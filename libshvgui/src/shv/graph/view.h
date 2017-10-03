@@ -45,7 +45,6 @@ public:
 	{
 		struct Axis
 		{
-//			enum RangeType { Automatic, Fixed };
 			enum RangeType { Fixed };
 			bool show = true;
 			QString description;
@@ -93,7 +92,6 @@ public:
 
 		struct Legend
 		{
-//			enum Type { Fixed, ToolTip };
 			enum Type { ToolTip };
 
 			bool show = true;
@@ -115,17 +113,10 @@ public:
 		QString legendStyle;
 		bool showCrossLine = true;
 		bool showDependent = true;
-		bool enableOvelapingSelections = false;
 		bool showSerieBackgroundStripes = false;
 		QTimeZone sourceDataTimeZone = QTimeZone::utc();
 		QTimeZone viewTimeZone = QTimeZone::utc();
 		std::function <void (QMenu*)> contextMenuExtend;
-	};
-
-	struct XAxisInterval
-	{
-		ValueChange::ValueX start;
-		ValueChange::ValueX end;
 	};
 
 	View(QWidget *parent);
@@ -136,7 +127,7 @@ public:
 	void releaseModel();
 
 	void showRange(ValueChange::ValueX from, ValueChange::ValueX to);
-	void showRange(XAxisInterval range);
+	void showRange(ValueXInterval range);
 	void zoom(qint64 center, double scale);
 
 	GraphModel *model() const;
@@ -149,10 +140,10 @@ public:
 	void showDependentSeries(bool enable);
 	void computeGeometry();
 
-	QVector<XAxisInterval> selections() const;
-	XAxisInterval loadedRange() const;
-	XAxisInterval shownRange() const;
-	void addSelection(XAxisInterval selection);
+	std::vector<ValueXInterval> selections() const;
+	ValueXInterval loadedRange() const;
+	ValueXInterval shownRange() const;
+	void addSelection(ValueXInterval selection);
 	void clearSelections();
 
 	inline Mode mode() const { return m_mode; }
@@ -211,6 +202,10 @@ private:
 		qint64 start;
 		qint64 end;
 
+		Selection(qint64 s = 0, qint64 e = 0) : start(s), end(e) {}
+
+		Selection normalized() const {return Selection(qMin(start, end), qMax(start, end));}
+		Selection& normalize() {if(end < start) qSwap(start, end); return *this;}
 		bool containsValue(qint64 value) const;
 	};
 
@@ -279,9 +274,6 @@ private:
 	qint64 xValue(const ValueChange::ValueX &value_x) const;
 	ValueChange::ValueX internalToValueX(qint64 value) const;
 	QString xValueString(qint64 value, const QString &datetime_format) const;
-	void computeRange(double &min, double &max, const Serie *serie) const;
-	void computeRange(int &min, int &max, const Serie *serie) const;
-	void computeRange(qint64 &min, qint64 &max, const Serie *serie) const;
 	template<typename T> void computeRange(T &min, T &max) const;
 	void computeDataRange();
 	void showRangeInternal(qint64 from, qint64 to);
@@ -291,6 +283,7 @@ private:
 
 	static ValueChange::ValueY formattedSerieValue(const Serie *serie, SerieData::const_iterator it);
 	int yPosition(ValueChange::ValueY value, const Serie *serie, const GraphArea &area);
+	void unionLastSelection();
 
 	void showToolTip();
 

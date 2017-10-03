@@ -164,9 +164,9 @@ void View::showRange(ValueChange::ValueX from, ValueChange::ValueX to)
 	showRangeInternal(xValue(from), xValue(to));
 }
 
-void View::showRange(View::XAxisInterval range)
+void View::showRange(ValueXInterval range)
 {
-	showRange(range.start, range.end);
+	showRange(range.min, range.max);
 }
 
 void View::setModel(GraphModel *model)
@@ -201,8 +201,6 @@ void View::onModelDataChanged() //TODO improve change detection in model
 	qint64 orig_displayed_range_max = m_displayedRangeMax;
 	qint64 orig_displayed_range_length = orig_displayed_range_max - orig_displayed_range_min;
 
-	m_loadedRangeMin = UINT64_MAX;
-	m_loadedRangeMax = 0;
 	for (Serie *serie : m_series) {
 		const SerieData &serie_model_data = serie->serieModelData(this);
 		serie->displayedDataBegin = serie_model_data.begin();
@@ -218,35 +216,33 @@ void View::onModelDataChanged() //TODO improve change detection in model
 	{
 		double min, max;
 		computeRange(min, max);
-		if (min < 0.0) {
-			SHV_EXCEPTION("GraphView cannot operate negative values on x axis");
-		}
 		m_xValueScale = INT64_MAX / max;
-		m_dataRangeMin = m_displayedRangeMin = m_loadedRangeMin = min * m_xValueScale;
-		m_dataRangeMax = m_displayedRangeMax = m_loadedRangeMax = max * m_xValueScale;
+		m_loadedRangeMin = min * m_xValueScale;
+		m_loadedRangeMax = max * m_xValueScale;
 		break;
 	}
 	case ValueType::Int:
 	{
 		int min, max;
 		computeRange(min, max);
-		if (min < 0.0) {
-			SHV_EXCEPTION("GraphView cannot operate negative values on x axis");
-		}
-		m_dataRangeMin = m_displayedRangeMin = m_loadedRangeMin = min;
-		m_dataRangeMax = m_displayedRangeMax = m_loadedRangeMax = max;
+		m_loadedRangeMin = min;
+		m_loadedRangeMax = max;
 		break;
 	}
 	case ValueType::TimeStamp:
 	{
 		computeRange(m_loadedRangeMin, m_loadedRangeMax);
-		m_dataRangeMin = m_displayedRangeMin = m_loadedRangeMin;
-		m_dataRangeMax = m_displayedRangeMax = m_loadedRangeMax;
 		break;
 	}
 	default:
 		break;
 	}
+	if (m_loadedRangeMin < 0LL) {
+		SHV_EXCEPTION("GraphView cannot operate negative values on x axis");
+	}
+	m_dataRangeMin = m_displayedRangeMin = m_loadedRangeMin;
+	m_dataRangeMax = m_displayedRangeMax = m_loadedRangeMax;
+
 	if (m_mode == Mode::Dynamic) {
 		qint64 loaded_range_length = m_loadedRangeMax - m_loadedRangeMin;
 
@@ -788,7 +784,7 @@ void View::mousePressEvent(QMouseEvent *mouse_event)
 				if (mouse_event->modifiers() & Qt::ControlModifier) {
 					m_zoomSelection = { value, value };
 				}
-				else if (settings.enableOvelapingSelections || !selectionOnValue(value)){
+				else {
 					m_selections << Selection { value, value };
 				}
 			}
@@ -832,19 +828,7 @@ const View::Selection *View::selectionOnValue(qint64 value) const
 
 void View::updateLastValueInLastSelection(qint64 value)
 {
-	Selection &last_selection = m_selections.last();
-	const Selection *overlaping_selection = selectionOnValue(value);
-	if (overlaping_selection && overlaping_selection != &last_selection && !settings.enableOvelapingSelections) {
-		if (last_selection.start <= last_selection.end) {
-			last_selection.end = overlaping_selection->start;
-		}
-		else {
-			last_selection.end = overlaping_selection->end;
-		}
-	}
-	else {
-		last_selection.end = value;
-	}
+	m_selections.last().end = value;
 	Q_EMIT selectionsChanged();
 }
 
@@ -987,6 +971,8 @@ void View::mouseReleaseEvent(QMouseEvent *mouse_event)
 				}
 				else if (m_currentSelectionModifiers & Qt::ShiftModifier) {
 					updateLastValueInLastSelection(value);
+					m_selections.last().normalize();
+					unionLastSelection();
 				}
 				m_currentSelectionModifiers = Qt::NoModifier;
 			}
@@ -1216,12 +1202,12 @@ void View::showDependentSeries(bool enable)
 	update();
 }
 
-QVector<View::XAxisInterval> View::selections() const
+std::vector<ValueXInterval> View::selections() const
 {
 	ValueChange::ValueX start(0);
 	ValueChange::ValueX end(0);
 
-	QVector<XAxisInterval> selections;
+	std::vector<ValueXInterval> selections;
 	for (const Selection &selection : m_selections) {
 		qint64 s_start = selection.start;
 		qint64 s_end = selection.end;
@@ -1244,29 +1230,29 @@ QVector<View::XAxisInterval> View::selections() const
 		default:
 			break;
 		}
-		selections << XAxisInterval { start, end };
+		selections.emplace_back(start, end, settings.xAxisType);
 	}
 
 	return selections;
 }
 
-View::XAxisInterval View::loadedRange() const
+ValueXInterval View::loadedRange() const
 {
-	return XAxisInterval { internalToValueX(m_loadedRangeMin), internalToValueX(m_loadedRangeMax) };
+	return ValueXInterval(internalToValueX(m_loadedRangeMin), internalToValueX(m_loadedRangeMax), settings.xAxisType);
 }
 
-View::XAxisInterval View::shownRange() const
+ValueXInterval View::shownRange() const
 {
-	return XAxisInterval { internalToValueX(m_displayedRangeMin), internalToValueX(m_displayedRangeMax) };
+	return ValueXInterval(internalToValueX(m_displayedRangeMin), internalToValueX(m_displayedRangeMax), settings.xAxisType);
 }
 
-void View::addSelection(XAxisInterval selection)
+void View::addSelection(ValueXInterval selection)
 {
 	bool overlap = false;
 
 	Selection new_selection;
-	new_selection.start = xValue(ValueChange { selection.start, {} });
-	new_selection.end = xValue(ValueChange { selection.end, {} });
+	new_selection.start = xValue(ValueChange { selection.min, {} });
+	new_selection.end = xValue(ValueChange { selection.max, {} });
 
 	for (const Selection &s: m_selections){
 		qint64 s_start = s.start;
@@ -1277,7 +1263,7 @@ void View::addSelection(XAxisInterval selection)
 		}
 
 		if ((new_selection.start <= s_end) && (new_selection.end >= s_start)) {
-				overlap = true;
+			overlap = true;
 		}
 	}
 
@@ -2046,6 +2032,27 @@ int View::yPosition(ValueChange::ValueY value, const Serie *serie, const GraphAr
 	return y_position;
 }
 
+void View::unionLastSelection()
+{
+	Selection &last_selection = m_selections.last();
+
+	int i = 0;
+	while (i < m_selections.count()-1){
+		Selection &s = m_selections[i];
+
+		if ((last_selection.start <= s.end) && (last_selection.end >= s.start)){
+			last_selection = {qMin(last_selection.start, s.start), qMax(last_selection.end, s.end)};
+			m_selections.removeAt(i);
+		}
+		else{
+			i++;
+		}
+	}
+
+	Q_EMIT selectionsChanged();
+	update();
+}
+
 void View::paintPointsOfInterest(QPainter *painter, const GraphArea &area)
 {
 	painter->save();
@@ -2469,19 +2476,6 @@ QString View::xValueString(qint64 value, const QString &datetime_format) const
 	return s;
 }
 
-void View::computeRange(double &min, double &max, const Serie *serie) const
-{
-	const SerieData &data = serie->serieModelData(this);
-	if (data.size()) {
-		if (data.at(0).valueX.doubleValue < min) {
-			min = data.at(0).valueX.doubleValue;
-		}
-		if (data.back().valueX.doubleValue > max) {
-			max = data.back().valueX.doubleValue;
-		}
-	}
-}
-
 template<typename T>
 void View::computeRange(T &min, T &max) const
 {
@@ -2489,39 +2483,13 @@ void View::computeRange(T &min, T &max) const
 	max = std::numeric_limits<T>::min();
 
 	for (const Serie *serie : m_series) {
-		computeRange(min, max, serie);
+		serie->serieModelData(this).extendRange(min, max);
 		for (const Serie *dependent_serie : serie->dependentSeries()) {
-			computeRange(min, max, dependent_serie);
+			dependent_serie->serieModelData(this).extendRange(min, max);
 		}
 	}
 	if (min == std::numeric_limits<T>::max() && max == std::numeric_limits<T>::min()) {
 		min = max = 0;
-	}
-}
-
-void View::computeRange(int &min, int &max, const Serie *serie) const
-{
-	const SerieData &data = serie->serieModelData(this);
-	if (data.size()) {
-		if (data.at(0).valueX.intValue < min) {
-			min = data.at(0).valueX.intValue;
-		}
-		if (data.back().valueX.intValue > max) {
-			max = data.back().valueX.intValue;
-		}
-	}
-}
-
-void View::computeRange(qint64 &min, qint64 &max, const Serie *serie) const
-{
-	const SerieData &data = serie->serieModelData(this);
-	if (data.size()) {
-		if (data.at(0).valueX.timeStamp < min) {
-			min = data.at(0).valueX.timeStamp;
-		}
-		if (data.back().valueX.timeStamp > max) {
-			max = data.back().valueX.timeStamp;
-		}
 	}
 }
 
