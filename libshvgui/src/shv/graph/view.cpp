@@ -1015,6 +1015,7 @@ bool View::eventFilter(QObject *watched, QEvent *event)
 					computeDataRange();
 					computeGeometry();
 					update();
+					Q_EMIT shownRangeChanged();
 				}
 			}
 			else { //(watched == m_rightRangeSelectorHandle)
@@ -1029,6 +1030,7 @@ bool View::eventFilter(QObject *watched, QEvent *event)
 					computeDataRange();
 					computeGeometry();
 					update();
+					Q_EMIT shownRangeChanged();
 				}
 
 			}
@@ -1167,10 +1169,13 @@ void View::addSerie(Serie *serie)
 
 Serie *View::serie(int index)
 {
-	if (index >= m_series.count()) {
-		SHV_EXCEPTION("GraphView: invalid serie index");
+	for (Serie *serie : m_series){
+		if (serie->serieIndex() == index){
+			return serie;
+		}
 	}
-	return m_series[index];
+
+	SHV_EXCEPTION("GraphView: invalid serie index");
 }
 
 void View::splitSeries()
@@ -1413,6 +1418,7 @@ void View::showRangeInternal(qint64 from, qint64 to)
 		computeRangeSelectorPosition();
 	}
 	update();
+	Q_EMIT shownRangeChanged();
 }
 
 void View::paintYAxisDescription(QPainter *painter, const GraphArea &area)
@@ -2222,10 +2228,10 @@ void View::paintViewBackgroundStripes(QPainter *painter, const View::GraphArea &
 		if (max_value > m_displayedRangeMax) {
 			max_value = m_displayedRangeMax;
 		}
-		int min = xValueToWidgetPosition(min_value);
-		int max = xValueToWidgetPosition(max_value);
+		if (max_value - min_value > 0LL) {
+			int min = xValueToWidgetPosition(min_value);
+			int max = xValueToWidgetPosition(max_value);
 
-		if (max - min > 0) {
 			painter->fillRect(min, area.graphRect.top(), max - min, area.graphRect.height(), stripe_color);
 			if (stripe->outLineType() != BackgroundStripe::OutlineType::No) {
 				QColor outline_color = stripe->outlineColor();
