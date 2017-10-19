@@ -489,19 +489,26 @@ int ChainPackProtocol::write(std::ostream &out, const RpcValue &pack)
 void ChainPackProtocol::writeMetaData(std::ostream &out, const RpcValue &pack)
 {
 	const RpcValue::MetaData &md = pack.metaData();
+	const RpcValue::IMap &cim = md.toIMap();
 	RpcValue::UInt mid = md.metaTypeId();
-	if(mid > 0) {
-		out << (uint8_t)ChainPackProtocol::TypeInfo::META_TYPE_ID;
-		write_UIntData(out, mid);
-	}
 	RpcValue::UInt mnsid = md.metaTypeNameSpaceId();
-	if(mnsid > 0) {
-		out << (uint8_t)ChainPackProtocol::TypeInfo::META_TYPE_NAMESPACE_ID;
-		write_UIntData(out, mnsid);
+	bool optimized_pack = cim.empty()
+						  || (mid > 0 && cim.size() == 1)
+						  || (mnsid > 0 && cim.size() == 1)
+						  || (mid > 0 && mnsid > 0 && cim.size() == 2);
+	if(optimized_pack) {
+		if(mid > 0) {
+			out << (uint8_t)ChainPackProtocol::TypeInfo::META_TYPE_ID;
+			write_UIntData(out, mid);
+		}
+		if(mnsid > 0) {
+			out << (uint8_t)ChainPackProtocol::TypeInfo::META_TYPE_NAMESPACE_ID;
+			write_UIntData(out, mnsid);
+		}
 	}
-	if(!md.isEmpty()) {
+	else {
 		out << (uint8_t)ChainPackProtocol::TypeInfo::MetaIMap;
-		writeData_IMap(out, md.toIMap());
+		writeData_IMap(out, cim);
 	}
 }
 

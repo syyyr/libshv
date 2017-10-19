@@ -23,12 +23,12 @@ public:
 	template<unsigned V>
 	struct NameSpace
 	{
-		static constexpr int Value = V;
+		static constexpr unsigned Value = V;
 	};
 	template<unsigned V>
 	struct TypeId
 	{
-		static constexpr int Value = V;
+		static constexpr unsigned Value = V;
 	};
 	struct Global : public NameSpace<0>
 	{

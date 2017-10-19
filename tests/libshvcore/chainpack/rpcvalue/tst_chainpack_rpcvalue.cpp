@@ -199,6 +199,25 @@ private:
 		return ret;
 	}
 
+	static inline char hex_nibble(char i)
+	{
+		if(i < 10)
+			return '0' + i;
+		return 'A' + (i - 10);
+	}
+
+	static std::string hex_dump(const RpcValue::Blob &out)
+	{
+		std::string ret;
+		for (size_t i = 0; i < out.size(); ++i) {
+			char h = out[i] / 16;
+			char l = out[i] % 16;
+			ret += hex_nibble(h);
+			ret += hex_nibble(l);
+		}
+		return ret;
+	}
+
 	void binaryTest()
 	{
 		qDebug() << "============= chainpack binary test ============";
@@ -207,7 +226,7 @@ private:
 			out += i;
 			ChainPackProtocol::TypeInfo::Enum e = (ChainPackProtocol::TypeInfo::Enum)i;
 			std::ostringstream str;
-			str << std::setw(3) << i << " " << binary_dump(out) << " "  << ChainPackProtocol::TypeInfo::name(e);
+			str << std::setw(3) << i << " " << std::hex << i << " " << binary_dump(out) << " "  << ChainPackProtocol::TypeInfo::name(e);
 			qDebug() << str.str();
  		}
 		for (int i = ChainPackProtocol::TypeInfo::Null; i <= ChainPackProtocol::TypeInfo::MetaIMap; ++i) {
@@ -215,7 +234,7 @@ private:
 			out += i;
 			ChainPackProtocol::TypeInfo::Enum e = (ChainPackProtocol::TypeInfo::Enum)i;
 			std::ostringstream str;
-			str << std::setw(3) << i << " " << binary_dump(out).c_str() << " "  << ChainPackProtocol::TypeInfo::name(e);
+			str << std::setw(3) << i << " " << std::hex << i << " " << binary_dump(out).c_str() << " "  << ChainPackProtocol::TypeInfo::name(e);
 			qDebug() << str.str();
 		}
 		for (int i = ChainPackProtocol::TypeInfo::Null_Array; i <= ChainPackProtocol::TypeInfo::MetaIMap_Array; ++i) {
@@ -223,7 +242,7 @@ private:
 			out += i;
 			ChainPackProtocol::TypeInfo::Enum e = (ChainPackProtocol::TypeInfo::Enum)i;
 			std::ostringstream str;
-			str << std::setw(3) << i << " " << binary_dump(out).c_str() << " "  << ChainPackProtocol::TypeInfo::name(e);
+			str << std::setw(3) << i << " " << std::hex << i << " " << binary_dump(out).c_str() << " "  << ChainPackProtocol::TypeInfo::name(e);
 			qDebug() << str.str();
 		}
 		for (int i = ChainPackProtocol::TypeInfo::TERM; i <= ChainPackProtocol::TypeInfo::TERM; ++i) {
@@ -231,7 +250,7 @@ private:
 			out += i;
 			ChainPackProtocol::TypeInfo::Enum e = (ChainPackProtocol::TypeInfo::Enum)i;
 			std::ostringstream str;
-			str << std::setw(3) << i << " " << binary_dump(out).c_str() << " "  << ChainPackProtocol::TypeInfo::name(e);
+			str << std::setw(3) << i << " " << std::hex << i << " " << binary_dump(out).c_str() << " "  << ChainPackProtocol::TypeInfo::name(e);
 			qDebug() << str.str();
 		}
 		{
@@ -497,8 +516,22 @@ private:
 			}
 		}
 		{
-			qDebug() << "------------- Meta";
-			RpcValue cp1{RpcValue::List{17, 18, 19}};
+			qDebug() << "------------- Meta1";
+			RpcValue cp1{RpcValue::String{"META1"}};
+			cp1.setMetaValue(MetaTypes::Tag::MetaTypeId, MetaTypes::Elesys::Value);
+			std::stringstream out;
+			int len = ChainPackProtocol::write(out, cp1);
+			RpcValue cp2 = ChainPackProtocol::read(out);
+			std::ostream::pos_type consumed = out.tellg();
+			qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " consumed: " << consumed << " dump: " << binary_dump(out.str());
+			qDebug() << "hex:" << hex_dump(out.str());
+			QVERIFY(len == (int)consumed);
+			QVERIFY(cp1.type() == cp2.type());
+			QVERIFY(cp1.metaData() == cp2.metaData());
+		}
+		{
+			qDebug() << "------------- Meta2";
+			RpcValue cp1{RpcValue::List{"META2", 17, 18, 19}};
 			cp1.setMetaValue(MetaTypes::Tag::MetaTypeNameSpaceId, MetaTypes::Elesys::Value);
 			cp1.setMetaValue(MetaTypes::Tag::MetaTypeId, 2u);
 			cp1.setMetaValue(MetaTypes::Tag::USER, "foo");
@@ -508,6 +541,7 @@ private:
 			RpcValue cp2 = ChainPackProtocol::read(out);
 			std::ostream::pos_type consumed = out.tellg();
 			qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " consumed: " << consumed << " dump: " << binary_dump(out.str());
+			qDebug() << "hex:" << hex_dump(out.str());
 			QVERIFY(len == (int)consumed);
 			QVERIFY(cp1.type() == cp2.type());
 			QVERIFY(cp1.metaData() == cp2.metaData());
