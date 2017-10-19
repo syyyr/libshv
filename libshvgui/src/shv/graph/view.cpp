@@ -217,8 +217,8 @@ void View::onModelDataChanged() //TODO improve change detection in model
 		double min, max;
 		computeRange(min, max);
 		m_xValueScale = INT64_MAX / max;
-		m_loadedRangeMin = min * m_xValueScale;
-		m_loadedRangeMax = max * m_xValueScale;
+		m_loadedRangeMin = static_cast<qint64>(min * m_xValueScale);
+		m_loadedRangeMax = static_cast<qint64>(max * m_xValueScale);
 		break;
 	}
 	case ValueType::Int:
@@ -240,8 +240,17 @@ void View::onModelDataChanged() //TODO improve change detection in model
 	if (m_loadedRangeMin < 0LL) {
 		SHV_EXCEPTION("GraphView cannot operate negative values on x axis");
 	}
-	m_dataRangeMin = m_displayedRangeMin = m_loadedRangeMin;
-	m_dataRangeMax = m_displayedRangeMax = m_loadedRangeMax;
+	m_dataRangeMin = m_loadedRangeMin;
+	m_dataRangeMax = m_loadedRangeMax;
+
+	if (m_mode == Mode::Static) {
+		if (orig_loaded_range_min == 0LL || orig_loaded_range_min != m_loadedRangeMin) {
+			m_displayedRangeMin = m_loadedRangeMin;
+		}
+		if (orig_loaded_range_max == 0LL || orig_loaded_range_max != m_loadedRangeMax) {
+			m_displayedRangeMax = m_loadedRangeMax;
+		}
+	}
 
 	if (m_mode == Mode::Dynamic) {
 		qint64 loaded_range_length = m_loadedRangeMax - m_loadedRangeMin;
