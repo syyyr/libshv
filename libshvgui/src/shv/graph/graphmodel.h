@@ -91,7 +91,7 @@ struct SHVGUI_DECL_EXPORT ValueChange
 	ValueChange() {}
 };
 
-struct ValueXInterval
+struct SHVGUI_DECL_EXPORT ValueXInterval
 {
 	inline ValueXInterval(ValueChange min, ValueChange max, ValueType type) : min(min.valueX), max(max.valueX), type(type) {}
 	inline ValueXInterval(ValueChange::ValueX min, ValueChange::ValueX max, ValueType type) : min(min), max(max), type(type) {}
@@ -99,6 +99,7 @@ struct ValueXInterval
 	inline ValueXInterval(ValueChange::TimeStamp min, ValueChange::TimeStamp max) : min(min), max(max), type(ValueType::TimeStamp) {}
 	inline ValueXInterval(double min, double max) : min(min), max(max), type(ValueType::Double) {}
 
+	ValueChange::ValueX length() const;
 	ValueChange::ValueX min;
 	ValueChange::ValueX max;
 	ValueType type;

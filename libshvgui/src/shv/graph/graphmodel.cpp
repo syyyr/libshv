@@ -412,5 +412,19 @@ SerieData::const_iterator SerieData::lower_bound(ValueChange::ValueX value_x) co
 	return it;
 }
 
+ValueChange::ValueX ValueXInterval::length() const
+{
+	if (type == ValueType::TimeStamp) {
+		return ValueChange::ValueX(max.timeStamp - min.timeStamp);
+	}
+	else if (type == ValueType::Int) {
+		return ValueChange::ValueX(max.intValue - min.intValue);
+	}
+	else if (type == ValueType::Double) {
+		return ValueChange::ValueX(max.doubleValue - min.doubleValue);
+	}
+	SHV_EXCEPTION("Invalid interval type");
+}
+
 }
 }
