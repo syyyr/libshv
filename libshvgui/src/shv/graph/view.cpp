@@ -47,6 +47,7 @@ View::View(QWidget *parent) : QWidget(parent)
   , m_rightRangeSelectorPosition(0)
   , m_mode(Mode::Static)
   , m_dynamicModePrepend(60000LL)
+  , m_preserveZoom(false)
 {
 	m_toolTipTimer.setSingleShot(true);
 	connect(&m_toolTipTimer, &QTimer::timeout, this, &View::showToolTip);
@@ -242,7 +243,11 @@ void View::onModelDataChanged() //TODO improve change detection in model
 	m_dataRangeMin = m_loadedRangeMin;
 	m_dataRangeMax = m_loadedRangeMax;
 
-	if (m_mode == Mode::Static) {
+	if (!m_preserveZoom) {
+		m_displayedRangeMin = m_loadedRangeMin;
+		m_displayedRangeMax = m_loadedRangeMax;
+	}
+	else if (m_mode == Mode::Static) {
 		if (orig_loaded_range_min == 0LL || orig_loaded_range_min != m_loadedRangeMin) {
 			m_displayedRangeMin = m_loadedRangeMin;
 		}

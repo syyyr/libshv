@@ -167,6 +167,7 @@ public:
 	Q_SIGNAL void shownRangeChanged();
 
 	void setLoadedRange(const ValueChange::ValueX &min, const ValueChange::ValueX &max);
+	void preserveZoomOnDataChange(bool b) { m_preserveZoom = b; }
 
 protected:
 	void resizeEvent(QResizeEvent *resize_event) Q_DECL_OVERRIDE;
@@ -328,6 +329,7 @@ private:
 	QVector<QMetaObject::Connection> m_connections;
 	Mode m_mode;
 	qint64 m_dynamicModePrepend;
+	bool m_preserveZoom;
 };
 
 } //namespace graphview
