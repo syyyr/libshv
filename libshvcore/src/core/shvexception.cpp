@@ -1,6 +1,7 @@
 #include "shvexception.h"
 
 #include <iostream>
+#include <cstdlib>
 
 bool shv::core::Exception::s_abortOnException = false;
 
@@ -10,7 +11,7 @@ shv::core::Exception::Exception(const std::string &_msg, const std::string &_whe
 {
 	std::cerr << " SHV_EXCEPTION: " << where() << message() << std::endl;
 	if(isAbortOnException())
-		abort();
+		std::abort();
 }
 
 const char *shv::core::Exception::what() const noexcept
