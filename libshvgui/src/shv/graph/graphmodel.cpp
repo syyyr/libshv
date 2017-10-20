@@ -358,16 +358,20 @@ void GraphModel::setData(GraphModelData *model_data)
 	connect(m_data, &GraphModelData::destroyed, this, &GraphModel::deleteLater);
 }
 
-GraphModelData *GraphModel::data() const
+GraphModelData *GraphModel::data(bool throw_exc) const
 {
-	if(!m_data)
+	if(!m_data && throw_exc)
 		SHV_EXCEPTION("No data set!");
 	return m_data;
 }
 
 const SerieData &GraphModel::serieData(int serie_index) const
 {
-	return data()->serieData(serie_index);
+	static SerieData empty_data;
+	GraphModelData *d = data(!shv::core::Exception::Throw);
+	if(!d)
+		return empty_data;
+	return d->serieData(serie_index);
 }
 
 SerieData::const_iterator SerieData::upper_bound(ValueChange::ValueX value_x) const

@@ -2,6 +2,8 @@
 
 #include "../../shvguiglobal.h"
 
+#include <shv/core/shvexception.h>
+
 #include <QObject>
 #include <QPair>
 #include <memory>
@@ -187,7 +189,7 @@ public:
 	virtual const SerieData &serieData(int serie_index) const;
 
 	void setData(GraphModelData *model_data);
-	GraphModelData *data() const;
+	GraphModelData *data(bool throw_exc = shv::core::Exception::Throw) const;
 
 protected:
 	GraphModelData *m_data = nullptr;
