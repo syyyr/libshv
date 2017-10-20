@@ -148,8 +148,7 @@ void View::releaseModel()
 	m_selections.clear();
 
 	m_model = nullptr;
-	qDeleteAll(m_pointsOfInterest);
-	m_pointsOfInterest.clear();
+	removePointsOfInterest();
 
 	if (m_toolTipTimer.isActive()) {
 		m_toolTipTimer.stop();
