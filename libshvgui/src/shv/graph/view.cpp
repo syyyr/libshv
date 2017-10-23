@@ -347,12 +347,27 @@ void View::computeRangeSelectorPosition()
 		m_leftRangeSelectorPosition = m_rangeSelectorRect.x();
 		m_rightRangeSelectorPosition = m_rangeSelectorRect.x() + m_rangeSelectorRect.width();
 	}
+	int dist = m_rightRangeSelectorPosition - m_leftRangeSelectorPosition;
+	int left_handle_width = m_leftRangeSelectorHandle->width() / 2;
+	int right_handle_width = m_rightRangeSelectorHandle->width() / 2;
+	int handle_width = left_handle_width + right_handle_width;
+	if (dist < handle_width && m_rangeSelectorRect.width() > handle_width) {
+		int mid = (m_leftRangeSelectorPosition + m_rightRangeSelectorPosition) / 2;
+		if (mid - left_handle_width < m_rangeSelectorRect.x()) {
+			mid = m_rangeSelectorRect.x() + left_handle_width;
+		}
+		else if (mid + right_handle_width > m_rangeSelectorRect.right()) {
+			mid = m_rangeSelectorRect.right() - right_handle_width;
+		}
+		m_leftRangeSelectorPosition = mid - left_handle_width;
+		m_rightRangeSelectorPosition = mid + right_handle_width;
+	}
 	m_leftRangeSelectorHandle->move(
-				m_leftRangeSelectorPosition - (m_leftRangeSelectorHandle->width() / 2),
+				m_leftRangeSelectorPosition - left_handle_width,
 				m_rangeSelectorRect.y() + (m_rangeSelectorRect.height() - m_leftRangeSelectorHandle->height()) / 2
 				);
 	m_rightRangeSelectorHandle->move(
-				m_rightRangeSelectorPosition - (m_rightRangeSelectorHandle->width() / 2),
+				m_rightRangeSelectorPosition - right_handle_width,
 				m_rangeSelectorRect.y() + (m_rangeSelectorRect.height() - m_rightRangeSelectorHandle->height()) / 2
 				);
 }
@@ -1018,7 +1033,7 @@ bool View::eventFilter(QObject *watched, QEvent *event)
 			QMouseEvent *mouse_event = (QMouseEvent *)event;
 			if (watched == m_leftRangeSelectorHandle) {
 				int new_position = m_leftRangeSelectorPosition + mouse_event->pos().x() - last_mouse_position;
-				if (new_position >= m_rangeSelectorRect.x() && new_position + 1 < m_rightRangeSelectorPosition) {
+				if (new_position >= m_rangeSelectorRect.x() && new_position + (m_leftRangeSelectorHandle->width() / 2 + m_rightRangeSelectorHandle->width() / 2) < m_rightRangeSelectorPosition) {
 					if (new_position == m_rangeSelectorRect.x()) {
 						m_displayedRangeMin = m_loadedRangeMin;
 					}
@@ -1033,7 +1048,7 @@ bool View::eventFilter(QObject *watched, QEvent *event)
 			}
 			else { //(watched == m_rightRangeSelectorHandle)
 				int new_position = m_rightRangeSelectorPosition + mouse_event->pos().x() - last_mouse_position;
-				if (new_position <= m_rangeSelectorRect.right() && new_position - 1 > m_leftRangeSelectorPosition) {
+				if (new_position <= m_rangeSelectorRect.right() && new_position - (m_leftRangeSelectorHandle->width() / 2 + m_rightRangeSelectorHandle->width() / 2) > m_leftRangeSelectorPosition) {
 					if (new_position == m_rangeSelectorRect.right()) {
 						m_displayedRangeMax = m_loadedRangeMax;
 					}
