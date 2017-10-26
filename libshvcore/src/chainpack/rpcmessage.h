@@ -69,6 +69,20 @@ public:
 	//int write(Value::Blob &out) const override;
 };
 
+class SHVCORE_DECL_EXPORT RpcNotify : public RpcRequest
+{
+private:
+	using Super = RpcRequest;
+public:
+	RpcNotify() : Super() {}
+	//RpcRequest(const Value &id) : Super(Json()) {setId(id);}
+	RpcNotify(const RpcMessage &msg) : Super(msg) {}
+public:
+	RpcRequest& setId(const RpcValue::UInt id) = delete;
+
+	//int write(Value::Blob &out) const override;
+};
+
 class SHVCORE_DECL_EXPORT RpcResponse : public RpcMessage
 {
 private:

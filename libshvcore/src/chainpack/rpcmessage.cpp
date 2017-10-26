@@ -39,7 +39,9 @@ void RpcMessage::setMetaValue(RpcValue::UInt key, const RpcValue &val)
 
 RpcValue::UInt RpcMessage::id() const
 {
-	return m_value.metaData().value(MetaTypes::Global::ChainPackRpcMessage::Tag::RequestId).toUInt();
+	if(isValid())
+		return m_value.metaData().value(MetaTypes::Global::ChainPackRpcMessage::Tag::RequestId).toUInt();
+	return 0;
 }
 
 void RpcMessage::setId(RpcValue::UInt id)
