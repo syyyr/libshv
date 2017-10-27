@@ -101,6 +101,8 @@ public:
 	static std::string categoriesLogInfo();
 	static const char *levelToString(ShvLog::Level level);
 	static const char *logCLIHelp();
+
+	//static void log(ShvLog::Level level, const LogContext &context, const char* format, ...);
 };
 
 inline ShvLog &ShvLog::operator=(const ShvLog &other)

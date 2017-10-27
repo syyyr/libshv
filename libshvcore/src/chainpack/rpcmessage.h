@@ -2,6 +2,8 @@
 
 #include "rpcvalue.h"
 
+#include "../core/utils.h"
+
 #include "../shvcoreglobal.h"
 
 namespace shv {
@@ -83,6 +85,20 @@ public:
 	//int write(Value::Blob &out) const override;
 };
 
+class SHVCORE_DECL_EXPORT RpcNotify : public RpcRequest
+{
+private:
+	using Super = RpcRequest;
+public:
+	RpcNotify() : Super() {}
+	//RpcRequest(const Value &id) : Super(Json()) {setId(id);}
+	RpcNotify(const RpcMessage &msg) : Super(msg) {}
+public:
+	RpcRequest& setId(const RpcValue::UInt id) = delete;
+
+	//int write(Value::Blob &out) const override;
+};
+
 class SHVCORE_DECL_EXPORT RpcResponse : public RpcMessage
 {
 private:
@@ -114,7 +130,7 @@ public:
 		RpcValue::String message() const;
 		//Error& setData(const Value &data);
 		//Value data() const;
-		RpcValue::String toString() const {return "RPC ERROR " + std::to_string(code()) + ": " + message();}
+		RpcValue::String toString() const {return "RPC ERROR " + shv::core::Utils::toString(code()) + ": " + message();}
 	public:
 		static Error createError(ErrorType c, RpcValue::String msg) {
 			Error ret;

@@ -41,7 +41,7 @@ protected:
 	bool isOpen() Q_DECL_OVERRIDE;
 	size_t bytesToWrite() Q_DECL_OVERRIDE;
 	int64_t writeBytes(const char *bytes, size_t length) Q_DECL_OVERRIDE;
-	bool flushNoBlock() Q_DECL_OVERRIDE;
+	int64_t flushNoBlock() Q_DECL_OVERRIDE;
 private:
 	QTcpSocket* socket();
 	void onReadyRead();

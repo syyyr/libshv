@@ -21,7 +21,9 @@
 
 #include "rpcvalue.h"
 #include "jsonprotocol.h"
+
 #include "../core/shvexception.h"
+#include "../core/utils.h"
 
 #include <cassert>
 #include <cstdlib>
@@ -31,7 +33,7 @@
 #include <iostream>
 //#include <utility>
 
-#ifdef _WIN32
+#if defined _WIN32 || defined LIBC_NEWLIB
 namespace {
 int is_leap(unsigned y)
 {
@@ -536,7 +538,7 @@ ChainPack ChainPack::fromType(ChainPack::Type::Enum t)
 	case Type::False: return "False";
 	case Type::TERM: return "TERM";
 	default:
-		SHV_EXCEPTION("Internal error: attempt to create object of helper type. type: " + std::to_string(t));
+		SHV_EXCEPTION("Internal error: attempt to create object of helper type. type: " + shv::core::Utils::toString(t));
 	}
 }
 */
@@ -825,7 +827,7 @@ std::string RpcValue::DateTime::toString() const
 		char buffer[80];
 		std::strftime(buffer, sizeof(buffer),"%Y-%m-%dT%H:%M:%S",tm);
 		std::string ret(buffer);
-		ret += '.' + std::to_string(msecs % 1000);
+		ret += '.' + shv::core::Utils::toString(msecs % 1000);
 		return ret;
 	}
 	return std::string();
@@ -842,7 +844,7 @@ std::string RpcValue::DateTime::toUtcString() const
 		char buffer[80];
 		std::strftime(buffer, sizeof(buffer),"%Y-%m-%dT%H:%M:%S",tm);
 		std::string ret(buffer);
-		ret += '.' + std::to_string(msecs % 1000);
+		ret += '.' + shv::core::Utils::toString(msecs % 1000);
 		return ret;
 	}
 	return std::string();
@@ -890,13 +892,13 @@ std::string RpcValue::MetaData::toStdString() const
 	UInt mtid = metaTypeId();
 	/*
 	if(nsid > 0) {
-		out += "S:" + std::to_string(nsid);
+		out += "S:" + shv::core::Utils::toString(nsid);
 		n++;
 	}
 	if(mtid > 0) {
 		if(n++ > 0)
 			out += ",";
-		out += "T:" + std::to_string(mtid);
+		out += "T:" + shv::core::Utils::toString(mtid);
 		n++;
 	}
 	*/
@@ -909,7 +911,7 @@ std::string RpcValue::MetaData::toStdString() const
 		if(kn[0])
 			out += std::string(kn) + ':';
 		else
-			out += std::to_string(key) + ':';
+			out += shv::core::Utils::toString(key) + ':';
 		RpcValue meta_val = value(key);
 		if(key == MetaTypes::Tag::MetaTypeId) {
 			UInt id = meta_val.toUInt();
@@ -917,7 +919,7 @@ std::string RpcValue::MetaData::toStdString() const
 			if(n[0])
 				out += n;
 			else
-				out += std::to_string(id);
+				out += shv::core::Utils::toString(id);
 		}
 		else {
 			meta_val.dumpText(out);

@@ -732,7 +732,7 @@ RpcValue ChainPackProtocol::readData(ChainPackProtocol::TypeInfo::Enum type, boo
 		case ChainPackProtocol::TypeInfo::IMap: { RpcValue::IMap val = readData_IMap(data); ret = RpcValue(val); break; }
 		case ChainPackProtocol::TypeInfo::Bool: { uint8_t t = data.get(); ret = RpcValue(t != 0); break; }
 		default:
-			SHV_EXCEPTION("Internal error: attempt to read helper type directly. type: " + std::to_string(type) + " " + TypeInfo::name(type));
+			SHV_EXCEPTION("Internal error: attempt to read helper type directly. type: " + shv::core::Utils::toString(type) + " " + TypeInfo::name(type));
 		}
 	}
 	return ret;

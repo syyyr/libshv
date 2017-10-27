@@ -28,12 +28,13 @@ protected:
 	virtual bool isOpen() = 0;
 	virtual size_t bytesToWrite() = 0;
 	virtual int64_t writeBytes(const char *bytes, size_t length) = 0;
-	virtual bool flushNoBlock() = 0;
+	virtual int64_t flushNoBlock() = 0;
 
 	// call it when new data arrived
 	void bytesRead(std::string &&bytes);
 	// call it, when data are sent, when bytesToWrite() == 0
 	void writePendingData();
+	virtual void onMessageReceived(const shv::core::chainpack::RpcValue &msg);
 private:
 	/*
 	class ChunkHeader : public shv::core::chainpack::RpcValue::IMap

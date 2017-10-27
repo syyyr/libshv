@@ -4,6 +4,7 @@ SOURCES += \
     $$PWD/rpcmessage.cpp \
     $$PWD/rpcvalue.cpp \
     $$PWD/rpcdriver.cpp \
+    $$PWD/socketrpcdriver.cpp \
     $$PWD/metatypes.cpp
 
 HEADERS += \
@@ -12,5 +13,6 @@ HEADERS += \
     $$PWD/rpcmessage.h \
     $$PWD/rpcvalue.h \
     $$PWD/rpcdriver.h \
+    $$PWD/socketrpcdriver.h \
     $$PWD/metatypes.h
 

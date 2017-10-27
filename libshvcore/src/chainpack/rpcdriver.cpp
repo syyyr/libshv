@@ -14,52 +14,7 @@ namespace core {
 namespace chainpack {
 
 int RpcDriver::s_defaultRpcTimeout = 5000;
-/*
-core::chainpack::RpcValue::UInt RpcDriver::ChunkHeader::chunkId() const
-{
-	return (count(shv::core::chainpack::ChunkHeaderKeys::ChunkId) == 0)? 0: at(shv::core::chainpack::ChunkHeaderKeys::ChunkId).toUInt();
-}
 
-void RpcDriver::ChunkHeader::setChunkId(core::chainpack::RpcValue::UInt id)
-{
-	(*this)[shv::core::chainpack::ChunkHeaderKeys::ChunkId] = id;
-}
-
-core::chainpack::RpcValue::UInt RpcDriver::ChunkHeader::chunkIndex() const
-{
-	return (count(shv::core::chainpack::ChunkHeaderKeys::ChunkIndex) == 0)? 0: at(shv::core::chainpack::ChunkHeaderKeys::ChunkIndex).toUInt();
-}
-
-void RpcDriver::ChunkHeader::setChunkIndex(core::chainpack::RpcValue::UInt id)
-{
-	(*this)[shv::core::chainpack::ChunkHeaderKeys::ChunkIndex] = id;
-}
-
-core::chainpack::RpcValue::UInt RpcDriver::ChunkHeader::chunkCount() const
-{
-	return (count(shv::core::chainpack::ChunkHeaderKeys::ChunkCount) == 0)? 0: at(shv::core::chainpack::ChunkHeaderKeys::ChunkCount).toUInt();
-}
-
-void RpcDriver::ChunkHeader::setChunkCount(core::chainpack::RpcValue::UInt id)
-{
-	(*this)[shv::core::chainpack::ChunkHeaderKeys::ChunkCount] = id;
-}
-
-std::string RpcDriver::ChunkHeader::toStringData() const
-{
-	std::ostringstream os;
-	shv::core::chainpack::ChainPackProtocol::writeChunkHeader(os, *this);
-	return os.str();
-}
-*/
-/*
-std::string RpcDriver::Chunk::packedLength() const
-{
-	std::ostringstream os;
-	shv::core::chainpack::ChainPackProtocol::writeUIntData(os, data.length());
-	return os.str();
-}
-*/
 RpcDriver::RpcDriver()
 {
 }
@@ -71,7 +26,7 @@ RpcDriver::~RpcDriver()
 void RpcDriver::sendMessage(const shv::core::chainpack::RpcValue &msg)
 {
 	using namespace std;
-	shvLogFuncFrame() << msg.toStdString();
+	//shvLogFuncFrame() << msg.toStdString();
 	std::ostringstream os_packed_data;
 	shv::core::chainpack::ChainPackProtocol::write(os_packed_data, msg);
 	std::string packed_data = os_packed_data.str();
@@ -220,13 +175,16 @@ int RpcDriver::processReadData(const std::string &read_data)
 		return 0;
 
 	RpcValue msg = ChainPackProtocol::read(in);
-	{
-		logRpc() << "\t emitting message received:" << msg.toStdString();
-		//logLongFiles() << "\t emitting message received:" << msg.dumpText();
-		if(m_messageReceivedCallback)
-			m_messageReceivedCallback(msg);
-	}
+	onMessageReceived(msg);
 	return read_len;
+}
+
+void RpcDriver::onMessageReceived(const RpcValue &msg)
+{
+	logRpc() << "\t emitting message received:" << msg.toStdString();
+	//logLongFiles() << "\t emitting message received:" << msg.dumpText();
+	if(m_messageReceivedCallback)
+		m_messageReceivedCallback(msg);
 }
 
 } // namespace chainpack

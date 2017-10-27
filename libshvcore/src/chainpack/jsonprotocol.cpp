@@ -1,8 +1,11 @@
 #include "jsonprotocol.h"
 
+#include "../core/utils.h"
+
 #include <limits>
 #include <cassert>
 #include <cmath>
+#include <cstdio>
 
 namespace shv {
 namespace core {
@@ -286,7 +289,7 @@ RpcValue JsonProtocol::parse_number() {
 
 	if (str[i] != '.' && str[i] != 'e' && str[i] != 'E'
 		&& (i - start_pos) <= static_cast<size_t>(std::numeric_limits<int>::digits10)) {
-		return std::atoi(str.c_str() + start_pos);
+		return atoi(str.c_str() + start_pos);
 	}
 
 	// Decimal part
@@ -313,7 +316,7 @@ RpcValue JsonProtocol::parse_number() {
 			i++;
 	}
 
-	return std::strtod(str.c_str() + start_pos, nullptr);
+	return strtod(str.c_str() + start_pos, nullptr);
 }
 
 /* expect(str, res)
@@ -447,12 +450,12 @@ void JsonProtocol::dumpJson(double value, std::string &out)
 
 void JsonProtocol::dumpJson(RpcValue::Int value, std::string &out)
 {
-	out += std::to_string(value);
+	out += shv::core::Utils::toString(value);
 }
 
 void JsonProtocol::dumpJson(RpcValue::UInt value, std::string &out)
 {
-	out += std::to_string(value);
+	out += shv::core::Utils::toString(value);
 }
 
 void JsonProtocol::dumpJson(bool value, std::string &out)

@@ -1,7 +1,13 @@
 #pragma once
 
 #include "../shvcoreglobal.h"
-#include "shvexception.h"
+//#include "shvexception.h"
+
+#include <string>
+
+#ifdef LIBC_NEWLIB
+#include <sstream>
+#endif
 
 #define SHV_SAFE_DELETE(x) if(x != nullptr) {delete x; x = nullptr;}
 /*
@@ -115,6 +121,18 @@ public:
 
 	static int versionStringToInt(const std::string &version_string);
 	static std::string intToVersionString(int ver);
+
+	template<typename T>
+	static std::string toString(T i)
+	{
+#ifdef LIBC_NEWLIB
+		std::ostringstream ss;
+		ss << i;
+		return ss.str();
+#else
+		return shv::core::Utils::toString(i); //not supported by newlib
+#endif
+	}
 
 #if 0
 	static const QString &nullValueString();

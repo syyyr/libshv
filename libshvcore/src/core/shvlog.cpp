@@ -3,12 +3,11 @@
 
 #include <map>
 #include <cctype>
-//#include <algorithm>
 #include <iostream>
+#include <cstdio>
 
 #ifdef __unix
 #include <unistd.h>
-#include <cstdio>
 #endif
 
 namespace shv {
@@ -240,7 +239,11 @@ ShvLog::~ShvLog()
 	if (!--stream->ref) {
 		if(stream->level > Level::Invalid) {
 			std::streambuf *buff = stream->ts.rdbuf();
+#ifdef SHVLOG_STRING_BUFF_USED
+			std::stringbuf *sbuff = static_cast<std::stringbuf*>(buff);
+#else
 			std::stringbuf *sbuff = dynamic_cast<std::stringbuf*>(buff);
+#endif
 			if(sbuff) {
 				std::string msg = sbuff->str();
 				if (stream->space && !msg.empty() && msg.back() == ' ')
@@ -385,5 +388,18 @@ const char *ShvLog::logCLIHelp()
 		"\tset treshold for all categories containing pattern to treshold\n"
 		"\tthe same rules as for module logging are applied to categiries\n";
 }
-
+/*
+void ShvLog::log(ShvLog::Level level, const LogContext &context, const char *format, ...)
+{
+	if(isMatchingLogFilter(level, context)) {
+		static constexpr size_t buff_len = 2048;
+		char buff[buff_len];
+		va_list list;
+		va_start(list, format);
+		std::vsnprintf(buff, buff_len, format, list);
+		va_end(list);
+		shv::core::ShvLog(level, context) << buff;
+	}
+}
+*/
 }}

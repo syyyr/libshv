@@ -30,7 +30,7 @@ int Utils::versionStringToInt(const std::string &version_string)
 {
 	int ret = 0;
 	for(auto s : split(version_string, '.')) {
-		int i = std::stoi(s);
+		int i = atoi(s.c_str());
 		ret = 100 * ret + i;
 	}
 	return ret;
@@ -42,7 +42,7 @@ std::string Utils::intToVersionString(int ver)
 	while(ver) {
 		int i = ver % 100;
 		ver /= 100;
-		std::string s = std::to_string(i);
+		std::string s = shv::core::Utils::toString(i);
 		//if(i < 10 && ver > 0)
 		//	s = '0' + s;
 		if(ret.empty())

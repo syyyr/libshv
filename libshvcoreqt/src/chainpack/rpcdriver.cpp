@@ -101,11 +101,11 @@ int64_t RpcDriver::writeBytes(const char *bytes, size_t length)
 	return socket()->write(bytes, length);
 }
 
-bool RpcDriver::flushNoBlock()
+int64_t RpcDriver::flushNoBlock()
 {
 	if(m_socket)
-		return m_socket->flush();
-	return false;
+		return m_socket->flush()? 1: 0;
+	return 0;
 }
 
 namespace {
