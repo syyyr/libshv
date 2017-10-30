@@ -17,14 +17,14 @@ public:
 	class SHVCORE_DECL_EXPORT LogContext
 	{
 	public:
-		LogContext() : line(0), file(nullptr), function(nullptr), category(nullptr) {}
+		LogContext() : file(nullptr), function(nullptr), category(nullptr), line(0) {}
 		LogContext(const char *file_name, int line_number, const char *function_name, const char *category_name = nullptr)
-			: line(line_number), file(file_name), function(function_name), category(category_name) {}
+			: file(file_name), function(function_name), category(category_name), line(line_number) {}
 
-		int line;
 		const char *file;
 		const char *function;
 		const char *category;
+		int line;
 	};
 	using MessageOutput = std::function<void (Level level, const LogContext &context, const std::string &message)>;
 private:
