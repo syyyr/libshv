@@ -94,9 +94,6 @@ public:
 		using Super = std::map<RpcValue::String, RpcValue>;
 		using Super::Super;
 	public:
-		//Map() : Super() {}
-		//Map(const Super &t) : Super(t) {}
-		//Map& operator=(const Super &o) {}
 		RpcValue value(const std::string &key, const RpcValue &default_val = RpcValue()) const
 		{
 			auto it = find(key);
@@ -116,13 +113,15 @@ public:
 		Array(Type type, List &&l) noexcept : List(std::move(l)), m_type(type) {}
 		Array(Type type, std::initializer_list<value_type> l) : List(l), m_type(type) {}
 		template<typename T, int sz>
-		Array(Type arr_type, const T(&arr)[sz]) : List{sz, RpcValue{}}, m_type(arr_type)
+		Array(const T(&arr)[sz]) : List(sz)
 		{
-
+			static_assert(sz > 0, "Array cannot be empty");
 			for (size_t i = 0; i < sz; ++i) {
 				RpcValue v(arr[i]);
-				RpcValue &a = (*this)[i];
-				a = std::move(v);
+				if(i == 0)
+					m_type = v.type();
+				(*this)[i] = std::move(v);
+				//push_back(std::move(v));
 			}
 		}
 		Type type() const {return m_type;}
@@ -201,7 +200,7 @@ public:
 	// ChainPack(bool(some_pointer)) if that behavior is desired.
 	RpcValue(void *) = delete;
 
-	~RpcValue() {}
+	~RpcValue();
 
 	Type type() const;
 	Type arrayType() const;
@@ -251,15 +250,12 @@ public:
 	static RpcValue parseJson(const char * in, std::string & err);
 
 	bool operator== (const RpcValue &rhs) const;
-	RpcValue& operator= (RpcValue rhs)
+	RpcValue& operator= (RpcValue rhs) noexcept
 	{
 		swap(rhs);
 		return *this;
 	}
-	void swap(RpcValue& other) noexcept
-	{
-		std::swap(m_ptr, other.m_ptr);
-	}
+	void swap(RpcValue& other) noexcept;
 	/*
 	bool operator<  (const ChainPack &rhs) const;
 	bool operator!= (const ChainPack &rhs) const { return !(*this == rhs); }

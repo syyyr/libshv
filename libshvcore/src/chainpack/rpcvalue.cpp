@@ -509,6 +509,23 @@ RpcValue::RpcValue(RpcValue::Map &&values) : m_ptr(std::make_shared<ChainPackMap
 RpcValue::RpcValue(const RpcValue::IMap &values) : m_ptr(std::make_shared<ChainPackIMap>(values)) {}
 RpcValue::RpcValue(RpcValue::IMap &&values) : m_ptr(std::make_shared<ChainPackIMap>(std::move(values))) {}
 
+RpcValue::~RpcValue()
+{
+	//std::cerr << __FUNCTION__ << " >>>>>>>>>>>>> " << m_ptr.get() << " ref cnt: " << m_ptr.use_count() << " val: " << toStdString() << std::endl;
+}
+
+void RpcValue::swap(RpcValue& other) noexcept
+{
+	/*
+	std::cerr << __FUNCTION__ << " xxxxxxxxxx "
+			  << m_ptr.get() << " ref cnt: " << m_ptr.use_count() << " val: " << toStdString()
+			  << " X "
+			  << other.m_ptr.get() << " ref cnt: " << other.m_ptr.use_count() << " val: " << other.toStdString()
+			  << std::endl;
+	*/
+	std::swap(m_ptr, other.m_ptr);
+}
+
 //Value::Value(const Value::MetaTypeId &value) : m_ptr(std::make_shared<ChainPackMetaTypeId>(value)) {}
 //Value::Value(const Value::MetaTypeNameSpaceId &value) : m_ptr(std::make_shared<ChainPackMetaTypeNameSpaceId>(value)) {}
 //Value::Value(const Value::MetaTypeName &value) : m_ptr(std::make_shared<ChainPackMetaTypeName>(value)) {}
