@@ -154,8 +154,10 @@ public:
 
 	// Constructors for the various types of JSON value.
 	RpcValue() noexcept;                // Null
+#ifdef RPCVALUE_COPY_AND_SWAP
 	RpcValue(const RpcValue &other) noexcept : m_ptr(other.m_ptr) {}
 	RpcValue(RpcValue &&other) noexcept : RpcValue() { swap(other); }
+#endif
 	RpcValue(std::nullptr_t) noexcept;  // Null
 	RpcValue(double value);             // Double
 	RpcValue(Int value);                // Int
@@ -250,12 +252,14 @@ public:
 	static RpcValue parseJson(const char * in, std::string & err);
 
 	bool operator== (const RpcValue &rhs) const;
+#ifdef RPCVALUE_COPY_AND_SWAP
 	RpcValue& operator= (RpcValue rhs) noexcept
 	{
 		swap(rhs);
 		return *this;
 	}
 	void swap(RpcValue& other) noexcept;
+#endif
 	/*
 	bool operator<  (const ChainPack &rhs) const;
 	bool operator!= (const ChainPack &rhs) const { return !(*this == rhs); }

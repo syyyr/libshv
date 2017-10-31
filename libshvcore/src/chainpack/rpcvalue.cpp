@@ -513,7 +513,7 @@ RpcValue::~RpcValue()
 {
 	//std::cerr << __FUNCTION__ << " >>>>>>>>>>>>> " << m_ptr.get() << " ref cnt: " << m_ptr.use_count() << " val: " << toStdString() << std::endl;
 }
-
+#ifdef RPCVALUE_COPY_AND_SWAP
 void RpcValue::swap(RpcValue& other) noexcept
 {
 	/*
@@ -525,7 +525,7 @@ void RpcValue::swap(RpcValue& other) noexcept
 	*/
 	std::swap(m_ptr, other.m_ptr);
 }
-
+#endif
 //Value::Value(const Value::MetaTypeId &value) : m_ptr(std::make_shared<ChainPackMetaTypeId>(value)) {}
 //Value::Value(const Value::MetaTypeNameSpaceId &value) : m_ptr(std::make_shared<ChainPackMetaTypeNameSpaceId>(value)) {}
 //Value::Value(const Value::MetaTypeName &value) : m_ptr(std::make_shared<ChainPackMetaTypeName>(value)) {}
