@@ -20,7 +20,6 @@ namespace shv {
 namespace core {
 namespace chainpack {
 
-
 class SHVCORE_DECL_EXPORT RpcValue final
 {
 public:
@@ -116,7 +115,16 @@ public:
 		Array(Type type, const List &l) : List(l), m_type(type) {}
 		Array(Type type, List &&l) noexcept : List(std::move(l)), m_type(type) {}
 		Array(Type type, std::initializer_list<value_type> l) : List(l), m_type(type) {}
+		template<typename T, int sz>
+		Array(Type arr_type, const T(&arr)[sz]) : List{sz, RpcValue{}}, m_type(arr_type)
+		{
 
+			for (size_t i = 0; i < sz; ++i) {
+				RpcValue v(arr[i]);
+				RpcValue &a = (*this)[i];
+				a = std::move(v);
+			}
+		}
 		Type type() const {return m_type;}
 	private:
 		Type m_type = Type::Invalid;
@@ -147,6 +155,8 @@ public:
 
 	// Constructors for the various types of JSON value.
 	RpcValue() noexcept;                // Null
+	RpcValue(const RpcValue &other) noexcept : m_ptr(other.m_ptr) {}
+	RpcValue(RpcValue &&other) noexcept : RpcValue() { swap(other); }
 	RpcValue(std::nullptr_t) noexcept;  // Null
 	RpcValue(double value);             // Double
 	RpcValue(Int value);                // Int
@@ -170,14 +180,6 @@ public:
 	RpcValue(const IMap &values);     // IMap
 	RpcValue(IMap &&values);          // IMap
 
-	//Value(const MetaTypeId &value);
-	//Value(const MetaTypeNameSpaceId &value);
-	//Value(const MetaTypeName &value);
-	//Value(const MetaTypeNameSpaceName &value);
-
-	//ChainPack fromType(Type::Enum t);
-	//Value(const std::shared_ptr<AbstractValueData> &r);
-
 	// Implicit constructor: anything with a to_json() function.
 	template <class T, class = decltype(&T::to_json)>
 	RpcValue(const T & t) : RpcValue(t.to_json()) {}
@@ -198,6 +200,8 @@ public:
 	// This prevents ChainPack(some_pointer) from accidentally producing a bool. Use
 	// ChainPack(bool(some_pointer)) if that behavior is desired.
 	RpcValue(void *) = delete;
+
+	~RpcValue() {}
 
 	Type type() const;
 	Type arrayType() const;
@@ -247,6 +251,15 @@ public:
 	static RpcValue parseJson(const char * in, std::string & err);
 
 	bool operator== (const RpcValue &rhs) const;
+	RpcValue& operator= (RpcValue rhs)
+	{
+		swap(rhs);
+		return *this;
+	}
+	void swap(RpcValue& other) noexcept
+	{
+		std::swap(m_ptr, other.m_ptr);
+	}
 	/*
 	bool operator<  (const ChainPack &rhs) const;
 	bool operator!= (const ChainPack &rhs) const { return !(*this == rhs); }
