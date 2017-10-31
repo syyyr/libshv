@@ -130,7 +130,7 @@ public:
 		ss << i;
 		return ss.str();
 #else
-		return shv::core::Utils::toString(i); //not supported by newlib
+		return std::to_string(i); //not supported by newlib
 #endif
 	}
 
