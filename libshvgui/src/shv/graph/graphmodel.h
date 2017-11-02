@@ -9,6 +9,7 @@
 #include <memory>
 #include <cmath>
 #include <QVector>
+#include <QMap>
 
 namespace shv {
 namespace gui {
@@ -156,6 +157,7 @@ public:
 	void addValueChange(int serie_index, const shv::gui::ValueChange &value);
 	void addValueChanges(int serie_index, const std::vector<shv::gui::ValueChange> &values); // adds array of valyes to one serie
 	void addValueChanges(const std::vector<shv::gui::ValueChange> &values); //adds array of values where every value belongs to one serie
+	void addValueChanges(const QMap<int, shv::gui::ValueChange> &values);
 
 	void addSerie(SerieData values);
 	void clearSerie(int serie_index);

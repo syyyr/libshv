@@ -214,7 +214,33 @@ void GraphModelData::addValueChanges(const std::vector<ValueChange> &values)
 			added << i;
 		}
 	}
-	if (added.count()) {
+	if (!added.isEmpty()) {
+		if (m_dataChangeEnabled) {
+			Q_EMIT dataChanged(added);
+		}
+		else {
+			for (int serie_index : added) {
+				if (!m_changedSeries.contains(serie_index)) {
+					m_changedSeries << serie_index;
+				}
+			}
+		}
+	}
+}
+
+void GraphModelData::addValueChanges(const QMap<int, shv::gui::ValueChange> &values)
+{
+	QVector<int> added;
+
+	for (QMap<int, shv::gui::ValueChange>::const_iterator value = values.constBegin(); value != values.constEnd(); ++value) {
+		checkIndex(value.key());
+
+		if (m_valueChanges[value.key()].addValueChange(value.value())) {
+			added << value.key();
+		}
+	}
+
+	if (!added.isEmpty()) {
 		if (m_dataChangeEnabled) {
 			Q_EMIT dataChanged(added);
 		}
