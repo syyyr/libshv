@@ -9,6 +9,7 @@
 #include <memory>
 #include <cmath>
 #include <QVector>
+#include <QMap>
 
 namespace shv {
 namespace gui {

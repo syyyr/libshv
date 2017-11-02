@@ -233,6 +233,8 @@ void GraphModelData::addValueChanges(const QMap<int, shv::gui::ValueChange> &val
 	QVector<int> added;
 
 	for (QMap<int, shv::gui::ValueChange>::const_iterator value = values.constBegin(); value != values.constEnd(); ++value) {
+		checkIndex(value.key());
+
 		if (m_valueChanges[value.key()].addValueChange(value.value())) {
 			added << value.key();
 		}
