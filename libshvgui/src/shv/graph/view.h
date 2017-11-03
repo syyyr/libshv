@@ -9,6 +9,7 @@
 #include <QWidget>
 
 #include "graphmodel.h"
+#include "serie.h"
 
 #include <functional>
 
@@ -16,7 +17,6 @@ namespace shv {
 namespace gui {
 namespace graphview {
 
-class Serie;
 class OutsideSerieGroup;
 class PointOfInterest;
 class BackgroundStripe;
@@ -233,10 +233,10 @@ private:
 	void paintHorizontalGrid(QPainter *painter, const GraphArea &area);
 	void paintRangeSelector(QPainter *painter);
 	void paintSeries(QPainter *painter, const GraphArea &area);
-	void paintSerie(QPainter *painter, const QRect &rect, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, bool fill_rect);
-	void paintBoolSerie(QPainter *painter, const QRect &area, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, bool fill_rect);
-	void paintBoolSerieAtPosition(QPainter *painter, const QRect &area, int y_position, const Serie *serie, qint64 min, qint64 max, bool fill_rect);
-	void paintValueSerie(QPainter *painter, const QRect &area, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, bool fill_rect);
+	void paintSerie(QPainter *painter, const QRect &rect, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base = -1);
+	void paintBoolSerie(QPainter *painter, const QRect &area, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base);
+	void paintBoolSerieAtPosition(QPainter *painter, const QRect &area, int y_position, const Serie *serie, qint64 min, qint64 max, const Serie::Fill &fill_rect, int fill_base);
+	void paintValueSerie(QPainter *painter, const QRect &area, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base);
 	void paintSelections(QPainter *painter, const GraphArea &area);
 	void paintSelection(QPainter *painter, const GraphArea &area, const Selection &selection, const QColor &color);
 	void paintSerieList(QPainter *painter);
@@ -253,6 +253,7 @@ private:
 	void paintSerieHorizontalBackgroundStripe(QPainter *painter, const GraphArea &area, const Serie *serie, const BackgroundStripe *stripe);
 	void paintViewBackgroundStripes(QPainter *painter, const GraphArea &area);
 	void paintOutsideSeriesGroups(QPainter *painter, const GraphArea &area);
+	void fillSerie(QPainter *painter, const QPolygon &polygon, const Serie *serie, const Serie::Fill &fill_rect);
 
 	QString legend(qint64 position) const;
 	QString legendRow(const Serie *serie, qint64 position) const;

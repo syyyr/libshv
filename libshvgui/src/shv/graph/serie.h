@@ -22,6 +22,29 @@ public:
 	enum class LineType { OneDimensional, TwoDimensional };
 	enum class YAxis { Y1, Y2 };
 
+	class Fill {
+
+	public:
+		enum class Type { None, SerieColor, Color, SerieGradient, Gradient };
+
+		inline Fill(Type type = Type::None, const QColor &color = QColor())
+			: m_type(type)
+			, m_color(color)
+		{
+		}
+
+		inline Fill(const QColor &color) : Fill(Type::Color, color)
+		{
+		}
+
+		inline Type type() const  { return m_type;	}
+		inline const QColor &color() const  {	return m_color; }
+
+	private:
+		Type m_type;
+		QColor m_color;
+	};
+
 	Serie(ValueType type, int serie_index, const QString &name, const QColor &color, QObject *parent = 0);
 	~Serie();
 
@@ -60,6 +83,9 @@ public:
 	inline double boolValue() const  { return m_boolValue; }
 	void setBoolValue(double value);
 
+	inline const Fill &fill() const  { return m_fill; }
+	void setFill(const Fill &fill);
+
 	inline bool isHidden() const  { return !m_show; }
 	void show(bool enable = true);
 	void hide();
@@ -93,6 +119,7 @@ private:
 	bool m_show = true;
 	bool m_showCurrent = true;
 	int m_serieIndex = -1;
+	Fill m_fill;
 	QVector<QMetaObject::Connection> m_connections;
 
 	SerieData::const_iterator displayedDataBegin = shv::gui::SerieData::const_iterator();
