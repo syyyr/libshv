@@ -47,8 +47,6 @@ void RpcDriver::writePendingData()
 		logRpc() << "skipping write because of bytesToWrite:" << bytesToWrite() << "try to flush";
 		bool ok = flushNoBlock();
 		logRpc() << "any data flushed:" << ok << "rest bytesToWrite:" << bytesToWrite();
-		// wait for bytesWritten signal and send data from right queue then
-		//shvWarning() << "writePendingData() called for not empty socket buffer";
 		return;
 	}
 	if(!m_highPriorityQueue.empty()) {
@@ -76,11 +74,11 @@ void RpcDriver::writeQueue(std::deque<Chunk> &queue, size_t &bytes_written_so_fa
 		{
 			std::ostringstream os;
 			shv::core::chainpack::ChainPackProtocol::writeUIntData(os, chunk.data.length() + protocol_version_data.length());
-			std::string data = os.str();
-			auto len = writeBytes(data.data(), data.length());
+			std::string packet_len_data = os.str();
+			auto len = writeBytes(packet_len_data.data(), packet_len_data.length());
 			if(len < 0)
 				SHV_EXCEPTION("Write socket error!");
-			if(len < (int)data.length())
+			if(len < (int)packet_len_data.length())
 				SHV_EXCEPTION("Design error! Chunk length shall be always written at once to the socket");
 		}
 		{
@@ -95,45 +93,20 @@ void RpcDriver::writeQueue(std::deque<Chunk> &queue, size_t &bytes_written_so_fa
 	{
 		//int data_written_so_far;
 		const std::string &data = chunk.data;
-		//int len_to_write = data.length() - bytes_written_so_far;
 		auto len = writeBytes(data.data() + bytes_written_so_far, data.length() - bytes_written_so_far);
 		if(len < 0)
 			SHV_EXCEPTION("Write socket error!");
 		if(len == 0)
 			SHV_EXCEPTION("Design error! At least 1 byte of data shall be always written to the socket");
 
-		//logLongFiles() << "#" << ++hi_cnt << "HiPriority message written to socket, data written:" << len << "of:" << (data.length() - bytes_written_so_far);
 		logRpc() << "writeQueue - data len:" << data.length() << "start index:" << bytes_written_so_far << "bytes written:" << len << "remaining:" << (data.length() - bytes_written_so_far - len);
 		bytes_written_so_far += len;
 		if(bytes_written_so_far == chunk.data.length()) {
 			bytes_written_so_far = 0;
 			queue.pop_front();
-			//shvInfo() << len << "bytes written (all)";
-			//return true;
 		}
 	}
-	//shvWarning() << "not all bytes written:" << len << "of" << data.length();
-	//return false;
 }
-/*
-/// this implementation expects, that Chunk can be always written at once to the socket
-void RpcDriver::writeQueue(std::deque<Chunk> &queue)
-{
-	const Chunk &chunk = queue[0];
-
-	const std::string* fields[] = {&chunk.packedLength, &chunk.packedHeader, &chunk.data};
-	static constexpr int FLD_CNT = 3;
-	for (int i = 0; i < FLD_CNT; ++i) {
-		const std::string* fld = fields[i];
-		auto len = writeBytes(fld->data(), fld->length());
-		if(len < 0)
-			SHV_EXCEPTION("Write socket error!");
-		if(len < (int)fld->length())
-			SHV_EXCEPTION("Design error! Chunk shall be always written at once to the socket");
-	}
-	queue.pop_front();
-}
-*/
 
 void RpcDriver::bytesRead(std::string &&bytes)
 {
