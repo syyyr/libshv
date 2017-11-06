@@ -732,7 +732,9 @@ void View::paintEvent(QPaintEvent *paint_event)
 			if (m_backgroundStripes.count()) {
 				paintViewBackgroundStripes(&painter, area);
 			}
-			paintPointsOfInterest(&painter, area);
+			if (m_displayedRangeMax - m_displayedRangeMin) {
+				paintPointsOfInterest(&painter, area);
+			}
 			if (m_series.count()) {
 				paintSeries(&painter, area);
 			}
