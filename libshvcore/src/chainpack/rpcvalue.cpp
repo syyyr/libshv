@@ -128,6 +128,11 @@ class ValueData : public RpcValue::AbstractValueData
 protected:
 	explicit ValueData(const T &value) : m_value(value) {}
 	explicit ValueData(T &&value) : m_value(std::move(value)) {}
+	// disable copy (because of m_metaData)
+	ValueData(const ValueData &o) = delete;
+	ValueData& operator=(const ValueData &o) = delete;
+	//ValueData(ValueData &&o) = delete;
+	//ValueData& operator=(ValueData &&o) = delete;
 	virtual ~ValueData() override
 	{
 		if(m_metaData)
