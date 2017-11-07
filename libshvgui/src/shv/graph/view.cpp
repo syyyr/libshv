@@ -277,10 +277,12 @@ void View::onModelDataChanged() //TODO improve change detection in model
 				if (m_displayedRangeMax > m_loadedRangeMax) {
 					m_displayedRangeMax = m_loadedRangeMax;
 				}
-				computeDataRange();
 			}
 		}
 	}
+
+	computeDataRange();
+
 	if (settings.rangeSelector.show) {
 		m_leftRangeSelectorHandle->show();
 		m_rightRangeSelectorHandle->show();
