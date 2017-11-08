@@ -199,10 +199,10 @@ void SocketRpcDriver::sendResponse(int request_id, const cp::RpcValue &result)
 
 void SocketRpcDriver::sendNotify(std::string &&method, const cp::RpcValue &result)
 {
+	shvInfo() << "sending notify:" << method;
 	cp::RpcNotify ntf;
 	ntf.setMethod(std::move(method));
 	ntf.setParams(result);
-	shvInfo() << "sending notify:" << method;
 	sendMessage(ntf.value());
 }
 
