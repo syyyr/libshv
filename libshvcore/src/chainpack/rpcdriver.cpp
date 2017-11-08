@@ -32,13 +32,13 @@ void RpcDriver::sendMessage(const shv::core::chainpack::RpcValue &msg)
 	std::string packed_data = os_packed_data.str();
 	logRpc() << "send message: packed data: " << (packed_data.size() > 50? "<... long data ...>" : packed_data);
 
-	m_highPriorityQueue.push_back(Chunk{std::move(packed_data)});
-
-	writePendingData();
+	writePendingData(Chunk{std::move(packed_data)});
 }
 
-void RpcDriver::writePendingData()
+void RpcDriver::writePendingData(RpcDriver::Chunk &&chunk_to_enqueue)
 {
+	if(!chunk_to_enqueue.empty())
+		m_chunkQueue.push_back(std::move(chunk_to_enqueue));
 	if(!isOpen()) {
 		shvError() << "write data error, socket is not open!";
 		return;
@@ -49,22 +49,22 @@ void RpcDriver::writePendingData()
 		logRpc() << "any data flushed:" << ok << "rest bytesToWrite:" << bytesToWrite();
 		return;
 	}
-	if(!m_highPriorityQueue.empty()) {
-		logRpc() << "writePendingData(), HI prio queue len:" << m_highPriorityQueue.size();
-		writeQueue(m_highPriorityQueue, m_headChunkBytesWrittenSoFar);
-	}
+	writeQueue();
 }
 
 namespace {
 const unsigned PROTOCOL_VERSION = 1;
 }
 
-void RpcDriver::writeQueue(std::deque<Chunk> &queue, size_t &bytes_written_so_far)
+void RpcDriver::writeQueue()
 {
+	if(m_chunkQueue.empty())
+		return;
+	logRpc() << "writePendingData(), HI prio queue len:" << m_chunkQueue.size();
 	//static int hi_cnt = 0;
-	const Chunk &chunk = queue[0];
+	const Chunk &chunk = m_chunkQueue[0];
 
-	if(bytes_written_so_far == 0) {
+	if(m_headChunkBytesWrittenSoFar == 0) {
 		std::string protocol_version_data;
 		{
 			std::ostringstream os;
@@ -73,7 +73,7 @@ void RpcDriver::writeQueue(std::deque<Chunk> &queue, size_t &bytes_written_so_fa
 		}
 		{
 			std::ostringstream os;
-			shv::core::chainpack::ChainPackProtocol::writeUIntData(os, chunk.data.length() + protocol_version_data.length());
+			shv::core::chainpack::ChainPackProtocol::writeUIntData(os, chunk.length() + protocol_version_data.length());
 			std::string packet_len_data = os.str();
 			auto len = writeBytes(packet_len_data.data(), packet_len_data.length());
 			if(len < 0)
@@ -91,19 +91,17 @@ void RpcDriver::writeQueue(std::deque<Chunk> &queue, size_t &bytes_written_so_fa
 	}
 
 	{
-		//int data_written_so_far;
-		const std::string &data = chunk.data;
-		auto len = writeBytes(data.data() + bytes_written_so_far, data.length() - bytes_written_so_far);
+		auto len = writeBytes(chunk.data() + m_headChunkBytesWrittenSoFar, chunk.length() - m_headChunkBytesWrittenSoFar);
 		if(len < 0)
 			SHV_EXCEPTION("Write socket error!");
 		if(len == 0)
 			SHV_EXCEPTION("Design error! At least 1 byte of data shall be always written to the socket");
 
-		logRpc() << "writeQueue - data len:" << data.length() << "start index:" << bytes_written_so_far << "bytes written:" << len << "remaining:" << (data.length() - bytes_written_so_far - len);
-		bytes_written_so_far += len;
-		if(bytes_written_so_far == chunk.data.length()) {
-			bytes_written_so_far = 0;
-			queue.pop_front();
+		logRpc() << "writeQueue - data len:" << chunk.length() << "start index:" << m_headChunkBytesWrittenSoFar << "bytes written:" << len << "remaining:" << (chunk.length() - m_headChunkBytesWrittenSoFar - len);
+		m_headChunkBytesWrittenSoFar += len;
+		if(m_headChunkBytesWrittenSoFar == chunk.length()) {
+			m_headChunkBytesWrittenSoFar = 0;
+			m_chunkQueue.pop_front();
 		}
 	}
 }

@@ -25,6 +25,8 @@ public:
 	static int defaultRpcTimeout() {return s_defaultRpcTimeout;}
 	static void setDefaultRpcTimeout(int tm) {s_defaultRpcTimeout = tm;}
 protected:
+	using Chunk = std::string;
+protected:
 	virtual bool isOpen() = 0;
 	virtual size_t bytesToWrite() = 0;
 	virtual int64_t writeBytes(const char *bytes, size_t length) = 0;
@@ -33,22 +35,10 @@ protected:
 	// call it when new data arrived
 	void bytesRead(std::string &&bytes);
 	// call it, when data are sent, when bytesToWrite() == 0
-	void writePendingData();
+	virtual void writePendingData(Chunk &&chunk_to_enqueue);
 	virtual void onMessageReceived(const shv::core::chainpack::RpcValue &msg);
 private:
 	/*
-	class ChunkHeader : public shv::core::chainpack::RpcValue::IMap
-	{
-	public:
-		shv::core::chainpack::RpcValue::UInt chunkId() const;
-		void setChunkId(shv::core::chainpack::RpcValue::UInt id);
-		shv::core::chainpack::RpcValue::UInt chunkIndex() const;
-		void setChunkIndex(shv::core::chainpack::RpcValue::UInt id);
-		shv::core::chainpack::RpcValue::UInt chunkCount() const;
-		void setChunkCount(shv::core::chainpack::RpcValue::UInt id);
-		std::string toStringData() const;
-	};
-	*/
 	struct Chunk
 	{
 		//std::string packedLength;
@@ -60,15 +50,16 @@ private:
 		//Chunk(std::string &&h, std::string &&d) : packedHeader(std::move(h)), data(std::move(d)) {fillPackedLength();}
 
 		//std::string packedLength() const;
-		size_t dataLength() const {return data.length();}
+		size_t length() const {return data.length();}
 	};
+	*/
 private:
 	int processReadData(const std::string &read_data);
-	void writeQueue(std::deque<Chunk> &queue, size_t &bytes_written_so_far);
+	void writeQueue();
 private:
 	MessageReceivedCallback m_messageReceivedCallback = nullptr;
 
-	std::deque<Chunk> m_highPriorityQueue;
+	std::deque<Chunk> m_chunkQueue;
 	size_t m_headChunkBytesWrittenSoFar = 0;
 	std::string m_readData;
 	static int s_defaultRpcTimeout;

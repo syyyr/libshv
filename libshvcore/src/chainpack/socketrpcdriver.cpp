@@ -4,7 +4,7 @@
 #include <cassert>
 #include <string.h>
 
-#ifdef LIBC_NEWLIB
+#ifdef FREE_RTOS
 #include "lwip/netdb.h"
 #include "lwip/sockets.h"
 #elif defined __unix
@@ -41,7 +41,7 @@ void SocketRpcDriver::closeConnection()
 
 bool SocketRpcDriver::isOpen()
 {
-	return m_socket > 0;
+	return m_socket >= 0;
 }
 
 size_t SocketRpcDriver::bytesToWrite()
@@ -121,6 +121,9 @@ bool SocketRpcDriver::connectToHost(const std::string &host, int port)
 
 void SocketRpcDriver::exec()
 {
+	//int pfd[2];
+	//if (pipe(pfd) == -1)
+	//		 return;
 	fd_set read_flags,write_flags; // the flag sets to be used
 	struct timeval waitd;
 
@@ -131,7 +134,7 @@ void SocketRpcDriver::exec()
 	memset(&out, 0, BUFF_LEN);
 
 	while(1) {
-		waitd.tv_sec = 1;
+		waitd.tv_sec = 5;
 		waitd.tv_usec = 0;
 
 		FD_ZERO(&read_flags);
@@ -152,7 +155,7 @@ void SocketRpcDriver::exec()
 			return;
 		}
 		if(sel == 0) {
-			//ESP_LOGI(__FILE__, "\t timeout");
+			shvInfo() << "\t timeout";
 			idleTaskOnSelectTimeout();
 			continue;
 		}
@@ -180,7 +183,7 @@ void SocketRpcDriver::exec()
 		if(FD_ISSET(m_socket, &write_flags)) {
 			shvInfo() << "\t write fd is set";
 			FD_CLR(m_socket, &write_flags);
-			flushNoBlock();
+			writePendingData(Chunk());
 		}
 	}
 }
@@ -199,7 +202,7 @@ void SocketRpcDriver::sendNotify(std::string &&method, const cp::RpcValue &resul
 	cp::RpcNotify ntf;
 	ntf.setMethod(std::move(method));
 	ntf.setParams(result);
-	shvInfo() << "sending notify:" << ntf.toStdString();
+	shvInfo() << "sending notify:" << method;
 	sendMessage(ntf.value());
 }
 

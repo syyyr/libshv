@@ -17,13 +17,14 @@ public:
 	bool connectToHost(const std::string & host, int port);
 	void closeConnection();
 	void exec();
+
+	void sendNotify(std::string &&method, const shv::core::chainpack::RpcValue &result);
 protected:
 	bool isOpen() override;
 	size_t bytesToWrite() override;
 	int64_t writeBytes(const char *bytes, size_t length) override;
 	int64_t flushNoBlock() override;
 	void sendResponse(int request_id, const shv::core::chainpack::RpcValue &result);
-	void sendNotify(std::string &&method, const shv::core::chainpack::RpcValue &result);
 
 	virtual void idleTaskOnSelectTimeout() {}
 private:
