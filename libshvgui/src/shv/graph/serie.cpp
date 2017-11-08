@@ -25,6 +25,7 @@ Serie::Serie(ValueType type, int serie_index, const QString &name, const QColor 
 		Serie *serie = qobject_cast<Serie*>(parent);
 		if (serie) {
 			serie->addDependentSerie(this);
+			m_fill = serie->fill();
 		}
 	}
 }
@@ -157,6 +158,15 @@ void Serie::setBoolValue(double value)
 {
 	if (m_boolValue != value) {
 		m_boolValue = value;
+		update();
+	}
+}
+
+void Serie::setFill(const Serie::Fill &fill)
+{
+	if ((fill.type() != m_fill.type()) ||
+		((fill.type() == Fill::Type::Color  || fill.type() == Fill::Type::Gradient)&& fill.color() != m_fill.color())) {
+		m_fill = fill;
 		update();
 	}
 }

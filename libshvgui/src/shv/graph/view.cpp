@@ -1632,7 +1632,8 @@ void View::paintRangeSelector(QPainter *painter)
 			}
 			QPen pen(settings.rangeSelector.color);
 			pen.setWidth(settings.rangeSelector.lineWidth);
-			paintSerie(painter, m_rangeSelectorRect, x_axis_position, serie, m_loadedRangeMin, m_loadedRangeMax, pen, true);
+			paintSerie(painter, m_rangeSelectorRect, x_axis_position, serie, m_loadedRangeMin, m_loadedRangeMax, pen,
+					   Serie::Fill(Serie::Fill::Type::Gradient, settings.rangeSelector.color), m_rangeSelectorRect.height());
 			break;
 		}
 	}
@@ -1695,30 +1696,33 @@ void View::paintSeries(QPainter *painter, const GraphArea &area)
 		if (!serie->isHidden() && settings.showDependent) {
 			for (const Serie *dependent_serie : serie->dependentSeries()) {
 				pen.setWidth(dependent_serie->lineWidth());
-				paintSerie(painter, area.graphRect, x_axis_position, dependent_serie, m_displayedRangeMin, m_displayedRangeMax, pen, false);
+				paintSerie(painter, area.graphRect, x_axis_position, dependent_serie, m_displayedRangeMin, m_displayedRangeMax, pen, dependent_serie->fill());
 			}
 		}
 		pen.setWidth(serie->lineWidth());
-		paintSerie(painter, area.graphRect, x_axis_position, serie, m_displayedRangeMin, m_displayedRangeMax, pen, false);
+		paintSerie(painter, area.graphRect, x_axis_position, serie, m_displayedRangeMin, m_displayedRangeMax, pen, serie->fill());
 	}
 	painter->restore();
 }
 
-void View::paintSerie(QPainter *painter, const QRect &rect, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, bool fill_rect)
+void View::paintSerie(QPainter *painter, const QRect &rect, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base)
 {
+	if (fill_base == -1) {
+		fill_base = x_axis_position;
+	}
 	if (!serie->isHidden()) {
 		if (serie->type() == ValueType::Bool) {
 			if (!serie->serieGroup()) {
-				paintBoolSerie(painter, rect, x_axis_position, serie, min, max, pen, fill_rect);
+				paintBoolSerie(painter, rect, x_axis_position, serie, min, max, pen, fill_rect, fill_base);
 			}
 		}
 		else {
-			paintValueSerie(painter, rect, x_axis_position, serie, min, max, pen, fill_rect);
+			paintValueSerie(painter, rect, x_axis_position, serie, min, max, pen, fill_rect, fill_base);
 		}
 	}
 }
 
-void View::paintBoolSerie(QPainter *painter, const QRect &rect, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, bool fill_rect)
+void View::paintBoolSerie(QPainter *painter, const QRect &rect, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base)
 {
 	if (serie->lineType() == Serie::LineType::TwoDimensional) {
 		SHV_EXCEPTION("Cannot paint two dimensional bool serie");
@@ -1734,10 +1738,10 @@ void View::paintBoolSerie(QPainter *painter, const QRect &rect, int x_axis_posit
 	painter->setPen(pen);
 
 	int y_true_line_position = x_axis_position - serie->boolValue() / y_scale;
-	paintBoolSerieAtPosition(painter, rect, y_true_line_position, serie, min, max, fill_rect);
+	paintBoolSerieAtPosition(painter, rect, y_true_line_position, serie, min, max, fill_rect, fill_base);
 }
 
-void View::paintBoolSerieAtPosition(QPainter *painter, const QRect &rect, int y_position, const Serie *serie, qint64 min, qint64 max, bool fill_rect)
+void View::paintBoolSerieAtPosition(QPainter *painter, const QRect &rect, int y_position, const Serie *serie, qint64 min, qint64 max, const Serie::Fill &fill_rect, int fill_base)
 {
 	const SerieData &data = serie->serieModelData(this);
 	if (data.size() == 0) {
@@ -1755,7 +1759,7 @@ void View::paintBoolSerieAtPosition(QPainter *painter, const QRect &rect, int y_
 	}
 
 	QPolygon polygon;
-	polygon << QPoint(0, rect.height());
+	polygon << QPoint(0, fill_base);
 
 	for (auto it = begin; it != end; ++it) {
 		ValueChange::ValueY value_y = formattedSerieValue(serie, it);
@@ -1773,26 +1777,19 @@ void View::paintBoolSerieAtPosition(QPainter *painter, const QRect &rect, int y_
 				end_line = (xValue(*it) - min) / x_scale;
 			}
 			painter->drawLine(begin_line, y_position, end_line, y_position);
-			if (fill_rect) {
+			if (fill_rect.type() != Serie::Fill::Type::None) {
 				polygon << QPoint(begin_line, rect.height()) << QPoint(begin_line, y_position)
 						<< QPoint(end_line, y_position) << QPoint(end_line, rect.height());
 			}
 		}
 	}
-	if (fill_rect) {
-		polygon << QPoint(rect.width(), rect.height());
-		QPainterPath path;
-		path.addPolygon(polygon);
-		path.closeSubpath();
-		QRect bounding_rect = polygon.boundingRect();
-		QLinearGradient gradient(bounding_rect.topLeft(), bounding_rect.bottomLeft());
-		gradient.setColorAt(0, painter->pen().color().lighter());
-		gradient.setColorAt(1, painter->pen().color());
-		painter->fillPath(path, gradient);
+	if (fill_rect.type() != Serie::Fill::Type::None) {
+		polygon << QPoint(rect.width(), fill_base);
+		fillSerie(painter, polygon, serie, fill_rect);
 	}
 }
 
-void View::paintValueSerie(QPainter *painter, const QRect &rect, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, bool fill_rect)
+void View::paintValueSerie(QPainter *painter, const QRect &rect, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base)
 {
 	const SerieData &data = serie->serieModelData(this);
 	if (data.size() == 0) {
@@ -1847,7 +1844,7 @@ void View::paintValueSerie(QPainter *painter, const QRect &rect, int x_axis_posi
 	int last_on_first = first_point.y();
 
 	QPolygon polygon;
-	polygon << QPoint(first_point.x(), rect.height());
+	polygon << QPoint(first_point.x(), fill_base);
 	polygon << first_point;
 
 	QPoint last_point(0, 0);
@@ -1872,7 +1869,7 @@ void View::paintValueSerie(QPainter *painter, const QRect &rect, int x_axis_posi
 			painter->drawLine(first_point.x(), last_on_first, last_point.x(), last_on_first);
 			painter->drawLine(last_point.x(), last_on_first, last_point.x(), last_point.y());
 
-			if (fill_rect) {
+			if (fill_rect.type() != Serie::Fill::Type::None) {
 				polygon << QPoint(first_point.x(), last_on_first);
 				polygon << QPoint(last_point.x(), last_on_first);
 				polygon << last_point;
@@ -1899,15 +1896,41 @@ void View::paintValueSerie(QPainter *painter, const QRect &rect, int x_axis_posi
 		polygon << QPoint(rect_last_point, last_point.y());
 	}
 
-	if (fill_rect) {
-		polygon << QPoint(rect.width(), rect.height());
-		QPainterPath path;
-		path.addPolygon(polygon);
-		path.closeSubpath();
+	if (fill_rect.type() != Serie::Fill::Type::None) {
+		polygon << QPoint(rect.width(), fill_base);
+		fillSerie(painter, polygon, serie, fill_rect);
+	}
+}
+
+void View::fillSerie(QPainter *painter, const QPolygon &polygon, const Serie *serie, const Serie::Fill &fill_rect)
+{
+	QPainterPath path;
+	path.addPolygon(polygon);
+	path.closeSubpath();
+	Serie::Fill::Type type = fill_rect.type();
+	if (type == Serie::Fill::Type::SerieColor || type == Serie::Fill::Type::Color) {
+		QColor color;
+		if (type == Serie::Fill::Type::SerieColor) {
+			color = serie->color();
+			color.setAlpha(50);
+		}
+		else {
+			color = fill_rect.color();
+		}
+		painter->fillPath(path, color);
+	}
+	else if (type == Serie::Fill::Type::SerieGradient || type == Serie::Fill::Type::Gradient) {
 		QRect bounding_rect = polygon.boundingRect();
 		QLinearGradient gradient(bounding_rect.topLeft(), bounding_rect.bottomLeft());
-		gradient.setColorAt(0, pen.color().lighter());
-		gradient.setColorAt(1, pen.color());
+		QColor color;
+		if (type == Serie::Fill::Type::SerieGradient) {
+			color = serie->color();
+		}
+		else {
+			color = fill_rect.color();
+		}
+		gradient.setColorAt(0, color.lighter());
+		gradient.setColorAt(1, color);
 		painter->fillPath(path, gradient);
 	}
 }
@@ -2329,7 +2352,7 @@ void View::paintOutsideSeriesGroups(QPainter *painter, const View::GraphArea &ar
 				pen.setWidth(serie_in_group.serie->lineWidth());
 				painter->setPen(pen);
 
-				paintBoolSerieAtPosition(painter, area.outsideSerieGroupsRects[i], position, serie_in_group.serie, m_displayedRangeMin, m_displayedRangeMax, false);
+				paintBoolSerieAtPosition(painter, area.outsideSerieGroupsRects[i], position, serie_in_group.serie, m_displayedRangeMin, m_displayedRangeMax, Serie::Fill(), position);
 				position = position + serie_in_group.serie->lineWidth() + group->serieSpacing();
 			}
 			++i;
