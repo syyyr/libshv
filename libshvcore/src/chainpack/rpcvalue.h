@@ -106,7 +106,7 @@ public:
 	class SHVCORE_DECL_EXPORT Array : public List
 	{
 	public:
-		Array(Type type) : List(), m_type(type) {}
+		Array(Type type, size_t sz = 0) : List(sz), m_type(type) {}
 		Array(const Array &t) : List(t), m_type(t.type()) {}
 		Array(Array &&t) noexcept : List(std::move(t)), m_type(t.type()) {}
 		Array(Type type, const List &l) : List(l), m_type(type) {}
@@ -174,6 +174,7 @@ public:
 	RpcValue(Int value);                // Int
 	RpcValue(UInt value);                // UInt
 	RpcValue(int value) : RpcValue((Int)value) {}
+	RpcValue(uint16_t value) : RpcValue((UInt)value) {}
 	RpcValue(unsigned int value) : RpcValue((UInt)value) {}
 	RpcValue(bool value);               // Bool
 	RpcValue(const DateTime &value);
