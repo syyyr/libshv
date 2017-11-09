@@ -447,6 +447,21 @@ private:
 				QVERIFY(cp1.type() == cp2.type());
 				QVERIFY(cp1.toList() == cp2.toList());
 			}
+			{
+				static constexpr size_t N = 10;
+				uint16_t samples[N];
+				for (size_t i = 0; i < N; ++i) {
+					samples[i] = i+100;
+				}
+				RpcValue::Array t{samples, N};
+				RpcValue cp1{t};
+				std::stringstream out;
+				int len = ChainPackProtocol::write(out, cp1);
+				RpcValue cp2 = ChainPackProtocol::read(out);
+				qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
+				QVERIFY(cp1.type() == cp2.type());
+				QVERIFY(cp1.toList() == cp2.toList());
+			}
 		}
 		{
 			qDebug() << "------------- List";

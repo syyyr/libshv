@@ -112,16 +112,27 @@ public:
 		Array(Type type, const List &l) : List(l), m_type(type) {}
 		Array(Type type, List &&l) noexcept : List(std::move(l)), m_type(type) {}
 		Array(Type type, std::initializer_list<value_type> l) : List(l), m_type(type) {}
-		template<typename T, int sz>
+		template<typename T, size_t sz>
 		Array(const T(&arr)[sz]) : List(sz)
 		{
-			static_assert(sz > 0, "Array cannot be empty");
+			static_assert(sz > 0, "Array cannot be empty for this constructor");
 			for (size_t i = 0; i < sz; ++i) {
 				RpcValue v(arr[i]);
 				if(i == 0)
 					m_type = v.type();
 				(*this)[i] = std::move(v);
-				//push_back(std::move(v));
+			}
+		}
+		template<typename T>
+		Array(const T *arr, size_t sz) : List(sz)
+		{
+			if(sz == 0)
+				throw std::runtime_error("Array cannot be empty for this constructor");
+			for (size_t i = 0; i < sz; ++i) {
+				RpcValue v(arr[i]);
+				if(i == 0)
+					m_type = v.type();
+				(*this)[i] = std::move(v);
 			}
 		}
 		Type type() const {return m_type;}
