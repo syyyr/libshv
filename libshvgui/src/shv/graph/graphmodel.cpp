@@ -377,11 +377,14 @@ GraphModel::GraphModel(QObject *parent)
 
 void GraphModel::setData(GraphModelData *model_data)
 {
-	if(m_data)
+	if (m_data) {
 		disconnect(m_data, 0, this, 0);
+	}
 	m_data = model_data;
-	connect(m_data, &GraphModelData::dataChanged, this, &GraphModel::dataChanged);
-	connect(m_data, &GraphModelData::destroyed, this, &GraphModel::deleteLater);
+	if (m_data) {
+		connect(m_data, &GraphModelData::dataChanged, this, &GraphModel::dataChanged);
+		connect(m_data, &GraphModelData::destroyed, this, &GraphModel::deleteLater);
+	}
 }
 
 GraphModelData *GraphModel::data(bool throw_exc) const
