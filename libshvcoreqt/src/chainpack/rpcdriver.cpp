@@ -1,7 +1,7 @@
 #include "rpcdriver.h"
+#include "../core/log.h"
 
 #include <shv/core/shvexception.h>
-#include <shv/core/log.h>
 //#include <shv/core/chainpack/metatypes.h>
 #include <shv/core/chainpack/rpcmessage.h>
 //#include <shv/core/chainpack/chainpackprotocol.h>
@@ -11,10 +11,13 @@
 #include <QEventLoop>
 #include <QTcpSocket>
 
-//#include <sstream>
-//#include <iostream>
+//#define DUMP_DATA_FILE
 
-//#define smcDebug shvWarning // syn metod call debug
+#ifdef DUMP_DATA_FILE
+#include <QFile>
+#endif
+
+
 #define smcDebug QNoDebug
 
 #define logRpc() shvCDebug("rpc")
@@ -31,6 +34,15 @@ RpcDriver::RpcDriver(QObject *parent)
 	setMessageReceivedCallback([this](const shv::core::chainpack::RpcValue &msg) {
 		emit messageReceived(msg);
 	});
+#ifdef DUMP_DATA_FILE
+	QFile *f = new QFile("/tmp/rpc.dat", this);
+	f->setObjectName("DUMP_DATA_FILE");
+	if(!f->open(QFile::WriteOnly)) {
+		shvError() << "cannot open file" << f->fileName() << "for write";
+		delete f;
+	}
+	shvInfo() << "Read data dump file:" << f->fileName();
+#endif
 }
 
 RpcDriver::~RpcDriver()
@@ -77,6 +89,13 @@ void RpcDriver::connectToHost(const QString &host_name, quint16 port)
 void RpcDriver::onReadyRead()
 {
 	QByteArray ba = socket()->readAll();
+#ifdef DUMP_DATA_FILE
+	QFile *f = findChild<QFile*>("DUMP_DATA_FILE");
+	if(f) {
+		f->write(ba.constData(), ba.length());
+		f->flush();
+	}
+#endif
 	bytesRead(ba.toStdString());
 }
 
