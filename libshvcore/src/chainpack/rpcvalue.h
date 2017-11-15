@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../shvcoreglobal.h"
+#include "../core/shvexception.h"
 #include "metatypes.h"
 
 #include <string>
@@ -103,41 +104,73 @@ public:
 		}
 	};
 	using IMap = std::map<RpcValue::UInt, RpcValue>;
-	class SHVCORE_DECL_EXPORT Array : public List
+	union ArrayElement
+	{
+		Int i;
+		UInt ui;
+	};
+	class SHVCORE_DECL_EXPORT Array
 	{
 	public:
-		Array(Type type, size_t sz = 0) : List(sz), m_type(type) {}
-		Array(const Array &t) : List(t), m_type(t.type()) {}
-		Array(Array &&t) noexcept : List(std::move(t)), m_type(t.type()) {}
-		Array(Type type, const List &l) : List(l), m_type(type) {}
-		Array(Type type, List &&l) noexcept : List(std::move(l)), m_type(type) {}
-		Array(Type type, std::initializer_list<value_type> l) : List(l), m_type(type) {}
+		Array(Type type) : m_type(type) {}
+		//Array(const Array &t) : List(t), m_type(t.type()) {}
+		//Array(Array &&t) noexcept : List(std::move(t)), m_type(t.type()) {}
+		//Array(Type type, const List &l) : List(l), m_type(type) {}
+		//Array(Type type, List &&l) noexcept : List(std::move(l)), m_type(type) {}
+		//Array(Type type, std::initializer_list<value_type> l) : List(l), m_type(type) {}
+		template<Int T> Type guessType() { return Type::Int; }
+		template<UInt T> Type guessType() { return Type::UInt; }
 		template<typename T, size_t sz>
-		Array(const T(&arr)[sz]) : List(sz)
+		Array(const T(&arr)[sz])// : List(sz)
 		{
-			static_assert(sz > 0, "Array cannot be empty for this constructor");
+			std::vector<T> array;
+			m_type = guessType<T>();
 			for (size_t i = 0; i < sz; ++i) {
-				RpcValue v(arr[i]);
-				if(i == 0)
-					m_type = v.type();
-				(*this)[i] = std::move(v);
+				array[i] = std::move(arr[i]);
+			}
+			switch(m_type) {
+			case Type::Int: m_intArray = std::move(array); break;
+			case Type::UInt: m_uintArray = std::move(array); break;
+			default: SHV_EXCEPTION("Unsupported array type");
 			}
 		}
-		template<typename T>
-		Array(const T *arr, size_t sz) : List(sz)
+		~Array()
 		{
-			if(sz == 0)
-				throw std::runtime_error("Array cannot be empty for this constructor");
-			for (size_t i = 0; i < sz; ++i) {
-				RpcValue v(arr[i]);
-				if(i == 0)
-					m_type = v.type();
-				(*this)[i] = std::move(v);
+			switch(m_type) {
+			case Type::Int: m_intArray.~vector(); break;
+			case Type::UInt: m_uintArray.~vector(); break;
+			default: SHV_EXCEPTION("Unsupported array type");
 			}
 		}
 		Type type() const {return m_type;}
+		/*
+		template<typename T>
+		void push_back(T &&val)
+		{
+			switch(m_type) {
+			case Type::Int: m_intArray.push_back(std::move(val)); break;
+			case Type::UInt: m_uintArray.push_back(std::move(val)); break;
+			default: SHV_EXCEPTION("Unsupported array type");
+			}
+		}
+		*/
+		template<typename T>
+		std::vector<T>& arrayRef()
+		{
+			if(guessType<T>() != m_type)
+				SHV_EXCEPTION("Bad cast");
+			switch(m_type) {
+			case Type::Int: return m_intArray;
+			case Type::UInt: return m_uintArray;
+			default: SHV_EXCEPTION("Unsupported array type");
+			}
+		}
 	private:
 		Type m_type = Type::Invalid;
+		union {
+			std::vector<Int> m_intArray;
+			std::vector<UInt> m_uintArray;
+		};
 	};
 	struct SHVCORE_DECL_EXPORT MetaData
 	{
