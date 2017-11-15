@@ -410,20 +410,11 @@ private:
 		{
 			qDebug() << "------------- Array";
 			{
-				RpcValue cp1{RpcValue::Array{RpcValue::Type::Int, {1, 2, 3}}};
-				std::stringstream out;
-				int len = ChainPackProtocol::write(out, cp1);
-				RpcValue cp2 = ChainPackProtocol::read(out);
-				qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
-				QVERIFY(cp1.type() == cp2.type());
-				QVERIFY(cp1.toList() == cp2.toList());
-			}
-			{
-				RpcValue::Array t{RpcValue::Type::List};
-				t.push_back(RpcValue::List{1, 2});
-				t.push_back(RpcValue::List{RpcValue{3}, RpcValue{4}});
-				t.push_back(RpcValue::List{RpcValue{5}, RpcValue{6}});
-				t.push_back(RpcValue::List{RpcValue{7}, RpcValue{8}});
+				RpcValue::Array t{RpcValue::Type::Int};
+				t.push_back(RpcValue::ArrayElement(RpcValue::Int(11)));
+				t.push_back(RpcValue::Int(12));
+				t.push_back(RpcValue::Int(13));
+				t.push_back(RpcValue::Int(14));
 				RpcValue cp1{t};
 				std::stringstream out;
 				int len = ChainPackProtocol::write(out, cp1);
@@ -447,6 +438,7 @@ private:
 				QVERIFY(cp1.type() == cp2.type());
 				QVERIFY(cp1.toList() == cp2.toList());
 			}
+			/*
 			{
 				static constexpr size_t N = 10;
 				uint16_t samples[N];
@@ -462,6 +454,7 @@ private:
 				QVERIFY(cp1.type() == cp2.type());
 				QVERIFY(cp1.toList() == cp2.toList());
 			}
+			*/
 		}
 		{
 			qDebug() << "------------- List";

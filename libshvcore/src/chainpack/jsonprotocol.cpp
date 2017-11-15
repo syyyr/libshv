@@ -525,6 +525,17 @@ void JsonProtocol::dumpJson(const RpcValue::List &values, std::string &out)
 	out += "]";
 }
 
+void JsonProtocol::dumpJson(const RpcValue::Array &values, std::string &out)
+{
+	out += "[";
+	for (size_t i = 0; i < values.size(); ++i) {
+		if (i > 0)
+			out += ", ";
+		values.valueAt(i).dumpJson(out);
+	}
+	out += "]";
+}
+
 void JsonProtocol::dumpJson(const RpcValue::Map &values, std::string &out)
 {
 	bool first = true;

@@ -108,69 +108,54 @@ public:
 	{
 		Int i;
 		UInt ui;
+
+		ArrayElement() {}
+		ArrayElement(Int _i) : i(_i) {}
+		ArrayElement(uint16_t _i) : ui(_i) {}
+		ArrayElement(UInt _i) : ui(_i) {}
 	};
-	class SHVCORE_DECL_EXPORT Array
+	class SHVCORE_DECL_EXPORT Array : public std::vector<ArrayElement>
 	{
+		using Super = std::vector<ArrayElement>;
 	public:
+		Array() {}
 		Array(Type type) : m_type(type) {}
 		//Array(const Array &t) : List(t), m_type(t.type()) {}
 		//Array(Array &&t) noexcept : List(std::move(t)), m_type(t.type()) {}
 		//Array(Type type, const List &l) : List(l), m_type(type) {}
 		//Array(Type type, List &&l) noexcept : List(std::move(l)), m_type(type) {}
 		//Array(Type type, std::initializer_list<value_type> l) : List(l), m_type(type) {}
-		template<Int T> Type guessType() { return Type::Int; }
-		template<UInt T> Type guessType() { return Type::UInt; }
 		template<typename T, size_t sz>
-		Array(const T(&arr)[sz])// : List(sz)
+		Array(const T(&arr)[sz])
 		{
-			std::vector<T> array;
-			m_type = guessType<T>();
+			reserve(sz);
+			m_type = RpcValue::guessType<T>();
 			for (size_t i = 0; i < sz; ++i) {
-				array[i] = std::move(arr[i]);
-			}
-			switch(m_type) {
-			case Type::Int: m_intArray = std::move(array); break;
-			case Type::UInt: m_uintArray = std::move(array); break;
-			default: SHV_EXCEPTION("Unsupported array type");
-			}
-		}
-		~Array()
-		{
-			switch(m_type) {
-			case Type::Int: m_intArray.~vector(); break;
-			case Type::UInt: m_uintArray.~vector(); break;
-			default: SHV_EXCEPTION("Unsupported array type");
+				ArrayElement el(arr[i]);
+				push_back(std::move(el));
 			}
 		}
 		Type type() const {return m_type;}
-		/*
-		template<typename T>
-		void push_back(T &&val)
+		RpcValue valueAt(size_t ix) const
 		{
-			switch(m_type) {
-			case Type::Int: m_intArray.push_back(std::move(val)); break;
-			case Type::UInt: m_uintArray.push_back(std::move(val)); break;
+			switch(type()) {
+			case RpcValue::Type::Int: return RpcValue(Super::at(ix).i);
+			case RpcValue::Type::UInt: return RpcValue(Super::at(ix).ui);
 			default: SHV_EXCEPTION("Unsupported array type");
 			}
 		}
-		*/
-		template<typename T>
-		std::vector<T>& arrayRef()
+		static ArrayElement makeElement(const RpcValue &val)
 		{
-			if(guessType<T>() != m_type)
-				SHV_EXCEPTION("Bad cast");
-			switch(m_type) {
-			case Type::Int: return m_intArray;
-			case Type::UInt: return m_uintArray;
+			ArrayElement el;
+			switch(val.type()) {
+			case RpcValue::Type::Int: el.i = val.toInt(); break;
+			case RpcValue::Type::UInt: el.ui = val.toUInt(); break;
 			default: SHV_EXCEPTION("Unsupported array type");
 			}
+			return el;
 		}
 	private:
 		Type m_type = Type::Invalid;
-		union {
-			std::vector<Int> m_intArray;
-			std::vector<UInt> m_uintArray;
-		};
 	};
 	struct SHVCORE_DECL_EXPORT MetaData
 	{
@@ -256,6 +241,8 @@ public:
 	void setMetaData(MetaData &&meta_data);
 	void setMetaValue(UInt key, const RpcValue &val);
 
+	template<typename T> static Type guessType();
+
 	bool isValid() const;
 	bool isNull() const { return type() == Type::Null; }
 	bool isInt() const { return type() == Type::Int; }
@@ -265,6 +252,7 @@ public:
 	bool isBool() const { return type() == Type::Bool; }
 	bool isString() const { return type() == Type::String; }
 	bool isList() const { return type() == Type::List; }
+	bool isArray() const { return type() == Type::Array; }
 	bool isMap() const { return type() == Type::Map; }
 	bool isIMap() const { return type() == Type::IMap; }
 
@@ -276,14 +264,15 @@ public:
 	const RpcValue::String &toString() const;
 	const Blob &toBlob() const;
 	const List &toList() const;
+	const Array &toArray() const;
 	const Map &toMap() const;
 	const IMap &toIMap() const;
 
 	size_t count() const;
-	const RpcValue & at(UInt i) const;
-	const RpcValue & at(const RpcValue::String &key) const;
-	const RpcValue & operator[](UInt i) const {return at(i);}
-	const RpcValue & operator[](const RpcValue::String &key) const {return at(key);}
+	RpcValue at(UInt i) const;
+	RpcValue at(const RpcValue::String &key) const;
+	RpcValue operator[](UInt i) const {return at(i);}
+	RpcValue operator[](const RpcValue::String &key) const {return at(key);}
 	void set(UInt ix, const RpcValue &val);
 	void set(const RpcValue::String &key, const RpcValue &val);
 
@@ -315,5 +304,10 @@ public:
 private:
 	std::shared_ptr<AbstractValueData> m_ptr;
 };
+
+template<typename T> RpcValue::Type guessType() { throw std::runtime_error("guessing of this type is not implemented"); }
+template<> inline RpcValue::Type RpcValue::guessType<RpcValue::Int>() { return Type::Int; }
+template<> inline RpcValue::Type RpcValue::guessType<RpcValue::UInt>() { return Type::UInt; }
+template<> inline RpcValue::Type RpcValue::guessType<uint16_t>() { return Type::UInt; }
 
 }}}

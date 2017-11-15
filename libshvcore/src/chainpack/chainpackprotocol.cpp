@@ -379,7 +379,7 @@ RpcValue::Array ChainPackProtocol::readData_Array(ChainPackProtocol::TypeInfo::E
 	ret.reserve(size);
 	for (unsigned i = 0; i < size; ++i) {
 		RpcValue cp = readData(array_type_info, false, data);
-		ret.push_back(cp);
+		ret.push_back(RpcValue::Array::makeElement(cp));
 	}
 	return ret;
 }

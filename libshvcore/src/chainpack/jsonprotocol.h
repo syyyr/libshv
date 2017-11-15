@@ -62,6 +62,7 @@ public:
 	static void dumpJson(const std::string &value, std::string &out);
 	static void dumpJson(const RpcValue::Blob &value, std::string &out);
 	static void dumpJson(const RpcValue::List &values, std::string &out);
+	static void dumpJson(const RpcValue::Array &values, std::string &out);
 	static void dumpJson(const RpcValue::Map &values, std::string &out);
 	static void dumpJson(const RpcValue::IMap &values, std::string &out);
 };
