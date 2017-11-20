@@ -186,7 +186,7 @@ void SocketRpcDriver::exec()
 		if(FD_ISSET(m_socket, &write_flags)) {
 			shvInfo() << "\t write fd is set";
 			FD_CLR(m_socket, &write_flags);
-			writePendingData(Chunk());
+			enqueueDataToSend(Chunk());
 		}
 	}
 }

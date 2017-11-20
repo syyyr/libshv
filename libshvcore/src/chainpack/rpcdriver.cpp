@@ -32,10 +32,10 @@ void RpcDriver::sendMessage(const shv::core::chainpack::RpcValue &msg)
 	std::string packed_data = os_packed_data.str();
 	logRpc() << "send message: packed data: " << (packed_data.size() > 50? "<... long data ...>" : packed_data);
 
-	writePendingData(Chunk{std::move(packed_data)});
+	enqueueDataToSend(Chunk{std::move(packed_data)});
 }
 
-void RpcDriver::writePendingData(RpcDriver::Chunk &&chunk_to_enqueue)
+void RpcDriver::enqueueDataToSend(RpcDriver::Chunk &&chunk_to_enqueue)
 {
 	if(!chunk_to_enqueue.empty())
 		m_chunkQueue.push_back(std::move(chunk_to_enqueue));

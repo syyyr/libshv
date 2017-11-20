@@ -28,14 +28,19 @@ protected:
 	using Chunk = std::string;
 protected:
 	virtual bool isOpen() = 0;
+	/// @return number of bytes in the write buffer
 	virtual size_t bytesToWrite() = 0;
+	/// write bytes to write buffer (and possibly to socket)
+	/// @return number of writen bytes
 	virtual int64_t writeBytes(const char *bytes, size_t length) = 0;
+	/// flush write buffer to socket
+	/// @return true if write buffer length has changed (some data was written to the socket)
 	virtual bool flushNoBlock() = 0;
 
-	// call it when new data arrived
+	/// call it when new data arrived
 	void bytesRead(std::string &&bytes);
-	// call it, when data are sent, when bytesToWrite() == 0
-	virtual void writePendingData(Chunk &&chunk_to_enqueue);
+	/// add data to the output queue, send data from top of the queue
+	virtual void enqueueDataToSend(Chunk &&chunk_to_enqueue);
 	virtual void onMessageReceived(const shv::core::chainpack::RpcValue &msg);
 private:
 	/*

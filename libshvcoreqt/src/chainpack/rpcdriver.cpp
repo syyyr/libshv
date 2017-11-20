@@ -102,7 +102,7 @@ void RpcDriver::onReadyRead()
 void RpcDriver::onBytesWritten()
 {
 	logRpc() << "onBytesWritten()";
-	writePendingData(Chunk());
+	enqueueDataToSend(Chunk());
 }
 
 bool RpcDriver::isOpen()
