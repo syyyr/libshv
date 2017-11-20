@@ -23,13 +23,14 @@ protected:
 	bool isOpen() override;
 	size_t bytesToWrite() override;
 	int64_t writeBytes(const char *bytes, size_t length) override;
-	int64_t flushNoBlock() override;
+	bool flushNoBlock() override;
 	void sendResponse(int request_id, const shv::core::chainpack::RpcValue &result);
 
 	virtual void idleTaskOnSelectTimeout() {}
 private:
 	int m_socket = -1;
 	std::string m_bytesToWrite;
+	size_t m_maxBytesToWriteLength = 4 * 1024;
 };
 
 }}}

@@ -43,12 +43,15 @@ void RpcDriver::writePendingData(RpcDriver::Chunk &&chunk_to_enqueue)
 		shvError() << "write data error, socket is not open!";
 		return;
 	}
+	flushNoBlock();
+	/*
 	if(bytesToWrite() > 0) {
 		logRpc() << "skipping write because of bytesToWrite:" << bytesToWrite() << "try to flush";
 		bool ok = flushNoBlock();
 		logRpc() << "any data flushed:" << ok << "rest bytesToWrite:" << bytesToWrite();
 		return;
 	}
+	*/
 	writeQueue();
 }
 

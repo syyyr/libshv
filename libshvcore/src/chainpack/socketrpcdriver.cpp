@@ -55,23 +55,26 @@ int64_t SocketRpcDriver::writeBytes(const char *bytes, size_t length)
 		shvInfo() << "Write to closed socket";
 		return 0;
 	}
-	m_bytesToWrite += std::string(bytes, length);
-	return flushNoBlock();
+	flushNoBlock();
+	size_t bytes_to_write_len = (m_bytesToWrite.size() + length > m_maxBytesToWriteLength)? m_maxBytesToWriteLength - m_bytesToWrite.size(): length;
+	if(bytes_to_write_len > 0)
+		m_bytesToWrite += std::string(bytes, bytes_to_write_len);
+	flushNoBlock();
+	return bytes_to_write_len;
 }
 
-int64_t SocketRpcDriver::flushNoBlock()
+bool SocketRpcDriver::flushNoBlock()
 {
 	if(m_bytesToWrite.empty()) {
 		shvDebug() << "write buffer is empty";
-		return 0;
+		return false;
 	}
 	shvDebug() << "Flushing write buffer, buffer len:" << m_bytesToWrite.size() << "...";
 	int64_t n = ::write(m_socket, m_bytesToWrite.data(), m_bytesToWrite.length());
 	shvDebug() << "\t" << n << "bytes written";
 	if(n > 0)
 		m_bytesToWrite = m_bytesToWrite.substr(n);
-
-	return n;
+	return (n > 0);
 }
 
 bool SocketRpcDriver::connectToHost(const std::string &host, int port)
@@ -163,13 +166,13 @@ void SocketRpcDriver::exec()
 		//socket ready for reading
 		if(FD_ISSET(m_socket, &read_flags)) {
 			shvInfo() << "\t read fd is set";
-
 			//clear set
 			FD_CLR(m_socket, &read_flags);
 
 			memset(&in, 0, BUFF_LEN);
 
 			auto n = read(m_socket, in, BUFF_LEN);
+			shvInfo() << "\t " << n << "bytes read";
 			if(n <= 0) {
 				shvError() << "Closing socket";
 				closeConnection();

@@ -41,7 +41,7 @@ RpcDriver::RpcDriver(QObject *parent)
 		shvError() << "cannot open file" << f->fileName() << "for write";
 		delete f;
 	}
-	shvInfo() << "Read data dump file:" << f->fileName();
+	shvInfo() << "Dumping RPC stream to file:" << f->fileName();
 #endif
 }
 
@@ -120,11 +120,11 @@ int64_t RpcDriver::writeBytes(const char *bytes, size_t length)
 	return socket()->write(bytes, length);
 }
 
-int64_t RpcDriver::flushNoBlock()
+bool RpcDriver::flushNoBlock()
 {
 	if(m_socket)
-		return m_socket->flush()? 1: 0;
-	return 0;
+		return m_socket->flush();
+	return false;
 }
 
 namespace {
