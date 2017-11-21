@@ -37,6 +37,7 @@ void RpcDriver::sendMessage(const shv::core::chainpack::RpcValue &msg)
 
 void RpcDriver::enqueueDataToSend(RpcDriver::Chunk &&chunk_to_enqueue)
 {
+	/// LOCK_FOR_SEND lock mutex here in the multothreaded environment
 	if(!chunk_to_enqueue.empty())
 		m_chunkQueue.push_back(std::move(chunk_to_enqueue));
 	if(!isOpen()) {
@@ -44,15 +45,8 @@ void RpcDriver::enqueueDataToSend(RpcDriver::Chunk &&chunk_to_enqueue)
 		return;
 	}
 	flushNoBlock();
-	/*
-	if(bytesToWrite() > 0) {
-		logRpc() << "skipping write because of bytesToWrite:" << bytesToWrite() << "try to flush";
-		bool ok = flushNoBlock();
-		logRpc() << "any data flushed:" << ok << "rest bytesToWrite:" << bytesToWrite();
-		return;
-	}
-	*/
 	writeQueue();
+	/// UNLOCK_FOR_SEND unlock mutex here in the multothreaded environment
 }
 
 namespace {
