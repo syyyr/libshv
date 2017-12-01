@@ -2161,6 +2161,10 @@ void View::paintPointOfInterestVertical(QPainter *painter, const GraphArea &area
 
 void View::paintPointOfInterestPoint(QPainter *painter, const GraphArea &area, PointOfInterest *poi)
 {
+	if (m_loadedRangeMax - m_loadedRangeMin == 0LL) {
+		return;
+	}
+
 	const Serie *serie = poi->serie();
 	if (serie && !area.series.contains(serie)) {
 		return;
@@ -2221,6 +2225,9 @@ void View::paintSerieVerticalBackgroundStripe(QPainter *painter, const View::Gra
 
 void View::paintSerieHorizontalBackgroundStripe(QPainter *painter, const View::GraphArea &area, const Serie *serie, const BackgroundStripe *stripe)
 {
+	if (area.graphRect.height() <= 0) {
+		return;
+	}
 	double range;
 	if (serie->relatedAxis() == Serie::YAxis::Y1) {
 		range = settings.yAxis.rangeMax - settings.yAxis.rangeMin;
