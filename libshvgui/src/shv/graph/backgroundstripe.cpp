@@ -10,17 +10,17 @@ namespace gui {
 namespace graphview {
 
 BackgroundStripe::BackgroundStripe(Type type, QObject *parent)
-	: BackgroundStripe(type, { 0LL, 0 }, { 0LL, 0 }, OutlineType::No, QColor(), QColor(), parent)
+	: BackgroundStripe(type, { 0LL, 0.0 }, { 0LL, 0.0 }, OutlineType::No, QColor(), QColor(), parent)
 {
 }
 
 BackgroundStripe::BackgroundStripe(BackgroundStripe::Type type, BackgroundStripe::OutlineType outline, QObject *parent)
-	: BackgroundStripe(type, { 0LL, 0 }, { 0LL, 0 }, outline, QColor(), QColor(), parent)
+	: BackgroundStripe(type, { 0LL, 0.0 }, { 0LL, 0.0 }, outline, QColor(), QColor(), parent)
 {
 }
 
 BackgroundStripe::BackgroundStripe(BackgroundStripe::Type type, BackgroundStripe::OutlineType outline, const QColor &color, QObject *parent)
-	: BackgroundStripe(type, { 0LL, 0 }, { 0LL, 0 }, outline, color, QColor(), parent)
+	: BackgroundStripe(type, { 0LL, 0.0 }, { 0LL, 0.0 }, outline, color, QColor(), parent)
 {
 
 }
