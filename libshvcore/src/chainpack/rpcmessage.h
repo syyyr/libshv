@@ -10,23 +10,28 @@ namespace shv {
 namespace core {
 namespace chainpack {
 
+namespace tid {
+
+class RpcMessage : public MetaTypes::Type
+{
+	using Super = MetaTypes::Type;
+public:
+	enum {ID = 1};
+	struct Tag { enum Enum {RequestId = (int)MetaTypes::Tag::USER, RpcCallType, DeviceId, MAX};};
+	struct Key { enum Enum {Method = 1, Params, Result, Error, ErrorCode, ErrorMessage, MAX};};
+	struct RpcCallType { enum Enum { Undefined = 0, Request, Response, Notify };};
+
+	RpcMessage();
+
+	static void registerMetaType();
+};
+
+}
+
 class SHVCORE_DECL_EXPORT RpcMessage
 {
 public:
-	struct Key {
-		enum Enum {
-			Method = 1,
-			Params,
-			Result,
-			Error,
-			ErrorCode,
-			ErrorMessage,
-			MAX_KEY
-		};
-	};
-	enum class RpcCallType : int { Undefined = 0, Request, Response, Notify };
-public:
-	RpcMessage() {}
+	RpcMessage();
 	RpcMessage(const RpcValue &val);
 	const RpcValue& value() const {return m_value;}
 protected:
@@ -46,7 +51,7 @@ public:
 
 	virtual int write(std::ostream &out) const;
 protected:
-	RpcMessage::RpcCallType rpcType() const;
+	tid::RpcMessage::RpcCallType::Enum rpcType() const;
 	void checkMetaValues();
 	void checkRpcTypeMetaValue();
 protected:

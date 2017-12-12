@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstddef>
+#include <map>
+
 namespace shv {
 namespace core {
 namespace chainpack {
@@ -7,11 +10,10 @@ namespace chainpack {
 class MetaTypes
 {
 public:
-	struct Tag
-	{
+	struct Tag {
 		enum Enum {
-			Invalid = 0,
-			MetaTypeId,
+			Invalid = -1,
+			MetaTypeId = 1,
 			MetaTypeNameSpaceId,
 			//MetaIMap,
 			//MetaTypeName,
@@ -19,39 +21,65 @@ public:
 			USER = 8
 		};
 	};
+	class MetaInfo
+	{
+	public:
+		int id = 0;
+		const char *name = nullptr;
 
-	template<unsigned V>
-	struct NameSpace
-	{
-		static constexpr unsigned Value = V;
+		MetaInfo() : id(0), name(nullptr) {}
+		MetaInfo(int id, const char *name) : id(id), name(name) {}
+
+		bool isValid() const {return (name && name[0]);}
 	};
-	template<unsigned V>
-	struct TypeId
+	class Type;
+	class NameSpace
 	{
-		static constexpr unsigned Value = V;
+		friend class MetaTypes;
+	public:
+		NameSpace(const char *name = nullptr) : m_name(name) {}
+		const char *name() const {return m_name;}
+		bool isValid() const {return (m_name && m_name[0]);}
+	protected:
+		const char *m_name;
+		std::map<int, Type*> m_types;
 	};
-	struct Global : public NameSpace<0>
+	class Type
 	{
-		struct ChainPackRpcMessage : public TypeId<0>
-		{
-			struct Tag
-			{
-				enum Enum {
-					RequestId = MetaTypes::Tag::USER,
-					RpcCallType,
-					DeviceId,
-					MAX
-				};
-			};
-		};
-		//struct SkyNetRpcMessage : public TypeId<ChainPackRpcMessage::Value + 1> {};
+		friend class MetaTypes;
+	public:
+		Type(const char *name) : m_name(name) {}
+		const char *name() const {return m_name;}
+		const MetaInfo& tagById(int id) const;
+		const MetaInfo& keyById(int id) const;
+		bool isValid() const {return (m_name && m_name[0]);}
+	protected:
+		const char *m_name;
+		std::map<int, MetaInfo> m_tags;
+		std::map<int, MetaInfo> m_keys;
 	};
-	struct Elesys : public NameSpace<1>
-	{
-	};
-public:
-	static const char *metaTypeName(int namespace_id, int type_id);
-	static const char *metaKeyName(int namespace_id, int type_id, int tag);
+	static void registerNameSpace(int ns_id, NameSpace *ns);
+	static void registerTypeId(int ns_id, int type_id, Type *tid);
+	static const NameSpace& metaNameSpace(int ns_id);
+	static const Type& metaType(int ns_id, int type_id);
 };
+
+namespace ns {
+
+class Default : public MetaTypes::NameSpace
+{
+	using Super = MetaTypes::NameSpace;
+public:
+	enum {ID = 0};
+	Default();
+};
+
+}
+
+namespace tid {
+
+//class ChainPackRpc : public MetaTypes::TypeId<1> {};
+
+}
 
 }}}

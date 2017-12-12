@@ -43,21 +43,7 @@ public:
 		MetaIMap,
 	};
 	static const char* typeToName(Type t);
-	/*
-	struct SHVCORE_DECL_EXPORT Tag
-	{
-		enum Enum : CHAINPACK_UINT {
-			Invalid = 0,
-			MetaTypeId,
-			MetaTypeNameSpaceId,
-			MetaIMap,
-			MetaTypeName,
-			MetaTypeNameSpaceName,
-			USER = 8
-		};
-		//static const char* name(Enum e);
-	};
-	*/
+
 	using Int = CHAINPACK_INT;
 	using UInt = CHAINPACK_UINT;
 	struct SHVCORE_DECL_EXPORT DateTime
@@ -165,10 +151,10 @@ public:
 	};
 	struct SHVCORE_DECL_EXPORT MetaData
 	{
-		RpcValue::UInt metaTypeId() const {return value(MetaTypes::Tag::MetaTypeId).toUInt();}
-		void setMetaTypeId(RpcValue::UInt id) {setValue(MetaTypes::Tag::MetaTypeId, id);}
-		RpcValue::UInt metaTypeNameSpaceId() const {return value(MetaTypes::Tag::MetaTypeNameSpaceId).toUInt();}
-		void setMetaTypeNameSpaceId(RpcValue::UInt id) {setValue(MetaTypes::Tag::MetaTypeNameSpaceId, id);}
+		int metaTypeId() const {return value(MetaTypes::Tag::MetaTypeId).toInt();}
+		void setMetaTypeId(RpcValue::Int id) {setValue(MetaTypes::Tag::MetaTypeId, id);}
+		int metaTypeNameSpaceId() const {return value(MetaTypes::Tag::MetaTypeNameSpaceId).toInt();}
+		void setMetaTypeNameSpaceId(RpcValue::Int id) {setValue(MetaTypes::Tag::MetaTypeNameSpaceId, id);}
 		std::vector<RpcValue::UInt> ikeys() const;
 		RpcValue value(RpcValue::UInt key) const;
 		void setValue(RpcValue::UInt key, const RpcValue &val);

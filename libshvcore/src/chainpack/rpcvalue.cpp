@@ -406,11 +406,24 @@ class ChainPackIMap final : public ValueData<RpcValue::Type::IMap, RpcValue::IMa
 	void set(RpcValue::UInt key, const RpcValue &val) override;
 	bool dumpTextValue(std::string &out) const override
 	{
+		int nsid = 0;
+		int tid = 0;
+		if(m_metaData) {
+			nsid = m_metaData->metaTypeNameSpaceId();
+			tid = m_metaData->metaTypeId();
+		}
+		const MetaTypes::Type &mt = MetaTypes::metaType(nsid, tid);
 		bool first = true;
 		for (const auto &kv : m_value) {
 			if (!first)
 				out += ",";
-			JsonProtocol::dumpJson(kv.first, out);
+			const char *key_name = nullptr;
+			if(mt.isValid())
+				key_name = mt.keyById(kv.first).name;
+			if(key_name)
+				out += key_name;
+			else
+				JsonProtocol::dumpJson(kv.first, out);
 			out += ":";
 			kv.second.dumpText(out);
 			first = false;
@@ -925,8 +938,8 @@ std::string RpcValue::MetaData::toStdString() const
 {
 	std::string out;
 	int n = 0;
-	UInt nsid = metaTypeNameSpaceId();
-	UInt mtid = metaTypeId();
+	int nsid = metaTypeNameSpaceId();
+	int mtid = metaTypeId();
 	/*
 	if(nsid > 0) {
 		out += "S:" + shv::core::Utils::toString(nsid);
@@ -939,20 +952,21 @@ std::string RpcValue::MetaData::toStdString() const
 		n++;
 	}
 	*/
-	for(auto key : ikeys()) {
+	for(auto tag : ikeys()) {
 		//if(key == RpcValue::Tag::MetaTypeId || key == RpcValue::Tag::MetaTypeNameSpaceId)
 		//	continue;
 		if(n++ > 0)
 			out += ",";
-		const char *kn = MetaTypes::metaKeyName(nsid, mtid, key);
-		if(kn[0])
-			out += std::string(kn) + ':';
+		const MetaTypes::MetaInfo &tag_info = MetaTypes::metaType(nsid, mtid).tagById(tag);
+		if(tag_info.isValid())
+			out += std::string(tag_info.name) + ':';
 		else
-			out += shv::core::Utils::toString(key) + ':';
-		RpcValue meta_val = value(key);
-		if(key == MetaTypes::Tag::MetaTypeId) {
-			UInt id = meta_val.toUInt();
-			const char *n = MetaTypes::metaTypeName(nsid, id);
+			out += shv::core::Utils::toString(tag) + ':';
+		RpcValue meta_val = value(tag);
+		if(tag == MetaTypes::Tag::MetaTypeId) {
+			int id = meta_val.toInt();
+			const MetaTypes::Type &type = MetaTypes::metaType(nsid, id);
+			const char *n = type.name();
 			if(n[0])
 				out += n;
 			else

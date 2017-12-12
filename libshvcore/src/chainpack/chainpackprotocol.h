@@ -69,7 +69,7 @@ public:
 	static RpcValue read(std::istream &data);
 	static int write(std::ostream &out, const RpcValue &pack);
 private:
-	static TypeInfo::Enum typeToTypeInfo(RpcValue::Type type);
+	static TypeInfo::Enum typeToTypeInfo(RpcValue::Type tid);
 	static RpcValue::Type typeInfoToType(TypeInfo::Enum type_info);
 	//static TypeInfo::Enum optimizedMetaTagType(RpcValue::Tag::Enum tag);
 
@@ -78,7 +78,7 @@ private:
 	//static void writeData(Blob &out, const RpcValue &pack);
 	static void writeData(std::ostream &out, const RpcValue &pack);
 	static TypeInfo::Enum readTypeInfo(std::istream &data, RpcValue &meta, int &tiny_uint);
-	static RpcValue readData(TypeInfo::Enum type, bool is_array, std::istream &data);
+	static RpcValue readData(TypeInfo::Enum tid, bool is_array, std::istream &data);
 private:
 	static void writeData_Array(std::ostream &out, const RpcValue &pack);
 	static void writeData_List(std::ostream &out, const RpcValue::List &list);
