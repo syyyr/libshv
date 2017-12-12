@@ -26,9 +26,9 @@ public:
 		enum Enum {
 			INVALID = -1,
 			/// auxiliary types used for optimization
-			META_TYPE_ID = 128,
-			META_TYPE_NAMESPACE_ID,
-			FALSE,
+			//META_TYPE_ID = 128,
+			//META_TYPE_NAMESPACE_ID,
+			FALSE = 128,
 			TRUE,
 			/// types
 			Null,

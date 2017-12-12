@@ -324,8 +324,8 @@ RpcValue::Type ChainPackProtocol::typeInfoToType(ChainPackProtocol::TypeInfo::En
 const char *ChainPackProtocol::TypeInfo::name(ChainPackProtocol::TypeInfo::Enum e)
 {
 	switch (e) {
-	case META_TYPE_ID: return "META_TYPE_ID";
-	case META_TYPE_NAMESPACE_ID: return "META_TYPE_NAMESPACE_ID";
+	//case META_TYPE_ID: return "META_TYPE_ID";
+	//case META_TYPE_NAMESPACE_ID: return "META_TYPE_NAMESPACE_ID";
 	case FALSE: return "FALSE";
 	case TRUE: return "TRUE";
 
@@ -489,7 +489,7 @@ int ChainPackProtocol::write(std::ostream &out, const RpcValue &pack)
 void ChainPackProtocol::writeMetaData(std::ostream &out, const RpcValue &pack)
 {
 	const RpcValue::MetaData &md = pack.metaData();
-	const RpcValue::IMap &cim = md.toIMap();
+	/*
 	RpcValue::UInt mid = md.metaTypeId();
 	RpcValue::UInt mnsid = md.metaTypeNameSpaceId();
 	bool optimized_pack = cim.empty()
@@ -507,6 +507,12 @@ void ChainPackProtocol::writeMetaData(std::ostream &out, const RpcValue &pack)
 		}
 	}
 	else {
+		out << (uint8_t)ChainPackProtocol::TypeInfo::MetaIMap;
+		writeData_IMap(out, cim);
+	}
+	*/
+	if(!md.isEmpty()) {
+		const RpcValue::IMap &cim = md.toIMap();
 		out << (uint8_t)ChainPackProtocol::TypeInfo::MetaIMap;
 		writeData_IMap(out, cim);
 	}
@@ -657,6 +663,7 @@ RpcValue::MetaData ChainPackProtocol::readMetaData(std::istream &data)
 		bool has_meta = true;
 		uint8_t type_info = data.peek();
 		switch(type_info) {
+		/*
 		case ChainPackProtocol::TypeInfo::META_TYPE_ID:  {
 			data.get();
 			RpcValue::UInt u = read_UIntData<RpcValue::UInt>(data);
@@ -669,6 +676,7 @@ RpcValue::MetaData ChainPackProtocol::readMetaData(std::istream &data)
 			ret.setMetaTypeNameSpaceId(u);
 			break;
 		}
+		*/
 		case ChainPackProtocol::TypeInfo::MetaIMap:  {
 			data.get();
 			RpcValue::IMap imap = readData_IMap(data);
