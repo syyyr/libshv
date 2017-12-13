@@ -221,14 +221,6 @@ private:
 	void binaryTest()
 	{
 		qDebug() << "============= chainpack binary test ============";
-		for (int i = ChainPackProtocol::TypeInfo::FALSE; i <= ChainPackProtocol::TypeInfo::TRUE; ++i) {
-			RpcValue::Blob out;
-			out += i;
-			ChainPackProtocol::TypeInfo::Enum e = (ChainPackProtocol::TypeInfo::Enum)i;
-			std::ostringstream str;
-			str << std::setw(3) << i << " " << std::hex << i << " " << binary_dump(out) << " "  << ChainPackProtocol::TypeInfo::name(e);
-			qDebug() << str.str();
- 		}
 		for (int i = ChainPackProtocol::TypeInfo::Null; i <= ChainPackProtocol::TypeInfo::MetaIMap; ++i) {
 			RpcValue::Blob out;
 			out += i;
@@ -245,7 +237,7 @@ private:
 			str << std::setw(3) << i << " " << std::hex << i << " " << binary_dump(out).c_str() << " "  << ChainPackProtocol::TypeInfo::name(e);
 			qDebug() << str.str();
 		}
-		for (int i = ChainPackProtocol::TypeInfo::TERM; i <= ChainPackProtocol::TypeInfo::TERM; ++i) {
+		for (int i = ChainPackProtocol::TypeInfo::FALSE; i <= ChainPackProtocol::TypeInfo::TERM; ++i) {
 			RpcValue::Blob out;
 			out += i;
 			ChainPackProtocol::TypeInfo::Enum e = (ChainPackProtocol::TypeInfo::Enum)i;

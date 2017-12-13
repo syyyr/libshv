@@ -25,13 +25,8 @@ public:
 	struct SHVCORE_DECL_EXPORT TypeInfo {
 		enum Enum {
 			INVALID = -1,
-			/// auxiliary types used for optimization
-			//META_TYPE_ID = 128,
-			//META_TYPE_NAMESPACE_ID,
-			FALSE = 128,
-			TRUE,
 			/// types
-			Null,
+			Null = 128,
 			UInt,
 			Int,
 			Double,
@@ -56,7 +51,10 @@ public:
 			Map_Array = Map | ARRAY_FLAG_MASK,
 			IMap_Array = IMap | ARRAY_FLAG_MASK,
 			MetaIMap_Array = MetaIMap | ARRAY_FLAG_MASK,
-			TERM = 255
+			/// auxiliary types used for optimization
+			FALSE = 255 - 2,
+			TRUE,
+			TERM,
 		};
 		static const char* name(Enum e);
 	};
