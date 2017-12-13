@@ -261,9 +261,8 @@ T read_Blob(std::istream &data)
 	return ret;
 }
 
-void write_DateTime(std::ostream &out, const RpcValue &pack)
+void write_DateTime(std::ostream &out, const RpcValue::DateTime &dt)
 {
-	const RpcValue::DateTime dt = pack.toDateTime();
 	uint64_t msecs = dt.msecs;
 	write_IntData(out, msecs);
 }
@@ -361,12 +360,12 @@ const char *ChainPackProtocol::TypeInfo::name(ChainPackProtocol::TypeInfo::Enum 
 	}
 }
 
-void ChainPackProtocol::writeData_Array(std::ostream &out, const RpcValue &pack)
+void ChainPackProtocol::writeData_Array(std::ostream &out, const RpcValue::Array &array)
 {
-	unsigned size = pack.count();
+	unsigned size = array.size();
 	write_UIntData(out, size);
 	for (unsigned i = 0; i < size; ++i) {
-		const RpcValue &cp = pack[i];
+		const RpcValue &cp = array.valueAt(i);
 		writeData(out, cp);
 	}
 }
@@ -565,11 +564,11 @@ void ChainPackProtocol::writeData(std::ostream &out, const RpcValue &pack)
 	case RpcValue::Type::UInt: { auto u = pack.toUInt(); write_UIntData(out, u); break; }
 	case RpcValue::Type::Int: { RpcValue::Int n = pack.toInt(); write_IntData(out, n); break; }
 	case RpcValue::Type::Double: write_Double(out, pack.toDouble()); break;
-	case RpcValue::Type::DateTime: write_DateTime(out, pack); break;
+	case RpcValue::Type::DateTime: write_DateTime(out, pack.toDateTime()); break;
 	case RpcValue::Type::String: write_Blob(out, pack.toString()); break;
 	case RpcValue::Type::Blob: write_Blob(out, pack.toBlob()); break;
 	case RpcValue::Type::List: writeData_List(out, pack.toList()); break;
-	case RpcValue::Type::Array: writeData_Array(out, pack); break;
+	case RpcValue::Type::Array: writeData_Array(out, pack.toArray()); break;
 	case RpcValue::Type::Map: writeData_Map(out, pack.toMap()); break;
 	case RpcValue::Type::IMap: writeData_IMap(out, pack.toIMap()); break;
 	case RpcValue::Type::Invalid:

@@ -78,7 +78,7 @@ private:
 	static TypeInfo::Enum readTypeInfo(std::istream &data, RpcValue &meta, int &tiny_uint);
 	static RpcValue readData(TypeInfo::Enum tid, bool is_array, std::istream &data);
 private:
-	static void writeData_Array(std::ostream &out, const RpcValue &pack);
+	static void writeData_Array(std::ostream &out, const RpcValue::Array &array);
 	static void writeData_List(std::ostream &out, const RpcValue::List &list);
 	static void writeData_Map(std::ostream &out, const RpcValue::Map &map);
 	static void writeData_IMap(std::ostream &out, const RpcValue::IMap &map);
