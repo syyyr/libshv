@@ -10,29 +10,6 @@ namespace shv {
 namespace core {
 namespace chainpack {
 
-CharDataStreamBuffer::CharDataStreamBuffer(const char *data, int len)
-{
-	//std::cerr << "data: " << data << std::endl;
-	char *pd = (char*)data;
-	setg(pd, pd, pd + len);
-}
-
-std::streambuf::pos_type CharDataStreamBuffer::seekoff(std::streambuf::off_type off, std::ios_base::seekdir dir, std::ios_base::openmode )
-{
-	char_type *curr = gptr();
-	if (dir == std::ios_base::cur)
-		curr += off;
-	else if (dir == std::ios_base::end)
-		curr = egptr() - off;
-	else
-		curr = eback() + off;
-	if(curr != gptr())
-		setg(eback(), curr, egptr());
-	pos_type ret = gptr() - eback();
-	//std::cerr << "seekoff: " << off << " pos: " << (gptr() - eback()) << " ret: " << ret << std::endl;
-	return ret;
-}
-
 namespace {
 
 /* UInt
@@ -215,8 +192,6 @@ double read_Double(std::istream &data)
 	u.n = 0;
 	int shift = 0;
 	for (size_t i = 0; i < sizeof(u.n); ++i) {
-		//if(pos >= data.length())
-		//	SHV_EXCEPTION("read_Double: Index out of range!");
 		uint8_t r = data.get();
 		uint64_t n1 = r;
 		n1 <<= shift;
@@ -435,17 +410,7 @@ RpcValue::Map ChainPackProtocol::readData_Map(std::istream &data)
 	}
 	return ret;
 }
-/*
-ChainPackProtocol::TypeInfo::Enum ChainPackProtocol::optimizedMetaTagType(RpcValue::Tag::Enum tag)
-{
-	switch(tag) {
-	case RpcValue::Tag::MetaTypeId: return ChainPackProtocol::TypeInfo::META_TYPE_ID;
-	case RpcValue::Tag::MetaTypeNameSpaceId: return ChainPackProtocol::TypeInfo::META_TYPE_NAMESPACE_ID;
-	default:
-		return ChainPackProtocol::TypeInfo::INVALID;
-	}
-}
-*/
+
 void ChainPackProtocol::writeData_IMap(std::ostream &out, const RpcValue::IMap &map)
 {
 	//unsigned size = map.size();
@@ -488,28 +453,6 @@ int ChainPackProtocol::write(std::ostream &out, const RpcValue &pack)
 void ChainPackProtocol::writeMetaData(std::ostream &out, const RpcValue &pack)
 {
 	const RpcValue::MetaData &md = pack.metaData();
-	/*
-	RpcValue::UInt mid = md.metaTypeId();
-	RpcValue::UInt mnsid = md.metaTypeNameSpaceId();
-	bool optimized_pack = cim.empty()
-						  || (mid > 0 && cim.size() == 1)
-						  || (mnsid > 0 && cim.size() == 1)
-						  || (mid > 0 && mnsid > 0 && cim.size() == 2);
-	if(optimized_pack) {
-		if(mid > 0) {
-			out << (uint8_t)ChainPackProtocol::TypeInfo::META_TYPE_ID;
-			write_UIntData(out, mid);
-		}
-		if(mnsid > 0) {
-			out << (uint8_t)ChainPackProtocol::TypeInfo::META_TYPE_NAMESPACE_ID;
-			write_UIntData(out, mnsid);
-		}
-	}
-	else {
-		out << (uint8_t)ChainPackProtocol::TypeInfo::MetaIMap;
-		writeData_IMap(out, cim);
-	}
-	*/
 	if(!md.isEmpty()) {
 		const RpcValue::IMap &cim = md.toIMap();
 		out << (uint8_t)ChainPackProtocol::TypeInfo::MetaIMap;
@@ -586,40 +529,11 @@ uint64_t ChainPackProtocol::readUIntData(std::istream &data, bool *ok)
 	return ret;
 }
 
-uint64_t ChainPackProtocol::readUIntData(const char *data, size_t len, size_t *read_len)
-{
-	CharDataStreamBuffer buff(data, len);
-	std::istream s(&buff);
-	bool ok;
-	uint64_t ret = readUIntData(s, &ok);
-	if(read_len)
-		*read_len = ok? (size_t)s.tellg(): 0;
-	return ret;
-}
-
 void ChainPackProtocol::writeUIntData(std::ostream &out, uint64_t n)
 {
 	write_UIntData(out, n);
 }
-/*
-RpcValue::IMap ChainPackProtocol::readChunkHeader(std::istream &data, bool *ok)
-{
-	uint8_t b = data.peek();
-	if(b == TypeInfo::CHUNK_HEADER) {
-		data.get();
-		*ok = true;
-		return readData_IMap(data);
-	}
-	*ok = false;
-	return RpcValue::IMap();
-}
 
-void ChainPackProtocol::writeChunkHeader(std::ostream &out, const RpcValue::IMap &header)
-{
-	out << (uint8_t)TypeInfo::CHUNK_HEADER;
-	writeData_IMap(out, header);
-}
-*/
 RpcValue ChainPackProtocol::read(std::istream &data)
 {
 	RpcValue ret;
@@ -695,8 +609,6 @@ RpcValue::MetaData ChainPackProtocol::readMetaData(std::istream &data)
 
 ChainPackProtocol::TypeInfo::Enum ChainPackProtocol::readTypeInfo(std::istream &data, RpcValue &meta, int &tiny_uint)
 {
-	//if(pos >= data.length())
-	//	SHV_EXCEPTION("Not enough data to read type info.");
 	uint8_t t = data.get();
 	if(t & 128) {
 		t = t & ~128;

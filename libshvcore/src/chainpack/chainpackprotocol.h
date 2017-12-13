@@ -9,15 +9,6 @@ namespace shv {
 namespace core {
 namespace chainpack {
 
-class SHVCORE_DECL_EXPORT CharDataStreamBuffer : public std::streambuf
-{
-	using Super = std::streambuf;
-public:
-	CharDataStreamBuffer(const char *data, int len);
-protected:
-	pos_type seekoff(off_type off, std::ios_base::seekdir dir, std::ios_base::openmode mode) override;
-};
-
 class SHVCORE_DECL_EXPORT ChainPackProtocol
 {
 	static constexpr uint8_t ARRAY_FLAG_MASK = 64;
@@ -52,28 +43,23 @@ public:
 			IMap_Array = IMap | ARRAY_FLAG_MASK,
 			MetaIMap_Array = MetaIMap | ARRAY_FLAG_MASK,
 			/// auxiliary types used for optimization
-			FALSE = 255 - 2,
-			TRUE,
-			TERM,
+			FALSE = 253,
+			TRUE = 254,
+			TERM = 255,
 		};
 		static const char* name(Enum e);
 	};
 public:
 	static uint64_t readUIntData(std::istream &data, bool *ok = nullptr);
-	static uint64_t readUIntData(const char *data, size_t len, size_t *read_len = nullptr);
 	static void writeUIntData(std::ostream &out, uint64_t n);
-	//static RpcValue::IMap readChunkHeader(std::istream &data, bool *ok);
-	//static void writeChunkHeader(std::ostream &out, const RpcValue::IMap &header);
 	static RpcValue read(std::istream &data);
 	static int write(std::ostream &out, const RpcValue &pack);
 private:
 	static TypeInfo::Enum typeToTypeInfo(RpcValue::Type tid);
 	static RpcValue::Type typeInfoToType(TypeInfo::Enum type_info);
-	//static TypeInfo::Enum optimizedMetaTagType(RpcValue::Tag::Enum tag);
 
 	static void writeMetaData(std::ostream &out, const RpcValue &pack);
 	static bool writeTypeInfo(std::ostream &out, const RpcValue &pack);
-	//static void writeData(Blob &out, const RpcValue &pack);
 	static void writeData(std::ostream &out, const RpcValue &pack);
 	static TypeInfo::Enum readTypeInfo(std::istream &data, RpcValue &meta, int &tiny_uint);
 	static RpcValue readData(TypeInfo::Enum tid, bool is_array, std::istream &data);

@@ -563,47 +563,6 @@ private:
 		}
 	}
 
-	void charArrayTest()
-	{
-		qDebug() << "============= charArrayTest ============";
-		{
-			const char ca[] = "Ahoj Babi";
-			CharDataStreamBuffer sb(ca, sizeof(ca));
-			std::istream in(&sb);
-			while(true) {
-				char c = in.get();
-				if(in.eof())
-					break;
-				qDebug() << c << "pos:" << in.tellg();
- 			}
-		}
-		/*
-		{
-			std::istringstream in("ahoj babi");
-			while(true) {
-				char c = in.get();
-				if(in.eof())
-					break;
-				qDebug() << c << "pos:" << in.tellg();
- 			}
-		}
-		*/
-		uint64_t u(585734057307);
-		RpcValue cp1{RpcValue::List{17, 18, 19}};
-		std::stringstream out;
-		ChainPackProtocol::writeUIntData(out, u);
-		//qDebug() << u << binary_dump(out.str());
-		ChainPackProtocol::write(out, cp1);
-
-		std::string s = out.str();
-		qDebug() << u << binary_dump(s);
-		size_t len;
-		uint64_t u2 = ChainPackProtocol::readUIntData(s.c_str(), s.length(), &len);
-		qDebug() << u << binary_dump(s) << "len:" << len;
-		QVERIFY(len > 0);
-		QCOMPARE(u, u2);
-	}
-
 private slots:
 	void initTestCase()
 	{
@@ -613,7 +572,6 @@ private slots:
 	{
 		textTest();
 		binaryTest();
-		//charArrayTest();
 	}
 
 	void cleanupTestCase()
