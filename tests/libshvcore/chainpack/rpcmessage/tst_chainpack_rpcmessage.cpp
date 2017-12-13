@@ -73,7 +73,7 @@ private:
 							   {"b", "bar"},
 							   {"c", RpcValue::List{1,2,3}},
 						   }});
-		rq.setMetaValue(tid::RpcMessage::Tag::DeviceId, "aus/mel/pres/A");
+		rq.setMetaValue(meta::RpcMessage::Tag::DeviceId, "aus/mel/pres/A");
 		std::stringstream out;
 		RpcValue cp1 = rq.value();
 		int len = rq.write(out);

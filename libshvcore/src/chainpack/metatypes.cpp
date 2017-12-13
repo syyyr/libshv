@@ -8,8 +8,9 @@
 namespace shv {
 namespace core {
 namespace chainpack {
+namespace meta {
 
-const MetaTypes::MetaInfo &MetaTypes::Type::tagById(int id) const
+const MetaInfo &MetaType::tagById(int id) const
 {
 	static std::map<int, MetaInfo> embeded_mi = {
 		{(int)Tag::Invalid, {(int)Tag::Invalid, ""}},
@@ -24,7 +25,7 @@ const MetaTypes::MetaInfo &MetaTypes::Type::tagById(int id) const
 	return m_tags.at(id);
 }
 
-const MetaTypes::MetaInfo &MetaTypes::Type::keyById(int id) const
+const MetaInfo &MetaType::keyById(int id) const
 {
 	static MetaInfo invalid(-1, "");
 	auto it = m_keys.find(id);
@@ -33,14 +34,14 @@ const MetaTypes::MetaInfo &MetaTypes::Type::keyById(int id) const
 	return m_keys.at(id);
 }
 
-ns::Default::Default()
+DefaultNS::DefaultNS()
 	: Super("Default")
 {
 }
 
 namespace {
 
-std::map<int, MetaTypes::NameSpace*> registered_ns;
+std::map<int, MetaNameSpace*> registered_ns;
 
 }
 #if 0
@@ -153,12 +154,12 @@ static void initMetaTypes()
 	static bool is_init = false;
 	if(!is_init) {
 		is_init = true;
-		static ns::Default def;
-		MetaTypes::registerNameSpace(ns::Default::ID, &def);
+		static DefaultNS def;
+		registerNameSpace(DefaultNS::ID, &def);
 	}
 }
 
-void MetaTypes::registerNameSpace(int ns_id, MetaTypes::NameSpace *ns)
+void registerNameSpace(int ns_id, MetaNameSpace *ns)
 {
 	initMetaTypes();
 	if(ns == nullptr)
@@ -167,39 +168,39 @@ void MetaTypes::registerNameSpace(int ns_id, MetaTypes::NameSpace *ns)
 		registered_ns[ns_id] = ns;
 }
 
-void MetaTypes::registerTypeId(int ns_id, int type_id, MetaTypes::Type *type)
+void registerType(int ns_id, int type_id, MetaType *type)
 {
 	initMetaTypes();
 	auto it = registered_ns.find(ns_id);
 	if(it == registered_ns.end())
 		SHV_EXCEPTION("Unknown namespace id!");
 	if(type == nullptr)
-		it->second->m_types.erase(type_id);
+		it->second->types().erase(type_id);
 	else
-		it->second->m_types[type_id] = type;
+		it->second->types()[type_id] = type;
 }
 
-const MetaTypes::NameSpace &MetaTypes::metaNameSpace(int ns_id)
+const MetaNameSpace &registeredNameSpace(int ns_id)
 {
 	initMetaTypes();
-	static NameSpace invalid("");
+	static MetaNameSpace invalid("");
 	auto it = registered_ns.find(ns_id);
 	if(it == registered_ns.end())
 		return invalid;
 	return *(it->second);
 }
 
-const MetaTypes::Type &MetaTypes::metaType(int ns_id, int type_id)
+const MetaType &registeredType(int ns_id, int type_id)
 {
-	static Type invalid("");
-	const NameSpace &ns = metaNameSpace(ns_id);
+	static MetaType invalid("");
+	const MetaNameSpace &ns = registeredNameSpace(ns_id);
 	if(ns.isValid()) {
-		auto it = ns.m_types.find(type_id);
-		if(it != ns.m_types.end()) {
+		auto it = ns.types().find(type_id);
+		if(it != ns.types().end()) {
 			return *(it->second);
 		}
 	}
 	return invalid;
 }
 
-}}}
+}}}}

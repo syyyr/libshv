@@ -412,7 +412,7 @@ class ChainPackIMap final : public ValueData<RpcValue::Type::IMap, RpcValue::IMa
 			nsid = m_metaData->metaTypeNameSpaceId();
 			tid = m_metaData->metaTypeId();
 		}
-		const MetaTypes::Type &mt = MetaTypes::metaType(nsid, tid);
+		const meta::MetaType &mt = meta::registeredType(nsid, tid);
 		bool first = true;
 		for (const auto &kv : m_value) {
 			if (!first)
@@ -957,15 +957,15 @@ std::string RpcValue::MetaData::toStdString() const
 		//	continue;
 		if(n++ > 0)
 			out += ",";
-		const MetaTypes::MetaInfo &tag_info = MetaTypes::metaType(nsid, mtid).tagById(tag);
+		const meta::MetaInfo &tag_info = meta::registeredType(nsid, mtid).tagById(tag);
 		if(tag_info.isValid())
 			out += std::string(tag_info.name) + ':';
 		else
 			out += shv::core::Utils::toString(tag) + ':';
 		RpcValue meta_val = value(tag);
-		if(tag == MetaTypes::Tag::MetaTypeId) {
+		if(tag == meta::Tag::MetaTypeId) {
 			int id = meta_val.toInt();
-			const MetaTypes::Type &type = MetaTypes::metaType(nsid, id);
+			const meta::MetaType &type = meta::registeredType(nsid, id);
 			const char *n = type.name();
 			if(n[0])
 				out += n;

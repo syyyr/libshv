@@ -151,10 +151,10 @@ public:
 	};
 	struct SHVCORE_DECL_EXPORT MetaData
 	{
-		int metaTypeId() const {return value(MetaTypes::Tag::MetaTypeId).toInt();}
-		void setMetaTypeId(RpcValue::Int id) {setValue(MetaTypes::Tag::MetaTypeId, id);}
-		int metaTypeNameSpaceId() const {return value(MetaTypes::Tag::MetaTypeNameSpaceId).toInt();}
-		void setMetaTypeNameSpaceId(RpcValue::Int id) {setValue(MetaTypes::Tag::MetaTypeNameSpaceId, id);}
+		int metaTypeId() const {return value(meta::Tag::MetaTypeId).toInt();}
+		void setMetaTypeId(RpcValue::Int id) {setValue(meta::Tag::MetaTypeId, id);}
+		int metaTypeNameSpaceId() const {return value(meta::Tag::MetaTypeNameSpaceId).toInt();}
+		void setMetaTypeNameSpaceId(RpcValue::Int id) {setValue(meta::Tag::MetaTypeNameSpaceId, id);}
 		std::vector<RpcValue::UInt> ikeys() const;
 		RpcValue value(RpcValue::UInt key) const;
 		void setValue(RpcValue::UInt key, const RpcValue &val);

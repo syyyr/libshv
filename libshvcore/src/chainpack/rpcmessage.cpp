@@ -8,7 +8,7 @@ namespace shv {
 namespace core {
 namespace chainpack {
 
-namespace tid {
+namespace meta {
 RpcMessage::RpcMessage()
 	: Super("RpcMessage")
 {
@@ -33,7 +33,7 @@ void RpcMessage::registerMetaType()
 	if(!is_init) {
 		is_init = true;
 		static RpcMessage s;
-		MetaTypes::registerTypeId(ns::Default::ID, tid::RpcMessage::ID, &s);
+		meta::registerType(meta::DefaultNS::ID, meta::RpcMessage::ID, &s);
 	}
 }
 
@@ -41,7 +41,7 @@ void RpcMessage::registerMetaType()
 
 RpcMessage::RpcMessage()
 {
-	tid::RpcMessage::registerMetaType();
+	meta::RpcMessage::registerMetaType();
 }
 
 RpcMessage::RpcMessage(const RpcValue &val)
@@ -63,7 +63,7 @@ RpcValue RpcMessage::value(RpcValue::UInt key) const
 
 void RpcMessage::setValue(RpcValue::UInt key, const RpcValue &val)
 {
-	assert(key >= tid::RpcMessage::Key::Method && key < tid::RpcMessage::Key::MAX);
+	assert(key >= meta::RpcMessage::Key::Method && key < meta::RpcMessage::Key::MAX);
 	checkMetaValues();
 	m_value.set(key, val);
 }
@@ -77,7 +77,7 @@ void RpcMessage::setMetaValue(RpcValue::UInt key, const RpcValue &val)
 RpcValue::UInt RpcMessage::id() const
 {
 	if(isValid())
-		return m_value.metaData().value(tid::RpcMessage::Tag::RequestId).toUInt();
+		return m_value.metaData().value(meta::RpcMessage::Tag::RequestId).toUInt();
 	return 0;
 }
 
@@ -85,7 +85,7 @@ void RpcMessage::setId(RpcValue::UInt id)
 {
 	checkMetaValues();
 	checkRpcTypeMetaValue();
-	setMetaValue(tid::RpcMessage::Tag::RequestId, id);
+	setMetaValue(meta::RpcMessage::Tag::RequestId, id);
 }
 
 bool RpcMessage::isValid() const
@@ -95,35 +95,35 @@ bool RpcMessage::isValid() const
 
 bool RpcMessage::isRequest() const
 {
-	return rpcType() == tid::RpcMessage::RpcCallType::Request;
+	return rpcType() == meta::RpcMessage::RpcCallType::Request;
 }
 
 bool RpcMessage::isNotify() const
 {
-	return rpcType() == tid::RpcMessage::RpcCallType::Notify;
+	return rpcType() == meta::RpcMessage::RpcCallType::Notify;
 }
 
 bool RpcMessage::isResponse() const
 {
-	return rpcType() == tid::RpcMessage::RpcCallType::Response;
+	return rpcType() == meta::RpcMessage::RpcCallType::Response;
 }
 
 int RpcMessage::write(std::ostream &out) const
 {
 	assert(m_value.isValid());
-	assert(rpcType() != tid::RpcMessage::RpcCallType::Undefined);
+	assert(rpcType() != meta::RpcMessage::RpcCallType::Undefined);
 	return ChainPackProtocol::write(out, m_value);
 }
 
-tid::RpcMessage::RpcCallType::Enum RpcMessage::rpcType() const
+meta::RpcMessage::RpcCallType::Enum RpcMessage::rpcType() const
 {
 	RpcValue::UInt rpc_id = id();
-	bool has_method = hasKey(tid::RpcMessage::Key::Method);
+	bool has_method = hasKey(meta::RpcMessage::Key::Method);
 	if(has_method)
-		return (rpc_id > 0)? tid::RpcMessage::RpcCallType::Request: tid::RpcMessage::RpcCallType::Notify;
-	if(hasKey(tid::RpcMessage::Key::Result) || hasKey(tid::RpcMessage::Key::Error))
-		return tid::RpcMessage::RpcCallType::Response;
-	return tid::RpcMessage::RpcCallType::Undefined;
+		return (rpc_id > 0)? meta::RpcMessage::RpcCallType::Request: meta::RpcMessage::RpcCallType::Notify;
+	if(hasKey(meta::RpcMessage::Key::Result) || hasKey(meta::RpcMessage::Key::Error))
+		return meta::RpcMessage::RpcCallType::Response;
+	return meta::RpcMessage::RpcCallType::Undefined;
 }
 
 void RpcMessage::checkMetaValues()
@@ -132,59 +132,59 @@ void RpcMessage::checkMetaValues()
 		m_value = RpcValue::IMap();
 		/// not needed, Global is default name space
 		//setMetaValue(MetaTypes::Tag::MetaTypeNameSpaceId, MetaTypes::Default::Value);
-		setMetaValue(MetaTypes::Tag::MetaTypeId, tid::RpcMessage::ID);
+		setMetaValue(meta::Tag::MetaTypeId, meta::RpcMessage::ID);
 	}
 }
 
 void RpcMessage::checkRpcTypeMetaValue()
 {
-	tid::RpcMessage::RpcCallType::Enum rpc_type = isResponse()? tid::RpcMessage::RpcCallType::Response: isNotify()? tid::RpcMessage::RpcCallType::Notify: tid::RpcMessage::RpcCallType::Request;
-	setMetaValue(tid::RpcMessage::Tag::RpcCallType, rpc_type);
+	meta::RpcMessage::RpcCallType::Enum rpc_type = isResponse()? meta::RpcMessage::RpcCallType::Response: isNotify()? meta::RpcMessage::RpcCallType::Notify: meta::RpcMessage::RpcCallType::Request;
+	setMetaValue(meta::RpcMessage::Tag::RpcCallType, rpc_type);
 }
 
 RpcValue::String RpcRequest::method() const
 {
-	return value(tid::RpcMessage::Key::Method).toString();
+	return value(meta::RpcMessage::Key::Method).toString();
 }
 
 RpcRequest &RpcRequest::setMethod(RpcValue::String &&met)
 {
-	setValue(tid::RpcMessage::Key::Method, RpcValue{std::move(met)});
+	setValue(meta::RpcMessage::Key::Method, RpcValue{std::move(met)});
 	checkRpcTypeMetaValue();
 	return *this;
 }
 
 RpcValue RpcRequest::params() const
 {
-	return value(tid::RpcMessage::Key::Params);
+	return value(meta::RpcMessage::Key::Params);
 }
 
 RpcRequest& RpcRequest::setParams(const RpcValue& p)
 {
-	setValue(tid::RpcMessage::Key::Params, p);
+	setValue(meta::RpcMessage::Key::Params, p);
 	return *this;
 }
 
 RpcResponse::Error RpcResponse::error() const
 {
-	return Error{value(tid::RpcMessage::Key::Error).toIMap()};
+	return Error{value(meta::RpcMessage::Key::Error).toIMap()};
 }
 
 RpcResponse &RpcResponse::setError(RpcResponse::Error err)
 {
-	setValue(tid::RpcMessage::Key::Error, std::move(err));
+	setValue(meta::RpcMessage::Key::Error, std::move(err));
 	checkRpcTypeMetaValue();
 	return *this;
 }
 
 RpcValue RpcResponse::result() const
 {
-	return value(tid::RpcMessage::Key::Result);
+	return value(meta::RpcMessage::Key::Result);
 }
 
 RpcResponse& RpcResponse::setResult(const RpcValue& res)
 {
-	setValue(tid::RpcMessage::Key::Result, res);
+	setValue(meta::RpcMessage::Key::Result, res);
 	checkRpcTypeMetaValue();
 	return *this;
 }
