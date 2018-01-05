@@ -17,7 +17,7 @@ const MetaInfo &MetaType::tagById(int id) const
 		{(int)Tag::MetaTypeId, {(int)Tag::MetaTypeId, "MetaTypeId"}},
 		{(int)Tag::MetaTypeNameSpaceId, {(int)Tag::MetaTypeNameSpaceId, "MetaTypeNameSpaceId"}},
 	};
-	if(id <= (int)Tag::MetaTypeId)
+	if(id <= (int)Tag::MetaTypeNameSpaceId)
 		return embeded_mi[id];
 	auto it = m_tags.find(id);
 	if(it == m_tags.end())
