@@ -59,7 +59,7 @@ private:
 	static TypeInfo::Enum typeToTypeInfo(RpcValue::Type tid);
 	static RpcValue::Type typeInfoToType(TypeInfo::Enum type_info);
 
-	static void writeMetaData(std::ostream &out, const RpcValue &pack);
+	static void writeMetaData(std::ostream &out, const RpcValue::MetaData &meta_data);
 	static bool writeTypeInfo(std::ostream &out, const RpcValue &pack);
 	static void writeData(std::ostream &out, const RpcValue &pack);
 	static TypeInfo::Enum readTypeInfo(std::istream &data, RpcValue &meta, int &tiny_uint);

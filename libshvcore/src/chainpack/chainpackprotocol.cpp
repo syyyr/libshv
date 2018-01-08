@@ -446,17 +446,16 @@ int ChainPackProtocol::write(std::ostream &out, const RpcValue &pack)
 	if(!pack.isValid())
 		SHV_EXCEPTION("Cannot serialize invalid ChainPack.");
 	std::ostream::pos_type len = out.tellp();
-	writeMetaData(out, pack);
+	writeMetaData(out, pack.metaData());
 	if(!writeTypeInfo(out, pack))
 		writeData(out, pack);
 	return (out.tellp() - len);
 }
 
-void ChainPackProtocol::writeMetaData(std::ostream &out, const RpcValue &pack)
+void ChainPackProtocol::writeMetaData(std::ostream &out, const RpcValue::MetaData &meta_data)
 {
-	const RpcValue::MetaData &md = pack.metaData();
-	if(!md.isEmpty()) {
-		const RpcValue::IMap &cim = md.toIMap();
+	if(!meta_data.isEmpty()) {
+		const RpcValue::IMap &cim = meta_data.toIMap();
 		out << (uint8_t)ChainPackProtocol::TypeInfo::MetaIMap;
 		writeData_IMap(out, cim);
 	}
