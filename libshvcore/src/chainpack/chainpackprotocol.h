@@ -52,16 +52,24 @@ public:
 	};
 public:
 	static uint64_t readUIntData(std::istream &data);
-	static void writeUIntData(std::ostream &out, uint64_t n);
 	static RpcValue read(std::istream &data);
-	static int write(std::ostream &out, const RpcValue &pack);
+
+	static void writeUIntData(std::ostream &out, uint64_t n);
+	static void writeMetaData(std::ostream &out, const RpcValue::MetaData &meta_data);
+	static int write(std::ostream &out, const RpcValue &val);
+	static void writeContainerBegin(std::ostream &out, const RpcValue::Type &container_type);
+	static void writeContainerEnd(std::ostream &out);
+	static void writeListElement(std::ostream &out, const RpcValue &val);
+	static void writeMapElement(std::ostream &out, const std::string &key, const RpcValue &val);
+	static void writeMapElement(std::ostream &out, const RpcValue::UInt &key, const RpcValue &val);
+	static void writeArrayBegin(std::ostream &out, size_t array_size, const RpcValue::Type &array_type);
+	static void writeArrayElement(std::ostream &out, const RpcValue &val) {	writeData(out, val); }
 private:
 	static TypeInfo::Enum typeToTypeInfo(RpcValue::Type tid);
 	static RpcValue::Type typeInfoToType(TypeInfo::Enum type_info);
 
-	static void writeMetaData(std::ostream &out, const RpcValue::MetaData &meta_data);
 	static bool writeTypeInfo(std::ostream &out, const RpcValue &pack);
-	static void writeData(std::ostream &out, const RpcValue &pack);
+	static void writeData(std::ostream &out, const RpcValue &val);
 	static TypeInfo::Enum readTypeInfo(std::istream &data, RpcValue &meta, int &tiny_uint);
 	static RpcValue readData(TypeInfo::Enum tid, bool is_array, std::istream &data);
 private:

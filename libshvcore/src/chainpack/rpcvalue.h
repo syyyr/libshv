@@ -127,8 +127,10 @@ public:
 		UInt uint_value;
 		double double_value;
 		bool bool_value;
+		std::nullptr_t null_value;
 
 		ArrayElement() {}
+		ArrayElement(std::nullptr_t) : null_value(nullptr) {}
 		ArrayElement(int16_t i) : int_value(i) {}
 		ArrayElement(int32_t i) : int_value(i) {}
 		ArrayElement(int64_t i) : int_value(i) {}
@@ -158,6 +160,7 @@ public:
 		RpcValue valueAt(size_t ix) const
 		{
 			switch(type()) {
+			case RpcValue::Type::Null: return RpcValue(nullptr);
 			case RpcValue::Type::Int: return RpcValue(Super::at(ix).int_value);
 			case RpcValue::Type::UInt: return RpcValue(Super::at(ix).uint_value);
 			case RpcValue::Type::Double: return RpcValue(Super::at(ix).double_value);
@@ -169,6 +172,7 @@ public:
 		{
 			ArrayElement el;
 			switch(val.type()) {
+			case RpcValue::Type::Null: el.null_value = nullptr; break;
 			case RpcValue::Type::Int: el.int_value = val.toInt(); break;
 			case RpcValue::Type::UInt: el.uint_value = val.toUInt(); break;
 			case RpcValue::Type::Double: el.double_value = val.toDouble(); break;
