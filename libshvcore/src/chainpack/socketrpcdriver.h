@@ -14,8 +14,8 @@ class SocketRpcDriver : public shv::core::chainpack::RpcDriver
 public:
 	SocketRpcDriver();
 	~SocketRpcDriver() override;
-	bool connectToHost(const std::string & host, int port);
-	void closeConnection();
+	virtual bool connectToHost(const std::string & host, int port);
+	virtual void closeConnection();
 	void exec();
 
 	void sendNotify(std::string &&method, const shv::core::chainpack::RpcValue &result);
@@ -27,6 +27,8 @@ protected:
 	void sendResponse(int request_id, const shv::core::chainpack::RpcValue &result);
 
 	virtual void idleTaskOnSelectTimeout() {}
+	//virtual void connectedToHost(bool ) {}
+	//virtual void connectionClosed() {}
 private:
 	int m_socket = -1;
 	std::string m_bytesToWrite;

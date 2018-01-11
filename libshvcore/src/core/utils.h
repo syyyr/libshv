@@ -122,6 +122,9 @@ public:
 	static int versionStringToInt(const std::string &version_string);
 	static std::string intToVersionString(int ver);
 
+	std::string binaryDump(const std::string &bytes);
+	static std::string toHex(const std::string &bytes);
+
 	template<typename T>
 	static std::string toString(T i)
 	{
@@ -157,25 +160,6 @@ public:
 
 	/// invoke method of prototype bool method()
 	static bool invokeMethod_B_V(QObject *obj, const char *method_name);
-
-	template <class T>
-	static T findParent(const QObject *_o, bool throw_exc = shv::core::Exception::Throw)
-	{
-		T t = NULL;
-		QObject *o = const_cast<QObject*>(_o);
-		while(o) {
-			o = o->parent();
-			if(!o)
-				break;
-			t = qobject_cast<T>(o);
-			if(t)
-				break;
-		}
-		if(!t && throw_exc) {
-			SHV_EXCEPTION(QString("object 0x%1 has not any parent of requested type.").arg((ulong)_o, 0, 16));
-		}
-		return t;
-	}
 
 	template <typename V, typename... T>
 	constexpr static inline auto make_array(T&&... t) -> std::array < V, sizeof...(T) >

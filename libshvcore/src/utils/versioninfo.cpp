@@ -1,6 +1,11 @@
 #include "versioninfo.h"
 
 #include "../core/string.h"
+#include "../core/utils.h"
+
+#ifdef LIBC_NEWLIB
+#include <stdlib.h>
+#endif
 
 namespace shv {
 namespace core {
@@ -21,14 +26,20 @@ VersionInfo::VersionInfo(const std::string &version, const std::string &branch)
 	while (parts.size() < 3) {
 		parts.push_back("0");
 	}
+#ifdef LIBC_NEWLIB
+	m_majorNumber = ::atoi(parts[0].c_str());
+	m_minorNumber = ::atoi(parts[1].c_str());
+	m_patchNumber = ::atoi(parts[2].c_str());
+#else
 	m_majorNumber = std::stoi(parts[0]);
 	m_minorNumber = std::stoi(parts[1]);
 	m_patchNumber = std::stoi(parts[2]);
+#endif
 }
 
 std::string VersionInfo::toString() const
 {
-	return std::to_string(m_majorNumber) + '.' + std::to_string(m_minorNumber) + '.' + std::to_string(m_patchNumber);
+	return shv::core::Utils::toString(m_majorNumber) + '.' + shv::core::Utils::toString(m_minorNumber) + '.' + shv::core::Utils::toString(m_patchNumber);
 }
 
 int VersionInfo::toInt() const

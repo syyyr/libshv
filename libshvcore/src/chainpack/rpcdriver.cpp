@@ -35,6 +35,11 @@ void RpcDriver::sendMessage(const shv::core::chainpack::RpcValue &msg)
 	enqueueDataToSend(Chunk{std::move(packed_data)});
 }
 
+void RpcDriver::sendRawData(std::string &&data)
+{
+	enqueueDataToSend(Chunk{std::move(data)});
+}
+
 void RpcDriver::enqueueDataToSend(RpcDriver::Chunk &&chunk_to_enqueue)
 {
 	/// LOCK_FOR_SEND lock mutex here in the multothreaded environment
@@ -46,7 +51,7 @@ void RpcDriver::enqueueDataToSend(RpcDriver::Chunk &&chunk_to_enqueue)
 	}
 	flushNoBlock();
 	writeQueue();
-	/// UNLOCK_FOR_SEND unlock mutex here in the multothreaded environment
+	/// UNLOCK_FOR_SEND unlock mutex here in the multithreaded environment
 }
 
 namespace {
@@ -119,19 +124,26 @@ void RpcDriver::bytesRead(std::string &&bytes)
 
 int RpcDriver::processReadData(const std::string &read_data)
 {
-	logRpc() << __FUNCTION__ << "data len:" << read_data.length();
+	logRpc() << __FUNCTION__ << "data len:" << read_data.length() << "reading bytes:" << shv::core::Utils::toHex(read_data);
 	using namespace shv::core::chainpack;
 
 	std::istringstream in(read_data);
 
-	uint64_t chunk_len = ChainPackProtocol::readUIntData(in);
+	bool ok;
+	uint64_t chunk_len = ChainPackProtocol::readUIntData(in, &ok);
+	if(!ok)
+		return 0;
 
 	size_t read_len = (size_t)in.tellg() + chunk_len;
 
-	uint64_t protocol_version = ChainPackProtocol::readUIntData(in);
+	uint64_t protocol_version = ChainPackProtocol::readUIntData(in, &ok);
+	if(!ok)
+		return 0;
 
-	if(protocol_version != PROTOCOL_VERSION)
+	if(protocol_version != PROTOCOL_VERSION) {
+		shvError() << shv::core::Utils::toHex(read_data);
 		SHV_EXCEPTION("Unsupported protocol version");
+	}
 
 	logRpc() << "\t chunk len:" << chunk_len << "read_len:" << read_len << "stream pos:" << in.tellg();
 	if(read_len > read_data.length())
@@ -144,7 +156,7 @@ int RpcDriver::processReadData(const std::string &read_data)
 
 void RpcDriver::onMessageReceived(const RpcValue &msg)
 {
-	logRpc() << "\t emitting message received:" << msg.toStdString();
+	logRpc() << "\t message received:" << msg.toStdString();
 	//logLongFiles() << "\t emitting message received:" << msg.dumpText();
 	if(m_messageReceivedCallback)
 		m_messageReceivedCallback(msg);

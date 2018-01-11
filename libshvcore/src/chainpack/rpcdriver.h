@@ -19,6 +19,7 @@ public:
 	virtual ~RpcDriver();
 
 	void sendMessage(const RpcValue &msg);
+	void sendRawData(std::string &&data);
 	using MessageReceivedCallback = std::function< void (const shv::core::chainpack::RpcValue &msg)>;
 	void setMessageReceivedCallback(const MessageReceivedCallback &callback) {m_messageReceivedCallback = callback;}
 

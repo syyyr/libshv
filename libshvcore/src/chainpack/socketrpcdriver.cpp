@@ -70,6 +70,7 @@ bool SocketRpcDriver::flushNoBlock()
 		return false;
 	}
 	shvDebug() << "Flushing write buffer, buffer len:" << m_bytesToWrite.size() << "...";
+	shvDebug() << "writing to socket:" << shv::core::Utils::toHex(m_bytesToWrite);
 	int64_t n = ::write(m_socket, m_bytesToWrite.data(), m_bytesToWrite.length());
 	shvDebug() << "\t" << n << "bytes written";
 	if(n > 0)
@@ -112,7 +113,7 @@ bool SocketRpcDriver::connectToHost(const std::string &host, int port)
 	{
 		//set_socket_nonblock
 		int flags;
-		flags = fcntl(m_socket,F_GETFL,0);
+		flags = fcntl(m_socket, F_GETFL, 0);
 		assert(flags != -1);
 		fcntl(m_socket, F_SETFL, flags | O_NONBLOCK);
 	}
@@ -148,7 +149,6 @@ void SocketRpcDriver::exec()
 		//FD_SET(STDIN_FILENO, &read_flags);
 		//FD_SET(STDIN_FILENO, &write_flags);
 
-		//ESP_LOGI(__FILE__, "select ...");
 		int sel = select(FD_SETSIZE, &read_flags, &write_flags, (fd_set*)0, &waitd);
 
 		//ESP_LOGI(__FILE__, "select returned, number of active file descriptors: %d", sel);
@@ -179,7 +179,6 @@ void SocketRpcDriver::exec()
 				return;
 			}
 			bytesRead(std::string(in, n));
-
 		}
 
 		//socket ready for writing

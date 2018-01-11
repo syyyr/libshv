@@ -51,7 +51,7 @@ public:
 		static const char* name(Enum e);
 	};
 public:
-	static uint64_t readUIntData(std::istream &data);
+	static uint64_t readUIntData(std::istream &data, bool *ok = nullptr);
 	static RpcValue read(std::istream &data);
 
 	static void writeUIntData(std::ostream &out, uint64_t n);
@@ -62,7 +62,7 @@ public:
 	static void writeListElement(std::ostream &out, const RpcValue &val);
 	static void writeMapElement(std::ostream &out, const std::string &key, const RpcValue &val);
 	static void writeMapElement(std::ostream &out, const RpcValue::UInt &key, const RpcValue &val);
-	static void writeArrayBegin(std::ostream &out, size_t array_size, const RpcValue::Type &array_type);
+	static void writeArrayBegin(std::ostream &out, const RpcValue::Type &array_type, size_t array_size);
 	static void writeArrayElement(std::ostream &out, const RpcValue &val) {	writeData(out, val); }
 private:
 	static TypeInfo::Enum typeToTypeInfo(RpcValue::Type tid);

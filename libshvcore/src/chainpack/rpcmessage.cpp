@@ -39,6 +39,9 @@ void RpcMessage::registerMetaType()
 
 }
 
+//==================================================================
+// RpcMessage
+//==================================================================
 RpcMessage::RpcMessage()
 {
 	meta::RpcMessage::registerMetaType();
@@ -142,6 +145,14 @@ void RpcMessage::checkRpcTypeMetaValue()
 	setMetaValue(meta::RpcMessage::Tag::RpcCallType, rpc_type);
 }
 
+std::string RpcMessage::toStdString() const
+{
+	return m_value.toStdString();
+}
+
+//==================================================================
+// RpcRequest
+//==================================================================
 RpcValue::String RpcRequest::method() const
 {
 	return value(meta::RpcMessage::Key::Method).toString();
@@ -165,6 +176,25 @@ RpcRequest& RpcRequest::setParams(const RpcValue& p)
 	return *this;
 }
 
+//==================================================================
+// RpcNotify
+//==================================================================
+void RpcNotify::write(std::ostream &out, const std::string &method, std::function<void (std::ostream &)> write_params_callback)
+{
+	RpcValue::MetaData md;
+	md.setMetaTypeId(meta::RpcMessage::ID);
+	md.setValue(meta::RpcMessage::Tag::RpcCallType, meta::RpcMessage::RpcCallType::Notify);
+	ChainPackProtocol::writeMetaData(out, md);
+	ChainPackProtocol::writeContainerBegin(out, RpcValue::Type::IMap);
+	ChainPackProtocol::writeMapElement(out, meta::RpcMessage::Key::Method, method);
+	ChainPackProtocol::writeUIntData(out, meta::RpcMessage::Key::Params);
+	write_params_callback(out);
+	ChainPackProtocol::writeContainerEnd(out);
+}
+
+//==================================================================
+// RpcResponse
+//==================================================================
 RpcResponse::Error RpcResponse::error() const
 {
 	return Error{value(meta::RpcMessage::Key::Error).toIMap()};
@@ -211,11 +241,6 @@ RpcValue::String RpcResponse::Error::message() const
 {
 	auto iter = find(KeyMessage);
 	return (iter == end()) ? RpcValue::String{} : iter->second.toString();
-}
-
-std::string RpcMessage::toStdString() const
-{
-	return m_value.toStdString();
 }
 
 } // namespace chainpackrpc

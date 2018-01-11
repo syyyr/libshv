@@ -3,8 +3,9 @@
 #include "rpcvalue.h"
 
 #include "../core/utils.h"
-
 #include "../shvcoreglobal.h"
+
+#include <functional>
 
 namespace shv {
 namespace core {
@@ -87,7 +88,7 @@ public:
 public:
 	RpcRequest& setId(const RpcValue::UInt id) = delete;
 
-	//int write(Value::Blob &out) const override;
+	static void write(std::ostream &out, const std::string &method, std::function<void (std::ostream &out)> write_params_callback);
 };
 
 class SHVCORE_DECL_EXPORT RpcResponse : public RpcMessage

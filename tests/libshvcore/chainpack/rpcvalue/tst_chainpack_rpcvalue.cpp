@@ -481,7 +481,7 @@ private:
 			{
 				static constexpr size_t N = 10;
 				std::stringstream out;
-				ChainPackProtocol::writeArrayBegin(out, N, RpcValue::Type::Bool);
+				ChainPackProtocol::writeArrayBegin(out, RpcValue::Type::Bool, N);
 				bool b = false;
 				for (size_t i = 0; i < N; ++i) {
 					ChainPackProtocol::writeArrayElement(out, RpcValue(b));
@@ -498,7 +498,7 @@ private:
 			{
 				static constexpr size_t N = 10;
 				std::stringstream out;
-				ChainPackProtocol::writeArrayBegin(out, N, RpcValue::Type::Null);
+				ChainPackProtocol::writeArrayBegin(out, RpcValue::Type::Null, N);
 				RpcValue cp2 = ChainPackProtocol::read(out);
 				const RpcValue::Array array = cp2.toArray();
 				for (size_t i = 0; i < array.size(); ++i) {
