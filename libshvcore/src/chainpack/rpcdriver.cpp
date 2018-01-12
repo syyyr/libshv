@@ -49,7 +49,7 @@ void RpcDriver::enqueueDataToSend(RpcDriver::Chunk &&chunk_to_enqueue)
 		shvError() << "write data error, socket is not open!";
 		return;
 	}
-	flushNoBlock();
+	flush();
 	writeQueue();
 	/// UNLOCK_FOR_SEND unlock mutex here in the multithreaded environment
 }
@@ -108,7 +108,7 @@ void RpcDriver::writeQueue()
 	}
 }
 
-void RpcDriver::bytesRead(std::string &&bytes)
+void RpcDriver::onBytesRead(std::string &&bytes)
 {
 	logRpc() << bytes.length() << "bytes of data read";
 	m_readData += std::string(std::move(bytes));

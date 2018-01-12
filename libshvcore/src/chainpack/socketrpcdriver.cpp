@@ -44,37 +44,32 @@ bool SocketRpcDriver::isOpen()
 	return m_socket >= 0;
 }
 
-size_t SocketRpcDriver::bytesToWrite()
-{
-	return m_bytesToWrite.length();
-}
-
 int64_t SocketRpcDriver::writeBytes(const char *bytes, size_t length)
 {
 	if(!isOpen()) {
 		shvInfo() << "Write to closed socket";
 		return 0;
 	}
-	flushNoBlock();
-	size_t bytes_to_write_len = (m_bytesToWrite.size() + length > m_maxBytesToWriteLength)? m_maxBytesToWriteLength - m_bytesToWrite.size(): length;
+	flush();
+	size_t bytes_to_write_len = (m_writeBuffer.size() + length > m_maxWriteBufferLength)? m_maxWriteBufferLength - m_writeBuffer.size(): length;
 	if(bytes_to_write_len > 0)
-		m_bytesToWrite += std::string(bytes, bytes_to_write_len);
-	flushNoBlock();
+		m_writeBuffer += std::string(bytes, bytes_to_write_len);
+	flush();
 	return bytes_to_write_len;
 }
 
-bool SocketRpcDriver::flushNoBlock()
+bool SocketRpcDriver::flush()
 {
-	if(m_bytesToWrite.empty()) {
+	if(m_writeBuffer.empty()) {
 		shvDebug() << "write buffer is empty";
 		return false;
 	}
-	shvDebug() << "Flushing write buffer, buffer len:" << m_bytesToWrite.size() << "...";
-	shvDebug() << "writing to socket:" << shv::core::Utils::toHex(m_bytesToWrite);
-	int64_t n = ::write(m_socket, m_bytesToWrite.data(), m_bytesToWrite.length());
+	shvDebug() << "Flushing write buffer, buffer len:" << m_writeBuffer.size() << "...";
+	shvDebug() << "writing to socket:" << shv::core::Utils::toHex(m_writeBuffer);
+	int64_t n = ::write(m_socket, m_writeBuffer.data(), m_writeBuffer.length());
 	shvDebug() << "\t" << n << "bytes written";
 	if(n > 0)
-		m_bytesToWrite = m_bytesToWrite.substr(n);
+		m_writeBuffer = m_writeBuffer.substr(n);
 	return (n > 0);
 }
 
@@ -144,7 +139,7 @@ void SocketRpcDriver::exec()
 		FD_ZERO(&read_flags);
 		FD_ZERO(&write_flags);
 		FD_SET(m_socket, &read_flags);
-		if(!m_bytesToWrite.empty())
+		if(!m_writeBuffer.empty())
 			FD_SET(m_socket, &write_flags);
 		//FD_SET(STDIN_FILENO, &read_flags);
 		//FD_SET(STDIN_FILENO, &write_flags);
@@ -178,7 +173,7 @@ void SocketRpcDriver::exec()
 				closeConnection();
 				return;
 			}
-			bytesRead(std::string(in, n));
+			onBytesRead(std::string(in, n));
 		}
 
 		//socket ready for writing

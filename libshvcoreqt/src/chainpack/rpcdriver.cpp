@@ -96,7 +96,7 @@ void RpcDriver::onReadyRead()
 		f->flush();
 	}
 #endif
-	bytesRead(ba.toStdString());
+	onBytesRead(ba.toStdString());
 }
 
 void RpcDriver::onBytesWritten()
@@ -110,17 +110,12 @@ bool RpcDriver::isOpen()
 	return m_socket && m_socket->isOpen();
 }
 
-size_t RpcDriver::bytesToWrite()
-{
-	return socket()->bytesToWrite();
-}
-
 int64_t RpcDriver::writeBytes(const char *bytes, size_t length)
 {
 	return socket()->write(bytes, length);
 }
 
-bool RpcDriver::flushNoBlock()
+bool RpcDriver::flush()
 {
 	if(m_socket)
 		return m_socket->flush();

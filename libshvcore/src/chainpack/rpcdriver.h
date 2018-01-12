@@ -29,36 +29,18 @@ protected:
 	using Chunk = std::string;
 protected:
 	virtual bool isOpen() = 0;
-	/// @return number of bytes in the write buffer
-	virtual size_t bytesToWrite() = 0;
 	/// write bytes to write buffer (and possibly to socket)
 	/// @return number of writen bytes
 	virtual int64_t writeBytes(const char *bytes, size_t length) = 0;
+	/// call it when new data arrived
+	void onBytesRead(std::string &&bytes);
 	/// flush write buffer to socket
 	/// @return true if write buffer length has changed (some data was written to the socket)
-	virtual bool flushNoBlock() = 0;
+	virtual bool flush() = 0;
 
-	/// call it when new data arrived
-	void bytesRead(std::string &&bytes);
 	/// add data to the output queue, send data from top of the queue
 	virtual void enqueueDataToSend(Chunk &&chunk_to_enqueue);
 	virtual void onMessageReceived(const shv::core::chainpack::RpcValue &msg);
-private:
-	/*
-	struct Chunk
-	{
-		//std::string packedLength;
-		//std::string packedHeader;
-		std::string data;
-
-		//Chunk(const ChunkHeader &h, std::string &&d) : packedHeader(h.toStringData()), data(std::move(d)) {fillPackedLength();}
-		Chunk(std::string &&d) : data(std::move(d)) {}
-		//Chunk(std::string &&h, std::string &&d) : packedHeader(std::move(h)), data(std::move(d)) {fillPackedLength();}
-
-		//std::string packedLength() const;
-		size_t length() const {return data.length();}
-	};
-	*/
 private:
 	int processReadData(const std::string &read_data);
 	void writeQueue();

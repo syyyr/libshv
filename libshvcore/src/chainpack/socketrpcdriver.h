@@ -21,9 +21,9 @@ public:
 	void sendNotify(std::string &&method, const shv::core::chainpack::RpcValue &result);
 protected:
 	bool isOpen() override;
-	size_t bytesToWrite() override;
 	int64_t writeBytes(const char *bytes, size_t length) override;
-	bool flushNoBlock() override;
+	bool flush() override;
+
 	void sendResponse(int request_id, const shv::core::chainpack::RpcValue &result);
 
 	virtual void idleTaskOnSelectTimeout() {}
@@ -31,8 +31,8 @@ protected:
 	//virtual void connectionClosed() {}
 private:
 	int m_socket = -1;
-	std::string m_bytesToWrite;
-	size_t m_maxBytesToWriteLength = 4 * 1024;
+	std::string m_writeBuffer;
+	size_t m_maxWriteBufferLength = 1024;
 };
 
 }}}
