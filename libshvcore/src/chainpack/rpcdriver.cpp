@@ -66,7 +66,7 @@ void RpcDriver::writeQueue()
 	//static int hi_cnt = 0;
 	const Chunk &chunk = m_chunkQueue[0];
 
-	if(m_headChunkBytesWrittenSoFar == 0) {
+	if(m_topChunkBytesWrittenSoFar == 0) {
 		std::string protocol_version_data;
 		{
 			std::ostringstream os;
@@ -93,16 +93,16 @@ void RpcDriver::writeQueue()
 	}
 
 	{
-		auto len = writeBytes(chunk.data() + m_headChunkBytesWrittenSoFar, chunk.length() - m_headChunkBytesWrittenSoFar);
+		auto len = writeBytes(chunk.data() + m_topChunkBytesWrittenSoFar, chunk.length() - m_topChunkBytesWrittenSoFar);
 		if(len < 0)
 			SHV_EXCEPTION("Write socket error!");
 		if(len == 0)
 			SHV_EXCEPTION("Design error! At least 1 byte of data shall be always written to the socket");
 
-		logRpc() << "writeQueue - data len:" << chunk.length() << "start index:" << m_headChunkBytesWrittenSoFar << "bytes written:" << len << "remaining:" << (chunk.length() - m_headChunkBytesWrittenSoFar - len);
-		m_headChunkBytesWrittenSoFar += len;
-		if(m_headChunkBytesWrittenSoFar == chunk.length()) {
-			m_headChunkBytesWrittenSoFar = 0;
+		logRpc() << "writeQueue - data len:" << chunk.length() << "start index:" << m_topChunkBytesWrittenSoFar << "bytes written:" << len << "remaining:" << (chunk.length() - m_topChunkBytesWrittenSoFar - len);
+		m_topChunkBytesWrittenSoFar += len;
+		if(m_topChunkBytesWrittenSoFar == chunk.length()) {
+			m_topChunkBytesWrittenSoFar = 0;
 			m_chunkQueue.pop_front();
 		}
 	}

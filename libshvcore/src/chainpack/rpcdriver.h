@@ -48,7 +48,7 @@ private:
 	MessageReceivedCallback m_messageReceivedCallback = nullptr;
 
 	std::deque<Chunk> m_chunkQueue;
-	size_t m_headChunkBytesWrittenSoFar = 0;
+	size_t m_topChunkBytesWrittenSoFar = 0;
 	std::string m_readData;
 	static int s_defaultRpcTimeout;
 };
