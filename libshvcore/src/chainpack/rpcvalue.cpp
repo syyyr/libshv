@@ -84,21 +84,13 @@ public:
 
 	virtual RpcValue::Type type() const {return RpcValue::Type::Invalid;}
 	virtual RpcValue::Type arrayType() const {return RpcValue::Type::Invalid;}
-	/*
-	virtual Value metaValue(Value::UInt key) const = 0;
-	virtual Value metaValue(const Value::String &key) const = 0;
-	virtual void setMetaValue(Value::UInt key, const Value &val) = 0;
-	virtual void setMetaValue(const Value::String &key, const Value &val) = 0;
-	*/
+
 	virtual const RpcValue::MetaData &metaData() const = 0;
 	virtual void setMetaData(RpcValue::MetaData &&meta_data) = 0;
 	virtual void setMetaValue(RpcValue::UInt key, const RpcValue &val) = 0;
 
 	virtual bool equals(const AbstractValueData * other) const = 0;
 	//virtual bool less(const Data * other) const = 0;
-
-	virtual void dumpText(std::string &out) const = 0;
-	virtual void dumpJson(std::string &out) const = 0;
 
 	virtual bool isNull() const {return false;}
 	virtual double toDouble() const {return 0;}
@@ -165,53 +157,6 @@ protected:
 		if(!m_metaData)
 			m_metaData = new RpcValue::MetaData();
 		m_metaData->setValue(key, val);
-	}
-
-	void dumpJson(std::string &out) const override
-	{
-		CponProtocol::serialize(m_value, out);
-	}
-
-	virtual bool dumpTextValue(std::string &out) const {dumpJson(out); return true;}
-	void dumpText(std::string &out) const override
-	{
-		if(m_metaData) {
-			out += '<' + m_metaData->toStdString() + '>';
-		}
-		std::string s;
-		dumpTextValue(s);
-		switch (type()) {
-		case RpcValue::Type::Null:
-			break;
-		case RpcValue::Type::Bool:
-			out += s;
-			break;
-		case RpcValue::Type::Int:
-			out += s;
-			break;
-		case RpcValue::Type::UInt:
-			out += s + 'u';
-			break;
-		case RpcValue::Type::String:
-			out += s;
-			break;
-		case RpcValue::Type::Double:
-			out += s;
-			if(s.find('e') == RpcValue::String::npos && s.find('E') == RpcValue::String::npos)
-				out += '.';
-			break;
-		case RpcValue::Type::List:
-			out += '[' + s + ']';
-			break;
-		case RpcValue::Type::Map:
-		case RpcValue::Type::IMap:
-			out += '{' + s + '}';
-			break;
-		default:
-			out += RpcValue::typeToName(type());
-			out += '(' + s + ')';
-			break;
-		}
 	}
 protected:
 	T m_value;
@@ -313,17 +258,6 @@ class ChainPackList final : public ValueData<RpcValue::Type::List, RpcValue::Lis
 	size_t count() const override {return m_value.size();}
 	RpcValue at(RpcValue::UInt i) const override;
 	void set(RpcValue::UInt key, const RpcValue &val) override;
-	bool dumpTextValue(std::string &out) const override
-	{
-		bool first = true;
-		for (const auto &value : m_value) {
-			if (!first)
-				out += ",";
-			value.dumpText(out);
-			first = false;
-		}
-		return true;
-	}
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toList(); }
 public:
 	explicit ChainPackList(const RpcValue::List &value) : ValueData(value) {}
@@ -336,15 +270,6 @@ class ChainPackArray final : public ValueData<RpcValue::Type::Array, RpcValue::A
 {
 	size_t count() const override {return m_value.size();}
 	RpcValue at(RpcValue::UInt i) const override;
-	bool dumpTextValue(std::string &out) const override
-	{
-		for (size_t i = 0; i < m_value.size(); ++i) {
-			if (i > 0)
-				out += ",";
-			m_value.valueAt(i).dumpText(out);
-		}
-		return true;
-	}
 	bool equals(const RpcValue::AbstractValueData * other) const override
 	{
 		const RpcValue::Array other_array = other->toArray();
@@ -390,19 +315,6 @@ class ChainPackMap final : public ValueData<RpcValue::Type::Map, RpcValue::Map>
 	//const ChainPack::Map &toMap() const override { return m_value; }
 	size_t count() const override {return m_value.size();}
 	RpcValue at(const RpcValue::String &key) const override;
-	bool dumpTextValue(std::string &out) const override
-	{
-		bool first = true;
-		for (const auto &kv : m_value) {
-			if (!first)
-				out += ",";
-			CponProtocol::serialize(kv.first, out);
-			out += ":";
-			kv.second.dumpText(out);
-			first = false;
-		}
-		return true;
-	}
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toMap(); }
 public:
 	explicit ChainPackMap(const RpcValue::Map &value) : ValueData(value) {}
@@ -417,32 +329,6 @@ class ChainPackIMap final : public ValueData<RpcValue::Type::IMap, RpcValue::IMa
 	size_t count() const override {return m_value.size();}
 	RpcValue at(RpcValue::UInt key) const override;
 	void set(RpcValue::UInt key, const RpcValue &val) override;
-	bool dumpTextValue(std::string &out) const override
-	{
-		int nsid = 0;
-		int tid = 0;
-		if(m_metaData) {
-			nsid = m_metaData->metaTypeNameSpaceId();
-			tid = m_metaData->metaTypeId();
-		}
-		const meta::MetaType &mt = meta::registeredType(nsid, tid);
-		bool first = true;
-		for (const auto &kv : m_value) {
-			if (!first)
-				out += ",";
-			const char *key_name = nullptr;
-			if(mt.isValid())
-				key_name = mt.keyById(kv.first).name;
-			if(key_name)
-				out += key_name;
-			else
-				CponProtocol::serialize(kv.first, out);
-			out += ":";
-			kv.second.dumpText(out);
-			first = false;
-		}
-		return true;
-	}
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toIMap(); }
 public:
 	explicit ChainPackIMap(const RpcValue::IMap &value) : ValueData(value) {}
@@ -458,39 +344,7 @@ class ChainPackNull final : public ValueData<RpcValue::Type::Null, std::nullptr_
 public:
 	ChainPackNull() : ValueData({}) {}
 };
-/*
-class ChainPackMetaTypeId final : public ChainPackUInt
-{
-public:
-	explicit ChainPackMetaTypeId(const Value::MetaTypeId value) : ChainPackUInt(value.id) { }
 
-	Value::Type::Enum type() const override { return Value::Type::MetaTypeId; }
-};
-
-class ChainPackMetaTypeNameSpaceId final : public ChainPackUInt
-{
-public:
-	explicit ChainPackMetaTypeNameSpaceId(const Value::MetaTypeNameSpaceId value) : ChainPackUInt(value.id) {}
-
-	Value::Type::Enum type() const override { return Value::Type::MetaTypeNameSpaceId; }
-};
-
-class ChainPackMetaTypeName final : public ChainPackString
-{
-public:
-	explicit ChainPackMetaTypeName(const Value::String value) : ChainPackString(value) {}
-
-	Value::Type::Enum type() const override { return Value::Type::MetaTypeName; }
-};
-
-class ChainPackMetaTypeNameSpaceName final : public ChainPackString
-{
-public:
-	explicit ChainPackMetaTypeNameSpaceName(const Value::String value) : ChainPackString(value) {}
-
-	Value::Type::Enum type() const override { return Value::Type::MetaTypeNameSpaceName; }
-};
-*/
 /* * * * * * * * * * * * * * * * * * * *
  * Static globals - static-init-safe
  */
@@ -574,36 +428,6 @@ void RpcValue::swap(RpcValue& other) noexcept
 //Value::Value(const Value::MetaTypeNameSpaceId &value) : m_ptr(std::make_shared<ChainPackMetaTypeNameSpaceId>(value)) {}
 //Value::Value(const Value::MetaTypeName &value) : m_ptr(std::make_shared<ChainPackMetaTypeName>(value)) {}
 //Value::Value(const Value::MetaTypeNameSpaceName &value) : m_ptr(std::make_shared<ChainPackMetaTypeNameSpaceName>(value)) {}
-/*
-ChainPack ChainPack::fromType(ChainPack::Type::Enum t)
-{
-	switch (t) {
-	case Type::Invalid: return ChainPack();
-	case Type::Null: return ChainPack(nullptr);
-	case Type::UInt: return ChainPack((unsigned int)0);
-	case Type::Int: return ChainPack((signed int)0);
-	case Type::Double: return ChainPack(0.);
-	case Type::Bool: return ChainPack(false);
-	case Type::Blob: return ChainPack(Blob());
-	case Type::String: return ChainPack(ChainPack::String());
-	case Type::List: ChainPack(List());
-	case Type::Table: ChainPack(Table());
-	case Type::Map: return ChainPack(Map());
-	case Type::DateTime: return ChainPack(DateTime{});
-	case Type::MetaTypeId: return ChainPack(DateTime{});
-	case Type::MetaTypeNameSpaceId: return ChainPack(DateTime{});
-	case Type::MetaTypeName: return ChainPack(DateTime{});
-	case Type::MetaTypeNameSpaceName: return ChainPack(DateTime{});
-
-	case Type::True: return "True";
-	case Type::False: return "False";
-	case Type::TERM: return "TERM";
-	default:
-		SHV_EXCEPTION("Internal error: attempt to create object of helper type. type: " + shv::core::Utils::toString(t));
-	}
-}
-*/
-//Value::Value(const std::shared_ptr<AbstractValueData> &r) : m_ptr(r) {}
 
 /* * * * * * * * * * * * * * * * * * * *
  * Accessors
@@ -680,6 +504,13 @@ void RpcValue::set(const RpcValue::String &key, const RpcValue &val)
 		m_ptr->set(key, val);
 	else
 		std::cerr << __FILE__ << ':' << __LINE__ << " Cannot set value to invalid ChainPack value! Key: " << key << std::endl;
+}
+
+std::string RpcValue::toCpon() const
+{
+	std::ostringstream out;
+	CponProtocol::serialize(out, *this);
+	return out.str();
 }
 
 const std::string & RpcValue::AbstractValueData::toString() const { return static_empty_string(); }
@@ -764,25 +595,6 @@ RpcValue RpcValue::parseCpon(const std::string &in, std::string *err)
 	else {
 		return CponProtocol::parse(in);
 	}
-}
-/*
-RpcValue RpcValue::parseCpon(const char *in, std::string &err)
-{
-	return ChainPackTextProtocol::parse(in, err);
-}
-*/
-void RpcValue::dumpText(std::string &out) const
-{
-	if(m_ptr)
-		m_ptr->dumpText(out);
-}
-
-void RpcValue::dumpJson(std::string &out) const
-{
-	if(m_ptr)
-		m_ptr->dumpJson(out);
-	else
-		out += "INVALID";
 }
 
 const char *RpcValue::typeToName(RpcValue::Type t)
@@ -958,51 +770,6 @@ bool RpcValue::MetaData::operator==(const RpcValue::MetaData &o) const
 		std::cerr << '\t' << it.first << ": " << it.second.dumpText() << std::endl;
 	*/
 	return m_imap == o.m_imap;
-}
-
-std::string RpcValue::MetaData::toStdString() const
-{
-	std::string out;
-	int n = 0;
-	int nsid = metaTypeNameSpaceId();
-	int mtid = metaTypeId();
-	/*
-	if(nsid > 0) {
-		out += "S:" + shv::core::Utils::toString(nsid);
-		n++;
-	}
-	if(mtid > 0) {
-		if(n++ > 0)
-			out += ",";
-		out += "T:" + shv::core::Utils::toString(mtid);
-		n++;
-	}
-	*/
-	for(auto tag : ikeys()) {
-		//if(key == RpcValue::Tag::MetaTypeId || key == RpcValue::Tag::MetaTypeNameSpaceId)
-		//	continue;
-		if(n++ > 0)
-			out += ",";
-		const meta::MetaInfo &tag_info = meta::registeredType(nsid, mtid).tagById(tag);
-		if(tag_info.isValid())
-			out += std::string(tag_info.name) + ':';
-		else
-			out += shv::core::Utils::toString(tag) + ':';
-		RpcValue meta_val = value(tag);
-		if(tag == meta::Tag::MetaTypeId) {
-			int id = meta_val.toInt();
-			const meta::MetaType &type = meta::registeredType(nsid, id);
-			const char *n = type.name();
-			if(n[0])
-				out += n;
-			else
-				out += shv::core::Utils::toString(id);
-		}
-		else {
-			meta_val.dumpText(out);
-		}
-	}
-	return out;
 }
 
 std::string RpcValue::Decimal::toString() const

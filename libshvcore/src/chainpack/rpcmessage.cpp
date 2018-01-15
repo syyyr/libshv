@@ -147,7 +147,7 @@ void RpcMessage::checkRpcTypeMetaValue()
 
 std::string RpcMessage::toStdString() const
 {
-	return m_value.toStdString();
+	return m_value.toCpon();
 }
 
 //==================================================================

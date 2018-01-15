@@ -203,17 +203,9 @@ public:
 		bool isEmpty() const {return m_imap.empty();}
 		bool operator==(const MetaData &o) const;
 		const RpcValue::IMap& toIMap() const {return m_imap;}
-		std::string toStdString() const;
 	protected:
-		//Value::Map smap;
 		RpcValue::IMap m_imap;
-		//RpcValue::UInt m_metaTypeId = 0;
-		//RpcValue::UInt m_metaTypeNameSpaceId = 0;
 	};
-	//struct MetaTypeId { uint32_t id = 0; MetaTypeId(uint32_t id) : id(id) {}};
-	//struct MetaTypeNameSpaceId { uint32_t id = 0; MetaTypeNameSpaceId(uint32_t id) : id(id) {}};
-	//struct MetaTypeName : public String { MetaTypeName(const String &id) : String(id) {} };
-	//struct MetaTypeNameSpaceName : public String { MetaTypeNameSpaceName(const String &id) : String(id) {} };
 
 	// Constructors for the various types of JSON value.
 	RpcValue() noexcept;                // Null
@@ -312,14 +304,9 @@ public:
 	void set(UInt ix, const RpcValue &val);
 	void set(const RpcValue::String &key, const RpcValue &val);
 
-	void dumpText(std::string &out) const;
-	void dumpJson(std::string &out) const;
-
-	std::string toStdString() const { std::string out; dumpText(out); return out; }
-	std::string toCpon() const { std::string out; dumpJson(out); return out; }
-
+	std::string toStdString() const { return toCpon(); }
+	std::string toCpon() const;
 	static RpcValue parseCpon(const std::string & in, std::string *err = nullptr);
-	//static RpcValue parseCpon(const char * in, std::string *err);
 
 	bool operator== (const RpcValue &rhs) const;
 #ifdef RPCVALUE_COPY_AND_SWAP

@@ -117,12 +117,12 @@ private:
 		string err;
 		const auto json = RpcValue::parseCpon(simple_test, &err);
 
-		qDebug() << "k1: " << json["k1"].toString().c_str();
+		qDebug() << "k1: " << json["k1"].toCpon().c_str();
 		qDebug() << "k3: " << json["k3"].toCpon().c_str();
 
 		RpcValue cp = json;
 		//cp.setMeta(json["k1"]);
-		qDebug() << "cp: " << cp.toStdString();
+		qDebug() << "cp: " << cp.toCpon();
 
 		string comment_test = R"({
 							  // comment /* with nested comment */
@@ -205,7 +205,7 @@ private:
 										   });
 
 		qDebug() << "obj: " << obj.toCpon();
-		QCOMPARE(obj.toCpon().c_str(), "{\"k1\": \"v1\", \"k2\": 42, \"k3\": [\"a\", 123, true, false, null]}");
+		QVERIFY(obj.toCpon() == "{\"k1\":\"v1\", \"k2\":42, \"k3\":[\"a\", 123, true, false, null]}");
 
 		QCOMPARE(RpcValue("a").toDouble(), 0.);
 		QCOMPARE(RpcValue("a").toString().c_str(), "a");
@@ -228,7 +228,7 @@ private:
 	};
 		std::string json_obj_str = my_json.toCpon();
 		qDebug() << "json_obj_str: " << json_obj_str.c_str();
-		QCOMPARE(json_obj_str.c_str(), "{\"key1\": \"value1\", \"key2\": false, \"key3\": [1, 2, 3]}");
+		QCOMPARE(json_obj_str.c_str(), "{\"key1\":\"value1\", \"key2\":false, \"key3\":[1, 2, 3]}");
 
 		class Point {
 		public:
@@ -312,7 +312,7 @@ private:
 			int len = ChainPackProtocol::write(out, cp1);
 			QVERIFY(len == 1);
 			RpcValue cp2 = ChainPackProtocol::read(out);
-			qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+			qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
 			QVERIFY(cp1.type() == cp2.type());
 		}
 		{
@@ -322,7 +322,7 @@ private:
 				std::stringstream out;
 				int len = ChainPackProtocol::write(out, cp1);
 				if(n < 10)
-					qDebug() << n << " " << cp1.toStdString() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+					qDebug() << n << " " << cp1.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
 				QVERIFY(len == 1);
 				RpcValue cp2 = ChainPackProtocol::read(out);
 				QVERIFY(cp1.type() == cp2.type());
@@ -340,7 +340,7 @@ private:
 					//QVERIFY(len > 1);
 					RpcValue cp2 = ChainPackProtocol::read(out);
 					//if(n < 100*step)
-					qDebug() << n << int_to_hex(n) << "..." << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+					qDebug() << n << int_to_hex(n) << "..." << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
 					QVERIFY(cp1.type() == cp2.type());
 					QCOMPARE(cp1.toUInt(), cp2.toUInt());
 				}
@@ -352,7 +352,7 @@ private:
 			std::stringstream out;
 			int len = ChainPackProtocol::write(out, cp1);
 			if(n < 10)
-				qDebug() << n << " " << cp1.toStdString() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+				qDebug() << n << " " << cp1.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
 			QVERIFY(len == 1);
 			RpcValue cp2 = ChainPackProtocol::read(out);
 			QVERIFY(cp1.type() == cp2.type());
@@ -372,7 +372,7 @@ private:
 							//QVERIFY(len > 1);
 							RpcValue cp2 = ChainPackProtocol::read(out);
 							//if(n < 100*step)
-							qDebug() << n << int_to_hex(n) << "..." << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+							qDebug() << n << int_to_hex(n) << "..." << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
 							QVERIFY(cp1.type() == cp2.type());
 							QCOMPARE(cp1.toUInt(), cp2.toUInt());
 						}
@@ -393,7 +393,7 @@ private:
 					QVERIFY(len > 1);
 					RpcValue cp2 = ChainPackProtocol::read(out);
 					if(n > -3*step && n < 3*step)
-						qDebug() << n << " " << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+						qDebug() << n << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
 					QVERIFY(cp1.type() == cp2.type());
 					QVERIFY(cp1.toDouble() == cp2.toDouble());
 				}
@@ -410,7 +410,7 @@ private:
 					QVERIFY(len > 1);
 					RpcValue cp2 = ChainPackProtocol::read(out);
 					if(n > -100 && n < 100)
-						qDebug() << n << " - " << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+						qDebug() << n << " - " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
 					QVERIFY(cp1.type() == cp2.type());
 					QVERIFY(cp1.toDouble() == cp2.toDouble());
 				}
@@ -429,7 +429,7 @@ private:
 					int len = ChainPackProtocol::write(out, cp1);
 					QVERIFY(len > 1);
 					RpcValue cp2 = ChainPackProtocol::read(out);
-					qDebug() << mant << prec << " - " << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+					qDebug() << mant << prec << " - " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
 					QVERIFY(cp1.type() == cp2.type());
 					QVERIFY(cp1 == cp2);
 				}
@@ -443,7 +443,7 @@ private:
 				int len = ChainPackProtocol::write(out, cp1);
 				QVERIFY(len == 1);
 				RpcValue cp2 = ChainPackProtocol::read(out);
-				qDebug() << b << " " << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+				qDebug() << b << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
 				QVERIFY(cp1.type() == cp2.type());
 				QVERIFY(cp1.toBool() == cp2.toBool());
 			}
@@ -456,7 +456,7 @@ private:
 			std::stringstream out;
 			int len = ChainPackProtocol::write(out, cp1);
 			RpcValue cp2 = ChainPackProtocol::read(out);
-			qDebug() << blob.toString() << " " << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+			qDebug() << blob.toString() << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
 			QVERIFY(cp1.type() == cp2.type());
 			QVERIFY(cp1.toBlob() == cp2.toBlob());
 		}
@@ -468,7 +468,7 @@ private:
 			std::stringstream out;
 			int len = ChainPackProtocol::write(out, cp1);
 			RpcValue cp2 = ChainPackProtocol::read(out);
-			qDebug() << str << " " << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
+			qDebug() << str << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
 			QVERIFY(cp1.type() == cp2.type());
 			QVERIFY(cp1.toString() == cp2.toString());
 		}
@@ -480,7 +480,7 @@ private:
 			std::stringstream out;
 			int len = ChainPackProtocol::write(out, cp1);
 			RpcValue cp2 = ChainPackProtocol::read(out);
-			qDebug() << str << " " << dt.toUtcString().c_str() << " " << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+			qDebug() << str << " " << dt.toUtcString().c_str() << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
 			QVERIFY(cp1.type() == cp2.type());
 			QVERIFY(cp1.toInt() == cp2.toInt());
 		}
@@ -496,7 +496,7 @@ private:
 				std::stringstream out;
 				int len = ChainPackProtocol::write(out, cp1);
 				RpcValue cp2 = ChainPackProtocol::read(out);
-				qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
+				qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
 				QVERIFY(cp1.type() == cp2.type());
 				QVERIFY(cp1.toList() == cp2.toList());
 			}
@@ -511,7 +511,7 @@ private:
 				std::stringstream out;
 				int len = ChainPackProtocol::write(out, cp1);
 				RpcValue cp2 = ChainPackProtocol::read(out);
-				qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
+				qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
 				QVERIFY(cp1.type() == cp2.type());
 				QVERIFY(cp1.toList() == cp2.toList());
 			}
@@ -568,7 +568,7 @@ private:
 				std::stringstream out;
 				int len = ChainPackProtocol::write(out, cp1);
 				RpcValue cp2 = ChainPackProtocol::read(out);
-				qDebug() << s << " " << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+				qDebug() << s << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
 				QVERIFY(cp1.type() == cp2.type());
 				QVERIFY(cp1.toList() == cp2.toList());
 			}
@@ -577,7 +577,7 @@ private:
 				std::stringstream out;
 				int len = ChainPackProtocol::write(out, cp1);
 				RpcValue cp2 = ChainPackProtocol::read(out);
-				qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+				qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
 				QVERIFY(cp1.type() == cp2.type());
 				QVERIFY(cp1.toList() == cp2.toList());
 			}
@@ -592,7 +592,7 @@ private:
 				ChainPackProtocol::writeContainerEnd(out);
 				//out.exceptions(std::iostream::eofbit);
 				RpcValue cp2 = ChainPackProtocol::read(out);
-				qDebug() << cp2.toStdString() << " dump: " << binary_dump(out.str()).c_str();
+				qDebug() << cp2.toCpon() << " dump: " << binary_dump(out.str()).c_str();
 				const RpcValue::List list = cp2.toList();
 				QVERIFY(list.size() == N);
 				for (size_t i = 0; i < list.size(); ++i) {
@@ -611,7 +611,7 @@ private:
 				std::stringstream out;
 				int len = ChainPackProtocol::write(out, cp1);
 				RpcValue cp2 = ChainPackProtocol::read(out);
-				qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
+				qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
 				QVERIFY(cp1.type() == cp2.type());
 				QVERIFY(cp1.toMap() == cp2.toMap());
 			}
@@ -646,7 +646,7 @@ private:
 				std::stringstream out;
 				int len = ChainPackProtocol::write(out, cp1);
 				RpcValue cp2 = ChainPackProtocol::read(out);
-				qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
+				qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
 				QVERIFY(cp1.type() == cp2.type());
 				QVERIFY(cp1.toIMap() == cp2.toIMap());
 			}
@@ -659,7 +659,7 @@ private:
 				std::stringstream out;
 				int len = ChainPackProtocol::write(out, cp1);
 				RpcValue cp2 = ChainPackProtocol::read(out);
-				qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
+				qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
 				QVERIFY(cp1.type() == cp2.type());
 				QVERIFY(cp1.toIMap() == cp2.toIMap());
 			}
@@ -672,7 +672,7 @@ private:
 			int len = ChainPackProtocol::write(out, cp1);
 			RpcValue cp2 = ChainPackProtocol::read(out);
 			std::ostream::pos_type consumed = out.tellg();
-			qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " consumed: " << consumed << " dump: " << binary_dump(out.str());
+			qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " consumed: " << consumed << " dump: " << binary_dump(out.str());
 			qDebug() << "hex:" << hex_dump(out.str());
 			QVERIFY(len == (int)consumed);
 			QVERIFY(cp1.type() == cp2.type());
@@ -689,7 +689,7 @@ private:
 			int len = ChainPackProtocol::write(out, cp1);
 			RpcValue cp2 = ChainPackProtocol::read(out);
 			std::ostream::pos_type consumed = out.tellg();
-			qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " consumed: " << consumed << " dump: " << binary_dump(out.str());
+			qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " consumed: " << consumed << " dump: " << binary_dump(out.str());
 			qDebug() << "hex:" << hex_dump(out.str());
 			QVERIFY(len == (int)consumed);
 			QVERIFY(cp1.type() == cp2.type());

@@ -12,6 +12,23 @@ namespace shv {
 namespace core {
 namespace chainpack {
 
+static const std::string S_NULL("null");
+static const std::string S_TRUE("true");
+static const std::string S_FALSE("false");
+
+static const std::string S_IMAP_BEGIN("i{");
+static const std::string S_ARRAY_BEGIN("a[");
+static const std::string S_BLOB_BEGIN("x\"");
+static const std::string S_DATETIME_BEGIN("d\"");
+//static const char S_LIST_BEGIN('[');
+//static const char S_LIST_END(']');
+//static const char S_MAP_BEGIN('{');
+//static const char S_MAP_END('}');
+static const char S_META_BEGIN('<');
+static const char S_META_END('>');
+static const char S_DECIMAL_END('n');
+static const char S_UNSIGNED_END('u');
+
 //==============================================================
 // Parsing
 //==============================================================
@@ -200,7 +217,6 @@ bool CponProtocol::parseMetaData(RpcValue::MetaData &meta_data)
 
 bool CponProtocol::parseNull(RpcValue &val)
 {
-	static const std::string S_NULL("null");
 	if(starts_with(m_str, m_pos, S_NULL)) {
 		m_pos += S_NULL.size();
 		val = RpcValue(nullptr);
@@ -211,8 +227,6 @@ bool CponProtocol::parseNull(RpcValue &val)
 
 bool CponProtocol::parseBool(RpcValue &val)
 {
-	static const std::string S_TRUE("true");
-	static const std::string S_FALSE("false");
 	if(starts_with(m_str, m_pos, S_TRUE)) {
 		m_pos += S_TRUE.size();
 		val = RpcValue(true);
@@ -284,7 +298,7 @@ bool CponProtocol::parseNumber(RpcValue &val)
 		int_part = parseDecimalUnsigned(radix);
 		if (m_pos == start_pos)
 			PARSE_EXCEPTION("number integer part missing");
-		if (starts_with(m_str, m_pos, 'u')) {
+		if (starts_with(m_str, m_pos, S_UNSIGNED_END)) {
 			type = RpcValue::Type::UInt;
 			m_pos++;
 		}
@@ -295,7 +309,7 @@ bool CponProtocol::parseNumber(RpcValue &val)
 		dec_part = parseDecimalUnsigned(radix);
 		type = RpcValue::Type::Double;
 		dec_cnt = m_pos - start_pos;
-		if (starts_with(m_str, m_pos, 'n')) {
+		if (starts_with(m_str, m_pos, S_DECIMAL_END)) {
 			type = RpcValue::Type::Decimal;
 			m_pos++;
 		}
@@ -408,10 +422,9 @@ bool CponProtocol::parseMap(RpcValue &val)
 
 bool CponProtocol::parseIMap(RpcValue &val)
 {
-	static const std::string S_IMAP("i{");
-	if (!starts_with(m_str, m_pos, S_IMAP))
+	if (!starts_with(m_str, m_pos, S_IMAP_BEGIN))
 		return false;
-	m_pos += S_IMAP.size();
+	m_pos += S_IMAP_BEGIN.size();
 	skipGarbage();
 	RpcValue::IMap imap = parseIMapContent();
 	char ch = skipGarbage();
@@ -424,10 +437,9 @@ bool CponProtocol::parseIMap(RpcValue &val)
 
 bool CponProtocol::parseArray(RpcValue &ret_val)
 {
-	static const std::string S_ARRAY("a[");
-	if(!starts_with(m_str, m_pos, S_ARRAY))
+	if(!starts_with(m_str, m_pos, S_ARRAY_BEGIN))
 		return false;
-	m_pos += S_ARRAY.size();
+	m_pos += S_ARRAY_BEGIN.size();
 
 	RpcValue::Array arr;
 	while (true) {
@@ -457,8 +469,7 @@ bool CponProtocol::parseArray(RpcValue &ret_val)
 
 bool CponProtocol::parseDateTime(RpcValue &val)
 {
-	static const std::string S_DATETIME("d\"");
-	if(!starts_with(m_str, m_pos, S_DATETIME))
+	if(!starts_with(m_str, m_pos, S_DATETIME_BEGIN))
 		return false;
 	m_pos += 1;
 	std::string s;
@@ -635,144 +646,204 @@ void CponProtocol::encodeUtf8(long pt, std::string & out)
 	}
 }
 
-void CponProtocol::serialize(std::nullptr_t, std::string &out)
+void CponProtocol::serialize(std::ostream &out, const RpcValue &value)
 {
-	out += "null";
+	if(!value.metaData().isEmpty())
+		serialize(value.metaData(), out);
+	switch (value.type()) {
+	//case RpcValue::Type::Invalid: serialize(value.toInvalid(), out); break;
+	case RpcValue::Type::Null: serialize(nullptr, out); break;
+	case RpcValue::Type::UInt: serialize(value.toUInt(), out); break;
+	case RpcValue::Type::Int: serialize(value.toInt(), out); break;
+	case RpcValue::Type::Double: serialize(value.toDouble(), out); break;
+	case RpcValue::Type::Bool: serialize(value.toBool(), out); break;
+	case RpcValue::Type::Blob: serialize(value.toBlob(), out); break;
+	case RpcValue::Type::String: serialize(value.toString(), out); break;
+	case RpcValue::Type::DateTime: serialize(value.toDateTime(), out); break;
+	case RpcValue::Type::List: serialize(value.toList(), out); break;
+	case RpcValue::Type::Array: serialize(value.toArray(), out); break;
+	case RpcValue::Type::Map: serialize(value.toMap(), out); break;
+	case RpcValue::Type::IMap: serialize(value.toIMap(), out); break;
+	//case RpcValue::Type::MetaIMap: serialize(value.toMetaIMap(), out); break;
+	case RpcValue::Type::Decimal: serialize(value.toDecimal(), out); break;
+	default:
+		std::runtime_error(std::string("Don't know how to serialize type: ") + RpcValue::typeToName(value.type()));
+	}
 }
 
-void CponProtocol::serialize(double value, std::string &out)
+void CponProtocol::serialize(std::nullptr_t, std::ostream &out)
+{
+	out << S_NULL;
+}
+
+void CponProtocol::serialize(double value, std::ostream &out)
 {
 	if (std::isfinite(value)) {
 		char buf[32];
 		snprintf(buf, sizeof buf, "%.17g", value);
-		out += buf;
+		out << buf;
 	}
 	else {
-		out += "null";
+		out << S_NULL;
 	}
 }
 
-void CponProtocol::serialize(RpcValue::Int value, std::string &out)
+void CponProtocol::serialize(RpcValue::Int value, std::ostream &out)
 {
-	out += shv::core::Utils::toString(value);
+	out << shv::core::Utils::toString(value);
 }
 
-void CponProtocol::serialize(RpcValue::UInt value, std::string &out)
+void CponProtocol::serialize(RpcValue::UInt value, std::ostream &out)
 {
-	out += shv::core::Utils::toString(value);
+	out << shv::core::Utils::toString(value);
 }
 
-void CponProtocol::serialize(bool value, std::string &out)
+void CponProtocol::serialize(bool value, std::ostream &out)
 {
-	out += value ? "true" : "false";
+	out << (value ? S_TRUE : S_FALSE);
 }
 
-void CponProtocol::serialize(RpcValue::DateTime value, std::string &out)
+void CponProtocol::serialize(RpcValue::DateTime value, std::ostream &out)
 {
-	out += value.toString();
+	out << S_DATETIME_BEGIN << value.toString() << '"';
 }
 
-void CponProtocol::serialize(RpcValue::Decimal value, std::string &out)
+void CponProtocol::serialize(RpcValue::Decimal value, std::ostream &out)
 {
-	out += value.toString();
+	out << value.toString() << S_DECIMAL_END;
 }
 
-void CponProtocol::serialize(const std::string &value, std::string &out)
+void CponProtocol::serialize(const std::string &value, std::ostream &out)
 {
-	out += '"';
+	out << '"';
 	for (size_t i = 0; i < value.length(); i++) {
 		const char ch = value[i];
 		if (ch == '\\') {
-			out += "\\\\";
+			out << "\\\\";
 		} else if (ch == '"') {
-			out += "\\\"";
+			out << "\\\"";
 		} else if (ch == '\b') {
-			out += "\\b";
+			out << "\\b";
 		} else if (ch == '\f') {
-			out += "\\f";
+			out << "\\f";
 		} else if (ch == '\n') {
-			out += "\\n";
+			out << "\\n";
 		} else if (ch == '\r') {
-			out += "\\r";
+			out << "\\r";
 		} else if (ch == '\t') {
-			out += "\\t";
+			out << "\\t";
 		} else if (static_cast<uint8_t>(ch) <= 0x1f) {
 			char buf[8];
 			snprintf(buf, sizeof buf, "\\u%04x", ch);
-			out += buf;
+			out << buf;
 		} else if (static_cast<uint8_t>(ch) == 0xe2 && static_cast<uint8_t>(value[i+1]) == 0x80
 				 && static_cast<uint8_t>(value[i+2]) == 0xa8) {
-			out += "\\u2028";
+			out << "\\u2028";
 			i += 2;
 		} else if (static_cast<uint8_t>(ch) == 0xe2 && static_cast<uint8_t>(value[i+1]) == 0x80
 				 && static_cast<uint8_t>(value[i+2]) == 0xa9) {
-			out += "\\u2029";
+			out << "\\u2029";
 			i += 2;
 		} else {
-			out += ch;
+			out << ch;
 		}
 	}
-	out += '"';
+	out << '"';
 }
 
-void CponProtocol::serialize(const RpcValue::Blob &value, std::string &out)
+void CponProtocol::serialize(const RpcValue::Blob &value, std::ostream &out)
 {
-	std::string s = value.toString();
-	serialize(s, out);
+	out << S_BLOB_BEGIN;
+	out << shv::core::Utils::toHex(value);
+	out << '"';
 }
 
-void CponProtocol::serialize(const RpcValue::List &values, std::string &out)
+void CponProtocol::serialize(const RpcValue::List &values, std::ostream &out)
 {
 	bool first = true;
-	out += "[";
+	out << "[";
 	for (const auto &value : values) {
 		if (!first)
-			out += ", ";
-		value.dumpJson(out);
+			out << ", ";
+		serialize(out, value);
 		first = false;
 	}
-	out += "]";
+	out << "]";
 }
 
-void CponProtocol::serialize(const RpcValue::Array &values, std::string &out)
+void CponProtocol::serialize(const RpcValue::Array &values, std::ostream &out)
 {
-	out += "[";
+	out << S_ARRAY_BEGIN;
 	for (size_t i = 0; i < values.size(); ++i) {
 		if (i > 0)
-			out += ", ";
-		values.valueAt(i).dumpJson(out);
+			out << ", ";
+		serialize(out, values.valueAt(i));
 	}
-	out += "]";
+	out << "]";
 }
 
-void CponProtocol::serialize(const RpcValue::Map &values, std::string &out)
+void CponProtocol::serialize(const RpcValue::Map &values, std::ostream &out)
 {
 	bool first = true;
-	out += "{";
+	out << "{";
 	for (const auto &kv : values) {
 		if (!first)
-			out += ", ";
+			out << ", ";
 		serialize(kv.first, out);
-		out += ": ";
-		kv.second.dumpJson(out);
+		out << ":";
+		serialize(out, kv.second);
 		first = false;
 	}
-	out += "}";
+	out << "}";
 }
 
-void CponProtocol::serialize(const RpcValue::IMap &values, std::string &out)
+void CponProtocol::serialize(const RpcValue::IMap &values, std::ostream &out)
 {
 	bool first = true;
-	out += "{";
+	out << S_IMAP_BEGIN;
 	for (const auto &kv : values) {
 		if (!first)
-			out += ", ";
+			out << ", ";
 		serialize(kv.first, out);
-		out += ": ";
-		kv.second.dumpJson(out);
+		out << ":";
+		serialize(out, kv.second);
 		first = false;
 	}
-	out += "}";
+	out << "}";
+}
+
+void CponProtocol::serialize(const RpcValue::MetaData &value, std::ostream &out)
+{
+	int n = 0;
+	int nsid = value.metaTypeNameSpaceId();
+	int mtid = value.metaTypeId();
+
+	out << S_META_BEGIN;
+	for(auto tag : value.ikeys()) {
+		//if(key == RpcValue::Tag::MetaTypeId || key == RpcValue::Tag::MetaTypeNameSpaceId)
+		//	continue;
+		if(n++ > 0)
+			out << ", ";
+		const meta::MetaInfo &tag_info = meta::registeredType(nsid, mtid).tagById(tag);
+		if(tag_info.isValid())
+			out << tag_info.name << ':';
+		else
+			out << shv::core::Utils::toString(tag) << ':';
+		RpcValue meta_val = value.value(tag);
+		if(tag == meta::Tag::MetaTypeId) {
+			int id = meta_val.toInt();
+			const meta::MetaType &type = meta::registeredType(nsid, id);
+			const char *n = type.name();
+			if(n[0])
+				out << n;
+			else
+				out << shv::core::Utils::toString(id);
+		}
+		else {
+			serialize(out, meta_val);
+		}
+	}
+	out << S_META_END;
 }
 
 }}}

@@ -23,6 +23,8 @@ public:
 	};
 public:
 	static RpcValue parse(const std::string & in);
+	static std::string serialize(const RpcValue &value);
+	static void serialize(std::ostream &out, const RpcValue &value);
 private:
 	CponProtocol(const std::string &str);
 	RpcValue parseAtPos();
@@ -53,19 +55,20 @@ private:
 private:
 	void encodeUtf8(long pt, std::string & out);
 public:
-	static void serialize(std::nullptr_t, std::string &out);
-	static void serialize(double value, std::string &out);
-	static void serialize(RpcValue::Int value, std::string &out);
-	static void serialize(RpcValue::UInt value, std::string &out);
-	static void serialize(bool value, std::string &out);
-	static void serialize(RpcValue::DateTime value, std::string &out);
-	static void serialize(RpcValue::Decimal value, std::string &out);
-	static void serialize(const std::string &value, std::string &out);
-	static void serialize(const RpcValue::Blob &value, std::string &out);
-	static void serialize(const RpcValue::List &values, std::string &out);
-	static void serialize(const RpcValue::Array &values, std::string &out);
-	static void serialize(const RpcValue::Map &values, std::string &out);
-	static void serialize(const RpcValue::IMap &values, std::string &out);
+	static void serialize(std::nullptr_t, std::ostream &out);
+	static void serialize(double value, std::ostream &out);
+	static void serialize(RpcValue::Int value, std::ostream &out);
+	static void serialize(RpcValue::UInt value, std::ostream &out);
+	static void serialize(bool value, std::ostream &out);
+	static void serialize(RpcValue::DateTime value, std::ostream &out);
+	static void serialize(RpcValue::Decimal value, std::ostream &out);
+	static void serialize(const std::string &value, std::ostream &out);
+	static void serialize(const RpcValue::Blob &value, std::ostream &out);
+	static void serialize(const RpcValue::List &values, std::ostream &out);
+	static void serialize(const RpcValue::Array &values, std::ostream &out);
+	static void serialize(const RpcValue::Map &values, std::ostream &out);
+	static void serialize(const RpcValue::IMap &values, std::ostream &out);
+	static void serialize(const RpcValue::MetaData &value, std::ostream &out);
 private:
 	const std::string &m_str;
 	//std::string &m_err;

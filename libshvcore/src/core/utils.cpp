@@ -97,6 +97,19 @@ std::string Utils::toHex(const std::string &bytes)
 	return ret;
 }
 
+std::string Utils::toHex(const std::basic_string<uint8_t> &bytes)
+{
+	std::string ret;
+	for (size_t i = 0; i < bytes.size(); ++i) {
+		unsigned char b = bytes[i];
+		char h = b / 16;
+		char l = b % 16;
+		ret += hex_nibble(h);
+		ret += hex_nibble(l);
+	}
+	return ret;
+}
+
 static inline char unhex_char(char c)
 {
 	if(c >= '0' && c <= '9')

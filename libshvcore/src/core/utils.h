@@ -124,6 +124,7 @@ public:
 
 	std::string binaryDump(const std::string &bytes);
 	static std::string toHex(const std::string &bytes);
+	static std::string toHex(const std::basic_string<uint8_t> &bytes);
 	static std::string fromHex(const std::string &bytes);
 
 	template<typename T>

@@ -156,7 +156,7 @@ int RpcDriver::processReadData(const std::string &read_data)
 
 void RpcDriver::onMessageReceived(const RpcValue &msg)
 {
-	logRpc() << "\t message received:" << msg.toStdString();
+	logRpc() << "\t message received:" << msg.toCpon();
 	//logLongFiles() << "\t emitting message received:" << msg.dumpText();
 	if(m_messageReceivedCallback)
 		m_messageReceivedCallback(msg);
