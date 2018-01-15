@@ -97,6 +97,30 @@ std::string Utils::toHex(const std::string &bytes)
 	return ret;
 }
 
+static inline char unhex_char(char c)
+{
+	if(c >= '0' && c <= '9')
+		return c - '0';
+	if(c >= 'a' && c <= 'f')
+		return c - 'a' + 10;
+	if(c >= 'A' && c <= 'F')
+		return c - 'A' + 10;
+	return char(0);
+}
+
+std::string Utils::fromHex(const std::string &bytes)
+{
+	std::string ret;
+	for (size_t i = 0; i < bytes.size(); ) {
+		unsigned char u = unhex_char(bytes[i++]);
+		u = 16 * u;
+		if(i < bytes.size())
+			u += unhex_char(bytes[i++]);
+		ret.push_back(u);
+	}
+	return ret;
+}
+
 #if 0
 const QString& Utils::nullValueString()
 {

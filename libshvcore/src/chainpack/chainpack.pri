@@ -1,18 +1,18 @@
 SOURCES += \
     $$PWD/chainpackprotocol.cpp \
-    $$PWD/jsonprotocol.cpp \
     $$PWD/rpcmessage.cpp \
     $$PWD/rpcvalue.cpp \
     $$PWD/rpcdriver.cpp \
-    $$PWD/metatypes.cpp
+    $$PWD/metatypes.cpp \
+    $$PWD/cponprotocol.cpp
 
 HEADERS += \
     $$PWD/chainpackprotocol.h \
-    $$PWD/jsonprotocol.h \
     $$PWD/rpcmessage.h \
     $$PWD/rpcvalue.h \
     $$PWD/rpcdriver.h \
-    $$PWD/metatypes.h
+    $$PWD/metatypes.h \
+    $$PWD/cponprotocol.h
 
 unix {
 SOURCES += \

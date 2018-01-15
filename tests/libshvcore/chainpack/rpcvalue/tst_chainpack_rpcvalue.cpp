@@ -57,15 +57,68 @@ class TestRpcValue: public QObject
 private:
 	void textTest()
 	{
-		qDebug() << "============= chainpack text test ============\n";
-		const string simple_test =
-				R"({"k1":"v1", "k2":42, "k3":["a",123,true,false,null]})";
+		qDebug() << "============= chainpack text test ============";
+		{
+			qDebug() << "--------------- List test";
+			string err;
+			const string test = R"(
+								[
+									"foo bar",
+									123,
+									true,
+									false,
+									null,
+									456u,
+									0.123,
+									123.456n,
+									x"48656c6c6f",
+									d"2018-01-14T01:17:33.256"
+									]
+								)";
+			const auto cp = RpcValue::parseCpon(test, &err);
+			QVERIFY(err.empty());
+			qDebug() << "List test: " << cp.toCpon().c_str();
+			QVERIFY(cp[0] == "foo bar");
+			QVERIFY(cp[1] == 123);
+			QVERIFY(cp[2] == true);
+			QVERIFY(cp[3] == false);
+			QVERIFY(cp[4] == RpcValue(nullptr));
+			QVERIFY(cp[5] == RpcValue::UInt(456));
+			QVERIFY(cp[6] == 0.123);
+			QVERIFY(cp[7] == RpcValue::Decimal(123456, 3));
+			QVERIFY(cp[8] == RpcValue::Blob("Hello"));
+			RpcValue::DateTime dt = cp[9].toDateTime();
+			QVERIFY(dt.msecsSinceEpoch() % 1000 == 256);
+		}
+		{
+			string err;
+			const string imap_test = R"(
+									 <1:"foo", 2u: "bar">
+									 i{
+									   1:"v1",
+									   2:42,
+									   3:[
+									     "a",
+									     123,
+									     true,
+									     false,
+									     null,
+									     123, 456u, 0.123, 123.456n
+									   ]
+									 }
+									 )";
+			const auto json = RpcValue::parseCpon(imap_test, &err);
+			QVERIFY(err.empty());
+			qDebug() << "imap_test: " << json.toCpon().c_str();
+		}
+
+		const string simple_test = R"({"k1":"v1", "k2":42, "k3":["a",123,true,false,null]})";
 
 		string err;
-		const auto json = RpcValue::parseJson(simple_test, err);
+		const auto json = RpcValue::parseCpon(simple_test, &err);
 
 		qDebug() << "k1: " << json["k1"].toString().c_str();
-		qDebug() << "k3: " << json["k3"].toJson().c_str();
+		qDebug() << "k3: " << json["k3"].toCpon().c_str();
 
 		RpcValue cp = json;
 		//cp.setMeta(json["k1"]);
@@ -89,48 +142,48 @@ private:
 							  })";
 
 		string err_comment;
-		auto json_comment = RpcValue::parseJson( comment_test, err_comment);
+		auto json_comment = RpcValue::parseCpon( comment_test, &err_comment);
 		QVERIFY(!json_comment.isNull());
 		QVERIFY(err_comment.empty());
 
 		comment_test = "{\"a\": 1}//trailing line comment";
-		json_comment = RpcValue::parseJson( comment_test, err_comment);
+		json_comment = RpcValue::parseCpon( comment_test, &err_comment);
 		QVERIFY(!json_comment.isNull());
 		QVERIFY(err_comment.empty());
 
 		comment_test = "{\"a\": 1}/*trailing multi-line comment*/";
-		json_comment = RpcValue::parseJson( comment_test, err_comment);
+		json_comment = RpcValue::parseCpon( comment_test, &err_comment);
 		QVERIFY(!json_comment.isNull());
 		QVERIFY(err_comment.empty());
 
 		string failing_comment_test = "{\n/* unterminated comment\n\"a\": 1,\n}";
 		string err_failing_comment;
-		RpcValue json_failing_comment = RpcValue::parseJson( failing_comment_test, err_failing_comment);
+		RpcValue json_failing_comment = RpcValue::parseCpon( failing_comment_test, &err_failing_comment);
 		QVERIFY(!json_failing_comment.isValid());
 		QVERIFY(!err_failing_comment.empty());
 
 		failing_comment_test = "{\n/* unterminated trailing comment }";
-		json_failing_comment = RpcValue::parseJson( failing_comment_test, err_failing_comment);
+		json_failing_comment = RpcValue::parseCpon( failing_comment_test, &err_failing_comment);
 		QVERIFY(!json_failing_comment.isValid());
 		QVERIFY(!err_failing_comment.empty());
 
 		failing_comment_test = "{\n/ / bad comment }";
-		json_failing_comment = RpcValue::parseJson( failing_comment_test, err_failing_comment);
+		json_failing_comment = RpcValue::parseCpon( failing_comment_test, &err_failing_comment);
 		QVERIFY(!json_failing_comment.isValid());
 		QVERIFY(!err_failing_comment.empty());
 
 		failing_comment_test = "{// bad comment }";
-		json_failing_comment = RpcValue::parseJson( failing_comment_test, err_failing_comment);
+		json_failing_comment = RpcValue::parseCpon( failing_comment_test, &err_failing_comment);
 		QVERIFY(!json_failing_comment.isValid());
 		QVERIFY(!err_failing_comment.empty());
-
+		/*
 		failing_comment_test = "{\n\"a\": 1\n}/";
-		json_failing_comment = RpcValue::parseJson( failing_comment_test, err_failing_comment);
+		json_failing_comment = RpcValue::parseCpon( failing_comment_test, &err_failing_comment);
 		QVERIFY(!json_failing_comment.isValid());
 		QVERIFY(!err_failing_comment.empty());
-
+		*/
 		failing_comment_test = "{/* bad\ncomment *}";
-		json_failing_comment = RpcValue::parseJson( failing_comment_test, err_failing_comment);
+		json_failing_comment = RpcValue::parseCpon( failing_comment_test, &err_failing_comment);
 		QVERIFY(!json_failing_comment.isValid());
 		QVERIFY(!err_failing_comment.empty());
 
@@ -151,8 +204,8 @@ private:
 											   { "k3", RpcValue::List({ "a", 123.0, true, false, nullptr }) },
 										   });
 
-		qDebug() << "obj: " << obj.toJson();
-		QCOMPARE(obj.toJson().c_str(), "{\"k1\": \"v1\", \"k2\": 42, \"k3\": [\"a\", 123, true, false, null]}");
+		qDebug() << "obj: " << obj.toCpon();
+		QCOMPARE(obj.toCpon().c_str(), "{\"k1\": \"v1\", \"k2\": 42, \"k3\": [\"a\", 123, true, false, null]}");
 
 		QCOMPARE(RpcValue("a").toDouble(), 0.);
 		QCOMPARE(RpcValue("a").toString().c_str(), "a");
@@ -164,7 +217,7 @@ private:
 		const char utf8[] = "blah" "\xf0\x9f\x92\xa9" "blah" "\xed\xa0\xbd" "blah"
 							"\xed\xb2\xa9" "blah" "\0" "blah" "\xe1\x88\xb4";
 
-		RpcValue uni = RpcValue::parseJson(unicode_escape_test, err);
+		RpcValue uni = RpcValue::parseCpon(unicode_escape_test, &err);
 		QVERIFY(uni[0].toString().size() == (sizeof utf8) - 1);
 		QVERIFY(std::memcmp(uni[0].toString().data(), utf8, sizeof utf8) == 0);
 
@@ -173,7 +226,7 @@ private:
 		{ "key2", false },
 		{ "key3", RpcValue::List { 1, 2, 3 } },
 	};
-		std::string json_obj_str = my_json.toJson();
+		std::string json_obj_str = my_json.toCpon();
 		qDebug() << "json_obj_str: " << json_obj_str.c_str();
 		QCOMPARE(json_obj_str.c_str(), "{\"key1\": \"value1\", \"key2\": false, \"key3\": [1, 2, 3]}");
 
@@ -186,7 +239,7 @@ private:
 		};
 
 		std::vector<Point> points = { { 1, 2 }, { 10, 20 }, { 100, 200 } };
-		std::string points_json = RpcValue(points).toJson();
+		std::string points_json = RpcValue(points).toCpon();
 		qDebug() << "points_json: " << points_json.c_str();
 		QVERIFY(points_json == "[[1, 2], [10, 20], [100, 200]]");
 	}
@@ -511,7 +564,7 @@ private:
 			{
 				const std::string s = R"(["a",123,true,[1,2,3],null])";
 				string err;
-				RpcValue cp1 = RpcValue::parseJson(s, err);
+				RpcValue cp1 = RpcValue::parseCpon(s, &err);
 				std::stringstream out;
 				int len = ChainPackProtocol::write(out, cp1);
 				RpcValue cp2 = ChainPackProtocol::read(out);

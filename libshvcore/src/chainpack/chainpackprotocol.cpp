@@ -245,14 +245,13 @@ T readData_Blob(std::istream &data)
 
 void writeData_DateTime(std::ostream &out, const RpcValue::DateTime &dt)
 {
-	uint64_t msecs = dt.msecs;
+	uint64_t msecs = dt.msecsSinceEpoch();
 	writeData_Int(out, msecs);
 }
 
 RpcValue::DateTime readData_DateTime(std::istream &data)
 {
-	RpcValue::DateTime dt;
-	dt.msecs = readData_Int<decltype(dt.msecs)>(data);
+	RpcValue::DateTime dt = RpcValue::DateTime::fromMSecsSinceEpoch(readData_Int<decltype(dt.msecsSinceEpoch())>(data));
 	return dt;
 }
 

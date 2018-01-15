@@ -12,7 +12,7 @@ namespace chainpack {
 class SHVCORE_DECL_EXPORT ChainPackProtocol
 {
 	static constexpr uint8_t ARRAY_FLAG_MASK = 64;
-public:
+public: // public just because of testing, normal user do not need to use this enum
 	struct SHVCORE_DECL_EXPORT TypeInfo {
 		enum Enum {
 			INVALID = -1,

@@ -20,7 +20,7 @@
  */
 
 #include "rpcvalue.h"
-#include "jsonprotocol.h"
+#include "cponprotocol.h"
 
 #include "../core/shvexception.h"
 #include "../core/utils.h"
@@ -33,8 +33,9 @@
 #include <iostream>
 //#include <utility>
 
-#if defined _WIN32 || defined LIBC_NEWLIB
 namespace {
+#if defined _WIN32 || defined LIBC_NEWLIB
+// see http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html#tag_04_15
 int is_leap(unsigned y)
 {
 	y += 1900;
@@ -66,8 +67,8 @@ time_t timegm(struct tm *tm)
 	res += tm->tm_sec;
 	return res;
 }
-} // namespace
 #endif
+} // namespace
 
 namespace shv {
 namespace core {
@@ -168,7 +169,7 @@ protected:
 
 	void dumpJson(std::string &out) const override
 	{
-		JsonProtocol::dumpJson(m_value, out);
+		CponProtocol::serialize(m_value, out);
 	}
 
 	virtual bool dumpTextValue(std::string &out) const {dumpJson(out); return true;}
@@ -274,11 +275,11 @@ public:
 
 class ChainPackDateTime final : public ValueData<RpcValue::Type::DateTime, RpcValue::DateTime>
 {
-	bool toBool() const override { return m_value.msecs != 0; }
-	RpcValue::Int toInt() const override { return m_value.msecs; }
-	RpcValue::UInt toUInt() const override { return m_value.msecs; }
+	bool toBool() const override { return m_value.msecsSinceEpoch() != 0; }
+	RpcValue::Int toInt() const override { return m_value.msecsSinceEpoch(); }
+	RpcValue::UInt toUInt() const override { return m_value.msecsSinceEpoch(); }
 	RpcValue::DateTime toDateTime() const override { return m_value; }
-	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value.msecs == other->toInt(); }
+	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value.msecsSinceEpoch() == other->toInt(); }
 public:
 	explicit ChainPackDateTime(RpcValue::DateTime value) : ValueData(value) {}
 };
@@ -395,7 +396,7 @@ class ChainPackMap final : public ValueData<RpcValue::Type::Map, RpcValue::Map>
 		for (const auto &kv : m_value) {
 			if (!first)
 				out += ",";
-			JsonProtocol::dumpJson(kv.first, out);
+			CponProtocol::serialize(kv.first, out);
 			out += ":";
 			kv.second.dumpText(out);
 			first = false;
@@ -435,7 +436,7 @@ class ChainPackIMap final : public ValueData<RpcValue::Type::IMap, RpcValue::IMa
 			if(key_name)
 				out += key_name;
 			else
-				JsonProtocol::dumpJson(kv.first, out);
+				CponProtocol::serialize(kv.first, out);
 			out += ":";
 			kv.second.dumpText(out);
 			first = false;
@@ -749,16 +750,27 @@ bool ChainPack::operator< (const ChainPack &other) const
 }
 */
 
-RpcValue RpcValue::parseJson(const std::string &in, std::string &err)
+RpcValue RpcValue::parseCpon(const std::string &in, std::string *err)
 {
-	return JsonProtocol::parseJson(in, err);
+	if(err) {
+		try {
+			return CponProtocol::parse(in);
+		}
+		catch(CponProtocol::ParseException &e) {
+			*err = e.mesage();
+		}
+		return RpcValue();
+	}
+	else {
+		return CponProtocol::parse(in);
+	}
 }
-
-RpcValue RpcValue::parseJson(const char *in, std::string &err)
+/*
+RpcValue RpcValue::parseCpon(const char *in, std::string &err)
 {
-	return JsonProtocol::parseJson(in, err);
+	return ChainPackTextProtocol::parse(in, err);
 }
-
+*/
 void RpcValue::dumpText(std::string &out) const
 {
 	if(m_ptr)
@@ -822,7 +834,7 @@ RpcValue::DateTime RpcValue::DateTime::fromString(const std::string &local_date_
 	char dsep, tsep, msep;
 
 	DateTime ret;
-	ret.msecs = 0;
+	ret.m_msecs = 0;
 
 	if (iss >> year >> dsep >> month >> dsep >> day >> tsep >> hour >> tsep >> min >> tsep >> sec >> msep >> msec) {
 		std::tm tm;
@@ -838,7 +850,7 @@ RpcValue::DateTime RpcValue::DateTime::fromString(const std::string &local_date_
 			std::cerr << "Invalid date time string: " << local_date_time_str;
 		}
 		else {
-			ret.msecs = tim * 1000 + msec;
+			ret.m_msecs = tim * 1000 + msec;
 		}
 	}
 	return ret;
@@ -851,7 +863,7 @@ RpcValue::DateTime RpcValue::DateTime::fromUtcString(const std::string &utc_date
 	char dsep, tsep, msep;
 
 	DateTime ret;
-	ret.msecs = 0;
+	ret.m_msecs = 0;
 
 	if (iss >> year >> dsep >> month >> dsep >> day >> tsep >> hour >> tsep >> min >> tsep >> sec >> msep >> msec) {
 		std::tm tm;
@@ -867,7 +879,7 @@ RpcValue::DateTime RpcValue::DateTime::fromUtcString(const std::string &utc_date
 			std::cerr << "Invalid date time string: " << utc_date_time_str;
 		}
 		else {
-			ret.msecs = tim * 1000 + msec;
+			ret.m_msecs = tim * 1000 + msec;
 		}
 	}
 	return ret;
@@ -876,22 +888,22 @@ RpcValue::DateTime RpcValue::DateTime::fromUtcString(const std::string &utc_date
 RpcValue::DateTime RpcValue::DateTime::fromMSecsSinceEpoch(int64_t msecs)
 {
 	DateTime ret;
-	ret.msecs = msecs;
+	ret.m_msecs = msecs;
 	return ret;
 }
 
 std::string RpcValue::DateTime::toString() const
 {
-	std::time_t tim = msecs / 1000;
+	std::time_t tim = m_msecs / 1000;
 	std::tm *tm = std::localtime(&tim);
 	if(tm == nullptr) {
-		std::cerr << "Invalid date time: " << msecs;
+		std::cerr << "Invalid date time: " << m_msecs;
 	}
 	else {
 		char buffer[80];
 		std::strftime(buffer, sizeof(buffer),"%Y-%m-%dT%H:%M:%S",tm);
 		std::string ret(buffer);
-		ret += '.' + shv::core::Utils::toString(msecs % 1000);
+		ret += '.' + shv::core::Utils::toString(m_msecs % 1000);
 		return ret;
 	}
 	return std::string();
@@ -899,16 +911,16 @@ std::string RpcValue::DateTime::toString() const
 
 std::string RpcValue::DateTime::toUtcString() const
 {
-	std::time_t tim = msecs / 1000;
+	std::time_t tim = m_msecs / 1000;
 	std::tm *tm = std::gmtime(&tim);
 	if(tm == nullptr) {
-		std::cerr << "Invalid date time: " << msecs;
+		std::cerr << "Invalid date time: " << m_msecs;
 	}
 	else {
 		char buffer[80];
 		std::strftime(buffer, sizeof(buffer),"%Y-%m-%dT%H:%M:%S",tm);
 		std::string ret(buffer);
-		ret += '.' + shv::core::Utils::toString(msecs % 1000);
+		ret += '.' + shv::core::Utils::toString(m_msecs % 1000);
 		return ret;
 	}
 	return std::string();

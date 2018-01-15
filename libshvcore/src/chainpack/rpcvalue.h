@@ -54,13 +54,13 @@ public:
 	public:
 		Decimal() : m_precision(-1) {}
 		Decimal(Int mantisa, int precision) : m_mantisa(mantisa), m_precision(precision) {}
-		Decimal(double n, int precision) : m_precision(precision)
+		static Decimal fromDouble(double n, int precision)
 		{
 			if(precision > 0) {
 				//m_mantisa = (int)(n * std::pow(10, precision) + 0.5);
 				for(; precision > 0; precision--) n *= 10;
-				m_mantisa = (Int)(n + 0.5);
 			}
+			return Decimal((Int)(n + 0.5), precision);
 		}
 		Int mantisa() const {return m_mantisa;}
 		int precision() const {return m_precision;}
@@ -77,17 +77,20 @@ public:
 		bool isValid() const {return !(mantisa() == 0 && precision() != 0);}
 		std::string toString() const;
 	};
-	struct SHVCORE_DECL_EXPORT DateTime
+	class SHVCORE_DECL_EXPORT DateTime
 	{
-		int64_t msecs = 0;
-
+	public:
 		DateTime() {}
+		int64_t msecsSinceEpoch() const { return m_msecs; }
 
 		static DateTime fromString(const std::string &local_date_time_str);
 		static DateTime fromUtcString(const std::string &utc_date_time_str);
-		static DateTime fromMSecsSinceEpoch(int64_t msecs);
+		static DateTime fromMSecsSinceEpoch(int64_t m_msecs);
+
 		std::string toString() const;
 		std::string toUtcString() const;
+	private:
+		int64_t m_msecs = 0;
 	};
 	using String = std::string;
 	struct SHVCORE_DECL_EXPORT Blob : public std::basic_string<uint8_t>
@@ -184,8 +187,12 @@ public:
 	private:
 		Type m_type = Type::Invalid;
 	};
-	struct SHVCORE_DECL_EXPORT MetaData
+	class SHVCORE_DECL_EXPORT MetaData
 	{
+	public:
+		MetaData() {}
+		MetaData(RpcValue::IMap &&imap) : m_imap(std::move(imap)) {}
+
 		int metaTypeId() const {return value(meta::Tag::MetaTypeId).toInt();}
 		void setMetaTypeId(RpcValue::Int id) {setValue(meta::Tag::MetaTypeId, id);}
 		int metaTypeNameSpaceId() const {return value(meta::Tag::MetaTypeNameSpaceId).toInt();}
@@ -309,10 +316,10 @@ public:
 	void dumpJson(std::string &out) const;
 
 	std::string toStdString() const { std::string out; dumpText(out); return out; }
-	std::string toJson() const { std::string out; dumpJson(out); return out; }
+	std::string toCpon() const { std::string out; dumpJson(out); return out; }
 
-	static RpcValue parseJson(const std::string & in, std::string & err);
-	static RpcValue parseJson(const char * in, std::string & err);
+	static RpcValue parseCpon(const std::string & in, std::string *err = nullptr);
+	//static RpcValue parseCpon(const char * in, std::string *err);
 
 	bool operator== (const RpcValue &rhs) const;
 #ifdef RPCVALUE_COPY_AND_SWAP
