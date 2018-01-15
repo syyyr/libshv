@@ -52,6 +52,11 @@ bool VersionInfo::operator==(const VersionInfo &v) const
 	return m_majorNumber == v.m_majorNumber && m_minorNumber == v.m_minorNumber && m_patchNumber == v.m_patchNumber && m_branch == v.m_branch;
 }
 
+bool VersionInfo::operator!=(const VersionInfo &v) const
+{
+	return !operator==(v);
+}
+
 const std::string &VersionInfo::branch() const
 {
 	return m_branch;
