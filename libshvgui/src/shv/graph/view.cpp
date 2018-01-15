@@ -43,11 +43,13 @@ View::View(QWidget *parent) : QWidget(parent)
   , m_xValueScale(0.0)
   , m_leftRangeSelectorHandle(0)
   , m_rightRangeSelectorHandle(0)
+  , m_verticalZoomSlider(0)
   , m_leftRangeSelectorPosition(0)
   , m_rightRangeSelectorPosition(0)
   , m_mode(Mode::Static)
   , m_dynamicModePrepend(60000LL)
   , m_preserveZoom(false)
+  , m_verticalZoom(1.0)
 {
 	m_toolTipTimer.setSingleShot(true);
 	connect(&m_toolTipTimer, &QTimer::timeout, this, &View::showToolTip);
@@ -318,7 +320,7 @@ void View::computeDataRange()
 
 int View::computeYLabelWidth(const Settings::Axis &axis, int &shownDecimalPoints) const
 {
-	double range = axis.rangeMax - axis.rangeMin;
+	double range = (axis.rangeMax / m_verticalZoom) - (axis.rangeMin / m_verticalZoom);
 	int place_value = 0;
 	while (range > 1.0) {
 		++place_value;
@@ -326,7 +328,7 @@ int View::computeYLabelWidth(const Settings::Axis &axis, int &shownDecimalPoints
 	}
 	shownDecimalPoints = 0;
 	if (place_value < 2) {
-		range = axis.rangeMax - axis.rangeMin;
+		range = (axis.rangeMax / m_verticalZoom) - (axis.rangeMin / m_verticalZoom);
 		while (range < 1.0 || (place_value + shownDecimalPoints) < 3) {
 			++shownDecimalPoints;
 			range *= 10.0;
@@ -430,6 +432,10 @@ void View::computeGeometry()
 	QRect all_graphs_rect(settings.margin.left, settings.margin.top + poi_strip_height,
 					 width() - settings.margin.left - settings.margin.right,
 					 height() - settings.margin.top - poi_strip_height - settings.margin.bottom);
+	if (m_verticalZoomSlider) {
+		m_verticalZoomSlider->setGeometry(all_graphs_rect.right() - 30, all_graphs_rect.top(), 30, all_graphs_rect.height());
+		all_graphs_rect.setRight(all_graphs_rect.right() - 30);
+	}
 	if (settings.serieList.show) {
 		m_serieListRect = QRect(all_graphs_rect.x(), all_graphs_rect.bottom() - settings.serieList.height, all_graphs_rect.width(), settings.serieList.height);
 		all_graphs_rect.setBottom(all_graphs_rect.bottom() - settings.serieList.height);
@@ -437,6 +443,9 @@ void View::computeGeometry()
 	if (settings.rangeSelector.show) {
 		m_rangeSelectorRect = QRect(all_graphs_rect.x(), all_graphs_rect.bottom() - settings.rangeSelector.height, all_graphs_rect.width(), settings.rangeSelector.height);
 		all_graphs_rect.setBottom(all_graphs_rect.bottom() - settings.rangeSelector.height - 15);
+		if (m_verticalZoomSlider) {
+			m_verticalZoomSlider->resize(m_verticalZoomSlider->width(), all_graphs_rect.height());
+		}
 	}
 	if (settings.xAxis.show) {
 		if (!settings.xAxis.description.isEmpty()) {
@@ -554,11 +563,11 @@ void View::computeGeometry()
 				y2_label_width = computeYLabelWidth(settings.y2Axis, m_y2AxisShownDecimalPoints);
 			}
 
-			double x_scale = (double)(settings.yAxis.rangeMax - settings.yAxis.rangeMin) / area.graphRect.height();
-			area.xAxisPosition = area.graphRect.y() + settings.yAxis.rangeMax / x_scale;
+			double x_scale = (double)((settings.yAxis.rangeMax / m_verticalZoom) - (settings.yAxis.rangeMin / m_verticalZoom)) / area.graphRect.height();
+			area.xAxisPosition = area.graphRect.y() + (settings.yAxis.rangeMax / m_verticalZoom) / x_scale;
 			if (settings.y2Axis.show && area.showY2Axis && !area.switchAxes) {
-				double x2_scale = (double)(settings.y2Axis.rangeMax - settings.y2Axis.rangeMin) / area.graphRect.height();
-				area.x2AxisPosition = area.graphRect.y() + settings.y2Axis.rangeMax / x2_scale;
+				double x2_scale = (double)((settings.y2Axis.rangeMax / m_verticalZoom) - (settings.y2Axis.rangeMin / m_verticalZoom)) / area.graphRect.height();
+				area.x2AxisPosition = area.graphRect.y() + (settings.y2Axis.rangeMax / m_verticalZoom) / x2_scale;
 			}
 			m_graphArea << area;
 
@@ -1157,6 +1166,39 @@ void View::zoom(qint64 center, double scale)
 	showRangeInternal(from, to);
 }
 
+void View::verticalZoom(double percentageScale)
+{
+	m_verticalZoom = percentageScale / 100.0;
+	computeGeometry();
+	update();
+}
+
+void View::setupVerticalZoomSlider(bool show, int minimumZoom, int maximumZoom)
+{
+	if (show != (m_verticalZoomSlider != 0)) {
+		if (show) {
+			m_verticalZoomSlider = new QSlider(this);
+			m_verticalZoomSlider->setToolTip(tr("Vertical zoom"));
+			m_verticalZoomSlider->setTickPosition(QSlider::TickPosition::TicksRight);
+			m_verticalZoomSlider->setTickInterval(100);
+			m_verticalZoomSlider->setMinimum(minimumZoom);
+			m_verticalZoomSlider->setMaximum(maximumZoom);
+			m_verticalZoomSlider->setValue((int)(m_verticalZoom * 100.0));
+			connect(m_verticalZoomSlider, &QSlider::valueChanged, this, &View::verticalZoom);
+		}
+		else {
+			delete m_verticalZoomSlider;
+			m_verticalZoomSlider = 0;
+		}
+		computeGeometry();
+		update();
+	}
+	else if (m_verticalZoomSlider) {
+		m_verticalZoomSlider->setMinimum(minimumZoom);
+		m_verticalZoomSlider->setMaximum(maximumZoom);
+	}
+}
+
 GraphModel *View::model() const
 {
 	if (!m_model)
@@ -1552,9 +1594,9 @@ void View::paintYAxisLabels(QPainter *painter, const Settings::Axis &axis, int s
 	painter->setFont(axis.labelFont);
 	int font_height = painter->fontMetrics().lineSpacing();
 
-	double y_scale = (double)(axis.rangeMax - axis.rangeMin) / rect.height();
+	double y_scale = (double)((axis.rangeMax / m_verticalZoom) - (axis.rangeMin / m_verticalZoom)) / rect.height();
 
-	double x_axis_position = rect.y() + axis.rangeMax / y_scale;
+	double x_axis_position = rect.y() + (axis.rangeMax / m_verticalZoom)/ y_scale;
 
 	QByteArray format;
 	format = "%." + QByteArray::number(shownDecimalPoints) + 'f';
@@ -1636,7 +1678,7 @@ void View::paintRangeSelector(QPainter *painter)
 			}
 			QPen pen(settings.rangeSelector.color);
 			pen.setWidth(settings.rangeSelector.lineWidth);
-			paintSerie(painter, m_rangeSelectorRect, x_axis_position, serie, m_loadedRangeMin, m_loadedRangeMax, pen,
+			paintSerie(painter, m_rangeSelectorRect, 1.0, x_axis_position, serie, m_loadedRangeMin, m_loadedRangeMax, pen,
 					   Serie::Fill(Serie::Fill::Type::Gradient, settings.rangeSelector.color), m_rangeSelectorRect.height());
 			break;
 		}
@@ -1700,16 +1742,16 @@ void View::paintSeries(QPainter *painter, const GraphArea &area)
 		if (!serie->isHidden() && settings.showDependent) {
 			for (const Serie *dependent_serie : serie->dependentSeries()) {
 				pen.setWidth(dependent_serie->lineWidth());
-				paintSerie(painter, area.graphRect, x_axis_position, dependent_serie, m_displayedRangeMin, m_displayedRangeMax, pen, dependent_serie->fill());
+				paintSerie(painter, area.graphRect, m_verticalZoom, x_axis_position, dependent_serie, m_displayedRangeMin, m_displayedRangeMax, pen, dependent_serie->fill());
 			}
 		}
 		pen.setWidth(serie->lineWidth());
-		paintSerie(painter, area.graphRect, x_axis_position, serie, m_displayedRangeMin, m_displayedRangeMax, pen, serie->fill());
+		paintSerie(painter, area.graphRect, m_verticalZoom, x_axis_position, serie, m_displayedRangeMin, m_displayedRangeMax, pen, serie->fill());
 	}
 	painter->restore();
 }
 
-void View::paintSerie(QPainter *painter, const QRect &rect, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base)
+void View::paintSerie(QPainter *painter, const QRect &rect, double vertical_zoom, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base)
 {
 	if (fill_base == -1) {
 		fill_base = x_axis_position;
@@ -1717,16 +1759,16 @@ void View::paintSerie(QPainter *painter, const QRect &rect, int x_axis_position,
 	if (!serie->isHidden()) {
 		if (serie->type() == ValueType::Bool) {
 			if (!serie->serieGroup()) {
-				paintBoolSerie(painter, rect, x_axis_position, serie, min, max, pen, fill_rect, fill_base);
+				paintBoolSerie(painter, rect, vertical_zoom, x_axis_position, serie, min, max, pen, fill_rect, fill_base);
 			}
 		}
 		else {
-			paintValueSerie(painter, rect, x_axis_position, serie, min, max, pen, fill_rect, fill_base);
+			paintValueSerie(painter, rect, vertical_zoom, x_axis_position, serie, min, max, pen, fill_rect, fill_base);
 		}
 	}
 }
 
-void View::paintBoolSerie(QPainter *painter, const QRect &rect, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base)
+void View::paintBoolSerie(QPainter *painter, const QRect &rect, double vertical_zoom, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base)
 {
 	if (serie->lineType() == Serie::LineType::TwoDimensional) {
 		SHV_EXCEPTION("Cannot paint two dimensional bool serie");
@@ -1734,10 +1776,10 @@ void View::paintBoolSerie(QPainter *painter, const QRect &rect, int x_axis_posit
 
 	double y_scale = 0.0;
 	if (serie->relatedAxis() == Serie::YAxis::Y1) {
-		y_scale = (double)(settings.yAxis.rangeMax - settings.yAxis.rangeMin) / rect.height();
+		y_scale = (double)((settings.yAxis.rangeMax / vertical_zoom) - (settings.yAxis.rangeMin / vertical_zoom)) / rect.height();
 	}
 	else if (serie->relatedAxis() == Serie::YAxis::Y2) {
-		y_scale = (double)(settings.y2Axis.rangeMax - settings.y2Axis.rangeMin) / rect.height();
+		y_scale = (double)((settings.y2Axis.rangeMax / vertical_zoom) - (settings.y2Axis.rangeMin / vertical_zoom)) / rect.height();
 	}
 	painter->setPen(pen);
 
@@ -1793,7 +1835,18 @@ void View::paintBoolSerieAtPosition(QPainter *painter, const QRect &rect, int y_
 	}
 }
 
-void View::paintValueSerie(QPainter *painter, const QRect &rect, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base)
+int View::fitPointInRect(int y, const QRect &rect)
+{
+	if (y <= 0) {
+		return 1;
+	}
+	if (y >= rect.height()) {
+		return rect.height() - 1;
+	}
+	return y;
+}
+
+void View::paintValueSerie(QPainter *painter, const QRect &rect, double vertical_zoom, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base)
 {
 	const SerieData &data = serie->serieModelData(this);
 	if (data.size() == 0) {
@@ -1804,10 +1857,10 @@ void View::paintValueSerie(QPainter *painter, const QRect &rect, int x_axis_posi
 
 	double y_scale = 0.0;
 	if (serie->relatedAxis() == Serie::YAxis::Y1) {
-		y_scale = (double)(settings.yAxis.rangeMax - settings.yAxis.rangeMin) / rect.height();
+		y_scale = (double)((settings.yAxis.rangeMax / vertical_zoom) - (settings.yAxis.rangeMin / vertical_zoom)) / rect.height();
 	}
 	else if (serie->relatedAxis() == Serie::YAxis::Y2) {
-		y_scale = (double)(settings.y2Axis.rangeMax - settings.y2Axis.rangeMin) / rect.height();
+		y_scale = (double)((settings.y2Axis.rangeMax / vertical_zoom) - (settings.y2Axis.rangeMin / vertical_zoom)) / rect.height();
 	}
 	painter->setPen(pen);
 
@@ -1868,15 +1921,25 @@ void View::paintValueSerie(QPainter *painter, const QRect &rect, int x_axis_posi
 		}
 		else { //if (last_point.x() > first_point.x()) {
 			if (max_on_first > first_point.y() || min_on_first < first_point.y()) {
-				painter->drawLine(first_point.x(), max_on_first, first_point.x(), min_on_first);
+				int y1 = fitPointInRect(max_on_first, rect);
+				int y2 = fitPointInRect(min_on_first, rect);
+				if (y1 != y2 || (max_on_first > 0 && max_on_first < rect.height() && min_on_first > 0 && min_on_first < rect.height())) {
+					painter->drawLine(first_point.x(), y1, first_point.x(), y2);
+				}
 			}
-			painter->drawLine(first_point.x(), last_on_first, last_point.x(), last_on_first);
-			painter->drawLine(last_point.x(), last_on_first, last_point.x(), last_point.y());
+			if (last_on_first > 0 && last_on_first < rect.height()) {
+				painter->drawLine(first_point.x(), last_on_first, last_point.x(), last_on_first);
+			}
+			int y1 = fitPointInRect(last_on_first, rect);
+			int y2 = fitPointInRect(last_point.y(), rect);
+			if (y1 != y2 || (last_on_first > 0 && last_on_first < rect.height() && last_point.y() > 0 && last_point.y() < rect.height())) {
+				painter->drawLine(last_point.x(), y1, last_point.x(), y2);
+			}
 
 			if (fill_rect.type() != Serie::Fill::Type::None) {
-				polygon << QPoint(first_point.x(), last_on_first);
-				polygon << QPoint(last_point.x(), last_on_first);
-				polygon << last_point;
+				polygon << QPoint(first_point.x(), y1);
+				polygon << QPoint(last_point.x(), y1);
+				polygon << QPoint(last_point.x(), y2);
 			}
 
 			first_point = last_point;
@@ -1888,16 +1951,20 @@ void View::paintValueSerie(QPainter *painter, const QRect &rect, int x_axis_posi
 
 	int rect_last_point = graphWidth();
 	if (last_point.x() == 0) { //last point was not found
-		painter->drawLine(first_point.x(), first_point.y(), rect_last_point, first_point.y());
-		polygon << QPoint(rect_last_point, first_point.y());
+		if (first_point.y() > 0 && first_point.y() < rect.height()) {
+			painter->drawLine(first_point.x(), first_point.y(), rect_last_point, first_point.y());
+		}
+		polygon << QPoint(rect_last_point, fitPointInRect(first_point.y(), rect));
 	}
 	else if (last_point.x() < rect_last_point) {
 		if (m_dataRangeMax < m_loadedRangeMax) {
 			rect_last_point = xValueToRectPosition(m_dataRangeMax);
 		}
-		painter->drawLine(last_point.x(), last_point.y(), rect_last_point, last_point.y());
-		polygon << QPoint(last_point.x(), last_point.y());
-		polygon << QPoint(rect_last_point, last_point.y());
+		if (last_point.y() > 0 && last_point.y() < rect.height()) {
+			painter->drawLine(last_point.x(), last_point.y(), rect_last_point, last_point.y());
+		}
+		polygon << QPoint(last_point.x(), fitPointInRect(last_point.y(), rect));
+		polygon << QPoint(rect_last_point, fitPointInRect(last_point.y(), rect));
 	}
 
 	if (fill_rect.type() != Serie::Fill::Type::None) {
@@ -2074,10 +2141,10 @@ int View::yPosition(ValueChange::ValueY value, const Serie *serie, const GraphAr
 {
 	double range;
 	if (serie->relatedAxis() == Serie::YAxis::Y1) {
-		range = settings.yAxis.rangeMax - settings.yAxis.rangeMin;
+		range = (settings.yAxis.rangeMax / m_verticalZoom) - (settings.yAxis.rangeMin / m_verticalZoom);
 	}
 	else {
-		range = settings.y2Axis.rangeMax - settings.y2Axis.rangeMin;
+		range = (settings.y2Axis.rangeMax / m_verticalZoom) - (settings.y2Axis.rangeMin / m_verticalZoom);
 	}
 	double scale = range / area.graphRect.height();
 	int y_position = 0;
@@ -2183,13 +2250,15 @@ void View::paintPointOfInterestPoint(QPainter *painter, const GraphArea &area, P
 		else {
 			y_pos = area.x2AxisPosition - y_pos;
 		}
-		QPainterPath circle_path;
-		circle_path.addEllipse(x_pos - (POI_SYMBOL_WIDTH / 2), y_pos - (POI_SYMBOL_WIDTH / 2), POI_SYMBOL_WIDTH, POI_SYMBOL_WIDTH);
-		if (serie) {
-			painter->fillPath(circle_path, serie->color());
-		}
-		else {
-			painter->fillPath(circle_path, poi->color());
+		if (y_pos - (POI_SYMBOL_WIDTH / 2) >= area.graphRect.top() && y_pos + (POI_SYMBOL_WIDTH / 2) <= area.graphRect.bottom()) {
+			QPainterPath circle_path;
+			circle_path.addEllipse(x_pos - (POI_SYMBOL_WIDTH / 2), y_pos - (POI_SYMBOL_WIDTH / 2), POI_SYMBOL_WIDTH, POI_SYMBOL_WIDTH);
+			if (serie) {
+				painter->fillPath(circle_path, serie->color());
+			}
+			else {
+				painter->fillPath(circle_path, poi->color());
+			}
 		}
 	}
 }
@@ -2230,10 +2299,10 @@ void View::paintSerieHorizontalBackgroundStripe(QPainter *painter, const View::G
 	}
 	double range;
 	if (serie->relatedAxis() == Serie::YAxis::Y1) {
-		range = settings.yAxis.rangeMax - settings.yAxis.rangeMin;
+		range = (settings.yAxis.rangeMax / m_verticalZoom) - (settings.yAxis.rangeMin / m_verticalZoom);
 	}
 	else {
-		range = settings.y2Axis.rangeMax - settings.y2Axis.rangeMin;
+		range = (settings.y2Axis.rangeMax / m_verticalZoom) - (settings.y2Axis.rangeMin / m_verticalZoom);
 	}
 	double scale = range / area.graphRect.height();
 
@@ -2253,21 +2322,33 @@ void View::paintSerieHorizontalBackgroundStripe(QPainter *painter, const View::G
 	else if (serie->type() == ValueType::Bool) {
 		SHV_EXCEPTION("GraphView: Cannot paint background stripe for bool serie");
 	}
-	if (max - min > 0) {
-		painter->fillRect(area.graphRect.x(), area.xAxisPosition - max, area.graphRect.width(), max - min, stripe_color);
+	int max_position = area.xAxisPosition - max;
+	int min_position = area.xAxisPosition - min;
+	bool max_outline_visible = true;
+	bool min_outline_visible = true;
+	if (max_position < area.graphRect.top()) {
+		max_position = area.graphRect.top();
+		max_outline_visible = false;
+	}
+	if (min_position > area.graphRect.bottom()) {
+		min_position = area.graphRect.bottom();
+		min_outline_visible = false;
+	}
+	if (max - min > 0 && min_position > area.graphRect.top() && max_position < area.graphRect.bottom()) {
+		painter->fillRect(area.graphRect.x(), max_position, area.graphRect.width(), min_position - max_position, stripe_color);
 		if (stripe->outLineType() != BackgroundStripe::OutlineType::No) {
 			QColor outline_color = serie->color();
 			outline_color.setAlpha(70);
 			painter->setPen(QPen(outline_color, 2.0));
-			if (stripe->outLineType() == BackgroundStripe::OutlineType::Min ||
-				stripe->outLineType() == BackgroundStripe::OutlineType::Both) {
-				int line_position = area.xAxisPosition - min;
-				painter->drawLine(area.graphRect.x(), line_position, area.graphRect.right(), line_position);
+			if (max_outline_visible &&
+				(stripe->outLineType() == BackgroundStripe::OutlineType::Min ||
+				stripe->outLineType() == BackgroundStripe::OutlineType::Both)) {
+				painter->drawLine(area.graphRect.x(), max_position, area.graphRect.right(), max_position);
 			}
-			if (stripe->outLineType() == BackgroundStripe::OutlineType::Max ||
-				stripe->outLineType() == BackgroundStripe::OutlineType::Both) {
-				int line_position = area.xAxisPosition - max;
-				painter->drawLine(area.graphRect.x(), line_position, area.graphRect.right(), line_position);
+			if (min_outline_visible &&
+				(stripe->outLineType() == BackgroundStripe::OutlineType::Max ||
+				stripe->outLineType() == BackgroundStripe::OutlineType::Both)) {
+				painter->drawLine(area.graphRect.x(), min_position, area.graphRect.right(), min_position);
 			}
 		}
 	}

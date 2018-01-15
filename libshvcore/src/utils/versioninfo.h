@@ -23,6 +23,7 @@ public:
 	int toInt() const;
 
 	bool operator==(const VersionInfo &v) const;
+	bool operator!=(const VersionInfo &v) const;
 
 private:
 	int m_majorNumber;

@@ -4,6 +4,7 @@
 
 #include <QMap>
 #include <QPushButton>
+#include <QSlider>
 #include <QTimeZone>
 #include <QTimer>
 #include <QWidget>
@@ -129,6 +130,9 @@ public:
 	void showRange(ValueChange::ValueX from, ValueChange::ValueX to);
 	void showRange(ValueXInterval range);
 	void zoom(qint64 center, double scale);
+	void verticalZoom(double percentageScale);
+
+	void setupVerticalZoomSlider(bool show, int minimumZoom = 100, int maximumZoom = 900);
 
 	GraphModel *model() const;
 	void addSerie(Serie *serie);
@@ -233,10 +237,10 @@ private:
 	void paintHorizontalGrid(QPainter *painter, const GraphArea &area);
 	void paintRangeSelector(QPainter *painter);
 	void paintSeries(QPainter *painter, const GraphArea &area);
-	void paintSerie(QPainter *painter, const QRect &rect, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base = -1);
-	void paintBoolSerie(QPainter *painter, const QRect &area, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base);
+	void paintSerie(QPainter *painter, const QRect &rect, double vertical_zoom, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base = -1);
+	void paintBoolSerie(QPainter *painter, const QRect &area, double vertical_zoom, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base);
 	void paintBoolSerieAtPosition(QPainter *painter, const QRect &area, int y_position, const Serie *serie, qint64 min, qint64 max, const Serie::Fill &fill_rect, int fill_base);
-	void paintValueSerie(QPainter *painter, const QRect &area, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base);
+	void paintValueSerie(QPainter *painter, const QRect &area, double vertical_zoom, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base);
 	void paintSelections(QPainter *painter, const GraphArea &area);
 	void paintSelection(QPainter *painter, const GraphArea &area, const Selection &selection, const QColor &color);
 	void paintSerieList(QPainter *painter);
@@ -287,6 +291,7 @@ private:
 	static ValueChange::ValueY formattedSerieValue(const Serie *serie, SerieData::const_iterator it);
 	int yPosition(ValueChange::ValueY value, const Serie *serie, const GraphArea &area);
 	void unionLastSelection();
+	int fitPointInRect(int y, const QRect &rect);
 
 	void showToolTip();
 
@@ -319,6 +324,7 @@ private:
 	QVector<QVector<const Serie*>> m_serieBlocks;
 	RangeSelectorHandle *m_leftRangeSelectorHandle;
 	RangeSelectorHandle *m_rightRangeSelectorHandle;
+	QSlider *m_verticalZoomSlider;
 	int m_leftRangeSelectorPosition;
 	int m_rightRangeSelectorPosition;
 	QTimer m_toolTipTimer;
@@ -331,6 +337,7 @@ private:
 	Mode m_mode;
 	qint64 m_dynamicModePrepend;
 	bool m_preserveZoom;
+	double m_verticalZoom;
 };
 
 } //namespace graphview
