@@ -67,6 +67,8 @@ protected:
 	//virtual void processMessage(const RpcMessage &rpc_msg);
 private:
 	RpcDriver *m_rpcDriver = nullptr;
+	// RpcDriver must run in separate thread to implement synchronous RPC calls properly
+	// QEventLoop solution is not enough, this enable sinc calls within sync call
 	QThread *m_rpcDriverThread = nullptr;
 	int m_connectionId;
 	RpcValue::UInt m_maxSyncMessageId = 0;

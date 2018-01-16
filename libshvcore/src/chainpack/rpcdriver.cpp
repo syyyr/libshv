@@ -42,7 +42,8 @@ void RpcDriver::sendRawData(std::string &&data)
 
 void RpcDriver::enqueueDataToSend(RpcDriver::Chunk &&chunk_to_enqueue)
 {
-	/// LOCK_FOR_SEND lock mutex here in the multothreaded environment
+	/// LOCK_FOR_SEND lock mutex here in the multithreaded environment
+	lockSendQueue();
 	if(!chunk_to_enqueue.empty())
 		m_chunkQueue.push_back(std::move(chunk_to_enqueue));
 	if(!isOpen()) {
@@ -52,6 +53,7 @@ void RpcDriver::enqueueDataToSend(RpcDriver::Chunk &&chunk_to_enqueue)
 	flush();
 	writeQueue();
 	/// UNLOCK_FOR_SEND unlock mutex here in the multithreaded environment
+	unlockSendQueue();
 }
 
 namespace {

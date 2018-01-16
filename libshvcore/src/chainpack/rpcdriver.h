@@ -41,6 +41,9 @@ protected:
 	/// add data to the output queue, send data from top of the queue
 	virtual void enqueueDataToSend(Chunk &&chunk_to_enqueue);
 	virtual void onMessageReceived(const shv::core::chainpack::RpcValue &msg);
+
+	virtual void lockSendQueue() {}
+	virtual void unlockSendQueue() {}
 private:
 	int processReadData(const std::string &read_data);
 	void writeQueue();
