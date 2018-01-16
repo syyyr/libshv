@@ -43,13 +43,15 @@ View::View(QWidget *parent) : QWidget(parent)
   , m_xValueScale(0.0)
   , m_leftRangeSelectorHandle(0)
   , m_rightRangeSelectorHandle(0)
-  , m_verticalZoomSlider(0)
   , m_leftRangeSelectorPosition(0)
   , m_rightRangeSelectorPosition(0)
   , m_mode(Mode::Static)
   , m_dynamicModePrepend(60000LL)
   , m_preserveZoom(false)
+  , m_enableVerticalZoom(true)
   , m_verticalZoom(1.0)
+  , m_minimumVerticalZoom(0.1)
+  , m_maximumVerticalZoom(10.0)
 {
 	m_toolTipTimer.setSingleShot(true);
 	connect(&m_toolTipTimer, &QTimer::timeout, this, &View::showToolTip);
@@ -432,10 +434,6 @@ void View::computeGeometry()
 	QRect all_graphs_rect(settings.margin.left, settings.margin.top + poi_strip_height,
 					 width() - settings.margin.left - settings.margin.right,
 					 height() - settings.margin.top - poi_strip_height - settings.margin.bottom);
-	if (m_verticalZoomSlider) {
-		m_verticalZoomSlider->setGeometry(all_graphs_rect.right() - 30, all_graphs_rect.top(), 30, all_graphs_rect.height());
-		all_graphs_rect.setRight(all_graphs_rect.right() - 30);
-	}
 	if (settings.serieList.show) {
 		m_serieListRect = QRect(all_graphs_rect.x(), all_graphs_rect.bottom() - settings.serieList.height, all_graphs_rect.width(), settings.serieList.height);
 		all_graphs_rect.setBottom(all_graphs_rect.bottom() - settings.serieList.height);
@@ -443,9 +441,6 @@ void View::computeGeometry()
 	if (settings.rangeSelector.show) {
 		m_rangeSelectorRect = QRect(all_graphs_rect.x(), all_graphs_rect.bottom() - settings.rangeSelector.height, all_graphs_rect.width(), settings.rangeSelector.height);
 		all_graphs_rect.setBottom(all_graphs_rect.bottom() - settings.rangeSelector.height - 15);
-		if (m_verticalZoomSlider) {
-			m_verticalZoomSlider->resize(m_verticalZoomSlider->width(), all_graphs_rect.height());
-		}
 	}
 	if (settings.xAxis.show) {
 		if (!settings.xAxis.description.isEmpty()) {
@@ -790,12 +785,32 @@ void View::wheelEvent(QWheelEvent *wheel_event)
 {
 	if (posInGraph(wheel_event->pos())) {
 
-		qint64 center = widgetPositionToXValue(wheel_event->pos().x());
-		if (wheel_event->angleDelta().y() > 0) {
-			zoom(center, 6.5 / 10.0);
+		if (wheel_event->modifiers() == Qt::NoModifier) {
+			qint64 center = widgetPositionToXValue(wheel_event->pos().x());
+			if (wheel_event->angleDelta().y() > 0) {
+				zoom(center, 6.5 / 10.0);
+			}
+			else if (wheel_event->angleDelta().y() < 0) {
+				zoom(center, 10.0 / 6.5);
+			}
 		}
-		else if (wheel_event->angleDelta().y() < 0) {
-			zoom(center, 10.0 / 6.5);
+		else if (wheel_event->modifiers() == Qt::ControlModifier) {
+			if (m_enableVerticalZoom) {
+				double vertical_zoom = m_verticalZoom;
+				if (wheel_event->angleDelta().y() > 0) {
+					vertical_zoom = m_verticalZoom / 0.92;
+					if (vertical_zoom > m_maximumVerticalZoom) {
+						vertical_zoom = m_maximumVerticalZoom;
+					}
+				}
+				else if (wheel_event->angleDelta().y() < 0) {
+					vertical_zoom = m_verticalZoom * 0.92;
+					if (vertical_zoom < m_minimumVerticalZoom) {
+						vertical_zoom = m_minimumVerticalZoom;
+					}
+				}
+				setVerticalZoomInternal(vertical_zoom);
+			}
 		}
 	}
 }
@@ -803,12 +818,23 @@ void View::wheelEvent(QWheelEvent *wheel_event)
 void View::mouseDoubleClickEvent(QMouseEvent *mouse_event)
 {
 	QPoint mouse_pos = mouse_event->pos();
-	if (posInGraph(mouse_pos) || posInRangeSelector(mouse_pos)) {
+	bool pos_in_graph = posInGraph(mouse_pos);
+	if (pos_in_graph || posInRangeSelector(mouse_pos)) {
 		if (m_zoomSelection.start || m_zoomSelection.end) {
 			m_zoomSelection = { 0, 0 };
 			m_currentSelectionModifiers = Qt::NoModifier;
 		}
-		if (m_loadedRangeMin != m_displayedRangeMin || m_loadedRangeMax != m_displayedRangeMax) {
+		bool horizontal_zoom_changed = m_loadedRangeMin != m_displayedRangeMin || m_loadedRangeMax != m_displayedRangeMax;
+		if ((m_verticalZoom != 1.0 && pos_in_graph) || horizontal_zoom_changed) {
+			if (pos_in_graph) {
+				if (m_verticalZoom != 1.0) {
+					m_verticalZoom = 1.0;
+					Q_EMIT verticalZoomChanged();
+				}
+				if (!horizontal_zoom_changed) {
+					update();
+				}
+			}
 			showRangeInternal(m_loadedRangeMin, m_loadedRangeMax);
 		}
 	}
@@ -1166,37 +1192,49 @@ void View::zoom(qint64 center, double scale)
 	showRangeInternal(from, to);
 }
 
-void View::verticalZoom(double percentageScale)
+void View::setVerticalZoom(double scale)
 {
-	m_verticalZoom = percentageScale / 100.0;
-	computeGeometry();
-	update();
+	if (m_enableVerticalZoom) {
+		if (scale < m_minimumVerticalZoom) {
+			scale = m_minimumVerticalZoom;
+		}
+		if (scale > m_maximumVerticalZoom) {
+			scale = m_maximumVerticalZoom;
+		}
+		setVerticalZoomInternal(scale);
+	}
 }
 
-void View::setupVerticalZoomSlider(bool show, int minimumZoom, int maximumZoom)
+void View::setVerticalZoomInternal(double zoom)
 {
-	if (show != (m_verticalZoomSlider != 0)) {
-		if (show) {
-			m_verticalZoomSlider = new QSlider(this);
-			m_verticalZoomSlider->setToolTip(tr("Vertical zoom"));
-			m_verticalZoomSlider->setTickPosition(QSlider::TickPosition::TicksRight);
-			m_verticalZoomSlider->setTickInterval(100);
-			m_verticalZoomSlider->setMinimum(minimumZoom);
-			m_verticalZoomSlider->setMaximum(maximumZoom);
-			m_verticalZoomSlider->setValue((int)(m_verticalZoom * 100.0));
-			connect(m_verticalZoomSlider, &QSlider::valueChanged, this, &View::verticalZoom);
-		}
-		else {
-			delete m_verticalZoomSlider;
-			m_verticalZoomSlider = 0;
-		}
-		computeGeometry();
+	if (m_verticalZoom != zoom) {
+		m_verticalZoom = zoom;
 		update();
+		Q_EMIT verticalZoomChanged();
 	}
-	else if (m_verticalZoomSlider) {
-		m_verticalZoomSlider->setMinimum(minimumZoom);
-		m_verticalZoomSlider->setMaximum(maximumZoom);
+
+}
+void View::setupVerticalZoom(bool enable, double minimumZoom, double maximumZoom)
+{
+	double vertical_zoom = m_verticalZoom;
+
+	m_enableVerticalZoom = enable;
+	if (!enable && m_verticalZoom != 1.0) {
+		vertical_zoom = 1.0;
 	}
+
+	m_minimumVerticalZoom = minimumZoom;
+	m_maximumVerticalZoom = maximumZoom;
+
+	if (enable && m_verticalZoom < minimumZoom) {
+		vertical_zoom = minimumZoom;
+	}
+
+	if (enable && m_verticalZoom > maximumZoom) {
+		vertical_zoom = maximumZoom;
+	}
+
+	setVerticalZoomInternal(vertical_zoom);
 }
 
 GraphModel *View::model() const
@@ -2125,14 +2163,16 @@ void View::paintCurrentPosition(QPainter *painter, const GraphArea &area, const 
 			return;
 		}
 		int y_position = yPosition(formattedSerieValue(serie, begin), serie, area);
-		QPainterPath path;
-		if (serie->relatedAxis() == Serie::YAxis::Y1 || area.switchAxes) {
-			path.addEllipse(m_currentPosition + area.graphRect.x() - 3, area.xAxisPosition - y_position - 3, 6, 6);
+		if (area.xAxisPosition - y_position - 3 >= area.graphRect.top() && area.xAxisPosition - y_position + 3 <= area.graphRect.bottom()) {
+			QPainterPath path;
+			if (serie->relatedAxis() == Serie::YAxis::Y1 || area.switchAxes) {
+				path.addEllipse(m_currentPosition + area.graphRect.x() - 3, area.xAxisPosition - y_position - 3, 6, 6);
+			}
+			else {
+				path.addEllipse(m_currentPosition + area.graphRect.x() - 3, area.x2AxisPosition - y_position - 3, 6, 6);
+			}
+			painter->fillPath(path, serie->color());
 		}
-		else {
-			path.addEllipse(m_currentPosition + area.graphRect.x() - 3, area.x2AxisPosition - y_position - 3, 6, 6);
-		}
-		painter->fillPath(path, serie->color());
 	}
 
 }

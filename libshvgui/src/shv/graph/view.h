@@ -4,7 +4,6 @@
 
 #include <QMap>
 #include <QPushButton>
-#include <QSlider>
 #include <QTimeZone>
 #include <QTimer>
 #include <QWidget>
@@ -130,9 +129,10 @@ public:
 	void showRange(ValueChange::ValueX from, ValueChange::ValueX to);
 	void showRange(ValueXInterval range);
 	void zoom(qint64 center, double scale);
-	void verticalZoom(double percentageScale);
 
-	void setupVerticalZoomSlider(bool show, int minimumZoom = 100, int maximumZoom = 900);
+	void setVerticalZoom(double scale);
+	inline double verticalZoom() const { return m_verticalZoom; }
+	void setupVerticalZoom(bool enable, double minimumZoom = 0.1, double maximumZoom = 10.0);
 
 	GraphModel *model() const;
 	void addSerie(Serie *serie);
@@ -169,6 +169,7 @@ public:
 	void setViewTimezone(const QTimeZone &tz);
 	Q_SIGNAL void selectionsChanged();
 	Q_SIGNAL void shownRangeChanged();
+	Q_SIGNAL void verticalZoomChanged();
 
 	void setLoadedRange(const ValueChange::ValueX &min, const ValueChange::ValueX &max);
 	void preserveZoomOnDataChange(bool b) { m_preserveZoom = b; }
@@ -284,6 +285,7 @@ private:
 	template<typename T> void computeRange(T &min, T &max) const;
 	void computeDataRange();
 	void showRangeInternal(qint64 from, qint64 to);
+	void setVerticalZoomInternal(double zoom);
 	QPainterPath createPoiPath(int x, int y) const;
 	shv::gui::SerieData::const_iterator findMinYValue(const SerieData::const_iterator &data_begin, const SerieData::const_iterator &data_end, qint64 x_value) const;
 	shv::gui::SerieData::const_iterator findMaxYValue(const SerieData::const_iterator &data_begin, const SerieData::const_iterator &data_end, qint64 x_value) const;
@@ -324,7 +326,6 @@ private:
 	QVector<QVector<const Serie*>> m_serieBlocks;
 	RangeSelectorHandle *m_leftRangeSelectorHandle;
 	RangeSelectorHandle *m_rightRangeSelectorHandle;
-	QSlider *m_verticalZoomSlider;
 	int m_leftRangeSelectorPosition;
 	int m_rightRangeSelectorPosition;
 	QTimer m_toolTipTimer;
@@ -337,7 +338,10 @@ private:
 	Mode m_mode;
 	qint64 m_dynamicModePrepend;
 	bool m_preserveZoom;
+	bool m_enableVerticalZoom;
 	double m_verticalZoom;
+	double m_minimumVerticalZoom;
+	double m_maximumVerticalZoom;
 };
 
 } //namespace graphview
