@@ -342,6 +342,7 @@ private:
 	double m_verticalZoom;
 	double m_minimumVerticalZoom;
 	double m_maximumVerticalZoom;
+	int m_verticalMove;
 };
 
 } //namespace graphview

@@ -52,6 +52,7 @@ View::View(QWidget *parent) : QWidget(parent)
   , m_verticalZoom(1.0)
   , m_minimumVerticalZoom(0.1)
   , m_maximumVerticalZoom(10.0)
+  , m_verticalMove(0)
 {
 	m_toolTipTimer.setSingleShot(true);
 	connect(&m_toolTipTimer, &QTimer::timeout, this, &View::showToolTip);
@@ -559,10 +560,10 @@ void View::computeGeometry()
 			}
 
 			double x_scale = (double)((settings.yAxis.rangeMax / m_verticalZoom) - (settings.yAxis.rangeMin / m_verticalZoom)) / area.graphRect.height();
-			area.xAxisPosition = area.graphRect.y() + (settings.yAxis.rangeMax / m_verticalZoom) / x_scale;
+			area.xAxisPosition = area.graphRect.y() + m_verticalMove + (settings.yAxis.rangeMax / m_verticalZoom) / x_scale;
 			if (settings.y2Axis.show && area.showY2Axis && !area.switchAxes) {
 				double x2_scale = (double)((settings.y2Axis.rangeMax / m_verticalZoom) - (settings.y2Axis.rangeMin / m_verticalZoom)) / area.graphRect.height();
-				area.x2AxisPosition = area.graphRect.y() + (settings.y2Axis.rangeMax / m_verticalZoom) / x2_scale;
+				area.x2AxisPosition = area.graphRect.y() + m_verticalMove + (settings.y2Axis.rangeMax / m_verticalZoom) / x2_scale;
 			}
 			m_graphArea << area;
 
@@ -825,11 +826,15 @@ void View::mouseDoubleClickEvent(QMouseEvent *mouse_event)
 			m_currentSelectionModifiers = Qt::NoModifier;
 		}
 		bool horizontal_zoom_changed = m_loadedRangeMin != m_displayedRangeMin || m_loadedRangeMax != m_displayedRangeMax;
-		if ((m_verticalZoom != 1.0 && pos_in_graph) || horizontal_zoom_changed) {
+		if (((m_verticalZoom != 1.0  || m_verticalMove != 0) && pos_in_graph) || horizontal_zoom_changed) {
 			if (pos_in_graph) {
 				if (m_verticalZoom != 1.0) {
 					m_verticalZoom = 1.0;
 					Q_EMIT verticalZoomChanged();
+				}
+				if (m_verticalMove != 0) {
+					m_verticalMove = 0;
+					computeGeometry();
 				}
 				if (!horizontal_zoom_changed) {
 					update();
@@ -845,15 +850,18 @@ void View::mousePressEvent(QMouseEvent *mouse_event)
 	QPoint pos = mouse_event->pos();
 	if (mouse_event->buttons() & Qt::LeftButton) {
 		if (posInGraph(pos)) {
-			if (mouse_event->modifiers() & Qt::ControlModifier || mouse_event->modifiers() & Qt::ShiftModifier) {
+			if (mouse_event->modifiers() & Qt::MetaModifier || mouse_event->modifiers() & Qt::ShiftModifier) {
 				qint64 value = widgetPositionToXValue(pos.x());
 				m_currentSelectionModifiers = mouse_event->modifiers();
-				if (mouse_event->modifiers() & Qt::ControlModifier) {
+				if (mouse_event->modifiers() & Qt::MetaModifier) {
 					m_zoomSelection = { value, value };
 				}
 				else {
 					m_selections << Selection { value, value };
 				}
+			}
+			else if (mouse_event->modifiers() == Qt::ControlModifier) {
+				m_moveStart = pos.y();
 			}
 			else if (mouse_event->modifiers() == Qt::NoModifier) {
 				m_moveStart = pos.x() - m_graphArea[0].graphRect.x();
@@ -912,13 +920,21 @@ void View::mouseMoveEvent(QMouseEvent *mouse_event)
 			m_currentPosition = -1;
 			if (m_currentSelectionModifiers != Qt::NoModifier) {
 				qint64 value = widgetPositionToXValue(pos.x());
-				if (m_currentSelectionModifiers & Qt::ControlModifier) {
+				if (m_currentSelectionModifiers & Qt::MetaModifier) {
 					m_zoomSelection.end = value;
 				}
 				else {
 					updateLastValueInLastSelection(value);
 				}
 				update();
+			}
+			else if (mouse_event->modifiers() == Qt::ControlModifier) {
+				if (m_moveStart != -1) {
+					m_verticalMove += pos.y() - m_moveStart;
+					m_moveStart = pos.y();
+					computeGeometry();
+					update();
+				}
 			}
 			else if (mouse_event->modifiers() == Qt::NoModifier) {
 				if (m_moveStart != -1) {
@@ -1024,7 +1040,7 @@ void View::mouseReleaseEvent(QMouseEvent *mouse_event)
 		if (mouse_event->button() == Qt::LeftButton) {
 			if (m_currentSelectionModifiers != Qt::NoModifier) {
 				qint64 value = widgetPositionToXValue(pos.x());
-				if (m_currentSelectionModifiers & Qt::ControlModifier) {
+				if (m_currentSelectionModifiers & Qt::MetaModifier) {
 					qint64 start = m_zoomSelection.start;
 					qint64 end = value;
 					if (end < start) {
@@ -1219,8 +1235,12 @@ void View::setupVerticalZoom(bool enable, double minimumZoom, double maximumZoom
 	double vertical_zoom = m_verticalZoom;
 
 	m_enableVerticalZoom = enable;
-	if (!enable && m_verticalZoom != 1.0) {
+	if (!enable) {
 		vertical_zoom = 1.0;
+		if (m_verticalMove != 0) {
+			m_verticalMove = 0;
+			computeGeometry();
+		}
 	}
 
 	m_minimumVerticalZoom = minimumZoom;
@@ -1634,14 +1654,22 @@ void View::paintYAxisLabels(QPainter *painter, const Settings::Axis &axis, int s
 
 	double y_scale = (double)((axis.rangeMax / m_verticalZoom) - (axis.rangeMin / m_verticalZoom)) / rect.height();
 
-	double x_axis_position = rect.y() + (axis.rangeMax / m_verticalZoom)/ y_scale;
+	double x_axis_position = rect.y() + m_verticalMove + (axis.rangeMax / m_verticalZoom)/ y_scale;
+
 
 	QByteArray format;
 	format = "%." + QByteArray::number(shownDecimalPoints) + 'f';
-	for (double y = rect.top(); y <= rect.bottom() + 1; y += m_horizontalGridDistance) {
+
+	double y = rect.top() + (m_verticalMove % (int)m_horizontalGridDistance);
+	if (y < rect.top()) {
+		y += m_horizontalGridDistance;
+	}
+
+	while (y <= rect.bottom() + 1) {
 		QString value;
 		value.sprintf(format.constData(), (x_axis_position - y) * y_scale);
 		painter->drawText(rect.x(), (int)y - font_height / 2, rect.width(), font_height, align, value);
+		y += m_horizontalGridDistance;
 	}
 	painter->restore();
 
@@ -1660,14 +1688,16 @@ void View::paintXAxisDescription(QPainter *painter)
 
 void View::paintXAxis(QPainter *painter, const GraphArea &area)
 {
-	painter->save();
-	QPen pen(settings.xAxis.color);
-	pen.setWidth(settings.xAxis.lineWidth);
-	painter->setPen(pen);
+	if (area.xAxisPosition >= area.graphRect.top() && area.xAxisPosition <= area.graphRect.bottom()) {
+		painter->save();
+		QPen pen(settings.xAxis.color);
+		pen.setWidth(settings.xAxis.lineWidth);
+		painter->setPen(pen);
 
-	painter->drawLine(area.graphRect.x(), area.xAxisPosition, area.graphRect.right(), area.xAxisPosition);
+		painter->drawLine(area.graphRect.x(), area.xAxisPosition, area.graphRect.right(), area.xAxisPosition);
 
-	painter->restore();
+		painter->restore();
+	}
 }
 
 void View::paintVerticalGrid(QPainter *painter, const GraphArea &area)
@@ -1688,8 +1718,13 @@ void View::paintHorizontalGrid(QPainter *painter, const GraphArea &area)
 	painter->save();
 	painter->setPen(settings.horizontalGrid.color);
 	if (m_horizontalGridDistance > 1.0) {
-		for (double y = area.graphRect.bottom(); y > area.graphRect.y(); y -= m_horizontalGridDistance) {
+		double y = area.graphRect.bottom() + (m_verticalMove % (int)m_horizontalGridDistance);
+		if (y > area.graphRect.bottom()) {
+			y -= m_horizontalGridDistance;
+		}
+		while (y > area.graphRect.y()) {
 			painter->drawLine(area.graphRect.x(), y, area.graphRect.right(), y);
+			y -= m_horizontalGridDistance;
 		}
 	}
 	painter->drawLine(area.graphRect.topLeft(), area.graphRect.topRight());
@@ -1939,8 +1974,8 @@ void View::paintValueSerie(QPainter *painter, const QRect &rect, double vertical
 	int last_on_first = first_point.y();
 
 	QPolygon polygon;
-	polygon << QPoint(first_point.x(), fill_base);
-	polygon << first_point;
+	polygon << QPoint(first_point.x(), fitPointInRect(fill_base, rect));
+	polygon << QPoint(first_point.x(), fitPointInRect(first_point.y(), rect));
 
 	QPoint last_point(0, 0);
 	for (auto it = begin + 1; it != end; ++it) {
@@ -2006,7 +2041,7 @@ void View::paintValueSerie(QPainter *painter, const QRect &rect, double vertical
 	}
 
 	if (fill_rect.type() != Serie::Fill::Type::None) {
-		polygon << QPoint(rect.width(), fill_base);
+		polygon << QPoint(rect.width(), fitPointInRect(fill_base, rect));
 		fillSerie(painter, polygon, serie, fill_rect);
 	}
 }
