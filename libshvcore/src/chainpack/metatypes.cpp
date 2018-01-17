@@ -14,8 +14,8 @@ const MetaInfo &MetaType::tagById(int id) const
 {
 	static std::map<int, MetaInfo> embeded_mi = {
 		{(int)Tag::Invalid, {(int)Tag::Invalid, ""}},
-		{(int)Tag::MetaTypeId, {(int)Tag::MetaTypeId, "MetaTypeId"}},
-		{(int)Tag::MetaTypeNameSpaceId, {(int)Tag::MetaTypeNameSpaceId, "MetaTypeNameSpaceId"}},
+		{(int)Tag::MetaTypeId, {(int)Tag::MetaTypeId, "T"}},
+		{(int)Tag::MetaTypeNameSpaceId, {(int)Tag::MetaTypeNameSpaceId, "NS"}},
 	};
 	if(id <= (int)Tag::MetaTypeNameSpaceId)
 		return embeded_mi[id];
@@ -34,7 +34,7 @@ const MetaInfo &MetaType::keyById(int id) const
 	return m_keys.at(id);
 }
 
-DefaultNS::DefaultNS()
+ChainPackNS::ChainPackNS()
 	: Super("Default")
 {
 }
@@ -44,118 +44,14 @@ namespace {
 std::map<int, MetaNameSpace*> registered_ns;
 
 }
-#if 0
-namespace
-{
-
-struct RegisteredNamespace
-{
-	MetaNameSpace *metaNameSpace = nullptr;
-	std::map<int, MetaType*> registeredTypes;
-};
-std::map<int, RegisteredNamespace> registered_ns;
-
-NS_Default ns_Default\;
-}
-
-NS_Default::NS_Default()
-	: Super(Id, "Default")
-{
-}
-
-void MetaTypes::registerNameSpace(MetaNameSpace *ns)
-{
-	if(!ns) {
-		shvError() << "Cannot register NULL namespace";
-		return;
-	}
-	if(!ns->id()) {
-		shvError() << "Cannot register namespace with id == 0";
-		return;
-	}
-	RegisteredNamespace &rns = registered_ns[ns->id()];
-	rns.metaNameSpace = ns;
-}
-
-void MetaTypes::registerType(int ns_id, MetaType *type)
-{
-	if(!type) {
-		shvError() << "Cannot register NULL type";
-		return;
-	}
-	if(!type->id()) {
-		shvError() << "Cannot register type with id == 0";
-		return;
-	}
-	RegisteredNamespace &rns = registered_ns[ns_id];
-	rns.registeredTypes[type->id()] = type;
-}
-
-MetaNameSpace *MetaTypes::registeredNameSpace(int ns_id)
-{
-	if(registered_ns.find(ns_id) == registered_ns.cend()) {
-		return nullptr;
-	}
-	RegisteredNamespace &rns = registered_ns[ns_id];
-	return rns.metaNameSpace;
-}
-
-MetaType *MetaTypes::registeredType(int ns_id, int type_id)
-{
-	auto ns_it = registered_ns.find(ns_id);
-	if(ns_it == registered_ns.end())
-		return nullptr;
-	auto type_it = ns_it->registeredTypes.find(type_id);
-	if(type_it == ns_it->registeredTypes.end())
-		return nullptr;
-	return type_it.value();
-}
-
-const char *MetaTypes::metaKeyName(int namespace_id, int type_id, int tag)
-{
-	switch(tag) {
-	case MetaTypes::Tag::MetaTypeId: return "T";
-	case MetaTypes::Tag::MetaTypeNameSpaceId: return "S";
-	}
-	if(namespace_id == MetaTypes::Default::Value) {
-		if(type_id == type::RpcMessage::Value /*|| meta_type_id == GlobalMetaTypeId::SkyNetRpcMessage*/) {
-			switch(tag) {
-			case type::RpcMessage::Tag::RequestId: return "RqId";
-			case type::RpcMessage::Tag::RpcCallType: return "Type";
-			case type::RpcMessage::Tag::DeviceId: return "DevId";
-			}
-		}
-		/*
-		else if(meta_type_id == GlobalMetaTypeId::SkyNetRpcMessage) {
-			switch(meta_key_id) {
-			case SkyNetRpcMessageMetaKey::DeviceId: return "DeviceId";
-			}
-		}
-		*/
-	}
-	return "";
-}
-
-
-const char *MetaTypes::metaTypeName(int namespace_id, int type_id)
-{
-	if(namespace_id == MetaTypes::Default::Value) {
-		switch(type_id) {
-		case type::RpcMessage::Value: return "Rpc";
-		//case GlobalMetaTypeId::SkyNetRpcMessage: return "SkyRpc";
-		}
-	}
-	return "";
-}
-#endif
 
 static void initMetaTypes()
 {
 	static bool is_init = false;
 	if(!is_init) {
 		is_init = true;
-		static DefaultNS def;
-		registerNameSpace(DefaultNS::ID, &def);
+		static ChainPackNS def;
+		registerNameSpace(ChainPackNS::ID, &def);
 	}
 }
 

@@ -9,6 +9,7 @@ namespace chainpack {
 class SHVCORE_DECL_EXPORT CponProtocol final
 {
 public:
+	//enum class Format {Compact};
 	class SHVCORE_DECL_EXPORT ParseException : public std::exception
 	{
 		using Super = std::exception;
@@ -22,11 +23,22 @@ public:
 		int m_pos;
 	};
 public:
-	static RpcValue parse(const std::string & in);
-	static std::string serialize(const RpcValue &value);
-	static void serialize(std::ostream &out, const RpcValue &value);
+	size_t pos() const {return m_pos;}
+	static RpcValue read(const std::string & in, size_t pos = 0, size_t *new_pos = nullptr);
+	//static RpcValue read(const std::istream & in);
+	//static std::string write(const RpcValue &value);
+	class SHVCORE_DECL_EXPORT WriteOptions
+	{
+		bool m_translateIds = false;
+	public:
+		WriteOptions() {}
+		bool translateIds() const {return m_translateIds;}
+		WriteOptions& translateIds(bool b) {m_translateIds = b; return *this;}
+
+	};
+	static void write(std::ostream &out, const RpcValue &value, const WriteOptions &opts = WriteOptions());
 private:
-	CponProtocol(const std::string &str);
+	CponProtocol(const std::string &str, size_t pos);
 	RpcValue parseAtPos();
 
 	void skipWhiteSpace();
@@ -55,25 +67,26 @@ private:
 private:
 	void encodeUtf8(long pt, std::string & out);
 public:
-	static void serialize(std::nullptr_t, std::ostream &out);
-	static void serialize(double value, std::ostream &out);
-	static void serialize(RpcValue::Int value, std::ostream &out);
-	static void serialize(RpcValue::UInt value, std::ostream &out);
-	static void serialize(bool value, std::ostream &out);
-	static void serialize(RpcValue::DateTime value, std::ostream &out);
-	static void serialize(RpcValue::Decimal value, std::ostream &out);
-	static void serialize(const std::string &value, std::ostream &out);
-	static void serialize(const RpcValue::Blob &value, std::ostream &out);
-	static void serialize(const RpcValue::List &values, std::ostream &out);
-	static void serialize(const RpcValue::Array &values, std::ostream &out);
-	static void serialize(const RpcValue::Map &values, std::ostream &out);
-	static void serialize(const RpcValue::IMap &values, std::ostream &out);
-	static void serialize(const RpcValue::MetaData &value, std::ostream &out);
+	static void write(std::nullptr_t, std::ostream &out);
+	static void write(double value, std::ostream &out);
+	static void write(RpcValue::Int value, std::ostream &out);
+	static void write(RpcValue::UInt value, std::ostream &out);
+	static void write(bool value, std::ostream &out);
+	static void write(RpcValue::DateTime value, std::ostream &out);
+	static void write(RpcValue::Decimal value, std::ostream &out);
+	static void write(const std::string &value, std::ostream &out);
+	static void write(const RpcValue::Blob &value, std::ostream &out);
+	static void write(const RpcValue::List &values, std::ostream &out);
+	static void write(const RpcValue::Array &values, std::ostream &out);
+	static void write(const RpcValue::Map &values, std::ostream &out);
+	static void write(const RpcValue::IMap &values, std::ostream &out, const WriteOptions &opts, const RpcValue::MetaData &meta_data);
+	static void write(const RpcValue::MetaData &value, std::ostream &out, const WriteOptions &opts);
 private:
 	const std::string &m_str;
 	//std::string &m_err;
 	size_t m_pos = 0;
 	int m_depth = 0;
+	bool m_verboseIds = true;
 };
 
 } // namespace chainpack

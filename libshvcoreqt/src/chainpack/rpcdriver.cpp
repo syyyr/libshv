@@ -31,9 +31,11 @@ namespace chainpack {
 RpcDriver::RpcDriver(QObject *parent)
 	: QObject(parent)
 {
+	/*
 	setMessageReceivedCallback([this](const shv::core::chainpack::RpcValue &msg) {
 		emit messageReceived(msg);
 	});
+	*/
 #ifdef DUMP_DATA_FILE
 	QFile *f = new QFile("/tmp/rpc.dat", this);
 	f->setObjectName("DUMP_DATA_FILE");
@@ -120,6 +122,11 @@ bool RpcDriver::flush()
 	if(m_socket)
 		return m_socket->flush();
 	return false;
+}
+
+void RpcDriver::onMessageReceived(const core::chainpack::RpcValue &msg)
+{
+	emit messageReceived(msg);
 }
 
 namespace {

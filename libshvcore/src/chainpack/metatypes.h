@@ -63,12 +63,12 @@ void registerType(int ns_id, int type_id, MetaType *tid);
 const MetaNameSpace& registeredNameSpace(int ns_id);
 const MetaType& registeredType(int ns_id, int type_id);
 
-class DefaultNS : public meta::MetaNameSpace
+class ChainPackNS : public meta::MetaNameSpace
 {
 	using Super = meta::MetaNameSpace;
 public:
-	enum {ID = 0};
-	DefaultNS();
+	enum {ID = 1};
+	ChainPackNS();
 };
 
 }}}}

@@ -265,6 +265,7 @@ public:
 	Type arrayType() const;
 
 	const MetaData &metaData() const;
+	RpcValue metaValue(RpcValue::UInt key) const;
 	void setMetaData(MetaData &&meta_data);
 	void setMetaValue(UInt key, const RpcValue &val);
 
@@ -304,7 +305,7 @@ public:
 	void set(UInt ix, const RpcValue &val);
 	void set(const RpcValue::String &key, const RpcValue &val);
 
-	std::string toStdString() const { return toCpon(); }
+	std::string toStdString() const;
 	std::string toCpon() const;
 	static RpcValue parseCpon(const std::string & in, std::string *err = nullptr);
 

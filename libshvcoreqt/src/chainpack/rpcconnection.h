@@ -30,6 +30,7 @@ public:
 
 	//static int nextRpcId();
 	void setSocket(QTcpSocket *socket);
+	void setProtocolVersion(shv::core::chainpack::RpcDriver::ProtocolVersion ver) {emit setProtocolVersionRequest(ver);}
 
 	int connectionId() const {return m_connectionId;}
 
@@ -40,18 +41,20 @@ public:
 	//QHostAddress peerAddress();
 	//int peerPort();
 
-	// since RpcDriver is connected to SocketDriver using queued connection. it is safe to call sendMessage from different thread
+	/// since RpcDriver is connected to SocketDriver using queued connection. it is safe to call sendMessage from different thread
 	Q_SLOT void sendMessage(const RpcMessage &rpc_msg);
 	Q_SLOT void sendNotify(const QString &method, const RpcValue &params = RpcValue());
 	Q_SLOT void sendResponse(int request_id, const RpcValue &result);
 	Q_SLOT void sendError(int request_id, const RpcResponse::Error &error);
 	Q_SLOT int callMethodASync(const QString &method, const RpcValue &params = RpcValue());
 	RpcResponse callMethodSync(const QString &method, const RpcValue &params = RpcValue(), int rpc_timeout = 0);
+	RpcResponse callShvMethodSync(const QString &shv_path, const QString &method, const RpcValue &params = RpcValue(), int rpc_timeout = 0);
 
 	Q_SIGNAL void messageReceived(const RpcMessage &msg);
 	//Q_SIGNAL void rpcError(const QString &err_msg);
 	Q_SIGNAL void openChanged(bool is_open);
 protected:
+	Q_SIGNAL void setProtocolVersionRequest(int ver);
 	Q_SIGNAL void sendMessageRequest(const RpcValue& msg);
 
 	Q_SIGNAL void sendMessageSyncRequest(const core::chainpack::RpcRequest &request, core::chainpack::RpcResponse *presponse, int time_out_ms);

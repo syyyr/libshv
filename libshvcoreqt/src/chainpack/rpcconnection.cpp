@@ -22,6 +22,7 @@ RpcConnection::RpcConnection(QObject *parent)
 	//m_rpcDriver->setSocket(new QTcpSocket(m_rpcDriver));
 	m_rpcDriver->moveToThread(m_rpcDriverThread);
 
+	connect(this, &RpcConnection::setProtocolVersionRequest, m_rpcDriver, &RpcDriver::setProtocolVersion, Qt::QueuedConnection);
 	connect(this, &RpcConnection::sendMessageRequest, m_rpcDriver, &RpcDriver::sendMessage, Qt::QueuedConnection);
 	connect(this, &RpcConnection::sendMessageSyncRequest, m_rpcDriver, &RpcDriver::sendRequestSync, Qt::BlockingQueuedConnection);
 	connect(this, &RpcConnection::connectToHostRequest, m_rpcDriver, &RpcDriver::connectToHost, Qt::QueuedConnection);
@@ -146,10 +147,17 @@ int RpcConnection::callMethodASync(const QString &method, const RpcConnection::R
 
 RpcConnection::RpcResponse RpcConnection::callMethodSync(const QString &method, const RpcConnection::RpcValue &params, int rpc_timeout)
 {
+	return callShvMethodSync(QString(), method, params, rpc_timeout);
+}
+
+RpcConnection::RpcResponse RpcConnection::callShvMethodSync(const QString &shv_path, const QString &method, const RpcConnection::RpcValue &params, int rpc_timeout)
+{
 	RpcRequest rq;
 	rq.setId(nextRpcId());
 	rq.setMethod(method.toStdString());
 	rq.setParams(params);
+	if(!shv_path.isEmpty())
+		rq.setShvPath(shv_path.toStdString());
 	//logRpc() << "--> sync method call:" << id << method;
 	RpcMessage ret = sendMessageSync(rq, rpc_timeout);
 	if(!ret.isResponse())

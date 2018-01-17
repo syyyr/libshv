@@ -25,6 +25,8 @@ public:
 	~RpcDriver() Q_DECL_OVERRIDE;
 
 	void setSocket(QTcpSocket *socket);
+	void setProtocolVersion(int v) {Super::setProtocolVersion((Super::ProtocolVersion)v);}
+
 	void connectToHost(const QString &host_name, quint16 port);
 
 	void sendMessage(const shv::core::chainpack::RpcValue &msg) {Super::sendMessage(msg);}
@@ -41,6 +43,7 @@ protected:
 	bool isOpen() Q_DECL_OVERRIDE;
 	int64_t writeBytes(const char *bytes, size_t length) Q_DECL_OVERRIDE;
 	bool flush() Q_DECL_OVERRIDE;
+	void onMessageReceived(const shv::core::chainpack::RpcValue &msg) Q_DECL_OVERRIDE;
 private:
 	QTcpSocket* socket();
 	void onReadyRead();

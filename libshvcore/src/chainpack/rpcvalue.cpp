@@ -451,6 +451,13 @@ const RpcValue::MetaData &RpcValue::metaData() const
 	return md;
 }
 
+RpcValue RpcValue::metaValue(RpcValue::UInt key) const
+{
+	const MetaData &md = metaData();
+	RpcValue ret = md.value(key);
+	return ret;
+}
+
 void RpcValue::setMetaData(RpcValue::MetaData &&meta_data)
 {
 	if(!m_ptr && !meta_data.isEmpty())
@@ -506,10 +513,17 @@ void RpcValue::set(const RpcValue::String &key, const RpcValue &val)
 		std::cerr << __FILE__ << ':' << __LINE__ << " Cannot set value to invalid ChainPack value! Key: " << key << std::endl;
 }
 
+std::string RpcValue::toStdString() const
+{
+	std::ostringstream out;
+	CponProtocol::write(out, *this, CponProtocol::WriteOptions().translateIds(true));
+	return out.str();
+}
+
 std::string RpcValue::toCpon() const
 {
 	std::ostringstream out;
-	CponProtocol::serialize(out, *this);
+	CponProtocol::write(out, *this);
 	return out.str();
 }
 
@@ -585,7 +599,7 @@ RpcValue RpcValue::parseCpon(const std::string &in, std::string *err)
 {
 	if(err) {
 		try {
-			return CponProtocol::parse(in);
+			return CponProtocol::read(in);
 		}
 		catch(CponProtocol::ParseException &e) {
 			*err = e.mesage();
@@ -593,7 +607,7 @@ RpcValue RpcValue::parseCpon(const std::string &in, std::string *err)
 		return RpcValue();
 	}
 	else {
-		return CponProtocol::parse(in);
+		return CponProtocol::read(in);
 	}
 }
 

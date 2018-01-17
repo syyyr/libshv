@@ -23,7 +23,7 @@ RpcMessage::RpcMessage()
 	m_tags = {
 		{(int)Tag::RequestId, {(int)Tag::RequestId, "RequestId"}},
 		{(int)Tag::RpcCallType, {(int)Tag::RpcCallType, "RpcCallType"}},
-		{(int)Tag::DeviceId, {(int)Tag::DeviceId, "DeviceId"}},
+		{(int)Tag::ShvPath, {(int)Tag::ShvPath, "ShvPath"}},
 	};
 }
 
@@ -33,7 +33,7 @@ void RpcMessage::registerMetaType()
 	if(!is_init) {
 		is_init = true;
 		static RpcMessage s;
-		meta::registerType(meta::DefaultNS::ID, meta::RpcMessage::ID, &s);
+		meta::registerType(meta::ChainPackNS::ID, meta::RpcMessage::ID, &s);
 	}
 }
 
@@ -71,6 +71,11 @@ void RpcMessage::setValue(RpcValue::UInt key, const RpcValue &val)
 	m_value.set(key, val);
 }
 
+RpcValue RpcMessage::metaValue(RpcValue::UInt key) const
+{
+	return m_value.metaValue(key);
+}
+
 void RpcMessage::setMetaValue(RpcValue::UInt key, const RpcValue &val)
 {
 	checkMetaValues();
@@ -106,6 +111,16 @@ bool RpcMessage::isNotify() const
 	return rpcType() == meta::RpcMessage::RpcCallType::Notify;
 }
 
+RpcValue RpcMessage::shvPath() const
+{
+	return metaValue(meta::RpcMessage::Tag::ShvPath);
+}
+
+void RpcMessage::setShvPath(const RpcValue &path)
+{
+	setMetaValue(meta::RpcMessage::Tag::ShvPath, path);
+}
+
 bool RpcMessage::isResponse() const
 {
 	return rpcType() == meta::RpcMessage::RpcCallType::Response;
@@ -134,7 +149,7 @@ void RpcMessage::checkMetaValues()
 	if(!m_value.isValid()) {
 		m_value = RpcValue::IMap();
 		/// not needed, Global is default name space
-		//setMetaValue(MetaTypes::Tag::MetaTypeNameSpaceId, MetaTypes::Default::Value);
+		setMetaValue(meta::Tag::MetaTypeNameSpaceId, meta::ChainPackNS::ID);
 		setMetaValue(meta::Tag::MetaTypeId, meta::RpcMessage::ID);
 	}
 }
@@ -147,7 +162,7 @@ void RpcMessage::checkRpcTypeMetaValue()
 
 std::string RpcMessage::toStdString() const
 {
-	return m_value.toCpon();
+	return m_value.toStdString();
 }
 
 //==================================================================

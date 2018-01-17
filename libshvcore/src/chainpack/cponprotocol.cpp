@@ -76,15 +76,18 @@ static inline bool starts_with(const std::string &str, size_t pos, const char pr
 	return (str.begin() + pos) != str.end() && *(str.begin() + pos) == prefix;
 }
 
-CponProtocol::CponProtocol(const std::string &str)
+CponProtocol::CponProtocol(const std::string &str, size_t pos)
 	: m_str(str)
+	, m_pos(pos)
 {
 }
 
-RpcValue CponProtocol::parse(const std::string &in)
+RpcValue CponProtocol::read(const std::string &in, size_t pos, size_t *new_pos)
 {
-	CponProtocol parser{in};
+	CponProtocol parser{in, pos};
 	RpcValue result = parser.parseAtPos();
+	if(new_pos)
+		*new_pos = parser.pos();
 	return result;
 }
 
@@ -646,37 +649,37 @@ void CponProtocol::encodeUtf8(long pt, std::string & out)
 	}
 }
 
-void CponProtocol::serialize(std::ostream &out, const RpcValue &value)
+void CponProtocol::write(std::ostream &out, const RpcValue &value, const WriteOptions &opts)
 {
 	if(!value.metaData().isEmpty())
-		serialize(value.metaData(), out);
+		write(value.metaData(), out, opts);
 	switch (value.type()) {
 	//case RpcValue::Type::Invalid: serialize(value.toInvalid(), out); break;
-	case RpcValue::Type::Null: serialize(nullptr, out); break;
-	case RpcValue::Type::UInt: serialize(value.toUInt(), out); break;
-	case RpcValue::Type::Int: serialize(value.toInt(), out); break;
-	case RpcValue::Type::Double: serialize(value.toDouble(), out); break;
-	case RpcValue::Type::Bool: serialize(value.toBool(), out); break;
-	case RpcValue::Type::Blob: serialize(value.toBlob(), out); break;
-	case RpcValue::Type::String: serialize(value.toString(), out); break;
-	case RpcValue::Type::DateTime: serialize(value.toDateTime(), out); break;
-	case RpcValue::Type::List: serialize(value.toList(), out); break;
-	case RpcValue::Type::Array: serialize(value.toArray(), out); break;
-	case RpcValue::Type::Map: serialize(value.toMap(), out); break;
-	case RpcValue::Type::IMap: serialize(value.toIMap(), out); break;
+	case RpcValue::Type::Null: write(nullptr, out); break;
+	case RpcValue::Type::UInt: write(value.toUInt(), out); break;
+	case RpcValue::Type::Int: write(value.toInt(), out); break;
+	case RpcValue::Type::Double: write(value.toDouble(), out); break;
+	case RpcValue::Type::Bool: write(value.toBool(), out); break;
+	case RpcValue::Type::Blob: write(value.toBlob(), out); break;
+	case RpcValue::Type::String: write(value.toString(), out); break;
+	case RpcValue::Type::DateTime: write(value.toDateTime(), out); break;
+	case RpcValue::Type::List: write(value.toList(), out); break;
+	case RpcValue::Type::Array: write(value.toArray(), out); break;
+	case RpcValue::Type::Map: write(value.toMap(), out); break;
+	case RpcValue::Type::IMap: write(value.toIMap(), out, opts, value.metaData()); break;
 	//case RpcValue::Type::MetaIMap: serialize(value.toMetaIMap(), out); break;
-	case RpcValue::Type::Decimal: serialize(value.toDecimal(), out); break;
+	case RpcValue::Type::Decimal: write(value.toDecimal(), out); break;
 	default:
 		std::runtime_error(std::string("Don't know how to serialize type: ") + RpcValue::typeToName(value.type()));
 	}
 }
 
-void CponProtocol::serialize(std::nullptr_t, std::ostream &out)
+void CponProtocol::write(std::nullptr_t, std::ostream &out)
 {
 	out << S_NULL;
 }
 
-void CponProtocol::serialize(double value, std::ostream &out)
+void CponProtocol::write(double value, std::ostream &out)
 {
 	if (std::isfinite(value)) {
 		char buf[32];
@@ -688,32 +691,32 @@ void CponProtocol::serialize(double value, std::ostream &out)
 	}
 }
 
-void CponProtocol::serialize(RpcValue::Int value, std::ostream &out)
+void CponProtocol::write(RpcValue::Int value, std::ostream &out)
 {
 	out << shv::core::Utils::toString(value);
 }
 
-void CponProtocol::serialize(RpcValue::UInt value, std::ostream &out)
+void CponProtocol::write(RpcValue::UInt value, std::ostream &out)
 {
 	out << shv::core::Utils::toString(value);
 }
 
-void CponProtocol::serialize(bool value, std::ostream &out)
+void CponProtocol::write(bool value, std::ostream &out)
 {
 	out << (value ? S_TRUE : S_FALSE);
 }
 
-void CponProtocol::serialize(RpcValue::DateTime value, std::ostream &out)
+void CponProtocol::write(RpcValue::DateTime value, std::ostream &out)
 {
 	out << S_DATETIME_BEGIN << value.toString() << '"';
 }
 
-void CponProtocol::serialize(RpcValue::Decimal value, std::ostream &out)
+void CponProtocol::write(RpcValue::Decimal value, std::ostream &out)
 {
 	out << value.toString() << S_DECIMAL_END;
 }
 
-void CponProtocol::serialize(const std::string &value, std::ostream &out)
+void CponProtocol::write(const std::string &value, std::ostream &out)
 {
 	out << '"';
 	for (size_t i = 0; i < value.length(); i++) {
@@ -751,68 +754,80 @@ void CponProtocol::serialize(const std::string &value, std::ostream &out)
 	out << '"';
 }
 
-void CponProtocol::serialize(const RpcValue::Blob &value, std::ostream &out)
+void CponProtocol::write(const RpcValue::Blob &value, std::ostream &out)
 {
 	out << S_BLOB_BEGIN;
 	out << shv::core::Utils::toHex(value);
 	out << '"';
 }
 
-void CponProtocol::serialize(const RpcValue::List &values, std::ostream &out)
+void CponProtocol::write(const RpcValue::List &values, std::ostream &out)
 {
 	bool first = true;
 	out << "[";
 	for (const auto &value : values) {
 		if (!first)
 			out << ", ";
-		serialize(out, value);
+		write(out, value);
 		first = false;
 	}
 	out << "]";
 }
 
-void CponProtocol::serialize(const RpcValue::Array &values, std::ostream &out)
+void CponProtocol::write(const RpcValue::Array &values, std::ostream &out)
 {
 	out << S_ARRAY_BEGIN;
 	for (size_t i = 0; i < values.size(); ++i) {
 		if (i > 0)
 			out << ", ";
-		serialize(out, values.valueAt(i));
+		write(out, values.valueAt(i));
 	}
 	out << "]";
 }
 
-void CponProtocol::serialize(const RpcValue::Map &values, std::ostream &out)
+void CponProtocol::write(const RpcValue::Map &values, std::ostream &out)
 {
 	bool first = true;
 	out << "{";
 	for (const auto &kv : values) {
 		if (!first)
 			out << ", ";
-		serialize(kv.first, out);
+		write(kv.first, out);
 		out << ":";
-		serialize(out, kv.second);
+		write(out, kv.second);
 		first = false;
 	}
 	out << "}";
 }
 
-void CponProtocol::serialize(const RpcValue::IMap &values, std::ostream &out)
+void CponProtocol::write(const RpcValue::IMap &values, std::ostream &out, const WriteOptions &opts, const RpcValue::MetaData &meta_data)
 {
 	bool first = true;
 	out << S_IMAP_BEGIN;
 	for (const auto &kv : values) {
 		if (!first)
 			out << ", ";
-		serialize(kv.first, out);
+		if(opts.translateIds() && !meta_data.isEmpty()) {
+			int mtid = meta_data.metaTypeId();
+			int nsid = meta_data.metaTypeNameSpaceId();
+			unsigned key = kv.first;
+			const meta::MetaInfo key_info = meta::registeredType(nsid, mtid).keyById(key);
+			if(key_info.isValid())
+				out << key_info.name;
+			else
+				out << key;
+		}
+		else {
+			write(kv.first, out);
+		}
 		out << ":";
-		serialize(out, kv.second);
+		write(out, kv.second);
 		first = false;
 	}
 	out << "}";
 }
 
-void CponProtocol::serialize(const RpcValue::MetaData &value, std::ostream &out)
+void CponProtocol::write(const RpcValue::MetaData &value, std::ostream &out, const CponProtocol::WriteOptions &opts)
 {
 	int n = 0;
 	int nsid = value.metaTypeNameSpaceId();
@@ -824,13 +839,19 @@ void CponProtocol::serialize(const RpcValue::MetaData &value, std::ostream &out)
 		//	continue;
 		if(n++ > 0)
 			out << ", ";
-		const meta::MetaInfo &tag_info = meta::registeredType(nsid, mtid).tagById(tag);
-		if(tag_info.isValid())
-			out << tag_info.name << ':';
-		else
-			out << shv::core::Utils::toString(tag) << ':';
+		if(opts.translateIds()) {
+			const meta::MetaInfo &tag_info = meta::registeredType(nsid, mtid).tagById(tag);
+			if(tag_info.isValid())
+				out << tag_info.name;
+			else
+				out << shv::core::Utils::toString(tag);
+		}
+		else {
+			out << shv::core::Utils::toString(tag);
+		}
+		out << ':';
 		RpcValue meta_val = value.value(tag);
-		if(tag == meta::Tag::MetaTypeId) {
+		if(tag == meta::Tag::MetaTypeId && opts.translateIds()) {
 			int id = meta_val.toInt();
 			const meta::MetaType &type = meta::registeredType(nsid, id);
 			const char *n = type.name();
@@ -840,7 +861,7 @@ void CponProtocol::serialize(const RpcValue::MetaData &value, std::ostream &out)
 				out << shv::core::Utils::toString(id);
 		}
 		else {
-			serialize(out, meta_val);
+			write(out, meta_val);
 		}
 	}
 	out << S_META_END;

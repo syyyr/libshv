@@ -15,8 +15,13 @@ namespace chainpack {
 class SHVCORE_DECL_EXPORT RpcDriver
 {
 public:
+	enum ProtocolVersion {ChainPack = 1, Cpon};
+
 	explicit RpcDriver();
 	virtual ~RpcDriver();
+
+	ProtocolVersion protocolVersion() const {return m_protocolVersion;}
+	void setProtocolVersion(ProtocolVersion v) {m_protocolVersion = v;}
 
 	void sendMessage(const RpcValue &msg);
 	void sendRawData(std::string &&data);
@@ -53,6 +58,7 @@ private:
 	std::deque<Chunk> m_chunkQueue;
 	size_t m_topChunkBytesWrittenSoFar = 0;
 	std::string m_readData;
+	ProtocolVersion m_protocolVersion = ChainPack;
 	static int s_defaultRpcTimeout;
 };
 
