@@ -133,6 +133,7 @@ public:
 
 	ValueXInterval range() const;
 	bool addValueChange(const ValueChange &value);
+	iterator insertValueChange(const_iterator position, const ValueChange &value);
 
 	void extendRange(int &min, int &max) const;
 	void extendRange(double &min, double &max) const;
@@ -158,6 +159,7 @@ public:
 	void addValueChanges(int serie_index, const std::vector<shv::gui::ValueChange> &values); // adds array of valyes to one serie
 	void addValueChanges(const std::vector<shv::gui::ValueChange> &values); //adds array of values where every value belongs to one serie
 	void addValueChanges(const QMap<int, shv::gui::ValueChange> &values);
+	SerieData::iterator insertValueChange(int serie_index, std::vector<ValueChange>::const_iterator position, const shv::gui::ValueChange &value);
 
 	void addSerie(SerieData values);
 	void clearSerie(int serie_index);
