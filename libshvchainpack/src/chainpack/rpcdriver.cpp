@@ -29,6 +29,32 @@ void RpcDriver::sendMessage(const RpcValue &msg)
 	//shvLogFuncFrame() << msg.toStdString();
 	std::ostringstream os_packed_data;
 	switch (protocolVersion()) {
+	case Json: {
+		RpcValue::Map json_msg;
+		RpcMessage rpc_msg(msg);
+		RpcValue shv_path = rpc_msg.shvPath();
+		json_msg["shvPath"] = shv_path;
+		if(rpc_msg.isResponse()) {
+			// response
+			json_msg["id"] = rpc_msg.id();
+			RpcResponse resp(rpc_msg);
+			if(resp.isError())
+				json_msg["error"] = resp.error().message();
+			else
+				json_msg["result"] = resp.result();
+		}
+		else {
+			// request
+			RpcRequest rq(rpc_msg);
+			json_msg["id"] = rq.id();
+			json_msg["method"] = rq.method();
+			json_msg["params"] = rq.params();
+			if(rpc_msg.isRequest())
+				json_msg["id"] = rpc_msg.id();
+		}
+		shv::core::chainpack::CponProtocol::write(os_packed_data, json_msg);
+		break;
+	}
 	case Cpon:
 		CponProtocol::write(os_packed_data, msg);
 		break;
@@ -155,6 +181,44 @@ int RpcDriver::processReadData(const std::string &read_data)
 
 	RpcValue msg;
 	switch (protocol_version) {
+	case Json: {
+		msg = CponProtocol::read(read_data, (size_t)in.tellg());
+		if(msg.isMap()) {
+			shvError() << "JSON message cannot be translated to ChainPack";
+		}
+		else {
+			const RpcValue::Map &map = msg.toMap();
+			unsigned id = map.value("id").toUInt();
+			RpcValue::String method = map.value("method").toString();
+			RpcValue result = map.value("result");
+			RpcValue error = map.value("error");
+			RpcValue shv_path = map.value("shvPath");
+			if(method.empty()) {
+				// response
+				RpcResponse resp;
+				resp.setShvPath(shv_path);
+				resp.setId(id);
+				if(result.isValid())
+					resp.setResult(result);
+				else if(error.isValid())
+					resp.setError(error.toIMap());
+				else
+					shvError() << "JSON RPC response must contain response or error field";
+				msg = resp.value();
+			}
+			else {
+				// request
+				RpcRequest rq;
+				rq.setShvPath(shv_path);
+				rq.setMethod(std::move(method));
+				rq.setParams(map.value("params"));
+				if(id > 0)
+					rq.setId(id);
+				msg = rq.value();
+			}
+		}
+		break;
+	}
 	case Cpon:
 		msg = CponProtocol::read(read_data, (size_t)in.tellg());
 		break;

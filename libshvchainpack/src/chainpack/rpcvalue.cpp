@@ -769,7 +769,10 @@ RpcValue RpcValue::MetaData::value(RpcValue::UInt key) const
 
 void RpcValue::MetaData::setValue(RpcValue::UInt key, const RpcValue &val)
 {
-	m_imap[key] = val;
+	if(val.isValid())
+		m_imap[key] = val;
+	else
+		m_imap.erase(key);
 }
 
 bool RpcValue::MetaData::operator==(const RpcValue::MetaData &o) const

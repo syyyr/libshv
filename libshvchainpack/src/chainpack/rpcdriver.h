@@ -14,7 +14,7 @@ namespace chainpack {
 class SHVCHAINPACK_DECL_EXPORT RpcDriver
 {
 public:
-	enum ProtocolVersion {ChainPack = 1, Cpon};
+	enum ProtocolVersion {ChainPack = 1, Cpon, Json};
 
 	explicit RpcDriver();
 	virtual ~RpcDriver();
