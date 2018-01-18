@@ -42,6 +42,10 @@ void RpcMessage::registerMetaType()
 //==================================================================
 // RpcMessage
 //==================================================================
+const char* RpcMessage::METHOD_GET = "GET";
+const char* RpcMessage::METHOD_SET = "SET";
+const char* RpcMessage::METHOD_VALUE_CHANGED = "CHNG";
+
 RpcMessage::RpcMessage()
 {
 	meta::RpcMessage::registerMetaType();

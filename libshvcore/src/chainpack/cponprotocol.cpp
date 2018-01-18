@@ -851,14 +851,28 @@ void CponProtocol::write(const RpcValue::MetaData &value, std::ostream &out, con
 		}
 		out << ':';
 		RpcValue meta_val = value.value(tag);
-		if(tag == meta::Tag::MetaTypeId && opts.translateIds()) {
-			int id = meta_val.toInt();
-			const meta::MetaType &type = meta::registeredType(nsid, id);
-			const char *n = type.name();
-			if(n[0])
-				out << n;
-			else
-				out << shv::core::Utils::toString(id);
+		if(opts.translateIds()) {
+			if(tag == meta::Tag::MetaTypeNameSpaceId) {
+				int id = meta_val.toInt();
+				const meta::MetaNameSpace &type = meta::registeredNameSpace(nsid);
+				const char *n = type.name();
+				if(n[0])
+					out << n;
+				else
+					out << shv::core::Utils::toString(id);
+			}
+			else if(tag == meta::Tag::MetaTypeId) {
+				int id = meta_val.toInt();
+				const meta::MetaType &type = meta::registeredType(nsid, id);
+				const char *n = type.name();
+				if(n[0])
+					out << n;
+				else
+					out << shv::core::Utils::toString(id);
+			}
+			else {
+				write(out, meta_val);
+			}
 		}
 		else {
 			write(out, meta_val);

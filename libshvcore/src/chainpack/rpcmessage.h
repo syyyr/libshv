@@ -32,6 +32,10 @@ public:
 class SHVCORE_DECL_EXPORT RpcMessage
 {
 public:
+	static const char* METHOD_GET;
+	static const char* METHOD_SET;
+	static const char* METHOD_VALUE_CHANGED;
+public:
 	RpcMessage();
 	RpcMessage(const RpcValue &val);
 	const RpcValue& value() const {return m_value;}

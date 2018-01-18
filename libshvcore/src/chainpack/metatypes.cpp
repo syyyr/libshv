@@ -35,7 +35,7 @@ const MetaInfo &MetaType::keyById(int id) const
 }
 
 ChainPackNS::ChainPackNS()
-	: Super("Default")
+	: Super("ChainPack")
 {
 }
 
