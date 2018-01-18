@@ -14,7 +14,7 @@ std::string::size_type String::indexOf(const std::string & str_haystack, const s
 				  str_needle.begin(), str_needle.end(),
 				  (case_sensitivity == CaseInsensitive) ?
 					  [](char a, char b) { return std::tolower(a) == std::tolower(b); }:
-					  [](char a, char b) { return a == b;}
+	[](char a, char b) { return a == b;}
 	);
 	return (it == str_haystack.end())? std::string::npos: it - str_haystack.begin();
 }
@@ -27,7 +27,7 @@ bool String::equal(std::string const& a, std::string const& b, String::CaseSensi
 					a.begin(),
 					(case_sensitivity == CaseInsensitive) ?
 						[](char a, char b) { return std::tolower(a) == std::tolower(b); }:
-						[](char a, char b) { return a == b;}
+		[](char a, char b) { return a == b;}
 		);
 	}
 	else {
@@ -48,6 +48,28 @@ std::vector<std::string> String::split(const std::string &str, char delim, Split
 		if(pos2 == string::npos)
 			break;
 		pos = pos2 + 1;
+	}
+	return ret;
+}
+
+std::string String::join(const std::vector<std::string> &lst, const std::string &delim)
+{
+	std::string ret;
+	for(const auto &s : lst) {
+		if(!ret.empty())
+			ret += delim;
+		ret += s;
+	}
+	return ret;
+}
+
+std::string String::join(const std::vector<std::string> &lst, char delim)
+{
+	std::string ret;
+	for(const auto &s : lst) {
+		if(!ret.empty())
+			ret += delim;
+		ret += s;
 	}
 	return ret;
 }
