@@ -79,6 +79,11 @@ bool SerieData::addValueChange(const ValueChange &value)
 	return false;
 }
 
+SerieData::iterator SerieData::insertValueChange(const_iterator position, const ValueChange &value)
+{
+	return insert(position, value);
+}
+
 void SerieData::extendRange(int &min, int &max) const
 {
 	if (size()) {
@@ -252,6 +257,11 @@ void GraphModelData::addValueChanges(const QMap<int, shv::gui::ValueChange> &val
 			}
 		}
 	}
+}
+
+SerieData::iterator GraphModelData::insertValueChange(int serie_index, std::vector<ValueChange>::const_iterator position, const shv::gui::ValueChange &value)
+{
+	return m_valueChanges[serie_index].insertValueChange(position, value);
 }
 
 void GraphModelData::addSerie(SerieData values)
