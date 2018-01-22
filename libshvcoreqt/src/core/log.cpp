@@ -26,7 +26,7 @@ static inline bool isPrintable(uchar c)
 	return c >= ' ' && c <= '~'; 
 }
 
-SHVCOREQT_DECL_EXPORT shv::core::ShvLog &operator<<(shv::core::ShvLog log, const QByteArray &input)
+SHVCOREQT_DECL_EXPORT NecroLog &operator<<(NecroLog log, const QByteArray &input)
 {
 	const char *begin = input.constData();
 	int length = input.length();

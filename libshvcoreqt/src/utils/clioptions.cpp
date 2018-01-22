@@ -351,7 +351,8 @@ void CLIOptions::printHelp(QTextStream& os) const
 		QString oc = opt.comment();
 		if(!oc.isEmpty()) os << "\t" << opt.comment() << endl;
 	}
-	os << shv::core::ShvLog::logCLIHelp() << endl;
+	//os << shv::core::ShvLog::logCLIHelp() << endl;
+	os << NecroLog::cliHelp() << endl;
 }
 
 void CLIOptions::printHelp() const
