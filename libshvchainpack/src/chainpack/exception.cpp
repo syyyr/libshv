@@ -1,7 +1,5 @@
 #include "exception.h"
-
-#include <iostream>
-#include <cstdlib>
+#include "../necrolog/necrolog.h"
 
 namespace shv {
 namespace chainpack {
@@ -12,7 +10,7 @@ Exception::Exception(const std::string &_msg, const std::string &_where)
 	: m_msg(_msg)
 	, m_where(_where)
 {
-	std::cerr << " SHV_EXCEPTION: " << where() << " " << message() << std::endl;
+	nError() << "SHV_CHAINPACK_EXCEPTION:" << where() << message();
 	if(isAbortOnException())
 		std::abort();
 }
