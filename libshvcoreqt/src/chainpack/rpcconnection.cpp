@@ -121,7 +121,7 @@ void RpcConnection::sendResponse(int request_id, const RpcConnection::RpcValue &
 	sendMessage(resp);
 }
 
-void RpcConnection::sendError(int request_id, const core::chainpack::RpcResponse::Error &error)
+void RpcConnection::sendError(int request_id, const shv::chainpack::RpcResponse::Error &error)
 {
 	RpcResponse resp;
 	resp.setId(request_id);
