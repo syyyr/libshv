@@ -21,6 +21,7 @@ message ( DESTDIR: $$DESTDIR )
 DEFINES += SHVCHAINPACK_BUILD_DLL
 
 INCLUDEPATH += \
+	../3rdparty/necrolog
 	#$$QUICKBOX_HOME/libqf/libqfcore/include \
 	#$$PROJECT_TOP_SRCDIR/qfopcua/libqfopcua/include \
 

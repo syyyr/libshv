@@ -3,7 +3,8 @@
 #include "chainpackprotocol.h"
 #include "cponprotocol.h"
 #include "exception.h"
-#include "../necrolog/necrolog.h"
+
+#include <necrolog.h>
 
 #include <sstream>
 #include <iostream>
@@ -52,7 +53,7 @@ void RpcDriver::sendMessage(const RpcValue &msg)
 			if(rpc_msg.isRequest())
 				json_msg["id"] = rpc_msg.id();
 		}
-		shv::core::chainpack::CponProtocol::write(os_packed_data, json_msg);
+		shv::chainpack::CponProtocol::write(os_packed_data, json_msg);
 		break;
 	}
 	case Cpon:
@@ -184,7 +185,7 @@ int RpcDriver::processReadData(const std::string &read_data)
 	case Json: {
 		msg = CponProtocol::read(read_data, (size_t)in.tellg());
 		if(msg.isMap()) {
-			shvError() << "JSON message cannot be translated to ChainPack";
+			nError() << "JSON message cannot be translated to ChainPack";
 		}
 		else {
 			const RpcValue::Map &map = msg.toMap();
@@ -203,7 +204,7 @@ int RpcDriver::processReadData(const std::string &read_data)
 				else if(error.isValid())
 					resp.setError(error.toIMap());
 				else
-					shvError() << "JSON RPC response must contain response or error field";
+					nError() << "JSON RPC response must contain response or error field";
 				msg = resp.value();
 			}
 			else {
