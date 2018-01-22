@@ -81,7 +81,7 @@ bool SerieData::addValueChange(const ValueChange &value)
 
 SerieData::iterator SerieData::insertValueChange(const_iterator position, const ValueChange &value)
 {
-  return emplace(position, value);
+	return insert(position, value);
 }
 
 void SerieData::extendRange(int &min, int &max) const
