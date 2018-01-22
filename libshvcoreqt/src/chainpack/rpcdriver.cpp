@@ -2,9 +2,9 @@
 #include "../core/log.h"
 
 #include <shv/core/shvexception.h>
-//#include <shv/core/chainpack/metatypes.h>
-#include <shv/core/chainpack/rpcmessage.h>
-//#include <shv/core/chainpack/chainpackprotocol.h>
+//#include <shv/chainpack/metatypes.h>
+#include <shv/chainpack/rpcmessage.h>
+//#include <shv/chainpack/chainpackprotocol.h>
 
 #include <QTimer>
 #include <QElapsedTimer>
@@ -32,7 +32,7 @@ RpcDriver::RpcDriver(QObject *parent)
 	: QObject(parent)
 {
 	/*
-	setMessageReceivedCallback([this](const shv::core::chainpack::RpcValue &msg) {
+	setMessageReceivedCallback([this](const shv::shv::chainpack::RpcValue &msg) {
 		emit messageReceived(msg);
 	});
 	*/
@@ -124,7 +124,7 @@ bool RpcDriver::flush()
 	return false;
 }
 
-void RpcDriver::onMessageReceived(const core::chainpack::RpcValue &msg)
+void RpcDriver::onMessageReceived(const shv::chainpack::RpcValue &msg)
 {
 	emit messageReceived(msg);
 }
@@ -140,15 +140,15 @@ private:
 };
 }
 
-void RpcDriver:: sendRequestSync(const core::chainpack::RpcRequest &request, core::chainpack::RpcResponse *presponse, int time_out_ms)
+void RpcDriver:: sendRequestSync(const shv::chainpack::RpcRequest &request, shv::chainpack::RpcResponse *presponse, int time_out_ms)
 {
-	namespace cp = shv::core::chainpack;
+	namespace cp = shv::chainpack;
 	smcDebug() << Q_FUNC_INFO << "timeout ms:" << time_out_ms;
 	if(time_out_ms == 0) {
 		smcDebug() << "sendMessageSync called with invalid timeout:" << time_out_ms << "," << defaultRpcTimeout() << "msec will be used instead.";
 		time_out_ms = defaultRpcTimeout();
 	}
-	core::chainpack::RpcResponse resp_msg;
+	shv::chainpack::RpcResponse resp_msg;
 	do {
 		cp::RpcValue::UInt msg_id = request.id();
 		if(msg_id == 0) {
@@ -162,9 +162,9 @@ void RpcDriver:: sendRequestSync(const core::chainpack::RpcRequest &request, cor
 		tm_elapsed.start();
 		QEventLoop eloop;
 		QMetaObject::Connection lambda_connection;
-		lambda_connection = connect(this, &RpcDriver::messageReceived, [&eloop, &resp_msg, &lambda_connection, msg_id](const shv::core::chainpack::RpcValue &msg_val)
+		lambda_connection = connect(this, &RpcDriver::messageReceived, [&eloop, &resp_msg, &lambda_connection, msg_id](const shv::chainpack::RpcValue &msg_val)
 		{
-			shv::core::chainpack::RpcMessage msg(msg_val);
+			shv::chainpack::RpcMessage msg(msg_val);
 			smcDebug() << &eloop << "New RPC message id:" << msg.id();
 			if(msg.id() == msg_id) {
 				QObject::disconnect(lambda_connection);

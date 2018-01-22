@@ -1,4 +1,5 @@
 #include "shvexception.h"
+#include "log.h"
 
 #include <iostream>
 #include <cstdlib>
@@ -9,7 +10,7 @@ shv::core::Exception::Exception(const std::string &_msg, const std::string &_whe
 	: m_msg(_msg)
 	, m_where(_where)
 {
-	std::cerr << " SHV_EXCEPTION: " << where() << " " << message() << std::endl;
+	shvError() << "SHV_EXCEPTION:" << where() << message();
 	if(isAbortOnException())
 		std::abort();
 }

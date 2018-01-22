@@ -6,7 +6,7 @@ CONFIG += C++11
 CONFIG += hide_symbols
 
 TEMPLATE = lib
-TARGET = shvcore
+TARGET = shvchainpack
 
 isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
 	SHV_PROJECT_TOP_BUILDDIR=$$shadowed($$PWD)/..
@@ -18,11 +18,11 @@ win32:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin
 
 message ( DESTDIR: $$DESTDIR )
 
-DEFINES += SHVCORE_BUILD_DLL
+DEFINES += SHVCHAINPACK_BUILD_DLL
 
 INCLUDEPATH += \
 	#$$QUICKBOX_HOME/libqf/libqfcore/include \
-	../3rdparty/necrolog \
+	#$$PROJECT_TOP_SRCDIR/qfopcua/libqfopcua/include \
 
 LIBS += \
     -L$$DESTDIR \

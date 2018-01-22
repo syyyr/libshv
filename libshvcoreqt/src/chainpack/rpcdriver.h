@@ -2,24 +2,24 @@
 
 #include "../shvcoreqtglobal.h"
 
-#include <shv/core/chainpack/rpcdriver.h>
+#include <shv/chainpack/rpcdriver.h>
 
 #include <QObject>
 
 class QTcpSocket;
 class QThread;
 
-namespace shv { namespace core { namespace chainpack { class RpcRequest; class RpcResponse; }}}
+namespace shv { namespace chainpack { class RpcRequest; class RpcResponse; }}
 
 namespace shv {
 namespace coreqt {
 namespace chainpack {
 
-class SHVCOREQT_DECL_EXPORT RpcDriver : public QObject, public shv::core::chainpack::RpcDriver
+class SHVCOREQT_DECL_EXPORT RpcDriver : public QObject, public shv::chainpack::RpcDriver
 {
 	Q_OBJECT
 
-	using Super = shv::core::chainpack::RpcDriver;
+	using Super = shv::chainpack::RpcDriver;
 public:
 	explicit RpcDriver(QObject *parent = nullptr);
 	~RpcDriver() Q_DECL_OVERRIDE;
@@ -29,10 +29,10 @@ public:
 
 	void connectToHost(const QString &host_name, quint16 port);
 
-	void sendMessage(const shv::core::chainpack::RpcValue &msg) {Super::sendMessage(msg);}
+	void sendMessage(const shv::chainpack::RpcValue &msg) {Super::sendMessage(msg);}
 
-	Q_SIGNAL void messageReceived(shv::core::chainpack::RpcValue msg);
-	void sendRequestSync(const shv::core::chainpack::RpcRequest& request, shv::core::chainpack::RpcResponse *presponse, int time_out_ms);
+	Q_SIGNAL void messageReceived(shv::chainpack::RpcValue msg);
+	void sendRequestSync(const shv::chainpack::RpcRequest& request, shv::chainpack::RpcResponse *presponse, int time_out_ms);
 
 	void abortConnection();
 	bool isConnected() const;
@@ -43,7 +43,7 @@ protected:
 	bool isOpen() Q_DECL_OVERRIDE;
 	int64_t writeBytes(const char *bytes, size_t length) Q_DECL_OVERRIDE;
 	bool flush() Q_DECL_OVERRIDE;
-	void onMessageReceived(const shv::core::chainpack::RpcValue &msg) Q_DECL_OVERRIDE;
+	void onMessageReceived(const shv::chainpack::RpcValue &msg) Q_DECL_OVERRIDE;
 private:
 	QTcpSocket* socket();
 	void onReadyRead();
@@ -55,4 +55,4 @@ private:
 
 }}}
 
-Q_DECLARE_METATYPE(shv::core::chainpack::RpcValue)
+Q_DECLARE_METATYPE(shv::chainpack::RpcValue)

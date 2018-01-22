@@ -3,8 +3,8 @@
 #include "../shvcoreqtglobal.h"
 #include "rpcdriver.h"
 
-#include <shv/core/chainpack/rpcmessage.h>
-#include <shv/core/chainpack/rpcdriver.h>
+#include <shv/chainpack/rpcmessage.h>
+#include <shv/chainpack/rpcdriver.h>
 
 #include <QObject>
 
@@ -19,18 +19,18 @@ class SHVCOREQT_DECL_EXPORT RpcConnection : public QObject
 {
 	Q_OBJECT
 public:
-	using RpcValue = shv::core::chainpack::RpcValue;
-	using RpcMessage = shv::core::chainpack::RpcMessage;
-	using RpcRequest = shv::core::chainpack::RpcRequest;
-	using RpcResponse = shv::core::chainpack::RpcResponse;
-	//using RpcDriver = shv::core::chainpack::RpcDriver;
+	using RpcValue = shv::chainpack::RpcValue;
+	using RpcMessage = shv::chainpack::RpcMessage;
+	using RpcRequest = shv::chainpack::RpcRequest;
+	using RpcResponse = shv::chainpack::RpcResponse;
+	//using RpcDriver = shv::chainpack::RpcDriver;
 public:
 	explicit RpcConnection(QObject *parent = nullptr);
 	~RpcConnection() Q_DECL_OVERRIDE;
 
 	//static int nextRpcId();
 	void setSocket(QTcpSocket *socket);
-	void setProtocolVersion(shv::core::chainpack::RpcDriver::ProtocolVersion ver) {emit setProtocolVersionRequest(ver);}
+	void setProtocolVersion(shv::chainpack::RpcDriver::ProtocolVersion ver) {emit setProtocolVersionRequest(ver);}
 
 	int connectionId() const {return m_connectionId;}
 
@@ -57,7 +57,7 @@ protected:
 	Q_SIGNAL void setProtocolVersionRequest(int ver);
 	Q_SIGNAL void sendMessageRequest(const RpcValue& msg);
 
-	Q_SIGNAL void sendMessageSyncRequest(const core::chainpack::RpcRequest &request, core::chainpack::RpcResponse *presponse, int time_out_ms);
+	Q_SIGNAL void sendMessageSyncRequest(const shv::chainpack::RpcRequest &request, shv::chainpack::RpcResponse *presponse, int time_out_ms);
 	Q_SLOT RpcResponse sendMessageSync(const RpcRequest &rpc_request_message, int time_out_ms = 0);
 
 	Q_SIGNAL void connectToHostRequest(const QString &host_name, quint16 port);
