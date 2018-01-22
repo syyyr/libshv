@@ -449,9 +449,9 @@ private:
 			}
 		}
 		{
-			qDebug() << "------------- blob";
-			RpcValue::Blob blob{"fpowfksap\0ofkpsaokfsa"};
-			blob[5] = 0;
+			qDebug() << "------------- Blob";
+			RpcValue::Blob blob{"blob containing zero character"};
+			blob[blob.size() - 9] = 0;
 			RpcValue cp1{blob};
 			std::stringstream out;
 			int len = ChainPackProtocol::write(out, cp1);
@@ -462,8 +462,8 @@ private:
 		}
 		{
 			qDebug() << "------------- string";
-			RpcValue::String str{"lhklhklfkjdsl\0fkposkfp79"};
-			str[5] = 0;
+			RpcValue::String str{"string containing zero character"};
+			str[str.size() - 10] = 0;
 			RpcValue cp1{str};
 			std::stringstream out;
 			int len = ChainPackProtocol::write(out, cp1);
