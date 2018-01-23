@@ -29,6 +29,6 @@ INCLUDEPATH += \
 LIBS += \
     -L$$DESTDIR \
     -lshvcore \
-    -lshvchainpack \
+    -lshvchainpack
 
 include($$PWD/src/src.pri)
