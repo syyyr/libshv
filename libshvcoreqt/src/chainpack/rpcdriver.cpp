@@ -124,7 +124,7 @@ bool RpcDriver::flush()
 	return false;
 }
 
-void RpcDriver::onMessageReceived(const shv::chainpack::RpcValue &msg)
+void RpcDriver::onRpcValueReceived(const shv::chainpack::RpcValue &msg)
 {
 	emit messageReceived(msg);
 }

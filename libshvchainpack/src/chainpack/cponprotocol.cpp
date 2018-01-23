@@ -90,6 +90,16 @@ RpcValue CponProtocol::read(const std::string &in, size_t pos, size_t *new_pos)
 	return result;
 }
 
+RpcValue::MetaData CponProtocol::readMetaData(const std::string &in, size_t pos, size_t *new_pos)
+{
+	RpcValue::MetaData md;
+	CponProtocol parser{in, pos};
+	bool ok = parser.parseMetaData(md);
+	if(new_pos)
+		*new_pos = ok? parser.pos(): pos;
+	return md;
+}
+
 namespace {
 class DepthScope
 {
@@ -671,6 +681,12 @@ void CponProtocol::write(std::ostream &out, const RpcValue &value, const WriteOp
 	default:
 		std::runtime_error(std::string("Don't know how to serialize type: ") + RpcValue::typeToName(value.type()));
 	}
+}
+
+void CponProtocol::writeMetaData(std::ostream &out, const RpcValue::MetaData &meta_data, const CponProtocol::WriteOptions &opts)
+{
+	if(!meta_data.isEmpty())
+		write(meta_data, out, opts);
 }
 
 void CponProtocol::write(std::nullptr_t, std::ostream &out)

@@ -52,6 +52,7 @@ public: // public just because of testing, normal user do not need to use this e
 public:
 	static uint64_t readUIntData(std::istream &data, bool *ok = nullptr);
 	static RpcValue read(std::istream &data);
+	static RpcValue::MetaData readMetaData(std::istream &data);
 
 	static void writeUIntData(std::ostream &out, uint64_t n);
 	static void writeMetaData(std::ostream &out, const RpcValue::MetaData &meta_data);
@@ -76,8 +77,6 @@ private:
 	static void writeData_List(std::ostream &out, const RpcValue::List &list);
 	static void writeData_Map(std::ostream &out, const RpcValue::Map &map);
 	static void writeData_IMap(std::ostream &out, const RpcValue::IMap &map);
-
-	static RpcValue::MetaData readMetaData(std::istream &data);
 
 	static RpcValue::List readData_List(std::istream &data);
 	static RpcValue::Array readData_Array(TypeInfo::Enum type_info, std::istream &data);

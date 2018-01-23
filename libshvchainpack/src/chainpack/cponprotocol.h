@@ -24,6 +24,7 @@ public:
 public:
 	size_t pos() const {return m_pos;}
 	static RpcValue read(const std::string & in, size_t pos = 0, size_t *new_pos = nullptr);
+	static RpcValue::MetaData readMetaData(const std::string & in, size_t pos = 0, size_t *new_pos = nullptr);
 	//static RpcValue read(const std::istream & in);
 	//static std::string write(const RpcValue &value);
 	class SHVCHAINPACK_DECL_EXPORT WriteOptions
@@ -36,6 +37,7 @@ public:
 
 	};
 	static void write(std::ostream &out, const RpcValue &value, const WriteOptions &opts = WriteOptions());
+	static void writeMetaData(std::ostream &out, const RpcValue::MetaData &meta_data, const WriteOptions &opts = WriteOptions());
 private:
 	CponProtocol(const std::string &str, size_t pos);
 	RpcValue parseAtPos();

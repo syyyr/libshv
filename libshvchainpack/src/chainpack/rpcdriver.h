@@ -24,13 +24,26 @@ public:
 
 	void sendMessage(const RpcValue &msg);
 	void sendRawData(std::string &&data);
+	void sendRawData(RpcValue::MetaData &&meta_data, std::string &&data);
 	using MessageReceivedCallback = std::function< void (const RpcValue &msg)>;
 	void setMessageReceivedCallback(const MessageReceivedCallback &callback) {m_messageReceivedCallback = callback;}
 
 	static int defaultRpcTimeout() {return s_defaultRpcTimeout;}
 	static void setDefaultRpcTimeout(int tm) {s_defaultRpcTimeout = tm;}
 protected:
-	using Chunk = std::string;
+	struct Chunk
+	{
+		std::string metaData;
+		std::string data;
+
+		Chunk() {}
+		Chunk(std::string &&meta_data, std::string &&data) : metaData(std::move(meta_data)), data(std::move(data)) {}
+		Chunk(std::string &&data) : data(std::move(data)) {}
+		Chunk(Chunk &&) = default;
+
+		bool empty() const {return metaData.empty() && data.empty();}
+		size_t size() const {return metaData.size() + data.size();}
+	};
 protected:
 	virtual bool isOpen() = 0;
 	/// write bytes to write buffer (and possibly to socket)
@@ -44,17 +57,21 @@ protected:
 
 	/// add data to the output queue, send data from top of the queue
 	virtual void enqueueDataToSend(Chunk &&chunk_to_enqueue);
-	virtual void onMessageReceived(const RpcValue &msg);
+
+	virtual void onRpcDataReceived(ProtocolVersion protocol_version, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len);
+	virtual void onRpcValueReceived(const RpcValue &msg);
 
 	virtual void lockSendQueue() {}
 	virtual void unlockSendQueue() {}
 private:
 	int processReadData(const std::string &read_data);
 	void writeQueue();
+	int64_t writeBytes_helper(const std::string &str, size_t from, size_t length);
 private:
 	MessageReceivedCallback m_messageReceivedCallback = nullptr;
 
 	std::deque<Chunk> m_chunkQueue;
+	bool m_topChunkHeaderWritten = false;
 	size_t m_topChunkBytesWrittenSoFar = 0;
 	std::string m_readData;
 	ProtocolVersion m_protocolVersion = ChainPack;

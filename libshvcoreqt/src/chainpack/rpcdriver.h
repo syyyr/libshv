@@ -43,7 +43,7 @@ protected:
 	bool isOpen() Q_DECL_OVERRIDE;
 	int64_t writeBytes(const char *bytes, size_t length) Q_DECL_OVERRIDE;
 	bool flush() Q_DECL_OVERRIDE;
-	void onMessageReceived(const shv::chainpack::RpcValue &msg) Q_DECL_OVERRIDE;
+	void onRpcValueReceived(const shv::chainpack::RpcValue &msg) Q_DECL_OVERRIDE;
 private:
 	QTcpSocket* socket();
 	void onReadyRead();

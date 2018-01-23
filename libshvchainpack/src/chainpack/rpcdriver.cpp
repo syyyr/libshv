@@ -77,6 +77,22 @@ void RpcDriver::sendRawData(std::string &&data)
 	enqueueDataToSend(Chunk{std::move(data)});
 }
 
+void RpcDriver::sendRawData(RpcValue::MetaData &&meta_data, std::string &&data)
+{
+	using namespace std;
+	//shvLogFuncFrame() << msg.toStdString();
+	std::ostringstream os_packed_data;
+	switch (protocolVersion()) {
+	case Cpon:
+		CponProtocol::writeMetaData(os_packed_data, meta_data);
+		break;
+	default:
+		ChainPackProtocol::writeMetaData(os_packed_data, meta_data);
+		break;
+	}
+	enqueueDataToSend(Chunk(os_packed_data.str(), std::move(data)));
+}
+
 void RpcDriver::enqueueDataToSend(RpcDriver::Chunk &&chunk_to_enqueue)
 {
 	/// LOCK_FOR_SEND lock mutex here in the multithreaded environment
@@ -101,7 +117,7 @@ void RpcDriver::writeQueue()
 	//static int hi_cnt = 0;
 	const Chunk &chunk = m_chunkQueue[0];
 
-	if(m_topChunkBytesWrittenSoFar == 0) {
+	if(!m_topChunkHeaderWritten) {
 		std::string protocol_version_data;
 		{
 			std::ostringstream os;
@@ -110,7 +126,7 @@ void RpcDriver::writeQueue()
 		}
 		{
 			std::ostringstream os;
-			ChainPackProtocol::writeUIntData(os, chunk.length() + protocol_version_data.length());
+			ChainPackProtocol::writeUIntData(os, chunk.size() + protocol_version_data.length());
 			std::string packet_len_data = os.str();
 			auto len = writeBytes(packet_len_data.data(), packet_len_data.length());
 			if(len < 0)
@@ -125,22 +141,32 @@ void RpcDriver::writeQueue()
 			if(len != 1)
 				SHVCHP_EXCEPTION("Design error! Protocol version shall be always written at once to the socket");
 		}
+		m_topChunkHeaderWritten = true;
 	}
-
-	{
-		auto len = writeBytes(chunk.data() + m_topChunkBytesWrittenSoFar, chunk.length() - m_topChunkBytesWrittenSoFar);
-		if(len < 0)
-			SHVCHP_EXCEPTION("Write socket error!");
-		if(len == 0)
-			SHVCHP_EXCEPTION("Design error! At least 1 byte of data shall be always written to the socket");
-
-		logRpc() << "writeQueue - data len:" << chunk.length() << "start index:" << m_topChunkBytesWrittenSoFar << "bytes written:" << len << "remaining:" << (chunk.length() - m_topChunkBytesWrittenSoFar - len);
-		m_topChunkBytesWrittenSoFar += len;
-		if(m_topChunkBytesWrittenSoFar == chunk.length()) {
-			m_topChunkBytesWrittenSoFar = 0;
-			m_chunkQueue.pop_front();
-		}
+	if(m_topChunkBytesWrittenSoFar < chunk.metaData.size()) {
+		m_topChunkBytesWrittenSoFar += writeBytes_helper(chunk.metaData, m_topChunkBytesWrittenSoFar, chunk.metaData.size() - m_topChunkBytesWrittenSoFar);
 	}
+	if(m_topChunkBytesWrittenSoFar >= chunk.metaData.size()) {
+		m_topChunkBytesWrittenSoFar += writeBytes_helper(chunk.data
+														 , m_topChunkBytesWrittenSoFar - chunk.metaData.size()
+														 , chunk.data.size() - (m_topChunkBytesWrittenSoFar - chunk.metaData.size()));
+		//logRpc() << "writeQueue - data len:" << chunk.length() << "start index:" << m_topChunkBytesWrittenSoFar << "bytes written:" << len << "remaining:" << (chunk.length() - m_topChunkBytesWrittenSoFar - len);
+	}
+	if(m_topChunkBytesWrittenSoFar == chunk.size()) {
+		m_topChunkHeaderWritten = false;
+		m_topChunkBytesWrittenSoFar = 0;
+		m_chunkQueue.pop_front();
+	}
+}
+
+int64_t RpcDriver::writeBytes_helper(const std::string &str, size_t from, size_t length)
+{
+	auto len = writeBytes(str.data() + from, length);
+	if(len < 0)
+		SHVCHP_EXCEPTION("Write socket error!");
+	if(len == 0)
+		SHVCHP_EXCEPTION("Design error! At least 1 byte of data shall be always written to the socket");
+	return len;
 }
 
 void RpcDriver::onBytesRead(std::string &&bytes)
@@ -172,7 +198,7 @@ int RpcDriver::processReadData(const std::string &read_data)
 
 	size_t read_len = (size_t)in.tellg() + chunk_len;
 
-	uint64_t protocol_version = ChainPackProtocol::readUIntData(in, &ok);
+	ProtocolVersion protocol_version = (ProtocolVersion)ChainPackProtocol::readUIntData(in, &ok);
 	if(!ok)
 		return 0;
 
@@ -182,7 +208,8 @@ int RpcDriver::processReadData(const std::string &read_data)
 
 	//		 << "reading bytes:" << (protocolVersion() == Cpon? read_data: shv::core::Utils::toHex(read_data));
 
-	RpcValue msg;
+	RpcValue::MetaData meta_data;
+	size_t meta_data_end_pos;
 	switch (protocol_version) {
 	/*
 	case Json: {
@@ -224,21 +251,46 @@ int RpcDriver::processReadData(const std::string &read_data)
 		break;
 	}
 	*/
-	case Cpon:
-		msg = CponProtocol::read(read_data, (size_t)in.tellg());
+	case Cpon: {
+		meta_data = CponProtocol::readMetaData(read_data, (size_t)in.tellg(), &meta_data_end_pos);
 		break;
-	case ChainPack:
-		msg = ChainPackProtocol::read(in);
+	}
+	case ChainPack: {
+		meta_data = ChainPackProtocol::readMetaData(in);
+		meta_data_end_pos = (size_t)in.tellg();
 		break;
+	}
 	default:
 		nError() << "Throwing away message with unknown protocol version:" << protocol_version;
 		break;
 	}
-	onMessageReceived(msg);
+	onRpcDataReceived(protocol_version, std::move(meta_data), read_data, meta_data_end_pos, read_len - meta_data_end_pos);
 	return read_len;
 }
 
-void RpcDriver::onMessageReceived(const RpcValue &msg)
+void RpcDriver::onRpcDataReceived(ProtocolVersion protocol_version, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
+{
+	(void)data_len;
+	RpcValue msg;
+	switch (protocol_version) {
+	case Cpon:
+		msg = CponProtocol::read(data, start_pos);
+		break;
+	case ChainPack: {
+		std::istringstream in(data);
+		in.seekg(start_pos);
+		msg = ChainPackProtocol::read(in);
+		break;
+	}
+	default:
+		nError() << "Throwing away message with unknown protocol version:" << protocol_version;
+		break;
+	}
+	msg.setMetaData(std::move(md));
+	onRpcValueReceived(msg);
+}
+
+void RpcDriver::onRpcValueReceived(const RpcValue &msg)
 {
 	logRpc() << "\t message received:" << msg.toCpon();
 	//logLongFiles() << "\t emitting message received:" << msg.dumpText();
