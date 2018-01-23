@@ -30,6 +30,7 @@ void RpcDriver::sendMessage(const RpcValue &msg)
 	//shvLogFuncFrame() << msg.toStdString();
 	std::ostringstream os_packed_data;
 	switch (protocolVersion()) {
+	/*
 	case Json: {
 		RpcValue::Map json_msg;
 		RpcMessage rpc_msg(msg);
@@ -56,6 +57,7 @@ void RpcDriver::sendMessage(const RpcValue &msg)
 		shv::chainpack::CponProtocol::write(os_packed_data, json_msg);
 		break;
 	}
+	*/
 	case Cpon:
 		CponProtocol::write(os_packed_data, msg);
 		break;
@@ -182,6 +184,7 @@ int RpcDriver::processReadData(const std::string &read_data)
 
 	RpcValue msg;
 	switch (protocol_version) {
+	/*
 	case Json: {
 		msg = CponProtocol::read(read_data, (size_t)in.tellg());
 		if(msg.isMap()) {
@@ -220,6 +223,7 @@ int RpcDriver::processReadData(const std::string &read_data)
 		}
 		break;
 	}
+	*/
 	case Cpon:
 		msg = CponProtocol::read(read_data, (size_t)in.tellg());
 		break;
