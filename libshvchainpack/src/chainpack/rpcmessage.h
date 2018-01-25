@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rpcvalue.h"
+#include "rpc.h"
 
 #include "utils.h"
 #include "../shvchainpackglobal.h"
@@ -17,7 +18,7 @@ class RpcMessage : public meta::MetaType
 	using Super = meta::MetaType;
 public:
 	enum {ID = 1};
-	struct Tag { enum Enum {RequestId = meta::Tag::USER, ConnectionId, ShvPath, MAX};};
+	struct Tag { enum Enum {RequestId = meta::Tag::USER, ConnectionId, ShvPath, ProtocolVersion, MAX};};
 	struct Key { enum Enum {Method = 1, Params, Result, Error, ErrorCode, ErrorMessage, MAX};};
 	struct RpcCallType { enum Enum { Undefined = 0, Request, Response, Notify };};
 
@@ -56,6 +57,9 @@ public:
 	RpcValue connectionId() const;
 	void setConnectionId(const RpcValue &id);
 
+	Rpc::ProtocolVersion protocolVersion() const;
+	void setProtocolVersion(shv::chainpack::Rpc::ProtocolVersion ver);
+
 	std::string toStdString() const;
 
 	RpcValue metaValue(RpcValue::UInt key) const;
@@ -79,6 +83,7 @@ public:
 	//RpcRequest(const Value &id) : Super(Json()) {setId(id);}
 	RpcRequest(const RpcMessage &msg) : Super(msg) {}
 public:
+	RpcRequest& setMethod(const RpcValue::String &met);
 	RpcRequest& setMethod(RpcValue::String &&met);
 	RpcValue::String method() const;
 	RpcRequest& setParams(const RpcValue &p);

@@ -22,7 +22,7 @@ RpcMessage::RpcMessage()
 	m_tags = {
 		{(int)Tag::RequestId, {(int)Tag::RequestId, "RequestId"}},
 		{(int)Tag::ConnectionId, {(int)Tag::ConnectionId, "ConnectionId"}},
-		//{(int)Tag::RpcCallType, {(int)Tag::RpcCallType, "RpcCallType"}},
+		{(int)Tag::ProtocolVersion, {(int)Tag::ProtocolVersion, "ProtocolVersion"}},
 		{(int)Tag::ShvPath, {(int)Tag::ShvPath, "ShvPath"}},
 	};
 }
@@ -135,6 +135,16 @@ void RpcMessage::setConnectionId(const RpcValue &id)
 	setMetaValue(meta::RpcMessage::Tag::ConnectionId, id);
 }
 
+Rpc::ProtocolVersion RpcMessage::protocolVersion() const
+{
+	return (Rpc::ProtocolVersion)metaValue(meta::RpcMessage::Tag::ProtocolVersion).toUInt();
+}
+
+void RpcMessage::setProtocolVersion(Rpc::ProtocolVersion ver)
+{
+	setMetaValue(meta::RpcMessage::Tag::ProtocolVersion, ver == Rpc::ProtocolVersion::Invalid? RpcValue(): RpcValue((unsigned)ver));
+}
+
 bool RpcMessage::isResponse() const
 {
 	return rpcType() == meta::RpcMessage::RpcCallType::Response;
@@ -185,6 +195,11 @@ std::string RpcMessage::toStdString() const
 RpcValue::String RpcRequest::method() const
 {
 	return value(meta::RpcMessage::Key::Method).toString();
+}
+
+RpcRequest &RpcRequest::setMethod(const RpcValue::String &met)
+{
+	return setMethod(RpcValue::String(met));
 }
 
 RpcRequest &RpcRequest::setMethod(RpcValue::String &&met)

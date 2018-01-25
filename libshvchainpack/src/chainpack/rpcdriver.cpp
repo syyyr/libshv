@@ -277,27 +277,36 @@ int RpcDriver::processReadData(const std::string &read_data)
 	return read_len;
 }
 
-void RpcDriver::onRpcDataReceived(Rpc::ProtocolVersion protocol_version, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
+RpcValue RpcDriver::decodeData(Rpc::ProtocolVersion protocol_version, const std::string &data, size_t start_pos)
 {
-	(void)data_len;
-	RpcValue msg;
+	RpcValue ret;
 	switch (protocol_version) {
 	case Rpc::ProtocolVersion::Cpon:
-		msg = CponProtocol::read(data, start_pos);
+		ret = CponProtocol::read(data, start_pos);
 		break;
 	case Rpc::ProtocolVersion::ChainPack: {
 		std::istringstream in(data);
 		in.seekg(start_pos);
-		msg = ChainPackProtocol::read(in);
+		ret = ChainPackProtocol::read(in);
 		break;
 	}
 	default:
-		nError() << "Throwing away message with unknown protocol version:" << (unsigned)protocol_version;
+		nError() << "Don't know how to decode message with unknown protocol version:" << (unsigned)protocol_version;
 		break;
 	}
+	return ret;
+}
+
+void RpcDriver::onRpcDataReceived(Rpc::ProtocolVersion protocol_version, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
+{
+	(void)data_len;
+	RpcValue msg = decodeData(protocol_version, data, start_pos);
 	if(msg.isValid()) {
 		msg.setMetaData(std::move(md));
 		onRpcValueReceived(msg);
+	}
+	else {
+		nError() << "Throwing away message with unknown protocol version:" << (unsigned)protocol_version;
 	}
 }
 

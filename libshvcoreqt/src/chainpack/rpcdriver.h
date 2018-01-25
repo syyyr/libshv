@@ -31,8 +31,11 @@ public:
 
 	void sendMessage(const shv::chainpack::RpcValue &msg) {Super::sendMessage(msg);}
 
-	Q_SIGNAL void messageReceived(shv::chainpack::RpcValue msg);
-	void sendRequestSync(const shv::chainpack::RpcRequest& request, shv::chainpack::RpcResponse *presponse, int time_out_ms);
+	Q_SIGNAL void rpcMessageReceived(shv::chainpack::RpcValue msg);
+
+	// function waits till response is received in event loop
+	// rpcMessageReceived signal can be emited meanwhile
+	void sendRequestQuasiSync(const shv::chainpack::RpcRequest& request, shv::chainpack::RpcResponse *presponse, int time_out_ms);
 
 	void abortConnection();
 	bool isConnected() const;
@@ -44,12 +47,13 @@ protected:
 	int64_t writeBytes(const char *bytes, size_t length) Q_DECL_OVERRIDE;
 	bool flush() Q_DECL_OVERRIDE;
 	void onRpcValueReceived(const shv::chainpack::RpcValue &msg) Q_DECL_OVERRIDE;
-private:
+
 	QTcpSocket* socket();
 	void onReadyRead();
 	void onBytesWritten();
-private:
+protected:
 	QTcpSocket *m_socket = nullptr;
+private:
 	bool m_isConnected = false;
 };
 

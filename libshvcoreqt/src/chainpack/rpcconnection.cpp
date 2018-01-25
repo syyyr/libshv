@@ -26,10 +26,10 @@ RpcConnection::RpcConnection(SyncCalls sync_calls, QObject *parent)
 	connect(this, &RpcConnection::abortConnectionRequest, m_rpcDriver, &RpcDriver::abortConnection);
 
 	connect(m_rpcDriver, &RpcDriver::connectedChanged, this, &RpcConnection::connectedChanged);
-	connect(m_rpcDriver, &RpcDriver::messageReceived, this, &RpcConnection::onMessageReceived);
+	connect(m_rpcDriver, &RpcDriver::rpcMessageReceived, this, &RpcConnection::onMessageReceived);
 
 	if(m_syncCalls == SyncCalls::Supported) {
-		connect(this, &RpcConnection::sendMessageSyncRequest, m_rpcDriver, &RpcDriver::sendRequestSync, Qt::BlockingQueuedConnection);
+		connect(this, &RpcConnection::sendMessageSyncRequest, m_rpcDriver, &RpcDriver::sendRequestQuasiSync, Qt::BlockingQueuedConnection);
 		m_rpcDriverThread = new QThread();
 		m_rpcDriver->moveToThread(m_rpcDriverThread);
 		m_rpcDriverThread->start();

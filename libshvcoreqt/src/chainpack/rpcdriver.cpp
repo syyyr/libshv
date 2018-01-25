@@ -126,7 +126,7 @@ bool RpcDriver::flush()
 
 void RpcDriver::onRpcValueReceived(const shv::chainpack::RpcValue &msg)
 {
-	emit messageReceived(msg);
+	emit rpcMessageReceived(msg);
 }
 
 namespace {
@@ -140,7 +140,7 @@ private:
 };
 }
 
-void RpcDriver:: sendRequestSync(const shv::chainpack::RpcRequest &request, shv::chainpack::RpcResponse *presponse, int time_out_ms)
+void RpcDriver:: sendRequestQuasiSync(const shv::chainpack::RpcRequest &request, shv::chainpack::RpcResponse *presponse, int time_out_ms)
 {
 	namespace cp = shv::chainpack;
 	smcDebug() << Q_FUNC_INFO << "timeout ms:" << time_out_ms;
@@ -162,7 +162,7 @@ void RpcDriver:: sendRequestSync(const shv::chainpack::RpcRequest &request, shv:
 		tm_elapsed.start();
 		QEventLoop eloop;
 		QMetaObject::Connection lambda_connection;
-		lambda_connection = connect(this, &RpcDriver::messageReceived, [&eloop, &resp_msg, &lambda_connection, msg_id](const shv::chainpack::RpcValue &msg_val)
+		lambda_connection = connect(this, &RpcDriver::rpcMessageReceived, [&eloop, &resp_msg, &lambda_connection, msg_id](const shv::chainpack::RpcValue &msg_val)
 		{
 			shv::chainpack::RpcMessage msg(msg_val);
 			smcDebug() << &eloop << "New RPC message id:" << msg.id();
