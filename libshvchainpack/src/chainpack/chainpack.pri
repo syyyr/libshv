@@ -1,4 +1,5 @@
 SOURCES += \
+    $$PWD/rpc.cpp \
     $$PWD/chainpackprotocol.cpp \
     $$PWD/rpcmessage.cpp \
     $$PWD/rpcvalue.cpp \
@@ -9,6 +10,7 @@ SOURCES += \
     $$PWD/utils.cpp
 
 HEADERS += \
+    $$PWD/rpc.h \
     $$PWD/chainpackprotocol.h \
     $$PWD/rpcmessage.h \
     $$PWD/rpcvalue.h \

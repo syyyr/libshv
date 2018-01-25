@@ -25,7 +25,7 @@ public:
 	~RpcDriver() Q_DECL_OVERRIDE;
 
 	void setSocket(QTcpSocket *socket);
-	void setProtocolVersion(int v) {Super::setProtocolVersion((Super::ProtocolVersion)v);}
+	void setProtocolVersionAsInt(int v) {Super::setProtocolVersion((shv::chainpack::Rpc::ProtocolVersion)v);}
 
 	void connectToHost(const QString &host_name, quint16 port);
 

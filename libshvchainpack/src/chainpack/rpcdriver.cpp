@@ -58,16 +58,18 @@ void RpcDriver::sendMessage(const RpcValue &msg)
 		break;
 	}
 	*/
-	case Cpon:
+	case Rpc::ProtocolVersion::Cpon:
 		CponProtocol::write(os_packed_data, msg);
 		break;
-	default:
+	case Rpc::ProtocolVersion::ChainPack:
 		ChainPackProtocol::write(os_packed_data, msg);
 		break;
+	default:
+		SHVCHP_EXCEPTION("Cannot serialize data without protocol version specified.")
 	}
 	std::string packed_data = os_packed_data.str();
 	logRpc() << "send message: packed data: " << (packed_data.size() > 250? "<... long data ...>" :
-				(protocolVersion() == Cpon? packed_data: Utils::toHex(packed_data)));
+				(protocolVersion() == Rpc::ProtocolVersion::Cpon? packed_data: Utils::toHex(packed_data)));
 
 	enqueueDataToSend(Chunk{std::move(packed_data)});
 }
@@ -83,12 +85,14 @@ void RpcDriver::sendRawData(RpcValue::MetaData &&meta_data, std::string &&data)
 	//shvLogFuncFrame() << msg.toStdString();
 	std::ostringstream os_packed_data;
 	switch (protocolVersion()) {
-	case Cpon:
+	case Rpc::ProtocolVersion::Cpon:
 		CponProtocol::writeMetaData(os_packed_data, meta_data);
 		break;
-	default:
+	case Rpc::ProtocolVersion::ChainPack:
 		ChainPackProtocol::writeMetaData(os_packed_data, meta_data);
 		break;
+	default:
+		SHVCHP_EXCEPTION("Cannot serialize data without protocol version specified.")
 	}
 	enqueueDataToSend(Chunk(os_packed_data.str(), std::move(data)));
 }
@@ -121,7 +125,7 @@ void RpcDriver::writeQueue()
 		std::string protocol_version_data;
 		{
 			std::ostringstream os;
-			ChainPackProtocol::writeUIntData(os, protocolVersion());
+			ChainPackProtocol::writeUIntData(os, (unsigned)protocolVersion());
 			protocol_version_data = os.str();
 		}
 		{
@@ -198,7 +202,7 @@ int RpcDriver::processReadData(const std::string &read_data)
 
 	size_t read_len = (size_t)in.tellg() + chunk_len;
 
-	ProtocolVersion protocol_version = (ProtocolVersion)ChainPackProtocol::readUIntData(in, &ok);
+	Rpc::ProtocolVersion protocol_version = (Rpc::ProtocolVersion)ChainPackProtocol::readUIntData(in, &ok);
 	if(!ok)
 		return 0;
 
@@ -251,43 +255,50 @@ int RpcDriver::processReadData(const std::string &read_data)
 		break;
 	}
 	*/
-	case Cpon: {
+	case Rpc::ProtocolVersion::Cpon: {
 		meta_data = CponProtocol::readMetaData(read_data, (size_t)in.tellg(), &meta_data_end_pos);
 		break;
 	}
-	case ChainPack: {
+	case Rpc::ProtocolVersion::ChainPack: {
 		meta_data = ChainPackProtocol::readMetaData(in);
 		meta_data_end_pos = (size_t)in.tellg();
 		break;
 	}
 	default:
-		nError() << "Throwing away message with unknown protocol version:" << protocol_version;
+		nError() << "Throwing away message with unknown protocol version:" << (unsigned)protocol_version;
 		break;
+	}
+	if(m_protocolVersion == Rpc::ProtocolVersion::Invalid && protocol_version != Rpc::ProtocolVersion::Invalid) {
+		// if protocol version is not explicitly specified,
+		// it is set from first received message (should be knockknock)
+		m_protocolVersion = protocol_version;
 	}
 	onRpcDataReceived(protocol_version, std::move(meta_data), read_data, meta_data_end_pos, read_len - meta_data_end_pos);
 	return read_len;
 }
 
-void RpcDriver::onRpcDataReceived(ProtocolVersion protocol_version, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
+void RpcDriver::onRpcDataReceived(Rpc::ProtocolVersion protocol_version, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
 {
 	(void)data_len;
 	RpcValue msg;
 	switch (protocol_version) {
-	case Cpon:
+	case Rpc::ProtocolVersion::Cpon:
 		msg = CponProtocol::read(data, start_pos);
 		break;
-	case ChainPack: {
+	case Rpc::ProtocolVersion::ChainPack: {
 		std::istringstream in(data);
 		in.seekg(start_pos);
 		msg = ChainPackProtocol::read(in);
 		break;
 	}
 	default:
-		nError() << "Throwing away message with unknown protocol version:" << protocol_version;
+		nError() << "Throwing away message with unknown protocol version:" << (unsigned)protocol_version;
 		break;
 	}
-	msg.setMetaData(std::move(md));
-	onRpcValueReceived(msg);
+	if(msg.isValid()) {
+		msg.setMetaData(std::move(md));
+		onRpcValueReceived(msg);
+	}
 }
 
 void RpcDriver::onRpcValueReceived(const RpcValue &msg)

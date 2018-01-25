@@ -33,8 +33,8 @@ const MetaInfo &MetaType::keyById(int id) const
 	return m_keys.at(id);
 }
 
-ChainPackNS::ChainPackNS()
-	: Super("ChainPack")
+GlobalNS::GlobalNS()
+	: Super("global")
 {
 }
 
@@ -49,8 +49,8 @@ static void initMetaTypes()
 	static bool is_init = false;
 	if(!is_init) {
 		is_init = true;
-		static ChainPackNS def;
-		registerNameSpace(ChainPackNS::ID, &def);
+		static GlobalNS def;
+		registerNameSpace(GlobalNS::ID, &def);
 	}
 }
 

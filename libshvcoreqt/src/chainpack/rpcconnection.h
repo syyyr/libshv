@@ -25,12 +25,14 @@ public:
 	using RpcResponse = shv::chainpack::RpcResponse;
 	//using RpcDriver = shv::chainpack::RpcDriver;
 public:
-	explicit RpcConnection(QObject *parent = nullptr);
+	enum class SyncCalls {Supported, NotSupported};
+
+	explicit RpcConnection(SyncCalls sync_calls, QObject *parent = nullptr);
 	~RpcConnection() Q_DECL_OVERRIDE;
 
 	//static int nextRpcId();
 	void setSocket(QTcpSocket *socket);
-	void setProtocolVersion(shv::chainpack::RpcDriver::ProtocolVersion ver) {emit setProtocolVersionRequest(ver);}
+	void setProtocolVersion(shv::chainpack::Rpc::ProtocolVersion ver) {emit setProtocolVersionRequest((unsigned)ver);}
 
 	int connectionId() const {return m_connectionId;}
 
@@ -74,6 +76,7 @@ private:
 	// QEventLoop solution is not enough, this enable sinc calls within sync call
 	QThread *m_rpcDriverThread = nullptr;
 	int m_connectionId;
+	SyncCalls m_syncCalls;
 	RpcValue::UInt m_maxSyncMessageId = 0;
 };
 

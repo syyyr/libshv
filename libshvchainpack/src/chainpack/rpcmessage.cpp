@@ -21,7 +21,8 @@ RpcMessage::RpcMessage()
 	};
 	m_tags = {
 		{(int)Tag::RequestId, {(int)Tag::RequestId, "RequestId"}},
-		{(int)Tag::RpcCallType, {(int)Tag::RpcCallType, "RpcCallType"}},
+		{(int)Tag::ConnectionId, {(int)Tag::ConnectionId, "ConnectionId"}},
+		//{(int)Tag::RpcCallType, {(int)Tag::RpcCallType, "RpcCallType"}},
 		{(int)Tag::ShvPath, {(int)Tag::ShvPath, "ShvPath"}},
 	};
 }
@@ -32,7 +33,7 @@ void RpcMessage::registerMetaType()
 	if(!is_init) {
 		is_init = true;
 		static RpcMessage s;
-		meta::registerType(meta::ChainPackNS::ID, meta::RpcMessage::ID, &s);
+		meta::registerType(meta::GlobalNS::ID, meta::RpcMessage::ID, &s);
 	}
 }
 
@@ -95,7 +96,7 @@ RpcValue::UInt RpcMessage::id() const
 void RpcMessage::setId(RpcValue::UInt id)
 {
 	checkMetaValues();
-	checkRpcTypeMetaValue();
+	//checkRpcTypeMetaValue();
 	setMetaValue(meta::RpcMessage::Tag::RequestId, id);
 }
 
@@ -122,6 +123,16 @@ RpcValue RpcMessage::shvPath() const
 void RpcMessage::setShvPath(const RpcValue &path)
 {
 	setMetaValue(meta::RpcMessage::Tag::ShvPath, path);
+}
+
+RpcValue RpcMessage::connectionId() const
+{
+	return metaValue(meta::RpcMessage::Tag::ConnectionId);
+}
+
+void RpcMessage::setConnectionId(const RpcValue &id)
+{
+	setMetaValue(meta::RpcMessage::Tag::ConnectionId, id);
 }
 
 bool RpcMessage::isResponse() const
@@ -152,17 +163,17 @@ void RpcMessage::checkMetaValues()
 	if(!m_value.isValid()) {
 		m_value = RpcValue::IMap();
 		/// not needed, Global is default name space
-		setMetaValue(meta::Tag::MetaTypeNameSpaceId, meta::ChainPackNS::ID);
+		//setMetaValue(meta::Tag::MetaTypeNameSpaceId, meta::GlobalNS::ID);
 		setMetaValue(meta::Tag::MetaTypeId, meta::RpcMessage::ID);
 	}
 }
-
+/*
 void RpcMessage::checkRpcTypeMetaValue()
 {
 	meta::RpcMessage::RpcCallType::Enum rpc_type = isResponse()? meta::RpcMessage::RpcCallType::Response: isNotify()? meta::RpcMessage::RpcCallType::Notify: meta::RpcMessage::RpcCallType::Request;
 	setMetaValue(meta::RpcMessage::Tag::RpcCallType, rpc_type);
 }
-
+*/
 std::string RpcMessage::toStdString() const
 {
 	return m_value.toStdString();
@@ -179,7 +190,7 @@ RpcValue::String RpcRequest::method() const
 RpcRequest &RpcRequest::setMethod(RpcValue::String &&met)
 {
 	setValue(meta::RpcMessage::Key::Method, RpcValue{std::move(met)});
-	checkRpcTypeMetaValue();
+	//checkRpcTypeMetaValue();
 	return *this;
 }
 
@@ -201,7 +212,7 @@ void RpcNotify::write(std::ostream &out, const std::string &method, std::functio
 {
 	RpcValue::MetaData md;
 	md.setMetaTypeId(meta::RpcMessage::ID);
-	md.setValue(meta::RpcMessage::Tag::RpcCallType, meta::RpcMessage::RpcCallType::Notify);
+	//md.setValue(meta::RpcMessage::Tag::RpcCallType, meta::RpcMessage::RpcCallType::Notify);
 	ChainPackProtocol::writeMetaData(out, md);
 	ChainPackProtocol::writeContainerBegin(out, RpcValue::Type::IMap);
 	ChainPackProtocol::writeMapElement(out, meta::RpcMessage::Key::Method, method);
@@ -221,7 +232,7 @@ RpcResponse::Error RpcResponse::error() const
 RpcResponse &RpcResponse::setError(RpcResponse::Error err)
 {
 	setValue(meta::RpcMessage::Key::Error, std::move(err));
-	checkRpcTypeMetaValue();
+	//checkRpcTypeMetaValue();
 	return *this;
 }
 
@@ -233,7 +244,7 @@ RpcValue RpcResponse::result() const
 RpcResponse& RpcResponse::setResult(const RpcValue& res)
 {
 	setValue(meta::RpcMessage::Key::Result, res);
-	checkRpcTypeMetaValue();
+	//checkRpcTypeMetaValue();
 	return *this;
 }
 

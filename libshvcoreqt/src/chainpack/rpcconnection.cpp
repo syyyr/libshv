@@ -12,47 +12,49 @@ namespace shv {
 namespace coreqt {
 namespace chainpack {
 
-RpcConnection::RpcConnection(QObject *parent)
+RpcConnection::RpcConnection(SyncCalls sync_calls, QObject *parent)
 	: QObject(parent)
+	, m_syncCalls(sync_calls)
 {
 	static int id = 0;
 	m_connectionId = ++id;
-	m_rpcDriverThread = new QThread();
 	m_rpcDriver = new RpcDriver();
-	//m_rpcDriver->setSocket(new QTcpSocket(m_rpcDriver));
-	m_rpcDriver->moveToThread(m_rpcDriverThread);
 
-	connect(this, &RpcConnection::setProtocolVersionRequest, m_rpcDriver, &RpcDriver::setProtocolVersion, Qt::QueuedConnection);
-	connect(this, &RpcConnection::sendMessageRequest, m_rpcDriver, &RpcDriver::sendMessage, Qt::QueuedConnection);
-	connect(this, &RpcConnection::sendMessageSyncRequest, m_rpcDriver, &RpcDriver::sendRequestSync, Qt::BlockingQueuedConnection);
-	connect(this, &RpcConnection::connectToHostRequest, m_rpcDriver, &RpcDriver::connectToHost, Qt::QueuedConnection);
-	connect(this, &RpcConnection::abortConnectionRequest, m_rpcDriver, &RpcDriver::abortConnection, Qt::QueuedConnection);
+	connect(this, &RpcConnection::setProtocolVersionRequest, m_rpcDriver, &RpcDriver::setProtocolVersionAsInt);
+	connect(this, &RpcConnection::sendMessageRequest, m_rpcDriver, &RpcDriver::sendMessage);
+	connect(this, &RpcConnection::connectToHostRequest, m_rpcDriver, &RpcDriver::connectToHost);
+	connect(this, &RpcConnection::abortConnectionRequest, m_rpcDriver, &RpcDriver::abortConnection);
 
-	connect(m_rpcDriver, &RpcDriver::connectedChanged, this, &RpcConnection::connectedChanged, Qt::QueuedConnection);
-	connect(m_rpcDriver, &RpcDriver::messageReceived, this, &RpcConnection::onMessageReceived, Qt::QueuedConnection);
-	/*
-	connect(m_rpcDriverThread, &QThread::finished, this, [this]() {
-		delete this->m_rpcDriver;
-		this->m_rpcDriver = nullptr;
-	});
-	*/
-	m_rpcDriverThread->start();
+	connect(m_rpcDriver, &RpcDriver::connectedChanged, this, &RpcConnection::connectedChanged);
+	connect(m_rpcDriver, &RpcDriver::messageReceived, this, &RpcConnection::onMessageReceived);
+
+	if(m_syncCalls == SyncCalls::Supported) {
+		connect(this, &RpcConnection::sendMessageSyncRequest, m_rpcDriver, &RpcDriver::sendRequestSync, Qt::BlockingQueuedConnection);
+		m_rpcDriverThread = new QThread();
+		m_rpcDriver->moveToThread(m_rpcDriverThread);
+		m_rpcDriverThread->start();
+	}
+	else {
+		connect(this, &RpcConnection::sendMessageSyncRequest, []() {
+			shvError() << "Sync calls are enabled in threaded RPC connection only!";
+		});
+	}
 }
 
 RpcConnection::~RpcConnection()
 {
 	shvDebug() << __FUNCTION__;
-	m_rpcDriverThread->quit();
-	shvDebug() << "after quit";
-	//delete m_rpcDriver;
-	if(m_rpcDriverThread->isRunning()) {
-		shvDebug() << "stopping rpc driver thread";
-		m_rpcDriverThread->quit();
+	if(m_syncCalls == SyncCalls::Supported) {
+		if(m_rpcDriverThread->isRunning()) {
+			shvDebug() << "stopping rpc driver thread";
+			m_rpcDriverThread->quit();
+			shvDebug() << "after quit";
+		}
+		shvDebug() << "joining rpc driver thread";
+		bool ok = m_rpcDriverThread->wait();
+		shvDebug() << "rpc driver thread joined ok:" << ok;
+		delete m_rpcDriverThread;
 	}
-	shvDebug() << "joining rpc driver thread";
-	bool ok = m_rpcDriverThread->wait();
-	shvDebug() << "rpc driver thread joined ok:" << ok;
-	delete m_rpcDriverThread;
 	delete m_rpcDriver;
 }
 

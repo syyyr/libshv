@@ -2,6 +2,7 @@
 
 #include "../shvchainpackglobal.h"
 #include "rpcmessage.h"
+#include "rpc.h"
 
 #include <functional>
 #include <string>
@@ -14,13 +15,11 @@ namespace chainpack {
 class SHVCHAINPACK_DECL_EXPORT RpcDriver
 {
 public:
-	enum ProtocolVersion {ChainPack = 1, Cpon, /*Json*/};
-
 	explicit RpcDriver();
 	virtual ~RpcDriver();
 
-	ProtocolVersion protocolVersion() const {return m_protocolVersion;}
-	void setProtocolVersion(ProtocolVersion v) {m_protocolVersion = v;}
+	Rpc::ProtocolVersion protocolVersion() const {return m_protocolVersion;}
+	void setProtocolVersion(Rpc::ProtocolVersion v) {m_protocolVersion = v;}
 
 	void sendMessage(const RpcValue &msg);
 	void sendRawData(std::string &&data);
@@ -58,7 +57,7 @@ protected:
 	/// add data to the output queue, send data from top of the queue
 	virtual void enqueueDataToSend(Chunk &&chunk_to_enqueue);
 
-	virtual void onRpcDataReceived(ProtocolVersion protocol_version, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len);
+	virtual void onRpcDataReceived(Rpc::ProtocolVersion protocol_version, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len);
 	virtual void onRpcValueReceived(const RpcValue &msg);
 
 	virtual void lockSendQueue() {}
@@ -74,7 +73,7 @@ private:
 	bool m_topChunkHeaderWritten = false;
 	size_t m_topChunkBytesWrittenSoFar = 0;
 	std::string m_readData;
-	ProtocolVersion m_protocolVersion = ChainPack;
+	Rpc::ProtocolVersion m_protocolVersion = Rpc::ProtocolVersion::Invalid;
 	static int s_defaultRpcTimeout;
 };
 

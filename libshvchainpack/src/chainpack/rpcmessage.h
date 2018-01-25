@@ -17,7 +17,7 @@ class RpcMessage : public meta::MetaType
 	using Super = meta::MetaType;
 public:
 	enum {ID = 1};
-	struct Tag { enum Enum {RequestId = meta::Tag::USER, RpcCallType, ShvPath, MAX};};
+	struct Tag { enum Enum {RequestId = meta::Tag::USER, ConnectionId, ShvPath, MAX};};
 	struct Key { enum Enum {Method = 1, Params, Result, Error, ErrorCode, ErrorMessage, MAX};};
 	struct RpcCallType { enum Enum { Undefined = 0, Request, Response, Notify };};
 
@@ -53,6 +53,9 @@ public:
 	RpcValue shvPath() const;
 	void setShvPath(const RpcValue &path);
 
+	RpcValue connectionId() const;
+	void setConnectionId(const RpcValue &id);
+
 	std::string toStdString() const;
 
 	RpcValue metaValue(RpcValue::UInt key) const;
@@ -62,7 +65,7 @@ public:
 protected:
 	meta::RpcMessage::RpcCallType::Enum rpcType() const;
 	void checkMetaValues();
-	void checkRpcTypeMetaValue();
+	//void checkRpcTypeMetaValue();
 protected:
 	RpcValue m_value;
 };
