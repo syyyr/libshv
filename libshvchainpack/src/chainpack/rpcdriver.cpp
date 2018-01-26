@@ -28,46 +28,7 @@ void RpcDriver::sendMessage(const RpcValue &msg)
 {
 	using namespace std;
 	//shvLogFuncFrame() << msg.toStdString();
-	std::ostringstream os_packed_data;
-	switch (protocolVersion()) {
-	/*
-	case Json: {
-		RpcValue::Map json_msg;
-		RpcMessage rpc_msg(msg);
-		RpcValue shv_path = rpc_msg.shvPath();
-		json_msg["shvPath"] = shv_path;
-		if(rpc_msg.isResponse()) {
-			// response
-			json_msg["id"] = rpc_msg.id();
-			RpcResponse resp(rpc_msg);
-			if(resp.isError())
-				json_msg["error"] = resp.error().message();
-			else
-				json_msg["result"] = resp.result();
-		}
-		else {
-			// request
-			RpcRequest rq(rpc_msg);
-			json_msg["id"] = rq.id();
-			json_msg["method"] = rq.method();
-			json_msg["params"] = rq.params();
-			if(rpc_msg.isRequest())
-				json_msg["id"] = rpc_msg.id();
-		}
-		shv::chainpack::CponProtocol::write(os_packed_data, json_msg);
-		break;
-	}
-	*/
-	case Rpc::ProtocolVersion::Cpon:
-		CponProtocol::write(os_packed_data, msg);
-		break;
-	case Rpc::ProtocolVersion::ChainPack:
-		ChainPackProtocol::write(os_packed_data, msg);
-		break;
-	default:
-		SHVCHP_EXCEPTION("Cannot serialize data without protocol version specified.")
-	}
-	std::string packed_data = os_packed_data.str();
+	std::string packed_data = codeRpcValue(protocolVersion(), msg);
 	logRpc() << "send message: packed data: " << (packed_data.size() > 250? "<... long data ...>" :
 				(protocolVersion() == Rpc::ProtocolVersion::Cpon? packed_data: Utils::toHex(packed_data)));
 
@@ -83,18 +44,29 @@ void RpcDriver::sendRawData(RpcValue::MetaData &&meta_data, std::string &&data)
 {
 	using namespace std;
 	//shvLogFuncFrame() << msg.toStdString();
-	std::ostringstream os_packed_data;
+	std::ostringstream os_packed_meta_data;
 	switch (protocolVersion()) {
 	case Rpc::ProtocolVersion::Cpon:
-		CponProtocol::writeMetaData(os_packed_data, meta_data);
+		CponProtocol::writeMetaData(os_packed_meta_data, meta_data);
 		break;
 	case Rpc::ProtocolVersion::ChainPack:
-		ChainPackProtocol::writeMetaData(os_packed_data, meta_data);
+		ChainPackProtocol::writeMetaData(os_packed_meta_data, meta_data);
 		break;
 	default:
 		SHVCHP_EXCEPTION("Cannot serialize data without protocol version specified.")
 	}
-	enqueueDataToSend(Chunk(os_packed_data.str(), std::move(data)));
+	Rpc::ProtocolVersion packed_data_ver = RpcMessage::protocolVersion(meta_data);
+	if(packed_data_ver == protocolVersion()) {
+		enqueueDataToSend(Chunk(os_packed_meta_data.str(), std::move(data)));
+	}
+	else if(packed_data_ver != Rpc::ProtocolVersion::Invalid) {
+		// recode data;
+		RpcValue val = decodeData(packed_data_ver, data, 0);
+		enqueueDataToSend(Chunk(os_packed_meta_data.str(), codeRpcValue(protocolVersion(), val)));
+	}
+	else {
+		SHVCHP_EXCEPTION("Cannot decode data without protocol version specified.")
+	}
 }
 
 void RpcDriver::enqueueDataToSend(RpcDriver::Chunk &&chunk_to_enqueue)
@@ -295,6 +267,50 @@ RpcValue RpcDriver::decodeData(Rpc::ProtocolVersion protocol_version, const std:
 		break;
 	}
 	return ret;
+}
+
+std::string RpcDriver::codeRpcValue(Rpc::ProtocolVersion protocol_version, const RpcValue &val)
+{
+	std::ostringstream os_packed_data;
+	switch (protocol_version) {
+	/*
+	case Json: {
+		RpcValue::Map json_msg;
+		RpcMessage rpc_msg(msg);
+		RpcValue shv_path = rpc_msg.shvPath();
+		json_msg["shvPath"] = shv_path;
+		if(rpc_msg.isResponse()) {
+			// response
+			json_msg["id"] = rpc_msg.id();
+			RpcResponse resp(rpc_msg);
+			if(resp.isError())
+				json_msg["error"] = resp.error().message();
+			else
+				json_msg["result"] = resp.result();
+		}
+		else {
+			// request
+			RpcRequest rq(rpc_msg);
+			json_msg["id"] = rq.id();
+			json_msg["method"] = rq.method();
+			json_msg["params"] = rq.params();
+			if(rpc_msg.isRequest())
+				json_msg["id"] = rpc_msg.id();
+		}
+		shv::chainpack::CponProtocol::write(os_packed_data, json_msg);
+		break;
+	}
+	*/
+	case Rpc::ProtocolVersion::Cpon:
+		CponProtocol::write(os_packed_data, val);
+		break;
+	case Rpc::ProtocolVersion::ChainPack:
+		ChainPackProtocol::write(os_packed_data, val);
+		break;
+	default:
+		SHVCHP_EXCEPTION("Cannot serialize data without protocol version specified.")
+	}
+	return os_packed_data.str();
 }
 
 void RpcDriver::onRpcDataReceived(Rpc::ProtocolVersion protocol_version, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)

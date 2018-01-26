@@ -51,12 +51,18 @@ public:
 	bool isResponse() const;
 	bool isNotify() const;
 
+	static RpcValue shvPath(const RpcValue::MetaData &meta);
+	static void setShvPath(RpcValue::MetaData &meta, const RpcValue &path);
 	RpcValue shvPath() const;
 	void setShvPath(const RpcValue &path);
 
+	static RpcValue connectionId(const RpcValue::MetaData &meta);
+	static void setConnectionId(RpcValue::MetaData &meta, const RpcValue &id);
 	RpcValue connectionId() const;
 	void setConnectionId(const RpcValue &id);
 
+	static Rpc::ProtocolVersion protocolVersion(const RpcValue::MetaData &meta);
+	static void setProtocolVersion(RpcValue::MetaData &meta, shv::chainpack::Rpc::ProtocolVersion ver);
 	Rpc::ProtocolVersion protocolVersion() const;
 	void setProtocolVersion(shv::chainpack::Rpc::ProtocolVersion ver);
 

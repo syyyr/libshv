@@ -115,6 +115,16 @@ bool RpcMessage::isNotify() const
 	return rpcType() == meta::RpcMessage::RpcCallType::Notify;
 }
 
+RpcValue RpcMessage::shvPath(const RpcValue::MetaData &meta)
+{
+	return meta.value(meta::RpcMessage::Tag::ShvPath);
+}
+
+void RpcMessage::setShvPath(RpcValue::MetaData &meta, const RpcValue &path)
+{
+	meta.setValue(meta::RpcMessage::Tag::ShvPath, path);
+}
+
 RpcValue RpcMessage::shvPath() const
 {
 	return metaValue(meta::RpcMessage::Tag::ShvPath);
@@ -125,6 +135,16 @@ void RpcMessage::setShvPath(const RpcValue &path)
 	setMetaValue(meta::RpcMessage::Tag::ShvPath, path);
 }
 
+RpcValue RpcMessage::connectionId(const RpcValue::MetaData &meta)
+{
+	return meta.value(meta::RpcMessage::Tag::ConnectionId);
+}
+
+void RpcMessage::setConnectionId(RpcValue::MetaData &meta, const RpcValue &id)
+{
+	meta.setValue(meta::RpcMessage::Tag::ConnectionId, id);
+}
+
 RpcValue RpcMessage::connectionId() const
 {
 	return metaValue(meta::RpcMessage::Tag::ConnectionId);
@@ -133,6 +153,16 @@ RpcValue RpcMessage::connectionId() const
 void RpcMessage::setConnectionId(const RpcValue &id)
 {
 	setMetaValue(meta::RpcMessage::Tag::ConnectionId, id);
+}
+
+Rpc::ProtocolVersion RpcMessage::protocolVersion(const RpcValue::MetaData &meta)
+{
+	return (Rpc::ProtocolVersion)meta.value(meta::RpcMessage::Tag::ProtocolVersion).toUInt();
+}
+
+void RpcMessage::setProtocolVersion(RpcValue::MetaData &meta, Rpc::ProtocolVersion ver)
+{
+	meta.setValue(meta::RpcMessage::Tag::ProtocolVersion, ver == Rpc::ProtocolVersion::Invalid? RpcValue(): RpcValue((unsigned)ver));
 }
 
 Rpc::ProtocolVersion RpcMessage::protocolVersion() const

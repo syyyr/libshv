@@ -61,6 +61,7 @@ protected:
 	virtual void onRpcValueReceived(const RpcValue &msg);
 
 	RpcValue decodeData(Rpc::ProtocolVersion protocol_version, const std::string &data, size_t start_pos);
+	std::string codeRpcValue(Rpc::ProtocolVersion protocol_version, const RpcValue &val);
 
 	virtual void lockSendQueue() {}
 	virtual void unlockSendQueue() {}
