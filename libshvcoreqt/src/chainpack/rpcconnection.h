@@ -44,23 +44,23 @@ public:
 	//int peerPort();
 
 	/// since RpcDriver is connected to SocketDriver using queued connection. it is safe to call sendMessage from different thread
-	Q_SLOT void sendMessage(const RpcMessage &rpc_msg);
-	Q_SLOT void sendNotify(const QString &method, const RpcValue &params = RpcValue());
-	Q_SLOT void sendResponse(int request_id, const RpcValue &result);
-	Q_SLOT void sendError(int request_id, const RpcResponse::Error &error);
-	Q_SLOT int callMethodASync(const QString &method, const RpcValue &params = RpcValue());
-	RpcResponse callMethodSync(const QString &method, const RpcValue &params = RpcValue(), int rpc_timeout = 0);
-	RpcResponse callShvMethodSync(const QString &shv_path, const QString &method, const RpcValue &params = RpcValue(), int rpc_timeout = 0);
+	Q_SLOT void sendMessage(const shv::chainpack::RpcMessage &rpc_msg);
+	Q_SLOT void sendNotify(const QString &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
+	Q_SLOT void sendResponse(int request_id, const shv::chainpack::RpcValue &result);
+	Q_SLOT void sendError(int request_id, const shv::chainpack::RpcResponse::Error &error);
+	Q_SLOT int callMethodASync(const QString &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
+	RpcResponse callMethodSync(const QString &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = 0);
+	RpcResponse callShvMethodSync(const QString &shv_path, const QString &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = 0);
 
-	Q_SIGNAL void messageReceived(const RpcMessage &msg);
+	Q_SIGNAL void messageReceived(const shv::chainpack::RpcMessage &msg);
 	//Q_SIGNAL void rpcError(const QString &err_msg);
 	Q_SIGNAL void openChanged(bool is_open);
 protected:
 	Q_SIGNAL void setProtocolVersionRequest(int ver);
-	Q_SIGNAL void sendMessageRequest(const RpcValue& msg);
+	Q_SIGNAL void sendMessageRequest(const shv::chainpack::RpcValue& msg);
 
 	Q_SIGNAL void sendMessageSyncRequest(const shv::chainpack::RpcRequest &request, shv::chainpack::RpcResponse *presponse, int time_out_ms);
-	Q_SLOT RpcResponse sendMessageSync(const RpcRequest &rpc_request_message, int time_out_ms = 0);
+	Q_SLOT RpcResponse sendMessageSync(const shv::chainpack::RpcRequest &rpc_request_message, int time_out_ms = 0);
 
 	Q_SIGNAL void connectToHostRequest(const QString &host_name, quint16 port);
 	Q_SIGNAL void abortConnectionRequest();
@@ -68,7 +68,7 @@ protected:
 	void onSocketConnected();
 	void onSocketDisconnected();
 
-	void onMessageReceived(const RpcValue &rpc_val);
+	void onMessageReceived(const shv::chainpack::RpcValue &rpc_val);
 	//virtual void processMessage(const RpcMessage &rpc_msg);
 private:
 	RpcDriver *m_rpcDriver = nullptr;
@@ -83,3 +83,4 @@ private:
 } // namespace chainpack
 } // namespace coreqt
 } // namespace shv
+

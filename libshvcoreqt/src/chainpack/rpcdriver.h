@@ -59,4 +59,3 @@ private:
 
 }}}
 
-Q_DECLARE_METATYPE(shv::chainpack::RpcValue)

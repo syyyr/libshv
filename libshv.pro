@@ -2,6 +2,7 @@ TEMPLATE = subdirs
 CONFIG += ordered
 
 SUBDIRS += \
+    3rdparty \
     libshvchainpack \
     libshvcore \
     libshvcoreqt \
@@ -11,7 +12,7 @@ SUBDIRS += \
     tests \
 }
 
-!beaglebone {
+!no-libshv-gui {
 SUBDIRS += \
     libshvgui \
 }

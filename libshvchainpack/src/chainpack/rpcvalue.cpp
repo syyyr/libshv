@@ -135,7 +135,7 @@ protected:
 
 	RpcValue::Type type() const override { return tag; }
 
-	const RpcValue::MetaData &metaData() const
+	const RpcValue::MetaData &metaData() const override
 	{
 		static RpcValue::MetaData md;
 		if(!m_metaData)
@@ -143,7 +143,7 @@ protected:
 		return *m_metaData;
 	}
 
-	void setMetaData(RpcValue::MetaData &&d)
+	void setMetaData(RpcValue::MetaData &&d) override
 	{
 		if(m_metaData)
 			(*m_metaData) = std::move(d);
@@ -151,7 +151,7 @@ protected:
 			m_metaData = new RpcValue::MetaData(std::move(d));
 	}
 
-	void setMetaValue(RpcValue::UInt key, const RpcValue &val)
+	void setMetaValue(RpcValue::UInt key, const RpcValue &val) override
 	{
 		if(!m_metaData)
 			m_metaData = new RpcValue::MetaData();

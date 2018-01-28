@@ -1,4 +1,5 @@
 #include "rpcdriver.h"
+#include "rpc.h"
 #include "../core/log.h"
 
 #include <shv/core/shvexception.h>
@@ -31,6 +32,7 @@ namespace chainpack {
 RpcDriver::RpcDriver(QObject *parent)
 	: QObject(parent)
 {
+	Rpc::registerMetatTypes();
 	/*
 	setMessageReceivedCallback([this](const shv::shv::chainpack::RpcValue &msg) {
 		emit messageReceived(msg);

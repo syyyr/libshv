@@ -1,5 +1,6 @@
 #include "socketrpcdriver.h"
-#include "../necrolog/necrolog.h"
+
+#include <necrolog.h>
 
 #include <cassert>
 #include <string.h>

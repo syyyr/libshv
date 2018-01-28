@@ -1,5 +1,6 @@
 #include "exception.h"
-#include "../necrolog/necrolog.h"
+
+#include <necrolog.h>
 
 namespace shv {
 namespace chainpack {

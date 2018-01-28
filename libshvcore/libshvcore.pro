@@ -22,10 +22,11 @@ DEFINES += SHVCORE_BUILD_DLL
 
 INCLUDEPATH += \
 	#$$QUICKBOX_HOME/libqf/libqfcore/include \
-	../3rdparty/necrolog \
+	../3rdparty/necrolog/include \
 
 LIBS += \
     -L$$DESTDIR \
+    -lnecrolog
     #-lqfcore
 
 include($$PWD/src/src.pri)

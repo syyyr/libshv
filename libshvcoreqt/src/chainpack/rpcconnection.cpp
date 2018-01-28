@@ -1,4 +1,5 @@
 #include "rpcconnection.h"
+#include "rpc.h"
 
 #include <shv/core/shvexception.h>
 #include <shv/core/log.h>
@@ -16,6 +17,8 @@ RpcConnection::RpcConnection(SyncCalls sync_calls, QObject *parent)
 	: QObject(parent)
 	, m_syncCalls(sync_calls)
 {
+	Rpc::registerMetatTypes();
+
 	static int id = 0;
 	m_connectionId = ++id;
 	m_rpcDriver = new RpcDriver();

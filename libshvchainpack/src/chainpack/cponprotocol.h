@@ -87,7 +87,7 @@ private:
 	//std::string &m_err;
 	size_t m_pos = 0;
 	int m_depth = 0;
-	bool m_verboseIds = true;
+	//bool m_verboseIds = true;
 };
 
 } // namespace chainpack

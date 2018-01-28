@@ -13,6 +13,7 @@ message (DESTDIR $$DESTDIR)
 
 LIBS += \
     -L$$LIB_DIR \
+    -lnecrolog \
     -lshvcore \
 
 unix {

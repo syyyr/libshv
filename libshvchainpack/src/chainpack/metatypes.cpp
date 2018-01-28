@@ -1,7 +1,7 @@
 #include "metatypes.h"
-
-#include "../necrolog/necrolog.h"
 #include "exception.h"
+
+#include <necrolog.h>
 
 #include <map>
 

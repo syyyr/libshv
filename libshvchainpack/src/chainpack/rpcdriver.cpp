@@ -237,6 +237,7 @@ int RpcDriver::processReadData(const std::string &read_data)
 		break;
 	}
 	default:
+		meta_data_end_pos = (size_t)in.tellg();
 		nError() << "Throwing away message with unknown protocol version:" << (unsigned)protocol_version;
 		break;
 	}

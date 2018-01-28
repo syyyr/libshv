@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <regex>
+#include <sstream>
 
 namespace shv {
 namespace core {

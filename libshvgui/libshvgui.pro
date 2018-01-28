@@ -31,6 +31,7 @@ message ( INCLUDEPATH: '$$INCLUDEPATH' )
 
 LIBS += \
     -L$$DESTDIR \
+    -lnecrolog
     -lshvcore
 
 include(src/src.pri)
