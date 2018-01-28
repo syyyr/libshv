@@ -28,8 +28,8 @@ INCLUDEPATH += \
 
 LIBS += \
     -L$$DESTDIR \
-    -lnecrolog
-    -lshvcore
+    -lnecrolog \
+    -lshvcore \
     -lshvchainpack
 
 include($$PWD/src/src.pri)
