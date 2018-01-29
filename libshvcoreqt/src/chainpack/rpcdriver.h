@@ -38,8 +38,8 @@ public:
 	void sendRequestQuasiSync(const shv::chainpack::RpcRequest& request, shv::chainpack::RpcResponse *presponse, int time_out_ms);
 
 	void abortConnection();
-	bool isConnected() const;
-	Q_SIGNAL void connectedChanged(bool is_connected);
+	bool isSocketConnected() const;
+	Q_SIGNAL void socketConnectedChanged(bool is_connected);
 
 protected:
 	// RpcDriver interface

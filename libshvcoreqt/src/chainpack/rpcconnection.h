@@ -37,8 +37,8 @@ public:
 	int connectionId() const {return m_connectionId;}
 
 	void connectToHost(const QString &host_name, quint16 port);
-	Q_SIGNAL void connectedChanged(bool is_connected);
-	bool isConnected() const;
+	Q_SIGNAL void socketConnectedChanged(bool is_connected);
+	bool isSocketConnected() const;
 	void abort();
 	//QHostAddress peerAddress();
 	//int peerPort();

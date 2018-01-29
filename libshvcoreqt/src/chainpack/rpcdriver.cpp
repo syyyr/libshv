@@ -64,12 +64,12 @@ void RpcDriver::setSocket(QTcpSocket *socket)
 	connect(socket, &QTcpSocket::connected, [this]() {
 		shvDebug() << this << "Connected!!!";
 		m_isConnected = true;
-		emit connectedChanged(m_isConnected);
+		emit socketConnectedChanged(m_isConnected);
 	});
 	connect(socket, &QTcpSocket::disconnected, [this]() {
 		shvDebug() << this << "Disconnected!!!";
 		m_isConnected = false;
-		emit connectedChanged(m_isConnected);
+		emit socketConnectedChanged(m_isConnected);
 	});
 }
 
@@ -80,7 +80,7 @@ QTcpSocket *RpcDriver::socket()
 	return m_socket;
 }
 
-bool RpcDriver::isConnected() const
+bool RpcDriver::isSocketConnected() const
 {
 	return m_socket && m_isConnected;
 }

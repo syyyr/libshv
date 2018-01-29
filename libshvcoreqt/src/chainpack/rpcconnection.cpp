@@ -28,7 +28,7 @@ RpcConnection::RpcConnection(SyncCalls sync_calls, QObject *parent)
 	connect(this, &RpcConnection::connectToHostRequest, m_rpcDriver, &RpcDriver::connectToHost);
 	connect(this, &RpcConnection::abortConnectionRequest, m_rpcDriver, &RpcDriver::abortConnection);
 
-	connect(m_rpcDriver, &RpcDriver::connectedChanged, this, &RpcConnection::connectedChanged);
+	connect(m_rpcDriver, &RpcDriver::socketConnectedChanged, this, &RpcConnection::socketConnectedChanged);
 	connect(m_rpcDriver, &RpcDriver::rpcMessageReceived, this, &RpcConnection::onMessageReceived);
 
 	if(m_syncCalls == SyncCalls::Supported) {
@@ -71,9 +71,9 @@ void RpcConnection::connectToHost(const QString &host_name, quint16 port)
 	emit connectToHostRequest(host_name, port);
 }
 
-bool RpcConnection::isConnected() const
+bool RpcConnection::isSocketConnected() const
 {
-	return m_rpcDriver->isConnected();
+	return m_rpcDriver->isSocketConnected();
 }
 
 void RpcConnection::abort()
