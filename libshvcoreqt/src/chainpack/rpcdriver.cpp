@@ -21,7 +21,8 @@
 
 #define smcDebug QNoDebug
 
-#define logRpc() shvCDebug("rpc")
+#define logRpcMsg() shvCDebug("RpcMsg")
+#define logRpcData() shvCDebug("RpcData")
 #define logRpcSyncCalls() shvCDebug("RpcSyncCalls")
 //#define logLongFiles() shvCDebug("LongFiles")
 
@@ -62,12 +63,12 @@ void RpcDriver::setSocket(QTcpSocket *socket)
 	connect(socket, &QTcpSocket::readyRead, this, &RpcDriver::onReadyRead);
 	connect(socket, &QTcpSocket::bytesWritten, this, &RpcDriver::onBytesWritten, Qt::QueuedConnection);
 	connect(socket, &QTcpSocket::connected, [this]() {
-		shvDebug() << this << "Connected!!!";
+		shvDebug() << this << "Socket connected!!!";
 		m_isConnected = true;
 		emit socketConnectedChanged(m_isConnected);
 	});
 	connect(socket, &QTcpSocket::disconnected, [this]() {
-		shvDebug() << this << "Disconnected!!!";
+		shvDebug() << this << "Socket disconnected!!!";
 		m_isConnected = false;
 		emit socketConnectedChanged(m_isConnected);
 	});
@@ -105,7 +106,7 @@ void RpcDriver::onReadyRead()
 
 void RpcDriver::onBytesWritten()
 {
-	logRpc() << "onBytesWritten()";
+	logRpcData() << "onBytesWritten()";
 	enqueueDataToSend(Chunk());
 }
 

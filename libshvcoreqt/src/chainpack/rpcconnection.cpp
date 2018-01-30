@@ -84,14 +84,20 @@ void RpcConnection::abort()
 void RpcConnection::onMessageReceived(const RpcConnection::RpcValue &rpc_val)
 {
 	RpcMessage msg(rpc_val);
+	if(!onRpcMessageReceived(msg))
+		emit messageReceived(msg);
+}
+
+bool RpcConnection::onRpcMessageReceived(const shv::chainpack::RpcMessage &msg)
+{
 	logRpcMsg() << "==>" << msg.toStdString();
 	RpcValue::UInt id = msg.id();
 	if(id > 0 && id <= m_maxSyncMessageId) {
 		// ignore messages alredy processed by sync calls
 		logRpcSyncCalls() << "<xxx ignoring already served sync response:" << id;
-		return;
+		return true;
 	}
-	emit messageReceived(msg);
+	return false;
 }
 
 void RpcConnection::sendMessage(const RpcConnection::RpcMessage &rpc_msg)

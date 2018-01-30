@@ -104,7 +104,7 @@ private:
 	{
 		RpcResponse rs;
 		rs.setId(123)
-				.setError(RpcResponse::Error::createError(RpcResponse::Error::InvalidParams, "Paramter length should be greater than zero!"));
+				.setError(RpcResponse::Error::create(RpcResponse::Error::InvalidParams, "Paramter length should be greater than zero!"));
 		std::stringstream out;
 		RpcValue cp1 = rs.value();
 		int len = rs.write(out);

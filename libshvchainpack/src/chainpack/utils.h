@@ -17,7 +17,7 @@ public:
 	static std::string removeJsonComments(const std::string &json_str);
 
 	std::string binaryDump(const std::string &bytes);
-	static std::string toHex(const std::string &bytes);
+	static std::string toHex(const std::string &bytes, size_t start_pos = 0);
 	static std::string toHex(const std::basic_string<uint8_t> &bytes);
 	static std::string fromHex(const std::string &bytes);
 

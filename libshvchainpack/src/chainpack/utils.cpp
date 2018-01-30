@@ -36,10 +36,10 @@ static inline char hex_nibble(char i)
 	return 'A' + (i - 10);
 }
 
-std::string Utils::toHex(const std::string &bytes)
+std::string Utils::toHex(const std::string &bytes, size_t start_pos)
 {
 	std::string ret;
-	for (size_t i = 0; i < bytes.size(); ++i) {
+	for (size_t i = start_pos; i < bytes.size(); ++i) {
 		unsigned char b = bytes[i];
 		char h = b / 16;
 		char l = b % 16;

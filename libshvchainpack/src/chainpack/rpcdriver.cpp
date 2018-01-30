@@ -9,7 +9,9 @@
 #include <sstream>
 #include <iostream>
 
-#define logRpc() nCDebug("rpc")
+#define logRpcMsg() nCDebug("RpcMsg")
+#define logRpcData() nCDebug("RpcData")
+//#define logRpcSyncCalls() nCDebug("RpcSyncCalls")
 
 namespace shv {
 namespace chainpack {
@@ -28,8 +30,9 @@ void RpcDriver::sendMessage(const RpcValue &msg)
 {
 	using namespace std;
 	//shvLogFuncFrame() << msg.toStdString();
+	logRpcMsg() << "==>" << msg.toStdString();
 	std::string packed_data = codeRpcValue(protocolVersion(), msg);
-	logRpc() << "send message: packed data: " << (packed_data.size() > 250? "<... long data ...>" :
+	logRpcData() << "send message:" << (packed_data.size() > 250? "<... long data ...>" :
 				(protocolVersion() == Rpc::ProtocolVersion::Cpon? packed_data: Utils::toHex(packed_data)));
 
 	enqueueDataToSend(Chunk{std::move(packed_data)});
@@ -37,11 +40,13 @@ void RpcDriver::sendMessage(const RpcValue &msg)
 
 void RpcDriver::sendRawData(std::string &&data)
 {
+	logRpcMsg() << "send raw data: " << (data.size() > 250? "<... long data ...>" : Utils::toHex(data));
 	enqueueDataToSend(Chunk{std::move(data)});
 }
 
 void RpcDriver::sendRawData(RpcValue::MetaData &&meta_data, std::string &&data)
 {
+	logRpcMsg() << "send raw meta + data: " << meta_data.toStdString() << (data.size() > 250? "<... long data ...>" : Utils::toHex(data));
 	using namespace std;
 	//shvLogFuncFrame() << msg.toStdString();
 	std::ostringstream os_packed_meta_data;
@@ -89,7 +94,7 @@ void RpcDriver::writeQueue()
 {
 	if(m_chunkQueue.empty())
 		return;
-	logRpc() << "writePendingData(), queue len:" << m_chunkQueue.size();
+	logRpcData() << "writePendingData(), queue len:" << m_chunkQueue.size();
 	//static int hi_cnt = 0;
 	const Chunk &chunk = m_chunkQueue[0];
 
@@ -147,7 +152,7 @@ int64_t RpcDriver::writeBytes_helper(const std::string &str, size_t from, size_t
 
 void RpcDriver::onBytesRead(std::string &&bytes)
 {
-	logRpc() << bytes.length() << "bytes of data read";
+	logRpcData() << bytes.length() << "bytes of data read";
 	m_readData += std::string(std::move(bytes));
 	while(true) {
 		int len = processReadData(m_readData);
@@ -161,7 +166,7 @@ void RpcDriver::onBytesRead(std::string &&bytes)
 
 int RpcDriver::processReadData(const std::string &read_data)
 {
-	logRpc() << __FUNCTION__ << "data len:" << read_data.length();
+	logRpcData() << __FUNCTION__ << "data len:" << read_data.length();
 
 	using namespace shv::chainpack;
 
@@ -178,7 +183,7 @@ int RpcDriver::processReadData(const std::string &read_data)
 	if(!ok)
 		return 0;
 
-	logRpc() << "\t chunk len:" << chunk_len << "read_len:" << read_len << "stream pos:" << in.tellg();
+	logRpcData() << "\t chunk len:" << chunk_len << "read_len:" << read_len << "stream pos:" << in.tellg();
 	if(read_len > read_data.length())
 		return 0;
 
@@ -329,7 +334,7 @@ void RpcDriver::onRpcDataReceived(Rpc::ProtocolVersion protocol_version, RpcValu
 
 void RpcDriver::onRpcValueReceived(const RpcValue &msg)
 {
-	logRpc() << "\t message received:" << msg.toCpon();
+	logRpcData() << "\t message received:" << msg.toCpon();
 	//logLongFiles() << "\t emitting message received:" << msg.dumpText();
 	if(m_messageReceivedCallback)
 		m_messageReceivedCallback(msg);

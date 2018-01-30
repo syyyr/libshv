@@ -65,11 +65,8 @@ protected:
 	Q_SIGNAL void connectToHostRequest(const QString &host_name, quint16 port);
 	Q_SIGNAL void abortConnectionRequest();
 
-	void onSocketConnected();
-	void onSocketDisconnected();
-
 	void onMessageReceived(const shv::chainpack::RpcValue &rpc_val);
-	//virtual void processMessage(const RpcMessage &rpc_msg);
+	virtual bool onRpcMessageReceived(const shv::chainpack::RpcMessage &msg);
 private:
 	RpcDriver *m_rpcDriver = nullptr;
 	// RpcDriver must run in separate thread to implement synchronous RPC calls properly

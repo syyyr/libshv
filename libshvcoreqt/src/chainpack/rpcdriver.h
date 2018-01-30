@@ -40,7 +40,6 @@ public:
 	void abortConnection();
 	bool isSocketConnected() const;
 	Q_SIGNAL void socketConnectedChanged(bool is_connected);
-
 protected:
 	// RpcDriver interface
 	bool isOpen() Q_DECL_OVERRIDE;

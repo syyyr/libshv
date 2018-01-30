@@ -146,7 +146,7 @@ public:
 		//Value data() const;
 		RpcValue::String toString() const {return "RPC ERROR " + Utils::toString(code()) + ": " + message();}
 	public:
-		static Error createError(ErrorType c, RpcValue::String msg) {
+		static Error create(ErrorType c, RpcValue::String msg) {
 			Error ret;
 			ret.setCode(c).setMessage(std::move(msg));
 			return ret;
@@ -177,10 +177,10 @@ public:
 		}
 		*/
 		static Error createInternalError(const RpcValue::String &msg = RpcValue::String()) {
-			return createError(InternalError, (msg.empty())? "Internal error": msg);
+			return create(InternalError, (msg.empty())? "Internal error": msg);
 		}
 		static Error createSyncMethodCallTimeout(const RpcValue::String &msg = RpcValue::String()) {
-			return createError(SyncMethodCallTimeout, (msg.empty())? "Sync method call timeout": msg);
+			return create(SyncMethodCallTimeout, (msg.empty())? "Sync method call timeout": msg);
 		}
 	};
 public:

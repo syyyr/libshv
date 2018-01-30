@@ -788,6 +788,13 @@ bool RpcValue::MetaData::operator==(const RpcValue::MetaData &o) const
 	return m_imap == o.m_imap;
 }
 
+std::string RpcValue::MetaData::toStdString() const
+{
+	std::ostringstream os;
+	CponProtocol::writeMetaData(os, *this);
+	return os.str();
+}
+
 std::string RpcValue::Decimal::toString() const
 {
 	std::string ret = Utils::toString(mantisa());

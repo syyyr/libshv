@@ -9,7 +9,8 @@ class SHVCHAINPACK_DECL_EXPORT Rpc
 {
 public:
 	enum class ProtocolVersion {Invalid = 0, ChainPack, Cpon, /*Json*/};
-	static const char* KNOCK_KNOCK;
+	static const char* METH_HELLO;
+	static const char* METH_LOGIN;
 };
 
 } // namespace chainpack

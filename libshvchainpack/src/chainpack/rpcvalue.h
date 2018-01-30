@@ -11,10 +11,10 @@
 #include <initializer_list>
 
 #ifndef CHAINPACK_UINT
-	#define CHAINPACK_UINT uint64_t
+	#define CHAINPACK_UINT unsigned
 #endif
 #ifndef CHAINPACK_INT
-	#define CHAINPACK_INT int64_t
+	#define CHAINPACK_INT int
 #endif
 
 namespace shv {
@@ -121,6 +121,11 @@ public:
 				return default_val;
 			return it->second;
 		}
+		bool hasKey(const std::string &key) const
+		{
+			auto it = find(key);
+			return !(it == end());
+		}
 	};
 	using IMap = std::map<RpcValue::UInt, RpcValue>;
 	union ArrayElement
@@ -202,6 +207,7 @@ public:
 		bool isEmpty() const {return m_imap.empty();}
 		bool operator==(const MetaData &o) const;
 		const RpcValue::IMap& toIMap() const {return m_imap;}
+		std::string toStdString() const;
 	protected:
 		RpcValue::IMap m_imap;
 	};
@@ -216,9 +222,9 @@ public:
 	RpcValue(bool value);               // Bool
 	RpcValue(Int value);                // Int
 	RpcValue(UInt value);                // UInt
-	RpcValue(int value) : RpcValue((Int)value) {}
+	//RpcValue(int value) : RpcValue((Int)value) {}
 	RpcValue(uint16_t value) : RpcValue((UInt)value) {}
-	RpcValue(unsigned int value) : RpcValue((UInt)value) {}
+	//RpcValue(unsigned int value) : RpcValue((UInt)value) {}
 	RpcValue(double value);             // Double
 	RpcValue(Decimal value);             // Decimal
 	RpcValue(const DateTime &value);
