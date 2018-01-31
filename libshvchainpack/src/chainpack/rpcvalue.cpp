@@ -744,19 +744,25 @@ static bool parse_ISO_DateTime(const std::string &s, std::tm &tm, unsigned &msec
 	tm.tm_mday = 0;
 	tm.tm_hour = 0;
 	tm.tm_min = 0;
-	tm.tm_sec = -1;
+	tm.tm_sec = 0;
 	tm.tm_isdst = -1;
 
 	msec = 0;
 	utc_offset = 0;
 
-	iss >> tm.tm_year >> sep >> tm.tm_mon >> sep >> tm.tm_mday >> sep >> tm.tm_hour >> sep >> tm.tm_min >> sep >> tm.tm_sec;
-	if (tm.tm_sec >= 0) {
+	if (iss >> tm.tm_year >> sep >> tm.tm_mon >> sep >> tm.tm_mday) {
 		tm.tm_year -= 1900;
 		tm.tm_mon -= 1;
 	}
 	else {
-		nError() << "Invalid date time string:" << s << "too short, sep:" <<  sep;
+		nError() << "Invalid date string:" << s << "too short";
+		return false;
+	}
+	iss.get();
+	if (iss >> tm.tm_hour >> sep >> tm.tm_min >> sep >> tm.tm_sec) {
+	}
+	else {
+		nError() << "Invalid time string:" << s << "too short";
 		return false;
 	}
 
