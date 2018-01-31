@@ -723,7 +723,7 @@ void CponProtocol::write(bool value, std::ostream &out)
 
 void CponProtocol::write(RpcValue::DateTime value, std::ostream &out)
 {
-	out << S_DATETIME_BEGIN << value.toString() << '"';
+	out << S_DATETIME_BEGIN << value.toUtcString() << '"';
 }
 
 void CponProtocol::write(RpcValue::Decimal value, std::ostream &out)

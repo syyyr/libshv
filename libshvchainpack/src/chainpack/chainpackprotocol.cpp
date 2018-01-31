@@ -245,12 +245,24 @@ T readData_Blob(std::istream &data)
 void writeData_DateTime(std::ostream &out, const RpcValue::DateTime &dt)
 {
 	uint64_t msecs = dt.msecsSinceEpoch();
+	msecs <<= 5;
+	int8_t offset = dt.offsetFromUtc() & 0b00011111;
+	msecs |= offset;
 	writeData_Int(out, msecs);
+}
+
+RpcValue::DateTime readData_DateTimeEpoch(std::istream &data)
+{
+	RpcValue::DateTime dt = RpcValue::DateTime::fromMSecsSinceEpoch(readData_Int<int64_t>(data));
+	return dt;
 }
 
 RpcValue::DateTime readData_DateTime(std::istream &data)
 {
-	RpcValue::DateTime dt = RpcValue::DateTime::fromMSecsSinceEpoch(readData_Int<decltype(dt.msecsSinceEpoch())>(data));
+	int64_t d = readData_Int<int64_t>(data);
+	int8_t offset = ((d & 0b00011111) << 3) >> 3; // sign extension
+	d >>= 5;
+	RpcValue::DateTime dt = RpcValue::DateTime::fromMSecsSinceEpoch(d, offset);
 	return dt;
 }
 
@@ -273,6 +285,7 @@ ChainPackProtocol::TypeInfo::Enum ChainPackProtocol::typeToTypeInfo(RpcValue::Ty
 	case RpcValue::Type::List: return TypeInfo::List;
 	case RpcValue::Type::Map: return TypeInfo::Map;
 	case RpcValue::Type::IMap: return TypeInfo::IMap;
+	//case RpcValue::Type::DateTimeEpoch: return TypeInfo::DateTimeEpoch;
 	case RpcValue::Type::DateTime: return TypeInfo::DateTime;
 	case RpcValue::Type::MetaIMap: return TypeInfo::MetaIMap;
 	case RpcValue::Type::Decimal: return TypeInfo::Decimal;
@@ -291,6 +304,7 @@ RpcValue::Type ChainPackProtocol::typeInfoToType(ChainPackProtocol::TypeInfo::En
 	case ChainPackProtocol::TypeInfo::Bool: return RpcValue::Type::Bool;
 	case ChainPackProtocol::TypeInfo::Blob: return RpcValue::Type::Blob;
 	case ChainPackProtocol::TypeInfo::String: return RpcValue::Type::String;
+	case ChainPackProtocol::TypeInfo::DateTimeEpoch: return RpcValue::Type::DateTime;
 	case ChainPackProtocol::TypeInfo::DateTime: return RpcValue::Type::DateTime;
 	case ChainPackProtocol::TypeInfo::List: return RpcValue::Type::List;
 	case ChainPackProtocol::TypeInfo::Map: return RpcValue::Type::Map;
@@ -650,6 +664,7 @@ RpcValue ChainPackProtocol::readData(ChainPackProtocol::TypeInfo::Enum type, boo
 		case ChainPackProtocol::TypeInfo::Decimal: { RpcValue::Decimal d = readData_Decimal(data); ret = RpcValue(d); break; }
 		case ChainPackProtocol::TypeInfo::TRUE: { bool b = true; ret = RpcValue(b); break; }
 		case ChainPackProtocol::TypeInfo::FALSE: { bool b = false; ret = RpcValue(b); break; }
+		case ChainPackProtocol::TypeInfo::DateTimeEpoch: { RpcValue::DateTime val = readData_DateTimeEpoch(data); ret = RpcValue(val); break; }
 		case ChainPackProtocol::TypeInfo::DateTime: { RpcValue::DateTime val = readData_DateTime(data); ret = RpcValue(val); break; }
 		case ChainPackProtocol::TypeInfo::String: { RpcValue::String val = readData_Blob<RpcValue::String>(data); ret = RpcValue(val); break; }
 		case ChainPackProtocol::TypeInfo::Blob: { RpcValue::Blob val = readData_Blob<RpcValue::Blob>(data); ret = RpcValue(val); break; }

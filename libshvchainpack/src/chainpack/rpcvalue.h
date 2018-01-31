@@ -76,20 +76,43 @@ public:
 		bool isValid() const {return !(mantisa() == 0 && precision() != 0);}
 		std::string toString() const;
 	};
+	/// DateTimeEpoch is deprecated
+	/*
+	class SHVCHAINPACK_DECL_EXPORT DateTimeEpoch
+	{
+	public:
+		DateTimeEpoch() {}
+		int64_t msecsSinceEpoch() const { return m_msecs; }
+
+		static DateTimeEpoch fromLocalString(const std::string &local_date_time_str);
+		static DateTimeEpoch fromUtcString(const std::string &utc_date_time_str);
+		static DateTimeEpoch fromMSecsSinceEpoch(int64_t m_msecs);
+
+		std::string toLocalString() const;
+		std::string toUtcString() const;
+	private:
+		int64_t m_msecs = 0;
+	};
+	*/
 	class SHVCHAINPACK_DECL_EXPORT DateTime
 	{
 	public:
 		DateTime() {}
-		int64_t msecsSinceEpoch() const { return m_msecs; }
+		int64_t msecsSinceEpoch() const { return m_dtm.msec; }
+		int8_t offsetFromUtc() const { return m_dtm.tz; }
 
-		static DateTime fromString(const std::string &local_date_time_str);
+		static DateTime fromLocalString(const std::string &local_date_time_str);
 		static DateTime fromUtcString(const std::string &utc_date_time_str);
-		static DateTime fromMSecsSinceEpoch(int64_t m_msecs);
+		static DateTime fromMSecsSinceEpoch(int64_t msecs, int8_t utc_offset = 0);
 
-		std::string toString() const;
+		std::string toLocalString() const;
 		std::string toUtcString() const;
 	private:
-		int64_t m_msecs = 0;
+		// UTC msec since epoch folowed by signed UTC offset <-16, +15>
+		struct MsTz {
+			int64_t msec: 59, tz: 5;
+		};
+		MsTz m_dtm = {0, 0};
 	};
 	using String = std::string;
 	struct SHVCHAINPACK_DECL_EXPORT Blob : public std::basic_string<uint8_t>

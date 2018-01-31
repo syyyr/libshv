@@ -72,7 +72,7 @@ private:
 									0.123,
 									123.456n,
 									x"48656c6c6f",
-									d"2018-01-14T01:17:33.256"
+									d"2018-01-14T01:17:33.256-11"
 									]
 								)";
 			const auto cp = RpcValue::parseCpon(test, &err);
@@ -89,6 +89,7 @@ private:
 			QVERIFY(cp[8] == RpcValue::Blob("Hello"));
 			RpcValue::DateTime dt = cp[9].toDateTime();
 			QVERIFY(dt.msecsSinceEpoch() % 1000 == 256);
+			QVERIFY(dt.offsetFromUtc() == -11);
 		}
 		{
 			string err;
@@ -474,15 +475,23 @@ private:
 		}
 		{
 			qDebug() << "------------- DateTime";
-			std::string str = "2017-05-03T15:52:31.123";
-			RpcValue::DateTime dt = RpcValue::DateTime::fromString(str);
-			RpcValue cp1{dt};
-			std::stringstream out;
-			int len = ChainPackProtocol::write(out, cp1);
-			RpcValue cp2 = ChainPackProtocol::read(out);
-			qDebug() << str << " " << dt.toUtcString().c_str() << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
-			QVERIFY(cp1.type() == cp2.type());
-			QVERIFY(cp1.toInt() == cp2.toInt());
+			for(std::string str : {
+				"2017-05-03 5:52:03",
+				"2017-05-03T15:52:03.923Z",
+				"2017-05-03T15:52:03+01",
+				"2017-05-03T15:52:03Z",
+				"2017-05-03T15:52:03.000-01",
+				"2017-05-03T15:52:03.923+00",
+			}) {
+				RpcValue::DateTime dt = RpcValue::DateTime::fromUtcString(str);
+				RpcValue cp1{dt};
+				std::stringstream out;
+				int len = ChainPackProtocol::write(out, cp1);
+				RpcValue cp2 = ChainPackProtocol::read(out);
+				qDebug() << str << " " << dt.toUtcString().c_str() << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+				QVERIFY(cp1.type() == cp2.type());
+				QVERIFY(cp1.toInt() == cp2.toInt());
+			}
 		}
 		{
 			qDebug() << "------------- Array";
