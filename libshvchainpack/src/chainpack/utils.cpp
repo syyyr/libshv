@@ -36,10 +36,11 @@ static inline char hex_nibble(char i)
 	return 'A' + (i - 10);
 }
 
-std::string Utils::toHex(const std::string &bytes, size_t start_pos)
+std::string Utils::toHex(const std::string &bytes, size_t start_pos, size_t length)
 {
 	std::string ret;
-	for (size_t i = start_pos; i < bytes.size(); ++i) {
+	const size_t max_pos = std::min(bytes.size(), start_pos + length);
+	for (size_t i = start_pos; i < max_pos; ++i) {
 		unsigned char b = bytes[i];
 		char h = b / 16;
 		char l = b % 16;
@@ -60,6 +61,17 @@ std::string Utils::toHex(const std::basic_string<uint8_t> &bytes)
 		ret += hex_nibble(l);
 	}
 	return ret;
+}
+
+std::string Utils::toHexElided(const std::string &bytes, size_t start_pos, size_t max_len)
+{
+	std::string hex = toHex(bytes, start_pos, max_len + 1);
+	if(hex.size() > 3 && hex.size() > max_len) {
+		hex.resize(hex.size() - 1);
+		for (int i = 0; i < 3; ++i)
+			hex[hex.size() - 1 - i] = '.';
+	}
+	return hex;
 }
 
 static inline char unhex_char(char c)

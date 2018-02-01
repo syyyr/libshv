@@ -15,6 +15,9 @@ namespace chainpack {
 class SHVCHAINPACK_DECL_EXPORT RpcDriver
 {
 public:
+	static const char * SND_LOG_ARROW;
+	static const char * RCV_LOG_ARROW;
+public:
 	explicit RpcDriver();
 	virtual ~RpcDriver();
 
@@ -29,6 +32,8 @@ public:
 
 	static int defaultRpcTimeout() {return s_defaultRpcTimeout;}
 	static void setDefaultRpcTimeout(int tm) {s_defaultRpcTimeout = tm;}
+
+	static RpcMessage composeRpcMessage(RpcValue::MetaData &&meta_data, const std::string &data, bool throw_exc = Exception::Throw);
 protected:
 	struct Chunk
 	{
@@ -60,8 +65,8 @@ protected:
 	virtual void onRpcDataReceived(Rpc::ProtocolVersion protocol_version, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len);
 	virtual void onRpcValueReceived(const RpcValue &msg);
 
-	RpcValue decodeData(Rpc::ProtocolVersion protocol_version, const std::string &data, size_t start_pos);
-	std::string codeRpcValue(Rpc::ProtocolVersion protocol_version, const RpcValue &val);
+	static RpcValue decodeData(Rpc::ProtocolVersion protocol_version, const std::string &data, size_t start_pos);
+	static std::string codeRpcValue(Rpc::ProtocolVersion protocol_version, const RpcValue &val);
 
 	virtual void lockSendQueue() {}
 	virtual void unlockSendQueue() {}

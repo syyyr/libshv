@@ -12,7 +12,8 @@ void Rpc::registerMetatTypes()
 	if(rpcvalue_id == 0) {
 		rpcvalue_id = qRegisterMetaType<shv::chainpack::RpcValue>();
 		shvInfo() << "qRegisterMetaType<shv::chainpack::RpcValue>() =" << rpcvalue_id;
-		//shvInfo() << NecroLog::instantiationInfo();
+		//rpcvalue_id = qRegisterMetaType<std::string>();
+		//shvInfo() << "qRegisterMetaType<std::string>() =" << rpcvalue_id;
 	}
 }
 

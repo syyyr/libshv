@@ -928,7 +928,7 @@ bool RpcValue::MetaData::operator==(const RpcValue::MetaData &o) const
 std::string RpcValue::MetaData::toStdString() const
 {
 	std::ostringstream os;
-	CponProtocol::writeMetaData(os, *this);
+	CponProtocol::writeMetaData(os, *this, CponProtocol::WriteOptions().translateIds(true));
 	return os.str();
 }
 

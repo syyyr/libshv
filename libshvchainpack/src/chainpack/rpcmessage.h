@@ -32,10 +32,6 @@ public:
 class SHVCHAINPACK_DECL_EXPORT RpcMessage
 {
 public:
-	static const char* METHOD_GET;
-	static const char* METHOD_SET;
-	static const char* METHOD_VALUE_CHANGED;
-public:
 	RpcMessage();
 	RpcMessage(const RpcValue &val);
 	const RpcValue& value() const {return m_value;}
@@ -44,12 +40,15 @@ protected:
 	RpcValue value(RpcValue::UInt key) const;
 	void setValue(RpcValue::UInt key, const RpcValue &val);
 public:
-	RpcValue::UInt id() const;
-	void setId(RpcValue::UInt id);
+	RpcValue::UInt requestId() const;
+	void setRequestId(RpcValue::UInt id);
 	bool isValid() const;
 	bool isRequest() const;
 	bool isResponse() const;
 	bool isNotify() const;
+
+	static RpcValue::UInt requestId(const RpcValue::MetaData &meta);
+	static void setRequestId(RpcValue::MetaData &meta, RpcValue::UInt id);
 
 	static RpcValue shvPath(const RpcValue::MetaData &meta);
 	static void setShvPath(RpcValue::MetaData &meta, const RpcValue &path);
@@ -57,9 +56,9 @@ public:
 	void setShvPath(const RpcValue &path);
 
 	static RpcValue connectionId(const RpcValue::MetaData &meta);
-	static void setConnectionId(RpcValue::MetaData &meta, const RpcValue &id);
+	static void setConnectionId(RpcValue::MetaData &meta, const RpcValue &requestId);
 	RpcValue connectionId() const;
-	void setConnectionId(const RpcValue &id);
+	void setConnectionId(const RpcValue &requestId);
 
 	static Rpc::ProtocolVersion protocolVersion(const RpcValue::MetaData &meta);
 	static void setProtocolVersion(RpcValue::MetaData &meta, shv::chainpack::Rpc::ProtocolVersion ver);
@@ -94,7 +93,7 @@ public:
 	RpcValue::String method() const;
 	RpcRequest& setParams(const RpcValue &p);
 	RpcValue params() const;
-	RpcRequest& setId(const RpcValue::UInt id) {Super::setId(id); return *this;}
+	RpcRequest& setRequestId(const RpcValue::UInt id) {Super::setRequestId(id); return *this;}
 
 	//int write(Value::Blob &out) const override;
 };
@@ -108,7 +107,7 @@ public:
 	//RpcRequest(const Value &id) : Super(Json()) {setId(id);}
 	RpcNotify(const RpcMessage &msg) : Super(msg) {}
 public:
-	RpcRequest& setId(const RpcValue::UInt id) = delete;
+	RpcRequest& setRequestId(const RpcValue::UInt requestId) = delete;
 
 	static void write(std::ostream &out, const std::string &method, std::function<void (std::ostream &out)> write_params_callback);
 };
@@ -194,7 +193,7 @@ public:
 	Error error() const;
 	RpcResponse& setResult(const RpcValue &res);
 	RpcValue result() const;
-	RpcResponse& setId(const RpcValue::UInt id) {Super::setId(id); return *this;}
+	RpcResponse& setRequestId(const RpcValue::UInt id) {Super::setRequestId(id); return *this;}
 };
 
 } // namespace chainpackrpc

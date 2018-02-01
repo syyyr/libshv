@@ -36,7 +36,7 @@ public:
 
 	int connectionId() const {return m_connectionId;}
 
-	void connectToHost(const QString &host_name, quint16 port);
+	void connectToHost(const std::string &host_name, quint16 port);
 	Q_SIGNAL void socketConnectedChanged(bool is_connected);
 	bool isSocketConnected() const;
 	void abort();
@@ -45,15 +45,15 @@ public:
 
 	/// since RpcDriver is connected to SocketDriver using queued connection. it is safe to call sendMessage from different thread
 	Q_SLOT void sendMessage(const shv::chainpack::RpcMessage &rpc_msg);
-	Q_SLOT void sendNotify(const QString &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
+	Q_SLOT void sendNotify(const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
 	Q_SLOT void sendResponse(int request_id, const shv::chainpack::RpcValue &result);
 	Q_SLOT void sendError(int request_id, const shv::chainpack::RpcResponse::Error &error);
-	Q_SLOT int callMethodASync(const QString &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
-	RpcResponse callMethodSync(const QString &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = 0);
-	RpcResponse callShvMethodSync(const QString &shv_path, const QString &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = 0);
+	Q_SLOT int callMethodASync(const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
+	RpcResponse callMethodSync(const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = 0);
+	RpcResponse callShvMethodSync(const std::string &shv_path, const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = 0);
 
 	Q_SIGNAL void messageReceived(const shv::chainpack::RpcMessage &msg);
-	//Q_SIGNAL void rpcError(const QString &err_msg);
+	//Q_SIGNAL void rpcError(const std::string &err_msg);
 	Q_SIGNAL void openChanged(bool is_open);
 protected:
 	Q_SIGNAL void setProtocolVersionRequest(int ver);
@@ -62,6 +62,7 @@ protected:
 	Q_SIGNAL void sendMessageSyncRequest(const shv::chainpack::RpcRequest &request, shv::chainpack::RpcResponse *presponse, int time_out_ms);
 	Q_SLOT RpcResponse sendMessageSync(const shv::chainpack::RpcRequest &rpc_request_message, int time_out_ms = 0);
 
+	// host_name is QString to avoid qRegisterMetatype<std::string>() for queued connection
 	Q_SIGNAL void connectToHostRequest(const QString &host_name, quint16 port);
 	Q_SIGNAL void abortConnectionRequest();
 

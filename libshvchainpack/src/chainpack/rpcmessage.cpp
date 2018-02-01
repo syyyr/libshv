@@ -42,9 +42,6 @@ void RpcMessage::registerMetaType()
 //==================================================================
 // RpcMessage
 //==================================================================
-const char* RpcMessage::METHOD_GET = "GET";
-const char* RpcMessage::METHOD_SET = "SET";
-const char* RpcMessage::METHOD_VALUE_CHANGED = "CHNG";
 
 RpcMessage::RpcMessage()
 {
@@ -86,14 +83,14 @@ void RpcMessage::setMetaValue(RpcValue::UInt key, const RpcValue &val)
 	m_value.setMetaValue(key, val);
 }
 
-RpcValue::UInt RpcMessage::id() const
+RpcValue::UInt RpcMessage::requestId() const
 {
 	if(isValid())
-		return m_value.metaData().value(meta::RpcMessage::Tag::RequestId).toUInt();
+		return requestId(m_value.metaData());
 	return 0;
 }
 
-void RpcMessage::setId(RpcValue::UInt id)
+void RpcMessage::setRequestId(RpcValue::UInt id)
 {
 	checkMetaValues();
 	//checkRpcTypeMetaValue();
@@ -113,6 +110,16 @@ bool RpcMessage::isRequest() const
 bool RpcMessage::isNotify() const
 {
 	return rpcType() == meta::RpcMessage::RpcCallType::Notify;
+}
+
+RpcValue::UInt RpcMessage::requestId(const RpcValue::MetaData &meta)
+{
+	return meta.value(meta::RpcMessage::Tag::RequestId).toUInt();
+}
+
+void RpcMessage::setRequestId(RpcValue::MetaData &meta, RpcValue::UInt id)
+{
+	meta.setValue(meta::RpcMessage::Tag::RequestId, id);
 }
 
 RpcValue RpcMessage::shvPath(const RpcValue::MetaData &meta)
@@ -189,7 +196,7 @@ int RpcMessage::write(std::ostream &out) const
 
 meta::RpcMessage::RpcCallType::Enum RpcMessage::rpcType() const
 {
-	RpcValue::UInt rpc_id = id();
+	RpcValue::UInt rpc_id = requestId();
 	bool has_method = hasKey(meta::RpcMessage::Key::Method);
 	if(has_method)
 		return (rpc_id > 0)? meta::RpcMessage::RpcCallType::Request: meta::RpcMessage::RpcCallType::Notify;

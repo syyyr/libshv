@@ -9,6 +9,8 @@
 #define logRpcMsg() shvCDebug("RpcMsg")
 #define logRpcSyncCalls() shvCDebug("RpcSyncCalls")
 
+namespace cp = shv::chainpack;
+
 namespace shv {
 namespace coreqt {
 namespace chainpack {
@@ -66,9 +68,9 @@ void RpcConnection::setSocket(QTcpSocket *socket)
 	m_rpcDriver->setSocket(socket);
 }
 
-void RpcConnection::connectToHost(const QString &host_name, quint16 port)
+void RpcConnection::connectToHost(const std::string &host_name, quint16 port)
 {
-	emit connectToHostRequest(host_name, port);
+	emit connectToHostRequest(QString::fromStdString(host_name), port);
 }
 
 bool RpcConnection::isSocketConnected() const
@@ -90,36 +92,36 @@ void RpcConnection::onMessageReceived(const RpcConnection::RpcValue &rpc_val)
 
 bool RpcConnection::onRpcMessageReceived(const shv::chainpack::RpcMessage &msg)
 {
-	logRpcMsg() << "==>" << msg.toStdString();
-	RpcValue::UInt id = msg.id();
+	RpcValue::UInt id = msg.requestId();
 	if(id > 0 && id <= m_maxSyncMessageId) {
 		// ignore messages alredy processed by sync calls
-		logRpcSyncCalls() << "<xxx ignoring already served sync response:" << id;
+		logRpcSyncCalls() << "XXX ignoring already served sync response:" << id;
 		return true;
 	}
+	//logRpcMsg() << cp::RpcDriver::RCV_LOG_ARROW << msg.toStdString();
 	return false;
 }
 
 void RpcConnection::sendMessage(const RpcConnection::RpcMessage &rpc_msg)
 {
-	logRpcMsg() << "<==" << rpc_msg.toStdString();
+	//logRpcMsg() << cp::RpcDriver::SND_LOG_ARROW << rpc_msg.toStdString();
 	emit sendMessageRequest(rpc_msg.value());
 }
 
 RpcConnection::RpcResponse RpcConnection::sendMessageSync(const RpcConnection::RpcRequest &rpc_request_message, int time_out_ms)
 {
 	RpcResponse res_msg;
-	m_maxSyncMessageId = qMax(m_maxSyncMessageId, rpc_request_message.id());
-	logRpcSyncCalls() << "==> send SYNC MSG id:" << rpc_request_message.id() << "data:" << rpc_request_message.toStdString();
+	m_maxSyncMessageId = qMax(m_maxSyncMessageId, rpc_request_message.requestId());
+	//logRpcSyncCalls() << "==> send SYNC MSG id:" << rpc_request_message.id() << "data:" << rpc_request_message.toStdString();
 	emit sendMessageSyncRequest(rpc_request_message, &res_msg, time_out_ms);
-	logRpcSyncCalls() << "<== RESP SYNC MSG id:" << rpc_request_message.id() << "data:" << rpc_request_message.toStdString();
+	//logRpcSyncCalls() << "<== RESP SYNC MSG id:" << res_msg.id() << "data:" << res_msg.toStdString();
 	return res_msg;
 }
 
-void RpcConnection::sendNotify(const QString &method, const RpcConnection::RpcValue &params)
+void RpcConnection::sendNotify(const std::string &method, const RpcConnection::RpcValue &params)
 {
 	RpcRequest rq;
-	rq.setMethod(method.toStdString());
+	rq.setMethod(method);
 	rq.setParams(params);
 	sendMessage(rq);
 }
@@ -127,7 +129,7 @@ void RpcConnection::sendNotify(const QString &method, const RpcConnection::RpcVa
 void RpcConnection::sendResponse(int request_id, const RpcConnection::RpcValue &result)
 {
 	RpcResponse resp;
-	resp.setId(request_id);
+	resp.setRequestId(request_id);
 	resp.setResult(result);
 	sendMessage(resp);
 }
@@ -135,7 +137,7 @@ void RpcConnection::sendResponse(int request_id, const RpcConnection::RpcValue &
 void RpcConnection::sendError(int request_id, const shv::chainpack::RpcResponse::Error &error)
 {
 	RpcResponse resp;
-	resp.setId(request_id);
+	resp.setRequestId(request_id);
 	resp.setError(error);
 	sendMessage(resp);
 }
@@ -147,30 +149,30 @@ int nextRpcId()
 	return ++n;
 }
 }
-int RpcConnection::callMethodASync(const QString &method, const RpcConnection::RpcValue &params)
+int RpcConnection::callMethodASync(const std::string &method, const RpcConnection::RpcValue &params)
 {
 	int id = nextRpcId();
 	RpcRequest rq;
-	rq.setId(id);
-	rq.setMethod(method.toStdString());
+	rq.setRequestId(id);
+	rq.setMethod(method);
 	rq.setParams(params);
 	sendMessage(rq);
 	return id;
 }
 
-RpcConnection::RpcResponse RpcConnection::callMethodSync(const QString &method, const RpcConnection::RpcValue &params, int rpc_timeout)
+RpcConnection::RpcResponse RpcConnection::callMethodSync(const std::string &method, const RpcConnection::RpcValue &params, int rpc_timeout)
 {
-	return callShvMethodSync(QString(), method, params, rpc_timeout);
+	return callShvMethodSync(std::string(), method, params, rpc_timeout);
 }
 
-RpcConnection::RpcResponse RpcConnection::callShvMethodSync(const QString &shv_path, const QString &method, const RpcConnection::RpcValue &params, int rpc_timeout)
+RpcConnection::RpcResponse RpcConnection::callShvMethodSync(const std::string &shv_path, const std::string &method, const RpcConnection::RpcValue &params, int rpc_timeout)
 {
 	RpcRequest rq;
-	rq.setId(nextRpcId());
-	rq.setMethod(method.toStdString());
+	rq.setRequestId(nextRpcId());
+	rq.setMethod(method);
 	rq.setParams(params);
-	if(!shv_path.isEmpty())
-		rq.setShvPath(shv_path.toStdString());
+	if(!shv_path.empty())
+		rq.setShvPath(shv_path);
 	//logRpc() << "--> sync method call:" << id << method;
 	RpcMessage ret = sendMessageSync(rq, rpc_timeout);
 	if(!ret.isResponse())

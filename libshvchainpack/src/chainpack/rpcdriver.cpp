@@ -16,6 +16,9 @@
 namespace shv {
 namespace chainpack {
 
+const char * RpcDriver::SND_LOG_ARROW = "<==";
+const char * RpcDriver::RCV_LOG_ARROW = "==>";
+
 int RpcDriver::s_defaultRpcTimeout = 5000;
 
 RpcDriver::RpcDriver()
@@ -30,7 +33,7 @@ void RpcDriver::sendMessage(const RpcValue &msg)
 {
 	using namespace std;
 	//shvLogFuncFrame() << msg.toStdString();
-	logRpcMsg() << "==>" << msg.toStdString();
+	logRpcMsg() << SND_LOG_ARROW << msg.toStdString();
 	std::string packed_data = codeRpcValue(protocolVersion(), msg);
 	logRpcData() << "send message:" << (packed_data.size() > 250? "<... long data ...>" :
 				(protocolVersion() == Rpc::ProtocolVersion::Cpon? packed_data: Utils::toHex(packed_data)));
@@ -72,6 +75,24 @@ void RpcDriver::sendRawData(RpcValue::MetaData &&meta_data, std::string &&data)
 	else {
 		SHVCHP_EXCEPTION("Cannot decode data without protocol version specified.")
 	}
+}
+
+RpcMessage RpcDriver::composeRpcMessage(RpcValue::MetaData &&meta_data, const std::string &data, bool throw_exc)
+{
+	Rpc::ProtocolVersion packed_data_ver = RpcMessage::protocolVersion(meta_data);
+	RpcValue val = decodeData(packed_data_ver, data, 0);
+	if(!val.isValid()) {
+		const char * msg = "Compose RPC message error.";
+		if(throw_exc) {
+			SHVCHP_EXCEPTION(msg);
+		}
+		else {
+			nError() << msg;
+			return RpcMessage();
+		}
+	}
+	val.setMetaData(std::move(meta_data));
+	return RpcMessage(val);
 }
 
 void RpcDriver::enqueueDataToSend(RpcDriver::Chunk &&chunk_to_enqueue)
@@ -325,6 +346,7 @@ void RpcDriver::onRpcDataReceived(Rpc::ProtocolVersion protocol_version, RpcValu
 	RpcValue msg = decodeData(protocol_version, data, start_pos);
 	if(msg.isValid()) {
 		msg.setMetaData(std::move(md));
+		logRpcMsg() << RCV_LOG_ARROW << msg.toStdString();
 		onRpcValueReceived(msg);
 	}
 	else {
