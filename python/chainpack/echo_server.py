@@ -5,7 +5,7 @@
 import socketserver
 import logging
 from rpcdriver import RpcDriver
-from value import RpcValue
+from rpcvalue import RpcValue
 
 
 logger=logging.getLogger()

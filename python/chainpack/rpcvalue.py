@@ -1,12 +1,10 @@
 import struct
-from datetime import datetime
 import enum
-#import typing, types
 import logging_config
 import logging
-from copy import deepcopy
 from math import floor
-
+from datetime import datetime
+from dateutil.tz import tzoffset
 import meta
 
 
@@ -138,7 +136,7 @@ class RpcValue():
 		if type(value) == RpcValue:
 			s._value = value._value
 			s._type = value._type
-			s._metaData = deepcopy(value._metaData)
+			s._metaData = value._metaData
 		else:
 			s._metaData = {}
 			if isinstance(value, list):
@@ -149,9 +147,10 @@ class RpcValue():
 				s._value = {}
 				for k,v in value.items():
 					if t == Type.IMap:
-						#s._value[RpcValue(k, Type.UInt)] = RpcValue(v)
+						assert isinstance(k, int)
 						s._value[k] = RpcValue(v)
 					else:
+						assert isinstance(k, str)
 						s._value[k] = RpcValue(v)
 			elif isinstance(value, enum.IntFlag):
 				s._value = int(value)
@@ -400,7 +399,7 @@ class ChainPackProtocol(bytearray):
 		elif t == Type.String:   s.writeData_String(v)
 		elif t == Type.Blob:     s.write_Blob(v)
 		elif t == Type.List:     s.writeData_List(v)
-		elif t == Type.Array:    s.writeData_List(v)
+		elif t == Type.Array:    s.writeData_Array(v)
 		elif t == Type.Map:      s.writeData_Map(v)
 		elif t == Type.IMap:     s.writeData_IMap(v)
 		elif t == Type.INVALID:  raise ChainpackTypeException("Internal error: attempt to write invalid type data")
