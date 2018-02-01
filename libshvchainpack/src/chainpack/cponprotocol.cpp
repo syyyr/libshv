@@ -663,7 +663,6 @@ void CponProtocol::write(std::ostream &out, const RpcValue &value, const WriteOp
 	if(!value.metaData().isEmpty())
 		write(value.metaData(), out, opts);
 	switch (value.type()) {
-	//case RpcValue::Type::Invalid: serialize(value.toInvalid(), out); break;
 	case RpcValue::Type::Null: write(nullptr, out); break;
 	case RpcValue::Type::UInt: write(value.toUInt(), out); break;
 	case RpcValue::Type::Int: write(value.toInt(), out); break;
@@ -678,8 +677,13 @@ void CponProtocol::write(std::ostream &out, const RpcValue &value, const WriteOp
 	case RpcValue::Type::IMap: write(value.toIMap(), out, opts, value.metaData()); break;
 	//case RpcValue::Type::MetaIMap: serialize(value.toMetaIMap(), out); break;
 	case RpcValue::Type::Decimal: write(value.toDecimal(), out); break;
+	case RpcValue::Type::Invalid:
+		if(WRITE_INVALID_AS_NULL) {
+			write(nullptr, out);
+			break;
+		}
 	default:
-		std::runtime_error(std::string("Don't know how to serialize type: ") + RpcValue::typeToName(value.type()));
+		SHVCHP_EXCEPTION(std::string("Don't know how to serialize type: ") + RpcValue::typeToName(value.type()));
 	}
 }
 

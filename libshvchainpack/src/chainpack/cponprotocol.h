@@ -88,6 +88,7 @@ private:
 	size_t m_pos = 0;
 	int m_depth = 0;
 	//bool m_verboseIds = true;
+	static constexpr bool WRITE_INVALID_AS_NULL = true;
 };
 
 } // namespace chainpack

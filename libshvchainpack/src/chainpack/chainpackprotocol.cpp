@@ -465,13 +465,19 @@ RpcValue::IMap ChainPackProtocol::readData_IMap(std::istream &data)
 
 int ChainPackProtocol::write(std::ostream &out, const RpcValue &val)
 {
-	if(!val.isValid())
-		SHVCHP_EXCEPTION("Cannot serialize invalid ChainPack.");
 	std::ostream::pos_type len = out.tellp();
-	writeMetaData(out, val.metaData());
-	if(!writeTypeInfo(out, val))
-		writeData(out, val);
-	return (out.tellp() - len);
+	if(!val.isValid()) {
+		if(WRITE_INVALID_AS_NULL)
+			return write(out, RpcValue(nullptr));
+		else
+			SHVCHP_EXCEPTION("Cannot serialize invalid ChainPack.");
+	}
+	else {
+		writeMetaData(out, val.metaData());
+		if(!writeTypeInfo(out, val))
+			writeData(out, val);
+		return (out.tellp() - len);
+	}
 }
 
 void ChainPackProtocol::writeMetaData(std::ostream &out, const RpcValue::MetaData &meta_data)

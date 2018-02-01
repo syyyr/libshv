@@ -84,6 +84,8 @@ private:
 	static RpcValue::Array readData_Array(TypeInfo::Enum type_info, std::istream &data);
 	static RpcValue::Map readData_Map(std::istream &data);
 	static RpcValue::IMap readData_IMap(std::istream &data);
+private:
+	static constexpr bool WRITE_INVALID_AS_NULL = true;
 };
 
 }}
