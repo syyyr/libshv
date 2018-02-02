@@ -113,17 +113,20 @@ def typeInfoToType(type_info: TypeInfo) -> Type:
 	if type_info == TypeInfo.MetaIMap: return Type.MetaIMap;
 	raise Exception("There is no Type for TypeInfo %s"%(type_info));
 
-def chainpackTypeFromPythonType(t):
-	if t == InvalidValue:  return Type.INVALID,
+def chainpackTypeFromPythonType(v):
+	if isinstance(v, datetime) or (type(v) == tuple and isinstance(v[0], datetime) and isinstance(v[1], int)):
+		return Type.DateTime,
+	t = type(v)
+	if t == InvalidValue:return Type.INVALID,
 	if t == type(None):  return Type.Null,
 	if t == bool:        return Type.Bool,
 	if t == uint:        return Type.UInt,
 	if t == int:         return Type.Int, Type.UInt,
 	if t == float:       return Type.Double,
-	if t == datetime:    return Type.DateTime,
 	if t == str:         return Type.String,
 	if t == list:        return Type.List, Type.Array
 	if t == dict:        return Type.Map, Type.IMap
+	if t in (bytearray, bytes): return Type.Blob,
 	raise ChainpackTypeException("failed deducing chainpack type for python type %s"%t)
 
 class InvalidValue():
@@ -133,6 +136,8 @@ invalid_value = InvalidValue()
 
 class RpcValue():
 	def __init__(s, value, t = None):
+		if isinstance(value, RpcValueArray):
+			raise Exception("must construct RpcValueArray")
 		if type(value) == RpcValue:
 			s._value = value._value
 			s._type = value._type
@@ -158,9 +163,9 @@ class RpcValue():
 				s._value = value
 
 			if t == None:
-				t = chainpackTypeFromPythonType(type(s._value))[0]
+				t = chainpackTypeFromPythonType(s._value)[0]
 			s._type = t
-		if s._type not in chainpackTypeFromPythonType(type(s._value)):
+		if s._type not in chainpackTypeFromPythonType(s._value):
 			raise ChainpackTypeException("python type %s for value %s does not match chainpack type %s" % (type(s._value), s._value, s._type))
 
 	def __eq__(s, x):
@@ -332,7 +337,7 @@ class ChainPackProtocol(bytearray):
 			out.append(t)
 		else:
 			if(value._type == Type.Array):
-				t = typeToTypeInfo(value.arrayType) | ARRAY_FLAG_MASK
+				t = typeToTypeInfo(value.element_type) | ARRAY_FLAG_MASK
 			else:
 				t = typeToTypeInfo(value._type)
 			out.append(t)
@@ -369,8 +374,7 @@ class ChainPackProtocol(bytearray):
 
 	def readData(s, t: TypeInfo, is_array: bool) -> RpcValue:
 		if(is_array):
-			val: list = s.readData_Array(t);
-			return RpcValue(val);
+			return s.readData_Array(t);
 		else:
 			if   t == TypeInfo.Null:     return RpcValue(None)
 			elif t == TypeInfo.UInt:     return RpcValue(s.readData_UInt(), Type.UInt)
@@ -399,7 +403,7 @@ class ChainPackProtocol(bytearray):
 		elif t == Type.String:   s.writeData_String(v)
 		elif t == Type.Blob:     s.write_Blob(v)
 		elif t == Type.List:     s.writeData_List(v)
-		elif t == Type.Array:    s.writeData_Array(v)
+		elif t == Type.Array:    s.writeData_Array(val)
 		elif t == Type.Map:      s.writeData_Map(v)
 		elif t == Type.IMap:     s.writeData_IMap(v)
 		elif t == Type.INVALID:  raise ChainpackTypeException("Internal error: attempt to write invalid type data")
@@ -434,12 +438,12 @@ class ChainPackProtocol(bytearray):
 		assert type(b) in (bytearray, bytes)
 		s.writeData_UInt(len(b))
 		for i in b:
-			s.writeData_UInt(i)
+			s.append(i)
 
 	def read_Blob(s):
 		r = bytearray()
 		for i in range(s.readData_UInt()):
-			r.append(s.readData_UInt())
+			r.append(s.get())
 		return r
 
 	def writeData_String(s, v):
@@ -450,10 +454,20 @@ class ChainPackProtocol(bytearray):
 		return s.read_Blob().decode('utf-8')
 
 	def write_DateTime(s, v):
-		s.writeData_Int(floor(v.timestamp() * 1000))
+		if isinstance(v, datetime):
+			v = (v, 0)
+		utc = floor(v[0].timestamp() * 1000)
+		tz = v[1]
+		s.writeData_Int((utc << 7) | tz)
+		print(((utc << 7) | tz))
 
 	def read_DateTime(s):
-		datetime.utcfromtimestamp(s.readData_Int() / 1000)
+		raw = s.readData_Int()
+		tz = raw & 0b111111
+		if raw & 0b1000000:
+			tz = -tz
+		raw = raw >> 7
+		return datetime.fromtimestamp(raw / 1000), tz
 
 	def readData_IMap(s) -> RpcValue:
 		ret = RpcValue({}, Type.IMap)
@@ -571,10 +585,29 @@ class ChainPackProtocol(bytearray):
 			num = (num << 8) + s.get()
 		return num, bitlen
 
-	def readData_Array(s, item_type_info):
-		#item_type = typeInfoToType(item_type_info)
-		ret = RpcValue([], Type.Array)
+	def readData_Array(s, item_type_info: TypeInfo):
+		item_type: Type = typeInfoToType(item_type_info)
+		ret = RpcValueArray(item_type)
 		size: int = s.readData_UInt()
 		for i in range(size):
-			ret.value.append(s.readData(item_type_info, False))
+			ret._value.append(s.readData(item_type_info, False))
 		return ret
+
+	def writeData_Array(s, array):
+		assert isinstance(array, RpcValueArray)
+		size = len(array._value)
+		s.writeData_UInt(size);
+		for i in array._value:
+			assert i._type == array.element_type
+			s.writeData(i);
+
+class RpcValueArray(RpcValue):
+	def __init__(s, element_type, value = None):
+		s.element_type = element_type
+		if value == None:
+			value = []
+		super().__init__(value, Type.Array)
+
+	def assertEquals(s, x):
+		assert s.element_type == x.element_type
+		super().assertEquals(x)

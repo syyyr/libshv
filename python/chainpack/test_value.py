@@ -122,106 +122,44 @@ def testMeta():
 
 def testBlob():
 	print("------------- Blob")
-	blob = RpcValue(b"blob containing\0zero character")
+	cp1 = RpcValue(b"blob containing\0zero character")
 	out = ChainPackProtocol()
-	l = out.write(blob)
-	RpcValue cp2 = out.read()
-	print(blob, " ", cp1, " ", cp2, " len: ", " dump: ", out)#binary_dump(out.str()).c_str();
+	l = out.write(cp1)
+	cp2 = out.read()
+	print(cp1, " ", cp1, " ", cp2, " len: ", " dump: ", out)#binary_dump(out.str()).c_str();
 	cp1.assertEquals(cp2);
-
+"""
 def testDateTime():
 	print("------------- DateTime")
-	for dt in [
-				datetime(2017,5,3,5, 52,03),
-				datetime(2017,5,3,15,52,03,923),
-				datetime(2017,5,3,15,52,03,0,tzoffset("", +01),
-				datetime(2017,5,3,15,52,03),
-				datetime(2017,5,3,15,52,03,0,tzoffset(-01),
-				datetime(2017,5,3,15,52,03,923)
-				]:
+	a = datetime(2017,5,3,5, 52,3)
+	print (a)
+	for dt in [ (datetime(2017,5,3,5, 52,3), 0),
+				datetime(2017,5,3,15,52,3,923000),
+				(datetime(2017,5,3,15,52,31,0), 10),
+				datetime(2017,5,3,15,52,3),
+				(datetime(2017,5,3,15,52,3,0), -1),
+				datetime(2017,5,3,15,52,3,923000)]:
 					cp1 = RpcValue(dt)
 					out = ChainPackProtocol()
-					int len = out.write(cp1)
+					len = out.write(cp1)
 					cp2 = out.read()
 					print(dt, cp1, cp2, " len: " ,len ," dump: " ,out);
 					cp1.assertEquals(cp2)
-
-
+"""
 def testArray():
 	print("------------- Array")
-	RpcValue::aArray t{RpcValue::Type::Int};
-				t.push_back(RpcValue::ArrayElement(RpcValue::Int(11)));
-				t.push_back(RpcValue::Int(12));
-				t.push_back(RpcValue::Int(13));
-				t.push_back(RpcValue::Int(14));
-				RpcValue cp1{t};
-				std::stringstream out;
-				int len = ChainPackProtocol::write(out, cp1);
-				RpcValue cp2 = ChainPackProtocol::read(out);
-				qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
-				QVERIFY(cp1.type() == cp2.type());
-				QVERIFY(cp1.toList() == cp2.toList());
-			}
-			{
-				static constexpr size_t N = 10;
-				uint16_t samples[N];
-				for (size_t i = 0; i < N; ++i) {
-					samples[i] = i+1;
-				}
-				RpcValue::Array t{samples};
-				RpcValue cp1{t};
-				std::stringstream out;
-				int len = ChainPackProtocol::write(out, cp1);
-				RpcValue cp2 = ChainPackProtocol::read(out);
-				qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
-				QVERIFY(cp1.type() == cp2.type());
-				QVERIFY(cp1.toList() == cp2.toList());
-			}
-			/*
-			{
-				static constexpr size_t N = 10;
-				std::stringstream out;
-				ChainPackProtocol::writeArrayBegin(out, N, RpcValue::Type::String);
-				std::string s("foo-bar");
-				for (size_t i = 0; i < N; ++i) {
-					ChainPackProtocol::writeArrayElement(out, RpcValue(s + shv::core::Utils::toString(i)));
-				}
-				RpcValue cp2 = ChainPackProtocol::read(out);
-				const RpcValue::Array array = cp2.toArray();
-				for (size_t i = 0; i < array.size(); ++i) {
-					QVERIFY(RpcValue(s + shv::core::Utils::toString(i)) == array.valueAt(i));
-				}
-			}
-			*/
-			{
-				static constexpr size_t N = 10;
-				std::stringstream out;
-				ChainPackProtocol::writeArrayBegin(out, RpcValue::Type::Bool, N);
-				bool b = false;
-				for (size_t i = 0; i < N; ++i) {
-					ChainPackProtocol::writeArrayElement(out, RpcValue(b));
-					b = !b;
-				}
-				RpcValue cp2 = ChainPackProtocol::read(out);
-				const RpcValue::Array array = cp2.toArray();
-				b = false;
-				for (size_t i = 0; i < array.size(); ++i) {
-					QVERIFY(RpcValue(b) == array.valueAt(i));
-					b = !b;
-				}
-			}
-			{
-				static constexpr size_t N = 10;
-				std::stringstream out;
-				ChainPackProtocol::writeArrayBegin(out, RpcValue::Type::Null, N);
-				RpcValue cp2 = ChainPackProtocol::read(out);
-				const RpcValue::Array array = cp2.toArray();
-				for (size_t i = 0; i < array.size(); ++i) {
-					QVERIFY(RpcValue(nullptr) == array.valueAt(i));
-				}
-			}
-		}
-
+	cp1 = RpcValueArray(Type.Int)
+	cp1._value.append(RpcValue(11));
+	cp1._value.append(RpcValue(12));
+	cp1._value.append(RpcValue(13));
+	cp1._value.append(RpcValue(14));
+	out = ChainPackProtocol()
+	l: int = out.write(cp1);
+	out2 = ChainPackProtocol(out)
+	cp2 = out2.read();
+	print(cp1, cp2, " len: ", l, " dump: " , out);
+	cp1.assertEquals(cp2);
+	assert(cp1.toPython() == cp2.toPython());
 
 
 
