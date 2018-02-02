@@ -1,6 +1,6 @@
 import enum
 import meta
-from value import *
+from rpcvalue import *
 
 
 class RpcMessage():
@@ -36,7 +36,7 @@ class RpcMessage():
 
 	def setId(s, id: (uint, int)) -> None:
 		s.checkMetaValues();
-		s.checkRpcTypeMetaValue();
+		#s.checkRpcTypeMetaValue();
 		s.setMetaValue(meta.RpcMessage.Tag.RequestId, RpcValue(uint(id)));
 
 	def isValid(s) -> bool:
@@ -89,7 +89,7 @@ class RpcMessage():
 		s.setValue(meta.RpcMessage.Key.Method, RpcValue(met));
 
 	def params(s) -> RpcValue:
-		return value(meta.RpcMessage.Key.Params);
+		return s.value(meta.RpcMessage.Key.Params);
 
 	def setParams(s, p: RpcValue) -> None:
 		s.setRpcValue(meta.RpcMessage.Key.Params, p);
@@ -169,12 +169,12 @@ class RpcResponse(RpcMessage):
 
 	def setError(s, err):
 		s.setValue(meta.RpcMessage.Key.Error, RpcValue(err, Type.IMap));
-		s.checkRpcTypeMetaValue();
+		#s.checkRpcTypeMetaValue();
 
 	def result(s) -> RpcValue:
 		return s.value(meta.RpcMessage.Key.Result);
 
 	def setResult(s, res: RpcValue) -> RpcResponse:
 		s.setValue(meta.RpcMessage.Key.Result, RpcValue(res));
-		s.checkRpcTypeMetaValue();
+		#s.checkRpcTypeMetaValue();
 

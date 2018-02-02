@@ -162,30 +162,28 @@ def testArray():
 	assert(cp1.toPython() == cp2.toPython());
 
 
-
-def encode(x):
+def round_trip(x):
 	print("encoding:",x)
 	r = ChainPackProtocol(x)
 	print("encoded:",r)
-	return r
-
-def decode(blob):
 	v = blob.read()
 	print("decoded:",v)
 	return v
 
-json = recursive(none() | booleans() | floats(allow_nan=False, allow_infinity=False) | integers() | text(),
+
+#hypothesis_test_integers = integers()
+hypothesis_test_integers = integers(-2147483647, 2147483647)
+test_data = recursive(none() | booleans() | floats(allow_nan=False, allow_infinity=False) | hypothesis_test_integers | text(),
 lambda children: lists(children) | dictionaries(text(), children))
 
 with hypothesis.settings(verbosity=hypothesis.Verbosity.verbose):
-
-	@given(json)
+	@given(test_data)
 	def test_decode_inverts_encode(s):
 		print("------------- Hypothesis")
 		s = RpcValue(s)
-		assert decode(encode(s)) == s
+		assert round_trip(s) == s
 
-	@given(dictionaries(integers(min_value=1), json), json)
+	@given(dictionaries(integers(min_value=1), test_data), test_data)
 	def test_decode_inverts_encode2(md, s):
 		print("------------- Hypothesis with meta")
 		s = RpcValue(s)
@@ -195,7 +193,7 @@ with hypothesis.settings(verbosity=hypothesis.Verbosity.verbose):
 					should_fail = True
 			s.setMetaValue(k, v)
 		try:
-			assert decode(encode(s)) == s
+			assert round_trip(s) == s
 		except ChainpackException as e:
 			if not should_fail:
 				raise

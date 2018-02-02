@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from value import *
+from rpcvalue import *
 import logging
 from rpcmessage import *
 
@@ -25,7 +25,7 @@ class RpcDriver():
 
 	def sendMessage(s, msg: RpcValue):
 		chunk = ChainPackProtocol(msg)
-		log("send message: packed data: ",  chunk[:50] + "<... long data ...>" if len(chunk) > 50 else chunk)
+		log("send message: packed data: ",  str(chunk[:50]) + "<... long data ...>" if len(chunk) > 50 else chunk)
 		protocol_version_data = ChainPackProtocol()
 		protocol_version_data.writeData_UInt(s.PROTOCOL_VERSION)
 		packet_len_data = ChainPackProtocol()
@@ -69,7 +69,7 @@ class RpcDriver():
 		if(chunk_len > received_len):
 			return 0;
 		msg: RpcValue = input.read()
-		s.onMessageReceived(msg);
+		s.onMessageReceived(RpcResponse(msg));
 		return initial_len - len(input);
 
 	def sendResponse(s, request_id: int, result: RpcValue):
@@ -81,9 +81,10 @@ class RpcDriver():
 
 	def sendRequest(s, method: str, params: RpcValue):
 		msg = RpcRequest()
+		msg.setId(1)
 		msg.setMethod(method);
 		msg.setParams(params);
-		info("sending request:", method)
+		info("sending request:", msg._value)
 		s.sendMessage(msg._value);
 	"""
 	def sendNotify(s, method: str, result: RpcValue):

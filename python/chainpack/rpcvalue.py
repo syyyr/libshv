@@ -194,15 +194,15 @@ class RpcValue():
 	def __repr__(s):
 		out = ""
 		if len(s._metaData):
-			out += '<@' + str(s._metaData) + '@>'
+			out += '<@meta:' + str(s._metaData) + '@>'
 		out += '<' + s._type._name_ + '>';
 		out += str(type(s._value))
 		out += s._value.__repr__()
 		value_repr = s._value.__repr__()
 		if isinstance(s._value, str):
 			value_repr = '"' + value_repr[1:-1] + '"'
-		#return "RpcValue(" + out  + ")"
-		return value_repr
+		return "RpcValue(" + out  + ")"
+		#return value_repr
 
 	def __len__(s):
 		return len(s._value)

@@ -10,13 +10,13 @@ class RpcMessage():
 	ID = 1
 
 	class Key(enum.IntFlag):
-		Method = 2,
-		Params = 3,
-		Result = 4,
-		Error = 5,
-		ErrorCode = 6,
-		ErrorMessage = 7,
-		MAX = 8
+		Method = 1,
+		Params = 2,
+		Result = 3,
+		Error = 4,
+		ErrorCode = 5,
+		ErrorMessage = 6,
+		MAX = 7
 
 	class Tag(enum.IntFlag):
 		RequestId = Tag.USER,
