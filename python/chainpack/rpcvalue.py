@@ -2,7 +2,7 @@ import struct
 import enum
 import logging_config
 import logging
-from math import floor
+from math import floor, trunc
 from datetime import datetime
 from dateutil.tz import tzoffset
 import meta
@@ -511,9 +511,9 @@ class ChainPackProtocol(bytearray):
 	@staticmethod
 	def bytes_needed(bit_len: int) -> int:
 		if (bit_len <= 28):
-			return (bit_len - 1) // 7 + 1;
+			return trunc((bit_len - 1) / 7) + 1;
 		else:
-			return (bit_len - 1) // 8 + 2;
+			return trunc((bit_len - 1) / 8) + 2;
 
 	@staticmethod
 	def expand_bit_len(bit_len: int):

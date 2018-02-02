@@ -190,7 +190,7 @@ with hypothesis.settings(verbosity=hypothesis.Verbosity.verbose):
 		print("------------- Hypothesis with meta")
 		s = RpcValue(s)
 		for k,v in md.items():
-			if k in [Tag.MetaTypeId, Tag.MetaTypeNameSpaceId]:
+			if k in [meta.Tag.MetaTypeId, meta.Tag.MetaTypeNameSpaceId]:
 				if (type(v) != int) or (v < 0):
 					should_fail = True
 			s.setMetaValue(k, v)
