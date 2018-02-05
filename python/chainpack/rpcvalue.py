@@ -245,11 +245,6 @@ class RpcValue():
 		s._metaData[tag] = value
 
 
-def optimizedMetaTagType(tag: meta.Tag) -> TypeInfo:
-	if tag == meta.Tag.MetaTypeId: return TypeInfo.META_TYPE_ID;
-	if tag == meta.Tag.MetaTypeNameSpaceId: return TypeInfo.META_TYPE_NAMESPACE_ID;
-	return TypeInfo.INVALID;
-
 def optimizeRpcValueIntoType(pack: RpcValue) -> int:
 		if (not pack.isValid()):
 			raise ChainpackTypeException("Cannot serialize invalid ChainPack.");
