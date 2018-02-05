@@ -100,7 +100,6 @@ public:
 	virtual RpcValue::UInt toUInt() const {return 0;}
 	virtual bool toBool() const {return false;}
 	virtual RpcValue::DateTime toDateTime() const { return RpcValue::DateTime{}; }
-	virtual RpcValue::DateTimeUtc toDateTimeUtc() const { return RpcValue::DateTimeUtc{}; }
 	virtual const std::string &toString() const;
 	virtual const RpcValue::Blob &toBlob() const;
 	virtual const RpcValue::List &toList() const;
@@ -226,22 +225,9 @@ class ChainPackDateTime final : public ValueData<RpcValue::Type::DateTime, RpcVa
 	RpcValue::Int toInt() const override { return m_value.msecsSinceEpoch(); }
 	RpcValue::UInt toUInt() const override { return m_value.msecsSinceEpoch(); }
 	RpcValue::DateTime toDateTime() const override { return m_value; }
-	RpcValue::DateTimeUtc toDateTimeUtc() const override { return RpcValue::DateTimeUtc::fromMSecsSinceEpoch(m_value.msecsSinceEpoch()); }
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value.msecsSinceEpoch() == other->toDateTime().msecsSinceEpoch(); }
 public:
 	explicit ChainPackDateTime(RpcValue::DateTime value) : ValueData(value) {}
-};
-
-class ChainPackDateTimeUtc final : public ValueData<RpcValue::Type::DateTimeUtc, RpcValue::DateTimeUtc>
-{
-	bool toBool() const override { return m_value.msecsSinceEpoch() != 0; }
-	RpcValue::Int toInt() const override { return m_value.msecsSinceEpoch(); }
-	RpcValue::UInt toUInt() const override { return m_value.msecsSinceEpoch(); }
-	RpcValue::DateTime toDateTime() const override { return RpcValue::DateTime::fromMSecsSinceEpoch(m_value.msecsSinceEpoch()); }
-	RpcValue::DateTimeUtc toDateTimeUtc() const override { return m_value; }
-	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value.msecsSinceEpoch() == other->toDateTime().msecsSinceEpoch(); }
-public:
-	explicit ChainPackDateTimeUtc(RpcValue::DateTimeUtc value) : ValueData(value) {}
 };
 
 class ChainPackString : public ValueData<RpcValue::Type::String, RpcValue::String>
@@ -403,7 +389,6 @@ RpcValue::RpcValue(Int value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
 RpcValue::RpcValue(UInt value) : m_ptr(std::make_shared<ChainPackUInt>(value)) {}
 RpcValue::RpcValue(bool value) : m_ptr(value ? statics().t : statics().f) {}
 RpcValue::RpcValue(const DateTime &value) : m_ptr(std::make_shared<ChainPackDateTime>(value)) {}
-RpcValue::RpcValue(const RpcValue::DateTimeUtc &value) : m_ptr(std::make_shared<ChainPackDateTimeUtc>(value)) {}
 
 RpcValue::RpcValue(const RpcValue::Blob &value) : m_ptr(std::make_shared<ChainPackBlob>(value)) {}
 RpcValue::RpcValue(RpcValue::Blob &&value) : m_ptr(std::make_shared<ChainPackBlob>(std::move(value))) {}
@@ -501,7 +486,6 @@ RpcValue::Int RpcValue::toInt() const { return m_ptr? m_ptr->toInt(): 0; }
 RpcValue::UInt RpcValue::toUInt() const { return m_ptr? m_ptr->toUInt(): 0; }
 bool RpcValue::toBool() const { return m_ptr? m_ptr->toBool(): false; }
 RpcValue::DateTime RpcValue::toDateTime() const { return m_ptr? m_ptr->toDateTime(): RpcValue::DateTime{}; }
-RpcValue::DateTimeUtc RpcValue::toDateTimeUtc() const { return m_ptr? m_ptr->toDateTimeUtc(): RpcValue::DateTimeUtc{}; }
 
 const std::string & RpcValue::toString() const { return m_ptr? m_ptr->toString(): static_empty_string(); }
 const RpcValue::Blob &RpcValue::toBlob() const { return m_ptr? m_ptr->toBlob(): static_empty_blob(); }
@@ -644,7 +628,6 @@ const char *RpcValue::typeToName(RpcValue::Type t)
 	case Type::Map: return "Map";
 	case Type::IMap: return "IMap";
 	case Type::DateTime: return "DateTime";
-	case Type::DateTimeUtc: return "DateTimeUtc";
 	case Type::MetaIMap: return "MetaIMap";
 	case Type::Decimal: return "Decimal";
 	}
@@ -900,7 +883,7 @@ std::string RpcValue::DateTime::toUtcString() const
 	std::string ret(buffer);
 	int msecs = m_dtm.msec % 1000;
 	if(msecs > 0)
-		ret += '.' + Utils::toString(msecs % 1000);
+		ret += '.' + Utils::toString(msecs % 1000, 3);
 	if(m_dtm.tz == 0) {
 		ret += 'Z';
 	}
@@ -912,18 +895,9 @@ std::string RpcValue::DateTime::toUtcString() const
 			min /= 60;
 			len = 2;
 		}
-		std::string tz = Utils::toString(min);
-		while(tz.length() < len)
-			tz = '0' + tz;
+		std::string tz = Utils::toString(min, len);
 		ret += ((m_dtm.tz < 0)? '-': '+') + tz;
 	}
-	return ret;
-}
-
-RpcValue::DateTimeUtc RpcValue::DateTimeUtc::fromMSecsSinceEpoch(int64_t msecs)
-{
-	RpcValue::DateTimeUtc ret;
-	ret.m_msec = msecs;
 	return ret;
 }
 

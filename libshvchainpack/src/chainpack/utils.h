@@ -24,15 +24,18 @@ public:
 	static std::string fromHex(const std::string &bytes);
 
 	template<typename T>
-	static std::string toString(T i)
+	static std::string toString(T i, size_t prepend_0s_to_len = 0)
 	{
 #ifdef LIBC_NEWLIB
 		std::ostringstream ss;
 		ss << i;
-		return ss.str();
+		std::string ret = ss.str();
 #else
-		return std::to_string(i); //not supported by newlib
+		std::string ret = std::to_string(i); //not supported by newlib
 #endif
+		while(ret.size() < prepend_0s_to_len)
+			ret = '0' + ret;
+		return ret;
 	}
 };
 
