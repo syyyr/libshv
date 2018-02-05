@@ -888,14 +888,14 @@ std::string RpcValue::DateTime::toUtcString() const
 		ret += 'Z';
 	}
 	else {
-		int min = (m_dtm.tz < 0)? -m_dtm.tz: m_dtm.tz;
-		min *= 15;
-		size_t len = 4;
-		if(min % 60 == 0) {
-			min /= 60;
-			len = 2;
-		}
-		std::string tz = Utils::toString(min, len);
+		int min = offsetFromUtc();
+		if(min < 0)
+			min = -min;
+		int hour = min / 60;
+		min = min % 60;
+		std::string tz = Utils::toString(hour, 2);
+		if(min != 0)
+			tz += Utils::toString(min, 2);
 		ret += ((m_dtm.tz < 0)? '-': '+') + tz;
 	}
 	return ret;

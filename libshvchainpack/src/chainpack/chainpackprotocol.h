@@ -29,8 +29,7 @@ public: // public just because of testing, normal user do not need to use this e
 			IMap,
 			MetaIMap,
 			Decimal,
-			DateTimeUtc,
-			DateTimeTZ,
+			DateTime,
 			/// arrays
 			/*
 			Null_Array = Null | ARRAY_FLAG_MASK, // if bit 6 is set, then packed value is an Array of corresponding values
@@ -73,7 +72,6 @@ public:
 	static void writeArrayBegin(std::ostream &out, const RpcValue::Type &array_type, size_t array_size);
 	static void writeArrayElement(std::ostream &out, const RpcValue &val) {	writeData(out, val); }
 private:
-	static TypeInfo::Enum typeToTypeInfo(const RpcValue &val);
 	static TypeInfo::Enum typeToTypeInfo(RpcValue::Type tid);
 	static RpcValue::Type typeInfoToType(TypeInfo::Enum type_info);
 

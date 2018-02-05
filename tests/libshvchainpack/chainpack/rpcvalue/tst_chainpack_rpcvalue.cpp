@@ -282,7 +282,7 @@ private:
 	void binaryTest()
 	{
 		qDebug() << "============= chainpack binary test ============";
-		for (int i = ChainPackProtocol::TypeInfo::Null; i <= ChainPackProtocol::TypeInfo::DateTimeTZ; ++i) {
+		for (int i = ChainPackProtocol::TypeInfo::Null; i <= ChainPackProtocol::TypeInfo::DateTime; ++i) {
 			RpcValue::Blob out;
 			out += i;
 			ChainPackProtocol::TypeInfo::Enum e = (ChainPackProtocol::TypeInfo::Enum)i;
@@ -485,6 +485,9 @@ private:
 				"2019-01-01 0:00:00",
 				"2020-01-01 0:00:00",
 				"2021-01-01 0:00:00",
+				"2031-01-01 0:00:00",
+				"2041-01-01 0:00:00",
+				"2041-01-01 0:00:00-1115",
 				"1970-01-01 0:00:00",
 				"2017-05-03 5:52:03",
 				"2017-05-03T15:52:03.923Z",
@@ -497,10 +500,13 @@ private:
 				RpcValue cp1{dt};
 				std::stringstream out;
 				int len = ChainPackProtocol::write(out, cp1);
+				std::string pack = out.str();
 				RpcValue cp2 = ChainPackProtocol::read(out);
-				qDebug() << str << " " << dt.toUtcString().c_str() << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+				qDebug() << str << " " << dt.toUtcString().c_str() << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(pack);
+				//qDebug() << cp1.toDateTime().msecsSinceEpoch() << cp1.toDateTime().offsetFromUtc();
+				//qDebug() << cp2.toDateTime().msecsSinceEpoch() << cp2.toDateTime().offsetFromUtc();
 				QVERIFY(cp1.type() == cp2.type());
-				QVERIFY(cp1.toInt() == cp2.toInt());
+				QVERIFY(cp1.toDateTime() == cp2.toDateTime());
 			}
 		}
 		{

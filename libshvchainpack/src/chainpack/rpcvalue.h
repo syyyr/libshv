@@ -94,6 +94,8 @@ public:
 
 		std::string toLocalString() const;
 		std::string toUtcString() const;
+
+		bool operator ==(const DateTime &o) const {return m_dtm.msec == o.m_dtm.msec && m_dtm.tz == o.m_dtm.tz;}
 	private:
 		//static constexpr int8_t TZ_INVALID = -128;
 		struct MsTz {
