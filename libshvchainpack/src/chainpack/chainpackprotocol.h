@@ -23,13 +23,14 @@ public: // public just because of testing, normal user do not need to use this e
 			Bool,
 			Blob,
 			String,
-			DateTimeEpoch,
+			DateTimeEpoch, // deprecated
 			List,
 			Map,
 			IMap,
 			MetaIMap,
 			Decimal,
-			DateTime,
+			DateTimeUtc,
+			DateTimeTZ,
 			/// arrays
 			Null_Array = Null | ARRAY_FLAG_MASK, // if bit 6 is set, then packed value is an Array of corresponding values
 			UInt_Array = UInt | ARRAY_FLAG_MASK,
@@ -44,7 +45,8 @@ public: // public just because of testing, normal user do not need to use this e
 			IMap_Array = IMap | ARRAY_FLAG_MASK,
 			MetaIMap_Array = MetaIMap | ARRAY_FLAG_MASK,
 			Decimal_Array = Decimal | ARRAY_FLAG_MASK,
-			DateTime_Array = DateTime | ARRAY_FLAG_MASK,
+			DateTimeUTC_Array = DateTimeTZ | ARRAY_FLAG_MASK, // not used, DateTimeTZ_Array is used allways for DateTime arrays
+			DateTimeTZ_Array = DateTimeTZ | ARRAY_FLAG_MASK,
 			FALSE = 253,
 			TRUE = 254,
 			TERM = 255,

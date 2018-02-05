@@ -72,7 +72,7 @@ private:
 									0.123,
 									123.456n,
 									x"48656c6c6f",
-									d"2018-01-14T01:17:33.256-11"
+									d"2018-01-14T01:17:33.256-1045"
 									]
 								)";
 			const auto cp = RpcValue::parseCpon(test, &err);
@@ -89,7 +89,7 @@ private:
 			QVERIFY(cp[8] == RpcValue::Blob("Hello"));
 			RpcValue::DateTime dt = cp[9].toDateTime();
 			QVERIFY(dt.msecsSinceEpoch() % 1000 == 256);
-			QVERIFY(dt.offsetFromUtc() == -11);
+			QVERIFY(dt.offsetFromUtc() == -(10*60+45));
 		}
 		{
 			string err;
@@ -476,11 +476,19 @@ private:
 		{
 			qDebug() << "------------- DateTime";
 			for(std::string str : {
+				"2018-02-02 0:00:00",
+				"2018-02-02 01:00:00+01",
+				"2018-12-02 0:00:00",
+				"2018-01-01 0:00:00",
+				"2019-01-01 0:00:00",
+				"2020-01-01 0:00:00",
+				"2021-01-01 0:00:00",
+				"1970-01-01 0:00:00",
 				"2017-05-03 5:52:03",
 				"2017-05-03T15:52:03.923Z",
 				"2017-05-03T15:52:31.123+10",
 				"2017-05-03T15:52:03Z",
-				"2017-05-03T15:52:03.000-01",
+				"2017-05-03T15:52:03.000-0130",
 				"2017-05-03T15:52:03.923+00",
 			}) {
 				RpcValue::DateTime dt = RpcValue::DateTime::fromUtcString(str);

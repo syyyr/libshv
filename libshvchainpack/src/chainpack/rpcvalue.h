@@ -34,6 +34,7 @@ public:
 		Bool,
 		Blob,
 		String,
+		DateTimeUtc,
 		DateTime,
 		List,
 		Array,
@@ -97,22 +98,42 @@ public:
 	class SHVCHAINPACK_DECL_EXPORT DateTime
 	{
 	public:
+		// UTC msec since 2.2. 2018 folowed by signed UTC offset in 1/4 hour
+		// Fri Feb 02 2018 00:00:00 == 1517529600 EPOCH
+		static constexpr int64_t SHV_EPOCH_MSEC = 1517529600000;
+	public:
 		DateTime() {}
 		int64_t msecsSinceEpoch() const { return m_dtm.msec; }
-		int8_t offsetFromUtc() const { return m_dtm.tz; }
+		int offsetFromUtc() const { return m_dtm.tz * 15; }
+		//bool isTZSet() const { return m_dtm.tz == TZ_INVALID; }
 
 		static DateTime fromLocalString(const std::string &local_date_time_str);
 		static DateTime fromUtcString(const std::string &utc_date_time_str);
-		static DateTime fromMSecsSinceEpoch(int64_t msecs, int8_t utc_offset = 0);
+		static DateTime fromMSecsSinceEpoch(int64_t msecs, int utc_offset_min = 0);
 
 		std::string toLocalString() const;
 		std::string toUtcString() const;
 	private:
-		// UTC msec since epoch folowed by signed UTC offset <-16, +15>
+		//static constexpr int8_t TZ_INVALID = -128;
 		struct MsTz {
-			int64_t msec: 59, tz: 5;
+			int64_t tz: 7, msec: 57;
 		};
 		MsTz m_dtm = {0, 0};
+	};
+	class SHVCHAINPACK_DECL_EXPORT DateTimeUtc
+	{
+	public:
+		DateTimeUtc() {}
+		int64_t msecsSinceEpoch() const { return m_msec; }
+
+		static DateTimeUtc fromLocalString(const std::string &local_date_time_str) {return DateTimeUtc::fromMSecsSinceEpoch(DateTime::fromLocalString(local_date_time_str).msecsSinceEpoch());}
+		static DateTimeUtc fromUtcString(const std::string &utc_date_time_str) {return DateTimeUtc::fromMSecsSinceEpoch(DateTime::fromUtcString(utc_date_time_str).msecsSinceEpoch());}
+		static DateTimeUtc fromMSecsSinceEpoch(int64_t msecs);
+
+		std::string toLocalString() const {return DateTime::fromMSecsSinceEpoch(msecsSinceEpoch()).toLocalString();}
+		std::string toUtcString() const{return DateTime::fromMSecsSinceEpoch(msecsSinceEpoch()).toUtcString();}
+	private:
+		int64_t m_msec = 0;
 	};
 	using String = std::string;
 	struct SHVCHAINPACK_DECL_EXPORT Blob : public std::basic_string<uint8_t>
@@ -251,6 +272,7 @@ public:
 	RpcValue(double value);             // Double
 	RpcValue(Decimal value);             // Decimal
 	RpcValue(const DateTime &value);
+	RpcValue(const DateTimeUtc &value);
 	RpcValue(const Blob &value); // Blob
 	RpcValue(Blob &&value);
 	RpcValue(const uint8_t *value, size_t size);
@@ -303,6 +325,7 @@ public:
 	bool isNull() const { return type() == Type::Null; }
 	bool isInt() const { return type() == Type::Int; }
 	bool isDateTime() const { return type() == Type::DateTime; }
+	bool isDateTimeUtc() const { return type() == Type::DateTimeUtc; }
 	bool isUInt() const { return type() == Type::UInt; }
 	bool isDouble() const { return type() == Type::Double; }
 	bool isBool() const { return type() == Type::Bool; }
@@ -318,6 +341,7 @@ public:
 	UInt toUInt() const;
 	bool toBool() const;
 	DateTime toDateTime() const;
+	DateTimeUtc toDateTimeUtc() const;
 	const RpcValue::String &toString() const;
 	const Blob &toBlob() const;
 	const List &toList() const;
