@@ -246,13 +246,18 @@ void writeData_DateTime(std::ostream &out, const RpcValue::DateTime &dt)
 {
 	int64_t msecs = dt.msecsSinceEpoch() - RpcValue::DateTime::SHV_EPOCH_MSEC;
 	int offset = (dt.offsetFromUtc() / 15) & 0b01111111;
-	if(offset == 0) {
-		msecs <<= 1;
+	int ms = msecs % 1000;
+	if(ms == 0)
+		msecs /= 1000;
+	if(offset != 0) {
+		msecs <<= 7;
+		msecs |= offset;
 	}
-	else {
-		msecs <<= 8;
-		msecs |= (offset << 1) | 1;
-	}
+	msecs <<= 2;
+	if(offset != 0)
+		msecs |= 1;
+	if(ms == 0)
+		msecs |= 2;
 	writeData_Int(out, msecs);
 }
 
@@ -266,13 +271,17 @@ RpcValue::DateTime readData_DateTime(std::istream &data)
 {
 	int64_t d = readData_Int<int64_t>(data);
 	int8_t offset = 0;
-	if(d & 1) {
-		offset = (d % 256) >> 1;
-		d >>= 8;
+	bool has_tz_offset = d & 1;
+	bool has_not_msec = d & 2;
+	d >>= 2;
+	if(has_tz_offset) {
+		offset = d & 0b01111111;
+		offset <<= 1;
+		offset >>= 1;
+		d >>= 7;
 	}
-	else {
-		d >>= 1;
-	}
+	if(has_not_msec)
+		d *= 1000;
 	d += RpcValue::DateTime::SHV_EPOCH_MSEC;
 	RpcValue::DateTime dt = RpcValue::DateTime::fromMSecsSinceEpoch(d, offset * (int)15);
 	return dt;
