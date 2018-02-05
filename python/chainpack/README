@@ -1,0 +1,5 @@
+requires python3.6
+
+testing dependencies:
+python3.6 -m pip install --user hypothesis-pytest hypothesis-datetime pytest mypy
+
