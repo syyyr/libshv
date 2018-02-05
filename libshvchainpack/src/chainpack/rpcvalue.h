@@ -34,7 +34,6 @@ public:
 		Bool,
 		Blob,
 		String,
-		DateTimeUtc,
 		DateTime,
 		List,
 		Array,
@@ -77,24 +76,6 @@ public:
 		bool isValid() const {return !(mantisa() == 0 && precision() != 0);}
 		std::string toString() const;
 	};
-	/// DateTimeEpoch is deprecated
-	/*
-	class SHVCHAINPACK_DECL_EXPORT DateTimeEpoch
-	{
-	public:
-		DateTimeEpoch() {}
-		int64_t msecsSinceEpoch() const { return m_msecs; }
-
-		static DateTimeEpoch fromLocalString(const std::string &local_date_time_str);
-		static DateTimeEpoch fromUtcString(const std::string &utc_date_time_str);
-		static DateTimeEpoch fromMSecsSinceEpoch(int64_t m_msecs);
-
-		std::string toLocalString() const;
-		std::string toUtcString() const;
-	private:
-		int64_t m_msecs = 0;
-	};
-	*/
 	class SHVCHAINPACK_DECL_EXPORT DateTime
 	{
 	public:
@@ -119,21 +100,6 @@ public:
 			int64_t tz: 7, msec: 57;
 		};
 		MsTz m_dtm = {0, 0};
-	};
-	class SHVCHAINPACK_DECL_EXPORT DateTimeUtc
-	{
-	public:
-		DateTimeUtc() {}
-		int64_t msecsSinceEpoch() const { return m_msec; }
-
-		static DateTimeUtc fromLocalString(const std::string &local_date_time_str) {return DateTimeUtc::fromMSecsSinceEpoch(DateTime::fromLocalString(local_date_time_str).msecsSinceEpoch());}
-		static DateTimeUtc fromUtcString(const std::string &utc_date_time_str) {return DateTimeUtc::fromMSecsSinceEpoch(DateTime::fromUtcString(utc_date_time_str).msecsSinceEpoch());}
-		static DateTimeUtc fromMSecsSinceEpoch(int64_t msecs);
-
-		std::string toLocalString() const {return DateTime::fromMSecsSinceEpoch(msecsSinceEpoch()).toLocalString();}
-		std::string toUtcString() const{return DateTime::fromMSecsSinceEpoch(msecsSinceEpoch()).toUtcString();}
-	private:
-		int64_t m_msec = 0;
 	};
 	using String = std::string;
 	struct SHVCHAINPACK_DECL_EXPORT Blob : public std::basic_string<uint8_t>
@@ -272,7 +238,6 @@ public:
 	RpcValue(double value);             // Double
 	RpcValue(Decimal value);             // Decimal
 	RpcValue(const DateTime &value);
-	RpcValue(const DateTimeUtc &value);
 	RpcValue(const Blob &value); // Blob
 	RpcValue(Blob &&value);
 	RpcValue(const uint8_t *value, size_t size);
@@ -325,7 +290,6 @@ public:
 	bool isNull() const { return type() == Type::Null; }
 	bool isInt() const { return type() == Type::Int; }
 	bool isDateTime() const { return type() == Type::DateTime; }
-	bool isDateTimeUtc() const { return type() == Type::DateTimeUtc; }
 	bool isUInt() const { return type() == Type::UInt; }
 	bool isDouble() const { return type() == Type::Double; }
 	bool isBool() const { return type() == Type::Bool; }
@@ -341,7 +305,6 @@ public:
 	UInt toUInt() const;
 	bool toBool() const;
 	DateTime toDateTime() const;
-	DateTimeUtc toDateTimeUtc() const;
 	const RpcValue::String &toString() const;
 	const Blob &toBlob() const;
 	const List &toList() const;

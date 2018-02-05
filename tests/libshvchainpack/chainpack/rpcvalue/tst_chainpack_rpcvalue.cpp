@@ -282,7 +282,7 @@ private:
 	void binaryTest()
 	{
 		qDebug() << "============= chainpack binary test ============";
-		for (int i = ChainPackProtocol::TypeInfo::Null; i <= ChainPackProtocol::TypeInfo::MetaIMap; ++i) {
+		for (int i = ChainPackProtocol::TypeInfo::Null; i <= ChainPackProtocol::TypeInfo::DateTimeTZ; ++i) {
 			RpcValue::Blob out;
 			out += i;
 			ChainPackProtocol::TypeInfo::Enum e = (ChainPackProtocol::TypeInfo::Enum)i;
@@ -290,7 +290,8 @@ private:
 			str << std::setw(3) << i << " " << std::hex << i << " " << binary_dump(out).c_str() << " "  << ChainPackProtocol::TypeInfo::name(e);
 			qDebug() << str.str();
 		}
-		for (int i = ChainPackProtocol::TypeInfo::Null_Array; i <= ChainPackProtocol::TypeInfo::MetaIMap_Array; ++i) {
+		/*
+		for (int i = ChainPackProtocol::TypeInfo::Null_Array; i <= ChainPackProtocol::TypeInfo::DateTimeTZ_Array; ++i) {
 			RpcValue::Blob out;
 			out += i;
 			ChainPackProtocol::TypeInfo::Enum e = (ChainPackProtocol::TypeInfo::Enum)i;
@@ -298,6 +299,7 @@ private:
 			str << std::setw(3) << i << " " << std::hex << i << " " << binary_dump(out).c_str() << " "  << ChainPackProtocol::TypeInfo::name(e);
 			qDebug() << str.str();
 		}
+		*/
 		for (int i = ChainPackProtocol::TypeInfo::FALSE; i <= ChainPackProtocol::TypeInfo::TERM; ++i) {
 			RpcValue::Blob out;
 			out += i;
@@ -476,8 +478,8 @@ private:
 		{
 			qDebug() << "------------- DateTime";
 			for(std::string str : {
-				"2018-02-02 0:00:00",
-				"2018-02-02 01:00:00+01",
+				"2018-02-02 0:00:00.001",
+				"2018-02-02 01:00:00.001+01",
 				"2018-12-02 0:00:00",
 				"2018-01-01 0:00:00",
 				"2019-01-01 0:00:00",
