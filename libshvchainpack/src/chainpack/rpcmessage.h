@@ -56,10 +56,10 @@ public:
 	static RpcValue::String method(const RpcValue::MetaData &meta);
 	RpcValue::String method() const;
 
-	static RpcValue shvPath(const RpcValue::MetaData &meta);
-	static void setShvPath(RpcValue::MetaData &meta, const RpcValue &path);
-	RpcValue shvPath() const;
-	void setShvPath(const RpcValue &path);
+	static RpcValue::String shvPath(const RpcValue::MetaData &meta);
+	static void setShvPath(RpcValue::MetaData &meta, const RpcValue::String &path);
+	RpcValue::String shvPath() const;
+	void setShvPath(const RpcValue::String &path);
 
 	static RpcValue::UInt callerId(const RpcValue::MetaData &meta);
 	static void setCallerId(RpcValue::MetaData &meta, RpcValue::UInt id);

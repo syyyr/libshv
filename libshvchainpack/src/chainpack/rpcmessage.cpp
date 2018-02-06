@@ -152,22 +152,22 @@ void RpcMessage::setRequestId(RpcValue::MetaData &meta, RpcValue::UInt id)
 	meta.setValue(meta::RpcMessage::Tag::RequestId, id);
 }
 
-RpcValue RpcMessage::shvPath(const RpcValue::MetaData &meta)
+RpcValue::String RpcMessage::shvPath(const RpcValue::MetaData &meta)
 {
-	return meta.value(meta::RpcMessage::Tag::ShvPath);
+	return meta.value(meta::RpcMessage::Tag::ShvPath).toString();
 }
 
-void RpcMessage::setShvPath(RpcValue::MetaData &meta, const RpcValue &path)
+void RpcMessage::setShvPath(RpcValue::MetaData &meta, const RpcValue::String &path)
 {
 	meta.setValue(meta::RpcMessage::Tag::ShvPath, path);
 }
 
-RpcValue RpcMessage::shvPath() const
+RpcValue::String RpcMessage::shvPath() const
 {
-	return metaValue(meta::RpcMessage::Tag::ShvPath);
+	return metaValue(meta::RpcMessage::Tag::ShvPath).toString();
 }
 
-void RpcMessage::setShvPath(const RpcValue &path)
+void RpcMessage::setShvPath(const RpcValue::String &path)
 {
 	setMetaValue(meta::RpcMessage::Tag::ShvPath, path);
 }
