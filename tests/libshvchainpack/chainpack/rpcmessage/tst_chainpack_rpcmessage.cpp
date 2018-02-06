@@ -125,7 +125,7 @@ private:
 							   {"b", "bar"},
 							   {"c", RpcValue::List{1,2,3}},
 						   }});
-		qDebug() << rq.toStdString();
+		qDebug() << rq.toCpon();
 		QVERIFY(rq.isNotify());
 		std::stringstream out;
 		RpcValue cp1 = rq.value();

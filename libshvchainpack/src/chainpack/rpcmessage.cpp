@@ -246,9 +246,9 @@ void RpcMessage::checkRpcTypeMetaValue()
 	setMetaValue(meta::RpcMessage::Tag::RpcCallType, rpc_type);
 }
 */
-std::string RpcMessage::toStdString() const
+std::string RpcMessage::toCpon() const
 {
-	return m_value.toStdString();
+	return m_value.toCpon();
 }
 
 //==================================================================

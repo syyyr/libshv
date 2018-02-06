@@ -158,8 +158,8 @@ void RpcDriver:: sendRequestQuasiSync(const shv::chainpack::RpcRequest &request,
 			shvWarning() << "Attempt to send RPC request with ID not set, message will be ignored";
 			break;
 		}
-		smcDebug() << "sending message:" << request.toStdString();
-		logRpcSyncCalls() << SND_LOG_ARROW << "SEND SYNC message id:" << msg_id << "msg:" << request.toStdString();
+		smcDebug() << "sending message:" << request.toCpon();
+		logRpcSyncCalls() << SND_LOG_ARROW << "SEND SYNC message id:" << msg_id << "msg:" << request.toCpon();
 		sendMessage(request.value());
 		QElapsedTimer tm_elapsed;
 		tm_elapsed.start();
@@ -180,7 +180,7 @@ void RpcDriver:: sendRequestQuasiSync(const shv::chainpack::RpcRequest &request,
 				//logRpcSyncCalls() << "<=== RECEIVE NOTIFY while waiting for SYNC response:" << msg.jsonRpcMessage().toString();
 			}
 			else {
-				logRpcSyncCalls() << "RECV other message while waiting for SYNC response id:" << msg.requestId() << "json:" << msg.toStdString();
+				logRpcSyncCalls() << "RECV other message while waiting for SYNC response id:" << msg.requestId() << "json:" << msg.toCpon();
 			}
 		});
 		ConnectionScope cscp(lambda_connection);
@@ -190,7 +190,7 @@ void RpcDriver:: sendRequestQuasiSync(const shv::chainpack::RpcRequest &request,
 		smcDebug() << "\t entering event loop ..." << &eloop;
 		eloop.exec();
 		smcDebug() << "\t event loop" << &eloop << "exec exit, message received:" << resp_msg.isValid();
-		logRpcSyncCalls() << RCV_LOG_ARROW << "RECV SYNC message id:" << resp_msg.requestId() << "msg:" << resp_msg.toStdString();
+		logRpcSyncCalls() << RCV_LOG_ARROW << "RECV SYNC message id:" << resp_msg.requestId() << "msg:" << resp_msg.toCpon();
 		int elapsed = (int)tm_elapsed.elapsed();
 		if(elapsed >= time_out_ms) {
 			cp::RpcValue::String err_msg = "Receive message timeout after: " + std::to_string(elapsed) + " msec!";

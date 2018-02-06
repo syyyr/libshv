@@ -190,7 +190,7 @@ void SocketRpcDriver::sendResponse(int request_id, const cp::RpcValue &result)
 	cp::RpcResponse resp;
 	resp.setRequestId(request_id);
 	resp.setResult(result);
-	nInfo() << "sending response:" << resp.toStdString();
+	nInfo() << "sending response:" << resp.toCpon();
 	sendMessage(resp.value());
 }
 

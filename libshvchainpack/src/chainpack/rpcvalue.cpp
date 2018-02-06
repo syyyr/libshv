@@ -599,6 +599,7 @@ bool ChainPack::operator< (const ChainPack &other) const
 RpcValue RpcValue::parseCpon(const std::string &in, std::string *err)
 {
 	if(err) {
+		err->clear();
 		try {
 			return CponProtocol::read(in);
 		}
