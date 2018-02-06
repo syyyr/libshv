@@ -58,8 +58,16 @@ private:
 	void textTest()
 	{
 		qDebug() << "============= chainpack text test ============";
+		qDebug() << "--------------- List test";
 		{
-			qDebug() << "--------------- List test";
+			string err;
+			for(auto test : {"[]", "[ ]", " [ ]", "[ 1, 2,3  , ]"}) {
+				const RpcValue cp = RpcValue::parseCpon(test, &err);
+				qDebug() << test << "--->" << cp.toCpon();
+				QVERIFY(err.empty());
+			}
+		}
+		{
 			string err;
 			const string test = R"(
 								[
@@ -90,6 +98,31 @@ private:
 			RpcValue::DateTime dt = cp[9].toDateTime();
 			QVERIFY(dt.msecsSinceEpoch() % 1000 == 256);
 			QVERIFY(dt.offsetFromUtc() == -(10*60+45));
+
+		}
+		{
+			string err;
+			for(auto test : {"{}", "{ }", " { }", R"({ "1": 2,"3": 45  , })"}) {
+				const RpcValue cp = RpcValue::parseCpon(test, &err);
+				qDebug() << test << "--->" << cp.toCpon();
+				QVERIFY(err.empty());
+			}
+		}
+		{
+			string err;
+			for(auto test : {"i{}", "i{ }", " i{ }", "i{ 1: 2,3: 45  , }"}) {
+				const RpcValue cp = RpcValue::parseCpon(test, &err);
+				qDebug() << test << "--->" << cp.toCpon();
+				QVERIFY(err.empty());
+			}
+		}
+		{
+			string err;
+			for(auto test : {"a[]", "a[ ]", " a[ ]", "a[ 1, 2,3  , ]"}) {
+				const RpcValue cp = RpcValue::parseCpon(test, &err);
+				qDebug() << test << "--->" << cp.toCpon();
+				QVERIFY(err.empty());
+			}
 		}
 		{
 			string err;
@@ -111,6 +144,14 @@ private:
 			const auto json = RpcValue::parseCpon(imap_test, &err);
 			QVERIFY(err.empty());
 			qDebug() << "imap_test: " << json.toCpon().c_str();
+		}
+
+		qDebug() << "--------------- Map test";
+		{
+			string err;
+			const string test = "{}";
+			const auto cp = RpcValue::parseCpon(test, &err);
+			QVERIFY(cp == RpcValue::Map());
 		}
 
 		const string simple_test = R"({"k1":"v1", "k2":42, "k3":["a",123,true,false,null]})";

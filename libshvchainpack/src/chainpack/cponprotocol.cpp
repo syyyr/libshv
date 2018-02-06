@@ -218,12 +218,8 @@ bool CponProtocol::parseMetaData(RpcValue::MetaData &meta_data)
 	if(ch != '<')
 		return false;
 	ch = nextValidChar();
-	RpcValue::IMap im = parseIMapContent();
-	ch = skipGarbage();
-	if(ch != '>')
-		PARSE_EXCEPTION("closing MetaData '>' missing");
+	RpcValue::IMap im = parseIMapContent('>');
 	meta_data = RpcValue::MetaData(std::move(im));
-	m_pos++;
 	return true;
 }
 
@@ -381,23 +377,20 @@ bool CponProtocol::parseList(RpcValue &val)
 	char ch = currentChar();
 	if (ch != '[')
 		return false;
-	nextValidChar();
+	ch = nextValidChar();
 	RpcValue::List lst;
 	while (true) {
+		if (ch == ']')
+			break;
 		lst.push_back(parseAtPos());
 		ch = skipGarbage();
-		if (ch == ',') {
-			nextValidChar();
-			continue;
-		}
-		if (ch == ']') {
-			m_pos++;
-			val = lst;
-			return true;
-		}
-		PARSE_EXCEPTION("expected ',' in list, got " + dump_char(ch));
+		if (ch == ',')
+			ch = nextValidChar();
+		//	PARSE_EXCEPTION("expected ',' in list, got " + dump_char(ch));
 	}
-	return false;
+	m_pos++;
+	val = lst;
+	return true;
 }
 
 bool CponProtocol::parseMap(RpcValue &val)
@@ -405,9 +398,11 @@ bool CponProtocol::parseMap(RpcValue &val)
 	char ch = currentChar();
 	if (ch != '{')
 		return false;
-	nextValidChar();
+	ch = nextValidChar();
 	RpcValue::Map map;
 	while (true) {
+		if (ch == '}')
+			break;
 		std::string key;
 		if(!parseStringHelper(key))
 			PARSE_EXCEPTION("expected string key, got " + dump_char(ch));
@@ -418,18 +413,13 @@ bool CponProtocol::parseMap(RpcValue &val)
 		RpcValue key_val = parseAtPos();
 		map[key] = key_val;
 		ch = skipGarbage();
-		if (ch == ',') {
-			nextValidChar();
-			continue;
-		}
-		if (ch == '}') {
-			m_pos++;
-			val = map;
-			return true;
-		}
-		PARSE_EXCEPTION("unexpected delimiter in IMap, got " + dump_char(ch));
+		if (ch == ',')
+			ch = nextValidChar();
+		//PARSE_EXCEPTION("unexpected delimiter in IMap, got " + dump_char(ch));
 	}
-	return false;
+	m_pos++;
+	val = map;
+	return true;
 }
 
 bool CponProtocol::parseIMap(RpcValue &val)
@@ -438,11 +428,7 @@ bool CponProtocol::parseIMap(RpcValue &val)
 		return false;
 	m_pos += S_IMAP_BEGIN.size();
 	skipGarbage();
-	RpcValue::IMap imap = parseIMapContent();
-	char ch = skipGarbage();
-	if (ch != '}')
-		PARSE_EXCEPTION("unexpected closing bracket in IMap, got " + dump_char(ch));
-	m_pos++;
+	RpcValue::IMap imap = parseIMapContent('}');
 	val = imap;
 	return true;
 }
@@ -451,10 +437,13 @@ bool CponProtocol::parseArray(RpcValue &ret_val)
 {
 	if(!starts_with(m_str, m_pos, S_ARRAY_BEGIN))
 		return false;
-	m_pos += S_ARRAY_BEGIN.size();
 
+	m_pos += S_ARRAY_BEGIN.size();
 	RpcValue::Array arr;
+	char ch = skipGarbage();
 	while (true) {
+		if (ch == ']')
+			break;
 		RpcValue val = parseAtPos();
 		if(arr.empty()) {
 			arr = RpcValue::Array(val.type());
@@ -464,19 +453,13 @@ bool CponProtocol::parseArray(RpcValue &ret_val)
 				PARSE_EXCEPTION("Mixed types in Array");
 		}
 		arr.push_back(RpcValue::Array::makeElement(val));
-		char ch = skipGarbage();
-		if (ch == ',') {
-			nextValidChar();
-			continue;
-		}
-		if (ch == ']') {
-			m_pos++;
-			ret_val = arr;
-			return true;
-		}
-		PARSE_EXCEPTION("unexpected closing bracket in Array, got " + dump_char(ch));
+		ch = skipGarbage();
+		if (ch == ',')
+			ch = nextValidChar();
 	}
-	return false;
+	m_pos++;
+	ret_val = arr;
+	return true;
 }
 
 bool CponProtocol::parseDateTime(RpcValue &val)
@@ -509,30 +492,30 @@ uint64_t CponProtocol::parseDecimalUnsigned(int radix)
 	return ret;
 }
 
-RpcValue::IMap CponProtocol::parseIMapContent()
+RpcValue::IMap CponProtocol::parseIMapContent(char closing_bracket)
 {
 	RpcValue::IMap map;
+	char ch = skipGarbage();
 	while (true) {
+		if(ch == closing_bracket)
+			break;
 		RpcValue v;
 		if(!parseNumber(v))
 			PARSE_EXCEPTION("number key expected");
 		if(!(v.type() == RpcValue::Type::Int || v.type() == RpcValue::Type::UInt))
 			PARSE_EXCEPTION("int key expected");
 		RpcValue::UInt key = v.toUInt();
-		char ch = skipGarbage();
+		ch = skipGarbage();
 		if (ch != ':')
 			PARSE_EXCEPTION("expected ':' in IMap, got " + dump_char(ch));
 		m_pos++;
 		RpcValue val = parseAtPos();
 		map[key] = val;
 		ch = skipGarbage();
-		if (ch == ',') {
-			nextValidChar();
-		}
-		else {
-			break;
-		}
+		if (ch == ',')
+			ch = nextValidChar();
 	}
+	m_pos++;
 	return map;
 }
 

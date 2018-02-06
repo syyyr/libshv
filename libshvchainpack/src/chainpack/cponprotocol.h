@@ -50,7 +50,7 @@ private:
 	char currentChar();
 
 	uint64_t parseDecimalUnsigned(int radix);
-	RpcValue::IMap parseIMapContent();
+	RpcValue::IMap parseIMapContent(char closing_bracket);
 	bool parseStringHelper(std::string &val);
 
 	bool parseMetaData(RpcValue::MetaData &meta_data);
