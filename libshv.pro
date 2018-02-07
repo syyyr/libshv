@@ -6,6 +6,7 @@ SUBDIRS += \
     libshvchainpack \
     libshvcore \
     libshvcoreqt \
+    libshviotqt \
 
 CONFIG(debug, debug|release) {
 SUBDIRS += \
