@@ -371,6 +371,7 @@ const char *ChainPackProtocol::TypeInfo::name(ChainPackProtocol::TypeInfo::Enum 
 	case DateTimeEpoch: return "DateTimeEpoch";
 	case DateTime: return "DateTime";
 	case MetaIMap: return "MetaIMap";
+	case MetaSMap: return "MetaSMap";
 	case Decimal: return "Decimal";
 		/*
 	case Null_Array: return "Null_Array";
@@ -520,9 +521,16 @@ int ChainPackProtocol::write(std::ostream &out, const RpcValue &val)
 void ChainPackProtocol::writeMetaData(std::ostream &out, const RpcValue::MetaData &meta_data)
 {
 	if(!meta_data.isEmpty()) {
-		const RpcValue::IMap &cim = meta_data.toIMap();
-		out << (uint8_t)ChainPackProtocol::TypeInfo::MetaIMap;
-		writeData_IMap(out, cim);
+		const RpcValue::IMap &cim = meta_data.iValues();
+		if(!cim.empty()) {
+			out << (uint8_t)ChainPackProtocol::TypeInfo::MetaIMap;
+			writeData_IMap(out, cim);
+		}
+		const RpcValue::Map &csm = meta_data.sValues();
+		if(!csm.empty()) {
+			out << (uint8_t)ChainPackProtocol::TypeInfo::MetaSMap;
+			writeData_Map(out, csm);
+		}
 	}
 }
 
@@ -636,7 +644,8 @@ RpcValue ChainPackProtocol::read(std::istream &data)
 
 RpcValue::MetaData ChainPackProtocol::readMetaData(std::istream &data)
 {
-	RpcValue::MetaData ret;
+	RpcValue::IMap imap;
+	RpcValue::Map smap;
 	while(true) {
 		bool has_meta = true;
 		uint8_t type_info = data.peek();
@@ -657,9 +666,12 @@ RpcValue::MetaData ChainPackProtocol::readMetaData(std::istream &data)
 		*/
 		case ChainPackProtocol::TypeInfo::MetaIMap:  {
 			data.get();
-			RpcValue::IMap imap = readData_IMap(data);
-			for( const auto &it : imap)
-				ret.setValue(it.first, it.second);
+			imap = readData_IMap(data);
+			break;
+		}
+		case ChainPackProtocol::TypeInfo::MetaSMap:  {
+			data.get();
+			smap = readData_Map(data);
 			break;
 		}
 		default:
@@ -669,7 +681,7 @@ RpcValue::MetaData ChainPackProtocol::readMetaData(std::istream &data)
 		if(!has_meta)
 			break;
 	}
-	return ret;
+	return RpcValue::MetaData(std::move(imap), std::move(smap));
 }
 
 ChainPackProtocol::TypeInfo::Enum ChainPackProtocol::readTypeInfo(std::istream &data, RpcValue &meta, int &tiny_uint)

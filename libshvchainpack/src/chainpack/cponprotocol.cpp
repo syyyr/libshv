@@ -218,8 +218,7 @@ bool CponProtocol::parseMetaData(RpcValue::MetaData &meta_data)
 	if(ch != '<')
 		return false;
 	ch = nextValidChar();
-	RpcValue::IMap im = parseIMapContent('>');
-	meta_data = RpcValue::MetaData(std::move(im));
+	meta_data = parseMetaDataContent('>');
 	return true;
 }
 
@@ -517,6 +516,35 @@ RpcValue::IMap CponProtocol::parseIMapContent(char closing_bracket)
 	}
 	m_pos++;
 	return map;
+}
+
+RpcValue::MetaData CponProtocol::parseMetaDataContent(char closing_bracket)
+{
+	RpcValue::IMap imap;
+	RpcValue::Map smap;
+	char ch = skipGarbage();
+	while (true) {
+		if(ch == closing_bracket)
+			break;
+		RpcValue key = parseAtPos();
+		if(!(key.type() == RpcValue::Type::Int || key.type() == RpcValue::Type::UInt)
+		   && !(key.type() == RpcValue::Type::String))
+			PARSE_EXCEPTION("key expected");
+		ch = skipGarbage();
+		if (ch != ':')
+			PARSE_EXCEPTION("expected ':' in IMap, got " + dump_char(ch));
+		nextValidChar();
+		RpcValue val = parseAtPos();
+		if(key.type() == RpcValue::Type::String)
+			smap[key.toString()] = val;
+		else
+			imap[key.toUInt()] = val;
+		ch = skipGarbage();
+		if (ch == ',')
+			ch = nextValidChar();
+	}
+	m_pos++;
+	return RpcValue::MetaData(std::move(imap), std::move(smap));
 }
 
 bool CponProtocol::parseStringHelper(std::string &val)
@@ -836,7 +864,7 @@ void CponProtocol::write(const RpcValue::MetaData &value, std::ostream &out, con
 	int mtid = value.metaTypeId();
 
 	out << S_META_BEGIN;
-	for(auto tag : value.ikeys()) {
+	for(auto tag : value.iKeys()) {
 		//if(key == RpcValue::Tag::MetaTypeId || key == RpcValue::Tag::MetaTypeNameSpaceId)
 		//	continue;
 		if(n++ > 0)
@@ -879,6 +907,14 @@ void CponProtocol::write(const RpcValue::MetaData &value, std::ostream &out, con
 		else {
 			write(out, meta_val);
 		}
+	}
+	for(auto tag : value.sKeys()) {
+		if(n++ > 0)
+			out << ", ";
+		out << '"' << tag << '"';
+		out << ':';
+		RpcValue meta_val = value.value(tag);
+		write(out, meta_val);
 	}
 	out << S_META_END;
 }

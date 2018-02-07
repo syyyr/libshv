@@ -752,6 +752,7 @@ private:
 			cp1.setMetaValue(meta::Tag::MetaTypeId, 2);
 			cp1.setMetaValue(meta::Tag::USER, "foo");
 			cp1.setMetaValue(meta::Tag::USER+1, RpcValue::List{1,2,3});
+			cp1.setMetaValue("bar", 3);
 			std::stringstream out;
 			int len = ChainPackProtocol::write(out, cp1);
 			RpcValue cp2 = ChainPackProtocol::read(out);

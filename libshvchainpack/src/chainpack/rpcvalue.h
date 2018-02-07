@@ -121,10 +121,10 @@ public:
 		}
 	};
 	using List = std::vector<RpcValue>;
-	class Map : public std::map<RpcValue::String, RpcValue>
+	class Map : public std::map<String, RpcValue>
 	{
-		using Super = std::map<RpcValue::String, RpcValue>;
-		using Super::Super;
+		using Super = std::map<String, RpcValue>;
+		using Super::Super; // expose base class constructors
 	public:
 		RpcValue value(const std::string &key, const RpcValue &default_val = RpcValue()) const
 		{
@@ -207,21 +207,36 @@ public:
 	{
 	public:
 		MetaData() {}
-		MetaData(RpcValue::IMap &&imap) : m_imap(std::move(imap)) {}
+		MetaData(MetaData &&o);
+		MetaData(RpcValue::IMap &&imap);
+		MetaData(RpcValue::Map &&smap);
+		MetaData(RpcValue::IMap &&imap, RpcValue::Map &&smap);
+		~MetaData();
+
+		MetaData& operator =(MetaData &&o) {swap(o); return *this;}
 
 		int metaTypeId() const {return value(meta::Tag::MetaTypeId).toInt();}
 		void setMetaTypeId(RpcValue::Int id) {setValue(meta::Tag::MetaTypeId, id);}
 		int metaTypeNameSpaceId() const {return value(meta::Tag::MetaTypeNameSpaceId).toInt();}
 		void setMetaTypeNameSpaceId(RpcValue::Int id) {setValue(meta::Tag::MetaTypeNameSpaceId, id);}
-		std::vector<RpcValue::UInt> ikeys() const;
+		std::vector<RpcValue::UInt> iKeys() const;
+		std::vector<RpcValue::String> sKeys() const;
 		RpcValue value(RpcValue::UInt key) const;
+		RpcValue value(RpcValue::String key) const;
 		void setValue(RpcValue::UInt key, const RpcValue &val);
-		bool isEmpty() const {return m_imap.empty();}
+		void setValue(RpcValue::String key, const RpcValue &val);
+		bool isEmpty() const;
 		bool operator==(const MetaData &o) const;
-		const RpcValue::IMap& toIMap() const {return m_imap;}
+		const RpcValue::IMap& iValues() const;
+		const RpcValue::Map& sValues() const;
 		std::string toStdString() const;
-	protected:
-		RpcValue::IMap m_imap;
+	private:
+		MetaData(const MetaData &o);
+		MetaData& operator =(const MetaData &o);
+		void swap(MetaData &o);
+	private:
+		RpcValue::IMap *m_imap = nullptr;
+		RpcValue::Map *m_smap = nullptr;
 	};
 
 	// Constructors for the various types of JSON value.
@@ -283,8 +298,10 @@ public:
 
 	const MetaData &metaData() const;
 	RpcValue metaValue(RpcValue::UInt key) const;
+	RpcValue metaValue(const RpcValue::String &key) const;
 	void setMetaData(MetaData &&meta_data);
 	void setMetaValue(UInt key, const RpcValue &val);
+	void setMetaValue(const String &key, const RpcValue &val);
 
 	template<typename T> static Type guessType();
 

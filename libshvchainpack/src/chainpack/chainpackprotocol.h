@@ -30,6 +30,7 @@ public: // public just because of testing, normal user do not need to use this e
 			MetaIMap,
 			Decimal,
 			DateTime,
+			MetaSMap,
 			/// arrays
 			/*
 			Null_Array = Null | ARRAY_FLAG_MASK, // if bit 6 is set, then packed value is an Array of corresponding values

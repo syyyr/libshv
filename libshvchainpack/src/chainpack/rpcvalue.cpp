@@ -89,6 +89,7 @@ public:
 	virtual const RpcValue::MetaData &metaData() const = 0;
 	virtual void setMetaData(RpcValue::MetaData &&meta_data) = 0;
 	virtual void setMetaValue(RpcValue::UInt key, const RpcValue &val) = 0;
+	virtual void setMetaValue(RpcValue::String key, const RpcValue &val) = 0;
 
 	virtual bool equals(const AbstractValueData * other) const = 0;
 	//virtual bool less(const Data * other) const = 0;
@@ -154,6 +155,12 @@ protected:
 	}
 
 	void setMetaValue(RpcValue::UInt key, const RpcValue &val) override
+	{
+		if(!m_metaData)
+			m_metaData = new RpcValue::MetaData();
+		m_metaData->setValue(key, val);
+	}
+	void setMetaValue(RpcValue::String key, const RpcValue &val) override
 	{
 		if(!m_metaData)
 			m_metaData = new RpcValue::MetaData();
@@ -459,6 +466,13 @@ RpcValue RpcValue::metaValue(RpcValue::UInt key) const
 	return ret;
 }
 
+RpcValue RpcValue::metaValue(const RpcValue::String &key) const
+{
+	const MetaData &md = metaData();
+	RpcValue ret = md.value(key);
+	return ret;
+}
+
 void RpcValue::setMetaData(RpcValue::MetaData &&meta_data)
 {
 	if(!m_ptr && !meta_data.isEmpty())
@@ -468,6 +482,14 @@ void RpcValue::setMetaData(RpcValue::MetaData &&meta_data)
 }
 
 void RpcValue::setMetaValue(RpcValue::UInt key, const RpcValue &val)
+{
+	if(!m_ptr && val.isValid())
+		SHVCHP_EXCEPTION("Cannot set valid meta value to invalid ChainPack value!");
+	if(m_ptr)
+		m_ptr->setMetaValue(key, val);
+}
+
+void RpcValue::setMetaValue(const RpcValue::String &key, const RpcValue &val)
 {
 	if(!m_ptr && val.isValid())
 		SHVCHP_EXCEPTION("Cannot set valid meta value to invalid ChainPack value!");
@@ -902,28 +924,103 @@ std::string RpcValue::DateTime::toUtcString() const
 	return ret;
 }
 
-std::vector<RpcValue::UInt> RpcValue::MetaData::ikeys() const
+RpcValue::MetaData::MetaData(RpcValue::MetaData &&o)
+	: MetaData()
+{
+	swap(o);
+}
+
+RpcValue::MetaData::MetaData(RpcValue::IMap &&imap)
+{
+	if(!imap.empty())
+		m_imap = new RpcValue::IMap(std::move(imap));
+}
+
+RpcValue::MetaData::MetaData(RpcValue::Map &&smap)
+{
+	if(!smap.empty())
+		m_smap = new RpcValue::Map(std::move(smap));
+}
+
+RpcValue::MetaData::MetaData(RpcValue::IMap &&imap, RpcValue::Map &&smap)
+{
+	if(!imap.empty())
+		m_imap = new RpcValue::IMap(std::move(imap));
+	if(!smap.empty())
+		m_smap = new RpcValue::Map(std::move(smap));
+}
+
+RpcValue::MetaData::~MetaData()
+{
+	if(m_imap)
+		delete m_imap;
+	if(m_smap)
+		delete m_smap;
+}
+
+std::vector<RpcValue::UInt> RpcValue::MetaData::iKeys() const
 {
 	std::vector<RpcValue::UInt> ret;
-	for(const auto &it : m_imap)
+	for(const auto &it : iValues())
+		ret.push_back(it.first);
+	return ret;
+}
+
+std::vector<RpcValue::String> RpcValue::MetaData::sKeys() const
+{
+	std::vector<RpcValue::String> ret;
+	for(const auto &it : sValues())
 		ret.push_back(it.first);
 	return ret;
 }
 
 RpcValue RpcValue::MetaData::value(RpcValue::UInt key) const
 {
-	auto it = m_imap.find(key);
-	if(it != m_imap.end())
+	const IMap &m = iValues();
+	auto it = m.find(key);
+	if(it != m.end())
+		return it->second;
+	return RpcValue();
+}
+
+RpcValue RpcValue::MetaData::value(RpcValue::String key) const
+{
+	const Map &m = sValues();
+	auto it = m.find(key);
+	if(it != m.end())
 		return it->second;
 	return RpcValue();
 }
 
 void RpcValue::MetaData::setValue(RpcValue::UInt key, const RpcValue &val)
 {
-	if(val.isValid())
-		m_imap[key] = val;
-	else
-		m_imap.erase(key);
+	if(val.isValid()) {
+		if(!m_imap)
+			m_imap = new RpcValue::IMap();
+		(*m_imap)[key] = val;
+	}
+	else {
+		if(m_imap)
+			m_imap->erase(key);
+	}
+}
+
+void RpcValue::MetaData::setValue(RpcValue::String key, const RpcValue &val)
+{
+	if(val.isValid()) {
+		if(!m_smap)
+			m_smap = new RpcValue::Map();
+		(*m_smap)[key] = val;
+	}
+	else {
+		if(m_smap)
+			m_smap->erase(key);
+	}
+}
+
+bool RpcValue::MetaData::isEmpty() const
+{
+	return (!m_imap || m_imap->empty()) && (!m_smap || m_smap->empty());
 }
 
 bool RpcValue::MetaData::operator==(const RpcValue::MetaData &o) const
@@ -936,7 +1033,19 @@ bool RpcValue::MetaData::operator==(const RpcValue::MetaData &o) const
 	for(const auto &it : o.m_imap)
 		std::cerr << '\t' << it.first << ": " << it.second.dumpText() << std::endl;
 	*/
-	return m_imap == o.m_imap;
+	return iValues() == o.iValues() && sValues() == o.sValues();
+}
+
+const RpcValue::IMap &RpcValue::MetaData::iValues() const
+{
+	static RpcValue::IMap m;
+	return m_imap? *m_imap: m;
+}
+
+const RpcValue::Map &RpcValue::MetaData::sValues() const
+{
+	static RpcValue::Map m;
+	return m_smap? *m_smap: m;
 }
 
 std::string RpcValue::MetaData::toStdString() const
@@ -944,6 +1053,12 @@ std::string RpcValue::MetaData::toStdString() const
 	std::ostringstream os;
 	CponProtocol::writeMetaData(os, *this, CponProtocol::WriteOptions().translateIds(true));
 	return os.str();
+}
+
+void RpcValue::MetaData::swap(RpcValue::MetaData &o)
+{
+	std::swap(m_imap, o.m_imap);
+	std::swap(m_smap, o.m_smap);
 }
 
 std::string RpcValue::Decimal::toString() const
