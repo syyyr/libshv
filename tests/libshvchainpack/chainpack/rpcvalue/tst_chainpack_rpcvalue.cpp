@@ -500,7 +500,7 @@ private:
 			std::stringstream out;
 			int len = ChainPackProtocol::write(out, cp1);
 			RpcValue cp2 = ChainPackProtocol::read(out);
-			qDebug() << blob.toString() << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+			qDebug() << blob << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
 			QVERIFY(cp1.type() == cp2.type());
 			QVERIFY(cp1.toBlob() == cp2.toBlob());
 		}
