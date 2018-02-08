@@ -104,21 +104,16 @@ public:
 		MsTz m_dtm = {0, 0};
 	};
 	using String = std::string;
-	struct SHVCHAINPACK_DECL_EXPORT Blob : public std::basic_string<uint8_t>
+	struct SHVCHAINPACK_DECL_EXPORT Blob : public std::basic_string<char>
 	{
-		Blob() : std::basic_string<uint8_t>() {}
-		Blob(const std::string &str) {
-			reserve(str.length());
-			for (size_t i = 0; i < str.length(); ++i)
-				this->operator +=((uint8_t)str[i]);
-		}
-		std::string toString() const {
-			std::string ret;
-			ret.reserve(length());
-			for (size_t i = 0; i < length(); ++i)
-				ret += (char)(this->operator [](i));
-			return ret;
-		}
+	private:
+		using Super = std::basic_string<char>;
+	public:
+		using Super::Super; // expose base class constructors
+		Blob() : Super() {}
+		Blob(const Super &str) : Super(str) {}
+		Blob(Super &&str) : Super(std::move(str)) {}
+		//const std::string& toString() const {return *this;}
 	};
 	using List = std::vector<RpcValue>;
 	class Map : public std::map<String, RpcValue>
