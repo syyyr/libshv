@@ -21,7 +21,7 @@ class RpcMessage():
 		return s._value._value[key]
 
 	def setValue(s, key: uint, val: RpcValue):
-		assert(key >= meta.RpcMessage.Key.Method and key < meta.RpcMessage.Key.MAX);
+		assert(key >= meta.RpcMessage.Key.Params and key < meta.RpcMessage.Key.MAX);
 		s.checkMetaValues();
 		s._value._value[key] = val
 
@@ -58,7 +58,7 @@ class RpcMessage():
 
 	def rpcType(s) -> meta.RpcMessage.RpcCallType:
 		rpc_id: int = s.id();
-		has_method: bool = s.hasKey(meta.RpcMessage.Key.Method);
+		has_method: bool = meta.RpcMessage.Key.Method in s._value._metaData;
 		if(has_method):
 			if rpc_id > 0:
 				return meta.RpcMessage.RpcCallType.Request
@@ -83,10 +83,10 @@ class RpcMessage():
 		s.setMetaValue(meta.RpcMessage.Tag.RpcCallType, rpc_type);
 
 	def method(s) -> str:
-		return s.value(meta.RpcMessage.Key.Method).toString();
+		return s._value._metaData[meta.RpcMessage.Tag.Method].toString;
 
 	def setMethod(s, met: str) -> None:
-		s.setValue(meta.RpcMessage.Key.Method, RpcValue(met));
+		s._value._metaData[meta.RpcMessage.Tag.Method] = RpcValue(met);
 
 	def params(s) -> RpcValue:
 		return s.value(meta.RpcMessage.Key.Params);

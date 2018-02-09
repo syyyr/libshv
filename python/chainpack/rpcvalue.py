@@ -3,17 +3,27 @@ import enum
 import logging_config
 import logging
 from math import floor, trunc
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from dateutil.tz import tzoffset
 import meta
-
 
 class uint(int):
 	pass
 
+class UtcAndTz:
+	def __init__(s, dt: datetime, tz = 0):
+		assert dt.utcoffset() == timedelta(0),    dt.utcoffset()
+		s.dt = dt
+		s.tz = tz
+	def __repr__(s):
+		return "UtcAndTz(" + s.dt.__repr__() + "," + s.tz.__repr__() + ")"
+	def __eq__(s, x):
+		return x.dt == s.dt and x.tz == s.tz
+
 debug = logging.debug
 ARRAY_FLAG_MASK = 64
 
+SHV_EPOCH_MSEC = 1517529600000
 
 class ChainpackException(Exception):
 	pass
@@ -39,11 +49,14 @@ class TypeInfo(enum.IntFlag):
 	Bool=132
 	Blob=133
 	String=134
-	DateTime=135
+	DateTimeEpoch=135#deprecated
 	List=136
 	Map=137
 	IMap=138
 	MetaIMap=139
+	Decimal=140
+	DateTime=141
+
 	#/// arrays
 	#// if bit 6 is set, then packed value is an Array of corresponding values
 	Null_Array = Null | ARRAY_FLAG_MASK
@@ -53,7 +66,7 @@ class TypeInfo(enum.IntFlag):
 	Bool_Array = Bool | ARRAY_FLAG_MASK
 	Blob_Array = Blob | ARRAY_FLAG_MASK
 	String_Array = String | ARRAY_FLAG_MASK
-	DateTime_Array = DateTime | ARRAY_FLAG_MASK
+	DateTime_Array = DateTimeEpoch | ARRAY_FLAG_MASK
 	List_Array = List | ARRAY_FLAG_MASK
 	Map_Array = Map | ARRAY_FLAG_MASK
 	IMap_Array = IMap | ARRAY_FLAG_MASK
@@ -79,6 +92,7 @@ class Type(enum.IntFlag):
 	Map=144
 	IMap=145
 	MetaIMap=146
+	Decimal=147
 
 
 def typeToTypeInfo(type: Type):
@@ -114,7 +128,7 @@ def typeInfoToType(type_info: TypeInfo) -> Type:
 	raise Exception("There is no Type for TypeInfo %s"%(type_info));
 
 def chainpackTypeFromPythonType(v):
-	if isinstance(v, datetime) or (type(v) == tuple and isinstance(v[0], datetime) and isinstance(v[1], int)):
+	if isinstance(v, (datetime, UtcAndTz)):
 		return Type.DateTime,
 	t = type(v)
 	if t == InvalidValue:return Type.INVALID,
@@ -239,9 +253,6 @@ class RpcValue():
 
 	def setMetaValue(s, tag, value):
 		value = RpcValue(value)
-		#if tag in [Tag.MetaTypeId, Tag.MetaTypeNameSpaceId]:
-		#	if value._type == Type.Int:
-		#		value = RpcValue(value._value, Type.UInt)
 		s._metaData[tag] = value
 
 
@@ -450,19 +461,48 @@ class ChainPackProtocol(bytearray):
 
 	def write_DateTime(s, v):
 		if isinstance(v, datetime):
-			v = (v, 0)
-		utc = floor(v[0].timestamp() * 1000)
-		tz = v[1]
-		s.writeData_Int((utc << 7) | tz)
-		print(((utc << 7) | tz))
+			dt = v
+			tz = 0
+		elif isinstance(v, UtcAndTz):
+			dt = v.dt
+			tz = v.tz
+		else:
+			assert False, v
+		out = round(dt.timestamp() * 1000) - SHV_EPOCH_MSEC
+		has_millis = (out % 1000 != 0)
+		if not has_millis:
+			out = out // 1000
+		if(tz != 0):
+			out <<= 7;
+			assert -64 <= tz <= 63
+			if tz < 0:
+				tz = (1 << 6) | (~(-1-tz) & 0b111111)
+			out |= tz;
+		out <<= 2;
+		if(tz != 0):
+			out |= 1;
+		if not has_millis:
+			out |= 2;
+		s.writeData_Int(out)
 
 	def read_DateTime(s):
-		raw = s.readData_Int()
-		tz = raw & 0b111111
-		if raw & 0b1000000:
-			tz = -tz
-		raw = raw >> 7
-		return datetime.fromtimestamp(raw / 1000), tz
+		d = s.readData_Int()
+		offset = 0;
+		has_tz_offset = d & 1;
+		has_not_msec = d & 2;
+		d >>= 2;
+		if(has_tz_offset):
+			offset = d & 0b01111111;
+			if offset & (1 << 6):
+				offset -= (1 << 7)
+			d >>= 7;
+		if(has_not_msec):
+			d *= 1000;
+		d2 = d + SHV_EPOCH_MSEC
+		d3 = d2 / 1000
+		dt = datetime.utcfromtimestamp(d3)
+		dt = dt.replace(tzinfo=timezone.utc)
+		return UtcAndTz(dt, offset)
 
 	def readData_IMap(s) -> RpcValue:
 		ret = RpcValue({}, Type.IMap)
@@ -596,6 +636,18 @@ class ChainPackProtocol(bytearray):
 			assert i._type == array.element_type
 			s.writeData(i);
 
+	def readData_Decimal(s):
+		mant = s.readData_Int();
+		prec = readData_Int();
+		return RpcValue((mant, prec), Type.Decimal);
+
+	def writeData_Decimal(s, d):
+		assert d._type == Type.Decimal
+		assert type(d._value) == tuple
+		s.writeData_Int(d._value[0]);
+		s.writeData_Int(d._value[1]);
+
+
 class RpcValueArray(RpcValue):
 	def __init__(s, element_type, value = None):
 		s.element_type = element_type
@@ -606,3 +658,4 @@ class RpcValueArray(RpcValue):
 	def assertEquals(s, x):
 		assert s.element_type == x.element_type
 		super().assertEquals(x)
+
