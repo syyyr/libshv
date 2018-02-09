@@ -266,7 +266,7 @@ bool CponProtocol::parseBlob(RpcValue &val)
 	std::string s;
 	if(parseStringHelper(s)) {
 		s = Utils::fromHex(s);
-		val = RpcValue::Blob(s);
+		val = RpcValue::Blob{s};
 		return true;
 	}
 	return false;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "abstractstreamwriter.h"
 #include "rpcvalue.h"
 
 namespace shv {
@@ -90,6 +91,54 @@ private:
 	int m_depth = 0;
 	//bool m_verboseIds = true;
 	static constexpr bool WRITE_INVALID_AS_NULL = true;
+};
+
+class SHVCHAINPACK_DECL_EXPORT CponWriter : public AbstractStreamWriter
+{
+	using Super = AbstractStreamWriter;
+public:
+	class SHVCHAINPACK_DECL_EXPORT WriteOptions
+	{
+		bool m_translateIds = false;
+	public:
+		WriteOptions() {}
+		bool translateIds() const {return m_translateIds;}
+		WriteOptions& translateIds(bool b) {m_translateIds = b; return *this;}
+	};
+
+	enum class Begin {Map, IMap, List, Meta, Array};
+	enum class End {Map, IMap, List, Meta, Array};
+
+	class ListElement : public RpcValue {};
+	class MapElement {};
+	class IMapElement {};
+public:
+	CponWriter(std::ostream &out) : m_out(out) {}
+	CponWriter(std::ostream &out, const WriteOptions &opts) : CponWriter(out) {m_opts = opts;}
+
+	CponWriter& operator <<(Begin manip);
+	CponWriter& operator <<(const ListElement &el);
+	CponWriter& operator <<(const MapElement &el);
+	CponWriter& operator <<(const IMapElement &el);
+	CponWriter& operator <<(End manip);
+
+	CponWriter& operator <<(std::nullptr_t);
+	CponWriter& operator <<(bool value);
+	CponWriter& operator <<(RpcValue::Int value);
+	CponWriter& operator <<(RpcValue::UInt value);
+	CponWriter& operator <<(double value);
+	CponWriter& operator <<(RpcValue::Decimal value);
+	CponWriter& operator <<(RpcValue::DateTime value);
+	CponWriter& operator <<(const std::string &value);
+	CponWriter& operator <<(const RpcValue::Blob &value);
+	CponWriter& operator <<(const RpcValue::List &values);
+	CponWriter& operator <<(const RpcValue::Array &values);
+	CponWriter& operator <<(const RpcValue::Map &values);
+	CponWriter& operator <<(const RpcValue::IMap &values);
+	CponWriter& operator <<(const RpcValue::MetaData &value);
+private:
+	std::ostream &m_out;
+	WriteOptions m_opts;
 };
 
 } // namespace chainpack

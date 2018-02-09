@@ -7,7 +7,9 @@ SOURCES += \
     $$PWD/metatypes.cpp \
     $$PWD/cponprotocol.cpp \
     $$PWD/exception.cpp \
-    $$PWD/utils.cpp
+    $$PWD/utils.cpp \
+    $$PWD/abstractstreamreader.cpp \
+    $$PWD/abstractstreamwriter.cpp
 
 HEADERS += \
     $$PWD/rpc.h \
@@ -18,7 +20,9 @@ HEADERS += \
     $$PWD/metatypes.h \
     $$PWD/cponprotocol.h \
     $$PWD/exception.h \
-    $$PWD/utils.h
+    $$PWD/utils.h \
+    $$PWD/abstractstreamreader.h \
+    $$PWD/abstractstreamwriter.h
 
 unix {
 SOURCES += \
