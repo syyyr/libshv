@@ -20,7 +20,7 @@
 namespace shv {
 namespace chainpack {
 
-class SHVCHAINPACK_DECL_EXPORT RpcValue final
+class SHVCHAINPACK_DECL_EXPORT RpcValue
 {
 public:
 	class AbstractValueData;
