@@ -3,6 +3,7 @@
 #include "chainpackprotocol.h"
 #include "cponprotocol.h"
 #include "exception.h"
+#include "cponwriter.h"
 
 #include <necrolog.h>
 
@@ -54,9 +55,11 @@ void RpcDriver::sendRawData(RpcValue::MetaData &&meta_data, std::string &&data)
 	//shvLogFuncFrame() << msg.toStdString();
 	std::ostringstream os_packed_meta_data;
 	switch (protocolVersion()) {
-	case Rpc::ProtocolVersion::Cpon:
-		CponProtocol::writeMetaData(os_packed_meta_data, meta_data);
+	case Rpc::ProtocolVersion::Cpon: {
+		CponWriter wr(os_packed_meta_data);
+		wr << meta_data;
 		break;
+	}
 	case Rpc::ProtocolVersion::ChainPack:
 		ChainPackProtocol::writeMetaData(os_packed_meta_data, meta_data);
 		break;
@@ -328,9 +331,11 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolVersion protocol_version, const
 		break;
 	}
 	*/
-	case Rpc::ProtocolVersion::Cpon:
-		CponProtocol::write(os_packed_data, val);
+	case Rpc::ProtocolVersion::Cpon: {
+		CponWriter wr(os_packed_data);
+		wr << val;
 		break;
+	}
 	case Rpc::ProtocolVersion::ChainPack:
 		ChainPackProtocol::write(os_packed_data, val);
 		break;

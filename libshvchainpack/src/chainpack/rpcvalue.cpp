@@ -21,6 +21,7 @@
 
 #include "rpcvalue.h"
 #include "cponprotocol.h"
+#include "cponwriter.h"
 
 #include "exception.h"
 #include "utils.h"
@@ -539,14 +540,24 @@ void RpcValue::set(const RpcValue::String &key, const RpcValue &val)
 std::string RpcValue::toStdString() const
 {
 	std::ostringstream out;
-	CponProtocol::write(out, *this, CponProtocol::WriteOptions().translateIds(true));
+	{
+		CponWriterOptions opts;
+		opts.setTranslateIds(true);
+		CponWriter wr(out, opts);
+		wr << *this;
+	}
 	return out.str();
 }
 
 std::string RpcValue::toCpon() const
 {
 	std::ostringstream out;
-	CponProtocol::write(out, *this);
+	{
+		CponWriterOptions opts;
+		opts.setTranslateIds(false);
+		CponWriter wr(out, opts);
+		wr << *this;
+	}
 	return out.str();
 }
 
@@ -651,7 +662,7 @@ const char *RpcValue::typeToName(RpcValue::Type t)
 	case Type::Map: return "Map";
 	case Type::IMap: return "IMap";
 	case Type::DateTime: return "DateTime";
-	case Type::MetaIMap: return "MetaIMap";
+	//case Type::MetaIMap: return "MetaIMap";
 	case Type::Decimal: return "Decimal";
 	}
 	return "UNKNOWN"; // just to remove mingw warning
@@ -1050,9 +1061,14 @@ const RpcValue::Map &RpcValue::MetaData::sValues() const
 
 std::string RpcValue::MetaData::toStdString() const
 {
-	std::ostringstream os;
-	CponProtocol::writeMetaData(os, *this, CponProtocol::WriteOptions().translateIds(true));
-	return os.str();
+	std::ostringstream out;
+	{
+		CponWriterOptions opts;
+		opts.setTranslateIds(true);
+		CponWriter wr(out, opts);
+		wr << *this;
+	}
+	return out.str();
 }
 
 void RpcValue::MetaData::swap(RpcValue::MetaData &o)

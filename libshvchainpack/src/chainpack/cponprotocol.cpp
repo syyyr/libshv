@@ -10,6 +10,9 @@
 
 namespace shv {
 namespace chainpack {
+#if 0
+static constexpr bool WRITE_INVALID_AS_NULL = true;
+#endif
 
 static const std::string S_NULL("null");
 static const std::string S_TRUE("true");
@@ -215,10 +218,10 @@ char CponProtocol::currentChar()
 bool CponProtocol::parseMetaData(RpcValue::MetaData &meta_data)
 {
 	char ch = m_str[m_pos];
-	if(ch != '<')
+	if(ch != S_META_BEGIN)
 		return false;
 	ch = nextValidChar();
-	meta_data = parseMetaDataContent('>');
+	meta_data = parseMetaDataContent(S_META_END);
 	return true;
 }
 
@@ -643,10 +646,6 @@ bool CponProtocol::parseStringHelper(std::string &val)
 	}
 }
 
-//==============================================================
-// Serialization
-//==============================================================
-
 void CponProtocol::encodeUtf8(long pt, std::string & out)
 {
 	if (pt < 0)
@@ -669,6 +668,10 @@ void CponProtocol::encodeUtf8(long pt, std::string & out)
 	}
 }
 
+//==============================================================
+// Serialization
+//==============================================================
+#if 0
 void CponProtocol::write(std::ostream &out, const RpcValue &value, const WriteOptions &opts)
 {
 	if(!value.metaData().isEmpty())
@@ -918,5 +921,5 @@ void CponProtocol::write(const RpcValue::MetaData &value, std::ostream &out, con
 	}
 	out << S_META_END;
 }
-
+#endif
 }}
