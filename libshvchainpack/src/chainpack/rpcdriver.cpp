@@ -1,9 +1,9 @@
 #include "rpcdriver.h"
 #include "metatypes.h"
 #include "chainpackprotocol.h"
-#include "cponprotocol.h"
 #include "exception.h"
 #include "cponwriter.h"
+#include "cponreader.h"
 
 #include <necrolog.h>
 
@@ -257,7 +257,9 @@ int RpcDriver::processReadData(const std::string &read_data)
 	}
 	*/
 	case Rpc::ProtocolVersion::Cpon: {
-		meta_data = CponProtocol::readMetaData(read_data, (size_t)in.tellg(), &meta_data_end_pos);
+		CponReader rd(in);
+		rd >> meta_data;
+		meta_data_end_pos = (size_t)in.tellg();
 		break;
 	}
 	case Rpc::ProtocolVersion::ChainPack: {
@@ -283,9 +285,18 @@ RpcValue RpcDriver::decodeData(Rpc::ProtocolVersion protocol_version, const std:
 {
 	RpcValue ret;
 	switch (protocol_version) {
-	case Rpc::ProtocolVersion::Cpon:
-		ret = CponProtocol::read(data, start_pos);
+	case Rpc::ProtocolVersion::Cpon: {
+		try {
+			std::istringstream in(data);
+			in.seekg(start_pos);
+			CponReader rd(in);
+			rd >> ret;
+		}
+		catch(CponReader::ParseException &e) {
+			nError() << e.mesage();
+		}
 		break;
+	}
 	case Rpc::ProtocolVersion::ChainPack: {
 		std::istringstream in(data);
 		in.seekg(start_pos);
