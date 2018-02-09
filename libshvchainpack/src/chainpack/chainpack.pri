@@ -9,7 +9,8 @@ SOURCES += \
     $$PWD/exception.cpp \
     $$PWD/utils.cpp \
     $$PWD/abstractstreamreader.cpp \
-    $$PWD/abstractstreamwriter.cpp
+    $$PWD/abstractstreamwriter.cpp \
+    $$PWD/cponwriter.cpp
 
 HEADERS += \
     $$PWD/rpc.h \
@@ -22,7 +23,8 @@ HEADERS += \
     $$PWD/exception.h \
     $$PWD/utils.h \
     $$PWD/abstractstreamreader.h \
-    $$PWD/abstractstreamwriter.h
+    $$PWD/abstractstreamwriter.h \
+    $$PWD/cponwriter.h
 
 unix {
 SOURCES += \

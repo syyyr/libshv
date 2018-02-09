@@ -322,7 +322,7 @@ ChainPackProtocol::TypeInfo::Enum ChainPackProtocol::typeToTypeInfo(RpcValue::Ty
 	case RpcValue::Type::IMap: return TypeInfo::IMap;
 	//case RpcValue::Type::DateTimeEpoch: return TypeInfo::DateTimeEpoch;
 	case RpcValue::Type::DateTime: return TypeInfo::DateTime;
-	case RpcValue::Type::MetaIMap: return TypeInfo::MetaIMap;
+	//case RpcValue::Type::MetaIMap: return TypeInfo::MetaIMap;
 	case RpcValue::Type::Decimal: return TypeInfo::Decimal;
 	}
 	SHVCHP_EXCEPTION("Unknown RpcValue::Type!");
@@ -344,7 +344,7 @@ RpcValue::Type ChainPackProtocol::typeInfoToType(ChainPackProtocol::TypeInfo::En
 	case ChainPackProtocol::TypeInfo::List: return RpcValue::Type::List;
 	case ChainPackProtocol::TypeInfo::Map: return RpcValue::Type::Map;
 	case ChainPackProtocol::TypeInfo::IMap: return RpcValue::Type::IMap;
-	case ChainPackProtocol::TypeInfo::MetaIMap: return RpcValue::Type::MetaIMap;
+	//case ChainPackProtocol::TypeInfo::MetaIMap: return RpcValue::Type::MetaIMap;
 	case ChainPackProtocol::TypeInfo::Decimal: return RpcValue::Type::Decimal;
 	default:
 		SHVCHP_EXCEPTION(std::string("There is type for type info ") + ChainPackProtocol::TypeInfo::name(type_info));
@@ -590,7 +590,7 @@ void ChainPackProtocol::writeData(std::ostream &out, const RpcValue &val)
 	case RpcValue::Type::Map: writeData_Map(out, val.toMap()); break;
 	case RpcValue::Type::IMap: writeData_IMap(out, val.toIMap()); break;
 	case RpcValue::Type::Invalid:
-	case RpcValue::Type::MetaIMap:
+	//case RpcValue::Type::MetaIMap:
 		SHVCHP_EXCEPTION("Internal error: attempt to write helper type directly. type: " + std::string(RpcValue::typeToName(type)));
 	}
 }
@@ -740,7 +740,7 @@ void ChainPackProtocol::writeContainerBegin(std::ostream &out, const RpcValue::T
 	case RpcValue::Type::List:
 	case RpcValue::Type::Map:
 	case RpcValue::Type::IMap:
-	case RpcValue::Type::MetaIMap:
+	//case RpcValue::Type::MetaIMap:
 	{
 		TypeInfo::Enum t = typeToTypeInfo(container_type);
 		out << (uint8_t)t;

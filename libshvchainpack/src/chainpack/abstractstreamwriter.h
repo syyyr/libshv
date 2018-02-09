@@ -1,11 +1,12 @@
 #ifndef ABSTRACTSTREAMWRITER_H
 #define ABSTRACTSTREAMWRITER_H
 
+#include "rpcvalue.h"
 
 namespace shv {
 namespace chainpack {
 
-class AbstractStreamWriter
+class SHVCHAINPACK_DECL_EXPORT AbstractStreamWriter
 {
 public:
 	AbstractStreamWriter();
