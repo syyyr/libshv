@@ -11,7 +11,7 @@ class SHVCHAINPACK_DECL_EXPORT CponWriterOptions
 	bool m_translateIds = false;
 	bool m_indent = 0;
 public:
-	CponWriterOptions() {}
+	//CponWriterOptions() {}
 
 	bool setTranslateIds() const {return m_translateIds;}
 	CponWriterOptions& setTranslateIds(bool b) {m_translateIds = b; return *this;}

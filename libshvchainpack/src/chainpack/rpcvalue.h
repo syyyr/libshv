@@ -336,7 +336,7 @@ public:
 
 	std::string toStdString() const;
 	std::string toCpon() const;
-	static RpcValue parseCpon(const std::string & in, std::string *err = nullptr);
+	static RpcValue parseCpon(const std::string & str, std::string *err = nullptr);
 
 	bool operator== (const RpcValue &rhs) const;
 #ifdef RPCVALUE_COPY_AND_SWAP
