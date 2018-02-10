@@ -155,7 +155,9 @@ class ChainPackDouble final : public ValueData<RpcValue::Type::Double, double>
 {
 	double toDouble() const override { return m_value; }
 	RpcValue::Int toInt() const override { return static_cast<int>(m_value); }
-	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toDouble(); }
+	bool equals(const RpcValue::AbstractValueData * other) const override {
+		return m_value == other->toDouble();
+	}
 	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
 public:
 	explicit ChainPackDouble(double value) : ValueData(value) {}
@@ -521,7 +523,7 @@ std::string RpcValue::toStdString() const
 	std::ostringstream out;
 	{
 		CponWriterOptions opts;
-		opts.setTranslateIds(true);
+		opts.setTranslateIds(true).setIndent(true);
 		CponWriter wr(out, opts);
 		wr << *this;
 	}

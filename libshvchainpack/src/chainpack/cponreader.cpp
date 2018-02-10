@@ -8,12 +8,13 @@ namespace chainpack {
 
 #define PARSE_EXCEPTION(msg) {\
 	std::clog << __FILE__ << ':' << __LINE__; \
+	char buff[40]; \
+	m_in.readsome(buff, sizeof(buff)); \
+	std::clog << ' ' << (msg) << " at pos: " << m_in.tellg() << " near to: " << buff << std::endl; \
 	if(exception_aborts) { \
-		std::clog << ' ' << (msg) << std::endl; \
 		abort(); \
 	} \
 	else { \
-		std::clog << ' ' << (msg) << std::endl; \
 		throw CponReader::ParseException(msg); \
 	} \
 }
@@ -21,24 +22,24 @@ namespace chainpack {
 namespace {
 enum {exception_aborts = 0};
 
-static const char* S_NULL("null");
-static const char* S_TRUE("true");
-static const char* S_FALSE("false");
+const std::string S_NULL("null");
+const std::string S_TRUE("true");
+const std::string S_FALSE("false");
 
-static const char* S_IMAP_BEGIN("i{");
-static const char* S_ARRAY_BEGIN("a[");
-static const char* S_BLOB_BEGIN("x\"");
-static const char* S_DATETIME_BEGIN("d\"");
-//static const char S_LIST_BEGIN('[');
-//static const char S_LIST_END(']');
-//static const char S_MAP_BEGIN('{');
-//static const char S_MAP_END('}');
-static const char S_META_BEGIN('<');
-static const char S_META_END('>');
-static const char S_DECIMAL_END('n');
-static const char S_UNSIGNED_END('u');
+const char S_IMAP_BEGIN('i');
+const char S_ARRAY_BEGIN('a');
+const char S_BLOB_BEGIN('x');
+const char S_DATETIME_BEGIN('d');
+//const char S_LIST_BEGIN('[');
+//const char S_LIST_END(']');
+//const char S_MAP_BEGIN('{');
+//const char S_MAP_END('}');
+//const char S_META_BEGIN('<');
+//const char S_META_END('>');
+const char S_DECIMAL_END('n');
+const char S_UNSIGNED_END('u');
 
-static const int MAX_RECURSION_DEPTH = 1000;
+const int MAX_RECURSION_DEPTH = 1000;
 
 class DepthScope
 {
@@ -49,12 +50,12 @@ private:
 	int &m_depth;
 };
 
-static inline bool in_range(long x, long lower, long upper)
+inline bool in_range(long x, long lower, long upper)
 {
 	return (x >= lower && x <= upper);
 }
 
-static inline std::string dump_char(char c)
+inline std::string dump_char(char c)
 {
 	char buf[12];
 	if (static_cast<uint8_t>(c) >= 0x20 && static_cast<uint8_t>(c) <= 0x7f) {
@@ -70,143 +71,164 @@ static inline std::string dump_char(char c)
 
 CponReader &CponReader::operator >>(RpcValue &value)
 {
-	value = parseAtPos();
+	getValue(value);
 	return *this;
 }
 
 CponReader &CponReader::operator >>(RpcValue::MetaData &meta_data)
 {
-	parseMetaData(meta_data);
+	auto ch = getValidChar();
+	if(ch == '<')
+		parseMetaData(meta_data);
 	return *this;
 }
 
-RpcValue CponReader::parseAtPos()
+int CponReader::getChar()
+{
+	auto ch = m_in.get();
+	if(m_in.eof())
+		PARSE_EXCEPTION("Unexpected end of stream.");
+	return ch;
+}
+
+void CponReader::getValue(RpcValue &val)
 {
 	if (m_depth > MAX_RECURSION_DEPTH)
 		PARSE_EXCEPTION("maximum nesting depth exceeded");
 	DepthScope{m_depth};
 
-	RpcValue ret_val;
-	RpcValue::MetaData meta_data;
-
-	skipGarbage();
-	if(parseMetaData(meta_data))
-		skipGarbage();
-	do {
-		if(parseString(ret_val)) { break; }
-		else if(parseNumber(ret_val)) { break; }
-		else if(parseNull(ret_val)) { break; }
-		else if(parseBool(ret_val)) { break; }
-		else if(parseList(ret_val)) { break; }
-		else if(parseMap(ret_val)) { break; }
-		else if(parseIMap(ret_val)) { break; }
-		else if(parseArray(ret_val)) { break; }
-		else if(parseBlob(ret_val)) { break; }
-		else if(parseDateTime(ret_val)) { break; }
+	RpcValue::Type type = RpcValue::Type::Invalid;
+	RpcValue::MetaData md;
+	auto ch = getValidChar();
+	if(ch == '<') {
+		parseMetaData(md);
+		ch = getValidChar();
+	}
+	switch (ch) {
+	case S_IMAP_BEGIN: {
+		ch = getChar();
+		if(ch == '{')
+			type = RpcValue::Type::IMap;
 		else
-			PARSE_EXCEPTION("unknown type");
-	} while(false);
-	if(!meta_data.isEmpty())
-		ret_val.setMetaData(std::move(meta_data));
-	return ret_val;
+			PARSE_EXCEPTION("Invalid IMap prefix.");
+		break;
+	}
+	case S_ARRAY_BEGIN: {
+		ch = getChar();
+		if(ch == '[')
+			type = RpcValue::Type::Array;
+		else
+			PARSE_EXCEPTION("Invalid Array prefix.");
+		break;
+	}
+	case S_BLOB_BEGIN: {
+		ch = getChar();
+		if(ch == '"')
+			type = RpcValue::Type::Blob;
+		else
+			PARSE_EXCEPTION("Invalid Blob prefix.");
+		break;
+	}
+	case S_DATETIME_BEGIN: {
+		ch = getChar();
+		if(ch == '"')
+			type = RpcValue::Type::DateTime;
+		else
+			PARSE_EXCEPTION("Invalid DateTime prefix.");
+		break;
+	}
+	case '{':  type = RpcValue::Type::Map; break;
+	case '[':  type = RpcValue::Type::List; break;
+	case '"':  type = RpcValue::Type::String; break;
+	case 'n':
+		m_in.unget();
+		type = RpcValue::Type::Null;
+		break;
+	case 'f':
+	case 't':
+		m_in.unget();
+		type = RpcValue::Type::Bool;
+		break;
+	default:
+		if((ch >= '0' && ch <= '9') || (ch == '-') || (ch == '.')) {
+			m_in.unget();
+			type = RpcValue::Type::Int;
+		}
+		else
+			PARSE_EXCEPTION("Invalid input.");
+		break;
+	}
+
+	switch (type) {
+	case RpcValue::Type::List: parseList(val); break;
+	case RpcValue::Type::Array: parseArray(val); break;
+	case RpcValue::Type::Map: parseMap(val); break;
+	case RpcValue::Type::IMap: parseIMap(val); break;
+	case RpcValue::Type::Null: parseNull(val); break;
+	case RpcValue::Type::Bool: parseBool(val); break;
+	case RpcValue::Type::Blob: parseBlob(val); break;
+	case RpcValue::Type::String: parseString(val); break;
+	case RpcValue::Type::DateTime: parseDateTime(val); break;
+	case RpcValue::Type::Int:
+	case RpcValue::Type::UInt:
+	case RpcValue::Type::Double:
+	case RpcValue::Type::Decimal: parseNumber(val); break;
+	case RpcValue::Type::Invalid:
+		PARSE_EXCEPTION("Invalid type.");
+		break;
+	}
+	if(!md.isEmpty())
+		val.setMetaData(std::move(md));
 }
 
-bool CponReader::getString(const char *str)
+char CponReader::getValidChar()
 {
-	bool ret = true;
-	int cnt;
-	for (cnt = 0; str[cnt]; ++cnt) {
-		if(m_in.eof()) {
-			ret = false;
-			break;
+	while(true) {
+		auto ch = getChar();
+		if (ch == ' ' || ch == '\r' || ch == '\n' || ch == '\t') {
 		}
-		auto ch = m_in.peek();
-		if(ch != str[cnt]) {
-			ret = false;
-			break;
+		else if(ch == '/') {
+			ch = getChar();
+			if(ch == '/') {
+				// to end of line comment
+				while (!m_in.eof()) {
+					ch = m_in.get();
+					if(ch == '\n')
+						break;
+				}
+			}
+			else if(ch == '*') {
+				// multi line comment
+				char prev_ch = -1;
+				ch = getChar();
+				while (!m_in.eof()) {
+					ch = m_in.get();
+					if(prev_ch == '*' && ch == '/')
+						break;
+					prev_ch = ch;
+				}
+				if(!(prev_ch == '*' && ch == '/'))
+					PARSE_EXCEPTION("Unclosed multiline comment.");
+			}
+			else {
+				PARSE_EXCEPTION("Invalid comment.");
+			}
 		}
-		m_in.get();
+		else {
+			return ch;
+		}
 	}
-	if(!ret)
-		while (cnt--)
-			m_in.unget();
+}
+
+std::string CponReader::getString(size_t n)
+{
+	std::string ret;
+	for (size_t i = 0; i < n; ++i)
+		ret += getChar();
 	return ret;
 }
 
-void CponReader::skipWhiteSpace()
-{
-	do {
-		auto ch = m_in.peek();
-		if (ch == ' ' || ch == '\r' || ch == '\n' || ch == '\t') {
-			m_in.get();
-		}
-	} while(true);
-}
-
-bool CponReader::skipComment()
-{
-	bool comment_found = false;
-	if(getString("//")) {
-		m_in.get(); m_in.get();
-		// advance until next line, or end of input
-		while(!m_in.eof()) {
-			auto ch = m_in.get();
-			if(ch == '\n')
-				break;
-		}
-		comment_found = true;
-	}
-	else if(getString("/*")) {
-		m_in.get(); m_in.get();
-		int ch, prev_char = -1;
-		while(!m_in.eof()) {
-			if(prev_char < 0) {
-				prev_char = m_in.get();
-			}
-			else {
-				ch = m_in.get();
-				if(prev_char == '*' && ch == '/')
-					break;
-			}
-		}
-		if(!(prev_char == '*' && ch == '/'))
-			PARSE_EXCEPTION("unexpected end of input inside multi-line comment");
-		comment_found = true;
-	}
-	return comment_found;
-}
-
-char CponReader::skipGarbage()
-{
-	skipWhiteSpace();
-	{
-		bool comment_found = false;
-		do {
-			comment_found = skipComment();
-			skipWhiteSpace();
-		}
-		while(comment_found);
-	}
-	return m_in.peek();
-}
-
-char CponReader::nextValidChar()
-{
-	if(m_in.eof())
-		PARSE_EXCEPTION("unexpected end of input");
-	m_in.get();
-	skipGarbage();
-	return m_in.peek();
-}
-
-char CponReader::currentChar()
-{
-	if(m_in.eof())
-		PARSE_EXCEPTION("unexpected end of input");
-	return m_in.peek();
-}
-
-void CponReader::encodeUtf8(long pt, std::string &out)
+void CponReader::decodeUtf8(long pt, std::string &out)
 {
 	if (pt < 0)
 		return;
@@ -231,122 +253,84 @@ void CponReader::encodeUtf8(long pt, std::string &out)
 	}
 }
 
-bool CponReader::parseMetaData(RpcValue::MetaData &meta_data)
+void CponReader::parseNull(RpcValue &val)
 {
-	char ch = currentChar();
-	if(ch != S_META_BEGIN)
-		return false;
-	ch = nextValidChar();
-	meta_data = parseMetaDataContent(S_META_END);
-	return true;
+	std::string s = getString(S_NULL.size());
+	if(s != S_NULL)
+		PARSE_EXCEPTION("Parse null error, got: " + s);
+	val = RpcValue(nullptr);
 }
 
-bool CponReader::parseNull(RpcValue &val)
+void CponReader::parseBool(RpcValue &val)
 {
-	if(getString(S_NULL)) {
-		val = RpcValue(nullptr);
-		return true;
-	}
-	return false;
-}
-
-bool CponReader::parseBool(RpcValue &val)
-{
-	if(getString(S_TRUE)) {
+	std::string s = getString(S_TRUE.size());
+	if(s == S_TRUE) {
 		val = RpcValue(true);
-		return true;
+		return;
 	}
-	if(getString(S_FALSE)) {
-		val = RpcValue(false);
-		return true;
+	else {
+		char ch = getChar();
+		s += ch;
+		if(s == S_FALSE) {
+			val = RpcValue(false);
+			return;
+		}
 	}
-	return false;
+	PARSE_EXCEPTION("Parse bool error, got: " + s);
 }
 
-bool CponReader::parseString(RpcValue &val)
+void CponReader::parseString(RpcValue &val)
 {
 	std::string s;
-	if(parseStringHelper(s)) {
-		val = s;
-		return true;
-	}
-	return false;
+	parseStringHelper(s);
+	val = s;
 }
 
-bool CponReader::parseBlob(RpcValue &val)
+void CponReader::parseBlob(RpcValue &val)
 {
-	if(!getString(S_BLOB_BEGIN))
-		return false;
-	m_in.unget();
 	std::string s;
-	if(parseStringHelper(s)) {
-		s = Utils::fromHex(s);
-		val = RpcValue::Blob{s};
-		return true;
-	}
-	return false;
+	parseStringHelper(s);
+	s = Utils::fromHex(s);
+	val = RpcValue::Blob{s};
 }
 
-bool CponReader::parseNumber(RpcValue &val)
+void CponReader::parseNumber(RpcValue &val)
 {
 	int sign = 1;
-	uint64_t int_part = 0;
-	uint64_t dec_part = 0;
+	int64_t int_part = 0;
+	int64_t dec_part = 0;
 	int dec_cnt = 0;
-	int radix = 10;
 	int exponent = std::numeric_limits<int>::max();
 	RpcValue::Type type = RpcValue::Type::Invalid;
 
-	bool is_number = false;
-	char ch = currentChar();
-	if (ch == '-') {
-		sign = -1;
-		ch = nextValidChar();
-	}
-	if (getString("0x")) {
-		radix = 16;
-		ch = nextValidChar();
-		is_number = true;
-	}
-	else if (in_range(ch, '0', '9')) {
-		is_number = true;
-	}
-	if(!is_number)
-		return false;
-	if (in_range(ch, '0', '9')) {
+	char ch = m_in.peek();
+	if(ch != '.') {
 		type = RpcValue::Type::Int;
-		auto start_pos = m_in.tellg();
-		int_part = parseDecimalUnsigned(radix);
-		if (m_in.tellg() == start_pos)
+		int cnt;
+		int_part = parseInteger(cnt);
+		if (cnt == 0)
 			PARSE_EXCEPTION("number integer part missing");
-		if (currentChar() == S_UNSIGNED_END) {
+		if (m_in.peek() == S_UNSIGNED_END) {
 			type = RpcValue::Type::UInt;
 			m_in.get();
 		}
+		//m_in.unget();
 	}
-	if (currentChar() == '.') {
+	if (m_in.peek() == '.') {
 		m_in.get();
-		auto start_pos = m_in.tellg();
-		dec_part = parseDecimalUnsigned(radix);
+		dec_part = parseInteger(dec_cnt);
 		type = RpcValue::Type::Double;
-		dec_cnt = m_in.tellg() - start_pos;
-		if (currentChar() == S_DECIMAL_END) {
+		if (m_in.peek() == S_DECIMAL_END) {
 			type = RpcValue::Type::Decimal;
 			m_in.get();
 		}
 	}
-	else if(currentChar() == 'e' || currentChar() == 'E') {
-		bool neg = false;
-		char ch = nextValidChar();
-		if (ch == '-') {
-			neg = true;
-			nextValidChar();
-		}
-		auto start_pos = m_in.tellg();
-		exponent = parseDecimalUnsigned(radix);
-		if (m_in.tellg() == start_pos)
+	else if(m_in.peek() == 'e' || m_in.peek() == 'E') {
+		m_in.get();
+		int cnt;
+		exponent = parseInteger(cnt);
+		if (cnt == 0)
 			PARSE_EXCEPTION("double exponent part missing");
-		exponent *= neg;
 		type = RpcValue::Type::Double;
 	}
 
@@ -383,79 +367,113 @@ bool CponReader::parseNumber(RpcValue &val)
 	default:
 		PARSE_EXCEPTION("number parse error");
 	}
-	return true;
 }
 
-bool CponReader::parseList(RpcValue &val)
+void CponReader::parseList(RpcValue &val)
 {
-	char ch = currentChar();
-	if (ch != '[')
-		return false;
-	ch = nextValidChar();
 	RpcValue::List lst;
 	while (true) {
+		auto ch = getValidChar();
+		if (ch == ',')
+			continue;
 		if (ch == ']')
 			break;
-		lst.push_back(parseAtPos());
-		ch = skipGarbage();
-		if (ch == ',')
-			ch = nextValidChar();
-		//	PARSE_EXCEPTION("expected ',' in list, got " + dump_char(ch));
+		m_in.unget();
+		RpcValue val;
+		getValue(val);
+		lst.push_back(val);
 	}
-	m_in.get();
 	val = lst;
-	return true;
 }
 
-bool CponReader::parseMap(RpcValue &val)
+void CponReader::parseMap(RpcValue &val)
 {
-	char ch = currentChar();
-	if (ch != '{')
-		return false;
-	ch = nextValidChar();
 	RpcValue::Map map;
 	while (true) {
+		auto ch = getValidChar();
+		if (ch == ',')
+			continue;
 		if (ch == '}')
 			break;
-		std::string key;
-		if(!parseStringHelper(key))
-			PARSE_EXCEPTION("expected string key, got " + dump_char(ch));
-		ch = skipGarbage();
+		if(ch != '"')
+			PARSE_EXCEPTION("expected '\"' in map key, got " + dump_char(ch));
+ 		std::string key;
+		parseStringHelper(key);
+		ch = getValidChar();
 		if (ch != ':')
 			PARSE_EXCEPTION("expected ':' in Map, got " + dump_char(ch));
-		m_in.get();
-		RpcValue key_val = parseAtPos();
-		map[key] = key_val;
-		ch = skipGarbage();
-		if (ch == ',')
-			ch = nextValidChar();
-		//PARSE_EXCEPTION("unexpected delimiter in IMap, got " + dump_char(ch));
+		RpcValue val;
+		getValue(val);
+		map[key] = val;
 	}
-	m_in.get();
 	val = map;
-	return true;
 }
 
-bool CponReader::parseIMap(RpcValue &val)
+void CponReader::parseIMap(RpcValue &val)
 {
-	if (!getString(S_IMAP_BEGIN))
-		return false;
-	skipGarbage();
-	RpcValue::IMap imap = parseIMapContent('}');
-	val = imap;
-	return true;
-}
-
-bool CponReader::parseArray(RpcValue &ret_val)
-{
-	if (!getString(S_ARRAY_BEGIN))
-		return false;
-	RpcValue::Array arr;
-	char ch = skipGarbage();
+	RpcValue::IMap map;
 	while (true) {
+		auto ch = getValidChar();
+		if (ch == ',')
+			continue;
+		if(ch == '}')
+			break;
+		m_in.unget();
+		RpcValue val;
+		parseNumber(val);
+		if(!(val.type() == RpcValue::Type::Int || val.type() == RpcValue::Type::UInt))
+			PARSE_EXCEPTION("int key expected");
+		RpcValue::UInt key = val.toUInt();
+		ch = getValidChar();
+		if (ch != ':')
+			PARSE_EXCEPTION("expected ':' in IMap, got " + dump_char(ch));
+		getValue(val);
+		map[key] = val;
+	}
+	val = map;
+}
+
+void CponReader::parseMetaData(RpcValue::MetaData &meta_data)
+{
+	RpcValue::IMap imap;
+	RpcValue::Map smap;
+	while (true) {
+		char ch = getValidChar();
+		if (ch == ',')
+			continue;
+		if(ch == '>')
+			break;
+		m_in.unget();
+		RpcValue key;
+		getValue(key);
+		if(!(key.type() == RpcValue::Type::Int || key.type() == RpcValue::Type::UInt)
+		   && !(key.type() == RpcValue::Type::String))
+			PARSE_EXCEPTION("key expected");
+		ch = getValidChar();
+		if (ch != ':')
+			PARSE_EXCEPTION("expected ':' in MetaData, got " + dump_char(ch));
+		RpcValue val;
+		getValue(val);
+		if(key.type() == RpcValue::Type::String)
+			smap[key.toString()] = val;
+		else
+			imap[key.toUInt()] = val;
+	}
+	meta_data = RpcValue::MetaData(std::move(imap), std::move(smap));
+}
+
+void CponReader::parseArray(RpcValue &ret_val)
+{
+	RpcValue::Array arr;
+	while (true) {
+		auto ch = getValidChar();
+		if (ch == ',')
+			continue;
 		if (ch == ']')
 			break;
-		RpcValue val = parseAtPos();
+		m_in.unget();
+		RpcValue val;
+		getValue(val);
 		if(arr.empty()) {
 			arr = RpcValue::Array(val.type());
 		}
@@ -464,119 +482,74 @@ bool CponReader::parseArray(RpcValue &ret_val)
 				PARSE_EXCEPTION("Mixed types in Array");
 		}
 		arr.push_back(RpcValue::Array::makeElement(val));
-		ch = skipGarbage();
-		if (ch == ',')
-			ch = nextValidChar();
 	}
-	m_in.get();
 	ret_val = arr;
-	return true;
 }
 
-bool CponReader::parseDateTime(RpcValue &val)
+void CponReader::parseDateTime(RpcValue &val)
 {
-	if(!getString(S_DATETIME_BEGIN))
-		return false;
-	m_in.unget();
 	std::string s;
-	if(parseStringHelper(s)) {
-		val = RpcValue::DateTime::fromUtcString(s);
-		return true;
-	}
-	PARSE_EXCEPTION("error parsing DateTime");
+	parseStringHelper(s);
+	val = RpcValue::DateTime::fromUtcString(s);
 }
 
-uint64_t CponReader::parseDecimalUnsigned(int radix)
+uint64_t CponReader::parseInteger(int &cnt)
 {
-	uint64_t ret = 0;
-	while(!m_in.eof()) {
-		auto ch = m_in.peek();
-		if(in_range(ch, '0', '9')) {
+	int64_t ret = 0;
+	cnt = 0;
+	int sig = 0;
+	int radix = 10;
+	while(true) {
+		char ch = m_in.get();
+		if(ch == 'x' && cnt == 1 && ret == 0) {
+			radix = 16;
+		}
+		else if(ch == '-' && sig == 0) {
+			sig = -1;
+		}
+		else if(ch == '+' && sig == 0) {
+			sig = 1;
+		}
+		else if(in_range(ch, '0', '9')) {
 			ret *= radix;
 			ret += (ch - '0');
-			m_in.get();
+			cnt++;
+		}
+		else if(radix == 16 && in_range(ch, 'a', 'f')) {
+			ret *= radix;
+			ret += (ch - 'a' + 10);
+			cnt++;
+		}
+		else if(radix == 16 && in_range(ch, 'A', 'F')) {
+			ret *= radix;
+			ret += (ch - 'A' + 10);
+			cnt++;
 		}
 		else {
+			m_in.unget();
 			break;
 		}
 	}
+	if(sig == 0)
+		sig = 1;
+	ret *= sig;
 	return ret;
 }
 
-RpcValue::IMap CponReader::parseIMapContent(char closing_bracket)
+void CponReader::parseStringHelper(std::string &val)
 {
-	RpcValue::IMap map;
-	char ch = skipGarbage();
-	while (true) {
-		if(ch == closing_bracket)
-			break;
-		RpcValue v;
-		if(!parseNumber(v))
-			PARSE_EXCEPTION("number key expected");
-		if(!(v.type() == RpcValue::Type::Int || v.type() == RpcValue::Type::UInt))
-			PARSE_EXCEPTION("int key expected");
-		RpcValue::UInt key = v.toUInt();
-		ch = skipGarbage();
-		if (ch != ':')
-			PARSE_EXCEPTION("expected ':' in IMap, got " + dump_char(ch));
-		m_in.get();
-		RpcValue val = parseAtPos();
-		map[key] = val;
-		ch = skipGarbage();
-		if (ch == ',')
-			ch = nextValidChar();
-	}
-	m_in.get();
-	return map;
-}
-
-RpcValue::MetaData CponReader::parseMetaDataContent(char closing_bracket)
-{
-	RpcValue::IMap imap;
-	RpcValue::Map smap;
-	char ch = skipGarbage();
-	while (true) {
-		if(ch == closing_bracket)
-			break;
-		RpcValue key = parseAtPos();
-		if(!(key.type() == RpcValue::Type::Int || key.type() == RpcValue::Type::UInt)
-		   && !(key.type() == RpcValue::Type::String))
-			PARSE_EXCEPTION("key expected");
-		ch = skipGarbage();
-		if (ch != ':')
-			PARSE_EXCEPTION("expected ':' in IMap, got " + dump_char(ch));
-		nextValidChar();
-		RpcValue val = parseAtPos();
-		if(key.type() == RpcValue::Type::String)
-			smap[key.toString()] = val;
-		else
-			imap[key.toUInt()] = val;
-		ch = skipGarbage();
-		if (ch == ',')
-			ch = nextValidChar();
-	}
-	m_in.get();
-	return RpcValue::MetaData(std::move(imap), std::move(smap));
-}
-
-bool CponReader::parseStringHelper(std::string &val)
-{
-	char ch = currentChar();
-	if (ch != '"')
-		return false;
-
 	std::string str_val;
 	long last_escaped_codepoint = -1;
 	while (true) {
 		if (m_in.eof())
 			PARSE_EXCEPTION("unexpected end of input in string");
 
-		ch = m_in.get();
+		auto ch = m_in.get();
 
 		if (ch == '"') {
-			encodeUtf8(last_escaped_codepoint, str_val);
+			decodeUtf8(last_escaped_codepoint, str_val);
 			val = str_val;
-			return true;
+			return;
 		}
 
 		if (in_range(ch, 0, 0x1f))
@@ -584,7 +557,7 @@ bool CponReader::parseStringHelper(std::string &val)
 
 		// The usual case: non-escaped characters
 		if (ch != '\\') {
-			encodeUtf8(last_escaped_codepoint, str_val);
+			decodeUtf8(last_escaped_codepoint, str_val);
 			last_escaped_codepoint = -1;
 			str_val += ch;
 			continue;
@@ -623,17 +596,17 @@ bool CponReader::parseStringHelper(std::string &val)
 				&& in_range(codepoint, 0xDC00, 0xDFFF)) {
 				// Reassemble the two surrogate pairs into one astral-plane character, per
 				// the UTF-16 algorithm.
-				encodeUtf8((((last_escaped_codepoint - 0xD800) << 10)
+				decodeUtf8((((last_escaped_codepoint - 0xD800) << 10)
 							 | (codepoint - 0xDC00)) + 0x10000, str_val);
 				last_escaped_codepoint = -1;
 			} else {
-				encodeUtf8(last_escaped_codepoint, str_val);
+				decodeUtf8(last_escaped_codepoint, str_val);
 				last_escaped_codepoint = codepoint;
 			}
 			continue;
 		}
 
-		encodeUtf8(last_escaped_codepoint, str_val);
+		decodeUtf8(last_escaped_codepoint, str_val);
 		last_escaped_codepoint = -1;
 
 		if (ch == 'b') {

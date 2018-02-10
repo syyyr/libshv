@@ -41,36 +41,34 @@ public:
 	CponReader& operator >>(RpcValue &value);
 	CponReader& operator >>(RpcValue::MetaData &meta_data);
 private:
-	RpcValue parseAtPos();
+	void getValue(RpcValue &val);
+	int getChar();
+private:
+	//RpcValue parseAtPos();
 
-	uint64_t parseDecimalUnsigned(int radix);
+	uint64_t parseInteger(int &cnt);
 	RpcValue::IMap parseIMapContent(char closing_bracket);
 	RpcValue::MetaData parseMetaDataContent(char closing_bracket);
-	bool parseStringHelper(std::string &val);
+	void parseStringHelper(std::string &val);
 
-	bool parseMetaData(RpcValue::MetaData &meta_data);
+	void parseMetaData(RpcValue::MetaData &meta_data);
 
-	bool parseNull(RpcValue &val);
-	bool parseBool(RpcValue &val);
-	bool parseString(RpcValue &val);
-	bool parseBlob(RpcValue &val);
-	bool parseNumber(RpcValue &val);
-	bool parseList(RpcValue &val);
-	bool parseArray(RpcValue &ret_val);
-	bool parseMap(RpcValue &val);
-	bool parseIMap(RpcValue &val);
-	bool parseDateTime(RpcValue &val);
+	void parseNull(RpcValue &val);
+	void parseBool(RpcValue &val);
+	void parseString(RpcValue &val);
+	void parseBlob(RpcValue &val);
+	void parseNumber(RpcValue &val);
+	void parseList(RpcValue &val);
+	void parseArray(RpcValue &ret_val);
+	void parseMap(RpcValue &val);
+	void parseIMap(RpcValue &val);
+	void parseDateTime(RpcValue &val);
 
-	void skipWhiteSpace();
-	bool skipComment();
+	char getValidChar();
+	std::string getString(size_t n);
 
-	char skipGarbage();
-	char nextValidChar();
-	char currentChar();
+	void decodeUtf8(long pt, std::string &out);
 
-	void encodeUtf8(long pt, std::string &out);
-
-	bool getString(const char *str);
 private:
 	std::istream &m_in;
 	int m_depth = 0;

@@ -28,7 +28,7 @@ static const char S_UNSIGNED_END('u');
 
 void CponWriter::startBlock()
 {
-	if(m_opts.isIndent() > 0) {
+	if(m_opts.isIndent()) {
 		m_out << '\n';
 		m_currentIndent++;
 	}
@@ -36,25 +36,33 @@ void CponWriter::startBlock()
 
 void CponWriter::endBlock()
 {
-	if(m_opts.isIndent() > 0) {
+	if(m_opts.isIndent()) {
 		m_out << '\n';
 		m_currentIndent--;
+		indentElement();
+	}
+}
+
+void CponWriter::indentElement()
+{
+	if(m_opts.isIndent()) {
+		m_out << std::string(m_currentIndent, '\t');
 	}
 }
 
 void CponWriter::separateElement()
 {
-	m_out << ", ";
-	if(m_opts.isIndent() > 0) {
-		m_out << '\n';
-		m_out << std::string(m_currentIndent, '\t');
-	}
+	m_out << ',';
+	m_out << (m_opts.isIndent()? '\n': ' ');
 }
 
 CponWriter &CponWriter::operator <<(const RpcValue &value)
 {
-	if(!value.metaData().isEmpty())
+	if(!value.metaData().isEmpty()) {
 		*this << value.metaData();
+		if(m_opts.isIndent())
+			m_out << '\n';
+	}
 	switch (value.type()) {
 	case RpcValue::Type::Null: *this << nullptr; return *this;
 	case RpcValue::Type::UInt: *this << value.toUInt(); return *this;
@@ -81,16 +89,17 @@ CponWriter &CponWriter::operator <<(const RpcValue &value)
 CponWriter &CponWriter::operator <<(const RpcValue::MetaData &meta_data)
 {
 	if(!meta_data.isEmpty()) {
+		*this << Begin::Meta;
 		const RpcValue::IMap &cim = meta_data.iValues();
-		if(!cim.empty()) {
-			m_out << (uint8_t)ChainPackProtocol::TypeInfo::MetaIMap;
-			*this << cim;
-		}
+		if(!cim.empty())
+			writeIMapContent(cim);
 		const RpcValue::Map &csm = meta_data.sValues();
 		if(!csm.empty()) {
-			m_out << (uint8_t)ChainPackProtocol::TypeInfo::MetaSMap;
-			*this << csm;
+			if(!cim.empty())
+				separateElement();
+			writeMapContent(csm);
 		}
+		*this << End::Meta;
 	}
 	return *this;
 }
@@ -194,9 +203,7 @@ CponWriter &CponWriter::operator <<(RpcValue::UInt value)
 CponWriter &CponWriter::operator <<(double value)
 {
 	if (std::isfinite(value)) {
-		char buf[32];
-		snprintf(buf, sizeof buf, "%.17g", value);
-		m_out << buf;
+		m_out << value;
 	}
 	else {
 		m_out << S_NULL;
@@ -277,6 +284,7 @@ CponWriter &CponWriter::operator <<(const RpcValue::List &values)
 {
 	*this << Begin::List;
 	for (size_t i = 0; i < values.size(); ) {
+		indentElement();
 		const RpcValue &value = values[i];
 		*this << value;
 		if (++i < values.size())
@@ -288,27 +296,20 @@ CponWriter &CponWriter::operator <<(const RpcValue::List &values)
 
 CponWriter &CponWriter::operator <<(const RpcValue::Array &values)
 {
-	*this << S_ARRAY_BEGIN;
-	for (size_t i = 0; i < values.size(); ++i) {
-		if (i > 0)
-			m_out << ", ";
+	m_out << S_ARRAY_BEGIN;
+	for (size_t i = 0; i < values.size();) {
 		*this << values.valueAt(i);
+		if (++i < values.size())
+			separateElement();
 	}
-	*this << ']'; // array is serialized flat
+	m_out << ']'; // array is serialized flat
 	return *this;
 }
 
 CponWriter &CponWriter::operator <<(const RpcValue::Map &values)
 {
-	size_t ix = 0;
 	*this << Begin::Map;
-	for (const auto &kv : values) {
-		*this << kv.first;
-		m_out << ":";
-		*this << kv.second;
-		if(++ix < values.size())
-			separateElement();
-	}
+	writeMapContent(values);
 	*this << End::Map;
 	return *this;
 }
@@ -321,9 +322,16 @@ CponWriter &CponWriter::operator <<(const RpcValue::IMap &values)
 
 void CponWriter::writeIMap(const RpcValue::IMap &values, const RpcValue::MetaData *meta_data)
 {
-	size_t ix = 0;
 	*this << Begin::IMap;
+	writeIMapContent(values, meta_data);
+	*this << End::IMap;
+}
+
+void CponWriter::writeIMapContent(const RpcValue::IMap &values, const RpcValue::MetaData *meta_data)
+{
+	size_t ix = 0;
 	for (const auto &kv : values) {
+		indentElement();
 		if(m_opts.setTranslateIds() && meta_data) {
 			int mtid = meta_data->metaTypeId();
 			int nsid = meta_data->metaTypeNameSpaceId();
@@ -339,10 +347,22 @@ void CponWriter::writeIMap(const RpcValue::IMap &values, const RpcValue::MetaDat
 		}
 		m_out << ":";
 		*this << kv.second;
-		if(++ix == values.size())
+		if(++ix < values.size())
 			separateElement();
 	}
-	*this << End::IMap;
+}
+
+void CponWriter::writeMapContent(const RpcValue::Map &values)
+{
+	size_t ix = 0;
+	for (const auto &kv : values) {
+		indentElement();
+		*this << kv.first;
+		m_out << ":";
+		*this << kv.second;
+		if(++ix < values.size())
+			separateElement();
+	}
 }
 
 } // namespace chainpack
