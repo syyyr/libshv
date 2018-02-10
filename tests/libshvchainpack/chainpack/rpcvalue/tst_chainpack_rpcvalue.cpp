@@ -58,6 +58,22 @@ private:
 	void textTest()
 	{
 		qDebug() << "============= chainpack text test ============";
+		qDebug() << "--------------- Numbers";
+		{
+			string err;
+			QVERIFY(err.empty() && RpcValue::parseCpon("0", &err) == RpcValue(0));
+			QVERIFY(err.empty() && RpcValue::parseCpon("123", &err) == RpcValue(123));
+			QVERIFY(err.empty() && RpcValue::parseCpon("-123", &err) == RpcValue(-123));
+			QVERIFY(err.empty() && RpcValue::parseCpon("3u", &err) == RpcValue((RpcValue::UInt)3));
+			QVERIFY(err.empty() && RpcValue::parseCpon("223.", &err) == RpcValue(223.));
+			QVERIFY(err.empty() && RpcValue::parseCpon("0.123", &err) == RpcValue(0.123));
+			QVERIFY(err.empty() && RpcValue::parseCpon(".123", &err) == RpcValue(.123));
+			//qDebug() << RpcValue::parseCpon("7e23", &err).toDouble() << RpcValue(7e23).toDouble();
+			QVERIFY(err.empty() && RpcValue::parseCpon("1e23", &err) == RpcValue(1e23));
+			QVERIFY(err.empty() && RpcValue::parseCpon("1e-3", &err) == RpcValue(1e-3));
+			QVERIFY(err.empty() && RpcValue::parseCpon("0x123abc", &err) == RpcValue(0x123abc));
+			QVERIFY(err.empty() && RpcValue::parseCpon("0.0123n", &err) == RpcValue(RpcValue::Decimal(123, 4)));
+		}
 		qDebug() << "--------------- List test";
 		{
 			string err;
@@ -85,7 +101,7 @@ private:
 								)";
 			const auto cp = RpcValue::parseCpon(test, &err);
 			QVERIFY(err.empty());
-			qDebug() << "List test: " << cp.toCpon().c_str();
+			qDebug() << "List test:" << test << "==" << cp.toCpon();
 			QVERIFY(cp[0] == "foo bar");
 			QVERIFY(cp[1] == 123);
 			QVERIFY(cp[2] == true);
@@ -102,7 +118,7 @@ private:
 		}
 		{
 			string err;
-			for(auto test : {"{}", "{ }", " { }", R"({ "1": 2,"3": 45  , })"}) {
+			for(auto test : {"{}", "{ }", " { }", R"({ "1": 2,"3": 45u  , })"}) {
 				const RpcValue cp = RpcValue::parseCpon(test, &err);
 				qDebug() << test << "--->" << cp.toCpon();
 				QVERIFY(err.empty());
@@ -127,12 +143,13 @@ private:
 		{
 			string err;
 			const string imap_test = R"(
-									 <1:"foo", 2u: "bar">
+									 <1:"foo", 2u: "bar", "pi-value":3.14>
 									 i{
 									   1:"v1",
 									   2:42,
 									   3:[
 									     "a",
+									     {"foo":1,"bar":2,"baz":3},
 									     123,
 									     true,
 									     false,
@@ -142,8 +159,9 @@ private:
 									 }
 									 )";
 			const auto json = RpcValue::parseCpon(imap_test, &err);
+			qDebug() << "imap_test: " << json.toStdString();
+			qDebug() << "err: " << err;
 			QVERIFY(err.empty());
-			qDebug() << "imap_test: " << json.toCpon().c_str();
 		}
 
 		qDebug() << "--------------- Map test";
@@ -774,7 +792,7 @@ private slots:
 	void testProtocol()
 	{
 		textTest();
-		binaryTest();
+		//binaryTest();
 	}
 
 	void cleanupTestCase()

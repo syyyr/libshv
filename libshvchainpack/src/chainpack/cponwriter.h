@@ -75,11 +75,14 @@ public:
 	CponWriter& operator <<(const RpcValue::List &values);
 	CponWriter& operator <<(const RpcValue::Array &values);
 	CponWriter& operator <<(const RpcValue::Map &values);
-	CponWriter &operator <<(const RpcValue::IMap &values);
+	CponWriter& operator <<(const RpcValue::IMap &values);
 private:
 	void writeIMap(const RpcValue::IMap &values, const RpcValue::MetaData *meta_data = nullptr);
+	void writeIMapContent(const RpcValue::IMap &values, const RpcValue::MetaData *meta_data = nullptr);
+	void writeMapContent(const RpcValue::Map &values);
 	void startBlock();
 	void endBlock();
+	void indentElement();
 	void separateElement();
 private:
 	std::ostream &m_out;

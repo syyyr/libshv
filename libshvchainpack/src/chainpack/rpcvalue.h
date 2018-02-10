@@ -39,8 +39,8 @@ public:
 		Array,
 		Map,
 		IMap,
-		//MetaIMap,
 		Decimal,
+		//MetaData,
 	};
 	static const char* typeToName(Type t);
 

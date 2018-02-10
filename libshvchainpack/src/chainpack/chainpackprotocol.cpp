@@ -322,7 +322,6 @@ ChainPackProtocol::TypeInfo::Enum ChainPackProtocol::typeToTypeInfo(RpcValue::Ty
 	case RpcValue::Type::IMap: return TypeInfo::IMap;
 	//case RpcValue::Type::DateTimeEpoch: return TypeInfo::DateTimeEpoch;
 	case RpcValue::Type::DateTime: return TypeInfo::DateTime;
-	//case RpcValue::Type::MetaIMap: return TypeInfo::MetaIMap;
 	case RpcValue::Type::Decimal: return TypeInfo::Decimal;
 	}
 	SHVCHP_EXCEPTION("Unknown RpcValue::Type!");
