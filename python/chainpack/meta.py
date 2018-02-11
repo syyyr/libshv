@@ -10,19 +10,20 @@ class RpcMessage():
 	ID = 1
 
 	class Key(enum.IntFlag):
-		Method = 1,
-		Params = 2,
-		Result = 3,
-		Error = 4,
-		ErrorCode = 5,
-		ErrorMessage = 6,
-		MAX = 7
+		Params = 1,
+		Result = 2,
+		Error = 3,
+		ErrorCode = 4,
+		ErrorMessage = 5,
+		MAX = 6
 
 	class Tag(enum.IntFlag):
 		RequestId = Tag.USER,
-		RpcCallType = Tag.USER + 1,
-		DeviceId = Tag.USER + 2,
-		MAX = Tag.USER + 3
+		CallerId = Tag.USER + 1,
+		Method = Tag.USER + 2,
+		ShvPath = Tag.USER + 3,
+		ProtocolVersion = Tag.USER + 4,
+		MAX = Tag.USER + 5
 
 	class RpcCallType(enum.IntFlag):
 		Undefined = 0,

@@ -128,24 +128,32 @@ def testBlob():
 	cp2 = out.read()
 	print(cp1, " ", cp1, " ", cp2, " len: ", " dump: ", out)#binary_dump(out.str()).c_str();
 	cp1.assertEquals(cp2);
-"""
+
 def testDateTime():
 	print("------------- DateTime")
-	a = datetime(2017,5,3,5, 52,3)
-	print (a)
-	for dt in [ (datetime(2017,5,3,5, 52,3), 0),
-				datetime(2017,5,3,15,52,3,923000),
-				(datetime(2017,5,3,15,52,31,0), 10),
-				datetime(2017,5,3,15,52,3),
-				(datetime(2017,5,3,15,52,3,0), -1),
-				datetime(2017,5,3,15,52,3,923000)]:
+	for dt in [
+				#UtcAndTz(datetime(2243, 1, 1, 0, 0, 0, 1000, tzinfo=timezone.utc),0),#https://bugs.python.org/issue23517
+				UtcAndTz(datetime(1978, 7, 6, 4, 51, 44, 30000, tzinfo=timezone.utc),52),
+				UtcAndTz(datetime(2018,2,2, 0,0,0,    0,timezone.utc), -4),
+				UtcAndTz(datetime(2018,2,2, 0,0,0,    1000,timezone.utc), 0),
+				UtcAndTz(datetime(2017,5,3, 5,52,3,   0,timezone.utc), 0),
+				UtcAndTz(datetime(2017,5,3, 15,52,3,  923000,timezone.utc)),
+				UtcAndTz(datetime(2017,5,3, 15,52,31, 0,timezone.utc), 10),
+				UtcAndTz(datetime(2017,5,3, 15,52,3,  0,timezone.utc)),
+				UtcAndTz(datetime(2017,5,3, 15,52,3,  0,timezone.utc), 1),
+				UtcAndTz(datetime(2017,5,3, 15,52,3,  0,timezone.utc), -1),
+				UtcAndTz(datetime(2017,5,3, 15,52,3,  0,timezone.utc), 63),
+				UtcAndTz(datetime(2017,5,3, 15,52,3,  0,timezone.utc), -64),
+				UtcAndTz(datetime(2017,5,3, 15,52,3,  923000,timezone.utc)),
+				]:
 					cp1 = RpcValue(dt)
 					out = ChainPackProtocol()
 					len = out.write(cp1)
-					cp2 = out.read()
+					out2 = ChainPackProtocol(out[:])
+					cp2 = out2.read()
 					print(dt, cp1, cp2, " len: " ,len ," dump: " ,out);
 					cp1.assertEquals(cp2)
-"""
+
 def testArray():
 	print("------------- Array")
 	cp1 = RpcValueArray(Type.Int)
@@ -164,16 +172,21 @@ def testArray():
 
 def round_trip(x):
 	print("encoding:",x)
-	r = ChainPackProtocol(x)
-	print("encoded:",r)
-	v = blob.read()
-	print("decoded:",v)
-	return v
+	encoded = ChainPackProtocol(x)
+	print("encoded:",encoded)
+	decoded = encoded.read()
+	print("decoded:",decoded)
+	return decoded
 
+
+@composite
+def utc_and_tz(draw, dt=datetimes(min_value=datetime(1970,1,1,0,0), max_value=datetime(2242, 1,1,0,0)), tz=integers(-64, 63)):
+	dt = draw(dt).replace(tzinfo=timezone.utc)
+	return UtcAndTz(dt.replace(microsecond=trunc(dt.microsecond/1000)*1000), draw(tz))
 
 #hypothesis_test_integers = integers()
 hypothesis_test_integers = integers(-2147483647, 2147483647)
-test_data = recursive(none() | booleans() | floats(allow_nan=False, allow_infinity=False) | hypothesis_test_integers | text(),
+test_data = recursive(none() | booleans() | floats(allow_nan=False, allow_infinity=False) | hypothesis_test_integers | text() | utc_and_tz(),
 lambda children: lists(children) | dictionaries(text(), children))
 
 with hypothesis.settings(verbosity=hypothesis.Verbosity.verbose):
