@@ -333,6 +333,7 @@ public:
 	RpcValue operator[](const RpcValue::String &key) const {return at(key);}
 	void set(UInt ix, const RpcValue &val);
 	void set(const RpcValue::String &key, const RpcValue &val);
+	void append(const RpcValue &val);
 
 	std::string toStdString() const;
 	std::string toCpon() const;
