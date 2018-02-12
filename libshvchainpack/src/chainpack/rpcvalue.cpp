@@ -93,6 +93,7 @@ public:
 	virtual RpcValue at(const RpcValue::String &key) const;
 	virtual void set(RpcValue::UInt ix, const RpcValue &val);
 	virtual void set(const RpcValue::String &key, const RpcValue &val);
+	virtual void append(const RpcValue &);
 };
 
 /* * * * * * * * * * * * * * * * * * * *
@@ -260,6 +261,7 @@ class ChainPackArray final : public ValueData<RpcValue::Type::Array, RpcValue::A
 {
 	size_t count() const override {return m_value.size();}
 	RpcValue at(RpcValue::UInt i) const override;
+	void set(RpcValue::UInt key, const RpcValue &val) override;
 	bool equals(const RpcValue::AbstractValueData * other) const override
 	{
 		const RpcValue::Array other_array = other->toArray();
@@ -274,27 +276,9 @@ class ChainPackArray final : public ValueData<RpcValue::Type::Array, RpcValue::A
 		}
 		return true;
 	}
-	/*
-	void checkSameType()
-	{
-		Value::Type::Enum type = Value::Type::Invalid;
-		int n = 0;
-		for (const auto &value : m_value) {
-			Value::Type::Enum t = value.type();
-			if(n++ == 0) {
-				type = t;
-			}
-			else if(t != type) {
-				SHV_EXCEPTION("Table must contain values of same type!");
-			}
-		}
-	}
-	*/
 public:
 	explicit ChainPackArray(const RpcValue::Array &value) : ValueData(value) {}
 	explicit ChainPackArray(RpcValue::Array &&value) noexcept : ValueData(std::move(value)) {}
-	//explicit ChainPackTable(const ChainPack::List &value) : ValueData(value) {}
-	//explicit ChainPackTable(ChainPack::List &&value) : ValueData(move(value)) {}
 
 	RpcValue::Type arrayType() const override {return m_value.type();}
 	const RpcValue::Array &toArray() const override { return m_value; }
@@ -302,9 +286,9 @@ public:
 
 class ChainPackMap final : public ValueData<RpcValue::Type::Map, RpcValue::Map>
 {
-	//const ChainPack::Map &toMap() const override { return m_value; }
 	size_t count() const override {return m_value.size();}
 	RpcValue at(const RpcValue::String &key) const override;
+	void set(const RpcValue::String &key, const RpcValue &val) override;
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toMap(); }
 public:
 	explicit ChainPackMap(const RpcValue::Map &value) : ValueData(value) {}
@@ -507,7 +491,7 @@ void RpcValue::set(RpcValue::UInt ix, const RpcValue &val)
 	if(m_ptr)
 		m_ptr->set(ix, val);
 	else
-		std::cerr << __FILE__ << ':' << __LINE__ << " Cannot set value to invalid ChainPack value! Index: " << ix << std::endl;
+		nError() << " Cannot set value to invalid ChainPack value! Index: " << ix;
 }
 
 void RpcValue::set(const RpcValue::String &key, const RpcValue &val)
@@ -515,7 +499,15 @@ void RpcValue::set(const RpcValue::String &key, const RpcValue &val)
 	if(m_ptr)
 		m_ptr->set(key, val);
 	else
-		std::cerr << __FILE__ << ':' << __LINE__ << " Cannot set value to invalid ChainPack value! Key: " << key << std::endl;
+		nError() << " Cannot set value to invalid ChainPack value! Key: " << key;
+}
+
+void RpcValue::append(const RpcValue &val)
+{
+	if(m_ptr)
+		m_ptr->append(val);
+	else
+		nError() << "Cannot append to invalid ChainPack value!";
 }
 
 std::string RpcValue::toStdString() const
@@ -554,12 +546,17 @@ RpcValue RpcValue::AbstractValueData::at(const RpcValue::String &) const { retur
 
 void RpcValue::AbstractValueData::set(RpcValue::UInt ix, const RpcValue &)
 {
-	std::cerr << __FILE__ << ':' << __LINE__ << " Value::AbstractValueData::set: trivial implementation called! Key: " << ix << std::endl;
+	nError() << "RpcValue::AbstractValueData::set: trivial implementation called! Key: " << ix;
 }
 
 void RpcValue::AbstractValueData::set(const RpcValue::String &key, const RpcValue &)
 {
-	std::cerr << __FILE__ << ':' << __LINE__ << " Value::AbstractValueData::set: trivial implementation called! Key: " << key << std::endl;
+	nError() << "RpcValue::AbstractValueData::set: trivial implementation called! Key: " << key;
+}
+
+void RpcValue::AbstractValueData::append(const RpcValue &)
+{
+	nError() << "RpcValue::AbstractValueData::append: trivial implementation called!";
 }
 
 
@@ -584,6 +581,13 @@ RpcValue ChainPackArray::at(RpcValue::UInt i) const
 		return static_chain_pack_invalid();
 	else
 		return m_value.valueAt(i);
+}
+
+void ChainPackArray::set(RpcValue::UInt key, const RpcValue &val)
+{
+	if(key >= m_value.size())
+		m_value.resize(key + 1);
+	m_value[key] = RpcValue::Array::makeElement(val);
 }
 
 /* * * * * * * * * * * * * * * * * * * *
@@ -656,6 +660,14 @@ RpcValue ChainPackMap::at(const RpcValue::String &key) const
 {
 	auto iter = m_value.find(key);
 	return (iter == m_value.end()) ? static_chain_pack_invalid() : iter->second;
+}
+
+void ChainPackMap::set(const RpcValue::String &key, const RpcValue &val)
+{
+	if(val.isValid())
+		m_value[key] = val;
+	else
+		m_value.erase(key);
 }
 
 RpcValue ChainPackIMap::at(RpcValue::UInt key) const
