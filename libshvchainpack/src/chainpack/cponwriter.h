@@ -1,5 +1,4 @@
-#ifndef CPONWRITER_H
-#define CPONWRITER_H
+#pragma once
 
 #include "abstractstreamwriter.h"
 
@@ -26,30 +25,6 @@ class SHVCHAINPACK_DECL_EXPORT CponWriter : public AbstractStreamWriter
 public:
 	enum class Begin {Map, IMap, List, Meta, Array};
 	enum class End {Map, IMap, List, Meta, Array};
-
-	class ListElement : public RpcValue
-	{
-		friend class CponWriter;
-		const RpcValue &val;
-	public:
-		ListElement(const RpcValue &v) : val(v) {}
-	};
-	class MapElement
-	{
-		friend class CponWriter;
-		const std::string &key;
-		const RpcValue &val;
-	public:
-		MapElement(const std::string &k, const RpcValue &v) : key(k), val(v) {}
-	};
-	class IMapElement
-	{
-		friend class CponWriter;
-		const RpcValue::UInt key;
-		const RpcValue &val;
-	public:
-		IMapElement(RpcValue::UInt k, const RpcValue &v) : key(k), val(v) {}
-	};
 public:
 	CponWriter(std::ostream &out) : m_out(out) {}
 	CponWriter(std::ostream &out, const CponWriterOptions &opts) : CponWriter(out) {m_opts = opts;}
@@ -59,6 +34,7 @@ public:
 
 	CponWriter& operator <<(Begin manip);
 	CponWriter& operator <<(End manip);
+	//CponWriter& operator <<(const BeginArray &arr);
 	CponWriter& operator <<(const ListElement &el);
 	CponWriter& operator <<(const MapElement &el);
 	CponWriter& operator <<(const IMapElement &el);
@@ -93,4 +69,3 @@ private:
 } // namespace chainpack
 } // namespace shv
 
-#endif // CPONWRITER_H

@@ -1,6 +1,7 @@
-#ifndef CPONREADER_H
-#define CPONREADER_H
+#pragma once
 
+#include "abstractstreamreader.h"
+#include "cpontokenizer.h"
 #include "rpcvalue.h"
 
 namespace shv {
@@ -22,8 +23,9 @@ public:
 	*/
 };
 
-class SHVCHAINPACK_DECL_EXPORT CponReader
+class SHVCHAINPACK_DECL_EXPORT CponReader : public AbstractStreamReader
 {
+	using Super = AbstractStreamReader;
 public:
 	class SHVCHAINPACK_DECL_EXPORT ParseException : public std::exception
 	{
@@ -36,16 +38,17 @@ public:
 		std::string m_message;
 	};
 public:
-	CponReader(std::istream &in) : m_in(in) {}
+	CponReader(std::istream &in) : Super(), m_tokenizer(in) {}
 
 	CponReader& operator >>(RpcValue &value);
 	CponReader& operator >>(RpcValue::MetaData &meta_data);
 private:
-	void getValue(RpcValue &val);
-	int getChar();
+	void readValue(RpcValue &val);
+	void readMetaData(RpcValue::MetaData &meta_data);
+	//int getChar();
 private:
 	//RpcValue parseAtPos();
-
+	/*
 	uint64_t parseInteger(int &cnt);
 	RpcValue::IMap parseIMapContent(char closing_bracket);
 	RpcValue::MetaData parseMetaDataContent(char closing_bracket);
@@ -68,13 +71,11 @@ private:
 	std::string getString(size_t n);
 
 	void decodeUtf8(long pt, std::string &out);
-
+	*/
 private:
-	std::istream &m_in;
-	int m_depth = 0;
+	CponTokenizer m_tokenizer;
 };
 
 } // namespace chainpack
 } // namespace shv
 
-#endif // CPONREADER_H

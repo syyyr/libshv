@@ -1,6 +1,5 @@
 SOURCES += \
     $$PWD/rpc.cpp \
-    $$PWD/chainpackprotocol.cpp \
     $$PWD/rpcmessage.cpp \
     $$PWD/rpcvalue.cpp \
     $$PWD/rpcdriver.cpp \
@@ -10,11 +9,16 @@ SOURCES += \
     $$PWD/abstractstreamreader.cpp \
     $$PWD/abstractstreamwriter.cpp \
     $$PWD/cponwriter.cpp \
-    $$PWD/cponreader.cpp
+    $$PWD/cponreader.cpp \
+    $$PWD/chainpackreader.cpp \
+    $$PWD/chainpack.cpp \
+    $$PWD/chainpackwriter.cpp \
+    $$PWD/abstractstreamtokenizer.cpp \
+    $$PWD/cpontokenizer.cpp \
+    $$PWD/chainpacktokenizer.cpp
 
 HEADERS += \
     $$PWD/rpc.h \
-    $$PWD/chainpackprotocol.h \
     $$PWD/rpcmessage.h \
     $$PWD/rpcvalue.h \
     $$PWD/rpcdriver.h \
@@ -24,7 +28,13 @@ HEADERS += \
     $$PWD/abstractstreamreader.h \
     $$PWD/abstractstreamwriter.h \
     $$PWD/cponwriter.h \
-    $$PWD/cponreader.h
+    $$PWD/cponreader.h \
+    $$PWD/chainpackreader.h \
+    $$PWD/chainpack.h \
+    $$PWD/chainpackwriter.h \
+    $$PWD/abstractstreamtokenizer.h \
+    $$PWD/cpontokenizer.h \
+    $$PWD/chainpacktokenizer.h
 
 unix {
 SOURCES += \

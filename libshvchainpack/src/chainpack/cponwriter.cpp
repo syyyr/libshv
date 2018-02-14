@@ -1,5 +1,5 @@
 #include "cponwriter.h"
-#include "chainpackprotocol.h"
+#include "chainpack.h"
 
 #include <iostream>
 #include <cmath>

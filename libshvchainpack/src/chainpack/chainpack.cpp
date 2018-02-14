@@ -1,4 +1,4 @@
-#include "chainpackprotocol.h"
+#include "chainpack.h"
 
 #include "exception.h"
 //#include "../core/log.h"
@@ -303,7 +303,7 @@ RpcValue::DateTime readData_DateTimeUtc(std::istream &data)
 */
 } // namespace
 
-ChainPackProtocol::TypeInfo::Enum ChainPackProtocol::typeToTypeInfo(RpcValue::Type type)
+ChainPack::TypeInfo::Enum ChainPack::typeToTypeInfo(RpcValue::Type type)
 {
 	switch (type) {
 	case RpcValue::Type::Invalid:
@@ -328,29 +328,29 @@ ChainPackProtocol::TypeInfo::Enum ChainPackProtocol::typeToTypeInfo(RpcValue::Ty
 	return TypeInfo::INVALID; // just to remove mingw warning
 }
 
-RpcValue::Type ChainPackProtocol::typeInfoToType(ChainPackProtocol::TypeInfo::Enum type_info)
+RpcValue::Type ChainPack::typeInfoToType(ChainPack::TypeInfo::Enum type_info)
 {
 	switch (type_info) {
-	case ChainPackProtocol::TypeInfo::Null: return RpcValue::Type::Null;
-	case ChainPackProtocol::TypeInfo::UInt: return RpcValue::Type::UInt;
-	case ChainPackProtocol::TypeInfo::Int: return RpcValue::Type::Int;
-	case ChainPackProtocol::TypeInfo::Double: return RpcValue::Type::Double;
-	case ChainPackProtocol::TypeInfo::Bool: return RpcValue::Type::Bool;
-	case ChainPackProtocol::TypeInfo::Blob: return RpcValue::Type::Blob;
-	case ChainPackProtocol::TypeInfo::String: return RpcValue::Type::String;
-	case ChainPackProtocol::TypeInfo::DateTimeEpoch: return RpcValue::Type::DateTime; // deprecated
-	case ChainPackProtocol::TypeInfo::DateTime: return RpcValue::Type::DateTime;
-	case ChainPackProtocol::TypeInfo::List: return RpcValue::Type::List;
-	case ChainPackProtocol::TypeInfo::Map: return RpcValue::Type::Map;
-	case ChainPackProtocol::TypeInfo::IMap: return RpcValue::Type::IMap;
-	//case ChainPackProtocol::TypeInfo::MetaIMap: return RpcValue::Type::MetaIMap;
-	case ChainPackProtocol::TypeInfo::Decimal: return RpcValue::Type::Decimal;
+	case ChainPack::TypeInfo::Null: return RpcValue::Type::Null;
+	case ChainPack::TypeInfo::UInt: return RpcValue::Type::UInt;
+	case ChainPack::TypeInfo::Int: return RpcValue::Type::Int;
+	case ChainPack::TypeInfo::Double: return RpcValue::Type::Double;
+	case ChainPack::TypeInfo::Bool: return RpcValue::Type::Bool;
+	case ChainPack::TypeInfo::Blob: return RpcValue::Type::Blob;
+	case ChainPack::TypeInfo::String: return RpcValue::Type::String;
+	case ChainPack::TypeInfo::DateTimeEpoch: return RpcValue::Type::DateTime; // deprecated
+	case ChainPack::TypeInfo::DateTime: return RpcValue::Type::DateTime;
+	case ChainPack::TypeInfo::List: return RpcValue::Type::List;
+	case ChainPack::TypeInfo::Map: return RpcValue::Type::Map;
+	case ChainPack::TypeInfo::IMap: return RpcValue::Type::IMap;
+	//case ChainPack::TypeInfo::MetaIMap: return RpcValue::Type::MetaIMap;
+	case ChainPack::TypeInfo::Decimal: return RpcValue::Type::Decimal;
 	default:
-		SHVCHP_EXCEPTION(std::string("There is type for type info ") + ChainPackProtocol::TypeInfo::name(type_info));
+		SHVCHP_EXCEPTION(std::string("There is type for type info ") + ChainPack::TypeInfo::name(type_info));
 	}
 }
 
-const char *ChainPackProtocol::TypeInfo::name(ChainPackProtocol::TypeInfo::Enum e)
+const char *ChainPack::TypeInfo::name(ChainPack::TypeInfo::Enum e)
 {
 	switch (e) {
 	case INVALID: return "INVALID";
@@ -395,153 +395,288 @@ const char *ChainPackProtocol::TypeInfo::name(ChainPackProtocol::TypeInfo::Enum 
 	return "";
 }
 
-void ChainPackProtocol::writeData_Array(std::ostream &out, const RpcValue::Array &array)
+void ChainPackWriter::writeData_Array(const RpcValue::Array &array)
 {
 	unsigned size = array.size();
-	writeData_UInt(out, size);
+	writeData_UInt(m_out, size);
 	for (unsigned i = 0; i < size; ++i) {
 		const RpcValue &cp = array.valueAt(i);
-		writeData(out, cp);
+		writeData(cp);
 	}
 }
-
-RpcValue::Array ChainPackProtocol::readData_Array(ChainPackProtocol::TypeInfo::Enum array_type_info, std::istream &data)
+#if 0
+RpcValue::Array ChainPackReader::readData_Array(ChainPack::TypeInfo::Enum array_type_info)
 {
-	RpcValue::Type type = typeInfoToType(array_type_info);
+	RpcValue::Type type = ChainPack::typeInfoToType(array_type_info);
 	RpcValue::Array ret(type);
-	RpcValue::UInt size = readData_UInt<RpcValue::UInt>(data);
+	RpcValue::UInt size = readData_UInt<RpcValue::UInt>(m_in);
 	ret.reserve(size);
 	for (unsigned i = 0; i < size; ++i) {
-		RpcValue cp = readData(array_type_info, false, data);
+		RpcValue cp = readData(array_type_info, false);
 		ret.push_back(RpcValue::Array::makeElement(cp));
 	}
 	return ret;
 }
 
-void ChainPackProtocol::writeData_List(std::ostream &out, const RpcValue::List &list)
+void ChainPackWriter::writeData_List(const RpcValue::List &list)
 {
 	unsigned size = list.size();
 	//write_UIntData(out, size);
 	for (unsigned i = 0; i < size; ++i) {
 		const RpcValue &cp = list.at(i);
-		write(out, cp);
+		write(cp);
 	}
-	out << (uint8_t)TypeInfo::TERM;
+	m_out << (uint8_t)ChainPack::TypeInfo::TERM;
 }
 
-RpcValue::List ChainPackProtocol::readData_List(std::istream &data)
+RpcValue::List ChainPackReader::readData_List()
 {
 	RpcValue::List lst;
 	while(true) {
-		int b = data.peek();
+		int b = m_in.peek();
 		if(b < 0)
 			SHVCHP_EXCEPTION("Unexpected EOF!");
-		if(b == ChainPackProtocol::TypeInfo::TERM) {
-			data.get();
+		if(b == ChainPack::TypeInfo::TERM) {
+			m_in.get();
 			break;
 		}
-		RpcValue cp = read(data);
+		RpcValue cp = read();
 		lst.push_back(cp);
 	}
 	return lst;
 }
 
-void ChainPackProtocol::writeData_Map(std::ostream &out, const RpcValue::Map &map)
-{
-	//unsigned size = map.size();
-	//write_UIntData(out, size);
-	for (const auto &kv : map) {
-		writeMapElement(out, kv.first, kv.second);
-	}
-	out << (uint8_t)TypeInfo::TERM;
-}
-
-RpcValue::Map ChainPackProtocol::readData_Map(std::istream &data)
+RpcValue::Map ChainPackReader::readData_Map()
 {
 	RpcValue::Map ret;
 	while(true) {
-		int b = data.peek();
+		int b = m_in.peek();
 		if(b < 0)
 			SHVCHP_EXCEPTION("Unexpected EOF!");
-		if(b == ChainPackProtocol::TypeInfo::TERM) {
-			data.get();
+		if(b == ChainPack::TypeInfo::TERM) {
+			m_in.get();
 			break;
 		}
-		RpcValue::String key = readData_Blob<RpcValue::String>(data);
-		RpcValue cp = read(data);
+		RpcValue::String key = readData_Blob<RpcValue::String>(m_in);
+		RpcValue cp = read();
 		ret[key] = cp;
 	}
 	return ret;
 }
 
-void ChainPackProtocol::writeData_IMap(std::ostream &out, const RpcValue::IMap &map)
+RpcValue::IMap ChainPackReader::readData_IMap()
+{
+	RpcValue::IMap ret;
+	while(true) {
+		int b = m_in.peek();
+		if(b == ChainPack::TypeInfo::TERM) {
+			m_in.get();
+			break;
+		}
+		RpcValue::UInt key = readData_UInt<RpcValue::UInt>(m_in);
+		RpcValue cp = read();
+		ret[key] = cp;
+	}
+	return ret;
+}
+
+uint64_t ChainPackReader::readUIntData(std::istream &in, bool *ok)
+{
+	int bitlen;
+	uint64_t ret = readData_UInt<uint64_t>(in, &bitlen);
+	if(ok)
+		*ok = (bitlen > 0);
+	return ret;
+}
+
+RpcValue ChainPackReader::read()
+{
+	RpcValue ret;
+	RpcValue::MetaData meta_data = readMetaData();
+	uint8_t type = m_in.get();
+	if(type < 128) {
+		if(type & 64) {
+			// tiny Int
+			RpcValue::Int n = type & 63;
+			ret = RpcValue(n);
+		}
+		else {
+			// tiny UInt
+			RpcValue::UInt n = type & 63;
+			ret = RpcValue(n);
+		}
+	}
+	else if(type == ChainPack::TypeInfo::FALSE) {
+		ret = RpcValue(false);
+	}
+	else if(type == ChainPack::TypeInfo::TRUE) {
+		ret = RpcValue(true);
+	}
+	if(!ret.isValid()) {
+		bool is_array = type & ChainPack::ARRAY_FLAG_MASK;
+		type = type & ~ChainPack::ARRAY_FLAG_MASK;
+		ret = readData((ChainPack::TypeInfo::Enum)type, is_array);
+	}
+	if(!meta_data.isEmpty())
+		ret.setMetaData(std::move(meta_data));
+	return ret;
+}
+
+RpcValue::MetaData ChainPackReader::readMetaData()
+{
+	RpcValue::IMap imap;
+	RpcValue::Map smap;
+	while(true) {
+		bool has_meta = true;
+		uint8_t type_info = m_in.peek();
+		switch(type_info) {
+		/*
+		case ChainPack::TypeInfo::META_TYPE_ID:  {
+			m_in.get();
+			RpcValue::UInt u = read_UIntData<RpcValue::UInt>(data);
+			ret.setMetaTypeId(u);
+			break;
+		}
+		case ChainPack::TypeInfo::META_TYPE_NAMESPACE_ID:  {
+			m_in.get();
+			RpcValue::UInt u = read_UIntData<RpcValue::UInt>(data);
+			ret.setMetaTypeNameSpaceId(u);
+			break;
+		}
+		*/
+		case ChainPack::TypeInfo::MetaIMap:  {
+			m_in.get();
+			imap = readData_IMap();
+			break;
+		}
+		case ChainPack::TypeInfo::MetaSMap:  {
+			m_in.get();
+			smap = readData_Map();
+			break;
+		}
+		default:
+			has_meta = false;
+			break;
+		}
+		if(!has_meta)
+			break;
+	}
+	return RpcValue::MetaData(std::move(imap), std::move(smap));
+}
+
+ChainPack::TypeInfo::Enum ChainPackReader::readTypeInfo(RpcValue &meta, int &tiny_uint)
+{
+	uint8_t t = m_in.get();
+	if(t & 128) {
+		t = t & ~128;
+		meta = read();
+	}
+	if(t >= 64) {
+		/// TinyUInt
+		t -= 64;
+		tiny_uint = t;
+		return ChainPack::TypeInfo::UInt;
+	}
+	else {
+		ChainPack::TypeInfo::Enum type = (ChainPack::TypeInfo::Enum)t;
+		return type;
+	}
+}
+
+RpcValue ChainPackReader::readData(ChainPack::TypeInfo::Enum type, bool is_array)
+{
+	RpcValue ret;
+	if(is_array) {
+		RpcValue::Array val = readData_Array(type);
+		ret = RpcValue(val);
+	}
+	else {
+		switch (type) {
+		case ChainPack::TypeInfo::Null: { ret = RpcValue(nullptr); break; }
+		case ChainPack::TypeInfo::UInt: { RpcValue::UInt u = readData_UInt<RpcValue::UInt>(m_in); ret = RpcValue(u); break; }
+		case ChainPack::TypeInfo::Int: { RpcValue::Int i = readData_Int<RpcValue::Int>(m_in); ret = RpcValue(i); break; }
+		case ChainPack::TypeInfo::Double: { double d = readData_Double(m_in); ret = RpcValue(d); break; }
+		case ChainPack::TypeInfo::Decimal: { RpcValue::Decimal d = readData_Decimal(m_in); ret = RpcValue(d); break; }
+		case ChainPack::TypeInfo::TRUE: { bool b = true; ret = RpcValue(b); break; }
+		case ChainPack::TypeInfo::FALSE: { bool b = false; ret = RpcValue(b); break; }
+		case ChainPack::TypeInfo::DateTimeEpoch: { RpcValue::DateTime val = readData_DateTimeEpoch(m_in); ret = RpcValue(val); break; }
+		case ChainPack::TypeInfo::DateTime: { RpcValue::DateTime val = readData_DateTime(m_in); ret = RpcValue(val); break; }
+		case ChainPack::TypeInfo::String: { RpcValue::String val = readData_Blob<RpcValue::String>(m_in); ret = RpcValue(val); break; }
+		case ChainPack::TypeInfo::Blob: { RpcValue::Blob val = readData_Blob<RpcValue::Blob>(m_in); ret = RpcValue(val); break; }
+		case ChainPack::TypeInfo::List: { RpcValue::List val = readData_List(); ret = RpcValue(val); break; }
+		case ChainPack::TypeInfo::Map: { RpcValue::Map val = readData_Map(); ret = RpcValue(val); break; }
+		case ChainPack::TypeInfo::IMap: { RpcValue::IMap val = readData_IMap(); ret = RpcValue(val); break; }
+		case ChainPack::TypeInfo::Bool: { uint8_t t = m_in.get(); ret = RpcValue(t != 0); break; }
+		default:
+			SHVCHP_EXCEPTION("Internal error: attempt to read helper type directly. type: " + Utils::toString(type) + " " + ChainPack::TypeInfo::name(type));
+		}
+	}
+	return ret;
+}
+
+#endif
+void ChainPackWriter::writeData_Map(const RpcValue::Map &map)
 {
 	//unsigned size = map.size();
 	//write_UIntData(out, size);
 	for (const auto &kv : map) {
-		writeMapElement(out, kv.first, kv.second);
+		writeMapElement(kv.first, kv.second);
 	}
-	out << (uint8_t)TypeInfo::TERM;
+	m_out << (uint8_t)ChainPack::TypeInfo::TERM;
 }
 
-RpcValue::IMap ChainPackProtocol::readData_IMap(std::istream &data)
+void ChainPackWriter::writeData_IMap(const RpcValue::IMap &map)
 {
-	RpcValue::IMap ret;
-	while(true) {
-		int b = data.peek();
-		if(b == ChainPackProtocol::TypeInfo::TERM) {
-			data.get();
-			break;
-		}
-		RpcValue::UInt key = readData_UInt<RpcValue::UInt>(data);
-		RpcValue cp = read(data);
-		ret[key] = cp;
+	//unsigned size = map.size();
+	//write_UIntData(out, size);
+	for (const auto &kv : map) {
+		writeMapElement(kv.first, kv.second);
 	}
-	return ret;
+	m_out << (uint8_t)ChainPack::TypeInfo::TERM;
 }
 
-int ChainPackProtocol::write(std::ostream &out, const RpcValue &val)
+int ChainPackWriter::write(const RpcValue &val)
 {
-	std::ostream::pos_type len = out.tellp();
+	std::ostream::pos_type len = m_out.tellp();
 	if(!val.isValid()) {
 		if(WRITE_INVALID_AS_NULL)
-			return write(out, RpcValue(nullptr));
+			return write(RpcValue(nullptr));
 		else
 			SHVCHP_EXCEPTION("Cannot serialize invalid ChainPack.");
 	}
 	else {
-		writeMetaData(out, val.metaData());
-		if(!writeTypeInfo(out, val))
-			writeData(out, val);
-		return (out.tellp() - len);
+		writeMetaData(val.metaData());
+		if(!writeTypeInfo(val))
+			writeData(val);
+		return (m_out.tellp() - len);
 	}
 }
 
-void ChainPackProtocol::writeMetaData(std::ostream &out, const RpcValue::MetaData &meta_data)
+void ChainPackWriter::writeMetaData(const RpcValue::MetaData &meta_data)
 {
 	if(!meta_data.isEmpty()) {
 		const RpcValue::IMap &cim = meta_data.iValues();
 		if(!cim.empty()) {
-			out << (uint8_t)ChainPackProtocol::TypeInfo::MetaIMap;
-			writeData_IMap(out, cim);
+			m_out << (uint8_t)ChainPack::TypeInfo::MetaIMap;
+			writeData_IMap(cim);
 		}
 		const RpcValue::Map &csm = meta_data.sValues();
 		if(!csm.empty()) {
-			out << (uint8_t)ChainPackProtocol::TypeInfo::MetaSMap;
-			writeData_Map(out, csm);
+			m_out << (uint8_t)ChainPack::TypeInfo::MetaSMap;
+			writeData_Map(csm);
 		}
 	}
 }
 
-bool ChainPackProtocol::writeTypeInfo(std::ostream &out, const RpcValue &pack)
+bool ChainPackWriter::writeTypeInfo(const RpcValue &pack)
 {
 	if(!pack.isValid())
 		SHVCHP_EXCEPTION("Cannot serialize invalid ChainPack.");
 	bool ret = false;
 	RpcValue::Type type = pack.type();
-	int t = TypeInfo::INVALID;
+	int t = ChainPack::TypeInfo::INVALID;
 	if(type == RpcValue::Type::Bool) {
-		t = pack.toBool()? ChainPackProtocol::TypeInfo::TRUE: ChainPackProtocol::TypeInfo::FALSE;
+		t = pack.toBool()? ChainPack::TypeInfo::TRUE: ChainPack::TypeInfo::FALSE;
 		ret = true;
 	}
 	else if(type == RpcValue::Type::UInt) {
@@ -561,179 +696,46 @@ bool ChainPackProtocol::writeTypeInfo(std::ostream &out, const RpcValue &pack)
 		}
 	}
 	else if(type == RpcValue::Type::Array) {
-		t = typeToTypeInfo(pack.arrayType());
-		t |= ARRAY_FLAG_MASK;
+		t = ChainPack::typeToTypeInfo(pack.arrayType());
+		t |= ChainPack::ARRAY_FLAG_MASK;
 	}
-	if(t == TypeInfo::INVALID) {
-		t = typeToTypeInfo(pack.type());
+	if(t == ChainPack::TypeInfo::INVALID) {
+		t = ChainPack::typeToTypeInfo(pack.type());
 	}
-	out << (uint8_t)t;
+	m_out << (uint8_t)t;
 	return ret;
 }
 
-void ChainPackProtocol::writeData(std::ostream &out, const RpcValue &val)
+void ChainPackWriter::writeData(const RpcValue &val)
 {
 	RpcValue::Type type = val.type();
 	switch (type) {
 	case RpcValue::Type::Null: break;
-	case RpcValue::Type::Bool: out << (uint8_t)(val.toBool() ? 1 : 0); break;
-	case RpcValue::Type::UInt: { RpcValue::UInt u = val.toUInt(); writeData_UInt(out, u); break; }
-	case RpcValue::Type::Int: { RpcValue::Int n = val.toInt(); writeData_Int<RpcValue::Int>(out, n); break; }
-	case RpcValue::Type::Double: writeData_Double(out, val.toDouble()); break;
-	case RpcValue::Type::Decimal: writeData_Decimal(out, val.toDecimal()); break;
-	case RpcValue::Type::DateTime: writeData_DateTime(out, val.toDateTime()); break;
-	case RpcValue::Type::String: writeData_Blob(out, val.toString()); break;
-	case RpcValue::Type::Blob: writeData_Blob(out, val.toBlob()); break;
-	case RpcValue::Type::List: writeData_List(out, val.toList()); break;
-	case RpcValue::Type::Array: writeData_Array(out, val.toArray()); break;
-	case RpcValue::Type::Map: writeData_Map(out, val.toMap()); break;
-	case RpcValue::Type::IMap: writeData_IMap(out, val.toIMap()); break;
+	case RpcValue::Type::Bool: m_out << (uint8_t)(val.toBool() ? 1 : 0); break;
+	case RpcValue::Type::UInt: { RpcValue::UInt u = val.toUInt(); writeData_UInt(m_out, u); break; }
+	case RpcValue::Type::Int: { RpcValue::Int n = val.toInt(); writeData_Int<RpcValue::Int>(m_out, n); break; }
+	case RpcValue::Type::Double: writeData_Double(m_out, val.toDouble()); break;
+	case RpcValue::Type::Decimal: writeData_Decimal(m_out, val.toDecimal()); break;
+	case RpcValue::Type::DateTime: writeData_DateTime(m_out, val.toDateTime()); break;
+	case RpcValue::Type::String: writeData_Blob(m_out, val.toString()); break;
+	case RpcValue::Type::Blob: writeData_Blob(m_out, val.toBlob()); break;
+	case RpcValue::Type::List: writeData_List(val.toList()); break;
+	case RpcValue::Type::Array: writeData_Array(val.toArray()); break;
+	case RpcValue::Type::Map: writeData_Map(val.toMap()); break;
+	case RpcValue::Type::IMap: writeData_IMap(val.toIMap()); break;
 	case RpcValue::Type::Invalid:
 	//case RpcValue::Type::MetaIMap:
 		SHVCHP_EXCEPTION("Internal error: attempt to write helper type directly. type: " + std::string(RpcValue::typeToName(type)));
 	}
 }
 
-uint64_t ChainPackProtocol::readUIntData(std::istream &data, bool *ok)
+ChainPackWriter& ChainPackWriter::writeUIntData(uint64_t n)
 {
-	int bitlen;
-	uint64_t ret = readData_UInt<uint64_t>(data, &bitlen);
-	if(ok)
-		*ok = (bitlen > 0);
-	return ret;
+	writeData_UInt(m_out, n);
+	return *this;
 }
 
-void ChainPackProtocol::writeUIntData(std::ostream &out, uint64_t n)
-{
-	writeData_UInt(out, n);
-}
-
-RpcValue ChainPackProtocol::read(std::istream &data)
-{
-	RpcValue ret;
-	RpcValue::MetaData meta_data = readMetaData(data);
-	uint8_t type = data.get();
-	if(type < 128) {
-		if(type & 64) {
-			// tiny Int
-			RpcValue::Int n = type & 63;
-			ret = RpcValue(n);
-		}
-		else {
-			// tiny UInt
-			RpcValue::UInt n = type & 63;
-			ret = RpcValue(n);
-		}
-	}
-	else if(type == ChainPackProtocol::TypeInfo::FALSE) {
-		ret = RpcValue(false);
-	}
-	else if(type == ChainPackProtocol::TypeInfo::TRUE) {
-		ret = RpcValue(true);
-	}
-	if(!ret.isValid()) {
-		bool is_array = type & ARRAY_FLAG_MASK;
-		type = type & ~ARRAY_FLAG_MASK;
-		ret = readData((ChainPackProtocol::TypeInfo::Enum)type, is_array, data);
-	}
-	if(!meta_data.isEmpty())
-		ret.setMetaData(std::move(meta_data));
-	return ret;
-}
-
-RpcValue::MetaData ChainPackProtocol::readMetaData(std::istream &data)
-{
-	RpcValue::IMap imap;
-	RpcValue::Map smap;
-	while(true) {
-		bool has_meta = true;
-		uint8_t type_info = data.peek();
-		switch(type_info) {
-		/*
-		case ChainPackProtocol::TypeInfo::META_TYPE_ID:  {
-			data.get();
-			RpcValue::UInt u = read_UIntData<RpcValue::UInt>(data);
-			ret.setMetaTypeId(u);
-			break;
-		}
-		case ChainPackProtocol::TypeInfo::META_TYPE_NAMESPACE_ID:  {
-			data.get();
-			RpcValue::UInt u = read_UIntData<RpcValue::UInt>(data);
-			ret.setMetaTypeNameSpaceId(u);
-			break;
-		}
-		*/
-		case ChainPackProtocol::TypeInfo::MetaIMap:  {
-			data.get();
-			imap = readData_IMap(data);
-			break;
-		}
-		case ChainPackProtocol::TypeInfo::MetaSMap:  {
-			data.get();
-			smap = readData_Map(data);
-			break;
-		}
-		default:
-			has_meta = false;
-			break;
-		}
-		if(!has_meta)
-			break;
-	}
-	return RpcValue::MetaData(std::move(imap), std::move(smap));
-}
-
-ChainPackProtocol::TypeInfo::Enum ChainPackProtocol::readTypeInfo(std::istream &data, RpcValue &meta, int &tiny_uint)
-{
-	uint8_t t = data.get();
-	if(t & 128) {
-		t = t & ~128;
-		meta = read(data);
-	}
-	if(t >= 64) {
-		/// TinyUInt
-		t -= 64;
-		tiny_uint = t;
-		return ChainPackProtocol::TypeInfo::UInt;
-	}
-	else {
-		ChainPackProtocol::TypeInfo::Enum type = (ChainPackProtocol::TypeInfo::Enum)t;
-		return type;
-	}
-}
-
-RpcValue ChainPackProtocol::readData(ChainPackProtocol::TypeInfo::Enum type, bool is_array, std::istream &data)
-{
-	RpcValue ret;
-	if(is_array) {
-		RpcValue::Array val = readData_Array(type, data);
-		ret = RpcValue(val);
-	}
-	else {
-		switch (type) {
-		case ChainPackProtocol::TypeInfo::Null: { ret = RpcValue(nullptr); break; }
-		case ChainPackProtocol::TypeInfo::UInt: { RpcValue::UInt u = readData_UInt<RpcValue::UInt>(data); ret = RpcValue(u); break; }
-		case ChainPackProtocol::TypeInfo::Int: { RpcValue::Int i = readData_Int<RpcValue::Int>(data); ret = RpcValue(i); break; }
-		case ChainPackProtocol::TypeInfo::Double: { double d = readData_Double(data); ret = RpcValue(d); break; }
-		case ChainPackProtocol::TypeInfo::Decimal: { RpcValue::Decimal d = readData_Decimal(data); ret = RpcValue(d); break; }
-		case ChainPackProtocol::TypeInfo::TRUE: { bool b = true; ret = RpcValue(b); break; }
-		case ChainPackProtocol::TypeInfo::FALSE: { bool b = false; ret = RpcValue(b); break; }
-		case ChainPackProtocol::TypeInfo::DateTimeEpoch: { RpcValue::DateTime val = readData_DateTimeEpoch(data); ret = RpcValue(val); break; }
-		case ChainPackProtocol::TypeInfo::DateTime: { RpcValue::DateTime val = readData_DateTime(data); ret = RpcValue(val); break; }
-		case ChainPackProtocol::TypeInfo::String: { RpcValue::String val = readData_Blob<RpcValue::String>(data); ret = RpcValue(val); break; }
-		case ChainPackProtocol::TypeInfo::Blob: { RpcValue::Blob val = readData_Blob<RpcValue::Blob>(data); ret = RpcValue(val); break; }
-		case ChainPackProtocol::TypeInfo::List: { RpcValue::List val = readData_List(data); ret = RpcValue(val); break; }
-		case ChainPackProtocol::TypeInfo::Map: { RpcValue::Map val = readData_Map(data); ret = RpcValue(val); break; }
-		case ChainPackProtocol::TypeInfo::IMap: { RpcValue::IMap val = readData_IMap(data); ret = RpcValue(val); break; }
-		case ChainPackProtocol::TypeInfo::Bool: { uint8_t t = data.get(); ret = RpcValue(t != 0); break; }
-		default:
-			SHVCHP_EXCEPTION("Internal error: attempt to read helper type directly. type: " + Utils::toString(type) + " " + TypeInfo::name(type));
-		}
-	}
-	return ret;
-}
-
-void ChainPackProtocol::writeContainerBegin(std::ostream &out, const RpcValue::Type &container_type)
+void ChainPackWriter::writeContainerBegin(const RpcValue::Type &container_type)
 {
 	switch (container_type) {
 	case RpcValue::Type::List:
@@ -741,8 +743,8 @@ void ChainPackProtocol::writeContainerBegin(std::ostream &out, const RpcValue::T
 	case RpcValue::Type::IMap:
 	//case RpcValue::Type::MetaIMap:
 	{
-		TypeInfo::Enum t = typeToTypeInfo(container_type);
-		out << (uint8_t)t;
+		ChainPack::TypeInfo::Enum t = ChainPack::typeToTypeInfo(container_type);
+		m_out << (uint8_t)t;
 		break;
 	}
 	default:
@@ -750,35 +752,34 @@ void ChainPackProtocol::writeContainerBegin(std::ostream &out, const RpcValue::T
 	}
 }
 
-void ChainPackProtocol::writeContainerEnd(std::ostream &out)
+void ChainPackWriter::writeContainerEnd()
 {
-	out << (uint8_t)TypeInfo::TERM;
+	m_out << (uint8_t)ChainPack::TypeInfo::TERM;
 }
 
-void ChainPackProtocol::writeListElement(std::ostream &out, const RpcValue &val)
+void ChainPackWriter::writeListElement(const RpcValue &val)
 {
-	write(out, val);
+	write(val);
 }
 
-void ChainPackProtocol::writeMapElement(std::ostream &out, const std::string &key, const RpcValue &val)
+void ChainPackWriter::writeMapElement(const std::string &key, const RpcValue &val)
 {
-	writeData_Blob<RpcValue::String>(out, key);
-	write(out, val);
-
+	writeData_Blob<RpcValue::String>(m_out, key);
+	write(val);
 }
 
-void ChainPackProtocol::writeMapElement(std::ostream &out, const RpcValue::UInt &key, const RpcValue &val)
+void ChainPackWriter::writeMapElement(const RpcValue::UInt &key, const RpcValue &val)
 {
-	writeData_UInt(out, key);
-	write(out, val);
+	writeData_UInt(m_out, key);
+	write(val);
 }
 
-void ChainPackProtocol::writeArrayBegin(std::ostream &out, const RpcValue::Type &array_type, size_t array_size)
+void ChainPackWriter::writeArrayBegin(const RpcValue::Type &array_type, size_t array_size)
 {
-	int t = typeToTypeInfo(array_type);
-	t |= ARRAY_FLAG_MASK;
-	out << (uint8_t)t;
-	writeData_UInt(out, array_size);
+	int t = ChainPack::typeToTypeInfo(array_type);
+	t |= ChainPack::ARRAY_FLAG_MASK;
+	m_out << (uint8_t)t;
+	writeData_UInt(m_out, array_size);
 }
 
 }}

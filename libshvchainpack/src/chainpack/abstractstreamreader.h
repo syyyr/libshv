@@ -1,6 +1,6 @@
-#ifndef ABSTRACTSTREAMREADER_H
-#define ABSTRACTSTREAMREADER_H
+#pragma once
 
+#include "rpcvalue.h"
 
 namespace shv {
 namespace chainpack {
@@ -9,9 +9,9 @@ class AbstractStreamReader
 {
 public:
 	AbstractStreamReader();
+
+	//std::istream::pos_type pos() const;
 };
 
 } // namespace chainpack
 } // namespace shv
-
-#endif // ABSTRACTSTREAMREADER_H

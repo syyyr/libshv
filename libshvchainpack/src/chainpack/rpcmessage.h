@@ -76,7 +76,7 @@ public:
 	RpcValue metaValue(RpcValue::UInt key) const;
 	void setMetaValue(RpcValue::UInt key, const RpcValue &val);
 
-	virtual int write(std::ostream &out) const;
+	virtual void write(std::ostream &out) const;
 protected:
 	//enum class RpcCallType { Undefined = 0, Request, Response, Notify };
 	//RpcCallType rpcType() const;
