@@ -8,7 +8,7 @@
 #ifdef FREE_RTOS
 #include "lwip/netdb.h"
 #include "lwip/sockets.h"
-#elif defined __unix
+#elif defined __GNUC__
 #include <unistd.h>
 #include <fcntl.h>
 #include <netinet/in.h>
