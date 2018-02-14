@@ -1,5 +1,5 @@
 #include "rpcmessage.h"
-#include "chainpackprotocol.h"
+#include "chainpack.h"
 #include "metatypes.h"
 
 #include <cassert>
@@ -216,7 +216,7 @@ int RpcMessage::write(std::ostream &out) const
 {
 	assert(m_value.isValid());
 	//assert(rpcType() != RpcCallType::Undefined);
-	return ChainPackProtocol::write(out, m_value);
+	return ChainPack::write(out, m_value);
 }
 /*
 RpcMessage::RpcCallType RpcMessage::rpcType() const
@@ -291,11 +291,11 @@ void RpcNotify::write(std::ostream &out, const std::string &method, std::functio
 	RpcValue::MetaData md;
 	md.setMetaTypeId(meta::RpcMessage::ID);
 	md.setValue(meta::RpcMessage::Tag::Method, method);
-	ChainPackProtocol::writeMetaData(out, md);
-	ChainPackProtocol::writeContainerBegin(out, RpcValue::Type::IMap);
-	ChainPackProtocol::writeUIntData(out, meta::RpcMessage::Key::Params);
+	ChainPack::writeMetaData(out, md);
+	ChainPack::writeContainerBegin(out, RpcValue::Type::IMap);
+	ChainPack::writeUIntData(out, meta::RpcMessage::Key::Params);
 	write_params_callback(out);
-	ChainPackProtocol::writeContainerEnd(out);
+	ChainPack::writeContainerEnd(out);
 }
 
 //==================================================================

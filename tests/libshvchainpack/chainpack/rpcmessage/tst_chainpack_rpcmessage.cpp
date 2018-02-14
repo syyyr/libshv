@@ -77,7 +77,7 @@ private:
 		std::stringstream out;
 		RpcValue cp1 = rq.value();
 		int len = rq.write(out);
-		RpcValue cp2 = ChainPackProtocol::read(out);
+		RpcValue cp2 = ChainPack::read(out);
 		qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
 		QCOMPARE(cp1.type(), cp2.type());
 		RpcRequest rq2(cp2);
@@ -93,7 +93,7 @@ private:
 		std::stringstream out;
 		RpcValue cp1 = rs.value();
 		int len = rs.write(out);
-		RpcValue cp2 = ChainPackProtocol::read(out);
+		RpcValue cp2 = ChainPack::read(out);
 		qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
 		QVERIFY(cp1.type() == cp2.type());
 		RpcResponse rs2(cp2);
@@ -108,7 +108,7 @@ private:
 		std::stringstream out;
 		RpcValue cp1 = rs.value();
 		int len = rs.write(out);
-		RpcValue cp2 = ChainPackProtocol::read(out);
+		RpcValue cp2 = ChainPack::read(out);
 		qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
 		QVERIFY(cp1.type() == cp2.type());
 		RpcResponse rs2(cp2);
@@ -130,7 +130,7 @@ private:
 		std::stringstream out;
 		RpcValue cp1 = rq.value();
 		int len = rq.write(out);
-		RpcValue cp2 = ChainPackProtocol::read(out);
+		RpcValue cp2 = ChainPack::read(out);
 		qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
 		QVERIFY(cp1.type() == cp2.type());
 		RpcRequest rq2(cp2);

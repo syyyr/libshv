@@ -1,5 +1,7 @@
 #include "cponwriter.h"
-#include "chainpackprotocol.h"
+//#include "chainpackprotocol.h"
+#include "cpon.h"
+#include "exception.h"
 
 #include <iostream>
 #include <cmath>
@@ -8,23 +10,6 @@ namespace shv {
 namespace chainpack {
 
 static constexpr bool WRITE_INVALID_AS_NULL = true;
-
-static const std::string S_NULL("null");
-static const std::string S_TRUE("true");
-static const std::string S_FALSE("false");
-
-static const std::string S_IMAP_BEGIN("i{");
-static const std::string S_ARRAY_BEGIN("a[");
-static const std::string S_BLOB_BEGIN("x\"");
-static const std::string S_DATETIME_BEGIN("d\"");
-//static const char S_LIST_BEGIN('[');
-//static const char S_LIST_END(']');
-//static const char S_MAP_BEGIN('{');
-//static const char S_MAP_END('}');
-static const char S_META_BEGIN('<');
-static const char S_META_END('>');
-static const char S_DECIMAL_END('n');
-static const char S_UNSIGNED_END('u');
 
 void CponWriter::startBlock()
 {
@@ -56,40 +41,41 @@ void CponWriter::separateElement()
 	m_out << (m_opts.isIndent()? '\n': ' ');
 }
 
-CponWriter &CponWriter::operator <<(const RpcValue &value)
+void CponWriter::write(const RpcValue &value)
 {
 	if(!value.metaData().isEmpty()) {
-		*this << value.metaData();
+		write(value.metaData());
 		if(m_opts.isIndent())
 			m_out << '\n';
 	}
 	switch (value.type()) {
-	case RpcValue::Type::Null: *this << nullptr; return *this;
-	case RpcValue::Type::UInt: *this << value.toUInt(); return *this;
-	case RpcValue::Type::Int: *this << value.toInt(); return *this;
-	case RpcValue::Type::Double: *this << value.toDouble(); return *this;
-	case RpcValue::Type::Bool: *this << value.toBool(); return *this;
-	case RpcValue::Type::Blob: *this << value.toBlob(); return *this;
-	case RpcValue::Type::String: *this << value.toString(); return *this;
-	case RpcValue::Type::DateTime: *this << value.toDateTime(); return *this;
-	case RpcValue::Type::List: *this << value.toList(); return *this;
-	case RpcValue::Type::Array: *this << value.toArray(); return *this;
-	case RpcValue::Type::Map: *this << value.toMap(); return *this;
-	case RpcValue::Type::IMap: writeIMap(value.toIMap(), &value.metaData()); return *this;
-	case RpcValue::Type::Decimal: *this << value.toDecimal(); return *this;
+	case RpcValue::Type::Null: write(nullptr); return;
+	case RpcValue::Type::UInt: write(value.toUInt()); return;
+	case RpcValue::Type::Int: write(value.toInt()); return;
+	case RpcValue::Type::Double: write(value.toDouble()); return;
+	case RpcValue::Type::Bool: write(value.toBool()); return;
+	case RpcValue::Type::Blob: write(value.toBlob()); return;
+	case RpcValue::Type::String: write(value.toString()); return;
+	case RpcValue::Type::DateTime: write(value.toDateTime()); return;
+	case RpcValue::Type::List: write(value.toList()); return;
+	case RpcValue::Type::Array: write(value.toArray()); return;
+	case RpcValue::Type::Map: write(value.toMap()); return;
+	case RpcValue::Type::IMap: write(value.toIMap(), &value.metaData()); return;
+	case RpcValue::Type::Decimal: write(value.toDecimal()); return;
 	case RpcValue::Type::Invalid:
 		if(WRITE_INVALID_AS_NULL) {
-			*this << nullptr;
-			return *this;
+			write(nullptr);
+			return;
 		}
 	}
 	SHVCHP_EXCEPTION(std::string("Don't know how to serialize type: ") + RpcValue::typeToName(value.type()));
 }
 
-CponWriter &CponWriter::operator <<(const RpcValue::MetaData &meta_data)
+void CponWriter::write(const RpcValue::MetaData &meta_data)
 {
 	if(!meta_data.isEmpty()) {
-		*this << Begin::Meta;
+		m_out << Cpon::C_META_BEGIN;
+		startBlock();
 		const RpcValue::IMap &cim = meta_data.iValues();
 		if(!cim.empty())
 			writeIMapContent(cim);
@@ -99,131 +85,130 @@ CponWriter &CponWriter::operator <<(const RpcValue::MetaData &meta_data)
 				separateElement();
 			writeMapContent(csm);
 		}
-		*this << End::Meta;
+		endBlock();
+		m_out << Cpon::C_META_END;
 	}
-	return *this;
+	return;
 }
 
-CponWriter &CponWriter::operator <<(CponWriter::Begin manip)
+void CponWriter::writeContainerBegin(RpcValue::Type container_type)
 {
-	switch (manip) {
-	case Begin::List:
-		m_out << '[';
+	switch (container_type) {
+	case RpcValue::Type::List:
+		m_out << Cpon::C_LIST_BEGIN;
 		startBlock();
 		break;
-	case Begin::Map:
-		m_out << '{';
+	case RpcValue::Type::Map:
+		m_out << Cpon::C_MAP_BEGIN;
 		startBlock();
 		break;
-	case Begin::IMap:
-		m_out << S_IMAP_BEGIN;
+	case RpcValue::Type::IMap:
+		m_out << Cpon::STR_IMAP_BEGIN;
 		startBlock();
 		break;
-	case Begin::Array:
-		m_out << S_ARRAY_BEGIN;
-		startBlock();
-		break;
-	case Begin::Meta:
-		m_out << S_META_BEGIN;
-		startBlock();
+	default:
+		SHVCHP_EXCEPTION(std::string("Cannot write begin of container type: ") + RpcValue::typeToName(container_type));
 		break;
 	}
-	return *this;
 }
 
-CponWriter &CponWriter::operator <<(CponWriter::End manip)
+void CponWriter::writeArrayBegin(RpcValue::Type , size_t )
 {
-	switch (manip) {
-	case End::List:
-	case End::Array:
+	m_out << Cpon::STR_ARRAY_BEGIN;
+	startBlock();
+}
+
+void CponWriter::writeContainerEnd(RpcValue::Type container_type)
+{
+	switch (container_type) {
+	case RpcValue::Type::List:
+	case RpcValue::Type::Array:
 		endBlock();
-		m_out << ']';
+		m_out << Cpon::C_LIST_END;
+		startBlock();
 		break;
-	case End::IMap:
-	case End::Map:
+	case RpcValue::Type::Map:
+	case RpcValue::Type::IMap:
 		endBlock();
-		m_out << '}';
+		m_out << Cpon::C_MAP_END;
 		break;
-	case End::Meta:
-		endBlock();
-		m_out << S_META_END;
+	default:
+		SHVCHP_EXCEPTION(std::string("Cannot write end of container type: ") + RpcValue::typeToName(container_type));
 		break;
 	}
-	return *this;
 }
 
-CponWriter &CponWriter::operator <<(const CponWriter::ListElement &el)
+void CponWriter::writeListElement(const RpcValue &val)
 {
-	*this << el.val;
+	write(val);
 	separateElement();
-	return *this;
 }
 
-CponWriter &CponWriter::operator <<(const CponWriter::MapElement &el)
+void CponWriter::writeMapElement(const std::string &key, const RpcValue &val)
 {
-	*this << el.key;
+	write(key);
 	m_out << ':';
-	*this << el.val;
-	return *this;
+	write(val);
+	separateElement();
 }
 
-CponWriter &CponWriter::operator <<(const CponWriter::IMapElement &el)
+void CponWriter::writeMapElement(RpcValue::UInt key, const RpcValue &val)
 {
-	*this << el.key;
+	write(key);
 	m_out << ':';
-	*this << el.val;
-	return *this;
+	write(val);
+	separateElement();
 }
 
-CponWriter &CponWriter::operator <<(std::nullptr_t)
+CponWriter &CponWriter::write(std::nullptr_t)
 {
-	m_out << S_NULL;
+	m_out << Cpon::STR_NULL;
 	return *this;
 }
 
-CponWriter &CponWriter::operator <<(bool value)
+CponWriter &CponWriter::write(bool value)
 {
-	m_out << (value ? S_TRUE : S_FALSE);
+	m_out << (value? Cpon::STR_TRUE : Cpon::STR_FALSE);
 	return *this;
 }
 
-CponWriter &CponWriter::operator <<(RpcValue::Int value)
+CponWriter &CponWriter::write(RpcValue::Int value)
 {
 	m_out << Utils::toString(value);
 	return *this;
 }
 
-CponWriter &CponWriter::operator <<(RpcValue::UInt value)
+CponWriter &CponWriter::write(RpcValue::UInt value)
 {
 	m_out << Utils::toString(value);
-	m_out << S_UNSIGNED_END;
+	m_out << Cpon::C_UNSIGNED_END;
 	return *this;
 }
 
-CponWriter &CponWriter::operator <<(double value)
+CponWriter &CponWriter::write(double value)
 {
 	if (std::isfinite(value)) {
 		m_out << value;
 	}
 	else {
-		m_out << S_NULL;
+		m_out << Cpon::STR_NULL;
 	}
 	return *this;
 }
 
-CponWriter &CponWriter::operator <<(RpcValue::Decimal value)
+CponWriter &CponWriter::write(RpcValue::Decimal value)
 {
-	m_out << value.toString() << S_DECIMAL_END;
+	m_out << value.toString() << Cpon::C_DECIMAL_END;
 	return *this;
 }
 
-CponWriter &CponWriter::operator <<(RpcValue::DateTime value)
+CponWriter &CponWriter::write(RpcValue::DateTime value)
 {
-	m_out << S_DATETIME_BEGIN << value.toUtcString() << '"';
+	m_out << Cpon::STR_DATETIME_BEGIN << value.toUtcString() << '"';
 	return *this;
 }
 
-CponWriter &CponWriter::operator <<(const std::string &value)
+CponWriter &CponWriter::write(const std::string &value)
 {
 	m_out << '"';
 	for (size_t i = 0; i < value.length(); i++) {
@@ -272,59 +257,54 @@ CponWriter &CponWriter::operator <<(const std::string &value)
 	return *this;
 }
 
-CponWriter &CponWriter::operator <<(const RpcValue::Blob &value)
+CponWriter &CponWriter::write(const RpcValue::Blob &value)
 {
-	m_out << S_BLOB_BEGIN;
+	m_out << Cpon::STR_BLOB_BEGIN;
 	m_out << Utils::toHex(value);
 	m_out << '"';
 	return *this;
 }
 
-CponWriter &CponWriter::operator <<(const RpcValue::List &values)
+CponWriter &CponWriter::write(const RpcValue::List &values)
 {
-	*this << Begin::List;
+	writeContainerBegin(RpcValue::Type::List);
 	for (size_t i = 0; i < values.size(); ) {
 		indentElement();
 		const RpcValue &value = values[i];
-		*this << value;
+		write(value);
 		if (++i < values.size())
 			separateElement();
 	}
-	*this << End::List;
+	writeContainerEnd(RpcValue::Type::List);
 	return *this;
 }
 
-CponWriter &CponWriter::operator <<(const RpcValue::Array &values)
+CponWriter &CponWriter::write(const RpcValue::Array &values)
 {
-	m_out << S_ARRAY_BEGIN;
+	writeArrayBegin(values.type(), values.size());
 	for (size_t i = 0; i < values.size();) {
-		*this << values.valueAt(i);
+		write(values.valueAt(i));
 		if (++i < values.size())
 			separateElement();
 	}
-	m_out << ']'; // array is serialized flat
+	writeContainerEnd(RpcValue::Type::Array);
 	return *this;
 }
 
-CponWriter &CponWriter::operator <<(const RpcValue::Map &values)
+CponWriter &CponWriter::write(const RpcValue::Map &values)
 {
-	*this << Begin::Map;
+	writeContainerBegin(RpcValue::Type::Map);
 	writeMapContent(values);
-	*this << End::Map;
+	writeContainerEnd(RpcValue::Type::Map);
 	return *this;
 }
 
-CponWriter &CponWriter::operator <<(const RpcValue::IMap &values)
+CponWriter &CponWriter::write(const RpcValue::IMap &values, const RpcValue::MetaData *meta_data)
 {
-	writeIMap(values, nullptr);
-	return *this;
-}
-
-void CponWriter::writeIMap(const RpcValue::IMap &values, const RpcValue::MetaData *meta_data)
-{
-	*this << Begin::IMap;
+	writeContainerBegin(RpcValue::Type::IMap);
 	writeIMapContent(values, meta_data);
-	*this << End::IMap;
+	writeContainerEnd(RpcValue::Type::IMap);
+	return *this;
 }
 
 void CponWriter::writeIMapContent(const RpcValue::IMap &values, const RpcValue::MetaData *meta_data)
@@ -340,13 +320,13 @@ void CponWriter::writeIMapContent(const RpcValue::IMap &values, const RpcValue::
 			if(key_info.isValid())
 				m_out << key_info.name;
 			else
-				*this << key;
+				write(key);
 		}
 		else {
-			*this << kv.first;
+			write(kv.first);
 		}
 		m_out << ":";
-		*this << kv.second;
+		write(kv.second);
 		if(++ix < values.size())
 			separateElement();
 	}
@@ -357,9 +337,9 @@ void CponWriter::writeMapContent(const RpcValue::Map &values)
 	size_t ix = 0;
 	for (const auto &kv : values) {
 		indentElement();
-		*this << kv.first;
+		write(kv.first);
 		m_out << ":";
-		*this << kv.second;
+		write(kv.second);
 		if(++ix < values.size())
 			separateElement();
 	}

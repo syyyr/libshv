@@ -1,6 +1,6 @@
 #include "rpcdriver.h"
 #include "metatypes.h"
-#include "chainpackprotocol.h"
+#include "chainpack.h"
 #include "exception.h"
 #include "cponwriter.h"
 #include "cponreader.h"
@@ -61,7 +61,7 @@ void RpcDriver::sendRawData(RpcValue::MetaData &&meta_data, std::string &&data)
 		break;
 	}
 	case Rpc::ProtocolVersion::ChainPack:
-		ChainPackProtocol::writeMetaData(os_packed_meta_data, meta_data);
+		ChainPack::writeMetaData(os_packed_meta_data, meta_data);
 		break;
 	default:
 		SHVCHP_EXCEPTION("Cannot serialize data without protocol version specified.")
@@ -126,12 +126,12 @@ void RpcDriver::writeQueue()
 		std::string protocol_version_data;
 		{
 			std::ostringstream os;
-			ChainPackProtocol::writeUIntData(os, (unsigned)protocolVersion());
+			ChainPack::writeUIntData(os, (unsigned)protocolVersion());
 			protocol_version_data = os.str();
 		}
 		{
 			std::ostringstream os;
-			ChainPackProtocol::writeUIntData(os, chunk.size() + protocol_version_data.length());
+			ChainPack::writeUIntData(os, chunk.size() + protocol_version_data.length());
 			std::string packet_len_data = os.str();
 			auto len = writeBytes(packet_len_data.data(), packet_len_data.length());
 			if(len < 0)
@@ -197,13 +197,13 @@ int RpcDriver::processReadData(const std::string &read_data)
 	std::istringstream in(read_data);
 
 	bool ok;
-	uint64_t chunk_len = ChainPackProtocol::readUIntData(in, &ok);
+	uint64_t chunk_len = ChainPack::readUIntData(in, &ok);
 	if(!ok)
 		return 0;
 
 	size_t read_len = (size_t)in.tellg() + chunk_len;
 
-	Rpc::ProtocolVersion protocol_version = (Rpc::ProtocolVersion)ChainPackProtocol::readUIntData(in, &ok);
+	Rpc::ProtocolVersion protocol_version = (Rpc::ProtocolVersion)ChainPack::readUIntData(in, &ok);
 	if(!ok)
 		return 0;
 
@@ -263,7 +263,7 @@ int RpcDriver::processReadData(const std::string &read_data)
 		break;
 	}
 	case Rpc::ProtocolVersion::ChainPack: {
-		meta_data = ChainPackProtocol::readMetaData(in);
+		meta_data = ChainPack::readMetaData(in);
 		meta_data_end_pos = (size_t)in.tellg();
 		break;
 	}
@@ -300,7 +300,7 @@ RpcValue RpcDriver::decodeData(Rpc::ProtocolVersion protocol_version, const std:
 	case Rpc::ProtocolVersion::ChainPack: {
 		std::istringstream in(data);
 		in.seekg(start_pos);
-		ret = ChainPackProtocol::read(in);
+		ret = ChainPack::read(in);
 		break;
 	}
 	default:
@@ -348,7 +348,7 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolVersion protocol_version, const
 		break;
 	}
 	case Rpc::ProtocolVersion::ChainPack:
-		ChainPackProtocol::write(os_packed_data, val);
+		ChainPack::write(os_packed_data, val);
 		break;
 	default:
 		SHVCHP_EXCEPTION("Cannot serialize data without protocol version specified.")

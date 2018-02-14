@@ -1,5 +1,4 @@
-#ifndef CPONWRITER_H
-#define CPONWRITER_H
+#pragma once
 
 #include "abstractstreamwriter.h"
 
@@ -23,69 +22,47 @@ public:
 class SHVCHAINPACK_DECL_EXPORT CponWriter : public AbstractStreamWriter
 {
 	using Super = AbstractStreamWriter;
-public:
-	enum class Begin {Map, IMap, List, Meta, Array};
-	enum class End {Map, IMap, List, Meta, Array};
 
-	class ListElement : public RpcValue
-	{
-		friend class CponWriter;
-		const RpcValue &val;
-	public:
-		ListElement(const RpcValue &v) : val(v) {}
-	};
-	class MapElement
-	{
-		friend class CponWriter;
-		const std::string &key;
-		const RpcValue &val;
-	public:
-		MapElement(const std::string &k, const RpcValue &v) : key(k), val(v) {}
-	};
-	class IMapElement
-	{
-		friend class CponWriter;
-		const RpcValue::UInt key;
-		const RpcValue &val;
-	public:
-		IMapElement(RpcValue::UInt k, const RpcValue &v) : key(k), val(v) {}
-	};
 public:
-	CponWriter(std::ostream &out) : m_out(out) {}
+	CponWriter(std::ostream &out) : Super(out) {}
 	CponWriter(std::ostream &out, const CponWriterOptions &opts) : CponWriter(out) {m_opts = opts;}
 
-	CponWriter& operator <<(const RpcValue &value);
-	CponWriter& operator <<(const RpcValue::MetaData &value);
+	CponWriter& operator <<(const RpcValue &value) {write(value); return *this;}
+	CponWriter& operator <<(const RpcValue::MetaData &meta_data) {write(meta_data); return *this;}
 
-	CponWriter& operator <<(Begin manip);
-	CponWriter& operator <<(End manip);
-	CponWriter& operator <<(const ListElement &el);
-	CponWriter& operator <<(const MapElement &el);
-	CponWriter& operator <<(const IMapElement &el);
+	void write(const RpcValue &val) override;
+	void write(const RpcValue::MetaData &meta_data) override;
 
-	CponWriter& operator <<(std::nullptr_t);
-	CponWriter& operator <<(bool value);
-	CponWriter& operator <<(RpcValue::Int value);
-	CponWriter& operator <<(RpcValue::UInt value);
-	CponWriter& operator <<(double value);
-	CponWriter& operator <<(RpcValue::Decimal value);
-	CponWriter& operator <<(RpcValue::DateTime value);
-	CponWriter& operator <<(const std::string &value);
-	CponWriter& operator <<(const RpcValue::Blob &value);
-	CponWriter& operator <<(const RpcValue::List &values);
-	CponWriter& operator <<(const RpcValue::Array &values);
-	CponWriter& operator <<(const RpcValue::Map &values);
-	CponWriter& operator <<(const RpcValue::IMap &values);
+	void writeContainerBegin(RpcValue::Type container_type) override;
+	void writeContainerEnd(RpcValue::Type container_type) override;
+	void writeListElement(const RpcValue &val) override;
+	void writeMapElement(const std::string &key, const RpcValue &val) override;
+	void writeMapElement(RpcValue::UInt key, const RpcValue &val) override;
+	void writeArrayBegin(RpcValue::Type, size_t) override;
+	void writeArrayElement(const RpcValue &val) override {writeListElement(val);}
 private:
-	void writeIMap(const RpcValue::IMap &values, const RpcValue::MetaData *meta_data = nullptr);
+	CponWriter& write(std::nullptr_t);
+	CponWriter& write(bool value);
+	CponWriter& write(RpcValue::Int value);
+	CponWriter& write(RpcValue::UInt value);
+	CponWriter& write(double value);
+	CponWriter& write(RpcValue::Decimal value);
+	CponWriter& write(RpcValue::DateTime value);
+	CponWriter& write(const std::string &value);
+	CponWriter& write(const RpcValue::Blob &value);
+	CponWriter& write(const RpcValue::List &values);
+	CponWriter& write(const RpcValue::Array &values);
+	CponWriter& write(const RpcValue::Map &values);
+	CponWriter& write(const RpcValue::IMap &values, const RpcValue::MetaData *meta_data = nullptr);
+private:
 	void writeIMapContent(const RpcValue::IMap &values, const RpcValue::MetaData *meta_data = nullptr);
 	void writeMapContent(const RpcValue::Map &values);
+
 	void startBlock();
 	void endBlock();
 	void indentElement();
 	void separateElement();
 private:
-	std::ostream &m_out;
 	CponWriterOptions m_opts;
 	int m_currentIndent = 0;
 };
@@ -93,4 +70,3 @@ private:
 } // namespace chainpack
 } // namespace shv
 
-#endif // CPONWRITER_H
