@@ -1,1 +1,1 @@
-#include "../../../src/chainpack/chainpackprotocol.h"
+#include "../../../src/chainpack/chainpack.h"

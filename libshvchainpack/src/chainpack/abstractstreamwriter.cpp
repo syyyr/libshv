@@ -3,7 +3,8 @@
 namespace shv {
 namespace chainpack {
 
-AbstractStreamWriter::AbstractStreamWriter()
+AbstractStreamWriter::AbstractStreamWriter(std::ostream &out)
+	: m_out(out)
 {
 
 }

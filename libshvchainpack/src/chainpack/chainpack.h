@@ -8,10 +8,10 @@
 namespace shv {
 namespace chainpack {
 
-class SHVCHAINPACK_DECL_EXPORT ChainPackProtocol
+class SHVCHAINPACK_DECL_EXPORT ChainPack
 {
+public:
 	static constexpr uint8_t ARRAY_FLAG_MASK = 64;
-public: // public just because of testing, normal user do not need to use this enum
 	struct SHVCHAINPACK_DECL_EXPORT TypeInfo {
 		enum Enum {
 			INVALID = -1,
@@ -90,8 +90,6 @@ private:
 	static RpcValue::Array readData_Array(TypeInfo::Enum type_info, std::istream &data);
 	static RpcValue::Map readData_Map(std::istream &data);
 	static RpcValue::IMap readData_IMap(std::istream &data);
-private:
-	static constexpr bool WRITE_INVALID_AS_NULL = true;
 };
 
 }}

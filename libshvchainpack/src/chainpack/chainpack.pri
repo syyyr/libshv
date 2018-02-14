@@ -1,6 +1,5 @@
 SOURCES += \
     $$PWD/rpc.cpp \
-    $$PWD/chainpackprotocol.cpp \
     $$PWD/rpcmessage.cpp \
     $$PWD/rpcvalue.cpp \
     $$PWD/rpcdriver.cpp \
@@ -10,11 +9,13 @@ SOURCES += \
     $$PWD/abstractstreamreader.cpp \
     $$PWD/abstractstreamwriter.cpp \
     $$PWD/cponwriter.cpp \
-    $$PWD/cponreader.cpp
+    $$PWD/cponreader.cpp \
+    $$PWD/chainpackwriter.cpp \
+    $$PWD/cpon.cpp \
+    $$PWD/chainpack.cpp
 
 HEADERS += \
     $$PWD/rpc.h \
-    $$PWD/chainpackprotocol.h \
     $$PWD/rpcmessage.h \
     $$PWD/rpcvalue.h \
     $$PWD/rpcdriver.h \
@@ -24,7 +25,10 @@ HEADERS += \
     $$PWD/abstractstreamreader.h \
     $$PWD/abstractstreamwriter.h \
     $$PWD/cponwriter.h \
-    $$PWD/cponreader.h
+    $$PWD/cponreader.h \
+    $$PWD/chainpackwriter.h \
+    $$PWD/cpon.h \
+    $$PWD/chainpack.h
 
 unix {
 SOURCES += \
