@@ -12,11 +12,12 @@ class SHVCHAINPACK_DECL_EXPORT AbstractStreamWriter
 public:
 	AbstractStreamWriter(std::ostream &out);
 
-	virtual void write(const RpcValue::MetaData &meta_data) = 0;
-	virtual void write(const RpcValue &val) = 0;
+	virtual size_t write(const RpcValue::MetaData &meta_data) = 0;
+	virtual size_t write(const RpcValue &val) = 0;
 
 	//virtual void writeMetaDataBegin() = 0;
 	//virtual void writeMetaDataEnd() = 0;
+	virtual void writeIMapKey(RpcValue::UInt key) = 0;
 	virtual void writeContainerBegin(RpcValue::Type container_type) = 0;
 	virtual void writeListElement(const RpcValue &val) = 0;
 	virtual void writeMapElement(const std::string &key, const RpcValue &val) = 0;

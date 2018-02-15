@@ -11,13 +11,19 @@ class SHVCHAINPACK_DECL_EXPORT ChainPackWriter : public shv::chainpack::Abstract
 public:
 	ChainPackWriter(std::ostream &out) : Super(out) {}
 
-	void write(const RpcValue &val) override;
-	void write(const RpcValue::MetaData &meta_data) override;
+	ChainPackWriter& operator <<(const RpcValue &value) {write(value); return *this;}
+	ChainPackWriter& operator <<(const RpcValue::MetaData &meta_data) {write(meta_data); return *this;}
+
+	size_t write(const RpcValue &val) override;
+	size_t write(const RpcValue::MetaData &meta_data) override;
 
 	void writeUIntData(uint64_t n);
+	static void writeUIntData(std::ostream &os, uint64_t n);
 
+	void writeIMapKey(RpcValue::UInt key) override {writeUIntData(key);}
 	void writeContainerBegin(RpcValue::Type container_type) override;
-	void writeContainerEnd(RpcValue::Type container_type) override;
+	/// ChainPack doesn't need to know container type to close it
+	void writeContainerEnd(RpcValue::Type container_type = RpcValue::Type::Invalid) override;
 	void writeListElement(const RpcValue &val) override;
 	void writeMapElement(const std::string &key, const RpcValue &val) override;
 	void writeMapElement(RpcValue::UInt key, const RpcValue &val) override;

@@ -71,7 +71,7 @@ inline std::string dump_char(char c)
 
 CponReader &CponReader::operator >>(RpcValue &value)
 {
-	getValue(value);
+	read(value);
 	return *this;
 }
 
@@ -79,7 +79,7 @@ CponReader &CponReader::operator >>(RpcValue::MetaData &meta_data)
 {
 	auto ch = getValidChar();
 	if(ch == '<')
-		parseMetaData(meta_data);
+		read(meta_data);
 	return *this;
 }
 
@@ -91,7 +91,7 @@ int CponReader::getChar()
 	return ch;
 }
 
-void CponReader::getValue(RpcValue &val)
+void CponReader::read(RpcValue &val)
 {
 	if (m_depth > MAX_RECURSION_DEPTH)
 		PARSE_EXCEPTION("maximum nesting depth exceeded");
@@ -101,7 +101,7 @@ void CponReader::getValue(RpcValue &val)
 	RpcValue::MetaData md;
 	auto ch = getValidChar();
 	if(ch == '<') {
-		parseMetaData(md);
+		read(md);
 		ch = getValidChar();
 	}
 	switch (ch) {
@@ -380,7 +380,7 @@ void CponReader::parseList(RpcValue &val)
 			break;
 		m_in.unget();
 		RpcValue val;
-		getValue(val);
+		read(val);
 		lst.push_back(val);
 	}
 	val = lst;
@@ -403,7 +403,7 @@ void CponReader::parseMap(RpcValue &val)
 		if (ch != ':')
 			PARSE_EXCEPTION("expected ':' in Map, got " + dump_char(ch));
 		RpcValue val;
-		getValue(val);
+		read(val);
 		map[key] = val;
 	}
 	val = map;
@@ -427,13 +427,13 @@ void CponReader::parseIMap(RpcValue &val)
 		ch = getValidChar();
 		if (ch != ':')
 			PARSE_EXCEPTION("expected ':' in IMap, got " + dump_char(ch));
-		getValue(val);
+		read(val);
 		map[key] = val;
 	}
 	val = map;
 }
 
-void CponReader::parseMetaData(RpcValue::MetaData &meta_data)
+void CponReader::read(RpcValue::MetaData &meta_data)
 {
 	RpcValue::IMap imap;
 	RpcValue::Map smap;
@@ -445,7 +445,7 @@ void CponReader::parseMetaData(RpcValue::MetaData &meta_data)
 			break;
 		m_in.unget();
 		RpcValue key;
-		getValue(key);
+		read(key);
 		if(!(key.type() == RpcValue::Type::Int || key.type() == RpcValue::Type::UInt)
 		   && !(key.type() == RpcValue::Type::String))
 			PARSE_EXCEPTION("key expected");
@@ -453,7 +453,7 @@ void CponReader::parseMetaData(RpcValue::MetaData &meta_data)
 		if (ch != ':')
 			PARSE_EXCEPTION("expected ':' in MetaData, got " + dump_char(ch));
 		RpcValue val;
-		getValue(val);
+		read(val);
 		if(key.type() == RpcValue::Type::String)
 			smap[key.toString()] = val;
 		else
@@ -473,7 +473,7 @@ void CponReader::parseArray(RpcValue &ret_val)
 			break;
 		m_in.unget();
 		RpcValue val;
-		getValue(val);
+		read(val);
 		if(arr.empty()) {
 			arr = RpcValue::Array(val.type());
 		}

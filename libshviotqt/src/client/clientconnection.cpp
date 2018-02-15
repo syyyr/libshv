@@ -6,7 +6,6 @@
 
 #include <shv/core/shvexception.h>
 
-#include <shv/chainpack/chainpackprotocol.h>
 #include <shv/chainpack/rpcmessage.h>
 
 #include <QTcpSocket>

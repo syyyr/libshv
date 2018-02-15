@@ -3,9 +3,17 @@
 namespace shv {
 namespace chainpack {
 
-AbstractStreamReader::AbstractStreamReader()
+AbstractStreamReader::AbstractStreamReader(std::istream &in)
+	: m_in(in)
 {
 
+}
+
+RpcValue AbstractStreamReader::read()
+{
+	RpcValue value;
+	read(value);
+	return value;
 }
 
 } // namespace chainpack
