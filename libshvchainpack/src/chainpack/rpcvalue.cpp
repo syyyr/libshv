@@ -510,12 +510,12 @@ void RpcValue::append(const RpcValue &val)
 		nError() << "Cannot append to invalid ChainPack value!";
 }
 
-std::string RpcValue::toStdString() const
+std::string RpcValue::toStdString(bool indent) const
 {
 	std::ostringstream out;
 	{
 		CponWriterOptions opts;
-		opts.setTranslateIds(true).setIndent(true);
+		opts.setTranslateIds(true).setIndent(indent);
 		CponWriter wr(out, opts);
 		wr << *this;
 	}

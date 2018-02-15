@@ -78,8 +78,55 @@ size_t CponWriter::write(const RpcValue::MetaData &meta_data)
 		m_out << Cpon::C_META_BEGIN;
 		startBlock();
 		const RpcValue::IMap &cim = meta_data.iValues();
-		if(!cim.empty())
-			writeIMapContent(cim);
+		if(!cim.empty()) {
+			int nsid = meta_data.metaTypeNameSpaceId();
+			int mtid = meta_data.metaTypeId();
+			size_t ix = 0;
+			for (const auto &kv : cim) {
+				indentElement();
+				unsigned tag = kv.first;
+				if(m_opts.isTranslateIds()) {
+					const meta::MetaInfo &tag_info = meta::registeredType(nsid, mtid).tagById(tag);
+					if(tag_info.isValid())
+						m_out << tag_info.name;
+					else
+						m_out << Utils::toString(tag);
+				}
+				else {
+					m_out << Utils::toString(tag);
+				}
+				m_out << ":";
+				RpcValue meta_val = kv.second;
+				if(m_opts.isTranslateIds()) {
+					if(tag == meta::Tag::MetaTypeNameSpaceId) {
+						int id = meta_val.toInt();
+						const meta::MetaNameSpace &type = meta::registeredNameSpace(nsid);
+						const char *n = type.name();
+						if(n[0])
+							m_out << n;
+						else
+							m_out << Utils::toString(id);
+					}
+					else if(tag == meta::Tag::MetaTypeId) {
+						int id = meta_val.toInt();
+						const meta::MetaType &type = meta::registeredType(nsid, id);
+						const char *n = type.name();
+						if(n[0])
+							m_out << n;
+						else
+							m_out << Utils::toString(id);
+					}
+					else {
+						write(meta_val);
+					}
+				}
+				else {
+					write(meta_val);
+				}
+				if(++ix < cim.size())
+					separateElement();
+			}
+		}
 		const RpcValue::Map &csm = meta_data.sValues();
 		if(!csm.empty()) {
 			if(!cim.empty())
@@ -126,7 +173,6 @@ void CponWriter::writeContainerEnd(RpcValue::Type container_type)
 	case RpcValue::Type::Array:
 		endBlock();
 		m_out << Cpon::C_LIST_END;
-		startBlock();
 		break;
 	case RpcValue::Type::Map:
 	case RpcValue::Type::IMap:
@@ -313,7 +359,7 @@ void CponWriter::writeIMapContent(const RpcValue::IMap &values, const RpcValue::
 	size_t ix = 0;
 	for (const auto &kv : values) {
 		indentElement();
-		if(m_opts.setTranslateIds() && meta_data) {
+		if(m_opts.isTranslateIds() && meta_data) {
 			int mtid = meta_data->metaTypeId();
 			int nsid = meta_data->metaTypeNameSpaceId();
 			unsigned key = kv.first;

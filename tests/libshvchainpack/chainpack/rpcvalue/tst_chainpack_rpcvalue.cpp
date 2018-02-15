@@ -104,6 +104,7 @@ private:
 			const auto cp = RpcValue::parseCpon(test, &err);
 			QVERIFY(err.empty());
 			qDebug() << "List test:" << test << "==" << cp.toCpon();
+			qDebug() << "Cpon writer:" << cp.toStdString();
 			QVERIFY(cp[0] == "foo bar");
 			QVERIFY(cp[1] == 123);
 			QVERIFY(cp[2] == true);
@@ -160,8 +161,8 @@ private:
 									   ]
 									 }
 									 )";
-			const auto json = RpcValue::parseCpon(imap_test, &err);
-			qDebug() << "imap_test: " << json.toStdString();
+			const auto cp = RpcValue::parseCpon(imap_test, &err);
+			qDebug().nospace() << "imap_test: \n" << cp.toStdString();
 			qDebug() << "err: " << err;
 			QVERIFY(err.empty());
 		}
@@ -797,7 +798,7 @@ private slots:
 	void testProtocol()
 	{
 		textTest();
-		//binaryTest();
+		binaryTest();
 	}
 
 	void cleanupTestCase()
