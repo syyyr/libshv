@@ -217,68 +217,11 @@ int RpcDriver::processReadData(const std::string &read_data)
 	if(read_len > read_data.length())
 		return 0;
 
-	//		 << "reading bytes:" << (protocolVersion() == Cpon? read_data: shv::core::Utils::toHex(read_data));
+	if(in.tellg() < 0)
+		return 0;
 
 	RpcValue::MetaData meta_data;
-	size_t meta_data_end_pos;
-	switch (protocol_version) {
-	/*
-	case Json: {
-		msg = CponProtocol::read(read_data, (size_t)in.tellg());
-		if(msg.isMap()) {
-			nError() << "JSON message cannot be translated to ChainPack";
-		}
-		else {
-			const RpcValue::Map &map = msg.toMap();
-			unsigned id = map.value("id").toUInt();
-			RpcValue::String method = map.value("method").toString();
-			RpcValue result = map.value("result");
-			RpcValue error = map.value("error");
-			RpcValue shv_path = map.value("shvPath");
-			if(method.empty()) {
-				// response
-				RpcResponse resp;
-				resp.setShvPath(shv_path);
-				resp.setId(id);
-				if(result.isValid())
-					resp.setResult(result);
-				else if(error.isValid())
-					resp.setError(error.toIMap());
-				else
-					nError() << "JSON RPC response must contain response or error field";
-				msg = resp.value();
-			}
-			else {
-				// request
-				RpcRequest rq;
-				rq.setShvPath(shv_path);
-				rq.setMethod(std::move(method));
-				rq.setParams(map.value("params"));
-				if(id > 0)
-					rq.setId(id);
-				msg = rq.value();
-			}
-		}
-		break;
-	}
-	*/
-	case Rpc::ProtocolVersion::Cpon: {
-		CponReader rd(in);
-		rd.read(meta_data);
-		meta_data_end_pos = (in.tellg() < 0)? read_data.size(): (size_t)in.tellg();
-		break;
-	}
-	case Rpc::ProtocolVersion::ChainPack: {
-		ChainPackReader rd(in);
-		rd.read(meta_data);
-		meta_data_end_pos = (in.tellg() < 0)? read_data.size(): (size_t)in.tellg();
-		break;
-	}
-	default:
-		meta_data_end_pos = (size_t)in.tellg();
-		nError() << "Throwing away message with unknown protocol version:" << (unsigned)protocol_version;
-		break;
-	}
+	size_t meta_data_end_pos = decodeMetaData(meta_data, protocol_version, read_data, in.tellg());
 	if(m_protocolVersion == Rpc::ProtocolVersion::Invalid && protocol_version != Rpc::ProtocolVersion::Invalid) {
 		// if protocol version is not explicitly specified,
 		// it is set from first received message (should be knockknock)
@@ -288,37 +231,101 @@ int RpcDriver::processReadData(const std::string &read_data)
 	return read_len;
 }
 
+size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolVersion protocol_version, const std::string &data, size_t start_pos)
+{
+	size_t meta_data_end_pos = start_pos;
+	std::istringstream in(data);
+	in.seekg(start_pos);
+	try {
+		switch (protocol_version) {
+		/*
+		case Json: {
+			msg = CponProtocol::read(read_data, (size_t)in.tellg());
+			if(msg.isMap()) {
+				nError() << "JSON message cannot be translated to ChainPack";
+			}
+			else {
+				const RpcValue::Map &map = msg.toMap();
+				unsigned id = map.value("id").toUInt();
+				RpcValue::String method = map.value("method").toString();
+				RpcValue result = map.value("result");
+				RpcValue error = map.value("error");
+				RpcValue shv_path = map.value("shvPath");
+				if(method.empty()) {
+					// response
+					RpcResponse resp;
+					resp.setShvPath(shv_path);
+					resp.setId(id);
+					if(result.isValid())
+						resp.setResult(result);
+					else if(error.isValid())
+						resp.setError(error.toIMap());
+					else
+						nError() << "JSON RPC response must contain response or error field";
+					msg = resp.value();
+				}
+				else {
+					// request
+					RpcRequest rq;
+					rq.setShvPath(shv_path);
+					rq.setMethod(std::move(method));
+					rq.setParams(map.value("params"));
+					if(id > 0)
+						rq.setId(id);
+					msg = rq.value();
+				}
+			}
+			break;
+		}
+		*/
+		case Rpc::ProtocolVersion::Cpon: {
+			CponReader rd(in);
+			rd.read(meta_data);
+			meta_data_end_pos = (in.tellg() < 0)? data.size(): (size_t)in.tellg();
+			break;
+		}
+		case Rpc::ProtocolVersion::ChainPack: {
+			ChainPackReader rd(in);
+			rd.read(meta_data);
+			meta_data_end_pos = (in.tellg() < 0)? data.size(): (size_t)in.tellg();
+			break;
+		}
+		default:
+			meta_data_end_pos = data.size();
+			nError() << "Throwing away message with unknown protocol version:" << (unsigned)protocol_version;
+			break;
+		}
+	}
+	catch(CponReader::ParseException &e) {
+		nError() << e.mesage();
+	}
+	return meta_data_end_pos;
+}
+
 RpcValue RpcDriver::decodeData(Rpc::ProtocolVersion protocol_version, const std::string &data, size_t start_pos)
 {
 	RpcValue ret;
-	switch (protocol_version) {
-	case Rpc::ProtocolVersion::Cpon: {
-		try {
-			std::istringstream in(data);
-			in.seekg(start_pos);
+	std::istringstream in(data);
+	in.seekg(start_pos);
+	try {
+		switch (protocol_version) {
+		case Rpc::ProtocolVersion::Cpon: {
 			CponReader rd(in);
 			rd.read(ret);
+			break;
 		}
-		catch(CponReader::ParseException &e) {
-			nError() << e.mesage();
-		}
-		break;
-	}
-	case Rpc::ProtocolVersion::ChainPack: {
-		try {
-			std::istringstream in(data);
-			in.seekg(start_pos);
+		case Rpc::ProtocolVersion::ChainPack: {
 			ChainPackReader rd(in);
 			rd.read(ret);
+			break;
 		}
-		catch(CponReader::ParseException &e) {
-			nError() << e.mesage();
+		default:
+			nError() << "Don't know how to decode message with unknown protocol version:" << (unsigned)protocol_version;
+			break;
 		}
-		break;
 	}
-	default:
-		nError() << "Don't know how to decode message with unknown protocol version:" << (unsigned)protocol_version;
-		break;
+	catch(CponReader::ParseException &e) {
+		nError() << e.mesage();
 	}
 	return ret;
 }

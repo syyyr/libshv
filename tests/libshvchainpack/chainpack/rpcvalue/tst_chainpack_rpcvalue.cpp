@@ -2,6 +2,7 @@
 #include <shv/chainpack/chainpack.h>
 #include <shv/chainpack/chainpackwriter.h>
 #include <shv/chainpack/chainpackreader.h>
+#include <shv/chainpack/cponreader.h>
 
 #include <QtTest/QtTest>
 #include <QDebug>
@@ -146,7 +147,7 @@ private:
 		{
 			string err;
 			const string imap_test = R"(
-									 <1:"foo", 2u: "bar", "pi-value":3.14>
+									 <1:1, 2u: "bar", "pi-value":3.14>
 									 i{
 									   1:"v1",
 									   2:42,
@@ -161,10 +162,20 @@ private:
 									   ]
 									 }
 									 )";
-			const auto cp = RpcValue::parseCpon(imap_test, &err);
-			qDebug().nospace() << "imap_test: \n" << cp.toStdString();
-			qDebug() << "err: " << err;
-			QVERIFY(err.empty());
+			{
+				std::istringstream in(imap_test);
+				CponReader rd(in);
+				RpcValue::MetaData md;
+				rd.read(md);
+				qDebug().nospace() << "metadata test: \n" << md.toStdString();
+				QVERIFY(!md.isEmpty());
+			}
+			{
+				const auto cp = RpcValue::parseCpon(imap_test, &err);
+				qDebug().nospace() << "imap_test: \n" << cp.toStdString();
+				qDebug() << "err: " << err;
+				QVERIFY(err.empty());
+			}
 		}
 
 		qDebug() << "--------------- Map test";

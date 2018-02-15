@@ -1,3 +1,4 @@
+#include "cpon.h"
 #include "cponreader.h"
 
 #include <iostream>
@@ -101,6 +102,7 @@ void CponReader::read(RpcValue &val)
 	RpcValue::MetaData md;
 	auto ch = getValidChar();
 	if(ch == '<') {
+		m_in.unget();
 		read(md);
 		ch = getValidChar();
 	}
@@ -437,8 +439,13 @@ void CponReader::read(RpcValue::MetaData &meta_data)
 {
 	RpcValue::IMap imap;
 	RpcValue::Map smap;
+	char ch = getValidChar();
+	if(ch != Cpon::C_META_BEGIN) {
+		m_in.unget();
+		return;
+	}
 	while (true) {
-		char ch = getValidChar();
+		ch = getValidChar();
 		if (ch == ',')
 			continue;
 		if(ch == '>')
