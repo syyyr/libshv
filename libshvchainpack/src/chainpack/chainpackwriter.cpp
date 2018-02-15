@@ -175,8 +175,9 @@ void writeData_DateTime(std::ostream &out, const RpcValue::DateTime &dt)
 
 } // namespace
 
-void ChainPackWriter::write(const RpcValue &val)
+size_t ChainPackWriter::write(const RpcValue &val)
 {
+	size_t len = m_out.tellp();
 	if(!val.isValid()) {
 		if(WRITE_INVALID_AS_NULL)
 			write(RpcValue(nullptr));
@@ -188,10 +189,12 @@ void ChainPackWriter::write(const RpcValue &val)
 		if(!writeTypeInfo(val))
 			writeData(val);
 	}
+	return (size_t)m_out.tellp() - len;
 }
 
-void ChainPackWriter::write(const RpcValue::MetaData &meta_data)
+size_t ChainPackWriter::write(const RpcValue::MetaData &meta_data)
 {
+	size_t len = m_out.tellp();
 	if(!meta_data.isEmpty()) {
 		const RpcValue::IMap &cim = meta_data.iValues();
 		if(!cim.empty()) {
@@ -204,11 +207,17 @@ void ChainPackWriter::write(const RpcValue::MetaData &meta_data)
 			writeData_Map(csm);
 		}
 	}
+	return (size_t)m_out.tellp() - len;
 }
 
 void ChainPackWriter::writeUIntData(uint64_t n)
 {
-	writeData_UInt(m_out, n);
+	writeUIntData(m_out, n);
+}
+
+void ChainPackWriter::writeUIntData(std::ostream &os, uint64_t n)
+{
+	writeData_UInt(os, n);
 }
 
 static ChainPack::TypeInfo::Enum typeToTypeInfo(RpcValue::Type type)
@@ -375,8 +384,6 @@ void ChainPackWriter::writeArrayElement(const RpcValue &val)
 {
 	writeData(val);
 }
-
-
 
 } // namespace chainpack
 } // namespace shv

@@ -1,6 +1,6 @@
-#ifndef CPONREADER_H
-#define CPONREADER_H
+#pragma once
 
+#include "abstractstreamreader.h"
 #include "rpcvalue.h"
 
 namespace shv {
@@ -22,36 +22,26 @@ public:
 	*/
 };
 
-class SHVCHAINPACK_DECL_EXPORT CponReader
+class SHVCHAINPACK_DECL_EXPORT CponReader : public AbstractStreamReader
 {
+	using Super = AbstractStreamReader;
 public:
-	class SHVCHAINPACK_DECL_EXPORT ParseException : public std::exception
-	{
-		using Super = std::exception;
-	public:
-		ParseException(std::string &&message) : m_message(std::move(message)) {}
-		const std::string& mesage() const {return m_message;}
-		const char *what() const noexcept override {return m_message.data();}
-	private:
-		std::string m_message;
-	};
-public:
-	CponReader(std::istream &in) : m_in(in) {}
+	CponReader(std::istream &in) : Super(in) {}
 
 	CponReader& operator >>(RpcValue &value);
 	CponReader& operator >>(RpcValue::MetaData &meta_data);
+
+	using Super::read;
+	void read(RpcValue::MetaData &meta_data);
+	void read(RpcValue &val);
 private:
-	void getValue(RpcValue &val);
 	int getChar();
-private:
 	//RpcValue parseAtPos();
 
 	uint64_t parseInteger(int &cnt);
 	RpcValue::IMap parseIMapContent(char closing_bracket);
 	RpcValue::MetaData parseMetaDataContent(char closing_bracket);
 	void parseStringHelper(std::string &val);
-
-	void parseMetaData(RpcValue::MetaData &meta_data);
 
 	void parseNull(RpcValue &val);
 	void parseBool(RpcValue &val);
@@ -70,11 +60,9 @@ private:
 	void decodeUtf8(long pt, std::string &out);
 
 private:
-	std::istream &m_in;
 	int m_depth = 0;
 };
 
 } // namespace chainpack
 } // namespace shv
 
-#endif // CPONREADER_H

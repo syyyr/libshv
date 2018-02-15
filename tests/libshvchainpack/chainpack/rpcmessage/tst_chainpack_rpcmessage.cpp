@@ -1,5 +1,7 @@
+#include <shv/chainpack/chainpackreader.h>
+#include <shv/chainpack/chainpackwriter.h>
 #include <shv/chainpack/rpcmessage.h>
-#include <shv/chainpack/chainpackprotocol.h>
+//#include <shv/chainpack/chainpackprotocol.h>
 
 #include <cassert>
 #include <string>
@@ -76,8 +78,10 @@ private:
 		rq.setMetaValue(meta::RpcMessage::Tag::ShvPath, "aus/mel/pres/A");
 		std::stringstream out;
 		RpcValue cp1 = rq.value();
-		int len = rq.write(out);
-		RpcValue cp2 = ChainPack::read(out);
+		ChainPackWriter wr(out);
+		int len = rq.write(wr);
+		ChainPackReader rd(out);
+		RpcValue cp2 = rd.read();
 		qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
 		QCOMPARE(cp1.type(), cp2.type());
 		RpcRequest rq2(cp2);
@@ -92,8 +96,10 @@ private:
 		rs.setRequestId(123).setResult(42u);
 		std::stringstream out;
 		RpcValue cp1 = rs.value();
-		int len = rs.write(out);
-		RpcValue cp2 = ChainPack::read(out);
+		ChainPackWriter wr(out);
+		size_t len = rs.write(wr);
+		ChainPackReader rd(out);
+		RpcValue cp2 = rd.read();
 		qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
 		QVERIFY(cp1.type() == cp2.type());
 		RpcResponse rs2(cp2);
@@ -107,8 +113,10 @@ private:
 				.setError(RpcResponse::Error::create(RpcResponse::Error::InvalidParams, "Paramter length should be greater than zero!"));
 		std::stringstream out;
 		RpcValue cp1 = rs.value();
-		int len = rs.write(out);
-		RpcValue cp2 = ChainPack::read(out);
+		ChainPackWriter wr(out);
+		size_t len = rs.write(wr);
+		ChainPackReader rd(out);
+		RpcValue cp2 = rd.read();
 		qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
 		QVERIFY(cp1.type() == cp2.type());
 		RpcResponse rs2(cp2);
@@ -129,8 +137,10 @@ private:
 		QVERIFY(rq.isNotify());
 		std::stringstream out;
 		RpcValue cp1 = rq.value();
-		int len = rq.write(out);
-		RpcValue cp2 = ChainPack::read(out);
+		ChainPackWriter wr(out);
+		size_t len = rq.write(wr);
+		ChainPackReader rd(out);
+		RpcValue cp2 = rd.read();
 		qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
 		QVERIFY(cp1.type() == cp2.type());
 		RpcRequest rq2(cp2);

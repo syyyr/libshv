@@ -2,8 +2,9 @@
 
 #include "rpcvalue.h"
 
-#include <string>
-#include <streambuf>
+//#include <string>
+//#include <streambuf>
+//#include "../shvchainpackglobal.h"
 
 namespace shv {
 namespace chainpack {
@@ -55,11 +56,13 @@ public:
 		};
 		static const char* name(Enum e);
 	};
+
+	static RpcValue::Type typeInfoToType(TypeInfo::Enum type_info);
 public:
+	/*
 	static uint64_t readUIntData(std::istream &data, bool *ok = nullptr);
 	static RpcValue read(std::istream &data);
 	static RpcValue::MetaData readMetaData(std::istream &data);
-
 	static void writeUIntData(std::ostream &out, uint64_t n);
 	static void writeMetaData(std::ostream &out, const RpcValue::MetaData &meta_data);
 
@@ -72,24 +75,25 @@ public:
 	static void writeMapElement(std::ostream &out, const RpcValue::UInt &key, const RpcValue &val);
 	static void writeArrayBegin(std::ostream &out, const RpcValue::Type &array_type, size_t array_size);
 	static void writeArrayElement(std::ostream &out, const RpcValue &val) {	writeData(out, val); }
+	*/
 private:
-	static TypeInfo::Enum typeToTypeInfo(RpcValue::Type tid);
-	static RpcValue::Type typeInfoToType(TypeInfo::Enum type_info);
+	//static TypeInfo::Enum typeToTypeInfo(RpcValue::Type tid);
 
-	static bool writeTypeInfo(std::ostream &out, const RpcValue &pack);
-	static void writeData(std::ostream &out, const RpcValue &val);
-	static TypeInfo::Enum readTypeInfo(std::istream &data, RpcValue &meta, int &tiny_uint);
-	static RpcValue readData(TypeInfo::Enum tid, bool is_array, std::istream &data);
+	//static bool writeTypeInfo(std::ostream &out, const RpcValue &pack);
+	//static void writeData(std::ostream &out, const RpcValue &val);
+	//static TypeInfo::Enum readTypeInfo(std::istream &data, RpcValue &meta, int &tiny_uint);
+	//static RpcValue readData(TypeInfo::Enum tid, bool is_array, std::istream &data);
 private:
+	/*
 	static void writeData_Array(std::ostream &out, const RpcValue::Array &array);
 	static void writeData_List(std::ostream &out, const RpcValue::List &list);
 	static void writeData_Map(std::ostream &out, const RpcValue::Map &map);
 	static void writeData_IMap(std::ostream &out, const RpcValue::IMap &map);
-
 	static RpcValue::List readData_List(std::istream &data);
 	static RpcValue::Array readData_Array(TypeInfo::Enum type_info, std::istream &data);
 	static RpcValue::Map readData_Map(std::istream &data);
 	static RpcValue::IMap readData_IMap(std::istream &data);
+*/
 };
 
 }}

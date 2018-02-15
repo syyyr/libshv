@@ -1,6 +1,7 @@
 #include "rpcmessage.h"
 #include "chainpack.h"
 #include "metatypes.h"
+#include "abstractstreamwriter.h"
 
 #include <cassert>
 
@@ -212,11 +213,10 @@ void RpcMessage::setProtocolVersion(Rpc::ProtocolVersion ver)
 	setMetaValue(meta::RpcMessage::Tag::ProtocolVersion, ver == Rpc::ProtocolVersion::Invalid? RpcValue(): RpcValue((unsigned)ver));
 }
 
-int RpcMessage::write(std::ostream &out) const
+size_t RpcMessage::write(AbstractStreamWriter &wr) const
 {
 	assert(m_value.isValid());
-	//assert(rpcType() != RpcCallType::Undefined);
-	return ChainPack::write(out, m_value);
+	return wr.write(m_value);
 }
 /*
 RpcMessage::RpcCallType RpcMessage::rpcType() const
@@ -286,16 +286,16 @@ RpcRequest& RpcRequest::setParams(const RpcValue& p)
 //==================================================================
 // RpcNotify
 //==================================================================
-void RpcNotify::write(std::ostream &out, const std::string &method, std::function<void (std::ostream &)> write_params_callback)
+void RpcNotify::write(AbstractStreamWriter &wr, const std::string &method, std::function<void (AbstractStreamWriter &)> write_params_callback)
 {
 	RpcValue::MetaData md;
 	md.setMetaTypeId(meta::RpcMessage::ID);
 	md.setValue(meta::RpcMessage::Tag::Method, method);
-	ChainPack::writeMetaData(out, md);
-	ChainPack::writeContainerBegin(out, RpcValue::Type::IMap);
-	ChainPack::writeUIntData(out, meta::RpcMessage::Key::Params);
-	write_params_callback(out);
-	ChainPack::writeContainerEnd(out);
+	wr.write(md);
+	wr.writeContainerBegin(RpcValue::Type::IMap);
+	wr.writeIMapKey(meta::RpcMessage::Key::Params);
+	write_params_callback(wr);
+	wr.writeContainerEnd(RpcValue::Type::IMap);
 }
 
 //==================================================================

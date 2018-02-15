@@ -30,9 +30,10 @@ public:
 	CponWriter& operator <<(const RpcValue &value) {write(value); return *this;}
 	CponWriter& operator <<(const RpcValue::MetaData &meta_data) {write(meta_data); return *this;}
 
-	void write(const RpcValue &val) override;
-	void write(const RpcValue::MetaData &meta_data) override;
+	size_t write(const RpcValue &val) override;
+	size_t write(const RpcValue::MetaData &meta_data) override;
 
+	void writeIMapKey(RpcValue::UInt key) override {write(key);}
 	void writeContainerBegin(RpcValue::Type container_type) override;
 	void writeContainerEnd(RpcValue::Type container_type) override;
 	void writeListElement(const RpcValue &val) override;

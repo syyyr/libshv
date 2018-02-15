@@ -9,8 +9,6 @@
 namespace shv {
 namespace chainpack {
 
-static constexpr bool WRITE_INVALID_AS_NULL = true;
-
 void CponWriter::startBlock()
 {
 	if(m_opts.isIndent()) {
@@ -41,38 +39,41 @@ void CponWriter::separateElement()
 	m_out << (m_opts.isIndent()? '\n': ' ');
 }
 
-void CponWriter::write(const RpcValue &value)
+size_t CponWriter::write(const RpcValue &value)
 {
+	size_t len = m_out.tellp();
 	if(!value.metaData().isEmpty()) {
 		write(value.metaData());
 		if(m_opts.isIndent())
 			m_out << '\n';
 	}
 	switch (value.type()) {
-	case RpcValue::Type::Null: write(nullptr); return;
-	case RpcValue::Type::UInt: write(value.toUInt()); return;
-	case RpcValue::Type::Int: write(value.toInt()); return;
-	case RpcValue::Type::Double: write(value.toDouble()); return;
-	case RpcValue::Type::Bool: write(value.toBool()); return;
-	case RpcValue::Type::Blob: write(value.toBlob()); return;
-	case RpcValue::Type::String: write(value.toString()); return;
-	case RpcValue::Type::DateTime: write(value.toDateTime()); return;
-	case RpcValue::Type::List: write(value.toList()); return;
-	case RpcValue::Type::Array: write(value.toArray()); return;
-	case RpcValue::Type::Map: write(value.toMap()); return;
-	case RpcValue::Type::IMap: write(value.toIMap(), &value.metaData()); return;
-	case RpcValue::Type::Decimal: write(value.toDecimal()); return;
+	case RpcValue::Type::Null: write(nullptr); break;
+	case RpcValue::Type::UInt: write(value.toUInt()); break;
+	case RpcValue::Type::Int: write(value.toInt()); break;
+	case RpcValue::Type::Double: write(value.toDouble()); break;
+	case RpcValue::Type::Bool: write(value.toBool()); break;
+	case RpcValue::Type::Blob: write(value.toBlob()); break;
+	case RpcValue::Type::String: write(value.toString()); break;
+	case RpcValue::Type::DateTime: write(value.toDateTime()); break;
+	case RpcValue::Type::List: write(value.toList()); break;
+	case RpcValue::Type::Array: write(value.toArray()); break;
+	case RpcValue::Type::Map: write(value.toMap()); break;
+	case RpcValue::Type::IMap: write(value.toIMap(), &value.metaData()); break;
+	case RpcValue::Type::Decimal: write(value.toDecimal()); break;
 	case RpcValue::Type::Invalid:
 		if(WRITE_INVALID_AS_NULL) {
 			write(nullptr);
-			return;
 		}
+		break;
 	}
-	SHVCHP_EXCEPTION(std::string("Don't know how to serialize type: ") + RpcValue::typeToName(value.type()));
+	//SHVCHP_EXCEPTION(std::string("Don't know how to serialize type: ") + RpcValue::typeToName(value.type()));
+	return (size_t)m_out.tellp() - len;
 }
 
-void CponWriter::write(const RpcValue::MetaData &meta_data)
+size_t CponWriter::write(const RpcValue::MetaData &meta_data)
 {
+	size_t len = m_out.tellp();
 	if(!meta_data.isEmpty()) {
 		m_out << Cpon::C_META_BEGIN;
 		startBlock();
@@ -88,7 +89,7 @@ void CponWriter::write(const RpcValue::MetaData &meta_data)
 		endBlock();
 		m_out << Cpon::C_META_END;
 	}
-	return;
+	return (size_t)m_out.tellp() - len;
 }
 
 void CponWriter::writeContainerBegin(RpcValue::Type container_type)

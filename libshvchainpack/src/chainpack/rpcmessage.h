@@ -28,6 +28,8 @@ public:
 
 }
 
+class AbstractStreamWriter;
+
 class SHVCHAINPACK_DECL_EXPORT RpcMessage
 {
 public:
@@ -76,7 +78,7 @@ public:
 	RpcValue metaValue(RpcValue::UInt key) const;
 	void setMetaValue(RpcValue::UInt key, const RpcValue &val);
 
-	virtual int write(std::ostream &out) const;
+	virtual size_t write(AbstractStreamWriter &wr) const;
 protected:
 	//enum class RpcCallType { Undefined = 0, Request, Response, Notify };
 	//RpcCallType rpcType() const;
@@ -102,7 +104,7 @@ public:
 	RpcValue params() const;
 	RpcRequest& setRequestId(const RpcValue::UInt id) {Super::setRequestId(id); return *this;}
 
-	//int write(Value::Blob &out) const override;
+	//size_t write(AbstractStreamWriter &wr) const override;
 };
 
 class SHVCHAINPACK_DECL_EXPORT RpcNotify : public RpcRequest
@@ -116,7 +118,7 @@ public:
 public:
 	RpcRequest& setRequestId(const RpcValue::UInt requestId) = delete;
 
-	static void write(std::ostream &out, const std::string &method, std::function<void (std::ostream &out)> write_params_callback);
+	static void write(AbstractStreamWriter &wr, const std::string &method, std::function<void (AbstractStreamWriter &)> write_params_callback);
 };
 
 class SHVCHAINPACK_DECL_EXPORT RpcResponse : public RpcMessage

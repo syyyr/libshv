@@ -9,9 +9,9 @@
 
 namespace shv {
 namespace chainpack {
-
+#if 0
 namespace {
-
+/*
 template<typename T>
 int significant_bits_part_length(T n)
 {
@@ -34,7 +34,7 @@ int bytes_needed(int bit_len)
 		cnt = (bit_len - 1) / 8 + 2;
 	return cnt;
 }
-
+*/
 /* UInt
  0 ...  7 bits  1  byte  |0|x|x|x|x|x|x|x|<-- LSB
  8 ... 14 bits  2  bytes |1|0|x|x|x|x|x|x| |x|x|x|x|x|x|x|x|<-- LSB
@@ -46,7 +46,7 @@ int bytes_needed(int bit_len)
                     n == 14 -> 18 bytes number
                     n == 15 -> for future (number of bytes will be specified in next byte)
 */
-
+/*
 template<typename T>
 void writeData_int_helper(std::ostream &out, T num, int bit_len)
 {
@@ -85,7 +85,7 @@ void writeData_UInt(std::ostream &out, T num)
 	int bitlen = significant_bits_part_length(num);
 	writeData_int_helper<T>(out, num, bitlen);
 }
-
+*/
 template<typename T>
 T readData_UInt(std::istream &data, int *pbitlen = nullptr)
 {
@@ -131,7 +131,7 @@ T readData_UInt(std::istream &data, int *pbitlen = nullptr)
                     n == 14 -> 18 bytes number
                     n == 15 -> for future (number of bytes will be specified in next byte)
 */
-
+/*
 // return max bit length >= bit_len, which can be encoded by same number of bytes
 int expand_bit_len(int bit_len)
 {
@@ -162,7 +162,7 @@ void writeData_Int(std::ostream &out, T snum)
 	}
 	writeData_int_helper(out, num, bitlen);
 }
-
+*/
 template<typename T>
 T readData_Int(std::istream &data)
 {
@@ -193,7 +193,7 @@ double readData_Double(std::istream &data)
 	}
 	return u.d;
 }
-
+/*
 void writeData_Double(std::ostream &out, double d)
 {
 	union U {uint64_t n; double d;} u;
@@ -205,14 +205,14 @@ void writeData_Double(std::ostream &out, double d)
 		out << r;
 	}
 }
-
+*/
 RpcValue::Decimal readData_Decimal(std::istream &data)
 {
 	RpcValue::Int mant = readData_Int<RpcValue::Int>(data);
 	int prec = readData_Int<RpcValue::Int>(data);
 	return RpcValue::Decimal(mant, prec);
 }
-
+/*
 void writeData_Decimal(std::ostream &out, const RpcValue::Decimal &d)
 {
 	writeData_Int(out, d.mantisa());
@@ -229,7 +229,7 @@ void writeData_Blob(std::ostream &out, const T &blob)
 	for (S i = 0; i < l; ++i)
 		out << (uint8_t)blob[i];
 }
-
+*/
 template<typename T>
 T readData_Blob(std::istream &data)
 {
@@ -241,7 +241,7 @@ T readData_Blob(std::istream &data)
 		ret += data.get();
 	return ret;
 }
-
+/*
 void writeData_DateTime(std::ostream &out, const RpcValue::DateTime &dt)
 {
 	int64_t msecs = dt.msecsSinceEpoch() - RpcValue::DateTime::SHV_EPOCH_MSEC;
@@ -260,7 +260,7 @@ void writeData_DateTime(std::ostream &out, const RpcValue::DateTime &dt)
 		msecs |= 2;
 	writeData_Int(out, msecs);
 }
-
+*/
 RpcValue::DateTime readData_DateTimeEpoch(std::istream &data)
 {
 	RpcValue::DateTime dt = RpcValue::DateTime::fromMSecsSinceEpoch(readData_Int<int64_t>(data));
@@ -327,7 +327,7 @@ ChainPack::TypeInfo::Enum ChainPack::typeToTypeInfo(RpcValue::Type type)
 	SHVCHP_EXCEPTION("Unknown RpcValue::Type!");
 	return TypeInfo::INVALID; // just to remove mingw warning
 }
-
+#endif
 RpcValue::Type ChainPack::typeInfoToType(ChainPack::TypeInfo::Enum type_info)
 {
 	switch (type_info) {
@@ -394,7 +394,7 @@ const char *ChainPack::TypeInfo::name(ChainPack::TypeInfo::Enum e)
 	//SHVCHP_EXCEPTION("Unknown TypeInfo: " + Utils::toString((int)e));
 	return "";
 }
-
+/*
 void ChainPack::writeData_Array(std::ostream &out, const RpcValue::Array &array)
 {
 	unsigned size = array.size();
@@ -499,7 +499,7 @@ RpcValue::IMap ChainPack::readData_IMap(std::istream &data)
 	}
 	return ret;
 }
-/*
+
 int ChainPackProtocol::write(std::ostream &out, const RpcValue &val)
 {
 	std::ostream::pos_type len = out.tellp();
@@ -516,7 +516,7 @@ int ChainPackProtocol::write(std::ostream &out, const RpcValue &val)
 		return (out.tellp() - len);
 	}
 }
-*/
+
 void ChainPack::writeMetaData(std::ostream &out, const RpcValue::MetaData &meta_data)
 {
 	if(!meta_data.isEmpty()) {
@@ -640,7 +640,8 @@ RpcValue ChainPack::read(std::istream &data)
 		ret.setMetaData(std::move(meta_data));
 	return ret;
 }
-
+*/
+#if 0
 RpcValue::MetaData ChainPack::readMetaData(std::istream &data)
 {
 	RpcValue::IMap imap;
@@ -732,7 +733,7 @@ RpcValue ChainPack::readData(ChainPack::TypeInfo::Enum type, bool is_array, std:
 	}
 	return ret;
 }
-
+/*
 void ChainPack::writeContainerBegin(std::ostream &out, const RpcValue::Type &container_type)
 {
 	switch (container_type) {
@@ -780,5 +781,7 @@ void ChainPack::writeArrayBegin(std::ostream &out, const RpcValue::Type &array_t
 	out << (uint8_t)t;
 	writeData_UInt(out, array_size);
 }
+*/
+#endif
 
 }}
