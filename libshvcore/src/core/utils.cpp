@@ -2,6 +2,7 @@
 #include "log.h"
 
 #include <regex>
+#include <sstream>
 
 namespace shv {
 namespace core {
