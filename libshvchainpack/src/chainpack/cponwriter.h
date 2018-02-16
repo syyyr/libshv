@@ -36,11 +36,17 @@ public:
 	void writeIMapKey(RpcValue::UInt key) override {write(key);}
 	void writeContainerBegin(RpcValue::Type container_type) override;
 	void writeContainerEnd(RpcValue::Type container_type) override;
-	void writeListElement(const RpcValue &val, bool is_last) override;
-	void writeMapElement(const std::string &key, const RpcValue &val, bool is_last) override;
-	void writeMapElement(RpcValue::UInt key, const RpcValue &val, bool is_last) override;
 	void writeArrayBegin(RpcValue::Type, size_t) override;
-	void writeArrayElement(const RpcValue &val, bool is_last) override {writeListElement(val, is_last);}
+
+	void writeListElement(const RpcValue &val) override {writeListElement(val, false);}
+	void writeMapElement(const std::string &key, const RpcValue &val) override {writeMapElement(key, val, false);}
+	void writeMapElement(RpcValue::UInt key, const RpcValue &val) override {writeMapElement(key, val, false);}
+
+	// terminating separator id OK in Cpon, but world is prettier without it
+	void writeListElement(const RpcValue &val, bool without_separator);
+	void writeMapElement(const std::string &key, const RpcValue &val, bool without_separator);
+	void writeMapElement(RpcValue::UInt key, const RpcValue &val, bool without_separator);
+	void writeArrayElement(const RpcValue &val, bool without_separator) {writeListElement(val, without_separator);}
 private:
 	CponWriter& write(std::nullptr_t);
 	CponWriter& write(bool value);
@@ -62,7 +68,7 @@ private:
 	void startBlock();
 	void endBlock();
 	void indentElement();
-	void separateElement(bool is_last);
+	void separateElement(bool without_comma);
 private:
 	CponWriterOptions m_opts;
 	int m_currentIndent = 0;
