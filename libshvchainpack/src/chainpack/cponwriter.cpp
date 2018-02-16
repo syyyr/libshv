@@ -37,9 +37,15 @@ void CponWriter::indentElement()
 
 void CponWriter::separateElement(bool without_comma)
 {
-	if(!without_comma)
-		m_out << ',';
-	m_out << (!m_opts.indent().empty()? '\n': ' ');
+	if(m_opts.indent().empty()) {
+		if(!without_comma)
+			m_out << ", ";
+	}
+	else {
+		if(!without_comma)
+			m_out << ',';
+		m_out << '\n';
+	}
 }
 
 size_t CponWriter::write(const RpcValue &value)
@@ -196,6 +202,7 @@ void CponWriter::writeListElement(const RpcValue &val, bool without_separator)
 
 void CponWriter::writeMapElement(const std::string &key, const RpcValue &val, bool without_separator)
 {
+	indentElement();
 	write(key);
 	m_out << ':';
 	write(val);
@@ -204,6 +211,7 @@ void CponWriter::writeMapElement(const std::string &key, const RpcValue &val, bo
 
 void CponWriter::writeMapElement(RpcValue::UInt key, const RpcValue &val, bool without_separator)
 {
+	indentElement();
 	write(key);
 	m_out << ':';
 	write(val);
@@ -380,13 +388,8 @@ void CponWriter::writeIMapContent(const RpcValue::IMap &values, const RpcValue::
 void CponWriter::writeMapContent(const RpcValue::Map &values)
 {
 	size_t ix = 0;
-	for (const auto &kv : values) {
-		indentElement();
-		write(kv.first);
-		m_out << ":";
-		write(kv.second);
-		separateElement(++ix == values.size());
-	}
+	for (const auto &kv : values)
+		writeMapElement(kv.first, kv.second, ++ix == values.size());
 }
 
 } // namespace chainpack
