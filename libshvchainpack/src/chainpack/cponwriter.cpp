@@ -1,5 +1,4 @@
 #include "cponwriter.h"
-//#include "chainpackprotocol.h"
 #include "cpon.h"
 #include "exception.h"
 
@@ -20,7 +19,7 @@ void CponWriter::startBlock()
 void CponWriter::endBlock()
 {
 	if(!m_opts.indent().empty()) {
-		m_out << '\n';
+		//m_out << '\n';
 		m_currentIndent--;
 		indentElement();
 	}
@@ -35,9 +34,10 @@ void CponWriter::indentElement()
 	}
 }
 
-void CponWriter::separateElement()
+void CponWriter::separateElement(bool is_last)
 {
-	m_out << ',';
+	if(!is_last)
+		m_out << ',';
 	m_out << (!m_opts.indent().empty()? '\n': ' ');
 }
 
@@ -125,14 +125,13 @@ size_t CponWriter::write(const RpcValue::MetaData &meta_data)
 				else {
 					write(meta_val);
 				}
-				if(++ix < cim.size())
-					separateElement();
+				separateElement(++ix == cim.size());
 			}
 		}
 		const RpcValue::Map &csm = meta_data.sValues();
 		if(!csm.empty()) {
 			if(!cim.empty())
-				separateElement();
+				separateElement(false);
 			writeMapContent(csm);
 		}
 		endBlock();
@@ -187,26 +186,26 @@ void CponWriter::writeContainerEnd(RpcValue::Type container_type)
 	}
 }
 
-void CponWriter::writeListElement(const RpcValue &val)
+void CponWriter::writeListElement(const RpcValue &val, bool is_last)
 {
 	write(val);
-	separateElement();
+	separateElement(is_last);
 }
 
-void CponWriter::writeMapElement(const std::string &key, const RpcValue &val)
+void CponWriter::writeMapElement(const std::string &key, const RpcValue &val, bool is_last)
 {
 	write(key);
 	m_out << ':';
 	write(val);
-	separateElement();
+	separateElement(is_last);
 }
 
-void CponWriter::writeMapElement(RpcValue::UInt key, const RpcValue &val)
+void CponWriter::writeMapElement(RpcValue::UInt key, const RpcValue &val, bool is_last)
 {
 	write(key);
 	m_out << ':';
 	write(val);
-	separateElement();
+	separateElement(is_last);
 }
 
 CponWriter &CponWriter::write(std::nullptr_t)
@@ -317,12 +316,11 @@ CponWriter &CponWriter::write(const RpcValue::Blob &value)
 CponWriter &CponWriter::write(const RpcValue::List &values)
 {
 	writeContainerBegin(RpcValue::Type::List);
-	for (size_t i = 0; i < values.size(); ) {
+	for (size_t ix = 0; ix < values.size(); ) {
 		indentElement();
-		const RpcValue &value = values[i];
+		const RpcValue &value = values[ix];
 		write(value);
-		if (++i < values.size())
-			separateElement();
+		separateElement(++ix == values.size());
 	}
 	writeContainerEnd(RpcValue::Type::List);
 	return *this;
@@ -331,11 +329,11 @@ CponWriter &CponWriter::write(const RpcValue::List &values)
 CponWriter &CponWriter::write(const RpcValue::Array &values)
 {
 	writeArrayBegin(values.type(), values.size());
-	for (size_t i = 0; i < values.size();) {
+	for (size_t ix = 0; ix < values.size();) {
 		indentElement();
-		write(values.valueAt(i));
-		if (++i < values.size())
-			separateElement();
+		write(values.valueAt(ix));
+		++ix; //if (++ix < values.size())
+		separateElement(++ix == values.size());
 	}
 	writeContainerEnd(RpcValue::Type::Array);
 	return *this;
@@ -377,8 +375,7 @@ void CponWriter::writeIMapContent(const RpcValue::IMap &values, const RpcValue::
 		}
 		m_out << ":";
 		write(kv.second);
-		if(++ix < values.size())
-			separateElement();
+		separateElement(++ix == values.size());
 	}
 }
 
@@ -390,8 +387,7 @@ void CponWriter::writeMapContent(const RpcValue::Map &values)
 		write(kv.first);
 		m_out << ":";
 		write(kv.second);
-		if(++ix < values.size())
-			separateElement();
+		separateElement(++ix == values.size());
 	}
 }
 

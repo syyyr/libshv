@@ -355,18 +355,18 @@ void ChainPackWriter::writeContainerEnd(RpcValue::Type container_type)
 	m_out << (uint8_t)ChainPack::TypeInfo::TERM;
 }
 
-void ChainPackWriter::writeListElement(const RpcValue &val)
+void ChainPackWriter::writeListElement(const RpcValue &val, bool )
 {
 	write(val);
 }
 
-void ChainPackWriter::writeMapElement(const std::string &key, const RpcValue &val)
+void ChainPackWriter::writeMapElement(const std::string &key, const RpcValue &val, bool )
 {
 	writeData_Blob(m_out, key);
 	write(val);
 }
 
-void ChainPackWriter::writeMapElement(RpcValue::UInt key, const RpcValue &val)
+void ChainPackWriter::writeMapElement(RpcValue::UInt key, const RpcValue &val, bool )
 {
 	writeData_UInt(m_out, key);
 	write(val);
@@ -380,7 +380,7 @@ void ChainPackWriter::writeArrayBegin(RpcValue::Type array_type, size_t array_si
 	writeUIntData(array_size);
 }
 
-void ChainPackWriter::writeArrayElement(const RpcValue &val)
+void ChainPackWriter::writeArrayElement(const RpcValue &val, bool is_last)
 {
 	writeData(val);
 }
