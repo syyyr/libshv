@@ -8,15 +8,15 @@ namespace chainpack {
 class SHVCHAINPACK_DECL_EXPORT CponWriterOptions
 {
 	bool m_translateIds = false;
-	bool m_indent = 0;
+	std::string m_indent;
 public:
 	//CponWriterOptions() {}
 
 	bool isTranslateIds() const {return m_translateIds;}
 	CponWriterOptions& setTranslateIds(bool b) {m_translateIds = b; return *this;}
 
-	bool isIndent() const {return m_indent;}
-	CponWriterOptions& setIndent(bool i) {m_indent = i; return *this;}
+	const std::string& indent() const {return m_indent;}
+	CponWriterOptions& setIndent(const std::string& i) {m_indent = i; return *this;}
 };
 
 class SHVCHAINPACK_DECL_EXPORT CponWriter : public AbstractStreamWriter

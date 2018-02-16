@@ -76,4 +76,16 @@ std::string String::join(const std::vector<std::string> &lst, char delim)
 	return ret;
 }
 
+int String::replace(std::string& str, const std::string& from, const std::string& to)
+{
+	int i = 0;
+	for (i = 0; ; ++i) {
+		size_t start_pos = str.find(from);
+		if(start_pos == std::string::npos)
+			break;
+		str.replace(start_pos, from.length(), to);
+	}
+	return i;
+}
+
 }}

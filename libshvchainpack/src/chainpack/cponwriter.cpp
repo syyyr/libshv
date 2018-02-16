@@ -11,7 +11,7 @@ namespace chainpack {
 
 void CponWriter::startBlock()
 {
-	if(m_opts.isIndent()) {
+	if(!m_opts.indent().empty()) {
 		m_out << '\n';
 		m_currentIndent++;
 	}
@@ -19,7 +19,7 @@ void CponWriter::startBlock()
 
 void CponWriter::endBlock()
 {
-	if(m_opts.isIndent()) {
+	if(!m_opts.indent().empty()) {
 		m_out << '\n';
 		m_currentIndent--;
 		indentElement();
@@ -28,15 +28,17 @@ void CponWriter::endBlock()
 
 void CponWriter::indentElement()
 {
-	if(m_opts.isIndent()) {
-		m_out << std::string(m_currentIndent, '\t');
+	if(!m_opts.indent().empty()) {
+		for (int i = 0; i < m_currentIndent; ++i) {
+			m_out << m_opts.indent();
+		}
 	}
 }
 
 void CponWriter::separateElement()
 {
 	m_out << ',';
-	m_out << (m_opts.isIndent()? '\n': ' ');
+	m_out << (!m_opts.indent().empty()? '\n': ' ');
 }
 
 size_t CponWriter::write(const RpcValue &value)
@@ -44,7 +46,7 @@ size_t CponWriter::write(const RpcValue &value)
 	size_t len = m_out.tellp();
 	if(!value.metaData().isEmpty()) {
 		write(value.metaData());
-		if(m_opts.isIndent())
+		if(!m_opts.indent().empty())
 			m_out << '\n';
 	}
 	switch (value.type()) {
@@ -330,6 +332,7 @@ CponWriter &CponWriter::write(const RpcValue::Array &values)
 {
 	writeArrayBegin(values.type(), values.size());
 	for (size_t i = 0; i < values.size();) {
+		indentElement();
 		write(values.valueAt(i));
 		if (++i < values.size())
 			separateElement();

@@ -35,7 +35,7 @@ public:
 	static std::vector<std::string> split(const std::string &str, char delim, SplitBehavior split_behavior = SkipEmptyParts);
 	static std::string join(const std::vector<std::string> &lst, const std::string &delim);
 	static std::string join(const std::vector<std::string> &lst, char delim);
-
+	static int replace(std::string &str, const std::string &from, const std::string &to);
 };
 
 }}
