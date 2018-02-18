@@ -20,11 +20,11 @@ public:
 	//virtual void writeMetaDataEnd() = 0;
 	virtual void writeIMapKey(RpcValue::UInt key) = 0;
 	virtual void writeContainerBegin(RpcValue::Type container_type) = 0;
-	virtual void writeListElement(const RpcValue &val, bool is_last) = 0;
-	virtual void writeMapElement(const std::string &key, const RpcValue &val, bool is_last) = 0;
-	virtual void writeMapElement(RpcValue::UInt key, const RpcValue &val, bool is_last) = 0;
+	virtual void writeListElement(const RpcValue &val) = 0;
+	virtual void writeMapElement(const std::string &key, const RpcValue &val) = 0;
+	virtual void writeMapElement(RpcValue::UInt key, const RpcValue &val) = 0;
 	virtual void writeArrayBegin(RpcValue::Type array_type, size_t array_size) = 0;
-	virtual void writeArrayElement(const RpcValue &val, bool is_last) = 0;
+	virtual void writeArrayElement(const RpcValue &val) = 0;
 	virtual void writeContainerEnd(RpcValue::Type container_type) = 0;
 
 protected:

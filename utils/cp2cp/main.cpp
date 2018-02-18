@@ -35,8 +35,8 @@ USAGE:
 	human readable metatypes in Cpon output
 -ip
 	input stream is Cpon (ChainPack otherwise)
--op
-	write output in Cpon (ChainPack otherwise)
+-oc
+	write output in ChainPack (Cpon otherwise)
 
 )";
 
@@ -52,21 +52,26 @@ int replace_str(std::string& str, const std::string& from, const std::string& to
 	return i;
 }
 
+void help(const std::string &app_name)
+{
+	std::cout << app_name << cp2cp_help;
+	std::cout << NecroLog::cliHelp();
+	exit(0);
+}
+
 int main(int argc, char *argv[])
 {
 	std::vector<std::string> args = NecroLog::setCLIOptions(argc, argv);
 
 	if(std::find(args.begin(), args.end(), "--help") != args.end()) {
-		std::cout << argv[0] << cp2cp_help;
-		std::cout << NecroLog::cliHelp();
-		exit(0);
+		help(argv[0]);
 	}
 	nDebug() << NecroLog::tresholdsLogInfo();
 
 	std::string o_indent;
 	bool o_translate_meta_ids = false;
 	bool o_cpon_input = false;
-	bool o_cpon_output = false;
+	bool o_chainpack_output = false;
 	std::string file_name;
 
 	for (size_t i = 1; i < args.size(); ++i) {
@@ -82,8 +87,10 @@ int main(int argc, char *argv[])
 			o_translate_meta_ids = true;
 		else if(arg == "-ip")
 			o_cpon_input = true;
-		else if(arg == "-op")
-			o_cpon_output = true;
+		else if(arg == "-oc")
+			o_chainpack_output = true;
+		else if(arg == "-h")
+			help(argv[0]);
 		else
 			file_name = arg;
 	}
@@ -113,15 +120,15 @@ int main(int argc, char *argv[])
 	else
 		prd = new cp::ChainPackReader(*pin);
 
-	if(o_cpon_output) {
+	if(o_chainpack_output) {
+		pwr = new cp::ChainPackWriter(std::cout);
+	}
+	else {
 		shv::chainpack::CponWriterOptions opts;
 		opts.setIndent(o_indent);
 		opts.setTranslateIds(o_translate_meta_ids);
 		cp::CponWriter *wr = new cp::CponWriter(std::cout, opts);
 		pwr = wr;
-	}
-	else {
-		pwr = new cp::ChainPackWriter(std::cout);
 	}
 
 	try {
@@ -160,6 +167,9 @@ int main(int argc, char *argv[])
 		nError() << e.what();
 		exit(-1);
 	}
+
+	delete prd;
+	delete pwr;
 
 	return 0;
 }

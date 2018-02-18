@@ -41,6 +41,7 @@ public:
 	void writeListElement(const RpcValue &val) override {writeListElement(val, false);}
 	void writeMapElement(const std::string &key, const RpcValue &val) override {writeMapElement(key, val, false);}
 	void writeMapElement(RpcValue::UInt key, const RpcValue &val) override {writeMapElement(key, val, false);}
+	void writeArrayElement(const RpcValue &val) override {writeListElement(val);}
 
 	// terminating separator id OK in Cpon, but world is prettier without it
 	void writeListElement(const RpcValue &val, bool without_separator);
