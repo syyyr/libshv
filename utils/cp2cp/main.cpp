@@ -11,6 +11,7 @@
 #include <iostream>
 #include <fstream>
 
+namespace cp = shv::chainpack;
 /*
 #define nFooInfo() nCInfo("foo")
 #define nBarDebug() nCDebug("bar")
@@ -28,9 +29,14 @@ static const char *cp2cp_help =
 R"( ChainPack to Cpon converter
 
 USAGE:
--i "indent_string" : indent Cpon
--t : human readable metatypes
--r : convert Cpon to ChainPack
+-i "indent_string"
+	indent Cpon (default is no-indent "")
+-t
+	human readable metatypes in Cpon output
+-ip
+	input stream is Cpon (ChainPack otherwise)
+-op
+	write output in Cpon (ChainPack otherwise)
 
 )";
 
@@ -59,7 +65,8 @@ int main(int argc, char *argv[])
 
 	std::string o_indent;
 	bool o_translate_meta_ids = false;
-	bool o_cpon_to_chainpack = false;
+	bool o_cpon_input = false;
+	bool o_cpon_output = false;
 	std::string file_name;
 
 	for (size_t i = 1; i < args.size(); ++i) {
@@ -73,8 +80,10 @@ int main(int argc, char *argv[])
 		}
 		else if(arg == "-t")
 			o_translate_meta_ids = true;
-		else if(arg == "-r")
-			o_cpon_to_chainpack = true;
+		else if(arg == "-ip")
+			o_cpon_input = true;
+		else if(arg == "-op")
+			o_cpon_output = true;
 		else
 			file_name = arg;
 	}
@@ -95,11 +104,29 @@ int main(int argc, char *argv[])
 		pin = &in_file;
 	}
 
+
+	cp::AbstractStreamReader *prd;
+	cp::AbstractStreamWriter *pwr;
+
+	if(o_cpon_input)
+		prd = new cp::CponReader(*pin);
+	else
+		prd = new cp::ChainPackReader(*pin);
+
+	if(o_cpon_output) {
+		shv::chainpack::CponWriterOptions opts;
+		opts.setIndent(o_indent);
+		opts.setTranslateIds(o_translate_meta_ids);
+		cp::CponWriter *wr = new cp::CponWriter(std::cout, opts);
+		pwr = wr;
+	}
+	else {
+		pwr = new cp::ChainPackWriter(std::cout);
+	}
+
 	try {
-		if(o_cpon_to_chainpack) {
-			nDebug() << "converting Cpon --> ChainPack";
-			shv::chainpack::CponReader rd(*pin);
-			shv::chainpack::ChainPackWriter wr(std::cout);
+		if(o_cpon_input) {
+			//nDebug() << "converting Cpon --> ChainPack";
 			while(true) {
 				// read garbage to discover end of stream
 				while(true) {
@@ -111,26 +138,21 @@ int main(int argc, char *argv[])
 						break;
 					}
 				}
-				shv::chainpack::RpcValue val = rd.read();
+				shv::chainpack::RpcValue val = prd->read();
 				//nInfo() << val.toCpon();
-				wr.write(val);
+				pwr->write(val);
 			}
 		}
 		else {
-			nDebug() << "converting ChainPack --> Cpon";
-			shv::chainpack::ChainPackReader rd(*pin);
-			shv::chainpack::CponWriterOptions opts;
-			opts.setIndent(o_indent);
-			opts.setTranslateIds(o_translate_meta_ids);
-			shv::chainpack::CponWriter wr(std::cout, opts);
+			//nDebug() << "converting ChainPack --> Cpon";
 			while(true) {
 				// check end of stream
 				int c = pin->get();
 				if(c < 0)
 					break;
 				pin->unget();
-				shv::chainpack::RpcValue val = rd.read();
-				wr.write(val);
+				shv::chainpack::RpcValue val = prd->read();
+				pwr->write(val);
 			}
 		}
 	}

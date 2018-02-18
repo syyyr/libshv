@@ -24,6 +24,7 @@ public:
 	};
 public:
 	AbstractStreamReader(std::istream &in);
+	virtual ~AbstractStreamReader() {}
 
 	RpcValue read();
 
