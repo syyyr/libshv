@@ -486,7 +486,7 @@ void CponReader::parseArray(RpcValue &ret_val)
 		}
 		else {
 			if(val.type() != arr.type())
-				PARSE_EXCEPTION("Mixed types in Array");
+				PARSE_EXCEPTION("Mixed types in Array: " + val.toCpon());
 		}
 		arr.push_back(RpcValue::Array::makeElement(val));
 	}

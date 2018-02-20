@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <sstream>
 
 namespace shv {
 namespace chainpack {
@@ -244,12 +245,17 @@ CponWriter &CponWriter::write(RpcValue::UInt value)
 
 CponWriter &CponWriter::write(double value)
 {
+	std::ostringstream ss;
 	if (std::isfinite(value)) {
-		m_out << value;
+		ss << value;
 	}
 	else {
-		m_out << Cpon::STR_NULL;
+		ss << Cpon::STR_NULL;
 	}
+	std::string s = ss.str();
+	if(s.find('.') == std::string::npos)
+		s += '.';
+	m_out << s;
 	return *this;
 }
 
