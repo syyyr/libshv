@@ -8,4 +8,5 @@ SOURCES += \
     $$PWD/shvnode.cpp
 
 include ($$PWD/client/client.pri)
+include ($$PWD/server/server.pri)
 

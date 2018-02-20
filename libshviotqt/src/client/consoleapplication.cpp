@@ -37,7 +37,7 @@ ConsoleApplication::ConsoleApplication(int &argc, char **argv, AppCliOptions *cl
 	installUnixSignalHandlers();
 #endif
 
-	m_clientConnection = new Connection(this);
+	m_clientConnection = new ClientConnection(this);
 	//m_clientConnection->setProfile(profile());
 	//m_clientConnection->setDeviceId(deviceId());
 	m_clientConnection->setUser(m_cliOptions->userName().toStdString());

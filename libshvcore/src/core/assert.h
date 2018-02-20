@@ -1,7 +1,7 @@
 #pragma once
 
 #include "log.h"
-#include "shvexception.h"
+#include "exception.h"
 
 //#define SHV_ASSERT_STRINGIFY_HELPER(x) #x
 //#define SHV_ASSERT_STRINGIFY(x) SHV_ASSERT_STRINGIFY_HELPER(x)

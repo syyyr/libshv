@@ -27,7 +27,7 @@ public:
 	void setDeviceMountPoint(const shv::chainpack::RpcValue::String &path);
 };
 */
-class SHVIOTQT_DECL_EXPORT Connection : public shv::coreqt::chainpack::RpcConnection
+class SHVIOTQT_DECL_EXPORT ClientConnection : public shv::coreqt::chainpack::RpcConnection
 {
 	Q_OBJECT
 	using Super = shv::coreqt::chainpack::RpcConnection;
@@ -38,8 +38,8 @@ class SHVIOTQT_DECL_EXPORT Connection : public shv::coreqt::chainpack::RpcConnec
 
 	SHV_PROPERTY_BOOL_IMPL(b, B, rokerConnected)
 public:
-	explicit Connection(QObject *parent = 0);
-	~Connection() Q_DECL_OVERRIDE;
+	explicit ClientConnection(QObject *parent = 0);
+	~ClientConnection() Q_DECL_OVERRIDE;
 protected:
 	bool onRpcMessageReceived(const shv::chainpack::RpcMessage &msg) override;
 private:

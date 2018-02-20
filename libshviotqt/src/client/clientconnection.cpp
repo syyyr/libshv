@@ -22,7 +22,7 @@ namespace shv {
 namespace iotqt {
 namespace client {
 
-Connection::Connection(QObject *parent)
+ClientConnection::ClientConnection(QObject *parent)
 	: Super(cpq::RpcConnection::SyncCalls::Supported, parent)
 {
 	//setDevice(cp::RpcValue(nullptr));
@@ -30,8 +30,8 @@ Connection::Connection(QObject *parent)
 	QTcpSocket *socket = new QTcpSocket();
 	setSocket(socket);
 
-	connect(this, &Connection::socketConnectedChanged, this, &Connection::onSocketConnectedChanged);
-	connect(this, &Connection::messageReceived, this, &Connection::onRpcMessageReceived);
+	connect(this, &ClientConnection::socketConnectedChanged, this, &ClientConnection::onSocketConnectedChanged);
+	connect(this, &ClientConnection::messageReceived, this, &ClientConnection::onRpcMessageReceived);
 	//setProtocolVersion(protocolVersion());
 	/*
 	{
@@ -42,13 +42,13 @@ Connection::Connection(QObject *parent)
 	*/
 }
 
-Connection::~Connection()
+ClientConnection::~ClientConnection()
 {
 	shvDebug() << Q_FUNC_INFO;
 	abort();
 }
 
-void Connection::onSocketConnectedChanged(bool is_connected)
+void ClientConnection::onSocketConnectedChanged(bool is_connected)
 {
 	if(is_connected) {
 		shvInfo() << "Socket connected to RPC server";
@@ -62,7 +62,7 @@ void Connection::onSocketConnectedChanged(bool is_connected)
 	}
 }
 
-void Connection::sendHello()
+void ClientConnection::sendHello()
 {
 	setBrokerConnected(false);
 	m_helloRequestId = callMethodASync(cp::Rpc::METH_HELLO);
@@ -78,7 +78,7 @@ void Connection::sendHello()
 	});
 }
 
-void Connection::sendLogin(const chainpack::RpcValue &server_hello)
+void ClientConnection::sendLogin(const chainpack::RpcValue &server_hello)
 {
 	std::string server_nonce = server_hello.toMap().value("nonce").toString();
 	std::string password = server_nonce + passwordHash(user());
@@ -96,7 +96,7 @@ void Connection::sendLogin(const chainpack::RpcValue &server_hello)
 									   });
 }
 
-std::string Connection::passwordHash(const std::string &user)
+std::string ClientConnection::passwordHash(const std::string &user)
 {
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
 	hash.addData(user.data(), user.size());
@@ -104,7 +104,7 @@ std::string Connection::passwordHash(const std::string &user)
 	return std::string(sha1.constData(), sha1.length());
 }
 
-bool Connection::onRpcMessageReceived(const cp::RpcMessage &msg)
+bool ClientConnection::onRpcMessageReceived(const cp::RpcMessage &msg)
 {
 	logRpc() << msg.toCpon();
 	if(Super::onRpcMessageReceived(msg))

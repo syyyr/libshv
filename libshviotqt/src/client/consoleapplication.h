@@ -17,7 +17,7 @@ namespace iotqt {
 namespace client {
 
 class AppCliOptions;
-class Connection;
+class ClientConnection;
 
 class SHVIOTQT_DECL_EXPORT ConsoleApplication : public QCoreApplication
 {
@@ -35,7 +35,7 @@ public:
 	QString versionString() const;
 
 	AppCliOptions* cliOptions() {return m_cliOptions;}
-	Connection *clientConnection() {return m_clientConnection;}
+	ClientConnection *clientConnection() {return m_clientConnection;}
 
 	static ConsoleApplication* instance() {return qobject_cast<ConsoleApplication*>(Super::instance());}
 protected:
@@ -44,7 +44,7 @@ protected:
 protected:
 	AppCliOptions *m_cliOptions;
 	QTimer *m_checkConnectedTimer;
-	Connection *m_clientConnection = nullptr;
+	ClientConnection *m_clientConnection = nullptr;
 #ifdef Q_OS_UNIX
 protected:
 	// Unix signal handlers.
