@@ -36,7 +36,7 @@ void RpcDriver::sendMessage(const RpcValue &msg)
 {
 	using namespace std;
 	//shvLogFuncFrame() << msg.toStdString();
-	logRpcMsg() << SND_LOG_ARROW << msg.toStdString();
+	logRpcMsg() << SND_LOG_ARROW << msg.toPrettyString();
 	std::string packed_data = codeRpcValue(protocolVersion(), msg);
 	logRpcData() << "send message:" << (packed_data.size() > 250? "<... long data ...>" :
 				(protocolVersion() == Rpc::ProtocolVersion::Cpon? packed_data: Utils::toHex(packed_data)));
@@ -384,7 +384,7 @@ void RpcDriver::onRpcDataReceived(Rpc::ProtocolVersion protocol_version, RpcValu
 	RpcValue msg = decodeData(protocol_version, data, start_pos);
 	if(msg.isValid()) {
 		msg.setMetaData(std::move(md));
-		logRpcMsg() << RCV_LOG_ARROW << msg.toStdString();
+		logRpcMsg() << RCV_LOG_ARROW << msg.toPrettyString();
 		onRpcValueReceived(msg);
 	}
 	else {

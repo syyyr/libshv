@@ -335,7 +335,7 @@ public:
 	void set(const RpcValue::String &key, const RpcValue &val);
 	void append(const RpcValue &val);
 
-	std::string toStdString(const std::string &indent = std::string()) const;
+	std::string toPrettyString(const std::string &indent = std::string()) const;
 	std::string toCpon() const;
 	static RpcValue parseCpon(const std::string & str, std::string *err = nullptr);
 

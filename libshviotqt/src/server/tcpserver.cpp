@@ -15,6 +15,11 @@ TcpServer::TcpServer(QObject *parent)
 	connect(this, &QTcpServer::newConnection, this, &TcpServer::onNewConnection);
 }
 
+TcpServer::~TcpServer()
+{
+	shvInfo() << "Destroying Eyas TcpServer";
+}
+
 bool TcpServer::start(int port)
 {
 	shvInfo() << "Starting RPC server on port:" << port;

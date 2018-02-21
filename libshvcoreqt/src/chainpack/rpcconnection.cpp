@@ -1,7 +1,7 @@
 #include "rpcconnection.h"
 #include "rpc.h"
 
-#include <shv/core/shvexception.h>
+#include <shv/core/exception.h>
 #include <shv/core/log.h>
 
 #include <QThread>
@@ -92,7 +92,7 @@ void RpcConnection::onMessageReceived(const RpcConnection::RpcValue &rpc_val)
 
 bool RpcConnection::onRpcMessageReceived(const shv::chainpack::RpcMessage &msg)
 {
-	RpcValue::UInt id = msg.requestId();
+	RpcValue::UInt id = msg.id();
 	if(id > 0 && id <= m_maxSyncMessageId) {
 		// ignore messages alredy processed by sync calls
 		logRpcSyncCalls() << "XXX ignoring already served sync response:" << id;
@@ -111,7 +111,7 @@ void RpcConnection::sendMessage(const RpcConnection::RpcMessage &rpc_msg)
 RpcConnection::RpcResponse RpcConnection::sendMessageSync(const RpcConnection::RpcRequest &rpc_request_message, int time_out_ms)
 {
 	RpcResponse res_msg;
-	m_maxSyncMessageId = qMax(m_maxSyncMessageId, rpc_request_message.requestId());
+	m_maxSyncMessageId = qMax(m_maxSyncMessageId, rpc_request_message.id());
 	//logRpcSyncCalls() << "==> send SYNC MSG id:" << rpc_request_message.id() << "data:" << rpc_request_message.toStdString();
 	emit sendMessageSyncRequest(rpc_request_message, &res_msg, time_out_ms);
 	//logRpcSyncCalls() << "<== RESP SYNC MSG id:" << res_msg.id() << "data:" << res_msg.toStdString();
@@ -129,7 +129,7 @@ void RpcConnection::sendNotify(const std::string &method, const RpcConnection::R
 void RpcConnection::sendResponse(int request_id, const RpcConnection::RpcValue &result)
 {
 	RpcResponse resp;
-	resp.setRequestId(request_id);
+	resp.setId(request_id);
 	resp.setResult(result);
 	sendMessage(resp);
 }
@@ -137,7 +137,7 @@ void RpcConnection::sendResponse(int request_id, const RpcConnection::RpcValue &
 void RpcConnection::sendError(int request_id, const shv::chainpack::RpcResponse::Error &error)
 {
 	RpcResponse resp;
-	resp.setRequestId(request_id);
+	resp.setId(request_id);
 	resp.setError(error);
 	sendMessage(resp);
 }
@@ -153,7 +153,7 @@ int RpcConnection::callMethodASync(const std::string &method, const RpcConnectio
 {
 	int id = nextRpcId();
 	RpcRequest rq;
-	rq.setRequestId(id);
+	rq.setId(id);
 	rq.setMethod(method);
 	rq.setParams(params);
 	sendMessage(rq);
@@ -168,7 +168,7 @@ RpcConnection::RpcResponse RpcConnection::callMethodSync(const std::string &meth
 RpcConnection::RpcResponse RpcConnection::callShvMethodSync(const std::string &shv_path, const std::string &method, const RpcConnection::RpcValue &params, int rpc_timeout)
 {
 	RpcRequest rq;
-	rq.setRequestId(nextRpcId());
+	rq.setId(nextRpcId());
 	rq.setMethod(method);
 	rq.setParams(params);
 	if(!shv_path.empty())

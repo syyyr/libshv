@@ -25,6 +25,7 @@ class SHVIOTQT_DECL_EXPORT TcpServer : public QTcpServer
 	//SHV_FIELD_IMPL(int, p, P, ort)
 public:
 	explicit TcpServer(QObject *parent = 0);
+	~TcpServer() override;
 
 	bool start(int port);
 	std::vector<unsigned> connectionIds() const;

@@ -239,13 +239,12 @@ void RpcMessage::checkMetaValues()
 		setMetaValue(meta::Tag::MetaTypeId, meta::RpcMessage::ID);
 	}
 }
-/*
-void RpcMessage::checkRpcTypeMetaValue()
+
+std::string RpcMessage::toPrettyString() const
 {
-	meta::RpcCallType::Enum rpc_type = isResponse()? meta::RpcCallType::Response: isNotify()? meta::RpcCallType::Notify: meta::RpcCallType::Request;
-	setMetaValue(meta::RpcMessage::Tag::RpcCallType, rpc_type);
+	return m_value.toPrettyString();
 }
-*/
+
 std::string RpcMessage::toCpon() const
 {
 	return m_value.toCpon();

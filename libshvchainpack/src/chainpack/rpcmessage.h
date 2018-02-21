@@ -73,6 +73,7 @@ public:
 	Rpc::ProtocolVersion protocolVersion() const;
 	void setProtocolVersion(shv::chainpack::Rpc::ProtocolVersion ver);
 
+	std::string toPrettyString() const;
 	std::string toCpon() const;
 
 	RpcValue metaValue(RpcValue::UInt key) const;
