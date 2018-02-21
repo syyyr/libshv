@@ -2416,12 +2416,12 @@ void View::paintSerieHorizontalBackgroundStripe(QPainter *painter, const View::G
 			outline_color.setAlpha(70);
 			painter->setPen(QPen(outline_color, 2.0));
 			if (max_outline_visible &&
-				(stripe->outLineType() == BackgroundStripe::OutlineType::Min ||
+				(stripe->outLineType() == BackgroundStripe::OutlineType::Max ||
 				stripe->outLineType() == BackgroundStripe::OutlineType::Both)) {
 				painter->drawLine(area.graphRect.x(), max_position, area.graphRect.right(), max_position);
 			}
 			if (min_outline_visible &&
-				(stripe->outLineType() == BackgroundStripe::OutlineType::Max ||
+				(stripe->outLineType() == BackgroundStripe::OutlineType::Min ||
 				stripe->outLineType() == BackgroundStripe::OutlineType::Both)) {
 				painter->drawLine(area.graphRect.x(), min_position, area.graphRect.right(), min_position);
 			}
