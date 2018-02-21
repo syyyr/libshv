@@ -24,7 +24,7 @@ DEFINES += SHVCOREQT_BUILD_DLL
 INCLUDEPATH += \
 	$$PWD/../libshvcore/include \
 	$$PWD/../libshvchainpack/include \
-	../3rdparty/necrolog/include \
+	$$PWD/../3rdparty/necrolog/include \
 
 LIBS += \
     -L$$DESTDIR \

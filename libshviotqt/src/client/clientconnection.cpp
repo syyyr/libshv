@@ -4,7 +4,7 @@
 #include <shv/coreqt/chainpack/rpcconnection.h>
 #include <shv/coreqt/log.h>
 
-#include <shv/core/shvexception.h>
+#include <shv/core/exception.h>
 
 #include <shv/chainpack/rpcmessage.h>
 
@@ -117,7 +117,7 @@ bool ClientConnection::onRpcMessageReceived(const cp::RpcMessage &msg)
 			shvInfo() << "Handshake response received:" << resp.toCpon();
 			if(resp.isError())
 				break;
-			unsigned id = resp.requestId();
+			unsigned id = resp.id();
 			if(id == 0)
 				break;
 			if(m_helloRequestId == id) {

@@ -18,7 +18,7 @@ class RpcMessage : public meta::MetaType
 	using Super = meta::MetaType;
 public:
 	enum {ID = 1};
-	struct Tag { enum Enum {RequestId = meta::Tag::USER, CallerId, Method, ShvPath, ProtocolVersion, MAX};};
+	struct Tag { enum Enum {Id = meta::Tag::USER, CallerId, Method, ShvPath, ProtocolVersion, MAX};};
 	struct Key { enum Enum {Params = 1, Result, Error, ErrorCode, ErrorMessage, MAX};};
 
 	RpcMessage();
@@ -50,10 +50,10 @@ public:
 	static bool isResponse(const RpcValue::MetaData &meta);
 	static bool isNotify(const RpcValue::MetaData &meta);
 
-	static RpcValue::UInt requestId(const RpcValue::MetaData &meta);
-	static void setRequestId(RpcValue::MetaData &meta, RpcValue::UInt id);
-	RpcValue::UInt requestId() const;
-	void setRequestId(RpcValue::UInt id);
+	static RpcValue::UInt id(const RpcValue::MetaData &meta);
+	static void setId(RpcValue::MetaData &meta, RpcValue::UInt id);
+	RpcValue::UInt id() const;
+	void setId(RpcValue::UInt id);
 
 	static RpcValue::String method(const RpcValue::MetaData &meta);
 	RpcValue::String method() const;
@@ -102,7 +102,7 @@ public:
 	//RpcValue::String method() const;
 	RpcRequest& setParams(const RpcValue &p);
 	RpcValue params() const;
-	RpcRequest& setRequestId(const RpcValue::UInt id) {Super::setRequestId(id); return *this;}
+	RpcRequest& setId(const RpcValue::UInt id) {Super::setId(id); return *this;}
 
 	//size_t write(AbstractStreamWriter &wr) const override;
 };
@@ -116,7 +116,7 @@ public:
 	//RpcRequest(const Value &id) : Super(Json()) {setId(id);}
 	RpcNotify(const RpcMessage &msg) : Super(msg) {}
 public:
-	RpcRequest& setRequestId(const RpcValue::UInt requestId) = delete;
+	RpcRequest& setId(const RpcValue::UInt id) = delete;
 
 	static void write(AbstractStreamWriter &wr, const std::string &method, std::function<void (AbstractStreamWriter &)> write_params_callback);
 };
@@ -203,7 +203,7 @@ public:
 	Error error() const;
 	RpcResponse& setResult(const RpcValue &res);
 	RpcValue result() const;
-	RpcResponse& setRequestId(const RpcValue::UInt id) {Super::setRequestId(id); return *this;}
+	RpcResponse& setId(const RpcValue::UInt id) {Super::setId(id); return *this;}
 };
 
 } // namespace chainpackrpc

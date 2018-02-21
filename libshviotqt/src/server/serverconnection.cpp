@@ -4,7 +4,7 @@
 #include <shv/coreqt/chainpack/rpcconnection.h>
 #include <shv/coreqt/log.h>
 
-#include <shv/core/shvexception.h>
+#include <shv/core/exception.h>
 
 //#include <shv/chainpack/chainpackprotocol.h>
 #include <shv/chainpack/rpcmessage.h>
@@ -58,7 +58,7 @@ int ServerConnection::callMethodASync(const std::string & method, const cp::RpcV
 {
 	int id = nextRpcId();
 	cp::RpcRequest rq;
-	rq.setRequestId(id);
+	rq.setId(id);
 	rq.setMethod(method);
 	rq.setParams(params);
 	sendMessage(rq.value());
@@ -68,7 +68,7 @@ int ServerConnection::callMethodASync(const std::string & method, const cp::RpcV
 void ServerConnection::sendResponse(int request_id, const cp::RpcValue &result)
 {
 	cp::RpcResponse resp;
-	resp.setRequestId(request_id);
+	resp.setId(request_id);
 	resp.setResult(result);
 	sendMessage(resp.value());
 }
@@ -76,7 +76,7 @@ void ServerConnection::sendResponse(int request_id, const cp::RpcValue &result)
 void ServerConnection::sendError(int request_id, const cp::RpcResponse::Error &error)
 {
 	cp::RpcResponse resp;
-	resp.setRequestId(request_id);
+	resp.setId(request_id);
 	resp.setError(error);
 	sendMessage(resp.value());
 }

@@ -2,7 +2,7 @@
 
 #include "../shvcoreqtglobal.h"
 
-#include <shv/core/shvexception.h>
+#include <shv/core/exception.h>
 
 #include <QObject>
 #include <QVariantMap>

@@ -4,7 +4,7 @@
 #include <shv/core/log.h>
 #include <shv/core/utils.h>
 #include <shv/core/assert.h>
-#include <shv/core/shvexception.h>
+#include <shv/core/exception.h>
 
 #include <QStringBuilder>
 #include <QStringList>
