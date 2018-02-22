@@ -68,7 +68,7 @@ private:
 	qDebug() << "------------- RpcRequest";
 	{
 		RpcRequest rq;
-		rq.setRequestId(123)
+		rq.setId(123)
 				.setMethod("foo")
 				.setParams({{
 							   {"a", 45},
@@ -82,34 +82,34 @@ private:
 		int len = rq.write(wr);
 		ChainPackReader rd(out);
 		RpcValue cp2 = rd.read();
-		qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
+		qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
 		QCOMPARE(cp1.type(), cp2.type());
 		RpcRequest rq2(cp2);
 		QVERIFY(rq2.isRequest());
-		QCOMPARE(rq2.requestId(), rq.requestId());
+		QCOMPARE(rq2.id(), rq.id());
 		QCOMPARE(rq2.method(), rq.method());
 		QCOMPARE(rq2.params(), rq.params());
 	}
 	qDebug() << "------------- RpcResponse";
 	{
 		RpcResponse rs;
-		rs.setRequestId(123).setResult(42u);
+		rs.setId(123).setResult(42u);
 		std::stringstream out;
 		RpcValue cp1 = rs.value();
 		ChainPackWriter wr(out);
 		size_t len = rs.write(wr);
 		ChainPackReader rd(out);
 		RpcValue cp2 = rd.read();
-		qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
+		qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
 		QVERIFY(cp1.type() == cp2.type());
 		RpcResponse rs2(cp2);
 		QVERIFY(rs2.isResponse());
-		QCOMPARE(rs2.requestId(), rs.requestId());
+		QCOMPARE(rs2.id(), rs.id());
 		QCOMPARE(rs2.result(), rs.result());
 	}
 	{
 		RpcResponse rs;
-		rs.setRequestId(123)
+		rs.setId(123)
 				.setError(RpcResponse::Error::create(RpcResponse::Error::InvalidParams, "Paramter length should be greater than zero!"));
 		std::stringstream out;
 		RpcValue cp1 = rs.value();
@@ -117,11 +117,11 @@ private:
 		size_t len = rs.write(wr);
 		ChainPackReader rd(out);
 		RpcValue cp2 = rd.read();
-		qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
+		qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
 		QVERIFY(cp1.type() == cp2.type());
 		RpcResponse rs2(cp2);
 		QVERIFY(rs2.isResponse());
-		QCOMPARE(rs2.requestId(), rs.requestId());
+		QCOMPARE(rs2.id(), rs.id());
 		QCOMPARE(rs2.error(), rs.error());
 	}
 	qDebug() << "------------- RpcNotify";
@@ -141,7 +141,7 @@ private:
 		size_t len = rq.write(wr);
 		ChainPackReader rd(out);
 		RpcValue cp2 = rd.read();
-		qDebug() << cp1.toStdString() << " " << cp2.toStdString() << " len: " << len << " dump: " << binary_dump(out.str());
+		qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
 		QVERIFY(cp1.type() == cp2.type());
 		RpcRequest rq2(cp2);
 		QVERIFY(rq2.isNotify());

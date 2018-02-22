@@ -31,7 +31,7 @@ public:
 	std::vector<unsigned> connectionIds() const;
 	ServerConnection* connectionById(unsigned connection_id);
 protected:
-	virtual ServerConnection* createServerConnection(QTcpSocket *socket, QObject *parent);
+	virtual ServerConnection* createServerConnection(QTcpSocket *socket, QObject *parent) = 0;
 	void onNewConnection();
 	void onConnectionDeleted(int connection_id);
 protected:

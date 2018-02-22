@@ -48,11 +48,6 @@ ServerConnection *TcpServer::connectionById(unsigned connection_id)
 	return it->second;
 }
 
-ServerConnection *TcpServer::createServerConnection(QTcpSocket *socket, QObject *parent)
-{
-	return new ServerConnection(socket, parent);
-}
-
 void TcpServer::onNewConnection()
 {
 	QTcpSocket *sock = nextPendingConnection();

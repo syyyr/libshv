@@ -95,19 +95,19 @@ int ServerConnection::peerPort() const
 	return -1;
 }
 
-bool ServerConnection::initCommunication(const chainpack::RpcValue &msg)
+bool ServerConnection::initCommunication(const chainpack::RpcValue &rpc_val)
 {
-	if(!m_helloReceived || !m_loginReceived) {
-		logRpcMsg() << msg.toCpon();
-		if(!msg.isRequest()) {
-			shvError() << "Initial message is not RPC request! Dropping client connection." << agentName() << msg.toCpon();
-			this->deleteLater();
-			return false;
-		}
-		cp::RpcRequest rq(msg);
-		try {
-			//shvInfo() << "RPC request received:" << rq.toStdString();
-			/*
+	cp::RpcMessage msg(rpc_val);
+	logRpcMsg() << msg.toCpon();
+	if(!msg.isRequest()) {
+		shvError() << "Initial message is not RPC request! Dropping client connection." << agentName() << msg.toCpon();
+		this->deleteLater();
+		return false;
+	}
+	cp::RpcRequest rq(msg);
+	try {
+		//shvInfo() << "RPC request received:" << rq.toStdString();
+		/*
 			if(!m_helloReceived && !m_loginReceived && rq.method() == "echo" && isEchoEnabled()) {
 				shvInfo() << "Client ECHO request received";// << profile;// << "device id::" << m.value("deviceId").toStdString();
 				sendResponse(rq.requestId(), rq.params());
@@ -119,45 +119,44 @@ bool ServerConnection::initCommunication(const chainpack::RpcValue &msg)
 				return;
 			}
 			*/
-			if(!m_helloReceived && !m_loginReceived && rq.method() == shv::chainpack::Rpc::METH_HELLO) {
-				shvInfo() << "Client hello received";// << profile;// << "device id::" << m.value("deviceId").toStdString();
-				//const shv::chainpack::RpcValue::String profile = m.value("profile").toString();
-				//m_profile = profile;
-				m_helloReceived = true;
-				shvInfo() << "sending hello response:" << agentName();// << "profile:" << m_profile;
-				m_pendingAuthNonce = std::to_string(std::rand());
-				cp::RpcValue::Map params {
-					//{"protocol", cp::RpcValue::Map{{"version", protocol_version}}},
-					{"nonce", m_pendingAuthNonce}
-				};
-				sendResponse(rq.requestId(), params);
-				QTimer::singleShot(3000, this, [this]() {
-					if(!m_loginReceived) {
-						shvError() << "client login time out! Dropping client connection." << agentName();
-						this->deleteLater();
-					}
-				});
-				return;
-			}
-			if(m_helloReceived && !m_loginReceived && rq.method() == shv::chainpack::Rpc::METH_LOGIN) {
-				shvInfo() << "Client login received";// << profile;// << "device id::" << m.value("deviceId").toStdString();
-				m_loginReceived = true;
-				cp::RpcValue::Map params = rq.params().toMap();
-				const cp::RpcValue login = params.value("login");
-				if(!login(rq.params()))
-					SHV_EXCEPTION("Invalid authentication for user: " + m_user + " at: " + agentName().toStdString());
-				shvInfo() << "Client logged in user:" << m_user << "from:" << agentName();
-				sendResponse(rq.id(), true);
-				return;
-			}
+		if(!m_helloReceived && !m_loginReceived && rq.method() == shv::chainpack::Rpc::METH_HELLO) {
+			shvInfo() << "Client hello received";// << profile;// << "device id::" << m.value("deviceId").toStdString();
+			//const shv::chainpack::RpcValue::String profile = m.value("profile").toString();
+			//m_profile = profile;
+			m_helloReceived = true;
+			shvInfo() << "sending hello response:" << agentName();// << "profile:" << m_profile;
+			m_pendingAuthNonce = std::to_string(std::rand());
+			cp::RpcValue::Map params {
+				//{"protocol", cp::RpcValue::Map{{"version", protocol_version}}},
+				{"nonce", m_pendingAuthNonce}
+			};
+			sendResponse(rq.id(), params);
+			QTimer::singleShot(3000, this, [this]() {
+				if(!m_loginReceived) {
+					shvError() << "client login time out! Dropping client connection." << agentName();
+					this->deleteLater();
+				}
+			});
+			return false;
 		}
-		catch(shv::core::Exception &e) {
-			sendError(rq.requestId(), cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodInvocationException, e.message()));
+		if(m_helloReceived && !m_loginReceived && rq.method() == shv::chainpack::Rpc::METH_LOGIN) {
+			shvInfo() << "Client login received";// << profile;// << "device id::" << m.value("deviceId").toStdString();
+			m_loginReceived = true;
+			//cp::RpcValue::Map params = rq.params().toMap();
+			//const cp::RpcValue login = params.value("login");
+			if(!login(rq.params()))
+				SHV_EXCEPTION("Invalid authentication for user: " + m_user + " at: " + agentName().toStdString());
+			shvInfo() << "Client logged in user:" << m_user << "from:" << agentName();
+			sendResponse(rq.id(), true);
+			return true;
 		}
-		shvError() << "Initial handshake error! Dropping client connection." << agentName() << msg.toCpon();
-		QTimer::singleShot(100, this, &RpcServerConnection::deleteLater); // need some time to send error to client
-		return;
 	}
+	catch(shv::core::Exception &e) {
+		sendError(rq.id(), cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodInvocationException, e.message()));
+	}
+	shvError() << "Initial handshake error! Dropping client connection." << agentName() << msg.toCpon();
+	QTimer::singleShot(100, this, &ServerConnection::deleteLater); // need some time to send error to client
+	return false;
 }
 
 }}}
