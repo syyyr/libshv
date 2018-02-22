@@ -49,11 +49,13 @@ protected:
 	QString peerAddress() const;
 	int peerPort() const;
 	//void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg);
-private:
-	//QTcpSocket* m_socket = nullptr;
-	//ServerRpcDriver* m_rpcDriver = nullptr;
-	//unsigned m_helloRequestId = 0;
-	//std::string m_profile;
+	bool initCommunication(const chainpack::RpcValue &msg) Q_DECL_OVERRIDE;
+	virtual bool login(const shv::chainpack::RpcValue &auth_params) = 0;
+protected:
+	std::string m_user;
+	std::string m_pendingAuthNonce;
+	bool m_helloReceived = false;
+	bool m_loginReceived = false;
 	int m_connectionId;
 };
 
