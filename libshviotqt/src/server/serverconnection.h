@@ -49,7 +49,7 @@ protected:
 	QString peerAddress() const;
 	int peerPort() const;
 	//void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg);
-	bool initCommunication(const chainpack::RpcValue &rpc_val) Q_DECL_OVERRIDE;
+	bool initConnection(const chainpack::RpcValue &rpc_val) Q_DECL_OVERRIDE;
 	virtual bool login(const shv::chainpack::RpcValue &auth_params) = 0;
 protected:
 	std::string m_user;

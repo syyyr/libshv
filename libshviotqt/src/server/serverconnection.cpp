@@ -95,7 +95,7 @@ int ServerConnection::peerPort() const
 	return -1;
 }
 
-bool ServerConnection::initCommunication(const chainpack::RpcValue &rpc_val)
+bool ServerConnection::initConnection(const chainpack::RpcValue &rpc_val)
 {
 	cp::RpcMessage msg(rpc_val);
 	logRpcMsg() << msg.toCpon();

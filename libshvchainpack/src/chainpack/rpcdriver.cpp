@@ -225,10 +225,11 @@ int RpcDriver::processReadData(const std::string &read_data)
 		// it is set from first received message (should be knockknock)
 		m_protocolVersion = protocol_version;
 	}
-	if(m_initCommunicationPhase) {
+	if(m_initConnectionPhase) {
 		RpcValue msg = decodeData(protocol_version, read_data, in.tellg());
-		if(initCommunication(msg))
-			m_initCommunicationPhase = false;
+		logRpcMsg() << RCV_LOG_ARROW << msg.toPrettyString();
+		if(initConnection(msg))
+			m_initConnectionPhase = false;
 	}
 	else {
 		RpcValue::MetaData meta_data;
@@ -385,7 +386,7 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolVersion protocol_version, const
 	return os_packed_data.str();
 }
 
-bool RpcDriver::initCommunication(const RpcValue &msg)
+bool RpcDriver::initConnection(const RpcValue &msg)
 {
 	(void)msg;
 	return true;
@@ -396,8 +397,8 @@ void RpcDriver::onRpcDataReceived(Rpc::ProtocolVersion protocol_version, RpcValu
 	(void)data_len;
 	RpcValue msg = decodeData(protocol_version, data, start_pos);
 	if(msg.isValid()) {
-		msg.setMetaData(std::move(md));
 		logRpcMsg() << RCV_LOG_ARROW << msg.toPrettyString();
+		msg.setMetaData(std::move(md));
 		onRpcValueReceived(msg);
 	}
 	else {
