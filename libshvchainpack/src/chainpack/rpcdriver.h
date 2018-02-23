@@ -62,7 +62,6 @@ protected:
 	/// add data to the output queue, send data from top of the queue
 	virtual void enqueueDataToSend(Chunk &&chunk_to_enqueue);
 
-	virtual bool initConnection(const RpcValue &msg);
 	virtual void onRpcDataReceived(Rpc::ProtocolVersion protocol_version, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len);
 	virtual void onRpcValueReceived(const RpcValue &msg);
 
@@ -78,9 +77,6 @@ private:
 	int64_t writeBytes_helper(const std::string &str, size_t from, size_t length);
 private:
 	MessageReceivedCallback m_messageReceivedCallback = nullptr;
-
-	bool m_initConnectionPhase = true;
-
 	std::deque<Chunk> m_chunkQueue;
 	bool m_topChunkHeaderWritten = false;
 	size_t m_topChunkBytesWrittenSoFar = 0;

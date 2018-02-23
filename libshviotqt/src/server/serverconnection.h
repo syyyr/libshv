@@ -33,25 +33,24 @@ public:
 	explicit ServerConnection(QTcpSocket* socket, QObject *parent = 0);
 	~ServerConnection() Q_DECL_OVERRIDE;
 
-	QString agentName() {return objectName();}
-	void setAgentName(const QString &n) {setObjectName(n);}
+	std::string connectionName() {return m_connectionName;}
+	void setConnectionName(const std::string &n) {m_connectionName = n; setObjectName(QString::fromStdString(n));}
 
 	int connectionId() const {return m_connectionId;}
 
 	int callMethodASync(const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
 	void sendResponse(int request_id, const shv::chainpack::RpcValue &result);
 	void sendError(int request_id, const shv::chainpack::RpcResponse::Error &error);
-
-	//Q_SIGNAL void knockknocReceived(int connection_id, const shv::chainpack::RpcValue::Map &params);
-	//Q_SIGNAL void rpcDataReceived(const shv::chainpack::RpcValue::MetaData &meta, const std::string &data);
-	//Q_SIGNAL void rpcMessageReceived(const shv::chainpack::RpcMessage &msg);
 protected:
 	QString peerAddress() const;
 	int peerPort() const;
-	//void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg);
-	bool initConnection(const chainpack::RpcValue &rpc_val) Q_DECL_OVERRIDE;
+
+	void onRpcDataReceived(shv::chainpack::Rpc::ProtocolVersion protocol_version, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len) override;
+	//bool initConnection(const chainpack::RpcValue &rpc_val) Q_DECL_OVERRIDE;
 	virtual bool login(const shv::chainpack::RpcValue &auth_params) = 0;
+	bool isLoginPhase() const {return !m_loginReceived;}
 protected:
+	std::string m_connectionName;
 	std::string m_user;
 	std::string m_pendingAuthNonce;
 	bool m_helloReceived = false;

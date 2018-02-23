@@ -225,17 +225,11 @@ int RpcDriver::processReadData(const std::string &read_data)
 		// it is set from first received message (should be knockknock)
 		m_protocolVersion = protocol_version;
 	}
-	if(m_initConnectionPhase) {
-		RpcValue msg = decodeData(protocol_version, read_data, in.tellg());
-		logRpcMsg() << RCV_LOG_ARROW << msg.toPrettyString();
-		if(initConnection(msg))
-			m_initConnectionPhase = false;
-	}
-	else {
-		RpcValue::MetaData meta_data;
-		size_t meta_data_end_pos = decodeMetaData(meta_data, protocol_version, read_data, in.tellg());
-		onRpcDataReceived(protocol_version, std::move(meta_data), read_data, meta_data_end_pos, read_len - meta_data_end_pos);
-	}
+
+	RpcValue::MetaData meta_data;
+	size_t meta_data_end_pos = decodeMetaData(meta_data, protocol_version, read_data, in.tellg());
+	onRpcDataReceived(protocol_version, std::move(meta_data), read_data, meta_data_end_pos, read_len - meta_data_end_pos);
+
 	return read_len;
 }
 
@@ -384,12 +378,6 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolVersion protocol_version, const
 		SHVCHP_EXCEPTION("Cannot serialize data without protocol version specified.")
 	}
 	return os_packed_data.str();
-}
-
-bool RpcDriver::initConnection(const RpcValue &msg)
-{
-	(void)msg;
-	return true;
 }
 
 void RpcDriver::onRpcDataReceived(Rpc::ProtocolVersion protocol_version, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
