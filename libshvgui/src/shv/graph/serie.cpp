@@ -4,7 +4,7 @@
 #include "view.h"
 #include "outsideseriegroup.h"
 
-#include <shv/core/shvexception.h>
+#include <shv/core/exception.h>
 
 namespace shv {
 namespace gui {

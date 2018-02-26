@@ -1,6 +1,6 @@
 #include "backgroundstripe.h"
 
-#include <shv/core/shvexception.h>
+#include <shv/core/exception.h>
 
 #include "view.h"
 #include "serie.h"

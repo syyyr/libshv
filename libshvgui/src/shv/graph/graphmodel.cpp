@@ -1,6 +1,6 @@
 #include "graphmodel.h"
 
-#include <shv/core/shvexception.h>
+#include <shv/core/exception.h>
 
 #include <QDebug>
 

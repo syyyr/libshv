@@ -5,7 +5,7 @@
 #include "serie.h"
 #include "pointofinterest.h"
 
-#include <shv/core/shvexception.h>
+#include <shv/core/exception.h>
 
 #include <QDateTime>
 #include <QDebug>
