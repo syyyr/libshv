@@ -75,7 +75,7 @@ void SocketRpcDriver::setSocket(QTcpSocket *socket)
 	connect(socket, &QTcpSocket::disconnected, [this]() {
 		shvDebug() << this << "Socket disconnected!!!";
 		m_isSocketConnected = false;
-		setSocketConnected(true);
+		setSocketConnected(false);
 	});
 }
 
