@@ -1,13 +1,12 @@
 #pragma once
 
 #include "../shviotqtglobal.h"
+#include "../chainpack/rpcconnection.h"
 
 #include <shv/core/utils.h>
 #include <shv/coreqt/utils.h>
 #include <shv/chainpack/rpcvalue.h>
 #include <shv/chainpack/rpcdriver.h>
-
-#include <shv/coreqt/chainpack/rpcconnection.h>
 
 #include <QAbstractSocket>
 #include <QObject>
@@ -17,20 +16,11 @@ namespace shv { namespace chainpack { class RpcMessage; }}
 namespace shv {
 namespace iotqt {
 namespace client {
-/*
-class HelloResponse : public shv::chainpack::RpcValue
-{
-public:
-	void setUser(const std::string &u);
-	void setPassword(const std::string &p);
-	void setDeviceId(const shv::chainpack::RpcValue &id);
-	void setDeviceMountPoint(const shv::chainpack::RpcValue::String &path);
-};
-*/
-class SHVIOTQT_DECL_EXPORT ClientConnection : public shv::coreqt::chainpack::RpcConnection
+
+class SHVIOTQT_DECL_EXPORT ClientConnection : public shv::iotqt::chainpack::RpcConnection
 {
 	Q_OBJECT
-	using Super = shv::coreqt::chainpack::RpcConnection;
+	using Super = shv::iotqt::chainpack::RpcConnection;
 
 	SHV_FIELD_IMPL(std::string, u, U, ser)
 	//SHV_FIELD_IMPL(std::string, p, P, rofile)

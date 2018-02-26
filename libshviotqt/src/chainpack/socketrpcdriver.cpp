@@ -1,6 +1,7 @@
-#include "rpcdriver.h"
+#include "socketrpcdriver.h"
 #include "rpc.h"
-#include "../core/log.h"
+
+#include <shv/coreqt/log.h>
 
 #include <shv/core/exception.h>
 #include <shv/chainpack/rpcmessage.h>
@@ -9,6 +10,7 @@
 #include <QElapsedTimer>
 #include <QEventLoop>
 #include <QTcpSocket>
+#include <QHostAddress>
 
 //#define DUMP_DATA_FILE
 
@@ -22,14 +24,19 @@
 #define logRpcMsg() shvCDebug("RpcMsg")
 #define logRpcData() shvCDebug("RpcData")
 #define logRpcSyncCalls() shvCDebug("RpcSyncCalls")
-//#define logLongFiles() shvCDebug("LongFiles")
+
+namespace cp = shv::chainpack;
+namespace cpq = shv::iotqt::chainpack;
 
 namespace shv {
-namespace coreqt {
+namespace iotqt {
 namespace chainpack {
 
-RpcDriver::RpcDriver(QObject *parent)
+static int s_connectionId = 0;
+
+SocketRpcDriver::SocketRpcDriver(QObject *parent)
 	: QObject(parent)
+	, m_connectionId(++s_connectionId)
 {
 	Rpc::registerMetatTypes();
 	/*
@@ -48,48 +55,56 @@ RpcDriver::RpcDriver(QObject *parent)
 #endif
 }
 
-RpcDriver::~RpcDriver()
+SocketRpcDriver::~SocketRpcDriver()
 {
 	shvDebug() << __FUNCTION__;
 	abortConnection();
 }
 
-void RpcDriver::setSocket(QTcpSocket *socket)
+void SocketRpcDriver::setSocket(QTcpSocket *socket)
 {
 	socket->moveToThread(this->thread());
 	m_socket = socket;
-	connect(socket, &QTcpSocket::readyRead, this, &RpcDriver::onReadyRead);
-	connect(socket, &QTcpSocket::bytesWritten, this, &RpcDriver::onBytesWritten, Qt::QueuedConnection);
+	connect(socket, &QTcpSocket::readyRead, this, &SocketRpcDriver::onReadyRead);
+	connect(socket, &QTcpSocket::bytesWritten, this, &SocketRpcDriver::onBytesWritten, Qt::QueuedConnection);
 	connect(socket, &QTcpSocket::connected, [this]() {
 		shvDebug() << this << "Socket connected!!!";
-		m_isConnected = true;
-		emit socketConnectedChanged(m_isConnected);
+		//shvWarning() << (peerAddress().toStdString() + ':' + std::to_string(peerPort()));
+		setSocketConnected(true);
 	});
 	connect(socket, &QTcpSocket::disconnected, [this]() {
 		shvDebug() << this << "Socket disconnected!!!";
-		m_isConnected = false;
-		emit socketConnectedChanged(m_isConnected);
+		m_isSocketConnected = false;
+		setSocketConnected(true);
 	});
 }
 
-QTcpSocket *RpcDriver::socket()
+QTcpSocket *SocketRpcDriver::socket()
 {
 	if(!m_socket)
 		SHV_EXCEPTION("Socket is NULL!");
 	return m_socket;
 }
 
-bool RpcDriver::isSocketConnected() const
+bool SocketRpcDriver::isSocketConnected() const
 {
-	return m_socket && m_isConnected;
+	return m_socket && m_isSocketConnected;
 }
 
-void RpcDriver::connectToHost(const QString &host_name, quint16 port)
+void SocketRpcDriver::setSocketConnected(bool b)
+{
+	if(b != m_isSocketConnected) {
+		m_isSocketConnected = b;
+		emit socketConnectedChanged(b);
+	}
+}
+
+void SocketRpcDriver::connectToHost(const QString &host_name, quint16 port)
 {
 	socket()->connectToHost(host_name, port);
 }
 
-void RpcDriver::onReadyRead()
+void SocketRpcDriver::onReadyRead()
 {
 	QByteArray ba = socket()->readAll();
 #ifdef DUMP_DATA_FILE
@@ -102,30 +117,30 @@ void RpcDriver::onReadyRead()
 	onBytesRead(ba.toStdString());
 }
 
-void RpcDriver::onBytesWritten()
+void SocketRpcDriver::onBytesWritten()
 {
 	logRpcData() << "onBytesWritten()";
 	enqueueDataToSend(Chunk());
 }
 
-bool RpcDriver::isOpen()
+bool SocketRpcDriver::isOpen()
 {
 	return m_socket && m_socket->isOpen();
 }
 
-int64_t RpcDriver::writeBytes(const char *bytes, size_t length)
+int64_t SocketRpcDriver::writeBytes(const char *bytes, size_t length)
 {
 	return socket()->write(bytes, length);
 }
 
-bool RpcDriver::flush()
+bool SocketRpcDriver::flush()
 {
 	if(m_socket)
 		return m_socket->flush();
 	return false;
 }
 
-void RpcDriver::onRpcValueReceived(const shv::chainpack::RpcValue &msg)
+void SocketRpcDriver::onRpcValueReceived(const shv::chainpack::RpcValue &msg)
 {
 	emit rpcMessageReceived(msg);
 }
@@ -141,7 +156,7 @@ private:
 };
 }
 
-void RpcDriver:: sendRequestQuasiSync(const shv::chainpack::RpcRequest &request, shv::chainpack::RpcResponse *presponse, int time_out_ms)
+void SocketRpcDriver:: sendRequestQuasiSync(const shv::chainpack::RpcRequest &request, shv::chainpack::RpcResponse *presponse, int time_out_ms)
 {
 	namespace cp = shv::chainpack;
 	smcDebug() << Q_FUNC_INFO << "timeout ms:" << time_out_ms;
@@ -163,7 +178,7 @@ void RpcDriver:: sendRequestQuasiSync(const shv::chainpack::RpcRequest &request,
 		tm_elapsed.start();
 		QEventLoop eloop;
 		QMetaObject::Connection lambda_connection;
-		lambda_connection = connect(this, &RpcDriver::rpcMessageReceived, [&eloop, &resp_msg, &lambda_connection, msg_id](const shv::chainpack::RpcValue &msg_val)
+		lambda_connection = connect(this, &SocketRpcDriver::rpcMessageReceived, [&eloop, &resp_msg, &lambda_connection, msg_id](const shv::chainpack::RpcValue &msg_val)
 		{
 			shv::chainpack::RpcMessage msg(msg_val);
 			smcDebug() << &eloop << "New RPC message id:" << msg.id();
@@ -210,11 +225,59 @@ void RpcDriver:: sendRequestQuasiSync(const shv::chainpack::RpcRequest &request,
 		*presponse = resp_msg;
 }
 
-void RpcDriver::abortConnection()
+void SocketRpcDriver::abortConnection()
 {
 	if(m_socket) {
 		m_socket->abort();
 	}
+}
+
+namespace {
+int nextRpcId()
+{
+	static int n = 0;
+	return ++n;
+}
+}
+int SocketRpcDriver::callMethodASync(const std::string & method, const cp::RpcValue &params)
+{
+	int id = nextRpcId();
+	cp::RpcRequest rq;
+	rq.setId(id);
+	rq.setMethod(method);
+	rq.setParams(params);
+	sendMessage(rq.value());
+	return id;
+}
+
+void SocketRpcDriver::sendResponse(int request_id, const cp::RpcValue &result)
+{
+	cp::RpcResponse resp;
+	resp.setId(request_id);
+	resp.setResult(result);
+	sendMessage(resp.value());
+}
+
+void SocketRpcDriver::sendError(int request_id, const cp::RpcResponse::Error &error)
+{
+	cp::RpcResponse resp;
+	resp.setId(request_id);
+	resp.setError(error);
+	sendMessage(resp.value());
+}
+
+std::string SocketRpcDriver::peerAddress() const
+{
+	if(m_socket)
+		return m_socket->peerAddress().toString().toStdString();
+	return std::string();
+}
+
+int SocketRpcDriver::peerPort() const
+{
+	if(m_socket)
+		return m_socket->peerPort();
+	return -1;
 }
 
 }}}

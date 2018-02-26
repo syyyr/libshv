@@ -1,7 +1,6 @@
 #include "clientconnection.h"
-//#include "../theapp.h"
+#include "../chainpack/rpcconnection.h"
 
-#include <shv/coreqt/chainpack/rpcconnection.h>
 #include <shv/coreqt/log.h>
 
 #include <shv/core/exception.h>
@@ -16,7 +15,7 @@
 #define logRpc() shvCDebug("rpc")
 
 namespace cp = shv::chainpack;
-namespace cpq = shv::coreqt::chainpack;
+namespace cpq = shv::iotqt::chainpack;
 
 namespace shv {
 namespace iotqt {
@@ -35,7 +34,7 @@ ClientConnection::ClientConnection(QObject *parent)
 	//setProtocolVersion(protocolVersion());
 	/*
 	{
-		m_rpcConnection = new shv::coreqt::chainpack::RpcConnection(cpq::RpcConnection::SyncCalls::Supported, this);
+		m_rpcConnection = new shv::iotqt::chainpack::RpcConnection(cpq::RpcConnection::SyncCalls::Supported, this);
 		m_rpcConnection->setSocket(socket);
 		m_rpcConnection->setProtocolVersion(protocolVersion());
 	}
@@ -78,7 +77,7 @@ void ClientConnection::sendHello()
 	});
 }
 
-void ClientConnection::sendLogin(const chainpack::RpcValue &server_hello)
+void ClientConnection::sendLogin(const shv::chainpack::RpcValue &server_hello)
 {
 	std::string server_nonce = server_hello.toMap().value("nonce").toString();
 	std::string password = server_nonce + passwordHash(user());

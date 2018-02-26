@@ -7,6 +7,7 @@ SOURCES += \
     $$PWD/shvnodetree.cpp \
     $$PWD/shvnode.cpp
 
+include ($$PWD/chainpack/chainpack.pri)
 include ($$PWD/client/client.pri)
 include ($$PWD/server/server.pri)
 

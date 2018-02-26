@@ -1,7 +1,6 @@
 ﻿#include "serverconnection.h"
-//#include "../brokerapp.h"
+#include "../chainpack/rpcconnection.h"
 
-#include <shv/coreqt/chainpack/rpcconnection.h>
 #include <shv/coreqt/log.h>
 
 #include <shv/core/exception.h>
@@ -10,25 +9,20 @@
 #include <shv/chainpack/rpcmessage.h>
 
 #include <QTcpSocket>
-#include <QHostAddress>
 #include <QTimer>
 #include <QCryptographicHash>
 
 #define logRpcMsg() shvCDebug("RpcMsg")
 
 namespace cp = shv::chainpack;
-namespace cpq = shv::coreqt::chainpack;
+namespace cpq = shv::iotqt::chainpack;
 
 namespace shv {
 namespace iotqt {
 namespace server {
 
-static int s_connectionId = 0;
-
 ServerConnection::ServerConnection(QTcpSocket *socket, QObject *parent)
 	: Super(parent)
-	//, m_socket(socket)
-	, m_connectionId(++s_connectionId)
 {
 	setSocket(socket);
 	socket->setParent(nullptr);
@@ -37,8 +31,7 @@ ServerConnection::ServerConnection(QTcpSocket *socket, QObject *parent)
 			this->deleteLater();
 		}
 		else {
-			QString cn = QStringLiteral("%1:%2").arg(peerAddress()).arg(peerPort());
-			setConnectionName(cn.toStdString());
+			setConnectionName(peerAddress() + ':' + std::to_string(peerPort()));
 		}
 	});
 }
@@ -48,58 +41,10 @@ ServerConnection::~ServerConnection()
 	shvInfo() << "Agent disconnected:" << connectionName();
 }
 
-namespace {
-int nextRpcId()
-{
-	static int n = 0;
-	return ++n;
-}
-}
-int ServerConnection::callMethodASync(const std::string & method, const cp::RpcValue &params)
-{
-	int id = nextRpcId();
-	cp::RpcRequest rq;
-	rq.setId(id);
-	rq.setMethod(method);
-	rq.setParams(params);
-	sendMessage(rq.value());
-	return id;
-}
-
-void ServerConnection::sendResponse(int request_id, const cp::RpcValue &result)
-{
-	cp::RpcResponse resp;
-	resp.setId(request_id);
-	resp.setResult(result);
-	sendMessage(resp.value());
-}
-
-void ServerConnection::sendError(int request_id, const cp::RpcResponse::Error &error)
-{
-	cp::RpcResponse resp;
-	resp.setId(request_id);
-	resp.setError(error);
-	sendMessage(resp.value());
-}
-
-QString ServerConnection::peerAddress() const
-{
-	if(m_socket)
-		return m_socket->peerAddress().toString();
-	return QString();
-}
-
-int ServerConnection::peerPort() const
-{
-	if(m_socket)
-		return m_socket->peerPort();
-	return -1;
-}
-
-void ServerConnection::onRpcDataReceived(chainpack::Rpc::ProtocolVersion protocol_version, chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
+void ServerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolVersion protocol_version, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
 {
 	if(isLoginPhase()) {
-		chainpack::RpcValue rpc_val = decodeData(protocol_version, data, start_pos);
+		shv::chainpack::RpcValue rpc_val = decodeData(protocol_version, data, start_pos);
 		rpc_val.setMetaData(std::move(md));
 		cp::RpcMessage msg(rpc_val);
 		logRpcMsg() << msg.toCpon();
@@ -147,7 +92,7 @@ void ServerConnection::onRpcDataReceived(chainpack::Rpc::ProtocolVersion protoco
 				//const cp::RpcValue login = params.value("login");
 				if(!login(rq.params()))
 					SHV_EXCEPTION("Invalid authentication for user: " + m_user + " at: " + connectionName());
-				shvInfo() << "Client logged in user:" << m_user << "from:" << connectionName();
+				shvInfo().nospace() << "Client logged in user: " << m_user << " from: " << peerAddress() << ':' << peerPort();
 				sendResponse(rq.id(), true);
 				return;
 			}

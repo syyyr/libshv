@@ -12,7 +12,7 @@
 namespace cp = shv::chainpack;
 
 namespace shv {
-namespace coreqt {
+namespace iotqt {
 namespace chainpack {
 
 RpcConnection::RpcConnection(SyncCalls sync_calls, QObject *parent)
@@ -23,18 +23,18 @@ RpcConnection::RpcConnection(SyncCalls sync_calls, QObject *parent)
 
 	static int id = 0;
 	m_connectionId = ++id;
-	m_rpcDriver = new RpcDriver();
+	m_rpcDriver = new SocketRpcDriver();
 
-	connect(this, &RpcConnection::setProtocolVersionRequest, m_rpcDriver, &RpcDriver::setProtocolVersionAsInt);
-	connect(this, &RpcConnection::sendMessageRequest, m_rpcDriver, &RpcDriver::sendMessage);
-	connect(this, &RpcConnection::connectToHostRequest, m_rpcDriver, &RpcDriver::connectToHost);
-	connect(this, &RpcConnection::abortConnectionRequest, m_rpcDriver, &RpcDriver::abortConnection);
+	connect(this, &RpcConnection::setProtocolVersionRequest, m_rpcDriver, &SocketRpcDriver::setProtocolVersionAsInt);
+	connect(this, &RpcConnection::sendMessageRequest, m_rpcDriver, &SocketRpcDriver::sendMessage);
+	connect(this, &RpcConnection::connectToHostRequest, m_rpcDriver, &SocketRpcDriver::connectToHost);
+	connect(this, &RpcConnection::abortConnectionRequest, m_rpcDriver, &SocketRpcDriver::abortConnection);
 
-	connect(m_rpcDriver, &RpcDriver::socketConnectedChanged, this, &RpcConnection::socketConnectedChanged);
-	connect(m_rpcDriver, &RpcDriver::rpcMessageReceived, this, &RpcConnection::onMessageReceived);
+	connect(m_rpcDriver, &SocketRpcDriver::socketConnectedChanged, this, &RpcConnection::socketConnectedChanged);
+	connect(m_rpcDriver, &SocketRpcDriver::rpcMessageReceived, this, &RpcConnection::onMessageReceived);
 
 	if(m_syncCalls == SyncCalls::Supported) {
-		connect(this, &RpcConnection::sendMessageSyncRequest, m_rpcDriver, &RpcDriver::sendRequestQuasiSync, Qt::BlockingQueuedConnection);
+		connect(this, &RpcConnection::sendMessageSyncRequest, m_rpcDriver, &SocketRpcDriver::sendRequestQuasiSync, Qt::BlockingQueuedConnection);
 		m_rpcDriverThread = new QThread();
 		m_rpcDriver->moveToThread(m_rpcDriverThread);
 		m_rpcDriverThread->start();

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../shvcoreqtglobal.h"
+#include "../shviotqtglobal.h"
 
 #include <shv/chainpack/rpcvalue.h>
 
@@ -9,10 +9,10 @@
 Q_DECLARE_METATYPE(shv::chainpack::RpcValue)
 
 namespace shv {
-namespace coreqt {
+namespace iotqt {
 namespace chainpack {
 
-class SHVCOREQT_DECL_EXPORT Rpc
+class SHVIOTQT_DECL_EXPORT Rpc
 {
 public:
 	static void registerMetatTypes();

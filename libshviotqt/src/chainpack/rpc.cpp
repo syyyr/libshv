@@ -1,9 +1,9 @@
 #include "rpc.h"
 
-#include "../core/log.h"
+#include <shv/coreqt/log.h>
 
 namespace shv {
-namespace coreqt {
+	namespace iotqt {
 namespace chainpack {
 
 void Rpc::registerMetatTypes()
@@ -18,5 +18,5 @@ void Rpc::registerMetatTypes()
 }
 
 } // namespace chainack
-} // namespace coreqt
+} // namespace iotqt
 } // namespace shv
