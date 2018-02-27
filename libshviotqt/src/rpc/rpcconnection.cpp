@@ -13,7 +13,7 @@ namespace cp = shv::chainpack;
 
 namespace shv {
 namespace iotqt {
-namespace chainpack {
+namespace rpc {
 
 RpcConnection::RpcConnection(SyncCalls sync_calls, QObject *parent)
 	: QObject(parent)

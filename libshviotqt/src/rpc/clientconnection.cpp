@@ -1,5 +1,5 @@
 #include "clientconnection.h"
-#include "../chainpack/rpcconnection.h"
+#include "rpcconnection.h"
 
 #include <shv/coreqt/log.h>
 
@@ -15,14 +15,13 @@
 #define logRpc() shvCDebug("rpc")
 
 namespace cp = shv::chainpack;
-namespace cpq = shv::iotqt::chainpack;
 
 namespace shv {
 namespace iotqt {
-namespace client {
+namespace rpc {
 
 ClientConnection::ClientConnection(QObject *parent)
-	: Super(cpq::RpcConnection::SyncCalls::Supported, parent)
+	: Super(RpcConnection::SyncCalls::Supported, parent)
 {
 	//setDevice(cp::RpcValue(nullptr));
 

@@ -14,10 +14,10 @@ class QSocketNotifier;
 
 namespace shv {
 namespace iotqt {
+namespace rpc { class ClientConnection; }
 namespace client {
 
 class AppCliOptions;
-class ClientConnection;
 
 class SHVIOTQT_DECL_EXPORT ConsoleApplication : public QCoreApplication
 {
@@ -35,7 +35,7 @@ public:
 	QString versionString() const;
 
 	AppCliOptions* cliOptions() {return m_cliOptions;}
-	ClientConnection *clientConnection() {return m_clientConnection;}
+    rpc::ClientConnection *clientConnection() {return m_clientConnection;}
 
 	static ConsoleApplication* instance() {return qobject_cast<ConsoleApplication*>(Super::instance());}
 protected:
@@ -44,7 +44,7 @@ protected:
 protected:
 	AppCliOptions *m_cliOptions;
 	QTimer *m_checkConnectedTimer;
-	ClientConnection *m_clientConnection = nullptr;
+    rpc::ClientConnection *m_clientConnection = nullptr;
 #ifdef Q_OS_UNIX
 protected:
 	// Unix signal handlers.

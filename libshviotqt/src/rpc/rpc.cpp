@@ -3,8 +3,8 @@
 #include <shv/coreqt/log.h>
 
 namespace shv {
-	namespace iotqt {
-namespace chainpack {
+namespace iotqt {
+namespace rpc {
 
 void Rpc::registerMetatTypes()
 {

@@ -26,11 +26,11 @@
 #define logRpcSyncCalls() shvCDebug("RpcSyncCalls")
 
 namespace cp = shv::chainpack;
-namespace cpq = shv::iotqt::chainpack;
+//namespace cpq = shv::iotqt::rpc;
 
 namespace shv {
 namespace iotqt {
-namespace chainpack {
+namespace rpc {
 
 static int s_connectionId = 0;
 

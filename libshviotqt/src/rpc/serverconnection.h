@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../shviotqtglobal.h"
-#include "../chainpack/socketrpcdriver.h"
+#include "socketrpcdriver.h"
 
 #include <shv/chainpack/rpcmessage.h>
 #include <shv/core/utils.h>
@@ -18,13 +18,13 @@ class QTcpSocket;
 
 namespace shv {
 namespace iotqt {
-namespace server {
+namespace rpc {
 
-class SHVIOTQT_DECL_EXPORT ServerConnection : public shv::iotqt::chainpack::SocketRpcDriver
+class SHVIOTQT_DECL_EXPORT ServerConnection : public SocketRpcDriver
 {
 	Q_OBJECT
 
-	using Super = shv::iotqt::chainpack::SocketRpcDriver;
+	using Super = SocketRpcDriver;
 
 	SHV_FIELD_BOOL_IMPL(e, E, choEnabled)
 

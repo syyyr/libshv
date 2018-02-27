@@ -7,7 +7,7 @@
 
 namespace shv {
 namespace iotqt {
-namespace server {
+namespace rpc {
 
 TcpServer::TcpServer(QObject *parent)
 	: Super(parent)

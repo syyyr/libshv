@@ -1,5 +1,5 @@
 ﻿#include "serverconnection.h"
-#include "../chainpack/rpcconnection.h"
+#include "rpcconnection.h"
 
 #include <shv/coreqt/log.h>
 
@@ -15,11 +15,10 @@
 #define logRpcMsg() shvCDebug("RpcMsg")
 
 namespace cp = shv::chainpack;
-namespace cpq = shv::iotqt::chainpack;
 
 namespace shv {
 namespace iotqt {
-namespace server {
+namespace rpc {
 
 ServerConnection::ServerConnection(QTcpSocket *socket, QObject *parent)
 	: Super(parent)

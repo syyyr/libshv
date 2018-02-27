@@ -10,7 +10,7 @@ Q_DECLARE_METATYPE(shv::chainpack::RpcValue)
 
 namespace shv {
 namespace iotqt {
-namespace chainpack {
+namespace rpc {
 
 class SHVIOTQT_DECL_EXPORT Rpc
 {

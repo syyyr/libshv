@@ -11,7 +11,7 @@ namespace shv { namespace chainpack { class RpcMessage; }}
 
 namespace shv {
 namespace iotqt {
-namespace server {
+namespace rpc {
 
 class ServerConnection;
 

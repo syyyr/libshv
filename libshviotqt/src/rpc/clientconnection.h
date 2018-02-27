@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../shviotqtglobal.h"
-#include "../chainpack/rpcconnection.h"
+#include "rpcconnection.h"
 
 #include <shv/core/utils.h>
 #include <shv/coreqt/utils.h>
@@ -15,12 +15,12 @@ namespace shv { namespace chainpack { class RpcMessage; }}
 
 namespace shv {
 namespace iotqt {
-namespace client {
+namespace rpc {
 
-class SHVIOTQT_DECL_EXPORT ClientConnection : public shv::iotqt::chainpack::RpcConnection
+class SHVIOTQT_DECL_EXPORT ClientConnection : public shv::iotqt::rpc::RpcConnection
 {
 	Q_OBJECT
-	using Super = shv::iotqt::chainpack::RpcConnection;
+	using Super = shv::iotqt::rpc::RpcConnection;
 
 	SHV_FIELD_IMPL(std::string, u, U, ser)
 	//SHV_FIELD_IMPL(std::string, p, P, rofile)
