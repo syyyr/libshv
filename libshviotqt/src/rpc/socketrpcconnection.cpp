@@ -1,4 +1,4 @@
-#include "rpcconnection.h"
+#include "socketrpcconnection.h"
 #include "rpc.h"
 
 #include <shv/core/exception.h>
@@ -15,7 +15,7 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
-RpcConnection::RpcConnection(SyncCalls sync_calls, QObject *parent)
+SocketRpcConnection::SocketRpcConnection(SyncCalls sync_calls, QObject *parent)
 	: QObject(parent)
 	, m_syncCalls(sync_calls)
 {
@@ -25,28 +25,28 @@ RpcConnection::RpcConnection(SyncCalls sync_calls, QObject *parent)
 	m_connectionId = ++id;
 	m_rpcDriver = new SocketRpcDriver();
 
-	connect(this, &RpcConnection::setProtocolVersionRequest, m_rpcDriver, &SocketRpcDriver::setProtocolVersionAsInt);
-	connect(this, &RpcConnection::sendMessageRequest, m_rpcDriver, &SocketRpcDriver::sendMessage);
-	connect(this, &RpcConnection::connectToHostRequest, m_rpcDriver, &SocketRpcDriver::connectToHost);
-	connect(this, &RpcConnection::abortConnectionRequest, m_rpcDriver, &SocketRpcDriver::abortConnection);
+	connect(this, &SocketRpcConnection::setProtocolVersionRequest, m_rpcDriver, &SocketRpcDriver::setProtocolVersionAsInt);
+	connect(this, &SocketRpcConnection::sendMessageRequest, m_rpcDriver, &SocketRpcDriver::sendMessage);
+	connect(this, &SocketRpcConnection::connectToHostRequest, m_rpcDriver, &SocketRpcDriver::connectToHost);
+	connect(this, &SocketRpcConnection::abortConnectionRequest, m_rpcDriver, &SocketRpcDriver::abortConnection);
 
-	connect(m_rpcDriver, &SocketRpcDriver::socketConnectedChanged, this, &RpcConnection::socketConnectedChanged);
-	connect(m_rpcDriver, &SocketRpcDriver::rpcMessageReceived, this, &RpcConnection::onMessageReceived);
+	connect(m_rpcDriver, &SocketRpcDriver::socketConnectedChanged, this, &SocketRpcConnection::socketConnectedChanged);
+	connect(m_rpcDriver, &SocketRpcDriver::rpcValueReceived, this, &SocketRpcConnection::onRpcValueReceived);
 
 	if(m_syncCalls == SyncCalls::Supported) {
-		connect(this, &RpcConnection::sendMessageSyncRequest, m_rpcDriver, &SocketRpcDriver::sendRequestQuasiSync, Qt::BlockingQueuedConnection);
+		connect(this, &SocketRpcConnection::sendMessageSyncRequest, m_rpcDriver, &SocketRpcDriver::sendRequestQuasiSync, Qt::BlockingQueuedConnection);
 		m_rpcDriverThread = new QThread();
 		m_rpcDriver->moveToThread(m_rpcDriverThread);
 		m_rpcDriverThread->start();
 	}
 	else {
-		connect(this, &RpcConnection::sendMessageSyncRequest, []() {
+		connect(this, &SocketRpcConnection::sendMessageSyncRequest, []() {
 			shvError() << "Sync calls are enabled in threaded RPC connection only!";
 		});
 	}
 }
 
-RpcConnection::~RpcConnection()
+SocketRpcConnection::~SocketRpcConnection()
 {
 	shvDebug() << __FUNCTION__;
 	if(m_syncCalls == SyncCalls::Supported) {
@@ -63,35 +63,36 @@ RpcConnection::~RpcConnection()
 	delete m_rpcDriver;
 }
 
-void RpcConnection::setSocket(QTcpSocket *socket)
+void SocketRpcConnection::setSocket(QTcpSocket *socket)
 {
 	m_rpcDriver->setSocket(socket);
 }
 
-void RpcConnection::connectToHost(const std::string &host_name, quint16 port)
+void SocketRpcConnection::connectToHost(const std::string &host_name, quint16 port)
 {
 	emit connectToHostRequest(QString::fromStdString(host_name), port);
 }
 
-bool RpcConnection::isSocketConnected() const
+bool SocketRpcConnection::isSocketConnected() const
 {
 	return m_rpcDriver->isSocketConnected();
 }
 
-void RpcConnection::abort()
+void SocketRpcConnection::abort()
 {
 	emit abortConnectionRequest();
 }
-
-void RpcConnection::onMessageReceived(const RpcConnection::RpcValue &rpc_val)
+/*
+void SocketRpcConnection::onRpcValueReceived(const SocketRpcConnection::RpcValue &rpc_val)
 {
 	RpcMessage msg(rpc_val);
-	if(!onRpcMessageReceived(msg))
+	if(!onRpcValueReceived(msg))
 		emit messageReceived(msg);
 }
-
-bool RpcConnection::onRpcMessageReceived(const shv::chainpack::RpcMessage &msg)
+*/
+bool SocketRpcConnection::onRpcValueReceived(const shv::chainpack::RpcValue &val)
 {
+	cp::RpcMessage msg(val);
 	RpcValue::UInt id = msg.id();
 	if(id > 0 && id <= m_maxSyncMessageId) {
 		// ignore messages alredy processed by sync calls
@@ -102,13 +103,13 @@ bool RpcConnection::onRpcMessageReceived(const shv::chainpack::RpcMessage &msg)
 	return false;
 }
 
-void RpcConnection::sendMessage(const RpcConnection::RpcMessage &rpc_msg)
+void SocketRpcConnection::sendMessage(const SocketRpcConnection::RpcMessage &rpc_msg)
 {
 	//logRpcMsg() << cp::RpcDriver::SND_LOG_ARROW << rpc_msg.toStdString();
 	emit sendMessageRequest(rpc_msg.value());
 }
 
-RpcConnection::RpcResponse RpcConnection::sendMessageSync(const RpcConnection::RpcRequest &rpc_request_message, int time_out_ms)
+SocketRpcConnection::RpcResponse SocketRpcConnection::sendMessageSync(const SocketRpcConnection::RpcRequest &rpc_request_message, int time_out_ms)
 {
 	RpcResponse res_msg;
 	m_maxSyncMessageId = qMax(m_maxSyncMessageId, rpc_request_message.id());
@@ -118,7 +119,7 @@ RpcConnection::RpcResponse RpcConnection::sendMessageSync(const RpcConnection::R
 	return res_msg;
 }
 
-void RpcConnection::sendNotify(const std::string &method, const RpcConnection::RpcValue &params)
+void SocketRpcConnection::sendNotify(const std::string &method, const SocketRpcConnection::RpcValue &params)
 {
 	RpcRequest rq;
 	rq.setMethod(method);
@@ -126,7 +127,7 @@ void RpcConnection::sendNotify(const std::string &method, const RpcConnection::R
 	sendMessage(rq);
 }
 
-void RpcConnection::sendResponse(int request_id, const RpcConnection::RpcValue &result)
+void SocketRpcConnection::sendResponse(int request_id, const SocketRpcConnection::RpcValue &result)
 {
 	RpcResponse resp;
 	resp.setId(request_id);
@@ -134,7 +135,7 @@ void RpcConnection::sendResponse(int request_id, const RpcConnection::RpcValue &
 	sendMessage(resp);
 }
 
-void RpcConnection::sendError(int request_id, const shv::chainpack::RpcResponse::Error &error)
+void SocketRpcConnection::sendError(int request_id, const shv::chainpack::RpcResponse::Error &error)
 {
 	RpcResponse resp;
 	resp.setId(request_id);
@@ -149,7 +150,7 @@ int nextRpcId()
 	return ++n;
 }
 }
-int RpcConnection::callMethodASync(const std::string &method, const RpcConnection::RpcValue &params)
+int SocketRpcConnection::callMethodASync(const std::string &method, const SocketRpcConnection::RpcValue &params)
 {
 	int id = nextRpcId();
 	RpcRequest rq;
@@ -160,12 +161,12 @@ int RpcConnection::callMethodASync(const std::string &method, const RpcConnectio
 	return id;
 }
 
-RpcConnection::RpcResponse RpcConnection::callMethodSync(const std::string &method, const RpcConnection::RpcValue &params, int rpc_timeout)
+SocketRpcConnection::RpcResponse SocketRpcConnection::callMethodSync(const std::string &method, const SocketRpcConnection::RpcValue &params, int rpc_timeout)
 {
 	return callShvMethodSync(std::string(), method, params, rpc_timeout);
 }
 
-RpcConnection::RpcResponse RpcConnection::callShvMethodSync(const std::string &shv_path, const std::string &method, const RpcConnection::RpcValue &params, int rpc_timeout)
+SocketRpcConnection::RpcResponse SocketRpcConnection::callShvMethodSync(const std::string &shv_path, const std::string &method, const SocketRpcConnection::RpcValue &params, int rpc_timeout)
 {
 	RpcRequest rq;
 	rq.setId(nextRpcId());

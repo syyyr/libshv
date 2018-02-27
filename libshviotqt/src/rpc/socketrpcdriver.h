@@ -31,7 +31,7 @@ public:
 
 	void sendMessage(const shv::chainpack::RpcValue &msg) {Super::sendMessage(msg);}
 
-	Q_SIGNAL void rpcMessageReceived(shv::chainpack::RpcValue msg);
+	Q_SIGNAL void rpcValueReceived(shv::chainpack::RpcValue msg);
 
 	// function waits till response is received in event loop
 	// rpcMessageReceived signal can be emited meanwhile

@@ -142,7 +142,7 @@ bool SocketRpcDriver::flush()
 
 void SocketRpcDriver::onRpcValueReceived(const shv::chainpack::RpcValue &msg)
 {
-	emit rpcMessageReceived(msg);
+	emit rpcValueReceived(msg);
 }
 
 namespace {
@@ -178,7 +178,7 @@ void SocketRpcDriver:: sendRequestQuasiSync(const shv::chainpack::RpcRequest &re
 		tm_elapsed.start();
 		QEventLoop eloop;
 		QMetaObject::Connection lambda_connection;
-		lambda_connection = connect(this, &SocketRpcDriver::rpcMessageReceived, [&eloop, &resp_msg, &lambda_connection, msg_id](const shv::chainpack::RpcValue &msg_val)
+		lambda_connection = connect(this, &SocketRpcDriver::rpcValueReceived, [&eloop, &resp_msg, &lambda_connection, msg_id](const shv::chainpack::RpcValue &msg_val)
 		{
 			shv::chainpack::RpcMessage msg(msg_val);
 			smcDebug() << &eloop << "New RPC message id:" << msg.id();

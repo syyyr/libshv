@@ -15,7 +15,7 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
-class SHVIOTQT_DECL_EXPORT RpcConnection : public QObject
+class SHVIOTQT_DECL_EXPORT SocketRpcConnection : public QObject
 {
 	Q_OBJECT
 public:
@@ -27,8 +27,8 @@ public:
 public:
 	enum class SyncCalls {Supported, NotSupported};
 
-	explicit RpcConnection(SyncCalls sync_calls, QObject *parent = nullptr);
-	~RpcConnection() Q_DECL_OVERRIDE;
+	explicit SocketRpcConnection(SyncCalls sync_calls, QObject *parent = nullptr);
+	~SocketRpcConnection() Q_DECL_OVERRIDE;
 
 	void setSocket(QTcpSocket *socket);
 	void setProtocolVersion(shv::chainpack::Rpc::ProtocolVersion ver) {emit setProtocolVersionRequest((unsigned)ver);}
@@ -49,7 +49,7 @@ public:
 	RpcResponse callMethodSync(const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = 0);
 	RpcResponse callShvMethodSync(const std::string &shv_path, const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = 0);
 
-	Q_SIGNAL void messageReceived(const shv::chainpack::RpcMessage &msg);
+	Q_SIGNAL void rpcMessageReceived(const shv::chainpack::RpcMessage &msg);
 	//Q_SIGNAL void rpcError(const std::string &err_msg);
 	Q_SIGNAL void openChanged(bool is_open);
 protected:
@@ -63,8 +63,8 @@ protected:
 	Q_SIGNAL void connectToHostRequest(const QString &host_name, quint16 port);
 	Q_SIGNAL void abortConnectionRequest();
 
-	void onMessageReceived(const shv::chainpack::RpcValue &rpc_val);
-	virtual bool onRpcMessageReceived(const shv::chainpack::RpcMessage &msg);
+	//virtual void onRpcValueReceived(const shv::chainpack::RpcValue &rpc_val);
+	virtual bool onRpcValueReceived(const shv::chainpack::RpcValue &val);
 private:
 	SocketRpcDriver *m_rpcDriver = nullptr;
 	// RpcDriver must run in separate thread to implement synchronous RPC calls properly

@@ -13,7 +13,7 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
-class ServerConnection;
+class ServerRpcDriver;
 
 class SHVIOTQT_DECL_EXPORT TcpServer : public QTcpServer
 {
@@ -29,13 +29,13 @@ public:
 
 	bool start(int port);
 	std::vector<unsigned> connectionIds() const;
-	ServerConnection* connectionById(unsigned connection_id);
+	ServerRpcDriver* connectionById(unsigned connection_id);
 protected:
-	virtual ServerConnection* createServerConnection(QTcpSocket *socket, QObject *parent) = 0;
+	virtual ServerRpcDriver* createServerConnection(QTcpSocket *socket, QObject *parent) = 0;
 	void onNewConnection();
 	void onConnectionDeleted(int connection_id);
 protected:
-	std::map<unsigned, ServerConnection*> m_connections;
+	std::map<unsigned, ServerRpcDriver*> m_connections;
 };
 
 }}}

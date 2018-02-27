@@ -1,5 +1,5 @@
 #include "clientconnection.h"
-#include "rpcconnection.h"
+#include "socketrpcconnection.h"
 
 #include <shv/coreqt/log.h>
 
@@ -21,7 +21,7 @@ namespace iotqt {
 namespace rpc {
 
 ClientConnection::ClientConnection(QObject *parent)
-	: Super(RpcConnection::SyncCalls::Supported, parent)
+	: Super(SocketRpcConnection::SyncCalls::Supported, parent)
 {
 	//setDevice(cp::RpcValue(nullptr));
 
@@ -29,7 +29,7 @@ ClientConnection::ClientConnection(QObject *parent)
 	setSocket(socket);
 
 	connect(this, &ClientConnection::socketConnectedChanged, this, &ClientConnection::onSocketConnectedChanged);
-	connect(this, &ClientConnection::messageReceived, this, &ClientConnection::onRpcMessageReceived);
+	//connect(this, &ClientConnection::rpcMessageReceived, this, &ClientConnection::onRpcValueReceived);
 	//setProtocolVersion(protocolVersion());
 	/*
 	{
@@ -48,6 +48,7 @@ ClientConnection::~ClientConnection()
 
 void ClientConnection::onSocketConnectedChanged(bool is_connected)
 {
+	setBrokerConnected(false);
 	if(is_connected) {
 		shvInfo() << "Socket connected to RPC server";
 		//sendKnockKnock(cp::RpcDriver::ChainPack);
@@ -78,20 +79,7 @@ void ClientConnection::sendHello()
 
 void ClientConnection::sendLogin(const shv::chainpack::RpcValue &server_hello)
 {
-	std::string server_nonce = server_hello.toMap().value("nonce").toString();
-	std::string password = server_nonce + passwordHash(user());
-	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-	hash.addData(password.c_str(), password.length());
-	QByteArray sha1 = hash.result().toHex();
-	m_loginRequestId = callMethodASync(cp::Rpc::METH_LOGIN
-									   , cp::RpcValue::Map {
-										   {"login", cp::RpcValue::Map {
-												{"user", user()},
-												{"password", std::string(sha1.constData())},
-											}
-										   },
-										   {"device", device()},
-									   });
+	m_loginRequestId = callMethodASync(cp::Rpc::METH_LOGIN, createLoginParams(server_hello));
 }
 
 std::string ClientConnection::passwordHash(const std::string &user)
@@ -102,36 +90,60 @@ std::string ClientConnection::passwordHash(const std::string &user)
 	return std::string(sha1.constData(), sha1.length());
 }
 
-bool ClientConnection::onRpcMessageReceived(const cp::RpcMessage &msg)
+bool ClientConnection::onRpcValueReceived(const cp::RpcValue &val)
 {
-	logRpc() << msg.toCpon();
-	if(Super::onRpcMessageReceived(msg))
+	if(Super::onRpcValueReceived(val))
 		return true;
-	if(!isBrokerConnected()) {
-		do {
-			if(!msg.isResponse())
-				break;
-			cp::RpcResponse resp(msg);
-			shvInfo() << "Handshake response received:" << resp.toCpon();
-			if(resp.isError())
-				break;
-			unsigned id = resp.id();
-			if(id == 0)
-				break;
-			if(m_helloRequestId == id) {
-				sendLogin(resp.result());
-				return true;
-			}
-			else if(m_loginRequestId == id) {
-				setBrokerConnected(true);
-				return true;
-			}
-		} while(false);
-		shvError() << "Invalid handshake message! Dropping connection." << msg.toCpon();
-		this->deleteLater();
+	cp::RpcMessage msg(val);
+	logRpc() << msg.toCpon();
+	if(isInitPhase()) {
+		processInitPhase(msg);
 		return true;
 	}
-	return false;
+	emit rpcMessageReceived(msg);
+	return true;
+}
+
+void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
+{
+	do {
+		if(!msg.isResponse())
+			break;
+		cp::RpcResponse resp(msg);
+		shvInfo() << "Handshake response received:" << resp.toCpon();
+		if(resp.isError())
+			break;
+		unsigned id = resp.id();
+		if(id == 0)
+			break;
+		if(m_helloRequestId == id) {
+			sendLogin(resp.result());
+			return;
+		}
+		else if(m_loginRequestId == id) {
+			setBrokerConnected(true);
+			return;
+		}
+	} while(false);
+	shvError() << "Invalid handshake message! Dropping connection." << msg.toCpon();
+	this->deleteLater();
+}
+
+chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValue &server_hello)
+{
+	std::string server_nonce = server_hello.toMap().value("nonce").toString();
+	std::string password = server_nonce + passwordHash(user());
+	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
+	hash.addData(password.c_str(), password.length());
+	QByteArray sha1 = hash.result().toHex();
+	return cp::RpcValue::Map {
+		{"login", cp::RpcValue::Map {
+			 {"user", user()},
+			 {"password", std::string(sha1.constData())},
+		 }
+		},
+		{"device", device()},
+	};
 }
 
 }}}
