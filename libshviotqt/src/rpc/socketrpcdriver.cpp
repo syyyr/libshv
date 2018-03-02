@@ -124,6 +124,11 @@ void SocketRpcDriver::onBytesWritten()
 	enqueueDataToSend(Chunk());
 }
 
+void SocketRpcDriver::onRpcValueReceived(const shv::chainpack::RpcValue &rpc_val)
+{
+	emit rpcValueReceived(rpc_val);
+}
+
 bool SocketRpcDriver::isOpen()
 {
 	return m_socket && m_socket->isOpen();

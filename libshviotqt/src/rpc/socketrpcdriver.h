@@ -30,8 +30,8 @@ public:
 
 	void connectToHost(const QString &host_name, quint16 port);
 
-	Q_SIGNAL void rpcValueReceived(shv::chainpack::RpcValue msg);
-	Q_SLOT void sendRpcValue(const shv::chainpack::RpcValue &msg) {Super::sendRpcValue(msg);}
+	Q_SIGNAL void rpcValueReceived(shv::chainpack::RpcValue rpc_val);
+	Q_SLOT void sendRpcValue(const shv::chainpack::RpcValue &rpc_val) {Super::sendRpcValue(rpc_val);}
 
 
 	// function waits till response is received in event loop
@@ -60,6 +60,8 @@ protected:
 	QTcpSocket* socket();
 	void onReadyRead();
 	void onBytesWritten();
+
+	void onRpcValueReceived(const shv::chainpack::RpcValue &rpc_val) override;
 protected:
 	QTcpSocket *m_socket = nullptr;
 private:
