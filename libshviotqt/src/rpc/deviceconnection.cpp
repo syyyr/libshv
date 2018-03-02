@@ -6,8 +6,8 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
-DeviceConnection::DeviceConnection(SyncCalls sync_calls, QObject *parent)
-	: Super(sync_calls, parent)
+DeviceConnection::DeviceConnection(QObject *parent)
+	: Super(parent)
 {
 
 }

@@ -10,6 +10,8 @@ class SHVCHAINPACK_DECL_EXPORT AbstractRpcConnection
 public:
 	static constexpr int WAIT_FOREVER = -1;
 	static constexpr int DEFAULT_RPC_TIMEOUT = 0;
+
+	static constexpr int DEFAULT_RPC_BROKER_PORT = 3755;
 public:
 	virtual void sendMessage(const shv::chainpack::RpcMessage &rpc_msg) = 0;
 	virtual RpcResponse sendMessageSync(const shv::chainpack::RpcRequest &rpc_request, int time_out_ms = DEFAULT_RPC_TIMEOUT) = 0;

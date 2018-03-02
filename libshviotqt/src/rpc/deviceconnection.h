@@ -16,7 +16,7 @@ class SHVIOTQT_DECL_EXPORT DeviceConnection : public ClientConnection
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, d, D, evice)
 
 public:
-	DeviceConnection(SyncCalls sync_calls, QObject *parent = 0);
+	DeviceConnection(QObject *parent = 0);
 protected:
 	shv::chainpack::RpcValue createLoginParams(const shv::chainpack::RpcValue &server_hello) override;
 };

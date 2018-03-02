@@ -42,7 +42,7 @@ ClientConnection::ClientConnection(SyncCalls sync_calls, QObject *parent)
 	connect(m_rpcDriver, &SocketRpcDriver::socketConnectedChanged, this, &ClientConnection::socketConnectedChanged);
 	connect(m_rpcDriver, &SocketRpcDriver::rpcValueReceived, this, &ClientConnection::onRpcValueReceived);
 
-	if(m_syncCalls == SyncCalls::Supported) {
+	if(m_syncCalls == SyncCalls::Enabled) {
 		connect(this, &ClientConnection::sendMessageSyncRequest, m_rpcDriver, &SocketRpcDriver::sendRpcRequestSync_helper, Qt::BlockingQueuedConnection);
 		m_rpcDriverThread = new QThread();
 		m_rpcDriver->moveToThread(m_rpcDriverThread);
@@ -65,7 +65,7 @@ ClientConnection::~ClientConnection()
 {
 	shvDebug() << __FUNCTION__;
 	abort();
-	if(m_syncCalls == SyncCalls::Supported) {
+	if(m_syncCalls == SyncCalls::Enabled) {
 		if(m_rpcDriverThread->isRunning()) {
 			shvDebug() << "stopping rpc driver thread";
 			m_rpcDriverThread->quit();

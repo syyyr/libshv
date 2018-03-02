@@ -24,15 +24,16 @@ class SHVIOTQT_DECL_EXPORT ClientConnection : public QObject, public shv::chainp
 
 	SHV_FIELD_IMPL(std::string, u, U, ser)
 	SHV_FIELD_IMPL(std::string, h, H, ost)
-	SHV_FIELD_IMPL(int, p, P, ort)
+	SHV_FIELD_IMPL2(int, p, P, ort, shv::chainpack::AbstractRpcConnection::DEFAULT_RPC_BROKER_PORT)
 	SHV_FIELD_IMPL(std::string, p, P, assword)
 
 	SHV_PROPERTY_BOOL_IMPL(b, B, rokerConnected)
 
 public:
-	enum class SyncCalls {Supported, NotSupported};
+	enum class SyncCalls {Enabled, Disabled};
 
 	explicit ClientConnection(SyncCalls sync_calls, QObject *parent = nullptr);
+	explicit ClientConnection(QObject *parent = nullptr) : ClientConnection(SyncCalls::Enabled, parent) {}
 	~ClientConnection() Q_DECL_OVERRIDE;
 
 	void open();

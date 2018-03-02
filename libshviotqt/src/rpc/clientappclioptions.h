@@ -6,18 +6,18 @@
 
 namespace shv {
 namespace iotqt {
-namespace client {
+namespace rpc {
 
-class SHVIOTQT_DECL_EXPORT AppCliOptions : public shv::coreqt::utils::ConfigCLIOptions
+class SHVIOTQT_DECL_EXPORT ClientAppCliOptions : public shv::coreqt::utils::ConfigCLIOptions
 {
 	Q_OBJECT
 private:
 	using Super = shv::coreqt::utils::ConfigCLIOptions;
 public:
-	AppCliOptions(QObject *parent = NULL);
-	~AppCliOptions() Q_DECL_OVERRIDE {}
+	ClientAppCliOptions(QObject *parent = NULL);
+	~ClientAppCliOptions() Q_DECL_OVERRIDE {}
 
-	CLIOPTION_GETTER_SETTER(QString, l, setL, ocale)
+	//CLIOPTION_GETTER_SETTER(QString, l, setL, ocale)
 	CLIOPTION_GETTER_SETTER2(QString, "user.name", u, setU, serName)
 	CLIOPTION_GETTER_SETTER2(QString, "server.host", s, setS, erverHost)
 	CLIOPTION_GETTER_SETTER2(int, "server.port", s, setS, erverPort)
