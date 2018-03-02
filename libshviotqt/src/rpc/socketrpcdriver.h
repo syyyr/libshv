@@ -9,7 +9,7 @@
 class QTcpSocket;
 class QThread;
 
-namespace shv { namespace chainpack { class RpcRequest; class RpcResponse; }}
+//namespace shv { namespace chainpack { class RpcRequest; class RpcResponse; }}
 
 namespace shv {
 namespace iotqt {
@@ -25,22 +25,21 @@ public:
 	~SocketRpcDriver() Q_DECL_OVERRIDE;
 
 	void setSocket(QTcpSocket *socket);
+	bool hasSocket() const {return m_socket != nullptr;}
 	void setProtocolVersionAsInt(int v) {Super::setProtocolVersion((shv::chainpack::Rpc::ProtocolVersion)v);}
 
 	void connectToHost(const QString &host_name, quint16 port);
 
-	void sendMessage(const shv::chainpack::RpcValue &msg) {Super::sendMessage(msg);}
-
 	Q_SIGNAL void rpcValueReceived(shv::chainpack::RpcValue msg);
+	Q_SLOT void sendRpcValue(const shv::chainpack::RpcValue &msg) {Super::sendRpcValue(msg);}
+
 
 	// function waits till response is received in event loop
 	// rpcMessageReceived signal can be emited meanwhile
-	void sendRequestQuasiSync(const shv::chainpack::RpcRequest& request, shv::chainpack::RpcResponse *presponse, int time_out_ms);
 
+	void closeConnection();
 	void abortConnection();
-protected:
-	void setSocketConnected(bool b);
-public:
+
 	bool isSocketConnected() const;
 	Q_SIGNAL void socketConnectedChanged(bool is_connected);
 
@@ -48,16 +47,15 @@ public:
 
 	std::string peerAddress() const;
 	int peerPort() const;
-
-	int callMethodASync(const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
-	void sendResponse(int request_id, const shv::chainpack::RpcValue &result);
-	void sendError(int request_id, const shv::chainpack::RpcResponse::Error &error);
+public:
+	Q_SLOT void sendRpcRequestSync_helper(const shv::chainpack::RpcRequest& request, shv::chainpack::RpcResponse *presponse, int time_out_ms);
 protected:
+	void setSocketConnected(bool b);
+
 	// RpcDriver interface
 	bool isOpen() Q_DECL_OVERRIDE;
 	int64_t writeBytes(const char *bytes, size_t length) Q_DECL_OVERRIDE;
 	bool flush() Q_DECL_OVERRIDE;
-	void onRpcValueReceived(const shv::chainpack::RpcValue &msg) Q_DECL_OVERRIDE;
 
 	QTcpSocket* socket();
 	void onReadyRead();

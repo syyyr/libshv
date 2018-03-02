@@ -1,4 +1,4 @@
-#include "serverrpcdriver.h"
+#include "serverconnection.h"
 #include "tcpserver.h"
 
 #include <shv/coreqt/log.h>
@@ -40,7 +40,7 @@ std::vector<unsigned> TcpServer::connectionIds() const
 	return ret;
 }
 
-ServerRpcDriver *TcpServer::connectionById(unsigned connection_id)
+ServerConnection *TcpServer::connectionById(unsigned connection_id)
 {
 	auto it = m_connections.find(connection_id);
 	if(it == m_connections.end())
@@ -53,10 +53,10 @@ void TcpServer::onNewConnection()
 	QTcpSocket *sock = nextPendingConnection();
 	if(sock) {
 		shvInfo().nospace() << "agent connected: " << sock->peerAddress().toString() << ':' << sock->peerPort();
-		ServerRpcDriver *c = createServerConnection(sock, this);
+		ServerConnection *c = createServerConnection(sock, this);
 		m_connections[c->connectionId()] = c;
 		int cid = c->connectionId();
-		connect(c, &ServerRpcDriver::destroyed, [this, cid]() {
+		connect(c, &ServerConnection::destroyed, [this, cid]() {
 			onConnectionDeleted(cid);
 		});
 	}

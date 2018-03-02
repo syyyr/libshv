@@ -68,7 +68,7 @@ private:
 	qDebug() << "------------- RpcRequest";
 	{
 		RpcRequest rq;
-		rq.setId(123)
+		rq.setRequestId(123)
 				.setMethod("foo")
 				.setParams({{
 							   {"a", 45},
@@ -86,14 +86,14 @@ private:
 		QCOMPARE(cp1.type(), cp2.type());
 		RpcRequest rq2(cp2);
 		QVERIFY(rq2.isRequest());
-		QCOMPARE(rq2.id(), rq.id());
+		QCOMPARE(rq2.requestId(), rq.requestId());
 		QCOMPARE(rq2.method(), rq.method());
 		QCOMPARE(rq2.params(), rq.params());
 	}
 	qDebug() << "------------- RpcResponse";
 	{
 		RpcResponse rs;
-		rs.setId(123).setResult(42u);
+		rs.setRequestId(123).setResult(42u);
 		std::stringstream out;
 		RpcValue cp1 = rs.value();
 		ChainPackWriter wr(out);
@@ -104,12 +104,12 @@ private:
 		QVERIFY(cp1.type() == cp2.type());
 		RpcResponse rs2(cp2);
 		QVERIFY(rs2.isResponse());
-		QCOMPARE(rs2.id(), rs.id());
+		QCOMPARE(rs2.requestId(), rs.requestId());
 		QCOMPARE(rs2.result(), rs.result());
 	}
 	{
 		RpcResponse rs;
-		rs.setId(123)
+		rs.setRequestId(123)
 				.setError(RpcResponse::Error::create(RpcResponse::Error::InvalidParams, "Paramter length should be greater than zero!"));
 		std::stringstream out;
 		RpcValue cp1 = rs.value();
@@ -121,7 +121,7 @@ private:
 		QVERIFY(cp1.type() == cp2.type());
 		RpcResponse rs2(cp2);
 		QVERIFY(rs2.isResponse());
-		QCOMPARE(rs2.id(), rs.id());
+		QCOMPARE(rs2.requestId(), rs.requestId());
 		QCOMPARE(rs2.error(), rs.error());
 	}
 	qDebug() << "------------- RpcNotify";

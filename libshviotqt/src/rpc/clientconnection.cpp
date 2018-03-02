@@ -1,4 +1,5 @@
 #include "clientconnection.h"
+#include "rpc.h"
 #include "socketrpcconnection.h"
 
 #include <shv/coreqt/log.h>
@@ -11,8 +12,10 @@
 #include <QHostAddress>
 #include <QTimer>
 #include <QCryptographicHash>
+#include <QThread>
 
-#define logRpc() shvCDebug("rpc")
+#define logRpcMsg() shvCDebug("RpcMsg")
+#define logRpcSyncCalls() shvCDebug("RpcSyncCalls")
 
 namespace cp = shv::chainpack;
 
@@ -20,30 +23,131 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
-ClientConnection::ClientConnection(QObject *parent)
-	: Super(SocketRpcConnection::SyncCalls::Supported, parent)
+ClientConnection::ClientConnection(SyncCalls sync_calls, QObject *parent)
+	: QObject(parent)
+	, m_syncCalls(sync_calls)
 {
-	//setDevice(cp::RpcValue(nullptr));
+	Rpc::registerMetatTypes();
 
-	QTcpSocket *socket = new QTcpSocket();
-	setSocket(socket);
+	static int id = 0;
+	m_connectionId = ++id;
+	m_rpcDriver = new SocketRpcDriver();
+
+	connect(this, &ClientConnection::setProtocolVersionRequest, m_rpcDriver, &SocketRpcDriver::setProtocolVersionAsInt);
+	connect(this, &ClientConnection::sendMessageRequest, m_rpcDriver, &SocketRpcDriver::sendRpcValue);
+	connect(this, &ClientConnection::connectToHostRequest, m_rpcDriver, &SocketRpcDriver::connectToHost);
+	connect(this, &ClientConnection::closeConnectionRequest, m_rpcDriver, &SocketRpcDriver::closeConnection);
+	connect(this, &ClientConnection::abortConnectionRequest, m_rpcDriver, &SocketRpcDriver::abortConnection);
+
+	connect(m_rpcDriver, &SocketRpcDriver::socketConnectedChanged, this, &ClientConnection::socketConnectedChanged);
+	connect(m_rpcDriver, &SocketRpcDriver::rpcValueReceived, this, &ClientConnection::onRpcValueReceived);
+
+	if(m_syncCalls == SyncCalls::Supported) {
+		connect(this, &ClientConnection::sendMessageSyncRequest, m_rpcDriver, &SocketRpcDriver::sendRpcRequestSync_helper, Qt::BlockingQueuedConnection);
+		m_rpcDriverThread = new QThread();
+		m_rpcDriver->moveToThread(m_rpcDriverThread);
+		m_rpcDriverThread->start();
+	}
+	else {
+		connect(this, &ClientConnection::sendMessageSyncRequest, []() {
+			shvError() << "Sync calls are enabled in threaded RPC connection only!";
+		});
+	}
 
 	connect(this, &ClientConnection::socketConnectedChanged, this, &ClientConnection::onSocketConnectedChanged);
-	//connect(this, &ClientConnection::rpcMessageReceived, this, &ClientConnection::onRpcValueReceived);
-	//setProtocolVersion(protocolVersion());
-	/*
-	{
-		m_rpcConnection = new shv::iotqt::chainpack::RpcConnection(cpq::RpcConnection::SyncCalls::Supported, this);
-		m_rpcConnection->setSocket(socket);
-		m_rpcConnection->setProtocolVersion(protocolVersion());
-	}
-	*/
+
+	m_checkConnectedTimer = new QTimer(this);
+	m_checkConnectedTimer->setInterval(1000 * 10);
+	connect(m_checkConnectedTimer, &QTimer::timeout, this, &ClientConnection::checkConnected);
 }
 
 ClientConnection::~ClientConnection()
 {
-	shvDebug() << Q_FUNC_INFO;
+	shvDebug() << __FUNCTION__;
 	abort();
+	if(m_syncCalls == SyncCalls::Supported) {
+		if(m_rpcDriverThread->isRunning()) {
+			shvDebug() << "stopping rpc driver thread";
+			m_rpcDriverThread->quit();
+			shvDebug() << "after quit";
+		}
+		shvDebug() << "joining rpc driver thread";
+		bool ok = m_rpcDriverThread->wait();
+		shvDebug() << "rpc driver thread joined ok:" << ok;
+		delete m_rpcDriverThread;
+	}
+	delete m_rpcDriver;
+}
+
+void ClientConnection::open()
+{
+	if(!m_rpcDriver->hasSocket()) {
+		QTcpSocket *socket = new QTcpSocket();
+		setSocket(socket);
+	}
+	checkConnected();
+	m_checkConnectedTimer->start();
+}
+
+void ClientConnection::close()
+{
+	m_checkConnectedTimer->stop();
+	emit closeConnectionRequest();
+}
+
+void ClientConnection::abort()
+{
+	m_checkConnectedTimer->stop();
+	emit abortConnectionRequest();
+}
+
+void ClientConnection::setSocket(QTcpSocket *socket)
+{
+	m_rpcDriver->setSocket(socket);
+}
+
+bool ClientConnection::isSocketConnected() const
+{
+	return m_rpcDriver->isSocketConnected();
+}
+
+void ClientConnection::onRpcValueReceived(const shv::chainpack::RpcValue &val)
+{
+	cp::RpcMessage msg(val);
+	cp::RpcValue::UInt id = msg.requestId();
+	if(id > 0 && id <= m_maxSyncMessageId) {
+		// ignore messages alredy processed by sync calls
+		logRpcSyncCalls() << "XXX ignoring already served sync response:" << id;
+		return;
+	}
+	//logRpcMsg() << cp::RpcDriver::RCV_LOG_ARROW << msg.toStdString();
+	onRpcMessageReceived(msg);
+}
+
+void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
+{
+	//logRpcMsg() << cp::RpcDriver::SND_LOG_ARROW << rpc_msg.toStdString();
+	emit sendMessageRequest(rpc_msg.value());
+}
+
+cp::RpcResponse ClientConnection::sendMessageSync(const cp::RpcRequest &rpc_request_message, int time_out_ms)
+{
+	cp::RpcResponse res_msg;
+	m_maxSyncMessageId = qMax(m_maxSyncMessageId, rpc_request_message.requestId());
+	//logRpcSyncCalls() << "==> send SYNC MSG id:" << rpc_request_message.id() << "data:" << rpc_request_message.toStdString();
+	emit sendMessageSyncRequest(rpc_request_message, &res_msg, time_out_ms);
+	//logRpcSyncCalls() << "<== RESP SYNC MSG id:" << res_msg.id() << "data:" << res_msg.toStdString();
+	return res_msg;
+}
+
+void ClientConnection::onRpcMessageReceived(const chainpack::RpcMessage &msg)
+{
+	logRpcMsg() << msg.toCpon();
+	if(isInitPhase()) {
+		processInitPhase(msg);
+		return;
+	}
+	emit rpcMessageReceived(msg);
 }
 
 void ClientConnection::onSocketConnectedChanged(bool is_connected)
@@ -64,7 +168,7 @@ void ClientConnection::onSocketConnectedChanged(bool is_connected)
 void ClientConnection::sendHello()
 {
 	setBrokerConnected(false);
-	m_helloRequestId = callMethodASync(cp::Rpc::METH_HELLO);
+	m_helloRequestId = callMethod(cp::Rpc::METH_HELLO);
 									   //cp::RpcValue::Map{{"profile", profile()}
 																//, {"deviceId", deviceId()}
 																//, {"protocolVersion", protocolVersion()}
@@ -79,7 +183,7 @@ void ClientConnection::sendHello()
 
 void ClientConnection::sendLogin(const shv::chainpack::RpcValue &server_hello)
 {
-	m_loginRequestId = callMethodASync(cp::Rpc::METH_LOGIN, createLoginParams(server_hello));
+	m_loginRequestId = callMethod(cp::Rpc::METH_LOGIN, createLoginParams(server_hello));
 }
 
 std::string ClientConnection::passwordHash(const std::string &user)
@@ -89,20 +193,12 @@ std::string ClientConnection::passwordHash(const std::string &user)
 	QByteArray sha1 = hash.result().toHex();
 	return std::string(sha1.constData(), sha1.length());
 }
-
-bool ClientConnection::onRpcValueReceived(const cp::RpcValue &val)
+/*
+void ClientConnection::connectToHost(const std::string &host_name, quint16 port)
 {
-	if(Super::onRpcValueReceived(val))
-		return true;
-	cp::RpcMessage msg(val);
-	logRpc() << msg.toCpon();
-	if(isInitPhase()) {
-		processInitPhase(msg);
-		return true;
-	}
-	emit rpcMessageReceived(msg);
-	return true;
+	emit connectToHostRequest(QString::fromStdString(host_name), port);
 }
+*/
 
 void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
 {
@@ -113,7 +209,7 @@ void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
 		shvInfo() << "Handshake response received:" << resp.toCpon();
 		if(resp.isError())
 			break;
-		unsigned id = resp.id();
+		unsigned id = resp.requestId();
 		if(id == 0)
 			break;
 		if(m_helloRequestId == id) {
@@ -142,8 +238,17 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 			 {"password", std::string(sha1.constData())},
 		 }
 		},
-		{"device", device()},
 	};
+}
+
+void ClientConnection::checkConnected()
+{
+	if(!isSocketConnected()) {
+		abort();
+		shvInfo().nospace() << "connecting to: " << user() << "@" << host() << ":" << port();
+		//m_clientConnection->setProtocolVersion(protocolVersion());
+		emit connectToHostRequest(QString::fromStdString(host()), port());
+	}
 }
 
 }}}

@@ -4,7 +4,8 @@ SOURCES += \
     $$PWD/clientconnection.cpp \
     $$PWD/tcpserver.cpp \
     $$PWD/socketrpcconnection.cpp \
-    $$PWD/serverrpcdriver.cpp
+    $$PWD/serverconnection.cpp \
+    $$PWD/deviceconnection.cpp
 
 HEADERS += \
     $$PWD/rpc.h \
@@ -12,5 +13,6 @@ HEADERS += \
     $$PWD/clientconnection.h \
     $$PWD/tcpserver.h \
     $$PWD/socketrpcconnection.h \
-    $$PWD/serverrpcdriver.h
+    $$PWD/serverconnection.h \
+    $$PWD/deviceconnection.h
 

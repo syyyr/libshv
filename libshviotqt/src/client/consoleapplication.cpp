@@ -1,5 +1,5 @@
 #include "consoleapplication.h"
-#include "../rpc/clientconnection.h"
+#include "../rpc/deviceconnection.h"
 #include "appclioptions.h"
 
 #include <shv/coreqt/log.h>
@@ -36,17 +36,6 @@ ConsoleApplication::ConsoleApplication(int &argc, char **argv, AppCliOptions *cl
 	//syslog (LOG_INFO, "Server started");
 	installUnixSignalHandlers();
 #endif
-
-    m_clientConnection = new rpc::ClientConnection(this);
-	//m_clientConnection->setProfile(profile());
-	//m_clientConnection->setDeviceId(deviceId());
-	m_clientConnection->setUser(m_cliOptions->userName().toStdString());
-
-	m_checkConnectedTimer = new QTimer(this);
-	m_checkConnectedTimer->start(1000 * 10);
-	connect(m_checkConnectedTimer, &QTimer::timeout, this, &ConsoleApplication::checkConnected);
-
-	QTimer::singleShot(0, this, &ConsoleApplication::lazyInit);
 }
 
 ConsoleApplication::~ConsoleApplication()
@@ -64,6 +53,22 @@ coreqt::utils::VersionInfo ConsoleApplication::versionInfo() const
 QString ConsoleApplication::versionString() const
 {
 	return QCoreApplication::applicationVersion();
+}
+
+rpc::ClientConnection *ConsoleApplication::clientConnection()
+{
+	if(!m_clientConnection)
+		SHV_EXCEPTION("Client connection is NULL");
+	return m_clientConnection;
+}
+
+void ConsoleApplication::setClientConnection(rpc::ClientConnection *cc)
+{
+	m_clientConnection = cc;
+	if(m_clientConnection)
+		m_checkConnectedTimer->start();
+	else
+		m_checkConnectedTimer->stop();
 }
 
 #ifdef Q_OS_UNIX
@@ -106,21 +111,6 @@ void ConsoleApplication::handleSigTerm()
 	m_snTerm->setEnabled(true);
 }
 #endif
-
-void ConsoleApplication::lazyInit()
-{
-	checkConnected();
-}
-
-void ConsoleApplication::checkConnected()
-{
-	if(!m_clientConnection->isSocketConnected()) {
-		m_clientConnection->abort();
-		shvInfo().nospace() << "connecting to: " << m_cliOptions->userName() << "@" << m_cliOptions->serverHost() << ":" << m_cliOptions->serverPort();
-		//m_clientConnection->setProtocolVersion(protocolVersion());
-		m_clientConnection->connectToHost(m_cliOptions->serverHost().toStdString(), m_cliOptions->serverPort());
-	}
-}
 
 } // namespace client
 } // namespace iot

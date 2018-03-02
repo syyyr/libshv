@@ -9,7 +9,6 @@
 
 namespace shv { namespace coreqt { namespace utils { class VersionInfo; }}}
 
-class QTimer;
 class QSocketNotifier;
 
 namespace shv {
@@ -35,16 +34,14 @@ public:
 	QString versionString() const;
 
 	AppCliOptions* cliOptions() {return m_cliOptions;}
-    rpc::ClientConnection *clientConnection() {return m_clientConnection;}
+
+	rpc::ClientConnection *clientConnection();
+	void setClientConnection(rpc::ClientConnection *cc);
 
 	static ConsoleApplication* instance() {return qobject_cast<ConsoleApplication*>(Super::instance());}
 protected:
-	void lazyInit();
-	void checkConnected();
-protected:
 	AppCliOptions *m_cliOptions;
-	QTimer *m_checkConnectedTimer;
-    rpc::ClientConnection *m_clientConnection = nullptr;
+	rpc::ClientConnection *m_clientConnection = nullptr;
 #ifdef Q_OS_UNIX
 protected:
 	// Unix signal handlers.

@@ -24,7 +24,7 @@ public:
 	Rpc::ProtocolVersion protocolVersion() const {return m_protocolVersion;}
 	void setProtocolVersion(Rpc::ProtocolVersion v) {m_protocolVersion = v;}
 
-	void sendMessage(const RpcValue &msg);
+	void sendRpcValue(const RpcValue &msg);
 	void sendRawData(std::string &&data);
 	void sendRawData(RpcValue::MetaData &&meta_data, std::string &&data);
 	using MessageReceivedCallback = std::function< void (const RpcValue &msg)>;

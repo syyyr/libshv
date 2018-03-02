@@ -32,7 +32,7 @@ RpcDriver::~RpcDriver()
 {
 }
 
-void RpcDriver::sendMessage(const RpcValue &msg)
+void RpcDriver::sendRpcValue(const RpcValue &msg)
 {
 	using namespace std;
 	//shvLogFuncFrame() << msg.toStdString();

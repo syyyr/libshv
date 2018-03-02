@@ -188,10 +188,10 @@ void SocketRpcDriver::exec()
 void SocketRpcDriver::sendResponse(int request_id, const cp::RpcValue &result)
 {
 	cp::RpcResponse resp;
-	resp.setId(request_id);
+	resp.setRequestId(request_id);
 	resp.setResult(result);
 	nInfo() << "sending response:" << resp.toCpon();
-	sendMessage(resp.value());
+	sendRpcValue(resp.value());
 }
 
 void SocketRpcDriver::sendNotify(std::string &&method, const cp::RpcValue &result)
@@ -200,7 +200,7 @@ void SocketRpcDriver::sendNotify(std::string &&method, const cp::RpcValue &resul
 	cp::RpcNotify ntf;
 	ntf.setMethod(std::move(method));
 	ntf.setParams(result);
-	sendMessage(ntf.value());
+	sendRpcValue(ntf.value());
 }
 
 }}

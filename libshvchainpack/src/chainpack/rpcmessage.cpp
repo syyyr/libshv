@@ -20,7 +20,7 @@ RpcMessage::RpcMessage()
 		{(int)Key::ErrorMessage, {(int)Key::ErrorMessage, "errorMessage"}},
 	};
 	m_tags = {
-		{(int)Tag::Id, {(int)Tag::Id, "id"}},
+		{(int)Tag::RequestId, {(int)Tag::RequestId, "id"}},
 		{(int)Tag::CallerId, {(int)Tag::CallerId, "callerId"}},
 		{(int)Tag::Method, {(int)Tag::Method, "method"}},
 		{(int)Tag::ProtocolVersion, {(int)Tag::ProtocolVersion, "protocolVersion"}},
@@ -84,18 +84,18 @@ void RpcMessage::setMetaValue(RpcValue::UInt key, const RpcValue &val)
 	m_value.setMetaValue(key, val);
 }
 
-RpcValue::UInt RpcMessage::id() const
+RpcValue::UInt RpcMessage::requestId() const
 {
 	if(isValid())
-		return id(m_value.metaData());
+		return requestId(m_value.metaData());
 	return 0;
 }
 
-void RpcMessage::setId(RpcValue::UInt id)
+void RpcMessage::setRequestId(RpcValue::UInt id)
 {
 	checkMetaValues();
 	//checkRpcTypeMetaValue();
-	setMetaValue(meta::RpcMessage::Tag::Id, id);
+	setMetaValue(meta::RpcMessage::Tag::RequestId, id);
 }
 
 RpcValue::String RpcMessage::method(const RpcValue::MetaData &meta)
@@ -115,42 +115,42 @@ bool RpcMessage::isValid() const
 
 bool RpcMessage::isRequest() const
 {
-	return id() > 0 && !method().empty();
+	return requestId() > 0 && !method().empty();
 }
 
 bool RpcMessage::isNotify() const
 {
-	return id() == 0 && !method().empty();
+	return requestId() == 0 && !method().empty();
 }
 
 bool RpcMessage::isResponse() const
 {
-	return id() > 0 && method().empty();
+	return requestId() > 0 && method().empty();
 }
 
 bool RpcMessage::isRequest(const RpcValue::MetaData &meta)
 {
-	return id(meta) > 0 && !method(meta).empty();
+	return requestId(meta) > 0 && !method(meta).empty();
 }
 
 bool RpcMessage::isResponse(const RpcValue::MetaData &meta)
 {
-	return id(meta) > 0 && method(meta).empty();
+	return requestId(meta) > 0 && method(meta).empty();
 }
 
 bool RpcMessage::isNotify(const RpcValue::MetaData &meta)
 {
-	return id(meta) == 0 && !method(meta).empty();
+	return requestId(meta) == 0 && !method(meta).empty();
 }
 
-RpcValue::UInt RpcMessage::id(const RpcValue::MetaData &meta)
+RpcValue::UInt RpcMessage::requestId(const RpcValue::MetaData &meta)
 {
-	return meta.value(meta::RpcMessage::Tag::Id).toUInt();
+	return meta.value(meta::RpcMessage::Tag::RequestId).toUInt();
 }
 
-void RpcMessage::setId(RpcValue::MetaData &meta, RpcValue::UInt id)
+void RpcMessage::setRequestId(RpcValue::MetaData &meta, RpcValue::UInt id)
 {
-	meta.setValue(meta::RpcMessage::Tag::Id, id);
+	meta.setValue(meta::RpcMessage::Tag::RequestId, id);
 }
 
 RpcValue::String RpcMessage::shvPath(const RpcValue::MetaData &meta)
@@ -303,9 +303,9 @@ void RpcNotify::write(AbstractStreamWriter &wr, const std::string &method, std::
 RpcResponse RpcResponse::forRequest(const RpcRequest &rq)
 {
 	RpcResponse ret;
-	RpcValue::UInt id = rq.id();
+	RpcValue::UInt id = rq.requestId();
 	if(id > 0)
-		ret.setId(id);
+		ret.setRequestId(id);
 	id = rq.callerId();
 	if(id > 0)
 		ret.setCallerId(id);
