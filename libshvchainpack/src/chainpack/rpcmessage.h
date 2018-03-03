@@ -61,7 +61,9 @@ public:
 	void setRequestId(RpcValue::UInt requestId);
 
 	static RpcValue::String method(const RpcValue::MetaData &meta);
+	static void setMethod(RpcValue::MetaData &meta, const RpcValue::String &method);
 	RpcValue::String method() const;
+	void setMethod(const RpcValue::String &method);
 
 	static RpcValue::String shvPath(const RpcValue::MetaData &meta);
 	static void setShvPath(RpcValue::MetaData &meta, const RpcValue::String &path);

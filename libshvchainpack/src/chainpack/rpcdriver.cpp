@@ -38,9 +38,8 @@ void RpcDriver::sendRpcValue(const RpcValue &msg)
 	//shvLogFuncFrame() << msg.toStdString();
 	logRpcMsg() << SND_LOG_ARROW << msg.toPrettyString();
 	std::string packed_data = codeRpcValue(protocolVersion(), msg);
-	logRpcData() << "send message:" << (packed_data.size() > 250? "<... long data ...>" :
-				(protocolVersion() == Rpc::ProtocolVersion::Cpon? packed_data: Utils::toHex(packed_data)));
-
+	logRpcData() << "send message:"
+				 << ((protocolVersion() == Rpc::ProtocolVersion::ChainPack)? Utils::toHex(packed_data, 0, 250): packed_data.substr(0, 250));
 	enqueueDataToSend(Chunk{std::move(packed_data)});
 }
 
@@ -52,7 +51,8 @@ void RpcDriver::sendRawData(std::string &&data)
 
 void RpcDriver::sendRawData(RpcValue::MetaData &&meta_data, std::string &&data)
 {
-	logRpcMsg() << "send raw meta + data: " << meta_data.toStdString() << (data.size() > 250? "<... long data ...>" : Utils::toHex(data));
+	logRpcMsg() << "protocol:" << Rpc::ProtocolVersionToString(protocolVersion()) << "send raw meta + data: " << meta_data.toStdString()
+				<< ((protocolVersion() == Rpc::ProtocolVersion::ChainPack)? Utils::toHex(data, 0, 250): data.substr(0, 250));
 	using namespace std;
 	//shvLogFuncFrame() << msg.toStdString();
 	std::ostringstream os_packed_meta_data;
@@ -240,46 +240,30 @@ size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolVer
 	in.seekg(start_pos);
 	try {
 		switch (protocol_version) {
-		/*
-		case Json: {
-			msg = CponProtocol::read(read_data, (size_t)in.tellg());
-			if(msg.isMap()) {
+		case Rpc::ProtocolVersion::JsonRpc: {
+			CponReader rd(in);
+			RpcValue msg;
+			rd.read(msg);
+			if(!msg.isMap()) {
 				nError() << "JSON message cannot be translated to ChainPack";
 			}
 			else {
 				const RpcValue::Map &map = msg.toMap();
-				unsigned id = map.value("id").toUInt();
-				RpcValue::String method = map.value("method").toString();
-				RpcValue result = map.value("result");
-				RpcValue error = map.value("error");
-				RpcValue shv_path = map.value("shvPath");
-				if(method.empty()) {
-					// response
-					RpcResponse resp;
-					resp.setShvPath(shv_path);
-					resp.setId(id);
-					if(result.isValid())
-						resp.setResult(result);
-					else if(error.isValid())
-						resp.setError(error.toIMap());
-					else
-						nError() << "JSON RPC response must contain response or error field";
-					msg = resp.value();
-				}
-				else {
-					// request
-					RpcRequest rq;
-					rq.setShvPath(shv_path);
-					rq.setMethod(std::move(method));
-					rq.setParams(map.value("params"));
-					if(id > 0)
-						rq.setId(id);
-					msg = rq.value();
-				}
+				unsigned id = map.value(Rpc::JSONRPC_ID).toUInt();
+				unsigned caller_id = map.value(Rpc::JSONRPC_CALLER_ID).toUInt();
+				RpcValue::String method = map.value(Rpc::JSONRPC_METHOD).toString();
+				std::string shv_path = map.value(Rpc::JSONRPC_SHV_PATH).toString();
+				if(id > 0)
+					RpcMessage::setRequestId(meta_data, id);
+				if(!method.empty())
+					RpcMessage::setMethod(meta_data, method);
+				if(!shv_path.empty())
+					RpcMessage::setShvPath(meta_data, shv_path);
+				if(caller_id > 0)
+					RpcMessage::setCallerId(meta_data, caller_id);
 			}
 			break;
 		}
-		*/
 		case Rpc::ProtocolVersion::Cpon: {
 			CponReader rd(in);
 			rd.read(meta_data);
@@ -311,6 +295,16 @@ RpcValue RpcDriver::decodeData(Rpc::ProtocolVersion protocol_version, const std:
 	in.seekg(start_pos);
 	try {
 		switch (protocol_version) {
+		case Rpc::ProtocolVersion::JsonRpc: {
+			CponReader rd(in);
+			rd.read(ret);
+			RpcValue::Map map = ret.toMap();
+			map.erase(Rpc::JSONRPC_ID);
+			map.erase(Rpc::JSONRPC_CALLER_ID);
+			map.erase(Rpc::JSONRPC_METHOD);
+			map.erase(Rpc::JSONRPC_SHV_PATH);
+			break;
+		}
 		case Rpc::ProtocolVersion::Cpon: {
 			CponReader rd(in);
 			rd.read(ret);

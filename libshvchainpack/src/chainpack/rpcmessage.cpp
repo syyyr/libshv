@@ -103,9 +103,20 @@ RpcValue::String RpcMessage::method(const RpcValue::MetaData &meta)
 	return meta.value(meta::RpcMessage::Tag::Method).toString();
 }
 
+void RpcMessage::setMethod(RpcValue::MetaData &meta, const RpcValue::String &method)
+{
+	meta.setValue(meta::RpcMessage::Tag::Method, method);
+}
+
 RpcValue::String RpcMessage::method() const
 {
 	return metaValue(meta::RpcMessage::Tag::Method).toString();
+}
+
+void RpcMessage::setMethod(const RpcValue::String &method)
+{
+	checkMetaValues();
+	setMetaValue(meta::RpcMessage::Tag::Method, method);
 }
 
 bool RpcMessage::isValid() const
