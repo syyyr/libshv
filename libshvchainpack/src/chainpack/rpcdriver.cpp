@@ -52,7 +52,7 @@ void RpcDriver::sendRawData(std::string &&data)
 void RpcDriver::sendRawData(RpcValue::MetaData &&meta_data, std::string &&data)
 {
 	logRpcMsg() << "protocol:" << Rpc::ProtocolVersionToString(protocolVersion()) << "send raw meta + data: " << meta_data.toStdString()
-				<< ((protocolVersion() == Rpc::ProtocolVersion::ChainPack)? Utils::toHex(data, 0, 250): data.substr(0, 250));
+				<< Utils::toHex(data, 0, 250);
 	using namespace std;
 	//shvLogFuncFrame() << msg.toStdString();
 	std::ostringstream os_packed_meta_data;
@@ -330,34 +330,40 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolVersion protocol_version, const
 {
 	std::ostringstream os_packed_data;
 	switch (protocol_version) {
-	/*
-	case Json: {
+	case Rpc::ProtocolVersion::JsonRpc: {
 		RpcValue::Map json_msg;
 		RpcMessage rpc_msg(msg);
-		RpcValue shv_path = rpc_msg.shvPath();
-		json_msg["shvPath"] = shv_path;
+
+		const RpcValue::UInt rq_id = rpc_msg.requestId();
+		if(rq_id > 0)
+			json_msg[Rpc::JSONRPC_ID] = rq_id;
+
+		const RpcValue::String shv_path = rpc_msg.shvPath();
+		if(!shv_path.empty())
+			json_msg[Rpc::JSONRPC_SHV_PATH] = shv_path;
+
+		const RpcValue::UInt caller_id = rpc_msg.callerId();
+		if(caller_id > 0)
+			json_msg[Rpc::JSONRPC_CALLER_ID] = caller_id;
+					;
 		if(rpc_msg.isResponse()) {
 			// response
-			json_msg["id"] = rpc_msg.id();
 			RpcResponse resp(rpc_msg);
 			if(resp.isError())
-				json_msg["error"] = resp.error().message();
+				json_msg[Rpc::JSONRPC_ERROR] = resp.error();
 			else
-				json_msg["result"] = resp.result();
+				json_msg[Rpc::JSONRPC_RESULT] = resp.result();
 		}
 		else {
 			// request
 			RpcRequest rq(rpc_msg);
-			json_msg["id"] = rq.id();
-			json_msg["method"] = rq.method();
-			json_msg["params"] = rq.params();
-			if(rpc_msg.isRequest())
-				json_msg["id"] = rpc_msg.id();
+			json_msg[Rpc::JSONRPC_METHOD] = rq.method();
+			json_msg[Rpc::JSONRPC_PARAMS] = rq.params();
 		}
-		shv::chainpack::CponProtocol::write(os_packed_data, json_msg);
+		CponWriter wr(os_packed_data);
+		wr.write(json_msg);
 		break;
 	}
-	*/
 	case Rpc::ProtocolVersion::Cpon: {
 		CponWriter wr(os_packed_data);
 		wr << val;
