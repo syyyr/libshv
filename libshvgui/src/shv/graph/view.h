@@ -257,6 +257,8 @@ private:
 	void paintSerieVerticalBackgroundStripe(QPainter *painter, const GraphArea &area, const Serie *serie, const BackgroundStripe *stripe);
 	void paintSerieHorizontalBackgroundStripe(QPainter *painter, const GraphArea &area, const Serie *serie, const BackgroundStripe *stripe);
 	void paintViewBackgroundStripes(QPainter *painter, const GraphArea &area);
+	void paintViewVerticalBackgroundStripe(QPainter *painter, const GraphArea &area, const BackgroundStripe *stripe);
+	void paintViewHorizontalBackgroundStripe(QPainter *painter, const GraphArea &area, const BackgroundStripe *stripe);
 	void paintOutsideSeriesGroups(QPainter *painter, const GraphArea &area);
 	void fillSerie(QPainter *painter, const QPolygon &polygon, const Serie *serie, const Serie::Fill &fill_rect);
 

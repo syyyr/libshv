@@ -21,10 +21,12 @@ public:
 	BackgroundStripe(Type type, QObject *parent = 0);
 	BackgroundStripe(Type type, OutlineType outline, QObject *parent = 0);
 	BackgroundStripe(Type type, OutlineType outline, const QColor &stripeColor, QObject *parent = 0);
-	BackgroundStripe(ValueChange::ValueY min, ValueChange::ValueY max, OutlineType outline, QObject *parent = 0);
+	BackgroundStripe(ValueChange::ValueY min, ValueChange::ValueY max, ValueType value_y_type, OutlineType outline, QObject *parent = 0);
 	BackgroundStripe(ValueChange::ValueX min, ValueChange::ValueX max, OutlineType outline, QObject *parent = 0);
 	BackgroundStripe(Type type, ValueChange min, ValueChange max, OutlineType outline, const QColor &stripe_color,
 					 const QColor &outline_color, QObject *parent = 0);
+	BackgroundStripe(Type type, ValueChange min, ValueChange max, ValueType value_y_type, OutlineType outline,
+					 const QColor &stripe_color, const QColor &outline_color, QObject *parent = 0);
 
 	inline Type type() const { return m_type; }
 	inline const ValueChange &min() const { return m_min; }
@@ -32,6 +34,7 @@ public:
 	inline OutlineType outLineType() const { return m_outline; }
 	inline const QColor &stripeColor() const { return m_stripeColor; }
 	inline const QColor &outlineColor() const { return m_outlineColor; }
+	inline ValueType valueYType() const { return m_valueYType; }
 
 	void setMin(const ValueChange::ValueY &min);
 	void setMax(const ValueChange::ValueY &max);
@@ -56,6 +59,7 @@ private:
 	OutlineType m_outline = OutlineType::No;
 	QColor m_stripeColor;
 	QColor m_outlineColor;
+	ValueType m_valueYType;
 };
 
 }

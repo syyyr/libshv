@@ -10,32 +10,42 @@ namespace gui {
 namespace graphview {
 
 BackgroundStripe::BackgroundStripe(Type type, QObject *parent)
-	: BackgroundStripe(type, { 0LL, 0.0 }, { 0LL, 0.0 }, OutlineType::No, QColor(), QColor(), parent)
+	: BackgroundStripe(type, { 0LL, 0.0 }, { 0LL, 0.0 }, ValueType::Double, OutlineType::No, QColor(), QColor(), parent)
 {
 }
 
 BackgroundStripe::BackgroundStripe(BackgroundStripe::Type type, BackgroundStripe::OutlineType outline, QObject *parent)
-	: BackgroundStripe(type, { 0LL, 0.0 }, { 0LL, 0.0 }, outline, QColor(), QColor(), parent)
+	: BackgroundStripe(type, { 0LL, 0.0 }, { 0LL, 0.0 }, ValueType::Double, outline, QColor(), QColor(), parent)
 {
 }
 
 BackgroundStripe::BackgroundStripe(BackgroundStripe::Type type, BackgroundStripe::OutlineType outline, const QColor &color, QObject *parent)
-	: BackgroundStripe(type, { 0LL, 0.0 }, { 0LL, 0.0 }, outline, color, QColor(), parent)
+	: BackgroundStripe(type, { 0LL, 0.0 }, { 0LL, 0.0 }, ValueType::Double, outline, color, QColor(), parent)
 {
 
 }
 
-BackgroundStripe::BackgroundStripe(ValueChange::ValueY min, ValueChange::ValueY max, OutlineType outline, QObject *parent)
-	: BackgroundStripe(Type::Horizontal, { 0LL, min }, { 0LL, max }, outline, QColor(), QColor(), parent)
+BackgroundStripe::BackgroundStripe(ValueChange::ValueY min, ValueChange::ValueY max, ValueType value_y_type, OutlineType outline, QObject *parent)
+	: BackgroundStripe(Type::Horizontal, { 0LL, min }, { 0LL, max }, value_y_type, outline, QColor(), QColor(), parent)
 {
 }
 
 BackgroundStripe::BackgroundStripe(ValueChange::ValueX min, ValueChange::ValueX max, OutlineType outline, QObject *parent)
-	: BackgroundStripe(Type::Vertical, { min, 0 }, { max, 0 }, outline, QColor(), QColor(), parent)
+	: BackgroundStripe(Type::Vertical, { min, 0 }, { max, 0 }, ValueType::Int, outline, QColor(), QColor(), parent)
 {
 }
 
-BackgroundStripe::BackgroundStripe(BackgroundStripe::Type type, ValueChange min, ValueChange max, BackgroundStripe::OutlineType outline, const QColor &stripe_color, const QColor &outline_color, QObject *parent)
+BackgroundStripe::BackgroundStripe(BackgroundStripe::Type type, ValueChange min, ValueChange max,
+								   BackgroundStripe::OutlineType outline, const QColor &stripe_color,
+								   const QColor &outline_color, QObject *parent)
+	: BackgroundStripe(type, min, max, ValueType::Int, outline, stripe_color, outline_color, parent)
+{
+//	Q_ASSERT(qobject_cast<Serie*>(parent));
+}
+
+BackgroundStripe::BackgroundStripe(BackgroundStripe::Type type, ValueChange min, ValueChange max, ValueType value_y_type,
+								   BackgroundStripe::OutlineType outline, const QColor &stripe_color, const QColor &outline_color,
+								   QObject *parent)
 	: QObject(parent)
 	, m_type(type)
 	, m_min(min)
@@ -43,10 +53,12 @@ BackgroundStripe::BackgroundStripe(BackgroundStripe::Type type, ValueChange min,
 	, m_outline(outline)
 	, m_stripeColor(stripe_color)
 	, m_outlineColor(outline_color)
+	, m_valueYType(value_y_type)
 {
 	Serie *serie = qobject_cast<Serie*>(parent);
 	if (serie) {
 		serie->addBackgroundStripe(this);
+		value_y_type = serie->type();
 	}
 	else {
 		View *view = qobject_cast<View*>(parent);
