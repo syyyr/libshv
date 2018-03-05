@@ -1280,13 +1280,19 @@ void View::addSerie(Serie *serie)
 		m_connections << connect(serie, &Serie::destroyed, [this, serie]() {
 			m_series.removeOne(serie);
 			for (int i = 0; i < m_serieBlocks.count(); ++i) {
-				QVector<const Serie*> serie_block = m_serieBlocks[i];
+				QVector<const Serie*> &serie_block = m_serieBlocks[i];
 				if (serie_block.contains(serie)) {
 					serie_block.removeOne(serie);
 					if (serie_block.count() == 0) {
 						m_serieBlocks.removeAt(i);
 					}
 					break;
+				}
+			}
+			for (int i = 0; i < m_graphArea.count(); ++i) {
+				GraphArea &area = m_graphArea[i];
+				if (area.series.contains(serie)) {
+					area.series.removeOne(serie);
 				}
 			}
 			computeGeometry();
@@ -1466,9 +1472,9 @@ void View::removePointsOfInterest()
 void View::addBackgroundStripe(BackgroundStripe *stripe)
 {
 	if (!m_backgroundStripes.contains(stripe)) {
-		if (stripe->type() != BackgroundStripe::Type::Vertical) {
-			SHV_EXCEPTION("View can contain only vertical stripes");
-		}
+//		if (stripe->type() != BackgroundStripe::Type::Vertical) {
+//			SHV_EXCEPTION("View can contain only vertical stripes");
+//		}
 		stripe->setParent(this);
 		m_backgroundStripes << stripe;
 		m_connections << connect(stripe, &BackgroundStripe::destroyed, [this, stripe]() {
@@ -2433,45 +2439,115 @@ void View::paintViewBackgroundStripes(QPainter *painter, const View::GraphArea &
 {
 	painter->save();
 	for (const BackgroundStripe *stripe : m_backgroundStripes) {
-		QColor stripe_color = stripe->stripeColor();
-		if (stripe_color.alpha() == 255) {
-			stripe_color.setAlpha(30);
-		}
 
-		qint64 min_value = xValue(stripe->min().valueX);
-		if (min_value < m_displayedRangeMin) {
-			min_value = m_displayedRangeMin;
+		if (stripe->type() == BackgroundStripe::Type::Vertical) {
+			paintViewVerticalBackgroundStripe(painter, area, stripe);
 		}
-		qint64 max_value = xValue(stripe->max().valueX);
-		if (max_value > m_displayedRangeMax) {
-			max_value = m_displayedRangeMax;
-		}
-		if (max_value - min_value > 0LL) {
-			int min = xValueToWidgetPosition(min_value);
-			int max = xValueToWidgetPosition(max_value);
-
-			painter->fillRect(min, area.graphRect.top(), max - min, area.graphRect.height(), stripe_color);
-			if (stripe->outLineType() != BackgroundStripe::OutlineType::No) {
-				QColor outline_color = stripe->outlineColor();
-				if (!outline_color.isValid()) {
-					outline_color = stripe->stripeColor();
-				}
-				if (outline_color.alpha() == 255) {
-					outline_color.setAlpha(80);
-				}
-				painter->setPen(QPen(outline_color, 2.0));
-				if (stripe->outLineType() == BackgroundStripe::OutlineType::Min ||
-					stripe->outLineType() == BackgroundStripe::OutlineType::Both) {
-					painter->drawLine(min, area.graphRect.top(), min, area.graphRect.bottom());
-				}
-				if (stripe->outLineType() == BackgroundStripe::OutlineType::Max ||
-					stripe->outLineType() == BackgroundStripe::OutlineType::Both) {
-					painter->drawLine(max, area.graphRect.top(), max, area.graphRect.bottom());
-				}
-			}
+		else {
+			paintViewHorizontalBackgroundStripe(painter, area, stripe);
 		}
 	}
 	painter->restore();
+}
+
+void View::paintViewVerticalBackgroundStripe(QPainter *painter, const View::GraphArea &area, const BackgroundStripe *stripe)
+{
+	QColor stripe_color = stripe->stripeColor();
+	if (stripe_color.alpha() == 255) {
+		stripe_color.setAlpha(30);
+	}
+
+	qint64 min_value = xValue(stripe->min().valueX);
+	if (min_value < m_displayedRangeMin) {
+		min_value = m_displayedRangeMin;
+	}
+	qint64 max_value = xValue(stripe->max().valueX);
+	if (max_value > m_displayedRangeMax) {
+		max_value = m_displayedRangeMax;
+	}
+	if (max_value - min_value > 0LL) {
+		int min = xValueToWidgetPosition(min_value);
+		int max = xValueToWidgetPosition(max_value);
+
+		painter->fillRect(min, area.graphRect.top(), max - min, area.graphRect.height(), stripe_color);
+		if (stripe->outLineType() != BackgroundStripe::OutlineType::No) {
+			QColor outline_color = stripe->outlineColor();
+			if (!outline_color.isValid()) {
+				outline_color = stripe->stripeColor();
+			}
+			if (outline_color.alpha() == 255) {
+				outline_color.setAlpha(80);
+			}
+			painter->setPen(QPen(outline_color, 2.0));
+			if (stripe->outLineType() == BackgroundStripe::OutlineType::Min ||
+				stripe->outLineType() == BackgroundStripe::OutlineType::Both) {
+				painter->drawLine(min, area.graphRect.top(), min, area.graphRect.bottom());
+			}
+			if (stripe->outLineType() == BackgroundStripe::OutlineType::Max ||
+				stripe->outLineType() == BackgroundStripe::OutlineType::Both) {
+				painter->drawLine(max, area.graphRect.top(), max, area.graphRect.bottom());
+			}
+		}
+	}
+}
+
+void View::paintViewHorizontalBackgroundStripe(QPainter *painter, const View::GraphArea &area, const BackgroundStripe *stripe)
+{
+	QColor stripe_color = stripe->stripeColor();
+	if (stripe_color.alpha() == 255) {
+		stripe_color.setAlpha(30);
+	}
+
+	if (area.graphRect.height() <= 0) {
+		return;
+	}
+	//horizontal stripe can be related only to y1 axis
+	double range = (settings.yAxis.rangeMax / m_verticalZoom) - (settings.yAxis.rangeMin / m_verticalZoom);
+	double scale = range / area.graphRect.height();
+
+	int min = 0;
+	int max = 0;
+	if (stripe->valueYType() == ValueType::Double) {
+		min = stripe->min().valueY.doubleValue / scale;
+		max = stripe->max().valueY.doubleValue / scale;
+	}
+	else if (stripe->valueYType() == ValueType::Int) {
+		min = stripe->min().valueY.intValue / scale;
+		max = stripe->max().valueY.intValue / scale;
+	}
+	else if (stripe->valueYType() == ValueType::Bool) {
+		SHV_EXCEPTION("GraphView: Cannot paint background stripe for bool serie");
+	}
+	int max_position = area.xAxisPosition - max;
+	int min_position = area.xAxisPosition - min;
+	bool max_outline_visible = true;
+	bool min_outline_visible = true;
+	if (max_position < area.graphRect.top()) {
+		max_position = area.graphRect.top();
+		max_outline_visible = false;
+	}
+	if (min_position > area.graphRect.bottom()) {
+		min_position = area.graphRect.bottom();
+		min_outline_visible = false;
+	}
+	if (max - min > 0 && min_position > area.graphRect.top() && max_position < area.graphRect.bottom()) {
+		painter->fillRect(area.graphRect.x(), max_position, area.graphRect.width(), min_position - max_position, stripe_color);
+		if (stripe->outLineType() != BackgroundStripe::OutlineType::No) {
+			QColor outline_color = stripe->outlineColor();
+			outline_color.setAlpha(70);
+			painter->setPen(QPen(outline_color, 2.0));
+			if (max_outline_visible &&
+				(stripe->outLineType() == BackgroundStripe::OutlineType::Max ||
+				stripe->outLineType() == BackgroundStripe::OutlineType::Both)) {
+				painter->drawLine(area.graphRect.x(), max_position, area.graphRect.right(), max_position);
+			}
+			if (min_outline_visible &&
+				(stripe->outLineType() == BackgroundStripe::OutlineType::Min ||
+				stripe->outLineType() == BackgroundStripe::OutlineType::Both)) {
+				painter->drawLine(area.graphRect.x(), min_position, area.graphRect.right(), min_position);
+			}
+		}
+	}
 }
 
 QVector<const OutsideSerieGroup*> View::groupsForSeries(const QVector<const Serie*> &series) const
