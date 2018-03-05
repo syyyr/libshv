@@ -176,7 +176,7 @@ void ClientConnection::sendHello()
 	QTimer::singleShot(5000, this, [this]() {
 		if(!isBrokerConnected()) {
 			shvError() << "Login time out! Dropping client connection.";
-			this->deleteLater();
+			abort();
 		}
 	});
 }
@@ -222,7 +222,7 @@ void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
 		}
 	} while(false);
 	shvError() << "Invalid handshake message! Dropping connection." << msg.toCpon();
-	this->deleteLater();
+	abort();
 }
 
 chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValue &server_hello)

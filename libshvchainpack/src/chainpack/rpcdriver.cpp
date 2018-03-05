@@ -332,7 +332,7 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolVersion protocol_version, const
 	switch (protocol_version) {
 	case Rpc::ProtocolVersion::JsonRpc: {
 		RpcValue::Map json_msg;
-		RpcMessage rpc_msg(msg);
+		RpcMessage rpc_msg(val);
 
 		const RpcValue::UInt rq_id = rpc_msg.requestId();
 		if(rq_id > 0)

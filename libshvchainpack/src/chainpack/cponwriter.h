@@ -48,7 +48,7 @@ public:
 	void writeMapElement(const std::string &key, const RpcValue &val, bool without_separator);
 	void writeMapElement(RpcValue::UInt key, const RpcValue &val, bool without_separator);
 	void writeArrayElement(const RpcValue &val, bool without_separator) {writeListElement(val, without_separator);}
-private:
+
 	CponWriter& write(std::nullptr_t);
 	CponWriter& write(bool value);
 	CponWriter& write(RpcValue::Int value);
