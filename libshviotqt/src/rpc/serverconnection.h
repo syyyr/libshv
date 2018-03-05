@@ -37,6 +37,9 @@ class SHVIOTQT_DECL_EXPORT ServerConnection : public SocketRpcDriver, public shv
 	const std::string& connectionName() {return m_connectionName;}
 	void setConnectionName(const std::string &n) {m_connectionName = n; setObjectName(QString::fromStdString(n));}
 
+	void close() Q_DECL_OVERRIDE {closeConnection();}
+	void abort() Q_DECL_OVERRIDE {abortConnection();}
+
 	Q_SIGNAL void rpcMessageReceived(const shv::chainpack::RpcMessage &msg);
 
 	/// AbstractRpcConnection interface implementation

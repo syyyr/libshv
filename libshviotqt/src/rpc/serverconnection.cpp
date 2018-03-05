@@ -27,7 +27,7 @@ ServerConnection::ServerConnection(QTcpSocket *socket, QObject *parent)
 	socket->setParent(nullptr);
 	connect(this, &ServerConnection::socketConnectedChanged, [this](bool is_connected) {
 		if(!is_connected) {
-			this->deleteLater();
+			//this->deleteLater();
 		}
 		else {
 			setConnectionName(peerAddress() + ':' + std::to_string(peerPort()));
@@ -111,7 +111,7 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 			QTimer::singleShot(3000, this, [this]() {
 				if(!m_loginReceived) {
 					shvError() << "client login time out! Dropping client connection." << connectionName();
-					this->deleteLater();
+					abort();
 				}
 			});
 			return;
@@ -132,7 +132,7 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 		sendError(rq.requestId(), cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodInvocationException, e.message()));
 	}
 	shvError() << "Initial handshake error! Dropping client connection." << connectionName() << msg.toCpon();
-	QTimer::singleShot(100, this, &ServerConnection::deleteLater); // need some time to send error to client
+	QTimer::singleShot(100, this, &ServerConnection::abort); // need some time to send error to client
 }
 
 }}}

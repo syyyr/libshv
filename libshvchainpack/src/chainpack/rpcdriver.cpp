@@ -38,7 +38,10 @@ void RpcDriver::sendRpcValue(const RpcValue &msg)
 	//shvLogFuncFrame() << msg.toStdString();
 	logRpcMsg() << SND_LOG_ARROW << msg.toPrettyString();
 	std::string packed_data = codeRpcValue(protocolVersion(), msg);
-	logRpcData() << "send message:"
+	//nWarning() << "protocol:" << Rpc::ProtocolVersionToString(protocolVersion()) << "msg:" << msg.toPrettyString();
+	//nWarning() << "data:" << packed_data;
+	logRpcData() << "protocol:" << Rpc::ProtocolVersionToString(protocolVersion())
+				 << "packed data:"
 				 << ((protocolVersion() == Rpc::ProtocolVersion::ChainPack)? Utils::toHex(packed_data, 0, 250): packed_data.substr(0, 250));
 	enqueueDataToSend(Chunk{std::move(packed_data)});
 }
@@ -106,8 +109,9 @@ void RpcDriver::enqueueDataToSend(RpcDriver::Chunk &&chunk_to_enqueue)
 {
 	/// LOCK_FOR_SEND lock mutex here in the multithreaded environment
 	lockSendQueue();
-	if(!chunk_to_enqueue.empty())
+	if(!chunk_to_enqueue.empty()) {
 		m_chunkQueue.push_back(std::move(chunk_to_enqueue));
+	}
 	if(!isOpen()) {
 		nError() << "write data error, socket is not open!";
 		return;
@@ -299,10 +303,23 @@ RpcValue RpcDriver::decodeData(Rpc::ProtocolVersion protocol_version, const std:
 			CponReader rd(in);
 			rd.read(ret);
 			RpcValue::Map map = ret.toMap();
-			map.erase(Rpc::JSONRPC_ID);
-			map.erase(Rpc::JSONRPC_CALLER_ID);
-			map.erase(Rpc::JSONRPC_METHOD);
-			map.erase(Rpc::JSONRPC_SHV_PATH);
+			RpcValue::IMap imap;
+			RpcValue params = map.value(Rpc::JSONRPC_PARAMS);
+			if(params.isValid()) {
+				imap[meta::RpcMessage::Key::Params] = params;
+			}
+			else {
+				RpcValue result = map.value(Rpc::JSONRPC_RESULT);
+				if(result.isValid()) {
+					imap[meta::RpcMessage::Key::Result] = result;
+				}
+				else {
+					RpcValue error = map.value(Rpc::JSONRPC_ERROR);
+					if(error.isValid())
+						imap[meta::RpcMessage::Key::Error] = error;
+				}
+			}
+			ret = imap;
 			break;
 		}
 		case Rpc::ProtocolVersion::Cpon: {

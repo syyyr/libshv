@@ -37,8 +37,8 @@ public:
 	~ClientConnection() Q_DECL_OVERRIDE;
 
 	void open();
-	void close();
-	void abort();
+	void close() Q_DECL_OVERRIDE;
+	void abort() Q_DECL_OVERRIDE;
 
 	void setSocket(QTcpSocket *socket);
 	void setProtocolVersion(shv::chainpack::Rpc::ProtocolVersion ver) {emit setProtocolVersionRequest((unsigned)ver);}
@@ -78,7 +78,8 @@ protected:
 	void sendHello();
 	void sendLogin(const shv::chainpack::RpcValue &server_hello);
 
-	void checkConnected();
+	void checkBrokerConnected();
+	void resetConnection();
 private:
 	SocketRpcDriver *m_rpcDriver = nullptr;
 	// RpcDriver must run in separate thread to implement synchronous RPC calls properly

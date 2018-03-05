@@ -67,16 +67,17 @@ void SocketRpcDriver::setSocket(QTcpSocket *socket)
 	socket->moveToThread(this->thread());
 	m_socket = socket;
 	connect(socket, &QTcpSocket::readyRead, this, &SocketRpcDriver::onReadyRead);
+	// queued connection here is to write data in next event loop, not directly when previous chunk is written
+	// possibly not needed, its my feeling to do it this way
 	connect(socket, &QTcpSocket::bytesWritten, this, &SocketRpcDriver::onBytesWritten, Qt::QueuedConnection);
 	connect(socket, &QTcpSocket::connected, [this]() {
 		shvDebug() << this << "Socket connected!!!";
 		//shvWarning() << (peerAddress().toStdString() + ':' + std::to_string(peerPort()));
-		setSocketConnected(true);
+		emit socketConnectedChanged(isSocketConnected());
 	});
 	connect(socket, &QTcpSocket::disconnected, [this]() {
 		shvDebug() << this << "Socket disconnected!!!";
-		m_isSocketConnected = false;
-		setSocketConnected(false);
+		emit socketConnectedChanged(isSocketConnected());
 	});
 }
 
@@ -89,15 +90,7 @@ QTcpSocket *SocketRpcDriver::socket()
 
 bool SocketRpcDriver::isSocketConnected() const
 {
-	return m_socket && m_isSocketConnected;
-}
-
-void SocketRpcDriver::setSocketConnected(bool b)
-{
-	if(b != m_isSocketConnected) {
-		m_isSocketConnected = b;
-		emit socketConnectedChanged(b);
-	}
+	return m_socket && m_socket->state() == QTcpSocket::ConnectedState;
 }
 
 void SocketRpcDriver::connectToHost(const QString &host_name, quint16 port)
@@ -131,7 +124,7 @@ void SocketRpcDriver::onRpcValueReceived(const shv::chainpack::RpcValue &rpc_val
 
 bool SocketRpcDriver::isOpen()
 {
-	return m_socket && m_socket->isOpen();
+	return isSocketConnected();
 }
 
 int64_t SocketRpcDriver::writeBytes(const char *bytes, size_t length)

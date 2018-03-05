@@ -58,7 +58,7 @@ ClientConnection::ClientConnection(SyncCalls sync_calls, QObject *parent)
 
 	m_checkConnectedTimer = new QTimer(this);
 	m_checkConnectedTimer->setInterval(1000 * 10);
-	connect(m_checkConnectedTimer, &QTimer::timeout, this, &ClientConnection::checkConnected);
+	connect(m_checkConnectedTimer, &QTimer::timeout, this, &ClientConnection::checkBrokerConnected);
 }
 
 ClientConnection::~ClientConnection()
@@ -85,7 +85,7 @@ void ClientConnection::open()
 		QTcpSocket *socket = new QTcpSocket();
 		setSocket(socket);
 	}
-	checkConnected();
+	checkBrokerConnected();
 	m_checkConnectedTimer->start();
 }
 
@@ -98,6 +98,11 @@ void ClientConnection::close()
 void ClientConnection::abort()
 {
 	m_checkConnectedTimer->stop();
+	emit abortConnectionRequest();
+}
+
+void ClientConnection::resetConnection()
+{
 	emit abortConnectionRequest();
 }
 
@@ -173,12 +178,14 @@ void ClientConnection::sendHello()
 																//, {"deviceId", deviceId()}
 																//, {"protocolVersion", protocolVersion()}
 									   //});
+	/*
 	QTimer::singleShot(5000, this, [this]() {
 		if(!isBrokerConnected()) {
 			shvError() << "Login time out! Dropping client connection.";
-			abort();
+			resetConnection();
 		}
 	});
+	*/
 }
 
 void ClientConnection::sendLogin(const shv::chainpack::RpcValue &server_hello)
@@ -222,7 +229,7 @@ void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
 		}
 	} while(false);
 	shvError() << "Invalid handshake message! Dropping connection." << msg.toCpon();
-	abort();
+	resetConnection();
 }
 
 chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValue &server_hello)
@@ -241,10 +248,11 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 	};
 }
 
-void ClientConnection::checkConnected()
+void ClientConnection::checkBrokerConnected()
 {
-	if(!isSocketConnected()) {
-		abort();
+	//shvWarning() << "check: " << isSocketConnected();
+	if(!isBrokerConnected()) {
+		emit abortConnectionRequest();
 		shvInfo().nospace() << "connecting to: " << user() << "@" << host() << ":" << port();
 		//m_clientConnection->setProtocolVersion(protocolVersion());
 		emit connectToHostRequest(QString::fromStdString(host()), port());

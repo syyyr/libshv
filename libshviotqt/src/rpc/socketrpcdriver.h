@@ -50,8 +50,6 @@ public:
 public:
 	Q_SLOT void sendRpcRequestSync_helper(const shv::chainpack::RpcRequest& request, shv::chainpack::RpcResponse *presponse, int time_out_ms);
 protected:
-	void setSocketConnected(bool b);
-
 	// RpcDriver interface
 	bool isOpen() Q_DECL_OVERRIDE;
 	int64_t writeBytes(const char *bytes, size_t length) Q_DECL_OVERRIDE;
@@ -65,7 +63,6 @@ protected:
 protected:
 	QTcpSocket *m_socket = nullptr;
 private:
-	bool m_isSocketConnected = false;
 	int m_connectionId;
 };
 

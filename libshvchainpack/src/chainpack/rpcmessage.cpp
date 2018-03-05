@@ -52,7 +52,8 @@ RpcMessage::RpcMessage()
 RpcMessage::RpcMessage(const RpcValue &val)
 	: RpcMessage()
 {
-	assert(val.isIMap());
+	if(!val.isIMap())
+		SHVCHP_EXCEPTION("Value is not IMap");
 	m_value = val;
 }
 
