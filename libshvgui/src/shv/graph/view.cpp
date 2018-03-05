@@ -310,14 +310,20 @@ void View::resizeEvent(QResizeEvent *resize_event)
 void View::computeDataRange()
 {
 	for (Serie *serie : m_series) {
-		const SerieData &serie_model_data = serie->serieModelData(this);
-		serie->displayedDataBegin = findMinYValue(serie_model_data.begin(), serie_model_data.end(), m_displayedRangeMin);
-		serie->displayedDataEnd = findMaxYValue(serie_model_data.begin(), serie_model_data.end(), m_displayedRangeMax);
-		for (Serie *dep_serie : serie->dependentSeries()) {
-			const SerieData &dep_serie_model_data = dep_serie->serieModelData(this);
-			dep_serie->displayedDataBegin = findMinYValue(dep_serie_model_data.begin(), dep_serie_model_data.end(), m_displayedRangeMin);
-			dep_serie->displayedDataEnd = findMaxYValue(dep_serie_model_data.begin(), dep_serie_model_data.end(), m_displayedRangeMax);
-		}
+		computeDataRange(serie);
+	}
+}
+
+void View::computeDataRange(Serie *serie)
+{
+	if (!m_model) {
+		return;
+	}
+	const SerieData &serie_model_data = serie->serieModelData(this);
+	serie->displayedDataBegin = findMinYValue(serie_model_data.begin(), serie_model_data.end(), m_displayedRangeMin);
+	serie->displayedDataEnd = findMaxYValue(serie_model_data.begin(), serie_model_data.end(), m_displayedRangeMax);
+	for (Serie *dep_serie : serie->dependentSeries()) {
+		computeDataRange(dep_serie);
 	}
 }
 

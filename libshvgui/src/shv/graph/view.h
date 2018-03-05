@@ -174,6 +174,9 @@ public:
 	void setLoadedRange(const ValueChange::ValueX &min, const ValueChange::ValueX &max);
 	void preserveZoomOnDataChange(bool b) { m_preserveZoom = b; }
 
+	void computeDataRange();
+	void computeDataRange(Serie *serie);
+
 protected:
 	void resizeEvent(QResizeEvent *resize_event) Q_DECL_OVERRIDE;
 	void paintEvent(QPaintEvent *paint_event) Q_DECL_OVERRIDE;
@@ -285,7 +288,6 @@ private:
 	ValueChange::ValueX internalToValueX(qint64 value) const;
 	QString xValueString(qint64 value, const QString &datetime_format) const;
 	template<typename T> void computeRange(T &min, T &max) const;
-	void computeDataRange();
 	void showRangeInternal(qint64 from, qint64 to);
 	void setVerticalZoomInternal(double zoom);
 	QPainterPath createPoiPath(int x, int y) const;
