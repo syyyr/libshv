@@ -127,7 +127,7 @@ void Serie::addToSerieGroup(OutsideSerieGroup *group)
 {
 	if (!m_serieGroup) {
 		m_serieGroup = group;
-		connect(group, &OutsideSerieGroup::destroyed, [this, group] {
+		m_connections << connect(group, &OutsideSerieGroup::destroyed, [this, group] {
 			m_serieGroup = nullptr;
 		});
 		group->addSerie(this);
