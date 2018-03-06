@@ -26,7 +26,11 @@ Serie::Serie(ValueType type, int serie_index, const QString &name, const QColor 
 		if (serie) {
 			serie->addDependentSerie(this);
 			m_fill = serie->fill();
+			graph = view();
 		}
+	}
+	if (graph) {
+		graph->computeDataRange(this);
 	}
 }
 
