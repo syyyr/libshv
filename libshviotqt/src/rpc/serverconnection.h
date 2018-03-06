@@ -48,7 +48,7 @@ class SHVIOTQT_DECL_EXPORT ServerConnection : public SocketRpcDriver, public shv
 	void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg) override;
 protected:
 	void onRpcDataReceived(shv::chainpack::Rpc::ProtocolVersion protocol_version, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len) override;
-	void onRpcValueReceived(const shv::chainpack::RpcValue &msg) Q_DECL_OVERRIDE;
+	void onRpcValueReceived(const shv::chainpack::RpcValue &msg) override;
 
 	bool isInitPhase() const {return !m_loginReceived;}
 	virtual void processInitPhase(const chainpack::RpcMessage &msg);

@@ -26,10 +26,7 @@ ServerConnection::ServerConnection(QTcpSocket *socket, QObject *parent)
 	setSocket(socket);
 	socket->setParent(nullptr);
 	connect(this, &ServerConnection::socketConnectedChanged, [this](bool is_connected) {
-		if(!is_connected) {
-			//this->deleteLater();
-		}
-		else {
+		if(is_connected) {
 			setConnectionName(peerAddress() + ':' + std::to_string(peerPort()));
 		}
 	});

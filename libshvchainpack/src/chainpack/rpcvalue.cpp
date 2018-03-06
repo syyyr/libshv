@@ -957,6 +957,14 @@ RpcValue::MetaData::MetaData(RpcValue::IMap &&imap, RpcValue::Map &&smap)
 		m_smap = new RpcValue::Map(std::move(smap));
 }
 
+RpcValue::MetaData::MetaData(const RpcValue::MetaData &o)
+{
+	for(auto kv : o.iValues())
+		setValue(kv.first, kv.second);
+	for(auto kv : o.sValues())
+		setValue(kv.first, kv.second);
+}
+
 RpcValue::MetaData::~MetaData()
 {
 	if(m_imap)

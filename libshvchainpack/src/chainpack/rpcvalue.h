@@ -206,6 +206,7 @@ public:
 		MetaData(RpcValue::IMap &&imap);
 		MetaData(RpcValue::Map &&smap);
 		MetaData(RpcValue::IMap &&imap, RpcValue::Map &&smap);
+		MetaData(const MetaData &o);
 		~MetaData();
 
 		MetaData& operator =(MetaData &&o) {swap(o); return *this;}
@@ -226,7 +227,6 @@ public:
 		const RpcValue::Map& sValues() const;
 		std::string toStdString() const;
 	private:
-		MetaData(const MetaData &o);
 		MetaData& operator =(const MetaData &o);
 		void swap(MetaData &o);
 	private:

@@ -26,7 +26,7 @@ public:
 
 	void sendRpcValue(const RpcValue &msg);
 	void sendRawData(std::string &&data);
-	void sendRawData(RpcValue::MetaData &&meta_data, std::string &&data);
+	void sendRawData(const RpcValue::MetaData &meta_data, std::string &&data);
 	using MessageReceivedCallback = std::function< void (const RpcValue &msg)>;
 	void setMessageReceivedCallback(const MessageReceivedCallback &callback) {m_messageReceivedCallback = callback;}
 

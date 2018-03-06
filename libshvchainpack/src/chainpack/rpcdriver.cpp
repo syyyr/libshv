@@ -52,7 +52,7 @@ void RpcDriver::sendRawData(std::string &&data)
 	enqueueDataToSend(Chunk{std::move(data)});
 }
 
-void RpcDriver::sendRawData(RpcValue::MetaData &&meta_data, std::string &&data)
+void RpcDriver::sendRawData(const RpcValue::MetaData &meta_data, std::string &&data)
 {
 	logRpcMsg() << "protocol:" << Rpc::ProtocolVersionToString(protocolVersion()) << "send raw meta + data: " << meta_data.toStdString()
 				<< Utils::toHex(data, 0, 250);
@@ -70,20 +70,31 @@ void RpcDriver::sendRawData(RpcValue::MetaData &&meta_data, std::string &&data)
 		wr << meta_data;
 		break;
 	}
+	case Rpc::ProtocolVersion::JsonRpc: {
+		break;
+	}
 	default:
 		SHVCHP_EXCEPTION("Cannot serialize data without protocol version specified.")
 	}
 	Rpc::ProtocolVersion packed_data_ver = RpcMessage::protocolVersion(meta_data);
-	if(packed_data_ver == protocolVersion()) {
-		enqueueDataToSend(Chunk(os_packed_meta_data.str(), std::move(data)));
-	}
-	else if(packed_data_ver != Rpc::ProtocolVersion::Invalid) {
+	if(protocolVersion() == Rpc::ProtocolVersion::JsonRpc) {
+		// JSON RPC must be handled separately
+		if(packed_data_ver == Rpc::ProtocolVersion::Invalid)
+			SHVCHP_EXCEPTION("Cannot serialize to JSON-RPC data without protocol version specified.")
 		// recode data;
 		RpcValue val = decodeData(packed_data_ver, data, 0);
-		enqueueDataToSend(Chunk(os_packed_meta_data.str(), codeRpcValue(protocolVersion(), val)));
+		val.setMetaData(RpcValue::MetaData(meta_data));
+		enqueueDataToSend(Chunk(codeRpcValue(Rpc::ProtocolVersion::JsonRpc, val)));
 	}
 	else {
-		SHVCHP_EXCEPTION("Cannot decode data without protocol version specified.")
+		if(packed_data_ver == Rpc::ProtocolVersion::Invalid || packed_data_ver == protocolVersion()) {
+			enqueueDataToSend(Chunk(os_packed_meta_data.str(), std::move(data)));
+		}
+		else {
+			// recode data;
+			RpcValue val = decodeData(packed_data_ver, data, 0);
+			enqueueDataToSend(Chunk(os_packed_meta_data.str(), codeRpcValue(protocolVersion(), val)));
+		}
 	}
 }
 
@@ -226,8 +237,10 @@ int RpcDriver::processReadData(const std::string &read_data)
 
 	if(m_protocolVersion == Rpc::ProtocolVersion::Invalid && protocol_version != Rpc::ProtocolVersion::Invalid) {
 		// if protocol version is not explicitly specified,
-		// it is set from first received message (should be knockknock)
+		// it is set from first received message
+
 		m_protocolVersion = protocol_version;
+		//nWarning() << this << "protocol version set to:" << Rpc::ProtocolVersionToString(m_protocolVersion);
 	}
 
 	RpcValue::MetaData meta_data;

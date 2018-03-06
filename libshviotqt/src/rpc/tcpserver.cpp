@@ -52,10 +52,11 @@ void TcpServer::onNewConnection()
 {
 	QTcpSocket *sock = nextPendingConnection();
 	if(sock) {
-		shvInfo().nospace() << "agent connected: " << sock->peerAddress().toString() << ':' << sock->peerPort();
+		shvInfo().nospace() << "client connected: " << sock->peerAddress().toString() << ':' << sock->peerPort();// << "socket:" << sock << sock->socketDescriptor() << "state:" << sock->state();
 		ServerConnection *c = createServerConnection(sock, this);
 		m_connections[c->connectionId()] = c;
 		int cid = c->connectionId();
+		connect(sock, &QTcpSocket::disconnected, c, &ServerConnection::deleteLater);
 		connect(c, &ServerConnection::destroyed, [this, cid]() {
 			onConnectionDeleted(cid);
 		});
