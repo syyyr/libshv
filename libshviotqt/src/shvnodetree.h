@@ -22,6 +22,8 @@ public:
 	ShvNode* mkdir(const ShvNode::String &path, ShvNode::String *path_rest = nullptr);
 	ShvNode* cd(const ShvNode::String &path, ShvNode::String *path_rest = nullptr);
 	bool mount(const ShvNode::String &path, ShvNode *node);
+
+	std::string dump();
 protected:
 	ShvNode* mdcd(const ShvNode::StringList &path, ShvNode::String *path_rest, bool create_dirs);
 protected:

@@ -1,5 +1,6 @@
 #include "shvnodetree.h"
 
+#include <shv/chainpack/rpcvalue.h>
 #include <shv/coreqt/log.h>
 
 namespace shv {
@@ -77,6 +78,24 @@ bool ShvNodeTree::mount(const ShvNode::String &path, ShvNode *node)
 	node->setParentNode(parent_nd);
 	node->setNodeName(last_id);
 	return true;
+}
+
+static std::string dump_node(ShvNode *parent, int indent)
+{
+	std::string ret;
+	for(const std::string &pn : parent->propertyNames()) {
+		ShvNode *chnd = parent->childNode(pn);
+		ret += '\n' + std::string(indent, '\t') + pn + ": " + parent->propertyValue(pn).toPrettyString();
+		if(chnd) {
+			ret += dump_node(chnd, ++indent);
+		}
+	}
+	return ret;
+}
+
+std::string ShvNodeTree::dump()
+{
+	return dump_node(m_root, 0);
 }
 
 }}
