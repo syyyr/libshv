@@ -8,8 +8,8 @@ namespace chainpack {
 class SHVCHAINPACK_DECL_EXPORT Rpc
 {
 public:
-	enum class ProtocolVersion {Invalid = 0, ChainPack, Cpon, JsonRpc};
-	static const char* ProtocolVersionToString(ProtocolVersion pv);
+	enum class ProtocolType {Invalid = 0, ChainPack, Cpon, JsonRpc};
+	static const char* ProtocolTypeToString(ProtocolType pv);
 
 	static const char* METH_HELLO;
 	static const char* METH_LOGIN;

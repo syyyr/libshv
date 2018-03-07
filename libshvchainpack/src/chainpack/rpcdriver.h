@@ -21,8 +21,8 @@ public:
 	explicit RpcDriver();
 	virtual ~RpcDriver();
 
-	Rpc::ProtocolVersion protocolVersion() const {return m_protocolVersion;}
-	void setProtocolVersion(Rpc::ProtocolVersion v) {m_protocolVersion = v;}
+	Rpc::ProtocolType protocolType() const {return m_protocolType;}
+	void setProtocolType(Rpc::ProtocolType v) {m_protocolType = v;}
 
 	void sendRpcValue(const RpcValue &msg);
 	void sendRawData(std::string &&data);
@@ -62,12 +62,12 @@ protected:
 	/// add data to the output queue, send data from top of the queue
 	virtual void enqueueDataToSend(Chunk &&chunk_to_enqueue);
 
-	virtual void onRpcDataReceived(Rpc::ProtocolVersion protocol_version, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len);
+	virtual void onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len);
 	virtual void onRpcValueReceived(const RpcValue &msg);
 
-	static size_t decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolVersion protocol_version, const std::string &data, size_t start_pos);
-	static RpcValue decodeData(Rpc::ProtocolVersion protocol_version, const std::string &data, size_t start_pos);
-	static std::string codeRpcValue(Rpc::ProtocolVersion protocol_version, const RpcValue &val);
+	static size_t decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolType protocol_type, const std::string &data, size_t start_pos);
+	static RpcValue decodeData(Rpc::ProtocolType protocol_type, const std::string &data, size_t start_pos);
+	static std::string codeRpcValue(Rpc::ProtocolType protocol_type, const RpcValue &val);
 
 	virtual void lockSendQueue() {}
 	virtual void unlockSendQueue() {}
@@ -81,7 +81,7 @@ private:
 	bool m_topChunkHeaderWritten = false;
 	size_t m_topChunkBytesWrittenSoFar = 0;
 	std::string m_readData;
-	Rpc::ProtocolVersion m_protocolVersion = Rpc::ProtocolVersion::Invalid;
+	Rpc::ProtocolType m_protocolType = Rpc::ProtocolType::Invalid;
 	static int s_defaultRpcTimeout;
 };
 

@@ -50,7 +50,7 @@ chainpack::RpcResponse ServerConnection::sendMessageSync(const chainpack::RpcReq
 	return chainpack::RpcResponse();
 }
 
-void ServerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolVersion protocol_version, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
+void ServerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_version, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
 {
 	if(isInitPhase()) {
 		shv::chainpack::RpcValue rpc_val = decodeData(protocol_version, data, start_pos);

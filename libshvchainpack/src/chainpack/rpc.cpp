@@ -18,13 +18,13 @@ const char* Rpc::JSONRPC_ERROR = "error";
 const char* Rpc::JSONRPC_SHV_PATH = "shvPath";
 const char* Rpc::JSONRPC_CALLER_ID = "callerId";
 
-const char *Rpc::ProtocolVersionToString(Rpc::ProtocolVersion pv)
+const char *Rpc::ProtocolTypeToString(Rpc::ProtocolType pv)
 {
 	switch(pv) {
-	case ProtocolVersion::ChainPack: return "ChainPack";
-	case ProtocolVersion::Cpon: return "Cpon";
-	case ProtocolVersion::JsonRpc: return "JsonRpc";
-	case ProtocolVersion::Invalid: return "Invalid";
+	case ProtocolType::ChainPack: return "ChainPack";
+	case ProtocolType::Cpon: return "Cpon";
+	case ProtocolType::JsonRpc: return "JsonRpc";
+	case ProtocolType::Invalid: return "Invalid";
 	}
 	return "???";
 }

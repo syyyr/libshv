@@ -33,7 +33,7 @@ ClientConnection::ClientConnection(SyncCalls sync_calls, QObject *parent)
 	m_connectionId = ++id;
 	m_rpcDriver = new SocketRpcDriver();
 
-	connect(this, &ClientConnection::setProtocolVersionRequest, m_rpcDriver, &SocketRpcDriver::setProtocolVersionAsInt);
+	connect(this, &ClientConnection::setProtocolTypeRequest, m_rpcDriver, &SocketRpcDriver::setProtocolTypeAsInt);
 	connect(this, &ClientConnection::sendMessageRequest, m_rpcDriver, &SocketRpcDriver::sendRpcValue);
 	connect(this, &ClientConnection::connectToHostRequest, m_rpcDriver, &SocketRpcDriver::connectToHost);
 	connect(this, &ClientConnection::closeConnectionRequest, m_rpcDriver, &SocketRpcDriver::closeConnection);
@@ -174,18 +174,6 @@ void ClientConnection::sendHello()
 {
 	setBrokerConnected(false);
 	m_helloRequestId = callMethod(cp::Rpc::METH_HELLO);
-									   //cp::RpcValue::Map{{"profile", profile()}
-																//, {"deviceId", deviceId()}
-																//, {"protocolVersion", protocolVersion()}
-									   //});
-	/*
-	QTimer::singleShot(5000, this, [this]() {
-		if(!isBrokerConnected()) {
-			shvError() << "Login time out! Dropping client connection.";
-			resetConnection();
-		}
-	});
-	*/
 }
 
 void ClientConnection::sendLogin(const shv::chainpack::RpcValue &server_hello)
@@ -254,7 +242,6 @@ void ClientConnection::checkBrokerConnected()
 	if(!isBrokerConnected()) {
 		emit abortConnectionRequest();
 		shvInfo().nospace() << "connecting to: " << user() << "@" << host() << ":" << port();
-		//m_clientConnection->setProtocolVersion(protocolVersion());
 		emit connectToHostRequest(QString::fromStdString(host()), port());
 	}
 }

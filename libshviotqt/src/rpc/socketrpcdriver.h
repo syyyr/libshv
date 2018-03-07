@@ -26,7 +26,7 @@ public:
 
 	void setSocket(QTcpSocket *socket);
 	bool hasSocket() const {return m_socket != nullptr;}
-	void setProtocolVersionAsInt(int v) {Super::setProtocolVersion((shv::chainpack::Rpc::ProtocolVersion)v);}
+	void setProtocolTypeAsInt(int v) {Super::setProtocolType((shv::chainpack::Rpc::ProtocolType)v);}
 
 	void connectToHost(const QString &host_name, quint16 port);
 

@@ -37,12 +37,10 @@ void RpcDriver::sendRpcValue(const RpcValue &msg)
 	using namespace std;
 	//shvLogFuncFrame() << msg.toStdString();
 	logRpcMsg() << SND_LOG_ARROW << msg.toPrettyString();
-	std::string packed_data = codeRpcValue(protocolVersion(), msg);
-	//nWarning() << "protocol:" << Rpc::ProtocolVersionToString(protocolVersion()) << "msg:" << msg.toPrettyString();
-	//nWarning() << "data:" << packed_data;
-	logRpcData() << "protocol:" << Rpc::ProtocolVersionToString(protocolVersion())
+	std::string packed_data = codeRpcValue(protocolType(), msg);
+	logRpcData() << "protocol:" << Rpc::ProtocolTypeToString(protocolType())
 				 << "packed data:"
-				 << ((protocolVersion() == Rpc::ProtocolVersion::ChainPack)? Utils::toHex(packed_data, 0, 250): packed_data.substr(0, 250));
+				 << ((protocolType() == Rpc::ProtocolType::ChainPack)? Utils::toHex(packed_data, 0, 250): packed_data.substr(0, 250));
 	enqueueDataToSend(Chunk{std::move(packed_data)});
 }
 
@@ -54,53 +52,53 @@ void RpcDriver::sendRawData(std::string &&data)
 
 void RpcDriver::sendRawData(const RpcValue::MetaData &meta_data, std::string &&data)
 {
-	logRpcMsg() << "protocol:" << Rpc::ProtocolVersionToString(protocolVersion()) << "send raw meta + data: " << meta_data.toStdString()
+	logRpcMsg() << "protocol:" << Rpc::ProtocolTypeToString(protocolType()) << "send raw meta + data: " << meta_data.toStdString()
 				<< Utils::toHex(data, 0, 250);
 	using namespace std;
 	//shvLogFuncFrame() << msg.toStdString();
 	std::ostringstream os_packed_meta_data;
-	switch (protocolVersion()) {
-	case Rpc::ProtocolVersion::Cpon: {
+	switch (protocolType()) {
+	case Rpc::ProtocolType::Cpon: {
 		CponWriter wr(os_packed_meta_data);
 		wr << meta_data;
 		break;
 	}
-	case Rpc::ProtocolVersion::ChainPack: {
+	case Rpc::ProtocolType::ChainPack: {
 		ChainPackWriter wr(os_packed_meta_data);
 		wr << meta_data;
 		break;
 	}
-	case Rpc::ProtocolVersion::JsonRpc: {
+	case Rpc::ProtocolType::JsonRpc: {
 		break;
 	}
 	default:
 		SHVCHP_EXCEPTION("Cannot serialize data without protocol version specified.")
 	}
-	Rpc::ProtocolVersion packed_data_ver = RpcMessage::protocolVersion(meta_data);
-	if(protocolVersion() == Rpc::ProtocolVersion::JsonRpc) {
+	Rpc::ProtocolType packed_data_ver = RpcMessage::protocolType(meta_data);
+	if(protocolType() == Rpc::ProtocolType::JsonRpc) {
 		// JSON RPC must be handled separately
-		if(packed_data_ver == Rpc::ProtocolVersion::Invalid)
+		if(packed_data_ver == Rpc::ProtocolType::Invalid)
 			SHVCHP_EXCEPTION("Cannot serialize to JSON-RPC data without protocol version specified.")
 		// recode data;
 		RpcValue val = decodeData(packed_data_ver, data, 0);
 		val.setMetaData(RpcValue::MetaData(meta_data));
-		enqueueDataToSend(Chunk(codeRpcValue(Rpc::ProtocolVersion::JsonRpc, val)));
+		enqueueDataToSend(Chunk(codeRpcValue(Rpc::ProtocolType::JsonRpc, val)));
 	}
 	else {
-		if(packed_data_ver == Rpc::ProtocolVersion::Invalid || packed_data_ver == protocolVersion()) {
+		if(packed_data_ver == Rpc::ProtocolType::Invalid || packed_data_ver == protocolType()) {
 			enqueueDataToSend(Chunk(os_packed_meta_data.str(), std::move(data)));
 		}
 		else {
 			// recode data;
 			RpcValue val = decodeData(packed_data_ver, data, 0);
-			enqueueDataToSend(Chunk(os_packed_meta_data.str(), codeRpcValue(protocolVersion(), val)));
+			enqueueDataToSend(Chunk(os_packed_meta_data.str(), codeRpcValue(protocolType(), val)));
 		}
 	}
 }
 
 RpcMessage RpcDriver::composeRpcMessage(RpcValue::MetaData &&meta_data, const std::string &data, bool throw_exc)
 {
-	Rpc::ProtocolVersion packed_data_ver = RpcMessage::protocolVersion(meta_data);
+	Rpc::ProtocolType packed_data_ver = RpcMessage::protocolType(meta_data);
 	RpcValue val = decodeData(packed_data_ver, data, 0);
 	if(!val.isValid()) {
 		const char * msg = "Compose RPC message error.";
@@ -142,17 +140,17 @@ void RpcDriver::writeQueue()
 	const Chunk &chunk = m_chunkQueue[0];
 
 	if(!m_topChunkHeaderWritten) {
-		std::string protocol_version_data;
+		std::string protocol_type_data;
 		{
 			std::ostringstream os;
 			ChainPackWriter wr(os);
-			wr.writeUIntData((unsigned)protocolVersion());
-			protocol_version_data = os.str();
+			wr.writeUIntData((unsigned)protocolType());
+			protocol_type_data = os.str();
 		}
 		{
 			std::ostringstream os;
 			ChainPackWriter wr(os);
-			wr.writeUIntData(chunk.size() + protocol_version_data.length());
+			wr.writeUIntData(chunk.size() + protocol_type_data.length());
 			std::string packet_len_data = os.str();
 			auto len = writeBytes(packet_len_data.data(), packet_len_data.length());
 			if(len < 0)
@@ -161,7 +159,7 @@ void RpcDriver::writeQueue()
 				SHVCHP_EXCEPTION("Design error! Chunk length shall be always written at once to the socket");
 		}
 		{
-			auto len = writeBytes(protocol_version_data.data(), protocol_version_data.length());
+			auto len = writeBytes(protocol_type_data.data(), protocol_type_data.length());
 			if(len < 0)
 				SHVCHP_EXCEPTION("Write socket error!");
 			if(len != 1)
@@ -224,7 +222,7 @@ int RpcDriver::processReadData(const std::string &read_data)
 
 	size_t read_len = (size_t)in.tellg() + chunk_len;
 
-	Rpc::ProtocolVersion protocol_version = (Rpc::ProtocolVersion)ChainPackReader::readUIntData(in, &ok);
+	Rpc::ProtocolType protocol_type = (Rpc::ProtocolType)ChainPackReader::readUIntData(in, &ok);
 	if(!ok)
 		return 0;
 
@@ -235,29 +233,28 @@ int RpcDriver::processReadData(const std::string &read_data)
 	if(in.tellg() < 0)
 		return 0;
 
-	if(m_protocolVersion == Rpc::ProtocolVersion::Invalid && protocol_version != Rpc::ProtocolVersion::Invalid) {
+	if(m_protocolType == Rpc::ProtocolType::Invalid && protocol_type != Rpc::ProtocolType::Invalid) {
 		// if protocol version is not explicitly specified,
 		// it is set from first received message
 
-		m_protocolVersion = protocol_version;
-		//nWarning() << this << "protocol version set to:" << Rpc::ProtocolVersionToString(m_protocolVersion);
+		m_protocolType = protocol_type;
 	}
 
 	RpcValue::MetaData meta_data;
-	size_t meta_data_end_pos = decodeMetaData(meta_data, protocol_version, read_data, in.tellg());
-	onRpcDataReceived(protocol_version, std::move(meta_data), read_data, meta_data_end_pos, read_len - meta_data_end_pos);
+	size_t meta_data_end_pos = decodeMetaData(meta_data, protocol_type, read_data, in.tellg());
+	onRpcDataReceived(protocol_type, std::move(meta_data), read_data, meta_data_end_pos, read_len - meta_data_end_pos);
 
 	return read_len;
 }
 
-size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolVersion protocol_version, const std::string &data, size_t start_pos)
+size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolType protocol_type, const std::string &data, size_t start_pos)
 {
 	size_t meta_data_end_pos = start_pos;
 	std::istringstream in(data);
 	in.seekg(start_pos);
 	try {
-		switch (protocol_version) {
-		case Rpc::ProtocolVersion::JsonRpc: {
+		switch (protocol_type) {
+		case Rpc::ProtocolType::JsonRpc: {
 			CponReader rd(in);
 			RpcValue msg;
 			rd.read(msg);
@@ -275,19 +272,19 @@ size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolVer
 				if(!method.empty())
 					RpcMessage::setMethod(meta_data, method);
 				if(!shv_path.empty())
-					RpcMessage::setShvPath(meta_data, shv_path);
+					RpcMessage::setDestination(meta_data, shv_path);
 				if(caller_id > 0)
 					RpcMessage::setCallerId(meta_data, caller_id);
 			}
 			break;
 		}
-		case Rpc::ProtocolVersion::Cpon: {
+		case Rpc::ProtocolType::Cpon: {
 			CponReader rd(in);
 			rd.read(meta_data);
 			meta_data_end_pos = (in.tellg() < 0)? data.size(): (size_t)in.tellg();
 			break;
 		}
-		case Rpc::ProtocolVersion::ChainPack: {
+		case Rpc::ProtocolType::ChainPack: {
 			ChainPackReader rd(in);
 			rd.read(meta_data);
 			meta_data_end_pos = (in.tellg() < 0)? data.size(): (size_t)in.tellg();
@@ -295,7 +292,7 @@ size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolVer
 		}
 		default:
 			meta_data_end_pos = data.size();
-			nError() << "Throwing away message with unknown protocol version:" << (unsigned)protocol_version;
+			nError() << "Throwing away message with unknown protocol version:" << (unsigned)protocol_type;
 			break;
 		}
 	}
@@ -305,14 +302,14 @@ size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolVer
 	return meta_data_end_pos;
 }
 
-RpcValue RpcDriver::decodeData(Rpc::ProtocolVersion protocol_version, const std::string &data, size_t start_pos)
+RpcValue RpcDriver::decodeData(Rpc::ProtocolType protocol_type, const std::string &data, size_t start_pos)
 {
 	RpcValue ret;
 	std::istringstream in(data);
 	in.seekg(start_pos);
 	try {
-		switch (protocol_version) {
-		case Rpc::ProtocolVersion::JsonRpc: {
+		switch (protocol_type) {
+		case Rpc::ProtocolType::JsonRpc: {
 			CponReader rd(in);
 			rd.read(ret);
 			RpcValue::Map map = ret.toMap();
@@ -335,18 +332,18 @@ RpcValue RpcDriver::decodeData(Rpc::ProtocolVersion protocol_version, const std:
 			ret = imap;
 			break;
 		}
-		case Rpc::ProtocolVersion::Cpon: {
+		case Rpc::ProtocolType::Cpon: {
 			CponReader rd(in);
 			rd.read(ret);
 			break;
 		}
-		case Rpc::ProtocolVersion::ChainPack: {
+		case Rpc::ProtocolType::ChainPack: {
 			ChainPackReader rd(in);
 			rd.read(ret);
 			break;
 		}
 		default:
-			nError() << "Don't know how to decode message with unknown protocol version:" << (unsigned)protocol_version;
+			nError() << "Don't know how to decode message with unknown protocol version:" << (unsigned)protocol_type;
 			break;
 		}
 	}
@@ -356,11 +353,11 @@ RpcValue RpcDriver::decodeData(Rpc::ProtocolVersion protocol_version, const std:
 	return ret;
 }
 
-std::string RpcDriver::codeRpcValue(Rpc::ProtocolVersion protocol_version, const RpcValue &val)
+std::string RpcDriver::codeRpcValue(Rpc::ProtocolType protocol_type, const RpcValue &val)
 {
 	std::ostringstream os_packed_data;
-	switch (protocol_version) {
-	case Rpc::ProtocolVersion::JsonRpc: {
+	switch (protocol_type) {
+	case Rpc::ProtocolType::JsonRpc: {
 		RpcValue::Map json_msg;
 		RpcMessage rpc_msg(val);
 
@@ -368,7 +365,7 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolVersion protocol_version, const
 		if(rq_id > 0)
 			json_msg[Rpc::JSONRPC_ID] = rq_id;
 
-		const RpcValue::String shv_path = rpc_msg.shvPath();
+		const RpcValue::String shv_path = rpc_msg.destination();
 		if(!shv_path.empty())
 			json_msg[Rpc::JSONRPC_SHV_PATH] = shv_path;
 
@@ -394,12 +391,12 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolVersion protocol_version, const
 		wr.write(json_msg);
 		break;
 	}
-	case Rpc::ProtocolVersion::Cpon: {
+	case Rpc::ProtocolType::Cpon: {
 		CponWriter wr(os_packed_data);
 		wr << val;
 		break;
 	}
-	case Rpc::ProtocolVersion::ChainPack: {
+	case Rpc::ProtocolType::ChainPack: {
 		ChainPackWriter wr(os_packed_data);
 		wr << val;
 		break;
@@ -410,17 +407,17 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolVersion protocol_version, const
 	return os_packed_data.str();
 }
 
-void RpcDriver::onRpcDataReceived(Rpc::ProtocolVersion protocol_version, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
+void RpcDriver::onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
 {
 	(void)data_len;
-	RpcValue msg = decodeData(protocol_version, data, start_pos);
+	RpcValue msg = decodeData(protocol_type, data, start_pos);
 	if(msg.isValid()) {
 		logRpcMsg() << RCV_LOG_ARROW << msg.toPrettyString();
 		msg.setMetaData(std::move(md));
 		onRpcValueReceived(msg);
 	}
 	else {
-		nError() << "Throwing away message with unknown protocol version:" << (unsigned)protocol_version;
+		nError() << "Throwing away message with unknown protocol version:" << (unsigned)protocol_type;
 	}
 }
 

@@ -75,7 +75,7 @@ private:
 							   {"b", "bar"},
 							   {"c", RpcValue::List{1,2,3}},
 						   }});
-		rq.setMetaValue(meta::RpcMessage::Tag::ShvPath, "aus/mel/pres/A");
+		rq.setMetaValue(meta::RpcMessage::Tag::Destination, "aus/mel/pres/A");
 		std::stringstream out;
 		RpcValue cp1 = rq.value();
 		ChainPackWriter wr(out);

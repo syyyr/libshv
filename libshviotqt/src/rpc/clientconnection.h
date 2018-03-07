@@ -41,7 +41,7 @@ public:
 	void abort() Q_DECL_OVERRIDE;
 
 	void setSocket(QTcpSocket *socket);
-	void setProtocolVersion(shv::chainpack::Rpc::ProtocolVersion ver) {emit setProtocolVersionRequest((unsigned)ver);}
+	void setProtocolType(shv::chainpack::Rpc::ProtocolType ver) {emit setProtocolTypeRequest((unsigned)ver);}
 
 	int connectionId() const {return m_connectionId;}
 
@@ -56,7 +56,7 @@ public:
 	shv::chainpack::RpcResponse sendMessageSync(const shv::chainpack::RpcRequest &rpc_request, int time_out_ms = DEFAULT_RPC_TIMEOUT) override;
 	void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg) override;
 protected:
-	Q_SIGNAL void setProtocolVersionRequest(int ver);
+	Q_SIGNAL void setProtocolTypeRequest(int ver);
 	Q_SIGNAL void sendMessageRequest(const shv::chainpack::RpcValue& msg);
 
 	Q_SIGNAL void sendMessageSyncRequest(const shv::chainpack::RpcRequest &request, shv::chainpack::RpcResponse *presponse, int time_out_ms);

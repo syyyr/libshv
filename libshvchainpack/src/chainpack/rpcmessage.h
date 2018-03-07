@@ -21,8 +21,8 @@ public:
 	struct Tag { enum Enum {RequestId = meta::Tag::USER,
 							CallerId,
 							Method,
-							ShvPath,
-							ProtocolVersion, //needed when dest client is using different version than source one to translate raw message data to correct format
+							Destination,
+							ProtocolType, //needed when dest client is using different version than source one to translate raw message data to correct format
 							MAX};};
 	struct Key { enum Enum {Params = 1, Result, Error, ErrorCode, ErrorMessage, MAX};};
 
@@ -65,20 +65,20 @@ public:
 	RpcValue::String method() const;
 	void setMethod(const RpcValue::String &method);
 
-	static RpcValue::String shvPath(const RpcValue::MetaData &meta);
-	static void setShvPath(RpcValue::MetaData &meta, const RpcValue::String &path);
-	RpcValue::String shvPath() const;
-	void setShvPath(const RpcValue::String &path);
+	static RpcValue::String destination(const RpcValue::MetaData &meta);
+	static void setDestination(RpcValue::MetaData &meta, const RpcValue::String &path);
+	RpcValue::String destination() const;
+	void setDestination(const RpcValue::String &path);
 
 	static RpcValue::UInt callerId(const RpcValue::MetaData &meta);
 	static void setCallerId(RpcValue::MetaData &meta, RpcValue::UInt requestId);
 	RpcValue::UInt callerId() const;
 	void setCallerId(RpcValue::UInt requestId);
 
-	static Rpc::ProtocolVersion protocolVersion(const RpcValue::MetaData &meta);
-	static void setProtocolVersion(RpcValue::MetaData &meta, shv::chainpack::Rpc::ProtocolVersion ver);
-	Rpc::ProtocolVersion protocolVersion() const;
-	void setProtocolVersion(shv::chainpack::Rpc::ProtocolVersion ver);
+	static Rpc::ProtocolType protocolType(const RpcValue::MetaData &meta);
+	static void setProtocolType(RpcValue::MetaData &meta, shv::chainpack::Rpc::ProtocolType ver);
+	Rpc::ProtocolType protocolType() const;
+	void setProtocolType(shv::chainpack::Rpc::ProtocolType ver);
 
 	std::string toPrettyString() const;
 	std::string toCpon() const;

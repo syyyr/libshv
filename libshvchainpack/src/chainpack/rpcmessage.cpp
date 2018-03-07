@@ -23,8 +23,8 @@ RpcMessage::RpcMessage()
 		{(int)Tag::RequestId, {(int)Tag::RequestId, "id"}},
 		{(int)Tag::CallerId, {(int)Tag::CallerId, "callerId"}},
 		{(int)Tag::Method, {(int)Tag::Method, "method"}},
-		{(int)Tag::ProtocolVersion, {(int)Tag::ProtocolVersion, "protocolVersion"}},
-		{(int)Tag::ShvPath, {(int)Tag::ShvPath, "shvPath"}},
+		{(int)Tag::ProtocolType, {(int)Tag::ProtocolType, "protocol"}},
+		{(int)Tag::Destination, {(int)Tag::Destination, "dest"}},
 	};
 }
 
@@ -165,24 +165,24 @@ void RpcMessage::setRequestId(RpcValue::MetaData &meta, RpcValue::UInt id)
 	meta.setValue(meta::RpcMessage::Tag::RequestId, id);
 }
 
-RpcValue::String RpcMessage::shvPath(const RpcValue::MetaData &meta)
+RpcValue::String RpcMessage::destination(const RpcValue::MetaData &meta)
 {
-	return meta.value(meta::RpcMessage::Tag::ShvPath).toString();
+	return meta.value(meta::RpcMessage::Tag::Destination).toString();
 }
 
-void RpcMessage::setShvPath(RpcValue::MetaData &meta, const RpcValue::String &path)
+void RpcMessage::setDestination(RpcValue::MetaData &meta, const RpcValue::String &path)
 {
-	meta.setValue(meta::RpcMessage::Tag::ShvPath, path);
+	meta.setValue(meta::RpcMessage::Tag::Destination, path);
 }
 
-RpcValue::String RpcMessage::shvPath() const
+RpcValue::String RpcMessage::destination() const
 {
-	return metaValue(meta::RpcMessage::Tag::ShvPath).toString();
+	return metaValue(meta::RpcMessage::Tag::Destination).toString();
 }
 
-void RpcMessage::setShvPath(const RpcValue::String &path)
+void RpcMessage::setDestination(const RpcValue::String &path)
 {
-	setMetaValue(meta::RpcMessage::Tag::ShvPath, path);
+	setMetaValue(meta::RpcMessage::Tag::Destination, path);
 }
 
 RpcValue::UInt RpcMessage::callerId(const RpcValue::MetaData &meta)
@@ -205,24 +205,24 @@ void RpcMessage::setCallerId(RpcValue::UInt id)
 	setMetaValue(meta::RpcMessage::Tag::CallerId, id);
 }
 
-Rpc::ProtocolVersion RpcMessage::protocolVersion(const RpcValue::MetaData &meta)
+Rpc::ProtocolType RpcMessage::protocolType(const RpcValue::MetaData &meta)
 {
-	return (Rpc::ProtocolVersion)meta.value(meta::RpcMessage::Tag::ProtocolVersion).toUInt();
+	return (Rpc::ProtocolType)meta.value(meta::RpcMessage::Tag::ProtocolType).toUInt();
 }
 
-void RpcMessage::setProtocolVersion(RpcValue::MetaData &meta, Rpc::ProtocolVersion ver)
+void RpcMessage::setProtocolType(RpcValue::MetaData &meta, Rpc::ProtocolType ver)
 {
-	meta.setValue(meta::RpcMessage::Tag::ProtocolVersion, ver == Rpc::ProtocolVersion::Invalid? RpcValue(): RpcValue((unsigned)ver));
+	meta.setValue(meta::RpcMessage::Tag::ProtocolType, ver == Rpc::ProtocolType::Invalid? RpcValue(): RpcValue((unsigned)ver));
 }
 
-Rpc::ProtocolVersion RpcMessage::protocolVersion() const
+Rpc::ProtocolType RpcMessage::protocolType() const
 {
-	return (Rpc::ProtocolVersion)metaValue(meta::RpcMessage::Tag::ProtocolVersion).toUInt();
+	return (Rpc::ProtocolType)metaValue(meta::RpcMessage::Tag::ProtocolType).toUInt();
 }
 
-void RpcMessage::setProtocolVersion(Rpc::ProtocolVersion ver)
+void RpcMessage::setProtocolType(Rpc::ProtocolType ver)
 {
-	setMetaValue(meta::RpcMessage::Tag::ProtocolVersion, ver == Rpc::ProtocolVersion::Invalid? RpcValue(): RpcValue((unsigned)ver));
+	setMetaValue(meta::RpcMessage::Tag::ProtocolType, ver == Rpc::ProtocolType::Invalid? RpcValue(): RpcValue((unsigned)ver));
 }
 
 size_t RpcMessage::write(AbstractStreamWriter &wr) const
@@ -230,18 +230,7 @@ size_t RpcMessage::write(AbstractStreamWriter &wr) const
 	assert(m_value.isValid());
 	return wr.write(m_value);
 }
-/*
-RpcMessage::RpcCallType RpcMessage::rpcType() const
-{
-	RpcValue::UInt rpc_id = requestId();
-	bool has_method = !method().empty();
-	if(has_method)
-		return (rpc_id > 0)? RpcCallType::Request: RpcCallType::Notify;
-	if(hasKey(meta::RpcMessage::Key::Result) || hasKey(meta::RpcMessage::Key::Error))
-		return RpcCallType::Response;
-	return RpcCallType::Undefined;
-}
-*/
+
 void RpcMessage::checkMetaValues()
 {
 	if(!m_value.isValid()) {
