@@ -1,6 +1,7 @@
 #include "utils.h"
 
 #include <regex>
+#include <iomanip>
 
 namespace shv {
 namespace chainpack {
@@ -36,16 +37,31 @@ static inline char hex_nibble(char i)
 	return 'A' + (i - 10);
 }
 
+static std::string byte_to_hex( uint8_t i )
+{
+	std::string ret;
+	char h = i / 16;
+	char l = i % 16;
+	ret += hex_nibble(h);
+	ret += hex_nibble(l);
+	return ret;
+}
+
+template<typename U>
+static std::string int_to_hex( U i )
+{
+	std::stringstream stream;
+	stream << std::setfill ('0') << std::setw(sizeof(U)*2) << std::hex << i;
+	return stream.str();
+}
+
 std::string Utils::toHex(const std::string &bytes, size_t start_pos, size_t length)
 {
 	std::string ret;
 	const size_t max_pos = std::min(bytes.size(), start_pos + length);
 	for (size_t i = start_pos; i < max_pos; ++i) {
 		unsigned char b = bytes[i];
-		char h = b / 16;
-		char l = b % 16;
-		ret += hex_nibble(h);
-		ret += hex_nibble(l);
+		ret += byte_to_hex(b);
 	}
 	return ret;
 }
@@ -55,10 +71,7 @@ std::string Utils::toHex(const std::basic_string<uint8_t> &bytes)
 	std::string ret;
 	for (size_t i = 0; i < bytes.size(); ++i) {
 		unsigned char b = bytes[i];
-		char h = b / 16;
-		char l = b % 16;
-		ret += hex_nibble(h);
-		ret += hex_nibble(l);
+		ret += byte_to_hex(b);
 	}
 	return ret;
 }
@@ -94,6 +107,33 @@ std::string Utils::fromHex(const std::string &bytes)
 		if(i < bytes.size())
 			u += unhex_char(bytes[i++]);
 		ret.push_back(u);
+	}
+	return ret;
+}
+
+std::string Utils::hexDump(const std::string &bytes)
+{
+	std::string ret;
+	std::string hex_l, str_l, num_l = int_to_hex((size_t)0);
+	for (size_t i = 0; i < bytes.length(); ++i) {
+		auto c = bytes[i];
+		std::string s = byte_to_hex(c);
+		hex_l += s;
+		str_l.push_back((c >= ' ' && c < 127)? c: '.');
+		if(( i + 1 ) % 16 == 0) {
+			ret += num_l + ' ' + hex_l + " " + str_l + '\n';
+			hex_l.clear();
+			str_l.clear();
+			num_l = int_to_hex(i+1);
+		}
+		else {
+			hex_l.push_back(' ');
+		}
+	}
+	if(!hex_l.empty()) {
+		static constexpr size_t hex_len = 16 * 3;
+		std::string rest_l(hex_len - hex_l.length(), ' ');
+		ret += num_l + ' ' + hex_l + rest_l + str_l;
 	}
 	return ret;
 }

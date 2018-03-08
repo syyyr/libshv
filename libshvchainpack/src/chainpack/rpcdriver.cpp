@@ -195,15 +195,19 @@ int64_t RpcDriver::writeBytes_helper(const std::string &str, size_t from, size_t
 
 void RpcDriver::onBytesRead(std::string &&bytes)
 {
-	logRpcData() << bytes.length() << "bytes of data read";
+	logRpcData().nospace() << __FUNCTION__ << " " << bytes.length() << " bytes of data read:\n" << shv::chainpack::Utils::hexDump(bytes);
 	m_readData += std::string(std::move(bytes));
 	while(true) {
 		int len = processReadData(m_readData);
-		//shvInfo() << len << "bytes of" << m_readData.size() << "processed";
-		if(len > 0)
+		logRpcData() << len << "bytes of" << m_readData.size() << "processed";
+		if(len > 0) {
+			//nWarning().nospace() << "1:" << m_readData.size() << " '" << m_readData << "'";
 			m_readData = m_readData.substr(len);
-		else
+			//nWarning().nospace() << "2:" << m_readData.size() << " '" << m_readData << "'";
+		}
+		else {
 			break;
+		}
 	}
 }
 
@@ -226,7 +230,7 @@ int RpcDriver::processReadData(const std::string &read_data)
 	if(!ok)
 		return 0;
 
-	logRpcData() << "\t chunk len:" << chunk_len << "read_len:" << read_len << "stream pos:" << in.tellg();
+	logRpcData() << "\t expected message data length:" << read_len << "length available:" << read_data.size();
 	if(read_len > read_data.length())
 		return 0;
 

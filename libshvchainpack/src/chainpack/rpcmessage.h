@@ -19,9 +19,9 @@ class RpcMessage : public meta::MetaType
 public:
 	enum {ID = 1};
 	struct Tag { enum Enum {RequestId = meta::Tag::USER,
-							CallerId,
-							Method,
 							Destination,
+							Method,
+							CallerId,
 							ProtocolType, //needed when dest client is using different version than source one to translate raw message data to correct format
 							MAX};};
 	struct Key { enum Enum {Params = 1, Result, Error, ErrorCode, ErrorMessage, MAX};};

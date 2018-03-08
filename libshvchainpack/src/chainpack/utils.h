@@ -22,6 +22,7 @@ public:
 	static std::string toHex(const std::string &bytes, size_t start_pos = 0, size_t length = std::numeric_limits<size_t>::max());
 	static std::string toHex(const std::basic_string<uint8_t> &bytes);
 	static std::string fromHex(const std::string &bytes);
+	static std::string hexDump(const std::string &bytes);
 
 	template<typename T>
 	static std::string toString(T i, size_t prepend_0s_to_len = 0)
