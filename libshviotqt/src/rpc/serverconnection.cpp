@@ -20,6 +20,8 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
+static int s_initPhaseTimeout = 10000;
+
 ServerConnection::ServerConnection(QTcpSocket *socket, QObject *parent)
 	: Super(parent)
 {
@@ -28,6 +30,12 @@ ServerConnection::ServerConnection(QTcpSocket *socket, QObject *parent)
 	connect(this, &ServerConnection::socketConnectedChanged, [this](bool is_connected) {
 		if(is_connected) {
 			setConnectionName(peerAddress() + ':' + std::to_string(peerPort()));
+		}
+	});
+	QTimer::singleShot(s_initPhaseTimeout, this, [this]() {
+		if(isInitPhase()) {
+			shvWarning() << "Client should login in" << (s_initPhaseTimeout/1000) << "seconds, dropping out connection.";
+			abort();
 		}
 	});
 }
@@ -105,23 +113,17 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 				{"nonce", m_pendingAuthNonce}
 			};
 			sendResponse(rq.requestId(), params);
-			QTimer::singleShot(3000, this, [this]() {
-				if(!m_loginReceived) {
-					shvError() << "client login time out! Dropping client connection." << connectionName();
-					abort();
-				}
-			});
 			return;
 		}
 		if(m_helloReceived && !m_loginReceived && rq.method() == shv::chainpack::Rpc::METH_LOGIN) {
 			shvInfo() << "Client login received";// << profile;// << "device id::" << m.value("deviceId").toStdString();
-			m_loginReceived = true;
 			//cp::RpcValue::Map params = rq.params().toMap();
 			//const cp::RpcValue login = params.value("login");
 			if(!login(rq.params()))
 				SHV_EXCEPTION("Invalid authentication for user: " + m_user + " at: " + connectionName());
 			shvInfo().nospace() << "Client logged in user: " << m_user << " from: " << peerAddress() << ':' << peerPort();
 			sendResponse(rq.requestId(), true);
+			m_loginReceived = true;
 			return;
 		}
 	}
