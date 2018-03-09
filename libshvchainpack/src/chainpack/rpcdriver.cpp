@@ -373,8 +373,8 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolType protocol_type, const RpcVa
 		if(!shv_path.empty())
 			json_msg[Rpc::JSONRPC_SHV_PATH] = shv_path;
 
-		const RpcValue::UInt caller_id = rpc_msg.callerId();
-		if(caller_id > 0)
+		const RpcValue caller_id = rpc_msg.callerId();
+		if(caller_id.isValid())
 			json_msg[Rpc::JSONRPC_CALLER_ID] = caller_id;
 					;
 		if(rpc_msg.isResponse()) {

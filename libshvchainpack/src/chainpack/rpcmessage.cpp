@@ -185,24 +185,61 @@ void RpcMessage::setDestination(const RpcValue::String &path)
 	setMetaValue(meta::RpcMessage::Tag::Destination, path);
 }
 
-RpcValue::UInt RpcMessage::callerId(const RpcValue::MetaData &meta)
+RpcValue RpcMessage::callerId(const RpcValue::MetaData &meta)
 {
-	return meta.value(meta::RpcMessage::Tag::CallerId).toUInt();
+	return meta.value(meta::RpcMessage::Tag::CallerId);
 }
 
-void RpcMessage::setCallerId(RpcValue::MetaData &meta, RpcValue::UInt id)
+void RpcMessage::setCallerId(RpcValue::MetaData &meta, const RpcValue &caller_id)
 {
-	meta.setValue(meta::RpcMessage::Tag::CallerId, id);
+	meta.setValue(meta::RpcMessage::Tag::CallerId, caller_id);
 }
 
-RpcValue::UInt RpcMessage::callerId() const
+void RpcMessage::pushCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id)
 {
-	return metaValue(meta::RpcMessage::Tag::CallerId).toUInt();
+	RpcValue curr_caller_id = RpcMessage::callerId(meta);
+	if(curr_caller_id.isArray()) {
+		RpcValue::Array array = curr_caller_id.toArray();
+		array.push_back(RpcValue::Array::makeElement(caller_id));
+		setCallerId(meta, array);
+	}
+	else if(curr_caller_id.isUInt()) {
+		RpcValue::Array array{RpcValue::Type::UInt};
+		array.push_back(curr_caller_id.toUInt());
+		array.push_back(RpcValue::Array::makeElement(caller_id));
+		setCallerId(meta, array);
+	}
+	else {
+		setCallerId(meta, caller_id);
+	}
 }
 
-void RpcMessage::setCallerId(RpcValue::UInt id)
+RpcValue::UInt RpcMessage::popCallerId(RpcValue::MetaData &meta)
 {
-	setMetaValue(meta::RpcMessage::Tag::CallerId, id);
+	RpcValue::UInt ret = 0;
+	shv::chainpack::RpcValue caller_id = callerId(meta);
+	if(caller_id.isArray()) {
+		shv::chainpack::RpcValue::Array array = caller_id.toArray();
+		if(!array.empty()) {
+			ret = array.back().uint_value;
+			array.pop_back();
+			setCallerId(meta, array);
+		}
+	}
+	else {
+		ret = caller_id.toUInt();
+	}
+	return ret;
+}
+
+RpcValue RpcMessage::callerId() const
+{
+	return metaValue(meta::RpcMessage::Tag::CallerId);
+}
+
+void RpcMessage::setCallerId(const RpcValue &callerId)
+{
+	setMetaValue(meta::RpcMessage::Tag::CallerId, callerId);
 }
 
 Rpc::ProtocolType RpcMessage::protocolType(const RpcValue::MetaData &meta)
@@ -307,9 +344,9 @@ RpcResponse RpcResponse::forRequest(const RpcRequest &rq)
 	RpcValue::UInt id = rq.requestId();
 	if(id > 0)
 		ret.setRequestId(id);
-	id = rq.callerId();
-	if(id > 0)
-		ret.setCallerId(id);
+	auto caller_id = rq.callerId();
+	if(caller_id.isValid())
+		ret.setCallerId(caller_id);
 	return ret;
 }
 

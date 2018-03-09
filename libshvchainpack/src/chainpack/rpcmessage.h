@@ -70,10 +70,12 @@ public:
 	RpcValue::String destination() const;
 	void setDestination(const RpcValue::String &path);
 
-	static RpcValue::UInt callerId(const RpcValue::MetaData &meta);
-	static void setCallerId(RpcValue::MetaData &meta, RpcValue::UInt requestId);
-	RpcValue::UInt callerId() const;
-	void setCallerId(RpcValue::UInt requestId);
+	static RpcValue callerId(const RpcValue::MetaData &meta);
+	static void setCallerId(RpcValue::MetaData &meta, const RpcValue &caller_id);
+	static void pushCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id);
+	static RpcValue::UInt popCallerId(RpcValue::MetaData &meta);
+	RpcValue callerId() const;
+	void setCallerId(const RpcValue &callerId);
 
 	static Rpc::ProtocolType protocolType(const RpcValue::MetaData &meta);
 	static void setProtocolType(RpcValue::MetaData &meta, shv::chainpack::Rpc::ProtocolType ver);

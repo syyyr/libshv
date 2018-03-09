@@ -4,6 +4,8 @@
 
 #include <shv/coreqt/log.h>
 
+namespace cp = shv::chainpack;
+
 namespace shv {
 namespace iotqt {
 
@@ -55,7 +57,14 @@ ShvNode::String ShvNode::nodePath() const
 	}
 	return ret;
 }
-
+/*
+chainpack::RpcValue ShvNode::dir(chainpack::RpcValue meta_methods_params)
+{
+	Q_UNUSED(meta_methods_params)
+	static cp::RpcValue::List methods{"get", "set"};
+	return methods;
+}
+*/
 ShvNode::StringList ShvNode::propertyNames() const
 {
 	StringList ret;
