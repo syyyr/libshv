@@ -89,6 +89,8 @@ public:
 	void setMetaValue(RpcValue::UInt key, const RpcValue &val);
 
 	virtual size_t write(AbstractStreamWriter &wr) const;
+
+	static void setMetaTypeImplicit(bool b) {m_isMetaTypeImplicit = b;}
 protected:
 	//enum class RpcCallType { Undefined = 0, Request, Response, Notify };
 	//RpcCallType rpcType() const;
@@ -96,6 +98,7 @@ protected:
 	//void checkRpcTypeMetaValue();
 protected:
 	RpcValue m_value;
+	static bool m_isMetaTypeImplicit;
 };
 
 class SHVCHAINPACK_DECL_EXPORT RpcRequest : public RpcMessage

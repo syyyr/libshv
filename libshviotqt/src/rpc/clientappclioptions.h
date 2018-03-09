@@ -22,6 +22,7 @@ public:
 	CLIOPTION_GETTER_SETTER2(QString, "server.host", s, setS, erverHost)
 	CLIOPTION_GETTER_SETTER2(int, "server.port", s, setS, erverPort)
 	CLIOPTION_GETTER_SETTER2(int, "rpc.timeout", r, setR, pcTimeout)
+	CLIOPTION_GETTER_SETTER2(bool, "rpc.metaTypeImplicit", is, set, MetaTypeImplicit)
 };
 
 } // namespace client
