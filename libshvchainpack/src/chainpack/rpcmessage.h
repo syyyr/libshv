@@ -19,7 +19,7 @@ class RpcMessage : public meta::MetaType
 public:
 	enum {ID = 1};
 	struct Tag { enum Enum {RequestId = meta::Tag::USER,
-							Destination,
+							ShvPath,
 							Method,
 							CallerId,
 							ProtocolType, //needed when dest client is using different version than source one to translate raw message data to correct format
@@ -65,10 +65,10 @@ public:
 	RpcValue::String method() const;
 	void setMethod(const RpcValue::String &method);
 
-	static RpcValue::String destination(const RpcValue::MetaData &meta);
-	static void setDestination(RpcValue::MetaData &meta, const RpcValue::String &path);
-	RpcValue::String destination() const;
-	void setDestination(const RpcValue::String &path);
+	static RpcValue::String shvPath(const RpcValue::MetaData &meta);
+	static void setShvPath(RpcValue::MetaData &meta, const RpcValue::String &path);
+	RpcValue::String shvPath() const;
+	void setShvPath(const RpcValue::String &path);
 
 	static RpcValue callerId(const RpcValue::MetaData &meta);
 	static void setCallerId(RpcValue::MetaData &meta, const RpcValue &caller_id);

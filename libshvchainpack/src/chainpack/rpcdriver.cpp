@@ -276,7 +276,7 @@ size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolTyp
 				if(!method.empty())
 					RpcMessage::setMethod(meta_data, method);
 				if(!shv_path.empty())
-					RpcMessage::setDestination(meta_data, shv_path);
+					RpcMessage::setShvPath(meta_data, shv_path);
 				if(caller_id > 0)
 					RpcMessage::setCallerId(meta_data, caller_id);
 			}
@@ -369,7 +369,7 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolType protocol_type, const RpcVa
 		if(rq_id > 0)
 			json_msg[Rpc::JSONRPC_ID] = rq_id;
 
-		const RpcValue::String shv_path = rpc_msg.destination();
+		const RpcValue::String shv_path = rpc_msg.shvPath();
 		if(!shv_path.empty())
 			json_msg[Rpc::JSONRPC_SHV_PATH] = shv_path;
 

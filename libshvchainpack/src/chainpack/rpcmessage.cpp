@@ -24,7 +24,7 @@ RpcMessage::RpcMessage()
 		{(int)Tag::CallerId, {(int)Tag::CallerId, "callerId"}},
 		{(int)Tag::Method, {(int)Tag::Method, "method"}},
 		{(int)Tag::ProtocolType, {(int)Tag::ProtocolType, "protocol"}},
-		{(int)Tag::Destination, {(int)Tag::Destination, "dest"}},
+		{(int)Tag::ShvPath, {(int)Tag::ShvPath, "shvPath"}},
 	};
 }
 
@@ -166,24 +166,24 @@ void RpcMessage::setRequestId(RpcValue::MetaData &meta, RpcValue::UInt id)
 	meta.setValue(meta::RpcMessage::Tag::RequestId, id);
 }
 
-RpcValue::String RpcMessage::destination(const RpcValue::MetaData &meta)
+RpcValue::String RpcMessage::shvPath(const RpcValue::MetaData &meta)
 {
-	return meta.value(meta::RpcMessage::Tag::Destination).toString();
+	return meta.value(meta::RpcMessage::Tag::ShvPath).toString();
 }
 
-void RpcMessage::setDestination(RpcValue::MetaData &meta, const RpcValue::String &path)
+void RpcMessage::setShvPath(RpcValue::MetaData &meta, const RpcValue::String &path)
 {
-	meta.setValue(meta::RpcMessage::Tag::Destination, path);
+	meta.setValue(meta::RpcMessage::Tag::ShvPath, path);
 }
 
-RpcValue::String RpcMessage::destination() const
+RpcValue::String RpcMessage::shvPath() const
 {
-	return metaValue(meta::RpcMessage::Tag::Destination).toString();
+	return metaValue(meta::RpcMessage::Tag::ShvPath).toString();
 }
 
-void RpcMessage::setDestination(const RpcValue::String &path)
+void RpcMessage::setShvPath(const RpcValue::String &path)
 {
-	setMetaValue(meta::RpcMessage::Tag::Destination, path);
+	setMetaValue(meta::RpcMessage::Tag::ShvPath, path);
 }
 
 RpcValue RpcMessage::callerId(const RpcValue::MetaData &meta)

@@ -57,7 +57,7 @@ RpcResponse AbstractRpcConnection::callShvMethodSync(const std::string &shv_path
 	rq.setMethod(method);
 	rq.setParams(params);
 	if(!shv_path.empty())
-		rq.setDestination(shv_path);
+		rq.setShvPath(shv_path);
 	//logRpc() << "--> sync method call:" << id << method;
 	RpcMessage ret = sendMessageSync(rq, rpc_timeout);
 	if(!ret.isResponse())
