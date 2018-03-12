@@ -29,9 +29,8 @@ ClientConnection::ClientConnection(SyncCalls sync_calls, QObject *parent)
 {
 	Rpc::registerMetatTypes();
 
-	static int id = 0;
-	m_connectionId = ++id;
 	m_rpcDriver = new SocketRpcDriver();
+	m_connectionId = m_rpcDriver->connectionId();
 
 	connect(this, &ClientConnection::setProtocolTypeRequest, m_rpcDriver, &SocketRpcDriver::setProtocolTypeAsInt);
 	connect(this, &ClientConnection::sendMessageRequest, m_rpcDriver, &SocketRpcDriver::sendRpcValue);

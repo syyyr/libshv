@@ -23,11 +23,11 @@ public:
 
 	/// @a min_length minimal length of digest
 	/// @return string crypted by 0-9, A-Z, a-z characters
-	std::string encrypt(const std::string &data, size_t min_length = 16);
+	std::string encrypt(const std::string &data, size_t min_length = 16) const;
 
-	std::string decrypt(const std::string &data);
+	std::string decrypt(const std::string &data) const;
 private:
-	std::string decodeArray(const std::string &ba);
+	std::string decodeArray(const std::string &ba) const;
 	//uint32_t nextRandomValue();
 private:
 	Generator m_generator;

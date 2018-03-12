@@ -275,7 +275,7 @@ QString Utils::replaceCaptions(const QString format_str, const QString &caption_
 {
 	QString ret = format_str;
 	QString placeholder = QLatin1String("{{") + caption_name + QLatin1String("}}");
-	//qfInfo() << placeholder << "->" << caption_value.toString();
+	//shvInfo() << placeholder << "->" << caption_value.toString();
 	ret.replace(placeholder, caption_value.toString());
 	return ret;
 }

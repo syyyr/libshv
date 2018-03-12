@@ -51,7 +51,7 @@ static std::string code_byte(uint8_t b)
 	return ret;
 }
 
-std::string Crypt::encrypt(const std::string &data, size_t min_length)
+std::string Crypt::encrypt(const std::string &data, size_t min_length) const
 {
 	std::string dest;
 
@@ -107,7 +107,7 @@ static uint8_t take_byte(const std::string &ba, size_t &i)
 	return b;
 }
 
-std::string Crypt::decodeArray(const std::string &ba)
+std::string Crypt::decodeArray(const std::string &ba) const
 {
 	/// vyuziva toho, ze generator nahodnych cisel generuje pokazde stejnou sekvenci
 	/// precte si seed ze zacatku \a ba a pak odxorovava nahodnymi cisly, jen to svisti
@@ -126,7 +126,7 @@ std::string Crypt::decodeArray(const std::string &ba)
 	return ret;
 }
 
-std::string Crypt::decrypt(const std::string &data)
+std::string Crypt::decrypt(const std::string &data) const
 {
 	/// odstran vsechny bile znaky, v zakodovanem textu nemohou byt, muzou to byt ale zalomeni radku
 	std::string ba = std::regex_replace(data, std::regex("\\s+"), "");

@@ -225,7 +225,7 @@ void CLIOptions::parse(int argc, char* argv[])
 
 void CLIOptions::parse(const QStringList& cmd_line_args)
 {
-	//qfLogFuncFrame() << cmd_line_args;
+	//shvLogFuncFrame() << cmd_line_args;
 	m_isAppBreak = false;
 	m_parsedArgIndex = 0;
 	m_arguments = cmd_line_args.mid(1);
@@ -452,7 +452,7 @@ QString ConfigCLIOptions::configFile()
 
 void ConfigCLIOptions::mergeConfig_helper(const QString &key_prefix, const QVariantMap &config_map)
 {
-	//qfLogFuncFrame() << key_prefix;
+	//shvLogFuncFrame() << key_prefix;
 	QMapIterator<QString, QVariant> it(config_map);
 	while(it.hasNext()) {
 		it.next();

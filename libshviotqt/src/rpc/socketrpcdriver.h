@@ -33,10 +33,6 @@ public:
 	Q_SIGNAL void rpcValueReceived(shv::chainpack::RpcValue rpc_val);
 	Q_SLOT void sendRpcValue(const shv::chainpack::RpcValue &rpc_val) {Super::sendRpcValue(rpc_val);}
 
-
-	// function waits till response is received in event loop
-	// rpcMessageReceived signal can be emited meanwhile
-
 	void closeConnection();
 	void abortConnection();
 
