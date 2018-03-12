@@ -30,6 +30,7 @@ ClientConnection::ClientConnection(SyncCalls sync_calls, QObject *parent)
 	Rpc::registerMetatTypes();
 
 	m_rpcDriver = new SocketRpcDriver();
+	m_rpcDriver->setProtocolType(cp::Rpc::ProtocolType::ChainPack);
 	m_connectionId = m_rpcDriver->connectionId();
 
 	connect(this, &ClientConnection::setProtocolTypeRequest, m_rpcDriver, &SocketRpcDriver::setProtocolTypeAsInt);
