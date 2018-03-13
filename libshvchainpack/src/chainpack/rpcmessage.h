@@ -11,32 +11,28 @@
 namespace shv {
 namespace chainpack {
 
-namespace meta {
-
-class RpcMessage : public meta::MetaType
-{
-	using Super = meta::MetaType;
-public:
-	enum {ID = 1};
-	struct Tag { enum Enum {RequestId = meta::Tag::USER,
-							ShvPath,
-							Method,
-							CallerId,
-							ProtocolType, //needed when dest client is using different version than source one to translate raw message data to correct format
-							MAX};};
-	struct Key { enum Enum {Params = 1, Result, Error, ErrorCode, ErrorMessage, MAX};};
-
-	RpcMessage();
-
-	static void registerMetaType();
-};
-
-}
-
 class AbstractStreamWriter;
 
 class SHVCHAINPACK_DECL_EXPORT RpcMessage
 {
+public:
+	class MetaType : public meta::MetaType
+	{
+		using Super = meta::MetaType;
+	public:
+		enum {ID = 1};
+		struct Tag { enum Enum {RequestId = meta::Tag::USER,
+								ShvPath,
+								Method,
+								CallerId,
+								ProtocolType, //needed when dest client is using different version than source one to translate raw message data to correct format
+								MAX};};
+		struct Key { enum Enum {Params = 1, Result, Error, ErrorCode, ErrorMessage, MAX};};
+
+		MetaType();
+
+		static void registerMetaType();
+	};
 public:
 	RpcMessage();
 	RpcMessage(const RpcValue &val);

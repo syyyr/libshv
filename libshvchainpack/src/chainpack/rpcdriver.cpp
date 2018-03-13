@@ -320,17 +320,17 @@ RpcValue RpcDriver::decodeData(Rpc::ProtocolType protocol_type, const std::strin
 			RpcValue::IMap imap;
 			RpcValue params = map.value(Rpc::JSONRPC_PARAMS);
 			if(params.isValid()) {
-				imap[meta::RpcMessage::Key::Params] = params;
+				imap[RpcMessage::MetaType::Key::Params] = params;
 			}
 			else {
 				RpcValue result = map.value(Rpc::JSONRPC_RESULT);
 				if(result.isValid()) {
-					imap[meta::RpcMessage::Key::Result] = result;
+					imap[RpcMessage::MetaType::Key::Result] = result;
 				}
 				else {
 					RpcValue error = map.value(Rpc::JSONRPC_ERROR);
 					if(error.isValid())
-						imap[meta::RpcMessage::Key::Error] = error;
+						imap[RpcMessage::MetaType::Key::Error] = error;
 				}
 			}
 			ret = imap;
