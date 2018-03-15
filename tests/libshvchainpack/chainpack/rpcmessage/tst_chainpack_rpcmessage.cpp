@@ -71,11 +71,11 @@ private:
 		rq.setRequestId(123)
 				.setMethod("foo")
 				.setParams({{
-							   {"a", 45},
-							   {"b", "bar"},
-							   {"c", RpcValue::List{1,2,3}},
-						   }});
-		rq.setMetaValue(meta::RpcMessage::Tag::Destination, "aus/mel/pres/A");
+								{"a", 45},
+								{"b", "bar"},
+								{"c", RpcValue::List{1,2,3}},
+							}});
+		rq.setMetaValue(RpcMessage::MetaType::Tag::ShvPath, "aus/mel/pres/A");
 		std::stringstream out;
 		RpcValue cp1 = rq.value();
 		ChainPackWriter wr(out);
