@@ -2,7 +2,7 @@
 
 #include <shv/core/exception.h>
 
-#include <QDebug>
+//#include <shv/core/log.h>
 
 namespace shv {
 namespace gui {

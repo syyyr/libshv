@@ -24,8 +24,8 @@ message ( DESTDIR: $$DESTDIR )
 DEFINES += SHVGUI_BUILD_DLL
 
 INCLUDEPATH += \
-    #$$QUICKBOX_HOME/libqf/libqfcore/include \
-    $$SHV_TOP_SRCDIR/libshvcore/include \
+	$$PWD/../3rdparty/necrolog/include \
+    $$PWD/../libshvcore/include \
 
 message ( INCLUDEPATH: '$$INCLUDEPATH' )
 

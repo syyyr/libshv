@@ -6,9 +6,9 @@
 #include "pointofinterest.h"
 
 #include <shv/core/exception.h>
+//#include <shv/core/log.h>
 
 #include <QDateTime>
-#include <QDebug>
 #include <QFrame>
 #include <QMenu>
 #include <QMouseEvent>
