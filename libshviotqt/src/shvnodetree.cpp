@@ -14,20 +14,35 @@ ShvNodeTree::ShvNodeTree(QObject *parent)
 	m_root->setNodeId("<ROOT>");
 }
 
-ShvNode *ShvNodeTree::mkdir(const ShvNode::String &path, ShvNode::String *path_rest)
+ShvNode *ShvNodeTree::mkdir(const ShvNode::String &path)
 {
 	ShvNode::StringViewList lst = shv::core::StringView(path).split('/');
-	return mdcd(lst, path_rest, true);
+	return mkdir(lst);
+}
+
+ShvNode *ShvNodeTree::mkdir(const ShvNode::StringViewList &path)
+{
+	return mdcd(path, true, nullptr);
+}
+
+ShvNode *ShvNodeTree::cd(const ShvNode::String &path)
+{
+	std::string path_rest;
+	ShvNode::StringViewList lst = shv::core::StringView(path).split('/');
+	ShvNode *nd = mdcd(lst, false, &path_rest);
+	if(path_rest.empty())
+		return nd;
+	return nullptr;
 }
 
 ShvNode *ShvNodeTree::cd(const ShvNode::String &path, ShvNode::String *path_rest)
 {
 	ShvNode::StringViewList lst = shv::core::StringView(path).split('/');
 	//shvWarning() << path << "->" << shv::core::String::join(lst, '-');
-	return mdcd(lst, path_rest, false);
+	return mdcd(lst, false, path_rest);
 }
 
-ShvNode *ShvNodeTree::mdcd(const ShvNode::StringViewList &path, ShvNode::String *path_rest, bool create_dirs)
+ShvNode *ShvNodeTree::mdcd(const ShvNode::StringViewList &path, bool create_dirs, ShvNode::String *path_rest)
 {
 	ShvNode *ret = m_root;
 	size_t ix;
@@ -40,7 +55,6 @@ ShvNode *ShvNodeTree::mdcd(const ShvNode::StringViewList &path, ShvNode::String 
 				ret->setNodeId(path[ix].toString());
 			}
 			else {
-				//ret = nullptr;
 				break;
 			}
 		}
@@ -69,7 +83,7 @@ bool ShvNodeTree::mount(const ShvNode::String &path, ShvNode *node)
 		parent_nd = m_root;
 	}
 	else {
-		parent_nd = mdcd(lst, nullptr, true);
+		parent_nd = mkdir(lst);
 	}
 	ShvNode *ch = parent_nd->childNode(last_id);
 	if(ch) {

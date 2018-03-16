@@ -19,13 +19,15 @@ public:
 
 	ShvNode* root() const {return m_root;}
 
-	ShvNode* mkdir(const ShvNode::String &path, ShvNode::String *path_rest = nullptr);
-	ShvNode* cd(const ShvNode::String &path, ShvNode::String *path_rest = nullptr);
+	ShvNode* mkdir(const ShvNode::String &path);
+	ShvNode* mkdir(const ShvNode::StringViewList &path);
+	ShvNode* cd(const ShvNode::String &path);
+	ShvNode* cd(const ShvNode::String &path, ShvNode::String *path_rest);
 	bool mount(const ShvNode::String &path, ShvNode *node);
 
 	std::string dumpTree();
 protected:
-	ShvNode* mdcd(const ShvNode::StringViewList &path, ShvNode::String *path_rest, bool create_dirs);
+	ShvNode* mdcd(const ShvNode::StringViewList &path, bool create_dirs, ShvNode::String *path_rest);
 protected:
 	//std::map<std::string, ShvNode*> m_root;
 	ShvNode* m_root = nullptr;
