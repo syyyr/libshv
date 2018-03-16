@@ -35,6 +35,7 @@ public:
 
 	//virtual shv::chainpack::RpcValue dir(shv::chainpack::RpcValue meta_methods_params);
 	virtual shv::chainpack::RpcValue ls(shv::chainpack::RpcValue methods_params);
+	virtual shv::chainpack::RpcValue dir(shv::chainpack::RpcValue methods_params);
 
 	virtual bool isRootNode() const {return false;}
 
