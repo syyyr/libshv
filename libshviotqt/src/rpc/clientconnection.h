@@ -28,7 +28,6 @@ class SHVIOTQT_DECL_EXPORT ClientConnection : public QObject, public shv::chainp
 	SHV_FIELD_IMPL(std::string, p, P, assword)
 
 	SHV_PROPERTY_BOOL_IMPL(b, B, rokerConnected)
-
 public:
 	enum class SyncCalls {Enabled, Disabled};
 
@@ -39,6 +38,9 @@ public:
 	void open();
 	void close() Q_DECL_OVERRIDE;
 	void abort() Q_DECL_OVERRIDE;
+
+	//unsigned checkBrokerConnectedInterval() const {return m_checkBrokerConnectedInterval;}
+	void setCheckBrokerConnectedInterval(unsigned ms);
 
 	void setSocket(QTcpSocket *socket);
 	void setProtocolType(shv::chainpack::Rpc::ProtocolType ver) {emit setProtocolTypeRequest((unsigned)ver);}

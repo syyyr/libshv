@@ -1,6 +1,7 @@
 #include "shvnodetree.h"
 
 #include <shv/chainpack/rpcvalue.h>
+#include <shv/core/stringview.h>
 #include <shv/coreqt/log.h>
 
 namespace shv {
@@ -10,33 +11,33 @@ ShvNodeTree::ShvNodeTree(QObject *parent)
 	: QObject(parent)
 	, m_root(new ShvRootNode(this))
 {
-	m_root->setNodeName("<ROOT>");
+	m_root->setNodeId("<ROOT>");
 }
 
 ShvNode *ShvNodeTree::mkdir(const ShvNode::String &path, ShvNode::String *path_rest)
 {
-	ShvNode::StringList lst = shv::core::String::split(path, '/');
+	ShvNode::StringViewList lst = shv::core::StringView(path).split('/');
 	return mdcd(lst, path_rest, true);
 }
 
 ShvNode *ShvNodeTree::cd(const ShvNode::String &path, ShvNode::String *path_rest)
 {
-	ShvNode::StringList lst = shv::core::String::split(path, '/');
+	ShvNode::StringViewList lst = shv::core::StringView(path).split('/');
 	//shvWarning() << path << "->" << shv::core::String::join(lst, '-');
 	return mdcd(lst, path_rest, false);
 }
 
-ShvNode *ShvNodeTree::mdcd(const ShvNode::StringList &path, ShvNode::String *path_rest, bool create_dirs)
+ShvNode *ShvNodeTree::mdcd(const ShvNode::StringViewList &path, ShvNode::String *path_rest, bool create_dirs)
 {
 	ShvNode *ret = m_root;
 	size_t ix;
 	for (ix = 0; ix < path.size(); ++ix) {
-		const ShvNode::String &s = path[ix];
+		const shv::core::StringView &s = path[ix];
 		ShvNode *nd2 = ret->childNode(s);
 		if(nd2 == nullptr) {
 			if(create_dirs) {
 				ret = new ShvNode(ret);
-				ret->setNodeName(path[ix]);
+				ret->setNodeId(path[ix].toString());
 			}
 			else {
 				//ret = nullptr;
@@ -48,7 +49,7 @@ ShvNode *ShvNodeTree::mdcd(const ShvNode::StringList &path, ShvNode::String *pat
 		}
 	}
 	if(path_rest) {
-		auto path2 = ShvNode::StringList(path.begin() + ix, path.end());
+		auto path2 = ShvNode::StringViewList(path.begin() + ix, path.end());
 		*path_rest = shv::core::String::join(path2, '/');
 	}
 	return ret;
@@ -56,12 +57,12 @@ ShvNode *ShvNodeTree::mdcd(const ShvNode::StringList &path, ShvNode::String *pat
 
 bool ShvNodeTree::mount(const ShvNode::String &path, ShvNode *node)
 {
-	ShvNode::StringList lst = shv::core::String::split(path, '/');
+	ShvNode::StringViewList lst = shv::core::StringView(path).split('/');
 	if(lst.empty()) {
 		shvError() << "Cannot mount node on empty path:" << path;
 		return false;
 	}
-	std::string last_id = lst.back();
+	shv::core::StringView last_id = lst.back();
 	lst.pop_back();
 	ShvNode *parent_nd = nullptr;
 	if(lst.empty()) {
@@ -76,16 +77,16 @@ bool ShvNodeTree::mount(const ShvNode::String &path, ShvNode *node)
 		return false;
 	}
 	node->setParentNode(parent_nd);
-	node->setNodeName(last_id);
+	node->setNodeId(last_id.toString());
 	return true;
 }
 
 static std::string dump_node(ShvNode *parent, int indent)
 {
 	std::string ret;
-	for(const std::string &pn : parent->propertyNames()) {
+	for(const std::string &pn : parent->childNodeIds()) {
 		ShvNode *chnd = parent->childNode(pn);
-		ret += '\n' + std::string(indent, '\t') + pn + ": " + parent->propertyValue(pn).toPrettyString();
+		ret += '\n' + std::string(indent, '\t') + pn;// + ": " + parent->propertyValue(pn).toPrettyString();
 		if(chnd) {
 			ret += dump_node(chnd, ++indent);
 		}
@@ -93,7 +94,7 @@ static std::string dump_node(ShvNode *parent, int indent)
 	return ret;
 }
 
-std::string ShvNodeTree::dump()
+std::string ShvNodeTree::dumpTree()
 {
 	return dump_node(m_root, 0);
 }

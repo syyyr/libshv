@@ -23,7 +23,8 @@ public:
 	void sendNotify(const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
 	void sendResponse(unsigned request_id, const shv::chainpack::RpcValue &result);
 	void sendError(unsigned request_id, const shv::chainpack::RpcResponse::Error &error);
-	int callMethod(const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
+	unsigned callMethod(const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
+	unsigned callShvMethod(const std::string &shv_path, const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
 	RpcResponse callMethodSync(const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = DEFAULT_RPC_TIMEOUT);
 	RpcResponse callShvMethodSync(const std::string &shv_path, const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = DEFAULT_RPC_TIMEOUT);
 

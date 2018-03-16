@@ -34,13 +34,20 @@ static unsigned next_rqid()
 	return ++n;
 }
 
-int AbstractRpcConnection::callMethod(const std::string &method, const RpcValue &params)
+unsigned AbstractRpcConnection::callMethod(const std::string &method, const RpcValue &params)
+{
+	return callShvMethod(std::string(), method, params);
+}
+
+unsigned AbstractRpcConnection::callShvMethod(const std::string &shv_path, const std::string &method, const RpcValue &params)
 {
 	unsigned id = next_rqid();
 	RpcRequest rq;
 	rq.setRequestId(id);
 	rq.setMethod(method);
 	rq.setParams(params);
+	if(!shv_path.empty())
+		rq.setShvPath(shv_path);
 	sendMessage(rq);
 	return id;
 }

@@ -1,7 +1,9 @@
 #include "shvnode.h"
 
+#include <shv/chainpack/rpcmessage.h>
 #include <shv/chainpack/rpcvalue.h>
-
+#include <shv/core/stringview.h>
+#include <shv/core/exception.h>
 #include <shv/coreqt/log.h>
 
 namespace cp = shv::chainpack;
@@ -20,10 +22,15 @@ ShvNode *ShvNode::parentNode() const
 	return qobject_cast<ShvNode*>(parent());
 }
 
-ShvNode *ShvNode::childNode(const String &name) const
+ShvNode *ShvNode::childNode(const ShvNode::String &name) const
 {
 	ShvNode *nd = findChild<ShvNode*>(QString::fromStdString(name), Qt::FindDirectChildrenOnly);
 	return nd;
+}
+
+ShvNode *ShvNode::childNode(const shv::core::StringView &name) const
+{
+	return childNode(name.toString());
 }
 
 void ShvNode::setParentNode(ShvNode *parent)
@@ -31,32 +38,33 @@ void ShvNode::setParentNode(ShvNode *parent)
 	setParent(parent);
 }
 
-void ShvNode::setNodeName(ShvNode::String &&n)
+void ShvNode::setNodeId(ShvNode::String &&n)
 {
 	setObjectName(QString::fromStdString(n));
 	shvDebug() << __FUNCTION__ << this << n;
-	m_nodeName = std::move(n);
+	m_nodeId = std::move(n);
 }
 
-void ShvNode::setNodeName(const ShvNode::String &n)
+void ShvNode::setNodeId(const ShvNode::String &n)
 {
 	setObjectName(QString::fromStdString(n));
 	shvDebug() << __FUNCTION__ << this << n;
-	m_nodeName = n;
+	m_nodeId = n;
 }
 
-ShvNode::String ShvNode::nodePath() const
+ShvNode::String ShvNode::shvPath() const
 {
 	String ret;
 	const ShvNode *nd = this;
 	while(nd) {
 		ret = '/' + ret;
 		if(!nd->isRootNode())
-			ret = nd->nodeName() + ret;
+			ret = nd->nodeId() + ret;
 		nd = nd->parentNode();
 	}
 	return ret;
 }
+
 /*
 chainpack::RpcValue ShvNode::dir(chainpack::RpcValue meta_methods_params)
 {
@@ -65,12 +73,25 @@ chainpack::RpcValue ShvNode::dir(chainpack::RpcValue meta_methods_params)
 	return methods;
 }
 */
-ShvNode::StringList ShvNode::propertyNames() const
+ShvNode::StringList ShvNode::childNodeIds() const
 {
 	StringList ret;
 	for(ShvNode *nd : findChildren<ShvNode*>(QString(), Qt::FindDirectChildrenOnly)) {
-		shvDebug() << "child:" << nd << nd->nodeName();
-		ret.push_back(nd->nodeName());
+		shvDebug() << "child:" << nd << nd->nodeId();
+		ret.push_back(nd->nodeId());
+	}
+	return ret;
+}
+
+shv::chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
+{
+	shv::chainpack::RpcValue ret;
+	chainpack::RpcValue::String method = rq.method();
+	if(method == "ls") {
+		ret = ls(rq.params());
+	}
+	else {
+		SHV_EXCEPTION("Invalid method: " + method + " called for node: " + shvPath());
 	}
 	return ret;
 }
@@ -78,11 +99,20 @@ ShvNode::StringList ShvNode::propertyNames() const
 shv::chainpack::RpcValue ShvNode::shvValue() const
 {
 	shv::chainpack::RpcValue::List lst;
-	for(const String &s : propertyNames())
+	for(const String &s : childNodeIds())
 		lst.push_back(s);
 	return lst;
 }
 
+chainpack::RpcValue ShvNode::ls(chainpack::RpcValue methods_params)
+{
+	Q_UNUSED(methods_params)
+	cp::RpcValue::List ret;
+	for(const std::string &n : childNodeIds())
+		ret.push_back(n);
+	return ret;
+}
+/*
 shv::chainpack::RpcValue ShvNode::propertyValue(const String &property_name) const
 {
 	ShvNode *nd = childNode(property_name);
@@ -106,5 +136,5 @@ bool ShvNode::setPropertyValue_helper(const ShvNode::String &property_name, cons
 	Q_UNUSED(val)
 	return false;
 }
-
+*/
 }}

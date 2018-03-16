@@ -1,5 +1,6 @@
 #include "string.h"
 #include "log.h"
+#include "stringview.h"
 
 #include <algorithm>
 
@@ -72,6 +73,17 @@ std::string String::join(const std::vector<std::string> &lst, char delim)
 		if(!ret.empty())
 			ret += delim;
 		ret += s;
+	}
+	return ret;
+}
+
+std::string String::join(const std::vector<StringView> &lst, char delim)
+{
+	std::string ret;
+	for(const auto &s : lst) {
+		if(!ret.empty())
+			ret += delim;
+		ret += s.toString();
 	}
 	return ret;
 }

@@ -57,7 +57,7 @@ ClientConnection::ClientConnection(SyncCalls sync_calls, QObject *parent)
 	connect(this, &ClientConnection::socketConnectedChanged, this, &ClientConnection::onSocketConnectedChanged);
 
 	m_checkConnectedTimer = new QTimer(this);
-	m_checkConnectedTimer->setInterval(1000 * 10);
+	m_checkConnectedTimer->setInterval(10*1000);
 	connect(m_checkConnectedTimer, &QTimer::timeout, this, &ClientConnection::checkBrokerConnected);
 }
 
@@ -86,7 +86,8 @@ void ClientConnection::open()
 		setSocket(socket);
 	}
 	checkBrokerConnected();
-	m_checkConnectedTimer->start();
+	if(m_checkConnectedTimer->interval() > 0)
+		m_checkConnectedTimer->start();
 }
 
 void ClientConnection::close()
@@ -99,6 +100,13 @@ void ClientConnection::abort()
 {
 	m_checkConnectedTimer->stop();
 	emit abortConnectionRequest();
+}
+
+void ClientConnection::setCheckBrokerConnectedInterval(unsigned ms)
+{
+	m_checkConnectedTimer->setInterval(ms);
+	if(ms == 0)
+		m_checkConnectedTimer->stop();
 }
 
 void ClientConnection::resetConnection()

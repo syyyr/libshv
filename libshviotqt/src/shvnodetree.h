@@ -23,9 +23,9 @@ public:
 	ShvNode* cd(const ShvNode::String &path, ShvNode::String *path_rest = nullptr);
 	bool mount(const ShvNode::String &path, ShvNode *node);
 
-	std::string dump();
+	std::string dumpTree();
 protected:
-	ShvNode* mdcd(const ShvNode::StringList &path, ShvNode::String *path_rest, bool create_dirs);
+	ShvNode* mdcd(const ShvNode::StringViewList &path, ShvNode::String *path_rest, bool create_dirs);
 protected:
 	//std::map<std::string, ShvNode*> m_root;
 	ShvNode* m_root = nullptr;
