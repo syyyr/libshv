@@ -19,9 +19,12 @@
 #define SHV_EXPAND_AND_QUOTE(x) SHV_QUOTE(x)
 //#define SHV_QUOTE_QSTRINGLITERAL(x) QStringLiteral(#x)
 
+//public: ptype& lower_letter##name_rest##Ref() {return m_##lower_letter##name_rest;}
+
 #define SHV_FIELD_IMPL(ptype, lower_letter, upper_letter, name_rest) \
 	private: ptype m_##lower_letter##name_rest; \
 	public: ptype lower_letter##name_rest() const {return m_##lower_letter##name_rest;} \
+	public: const ptype& lower_letter##name_rest##Ref() const {return m_##lower_letter##name_rest;} \
 	public: bool set##upper_letter##name_rest(const ptype &val) { \
 		if(!(m_##lower_letter##name_rest == val)) { m_##lower_letter##name_rest = val; return true; } \
 		return false; \
@@ -30,6 +33,7 @@
 #define SHV_FIELD_IMPL2(ptype, lower_letter, upper_letter, name_rest, default_value) \
 	private: ptype m_##lower_letter##name_rest = default_value; \
 	public: ptype lower_letter##name_rest() const {return m_##lower_letter##name_rest;} \
+	public: const ptype& lower_letter##name_rest##Ref() const {return m_##lower_letter##name_rest;} \
 	public: bool set##upper_letter##name_rest(const ptype &val) { \
 		if(!(m_##lower_letter##name_rest == val)) { m_##lower_letter##name_rest = val; return true; } \
 		return false; \
