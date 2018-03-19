@@ -1931,6 +1931,26 @@ int View::fitPointInRect(int y, const QRect &rect)
 	return y;
 }
 
+QPainterPath View::paintTopTriangle(const QRectF &rect)
+{
+	QPainterPath path;
+	path.moveTo(rect.left() + (rect.width() / 2), rect.top());
+	path.lineTo(rect.bottomLeft());
+	path.lineTo(rect.bottomRight());
+	path.lineTo(rect.left() + (rect.width() / 2), rect.top());
+	return path;
+};
+
+QPainterPath View::paintBottomTriangle(const QRectF &rect)
+{
+	QPainterPath path;
+	path.moveTo(rect.left() + (rect.width() / 2), rect.bottom());
+	path.lineTo(rect.topLeft());
+	path.lineTo(rect.topRight());
+	path.lineTo(rect.left() + (rect.width() / 2), rect.bottom());
+	return path;
+}
+
 void View::paintValueSerie(QPainter *painter, const QRect &rect, double vertical_zoom, int x_axis_position, const Serie *serie, qint64 min, qint64 max, const QPen &pen, const Serie::Fill &fill_rect, int fill_base)
 {
 	const SerieData &data = serie->serieModelData(this);
@@ -1989,6 +2009,19 @@ void View::paintValueSerie(QPainter *painter, const QRect &rect, double vertical
 	polygon << QPoint(first_point.x(), fitPointInRect(fill_base, rect));
 	polygon << QPoint(first_point.x(), fitPointInRect(first_point.y(), rect));
 
+	auto drawTriangleLine = [this, &serie, &painter, &rect](int first_point, int last_point, TriangleLineType line_type) {
+		for (int i = first_point; i < last_point; i += 5) {
+			QPainterPath path;
+			if (line_type == TriangleLineType::Top) {
+				path = paintTopTriangle(QRectF(i, 0, 4, 4));
+			}
+			else {
+				path = paintBottomTriangle(QRectF(i, rect.height() - 4, 4, 4));
+			}
+			painter->fillPath(path, serie->color());
+		}
+	};
+
 	QPoint last_point(0, 0);
 	for (auto it = begin + 1; it != end; ++it) {
 		ValueChange::ValueY value_change = formattedSerieValue(serie, it);
@@ -2015,6 +2048,9 @@ void View::paintValueSerie(QPainter *painter, const QRect &rect, double vertical
 			if (last_on_first > 0 && last_on_first < rect.height()) {
 				painter->drawLine(first_point.x(), last_on_first, last_point.x(), last_on_first);
 			}
+			else if (settings.inicateOutOfRectSerie) {
+				drawTriangleLine(first_point.x(), last_point.x(), (last_on_first <= 0) ? TriangleLineType::Top : TriangleLineType::Bottom);
+			}
 			int y1 = fitPointInRect(last_on_first, rect);
 			int y2 = fitPointInRect(last_point.y(), rect);
 			if (y1 != y2 || (last_on_first > 0 && last_on_first < rect.height() && last_point.y() > 0 && last_point.y() < rect.height())) {
@@ -2039,6 +2075,9 @@ void View::paintValueSerie(QPainter *painter, const QRect &rect, double vertical
 		if (first_point.y() > 0 && first_point.y() < rect.height()) {
 			painter->drawLine(first_point.x(), first_point.y(), rect_last_point, first_point.y());
 		}
+		else if (settings.inicateOutOfRectSerie) {
+			drawTriangleLine(first_point.x(), rect_last_point, (first_point.y() <= 0) ? TriangleLineType::Top : TriangleLineType::Bottom);
+		}
 		polygon << QPoint(rect_last_point, fitPointInRect(first_point.y(), rect));
 	}
 	else if (last_point.x() < rect_last_point) {
@@ -2047,6 +2086,9 @@ void View::paintValueSerie(QPainter *painter, const QRect &rect, double vertical
 		}
 		if (last_point.y() > 0 && last_point.y() < rect.height()) {
 			painter->drawLine(last_point.x(), last_point.y(), rect_last_point, last_point.y());
+		}
+		else if (settings.inicateOutOfRectSerie) {
+			drawTriangleLine(last_point.x(), rect_last_point, (last_point.y() <= 0) ? TriangleLineType::Top : TriangleLineType::Bottom);
 		}
 		polygon << QPoint(last_point.x(), fitPointInRect(last_point.y(), rect));
 		polygon << QPoint(rect_last_point, fitPointInRect(last_point.y(), rect));
