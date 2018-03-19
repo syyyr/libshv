@@ -16,6 +16,8 @@ public:
 	static const char* METH_GET;
 	static const char* METH_SET;
 	static const char* METH_VAL_CHANGED;
+	static const char* METH_DIR;
+	static const char* METH_LS;
 
 	static const char* JSONRPC_ID;
 	static const char* JSONRPC_METHOD;

@@ -9,6 +9,8 @@ const char* Rpc::METH_LOGIN = "login";
 const char* Rpc::METH_GET = "get";
 const char* Rpc::METH_SET = "set";
 const char* Rpc::METH_VAL_CHANGED = "chng";
+const char* Rpc::METH_DIR = "dir";
+const char* Rpc::METH_LS = "ls";
 
 const char* Rpc::JSONRPC_ID = "id";
 const char* Rpc::JSONRPC_METHOD = "method";
