@@ -114,6 +114,7 @@ public:
 		bool showCrossLine = true;
 		bool showDependent = true;
 		bool showSerieBackgroundStripes = false;
+		bool inicateOutOfRectSerie = true;
 		QTimeZone sourceDataTimeZone = QTimeZone::utc();
 		QTimeZone viewTimeZone = QTimeZone::utc();
 		std::function <void (QMenu*)> contextMenuExtend;
@@ -190,6 +191,8 @@ protected:
 	virtual void onModelDataChanged();
 
 private:
+	enum class TriangleLineType { Top, Bottom };
+
 	class GraphArea
 	{
 	public:
@@ -264,6 +267,8 @@ private:
 	void paintViewHorizontalBackgroundStripe(QPainter *painter, const GraphArea &area, const BackgroundStripe *stripe);
 	void paintOutsideSeriesGroups(QPainter *painter, const GraphArea &area);
 	void fillSerie(QPainter *painter, const QPolygon &polygon, const Serie *serie, const Serie::Fill &fill_rect);
+	QPainterPath paintBottomTriangle(const QRectF &rect);
+	QPainterPath paintTopTriangle(const QRectF &rect);
 
 	QString legend(qint64 position) const;
 	QString legendRow(const Serie *serie, qint64 position) const;
