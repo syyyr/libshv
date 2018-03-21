@@ -4,10 +4,17 @@
 namespace shv {
 namespace chainpack {
 
-void AbstractRpcConnection::sendNotify(const std::string &method, const RpcValue &params)
+void AbstractRpcConnection::sendNotify(std::string method, const RpcValue &params)
+{
+	sendShvNotify(std::string(), std::move(method), params);
+}
+
+void AbstractRpcConnection::sendShvNotify(const std::string &shv_path, std::string method, const RpcValue &params)
 {
 	RpcRequest rq;
-	rq.setMethod(method);
+	if(!shv_path.empty())
+		rq.setShvPath(shv_path);
+	rq.setMethod(std::move(method));
 	rq.setParams(params);
 	sendMessage(rq);
 }
@@ -34,17 +41,17 @@ static unsigned next_rqid()
 	return ++n;
 }
 
-unsigned AbstractRpcConnection::callMethod(const std::string &method, const RpcValue &params)
+unsigned AbstractRpcConnection::callMethod(std::string method, const RpcValue &params)
 {
-	return callShvMethod(std::string(), method, params);
+	return callShvMethod(std::string(), std::move(method), params);
 }
 
-unsigned AbstractRpcConnection::callShvMethod(const std::string &shv_path, const std::string &method, const RpcValue &params)
+unsigned AbstractRpcConnection::callShvMethod(const std::string &shv_path, std::string method, const RpcValue &params)
 {
 	unsigned id = next_rqid();
 	RpcRequest rq;
 	rq.setRequestId(id);
-	rq.setMethod(method);
+	rq.setMethod(std::move(method));
 	rq.setParams(params);
 	if(!shv_path.empty())
 		rq.setShvPath(shv_path);

@@ -41,6 +41,7 @@ public:
 	void open();
 	void close() Q_DECL_OVERRIDE;
 	void abort() Q_DECL_OVERRIDE;
+	void resetConnection();
 
 	//unsigned checkBrokerConnectedInterval() const {return m_checkBrokerConnectedInterval;}
 	void setCheckBrokerConnectedInterval(unsigned ms);
@@ -84,7 +85,6 @@ protected:
 	void sendLogin(const shv::chainpack::RpcValue &server_hello);
 
 	void checkBrokerConnected();
-	void resetConnection();
 private:
 	SocketRpcDriver *m_rpcDriver = nullptr;
 	// RpcDriver must run in separate thread to implement synchronous RPC calls properly

@@ -20,11 +20,12 @@ public:
 	virtual RpcResponse sendMessageSync(const shv::chainpack::RpcRequest &rpc_request, int time_out_ms = DEFAULT_RPC_TIMEOUT) = 0;
 	virtual void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg) = 0;
 
-	void sendNotify(const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
+	void sendNotify(std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
+	void sendShvNotify(const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
 	void sendResponse(unsigned request_id, const shv::chainpack::RpcValue &result);
 	void sendError(unsigned request_id, const shv::chainpack::RpcResponse::Error &error);
-	unsigned callMethod(const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
-	unsigned callShvMethod(const std::string &shv_path, const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
+	unsigned callMethod(std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
+	unsigned callShvMethod(const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
 	RpcResponse callMethodSync(const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = DEFAULT_RPC_TIMEOUT);
 	RpcResponse callShvMethodSync(const std::string &shv_path, const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = DEFAULT_RPC_TIMEOUT);
 
