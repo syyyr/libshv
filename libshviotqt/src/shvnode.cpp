@@ -85,6 +85,8 @@ ShvNode::StringList ShvNode::childNodeIds() const
 
 shv::chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 {
+	if(!rq.shvPath().empty())
+		SHV_EXCEPTION("Subtree '" + shvPath() + "' not exists!");
 	shv::chainpack::RpcValue ret;
 	chainpack::RpcValue::String method = rq.method();
 	if(method == cp::Rpc::METH_LS) {
@@ -99,7 +101,7 @@ shv::chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest 
 	return ret;
 }
 
-chainpack::RpcValue ShvNode::ls(chainpack::RpcValue methods_params)
+chainpack::RpcValue ShvNode::ls(const chainpack::RpcValue &methods_params)
 {
 	Q_UNUSED(methods_params)
 	cp::RpcValue::List ret;
@@ -108,11 +110,11 @@ chainpack::RpcValue ShvNode::ls(chainpack::RpcValue methods_params)
 	return ret;
 }
 
-chainpack::RpcValue ShvNode::dir(chainpack::RpcValue methods_params)
+chainpack::RpcValue ShvNode::dir(const chainpack::RpcValue &methods_params)
 {
 	Q_UNUSED(methods_params)
 	//static cp::RpcValue::List ret{cp::Rpc::METH_GET, cp::Rpc::METH_SET};
-	static cp::RpcValue::List ret{"dir", "ls"};
+	static cp::RpcValue::List ret{cp::Rpc::METH_DIR, cp::Rpc::METH_LS};
 	return ret;
 }
 /*
