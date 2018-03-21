@@ -146,6 +146,7 @@ public:
 		double double_value;
 		bool bool_value;
 		std::nullptr_t null_value;
+		DateTime datetime_value;
 
 		ArrayElement() {}
 		ArrayElement(std::nullptr_t) : null_value(nullptr) {}
@@ -157,6 +158,7 @@ public:
 		ArrayElement(uint64_t i) : uint64_value(i) {}
 		ArrayElement(double d) : double_value(d) {}
 		ArrayElement(bool b) : bool_value(b) {}
+		ArrayElement(DateTime dt) : datetime_value(dt) {}
 	};
 	class SHVCHAINPACK_DECL_EXPORT Array : public std::vector<ArrayElement>
 	{
@@ -174,6 +176,14 @@ public:
 				push_back(std::move(el));
 			}
 		}
+		bool operator ==(const Array &o) const
+		{
+			for (size_t i = 0; i < size(); ++i) {
+				if(!(valueAt(i) == o.valueAt(i)))
+					return false;
+			}
+			return true;
+		}
 		Type type() const {return m_type;}
 		RpcValue valueAt(size_t ix) const
 		{
@@ -185,6 +195,7 @@ public:
 			case RpcValue::Type::UInt64: return RpcValue::fromUInt64(Super::at(ix).uint64_value);
 			case RpcValue::Type::Double: return RpcValue(Super::at(ix).double_value);
 			case RpcValue::Type::Bool: return RpcValue(Super::at(ix).bool_value);
+			case RpcValue::Type::DateTime: return RpcValue(Super::at(ix).datetime_value);
 			default: SHVCHP_EXCEPTION("Unsupported array type");
 			}
 		}
@@ -197,6 +208,7 @@ public:
 			case RpcValue::Type::UInt: el.uint_value = val.toUInt(); break;
 			case RpcValue::Type::Double: el.double_value = val.toDouble(); break;
 			case RpcValue::Type::Bool: el.bool_value = val.toBool(); break;
+			case RpcValue::Type::DateTime: el.datetime_value = val.toDateTime(); break;
 			default: SHVCHP_EXCEPTION("Unsupported array type");
 			}
 			return el;
@@ -377,5 +389,7 @@ template<typename T> RpcValue::Type guessType() { throw std::runtime_error("gues
 template<> inline RpcValue::Type RpcValue::guessType<RpcValue::Int>() { return Type::Int; }
 template<> inline RpcValue::Type RpcValue::guessType<RpcValue::UInt>() { return Type::UInt; }
 template<> inline RpcValue::Type RpcValue::guessType<uint16_t>() { return Type::UInt; }
+template<> inline RpcValue::Type RpcValue::guessType<bool>() { return Type::Bool; }
+template<> inline RpcValue::Type RpcValue::guessType<RpcValue::DateTime>() { return Type::DateTime; }
 
 }}

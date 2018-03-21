@@ -279,7 +279,7 @@ private:
 										   });
 
 		qDebug() << "obj: " << obj.toCpon();
-		QVERIFY(obj.toCpon() == "{\"k1\":\"v1\", \"k2\":42, \"k3\":[\"a\", 123, true, false, null]}");
+		QVERIFY(obj.toCpon() == "{\"k1\":\"v1\", \"k2\":42., \"k3\":[\"a\", 123., true, false, null]}");
 
 		QCOMPARE(RpcValue("a").toDouble(), 0.);
 		QCOMPARE(RpcValue("a").toString().c_str(), "a");
@@ -597,7 +597,7 @@ private:
 				ChainPackReader rd(out); RpcValue cp2 = rd.read();
 				qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
 				QVERIFY(cp1.type() == cp2.type());
-				QVERIFY(cp1.toList() == cp2.toList());
+				QVERIFY(cp1.toArray() == cp2.toArray());
 			}
 			{
 				static constexpr size_t N = 10;
@@ -612,24 +612,23 @@ private:
 				ChainPackReader rd(out); RpcValue cp2 = rd.read();
 				qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
 				QVERIFY(cp1.type() == cp2.type());
-				QVERIFY(cp1.toList() == cp2.toList());
+				QVERIFY(cp1.toArray() == cp2.toArray());
 			}
-			/*
 			{
 				static constexpr size_t N = 10;
-				std::stringstream out;
-				ChainPackProtocol::writeArrayBegin(out, N, RpcValue::Type::String);
-				std::string s("foo-bar");
+				RpcValue::DateTime samples[N];
 				for (size_t i = 0; i < N; ++i) {
-					ChainPackProtocol::writeArrayElement(out, RpcValue(s + shv::core::Utils::toString(i)));
+					samples[i] = RpcValue::DateTime::fromMSecsSinceEpoch(100000 * i);
 				}
-				RpcValue cp2 = ChainPackProtocol::read(out);
-				const RpcValue::Array array = cp2.toArray();
-				for (size_t i = 0; i < array.size(); ++i) {
-					QVERIFY(RpcValue(s + shv::core::Utils::toString(i)) == array.valueAt(i));
-				}
+				RpcValue::Array t{samples};
+				RpcValue cp1{t};
+				std::stringstream out;
+				ChainPackWriter wr(out); size_t len = wr.write(cp1);
+				ChainPackReader rd(out); RpcValue cp2 = rd.read();
+				qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
+				QVERIFY(cp1.type() == cp2.type());
+				QVERIFY(cp1.toArray() == cp2.toArray());
 			}
-			*/
 			{
 				static constexpr size_t N = 10;
 				std::stringstream out;
