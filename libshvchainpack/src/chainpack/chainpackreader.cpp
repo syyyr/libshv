@@ -283,7 +283,7 @@ RpcValue::IMap ChainPackReader::readData_IMap()
 
 RpcValue::Array ChainPackReader::readData_Array(ChainPack::TypeInfo::Enum array_type_info)
 {
-	RpcValue::Type type = ChainPack::typeInfoToType(array_type_info);
+	RpcValue::Type type = ChainPack::typeInfoToArrayType(array_type_info);
 	RpcValue::Array ret(type);
 	RpcValue::UInt size = readData_UInt<RpcValue::UInt>(m_in);
 	ret.reserve(size);

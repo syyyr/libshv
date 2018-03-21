@@ -36,7 +36,7 @@ public:
 		static const char* name(Enum e);
 	};
 
-	static RpcValue::Type typeInfoToType(TypeInfo::Enum type_info);
+	static RpcValue::Type typeInfoToArrayType(TypeInfo::Enum type_info);
 };
 
 }}

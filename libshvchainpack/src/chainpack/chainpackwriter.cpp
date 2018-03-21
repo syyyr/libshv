@@ -228,7 +228,9 @@ static ChainPack::TypeInfo::Enum typeToTypeInfo(RpcValue::Type type)
 	case RpcValue::Type::Array:
 		SHVCHP_EXCEPTION("There is no type info for type Array");
 	case RpcValue::Type::Null: return ChainPack::TypeInfo::Null;
+	case RpcValue::Type::UInt64:
 	case RpcValue::Type::UInt: return ChainPack::TypeInfo::UInt;
+	case RpcValue::Type::Int64:
 	case RpcValue::Type::Int: return ChainPack::TypeInfo::Int;
 	case RpcValue::Type::Double: return ChainPack::TypeInfo::Double;
 	case RpcValue::Type::Bool: return ChainPack::TypeInfo::Bool;
@@ -291,6 +293,8 @@ void ChainPackWriter::writeData(const RpcValue &val)
 	case RpcValue::Type::Bool: m_out << (uint8_t)(val.toBool() ? 1 : 0); break;
 	case RpcValue::Type::UInt: { RpcValue::UInt u = val.toUInt(); writeData_UInt(m_out, u); break; }
 	case RpcValue::Type::Int: { RpcValue::Int n = val.toInt(); writeData_Int(m_out, n); break; }
+	case RpcValue::Type::UInt64: { RpcValue::UInt64 u = val.toUInt64(); writeData_UInt(m_out, u); break; }
+	case RpcValue::Type::Int64: { RpcValue::Int64 n = val.toInt64(); writeData_Int(m_out, n); break; }
 	case RpcValue::Type::Double: writeData_Double(m_out, val.toDouble()); break;
 	case RpcValue::Type::Decimal: writeData_Decimal(m_out, val.toDecimal()); break;
 	case RpcValue::Type::DateTime: writeData_DateTime(m_out, val.toDateTime()); break;

@@ -10,12 +10,10 @@
 #include <memory>
 #include <initializer_list>
 
-#ifndef CHAINPACK_UINT
-	#define CHAINPACK_UINT unsigned
-#endif
 #ifndef CHAINPACK_INT
 	#define CHAINPACK_INT int
 #endif
+#define CHAINPACK_UINT unsigned CHAINPACK_INT
 
 namespace shv {
 namespace chainpack {
@@ -30,6 +28,8 @@ public:
 		Null,
 		UInt,
 		Int,
+		UInt64,
+		Int64,
 		Double,
 		Bool,
 		Blob,
@@ -46,6 +46,8 @@ public:
 
 	using Int = CHAINPACK_INT;
 	using UInt = CHAINPACK_UINT;
+	using Int64 = int64_t;
+	using UInt64 = uint64_t;
 	class SHVCHAINPACK_DECL_EXPORT Decimal
 	{
 		Int m_mantisa = 0;
@@ -137,8 +139,10 @@ public:
 	using IMap = std::map<RpcValue::UInt, RpcValue>;
 	union ArrayElement
 	{
-		Int int_value;
-		UInt uint_value;
+		RpcValue::Int int_value;
+		RpcValue::UInt uint_value;
+		RpcValue::Int64 int64_value;
+		RpcValue::UInt64 uint64_value;
 		double double_value;
 		bool bool_value;
 		std::nullptr_t null_value;
@@ -147,10 +151,10 @@ public:
 		ArrayElement(std::nullptr_t) : null_value(nullptr) {}
 		ArrayElement(int16_t i) : int_value(i) {}
 		ArrayElement(int32_t i) : int_value(i) {}
-		ArrayElement(int64_t i) : int_value(i) {}
+		ArrayElement(int64_t i) : int64_value(i) {}
 		ArrayElement(uint16_t i) : uint_value(i) {}
 		ArrayElement(uint32_t i) : uint_value(i) {}
-		ArrayElement(uint64_t i) : uint_value(i) {}
+		ArrayElement(uint64_t i) : uint64_value(i) {}
 		ArrayElement(double d) : double_value(d) {}
 		ArrayElement(bool b) : bool_value(b) {}
 	};
@@ -177,6 +181,8 @@ public:
 			case RpcValue::Type::Null: return RpcValue(nullptr);
 			case RpcValue::Type::Int: return RpcValue(Super::at(ix).int_value);
 			case RpcValue::Type::UInt: return RpcValue(Super::at(ix).uint_value);
+			case RpcValue::Type::Int64: return RpcValue::fromInt64(Super::at(ix).int64_value);
+			case RpcValue::Type::UInt64: return RpcValue::fromUInt64(Super::at(ix).uint64_value);
 			case RpcValue::Type::Double: return RpcValue(Super::at(ix).double_value);
 			case RpcValue::Type::Bool: return RpcValue(Super::at(ix).bool_value);
 			default: SHVCHP_EXCEPTION("Unsupported array type");
@@ -242,10 +248,10 @@ public:
 #endif
 	RpcValue(std::nullptr_t) noexcept;  // Null
 	RpcValue(bool value);               // Bool
-	RpcValue(Int value);                // Int
-	RpcValue(UInt value);                // UInt
+	RpcValue(Int value);
+	RpcValue(UInt value);
 	//RpcValue(int value) : RpcValue((Int)value) {}
-	RpcValue(uint16_t value) : RpcValue((UInt)value) {}
+	RpcValue(uint16_t value) : RpcValue((uint32_t)value) {}
 	//RpcValue(unsigned int value) : RpcValue((UInt)value) {}
 	RpcValue(double value);             // Double
 	RpcValue(Decimal value);             // Decimal
@@ -264,6 +270,12 @@ public:
 	RpcValue(Map &&values);          // Map
 	RpcValue(const IMap &values);     // IMap
 	RpcValue(IMap &&values);          // IMap
+private:
+	RpcValue(Int64 value, char);
+	RpcValue(UInt64 value, char);
+public:
+	static RpcValue fromInt64(Int64 i) {return RpcValue(i, 'a');}
+	static RpcValue fromUInt64(UInt64 i) {return RpcValue(i, 'a');}
 
 	// Implicit constructor: anything with a to_json() function.
 	template <class T, class = decltype(&T::to_json)>
@@ -303,11 +315,11 @@ public:
 	bool isValid() const;
 	bool isNull() const { return type() == Type::Null; }
 	bool isInt() const { return type() == Type::Int; }
-	bool isDateTime() const { return type() == Type::DateTime; }
 	bool isUInt() const { return type() == Type::UInt; }
 	bool isDouble() const { return type() == Type::Double; }
 	bool isBool() const { return type() == Type::Bool; }
 	bool isString() const { return type() == Type::String; }
+	bool isDateTime() const { return type() == Type::DateTime; }
 	bool isList() const { return type() == Type::List; }
 	bool isArray() const { return type() == Type::Array; }
 	bool isMap() const { return type() == Type::Map; }
@@ -317,6 +329,8 @@ public:
 	Decimal toDecimal() const;
 	Int toInt() const;
 	UInt toUInt() const;
+	Int64 toInt64() const;
+	UInt64 toUInt64() const;
 	bool toBool() const;
 	DateTime toDateTime() const;
 	const RpcValue::String &toString() const;

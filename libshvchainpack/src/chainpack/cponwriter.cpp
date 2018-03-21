@@ -60,6 +60,8 @@ size_t CponWriter::write(const RpcValue &value)
 	case RpcValue::Type::Null: write(nullptr); break;
 	case RpcValue::Type::UInt: write(value.toUInt()); break;
 	case RpcValue::Type::Int: write(value.toInt()); break;
+	case RpcValue::Type::UInt64: write(value.toUInt64()); break;
+	case RpcValue::Type::Int64: write(value.toInt64()); break;
 	case RpcValue::Type::Double: write(value.toDouble()); break;
 	case RpcValue::Type::Bool: write(value.toBool()); break;
 	case RpcValue::Type::Blob: write(value.toBlob()); break;
@@ -230,13 +232,26 @@ CponWriter &CponWriter::write(bool value)
 	return *this;
 }
 
-CponWriter &CponWriter::write(RpcValue::Int value)
+CponWriter &CponWriter::write(int32_t value)
 {
 	m_out << Utils::toString(value);
 	return *this;
 }
 
-CponWriter &CponWriter::write(RpcValue::UInt value)
+CponWriter &CponWriter::write(uint32_t value)
+{
+	m_out << Utils::toString(value);
+	m_out << Cpon::C_UNSIGNED_END;
+	return *this;
+}
+
+CponWriter &CponWriter::write(int64_t value)
+{
+	m_out << Utils::toString(value);
+	return *this;
+}
+
+CponWriter &CponWriter::write(uint64_t value)
 {
 	m_out << Utils::toString(value);
 	m_out << Cpon::C_UNSIGNED_END;
