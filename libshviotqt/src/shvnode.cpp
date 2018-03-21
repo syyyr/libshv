@@ -87,24 +87,16 @@ shv::chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest 
 {
 	shv::chainpack::RpcValue ret;
 	chainpack::RpcValue::String method = rq.method();
-	if(method == "ls") {
+	if(method == cp::Rpc::METH_LS) {
 		ret = ls(rq.params());
 	}
-	else if(method == "dir") {
+	else if(method == cp::Rpc::METH_DIR) {
 		ret = dir(rq.params());
 	}
 	else {
 		SHV_EXCEPTION("Invalid method: " + method + " called for node: " + shvPath());
 	}
 	return ret;
-}
-
-shv::chainpack::RpcValue ShvNode::shvValue() const
-{
-	shv::chainpack::RpcValue::List lst;
-	for(const String &s : childNodeIds())
-		lst.push_back(s);
-	return lst;
 }
 
 chainpack::RpcValue ShvNode::ls(chainpack::RpcValue methods_params)

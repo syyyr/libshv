@@ -12,13 +12,10 @@ class SHVIOTQT_DECL_EXPORT DeviceConnection : public ClientConnection
 {
 	Q_OBJECT
 	using Super = ClientConnection;
-
-	SHV_FIELD_IMPL(shv::chainpack::RpcValue, d, D, evice)
-
 public:
 	DeviceConnection(QObject *parent = 0);
 protected:
-	shv::chainpack::RpcValue createLoginParams(const shv::chainpack::RpcValue &server_hello) override;
+	//shv::chainpack::RpcValue createLoginParams(const shv::chainpack::RpcValue &server_hello) override;
 };
 
 } // namespace rpc

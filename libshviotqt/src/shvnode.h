@@ -39,12 +39,7 @@ public:
 
 	virtual bool isRootNode() const {return false;}
 
-	virtual shv::chainpack::RpcValue shvValue() const;
-
 	virtual StringList childNodeIds() const;
-	//virtual shv::chainpack::RpcValue propertyValue(const String &property_name) const;
-	//virtual bool setPropertyValue(const String &property_name, const shv::chainpack::RpcValue &val);
-	//Q_SIGNAL void propertyValueChanged(const String &property_name, const shv::chainpack::RpcValue &new_val);
 	virtual chainpack::RpcValue processRpcRequest(const shv::chainpack::RpcRequest &rq);
 protected:
 	//virtual bool setPropertyValue_helper(const String &property_name, const shv::chainpack::RpcValue &val);

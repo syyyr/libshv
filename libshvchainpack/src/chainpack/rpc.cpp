@@ -3,6 +3,10 @@
 namespace shv {
 namespace chainpack {
 
+const char* Rpc::TYPE_CLIENT = "client";
+const char* Rpc::TYPE_DEVICE = "device";
+const char* Rpc::TYPE_TUNNEL = "tunnel";
+
 const char* Rpc::METH_HELLO = "hello";
 const char* Rpc::METH_LOGIN = "login";
 
@@ -11,6 +15,7 @@ const char* Rpc::METH_SET = "set";
 const char* Rpc::METH_VAL_CHANGED = "chng";
 const char* Rpc::METH_DIR = "dir";
 const char* Rpc::METH_LS = "ls";
+const char* Rpc::METH_PING = "ping";
 
 const char* Rpc::JSONRPC_ID = "id";
 const char* Rpc::JSONRPC_METHOD = "method";

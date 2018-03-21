@@ -9,9 +9,9 @@ namespace rpc {
 DeviceConnection::DeviceConnection(QObject *parent)
 	: Super(parent)
 {
-
+	setConnectionType(cp::Rpc::TYPE_DEVICE);
 }
-
+/*
 chainpack::RpcValue DeviceConnection::createLoginParams(const chainpack::RpcValue &server_hello)
 {
 	chainpack::RpcValue v = Super::createLoginParams(server_hello);
@@ -19,7 +19,7 @@ chainpack::RpcValue DeviceConnection::createLoginParams(const chainpack::RpcValu
 	m["device"] =  device();
 	return m;
 }
-
+*/
 } // namespace rpc
 } // namespace iotqt
 } // namespace shv
