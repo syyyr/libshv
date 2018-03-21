@@ -56,7 +56,6 @@ void TcpServer::onNewConnection()
 		ServerConnection *c = createServerConnection(sock, this);
 		m_connections[c->connectionId()] = c;
 		int cid = c->connectionId();
-		connect(sock, &QTcpSocket::disconnected, c, &ServerConnection::deleteLater);
 		connect(c, &ServerConnection::destroyed, [this, cid]() {
 			onConnectionDeleted(cid);
 		});

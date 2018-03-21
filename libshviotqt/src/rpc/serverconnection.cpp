@@ -42,7 +42,7 @@ ServerConnection::ServerConnection(QTcpSocket *socket, QObject *parent)
 
 ServerConnection::~ServerConnection()
 {
-	shvInfo() << "Agent disconnected:" << connectionName();
+	shvInfo() << "Destroying Connection ID:" << connectionId() << "name:" << connectionName();
 }
 
 void ServerConnection::sendMessage(const chainpack::RpcMessage &rpc_msg)

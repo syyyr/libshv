@@ -13,7 +13,6 @@
 #include <string>
 
 class QTcpSocket;
-//class Agent;
 
 //namespace shv { namespace chainpack { class RpcMessage; class RpcValue; }}
 //namespace shv { namespace coreqt { namespace chainpack { class RpcConnection; }}}
@@ -39,6 +38,8 @@ class SHVIOTQT_DECL_EXPORT ServerConnection : public SocketRpcDriver, public shv
 
 	void close() Q_DECL_OVERRIDE {closeConnection();}
 	void abort() Q_DECL_OVERRIDE {abortConnection();}
+
+	bool isBrokerConnected() const {return isSocketConnected() && !isInitPhase();}
 
 	Q_SIGNAL void rpcMessageReceived(const shv::chainpack::RpcMessage &msg);
 

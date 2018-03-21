@@ -11,6 +11,8 @@ public:
 	enum class ProtocolType {Invalid = 0, ChainPack, Cpon, JsonRpc};
 	static const char* ProtocolTypeToString(ProtocolType pv);
 
+	static const char* OPT_IDLE_WD_TIMEOUT;
+
 	static const char* TYPE_CLIENT;
 	static const char* TYPE_DEVICE;
 	static const char* TYPE_TUNNEL;
@@ -19,11 +21,14 @@ public:
 	static const char* METH_LOGIN;
 	static const char* METH_GET;
 	static const char* METH_SET;
-	static const char* METH_VAL_CHANGED;
 	static const char* METH_DIR;
 	static const char* METH_LS;
 	static const char* METH_PING;
 	static const char* METH_ECHO;
+
+	static const char* NTF_VAL_CHANGED;
+	static const char* NTF_CONNECTED;
+	static const char* NTF_DISCONNECTED;
 
 	static const char* JSONRPC_ID;
 	static const char* JSONRPC_METHOD;

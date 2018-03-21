@@ -3,6 +3,8 @@
 namespace shv {
 namespace chainpack {
 
+const char* Rpc::OPT_IDLE_WD_TIMEOUT = "idleWatchDogTimeOut";
+
 const char* Rpc::TYPE_CLIENT = "client";
 const char* Rpc::TYPE_DEVICE = "device";
 const char* Rpc::TYPE_TUNNEL = "tunnel";
@@ -12,11 +14,14 @@ const char* Rpc::METH_LOGIN = "login";
 
 const char* Rpc::METH_GET = "get";
 const char* Rpc::METH_SET = "set";
-const char* Rpc::METH_VAL_CHANGED = "chng";
 const char* Rpc::METH_DIR = "dir";
 const char* Rpc::METH_LS = "ls";
 const char* Rpc::METH_PING = "ping";
 const char* Rpc::METH_ECHO = "echo";
+
+const char* Rpc::NTF_VAL_CHANGED = "chng";
+const char* Rpc::NTF_CONNECTED = "connected";
+const char* Rpc::NTF_DISCONNECTED = "disconnected";
 
 const char* Rpc::JSONRPC_ID = "id";
 const char* Rpc::JSONRPC_METHOD = "method";
