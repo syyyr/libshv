@@ -358,8 +358,10 @@ RpcValue::RpcValue() noexcept {}
 RpcValue::RpcValue(std::nullptr_t) noexcept : m_ptr(statics().null) {}
 RpcValue::RpcValue(double value) : m_ptr(std::make_shared<ChainPackDouble>(value)) {}
 RpcValue::RpcValue(RpcValue::Decimal value) : m_ptr(std::make_shared<ChainPackDecimal>(std::move(value))) {}
-RpcValue::RpcValue(Int value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
-RpcValue::RpcValue(UInt value) : m_ptr(std::make_shared<ChainPackUInt>(value)) {}
+RpcValue::RpcValue(int32_t value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
+RpcValue::RpcValue(uint32_t value) : m_ptr(std::make_shared<ChainPackUInt>(value)) {}
+RpcValue::RpcValue(int64_t value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
+RpcValue::RpcValue(uint64_t value) : m_ptr(std::make_shared<ChainPackUInt>(value)) {}
 RpcValue::RpcValue(bool value) : m_ptr(value ? statics().t : statics().f) {}
 RpcValue::RpcValue(const DateTime &value) : m_ptr(std::make_shared<ChainPackDateTime>(value)) {}
 

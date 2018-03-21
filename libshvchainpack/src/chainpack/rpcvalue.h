@@ -137,8 +137,8 @@ public:
 	using IMap = std::map<RpcValue::UInt, RpcValue>;
 	union ArrayElement
 	{
-		Int int_value;
-		UInt uint_value;
+		int64_t int_value;
+		uint64_t uint_value;
 		double double_value;
 		bool bool_value;
 		std::nullptr_t null_value;
@@ -254,11 +254,11 @@ public:
 #endif
 	RpcValue(std::nullptr_t) noexcept;  // Null
 	RpcValue(bool value);               // Bool
-	RpcValue(Int value);                // Int
-	RpcValue(UInt value);                // UInt
-	//RpcValue(int value) : RpcValue((Int)value) {}
 	RpcValue(uint16_t value) : RpcValue((UInt)value) {}
-	//RpcValue(unsigned int value) : RpcValue((UInt)value) {}
+	RpcValue(int32_t value);                // Int
+	RpcValue(uint32_t value);                // UInt
+	RpcValue(int64_t value);                // Int
+	RpcValue(uint64_t value);                // UInt
 	RpcValue(double value);             // Double
 	RpcValue(Decimal value);             // Decimal
 	RpcValue(const DateTime &value);

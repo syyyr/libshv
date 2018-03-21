@@ -51,8 +51,10 @@ public:
 
 	CponWriter& write(std::nullptr_t);
 	CponWriter& write(bool value);
-	CponWriter& write(RpcValue::Int value);
-	CponWriter& write(RpcValue::UInt value);
+	CponWriter& write(int32_t value);
+	CponWriter& write(uint32_t value);
+	CponWriter& write(int64_t value);
+	CponWriter& write(uint64_t value);
 	CponWriter& write(double value);
 	CponWriter& write(RpcValue::Decimal value);
 	CponWriter& write(RpcValue::DateTime value);

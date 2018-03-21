@@ -230,13 +230,26 @@ CponWriter &CponWriter::write(bool value)
 	return *this;
 }
 
-CponWriter &CponWriter::write(RpcValue::Int value)
+CponWriter &CponWriter::write(int32_t value)
 {
 	m_out << Utils::toString(value);
 	return *this;
 }
 
-CponWriter &CponWriter::write(RpcValue::UInt value)
+CponWriter &CponWriter::write(uint32_t value)
+{
+	m_out << Utils::toString(value);
+	m_out << Cpon::C_UNSIGNED_END;
+	return *this;
+}
+
+CponWriter &CponWriter::write(int64_t value)
+{
+	m_out << Utils::toString(value);
+	return *this;
+}
+
+CponWriter &CponWriter::write(uint64_t value)
 {
 	m_out << Utils::toString(value);
 	m_out << Cpon::C_UNSIGNED_END;
