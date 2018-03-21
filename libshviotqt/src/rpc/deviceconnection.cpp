@@ -7,7 +7,7 @@ namespace iotqt {
 namespace rpc {
 
 DeviceConnection::DeviceConnection(QObject *parent)
-	: Super(parent)
+	: Super(SyncCalls::Disabled, parent)
 {
 	setConnectionType(cp::Rpc::TYPE_DEVICE);
 }
