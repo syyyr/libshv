@@ -10,13 +10,6 @@
 #include <memory>
 #include <initializer_list>
 
-#ifndef CHAINPACK_INT
-	#define CHAINPACK_INT int
-#endif
-#ifndef CHAINPACK_UINT
-	#define CHAINPACK_UINT unsigned
-#endif
-
 namespace shv {
 namespace chainpack {
 
@@ -44,10 +37,8 @@ public:
 	};
 	static const char* typeToName(Type t);
 
-	using Int = CHAINPACK_INT;
-	using UInt = CHAINPACK_UINT;
-	//using int64_t = int64_t;
-	//using uint64_t = uint64_t;
+	using Int = int;
+	using UInt = unsigned;
 	class SHVCHAINPACK_DECL_EXPORT Decimal
 	{
 		struct Num {
@@ -56,8 +47,8 @@ public:
 		Num m_num = {0, 0};
 	public:
 		Decimal() : m_num{-1, 0} {}
-		Decimal(Int mantisa, int precision) : m_num{precision, mantisa} {}
-		static Decimal fromDouble(double n, int precision)
+		Decimal(int64_t mantisa, int16_t precision) : m_num{precision, mantisa} {}
+		static Decimal fromDouble(double n, int16_t precision)
 		{
 			if(precision > 0) {
 				//m_num.mantisa = (int)(n * std::pow(10, precision) + 0.5);
@@ -65,8 +56,8 @@ public:
 			}
 			return Decimal((Int)(n + 0.5), precision);
 		}
-		Int mantisa() const {return m_num.mantisa;}
-		int precision() const {return m_num.precision;}
+		int64_t mantisa() const {return m_num.mantisa;}
+		int16_t precision() const {return m_num.precision;}
 		double toDouble() const
 		{
 			double ret = mantisa();

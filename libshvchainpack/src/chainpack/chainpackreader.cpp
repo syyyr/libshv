@@ -71,8 +71,8 @@ double readData_Double(std::istream &data)
 
 RpcValue::Decimal readData_Decimal(std::istream &data)
 {
-	RpcValue::Int mant = readData_Int<RpcValue::Int>(data);
-	int prec = readData_Int<RpcValue::Int>(data);
+	int64_t mant = readData_Int<int64_t>(data);
+	int prec = readData_Int<int>(data);
 	return RpcValue::Decimal(mant, prec);
 }
 
@@ -166,7 +166,7 @@ void ChainPackReader::read(RpcValue &val)
 	if(type < 128) {
 		if(type & 64) {
 			// tiny Int
-			RpcValue::Int n = type & 63;
+			int n = type & 63;
 			val = RpcValue(n);
 		}
 		else {

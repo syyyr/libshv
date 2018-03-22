@@ -79,8 +79,8 @@ public:
 	virtual RpcValue::Decimal toDecimal() const { return RpcValue::Decimal{}; }
 	virtual RpcValue::Int toInt() const {return 0;}
 	virtual RpcValue::UInt toUInt() const {return 0;}
-	virtual RpcValue::Int toint64_t() const {return 0;}
-	virtual RpcValue::UInt touint64_t() const {return 0;}
+	virtual int64_t toInt64() const {return 0;}
+	virtual uint64_t toUInt64() const {return 0;}
 	virtual bool toBool() const {return false;}
 	virtual RpcValue::DateTime toDateTime() const { return RpcValue::DateTime{}; }
 	virtual const std::string &toString() const;
@@ -160,8 +160,8 @@ class ChainPackDouble final : public ValueData<RpcValue::Type::Double, double>
 	bool toBool() const override { return !(m_value == 0); }
 	RpcValue::Int toInt() const override { return static_cast<RpcValue::Int>(m_value); }
 	RpcValue::UInt toUInt() const override { return static_cast<RpcValue::UInt>(m_value); }
-	RpcValue::Int toint64_t() const override { return static_cast<RpcValue::Int>(m_value); }
-	RpcValue::UInt touint64_t() const override { return static_cast<RpcValue::UInt>(m_value); }
+	int64_t toInt64() const override { return static_cast<int64_t>(m_value); }
+	uint64_t toUInt64() const override { return static_cast<uint64_t>(m_value); }
 	bool equals(const RpcValue::AbstractValueData * other) const override {
 		return m_value == other->toDouble();
 	}
@@ -176,8 +176,8 @@ class ChainPackDecimal final : public ValueData<RpcValue::Type::Decimal, RpcValu
 	bool toBool() const override { return !(m_value.mantisa() == 0); }
 	RpcValue::Int toInt() const override { return static_cast<RpcValue::Int>(m_value.toDouble()); }
 	RpcValue::UInt toUInt() const override { return static_cast<RpcValue::UInt>(m_value.toDouble()); }
-	RpcValue::Int toint64_t() const override { return static_cast<RpcValue::Int>(m_value.toDouble()); }
-	RpcValue::UInt touint64_t() const override { return static_cast<RpcValue::UInt>(m_value.toDouble()); }
+	int64_t toInt64() const override { return static_cast<int64_t>(m_value.toDouble()); }
+	uint64_t toUInt64() const override { return static_cast<uint64_t>(m_value.toDouble()); }
 	RpcValue::Decimal toDecimal() const override { return m_value; }
 	bool equals(const RpcValue::AbstractValueData * other) const override { return toDouble() == other->toDouble(); }
 	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
@@ -191,8 +191,8 @@ class ChainPackInt final : public ValueData<RpcValue::Type::Int, int64_t>
 	bool toBool() const override { return !(m_value == 0); }
 	RpcValue::Int toInt() const override { return m_value; }
 	RpcValue::UInt toUInt() const override { return (RpcValue::UInt)m_value; }
-	RpcValue::Int toint64_t() const override { return static_cast<RpcValue::Int>(m_value); }
-	RpcValue::UInt touint64_t() const override { return static_cast<RpcValue::UInt>(m_value); }
+	int64_t toInt64() const override { return static_cast<int64_t>(m_value); }
+	uint64_t toUInt64() const override { return static_cast<uint64_t>(m_value); }
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toInt(); }
 	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
 public:
@@ -206,8 +206,8 @@ protected:
 	bool toBool() const override { return !(m_value == 0); }
 	RpcValue::Int toInt() const override { return m_value; }
 	RpcValue::UInt toUInt() const override { return m_value; }
-	RpcValue::Int toint64_t() const override { return m_value; }
-	RpcValue::UInt touint64_t() const override { return m_value; }
+	int64_t toInt64() const override { return m_value; }
+	uint64_t toUInt64() const override { return m_value; }
 protected:
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toUInt(); }
 	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
@@ -220,8 +220,8 @@ class ChainPackBoolean final : public ValueData<RpcValue::Type::Bool, bool>
 	bool toBool() const override { return m_value; }
 	RpcValue::Int toInt() const override { return m_value; }
 	RpcValue::UInt toUInt() const override { return m_value; }
-	RpcValue::Int toint64_t() const override { return m_value; }
-	RpcValue::UInt touint64_t() const override { return m_value; }
+	int64_t toInt64() const override { return m_value; }
+	uint64_t toUInt64() const override { return m_value; }
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toBool(); }
 public:
 	explicit ChainPackBoolean(bool value) : ValueData(value) {}
@@ -230,8 +230,8 @@ public:
 class ChainPackDateTime final : public ValueData<RpcValue::Type::DateTime, RpcValue::DateTime>
 {
 	bool toBool() const override { return m_value.msecsSinceEpoch() != 0; }
-	RpcValue::Int toint64_t() const override { return m_value.msecsSinceEpoch(); }
-	RpcValue::UInt touint64_t() const override { return m_value.msecsSinceEpoch(); }
+	int64_t toInt64() const override { return m_value.msecsSinceEpoch(); }
+	uint64_t toUInt64() const override { return m_value.msecsSinceEpoch(); }
 	RpcValue::DateTime toDateTime() const override { return m_value; }
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value.msecsSinceEpoch() == other->toDateTime().msecsSinceEpoch(); }
 public:
@@ -490,8 +490,8 @@ double RpcValue::toDouble() const { return m_ptr? m_ptr->toDouble(): 0; }
 RpcValue::Decimal RpcValue::toDecimal() const { return m_ptr? m_ptr->toDecimal(): Decimal(); }
 RpcValue::Int RpcValue::toInt() const { return m_ptr? m_ptr->toInt(): 0; }
 RpcValue::UInt RpcValue::toUInt() const { return m_ptr? m_ptr->toUInt(): 0; }
-int64_t RpcValue::toInt64() const { return m_ptr? m_ptr->toint64_t(): 0; }
-uint64_t RpcValue::toUInt64() const { return m_ptr? m_ptr->touint64_t(): 0; }
+int64_t RpcValue::toInt64() const { return m_ptr? m_ptr->toInt64(): 0; }
+uint64_t RpcValue::toUInt64() const { return m_ptr? m_ptr->toUInt64(): 0; }
 bool RpcValue::toBool() const { return m_ptr? m_ptr->toBool(): false; }
 RpcValue::DateTime RpcValue::toDateTime() const { return m_ptr? m_ptr->toDateTime(): RpcValue::DateTime{}; }
 
