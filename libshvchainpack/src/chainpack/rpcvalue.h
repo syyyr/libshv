@@ -138,6 +138,7 @@ public:
 		bool bool_value;
 		std::nullptr_t null_value;
 		DateTime datetime_value;
+		Decimal decimal_value;
 
 		ArrayElement() {}
 		ArrayElement(std::nullptr_t) : null_value(nullptr) {}
@@ -148,6 +149,7 @@ public:
 		ArrayElement(double d) : double_value(d) {}
 		ArrayElement(bool b) : bool_value(b) {}
 		ArrayElement(DateTime dt) : datetime_value(dt) {}
+		ArrayElement(Decimal dt) : decimal_value(dt) {}
 	};
 	class SHVCHAINPACK_DECL_EXPORT Array : public std::vector<ArrayElement>
 	{
@@ -183,6 +185,7 @@ public:
 			case RpcValue::Type::Double: return RpcValue(Super::at(ix).double_value);
 			case RpcValue::Type::Bool: return RpcValue(Super::at(ix).bool_value);
 			case RpcValue::Type::DateTime: return RpcValue(Super::at(ix).datetime_value);
+			case RpcValue::Type::Decimal: return RpcValue(Super::at(ix).decimal_value);
 			default: SHVCHP_EXCEPTION("Unsupported array type");
 			}
 		}
@@ -373,5 +376,6 @@ template<> inline RpcValue::Type RpcValue::guessType<RpcValue::UInt>() { return 
 template<> inline RpcValue::Type RpcValue::guessType<uint16_t>() { return Type::UInt; }
 template<> inline RpcValue::Type RpcValue::guessType<bool>() { return Type::Bool; }
 template<> inline RpcValue::Type RpcValue::guessType<RpcValue::DateTime>() { return Type::DateTime; }
+template<> inline RpcValue::Type RpcValue::guessType<RpcValue::Decimal>() { return Type::Decimal; }
 
 }}
