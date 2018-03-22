@@ -58,10 +58,8 @@ size_t CponWriter::write(const RpcValue &value)
 	}
 	switch (value.type()) {
 	case RpcValue::Type::Null: write(nullptr); break;
-	case RpcValue::Type::UInt: write(value.toUInt()); break;
-	case RpcValue::Type::Int: write(value.toInt()); break;
-	case RpcValue::Type::UInt64: write(value.toUInt64()); break;
-	case RpcValue::Type::Int64: write(value.toInt64()); break;
+	case RpcValue::Type::UInt: write(value.toUInt64()); break;
+	case RpcValue::Type::Int: write(value.toInt64()); break;
 	case RpcValue::Type::Double: write(value.toDouble()); break;
 	case RpcValue::Type::Bool: write(value.toBool()); break;
 	case RpcValue::Type::Blob: write(value.toBlob()); break;

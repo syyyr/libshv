@@ -79,8 +79,8 @@ public:
 	virtual RpcValue::Decimal toDecimal() const { return RpcValue::Decimal{}; }
 	virtual RpcValue::Int toInt() const {return 0;}
 	virtual RpcValue::UInt toUInt() const {return 0;}
-	virtual RpcValue::Int64 toInt64() const {return 0;}
-	virtual RpcValue::UInt64 toUInt64() const {return 0;}
+	virtual RpcValue::Int toint64_t() const {return 0;}
+	virtual RpcValue::UInt touint64_t() const {return 0;}
 	virtual bool toBool() const {return false;}
 	virtual RpcValue::DateTime toDateTime() const { return RpcValue::DateTime{}; }
 	virtual const std::string &toString() const;
@@ -160,8 +160,8 @@ class ChainPackDouble final : public ValueData<RpcValue::Type::Double, double>
 	bool toBool() const override { return !(m_value == 0); }
 	RpcValue::Int toInt() const override { return static_cast<RpcValue::Int>(m_value); }
 	RpcValue::UInt toUInt() const override { return static_cast<RpcValue::UInt>(m_value); }
-	RpcValue::Int64 toInt64() const override { return static_cast<RpcValue::Int64>(m_value); }
-	RpcValue::UInt64 toUInt64() const override { return static_cast<RpcValue::UInt64>(m_value); }
+	RpcValue::Int toint64_t() const override { return static_cast<RpcValue::Int>(m_value); }
+	RpcValue::UInt touint64_t() const override { return static_cast<RpcValue::UInt>(m_value); }
 	bool equals(const RpcValue::AbstractValueData * other) const override {
 		return m_value == other->toDouble();
 	}
@@ -176,8 +176,8 @@ class ChainPackDecimal final : public ValueData<RpcValue::Type::Decimal, RpcValu
 	bool toBool() const override { return !(m_value.mantisa() == 0); }
 	RpcValue::Int toInt() const override { return static_cast<RpcValue::Int>(m_value.toDouble()); }
 	RpcValue::UInt toUInt() const override { return static_cast<RpcValue::UInt>(m_value.toDouble()); }
-	RpcValue::Int64 toInt64() const override { return static_cast<RpcValue::Int64>(m_value.toDouble()); }
-	RpcValue::UInt64 toUInt64() const override { return static_cast<RpcValue::UInt64>(m_value.toDouble()); }
+	RpcValue::Int toint64_t() const override { return static_cast<RpcValue::Int>(m_value.toDouble()); }
+	RpcValue::UInt touint64_t() const override { return static_cast<RpcValue::UInt>(m_value.toDouble()); }
 	RpcValue::Decimal toDecimal() const override { return m_value; }
 	bool equals(const RpcValue::AbstractValueData * other) const override { return toDouble() == other->toDouble(); }
 	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
@@ -185,29 +185,29 @@ public:
 	explicit ChainPackDecimal(RpcValue::Decimal &&value) : ValueData(std::move(value)) {}
 };
 
-class ChainPackInt final : public ValueData<RpcValue::Type::Int, RpcValue::Int>
+class ChainPackInt final : public ValueData<RpcValue::Type::Int, int64_t>
 {
 	double toDouble() const override { return m_value; }
 	bool toBool() const override { return !(m_value == 0); }
 	RpcValue::Int toInt() const override { return m_value; }
 	RpcValue::UInt toUInt() const override { return (RpcValue::UInt)m_value; }
-	RpcValue::Int64 toInt64() const override { return static_cast<RpcValue::Int64>(m_value); }
-	RpcValue::UInt64 toUInt64() const override { return static_cast<RpcValue::UInt64>(m_value); }
+	RpcValue::Int toint64_t() const override { return static_cast<RpcValue::Int>(m_value); }
+	RpcValue::UInt touint64_t() const override { return static_cast<RpcValue::UInt>(m_value); }
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toInt(); }
 	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
 public:
 	explicit ChainPackInt(RpcValue::Int value) : ValueData(value) {}
 };
 
-class ChainPackUInt : public ValueData<RpcValue::Type::UInt, RpcValue::UInt>
+class ChainPackUInt : public ValueData<RpcValue::Type::UInt, uint64_t>
 {
 protected:
 	double toDouble() const override { return m_value; }
 	bool toBool() const override { return !(m_value == 0); }
 	RpcValue::Int toInt() const override { return m_value; }
 	RpcValue::UInt toUInt() const override { return m_value; }
-	RpcValue::Int64 toInt64() const override { return m_value; }
-	RpcValue::UInt64 toUInt64() const override { return m_value; }
+	RpcValue::Int toint64_t() const override { return m_value; }
+	RpcValue::UInt touint64_t() const override { return m_value; }
 protected:
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toUInt(); }
 	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
@@ -215,43 +215,13 @@ public:
 	explicit ChainPackUInt(RpcValue::UInt value) : ValueData(value) {}
 };
 
-class ChainPackInt64 final : public ValueData<RpcValue::Type::Int64, int64_t>
-{
-	double toDouble() const override { return m_value; }
-	bool toBool() const override { return !(m_value == 0); }
-	RpcValue::Int toInt() const override { return m_value; }
-	RpcValue::UInt toUInt() const override { return m_value; }
-	RpcValue::Int64 toInt64() const override { return m_value; }
-	RpcValue::UInt64 toUInt64() const override { return m_value; }
-	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toInt64(); }
-	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
-public:
-	explicit ChainPackInt64(int64_t value) : ValueData(value) {}
-};
-
-class ChainPackUInt64 : public ValueData<RpcValue::Type::UInt64, uint64_t>
-{
-protected:
-	double toDouble() const override { return m_value; }
-	bool toBool() const override { return !(m_value == 0); }
-	RpcValue::Int toInt() const override { return m_value; }
-	RpcValue::UInt toUInt() const override { return m_value; }
-	RpcValue::Int64 toInt64() const override { return m_value; }
-	RpcValue::UInt64 toUInt64() const override { return m_value; }
-protected:
-	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toUInt64(); }
-	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
-public:
-	explicit ChainPackUInt64(uint64_t value) : ValueData(value) {}
-};
-
 class ChainPackBoolean final : public ValueData<RpcValue::Type::Bool, bool>
 {
 	bool toBool() const override { return m_value; }
 	RpcValue::Int toInt() const override { return m_value; }
 	RpcValue::UInt toUInt() const override { return m_value; }
-	RpcValue::Int64 toInt64() const override { return m_value; }
-	RpcValue::UInt64 toUInt64() const override { return m_value; }
+	RpcValue::Int toint64_t() const override { return m_value; }
+	RpcValue::UInt touint64_t() const override { return m_value; }
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toBool(); }
 public:
 	explicit ChainPackBoolean(bool value) : ValueData(value) {}
@@ -260,8 +230,8 @@ public:
 class ChainPackDateTime final : public ValueData<RpcValue::Type::DateTime, RpcValue::DateTime>
 {
 	bool toBool() const override { return m_value.msecsSinceEpoch() != 0; }
-	RpcValue::Int64 toInt64() const override { return m_value.msecsSinceEpoch(); }
-	RpcValue::UInt64 toUInt64() const override { return m_value.msecsSinceEpoch(); }
+	RpcValue::Int toint64_t() const override { return m_value.msecsSinceEpoch(); }
+	RpcValue::UInt touint64_t() const override { return m_value.msecsSinceEpoch(); }
 	RpcValue::DateTime toDateTime() const override { return m_value; }
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value.msecsSinceEpoch() == other->toDateTime().msecsSinceEpoch(); }
 public:
@@ -406,8 +376,8 @@ RpcValue::RpcValue() noexcept {}
 RpcValue::RpcValue(std::nullptr_t) noexcept : m_ptr(statics().null) {}
 RpcValue::RpcValue(double value) : m_ptr(std::make_shared<ChainPackDouble>(value)) {}
 RpcValue::RpcValue(RpcValue::Decimal value) : m_ptr(std::make_shared<ChainPackDecimal>(std::move(value))) {}
-RpcValue::RpcValue(RpcValue::Int value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
-RpcValue::RpcValue(RpcValue::UInt value) : m_ptr(std::make_shared<ChainPackUInt>(value)) {}
+RpcValue::RpcValue(int64_t value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
+RpcValue::RpcValue(uint64_t value) : m_ptr(std::make_shared<ChainPackUInt>(value)) {}
 RpcValue::RpcValue(bool value) : m_ptr(value ? statics().t : statics().f) {}
 RpcValue::RpcValue(const DateTime &value) : m_ptr(std::make_shared<ChainPackDateTime>(value)) {}
 
@@ -428,9 +398,6 @@ RpcValue::RpcValue(RpcValue::Map &&values) : m_ptr(std::make_shared<ChainPackMap
 
 RpcValue::RpcValue(const RpcValue::IMap &values) : m_ptr(std::make_shared<ChainPackIMap>(values)) {}
 RpcValue::RpcValue(RpcValue::IMap &&values) : m_ptr(std::make_shared<ChainPackIMap>(std::move(values))) {}
-
-RpcValue::RpcValue(RpcValue::Int64 value, char) : m_ptr(std::make_shared<ChainPackInt64>(value)) {}
-RpcValue::RpcValue(RpcValue::UInt64 value, char) : m_ptr(std::make_shared<ChainPackUInt64>(value)) {}
 
 RpcValue::~RpcValue()
 {
@@ -523,8 +490,8 @@ double RpcValue::toDouble() const { return m_ptr? m_ptr->toDouble(): 0; }
 RpcValue::Decimal RpcValue::toDecimal() const { return m_ptr? m_ptr->toDecimal(): Decimal(); }
 RpcValue::Int RpcValue::toInt() const { return m_ptr? m_ptr->toInt(): 0; }
 RpcValue::UInt RpcValue::toUInt() const { return m_ptr? m_ptr->toUInt(): 0; }
-RpcValue::Int64 RpcValue::toInt64() const { return m_ptr? m_ptr->toInt64(): 0; }
-RpcValue::UInt64 RpcValue::toUInt64() const { return m_ptr? m_ptr->toUInt64(): 0; }
+int64_t RpcValue::toInt64() const { return m_ptr? m_ptr->toint64_t(): 0; }
+uint64_t RpcValue::toUInt64() const { return m_ptr? m_ptr->touint64_t(): 0; }
 bool RpcValue::toBool() const { return m_ptr? m_ptr->toBool(): false; }
 RpcValue::DateTime RpcValue::toDateTime() const { return m_ptr? m_ptr->toDateTime(): RpcValue::DateTime{}; }
 
@@ -694,8 +661,6 @@ const char *RpcValue::typeToName(RpcValue::Type t)
 	case Type::Null: return "Null";
 	case Type::UInt: return "UInt";
 	case Type::Int: return "Int";
-	case Type::UInt64: return "UInt64";
-	case Type::Int64: return "Int64";
 	case Type::Double: return "Double";
 	case Type::Bool: return "Bool";
 	case Type::Blob: return "Blob";

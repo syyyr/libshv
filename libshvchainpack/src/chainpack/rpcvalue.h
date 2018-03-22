@@ -30,8 +30,6 @@ public:
 		Null,
 		UInt,
 		Int,
-		UInt64,
-		Int64,
 		Double,
 		Bool,
 		Blob,
@@ -48,25 +46,27 @@ public:
 
 	using Int = CHAINPACK_INT;
 	using UInt = CHAINPACK_UINT;
-	using Int64 = int64_t;
-	using UInt64 = uint64_t;
+	//using int64_t = int64_t;
+	//using uint64_t = uint64_t;
 	class SHVCHAINPACK_DECL_EXPORT Decimal
 	{
-		Int m_mantisa = 0;
-		int16_t m_precision = 0;
+		struct Num {
+			int64_t precision: 16, mantisa: 48;
+		};
+		Num m_num = {0, 0};
 	public:
-		Decimal() : m_precision(-1) {}
-		Decimal(Int mantisa, int precision) : m_mantisa(mantisa), m_precision(precision) {}
+		Decimal() : m_num{-1, 0} {}
+		Decimal(Int mantisa, int precision) : m_num{precision, mantisa} {}
 		static Decimal fromDouble(double n, int precision)
 		{
 			if(precision > 0) {
-				//m_mantisa = (int)(n * std::pow(10, precision) + 0.5);
+				//m_num.mantisa = (int)(n * std::pow(10, precision) + 0.5);
 				for(; precision > 0; precision--) n *= 10;
 			}
 			return Decimal((Int)(n + 0.5), precision);
 		}
-		Int mantisa() const {return m_mantisa;}
-		int precision() const {return m_precision;}
+		Int mantisa() const {return m_num.mantisa;}
+		int precision() const {return m_num.precision;}
 		double toDouble() const
 		{
 			double ret = mantisa();
@@ -141,10 +141,8 @@ public:
 	using IMap = std::map<RpcValue::UInt, RpcValue>;
 	union ArrayElement
 	{
-		RpcValue::Int int_value;
-		RpcValue::UInt uint_value;
-		RpcValue::Int64 int64_value;
-		RpcValue::UInt64 uint64_value;
+		int64_t int_value;
+		uint64_t uint_value;
 		double double_value;
 		bool bool_value;
 		std::nullptr_t null_value;
@@ -154,10 +152,8 @@ public:
 		ArrayElement(std::nullptr_t) : null_value(nullptr) {}
 		ArrayElement(int16_t i) : int_value(i) {}
 		ArrayElement(int32_t i) : int_value(i) {}
-		ArrayElement(int64_t i) : int64_value(i) {}
 		ArrayElement(uint16_t i) : uint_value(i) {}
 		ArrayElement(uint32_t i) : uint_value(i) {}
-		ArrayElement(uint64_t i) : uint64_value(i) {}
 		ArrayElement(double d) : double_value(d) {}
 		ArrayElement(bool b) : bool_value(b) {}
 		ArrayElement(DateTime dt) : datetime_value(dt) {}
@@ -193,8 +189,6 @@ public:
 			case RpcValue::Type::Null: return RpcValue(nullptr);
 			case RpcValue::Type::Int: return RpcValue(Super::at(ix).int_value);
 			case RpcValue::Type::UInt: return RpcValue(Super::at(ix).uint_value);
-			case RpcValue::Type::Int64: return RpcValue::fromInt64(Super::at(ix).int64_value);
-			case RpcValue::Type::UInt64: return RpcValue::fromUInt64(Super::at(ix).uint64_value);
 			case RpcValue::Type::Double: return RpcValue(Super::at(ix).double_value);
 			case RpcValue::Type::Bool: return RpcValue(Super::at(ix).bool_value);
 			case RpcValue::Type::DateTime: return RpcValue(Super::at(ix).datetime_value);
@@ -262,11 +256,12 @@ public:
 #endif
 	RpcValue(std::nullptr_t) noexcept;  // Null
 	RpcValue(bool value);               // Bool
-	RpcValue(Int value);
-	RpcValue(UInt value);
+	RpcValue(int64_t value);
+	RpcValue(uint64_t value);
 	//RpcValue(int value) : RpcValue((Int)value) {}
-	RpcValue(uint16_t value) : RpcValue((uint32_t)value) {}
-	//RpcValue(unsigned int value) : RpcValue((UInt)value) {}
+	//RpcValue(uint16_t value) : RpcValue((uint32_t)value) {}
+	RpcValue(int value) : RpcValue((int64_t)value) {}
+	RpcValue(unsigned value) : RpcValue((uint64_t)value) {}
 	RpcValue(double value);             // Double
 	RpcValue(Decimal value);             // Decimal
 	RpcValue(const DateTime &value);
@@ -284,12 +279,6 @@ public:
 	RpcValue(Map &&values);          // Map
 	RpcValue(const IMap &values);     // IMap
 	RpcValue(IMap &&values);          // IMap
-private:
-	RpcValue(Int64 value, char);
-	RpcValue(UInt64 value, char);
-public:
-	static RpcValue fromInt64(Int64 i) {return RpcValue(i, 'a');}
-	static RpcValue fromUInt64(UInt64 i) {return RpcValue(i, 'a');}
 
 	// Implicit constructor: anything with a to_json() function.
 	template <class T, class = decltype(&T::to_json)>
@@ -343,8 +332,8 @@ public:
 	Decimal toDecimal() const;
 	Int toInt() const;
 	UInt toUInt() const;
-	Int64 toInt64() const;
-	UInt64 toUInt64() const;
+	int64_t toInt64() const;
+	uint64_t toUInt64() const;
 	bool toBool() const;
 	DateTime toDateTime() const;
 	const RpcValue::String &toString() const;

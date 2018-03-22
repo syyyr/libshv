@@ -173,8 +173,6 @@ void CponReader::read(RpcValue &val)
 	case RpcValue::Type::DateTime: parseDateTime(val); break;
 	case RpcValue::Type::Int:
 	case RpcValue::Type::UInt:
-	case RpcValue::Type::Int64:
-	case RpcValue::Type::UInt64:
 	case RpcValue::Type::Double:
 	case RpcValue::Type::Decimal: parseNumber(val); break;
 	case RpcValue::Type::Invalid:
@@ -340,16 +338,10 @@ void CponReader::parseNumber(RpcValue &val)
 
 	switch (type) {
 	case RpcValue::Type::Int:
-		if((int_part & 0xFFFFFFFF00000000L) == 0)
-			val = RpcValue((RpcValue::Int)(int_part * sign));
-		else
-			val = RpcValue::fromInt64(int_part * sign);
+		val = RpcValue(int_part * sign);
 		break;
 	case RpcValue::Type::UInt:
-		if((int_part & 0xFFFFFFFF00000000L) == 0)
-			val = RpcValue((RpcValue::UInt)int_part);
-		else
-			val = RpcValue::fromUInt64(int_part);
+		val = RpcValue((uint64_t)int_part);
 		break;
 	case RpcValue::Type::Decimal: {
 		int64_t n = int_part * sign;

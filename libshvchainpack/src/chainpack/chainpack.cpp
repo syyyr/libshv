@@ -7,8 +7,8 @@ RpcValue::Type ChainPack::typeInfoToArrayType(ChainPack::TypeInfo::Enum type_inf
 {
 	switch (type_info) {
 	case ChainPack::TypeInfo::Null: return RpcValue::Type::Null;
-	case ChainPack::TypeInfo::UInt: return RpcValue::Type::UInt64;
-	case ChainPack::TypeInfo::Int: return RpcValue::Type::Int64;
+	case ChainPack::TypeInfo::UInt: return RpcValue::Type::UInt;
+	case ChainPack::TypeInfo::Int: return RpcValue::Type::Int;
 	case ChainPack::TypeInfo::Double: return RpcValue::Type::Double;
 	case ChainPack::TypeInfo::Bool: return RpcValue::Type::Bool;
 	case ChainPack::TypeInfo::Blob: return RpcValue::Type::Blob;
