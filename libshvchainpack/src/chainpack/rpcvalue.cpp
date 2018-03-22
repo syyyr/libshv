@@ -215,7 +215,7 @@ public:
 	explicit ChainPackUInt(RpcValue::UInt value) : ValueData(value) {}
 };
 
-class ChainPackInt64 final : public ValueData<RpcValue::Type::Int, int64_t>
+class ChainPackInt64 final : public ValueData<RpcValue::Type::Int64, int64_t>
 {
 	double toDouble() const override { return m_value; }
 	bool toBool() const override { return !(m_value == 0); }
@@ -229,7 +229,7 @@ public:
 	explicit ChainPackInt64(int64_t value) : ValueData(value) {}
 };
 
-class ChainPackUInt64 : public ValueData<RpcValue::Type::UInt, uint64_t>
+class ChainPackUInt64 : public ValueData<RpcValue::Type::UInt64, uint64_t>
 {
 protected:
 	double toDouble() const override { return m_value; }
