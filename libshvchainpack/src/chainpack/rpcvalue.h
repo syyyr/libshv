@@ -13,7 +13,9 @@
 #ifndef CHAINPACK_INT
 	#define CHAINPACK_INT int
 #endif
-#define CHAINPACK_UINT unsigned CHAINPACK_INT
+#ifndef CHAINPACK_UINT
+	#define CHAINPACK_UINT unsigned
+#endif
 
 namespace shv {
 namespace chainpack {

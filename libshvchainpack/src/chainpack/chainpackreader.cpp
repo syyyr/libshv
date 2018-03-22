@@ -209,8 +209,22 @@ RpcValue ChainPackReader::readData(ChainPack::TypeInfo::Enum type_info, bool is_
 	else {
 		switch (type_info) {
 		case ChainPack::TypeInfo::Null: { ret = RpcValue(nullptr); break; }
-		case ChainPack::TypeInfo::UInt: { RpcValue::UInt u = readData_UInt<RpcValue::UInt>(m_in); ret = RpcValue(u); break; }
-		case ChainPack::TypeInfo::Int: { RpcValue::Int i = readData_Int<RpcValue::Int>(m_in); ret = RpcValue(i); break; }
+		case ChainPack::TypeInfo::UInt: {
+			RpcValue::UInt64 u = readData_UInt<RpcValue::UInt64>(m_in);
+			if((u & 0xFFFFFFFF00000000L) == 0)
+				ret = RpcValue((RpcValue::UInt)u);
+			else
+				ret = RpcValue::fromUInt64(u);
+			break;
+		}
+		case ChainPack::TypeInfo::Int: {
+			RpcValue::Int64 i = readData_Int<RpcValue::Int64>(m_in);
+			if((i & 0xFFFFFFFF00000000L) == 0 || (i & 0xFFFFFFFF80000000L) == 0xFFFFFFFF80000000L)
+				ret = RpcValue((RpcValue::Int)i);
+			else
+				ret = RpcValue::fromInt64(i);
+			break;
+		}
 		case ChainPack::TypeInfo::Double: { double d = readData_Double(m_in); ret = RpcValue(d); break; }
 		case ChainPack::TypeInfo::Decimal: { RpcValue::Decimal d = readData_Decimal(m_in); ret = RpcValue(d); break; }
 		case ChainPack::TypeInfo::TRUE: { bool b = true; ret = RpcValue(b); break; }
