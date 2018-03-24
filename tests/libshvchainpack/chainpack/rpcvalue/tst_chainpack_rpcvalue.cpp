@@ -586,6 +586,7 @@ private:
 		{
 			qDebug() << "------------- Array";
 			{
+				qDebug() << "\t of Int";
 				RpcValue::Array t{RpcValue::Type::Int};
 				t.push_back(RpcValue::ArrayElement(RpcValue::Int(11)));
 				t.push_back(RpcValue::Int(12));
@@ -615,6 +616,7 @@ private:
 				QVERIFY(cp1.toArray() == cp2.toArray());
 			}
 			{
+				qDebug() << "\t of DateTime";
 				static constexpr size_t N = 10;
 				RpcValue::DateTime samples[N];
 				for (size_t i = 0; i < N; ++i) {
@@ -628,6 +630,30 @@ private:
 				qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
 				QVERIFY(cp1.type() == cp2.type());
 				QVERIFY(cp1.toArray() == cp2.toArray());
+			}
+			{
+				qDebug() << "\t of Decimals";
+				static constexpr size_t N = 10;
+				RpcValue::Decimal samples[N];
+				for (size_t i = 0; i < N; ++i) {
+					int rnd = qrand() - RAND_MAX/2;
+					int prec = i;
+					prec -= N/2;
+					samples[i] = RpcValue::Decimal(rnd, prec);
+				}
+				RpcValue::Array t{samples};
+				RpcValue cp1{t};
+				std::stringstream out;
+				ChainPackWriter wr(out); size_t len = wr.write(cp1);
+				ChainPackReader rd(out); RpcValue cp2 = rd.read();
+				qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
+				QVERIFY(cp1.type() == cp2.type());
+				QVERIFY(cp1.toArray() == cp2.toArray());
+				const RpcValue::Array a1 = cp1.toArray();
+				const RpcValue::Array a2 = cp2.toArray();
+				for (size_t i = 0; i < a1.size(); ++i) {
+					qDebug() << i << a1.valueAt(i).toCpon() << a2.valueAt(i).toCpon();
+ 				}
 			}
 			{
 				static constexpr size_t N = 10;

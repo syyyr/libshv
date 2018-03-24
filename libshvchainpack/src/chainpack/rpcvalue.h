@@ -199,6 +199,7 @@ public:
 			case RpcValue::Type::Double: el.double_value = val.toDouble(); break;
 			case RpcValue::Type::Bool: el.bool_value = val.toBool(); break;
 			case RpcValue::Type::DateTime: el.datetime_value = val.toDateTime(); break;
+			case RpcValue::Type::Decimal: el.decimal_value = val.toDecimal(); break;
 			default: SHVCHP_EXCEPTION("Unsupported array type");
 			}
 			return el;
