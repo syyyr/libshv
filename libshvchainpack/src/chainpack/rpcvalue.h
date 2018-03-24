@@ -10,6 +10,9 @@
 #include <memory>
 #include <initializer_list>
 
+#ifndef CHAINPACK_UINT
+	#define CHAINPACK_UINT unsigned
+#endif
 namespace shv {
 namespace chainpack {
 
@@ -37,8 +40,8 @@ public:
 	};
 	static const char* typeToName(Type t);
 
-	using Int = int;
-	using UInt = unsigned;
+	using Int = int; //int64_t;
+	using UInt = unsigned; //uint64_t;
 	class SHVCHAINPACK_DECL_EXPORT Decimal
 	{
 		struct Num {
@@ -142,10 +145,10 @@ public:
 
 		ArrayElement() {}
 		ArrayElement(std::nullptr_t) : null_value(nullptr) {}
-		ArrayElement(int16_t i) : int_value(i) {}
 		ArrayElement(int32_t i) : int_value(i) {}
-		ArrayElement(uint16_t i) : uint_value(i) {}
+		ArrayElement(int64_t i) : int_value(i) {}
 		ArrayElement(uint32_t i) : uint_value(i) {}
+		ArrayElement(uint64_t i) : uint_value(i) {}
 		ArrayElement(double d) : double_value(d) {}
 		ArrayElement(bool b) : bool_value(b) {}
 		ArrayElement(DateTime dt) : datetime_value(dt) {}
@@ -251,12 +254,11 @@ public:
 #endif
 	RpcValue(std::nullptr_t) noexcept;  // Null
 	RpcValue(bool value);               // Bool
-	RpcValue(int64_t value);
-	RpcValue(uint64_t value);
-	//RpcValue(int value) : RpcValue((Int)value) {}
-	//RpcValue(uint16_t value) : RpcValue((uint32_t)value) {}
-	RpcValue(int value) : RpcValue((int64_t)value) {}
-	RpcValue(unsigned value) : RpcValue((uint64_t)value) {}
+
+	RpcValue(int32_t value);                // Int
+	RpcValue(uint32_t value);                // UInt
+	RpcValue(int64_t value);                // Int
+	RpcValue(uint64_t value);                // UInt
 	RpcValue(double value);             // Double
 	RpcValue(Decimal value);             // Decimal
 	RpcValue(const DateTime &value);
