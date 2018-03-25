@@ -18,11 +18,19 @@ public:
 	~ClientAppCliOptions() Q_DECL_OVERRIDE {}
 
 	//CLIOPTION_GETTER_SETTER(QString, l, setL, ocale)
-	CLIOPTION_GETTER_SETTER2(QString, "user.name", u, setU, serName)
+	CLIOPTION_GETTER_SETTER2(QString, "login.user", u, setU, ser)
+	CLIOPTION_GETTER_SETTER2(QString, "login.password", p, setP, assword)
 	CLIOPTION_GETTER_SETTER2(QString, "server.host", s, setS, erverHost)
 	CLIOPTION_GETTER_SETTER2(int, "server.port", s, setS, erverPort)
+
+	CLIOPTION_GETTER_SETTER2(QString, "rpc.protocolType", p, setP, rotocolType)
+
 	CLIOPTION_GETTER_SETTER2(int, "rpc.timeout", r, setR, pcTimeout)
 	CLIOPTION_GETTER_SETTER2(bool, "rpc.metaTypeExplicit", is, set, MetaTypeExplicit)
+	CLIOPTION_GETTER_SETTER2(int, "rpc.heartbeatInterval", h, setH, eartbeatInterval)
+
+	CLIOPTION_GETTER_SETTER2(QString, "shv.mountPoint", m, setM, ountPoint)
+	CLIOPTION_GETTER_SETTER2(QString, "shv.deviceId", d, setD, eviceId)
 };
 
 } // namespace client

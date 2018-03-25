@@ -1,4 +1,6 @@
 #include "clientconnection.h"
+
+#include "clientappclioptions.h"
 #include "rpc.h"
 #include "socketrpcconnection.h"
 
@@ -81,6 +83,46 @@ ClientConnection::~ClientConnection()
 	delete m_rpcDriver;
 }
 
+void ClientConnection::setCliOptions(const ClientAppCliOptions &cli_opts)
+{
+	QString pv = cli_opts.protocolType();
+	if(pv == QLatin1String("cpon"))
+		setProtocolType(shv::chainpack::Rpc::ProtocolType::Cpon);
+	else if(pv == QLatin1String("jsonrpc"))
+		setProtocolType(shv::chainpack::Rpc::ProtocolType::JsonRpc);
+	else
+		setProtocolType(shv::chainpack::Rpc::ProtocolType::ChainPack);
+	setHost(cli_opts.serverHost().toStdString());
+	setPort(cli_opts.serverPort());
+	setUser(cli_opts.user().toStdString());
+	setPassword(cli_opts.password().toStdString());
+	{
+		cp::RpcValue::Map dev;
+		dev["id"] = cli_opts.deviceId().toStdString();
+		dev["mount"] = cli_opts.mountPoint().toStdString();
+		cp::RpcValue::Map opts;
+		opts[cp::Rpc::OPT_IDLE_WD_TIMEOUT] = 5 * cli_opts.heartbeatInterval();
+		opts[cp::Rpc::TYPE_DEVICE] = dev;
+		setconnectionOptions(opts);
+	}
+	int hbi = cli_opts.heartbeatInterval();
+	if(hbi > 0) {
+		if(!m_pingTimer) {
+			m_pingTimer = new QTimer(this);
+			m_pingTimer->setInterval(hbi * 1000);
+			connect(m_pingTimer, &QTimer::timeout, this, [this]() {
+				if(m_pingRqId > 0) {
+					shvError() << "PING response not received within" << (m_pingTimer->interval() / 1000) << "seconds, restarting conection to broker.";
+					resetConnection();
+				}
+				else {
+					m_pingRqId = callShvMethod(".broker", cp::Rpc::METH_PING);
+				}
+			});
+		}
+	}
+}
+
 void ClientConnection::open()
 {
 	if(!m_rpcDriver->hasSocket()) {
@@ -161,6 +203,13 @@ void ClientConnection::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 	if(isInitPhase()) {
 		processInitPhase(msg);
 		return;
+	}
+	if(msg.isResponse()) {
+		cp::RpcResponse rp(msg);
+		if(rp.requestId() == m_pingRqId) {
+			m_pingRqId = 0;
+			return;
+		}
 	}
 	emit rpcMessageReceived(msg);
 }
@@ -255,6 +304,22 @@ void ClientConnection::checkBrokerConnected()
 		emit abortConnectionRequest();
 		shvInfo().nospace() << "connecting to: " << user() << "@" << host() << ":" << port();
 		emit connectToHostRequest(QString::fromStdString(host()), port());
+	}
+}
+
+void ClientConnection::setBrokerConnected(bool b)
+{
+	if(b != m_isBrokerConnected) {
+		m_isBrokerConnected = b;
+		if(b) {
+			if(m_pingTimer && m_pingTimer->interval() > 0)
+				m_pingTimer->start();
+		}
+		else {
+			if(m_pingTimer)
+				m_pingTimer->stop();
+		}
+		emit brokerConnectedChanged(b);
 	}
 }
 

@@ -18,6 +18,8 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
+class ClientAppCliOptions;
+
 class SHVIOTQT_DECL_EXPORT ClientConnection : public QObject, public shv::chainpack::AbstractRpcConnection
 {
 	Q_OBJECT
@@ -30,7 +32,7 @@ class SHVIOTQT_DECL_EXPORT ClientConnection : public QObject, public shv::chainp
 	SHV_FIELD_IMPL(std::string,c, C, onnectionType) // [device | tunnel | client]
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, c, c, onnectionOptions)
 
-	SHV_PROPERTY_BOOL_IMPL(b, B, rokerConnected)
+	//SHV_PROPERTY_BOOL_IMPL(b, B, rokerConnected)
 public:
 	enum class SyncCalls {Enabled, Disabled};
 
@@ -42,6 +44,8 @@ public:
 	void close() Q_DECL_OVERRIDE;
 	void abort() Q_DECL_OVERRIDE;
 	void resetConnection();
+
+	void setCliOptions(const ClientAppCliOptions &cli_opts);
 
 	//unsigned checkBrokerConnectedInterval() const {return m_checkBrokerConnectedInterval;}
 	void setCheckBrokerConnectedInterval(unsigned ms);
@@ -85,6 +89,10 @@ protected:
 	void sendLogin(const shv::chainpack::RpcValue &server_hello);
 
 	void checkBrokerConnected();
+	void setBrokerConnected(bool b);
+public:
+	bool isBrokerConnected() const {return m_isBrokerConnected;}
+	Q_SIGNAL void brokerConnectedChanged(bool is_connected);
 private:
 	SocketRpcDriver *m_rpcDriver = nullptr;
 	// RpcDriver must run in separate thread to implement synchronous RPC calls properly
@@ -94,10 +102,13 @@ private:
 	SyncCalls m_syncCalls;
 	shv::chainpack::RpcValue::UInt m_maxSyncMessageId = 0;
 
+	bool m_isBrokerConnected = false;
 	QTimer *m_checkConnectedTimer;
-private:
 	unsigned m_helloRequestId = 0;
 	unsigned m_loginRequestId = 0;
+
+	QTimer *m_pingTimer = nullptr;
+	unsigned m_pingRqId = 0;
 };
 
 } // namespace chainpack
