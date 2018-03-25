@@ -108,6 +108,7 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions &cli_opts)
 	int hbi = cli_opts.heartbeatInterval();
 	if(hbi > 0) {
 		if(!m_pingTimer) {
+			shvInfo() << "Creating heart-beat timer, interval:" << hbi << "sec.";
 			m_pingTimer = new QTimer(this);
 			m_pingTimer->setInterval(hbi * 1000);
 			connect(m_pingTimer, &QTimer::timeout, this, [this]() {
@@ -260,7 +261,7 @@ void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
 		if(!msg.isResponse())
 			break;
 		cp::RpcResponse resp(msg);
-		shvInfo() << "Handshake response received:" << resp.toCpon();
+		//shvInfo() << "Handshake response received:" << resp.toCpon();
 		if(resp.isError())
 			break;
 		unsigned id = resp.requestId();
