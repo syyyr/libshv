@@ -40,7 +40,7 @@ void RpcMessage::MetaType::registerMetaType()
 //==================================================================
 // RpcMessage
 //==================================================================
-bool RpcMessage::m_isMetaTypeImplicit = false;
+bool RpcMessage::m_isMetaTypeExplicit = false;
 
 RpcMessage::RpcMessage()
 {
@@ -273,7 +273,7 @@ void RpcMessage::checkMetaValues()
 		/// not needed, Global is default name space
 		//setMetaValue(meta::Tag::MetaTypeNameSpaceId, meta::GlobalNS::ID);
 		/// not needed, RpcMessage is only type used so far
-		if(!m_isMetaTypeImplicit)
+		if(m_isMetaTypeExplicit)
 			setMetaValue(meta::Tag::MetaTypeId, RpcMessage::MetaType::ID);
 	}
 }
