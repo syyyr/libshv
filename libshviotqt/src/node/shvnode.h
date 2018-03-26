@@ -1,6 +1,6 @@
 #pragma once
 
-#include "shviotqtglobal.h"
+#include "../shviotqtglobal.h"
 
 //#include <shv/chainpack/rpcvalue.h>
 
@@ -11,6 +11,7 @@ namespace shv { namespace core { class StringView; }}
 
 namespace shv {
 namespace iotqt {
+namespace node {
 
 class SHVIOTQT_DECL_EXPORT ShvNode : public QObject
 {
@@ -20,7 +21,7 @@ public:
 	using StringViewList = std::vector<shv::core::StringView>;
 	using String = std::string;
 public:
-	explicit ShvNode(QObject *parent = nullptr);
+	explicit ShvNode(ShvNode *parent = nullptr);
 
 	//size_t childNodeCount() const {return propertyNames().size();}
 	ShvNode* parentNode() const;
@@ -50,9 +51,9 @@ class SHVIOTQT_DECL_EXPORT ShvRootNode : public ShvNode
 {
 	using Super = ShvNode;
 public:
-	explicit ShvRootNode(QObject *parent = nullptr) : Super(parent) {}
+	explicit ShvRootNode() : Super(nullptr) {}
 
 	bool isRootNode() const override {return true;}
 };
 
-}}
+}}}

@@ -416,8 +416,8 @@ void RpcDriver::onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::Met
 	(void)data_len;
 	RpcValue msg = decodeData(protocol_type, data, start_pos);
 	if(msg.isValid()) {
-		logRpcMsg() << RCV_LOG_ARROW << msg.toPrettyString();
 		msg.setMetaData(std::move(md));
+		logRpcMsg() << RCV_LOG_ARROW << msg.toPrettyString();
 		onRpcValueReceived(msg);
 	}
 	else {

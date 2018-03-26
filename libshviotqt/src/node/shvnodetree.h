@@ -8,6 +8,7 @@
 
 namespace shv {
 namespace iotqt {
+namespace node {
 
 class ShvNode;
 
@@ -16,6 +17,7 @@ class SHVIOTQT_DECL_EXPORT ShvNodeTree : public QObject
 	Q_OBJECT
 public:
 	explicit ShvNodeTree(QObject *parent = nullptr);
+	~ShvNodeTree() override;
 
 	ShvNode* root() const {return m_root;}
 
@@ -33,4 +35,4 @@ protected:
 	ShvNode* m_root = nullptr;
 };
 
-}}
+}}}

@@ -83,29 +83,35 @@ ClientConnection::~ClientConnection()
 	delete m_rpcDriver;
 }
 
-void ClientConnection::setCliOptions(const ClientAppCliOptions &cli_opts)
+void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 {
-	QString pv = cli_opts.protocolType();
+	if(!cli_opts)
+		return;
+	cp::RpcMessage::setMetaTypeExplicit(cli_opts->isMetaTypeExplicit());
+
+	QString pv = cli_opts->protocolType();
 	if(pv == QLatin1String("cpon"))
 		setProtocolType(shv::chainpack::Rpc::ProtocolType::Cpon);
 	else if(pv == QLatin1String("jsonrpc"))
 		setProtocolType(shv::chainpack::Rpc::ProtocolType::JsonRpc);
 	else
 		setProtocolType(shv::chainpack::Rpc::ProtocolType::ChainPack);
-	setHost(cli_opts.serverHost().toStdString());
-	setPort(cli_opts.serverPort());
-	setUser(cli_opts.user().toStdString());
-	setPassword(cli_opts.password().toStdString());
+
+	setHost(cli_opts->serverHost().toStdString());
+	setPort(cli_opts->serverPort());
+	setUser(cli_opts->user().toStdString());
+	setPassword(cli_opts->password().toStdString());
+
 	{
 		cp::RpcValue::Map dev;
-		dev["id"] = cli_opts.deviceId().toStdString();
-		dev["mount"] = cli_opts.mountPoint().toStdString();
+		dev["id"] = cli_opts->deviceId().toStdString();
+		dev["mount"] = cli_opts->mountPoint().toStdString();
 		cp::RpcValue::Map opts;
-		opts[cp::Rpc::OPT_IDLE_WD_TIMEOUT] = 5 * cli_opts.heartbeatInterval();
+		opts[cp::Rpc::OPT_IDLE_WD_TIMEOUT] = 5 * cli_opts->heartbeatInterval();
 		opts[cp::Rpc::TYPE_DEVICE] = dev;
 		setconnectionOptions(opts);
 	}
-	int hbi = cli_opts.heartbeatInterval();
+	int hbi = cli_opts->heartbeatInterval();
 	if(hbi > 0) {
 		if(!m_pingTimer) {
 			shvInfo() << "Creating heart-beat timer, interval:" << hbi << "sec.";
@@ -200,7 +206,7 @@ cp::RpcResponse ClientConnection::sendMessageSync(const cp::RpcRequest &rpc_requ
 
 void ClientConnection::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 {
-	logRpcMsg() << msg.toCpon();
+	//logRpcMsg() << msg.toCpon();
 	if(isInitPhase()) {
 		processInitPhase(msg);
 		return;

@@ -6,12 +6,18 @@
 
 namespace shv {
 namespace iotqt {
+namespace node {
 
 ShvNodeTree::ShvNodeTree(QObject *parent)
 	: QObject(parent)
-	, m_root(new ShvRootNode(this))
+	, m_root(new ShvRootNode())
 {
 	m_root->setNodeId("<ROOT>");
+}
+
+ShvNodeTree::~ShvNodeTree()
+{
+	delete m_root;
 }
 
 ShvNode *ShvNodeTree::mkdir(const ShvNode::String &path)
@@ -113,4 +119,4 @@ std::string ShvNodeTree::dumpTree()
 	return dump_node(m_root, 0);
 }
 
-}}
+}}}

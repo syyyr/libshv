@@ -10,8 +10,9 @@ namespace cp = shv::chainpack;
 
 namespace shv {
 namespace iotqt {
+namespace node {
 
-ShvNode::ShvNode(QObject *parent)
+ShvNode::ShvNode(ShvNode *parent)
 	: QObject(parent)
 {
 	shvDebug() << __FUNCTION__ << this;
@@ -86,7 +87,7 @@ ShvNode::StringList ShvNode::childNodeIds() const
 shv::chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 {
 	if(!rq.shvPath().empty())
-		SHV_EXCEPTION("Subtree '" + shvPath() + "' not exists!");
+		SHV_EXCEPTION("Subtree RPC request'" + shvPath() + "' on single node!");
 	shv::chainpack::RpcValue ret;
 	chainpack::RpcValue::String method = rq.method();
 	if(method == cp::Rpc::METH_LS) {
@@ -142,4 +143,4 @@ bool ShvNode::setPropertyValue_helper(const ShvNode::String &property_name, cons
 	return false;
 }
 */
-}}
+}}}

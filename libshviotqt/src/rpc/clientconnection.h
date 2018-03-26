@@ -45,7 +45,7 @@ public:
 	void abort() Q_DECL_OVERRIDE;
 	void resetConnection();
 
-	void setCliOptions(const ClientAppCliOptions &cli_opts);
+	void setCliOptions(const ClientAppCliOptions *cli_opts);
 
 	//unsigned checkBrokerConnectedInterval() const {return m_checkBrokerConnectedInterval;}
 	void setCheckBrokerConnectedInterval(unsigned ms);
