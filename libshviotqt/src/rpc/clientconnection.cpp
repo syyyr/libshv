@@ -250,8 +250,12 @@ void ClientConnection::sendLogin(const shv::chainpack::RpcValue &server_hello)
 std::string ClientConnection::passwordHash(const std::string &user)
 {
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-	hash.addData(user.data(), user.size());
+	std::string pass = password();
+	if(pass.empty())
+		pass = user;
+	hash.addData(pass.data(), pass.size());
 	QByteArray sha1 = hash.result().toHex();
+	//shvWarning() << user << pass << sha1;
 	return std::string(sha1.constData(), sha1.length());
 }
 /*
@@ -293,6 +297,7 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
 	hash.addData(password.c_str(), password.length());
 	QByteArray sha1 = hash.result().toHex();
+	//shvWarning() << password << sha1;
 	return cp::RpcValue::Map {
 		{"login", cp::RpcValue::Map {
 			 {"user", user()},
