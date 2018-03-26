@@ -92,6 +92,17 @@ int CponReader::getChar()
 	return ch;
 }
 
+void CponReader::read(RpcValue &val, std::string &err)
+{
+	err.clear();
+	try {
+		read(val);
+	}
+	catch (ParseException &e) {
+		err = e.mesage();
+	}
+}
+
 void CponReader::read(RpcValue &val)
 {
 	if (m_depth > MAX_RECURSION_DEPTH)

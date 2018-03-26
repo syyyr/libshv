@@ -350,6 +350,7 @@ public:
 	void append(const RpcValue &val);
 
 	std::string toPrettyString(const std::string &indent = std::string()) const;
+	std::string toStdString() const;
 	std::string toCpon() const;
 	static RpcValue parseCpon(const std::string & str, std::string *err = nullptr);
 

@@ -34,6 +34,7 @@ public:
 	using Super::read;
 	void read(RpcValue::MetaData &meta_data);
 	void read(RpcValue &val);
+	void read(RpcValue &val, std::string &err);
 private:
 	int getChar();
 	//RpcValue parseAtPos();
