@@ -123,7 +123,7 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 					resetConnection();
 				}
 				else {
-					m_pingRqId = callShvMethod(".broker", cp::Rpc::METH_PING);
+					m_pingRqId = callShvMethod(".broker/app", cp::Rpc::METH_PING);
 				}
 			});
 		}
