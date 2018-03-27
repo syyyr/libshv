@@ -88,13 +88,18 @@ shv::chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest 
 {
 	if(!rq.shvPath().empty())
 		SHV_EXCEPTION("Subtree RPC request'" + shvPath() + "' on single node!");
+	shv::chainpack::RpcValue ret = call(rq.method(), rq.params());
+	return ret;
+}
+
+chainpack::RpcValue ShvNode::call(const std::string &method, const chainpack::RpcValue &params)
+{
 	shv::chainpack::RpcValue ret;
-	chainpack::RpcValue::String method = rq.method();
 	if(method == cp::Rpc::METH_LS) {
-		ret = ls(rq.params());
+		ret = ls(params);
 	}
 	else if(method == cp::Rpc::METH_DIR) {
-		ret = dir(rq.params());
+		ret = dir(params);
 	}
 	else {
 		SHV_EXCEPTION("Invalid method: " + method + " called for node: " + shvPath());
@@ -104,10 +109,21 @@ shv::chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest 
 
 chainpack::RpcValue ShvNode::ls(const chainpack::RpcValue &methods_params)
 {
-	Q_UNUSED(methods_params)
+	const chainpack::RpcValue::List &mps = methods_params.toList();
 	cp::RpcValue::List ret;
-	for(const std::string &n : childNodeIds())
+	for(const std::string &n : childNodeIds()) {
 		ret.push_back(n);
+		for(const chainpack::RpcValue &mp : mps) {
+			std::string method = mp.isList()? mp.toList().value(0).toString(): mp.toString();
+			chainpack::RpcValue params = mp.isList()? mp.toList().value(1): chainpack::RpcValue();
+			try {
+				ShvNode *nd = childNode(n);
+				ret.push_back(nd->call(method, params));
+			} catch (shv::core::Exception &) {
+				ret.push_back(nullptr);
+			}
+		}
+	}
 	return ret;
 }
 
@@ -118,6 +134,7 @@ chainpack::RpcValue ShvNode::dir(const chainpack::RpcValue &methods_params)
 	static cp::RpcValue::List ret{cp::Rpc::METH_DIR, cp::Rpc::METH_LS};
 	return ret;
 }
+
 /*
 shv::chainpack::RpcValue ShvNode::propertyValue(const String &property_name) const
 {
