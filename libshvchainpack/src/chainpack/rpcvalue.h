@@ -113,7 +113,18 @@ public:
 		Blob(Super &&str) : Super(std::move(str)) {}
 		//const std::string& toString() const {return *this;}
 	};
-	using List = std::vector<RpcValue>;
+	class List : public std::vector<RpcValue>
+	{
+		using Super = std::vector<RpcValue>;
+		using Super::Super; // expose base class constructors
+	public:
+		RpcValue value(size_t ix) const
+		{
+			if(ix >= size())
+				return RpcValue();
+			return operator [](ix);
+		}
+	};
 	class Map : public std::map<String, RpcValue>
 	{
 		using Super = std::map<String, RpcValue>;
