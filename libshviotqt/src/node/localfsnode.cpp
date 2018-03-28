@@ -26,13 +26,30 @@ QFileInfo LocalFSNode::ndFileInfo(const std::string &path)
 
 cp::RpcValue LocalFSNode::ndLs(const std::string &path, const chainpack::RpcValue &methods_params)
 {
-	Q_UNUSED(methods_params)
 	cp::RpcValue::List ret;
 	QDir d2(m_rootDir.absolutePath() + '/' + QString::fromStdString(path));
 	if(!d2.exists())
-		return ret;
+		SHV_EXCEPTION("Path " + d2.absolutePath().toStdString() + " do not exists.");
+
+	MethParamsList mpl(methods_params);
 	for(const QFileInfo &fi : d2.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot)) {
-		ret.push_back(fi.fileName().toStdString());
+		std::string fn = fi.fileName().toStdString();
+		if(mpl.empty()) {
+			ret.push_back(fn);
+		}
+		else {
+			cp::RpcValue::List ret1;
+			ret1.push_back(fn);
+			for(const MethParams &mp : mpl) {
+				try {
+					std::string p2 = path + '/' + fn;
+					ret1.push_back(ndCall(p2, mp.method(), mp.params()));
+				} catch (shv::core::Exception &) {
+					ret1.push_back(nullptr);
+				}
+			}
+			ret.push_back(ret1);
+		}
 	}
 	return ret;
 }
@@ -50,6 +67,36 @@ chainpack::RpcValue LocalFSNode::ndRead(const std::string &path)
 		return cp::RpcValue::Blob(ba.constData(), ba.size());
 	}
 	SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for reading.");
+}
+
+chainpack::RpcValue LocalFSNode::ndCall(const std::string &path, const std::string &method, const chainpack::RpcValue &params)
+{
+	cp::RpcValue ret;
+	if(method == cp::Rpc::METH_LS) {
+		ret = ndLs(path, params);
+	}
+	else if(method == M_SIZE) {
+		ret = ndSize(path);
+	}
+	else if(method == M_READ) {
+		ret = ndRead(path);
+	}
+	else if(method == cp::Rpc::METH_DIR) {
+		QFileInfo fi = ndFileInfo(path);
+		cp::RpcValue::List lst{cp::Rpc::METH_DIR};
+		if(fi.isFile()) {
+			lst.push_back(M_SIZE);
+			lst.push_back(M_READ);
+		}
+		else if(fi.isDir()) {
+			lst.push_back(cp::Rpc::METH_LS);
+		}
+		ret = lst;
+	}
+	else {
+		SHV_EXCEPTION("Invalid method: " + method + " called for node: " + path);
+	}
+	return ret;
 }
 
 cp::RpcValue LocalFSNode::processRpcRequest(const chainpack::RpcRequest &rq)

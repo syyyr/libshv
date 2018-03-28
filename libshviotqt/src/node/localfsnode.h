@@ -20,6 +20,7 @@ private:
 	chainpack::RpcValue ndLs(const std::string &path, const chainpack::RpcValue &methods_params);
 	chainpack::RpcValue ndSize(const std::string &path);
 	chainpack::RpcValue ndRead(const std::string &path);
+	shv::chainpack::RpcValue ndCall(const std::string &path, const std::string &method, const shv::chainpack::RpcValue &params);
 	//chainpack::RpcValue dir(const chainpack::RpcValue &methods_params) override;
 	chainpack::RpcValue processRpcRequest(const chainpack::RpcRequest &rq) override;
 private:

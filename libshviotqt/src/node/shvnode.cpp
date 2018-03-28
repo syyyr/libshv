@@ -12,6 +12,22 @@ namespace shv {
 namespace iotqt {
 namespace node {
 
+std::string ShvNode::MethParams::method() const
+{
+	return m_mp.isList()? m_mp.toList().value(0).toString(): m_mp.toString();
+}
+
+chainpack::RpcValue ShvNode::MethParams::params() const
+{
+	return m_mp.isList()? m_mp.toList().value(1): chainpack::RpcValue();
+}
+
+ShvNode::MethParamsList::MethParamsList(const chainpack::RpcValue &method_params)
+{
+	for(const auto &v : method_params.toList())
+		push_back(MethParams(v));
+}
+
 ShvNode::ShvNode(ShvNode *parent)
 	: QObject(parent)
 {
@@ -109,19 +125,24 @@ chainpack::RpcValue ShvNode::call(const std::string &method, const chainpack::Rp
 
 chainpack::RpcValue ShvNode::ls(const chainpack::RpcValue &methods_params)
 {
-	const chainpack::RpcValue::List &mps = methods_params.toList();
+	MethParamsList mpl(methods_params);
 	cp::RpcValue::List ret;
 	for(const std::string &n : childNodeIds()) {
-		ret.push_back(n);
-		for(const chainpack::RpcValue &mp : mps) {
-			std::string method = mp.isList()? mp.toList().value(0).toString(): mp.toString();
-			chainpack::RpcValue params = mp.isList()? mp.toList().value(1): chainpack::RpcValue();
-			try {
-				ShvNode *nd = childNode(n);
-				ret.push_back(nd->call(method, params));
-			} catch (shv::core::Exception &) {
-				ret.push_back(nullptr);
+		if(mpl.empty()) {
+			ret.push_back(n);
+		}
+		else {
+			cp::RpcValue::List ret1;
+			ret1.push_back(n);
+			for(const MethParams &mp : mpl) {
+				try {
+					ShvNode *nd = childNode(n);
+					ret1.push_back(nd->call(mp.method(), mp.params()));
+				} catch (shv::core::Exception &) {
+					ret1.push_back(nullptr);
+				}
 			}
+			ret.push_back(ret1);
 		}
 	}
 	return ret;

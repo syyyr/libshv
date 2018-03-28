@@ -2,7 +2,7 @@
 
 #include "../shviotqtglobal.h"
 
-//#include <shv/chainpack/rpcvalue.h>
+#include <shv/chainpack/rpcvalue.h>
 
 #include <QObject>
 
@@ -20,6 +20,23 @@ public:
 	using StringList = std::vector<std::string>;
 	using StringViewList = std::vector<shv::core::StringView>;
 	using String = std::string;
+
+	class SHVIOTQT_DECL_EXPORT MethParams
+	{
+	public:
+		MethParams() {}
+		MethParams(const chainpack::RpcValue &method_params) : m_mp(method_params) {}
+		std::string method() const;
+		chainpack::RpcValue params() const;
+	private:
+		chainpack::RpcValue m_mp;
+	};
+	class SHVIOTQT_DECL_EXPORT MethParamsList : public std::vector<MethParams>
+	{
+	public:
+		MethParamsList(const chainpack::RpcValue &method_params);
+		MethParams value(size_t ix) const {return (ix < size())? operator [](ix): MethParams();}
+	};
 public:
 	explicit ShvNode(ShvNode *parent = nullptr);
 
