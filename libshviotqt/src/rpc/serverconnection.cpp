@@ -60,7 +60,7 @@ chainpack::RpcResponse ServerConnection::sendMessageSync(const chainpack::RpcReq
 
 void ServerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_version, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
 {
-	shvInfo() << __FILE__ << RCV_LOG_ARROW << md.toStdString() << shv::chainpack::Utils::toHexElided(data, start_pos, 100);
+	//shvInfo() << __FILE__ << RCV_LOG_ARROW << md.toStdString() << shv::chainpack::Utils::toHexElided(data, start_pos, 100);
 	if(isInitPhase()) {
 		shv::chainpack::RpcValue rpc_val = decodeData(protocol_version, data, start_pos);
 		rpc_val.setMetaData(std::move(md));

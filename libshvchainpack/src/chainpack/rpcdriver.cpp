@@ -413,7 +413,7 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolType protocol_type, const RpcVa
 
 void RpcDriver::onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
 {
-	nInfo() << __FILE__ << RCV_LOG_ARROW << md.toStdString() << shv::chainpack::Utils::toHexElided(data, start_pos, 100);
+	//nInfo() << __FILE__ << RCV_LOG_ARROW << md.toStdString() << shv::chainpack::Utils::toHexElided(data, start_pos, 100);
 	(void)data_len;
 	RpcValue msg = decodeData(protocol_type, data, start_pos);
 	if(msg.isValid()) {
