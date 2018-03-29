@@ -314,6 +314,7 @@ void ClientConnection::checkBrokerConnected()
 	//shvWarning() << "check: " << isSocketConnected();
 	if(!isBrokerConnected()) {
 		emit abortConnectionRequest();
+		m_pingRqId = 0;
 		shvInfo().nospace() << "connecting to: " << user() << "@" << host() << ":" << port();
 		emit connectToHostRequest(QString::fromStdString(host()), port());
 	}
