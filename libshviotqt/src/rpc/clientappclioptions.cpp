@@ -20,7 +20,7 @@ ClientAppCliOptions::ClientAppCliOptions(QObject *parent)
 	addOption("rpc.metaTypeExplicit").setType(QVariant::Bool).setNames("-mtid", "--rpc-metatype-explicit").setComment(tr("RpcMessage Type ID is included in RpcMessage when set, for more verbose -v rpcmsg log output")).setDefaultValue(false);
 	addOption("rpc.heartbeatInterval").setType(QVariant::Int).setNames({"-hbi", "--rpc-heartbeat-interval"}).setComment(tr("Send heart beat to broker every n sec. Disabled when set to 0")).setDefaultValue(60);
 
-	addOption("shv.mountPoint").setType(QVariant::String).setNames("--mount-point").setComment(tr("Shv tree, where device should be mounted to. Only paths beginning with test/ are enabled."));
+	addOption("shv.mount").setType(QVariant::String).setNames("--mount", "--mount-point").setComment(tr("Shv tree, where device should be mounted to. Only paths beginning with test/ are enabled. --mount-point version is deprecated"));
 	addOption("shv.deviceId").setType(QVariant::String).setNames("-id", "--device-id").setComment(tr("Device ID"));
 }
 

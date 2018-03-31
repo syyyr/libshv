@@ -17,7 +17,7 @@ TcpServer::TcpServer(QObject *parent)
 
 TcpServer::~TcpServer()
 {
-	shvInfo() << "Destroying Eyas TcpServer";
+	shvInfo() << "Destroying SHV TcpServer";
 }
 
 bool TcpServer::start(int port)
