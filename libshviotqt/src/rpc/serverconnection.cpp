@@ -43,6 +43,7 @@ ServerConnection::ServerConnection(QTcpSocket *socket, QObject *parent)
 ServerConnection::~ServerConnection()
 {
 	shvInfo() << "Destroying Connection ID:" << connectionId() << "name:" << connectionName();
+	abort();
 }
 
 void ServerConnection::sendMessage(const chainpack::RpcMessage &rpc_msg)

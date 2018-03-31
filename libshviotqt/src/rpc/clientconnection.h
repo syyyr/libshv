@@ -91,7 +91,7 @@ protected:
 	void checkBrokerConnected();
 	void setBrokerConnected(bool b);
 public:
-	bool isBrokerConnected() const {return m_isBrokerConnected;}
+	bool isBrokerConnected() const {return m_connectionState.isBrokerConnected;}
 	Q_SIGNAL void brokerConnectedChanged(bool is_connected);
 private:
 	SocketRpcDriver *m_rpcDriver = nullptr;
@@ -100,15 +100,20 @@ private:
 	QThread *m_rpcDriverThread = nullptr;
 	int m_connectionId;
 	SyncCalls m_syncCalls;
-	shv::chainpack::RpcValue::UInt m_maxSyncMessageId = 0;
 
-	bool m_isBrokerConnected = false;
 	QTimer *m_checkConnectedTimer;
-	unsigned m_helloRequestId = 0;
-	unsigned m_loginRequestId = 0;
-
 	QTimer *m_pingTimer = nullptr;
-	unsigned m_pingRqId = 0;
+
+	struct ConnectionState
+	{
+		unsigned maxSyncMessageId = 0;
+		bool isBrokerConnected = false;
+		unsigned helloRequestId = 0;
+		unsigned loginRequestId = 0;
+		unsigned pingRqId = 0;
+	};
+
+	ConnectionState m_connectionState;
 };
 
 } // namespace chainpack

@@ -118,12 +118,12 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 			m_pingTimer = new QTimer(this);
 			m_pingTimer->setInterval(hbi * 1000);
 			connect(m_pingTimer, &QTimer::timeout, this, [this]() {
-				if(m_pingRqId > 0) {
+				if(m_connectionState.pingRqId > 0) {
 					shvError() << "PING response not received within" << (m_pingTimer->interval() / 1000) << "seconds, restarting conection to broker.";
 					resetConnection();
 				}
 				else {
-					m_pingRqId = callShvMethod(".broker/app", cp::Rpc::METH_PING);
+					m_connectionState.pingRqId = callShvMethod(".broker/app", cp::Rpc::METH_PING);
 				}
 			});
 		}
@@ -179,7 +179,7 @@ void ClientConnection::onRpcValueReceived(const shv::chainpack::RpcValue &val)
 {
 	cp::RpcMessage msg(val);
 	cp::RpcValue::UInt id = msg.requestId();
-	if(id > 0 && id <= m_maxSyncMessageId) {
+	if(id > 0 && id <= m_connectionState.maxSyncMessageId) {
 		// ignore messages alredy processed by sync calls
 		logRpcSyncCalls() << "XXX ignoring already served sync response:" << id;
 		return;
@@ -197,7 +197,7 @@ void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
 cp::RpcResponse ClientConnection::sendMessageSync(const cp::RpcRequest &rpc_request_message, int time_out_ms)
 {
 	cp::RpcResponse res_msg;
-	m_maxSyncMessageId = qMax(m_maxSyncMessageId, rpc_request_message.requestId());
+	m_connectionState.maxSyncMessageId = qMax(m_connectionState.maxSyncMessageId, rpc_request_message.requestId());
 	//logRpcSyncCalls() << "==> send SYNC MSG id:" << rpc_request_message.id() << "data:" << rpc_request_message.toStdString();
 	emit sendMessageSyncRequest(rpc_request_message, &res_msg, time_out_ms);
 	//logRpcSyncCalls() << "<== RESP SYNC MSG id:" << res_msg.id() << "data:" << res_msg.toStdString();
@@ -213,8 +213,8 @@ void ClientConnection::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 	}
 	if(msg.isResponse()) {
 		cp::RpcResponse rp(msg);
-		if(rp.requestId() == m_pingRqId) {
-			m_pingRqId = 0;
+		if(rp.requestId() == m_connectionState.pingRqId) {
+			m_connectionState.pingRqId = 0;
 			return;
 		}
 	}
@@ -239,12 +239,12 @@ void ClientConnection::onSocketConnectedChanged(bool is_connected)
 void ClientConnection::sendHello()
 {
 	setBrokerConnected(false);
-	m_helloRequestId = callMethod(cp::Rpc::METH_HELLO);
+	m_connectionState.helloRequestId = callMethod(cp::Rpc::METH_HELLO);
 }
 
 void ClientConnection::sendLogin(const shv::chainpack::RpcValue &server_hello)
 {
-	m_loginRequestId = callMethod(cp::Rpc::METH_LOGIN, createLoginParams(server_hello));
+	m_connectionState.loginRequestId = callMethod(cp::Rpc::METH_LOGIN, createLoginParams(server_hello));
 }
 
 std::string ClientConnection::passwordHash(const std::string &user)
@@ -277,11 +277,11 @@ void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
 		unsigned id = resp.requestId();
 		if(id == 0)
 			break;
-		if(m_helloRequestId == id) {
+		if(m_connectionState.helloRequestId == id) {
 			sendLogin(resp.result());
 			return;
 		}
-		else if(m_loginRequestId == id) {
+		else if(m_connectionState.loginRequestId == id) {
 			setBrokerConnected(true);
 			return;
 		}
@@ -314,18 +314,19 @@ void ClientConnection::checkBrokerConnected()
 	//shvWarning() << "check: " << isSocketConnected();
 	if(!isBrokerConnected()) {
 		emit abortConnectionRequest();
-		m_pingRqId = 0;
 		shvInfo().nospace() << "connecting to: " << user() << "@" << host() << ":" << port();
+		m_connectionState = ConnectionState();
 		emit connectToHostRequest(QString::fromStdString(host()), port());
 	}
 }
 
 void ClientConnection::setBrokerConnected(bool b)
 {
-	if(b != m_isBrokerConnected) {
-		m_isBrokerConnected = b;
+	if(b != m_connectionState.isBrokerConnected) {
+		m_connectionState.isBrokerConnected = b;
 		if(b) {
 			if(m_pingTimer && m_pingTimer->interval() > 0)
+				//m_connStatus.pingRqId = 0;
 				m_pingTimer->start();
 		}
 		else {

@@ -25,6 +25,8 @@ public:
 	static const char* METH_LS;
 	static const char* METH_PING;
 	static const char* METH_ECHO;
+	static const char* METH_APP_NAME;
+	static const char* METH_DEVICE_ID;
 
 	static const char* NTF_VAL_CHANGED;
 	static const char* NTF_CONNECTED;

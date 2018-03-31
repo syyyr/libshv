@@ -9,15 +9,21 @@ namespace iotqt {
 namespace node {
 
 ShvNodeTree::ShvNodeTree(QObject *parent)
-	: QObject(parent)
-	, m_root(new ShvRootNode())
+	: ShvNodeTree(new ShvRootNode(this), parent)
 {
-	m_root->setNodeId("<ROOT>");
+}
+
+ShvNodeTree::ShvNodeTree(ShvRootNode *root, QObject *parent)
+	: QObject(parent)
+	, m_root(root)
+{
+	//m_root->setNodeId("<ROOT>");
 }
 
 ShvNodeTree::~ShvNodeTree()
 {
-	delete m_root;
+	if(m_root && !m_root->parent())
+		delete m_root;
 }
 
 ShvNode *ShvNodeTree::mkdir(const ShvNode::String &path)

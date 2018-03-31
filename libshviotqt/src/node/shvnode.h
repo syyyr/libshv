@@ -69,7 +69,7 @@ class SHVIOTQT_DECL_EXPORT ShvRootNode : public ShvNode
 {
 	using Super = ShvNode;
 public:
-	explicit ShvRootNode() : Super(nullptr) {}
+	explicit ShvRootNode(QObject *parent) : Super() {setParent(parent);}
 
 	bool isRootNode() const override {return true;}
 };
