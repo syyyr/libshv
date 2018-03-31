@@ -47,7 +47,6 @@ public:
 
 	void setCliOptions(const ClientAppCliOptions *cli_opts);
 
-	//unsigned checkBrokerConnectedInterval() const {return m_checkBrokerConnectedInterval;}
 	void setCheckBrokerConnectedInterval(unsigned ms);
 
 	void setSocket(QTcpSocket *socket);
@@ -114,6 +113,7 @@ private:
 	};
 
 	ConnectionState m_connectionState;
+	int m_checkBrokerConnectedInterval = 0;
 };
 
 } // namespace chainpack

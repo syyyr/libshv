@@ -87,6 +87,9 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 {
 	if(!cli_opts)
 		return;
+
+	setCheckBrokerConnectedInterval(cli_opts->reconnectInterval() * 1000);
+
 	cp::RpcMessage::setMetaTypeExplicit(cli_opts->isMetaTypeExplicit());
 
 	QString pv = cli_opts->protocolType();
@@ -137,8 +140,8 @@ void ClientConnection::open()
 		setSocket(socket);
 	}
 	checkBrokerConnected();
-	if(m_checkConnectedTimer->interval() > 0)
-		m_checkConnectedTimer->start();
+	if(m_checkBrokerConnectedInterval > 0)
+		m_checkConnectedTimer->start(m_checkBrokerConnectedInterval);
 }
 
 void ClientConnection::close()
@@ -155,9 +158,11 @@ void ClientConnection::abort()
 
 void ClientConnection::setCheckBrokerConnectedInterval(unsigned ms)
 {
-	m_checkConnectedTimer->setInterval(ms);
+	m_checkBrokerConnectedInterval = ms;
 	if(ms == 0)
 		m_checkConnectedTimer->stop();
+	else
+		m_checkConnectedTimer->setInterval(ms);
 }
 
 void ClientConnection::resetConnection()

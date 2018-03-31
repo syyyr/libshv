@@ -330,6 +330,7 @@ public:
 	bool isDouble() const { return type() == Type::Double; }
 	bool isBool() const { return type() == Type::Bool; }
 	bool isString() const { return type() == Type::String; }
+	bool isBlob() const { return type() == Type::Blob; }
 	bool isDateTime() const { return type() == Type::DateTime; }
 	bool isList() const { return type() == Type::List; }
 	bool isArray() const { return type() == Type::Array; }

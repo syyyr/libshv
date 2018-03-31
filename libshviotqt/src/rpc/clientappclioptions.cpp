@@ -18,6 +18,7 @@ ClientAppCliOptions::ClientAppCliOptions(QObject *parent)
 	addOption("rpc.protocolType").setType(QVariant::String).setNames("--protocol-type").setComment(tr("Protocol type [chainpack | cpon | jsonrpc]")).setDefaultValue("chainpack");
 	addOption("rpc.timeout").setType(QVariant::Int).setNames("--rpc-timeout").setComment(tr("RPC timeout msec")).setDefaultValue(shv::chainpack::AbstractRpcConnection::DEFAULT_RPC_TIMEOUT);
 	addOption("rpc.metaTypeExplicit").setType(QVariant::Bool).setNames("-mtid", "--rpc-metatype-explicit").setComment(tr("RpcMessage Type ID is included in RpcMessage when set, for more verbose -v rpcmsg log output")).setDefaultValue(false);
+	addOption("rpc.reconnectInterval").setType(QVariant::Int).setNames({"-rci", "--rpc-reconnect-interval"}).setComment(tr("Reconnect to broker if connection lost at least after recoonect-interval seconds. Disabled when set to 0")).setDefaultValue(10);
 	addOption("rpc.heartbeatInterval").setType(QVariant::Int).setNames({"-hbi", "--rpc-heartbeat-interval"}).setComment(tr("Send heart beat to broker every n sec. Disabled when set to 0")).setDefaultValue(60);
 
 	addOption("shv.mount").setType(QVariant::String).setNames("--mount", "--mount-point").setComment(tr("Shv tree, where device should be mounted to. Only paths beginning with test/ are enabled. --mount-point version is deprecated"));
