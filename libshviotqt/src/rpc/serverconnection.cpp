@@ -124,7 +124,9 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 			if(!login(rq.params()))
 				SHV_EXCEPTION("Invalid authentication for user: " + m_user + " at: " + connectionName());
 			shvInfo().nospace() << "Client logged in user: " << m_user << " from: " << peerAddress() << ':' << peerPort();
-			sendResponse(rq.requestId(), true);
+			cp::RpcValue::Map login_resp;
+			login_resp["connectionId"] = connectionId();
+			sendResponse(rq.requestId(), login_resp);
 			m_loginReceived = true;
 			return;
 		}

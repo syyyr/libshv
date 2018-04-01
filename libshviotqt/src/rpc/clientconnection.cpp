@@ -263,12 +263,6 @@ std::string ClientConnection::passwordHash(const std::string &user)
 	//shvWarning() << user << pass << sha1;
 	return std::string(sha1.constData(), sha1.length());
 }
-/*
-void ClientConnection::connectToHost(const std::string &host_name, quint16 port)
-{
-	emit connectToHostRequest(QString::fromStdString(host_name), port);
-}
-*/
 
 void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
 {
@@ -287,6 +281,8 @@ void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
 			return;
 		}
 		else if(m_connectionState.loginRequestId == id) {
+			const chainpack::RpcValue::Map &m = resp.result().toMap();
+			setBrokerClientId(m.value("connectionId").toInt());
 			setBrokerConnected(true);
 			return;
 		}
