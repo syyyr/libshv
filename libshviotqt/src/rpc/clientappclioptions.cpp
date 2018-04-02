@@ -23,6 +23,8 @@ ClientAppCliOptions::ClientAppCliOptions(QObject *parent)
 
 	addOption("shv.mount").setType(QVariant::String).setNames({"-m", "--mount", "--mount-point"}).setComment(tr("Shv tree, where device should be mounted to. Only paths beginning with test/ are enabled. --mount-point version is deprecated"));
 	addOption("shv.deviceId").setType(QVariant::String).setNames("-id", "--device-id").setComment(tr("Device ID"));
+	addOption("shv.sessionToken").setType(QVariant::String).setNames("-st", "--session-token")
+			.setComment(tr("Session token containing authorization for this instance on the broker when connected."));
 }
 
 } // namespace client

@@ -366,6 +366,8 @@ public:
 	std::string toCpon() const;
 	static RpcValue parseCpon(const std::string & str, std::string *err = nullptr);
 
+	std::string toChainPack() const;
+
 	bool operator== (const RpcValue &rhs) const;
 #ifdef RPCVALUE_COPY_AND_SWAP
 	RpcValue& operator= (RpcValue rhs) noexcept

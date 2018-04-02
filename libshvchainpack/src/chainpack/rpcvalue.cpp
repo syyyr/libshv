@@ -1,6 +1,7 @@
 #include "rpcvalue.h"
 #include "cponwriter.h"
 
+#include "chainpackwriter.h"
 #include "cponreader.h"
 #include "exception.h"
 #include "utils.h"
@@ -682,6 +683,16 @@ RpcValue RpcValue::parseCpon(const std::string &str, std::string *err)
 		rd >> ret;
 	}
 	return ret;
+}
+
+std::string RpcValue::toChainPack() const
+{
+	std::ostringstream out;
+	{
+		ChainPackWriter wr(out);
+		wr << *this;
+	}
+	return out.str();
 }
 
 const char *RpcValue::typeToName(RpcValue::Type t)

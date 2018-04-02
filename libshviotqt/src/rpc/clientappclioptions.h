@@ -32,6 +32,7 @@ public:
 
 	CLIOPTION_GETTER_SETTER2(QString, "shv.mount", m, setM, ountPoint)
 	CLIOPTION_GETTER_SETTER2(QString, "shv.deviceId", d, setD, eviceId)
+	CLIOPTION_GETTER_SETTER2(QString, "shv.sessionToken", s, setS, essionToken)
 };
 
 } // namespace client

@@ -109,6 +109,7 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 		cp::RpcValue::Map dev;
 		dev["id"] = cli_opts->deviceId().toStdString();
 		dev["mount"] = cli_opts->mountPoint().toStdString();
+		dev["sessionToken"] = cli_opts->sessionToken().toStdString();
 		cp::RpcValue::Map opts;
 		opts[cp::Rpc::OPT_IDLE_WD_TIMEOUT] = 5 * cli_opts->heartbeatInterval();
 		opts[cp::Rpc::TYPE_DEVICE] = dev;
