@@ -121,11 +121,10 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 			shvInfo() << "Client login received";// << profile;// << "device id::" << m.value("deviceId").toStdString();
 			//cp::RpcValue::Map params = rq.params().toMap();
 			//const cp::RpcValue login = params.value("login");
-			if(!login(rq.params()))
+			cp::RpcValue login_resp = login(rq.params());
+			if(!login_resp.isValid())
 				SHV_EXCEPTION("Invalid authentication for user: " + m_user + " at: " + connectionName());
 			shvInfo().nospace() << "Client logged in user: " << m_user << " from: " << peerAddress() << ':' << peerPort();
-			cp::RpcValue::Map login_resp;
-			login_resp["connectionId"] = connectionId();
 			sendResponse(rq.requestId(), login_resp);
 			m_loginReceived = true;
 			return;

@@ -5,6 +5,9 @@ namespace chainpack {
 
 const char* Rpc::OPT_IDLE_WD_TIMEOUT = "idleWatchDogTimeOut";
 
+const char* Rpc::KEY_CLIENT_ID = "clientId";
+const char* Rpc::KEY_MOUT_POINT = "mountPoint";
+
 const char* Rpc::TYPE_CLIENT = "client";
 const char* Rpc::TYPE_DEVICE = "device";
 const char* Rpc::TYPE_TUNNEL = "tunnel";

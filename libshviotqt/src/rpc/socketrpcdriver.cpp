@@ -68,7 +68,7 @@ void SocketRpcDriver::setSocket(QTcpSocket *socket)
 	m_socket = socket;
 	connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this,
 		  [this](QAbstractSocket::SocketError socket_error) {
-		shvError() << "Socket error:" << socket_error << m_socket->errorString();
+		shvInfo() << "Socket error:" << socket_error << m_socket->errorString();
 	});
 	connect(socket, &QTcpSocket::readyRead, this, &SocketRpcDriver::onReadyRead);
 	// queued connection here is to write data in next event loop, not directly when previous chunk is written

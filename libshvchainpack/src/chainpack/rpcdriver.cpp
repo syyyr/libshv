@@ -96,17 +96,17 @@ void RpcDriver::sendRawData(const RpcValue::MetaData &meta_data, std::string &&d
 	}
 }
 
-RpcMessage RpcDriver::composeRpcMessage(RpcValue::MetaData &&meta_data, const std::string &data, bool throw_exc)
+RpcMessage RpcDriver::composeRpcMessage(RpcValue::MetaData &&meta_data, const std::string &data, std::string *errmsg)
 {
 	Rpc::ProtocolType packed_data_ver = RpcMessage::protocolType(meta_data);
 	RpcValue val = decodeData(packed_data_ver, data, 0);
 	if(!val.isValid()) {
 		const char * msg = "Compose RPC message error.";
-		if(throw_exc) {
+		if(!errmsg) {
 			SHVCHP_EXCEPTION(msg);
 		}
 		else {
-			nError() << msg;
+			*errmsg = std::move(msg);
 			return RpcMessage();
 		}
 	}

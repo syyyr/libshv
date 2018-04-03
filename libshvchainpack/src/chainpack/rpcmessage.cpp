@@ -212,21 +212,36 @@ void RpcMessage::pushCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id
 	}
 }
 
+RpcValue RpcMessage::popCallerId(const RpcValue &caller_ids, RpcValue::UInt &id)
+{
+	if(caller_ids.isArray()) {
+		shv::chainpack::RpcValue::Array array = caller_ids.toArray();
+		if(array.empty()) {
+			id = 0;
+		}
+		else {
+			id = array.back().uint_value;
+			array.pop_back();
+		}
+		return array;
+	}
+	else {
+		id = caller_ids.toUInt();
+	}
+	return RpcValue();
+}
+
 RpcValue::UInt RpcMessage::popCallerId(RpcValue::MetaData &meta)
 {
 	RpcValue::UInt ret = 0;
-	shv::chainpack::RpcValue caller_id = callerId(meta);
-	if(caller_id.isArray()) {
-		shv::chainpack::RpcValue::Array array = caller_id.toArray();
-		if(!array.empty()) {
-			ret = array.back().uint_value;
-			array.pop_back();
-			setCallerId(meta, array);
-		}
-	}
-	else {
-		ret = caller_id.toUInt();
-	}
+	setCallerId(meta, popCallerId(callerId(meta), ret));
+	return ret;
+}
+
+RpcValue::UInt RpcMessage::popCallerId()
+{
+	RpcValue::UInt ret = 0;
+	setCallerId(popCallerId(callerId(), ret));
 	return ret;
 }
 
@@ -338,13 +353,13 @@ void RpcNotify::write(AbstractStreamWriter &wr, const std::string &method, std::
 //==================================================================
 // RpcResponse
 //==================================================================
-RpcResponse RpcResponse::forRequest(const RpcRequest &rq)
+RpcResponse RpcResponse::forRequest(const RpcValue::MetaData &meta)
 {
 	RpcResponse ret;
-	RpcValue::UInt id = rq.requestId();
+	RpcValue::UInt id = requestId(meta);
 	if(id > 0)
 		ret.setRequestId(id);
-	auto caller_id = rq.callerId();
+	auto caller_id = callerId(meta);
 	if(caller_id.isValid())
 		ret.setCallerId(caller_id);
 	return ret;

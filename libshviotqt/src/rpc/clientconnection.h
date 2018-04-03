@@ -32,7 +32,7 @@ class SHVIOTQT_DECL_EXPORT ClientConnection : public QObject, public shv::chainp
 	SHV_FIELD_IMPL(std::string,c, C, onnectionType) // [device | tunnel | client]
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, c, c, onnectionOptions)
 
-	SHV_FIELD_IMPL2(int, b, B, rokerClientId, 0)
+	//SHV_FIELD_IMPL2(int, b, B, rokerClientId, 0)
 public:
 	enum class SyncCalls {Enabled, Disabled};
 
@@ -92,6 +92,8 @@ protected:
 public:
 	bool isBrokerConnected() const {return m_connectionState.isBrokerConnected;}
 	Q_SIGNAL void brokerConnectedChanged(bool is_connected);
+	const shv::chainpack::RpcValue& loginResult() const {return m_connectionState.loginResult;}
+	unsigned brokerClientId() const;
 private:
 	SocketRpcDriver *m_rpcDriver = nullptr;
 	// RpcDriver must run in separate thread to implement synchronous RPC calls properly
@@ -110,6 +112,7 @@ private:
 		unsigned helloRequestId = 0;
 		unsigned loginRequestId = 0;
 		unsigned pingRqId = 0;
+		shv::chainpack::RpcValue loginResult;
 	};
 
 	ConnectionState m_connectionState;

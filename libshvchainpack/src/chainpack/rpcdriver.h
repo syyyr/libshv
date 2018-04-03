@@ -33,7 +33,7 @@ public:
 	static int defaultRpcTimeout() {return s_defaultRpcTimeout;}
 	static void setDefaultRpcTimeout(int tm) {s_defaultRpcTimeout = tm;}
 
-	static RpcMessage composeRpcMessage(RpcValue::MetaData &&meta_data, const std::string &data, bool throw_exc = Exception::Throw);
+	static RpcMessage composeRpcMessage(RpcValue::MetaData &&meta_data, const std::string &data, std::string *errmsg = nullptr);
 protected:
 	struct Chunk
 	{

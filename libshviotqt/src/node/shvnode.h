@@ -13,6 +13,8 @@ namespace shv {
 namespace iotqt {
 namespace node {
 
+class ShvRootNode;
+
 class SHVIOTQT_DECL_EXPORT ShvNode : public QObject
 {
 	Q_OBJECT
@@ -50,6 +52,7 @@ public:
 	void setNodeId(const String &n);
 
 	String shvPath() const;
+	ShvRootNode* rootNode();
 
 	virtual shv::chainpack::RpcValue ls(const shv::chainpack::RpcValue &methods_params);
 	virtual shv::chainpack::RpcValue dir(const shv::chainpack::RpcValue &methods_params);
@@ -58,6 +61,8 @@ public:
 	virtual bool isRootNode() const {return false;}
 
 	virtual StringList childNodeIds() const;
+
+	virtual void processRawData(const shv::chainpack::RpcValue::MetaData &meta, std::string &&data);
 	virtual chainpack::RpcValue processRpcRequest(const shv::chainpack::RpcRequest &rq);
 protected:
 	//virtual bool setPropertyValue_helper(const String &property_name, const shv::chainpack::RpcValue &val);
@@ -67,11 +72,15 @@ private:
 
 class SHVIOTQT_DECL_EXPORT ShvRootNode : public ShvNode
 {
+	Q_OBJECT
 	using Super = ShvNode;
 public:
 	explicit ShvRootNode(QObject *parent) : Super() {setParent(parent);}
 
 	bool isRootNode() const override {return true;}
+
+	Q_SIGNAL void sendRpcMesage(const shv::chainpack::RpcMessage &msg);
+	void emitSendRpcMesage(const shv::chainpack::RpcMessage &msg) {emit sendRpcMesage(msg);}
 };
 
 }}}

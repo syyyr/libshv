@@ -282,8 +282,7 @@ void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
 			return;
 		}
 		else if(m_connectionState.loginRequestId == id) {
-			const chainpack::RpcValue::Map &m = resp.result().toMap();
-			setBrokerClientId(m.value("connectionId").toInt());
+			m_connectionState.loginResult = resp.result();
 			setBrokerConnected(true);
 			return;
 		}
@@ -337,6 +336,11 @@ void ClientConnection::setBrokerConnected(bool b)
 		}
 		emit brokerConnectedChanged(b);
 	}
+}
+
+unsigned ClientConnection::brokerClientId() const
+{
+	return loginResult().toMap().value(cp::Rpc::KEY_CLIENT_ID).toUInt();
 }
 
 }}}

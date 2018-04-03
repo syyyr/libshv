@@ -2,6 +2,7 @@
 
 #include <shv/chainpack/rpcmessage.h>
 #include <shv/chainpack/rpcvalue.h>
+#include <shv/chainpack/rpcdriver.h>
 #include <shv/core/stringview.h>
 #include <shv/core/exception.h>
 #include <shv/coreqt/log.h>
@@ -82,6 +83,18 @@ ShvNode::String ShvNode::shvPath() const
 	return ret;
 }
 
+ShvRootNode *ShvNode::rootNode()
+{
+	ShvNode *nd = this;
+	while(nd) {
+		if(nd->isRootNode())
+			return qobject_cast<ShvRootNode*>(nd);
+		nd = nd->parentNode();
+	}
+	SHV_EXCEPTION("Cannot find root node!");
+	return nullptr;
+}
+
 /*
 chainpack::RpcValue ShvNode::dir(chainpack::RpcValue meta_methods_params)
 {
@@ -98,6 +111,36 @@ ShvNode::StringList ShvNode::childNodeIds() const
 		ret.push_back(nd->nodeId());
 	}
 	return ret;
+}
+
+void ShvNode::processRawData(const chainpack::RpcValue::MetaData &meta, std::string &&data)
+{
+	std::string errmsg;
+	cp::RpcMessage rpc_msg = cp::RpcDriver::composeRpcMessage(cp::RpcValue::MetaData(meta), data, &errmsg);
+	if(!errmsg.empty()) {
+		shvError() << errmsg;
+		return;
+	}
+	cp::RpcRequest rq(rpc_msg);
+	cp::RpcResponse resp = cp::RpcResponse::forRequest(rq.metaData());
+	bool response_deffered = false;
+	try {
+		cp::RpcValue result = processRpcRequest(rq);
+		if(result.isValid())
+			resp.setResult(result);
+		else
+			response_deffered = true;
+	}
+	catch (shv::core::Exception &e) {
+		shvError() << e.message();
+		resp.setError(cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodInvocationException, e.message()));
+	}
+	if(!response_deffered) {
+		ShvRootNode *root = rootNode();
+		if(root) {
+			root->emitSendRpcMesage(resp);
+		}
+	}
 }
 
 shv::chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)

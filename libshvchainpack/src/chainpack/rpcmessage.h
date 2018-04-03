@@ -69,7 +69,9 @@ public:
 	static RpcValue callerId(const RpcValue::MetaData &meta);
 	static void setCallerId(RpcValue::MetaData &meta, const RpcValue &caller_id);
 	static void pushCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id);
+	static RpcValue popCallerId(const RpcValue &caller_ids, RpcValue::UInt &id);
 	static RpcValue::UInt popCallerId(RpcValue::MetaData &meta);
+	RpcValue::UInt popCallerId();
 	RpcValue callerId() const;
 	void setCallerId(const RpcValue &callerId);
 
@@ -81,6 +83,7 @@ public:
 	std::string toPrettyString() const;
 	std::string toCpon() const;
 
+	const RpcValue::MetaData& metaData() const {return m_value.metaData();}
 	RpcValue metaValue(RpcValue::UInt key) const;
 	void setMetaValue(RpcValue::UInt key, const RpcValue &val);
 
@@ -205,7 +208,9 @@ public:
 	//RpcResponse(const Value &request_id) : Super(Json()) { setId(request_id); }
 	RpcResponse() : Super() {}
 	RpcResponse(const RpcMessage &msg) : Super(msg) {}
-	static RpcResponse forRequest(const RpcRequest &rq);
+
+	static RpcResponse forRequest(const RpcValue::MetaData &meta);
+	static RpcResponse forRequest(const RpcRequest &rq) {return forRequest(rq.metaData());}
 public:
 	bool isError() const {return !error().empty();}
 	RpcResponse& setError(Error err);
