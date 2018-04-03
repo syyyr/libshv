@@ -7,11 +7,11 @@
 namespace shv {
 namespace chainpack {
 
+//std::clog << ' ' << (msg) << " at pos: " << m_in.tellg() << " near to: " << buff << std::endl;
 #define PARSE_EXCEPTION(msg) {\
 	std::clog << __FILE__ << ':' << __LINE__; \
 	char buff[40]; \
 	m_in.readsome(buff, sizeof(buff)); \
-	std::clog << ' ' << (msg) << " at pos: " << m_in.tellg() << " near to: " << buff << std::endl; \
 	if(exception_aborts) { \
 		abort(); \
 	} \
@@ -29,7 +29,8 @@ const std::string S_FALSE("false");
 
 const char S_IMAP_BEGIN('i');
 const char S_ARRAY_BEGIN('a');
-const char S_BLOB_BEGIN('x');
+const char S_ESC_BLOB_BEGIN('b');
+const char S_HEX_BLOB_BEGIN('x');
 const char S_DATETIME_BEGIN('d');
 //const char S_LIST_BEGIN('[');
 //const char S_LIST_END(']');
@@ -111,6 +112,7 @@ void CponReader::read(RpcValue &val)
 
 	RpcValue::Type type = RpcValue::Type::Invalid;
 	RpcValue::MetaData md;
+	bool hex_blob = false;
 	auto ch = getValidChar();
 	if(ch == '<') {
 		m_in.unget();
@@ -134,7 +136,17 @@ void CponReader::read(RpcValue &val)
 			PARSE_EXCEPTION("Invalid Array prefix.");
 		break;
 	}
-	case S_BLOB_BEGIN: {
+	case S_ESC_BLOB_BEGIN: {
+		hex_blob = false;
+		ch = getChar();
+		if(ch == '"')
+			type = RpcValue::Type::Blob;
+		else
+			PARSE_EXCEPTION("Invalid Blob prefix.");
+		break;
+	}
+	case S_HEX_BLOB_BEGIN: {
+		hex_blob = true;
 		ch = getChar();
 		if(ch == '"')
 			type = RpcValue::Type::Blob;
@@ -179,7 +191,7 @@ void CponReader::read(RpcValue &val)
 	case RpcValue::Type::IMap: parseIMap(val); break;
 	case RpcValue::Type::Null: parseNull(val); break;
 	case RpcValue::Type::Bool: parseBool(val); break;
-	case RpcValue::Type::Blob: parseBlob(val); break;
+	case RpcValue::Type::Blob: parseBlob(val, hex_blob); break;
 	case RpcValue::Type::String: parseString(val); break;
 	case RpcValue::Type::DateTime: parseDateTime(val); break;
 	case RpcValue::Type::Int:
@@ -299,11 +311,16 @@ void CponReader::parseString(RpcValue &val)
 	val = s;
 }
 
-void CponReader::parseBlob(RpcValue &val)
+void CponReader::parseBlob(RpcValue &val, bool hex_blob)
 {
 	std::string s;
-	parseStringHelper(s);
-	s = Utils::fromHex(s);
+	if(hex_blob) {
+		parseStringHelper(s);
+		s = Utils::fromHex(s);
+	}
+	else {
+		parseCStringHelper(s);
+	}
 	val = RpcValue::Blob{s};
 }
 
@@ -646,6 +663,68 @@ void CponReader::parseStringHelper(std::string &val)
 			str_val += ch;
 		}
 		else {
+			PARSE_EXCEPTION("invalid escape character " + dump_char(ch));
+		}
+	}
+}
+
+void CponReader::parseCStringHelper(std::string &val)
+{
+	std::string str_val;
+	while (true) {
+		if (m_in.eof())
+			PARSE_EXCEPTION("unexpected end of input in string");
+
+		auto ch = m_in.get();
+		//std::cout << "A -> " << ch << std::endl;
+		if (ch == '"') {
+			val = str_val;
+			return;
+		}
+
+		if (in_range(ch, 0, 0x1f))
+			PARSE_EXCEPTION("unescaped " + dump_char(ch) + " in string");
+
+		// The usual case: non-escaped characters
+		if (ch != '\\') {
+			str_val += ch;
+			continue;
+		}
+
+		// Handle escapes
+		if (m_in.eof())
+			PARSE_EXCEPTION("unexpected end of input in string");
+
+		ch = m_in.get();
+		//std::cout << "B -> " << ch << std::endl;
+
+		if (ch == 'x') {
+			// Extract 2-byte escape sequence
+			std::string esc;
+			for (int i = 0; i < 2 && !m_in.eof(); ++i)
+				esc += m_in.get();
+			if (esc.length() < 2)
+				PARSE_EXCEPTION("bad \\x escape: " + esc);
+
+			ch = 0;
+			for (size_t j = 0; j < 2; j++) {
+				char c = Utils::fromHex(esc[j]);
+				if (c < 0)
+					PARSE_EXCEPTION("bad \\x escape: " + esc);
+				ch = 16*ch + c;
+			}
+			str_val += ch;
+			continue;
+		}
+		switch (ch) {
+		case '\\': str_val += '\\'; break;
+		case '"' : str_val += '"'; break;
+		case 'b': str_val += '\b'; break;
+		case 'f': str_val += '\f'; break;
+		case 'n': str_val += '\n'; break;
+		case 'r': str_val += '\r'; break;
+		case 't': str_val += '\t'; break;
+		default:
 			PARSE_EXCEPTION("invalid escape character " + dump_char(ch));
 		}
 	}

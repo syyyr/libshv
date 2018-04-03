@@ -87,7 +87,7 @@ std::string Utils::toHexElided(const std::string &bytes, size_t start_pos, size_
 	return hex;
 }
 
-static inline char unhex_char(char c)
+char Utils::fromHex(char c)
 {
 	if(c >= '0' && c <= '9')
 		return c - '0';
@@ -95,17 +95,17 @@ static inline char unhex_char(char c)
 		return c - 'a' + 10;
 	if(c >= 'A' && c <= 'F')
 		return c - 'A' + 10;
-	return char(0);
+	return char(-1);
 }
 
 std::string Utils::fromHex(const std::string &bytes)
 {
 	std::string ret;
 	for (size_t i = 0; i < bytes.size(); ) {
-		unsigned char u = unhex_char(bytes[i++]);
+		unsigned char u = fromHex(bytes[i++]);
 		u = 16 * u;
 		if(i < bytes.size())
-			u += unhex_char(bytes[i++]);
+			u += fromHex(bytes[i++]);
 		ret.push_back(u);
 	}
 	return ret;

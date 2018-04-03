@@ -43,11 +43,12 @@ private:
 	RpcValue::IMap parseIMapContent(char closing_bracket);
 	RpcValue::MetaData parseMetaDataContent(char closing_bracket);
 	void parseStringHelper(std::string &val);
+	void parseCStringHelper(std::string &val);
 
 	void parseNull(RpcValue &val);
 	void parseBool(RpcValue &val);
 	void parseString(RpcValue &val);
-	void parseBlob(RpcValue &val);
+	void parseBlob(RpcValue &val, bool hex_blob);
 	void parseNumber(RpcValue &val);
 	void parseList(RpcValue &val);
 	void parseArray(RpcValue &ret_val);

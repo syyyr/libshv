@@ -13,7 +13,8 @@ public:
 	static const std::string STR_FALSE;
 	static const std::string STR_IMAP_BEGIN;
 	static const std::string STR_ARRAY_BEGIN;
-	static const std::string STR_BLOB_BEGIN;
+	static const std::string STR_ESC_BLOB_BEGIN;
+	static const std::string STR_HEX_BLOB_BEGIN;
 	static const std::string STR_DATETIME_BEGIN;
 
 	static const char C_LIST_BEGIN;

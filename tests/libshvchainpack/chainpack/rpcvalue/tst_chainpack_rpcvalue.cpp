@@ -64,18 +64,17 @@ private:
 		qDebug() << "--------------- Numbers";
 		{
 			string err;
-			QVERIFY(err.empty() && RpcValue::parseCpon("0", &err) == RpcValue(0));
-			QVERIFY(err.empty() && RpcValue::parseCpon("123", &err) == RpcValue(123));
-			QVERIFY(err.empty() && RpcValue::parseCpon("-123", &err) == RpcValue(-123));
-			QVERIFY(err.empty() && RpcValue::parseCpon("3u", &err) == RpcValue((RpcValue::UInt)3));
-			QVERIFY(err.empty() && RpcValue::parseCpon("223.", &err) == RpcValue(223.));
-			QVERIFY(err.empty() && RpcValue::parseCpon("0.123", &err) == RpcValue(0.123));
-			QVERIFY(err.empty() && RpcValue::parseCpon(".123", &err) == RpcValue(.123));
-			//qDebug() << RpcValue::parseCpon("7e23", &err).toDouble() << RpcValue(7e23).toDouble();
-			QVERIFY(err.empty() && RpcValue::parseCpon("1e23", &err) == RpcValue(1e23));
-			QVERIFY(err.empty() && RpcValue::parseCpon("1e-3", &err) == RpcValue(1e-3));
-			QVERIFY(err.empty() && RpcValue::parseCpon("0x123abc", &err) == RpcValue(0x123abc));
-			QVERIFY(err.empty() && RpcValue::parseCpon("0.0123n", &err) == RpcValue(RpcValue::Decimal(123, 4)));
+			QVERIFY(RpcValue::parseCpon("0", &err) == RpcValue(0) && err.empty());
+			QVERIFY(RpcValue::parseCpon("123", &err) == RpcValue(123) && err.empty());
+			QVERIFY(RpcValue::parseCpon("-123", &err) == RpcValue(-123) && err.empty());
+			QVERIFY(RpcValue::parseCpon("3u", &err) == RpcValue((RpcValue::UInt)3) && err.empty());
+			QVERIFY(RpcValue::parseCpon("223.", &err) == RpcValue(223.) && err.empty());
+			QVERIFY(RpcValue::parseCpon("0.123", &err) == RpcValue(0.123) && err.empty());
+			QVERIFY(RpcValue::parseCpon(".123", &err) == RpcValue(.123) && err.empty());
+			QVERIFY(RpcValue::parseCpon("1e23", &err) == RpcValue(1e23) && err.empty());
+			QVERIFY(RpcValue::parseCpon("1e-3", &err) == RpcValue(1e-3) && err.empty());
+			QVERIFY(RpcValue::parseCpon("0x123abc", &err) == RpcValue(0x123abc) && err.empty());
+			QVERIFY(RpcValue::parseCpon("0.0123n", &err) == RpcValue(RpcValue::Decimal(123, 4)) && err.empty());
 		}
 		qDebug() << "--------------- List test";
 		{
@@ -284,17 +283,26 @@ private:
 		QCOMPARE(RpcValue("a").toDouble(), 0.);
 		QCOMPARE(RpcValue("a").toString().c_str(), "a");
 		QCOMPARE(RpcValue().toDouble(), 0.);
+		{
+			const string unicode_escape_test =
+					R"([ "blah\ud83d\udca9blah\ud83dblah\udca9blah\u0000blah\u1234" ])";
 
-		const string unicode_escape_test =
-				R"([ "blah\ud83d\udca9blah\ud83dblah\udca9blah\u0000blah\u1234" ])";
-
-		const char utf8[] = "blah" "\xf0\x9f\x92\xa9" "blah" "\xed\xa0\xbd" "blah"
-							"\xed\xb2\xa9" "blah" "\0" "blah" "\xe1\x88\xb4";
-
-		RpcValue uni = RpcValue::parseCpon(unicode_escape_test, &err);
-		QVERIFY(uni[0].toString().size() == (sizeof utf8) - 1);
-		QVERIFY(std::memcmp(uni[0].toString().data(), utf8, sizeof utf8) == 0);
-
+			const char utf8[] = "blah" "\xf0\x9f\x92\xa9" "blah" "\xed\xa0\xbd" "blah"
+								"\xed\xb2\xa9" "blah" "\0" "blah" "\xe1\x88\xb4";
+			RpcValue uni = RpcValue::parseCpon(unicode_escape_test, &err);
+			QVERIFY(uni[0].toString().size() == (sizeof utf8) - 1);
+			QVERIFY(std::memcmp(uni[0].toString().data(), utf8, sizeof utf8) == 0);
+		}
+		{
+			const string escape_test = "b\"foo\\\\1\\r\\n2\\t\\b\\\"bar\\x0d\\x0A\"";
+			const char test[] = "foo\\1\r\n2\t\b\"bar\x0d\x0A";
+			RpcValue::Blob b = RpcValue::parseCpon(escape_test, &err).toBlob();
+			//if(!err.empty())
+			//	qDebug() << "!!!!!!!!! " << err << "---" << escape_test;
+			//qDebug() << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% " << b.size() << "    " << b;
+			QVERIFY(b.size() == (sizeof test) - 1);
+			QVERIFY(std::memcmp(b.data(), test, b.size()) == 0);
+		}
 		RpcValue my_json = RpcValue::Map {
 		{ "key1", "value1" },
 		{ "key2", false },

@@ -335,9 +335,37 @@ CponWriter &CponWriter::write(const std::string &value)
 
 CponWriter &CponWriter::write(const RpcValue::Blob &value)
 {
-	m_out << Cpon::STR_BLOB_BEGIN;
-	m_out << Utils::toHex(value);
-	m_out << '"';
+	if(m_opts.isHexBlob()) {
+		m_out << Cpon::STR_HEX_BLOB_BEGIN;
+		m_out << Utils::toHex(value);
+		m_out << '"';
+	}
+	else {
+		m_out << Cpon::STR_ESC_BLOB_BEGIN;
+		for (size_t i = 0; i < value.length(); i++) {
+			const char ch = value[i];
+			switch (ch) {
+			case '\\': m_out << "\\\\"; break;
+			case '"' : m_out << "\\\""; break;
+			case '\b': m_out << "\\b"; break;
+			case '\f': m_out << "\\f"; break;
+			case '\n': m_out << "\\n"; break;
+			case '\r': m_out << "\\r"; break;
+			case '\t': m_out << "\\t"; break;
+			default: {
+				if (static_cast<uint8_t>(ch) <= 0x1f) {
+					char buf[8];
+					snprintf(buf, sizeof buf, "\\x%02x", ch);
+					m_out << buf;
+				}
+				else {
+					m_out << ch;
+				}
+			}
+			}
+		}
+		m_out << '"';
+	}
 	return *this;
 }
 

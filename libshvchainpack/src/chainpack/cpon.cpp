@@ -8,7 +8,8 @@ const std::string Cpon::STR_TRUE("true");
 const std::string Cpon::STR_FALSE("false");
 const std::string Cpon::STR_IMAP_BEGIN("i{");
 const std::string Cpon::STR_ARRAY_BEGIN("a[");
-const std::string Cpon::STR_BLOB_BEGIN("x\"");
+const std::string Cpon::STR_ESC_BLOB_BEGIN("b\"");
+const std::string Cpon::STR_HEX_BLOB_BEGIN("x\"");
 const std::string Cpon::STR_DATETIME_BEGIN("d\"");
 
 const char Cpon::C_LIST_BEGIN('[');
