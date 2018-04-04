@@ -52,6 +52,7 @@ protected:
 	void onRpcValueReceived(const shv::chainpack::RpcValue &msg) override;
 
 	bool isInitPhase() const {return !m_loginReceived;}
+	//bool isInitPhase() const {return !m_loginReceived && (m_sessionClientId == 0 || m_sessionValidated);}
 	virtual void processInitPhase(const chainpack::RpcMessage &msg);
 	virtual shv::chainpack::RpcValue login(const shv::chainpack::RpcValue &auth_params) = 0;
 	//virtual shv::chainpack::RpcValue createLoginResult() = 0;
@@ -61,6 +62,8 @@ protected:
 	std::string m_pendingAuthNonce;
 	bool m_helloReceived = false;
 	bool m_loginReceived = false;
+	//int m_sessionClientId = 0;
+	//bool m_sessionValidated = false;
 };
 
 }}}

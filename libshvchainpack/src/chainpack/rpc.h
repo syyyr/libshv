@@ -15,6 +15,7 @@ public:
 
 	static const char* KEY_CLIENT_ID;
 	static const char* KEY_MOUT_POINT;
+	static const char* KEY_DEVICE_ID;
 
 	static const char* TYPE_CLIENT;
 	static const char* TYPE_DEVICE;

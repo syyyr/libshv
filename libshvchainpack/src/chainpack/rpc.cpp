@@ -7,6 +7,7 @@ const char* Rpc::OPT_IDLE_WD_TIMEOUT = "idleWatchDogTimeOut";
 
 const char* Rpc::KEY_CLIENT_ID = "clientId";
 const char* Rpc::KEY_MOUT_POINT = "mountPoint";
+const char* Rpc::KEY_DEVICE_ID = "deviceId";
 
 const char* Rpc::TYPE_CLIENT = "client";
 const char* Rpc::TYPE_DEVICE = "device";

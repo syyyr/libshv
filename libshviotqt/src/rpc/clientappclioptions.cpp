@@ -21,10 +21,8 @@ ClientAppCliOptions::ClientAppCliOptions(QObject *parent)
 	addOption("rpc.reconnectInterval").setType(QVariant::Int).setNames({"-rci", "--rpc-reconnect-interval"}).setComment(tr("Reconnect to broker if connection lost at least after recoonect-interval seconds. Disabled when set to 0")).setDefaultValue(10);
 	addOption("rpc.heartbeatInterval").setType(QVariant::Int).setNames({"-hbi", "--rpc-heartbeat-interval"}).setComment(tr("Send heart beat to broker every n sec. Disabled when set to 0")).setDefaultValue(60);
 
-	addOption("shv.mount").setType(QVariant::String).setNames({"-m", "--mount", "--mount-point"}).setComment(tr("Shv tree, where device should be mounted to. Only paths beginning with test/ are enabled. --mount-point version is deprecated"));
-	addOption("shv.deviceId").setType(QVariant::String).setNames("-id", "--device-id").setComment(tr("Device ID"));
-	addOption("shv.sessionToken").setType(QVariant::String).setNames("-st", "--session-token")
-			.setComment(tr("Session token containing authorization for this instance on the broker when connected."));
+	//addOption("shv.sessionToken").setType(QVariant::String).setNames("-st", "--session-token")
+	//		.setComment(tr("Session token containing authorization for this instance on the broker when connected."));
 }
 
 } // namespace client

@@ -64,23 +64,23 @@ private:
 		qDebug() << "--------------- Numbers";
 		{
 			string err;
-			QVERIFY(RpcValue::parseCpon("0", &err) == RpcValue(0) && err.empty());
-			QVERIFY(RpcValue::parseCpon("123", &err) == RpcValue(123) && err.empty());
-			QVERIFY(RpcValue::parseCpon("-123", &err) == RpcValue(-123) && err.empty());
-			QVERIFY(RpcValue::parseCpon("3u", &err) == RpcValue((RpcValue::UInt)3) && err.empty());
-			QVERIFY(RpcValue::parseCpon("223.", &err) == RpcValue(223.) && err.empty());
-			QVERIFY(RpcValue::parseCpon("0.123", &err) == RpcValue(0.123) && err.empty());
-			QVERIFY(RpcValue::parseCpon(".123", &err) == RpcValue(.123) && err.empty());
-			QVERIFY(RpcValue::parseCpon("1e23", &err) == RpcValue(1e23) && err.empty());
-			QVERIFY(RpcValue::parseCpon("1e-3", &err) == RpcValue(1e-3) && err.empty());
-			QVERIFY(RpcValue::parseCpon("0x123abc", &err) == RpcValue(0x123abc) && err.empty());
-			QVERIFY(RpcValue::parseCpon("0.0123n", &err) == RpcValue(RpcValue::Decimal(123, 4)) && err.empty());
+			QVERIFY(RpcValue::fromCpon("0", &err) == RpcValue(0) && err.empty());
+			QVERIFY(RpcValue::fromCpon("123", &err) == RpcValue(123) && err.empty());
+			QVERIFY(RpcValue::fromCpon("-123", &err) == RpcValue(-123) && err.empty());
+			QVERIFY(RpcValue::fromCpon("3u", &err) == RpcValue((RpcValue::UInt)3) && err.empty());
+			QVERIFY(RpcValue::fromCpon("223.", &err) == RpcValue(223.) && err.empty());
+			QVERIFY(RpcValue::fromCpon("0.123", &err) == RpcValue(0.123) && err.empty());
+			QVERIFY(RpcValue::fromCpon(".123", &err) == RpcValue(.123) && err.empty());
+			QVERIFY(RpcValue::fromCpon("1e23", &err) == RpcValue(1e23) && err.empty());
+			QVERIFY(RpcValue::fromCpon("1e-3", &err) == RpcValue(1e-3) && err.empty());
+			QVERIFY(RpcValue::fromCpon("0x123abc", &err) == RpcValue(0x123abc) && err.empty());
+			QVERIFY(RpcValue::fromCpon("0.0123n", &err) == RpcValue(RpcValue::Decimal(123, 4)) && err.empty());
 		}
 		qDebug() << "--------------- List test";
 		{
 			string err;
 			for(auto test : {"[]", "[ ]", " [ ]", "[ 1, 2,3  , ]"}) {
-				const RpcValue cp = RpcValue::parseCpon(test, &err);
+				const RpcValue cp = RpcValue::fromCpon(test, &err);
 				qDebug() << test << "--->" << cp.toCpon();
 				QVERIFY(err.empty());
 			}
@@ -101,7 +101,7 @@ private:
 									d"2018-01-14T01:17:33.256-1045"
 									]
 								)";
-			const auto cp = RpcValue::parseCpon(test, &err);
+			const auto cp = RpcValue::fromCpon(test, &err);
 			QVERIFY(err.empty());
 			qDebug() << "List test:" << test << "==" << cp.toCpon();
 			qDebug() << "Cpon writer:" << cp.toPrettyString();
@@ -122,7 +122,7 @@ private:
 		{
 			string err;
 			for(auto test : {"{}", "{ }", " { }", R"({ "1": 2,"3": 45u  , })"}) {
-				const RpcValue cp = RpcValue::parseCpon(test, &err);
+				const RpcValue cp = RpcValue::fromCpon(test, &err);
 				qDebug() << test << "--->" << cp.toCpon();
 				QVERIFY(err.empty());
 			}
@@ -130,7 +130,7 @@ private:
 		{
 			string err;
 			for(auto test : {"i{}", "i{ }", " i{ }", "i{ 1: 2,3: 45  , }"}) {
-				const RpcValue cp = RpcValue::parseCpon(test, &err);
+				const RpcValue cp = RpcValue::fromCpon(test, &err);
 				qDebug() << test << "--->" << cp.toCpon();
 				QVERIFY(err.empty());
 			}
@@ -138,7 +138,7 @@ private:
 		{
 			string err;
 			for(auto test : {"a[]", "a[ ]", " a[ ]", "a[ 1, 2,3  , ]"}) {
-				const RpcValue cp = RpcValue::parseCpon(test, &err);
+				const RpcValue cp = RpcValue::fromCpon(test, &err);
 				qDebug() << test << "--->" << cp.toCpon();
 				QVERIFY(err.empty());
 			}
@@ -170,7 +170,7 @@ private:
 				QVERIFY(!md.isEmpty());
 			}
 			{
-				const auto cp = RpcValue::parseCpon(imap_test, &err);
+				const auto cp = RpcValue::fromCpon(imap_test, &err);
 				qDebug().nospace() << "imap_test: \n" << cp.toPrettyString();
 				qDebug() << "err: " << err;
 				QVERIFY(err.empty());
@@ -181,14 +181,14 @@ private:
 		{
 			string err;
 			const string test = "{}";
-			const auto cp = RpcValue::parseCpon(test, &err);
+			const auto cp = RpcValue::fromCpon(test, &err);
 			QVERIFY(cp == RpcValue::Map());
 		}
 
 		const string simple_test = R"({"k1":"v1", "k2":42, "k3":["a",123,true,false,null]})";
 
 		string err;
-		const auto json = RpcValue::parseCpon(simple_test, &err);
+		const auto json = RpcValue::fromCpon(simple_test, &err);
 
 		qDebug() << "k1: " << json["k1"].toCpon().c_str();
 		qDebug() << "k3: " << json["k3"].toCpon().c_str();
@@ -215,38 +215,38 @@ private:
 							  })";
 
 		string err_comment;
-		auto json_comment = RpcValue::parseCpon( comment_test, &err_comment);
+		auto json_comment = RpcValue::fromCpon( comment_test, &err_comment);
 		QVERIFY(!json_comment.isNull());
 		QVERIFY(err_comment.empty());
 
 		comment_test = "{\"a\": 1}//trailing line comment";
-		json_comment = RpcValue::parseCpon( comment_test, &err_comment);
+		json_comment = RpcValue::fromCpon( comment_test, &err_comment);
 		QVERIFY(!json_comment.isNull());
 		QVERIFY(err_comment.empty());
 
 		comment_test = "{\"a\": 1}/*trailing multi-line comment*/";
-		json_comment = RpcValue::parseCpon( comment_test, &err_comment);
+		json_comment = RpcValue::fromCpon( comment_test, &err_comment);
 		QVERIFY(!json_comment.isNull());
 		QVERIFY(err_comment.empty());
 
 		string failing_comment_test = "{\n/* unterminated comment\n\"a\": 1,\n}";
 		string err_failing_comment;
-		RpcValue json_failing_comment = RpcValue::parseCpon( failing_comment_test, &err_failing_comment);
+		RpcValue json_failing_comment = RpcValue::fromCpon( failing_comment_test, &err_failing_comment);
 		QVERIFY(!json_failing_comment.isValid());
 		QVERIFY(!err_failing_comment.empty());
 
 		failing_comment_test = "{\n/* unterminated trailing comment }";
-		json_failing_comment = RpcValue::parseCpon( failing_comment_test, &err_failing_comment);
+		json_failing_comment = RpcValue::fromCpon( failing_comment_test, &err_failing_comment);
 		QVERIFY(!json_failing_comment.isValid());
 		QVERIFY(!err_failing_comment.empty());
 
 		failing_comment_test = "{\n/ / bad comment }";
-		json_failing_comment = RpcValue::parseCpon( failing_comment_test, &err_failing_comment);
+		json_failing_comment = RpcValue::fromCpon( failing_comment_test, &err_failing_comment);
 		QVERIFY(!json_failing_comment.isValid());
 		QVERIFY(!err_failing_comment.empty());
 
 		failing_comment_test = "{// bad comment }";
-		json_failing_comment = RpcValue::parseCpon( failing_comment_test, &err_failing_comment);
+		json_failing_comment = RpcValue::fromCpon( failing_comment_test, &err_failing_comment);
 		QVERIFY(!json_failing_comment.isValid());
 		QVERIFY(!err_failing_comment.empty());
 		/*
@@ -256,7 +256,7 @@ private:
 		QVERIFY(!err_failing_comment.empty());
 		*/
 		failing_comment_test = "{/* bad\ncomment *}";
-		json_failing_comment = RpcValue::parseCpon( failing_comment_test, &err_failing_comment);
+		json_failing_comment = RpcValue::fromCpon( failing_comment_test, &err_failing_comment);
 		QVERIFY(!json_failing_comment.isValid());
 		QVERIFY(!err_failing_comment.empty());
 
@@ -289,14 +289,14 @@ private:
 
 			const char utf8[] = "blah" "\xf0\x9f\x92\xa9" "blah" "\xed\xa0\xbd" "blah"
 								"\xed\xb2\xa9" "blah" "\0" "blah" "\xe1\x88\xb4";
-			RpcValue uni = RpcValue::parseCpon(unicode_escape_test, &err);
+			RpcValue uni = RpcValue::fromCpon(unicode_escape_test, &err);
 			QVERIFY(uni[0].toString().size() == (sizeof utf8) - 1);
 			QVERIFY(std::memcmp(uni[0].toString().data(), utf8, sizeof utf8) == 0);
 		}
 		{
 			const string escape_test = "b\"foo\\\\1\\r\\n2\\t\\b\\\"bar\\x0d\\x0A\"";
 			const char test[] = "foo\\1\r\n2\t\b\"bar\x0d\x0A";
-			RpcValue::Blob b = RpcValue::parseCpon(escape_test, &err).toBlob();
+			RpcValue::Blob b = RpcValue::fromCpon(escape_test, &err).toBlob();
 			//if(!err.empty())
 			//	qDebug() << "!!!!!!!!! " << err << "---" << escape_test;
 			//qDebug() << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% " << b.size() << "    " << b;
@@ -698,7 +698,7 @@ private:
 			{
 				const std::string s = R"(["a",123,true,[1,2,3],null])";
 				string err;
-				RpcValue cp1 = RpcValue::parseCpon(s, &err);
+				RpcValue cp1 = RpcValue::fromCpon(s, &err);
 				std::stringstream out;
 				ChainPackWriter wr(out); size_t len = wr.write(cp1);
 				ChainPackReader rd(out); RpcValue cp2 = rd.read();

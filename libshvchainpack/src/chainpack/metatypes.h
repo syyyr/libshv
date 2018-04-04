@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../shvchainpackglobal.h"
+
 #include <cstddef>
 #include <map>
 
@@ -18,6 +20,7 @@ struct Tag {
 		USER = 8
 	};
 };
+
 class MetaInfo
 {
 public:
@@ -29,6 +32,7 @@ public:
 
 	bool isValid() const {return (name && name[0]);}
 };
+
 class MetaType;
 class MetaNameSpace
 {
@@ -43,6 +47,7 @@ protected:
 	const char *m_name;
 	std::map<int, MetaType*> m_types;
 };
+
 class MetaType
 {
 public:
@@ -57,10 +62,10 @@ protected:
 	std::map<int, MetaInfo> m_keys;
 };
 
-void registerNameSpace(int ns_id, MetaNameSpace *ns);
-void registerType(int ns_id, int type_id, MetaType *tid);
-const MetaNameSpace& registeredNameSpace(int ns_id);
-const MetaType& registeredType(int ns_id, int type_id);
+SHVCHAINPACK_DECL_EXPORT void registerNameSpace(int ns_id, MetaNameSpace *ns);
+SHVCHAINPACK_DECL_EXPORT void registerType(int ns_id, int type_id, MetaType *tid);
+SHVCHAINPACK_DECL_EXPORT const MetaNameSpace& registeredNameSpace(int ns_id);
+SHVCHAINPACK_DECL_EXPORT const MetaType& registeredType(int ns_id, int type_id);
 
 class GlobalNS : public meta::MetaNameSpace
 {
@@ -68,6 +73,14 @@ class GlobalNS : public meta::MetaNameSpace
 public:
 	enum {ID = 0};
 	GlobalNS();
+
+	struct RegisteredMetaTypes
+	{
+		enum Enum {
+			ChainPackRpcMessage = 1,
+			RpcTunnelParams = 1,
+		};
+	};
 };
 
 }}}

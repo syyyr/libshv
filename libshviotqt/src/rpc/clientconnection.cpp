@@ -8,6 +8,7 @@
 
 #include <shv/core/exception.h>
 
+#include <shv/chainpack/cponreader.h>
 #include <shv/chainpack/rpcmessage.h>
 
 #include <QTcpSocket>
@@ -106,13 +107,20 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 	setPassword(cli_opts->password().toStdString());
 
 	{
-		cp::RpcValue::Map dev;
-		dev["id"] = cli_opts->deviceId().toStdString();
-		dev["mount"] = cli_opts->mountPoint().toStdString();
-		dev["sessionToken"] = cli_opts->sessionToken().toStdString();
+		/*
+		std::string ss = cli_opts->sessionToken().toStdString();
+		if(!ss.empty()) {
+			ss = cp::Utils::fromHex(ss);
+			std::string errmsg;
+			cp::RpcValue rv = cp::RpcValue::fromCpon(ss, &errmsg);
+			if(errmsg.empty())
+				dev["sessionToken"] = rv;
+			else
+				shvError() << "Invalid session token:" << errmsg;
+		}
+		*/
 		cp::RpcValue::Map opts;
 		opts[cp::Rpc::OPT_IDLE_WD_TIMEOUT] = 5 * cli_opts->heartbeatInterval();
-		opts[cp::Rpc::TYPE_DEVICE] = dev;
 		setconnectionOptions(opts);
 	}
 	int hbi = cli_opts->heartbeatInterval();
@@ -185,7 +193,7 @@ void ClientConnection::onRpcValueReceived(const shv::chainpack::RpcValue &val)
 {
 	cp::RpcMessage msg(val);
 	const cp::RpcValue::UInt id = msg.requestId().toUInt();
-	if(id > 0 && id <= m_connectionState.maxSyncMessageId) {
+	if(m_syncCalls == SyncCalls::Enabled && id > 0 && id <= m_connectionState.maxSyncMessageId) {
 		// ignore messages alredy processed by sync calls
 		logRpcSyncCalls() << "XXX ignoring already served sync response:" << id;
 		return;

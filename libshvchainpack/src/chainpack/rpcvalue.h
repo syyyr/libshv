@@ -143,7 +143,24 @@ public:
 			return !(it == end());
 		}
 	};
-	using IMap = std::map<RpcValue::UInt, RpcValue>;
+	class IMap : public std::map<RpcValue::UInt, RpcValue>
+	{
+		using Super = std::map<RpcValue::UInt, RpcValue>;
+		using Super::Super; // expose base class constructors
+	public:
+		RpcValue value(unsigned key, const RpcValue &default_val = RpcValue()) const
+		{
+			auto it = find(key);
+			if(it == end())
+				return default_val;
+			return it->second;
+		}
+		bool hasKey(unsigned key) const
+		{
+			auto it = find(key);
+			return !(it == end());
+		}
+	};
 	union ArrayElement
 	{
 		int64_t int_value;
@@ -364,7 +381,7 @@ public:
 	std::string toPrettyString(const std::string &indent = std::string()) const;
 	std::string toStdString() const;
 	std::string toCpon() const;
-	static RpcValue parseCpon(const std::string & str, std::string *err = nullptr);
+	static RpcValue fromCpon(const std::string & str, std::string *err = nullptr);
 
 	std::string toChainPack() const;
 

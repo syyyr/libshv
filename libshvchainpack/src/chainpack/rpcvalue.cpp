@@ -665,7 +665,7 @@ bool ChainPack::operator< (const ChainPack &other) const
 }
 */
 
-RpcValue RpcValue::parseCpon(const std::string &str, std::string *err)
+RpcValue RpcValue::fromCpon(const std::string &str, std::string *err)
 {
 	RpcValue ret;
 	std::istringstream in(str);
