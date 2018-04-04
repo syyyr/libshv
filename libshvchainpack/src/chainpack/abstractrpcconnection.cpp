@@ -19,7 +19,7 @@ void AbstractRpcConnection::sendShvNotify(const std::string &shv_path, std::stri
 	sendMessage(rq);
 }
 
-void AbstractRpcConnection::sendResponse(unsigned request_id, const RpcValue &result)
+void AbstractRpcConnection::sendResponse(const RpcValue &request_id, const RpcValue &result)
 {
 	RpcResponse resp;
 	resp.setRequestId(request_id);
@@ -27,7 +27,7 @@ void AbstractRpcConnection::sendResponse(unsigned request_id, const RpcValue &re
 	sendMessage(resp);
 }
 
-void AbstractRpcConnection::sendError(unsigned request_id, const RpcResponse::Error &error)
+void AbstractRpcConnection::sendError(const RpcValue &request_id, const RpcResponse::Error &error)
 {
 	RpcResponse resp;
 	resp.setRequestId(request_id);

@@ -7,16 +7,16 @@
 namespace shv {
 namespace chainpack {
 
-//std::clog << ' ' << (msg) << " at pos: " << m_in.tellg() << " near to: " << buff << std::endl;
 #define PARSE_EXCEPTION(msg) {\
-	std::clog << __FILE__ << ':' << __LINE__; \
 	char buff[40]; \
 	m_in.readsome(buff, sizeof(buff)); \
 	if(exception_aborts) { \
+		std::clog << __FILE__ << ':' << __LINE__;  \
+		std::clog << ' ' << (msg) << " at pos: " << m_in.tellg() << " near to: " << buff << std::endl; \
 		abort(); \
 	} \
 	else { \
-		throw CponReader::ParseException(msg); \
+		throw CponReader::ParseException(msg + std::string(" at pos: ") + std::to_string(m_in.tellg()) + " near to: " + buff); \
 	} \
 }
 

@@ -83,14 +83,14 @@ void RpcMessage::setMetaValue(RpcValue::UInt key, const RpcValue &val)
 	m_value.setMetaValue(key, val);
 }
 
-RpcValue::UInt RpcMessage::requestId() const
+RpcValue RpcMessage::requestId() const
 {
 	if(isValid())
 		return requestId(m_value.metaData());
-	return 0;
+	return RpcValue();
 }
 
-void RpcMessage::setRequestId(RpcValue::UInt id)
+void RpcMessage::setRequestId(const RpcValue &id)
 {
 	checkMetaValues();
 	//checkRpcTypeMetaValue();
@@ -125,40 +125,40 @@ bool RpcMessage::isValid() const
 
 bool RpcMessage::isRequest() const
 {
-	return requestId() > 0 && !method().empty();
+	return requestId().isValid() && !method().empty();
 }
 
 bool RpcMessage::isNotify() const
 {
-	return requestId() == 0 && !method().empty();
+	return !requestId().isValid() && !method().empty();
 }
 
 bool RpcMessage::isResponse() const
 {
-	return requestId() > 0 && method().empty();
+	return requestId().isValid() && method().empty();
 }
 
 bool RpcMessage::isRequest(const RpcValue::MetaData &meta)
 {
-	return requestId(meta) > 0 && !method(meta).empty();
+	return requestId(meta).isValid() && !method(meta).empty();
 }
 
 bool RpcMessage::isResponse(const RpcValue::MetaData &meta)
 {
-	return requestId(meta) > 0 && method(meta).empty();
+	return requestId(meta).isValid() && method(meta).empty();
 }
 
 bool RpcMessage::isNotify(const RpcValue::MetaData &meta)
 {
-	return requestId(meta) == 0 && !method(meta).empty();
+	return !requestId(meta).isValid() && !method(meta).empty();
 }
 
-RpcValue::UInt RpcMessage::requestId(const RpcValue::MetaData &meta)
+RpcValue RpcMessage::requestId(const RpcValue::MetaData &meta)
 {
-	return meta.value(RpcMessage::MetaType::Tag::RequestId).toUInt();
+	return meta.value(RpcMessage::MetaType::Tag::RequestId);
 }
 
-void RpcMessage::setRequestId(RpcValue::MetaData &meta, RpcValue::UInt id)
+void RpcMessage::setRequestId(RpcValue::MetaData &meta, const RpcValue &id)
 {
 	meta.setValue(RpcMessage::MetaType::Tag::RequestId, id);
 }
@@ -356,8 +356,8 @@ void RpcNotify::write(AbstractStreamWriter &wr, const std::string &method, std::
 RpcResponse RpcResponse::forRequest(const RpcValue::MetaData &meta)
 {
 	RpcResponse ret;
-	RpcValue::UInt id = requestId(meta);
-	if(id > 0)
+	RpcValue id = requestId(meta);
+	if(id.isValid())
 		ret.setRequestId(id);
 	auto caller_id = callerId(meta);
 	if(caller_id.isValid())

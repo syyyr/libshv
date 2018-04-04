@@ -164,13 +164,13 @@ void SocketRpcDriver:: sendRpcRequestSync_helper(const shv::chainpack::RpcReques
 	}
 	shv::chainpack::RpcResponse resp_msg;
 	do {
-		cp::RpcValue::UInt msg_id = request.requestId();
-		if(msg_id == 0) {
+		const cp::RpcValue msg_id = request.requestId();
+		if(!msg_id.isValid()) {
 			shvWarning() << "Attempt to send RPC request with ID not set, message will be ignored";
 			break;
 		}
 		smcDebug() << "sending message:" << request.toCpon();
-		logRpcSyncCalls() << SND_LOG_ARROW << "SEND SYNC message id:" << msg_id << "msg:" << request.toCpon();
+		logRpcSyncCalls() << SND_LOG_ARROW << "SEND SYNC message id:" << msg_id.toCpon() << "msg:" << request.toCpon();
 		sendRpcValue(request.value());
 		QElapsedTimer tm_elapsed;
 		tm_elapsed.start();
@@ -191,7 +191,7 @@ void SocketRpcDriver:: sendRpcRequestSync_helper(const shv::chainpack::RpcReques
 				//logRpcSyncCalls() << "<=== RECEIVE NOTIFY while waiting for SYNC response:" << msg.jsonRpcMessage().toString();
 			}
 			else {
-				logRpcSyncCalls() << "RECV other message while waiting for SYNC response id:" << msg.requestId() << "json:" << msg.toCpon();
+				logRpcSyncCalls() << "RECV other message while waiting for SYNC response id:" << msg.requestId().toCpon() << "json:" << msg.toCpon();
 			}
 		});
 		ConnectionScope cscp(lambda_connection);
@@ -201,7 +201,7 @@ void SocketRpcDriver:: sendRpcRequestSync_helper(const shv::chainpack::RpcReques
 		smcDebug() << "\t entering event loop ..." << &eloop;
 		eloop.exec();
 		smcDebug() << "\t event loop" << &eloop << "exec exit, message received:" << resp_msg.isValid();
-		logRpcSyncCalls() << RCV_LOG_ARROW << "RECV SYNC message id:" << resp_msg.requestId() << "msg:" << resp_msg.toCpon();
+		logRpcSyncCalls() << RCV_LOG_ARROW << "RECV SYNC message id:" << resp_msg.requestId().toCpon() << "msg:" << resp_msg.toCpon();
 		int elapsed = (int)tm_elapsed.elapsed();
 		if(elapsed >= time_out_ms) {
 			cp::RpcValue::String err_msg = "Receive message timeout after: " + std::to_string(elapsed) + " msec!";

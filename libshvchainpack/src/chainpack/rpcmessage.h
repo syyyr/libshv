@@ -51,10 +51,10 @@ public:
 	static bool isResponse(const RpcValue::MetaData &meta);
 	static bool isNotify(const RpcValue::MetaData &meta);
 
-	static RpcValue::UInt requestId(const RpcValue::MetaData &meta);
-	static void setRequestId(RpcValue::MetaData &meta, RpcValue::UInt requestId);
-	RpcValue::UInt requestId() const;
-	void setRequestId(RpcValue::UInt requestId);
+	static RpcValue requestId(const RpcValue::MetaData &meta);
+	static void setRequestId(RpcValue::MetaData &meta, const RpcValue &requestId);
+	RpcValue requestId() const;
+	void setRequestId(const RpcValue &requestId);
 
 	static RpcValue::String method(const RpcValue::MetaData &meta);
 	static void setMethod(RpcValue::MetaData &meta, const RpcValue::String &method);
@@ -217,7 +217,7 @@ public:
 	Error error() const;
 	RpcResponse& setResult(const RpcValue &res);
 	RpcValue result() const;
-	RpcResponse& setRequestId(const RpcValue::UInt id) {Super::setRequestId(id); return *this;}
+	RpcResponse& setRequestId(const RpcValue &id) {Super::setRequestId(id); return *this;}
 };
 
 } // namespace chainpackrpc

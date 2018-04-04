@@ -184,7 +184,7 @@ bool ClientConnection::isSocketConnected() const
 void ClientConnection::onRpcValueReceived(const shv::chainpack::RpcValue &val)
 {
 	cp::RpcMessage msg(val);
-	cp::RpcValue::UInt id = msg.requestId();
+	const cp::RpcValue::UInt id = msg.requestId().toUInt();
 	if(id > 0 && id <= m_connectionState.maxSyncMessageId) {
 		// ignore messages alredy processed by sync calls
 		logRpcSyncCalls() << "XXX ignoring already served sync response:" << id;
@@ -203,7 +203,7 @@ void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
 cp::RpcResponse ClientConnection::sendMessageSync(const cp::RpcRequest &rpc_request_message, int time_out_ms)
 {
 	cp::RpcResponse res_msg;
-	m_connectionState.maxSyncMessageId = qMax(m_connectionState.maxSyncMessageId, rpc_request_message.requestId());
+	m_connectionState.maxSyncMessageId = qMax(m_connectionState.maxSyncMessageId, rpc_request_message.requestId().toUInt());
 	//logRpcSyncCalls() << "==> send SYNC MSG id:" << rpc_request_message.id() << "data:" << rpc_request_message.toStdString();
 	emit sendMessageSyncRequest(rpc_request_message, &res_msg, time_out_ms);
 	//logRpcSyncCalls() << "<== RESP SYNC MSG id:" << res_msg.id() << "data:" << res_msg.toStdString();
@@ -274,7 +274,7 @@ void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
 		//shvInfo() << "Handshake response received:" << resp.toCpon();
 		if(resp.isError())
 			break;
-		unsigned id = resp.requestId();
+		unsigned id = resp.requestId().toUInt();
 		if(id == 0)
 			break;
 		if(m_connectionState.helloRequestId == id) {
