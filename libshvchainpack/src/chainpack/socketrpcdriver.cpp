@@ -185,7 +185,7 @@ void SocketRpcDriver::exec()
 	}
 }
 
-void SocketRpcDriver::sendResponse(int request_id, const cp::RpcValue &result)
+void SocketRpcDriver::sendResponse(unsigned request_id, const cp::RpcValue &result)
 {
 	cp::RpcResponse resp;
 	resp.setRequestId(request_id);

@@ -148,6 +148,8 @@ shv::chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest 
 	if(!rq.shvPath().empty())
 		SHV_EXCEPTION("Subtree RPC request'" + shvPath() + "' on single node!");
 	shv::chainpack::RpcValue ret = call(rq.method(), rq.params());
+	if(rq.requestId().toUInt() == 0)
+		return cp::RpcValue(); // RPC calls with requestID == 0 does not expect response
 	return ret;
 }
 
