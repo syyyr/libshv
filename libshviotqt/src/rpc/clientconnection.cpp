@@ -121,7 +121,7 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 		*/
 		cp::RpcValue::Map opts;
 		opts[cp::Rpc::OPT_IDLE_WD_TIMEOUT] = 5 * cli_opts->heartbeatInterval();
-		setconnectionOptions(opts);
+		setConnectionOptions(opts);
 	}
 	int hbi = cli_opts->heartbeatInterval();
 	if(hbi > 0) {

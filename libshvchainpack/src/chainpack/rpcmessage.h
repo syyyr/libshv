@@ -24,8 +24,9 @@ public:
 		struct Tag { enum Enum {RequestId = meta::Tag::USER,
 								ShvPath,
 								Method,
-								CallerId,
+								CallerIds,
 								ProtocolType, //needed when dest client is using different version than source one to translate raw message data to correct format
+								TunnelHandle,
 								MAX};};
 		struct Key { enum Enum {Params = 1, Result, Error, ErrorCode, ErrorMessage, MAX};};
 
@@ -66,14 +67,19 @@ public:
 	RpcValue::String shvPath() const;
 	void setShvPath(const RpcValue::String &path);
 
-	static RpcValue callerId(const RpcValue::MetaData &meta);
-	static void setCallerId(RpcValue::MetaData &meta, const RpcValue &caller_id);
+	static RpcValue callerIds(const RpcValue::MetaData &meta);
+	static void setCallerIds(RpcValue::MetaData &meta, const RpcValue &caller_id);
 	static void pushCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id);
 	static RpcValue popCallerId(const RpcValue &caller_ids, RpcValue::UInt &id);
 	static RpcValue::UInt popCallerId(RpcValue::MetaData &meta);
 	RpcValue::UInt popCallerId();
-	RpcValue callerId() const;
-	void setCallerId(const RpcValue &callerId);
+	RpcValue callerIds() const;
+	void setCallerIds(const RpcValue &callerIds);
+
+	static RpcValue tunnelHandle(const RpcValue::MetaData &meta);
+	static void setTunnelHandle(RpcValue::MetaData &meta, const RpcValue &tun_handle);
+	RpcValue tunnelHandle() const;
+	void setTunnelHandle(const RpcValue &tun_handle);
 
 	static Rpc::ProtocolType protocolType(const RpcValue::MetaData &meta);
 	static void setProtocolType(RpcValue::MetaData &meta, shv::chainpack::Rpc::ProtocolType ver);

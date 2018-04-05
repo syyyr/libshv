@@ -278,7 +278,7 @@ size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolTyp
 				if(!shv_path.empty())
 					RpcMessage::setShvPath(meta_data, shv_path);
 				if(caller_id > 0)
-					RpcMessage::setCallerId(meta_data, caller_id);
+					RpcMessage::setCallerIds(meta_data, caller_id);
 			}
 			break;
 		}
@@ -301,7 +301,7 @@ size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolTyp
 		}
 	}
 	catch(CponReader::ParseException &e) {
-		nError() << e.mesage();
+		nError() << e.what();
 	}
 	return meta_data_end_pos;
 }
@@ -352,7 +352,7 @@ RpcValue RpcDriver::decodeData(Rpc::ProtocolType protocol_type, const std::strin
 		}
 	}
 	catch(CponReader::ParseException &e) {
-		nError() << e.mesage();
+		nError() << e.what();
 	}
 	return ret;
 }
@@ -373,7 +373,7 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolType protocol_type, const RpcVa
 		if(!shv_path.empty())
 			json_msg[Rpc::JSONRPC_SHV_PATH] = shv_path;
 
-		const RpcValue caller_id = rpc_msg.callerId();
+		const RpcValue caller_id = rpc_msg.callerIds();
 		if(caller_id.isValid())
 			json_msg[Rpc::JSONRPC_CALLER_ID] = caller_id;
 					;

@@ -20,10 +20,11 @@ RpcMessage::MetaType::MetaType()
 	};
 	m_tags = {
 		{(int)Tag::RequestId, {(int)Tag::RequestId, "id"}},
-		{(int)Tag::CallerId, {(int)Tag::CallerId, "callerId"}},
-		{(int)Tag::Method, {(int)Tag::Method, "method"}},
-		{(int)Tag::ProtocolType, {(int)Tag::ProtocolType, "protocol"}},
 		{(int)Tag::ShvPath, {(int)Tag::ShvPath, "shvPath"}},
+		{(int)Tag::Method, {(int)Tag::Method, "method"}},
+		{(int)Tag::CallerIds, {(int)Tag::CallerIds, "callerIds"}},
+		{(int)Tag::ProtocolType, {(int)Tag::ProtocolType, "protocol"}},
+		{(int)Tag::TunnelHandle, {(int)Tag::TunnelHandle, Rpc::KEY_TUNNEL_HANDLE}},
 	};
 }
 
@@ -183,32 +184,32 @@ void RpcMessage::setShvPath(const RpcValue::String &path)
 	setMetaValue(RpcMessage::MetaType::Tag::ShvPath, path);
 }
 
-RpcValue RpcMessage::callerId(const RpcValue::MetaData &meta)
+RpcValue RpcMessage::callerIds(const RpcValue::MetaData &meta)
 {
-	return meta.value(RpcMessage::MetaType::Tag::CallerId);
+	return meta.value(RpcMessage::MetaType::Tag::CallerIds);
 }
 
-void RpcMessage::setCallerId(RpcValue::MetaData &meta, const RpcValue &caller_id)
+void RpcMessage::setCallerIds(RpcValue::MetaData &meta, const RpcValue &caller_id)
 {
-	meta.setValue(RpcMessage::MetaType::Tag::CallerId, caller_id);
+	meta.setValue(RpcMessage::MetaType::Tag::CallerIds, caller_id);
 }
 
 void RpcMessage::pushCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id)
 {
-	RpcValue curr_caller_id = RpcMessage::callerId(meta);
+	RpcValue curr_caller_id = RpcMessage::callerIds(meta);
 	if(curr_caller_id.isArray()) {
 		RpcValue::Array array = curr_caller_id.toArray();
 		array.push_back(RpcValue::Array::makeElement(caller_id));
-		setCallerId(meta, array);
+		setCallerIds(meta, array);
 	}
 	else if(curr_caller_id.isUInt()) {
 		RpcValue::Array array{RpcValue::Type::UInt};
 		array.push_back(curr_caller_id.toUInt());
 		array.push_back(RpcValue::Array::makeElement(caller_id));
-		setCallerId(meta, array);
+		setCallerIds(meta, array);
 	}
 	else {
-		setCallerId(meta, caller_id);
+		setCallerIds(meta, caller_id);
 	}
 }
 
@@ -234,25 +235,45 @@ RpcValue RpcMessage::popCallerId(const RpcValue &caller_ids, RpcValue::UInt &id)
 RpcValue::UInt RpcMessage::popCallerId(RpcValue::MetaData &meta)
 {
 	RpcValue::UInt ret = 0;
-	setCallerId(meta, popCallerId(callerId(meta), ret));
+	setCallerIds(meta, popCallerId(callerIds(meta), ret));
 	return ret;
 }
 
 RpcValue::UInt RpcMessage::popCallerId()
 {
 	RpcValue::UInt ret = 0;
-	setCallerId(popCallerId(callerId(), ret));
+	setCallerIds(popCallerId(callerIds(), ret));
 	return ret;
 }
 
-RpcValue RpcMessage::callerId() const
+RpcValue RpcMessage::callerIds() const
 {
-	return metaValue(RpcMessage::MetaType::Tag::CallerId);
+	return metaValue(RpcMessage::MetaType::Tag::CallerIds);
 }
 
-void RpcMessage::setCallerId(const RpcValue &callerId)
+void RpcMessage::setCallerIds(const RpcValue &callerId)
 {
-	setMetaValue(RpcMessage::MetaType::Tag::CallerId, callerId);
+	setMetaValue(RpcMessage::MetaType::Tag::CallerIds, callerId);
+}
+
+RpcValue RpcMessage::tunnelHandle(const RpcValue::MetaData &meta)
+{
+	return meta.value(RpcMessage::MetaType::Tag::TunnelHandle);
+}
+
+void RpcMessage::setTunnelHandle(RpcValue::MetaData &meta, const RpcValue &tun_handle)
+{
+	meta.setValue(RpcMessage::MetaType::Tag::TunnelHandle, tun_handle);
+}
+
+RpcValue RpcMessage::tunnelHandle() const
+{
+	return metaValue(RpcMessage::MetaType::Tag::TunnelHandle);
+}
+
+void RpcMessage::setTunnelHandle(const RpcValue &tun_handle)
+{
+	setMetaValue(RpcMessage::MetaType::Tag::TunnelHandle, tun_handle);
 }
 
 Rpc::ProtocolType RpcMessage::protocolType(const RpcValue::MetaData &meta)
@@ -359,9 +380,9 @@ RpcResponse RpcResponse::forRequest(const RpcValue::MetaData &meta)
 	RpcValue id = requestId(meta);
 	if(id.isValid())
 		ret.setRequestId(id);
-	auto caller_id = callerId(meta);
+	auto caller_id = callerIds(meta);
 	if(caller_id.isValid())
-		ret.setCallerId(caller_id);
+		ret.setCallerIds(caller_id);
 	return ret;
 }
 

@@ -115,6 +115,7 @@ ShvNode::StringList ShvNode::childNodeIds() const
 
 void ShvNode::processRawData(const chainpack::RpcValue::MetaData &meta, std::string &&data)
 {
+	shvLogFuncFrame() << meta.toStdString();
 	std::string errmsg;
 	cp::RpcMessage rpc_msg = cp::RpcDriver::composeRpcMessage(cp::RpcValue::MetaData(meta), data, &errmsg);
 	if(!errmsg.empty()) {
@@ -126,6 +127,7 @@ void ShvNode::processRawData(const chainpack::RpcValue::MetaData &meta, std::str
 	bool response_deffered = false;
 	try {
 		cp::RpcValue result = processRpcRequest(rq);
+		shvDebug() << result.toPrettyString();
 		if(result.isValid())
 			resp.setResult(result);
 		else

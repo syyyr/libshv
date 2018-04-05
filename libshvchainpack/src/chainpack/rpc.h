@@ -16,6 +16,7 @@ public:
 	static const char* KEY_CLIENT_ID;
 	static const char* KEY_MOUT_POINT;
 	static const char* KEY_DEVICE_ID;
+	static const char* KEY_TUNNEL_HANDLE;
 
 	static const char* TYPE_CLIENT;
 	static const char* TYPE_DEVICE;
@@ -31,6 +32,7 @@ public:
 	static const char* METH_ECHO;
 	static const char* METH_APP_NAME;
 	static const char* METH_DEVICE_ID;
+	static const char* METH_CONNECTION_TYPE;
 
 	static const char* NTF_VAL_CHANGED;
 	static const char* NTF_CONNECTED;

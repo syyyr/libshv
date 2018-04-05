@@ -676,7 +676,7 @@ RpcValue RpcValue::fromCpon(const std::string &str, std::string *err)
 			rd >> ret;
 		}
 		catch(CponReader::ParseException &e) {
-			*err = e.mesage();
+			*err = e.what();
 		}
 	}
 	else {

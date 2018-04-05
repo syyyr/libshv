@@ -28,7 +28,7 @@ void DeviceConnection::setCliOptions(const DeviceAppCliOptions *cli_opts)
 		dev[cp::Rpc::KEY_DEVICE_ID] = cli_opts->deviceId().toStdString();
 		dev[cp::Rpc::KEY_MOUT_POINT] = cli_opts->mountPoint().toStdString();
 		opts[cp::Rpc::TYPE_DEVICE] = dev;
-		setconnectionOptions(opts);
+		setConnectionOptions(opts);
 	}
 }
 

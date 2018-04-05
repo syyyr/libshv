@@ -8,6 +8,7 @@ const char* Rpc::OPT_IDLE_WD_TIMEOUT = "idleWatchDogTimeOut";
 const char* Rpc::KEY_CLIENT_ID = "clientId";
 const char* Rpc::KEY_MOUT_POINT = "mountPoint";
 const char* Rpc::KEY_DEVICE_ID = "deviceId";
+const char* Rpc::KEY_TUNNEL_HANDLE = "tunnelHandle";
 
 const char* Rpc::TYPE_CLIENT = "client";
 const char* Rpc::TYPE_DEVICE = "device";
@@ -24,6 +25,7 @@ const char* Rpc::METH_PING = "ping";
 const char* Rpc::METH_ECHO = "echo";
 const char* Rpc::METH_APP_NAME = "appName";
 const char* Rpc::METH_DEVICE_ID = "deviceId";
+const char* Rpc::METH_CONNECTION_TYPE = "connectionType";
 
 const char* Rpc::NTF_VAL_CHANGED = "chng";
 const char* Rpc::NTF_CONNECTED = "connected";

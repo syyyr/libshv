@@ -100,7 +100,7 @@ void CponReader::read(RpcValue &val, std::string &err)
 		read(val);
 	}
 	catch (ParseException &e) {
-		err = e.mesage();
+		err = e.what();
 	}
 }
 

@@ -2,8 +2,9 @@
 
 #include "clientappclioptions.h"
 #include "clientconnection.h"
+#include "tunnelhandle.h"
 
-#include <shv/chainpack/metatypes.h>
+#include <shv/chainpack/rpcvalue.h>
 
 namespace shv {
 namespace iotqt {
@@ -32,7 +33,18 @@ public:
 		enum {ID = shv::chainpack::meta::GlobalNS::RegisteredMetaTypes::RpcTunnelParams};
 		//struct Tag { enum Enum {RequestId = meta::Tag::USER,
 		//						MAX};};
-		struct Key { enum Enum {Host = 1, Port, User, Password, ParentClientId, CallerClientIds, TunName, TunnelResponseRequestId, MAX};};
+		struct Key { enum Enum {
+				Host = 1,
+				Port,
+				User,
+				Password,
+				ParentClientId,
+				CallerClientIds,
+				//TunName,
+				//TunnelResponseRequestId,
+				MAX
+			};
+		};
 
 		MetaType();
 
@@ -44,12 +56,16 @@ public:
 	//TunnelParams& operator=(TunnelParams &&o) {Super::operator =(std::move(o)); return *this;}
 
 	shv::chainpack::RpcValue toRpcValue() const;
+
+	shv::chainpack::RpcValue callerClientIds() const;
 };
 
 class SHVIOTQT_DECL_EXPORT TunnelConnection : public shv::iotqt::rpc::ClientConnection
 {
 	Q_OBJECT
 	using Super = ClientConnection;
+
+	SHV_FIELD_IMPL(shv::chainpack::RpcValue, t, T, unnelHandle)
 public:
 	TunnelConnection(QObject *parent = 0);
 
