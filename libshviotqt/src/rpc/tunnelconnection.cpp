@@ -23,14 +23,14 @@ TunnelParams::MetaType::MetaType()
 	: Super("TunnelParams")
 {
 	m_keys = {
-		{(int)Key::Host, {(int)Key::Host, "Host"}},
-		{(int)Key::Port, {(int)Key::Port, "Port"}},
-		{(int)Key::User, {(int)Key::User, "User"}},
-		{(int)Key::Password, {(int)Key::Password, "Password"}},
-		{(int)Key::ParentClientId, {(int)Key::ParentClientId, "ParentClientId"}},
-		{(int)Key::CallerClientIds, {(int)Key::CallerClientIds, "CallerClientIds"}},
-		{(int)Key::TunName, {(int)Key::TunName, "TunName"}},
-		{(int)Key::TunnelResponseRequestId, {(int)Key::TunnelResponseRequestId, "TunnelResponseRequestId"}},
+		RPC_META_KEY_DEF(Host),
+		RPC_META_KEY_DEF(Port),
+		RPC_META_KEY_DEF(User),
+		RPC_META_KEY_DEF(Password),
+		RPC_META_KEY_DEF(ParentClientId),
+		RPC_META_KEY_DEF(CallerClientIds),
+		RPC_META_KEY_DEF(TunName),
+		RPC_META_KEY_DEF(TunnelResponseRequestId),
 	};
 	//m_tags = {
 	//	{(int)Tag::RequestId, {(int)Tag::RequestId, "id"}},

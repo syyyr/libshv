@@ -5,6 +5,9 @@
 #include <cstddef>
 #include <map>
 
+#define RPC_META_TAG_DEF(tag_name) {(int)Tag::tag_name, {(int)Tag::tag_name, #tag_name }}
+#define RPC_META_KEY_DEF(key_name) {(int)Key::key_name, {(int)Key::key_name, #key_name }}
+
 namespace shv {
 namespace chainpack {
 namespace meta {
@@ -78,7 +81,8 @@ public:
 	{
 		enum Enum {
 			ChainPackRpcMessage = 1,
-			RpcTunnelParams = 1,
+			RpcTunnelParams,
+			RpcTunnelHandle,
 		};
 	};
 };

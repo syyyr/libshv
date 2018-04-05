@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QtGlobal>
+
 /// Declaration of macros required for exporting symbols
 /// into shared libraries
 #if defined(SHVIOTQT_BUILD_DLL)
