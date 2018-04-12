@@ -26,6 +26,10 @@ const char* Rpc::METH_ECHO = "echo";
 const char* Rpc::METH_APP_NAME = "appName";
 const char* Rpc::METH_DEVICE_ID = "deviceId";
 const char* Rpc::METH_CONNECTION_TYPE = "connectionType";
+const char* Rpc::METH_SUBSCRIBE = "subscribe";
+
+const char* Rpc::PAR_PATH = "path";
+const char* Rpc::PAR_METHOD = "method";
 
 const char* Rpc::NTF_VAL_CHANGED = "chng";
 const char* Rpc::NTF_CONNECTED = "connected";

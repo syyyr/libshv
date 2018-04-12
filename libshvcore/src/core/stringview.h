@@ -37,6 +37,8 @@ public:
 	StringView normalized() const;
 	std::string toString() const;
 
+	bool startsWith(const StringView &str) const;
+
 	StringView mid(size_t start)const {return mid(start, length() - start);}
 	StringView mid(size_t start, size_t len) const;
 

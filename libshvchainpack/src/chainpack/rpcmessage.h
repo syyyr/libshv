@@ -57,14 +57,14 @@ public:
 	RpcValue requestId() const;
 	void setRequestId(const RpcValue &requestId);
 
-	static RpcValue::String method(const RpcValue::MetaData &meta);
+	static RpcValue method(const RpcValue::MetaData &meta);
 	static void setMethod(RpcValue::MetaData &meta, const RpcValue::String &method);
-	RpcValue::String method() const;
+	RpcValue method() const;
 	void setMethod(const RpcValue::String &method);
 
-	static RpcValue::String shvPath(const RpcValue::MetaData &meta);
+	static RpcValue shvPath(const RpcValue::MetaData &meta);
 	static void setShvPath(RpcValue::MetaData &meta, const RpcValue::String &path);
-	RpcValue::String shvPath() const;
+	RpcValue shvPath() const;
 	void setShvPath(const RpcValue::String &path);
 
 	static RpcValue callerIds(const RpcValue::MetaData &meta);

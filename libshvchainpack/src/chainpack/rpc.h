@@ -33,6 +33,10 @@ public:
 	static const char* METH_APP_NAME;
 	static const char* METH_DEVICE_ID;
 	static const char* METH_CONNECTION_TYPE;
+	static const char* METH_SUBSCRIBE;
+
+	static const char* PAR_PATH;
+	static const char* PAR_METHOD;
 
 	static const char* NTF_VAL_CHANGED;
 	static const char* NTF_CONNECTED;

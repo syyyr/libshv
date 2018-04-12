@@ -98,9 +98,9 @@ void RpcMessage::setRequestId(const RpcValue &id)
 	setMetaValue(RpcMessage::MetaType::Tag::RequestId, id);
 }
 
-RpcValue::String RpcMessage::method(const RpcValue::MetaData &meta)
+RpcValue RpcMessage::method(const RpcValue::MetaData &meta)
 {
-	return meta.value(RpcMessage::MetaType::Tag::Method).toString();
+	return meta.value(RpcMessage::MetaType::Tag::Method);
 }
 
 void RpcMessage::setMethod(RpcValue::MetaData &meta, const RpcValue::String &method)
@@ -108,9 +108,9 @@ void RpcMessage::setMethod(RpcValue::MetaData &meta, const RpcValue::String &met
 	meta.setValue(RpcMessage::MetaType::Tag::Method, method);
 }
 
-RpcValue::String RpcMessage::method() const
+RpcValue RpcMessage::method() const
 {
-	return metaValue(RpcMessage::MetaType::Tag::Method).toString();
+	return metaValue(RpcMessage::MetaType::Tag::Method);
 }
 
 void RpcMessage::setMethod(const RpcValue::String &method)
@@ -126,32 +126,32 @@ bool RpcMessage::isValid() const
 
 bool RpcMessage::isRequest() const
 {
-	return requestId().isValid() && !method().empty();
+	return requestId().isValid() && !method().toString().empty();
 }
 
 bool RpcMessage::isNotify() const
 {
-	return !requestId().isValid() && !method().empty();
+	return !requestId().isValid() && !method().toString().empty();
 }
 
 bool RpcMessage::isResponse() const
 {
-	return requestId().isValid() && method().empty();
+	return requestId().isValid() && method().toString().empty();
 }
 
 bool RpcMessage::isRequest(const RpcValue::MetaData &meta)
 {
-	return requestId(meta).isValid() && !method(meta).empty();
+	return requestId(meta).isValid() && !method(meta).toString().empty();
 }
 
 bool RpcMessage::isResponse(const RpcValue::MetaData &meta)
 {
-	return requestId(meta).isValid() && method(meta).empty();
+	return requestId(meta).isValid() && method(meta).toString().empty();
 }
 
 bool RpcMessage::isNotify(const RpcValue::MetaData &meta)
 {
-	return !requestId(meta).isValid() && !method(meta).empty();
+	return !requestId(meta).isValid() && !method(meta).toString().empty();
 }
 
 RpcValue RpcMessage::requestId(const RpcValue::MetaData &meta)
@@ -164,9 +164,9 @@ void RpcMessage::setRequestId(RpcValue::MetaData &meta, const RpcValue &id)
 	meta.setValue(RpcMessage::MetaType::Tag::RequestId, id);
 }
 
-RpcValue::String RpcMessage::shvPath(const RpcValue::MetaData &meta)
+RpcValue RpcMessage::shvPath(const RpcValue::MetaData &meta)
 {
-	return meta.value(RpcMessage::MetaType::Tag::ShvPath).toString();
+	return meta.value(RpcMessage::MetaType::Tag::ShvPath);
 }
 
 void RpcMessage::setShvPath(RpcValue::MetaData &meta, const RpcValue::String &path)
@@ -174,9 +174,9 @@ void RpcMessage::setShvPath(RpcValue::MetaData &meta, const RpcValue::String &pa
 	meta.setValue(RpcMessage::MetaType::Tag::ShvPath, path);
 }
 
-RpcValue::String RpcMessage::shvPath() const
+RpcValue RpcMessage::shvPath() const
 {
-	return metaValue(RpcMessage::MetaType::Tag::ShvPath).toString();
+	return metaValue(RpcMessage::MetaType::Tag::ShvPath);
 }
 
 void RpcMessage::setShvPath(const RpcValue::String &path)

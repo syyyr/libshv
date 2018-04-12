@@ -107,6 +107,16 @@ std::string StringView::toString() const
 	return m_str->substr(m_start, m_length);
 }
 
+bool StringView::startsWith(const StringView &str) const
+{
+	size_t i;
+	for (i = 0; i < length() && i < str.length(); ++i) {
+		if((*this)[i] != str[i])
+			return false;
+	}
+	return i == str.length();
+}
+
 StringView StringView::mid(size_t start, size_t len) const
 {
 	return StringView(str(), this->start() + start, len);

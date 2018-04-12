@@ -102,18 +102,19 @@ chainpack::RpcValue LocalFSNode::ndCall(const std::string &path, const std::stri
 cp::RpcValue LocalFSNode::processRpcRequest(const chainpack::RpcRequest &rq)
 {
 	cp::RpcValue ret;
-	cp::RpcValue::String method = rq.method();
+	cp::RpcValue::String method = rq.method().toString();
+	chainpack::RpcValue shv_path = rq.shvPath();
 	if(method == cp::Rpc::METH_LS) {
-		ret = ndLs(rq.shvPath(), rq.params());
+		ret = ndLs(shv_path.toString(), rq.params());
 	}
 	else if(method == M_SIZE) {
-		ret = ndSize(rq.shvPath());
+		ret = ndSize(shv_path.toString());
 	}
 	else if(method == M_READ) {
-		ret = ndRead(rq.shvPath());
+		ret = ndRead(shv_path.toString());
 	}
 	else if(method == cp::Rpc::METH_DIR) {
-		QFileInfo fi = ndFileInfo(rq.shvPath());
+		QFileInfo fi = ndFileInfo(shv_path.toString());
 		cp::RpcValue::List lst{cp::Rpc::METH_DIR, cp::Rpc::METH_LS};
 		if(fi.isFile()) {
 			lst.push_back(M_SIZE);
@@ -122,7 +123,7 @@ cp::RpcValue LocalFSNode::processRpcRequest(const chainpack::RpcRequest &rq)
 		ret = lst;
 	}
 	else {
-		SHV_EXCEPTION("Invalid method: " + method + " called for node: " + rq.shvPath());
+		SHV_EXCEPTION("Invalid method: " + method + " called for node: " + shv_path.toString());
 	}
 	return ret;
 }

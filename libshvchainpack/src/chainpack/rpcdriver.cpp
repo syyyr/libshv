@@ -369,9 +369,9 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolType protocol_type, const RpcVa
 		if(rq_id.isValid())
 			json_msg[Rpc::JSONRPC_ID] = rq_id;
 
-		const RpcValue::String shv_path = rpc_msg.shvPath();
-		if(!shv_path.empty())
-			json_msg[Rpc::JSONRPC_SHV_PATH] = shv_path;
+		const RpcValue shv_path = rpc_msg.shvPath();
+		if(shv_path.isString())
+			json_msg[Rpc::JSONRPC_SHV_PATH] = shv_path.toString();
 
 		const RpcValue caller_id = rpc_msg.callerIds();
 		if(caller_id.isValid())
