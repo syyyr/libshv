@@ -413,4 +413,26 @@ template<> inline RpcValue::Type RpcValue::guessType<bool>() { return Type::Bool
 template<> inline RpcValue::Type RpcValue::guessType<RpcValue::DateTime>() { return Type::DateTime; }
 template<> inline RpcValue::Type RpcValue::guessType<RpcValue::Decimal>() { return Type::Decimal; }
 
+class RpcValueGenList
+{
+public:
+	RpcValueGenList(const RpcValue &v) : m_val(v) {}
+
+	RpcValue value(size_t ix) const
+	{
+		if(m_val.isList())
+			return m_val.toList().value(ix);
+		return m_val;
+	}
+	bool size() const
+	{
+		if(m_val.isList())
+			return m_val.toList().size();
+		return m_val.isValid()? 1: 0;
+	}
+	bool empty() const {return size() == 0;}
+private:
+	RpcValue m_val;
+};
+
 }}

@@ -2,11 +2,12 @@
 
 #include "../shviotqtglobal.h"
 
+//#include <shv/chainpack/rpc.h>
 #include <shv/chainpack/rpcvalue.h>
 
 #include <QObject>
 
-namespace shv { namespace chainpack { class RpcValue; class RpcMessage; class RpcRequest; }}
+namespace shv { namespace chainpack { class MetaMethod; class RpcValue; class RpcMessage; class RpcRequest; }}
 namespace shv { namespace core { class StringView; }}
 
 namespace shv {
@@ -22,32 +23,6 @@ public:
 	using StringList = std::vector<std::string>;
 	using StringViewList = std::vector<shv::core::StringView>;
 	using String = std::string;
-
-	class SHVIOTQT_DECL_EXPORT MethParams
-	{
-	public:
-		MethParams() {}
-		MethParams(const chainpack::RpcValue &method_params) : m_mp(method_params) {}
-		std::string method() const;
-		chainpack::RpcValue params() const;
-	private:
-		chainpack::RpcValue m_mp;
-	};
-	class SHVIOTQT_DECL_EXPORT MethParamsList : public std::vector<MethParams>
-	{
-	public:
-		MethParamsList() {}
-		MethParamsList(const chainpack::RpcValue &method_params);
-		MethParams value(size_t ix) const {return (ix < size())? operator [](ix): MethParams();}
-	};
-	class SHVIOTQT_DECL_EXPORT DirMethParamsList : public MethParamsList
-	{
-	public:
-		DirMethParamsList(const chainpack::RpcValue &method_params);
-		std::string method() const {return m_method;}
-	private:
-		std::string m_method;
-	};
 public:
 	explicit ShvNode(ShvNode *parent = nullptr);
 
@@ -63,24 +38,22 @@ public:
 	String shvPath() const;
 	ShvRootNode* rootNode();
 
-	StringList childNodeIds() const {return childNodeIds(std::string());}
-	shv::chainpack::RpcValue ls(const shv::chainpack::RpcValue &methods_params) {return ls(std::string(), methods_params);}
-	shv::chainpack::RpcValue dir(const shv::chainpack::RpcValue &methods_params) {return dir(std::string(), methods_params);}
-	shv::chainpack::RpcValue call(const std::string &method, const shv::chainpack::RpcValue &params) {return call(std::string(), method, params);}
-
 	virtual bool isRootNode() const {return false;}
 
 
 	virtual void processRawData(const shv::chainpack::RpcValue::MetaData &meta, std::string &&data);
 	virtual chainpack::RpcValue processRpcRequest(const shv::chainpack::RpcRequest &rq);
-protected:
-	virtual StringList childNodeIds(const std::string &shv_path) const;
-	virtual shv::chainpack::RpcValue ls(const std::string &shv_path, const shv::chainpack::RpcValue &methods_params);
-	virtual StringList methodNames();
-	virtual shv::chainpack::RpcValue dirMethod(const std::string &shv_path, const std::string &method, const shv::chainpack::RpcValue &methods_params);
-	virtual shv::chainpack::RpcValue dir(const std::string &shv_path, const shv::chainpack::RpcValue &methods_params);
-	virtual shv::chainpack::RpcValue call(const std::string &shv_path, const std::string &method, const shv::chainpack::RpcValue &params);
-	virtual shv::chainpack::RpcValue callChild(const std::string &shv_path, const std::string &node_id, const std::string &method, const shv::chainpack::RpcValue &params);
+public:
+	virtual size_t childCount(const std::string &shv_path = std::string()) const;
+	virtual std::string childName(size_t ix, const std::string &shv_path = std::string()) const;
+	virtual shv::chainpack::RpcValue call(const shv::chainpack::RpcValue &method_params, const std::string &shv_path = std::string());
+	virtual shv::chainpack::RpcValue ls(const shv::chainpack::RpcValue &methods_params, const std::string &shv_path = std::string());
+	StringList childNames(const std::string &shv_path = std::string()) const;
+
+	virtual shv::chainpack::RpcValue dir(const shv::chainpack::RpcValue &methods_params, const std::string &shv_path = std::string());
+	virtual size_t methodCount(const std::string &shv_path = std::string()) const;
+	virtual const shv::chainpack::MetaMethod* metaMethod(size_t ix, const std::string &shv_path = std::string()) const;
+	StringList methodNames(const std::string &shv_path = std::string());
 private:
 	String m_nodeId;
 };

@@ -111,7 +111,7 @@ bool ShvNodeTree::mount(const ShvNode::String &path, ShvNode *node)
 static std::string dump_node(ShvNode *parent, int indent)
 {
 	std::string ret;
-	for(const std::string &pn : parent->childNodeIds()) {
+	for(const std::string &pn : parent->childNames()) {
 		ShvNode *chnd = parent->childNode(pn);
 		ret += '\n' + std::string(indent, '\t') + pn;// + ": " + parent->propertyValue(pn).toPrettyString();
 		if(chnd) {

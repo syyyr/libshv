@@ -1,5 +1,6 @@
 #include "shvnode.h"
 
+#include <shv/chainpack/metamethod.h>
 #include <shv/chainpack/rpcmessage.h>
 #include <shv/chainpack/rpcvalue.h>
 #include <shv/chainpack/rpcdriver.h>
@@ -12,36 +13,6 @@ namespace cp = shv::chainpack;
 namespace shv {
 namespace iotqt {
 namespace node {
-
-std::string ShvNode::MethParams::method() const
-{
-	return m_mp.isList()? m_mp.toList().value(0).toString(): m_mp.toString();
-}
-
-chainpack::RpcValue ShvNode::MethParams::params() const
-{
-	return m_mp.isList()? m_mp.toList().value(1): chainpack::RpcValue();
-}
-
-ShvNode::MethParamsList::MethParamsList(const chainpack::RpcValue &method_params)
-{
-	for(const auto &v : method_params.toList())
-		push_back(MethParams(v));
-}
-
-ShvNode::DirMethParamsList::DirMethParamsList(const chainpack::RpcValue &method_params)
-{
-	if(method_params.isString()) {
-		m_method = method_params.toString();
-	}
-	else if(method_params.isList()) {
-		const chainpack::RpcValue::List &lst = method_params.toList();
-		m_method = lst.value(0).toString();
-		for (size_t i = 1; i < lst.size(); ++i) {
-			push_back(MethParams(lst[i]));
-		}
-	}
-}
 
 ShvNode::ShvNode(ShvNode *parent)
 	: QObject(parent)
@@ -153,106 +124,123 @@ shv::chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest 
 {
 	//if(!rq.shvPath().toString().empty())
 	//	SHV_EXCEPTION("Subtree RPC request'" + shvPath() + "' on single node!");
-	shv::chainpack::RpcValue ret = call(rq.shvPath().toString(), rq.method().toString(), rq.params());
+	shv::chainpack::RpcValue ret = call(cp::RpcValue::List{rq.method(), rq.params()}, rq.shvPath().toString());
 	if(rq.requestId().toUInt() == 0)
 		return cp::RpcValue(); // RPC calls with requestID == 0 does not expect response
 	return ret;
 }
 
-ShvNode::StringList ShvNode::childNodeIds(const std::string &shv_path) const
+size_t ShvNode::childCount(const std::string &shv_path) const
 {
 	if(!shv_path.empty())
-		SHV_EXCEPTION("Subtree RPC request'" + shv_path + "' on single node!");
-	StringList ret;
-	for(ShvNode *nd : findChildren<ShvNode*>(QString(), Qt::FindDirectChildrenOnly)) {
-		shvDebug() << "child:" << nd << nd->nodeId();
-		ret.push_back(nd->nodeId());
+		return childNode(shv_path)->childCount();
+	QList<ShvNode*> lst = findChildren<ShvNode*>(QString(), Qt::FindDirectChildrenOnly);
+	return lst.size();
+}
+
+std::string ShvNode::childName(size_t ix, const std::string &shv_path) const
+{
+	if(!shv_path.empty())
+		return childNode(shv_path)->childName(ix);
+	QList<ShvNode*> lst = findChildren<ShvNode*>(QString(), Qt::FindDirectChildrenOnly);
+	return lst[ix]->nodeId();
+}
+
+ShvNode::StringList ShvNode::childNames(const std::string &shv_path) const
+{
+	ShvNode::StringList ret;
+	size_t cnt = childCount(shv_path);
+	for (size_t ix = 0; ix < cnt; ++ix) {
+		ret.push_back(childName(ix, shv_path));
 	}
 	return ret;
 }
 
-chainpack::RpcValue ShvNode::call(const std::string &shv_path, const std::string &method, const chainpack::RpcValue &params)
+chainpack::RpcValue ShvNode::call(const chainpack::RpcValue &method_params, const std::string &shv_path)
 {
 	if(!shv_path.empty())
-		SHV_EXCEPTION("Subtree RPC request'" + shvPath() + "' on single node!");
+		return childNode(shv_path)->call(method_params);
+	chainpack::RpcValueGenList params(method_params);
+	const std::string method = params.value(0).toString();
 	if(method == cp::Rpc::METH_LS) {
-		return ls(params);
+		return ls(params.value(1));
 	}
 	if(method == cp::Rpc::METH_DIR) {
-		return dir(params);
+		return dir(params.value(1));
 	}
-	{
-		SHV_EXCEPTION("Invalid method: " + method + " called for node: " + shvPath());
-	}
+	SHV_EXCEPTION("Invalid method: " + method + " called for node: " + shvPath());
 }
 
-chainpack::RpcValue ShvNode::callChild(const std::string &shv_path, const std::string &node_id, const std::string &method, const chainpack::RpcValue &params)
+chainpack::RpcValue ShvNode::ls(const chainpack::RpcValue &methods_params, const std::string &shv_path)
 {
-	if(!shv_path.empty())
-		SHV_EXCEPTION("Subtree RPC request'" + shvPath() + "' on single node!");
-	ShvNode *nd = childNode(node_id);
-	return nd->call(method, params);
-}
-
-chainpack::RpcValue ShvNode::ls(const std::string &shv_path, const chainpack::RpcValue &methods_params)
-{
-	MethParamsList mpl(methods_params);
+	//if(!shv_path.empty())
+	//	return childNode(shv_path)->ls(methods_params);
+	chainpack::RpcValueGenList mpl(methods_params);
+	const std::string child_name_pattern = mpl.value(0).toString();
 	cp::RpcValue::List ret;
-	for(const std::string &n : childNodeIds(shv_path)) {
-		if(mpl.empty()) {
-			ret.push_back(n);
-		}
-		else {
-			cp::RpcValue::List ret1;
-			ret1.push_back(n);
-			for(const MethParams &mp : mpl) {
+	for(const std::string &child_name : childNames(shv_path)) {
+		if(child_name_pattern.empty() || child_name_pattern == child_name) {
+			cp::RpcValue::List results;
+			//results.push_back(child_name);
+			for (size_t i = 1; i < mpl.size(); ++i) {
+				chainpack::RpcValue mp = mpl.value(i);
 				try {
-					ret1.push_back(callChild(shv_path, n, mp.method(), mp.params()));
-				} catch (shv::core::Exception &) {
-					ret1.push_back(nullptr);
+					results.push_back(call(mp, shv_path));
+				}
+				catch (std::exception &) {
+					results.push_back(nullptr);
 				}
 			}
-			ret.push_back(ret1);
+			ret.push_back(results);
 		}
 	}
 	return ret;
 }
 
-static const ShvNode::StringList& _methodNames()
-{
-	static ShvNode::StringList lst{cp::Rpc::METH_DIR};
-	return lst;
-}
+static std::vector<cp::MetaMethod> meta_methods {
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, false},
+};
 
-ShvNode::StringList ShvNode::methodNames()
+size_t ShvNode::methodCount(const std::string &shv_path) const
 {
-	return _methodNames();
-}
-
-chainpack::RpcValue ShvNode::dirMethod(const std::string &shv_path, const std::string &method, const chainpack::RpcValue &methods_params)
-{
-	Q_UNUSED(methods_params);
 	if(!shv_path.empty())
-		SHV_EXCEPTION("Subtree RPC request'" + shvPath() + "' on single node!");
-	const StringList &mn = _methodNames();
-	if(std::find(mn.begin(), mn.end(), method) == mn.end())
-		return nullptr;
-	return method;
+		return childNode(shv_path)->methodCount();
+	return meta_methods.size();
 }
 
-chainpack::RpcValue ShvNode::dir(const std::string &shv_path, const chainpack::RpcValue &methods_params)
+const chainpack::MetaMethod *ShvNode::metaMethod(size_t ix, const std::string &shv_path) const
 {
-	//MethParamsList mpl(methods_params);
 	if(!shv_path.empty())
-		SHV_EXCEPTION("Subtree RPC request'" + shvPath() + "' on single node!");
-	cp::RpcValue::List ret;
-	if(method.empty()) {
-		for(const std::string &m : methodNames()) {
-			ret.push_back(dirMethod(shv_path, m, methods_params));
-		}
+		return childNode(shv_path)->metaMethod(ix);
+	return &(meta_methods.at(ix));
+}
+
+ShvNode::StringList ShvNode::methodNames(const std::string &shv_path)
+{
+	ShvNode::StringList ret;
+	size_t cnt = methodCount(shv_path);
+	for (size_t ix = 0; ix < cnt; ++ix) {
+		ret.push_back(metaMethod(ix, shv_path)->name());
 	}
-	else {
-		ret.push_back(dirMethod(shv_path, method, methods_params));
+	return ret;
+}
+
+chainpack::RpcValue ShvNode::dir(const chainpack::RpcValue &methods_params, const std::string &shv_path)
+{
+	cp::RpcValue::List ret;
+	chainpack::RpcValueGenList params(methods_params);
+	const std::string method = params.value(0).toString();
+	unsigned attrs = params.value(1).toUInt();
+	size_t cnt = methodCount(shv_path);
+	for (size_t ix = 0; ix < cnt; ++ix) {
+		const chainpack::MetaMethod *mm = metaMethod(ix, shv_path);
+		if(method.empty()) {
+			ret.push_back(mm->attributes(attrs));
+		}
+		else if(method == mm->name()) {
+				ret.push_back(mm->attributes(attrs));
+				break;
+		}
 	}
 	return ret;
 }
