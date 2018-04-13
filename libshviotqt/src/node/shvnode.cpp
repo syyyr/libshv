@@ -130,7 +130,7 @@ shv::chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest 
 	return ret;
 }
 
-size_t ShvNode::childCount(const std::string &shv_path) const
+size_t ShvNode::childCount(const std::string &shv_path)
 {
 	if(!shv_path.empty())
 		return childNode(shv_path)->childCount();
@@ -138,7 +138,7 @@ size_t ShvNode::childCount(const std::string &shv_path) const
 	return lst.size();
 }
 
-std::string ShvNode::childName(size_t ix, const std::string &shv_path) const
+std::string ShvNode::childName(size_t ix, const std::string &shv_path)
 {
 	if(!shv_path.empty())
 		return childNode(shv_path)->childName(ix);
@@ -146,7 +146,7 @@ std::string ShvNode::childName(size_t ix, const std::string &shv_path) const
 	return lst[ix]->nodeId();
 }
 
-ShvNode::StringList ShvNode::childNames(const std::string &shv_path) const
+ShvNode::StringList ShvNode::childNames(const std::string &shv_path)
 {
 	ShvNode::StringList ret;
 	size_t cnt = childCount(shv_path);
@@ -201,14 +201,14 @@ static std::vector<cp::MetaMethod> meta_methods {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, false},
 };
 
-size_t ShvNode::methodCount(const std::string &shv_path) const
+size_t ShvNode::methodCount(const std::string &shv_path)
 {
 	if(!shv_path.empty())
 		return childNode(shv_path)->methodCount();
 	return meta_methods.size();
 }
 
-const chainpack::MetaMethod *ShvNode::metaMethod(size_t ix, const std::string &shv_path) const
+const chainpack::MetaMethod *ShvNode::metaMethod(size_t ix, const std::string &shv_path)
 {
 	if(!shv_path.empty())
 		return childNode(shv_path)->metaMethod(ix);

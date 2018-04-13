@@ -43,17 +43,18 @@ public:
 
 	virtual void processRawData(const shv::chainpack::RpcValue::MetaData &meta, std::string &&data);
 	virtual chainpack::RpcValue processRpcRequest(const shv::chainpack::RpcRequest &rq);
+
+	StringList childNames(const std::string &shv_path = std::string());
+	StringList methodNames(const std::string &shv_path = std::string());
 public:
-	virtual size_t childCount(const std::string &shv_path = std::string()) const;
-	virtual std::string childName(size_t ix, const std::string &shv_path = std::string()) const;
+	virtual size_t childCount(const std::string &shv_path = std::string());
+	virtual std::string childName(size_t ix, const std::string &shv_path = std::string());
 	virtual shv::chainpack::RpcValue call(const shv::chainpack::RpcValue &method_params, const std::string &shv_path = std::string());
 	virtual shv::chainpack::RpcValue ls(const shv::chainpack::RpcValue &methods_params, const std::string &shv_path = std::string());
-	StringList childNames(const std::string &shv_path = std::string()) const;
 
 	virtual shv::chainpack::RpcValue dir(const shv::chainpack::RpcValue &methods_params, const std::string &shv_path = std::string());
-	virtual size_t methodCount(const std::string &shv_path = std::string()) const;
-	virtual const shv::chainpack::MetaMethod* metaMethod(size_t ix, const std::string &shv_path = std::string()) const;
-	StringList methodNames(const std::string &shv_path = std::string());
+	virtual size_t methodCount(const std::string &shv_path = std::string());
+	virtual const shv::chainpack::MetaMethod* metaMethod(size_t ix, const std::string &shv_path = std::string());
 private:
 	String m_nodeId;
 };
