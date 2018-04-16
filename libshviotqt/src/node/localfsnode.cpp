@@ -62,6 +62,12 @@ chainpack::RpcValue LocalFSNode::call(const chainpack::RpcValue &method_params, 
 	return Super::call(method_params, shv_path);
 }
 
+ShvNode::StringList LocalFSNode::childNames(const std::string &shv_path)
+{
+	m_dirCache.remove(QString::fromStdString(shv_path));
+	return Super::childNames(shv_path);
+}
+
 static std::vector<cp::MetaMethod> meta_methods {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, false},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, false},

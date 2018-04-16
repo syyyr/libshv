@@ -44,8 +44,8 @@ public:
 	virtual void processRawData(const shv::chainpack::RpcValue::MetaData &meta, std::string &&data);
 	virtual chainpack::RpcValue processRpcRequest(const shv::chainpack::RpcRequest &rq);
 
-	StringList childNames(const std::string &shv_path = std::string());
-	StringList methodNames(const std::string &shv_path = std::string());
+	virtual StringList childNames(const std::string &shv_path = std::string());
+	virtual StringList methodNames(const std::string &shv_path = std::string());
 public:
 	virtual size_t childCount(const std::string &shv_path = std::string());
 	virtual std::string childName(size_t ix, const std::string &shv_path = std::string());
