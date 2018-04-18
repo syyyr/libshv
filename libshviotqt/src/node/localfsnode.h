@@ -17,13 +17,12 @@ class SHVIOTQT_DECL_EXPORT LocalFSNode : public shv::iotqt::node::ShvNode
 public:
 	LocalFSNode(const QString &root_path, Super *parent = nullptr);
 
-	size_t childCount(const std::string &shv_path = std::string()) override;
-	std::string childName(size_t ix, const std::string &shv_path = std::string()) override;
-	shv::chainpack::RpcValue call(const shv::chainpack::RpcValue &method_params, const std::string &shv_path = std::string()) override;
-	StringList childNames(const std::string &shv_path = std::string()) override;
-	//shv::chainpack::RpcValue ls(const shv::chainpack::RpcValue &methods_params, const std::string &shv_path = std::string()) override;
+	chainpack::RpcValue call(const std::string &method, const chainpack::RpcValue &params, const std::string &shv_path) override;
 
-	//shv::chainpack::RpcValue dir(const shv::chainpack::RpcValue &methods_params, const std::string &shv_path = std::string()) override;
+	StringList childNames(const std::string &shv_path = std::string()) override;
+	bool hasChildren(const std::string &shv_path) override;
+	//chainpack::RpcValue lsAttributes(const std::string &node_id, unsigned attributes, const std::string &shv_path) override;
+
 	size_t methodCount(const std::string &shv_path = std::string()) override;
 	const shv::chainpack::MetaMethod* metaMethod(size_t ix, const std::string &shv_path = std::string()) override;
 private:
@@ -38,7 +37,6 @@ private:
 	*/
 private:
 	QDir m_rootDir;
-	QMap<QString, QStringList> m_dirCache;
 };
 
 } // namespace node

@@ -3,6 +3,7 @@
 #include <shv/chainpack/rpcmessage.h>
 #include <shv/chainpack/metamethod.h>
 #include <shv/core/exception.h>
+#include <shv/coreqt/log.h>
 
 namespace cp = shv::chainpack;
 
@@ -19,6 +20,7 @@ LocalFSNode::LocalFSNode(const QString &root_path, Super *parent)
 {
 }
 
+#if 0
 size_t LocalFSNode::childCount(const std::string &shv_path)
 {
 	QString qpath = QString::fromStdString(shv_path);
@@ -61,11 +63,43 @@ chainpack::RpcValue LocalFSNode::call(const chainpack::RpcValue &method_params, 
 	}
 	return Super::call(method_params, shv_path);
 }
+#endif
+
+chainpack::RpcValue LocalFSNode::call(const std::string &method, const chainpack::RpcValue &params, const std::string &shv_path)
+{
+	if(method == M_SIZE) {
+		return ndSize(shv_path);
+	}
+	else if(method == M_READ) {
+		return ndRead(shv_path);
+	}
+	return Super::call(method, params, shv_path);
+}
 
 ShvNode::StringList LocalFSNode::childNames(const std::string &shv_path)
 {
-	m_dirCache.remove(QString::fromStdString(shv_path));
-	return Super::childNames(shv_path);
+	QString qpath = QString::fromStdString(shv_path);
+	QFileInfo fi_path(m_rootDir.absolutePath() + '/' + qpath);
+	//shvInfo() << __FUNCTION__ << fi_path.absoluteFilePath() << "is dir:" << fi_path.isFile();
+	if(fi_path.isDir()) {
+		QDir d2(fi_path.dir());
+		if(!d2.exists())
+			SHV_EXCEPTION("Path " + d2.absolutePath().toStdString() + " do not exists.");
+		ShvNode::StringList lst;
+		for(const QFileInfo &fi : d2.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot)) {
+			lst.push_back(fi.fileName().toStdString());
+		}
+		return lst;
+	}
+	return ShvNode::StringList();
+}
+
+bool LocalFSNode::hasChildren(const std::string &shv_path)
+{
+	QString qpath = QString::fromStdString(shv_path);
+	QFileInfo fi_path(m_rootDir.absolutePath() + '/' + qpath);
+	//shvInfo() << __FUNCTION__ << shv_path << "ret:" << fi_path.isDir();
+	return fi_path.isDir();
 }
 
 static std::vector<cp::MetaMethod> meta_methods {

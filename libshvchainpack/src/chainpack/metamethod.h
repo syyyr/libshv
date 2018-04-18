@@ -38,5 +38,9 @@ private:
 	bool m_isSignal;
 };
 
+enum class LsAttribute {
+	HasChildren = 1 << 0,
+};
+
 } // namespace chainpack
 } // namespace shv
