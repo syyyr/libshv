@@ -49,7 +49,7 @@ public:
 
 	virtual shv::chainpack::RpcValue ls(const shv::chainpack::RpcValue &methods_params, const std::string &shv_path = std::string());
 	virtual bool hasChildren(const std::string &shv_path = std::string());
-	virtual shv::chainpack::RpcValue lsAttributes(const std::string &node_id, unsigned attributes, const std::string &shv_path = std::string());
+	virtual shv::chainpack::RpcValue lsAttributes(unsigned attributes, const std::string &shv_path = std::string());
 public:
 	virtual size_t methodCount(const std::string &shv_path = std::string());
 	virtual const shv::chainpack::MetaMethod* metaMethod(size_t ix, const std::string &shv_path = std::string());

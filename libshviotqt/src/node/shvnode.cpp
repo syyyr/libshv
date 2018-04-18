@@ -168,14 +168,14 @@ bool ShvNode::hasChildren(const std::string &shv_path)
 	return childNode(shv_path)->hasChildren();
 }
 
-chainpack::RpcValue ShvNode::lsAttributes(const std::string &node_id, unsigned attributes, const std::string &shv_path)
+chainpack::RpcValue ShvNode::lsAttributes(unsigned attributes, const std::string &shv_path)
 {
 	//if(!shv_path.empty())
 	//	SHV_EXCEPTION("ShvNode::call - subtree RPC request'" + shvPath() + "' on single node, method: " + __FUNCTION__ + " shv path: " + shv_path);
 	cp::RpcValue::List ret;
 	if(attributes & (int)cp::LsAttribute::HasChildren) {
-		std::string path = shv_path.empty()? node_id: shv_path + '/' + node_id;
-		ret.push_back(hasChildren(path));
+		//std::string path = shv_path.empty()? node_id: shv_path + '/' + node_id;
+		ret.push_back(hasChildren(shv_path));
 		//ret.push_back(childNode(node_id)->hasChildren());
 	}
 	//shvWarning() << "lsAttributes path:" << shv_path << node_id << "ret:" << cp::RpcValue(ret).toCpon();
@@ -205,9 +205,9 @@ chainpack::RpcValue ShvNode::ls(const chainpack::RpcValue &methods_params, const
 	cp::RpcValue::List ret;
 	for(const std::string &child_name : childNames(shv_path)) {
 		if(child_name_pattern.empty() || child_name_pattern == child_name) {
-			//std::string path = shv_path.empty()? child_name: shv_path + '/' + child_name;
+			std::string path = shv_path.empty()? child_name: shv_path + '/' + child_name;
 			try {
-				cp::RpcValue::List attrs_result = lsAttributes(child_name, attrs, shv_path).toList();
+				cp::RpcValue::List attrs_result = lsAttributes(attrs, path).toList();
 				if(attrs_result.empty()) {
 					ret.push_back(child_name);
 				}
