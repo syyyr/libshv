@@ -30,7 +30,7 @@ public:
 	size_t end() const {return m_start + m_length;}
 	void setStart(size_t ix) {m_start = ix;}
 	size_t length() const {return m_length;}
-	size_t space() const;
+	//size_t space() const;
 	bool empty() const {return length() == 0;}
 	bool valid() const;
 	void normalize();
@@ -39,7 +39,7 @@ public:
 
 	bool startsWith(const StringView &str) const;
 
-	StringView mid(size_t start)const {return mid(start, length() - start);}
+	StringView mid(size_t start)const {return mid(start, (length() > start)? length() - start: 0);}
 	StringView mid(size_t start, size_t len) const;
 
 	StringView getToken(char delim = ' ');

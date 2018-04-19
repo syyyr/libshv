@@ -67,14 +67,14 @@ char StringView::at2(int ix) const
 		return 0;
 	return str()[m_start + ix];
 }
-
+/*
 size_t StringView::space() const
 {
 	if(m_start + m_length >= m_str->length())
 		return 0;
 	return m_str->length() - (m_start + m_length);
 }
-
+*/
 bool StringView::valid() const
 {
 	if(m_length == 0)
@@ -145,7 +145,7 @@ std::vector<StringView> StringView::split(char delim, StringView::SplitBehavior 
 		StringView token = strv.getToken(delim);
 		if(split_behavior == KeepEmptyParts || token.length())
 			ret.push_back(token);
-		if(token.space() == 0)
+		if(token.end() >= strv.end())
 			break;
 		strv = strv.mid(token.length() + 1);
 	}

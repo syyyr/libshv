@@ -42,6 +42,9 @@ public:
 	static const char* NTF_CONNECTED;
 	static const char* NTF_DISCONNECTED;
 
+	static const char* DIR_BROKER;
+	static const char* DIR_BROKER_APP;
+
 	static const char* JSONRPC_ID;
 	static const char* JSONRPC_METHOD;
 	static const char* JSONRPC_PARAMS;

@@ -35,6 +35,9 @@ const char* Rpc::NTF_VAL_CHANGED = "chng";
 const char* Rpc::NTF_CONNECTED = "connected";
 const char* Rpc::NTF_DISCONNECTED = "disconnected";
 
+const char* Rpc::DIR_BROKER = ".broker";
+const char* Rpc::DIR_BROKER_APP = ".broker/app";
+
 const char* Rpc::JSONRPC_ID = "id";
 const char* Rpc::JSONRPC_METHOD = "method";
 const char* Rpc::JSONRPC_PARAMS = "params";
