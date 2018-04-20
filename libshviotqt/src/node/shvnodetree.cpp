@@ -1,6 +1,7 @@
 #include "shvnodetree.h"
 
 #include <shv/chainpack/rpcvalue.h>
+#include <shv/core/exception.h>
 #include <shv/core/stringview.h>
 #include <shv/coreqt/log.h>
 
@@ -61,7 +62,7 @@ ShvNode *ShvNodeTree::mdcd(const ShvNode::StringViewList &path, bool create_dirs
 	size_t ix;
 	for (ix = 0; ix < path.size(); ++ix) {
 		const shv::core::StringView &s = path[ix];
-		ShvNode *nd2 = ret->childNode(s.toString());
+		ShvNode *nd2 = ret->childNode(s.toString(), !shv::core::Exception::Throw);
 		if(nd2 == nullptr) {
 			if(create_dirs) {
 				ret = new ShvNode(ret);
@@ -98,7 +99,7 @@ bool ShvNodeTree::mount(const ShvNode::String &path, ShvNode *node)
 	else {
 		parent_nd = mkdir(lst);
 	}
-	ShvNode *ch = parent_nd->childNode(last_id.toString());
+	ShvNode *ch = parent_nd->childNode(last_id.toString(), !shv::core::Exception::Throw);
 	if(ch) {
 		shvError() << "Node exist allready:" << path;
 		return false;

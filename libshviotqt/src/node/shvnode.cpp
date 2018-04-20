@@ -25,9 +25,11 @@ ShvNode *ShvNode::parentNode() const
 	return qobject_cast<ShvNode*>(parent());
 }
 
-ShvNode *ShvNode::childNode(const ShvNode::String &name) const
+ShvNode *ShvNode::childNode(const ShvNode::String &name, bool throw_exc) const
 {
 	ShvNode *nd = findChild<ShvNode*>(QString::fromStdString(name), Qt::FindDirectChildrenOnly);
+	if(throw_exc && !nd)
+		SHV_EXCEPTION("Child node id: " + name + " doesn't exist, parent node: " + shvPath());
 	return nd;
 }
 
@@ -138,11 +140,12 @@ bool ShvNode::hasChildren(const std::string &shv_path)
 	return !childNames(shv_path).empty();
 }
 
-chainpack::RpcValue ShvNode::lsAttributes(unsigned attributes, const std::string &shv_path)
+chainpack::RpcValue ShvNode::lsAttributes(const std::string &node_id, unsigned attributes, const std::string &shv_path)
 {
-	shvLogFuncFrame() << "attributes:" << attributes << "path:" << shv_path;
+	shvLogFuncFrame() << "node_id:" << node_id << "attributes:" << attributes << "path:" << shv_path;
 	cp::RpcValue::List ret;
 	if(attributes & (int)cp::LsAttribute::HasChildren) {
+		//childNode(node_id)->hasChildren();
 		ret.push_back(hasChildren(shv_path));
 	}
 	return ret;
@@ -168,9 +171,9 @@ chainpack::RpcValue ShvNode::ls(const chainpack::RpcValue &methods_params, const
 	cp::RpcValue::List ret;
 	for(const std::string &child_name : childNames(shv_path)) {
 		if(child_name_pattern.empty() || child_name_pattern == child_name) {
-			std::string path = shv_path.empty()? child_name: shv_path + '/' + child_name;
+			//std::string path = shv_path.empty()? child_name: shv_path + '/' + child_name;
 			try {
-				cp::RpcValue::List attrs_result = lsAttributes(attrs, path).toList();
+				cp::RpcValue::List attrs_result = lsAttributes(child_name, attrs, shv_path).toList();
 				if(attrs_result.empty()) {
 					ret.push_back(child_name);
 				}
