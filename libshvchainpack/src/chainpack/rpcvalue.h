@@ -422,7 +422,9 @@ public:
 	{
 		if(m_val.isList())
 			return m_val.toList().value(ix);
-		return m_val;
+		else if(ix == 0)
+			return m_val;
+		return RpcValue();
 	}
 	bool size() const
 	{

@@ -35,9 +35,9 @@ ShvNode::StringList LocalFSNode::childNames2(const std::string &shv_path)
 {
 	QString qpath = QString::fromStdString(shv_path);
 	QFileInfo fi_path(m_rootDir.absolutePath() + '/' + qpath);
-	//shvInfo() << __FUNCTION__ << fi_path.absoluteFilePath() << "is dir:" << fi_path.isFile();
+	//shvInfo() << __FUNCTION__ << fi_path.absoluteFilePath() << "is dir:" << fi_path.isDir();
 	if(fi_path.isDir()) {
-		QDir d2(fi_path.dir());
+		QDir d2(fi_path.absoluteFilePath());
 		if(!d2.exists())
 			SHV_EXCEPTION("Path " + d2.absolutePath().toStdString() + " do not exists.");
 		ShvNode::StringList lst;
