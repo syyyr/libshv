@@ -20,52 +20,7 @@ LocalFSNode::LocalFSNode(const QString &root_path, Super *parent)
 {
 }
 
-#if 0
-size_t LocalFSNode::childCount(const std::string &shv_path)
-{
-	QString qpath = QString::fromStdString(shv_path);
-	if(m_dirCache.contains(qpath)) {
-		return m_dirCache.value(qpath).size();
-	}
-
-	while(m_dirCache.size() > 1000)
-		m_dirCache.erase(m_dirCache.begin());
-
-	QDir d2(m_rootDir.absolutePath() + '/' + qpath);
-	if(!d2.exists())
-		SHV_EXCEPTION("Path " + d2.absolutePath().toStdString() + " do not exists.");
-	QStringList lst;
-	for(const QFileInfo &fi : d2.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot)) {
-		lst << fi.fileName();
-	}
-	m_dirCache[qpath] = lst;
-	return lst.size();
-}
-
-std::string LocalFSNode::childName(size_t ix, const std::string &shv_path)
-{
-	size_t cnt = childCount(shv_path);
-	if(cnt <= ix)
-		SHV_EXCEPTION("Invalid child index: " + std::to_string(ix) + " of: " + std::to_string(cnt));
-	QString qpath = QString::fromStdString(shv_path);
-	return m_dirCache.value(qpath).value(ix).toStdString();
-}
-
-chainpack::RpcValue LocalFSNode::call(const chainpack::RpcValue &method_params, const std::string &shv_path)
-{
-	cp::RpcValueGenList mpl(method_params);
-	shv::chainpack::RpcValue::String method = mpl.value(0).toString();
-	if(method == M_SIZE) {
-		return ndSize(shv_path);
-	}
-	else if(method == M_READ) {
-		return ndRead(shv_path);
-	}
-	return Super::call(method_params, shv_path);
-}
-#endif
-
-chainpack::RpcValue LocalFSNode::call(const std::string &method, const chainpack::RpcValue &params, const std::string &shv_path)
+chainpack::RpcValue LocalFSNode::call2(const std::string &method, const chainpack::RpcValue &params, const std::string &shv_path)
 {
 	if(method == M_SIZE) {
 		return ndSize(shv_path);
@@ -73,10 +28,10 @@ chainpack::RpcValue LocalFSNode::call(const std::string &method, const chainpack
 	else if(method == M_READ) {
 		return ndRead(shv_path);
 	}
-	return Super::call(method, params, shv_path);
+	return Super::call2(method, params, shv_path);
 }
 
-ShvNode::StringList LocalFSNode::childNames(const std::string &shv_path)
+ShvNode::StringList LocalFSNode::childNames2(const std::string &shv_path)
 {
 	QString qpath = QString::fromStdString(shv_path);
 	QFileInfo fi_path(m_rootDir.absolutePath() + '/' + qpath);
@@ -94,12 +49,14 @@ ShvNode::StringList LocalFSNode::childNames(const std::string &shv_path)
 	return ShvNode::StringList();
 }
 
-bool LocalFSNode::hasChildren(const std::string &shv_path)
+bool LocalFSNode::hasChildren2(const std::string &shv_path)
 {
 	QString qpath = QString::fromStdString(shv_path);
-	QFileInfo fi_path(m_rootDir.absolutePath() + '/' + qpath);
-	//shvInfo() << __FUNCTION__ << shv_path << "ret:" << fi_path.isDir();
-	return fi_path.isDir();
+	QFileInfo fi(m_rootDir.absolutePath() + '/' + qpath);
+	if(!fi.exists())
+		shvError() << "Invalid path:" << fi.absoluteFilePath();
+	shvDebug() << __FUNCTION__ << "shv path:" << shv_path << "file info:" << fi.absoluteFilePath() << "is dir:" << fi.isDir();
+	return fi.isDir();
 }
 
 static std::vector<cp::MetaMethod> meta_methods {
@@ -109,13 +66,13 @@ static std::vector<cp::MetaMethod> meta_methods {
 	{M_READ, cp::MetaMethod::Signature::RetVoid, false},
 };
 
-size_t LocalFSNode::methodCount(const std::string &shv_path)
+size_t LocalFSNode::methodCount2(const std::string &shv_path)
 {
 	QFileInfo fi = ndFileInfo(shv_path);
 	return fi.isFile()? 4: 2;
 }
 
-const chainpack::MetaMethod *LocalFSNode::metaMethod(size_t ix, const std::string &shv_path)
+const chainpack::MetaMethod *LocalFSNode::metaMethod2(size_t ix, const std::string &shv_path)
 {
 	Q_UNUSED(shv_path)
 	if(meta_methods.size() <= ix)

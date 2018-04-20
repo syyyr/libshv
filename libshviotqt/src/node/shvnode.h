@@ -44,19 +44,19 @@ public:
 	virtual void processRawData(const shv::chainpack::RpcValue::MetaData &meta, std::string &&data);
 	virtual chainpack::RpcValue processRpcRequest(const shv::chainpack::RpcRequest &rq);
 
-	virtual shv::chainpack::RpcValue dir(const shv::chainpack::RpcValue &methods_params, const std::string &shv_path = std::string());
-	virtual StringList methodNames(const std::string &shv_path = std::string());
+	virtual shv::chainpack::RpcValue dir(const shv::chainpack::RpcValue &methods_params);
+	virtual StringList methodNames();
 
-	virtual shv::chainpack::RpcValue ls(const shv::chainpack::RpcValue &methods_params, const std::string &shv_path = std::string());
-	virtual bool hasChildren(const std::string &shv_path = std::string());
-	virtual shv::chainpack::RpcValue lsAttributes(const std::string &node_id, unsigned attributes, const std::string &shv_path = std::string());
+	virtual shv::chainpack::RpcValue ls(const shv::chainpack::RpcValue &methods_params);
+	virtual bool hasChildren();
+	virtual shv::chainpack::RpcValue lsAttributes(unsigned attributes);
 public:
-	virtual size_t methodCount(const std::string &shv_path = std::string());
-	virtual const shv::chainpack::MetaMethod* metaMethod(size_t ix, const std::string &shv_path = std::string());
+	virtual size_t methodCount();
+	virtual const shv::chainpack::MetaMethod* metaMethod(size_t ix);
 
-	virtual StringList childNames(const std::string &shv_path = std::string());
+	virtual StringList childNames();
 
-	virtual shv::chainpack::RpcValue call(const std::string &method, const shv::chainpack::RpcValue &params, const std::string &shv_path = std::string());
+	virtual shv::chainpack::RpcValue call(const std::string &method, const shv::chainpack::RpcValue &params);
 private:
 	String m_nodeId;
 };
@@ -73,18 +73,5 @@ public:
 	Q_SIGNAL void sendRpcMesage(const shv::chainpack::RpcMessage &msg);
 	void emitSendRpcMesage(const shv::chainpack::RpcMessage &msg) {emit sendRpcMesage(msg);}
 };
-/*
-class SHVIOTQT_DECL_EXPORT ShvTreeNode : public ShvNode
-{
-	Q_OBJECT
-	using Super = ShvNode;
-public:
-	explicit ShvRootNode(QObject *parent) : Super() {setParent(parent);}
 
-	bool isRootNode() const override {return true;}
-
-	Q_SIGNAL void sendRpcMesage(const shv::chainpack::RpcMessage &msg);
-	void emitSendRpcMesage(const shv::chainpack::RpcMessage &msg) {emit sendRpcMesage(msg);}
-};
-*/
 }}}

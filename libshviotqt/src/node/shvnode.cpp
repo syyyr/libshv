@@ -116,64 +116,60 @@ void ShvNode::processRawData(const chainpack::RpcValue::MetaData &meta, std::str
 
 shv::chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 {
-	shv::chainpack::RpcValue ret = call(rq.method().toString(), rq.params(), rq.shvPath().toString());
+	shv::chainpack::RpcValue ret = call(rq.method().toString(), rq.params());
 	if(rq.requestId().toUInt() == 0)
 		return cp::RpcValue(); // RPC calls with requestID == 0 does not expect response
 	return ret;
 }
 
-ShvNode::StringList ShvNode::childNames(const std::string &shv_path)
+ShvNode::StringList ShvNode::childNames()
 {
-	if(shv_path.empty()) {
-		ShvNode::StringList ret;
-		QList<ShvNode*> lst = findChildren<ShvNode*>(QString(), Qt::FindDirectChildrenOnly);
-		for (ShvNode *nd : lst) {
-			ret.push_back(nd->nodeId());
-		}
-		return ret;
-	}
-	return childNode(shv_path)->childNames();
-}
-
-bool ShvNode::hasChildren(const std::string &shv_path)
-{
-	return !childNames(shv_path).empty();
-}
-
-chainpack::RpcValue ShvNode::lsAttributes(const std::string &node_id, unsigned attributes, const std::string &shv_path)
-{
-	shvLogFuncFrame() << "node_id:" << node_id << "attributes:" << attributes << "path:" << shv_path;
-	cp::RpcValue::List ret;
-	if(attributes & (int)cp::LsAttribute::HasChildren) {
-		//childNode(node_id)->hasChildren();
-		ret.push_back(hasChildren(shv_path));
+	ShvNode::StringList ret;
+	QList<ShvNode*> lst = findChildren<ShvNode*>(QString(), Qt::FindDirectChildrenOnly);
+	for (ShvNode *nd : lst) {
+		ret.push_back(nd->nodeId());
 	}
 	return ret;
 }
 
-chainpack::RpcValue ShvNode::call(const std::string &method, const chainpack::RpcValue &params, const std::string &shv_path)
+bool ShvNode::hasChildren()
 {
-	shvLogFuncFrame() << "method:" << method << "params:" << params.toCpon() << "path:" << shv_path;
+	return !childNames().empty();
+}
+
+chainpack::RpcValue ShvNode::lsAttributes(unsigned attributes)
+{
+	shvLogFuncFrame() << "attributes:" << attributes << "shv path:" << shvPath();
+	cp::RpcValue::List ret;
+	if(attributes & (int)cp::LsAttribute::HasChildren) {
+		ret.push_back(hasChildren());
+	}
+	return ret;
+}
+
+chainpack::RpcValue ShvNode::call(const std::string &method, const chainpack::RpcValue &params)
+{
+	shvLogFuncFrame() << "method:" << method << "params:" << params.toCpon() << "shv path:" << shvPath();
 	if(method == cp::Rpc::METH_LS) {
-		return ls(params, shv_path);
+		return ls(params);
 	}
 	if(method == cp::Rpc::METH_DIR) {
-		return dir(params, shv_path);
+		return dir(params);
 	}
 	SHV_EXCEPTION("Invalid method: " + method + " called for node: " + shvPath());
 }
 
-chainpack::RpcValue ShvNode::ls(const chainpack::RpcValue &methods_params, const std::string &shv_path)
+chainpack::RpcValue ShvNode::ls(const chainpack::RpcValue &methods_params)
 {
 	chainpack::RpcValueGenList mpl(methods_params);
 	const std::string child_name_pattern = mpl.value(0).toString();
 	unsigned attrs = mpl.value(1).toUInt();
 	cp::RpcValue::List ret;
-	for(const std::string &child_name : childNames(shv_path)) {
+	for(const std::string &child_name : childNames()) {
 		if(child_name_pattern.empty() || child_name_pattern == child_name) {
 			//std::string path = shv_path.empty()? child_name: shv_path + '/' + child_name;
 			try {
-				cp::RpcValue::List attrs_result = lsAttributes(child_name, attrs, shv_path).toList();
+				cp::RpcValue::List attrs_result = childNode(child_name)->lsAttributes(attrs).toList();
 				if(attrs_result.empty()) {
 					ret.push_back(child_name);
 				}
@@ -195,39 +191,35 @@ static std::vector<cp::MetaMethod> meta_methods {
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, false},
 };
 
-size_t ShvNode::methodCount(const std::string &shv_path)
+size_t ShvNode::methodCount()
 {
-	if(!shv_path.empty())
-		return childNode(shv_path)->methodCount();
 	return meta_methods.size();
 }
 
-const chainpack::MetaMethod *ShvNode::metaMethod(size_t ix, const std::string &shv_path)
+const chainpack::MetaMethod *ShvNode::metaMethod(size_t ix)
 {
-	if(!shv_path.empty())
-		return childNode(shv_path)->metaMethod(ix);
 	return &(meta_methods.at(ix));
 }
 
-ShvNode::StringList ShvNode::methodNames(const std::string &shv_path)
+ShvNode::StringList ShvNode::methodNames()
 {
 	ShvNode::StringList ret;
-	size_t cnt = methodCount(shv_path);
+	size_t cnt = methodCount();
 	for (size_t ix = 0; ix < cnt; ++ix) {
-		ret.push_back(metaMethod(ix, shv_path)->name());
+		ret.push_back(metaMethod(ix)->name());
 	}
 	return ret;
 }
 
-chainpack::RpcValue ShvNode::dir(const chainpack::RpcValue &methods_params, const std::string &shv_path)
+chainpack::RpcValue ShvNode::dir(const chainpack::RpcValue &methods_params)
 {
 	cp::RpcValue::List ret;
 	chainpack::RpcValueGenList params(methods_params);
 	const std::string method = params.value(0).toString();
 	unsigned attrs = params.value(1).toUInt();
-	size_t cnt = methodCount(shv_path);
+	size_t cnt = methodCount();
 	for (size_t ix = 0; ix < cnt; ++ix) {
-		const chainpack::MetaMethod *mm = metaMethod(ix, shv_path);
+		const chainpack::MetaMethod *mm = metaMethod(ix);
 		if(method.empty()) {
 			ret.push_back(mm->attributes(attrs));
 		}
