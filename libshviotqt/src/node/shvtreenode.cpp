@@ -76,7 +76,7 @@ chainpack::RpcValue ShvTreeNode::ls2(const chainpack::RpcValue &methods_params, 
 	return ret;
 }
 
-bool ShvTreeNode::hasChildren2(const std::string &shv_path)
+chainpack::RpcValue ShvTreeNode::hasChildren2(const std::string &shv_path)
 {
 	return !childNames2(shv_path).empty();
 }
