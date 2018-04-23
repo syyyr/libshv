@@ -239,7 +239,8 @@ CponWriter &CponWriter::write(int32_t value)
 CponWriter &CponWriter::write(uint32_t value)
 {
 	m_out << Utils::toString(value);
-	m_out << Cpon::C_UNSIGNED_END;
+	if(!m_opts.isJsonFormat())
+		m_out << Cpon::C_UNSIGNED_END;
 	return *this;
 }
 
@@ -252,7 +253,8 @@ CponWriter &CponWriter::write(int64_t value)
 CponWriter &CponWriter::write(uint64_t value)
 {
 	m_out << Utils::toString(value);
-	m_out << Cpon::C_UNSIGNED_END;
+	if(!m_opts.isJsonFormat())
+		m_out << Cpon::C_UNSIGNED_END;
 	return *this;
 }
 

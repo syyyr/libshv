@@ -10,6 +10,7 @@ class SHVCHAINPACK_DECL_EXPORT CponWriterOptions
 	bool m_translateIds = false;
 	bool m_hexBlob = false;
 	std::string m_indent;
+	bool m_jsonFormat = false;
 public:
 	//CponWriterOptions() {}
 
@@ -21,6 +22,9 @@ public:
 
 	const std::string& indent() const {return m_indent;}
 	CponWriterOptions& setIndent(const std::string& i) {m_indent = i; return *this;}
+
+	bool isJsonFormat() const {return m_jsonFormat;}
+	CponWriterOptions& setJsonFormat(bool b) {m_jsonFormat = b; return *this;}
 };
 
 class SHVCHAINPACK_DECL_EXPORT CponWriter : public AbstractStreamWriter
