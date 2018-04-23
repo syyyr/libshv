@@ -48,7 +48,7 @@ public:
 	virtual StringList methodNames();
 
 	virtual shv::chainpack::RpcValue ls(const shv::chainpack::RpcValue &methods_params);
-	virtual bool hasChildren();
+	virtual shv::chainpack::RpcValue hasChildren();
 	virtual shv::chainpack::RpcValue lsAttributes(unsigned attributes);
 public:
 	virtual size_t methodCount();

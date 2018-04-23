@@ -107,20 +107,8 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 	setPassword(cli_opts->password().toStdString());
 
 	{
-		/*
-		std::string ss = cli_opts->sessionToken().toStdString();
-		if(!ss.empty()) {
-			ss = cp::Utils::fromHex(ss);
-			std::string errmsg;
-			cp::RpcValue rv = cp::RpcValue::fromCpon(ss, &errmsg);
-			if(errmsg.empty())
-				dev["sessionToken"] = rv;
-			else
-				shvError() << "Invalid session token:" << errmsg;
-		}
-		*/
 		cp::RpcValue::Map opts;
-		opts[cp::Rpc::OPT_IDLE_WD_TIMEOUT] = 5 * cli_opts->heartbeatInterval();
+		opts[cp::Rpc::OPT_IDLE_WD_TIMEOUT] = 3 * cli_opts->heartbeatInterval();
 		setConnectionOptions(opts);
 	}
 	int hbi = cli_opts->heartbeatInterval();

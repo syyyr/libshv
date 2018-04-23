@@ -132,7 +132,7 @@ ShvNode::StringList ShvNode::childNames()
 	return ret;
 }
 
-bool ShvNode::hasChildren()
+chainpack::RpcValue ShvNode::hasChildren()
 {
 	return !childNames().empty();
 }
