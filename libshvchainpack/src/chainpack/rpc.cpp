@@ -43,6 +43,8 @@ const char* Rpc::JSONRPC_METHOD = "method";
 const char* Rpc::JSONRPC_PARAMS = "params";
 const char* Rpc::JSONRPC_RESULT = "result";
 const char* Rpc::JSONRPC_ERROR = "error";
+const char* Rpc::JSONRPC_ERROR_CODE = "code";
+const char* Rpc::JSONRPC_ERROR_MESSAGE = "message";
 const char* Rpc::JSONRPC_SHV_PATH = "shvPath";
 const char* Rpc::JSONRPC_CALLER_ID = "callerId";
 

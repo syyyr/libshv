@@ -52,6 +52,8 @@ public:
 	static const char* JSONRPC_PARAMS;
 	static const char* JSONRPC_RESULT;
 	static const char* JSONRPC_ERROR;
+	static const char* JSONRPC_ERROR_CODE;
+	static const char* JSONRPC_ERROR_MESSAGE;
 	static const char* JSONRPC_SHV_PATH;
 	static const char* JSONRPC_CALLER_ID;
 

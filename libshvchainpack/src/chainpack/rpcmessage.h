@@ -171,6 +171,13 @@ public:
 		//Error& setData(const Value &data);
 		//Value data() const;
 		RpcValue::String toString() const {return "RPC ERROR " + Utils::toString(code()) + ": " + message();}
+		RpcValue::Map toJson() const
+		{
+			return RpcValue::Map{
+				{Rpc::JSONRPC_ERROR_CODE, (int)code()},
+				{Rpc::JSONRPC_ERROR_MESSAGE, message()},
+			};
+		}
 	public:
 		static Error create(ErrorType c, RpcValue::String msg) {
 			Error ret;

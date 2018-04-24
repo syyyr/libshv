@@ -381,7 +381,7 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolType protocol_type, const RpcVa
 			// response
 			RpcResponse resp(rpc_msg);
 			if(resp.isError())
-				json_msg[Rpc::JSONRPC_ERROR] = resp.error();
+				json_msg[Rpc::JSONRPC_ERROR] = resp.error().toJson();
 			else
 				json_msg[Rpc::JSONRPC_RESULT] = resp.result();
 		}
