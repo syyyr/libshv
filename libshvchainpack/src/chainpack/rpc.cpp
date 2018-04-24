@@ -57,5 +57,18 @@ const char *Rpc::ProtocolTypeToString(Rpc::ProtocolType pv)
 	return "???";
 }
 
+std::string Rpc::joinShvPath(const std::string &p1, const std::string &p2)
+{
+	if(p2.empty())
+		return p1;
+	if(p1.empty())
+		return p2;
+	std::string ret = p1;
+	if(p1[p1.length()  -1] != '/' && p2[0] != '/')
+		ret += '/';
+	ret += p2;
+	return ret;
+}
+
 } // namespace chainpack
 } // namespace shv

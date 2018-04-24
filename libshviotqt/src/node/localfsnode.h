@@ -20,7 +20,7 @@ public:
 	chainpack::RpcValue call2(const std::string &method, const chainpack::RpcValue &params, const std::string &shv_path) override;
 
 	StringList childNames2(const std::string &shv_path = std::string()) override;
-	bool hasChildren2(const std::string &shv_path) override;
+	chainpack::RpcValue hasChildren2(const std::string &shv_path) override;
 	//chainpack::RpcValue lsAttributes(const std::string &node_id, unsigned attributes, const std::string &shv_path) override;
 
 	size_t methodCount2(const std::string &shv_path = std::string()) override;

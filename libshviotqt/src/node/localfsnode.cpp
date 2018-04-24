@@ -49,7 +49,7 @@ ShvNode::StringList LocalFSNode::childNames2(const std::string &shv_path)
 	return ShvNode::StringList();
 }
 
-bool LocalFSNode::hasChildren2(const std::string &shv_path)
+chainpack::RpcValue LocalFSNode::hasChildren2(const std::string &shv_path)
 {
 	QString qpath = QString::fromStdString(shv_path);
 	QFileInfo fi(m_rootDir.absolutePath() + '/' + qpath);

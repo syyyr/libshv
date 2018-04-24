@@ -2,6 +2,8 @@
 
 #include "../shvchainpackglobal.h"
 
+#include <string>
+
 namespace shv {
 namespace chainpack {
 
@@ -52,6 +54,8 @@ public:
 	static const char* JSONRPC_ERROR;
 	static const char* JSONRPC_SHV_PATH;
 	static const char* JSONRPC_CALLER_ID;
+
+	static std::string joinShvPath(const std::string &p1, const std::string &p2);
 };
 
 } // namespace chainpack
