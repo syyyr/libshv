@@ -14,6 +14,7 @@ class SHVCORE_DECL_EXPORT StringView
 public:
 	enum SplitBehavior {KeepEmptyParts, SkipEmptyParts};
 public:
+	StringView();
 	StringView(const StringView &strv);
 	StringView(const std::string &str, size_t start = 0);
 	StringView(const std::string &str, size_t start, size_t len);
@@ -44,6 +45,7 @@ public:
 
 	StringView getToken(char delim = ' ');
 	std::vector<StringView> split(char delim, SplitBehavior split_behavior = SkipEmptyParts) const;
+	static std::string join(const std::vector<StringView> &lst, const std::string &delim);
 private:
 	const std::string *m_str;
 	size_t m_start;

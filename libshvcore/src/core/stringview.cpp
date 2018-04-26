@@ -3,6 +3,13 @@
 namespace shv {
 namespace core {
 
+static std::string empty_string;
+
+StringView::StringView()
+	: StringView(empty_string)
+{
+}
+
 StringView::StringView(const StringView &strv)
 	: m_str(strv.m_str)
 	, m_start(strv.start())
@@ -148,6 +155,17 @@ std::vector<StringView> StringView::split(char delim, StringView::SplitBehavior 
 		if(token.end() >= strv.end())
 			break;
 		strv = strv.mid(token.length() + 1);
+	}
+	return ret;
+}
+
+std::string StringView::join(const std::vector<StringView> &lst, const std::string &delim)
+{
+	std::string ret;
+	for (size_t i = 0; i < lst.size(); ++i) {
+		if(i > 0)
+			ret += delim;
+		ret += lst[i].toString();
 	}
 	return ret;
 }

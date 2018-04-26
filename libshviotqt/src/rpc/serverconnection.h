@@ -29,8 +29,8 @@ class SHVIOTQT_DECL_EXPORT ServerConnection : public SocketRpcDriver, public shv
 
 	//SHV_FIELD_BOOL_IMPL(e, E, choEnabled)
 
-	public:
-		explicit ServerConnection(QTcpSocket* socket, QObject *parent = 0);
+public:
+	explicit ServerConnection(QTcpSocket* socket, QObject *parent = 0);
 	~ServerConnection() Q_DECL_OVERRIDE;
 
 	const std::string& connectionName() {return m_connectionName;}
