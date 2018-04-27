@@ -39,6 +39,9 @@ public:
 	void close() Q_DECL_OVERRIDE {closeConnection();}
 	void abort() Q_DECL_OVERRIDE {abortConnection();}
 
+	const std::string& connectionType() const {return m_connectionType;}
+	const shv::chainpack::RpcValue::Map& connectionOptions() const {return m_connectionOptions.toMap();}
+
 	bool isBrokerConnected() const {return isSocketConnected() && !isInitPhase();}
 
 	Q_SIGNAL void rpcMessageReceived(const shv::chainpack::RpcMessage &msg);
@@ -54,16 +57,19 @@ protected:
 	bool isInitPhase() const {return !m_loginReceived;}
 	//bool isInitPhase() const {return !m_loginReceived && (m_sessionClientId == 0 || m_sessionValidated);}
 	virtual void processInitPhase(const chainpack::RpcMessage &msg);
-	virtual shv::chainpack::RpcValue login(const shv::chainpack::RpcValue &auth_params) = 0;
-	//virtual shv::chainpack::RpcValue createLoginResult() = 0;
+	virtual shv::chainpack::RpcValue login(const shv::chainpack::RpcValue &auth_params);
+	virtual bool checkPassword(const shv::chainpack::RpcValue::Map &login);
+	enum class PasswordHashType {Invalid, Plain, Sha1, RsaOaep};
+	virtual std::string passwordHash(PasswordHashType type, const std::string &user) = 0;
 protected:
 	std::string m_connectionName;
 	std::string m_user;
 	std::string m_pendingAuthNonce;
 	bool m_helloReceived = false;
 	bool m_loginReceived = false;
-	//int m_sessionClientId = 0;
-	//bool m_sessionValidated = false;
+
+	std::string m_connectionType;
+	shv::chainpack::RpcValue m_connectionOptions;
 };
 
 }}}

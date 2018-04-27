@@ -138,6 +138,59 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 	QTimer::singleShot(100, this, &ServerConnection::abort); // need some time to send error to client
 }
 
+chainpack::RpcValue ServerConnection::login(const chainpack::RpcValue &auth_params)
+{
+	const cp::RpcValue::Map params = auth_params.toMap();
+	const cp::RpcValue::Map login = params.value("login").toMap();
+
+	m_user = login.value("user").toString();
+	if(m_user.empty())
+		return false;
+
+	shvInfo() << "login - user:" << m_user;// << "password:" << password_hash;
+	bool password_ok = checkPassword(login);
+	if(password_ok) {
+		cp::RpcValue::Map login_resp;
+		login_resp[cp::Rpc::KEY_CLIENT_ID] = connectionId();
+		return login_resp;
+	}
+	return cp::RpcValue();
+}
+
+bool ServerConnection::checkPassword(const chainpack::RpcValue::Map &login)
+{
+	bool password_ok = false;
+	std::string login_type = login.value("type").toString();
+	if(login_type == "RSA-OAEP") {
+		shvError() << "RSA-OAEP" << "login type not supported yet";
+		//std::string password_hash = passwordHash(PasswordHashType::RsaOaep, m_user);
+	}
+	else if(login_type == "PLAIN") {
+		std::string password_hash = passwordHash(PasswordHashType::Plain, m_user);
+		password_ok = password_hash.empty();
+		if(!password_ok) {
+			std::string pwd = login.value("password").toString();
+			password_ok = (pwd == password_hash);
+		}
+	}
+	else {
+		/// login_type == "SHA1" is default
+		std::string password_hash = passwordHash(PasswordHashType::Sha1, m_user);
+		password_ok = password_hash.empty();
+		if(!password_ok) {
+			std::string nonce_sha1 = login.value("password").toString();
+			std::string nonce = m_pendingAuthNonce + password_hash;
+			//shvWarning() << m_pendingAuthNonce << "prd" << nonce;
+			QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
+			hash.addData(nonce.data(), nonce.length());
+			std::string sha1 = std::string(hash.result().toHex().constData());
+			//shvInfo() << nonce_sha1 << "vs" << sha1;
+			password_ok = (nonce_sha1 == sha1);
+		}
+	}
+	return password_ok;
+}
+
 }}}
 
 
