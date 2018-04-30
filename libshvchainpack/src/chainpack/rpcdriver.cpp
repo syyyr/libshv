@@ -14,6 +14,8 @@
 
 #define logRpcMsg() nCDebug("RpcMsg")
 #define logRpcData() nCDebug("RpcData")
+//#define logRpcData() nInfo()
+
 //#define logRpcSyncCalls() nCDebug("RpcSyncCalls")
 
 namespace shv {
@@ -240,13 +242,18 @@ int RpcDriver::processReadData(const std::string &read_data)
 	if(m_protocolType == Rpc::ProtocolType::Invalid && protocol_type != Rpc::ProtocolType::Invalid) {
 		// if protocol version is not explicitly specified,
 		// it is set from first received message
-
 		m_protocolType = protocol_type;
 	}
 
-	RpcValue::MetaData meta_data;
-	size_t meta_data_end_pos = decodeMetaData(meta_data, protocol_type, read_data, in.tellg());
-	onRpcDataReceived(protocol_type, std::move(meta_data), read_data, meta_data_end_pos, read_len - meta_data_end_pos);
+	try {
+		RpcValue::MetaData meta_data;
+		size_t meta_data_end_pos = decodeMetaData(meta_data, protocol_type, read_data, in.tellg());
+		onRpcDataReceived(protocol_type, std::move(meta_data), read_data, meta_data_end_pos, read_len - meta_data_end_pos);
+	}
+	catch (std::exception &e) {
+		nError() << "processReadData error:" << e.what();
+		onProcessReadDataError();
+	}
 
 	return read_len;
 }
@@ -256,53 +263,51 @@ size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolTyp
 	size_t meta_data_end_pos = start_pos;
 	std::istringstream in(data);
 	in.seekg(start_pos);
-	try {
-		switch (protocol_type) {
-		case Rpc::ProtocolType::JsonRpc: {
-			CponReader rd(in);
-			RpcValue msg;
-			rd.read(msg);
-			if(!msg.isMap()) {
-				nError() << "JSON message cannot be translated to ChainPack";
-			}
-			else {
-				const RpcValue::Map &map = msg.toMap();
-				unsigned id = map.value(Rpc::JSONRPC_ID).toUInt();
-				unsigned caller_id = map.value(Rpc::JSONRPC_CALLER_ID).toUInt();
-				RpcValue::String method = map.value(Rpc::JSONRPC_METHOD).toString();
-				std::string shv_path = map.value(Rpc::JSONRPC_SHV_PATH).toString();
-				if(id > 0)
-					RpcMessage::setRequestId(meta_data, id);
-				if(!method.empty())
-					RpcMessage::setMethod(meta_data, method);
-				if(!shv_path.empty())
-					RpcMessage::setShvPath(meta_data, shv_path);
-				if(caller_id > 0)
-					RpcMessage::setCallerIds(meta_data, caller_id);
-			}
-			break;
+
+	switch (protocol_type) {
+	case Rpc::ProtocolType::JsonRpc: {
+		CponReader rd(in);
+		RpcValue msg;
+		rd.read(msg);
+		if(!msg.isMap()) {
+			nError() << "JSON message cannot be translated to ChainPack";
 		}
-		case Rpc::ProtocolType::Cpon: {
-			CponReader rd(in);
-			rd.read(meta_data);
-			meta_data_end_pos = (in.tellg() < 0)? data.size(): (size_t)in.tellg();
-			break;
+		else {
+			const RpcValue::Map &map = msg.toMap();
+			unsigned id = map.value(Rpc::JSONRPC_ID).toUInt();
+			unsigned caller_id = map.value(Rpc::JSONRPC_CALLER_ID).toUInt();
+			RpcValue::String method = map.value(Rpc::JSONRPC_METHOD).toString();
+			std::string shv_path = map.value(Rpc::JSONRPC_SHV_PATH).toString();
+			if(id > 0)
+				RpcMessage::setRequestId(meta_data, id);
+			if(!method.empty())
+				RpcMessage::setMethod(meta_data, method);
+			if(!shv_path.empty())
+				RpcMessage::setShvPath(meta_data, shv_path);
+			if(caller_id > 0)
+				RpcMessage::setCallerIds(meta_data, caller_id);
 		}
-		case Rpc::ProtocolType::ChainPack: {
-			ChainPackReader rd(in);
-			rd.read(meta_data);
-			meta_data_end_pos = (in.tellg() < 0)? data.size(): (size_t)in.tellg();
-			break;
-		}
-		default:
-			meta_data_end_pos = data.size();
-			nError() << "Throwing away message with unknown protocol version:" << (unsigned)protocol_type;
-			break;
-		}
+		break;
 	}
-	catch(CponReader::ParseException &e) {
-		nError() << e.what();
+	case Rpc::ProtocolType::Cpon: {
+		CponReader rd(in);
+		rd.read(meta_data);
+		meta_data_end_pos = (in.tellg() < 0)? data.size(): (size_t)in.tellg();
+		break;
 	}
+	case Rpc::ProtocolType::ChainPack: {
+		ChainPackReader rd(in);
+		rd.read(meta_data);
+		meta_data_end_pos = (in.tellg() < 0)? data.size(): (size_t)in.tellg();
+		break;
+	}
+	default:
+		SHVCHP_EXCEPTION("Unknown protocol type: " + Utils::toString((int)protocol_type));
+		//meta_data_end_pos = data.size();
+		//nError() << "Throwing away message with unknown protocol version:" << (unsigned)protocol_type;
+		break;
+	}
+
 	return meta_data_end_pos;
 }
 

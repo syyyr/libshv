@@ -64,6 +64,7 @@ protected:
 
 	virtual void onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len);
 	virtual void onRpcValueReceived(const RpcValue &msg);
+	virtual void onProcessReadDataError() = 0;
 
 	static size_t decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolType protocol_type, const std::string &data, size_t start_pos);
 	static RpcValue decodeData(Rpc::ProtocolType protocol_type, const std::string &data, size_t start_pos);

@@ -42,7 +42,7 @@ public:
 	const std::string& connectionType() const {return m_connectionType;}
 	const shv::chainpack::RpcValue::Map& connectionOptions() const {return m_connectionOptions.toMap();}
 
-	bool isBrokerConnected() const {return isSocketConnected() && !isInitPhase();}
+	bool isConnectedAndLoggedIn() const {return isSocketConnected() && !isInitPhase();}
 
 	Q_SIGNAL void rpcMessageReceived(const shv::chainpack::RpcMessage &msg);
 
