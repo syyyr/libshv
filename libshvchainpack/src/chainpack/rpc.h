@@ -15,6 +15,8 @@ public:
 
 	static const char* OPT_IDLE_WD_TIMEOUT;
 
+	static const char* KEY_CONNECTION_OPTIONS;
+	static const char* KEY_CONNECTION_TYPE;
 	static const char* KEY_CLIENT_ID;
 	static const char* KEY_MOUT_POINT;
 	static const char* KEY_DEVICE_ID;
