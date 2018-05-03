@@ -56,7 +56,7 @@ protected:
 	void onBytesWritten();
 
 	void onRpcValueReceived(const shv::chainpack::RpcValue &rpc_val) override;
-	void onProcessReadDataError() override {abortConnection();}
+	void onProcessReadDataException(std::exception &e) override {Q_UNUSED(e) abortConnection();}
 protected:
 	QTcpSocket *m_socket = nullptr;
 private:

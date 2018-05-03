@@ -100,8 +100,8 @@ void RpcDriver::sendRawData(const RpcValue::MetaData &meta_data, std::string &&d
 
 RpcMessage RpcDriver::composeRpcMessage(RpcValue::MetaData &&meta_data, const std::string &data, std::string *errmsg)
 {
-	Rpc::ProtocolType packed_data_ver = RpcMessage::protocolType(meta_data);
-	RpcValue val = decodeData(packed_data_ver, data, 0);
+	Rpc::ProtocolType protocol_type = RpcMessage::protocolType(meta_data);
+	RpcValue val = decodeData(protocol_type, data, 0);
 	if(!val.isValid()) {
 		const char * msg = "Compose RPC message error.";
 		if(!errmsg) {
@@ -252,7 +252,7 @@ int RpcDriver::processReadData(const std::string &read_data)
 	}
 	catch (std::exception &e) {
 		nError() << "processReadData error:" << e.what();
-		onProcessReadDataError();
+		onProcessReadDataException(e);
 	}
 
 	return read_len;

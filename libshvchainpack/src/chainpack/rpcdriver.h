@@ -54,7 +54,7 @@ protected:
 	/// @return number of writen bytes
 	virtual int64_t writeBytes(const char *bytes, size_t length) = 0;
 	/// call it when new data arrived
-	void onBytesRead(std::string &&bytes);
+	virtual void onBytesRead(std::string &&bytes);
 	/// flush write buffer to socket
 	/// @return true if write buffer length has changed (some data was written to the socket)
 	virtual bool flush() = 0;
@@ -64,7 +64,7 @@ protected:
 
 	virtual void onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len);
 	virtual void onRpcValueReceived(const RpcValue &msg);
-	virtual void onProcessReadDataError() = 0;
+	virtual void onProcessReadDataException(std::exception &e) = 0;
 
 	static size_t decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolType protocol_type, const std::string &data, size_t start_pos);
 	static RpcValue decodeData(Rpc::ProtocolType protocol_type, const std::string &data, size_t start_pos);
