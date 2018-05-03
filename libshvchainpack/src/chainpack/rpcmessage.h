@@ -173,9 +173,22 @@ public:
 		RpcValue::String toString() const {return "RPC ERROR " + Utils::toString(code()) + ": " + message();}
 		RpcValue::Map toJson() const
 		{
-			return RpcValue::Map{
+			return RpcValue::Map {
 				{Rpc::JSONRPC_ERROR_CODE, (int)code()},
 				{Rpc::JSONRPC_ERROR_MESSAGE, message()},
+			};
+		}
+		static Error fromJson(const RpcValue::Map &json)
+		{
+			/*
+			Error ret;
+			ret.setCode(json.value(Rpc::JSONRPC_ERROR_CODE).toInt());
+			ret.setMessage(json.value(Rpc::JSONRPC_ERROR_MESSAGE).toString());
+			return ret;
+			*/
+			return RpcValue::IMap {
+				{KeyCode, json.value(Rpc::JSONRPC_ERROR_CODE).toInt()},
+				{KeyMessage, json.value(Rpc::JSONRPC_ERROR_MESSAGE).toString()},
 			};
 		}
 	public:

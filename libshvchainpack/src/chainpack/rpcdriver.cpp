@@ -335,7 +335,7 @@ RpcValue RpcDriver::decodeData(Rpc::ProtocolType protocol_type, const std::strin
 				else {
 					RpcValue error = map.value(Rpc::JSONRPC_ERROR);
 					if(error.isValid())
-						imap[RpcMessage::MetaType::Key::Error] = error;
+						imap[RpcMessage::MetaType::Key::Error] = RpcResponse::Error::fromJson(error.toMap());
 				}
 			}
 			ret = imap;
