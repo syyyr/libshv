@@ -22,7 +22,7 @@
 
 #define smcDebug QNoDebug
 
-#define logRpcMsg() shvCDebug("RpcMsg")
+//#define logRpcMsg() shvCDebug("RpcMsg")
 #define logRpcData() shvCDebug("RpcData")
 #define logRpcSyncCalls() shvCDebug("RpcSyncCalls")
 

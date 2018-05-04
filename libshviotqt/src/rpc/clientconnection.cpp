@@ -17,7 +17,7 @@
 #include <QCryptographicHash>
 #include <QThread>
 
-#define logRpcMsg() shvCDebug("RpcMsg")
+//#define logRpcMsg() shvCDebug("RpcMsg")
 #define logRpcSyncCalls() shvCDebug("RpcSyncCalls")
 
 namespace cp = shv::chainpack;

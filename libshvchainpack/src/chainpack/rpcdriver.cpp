@@ -12,7 +12,7 @@
 #include <sstream>
 #include <iostream>
 
-#define logRpcMsg() nCDebug("RpcMsg")
+#define logRpcRawMsg() nCDebug("RpcRawMsg")
 #define logRpcData() nCDebug("RpcData")
 //#define logRpcData() nInfo()
 
@@ -38,7 +38,7 @@ void RpcDriver::sendRpcValue(const RpcValue &msg)
 {
 	using namespace std;
 	//shvLogFuncFrame() << msg.toStdString();
-	logRpcMsg() << SND_LOG_ARROW << msg.toPrettyString();
+	logRpcRawMsg() << SND_LOG_ARROW << msg.toPrettyString();
 	std::string packed_data = codeRpcValue(protocolType(), msg);
 	logRpcData() << "protocol:" << Rpc::ProtocolTypeToString(protocolType())
 				 << "packed data:"
@@ -48,13 +48,13 @@ void RpcDriver::sendRpcValue(const RpcValue &msg)
 
 void RpcDriver::sendRawData(std::string &&data)
 {
-	logRpcMsg() << "send raw data: " << (data.size() > 250? "<... long data ...>" : Utils::toHex(data));
+	logRpcRawMsg() << "send raw data: " << (data.size() > 250? "<... long data ...>" : Utils::toHex(data));
 	enqueueDataToSend(Chunk{std::move(data)});
 }
 
 void RpcDriver::sendRawData(const RpcValue::MetaData &meta_data, std::string &&data)
 {
-	logRpcMsg() << "protocol:" << Rpc::ProtocolTypeToString(protocolType()) << "send raw meta + data: " << meta_data.toStdString()
+	logRpcRawMsg() << "protocol:" << Rpc::ProtocolTypeToString(protocolType()) << "send raw meta + data: " << meta_data.toStdString()
 				<< Utils::toHex(data, 0, 250);
 	using namespace std;
 	//shvLogFuncFrame() << msg.toStdString();
@@ -274,7 +274,7 @@ size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolTyp
 		}
 		else {
 			const RpcValue::Map &map = msg.toMap();
-			unsigned id = map.value(Rpc::JSONRPC_ID).toUInt();
+			unsigned id = map.value(Rpc::JSONRPC_REQUEST_ID).toUInt();
 			unsigned caller_id = map.value(Rpc::JSONRPC_CALLER_ID).toUInt();
 			RpcValue::String method = map.value(Rpc::JSONRPC_METHOD).toString();
 			std::string shv_path = map.value(Rpc::JSONRPC_SHV_PATH).toString();
@@ -372,7 +372,7 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolType protocol_type, const RpcVa
 
 		const RpcValue rq_id = rpc_msg.requestId();
 		if(rq_id.isValid())
-			json_msg[Rpc::JSONRPC_ID] = rq_id;
+			json_msg[Rpc::JSONRPC_REQUEST_ID] = rq_id;
 
 		const RpcValue shv_path = rpc_msg.shvPath();
 		if(shv_path.isString())
@@ -425,7 +425,7 @@ void RpcDriver::onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::Met
 	RpcValue msg = decodeData(protocol_type, data, start_pos);
 	if(msg.isValid()) {
 		msg.setMetaData(std::move(md));
-		logRpcMsg() << RCV_LOG_ARROW << msg.toPrettyString();
+		logRpcRawMsg() << RCV_LOG_ARROW << msg.toPrettyString();
 		onRpcValueReceived(msg);
 	}
 	else {

@@ -40,15 +40,15 @@ const char* Rpc::NTF_DISCONNECTED = "disconnected";
 const char* Rpc::DIR_BROKER = ".broker";
 const char* Rpc::DIR_BROKER_APP = ".broker/app";
 
-const char* Rpc::JSONRPC_ID = "id";
+const char* Rpc::JSONRPC_REQUEST_ID = "id";
 const char* Rpc::JSONRPC_METHOD = "method";
 const char* Rpc::JSONRPC_PARAMS = "params";
 const char* Rpc::JSONRPC_RESULT = "result";
 const char* Rpc::JSONRPC_ERROR = "error";
 const char* Rpc::JSONRPC_ERROR_CODE = "code";
 const char* Rpc::JSONRPC_ERROR_MESSAGE = "message";
-const char* Rpc::JSONRPC_SHV_PATH = "shvPath";
-const char* Rpc::JSONRPC_CALLER_ID = "callerId";
+const char* Rpc::JSONRPC_SHV_PATH = "path";
+const char* Rpc::JSONRPC_CALLER_ID = "cid";
 
 const char *Rpc::ProtocolTypeToString(Rpc::ProtocolType pv)
 {

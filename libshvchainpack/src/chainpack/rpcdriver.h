@@ -34,6 +34,10 @@ public:
 	static void setDefaultRpcTimeout(int tm) {s_defaultRpcTimeout = tm;}
 
 	static RpcMessage composeRpcMessage(RpcValue::MetaData &&meta_data, const std::string &data, std::string *errmsg = nullptr);
+
+	static size_t decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolType protocol_type, const std::string &data, size_t start_pos);
+	static RpcValue decodeData(Rpc::ProtocolType protocol_type, const std::string &data, size_t start_pos);
+	static std::string codeRpcValue(Rpc::ProtocolType protocol_type, const RpcValue &val);
 protected:
 	struct Chunk
 	{
@@ -65,10 +69,6 @@ protected:
 	virtual void onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len);
 	virtual void onRpcValueReceived(const RpcValue &msg);
 	virtual void onProcessReadDataException(std::exception &e) = 0;
-
-	static size_t decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolType protocol_type, const std::string &data, size_t start_pos);
-	static RpcValue decodeData(Rpc::ProtocolType protocol_type, const std::string &data, size_t start_pos);
-	static std::string codeRpcValue(Rpc::ProtocolType protocol_type, const RpcValue &val);
 
 	virtual void lockSendQueue() {}
 	virtual void unlockSendQueue() {}

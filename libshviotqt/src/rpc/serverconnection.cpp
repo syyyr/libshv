@@ -12,7 +12,7 @@
 #include <QTimer>
 #include <QCryptographicHash>
 
-#define logRpcMsg() shvCDebug("RpcMsg")
+//#define logRpcMsg() shvCDebug("RpcMsg")
 
 namespace cp = shv::chainpack;
 
@@ -67,7 +67,7 @@ void ServerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType proto
 		shv::chainpack::RpcValue rpc_val = decodeData(protocol_type, data, start_pos);
 		rpc_val.setMetaData(std::move(md));
 		cp::RpcMessage msg(rpc_val);
-		logRpcMsg() << msg.toCpon();
+		//logRpcMsg() << msg.toCpon();
 		processInitPhase(msg);
 		return;
 	}
