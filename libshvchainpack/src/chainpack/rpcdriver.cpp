@@ -394,7 +394,8 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolType protocol_type, const RpcVa
 			// request
 			RpcRequest rq(rpc_msg);
 			json_msg[Rpc::JSONRPC_METHOD] = rq.method();
-			json_msg[Rpc::JSONRPC_PARAMS] = rq.params();
+			if(rq.params().isValid())
+				json_msg[Rpc::JSONRPC_PARAMS] = rq.params();
 		}
 		CponWriterOptions opts;
 		opts.setJsonFormat(true);

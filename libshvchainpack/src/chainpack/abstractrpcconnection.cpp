@@ -52,7 +52,8 @@ unsigned AbstractRpcConnection::callShvMethod(const std::string &shv_path, std::
 	RpcRequest rq;
 	rq.setRequestId(id);
 	rq.setMethod(std::move(method));
-	rq.setParams(params);
+	if(params.isValid())
+		rq.setParams(params);
 	if(!shv_path.empty())
 		rq.setShvPath(shv_path);
 	sendMessage(rq);
