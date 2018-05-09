@@ -336,6 +336,16 @@ int View::xAxisLabelHeight() const
 	return m_xAxisLabelRect.height();
 }
 
+int View::valueToRectPosition(const ValueChange &value) const
+{
+	return xValueToRectPosition(xValue(value));
+}
+
+int View::valueToRectPosition(const ValueChange::ValueX &value_x) const
+{
+	return xValueToRectPosition(xValue(value_x));
+}
+
 int View::computeYLabelWidth(const Settings::Axis &axis, int &shownDecimalPoints) const
 {
 	double range = (axis.rangeMax / m_verticalZoom) - (axis.rangeMin / m_verticalZoom);

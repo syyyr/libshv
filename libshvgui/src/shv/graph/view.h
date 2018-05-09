@@ -200,6 +200,9 @@ public:
 	int xAxisDescriptionHeight() const;
 	int xAxisLabelHeight() const;
 
+	int valueToRectPosition(const ValueChange &value) const;
+	int valueToRectPosition(const ValueChange::ValueX &value_x) const;
+
 protected:
 	void resizeEvent(QResizeEvent *resize_event) Q_DECL_OVERRIDE;
 	void paintEvent(QPaintEvent *paint_event) Q_DECL_OVERRIDE;
