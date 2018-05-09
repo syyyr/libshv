@@ -6,6 +6,8 @@
 #include <QColor>
 #include <QVector>
 
+class QPainter;
+
 namespace shv {
 namespace gui {
 namespace graphview {
@@ -45,7 +47,11 @@ public:
 		QColor m_color;
 	};
 
-	Serie(ValueType type, int serie_index, const QString &name, const QColor &color, QObject *parent = 0);
+	using SeriePainter = std::function<void (QPainter *painter, const QRect &rect, double vertical_zoom,
+	int x_axis_position, const Serie *serie, shv::gui::SerieData::const_iterator data_begin,
+	shv::gui::SerieData::const_iterator data_end, const QPen &pen, const Serie::Fill &fill_rect, int fill_base)>;
+
+	Serie(ValueType type, int serie_index, const QString &name, const QColor &color, QObject *parent = nullptr);
 	~Serie();
 
 	inline const QString &name() const { return m_name; }
@@ -103,6 +109,13 @@ public:
 
 	Q_SIGNAL void visibilityChanged();
 
+	virtual void paintSerie(QPainter *painter, const QRect &rect, double vertical_zoom, int x_axis_position,
+							shv::gui::SerieData::const_iterator data_begin, shv::gui::SerieData::const_iterator data_end,
+							const QPen &pen, const Serie::Fill &fill_rect, int fill_base) const;
+
+	const SeriePainter &seriePainter() const;
+	void setSeriePainter(const SeriePainter &seriePainter);
+
 private:
 	QString m_name;
 	ValueType m_type;
@@ -120,6 +133,7 @@ private:
 	bool m_showCurrent = true;
 	int m_serieIndex = -1;
 	Fill m_fill;
+	SeriePainter m_seriePainter;
 	QVector<QMetaObject::Connection> m_connections;
 
 	SerieData::const_iterator displayedDataBegin = shv::gui::SerieData::const_iterator();

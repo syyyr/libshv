@@ -1600,6 +1600,11 @@ void View::setCurrent(ValueChange::ValueX curr)
 	}
 }
 
+void View::setLoadedRange(const ValueXInterval &data_range)
+{
+	setLoadedRange(data_range.min, data_range.max);
+}
+
 void View::setLoadedRange(const ValueChange::ValueX &min, const ValueChange::ValueX &max)
 {
 	m_displayedRangeMin = m_loadedRangeMin = xValue(min);
@@ -1918,7 +1923,37 @@ void View::paintSerie(QPainter *painter, const QRect &rect, double vertical_zoom
 		fill_base = x_axis_position;
 	}
 	if (!serie->isHidden()) {
-		if (serie->type() == ValueType::Bool) {
+		if (serie->type() == ValueType::Pointer) {
+			const SerieData &data = serie->serieModelData(this);
+			if (data.size() == 0) {
+				return;
+			}
+			SerieData::const_iterator begin;
+			SerieData::const_iterator end;
+			if (min == m_loadedRangeMin) {
+				begin = data.cbegin();
+			}
+			else if (min == m_displayedRangeMin) {
+				begin = serie->displayedDataBegin;
+			}
+			else {
+				begin = findMinYValue(data.cbegin(), data.cend(), min);
+			}
+			if (max == m_loadedRangeMax) {
+				end = data.cend();
+			}
+			else if (max == m_displayedRangeMax) {
+				end = serie->displayedDataEnd;
+			}
+			else {
+				end = findMaxYValue(begin, data.cend(), max);
+			}
+			if (begin == end) {
+				return;
+			}
+			serie->paintSerie(painter, rect, vertical_zoom, x_axis_position, begin, end, pen, fill_rect, fill_base);
+		}
+		else if (serie->type() == ValueType::Bool) {
 			if (!serie->serieGroup()) {
 				paintBoolSerie(painter, rect, vertical_zoom, x_axis_position, serie, min, max, pen, fill_rect, fill_base);
 			}

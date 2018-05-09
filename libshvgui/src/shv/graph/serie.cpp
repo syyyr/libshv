@@ -221,7 +221,7 @@ void Serie::update(bool force)
 const Serie *Serie::masterSerie() const
 {
 	const Serie *master = this;
-	Serie *parent_serie = 0;
+	Serie *parent_serie = nullptr;
 	while ((parent_serie = qobject_cast<Serie*>(master->parent()))) {
 		master = parent_serie;
 	}
@@ -231,6 +231,25 @@ const Serie *Serie::masterSerie() const
 View *Serie::view() const
 {
 	return qobject_cast<View*>(masterSerie()->parent());
+}
+
+void Serie::paintSerie(QPainter *painter, const QRect &rect, double vertical_zoom, int x_axis_position,
+					   shv::gui::SerieData::const_iterator data_begin, shv::gui::SerieData::const_iterator data_end,
+					   const QPen &pen, const Serie::Fill &fill_rect, int fill_base) const
+{
+	if (m_seriePainter) {
+		m_seriePainter(painter, rect, vertical_zoom, x_axis_position, this, data_begin, data_end, pen, fill_rect, fill_base);
+	}
+}
+
+const Serie::SeriePainter &Serie::seriePainter() const
+{
+	return m_seriePainter;
+}
+
+void Serie::setSeriePainter(const SeriePainter &seriePainter)
+{
+	m_seriePainter = seriePainter;
 }
 
 }

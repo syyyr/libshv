@@ -190,6 +190,7 @@ public:
 	ValueChange::ValueX current() const;
 	void setCurrent(ValueChange::ValueX curr);
 
+	void setLoadedRange(const shv::gui::ValueXInterval &data_range);
 	void setLoadedRange(const ValueChange::ValueX &min, const ValueChange::ValueX &max);
 	void preserveZoomOnDataChange(bool b) { m_preserveZoom = b; }
 
