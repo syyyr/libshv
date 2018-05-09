@@ -185,7 +185,13 @@ private:
 			QVERIFY(cp == RpcValue::Map());
 		}
 
-		const string simple_test = R"({"k1":"v1", "k2":42, "k3":["a",123,true,false,null]})";
+		const string simple_test = R"(
+								   {
+								     "k1":"v1",
+								     "k2":42,
+								     "k3":["a",123,true,false,null],
+								   }
+								   )";
 
 		string err;
 		const auto json = RpcValue::fromCpon(simple_test, &err);
