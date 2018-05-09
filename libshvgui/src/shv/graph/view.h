@@ -45,16 +45,29 @@ public:
 	{
 		struct Axis
 		{
+			struct Description
+			{
+				bool show = true;
+				QString text;
+				QFont font;
+			};
+			struct Label
+			{
+				bool show = true;
+				QFont font;
+				int size = -1; //width for y-axis, height for x-axis, -1 = Auto
+			};
 			enum RangeType { Fixed };
 			bool show = true;
-			QString description;
+
+			Description description;
+			Label label;
 			QColor color;
-			QFont descriptionFont;
-			QFont labelFont;
 			int lineWidth = 2;
 			RangeType rangeType = Fixed;
 			double rangeMin = 0.0;
 			double rangeMax = 100.0;
+			int decimalPoints = -1;  //-1 = Auto
 		};
 
 		struct RangeSelector
@@ -109,6 +122,7 @@ public:
 		Margin margin;
 		QColor backgroundColor;
 		QColor frameColor;
+		int frameWidth = 1;
 		Legend legend;
 		QString legendStyle;
 		bool showCrossLine = true;
@@ -121,7 +135,7 @@ public:
 	};
 
 	View(QWidget *parent);
-	~View();
+	~View() override;
 
 	Settings settings;
 	void setModel(GraphModel *model);
@@ -171,12 +185,23 @@ public:
 	Q_SIGNAL void selectionsChanged();
 	Q_SIGNAL void shownRangeChanged();
 	Q_SIGNAL void verticalZoomChanged();
+	Q_SIGNAL void currentChanged();
 
+	ValueChange::ValueX current() const;
+	void setCurrent(ValueChange::ValueX curr);
+
+	void setLoadedRange(const shv::gui::ValueXInterval &data_range);
 	void setLoadedRange(const ValueChange::ValueX &min, const ValueChange::ValueX &max);
 	void preserveZoomOnDataChange(bool b) { m_preserveZoom = b; }
 
 	void computeDataRange();
 	void computeDataRange(Serie *serie);
+
+	int xAxisDescriptionHeight() const;
+	int xAxisLabelHeight() const;
+
+	int valueToRectPosition(const ValueChange &value) const;
+	int valueToRectPosition(const ValueChange::ValueX &value_x) const;
 
 protected:
 	void resizeEvent(QResizeEvent *resize_event) Q_DECL_OVERRIDE;

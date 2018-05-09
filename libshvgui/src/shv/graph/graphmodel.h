@@ -14,7 +14,7 @@
 namespace shv {
 namespace gui {
 
-enum class ValueType { TimeStamp, Int, Double, Bool };
+enum class ValueType { TimeStamp, Int, Double, Bool, Pointer };
 
 struct SHVGUI_DECL_EXPORT ValueChange
 {
@@ -52,6 +52,7 @@ struct SHVGUI_DECL_EXPORT ValueChange
 		ValueY(bool value) : boolValue(value) {}
 		ValueY(int value) : intValue(value) {}
 		ValueY(double value) : doubleValue(value) {}
+		ValueY(void *value) : pointerValue(value) {}
 		ValueY() : intValue(0) {}
 
 		double toDouble(ValueType stored_type) const{
@@ -84,6 +85,7 @@ struct SHVGUI_DECL_EXPORT ValueChange
 		bool boolValue;
 		int intValue;
 		double doubleValue;
+		void *pointerValue;
 	} valueY;
 
 	ValueChange(ValueX value_x, ValueY value_y) : valueX(value_x), valueY(value_y) {}
@@ -91,6 +93,7 @@ struct SHVGUI_DECL_EXPORT ValueChange
 	ValueChange(TimeStamp value_x, bool value_y) : ValueChange(value_x, ValueY(value_y)) {}
 	ValueChange(TimeStamp value_x, int value_y) : ValueChange(value_x, ValueY(value_y)) {}
 	ValueChange(TimeStamp value_x, double value_y) : ValueChange(value_x, ValueY(value_y)) {}
+	ValueChange(TimeStamp value_x, void *value_y) : ValueChange(value_x, ValueY(value_y)) {}
 	ValueChange() {}
 };
 
@@ -161,12 +164,14 @@ public:
 	void addValueChanges(const QMap<int, shv::gui::ValueChange> &values);
 	SerieData::iterator insertValueChange(int serie_index, std::vector<ValueChange>::const_iterator position, const shv::gui::ValueChange &value);
 
-	void addSerie(SerieData values);
+	int addSerie(SerieData values);
 	void clearSerie(int serie_index);
 	void clearSeries();
 
 	void dataChangeBegin();
 	void dataChangeEnd();
+
+	int serieCount() const;
 
 	SerieData::iterator removeValueChanges(int serie_index, SerieData::const_iterator from, SerieData::const_iterator to);
 

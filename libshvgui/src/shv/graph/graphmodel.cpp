@@ -160,6 +160,8 @@ bool compareValueY(const ValueChange::ValueY &value1, const ValueChange::ValueY 
 		return value1.intValue == value2.intValue;
 	case ValueType::Bool:
 		return value1.boolValue == value2.boolValue;
+	case ValueType::Pointer:
+		return value1.pointerValue == value2.pointerValue;
 	default:
 		SHV_EXCEPTION("Invalid type on valueY");
 	}
@@ -264,9 +266,11 @@ SerieData::iterator GraphModelData::insertValueChange(int serie_index, std::vect
 	return m_valueChanges[serie_index].insertValueChange(position, value);
 }
 
-void GraphModelData::addSerie(SerieData values)
+int GraphModelData::addSerie(SerieData values)
 {
+	int index = m_valueChanges.size();
 	m_valueChanges.push_back(values);
+	return index;
 }
 
 void GraphModelData::clearSerie(int serie_index)
@@ -322,6 +326,11 @@ void GraphModelData::dataChangeEnd()
 	}
 	m_changedSeries.clear();
 	m_dataChangeEnabled = true;
+}
+
+int GraphModelData::serieCount() const
+{
+	return  m_valueChanges.size();
 }
 
 SerieData::iterator GraphModelData::removeValueChanges(int serie_index, SerieData::const_iterator from, SerieData::const_iterator to)
