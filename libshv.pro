@@ -13,8 +13,3 @@ CONFIG(debug, debug|release) {
 SUBDIRS += \
     tests \
 }
-
-!no-libshv-gui {
-SUBDIRS += \
-    libshvgui \
-}
