@@ -48,6 +48,7 @@ public:
 
 	static const char* DIR_BROKER;
 	static const char* DIR_BROKER_APP;
+	static const char* DIR_CLIENTS;
 
 	static const char* JSONRPC_REQUEST_ID;
 	static const char* JSONRPC_METHOD;

@@ -336,7 +336,12 @@ void ClientConnection::setBrokerConnected(bool b)
 
 unsigned ClientConnection::brokerClientId() const
 {
-	return loginResult().toMap().value(cp::Rpc::KEY_CLIENT_ID).toUInt();
+	return loginResult().value(cp::Rpc::KEY_CLIENT_ID).toUInt();
+}
+
+std::string ClientConnection::brokerMountPoint() const
+{
+	return loginResult().value(cp::Rpc::KEY_MOUT_POINT).toString();
 }
 
 }}}

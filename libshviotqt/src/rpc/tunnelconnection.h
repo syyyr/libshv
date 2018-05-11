@@ -40,8 +40,8 @@ public:
 				Password,
 				ParentClientId,
 				CallerClientIds,
+				RequestId,
 				//TunName,
-				//TunnelResponseRequestId,
 				MAX
 			};
 		};
@@ -56,7 +56,6 @@ public:
 	//TunnelParams& operator=(TunnelParams &&o) {Super::operator =(std::move(o)); return *this;}
 
 	shv::chainpack::RpcValue toRpcValue() const;
-
 	shv::chainpack::RpcValue callerClientIds() const;
 };
 
@@ -65,7 +64,7 @@ class SHVIOTQT_DECL_EXPORT TunnelConnection : public shv::iotqt::rpc::ClientConn
 	Q_OBJECT
 	using Super = ClientConnection;
 
-	SHV_FIELD_IMPL(shv::chainpack::RpcValue, t, T, unnelHandle)
+	//SHV_FIELD_IMPL(shv::chainpack::RpcValue, t, T, unnelHandle)
 public:
 	TunnelConnection(QObject *parent = 0);
 

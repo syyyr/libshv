@@ -19,7 +19,7 @@ public:
 		enum {ID = shv::chainpack::meta::GlobalNS::RegisteredMetaTypes::RpcTunnelHandle};
 		//struct Tag { enum Enum {RequestId = meta::Tag::USER,
 		//						MAX};};
-		struct Key { enum Enum {CallerClientIds = 1, TunnelClientId, MAX};};
+		struct Key { enum Enum {TunnelRelativePath = 1, MAX};};
 
 		MetaType();
 		static void registerMetaType();
@@ -27,7 +27,7 @@ public:
 public:
 	TunnelHandle();
 	TunnelHandle(const shv::chainpack::RpcValue::IMap &m);
-	TunnelHandle(const shv::chainpack::RpcValue &caller_ids, unsigned tun_id);
+	TunnelHandle(const std::string &tunnel_relative_path);
 
 	shv::chainpack::RpcValue toRpcValue() const;
 };

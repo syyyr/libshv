@@ -75,12 +75,12 @@ public:
 	RpcValue::UInt popCallerId();
 	RpcValue callerIds() const;
 	void setCallerIds(const RpcValue &callerIds);
-
+	/*
 	static RpcValue tunnelHandle(const RpcValue::MetaData &meta);
 	static void setTunnelHandle(RpcValue::MetaData &meta, const RpcValue &tun_handle);
 	RpcValue tunnelHandle() const;
 	void setTunnelHandle(const RpcValue &tun_handle);
-
+	*/
 	static Rpc::ProtocolType protocolType(const RpcValue::MetaData &meta);
 	static void setProtocolType(RpcValue::MetaData &meta, shv::chainpack::Rpc::ProtocolType ver);
 	Rpc::ProtocolType protocolType() const;

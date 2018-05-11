@@ -29,8 +29,8 @@ TunnelParams::MetaType::MetaType()
 		RPC_META_KEY_DEF(Password),
 		RPC_META_KEY_DEF(ParentClientId),
 		RPC_META_KEY_DEF(CallerClientIds),
+		RPC_META_KEY_DEF(RequestId),
 		//RPC_META_KEY_DEF(TunName),
-		//RPC_META_KEY_DEF(TunnelResponseRequestId),
 	};
 	//m_tags = {
 	//	{(int)Tag::RequestId, {(int)Tag::RequestId, "id"}},

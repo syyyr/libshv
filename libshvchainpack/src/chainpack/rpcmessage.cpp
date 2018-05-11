@@ -22,9 +22,9 @@ RpcMessage::MetaType::MetaType()
 		{(int)Tag::RequestId, {(int)Tag::RequestId, "id"}},
 		{(int)Tag::ShvPath, {(int)Tag::ShvPath, "shvPath"}},
 		{(int)Tag::Method, {(int)Tag::Method, "method"}},
-		{(int)Tag::CallerIds, {(int)Tag::CallerIds, "callerIds"}},
+		{(int)Tag::CallerIds, {(int)Tag::CallerIds, "cid"}},
 		{(int)Tag::ProtocolType, {(int)Tag::ProtocolType, "protocol"}},
-		{(int)Tag::TunnelHandle, {(int)Tag::TunnelHandle, Rpc::KEY_TUNNEL_HANDLE}},
+		//{(int)Tag::TunnelHandle, {(int)Tag::TunnelHandle, Rpc::KEY_TUNNEL_HANDLE}},
 	};
 }
 
@@ -255,7 +255,7 @@ void RpcMessage::setCallerIds(const RpcValue &callerId)
 {
 	setMetaValue(RpcMessage::MetaType::Tag::CallerIds, callerId);
 }
-
+/*
 RpcValue RpcMessage::tunnelHandle(const RpcValue::MetaData &meta)
 {
 	return meta.value(RpcMessage::MetaType::Tag::TunnelHandle);
@@ -275,7 +275,7 @@ void RpcMessage::setTunnelHandle(const RpcValue &tun_handle)
 {
 	setMetaValue(RpcMessage::MetaType::Tag::TunnelHandle, tun_handle);
 }
-
+*/
 Rpc::ProtocolType RpcMessage::protocolType(const RpcValue::MetaData &meta)
 {
 	return (Rpc::ProtocolType)meta.value(RpcMessage::MetaType::Tag::ProtocolType).toUInt();

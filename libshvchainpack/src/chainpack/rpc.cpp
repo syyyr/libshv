@@ -39,6 +39,7 @@ const char* Rpc::NTF_DISCONNECTED = "disconnected";
 
 const char* Rpc::DIR_BROKER = ".broker";
 const char* Rpc::DIR_BROKER_APP = ".broker/app";
+const char* Rpc::DIR_CLIENTS = "clients";
 
 const char* Rpc::JSONRPC_REQUEST_ID = "id";
 const char* Rpc::JSONRPC_METHOD = "method";
