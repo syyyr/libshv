@@ -201,10 +201,10 @@ class ChainPackInt final : public ValueData<RpcValue::Type::Int, int64_t>
 	RpcValue::UInt toUInt() const override { return (RpcValue::UInt)m_value; }
 	int64_t toInt64() const override { return static_cast<int64_t>(m_value); }
 	uint64_t toUInt64() const override { return static_cast<uint64_t>(m_value); }
-	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toInt(); }
+	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toInt64(); }
 	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
 public:
-	explicit ChainPackInt(RpcValue::Int value) : ValueData(value) {}
+	explicit ChainPackInt(int64_t value) : ValueData(value) {}
 };
 
 class ChainPackUInt : public ValueData<RpcValue::Type::UInt, uint64_t>
@@ -219,10 +219,10 @@ protected:
 	int64_t toInt64() const override { return m_value; }
 	uint64_t toUInt64() const override { return m_value; }
 protected:
-	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toUInt(); }
+	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toUInt64(); }
 	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
 public:
-	explicit ChainPackUInt(RpcValue::UInt value) : ValueData(value) {}
+	explicit ChainPackUInt(uint64_t value) : ValueData(value) {}
 };
 
 class ChainPackBoolean final : public ValueData<RpcValue::Type::Bool, bool>
