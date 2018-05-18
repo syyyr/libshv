@@ -116,6 +116,8 @@ void ShvNode::processRawData(const chainpack::RpcValue::MetaData &meta, std::str
 
 shv::chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 {
+	if(!rq.shvPath().toString().empty())
+		SHV_EXCEPTION("Invalid subpath: " + rq.shvPath().toCpon() + " method: " + rq.method().toCpon() + " called for node: " + shvPath());
 	shv::chainpack::RpcValue ret = call(rq.method().toString(), rq.params());
 	if(rq.requestId().toUInt() == 0)
 		return cp::RpcValue(); // RPC calls with requestID == 0 does not expect response

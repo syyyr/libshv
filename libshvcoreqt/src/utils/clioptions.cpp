@@ -1,5 +1,5 @@
 #include "clioptions.h"
-#include "../core/log.h"
+#include "../log.h"
 
 #include <shv/core/log.h>
 #include <shv/core/utils.h>

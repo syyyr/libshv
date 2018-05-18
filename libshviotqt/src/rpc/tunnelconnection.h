@@ -38,9 +38,9 @@ public:
 				Port,
 				User,
 				Password,
-				ParentClientId,
-				CallerClientIds,
-				RequestId,
+				//ParentClientId,
+				//CallerClientIds,
+				//RequestId,
 				//TunName,
 				MAX
 			};
@@ -56,7 +56,7 @@ public:
 	//TunnelParams& operator=(TunnelParams &&o) {Super::operator =(std::move(o)); return *this;}
 
 	shv::chainpack::RpcValue toRpcValue() const;
-	shv::chainpack::RpcValue callerClientIds() const;
+	//shv::chainpack::RpcValue callerClientIds() const;
 };
 
 class SHVIOTQT_DECL_EXPORT TunnelConnection : public shv::iotqt::rpc::ClientConnection

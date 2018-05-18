@@ -37,7 +37,7 @@ public:
 	enum class SyncCalls {Enabled, Disabled};
 
 	explicit ClientConnection(SyncCalls sync_calls, QObject *parent = nullptr);
-	explicit ClientConnection(QObject *parent = nullptr) : ClientConnection(SyncCalls::Enabled, parent) {}
+	explicit ClientConnection(QObject *parent = nullptr) : ClientConnection(SyncCalls::Disabled, parent) {}
 	~ClientConnection() Q_DECL_OVERRIDE;
 
 	void open();

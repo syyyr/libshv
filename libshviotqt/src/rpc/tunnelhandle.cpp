@@ -34,7 +34,7 @@ TunnelHandle::TunnelHandle()
 	MetaType::registerMetaType();
 }
 
-TunnelHandle::TunnelHandle(const chainpack::RpcValue::IMap &m)
+TunnelHandle::TunnelHandle(const cp::RpcValue::IMap &m)
 	: Super(m)
 {
 	MetaType::registerMetaType();
@@ -44,6 +44,11 @@ TunnelHandle::TunnelHandle(const std::string &tunnel_relative_path)
 	:TunnelHandle()
 {
 	(*this)[MetaType::Key::TunnelRelativePath] = tunnel_relative_path;
+}
+
+std::string TunnelHandle::tunnelRelativePath() const
+{
+	return value(MetaType::Key::TunnelRelativePath).toString();
 }
 
 chainpack::RpcValue TunnelHandle::toRpcValue() const

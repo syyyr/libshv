@@ -29,6 +29,8 @@ public:
 	TunnelHandle(const shv::chainpack::RpcValue::IMap &m);
 	TunnelHandle(const std::string &tunnel_relative_path);
 
+	std::string tunnelRelativePath() const;
+
 	shv::chainpack::RpcValue toRpcValue() const;
 };
 

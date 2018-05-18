@@ -21,12 +21,12 @@ public:
 		using Super = meta::MetaType;
 	public:
 		enum {ID = meta::GlobalNS::RegisteredMetaTypes::ChainPackRpcMessage};
-		struct Tag { enum Enum {RequestId = meta::Tag::USER,
-								ShvPath,
-								Method,
-								CallerIds,
+		struct Tag { enum Enum {RequestId = meta::Tag::USER, // 8
+								ShvPath, // 9
+								Method,  // 10
+								CallerIds, // 11
 								ProtocolType, //needed when dest client is using different version than source one to translate raw message data to correct format
-								TunnelHandle,
+								//TunnelHandle,
 								MAX};};
 		struct Key { enum Enum {Params = 1, Result, Error, ErrorCode, ErrorMessage, MAX};};
 

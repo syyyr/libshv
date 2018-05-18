@@ -54,6 +54,19 @@ bool StringView::operator==(const StringView &o) const
 	return true;
 }
 
+bool StringView::operator==(const char *o) const
+{
+	size_t i;
+	for (i = 0; i < length(); ++i) {
+		char c = o[i];
+		if(!c)
+			return false;
+		if((*this)[i] != c)
+			return false;
+	}
+	return o[i] == 0;
+}
+
 char StringView::operator[](size_t ix) const
 {
 	return str()[m_start + ix];
@@ -141,7 +154,7 @@ StringView StringView::getToken(char delim)
 	return *this;
 }
 
-std::vector<StringView> StringView::split(char delim, StringView::SplitBehavior split_behavior) const
+StringView::StringViewList StringView::split(char delim, StringView::SplitBehavior split_behavior) const
 {
 	using namespace std;
 	vector<StringView> ret;
@@ -159,13 +172,15 @@ std::vector<StringView> StringView::split(char delim, StringView::SplitBehavior 
 	return ret;
 }
 
-std::string StringView::join(const std::vector<StringView> &lst, const std::string &delim)
+std::string StringView::join(StringViewList::const_iterator first, StringViewList::const_iterator last, const std::string &delim)
 {
 	std::string ret;
-	for (size_t i = 0; i < lst.size(); ++i) {
-		if(i > 0)
+	int i = 0;
+	while(first != last) {
+		if(i++ > 0)
 			ret += delim;
-		ret += lst[i].toString();
+		ret += first->toString();
+		first++;
 	}
 	return ret;
 }

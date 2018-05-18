@@ -38,6 +38,8 @@ public:
 	static const char* METH_DEVICE_ID;
 	static const char* METH_CONNECTION_TYPE;
 	static const char* METH_SUBSCRIBE;
+	static const char* METH_RUN_CMD;
+	static const char* METH_OPEN_REXEC;
 
 	static const char* PAR_PATH;
 	static const char* PAR_METHOD;
@@ -59,8 +61,6 @@ public:
 	static const char* JSONRPC_ERROR_MESSAGE;
 	static const char* JSONRPC_SHV_PATH;
 	static const char* JSONRPC_CALLER_ID;
-
-	static std::string joinShvPath(const std::string &p1, const std::string &p2);
 };
 
 } // namespace chainpack

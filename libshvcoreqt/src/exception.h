@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../shvcoreqtglobal.h"
+#include "shvcoreqtglobal.h"
 
 #include <shv/core/exception.h>
 

@@ -29,6 +29,8 @@ const char* Rpc::METH_APP_NAME = "appName";
 const char* Rpc::METH_DEVICE_ID = "deviceId";
 const char* Rpc::METH_CONNECTION_TYPE = "connectionType";
 const char* Rpc::METH_SUBSCRIBE = "subscribe";
+const char* Rpc::METH_RUN_CMD = "runCmd";
+const char* Rpc::METH_OPEN_REXEC = "openRexec";
 
 const char* Rpc::PAR_PATH = "path";
 const char* Rpc::PAR_METHOD = "method";
@@ -60,19 +62,6 @@ const char *Rpc::ProtocolTypeToString(Rpc::ProtocolType pv)
 	case ProtocolType::Invalid: return "Invalid";
 	}
 	return "???";
-}
-
-std::string Rpc::joinShvPath(const std::string &p1, const std::string &p2)
-{
-	if(p2.empty())
-		return p1;
-	if(p1.empty())
-		return p2;
-	std::string ret = p1;
-	if(p1[p1.length()  -1] != '/' && p2[0] != '/')
-		ret += '/';
-	ret += p2;
-	return ret;
 }
 
 } // namespace chainpack

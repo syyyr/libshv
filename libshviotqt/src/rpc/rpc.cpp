@@ -8,7 +8,7 @@ namespace rpc {
 
 void Rpc::registerMetatTypes()
 {
-	static auto rpcvalue_id = 0;
+	static int rpcvalue_id = 0;
 	if(rpcvalue_id == 0) {
 		rpcvalue_id = qRegisterMetaType<shv::chainpack::RpcValue>();
 		shvInfo() << "qRegisterMetaType<shv::chainpack::RpcValue>() =" << rpcvalue_id;

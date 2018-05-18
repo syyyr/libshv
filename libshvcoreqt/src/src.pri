@@ -1,8 +1,13 @@
 HEADERS += \
 	$$PWD/shvcoreqtglobal.h \
+	$$PWD/log.h \
+	$$PWD/exception.h \
+	$$PWD/utils.h
 
 SOURCES += \
+	$$PWD/log.cpp \
+	$$PWD/exception.cpp \
+	$$PWD/utils.cpp
 
-include ($$PWD/core/core.pri)
 include ($$PWD/utils/utils.pri)
 

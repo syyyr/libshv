@@ -1,6 +1,6 @@
 #include "crypt.h"
 
-#include "../core/log.h"
+#include "../log.h"
 
 #include <chrono>
 #include <regex>

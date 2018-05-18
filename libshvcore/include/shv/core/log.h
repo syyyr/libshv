@@ -1,1 +1,1 @@
-#include "../../../src/core/log.h"
+#include "../../../src/log.h"

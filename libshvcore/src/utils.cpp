@@ -1,8 +1,11 @@
 #include "utils.h"
 #include "log.h"
+#include "stringview.h"
 
 #include <regex>
 #include <sstream>
+
+#include <unistd.h>
 
 namespace shv {
 namespace core {
@@ -132,6 +135,53 @@ std::string Utils::fromHex(const std::string &bytes)
 			u += unhex_char(bytes[i++]);
 		ret.push_back(u);
 	}
+	return ret;
+}
+
+std::string Utils::joinPath(const std::string &p1, const std::string &p2)
+{
+	if(p2.empty())
+		return p1;
+	if(p1.empty())
+		return p2;
+	std::string ret = p1;
+	if(p1[p1.length()  -1] != '/' && p2[0] != '/')
+		ret += '/';
+	ret += p2;
+	return ret;
+}
+
+std::string Utils::simplifyPath(const std::string &p)
+{
+	StringViewList ret;
+	StringViewList lst = StringView(p).split('/');
+	for (size_t i = 0; i < lst.size(); ++i) {
+		const StringView &s = lst[i];
+		if(s == ".")
+			continue;
+		if(s == "..") {
+			if(!ret.empty())
+				ret.pop_back();
+			continue;
+		}
+		ret.push_back(s);
+	}
+	return StringView::join(ret, "/");
+}
+
+std::vector<char> Utils::readAllFd(int fd)
+{
+	static constexpr ssize_t CHUNK_SIZE = 1024;
+	std::vector<char> ret;
+	do {
+		size_t prev_size = ret.size();
+		ret.resize(ret.size() + CHUNK_SIZE);
+		ssize_t n = ::read(fd, ret.data() + prev_size, CHUNK_SIZE);
+		if(n < CHUNK_SIZE) {
+			ret.resize(prev_size + n);
+			break;
+		}
+	} while(true);
 	return ret;
 }
 

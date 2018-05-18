@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../shvcoreglobal.h"
-//#include "shvexception.h"
+#include "shvcoreglobal.h"
 
 #include <string>
+#include <vector>
 
 #ifdef LIBC_NEWLIB
 #include <sstream>
@@ -65,6 +65,12 @@ public:
 	static std::string toHex(const std::string &bytes);
 	static std::string toHex(const std::basic_string<uint8_t> &bytes);
 	static std::string fromHex(const std::string &bytes);
+
+
+	static std::string joinPath(const std::string &p1, const std::string &p2);
+	static std::string simplifyPath(const std::string &p);
+
+	static std::vector<char> readAllFd(int fd);
 
 	template<typename T>
 	static std::string toString(T i)

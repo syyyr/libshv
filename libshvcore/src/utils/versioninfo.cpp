@@ -1,7 +1,7 @@
 #include "versioninfo.h"
 
-#include "../core/string.h"
-#include "../core/utils.h"
+#include "../string.h"
+#include "../utils.h"
 
 #ifdef LIBC_NEWLIB
 #include <stdlib.h>

@@ -48,6 +48,7 @@ ClientConnection::ClientConnection(SyncCalls sync_calls, QObject *parent)
 	connect(m_rpcDriver, &SocketRpcDriver::rpcValueReceived, this, &ClientConnection::onRpcValueReceived);
 
 	if(m_syncCalls == SyncCalls::Enabled) {
+		shvInfo() << "Creating RPC thread to support SYNC calls.";
 		connect(this, &ClientConnection::sendMessageSyncRequest, m_rpcDriver, &SocketRpcDriver::sendRpcRequestSync_helper, Qt::BlockingQueuedConnection);
 		m_rpcDriverThread = new QThread();
 		m_rpcDriver->moveToThread(m_rpcDriverThread);
@@ -322,6 +323,7 @@ void ClientConnection::setBrokerConnected(bool b)
 	if(b != m_connectionState.isBrokerConnected) {
 		m_connectionState.isBrokerConnected = b;
 		if(b) {
+			shvInfo() << "Connected to broker, client id:" << brokerClientId();
 			if(m_pingTimer && m_pingTimer->interval() > 0)
 				//m_connStatus.pingRqId = 0;
 				m_pingTimer->start();

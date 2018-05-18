@@ -27,9 +27,9 @@ TunnelParams::MetaType::MetaType()
 		RPC_META_KEY_DEF(Port),
 		RPC_META_KEY_DEF(User),
 		RPC_META_KEY_DEF(Password),
-		RPC_META_KEY_DEF(ParentClientId),
-		RPC_META_KEY_DEF(CallerClientIds),
-		RPC_META_KEY_DEF(RequestId),
+		//RPC_META_KEY_DEF(ParentClientId),
+		//RPC_META_KEY_DEF(CallerClientIds),
+		//RPC_META_KEY_DEF(RequestId),
 		//RPC_META_KEY_DEF(TunName),
 	};
 	//m_tags = {
@@ -66,12 +66,12 @@ chainpack::RpcValue TunnelParams::toRpcValue() const
 	ret.setMetaValue(cp::meta::Tag::MetaTypeId, TunnelParams::MetaType::ID);
 	return ret;
 }
-
+/*
 chainpack::RpcValue TunnelParams::callerClientIds() const
 {
 	return value(MetaType::Key::CallerClientIds);
 }
-
+*/
 /*
 void TunnelConnection::setCliOptions(const TunnelAppCliOptions *cli_opts)
 {

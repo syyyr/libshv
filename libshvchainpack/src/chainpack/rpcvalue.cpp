@@ -207,9 +207,8 @@ public:
 	explicit ChainPackInt(int64_t value) : ValueData(value) {}
 };
 
-class ChainPackUInt : public ValueData<RpcValue::Type::UInt, uint64_t>
+class ChainPackUInt final : public ValueData<RpcValue::Type::UInt, uint64_t>
 {
-protected:
 	std::string toStdString() const override { return Utils::toString(m_value); }
 
 	double toDouble() const override { return m_value; }
@@ -218,7 +217,6 @@ protected:
 	RpcValue::UInt toUInt() const override { return m_value; }
 	int64_t toInt64() const override { return m_value; }
 	uint64_t toUInt64() const override { return m_value; }
-protected:
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toUInt64(); }
 	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
 public:
@@ -647,9 +645,14 @@ void ChainPackArray::set(RpcValue::UInt key, const RpcValue &val)
 bool RpcValue::operator== (const RpcValue &other) const
 {
 	if(isValid() && other.isValid()) {
-		if (m_ptr->type() != other.m_ptr->type())
-			return false;
-		return m_ptr->equals(other.m_ptr.get());
+		if (
+			(m_ptr->type() == other.m_ptr->type())
+			|| (m_ptr->type() == RpcValue::Type::UInt && other.m_ptr->type() == RpcValue::Type::Int)
+			|| (m_ptr->type() == RpcValue::Type::Int && other.m_ptr->type() == RpcValue::Type::UInt)
+		) {
+			return m_ptr->equals(other.m_ptr.get());
+		}
+		return false;
 	}
 	return (!isValid() && !other.isValid());
 }

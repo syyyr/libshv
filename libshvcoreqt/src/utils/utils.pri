@@ -4,5 +4,5 @@ HEADERS += \
 
 SOURCES += \
 	$$PWD/clioptions.cpp \
-    $$PWD/versioninfo.cpp
+    $$PWD/versioninfo.cpp \
 
