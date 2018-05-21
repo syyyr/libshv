@@ -45,8 +45,10 @@ public:
 	static const char* PAR_METHOD;
 
 	static const char* NTF_VAL_CHANGED;
-	static const char* NTF_CONNECTED;
-	static const char* NTF_DISCONNECTED;
+	static const char* NTF_CONNECTED; /// obsolete
+	static const char* NTF_DISCONNECTED; /// obsolete
+	static const char* NTF_MOUNTED_CHANGED;
+	static const char* NTF_CONNECTED_CHANGED;
 
 	static const char* DIR_BROKER;
 	static const char* DIR_BROKER_APP;

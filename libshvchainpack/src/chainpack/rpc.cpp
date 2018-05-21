@@ -38,6 +38,8 @@ const char* Rpc::PAR_METHOD = "method";
 const char* Rpc::NTF_VAL_CHANGED = "chng";
 const char* Rpc::NTF_CONNECTED = "connected";
 const char* Rpc::NTF_DISCONNECTED = "disconnected";
+const char* Rpc::NTF_MOUNTED_CHANGED = "mntchng";
+const char* Rpc::NTF_CONNECTED_CHANGED = "connchng";
 
 const char* Rpc::DIR_BROKER = ".broker";
 const char* Rpc::DIR_BROKER_APP = ".broker/app";
