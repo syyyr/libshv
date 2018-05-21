@@ -26,7 +26,7 @@ public:
 								Method,  // 10
 								CallerIds, // 11
 								ProtocolType, //needed when dest client is using different version than source one to translate raw message data to correct format
-								//TunnelHandle,
+								RevCallerIds,
 								MAX};};
 		struct Key { enum Enum {Params = 1, Result, Error, ErrorCode, ErrorMessage, MAX};};
 
@@ -75,6 +75,13 @@ public:
 	RpcValue::UInt popCallerId();
 	RpcValue callerIds() const;
 	void setCallerIds(const RpcValue &callerIds);
+
+	static RpcValue revCallerIds(const RpcValue::MetaData &meta);
+	static void setRevCallerIds(RpcValue::MetaData &meta, const RpcValue &caller_ids);
+	static void pushRevCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id);
+	RpcValue revCallerIds() const;
+	void setOpenTunnelFlag();
+	static bool isOpenTunnelFlag(const RpcValue::MetaData &meta);
 	/*
 	static RpcValue tunnelHandle(const RpcValue::MetaData &meta);
 	static void setTunnelHandle(RpcValue::MetaData &meta, const RpcValue &tun_handle);

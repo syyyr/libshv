@@ -10,7 +10,8 @@ TunnelHandle::MetaType::MetaType()
 	: Super("TunnelHandle")
 {
 	m_keys = {
-		RPC_META_KEY_DEF(TunnelRelativePath),
+		RPC_META_KEY_DEF(RequestId),
+		RPC_META_KEY_DEF(CallerIds),
 	};
 	//m_tags = {
 	//	{(int)Tag::RequestId, {(int)Tag::RequestId, "id"}},
@@ -40,15 +41,10 @@ TunnelHandle::TunnelHandle(const cp::RpcValue::IMap &m)
 	MetaType::registerMetaType();
 }
 
-TunnelHandle::TunnelHandle(const std::string &tunnel_relative_path)
-	:TunnelHandle()
+TunnelHandle::TunnelHandle(const chainpack::RpcValue &request_id, const chainpack::RpcValue &caller_ids)
 {
-	(*this)[MetaType::Key::TunnelRelativePath] = tunnel_relative_path;
-}
-
-std::string TunnelHandle::tunnelRelativePath() const
-{
-	return value(MetaType::Key::TunnelRelativePath).toString();
+	(*this)[MetaType::Key::RequestId] = request_id;
+	(*this)[MetaType::Key::CallerIds] = caller_ids;
 }
 
 chainpack::RpcValue TunnelHandle::toRpcValue() const

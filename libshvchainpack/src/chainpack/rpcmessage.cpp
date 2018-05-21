@@ -24,7 +24,7 @@ RpcMessage::MetaType::MetaType()
 		{(int)Tag::Method, {(int)Tag::Method, "method"}},
 		{(int)Tag::CallerIds, {(int)Tag::CallerIds, "cid"}},
 		{(int)Tag::ProtocolType, {(int)Tag::ProtocolType, "protocol"}},
-		//{(int)Tag::TunnelHandle, {(int)Tag::TunnelHandle, Rpc::KEY_TUNNEL_HANDLE}},
+		{(int)Tag::RevCallerIds, {(int)Tag::RevCallerIds, "rcid"}},
 	};
 }
 
@@ -254,6 +254,50 @@ RpcValue RpcMessage::callerIds() const
 void RpcMessage::setCallerIds(const RpcValue &callerId)
 {
 	setMetaValue(RpcMessage::MetaType::Tag::CallerIds, callerId);
+}
+
+RpcValue RpcMessage::revCallerIds(const RpcValue::MetaData &meta)
+{
+	return meta.value(RpcMessage::MetaType::Tag::RevCallerIds);
+}
+
+void RpcMessage::setRevCallerIds(RpcValue::MetaData &meta, const RpcValue &caller_ids)
+{
+	meta.setValue(RpcMessage::MetaType::Tag::RevCallerIds, caller_ids);
+}
+
+void RpcMessage::pushRevCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id)
+{
+	RpcValue curr_caller_id = RpcMessage::revCallerIds(meta);
+	if(curr_caller_id.isArray()) {
+		RpcValue::Array array = curr_caller_id.toArray();
+		array.push_back(RpcValue::Array::makeElement(caller_id));
+		setRevCallerIds(meta, array);
+	}
+	else if(curr_caller_id.isUInt()) {
+		RpcValue::Array array{RpcValue::Type::UInt};
+		array.push_back(curr_caller_id.toUInt());
+		array.push_back(RpcValue::Array::makeElement(caller_id));
+		setRevCallerIds(meta, array);
+	}
+	else {
+		setRevCallerIds(meta, caller_id);
+	}
+}
+
+RpcValue RpcMessage::revCallerIds() const
+{
+	return metaValue(RpcMessage::MetaType::Tag::RevCallerIds);
+}
+
+void RpcMessage::setOpenTunnelFlag()
+{
+	setMetaValue(RpcMessage::MetaType::Tag::RevCallerIds, nullptr);
+}
+
+bool RpcMessage::isOpenTunnelFlag(const RpcValue::MetaData &meta)
+{
+	return revCallerIds(meta).isValid();
 }
 /*
 RpcValue RpcMessage::tunnelHandle(const RpcValue::MetaData &meta)
