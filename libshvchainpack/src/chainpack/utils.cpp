@@ -2,6 +2,7 @@
 
 #include <regex>
 #include <iomanip>
+#include <sstream>
 
 namespace shv {
 namespace chainpack {

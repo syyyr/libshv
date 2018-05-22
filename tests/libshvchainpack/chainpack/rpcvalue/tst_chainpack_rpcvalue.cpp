@@ -68,7 +68,7 @@ private:
 			string err;
 			QVERIFY(RpcValue::fromCpon("0", &err) == RpcValue(0) && err.empty());
 			QVERIFY(RpcValue::fromCpon("123", &err) == RpcValue(123) && err.empty());
-			QVERIFY(RpcValue::fromCpon("1526303051038", &err) == RpcValue(1526303051038) && err.empty());
+			QVERIFY(RpcValue::fromCpon("1526303051038", &err) == RpcValue(1526303051038ll) && err.empty());
 			QVERIFY(RpcValue::fromCpon("-123", &err) == RpcValue(-123) && err.empty());
 			QVERIFY(RpcValue::fromCpon("3u", &err) == RpcValue((RpcValue::UInt)3) && err.empty());
 			QVERIFY(RpcValue::fromCpon("223.", &err) == RpcValue(223.) && err.empty());
