@@ -133,7 +133,7 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 		}
 	}
 	catch(shv::core::Exception &e) {
-		sendError(rq.requestId(), cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodInvocationException, e.message()));
+		sendError(rq.requestId(), cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodCallException, e.message()));
 	}
 	shvError() << "Initial handshake error! Dropping client connection." << connectionName() << msg.toCpon();
 	QTimer::singleShot(100, this, &ServerConnection::abort); // need some time to send error to client

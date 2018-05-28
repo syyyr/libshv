@@ -104,7 +104,7 @@ void ShvNode::processRawData(const chainpack::RpcValue::MetaData &meta, std::str
 	}
 	catch (std::exception &e) {
 		shvError() << e.what();
-		resp.setError(cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodInvocationException, e.what()));
+		resp.setError(cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodCallException, e.what()));
 	}
 	if(!response_deffered) {
 		ShvRootNode *root = rootNode();

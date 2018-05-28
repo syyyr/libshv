@@ -40,6 +40,7 @@ public:
 	static const char* METH_SUBSCRIBE;
 	static const char* METH_RUN_CMD;
 	static const char* METH_LAUNCH_REXEC;
+	static const char* METH_HELP;
 
 	static const char* PAR_PATH;
 	static const char* PAR_METHOD;

@@ -166,7 +166,7 @@ public:
 			ParseError,		// Invalid JSON was received by the server. An error occurred on the server while parsing the JSON text.
 			SyncMethodCallTimeout,
 			SyncMethodCallCancelled,
-			MethodInvocationException,
+			MethodCallException,
 			Unknown
 		};
 	public:
@@ -225,10 +225,10 @@ public:
 							   (msg.isEmpty())? "Invalid params": msg,
 							   (data.isValid())? data: "Invalid method parameter(s).");
 		}
-		static Error createMethodInvocationExceptionError(const Value::String &msg = Value::String(), const Value &data = Value()) {
-			return createError(MethodInvocationException, msg, data);
-		}
 		*/
+		static Error createMethodCallExceptionError(const RpcValue::String &msg = RpcValue::String()) {
+			return create(MethodCallException, (msg.empty())? "Method call exception": msg);
+		}
 		static Error createInternalError(const RpcValue::String &msg = RpcValue::String()) {
 			return create(InternalError, (msg.empty())? "Internal error": msg);
 		}

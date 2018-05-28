@@ -31,6 +31,7 @@ const char* Rpc::METH_CONNECTION_TYPE = "connectionType";
 const char* Rpc::METH_SUBSCRIBE = "subscribe";
 const char* Rpc::METH_RUN_CMD = "runCmd";
 const char* Rpc::METH_LAUNCH_REXEC = "launchRexec";
+const char* Rpc::METH_HELP = "help";
 
 const char* Rpc::PAR_PATH = "path";
 const char* Rpc::PAR_METHOD = "method";
