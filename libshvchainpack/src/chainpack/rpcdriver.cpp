@@ -48,13 +48,13 @@ void RpcDriver::sendRpcValue(const RpcValue &msg)
 
 void RpcDriver::sendRawData(std::string &&data)
 {
-	logRpcRawMsg() << "send raw data: " << (data.size() > 250? "<... long data ...>" : Utils::toHex(data));
+	logRpcRawMsg() << SND_LOG_ARROW << "send raw data: " << (data.size() > 250? "<... long data ...>" : Utils::toHex(data));
 	enqueueDataToSend(Chunk{std::move(data)});
 }
 
 void RpcDriver::sendRawData(const RpcValue::MetaData &meta_data, std::string &&data)
 {
-	logRpcRawMsg() << "protocol:" << Rpc::ProtocolTypeToString(protocolType()) << "send raw meta + data: " << meta_data.toStdString()
+	logRpcRawMsg() << SND_LOG_ARROW << "protocol:" << Rpc::ProtocolTypeToString(protocolType()) << "send raw meta + data: " << meta_data.toStdString()
 				<< Utils::toHex(data, 0, 250);
 	using namespace std;
 	//shvLogFuncFrame() << msg.toStdString();

@@ -10,7 +10,7 @@ DeviceAppCliOptions::DeviceAppCliOptions(QObject *parent)
 	: Super(parent)
 {
 	addOption("device.mountPoint").setType(QVariant::String).setNames({"-m", "--mount", "--mount-point"}).setComment(tr("Shv tree, where device should be mounted to. Only paths beginning with test/ are enabled. --mount-point version is deprecated"));
-	addOption("device.id").setType(QVariant::String).setNames("-id", "--device-id").setComment(tr("Device ID"));
+	addOption("device.id").setType(QVariant::String).setNames("--id", "--device-id").setComment(tr("Device ID"));
 }
 
 DeviceConnection::DeviceConnection(QObject *parent)
