@@ -116,8 +116,8 @@ public:
 protected:
 	QVariant value_helper(const QString &name, bool throw_exception) const;
 	QPair<QString, QString> applicationDirAndName() const;
-	QString takeArg();
-	QString peekArg() const;
+	QString takeArg(bool &ok);
+	QString peekArg(bool &ok) const;
 	void addParseError(const QString &err);
 private:
 	QMap<QString, Option> m_options;

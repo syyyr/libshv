@@ -102,8 +102,8 @@ CLIOptions::CLIOptions(QObject *parent)
 {
 	addOption("abortOnException").setType(QVariant::Bool).setNames("--abort-on-exception").setComment(tr("Abort application on exception"));
 	addOption("help").setType(QVariant::Bool).setNames("-h", "--help").setComment(tr("Print help"));
-	addOption("config").setType(QVariant::String).setNames("--config").setComment(tr("Config name, it is loaded from {app-name}[.conf] if file exists in {config-path}"));
-	addOption("configDir").setType(QVariant::String).setNames("--config-dir").setComment("Directory where server config fiels are searched, default value: {app-dir-path}.");
+	//addOption("config").setType(QVariant::String).setNames("--config").setComment(tr("Config name, it is loaded from {app-name}[.conf] if file exists in {config-path}"));
+	//addOption("configDir").setType(QVariant::String).setNames("--config-dir").setComment("Directory where server config fiels are searched, default value: {app-dir-path}.");
 }
 
 CLIOptions::~CLIOptions()
@@ -203,14 +203,16 @@ bool CLIOptions::setValue(const QString& name, const QVariant val, bool throw_ex
 	}
 }
 
-QString CLIOptions::takeArg()
+QString CLIOptions::takeArg(bool &ok)
 {
+	ok = m_parsedArgIndex < m_arguments.count();
 	QString ret = m_arguments.value(m_parsedArgIndex++);
 	return ret;
 }
 
-QString CLIOptions::peekArg() const
+QString CLIOptions::peekArg(bool &ok) const
 {
+	ok = m_parsedArgIndex < m_arguments.count();
 	QString ret = m_arguments.value(m_parsedArgIndex);
 	return ret;
 }
@@ -233,13 +235,15 @@ void CLIOptions::parse(const QStringList& cmd_line_args)
 	m_parseErrors = QStringList();
 	m_allArgs = cmd_line_args;
 
+	bool ok;
 	while(true) {
-		QString arg = takeArg();
-		if(arg.isEmpty())
+		QString arg = takeArg(ok);
+		if(!ok) {
+			//addParseError("Unexpected empty argument.");
 			break;
+		}
 		if(arg == QStringLiteral("--help") || arg == QStringLiteral("-h")) {
 			setHelp(true);
-			//printHelp();
 			m_isAppBreak = true;
 			return;
 		}
@@ -252,13 +256,13 @@ void CLIOptions::parse(const QStringList& cmd_line_args)
 				QStringList names = opt.names();
 				if(names.contains(arg)) {
 					found = true;
-					arg = peekArg();
-					if(arg.startsWith('-') || arg.isEmpty()) {
+					arg = peekArg(ok);
+					if(arg.startsWith('-') || !ok) {
 						// switch has no value entered
 						arg = QString();
 					}
 					else {
-						arg = takeArg();
+						arg = takeArg(ok);
 					}
 					opt.setValueString(arg);
 					break;
