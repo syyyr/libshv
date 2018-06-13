@@ -19,6 +19,7 @@ public:
 	static const char* KEY_CONNECTION_TYPE;
 	static const char* KEY_CLIENT_ID;
 	static const char* KEY_MOUT_POINT;
+	static const char* KEY_RELATIVE_PATH;
 	static const char* KEY_DEVICE_ID;
 	static const char* KEY_TUNNEL_HANDLE;
 
@@ -47,8 +48,8 @@ public:
 	static const char* PAR_METHOD;
 
 	static const char* NTF_VAL_CHANGED;
-	static const char* NTF_CONNECTED; /// obsolete
-	static const char* NTF_DISCONNECTED; /// obsolete
+	//static const char* NTF_CONNECTED; /// obsolete
+	//static const char* NTF_DISCONNECTED; /// obsolete
 	static const char* NTF_MOUNTED_CHANGED;
 	static const char* NTF_CONNECTED_CHANGED;
 

@@ -9,6 +9,7 @@ const char* Rpc::KEY_CONNECTION_OPTIONS = "options";
 const char* Rpc::KEY_CONNECTION_TYPE = "type";
 const char* Rpc::KEY_CLIENT_ID = "clientId";
 const char* Rpc::KEY_MOUT_POINT = "mountPoint";
+const char* Rpc::KEY_RELATIVE_PATH = "relPath";
 const char* Rpc::KEY_DEVICE_ID = "deviceId";
 const char* Rpc::KEY_TUNNEL_HANDLE = "tunnelHandle";
 
@@ -38,8 +39,8 @@ const char* Rpc::PAR_PATH = "path";
 const char* Rpc::PAR_METHOD = "method";
 
 const char* Rpc::NTF_VAL_CHANGED = "chng";
-const char* Rpc::NTF_CONNECTED = "connected";
-const char* Rpc::NTF_DISCONNECTED = "disconnected";
+//const char* Rpc::NTF_CONNECTED = "connected";
+//const char* Rpc::NTF_DISCONNECTED = "disconnected";
 const char* Rpc::NTF_MOUNTED_CHANGED = "mntchng";
 const char* Rpc::NTF_CONNECTED_CHANGED = "connchng";
 

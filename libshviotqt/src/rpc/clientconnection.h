@@ -63,6 +63,8 @@ public:
 	Q_SIGNAL void brokerConnectedChanged(bool is_connected);
 	const shv::chainpack::RpcValue::Map& loginResult() const {return m_connectionState.loginResult.toMap();}
 	unsigned brokerClientId() const;
+	static std::string brokerClientPath(unsigned client_id);
+	std::string brokerClientPath() const {return brokerClientPath(brokerClientId());}
 	std::string brokerMountPoint() const;
 public:
 	/// AbstractRpcConnection interface implementation

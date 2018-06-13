@@ -336,6 +336,11 @@ void ClientConnection::setBrokerConnected(bool b)
 	}
 }
 
+std::string ClientConnection::brokerClientPath(unsigned client_id)
+{
+	return std::string(cp::Rpc::DIR_BROKER) + "/clients/" + std::to_string(client_id) + "/app";
+}
+
 unsigned ClientConnection::brokerClientId() const
 {
 	return loginResult().value(cp::Rpc::KEY_CLIENT_ID).toUInt();

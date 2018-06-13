@@ -21,8 +21,8 @@
 namespace shv {
 namespace chainpack {
 
-const char * RpcDriver::SND_LOG_ARROW = "<==";
-const char * RpcDriver::RCV_LOG_ARROW = "==>";
+const char * RpcDriver::SND_LOG_ARROW = "==>";
+const char * RpcDriver::RCV_LOG_ARROW = "<==";
 
 int RpcDriver::s_defaultRpcTimeout = 5000;
 
