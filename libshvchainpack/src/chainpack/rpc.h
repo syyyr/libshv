@@ -36,6 +36,7 @@ public:
 	static const char* METH_ECHO;
 	static const char* METH_APP_NAME;
 	static const char* METH_DEVICE_ID;
+	static const char* METH_MOUNT_POINT;
 	static const char* METH_CONNECTION_TYPE;
 	static const char* METH_SUBSCRIBE;
 	static const char* METH_RUN_CMD;
