@@ -8,10 +8,10 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
-class SHVIOTQT_DECL_EXPORT TunnelHandle : public shv::chainpack::RpcValue::IMap
+class SHVIOTQT_DECL_EXPORT TunnelHandle
 {
-	using Super = shv::chainpack::RpcValue::IMap;
 public:
+	/*
 	class  MetaType : public shv::chainpack::meta::MetaType
 	{
 		using Super = shv::chainpack::meta::MetaType;
@@ -21,7 +21,7 @@ public:
 		//						MAX};};
 		struct Key {
 			enum Enum {
-				RequestId = shv::chainpack::RpcMessage::MetaType::Tag::RequestId,
+				RevRequestId = shv::chainpack::RpcMessage::MetaType::Tag::RequestId,
 				CallerIds = shv::chainpack::RpcMessage::MetaType::Tag::CallerIds,
 			};
 		};
@@ -29,15 +29,22 @@ public:
 		MetaType();
 		static void registerMetaType();
 	};
+	*/
 public:
-	TunnelHandle();
-	TunnelHandle(const shv::chainpack::RpcValue::IMap &m);
-	TunnelHandle(const shv::chainpack::RpcValue &request_id, const shv::chainpack::RpcValue &caller_ids);
+	TunnelHandle() {}
+	TunnelHandle(unsigned req_id, const shv::chainpack::RpcValue &caller_ids)
+		: m_requestId(req_id)
+		, m_callerIds(caller_ids)
+	{}
 
-	shv::chainpack::RpcValue requestId() const {return value(MetaType::Key::RequestId);}
-	shv::chainpack::RpcValue callerIds() const {return value(MetaType::Key::CallerIds);}
+	unsigned requestId() const {return m_requestId;}
+	const shv::chainpack::RpcValue& callerIds() const {return m_callerIds;}
+	bool isValid() const {return requestId() > 0 && m_callerIds.isValid();}
 
-	shv::chainpack::RpcValue toRpcValue() const;
+	//shv::chainpack::RpcValue toRpcValue() const;
+private:
+	unsigned m_requestId = 0;
+	shv::chainpack::RpcValue m_callerIds;
 };
 
 } // namespace rpc

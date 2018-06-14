@@ -5,7 +5,7 @@ namespace cp = shv::chainpack;
 namespace shv {
 namespace iotqt {
 namespace rpc {
-
+#if 0
 TunnelHandle::MetaType::MetaType()
 	: Super("TunnelHandle")
 {
@@ -43,16 +43,14 @@ TunnelHandle::TunnelHandle(const cp::RpcValue::IMap &m)
 
 TunnelHandle::TunnelHandle(const chainpack::RpcValue &request_id, const chainpack::RpcValue &caller_ids)
 {
-	(*this)[MetaType::Key::RequestId] = request_id;
+	(*this)[MetaType::Key::RevRequestId] = request_id;
 	(*this)[MetaType::Key::CallerIds] = caller_ids;
 }
-
 chainpack::RpcValue TunnelHandle::toRpcValue() const
 {
-	cp::RpcValue ret(*this);
-	ret.setMetaValue(cp::meta::Tag::MetaTypeId, TunnelHandle::MetaType::ID);
-	return ret;
+	return revRequestId();
 }
+#endif
 
 } // namespace rpc
 } // namespace iotqt
