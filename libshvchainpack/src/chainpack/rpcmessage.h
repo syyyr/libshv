@@ -80,8 +80,8 @@ public:
 	static void setRevCallerIds(RpcValue::MetaData &meta, const RpcValue &caller_ids);
 	static void pushRevCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id);
 	RpcValue revCallerIds() const;
-	void setOpenTunnelFlag();
-	static bool isOpenTunnelFlag(const RpcValue::MetaData &meta);
+	void setRegisterRevCallerIds();
+	static bool isRegisterRevCallerIds(const RpcValue::MetaData &meta);
 	/*
 	static RpcValue tunnelHandle(const RpcValue::MetaData &meta);
 	static void setTunnelHandle(RpcValue::MetaData &meta, const RpcValue &tun_handle);

@@ -290,36 +290,16 @@ RpcValue RpcMessage::revCallerIds() const
 	return metaValue(RpcMessage::MetaType::Tag::RevCallerIds);
 }
 
-void RpcMessage::setOpenTunnelFlag()
+void RpcMessage::setRegisterRevCallerIds()
 {
 	setMetaValue(RpcMessage::MetaType::Tag::RevCallerIds, nullptr);
 }
 
-bool RpcMessage::isOpenTunnelFlag(const RpcValue::MetaData &meta)
+bool RpcMessage::isRegisterRevCallerIds(const RpcValue::MetaData &meta)
 {
 	return revCallerIds(meta).isValid();
 }
-/*
-RpcValue RpcMessage::tunnelHandle(const RpcValue::MetaData &meta)
-{
-	return meta.value(RpcMessage::MetaType::Tag::TunnelHandle);
-}
 
-void RpcMessage::setTunnelHandle(RpcValue::MetaData &meta, const RpcValue &tun_handle)
-{
-	meta.setValue(RpcMessage::MetaType::Tag::TunnelHandle, tun_handle);
-}
-
-RpcValue RpcMessage::tunnelHandle() const
-{
-	return metaValue(RpcMessage::MetaType::Tag::TunnelHandle);
-}
-
-void RpcMessage::setTunnelHandle(const RpcValue &tun_handle)
-{
-	setMetaValue(RpcMessage::MetaType::Tag::TunnelHandle, tun_handle);
-}
-*/
 Rpc::ProtocolType RpcMessage::protocolType(const RpcValue::MetaData &meta)
 {
 	return (Rpc::ProtocolType)meta.value(RpcMessage::MetaType::Tag::ProtocolType).toUInt();
