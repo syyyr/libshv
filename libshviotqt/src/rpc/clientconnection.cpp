@@ -163,7 +163,7 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 	int hbi = cli_opts->heartbeatInterval();
 	if(hbi > 0) {
 		if(!m_pingTimer) {
-			shvInfo() << "Creating heart-beat timer, interval:" << hbi << "sec.";
+			shvInfo() << "Preparing heart-beat timer, interval:" << hbi << "sec.";
 			m_pingTimer = new QTimer(this);
 			m_pingTimer->setInterval(hbi * 1000);
 			connect(m_pingTimer, &QTimer::timeout, this, [this]() {
