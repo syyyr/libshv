@@ -11,7 +11,7 @@ class SHVCHAINPACK_DECL_EXPORT Rpc
 {
 public:
 	enum class ProtocolType {Invalid = 0, ChainPack, Cpon, JsonRpc};
-	static const char* ProtocolTypeToString(ProtocolType pv);
+	static const char* protocolTypeToString(ProtocolType pv);
 
 	static const char* OPT_IDLE_WD_TIMEOUT;
 

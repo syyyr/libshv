@@ -40,7 +40,7 @@ void RpcDriver::sendRpcValue(const RpcValue &msg)
 	//shvLogFuncFrame() << msg.toStdString();
 	logRpcRawMsg() << SND_LOG_ARROW << msg.toPrettyString();
 	std::string packed_data = codeRpcValue(protocolType(), msg);
-	logRpcData() << "protocol:" << Rpc::ProtocolTypeToString(protocolType())
+	logRpcData() << "protocol:" << Rpc::protocolTypeToString(protocolType())
 				 << "packed data:"
 				 << ((protocolType() == Rpc::ProtocolType::ChainPack)? Utils::toHex(packed_data, 0, 250): packed_data.substr(0, 250));
 	enqueueDataToSend(Chunk{std::move(packed_data)});
@@ -54,7 +54,7 @@ void RpcDriver::sendRawData(std::string &&data)
 
 void RpcDriver::sendRawData(const RpcValue::MetaData &meta_data, std::string &&data)
 {
-	logRpcRawMsg() << SND_LOG_ARROW << "protocol:" << Rpc::ProtocolTypeToString(protocolType()) << "send raw meta + data: " << meta_data.toStdString()
+	logRpcRawMsg() << SND_LOG_ARROW << "protocol:" << Rpc::protocolTypeToString(protocolType()) << "send raw meta + data: " << meta_data.toStdString()
 				<< Utils::toHex(data, 0, 250);
 	using namespace std;
 	//shvLogFuncFrame() << msg.toStdString();

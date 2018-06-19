@@ -58,7 +58,7 @@ const char* Rpc::JSONRPC_ERROR_MESSAGE = "message";
 const char* Rpc::JSONRPC_SHV_PATH = "path";
 const char* Rpc::JSONRPC_CALLER_ID = "cid";
 
-const char *Rpc::ProtocolTypeToString(Rpc::ProtocolType pv)
+const char *Rpc::protocolTypeToString(Rpc::ProtocolType pv)
 {
 	switch(pv) {
 	case ProtocolType::ChainPack: return "ChainPack";
