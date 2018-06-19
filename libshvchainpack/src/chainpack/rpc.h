@@ -21,11 +21,11 @@ public:
 	static const char* KEY_MOUT_POINT;
 	static const char* KEY_RELATIVE_PATH;
 	static const char* KEY_DEVICE_ID;
-	static const char* KEY_TUNNEL_HANDLE;
+	//static const char* KEY_TUNNEL_HANDLE;
 
 	static const char* TYPE_CLIENT;
 	static const char* TYPE_DEVICE;
-	static const char* TYPE_TUNNEL;
+	//static const char* TYPE_TUNNEL;
 
 	static const char* METH_HELLO;
 	static const char* METH_LOGIN;

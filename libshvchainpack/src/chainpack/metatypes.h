@@ -81,8 +81,8 @@ public:
 	{
 		enum Enum {
 			ChainPackRpcMessage = 1,
-			RpcTunnelParams,
-			RpcTunnelHandle,
+			RpcConnectionParams,
+			//RpcTunnelHandle,
 		};
 	};
 };

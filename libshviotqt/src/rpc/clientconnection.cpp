@@ -26,6 +26,54 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
+ConnectionParams::MetaType::MetaType()
+	: Super("TunnelParams")
+{
+	m_keys = {
+		RPC_META_KEY_DEF(Host),
+		RPC_META_KEY_DEF(Port),
+		RPC_META_KEY_DEF(User),
+		RPC_META_KEY_DEF(Password),
+		//RPC_META_KEY_DEF(ParentClientId),
+		//RPC_META_KEY_DEF(CallerClientIds),
+		//RPC_META_KEY_DEF(RequestId),
+		//RPC_META_KEY_DEF(TunName),
+	};
+	//m_tags = {
+	//	{(int)Tag::RequestId, {(int)Tag::RequestId, "id"}},
+	//	{(int)Tag::ShvPath, {(int)Tag::ShvPath, "shvPath"}},
+	//};
+}
+
+void ConnectionParams::MetaType::registerMetaType()
+{
+	static bool is_init = false;
+	if(!is_init) {
+		is_init = true;
+		static MetaType s;
+		shv::chainpack::meta::registerType(shv::chainpack::meta::GlobalNS::ID, MetaType::ID, &s);
+	}
+}
+
+ConnectionParams::ConnectionParams()
+	: Super()
+{
+	MetaType::registerMetaType();
+}
+
+ConnectionParams::ConnectionParams(const IMap &m)
+	: Super(m)
+{
+	MetaType::registerMetaType();
+}
+
+chainpack::RpcValue ConnectionParams::toRpcValue() const
+{
+	cp::RpcValue ret(*this);
+	ret.setMetaValue(cp::meta::Tag::MetaTypeId, ConnectionParams::MetaType::ID);
+	return ret;
+}
+
 ClientConnection::ClientConnection(SyncCalls sync_calls, QObject *parent)
 	: QObject(parent)
 	, m_syncCalls(sync_calls)

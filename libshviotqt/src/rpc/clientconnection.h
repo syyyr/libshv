@@ -20,6 +20,43 @@ namespace rpc {
 
 class ClientAppCliOptions;
 
+class SHVIOTQT_DECL_EXPORT ConnectionParams : public shv::chainpack::RpcValue::IMap
+{
+	using Super = shv::chainpack::RpcValue::IMap;
+public:
+	class SHVIOTQT_DECL_EXPORT MetaType : public shv::chainpack::meta::MetaType
+	{
+		using Super = shv::chainpack::meta::MetaType;
+	public:
+		enum {ID = shv::chainpack::meta::GlobalNS::RegisteredMetaTypes::RpcConnectionParams};
+		//struct Tag { enum Enum {RequestId = meta::Tag::USER,
+		//						MAX};};
+		struct Key { enum Enum {
+				Host = 1,
+				Port,
+				User,
+				Password,
+				//ParentClientId,
+				//CallerClientIds,
+				//RequestId,
+				//TunName,
+				MAX
+			};
+		};
+
+		MetaType();
+
+		static void registerMetaType();
+	};
+public:
+	ConnectionParams();
+	ConnectionParams(const shv::chainpack::RpcValue::IMap &m);
+	//TunnelParams& operator=(TunnelParams &&o) {Super::operator =(std::move(o)); return *this;}
+
+	shv::chainpack::RpcValue toRpcValue() const;
+	//shv::chainpack::RpcValue callerClientIds() const;
+};
+
 class SHVIOTQT_DECL_EXPORT ClientConnection : public QObject, public shv::chainpack::AbstractRpcConnection
 {
 	Q_OBJECT

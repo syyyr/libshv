@@ -11,11 +11,11 @@ const char* Rpc::KEY_CLIENT_ID = "clientId";
 const char* Rpc::KEY_MOUT_POINT = "mountPoint";
 const char* Rpc::KEY_RELATIVE_PATH = "relPath";
 const char* Rpc::KEY_DEVICE_ID = "deviceId";
-const char* Rpc::KEY_TUNNEL_HANDLE = "tunnelHandle";
+//const char* Rpc::KEY_TUNNEL_HANDLE = "tunnelHandle";
 
 const char* Rpc::TYPE_CLIENT = "client";
 const char* Rpc::TYPE_DEVICE = "device";
-const char* Rpc::TYPE_TUNNEL = "tunnel";
+//const char* Rpc::TYPE_TUNNEL = "tunnel";
 
 const char* Rpc::METH_HELLO = "hello";
 const char* Rpc::METH_LOGIN = "login";

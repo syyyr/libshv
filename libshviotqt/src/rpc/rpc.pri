@@ -7,7 +7,6 @@ SOURCES += \
     $$PWD/serverconnection.cpp \
     $$PWD/deviceconnection.cpp \
     $$PWD/clientappclioptions.cpp \
-    $$PWD/tunnelconnection.cpp \
     $$PWD/tunnelhandle.cpp
 
 HEADERS += \
@@ -19,6 +18,5 @@ HEADERS += \
     $$PWD/serverconnection.h \
     $$PWD/deviceconnection.h \
     $$PWD/clientappclioptions.h \
-    $$PWD/tunnelconnection.h \
     $$PWD/tunnelhandle.h
 
