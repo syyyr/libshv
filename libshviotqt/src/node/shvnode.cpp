@@ -82,6 +82,18 @@ ShvRootNode *ShvNode::rootNode()
 	return nullptr;
 }
 
+void ShvNode::deleteDanglingPath()
+{
+	ShvNode *nd = this;
+	ShvNode *dangling_nd = nullptr;
+	while(!nd->isRootNode() && nd->childNames().empty()) {
+		dangling_nd = nd;
+		nd = nd->parentNode();
+	}
+	if(dangling_nd)
+		delete dangling_nd;
+}
+
 void ShvNode::processRawData(const chainpack::RpcValue::MetaData &meta, std::string &&data)
 {
 	shvLogFuncFrame() << meta.toStdString();

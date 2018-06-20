@@ -38,8 +38,9 @@ public:
 	String shvPath() const;
 	ShvRootNode* rootNode();
 
-	virtual bool isRootNode() const {return false;}
+	void deleteDanglingPath();
 
+	virtual bool isRootNode() const {return false;}
 
 	virtual void processRawData(const shv::chainpack::RpcValue::MetaData &meta, std::string &&data);
 	virtual chainpack::RpcValue processRpcRequest(const shv::chainpack::RpcRequest &rq);
