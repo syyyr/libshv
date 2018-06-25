@@ -14,7 +14,7 @@
 #include <ctime>
 #include <sstream>
 #include <iostream>
-//#include <utility>
+#include <chrono>
 
 namespace {
 #if defined _WIN32 || defined LIBC_NEWLIB
@@ -891,6 +891,13 @@ static bool parse_ISO_DateTime(const std::string &s, std::tm &tm, unsigned &msec
 	return true;
 }
 
+RpcValue::DateTime RpcValue::DateTime::now()
+{
+	std::chrono::time_point<std::chrono::system_clock> p1 = std::chrono::system_clock::now();
+	int msecs = std::chrono::duration_cast<std::chrono:: milliseconds>(p1.time_since_epoch()).count();
+	return fromMSecsSinceEpoch(msecs);
+}
+
 RpcValue::DateTime RpcValue::DateTime::fromLocalString(const std::string &local_date_time_str)
 {
 	std::tm tm;
@@ -982,7 +989,7 @@ std::string RpcValue::DateTime::toUtcString() const
 		ret += 'Z';
 	}
 	else {
-		int min = offsetFromUtc();
+		int min = minutesFromUtc();
 		if(min < 0)
 			min = -min;
 		int hour = min / 60;

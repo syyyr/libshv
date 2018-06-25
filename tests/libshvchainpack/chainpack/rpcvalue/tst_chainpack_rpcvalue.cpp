@@ -119,7 +119,7 @@ private:
 			QVERIFY(cp[8] == RpcValue::Blob("Hello"));
 			RpcValue::DateTime dt = cp[9].toDateTime();
 			QVERIFY(dt.msecsSinceEpoch() % 1000 == 256);
-			QVERIFY(dt.offsetFromUtc() == -(10*60+45));
+			QVERIFY(dt.minutesFromUtc() == -(10*60+45));
 
 		}
 		{
@@ -567,6 +567,14 @@ private:
 		}
 		{
 			qDebug() << "------------- DateTime";
+			QVERIFY(RpcValue::DateTime().isValid() == false);
+			QVERIFY(RpcValue::DateTime::fromMSecsSinceEpoch(0).isValid() == true);
+			QVERIFY(RpcValue::DateTime() == RpcValue::DateTime());
+			QVERIFY(RpcValue::DateTime::fromMSecsSinceEpoch(0) == RpcValue::DateTime::fromMSecsSinceEpoch(0));
+			QVERIFY(RpcValue::DateTime::fromMSecsSinceEpoch(1) == RpcValue::DateTime::fromMSecsSinceEpoch(1, 2));
+			QVERIFY(!(RpcValue::DateTime() < RpcValue::DateTime()));
+			QVERIFY(RpcValue::DateTime() < RpcValue::DateTime::fromMSecsSinceEpoch(0));
+			QVERIFY(RpcValue::DateTime::fromMSecsSinceEpoch(1) < RpcValue::DateTime::fromMSecsSinceEpoch(2));
 			for(std::string str : {
 				"2018-02-02 0:00:00.001",
 				"2018-02-02 01:00:00.001+01",

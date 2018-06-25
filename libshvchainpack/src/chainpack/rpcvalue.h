@@ -81,21 +81,42 @@ public:
 		// Fri Feb 02 2018 00:00:00 == 1517529600 EPOCH
 		static constexpr int64_t SHV_EPOCH_MSEC = 1517529600000;
 	public:
-		DateTime() {}
+		DateTime() : m_dtm{TZ_INVALID, 0} {}
 		int64_t msecsSinceEpoch() const { return m_dtm.msec; }
-		int offsetFromUtc() const { return m_dtm.tz * 15; }
-		//bool isTZSet() const { return m_dtm.tz == TZ_INVALID; }
+		int minutesFromUtc() const { return m_dtm.tz * 15; }
 
+		static DateTime now();
 		static DateTime fromLocalString(const std::string &local_date_time_str);
 		static DateTime fromUtcString(const std::string &utc_date_time_str);
 		static DateTime fromMSecsSinceEpoch(int64_t msecs, int utc_offset_min = 0);
 
+		void setTimeZone(int utc_offset_min) {m_dtm.tz = utc_offset_min / 15;}
+
 		std::string toLocalString() const;
 		std::string toUtcString() const;
 
-		bool operator ==(const DateTime &o) const {return m_dtm.msec == o.m_dtm.msec && m_dtm.tz == o.m_dtm.tz;}
+		bool operator ==(const DateTime &o) const
+		{
+			if(!o.isValid())
+				return !o.isValid();
+			if(!isValid())
+				return false;
+			return (m_dtm.msec == o.m_dtm.msec);
+		}
+		bool operator <(const DateTime &o) const
+		{
+			if(!o.isValid())
+				return false;
+			if(!isValid())
+				return true;
+			return m_dtm.msec < o.m_dtm.msec;
+		}
+		bool isValid() const
+		{
+			return m_dtm.tz != TZ_INVALID;
+		}
 	private:
-		//static constexpr int8_t TZ_INVALID = -128;
+		static constexpr int8_t TZ_INVALID = -64;
 		struct MsTz {
 			int64_t tz: 7, msec: 57;
 		};
