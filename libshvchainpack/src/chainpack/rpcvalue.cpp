@@ -920,6 +920,8 @@ RpcValue::DateTime RpcValue::DateTime::fromLocalString(const std::string &local_
 
 RpcValue::DateTime RpcValue::DateTime::fromUtcString(const std::string &utc_date_time_str)
 {
+	if(utc_date_time_str.empty())
+		return DateTime();
 	std::tm tm;
 	unsigned msec;
 	int8_t utc_offset;
@@ -973,6 +975,8 @@ std::string RpcValue::DateTime::toLocalString() const
 
 std::string RpcValue::DateTime::toUtcString() const
 {
+	if(!isValid())
+		return std::string();
 	std::time_t tim = m_dtm.msec / 1000 + m_dtm.tz * 15 * 60;
 	std::tm *tm = std::gmtime(&tim);
 	if(tm == nullptr) {

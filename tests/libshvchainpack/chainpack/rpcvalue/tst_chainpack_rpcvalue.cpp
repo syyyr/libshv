@@ -568,6 +568,7 @@ private:
 		{
 			qDebug() << "------------- DateTime";
 			QVERIFY(RpcValue::DateTime().isValid() == false);
+			QVERIFY(RpcValue::DateTime::fromUtcString("").isValid() == false);
 			QVERIFY(RpcValue::DateTime::fromMSecsSinceEpoch(0).isValid() == true);
 			QVERIFY(RpcValue::DateTime() == RpcValue::DateTime());
 			QVERIFY(RpcValue::DateTime::fromMSecsSinceEpoch(0) == RpcValue::DateTime::fromMSecsSinceEpoch(0));
@@ -576,8 +577,8 @@ private:
 			QVERIFY(RpcValue::DateTime() < RpcValue::DateTime::fromMSecsSinceEpoch(0));
 			QVERIFY(RpcValue::DateTime::fromMSecsSinceEpoch(1) < RpcValue::DateTime::fromMSecsSinceEpoch(2));
 			QVERIFY(RpcValue::DateTime::fromMSecsSinceEpoch(0) == RpcValue::DateTime::fromUtcString("1970-01-01T00:00:00"));
-			//RpcValue::DateTime ts = RpcValue::DateTime::now();
-			//qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~ " << ts.msecsSinceEpoch() << RpcValue(ts).toCpon();
+			//RpcValue::DateTime ts;// = RpcValue::DateTime::now();
+			//qDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~ " << RpcValue(ts).toCpon();
 			for(std::string str : {
 				"2018-02-02 0:00:00.001",
 				"2018-02-02 01:00:00.001+01",
