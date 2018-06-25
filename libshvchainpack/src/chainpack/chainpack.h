@@ -8,6 +8,10 @@ namespace chainpack {
 class SHVCHAINPACK_DECL_EXPORT ChainPack
 {
 public:
+	// UTC msec since 2.2. 2018 folowed by signed UTC offset in 1/4 hour
+	// Fri Feb 02 2018 00:00:00 == 1517529600 EPOCH
+	static constexpr int64_t SHV_EPOCH_MSEC = 1517529600000;
+public:
 	static constexpr uint8_t ARRAY_FLAG_MASK = 64;
 	struct SHVCHAINPACK_DECL_EXPORT TypeInfo {
 		enum Enum {

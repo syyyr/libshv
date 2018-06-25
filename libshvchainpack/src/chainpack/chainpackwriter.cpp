@@ -156,7 +156,7 @@ void writeData_Blob(std::ostream &out, const T &blob)
 
 void writeData_DateTime(std::ostream &out, const RpcValue::DateTime &dt)
 {
-	int64_t msecs = dt.msecsSinceEpoch() - RpcValue::DateTime::SHV_EPOCH_MSEC;
+	int64_t msecs = dt.msecsSinceEpoch() - ChainPack::SHV_EPOCH_MSEC;
 	int offset = (dt.minutesFromUtc() / 15) & 0b01111111;
 	int ms = msecs % 1000;
 	if(ms == 0)

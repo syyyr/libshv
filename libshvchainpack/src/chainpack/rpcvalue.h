@@ -77,10 +77,6 @@ public:
 	class SHVCHAINPACK_DECL_EXPORT DateTime
 	{
 	public:
-		// UTC msec since 2.2. 2018 folowed by signed UTC offset in 1/4 hour
-		// Fri Feb 02 2018 00:00:00 == 1517529600 EPOCH
-		static constexpr int64_t SHV_EPOCH_MSEC = 1517529600000;
-	public:
 		DateTime() : m_dtm{TZ_INVALID, 0} {}
 		int64_t msecsSinceEpoch() const { return m_dtm.msec; }
 		int minutesFromUtc() const { return m_dtm.tz * 15; }

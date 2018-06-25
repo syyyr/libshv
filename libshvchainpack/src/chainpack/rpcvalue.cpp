@@ -894,7 +894,7 @@ static bool parse_ISO_DateTime(const std::string &s, std::tm &tm, unsigned &msec
 RpcValue::DateTime RpcValue::DateTime::now()
 {
 	std::chrono::time_point<std::chrono::system_clock> p1 = std::chrono::system_clock::now();
-	int msecs = std::chrono::duration_cast<std::chrono:: milliseconds>(p1.time_since_epoch()).count();
+	int64_t msecs = std::chrono::duration_cast<std::chrono:: milliseconds>(p1.time_since_epoch()).count();
 	return fromMSecsSinceEpoch(msecs);
 }
 

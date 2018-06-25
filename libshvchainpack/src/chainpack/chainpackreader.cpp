@@ -109,7 +109,7 @@ RpcValue::DateTime readData_DateTime(std::istream &data)
 	}
 	if(has_not_msec)
 		d *= 1000;
-	d += RpcValue::DateTime::SHV_EPOCH_MSEC;
+	d += ChainPack::SHV_EPOCH_MSEC;
 	RpcValue::DateTime dt = RpcValue::DateTime::fromMSecsSinceEpoch(d, offset * (int)15);
 	return dt;
 }
