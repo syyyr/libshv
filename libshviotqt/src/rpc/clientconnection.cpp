@@ -34,7 +34,7 @@ ConnectionParams::MetaType::MetaType()
 		RPC_META_KEY_DEF(Port),
 		RPC_META_KEY_DEF(User),
 		RPC_META_KEY_DEF(Password),
-		//RPC_META_KEY_DEF(ParentClientId),
+		RPC_META_KEY_DEF(OnConnectedCall),
 		//RPC_META_KEY_DEF(CallerClientIds),
 		//RPC_META_KEY_DEF(RequestId),
 		//RPC_META_KEY_DEF(TunName),

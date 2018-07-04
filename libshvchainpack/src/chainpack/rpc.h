@@ -66,6 +66,7 @@ public:
 	static const char* JSONRPC_ERROR_MESSAGE;
 	static const char* JSONRPC_SHV_PATH;
 	static const char* JSONRPC_CALLER_ID;
+	static const char* JSONRPC_REV_CALLER_ID;
 };
 
 } // namespace chainpack

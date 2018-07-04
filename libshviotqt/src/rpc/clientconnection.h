@@ -36,7 +36,7 @@ public:
 				Port,
 				User,
 				Password,
-				//ParentClientId,
+				OnConnectedCall,
 				//CallerClientIds,
 				//RequestId,
 				//TunName,

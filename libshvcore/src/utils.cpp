@@ -175,8 +175,19 @@ std::vector<char> Utils::readAllFd(int fd)
 	std::vector<char> ret;
 	do {
 		size_t prev_size = ret.size();
-		ret.resize(ret.size() + CHUNK_SIZE);
+		ret.resize(prev_size + CHUNK_SIZE);
 		ssize_t n = ::read(fd, ret.data() + prev_size, CHUNK_SIZE);
+		if(n < 0) {
+			if(errno == EAGAIN) {
+				shvError() << "no data available";
+				ret.resize(prev_size);
+				return ret;
+			}
+			else {
+				shvError() << "error read fd:" << fd << ::strerror(errno);
+				return std::vector<char>();
+			}
+		}
 		if(n < CHUNK_SIZE) {
 			ret.resize(prev_size + n);
 			break;

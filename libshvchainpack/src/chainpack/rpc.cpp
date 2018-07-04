@@ -57,6 +57,7 @@ const char* Rpc::JSONRPC_ERROR_CODE = "code";
 const char* Rpc::JSONRPC_ERROR_MESSAGE = "message";
 const char* Rpc::JSONRPC_SHV_PATH = "path";
 const char* Rpc::JSONRPC_CALLER_ID = "cid";
+const char* Rpc::JSONRPC_REV_CALLER_ID = "rcid";
 
 const char *Rpc::protocolTypeToString(Rpc::ProtocolType pv)
 {
