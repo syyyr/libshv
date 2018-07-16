@@ -104,4 +104,9 @@ const MetaType &registeredType(int ns_id, int type_id)
 	return invalid;
 }
 
+ElesysNS::ElesysNS()
+	: Super("elesys")
+{
+}
+
 }}}
