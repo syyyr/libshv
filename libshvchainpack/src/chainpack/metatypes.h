@@ -70,11 +70,17 @@ SHVCHAINPACK_DECL_EXPORT void registerType(int ns_id, int type_id, MetaType *tid
 SHVCHAINPACK_DECL_EXPORT const MetaNameSpace& registeredNameSpace(int ns_id);
 SHVCHAINPACK_DECL_EXPORT const MetaType& registeredType(int ns_id, int type_id);
 
+enum class NameSpaceID
+{
+	Global = 0,
+	Elesys
+};
+
 class GlobalNS : public meta::MetaNameSpace
 {
 	using Super = meta::MetaNameSpace;
 public:
-	enum {ID = 0};
+	enum {ID = (int)NameSpaceID::Global};
 	GlobalNS();
 
 	struct RegisteredMetaTypes
@@ -82,7 +88,21 @@ public:
 		enum Enum {
 			ChainPackRpcMessage = 1,
 			RpcConnectionParams,
-			//RpcTunnelHandle,
+		};
+	};
+};
+
+class ElesysNS : public meta::MetaNameSpace
+{
+	using Super = meta::MetaNameSpace;
+public:
+	enum {ID = (int)NameSpaceID::Elesys};
+	ElesysNS();
+
+	struct RegisteredMetaTypes
+	{
+		enum Enum {
+			VTKEventData = 1,
 		};
 	};
 };

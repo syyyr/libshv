@@ -49,8 +49,14 @@ static void initMetaTypes()
 	static bool is_init = false;
 	if(!is_init) {
 		is_init = true;
-		static GlobalNS def;
-		registerNameSpace(GlobalNS::ID, &def);
+		{
+			static GlobalNS def;
+			registerNameSpace(GlobalNS::ID, &def);
+		}
+		{
+			static ElesysNS def;
+			registerNameSpace(ElesysNS::ID, &def);
+		}
 	}
 }
 
