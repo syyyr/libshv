@@ -605,7 +605,7 @@ private:
 				ChainPackWriter wr(out); size_t len = wr.write(cp1);
 				std::string pack = out.str();
 				ChainPackReader rd(out); RpcValue cp2 = rd.read();
-				qDebug() << str << " " << dt.toUtcString().c_str() << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(pack);
+				qDebug() << str << " " << dt.toIsoString().c_str() << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(pack);
 				//qDebug() << cp1.toDateTime().msecsSinceEpoch() << cp1.toDateTime().offsetFromUtc();
 				//qDebug() << cp2.toDateTime().msecsSinceEpoch() << cp2.toDateTime().offsetFromUtc();
 				QVERIFY(cp1.type() == cp2.type());

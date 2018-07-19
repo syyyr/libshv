@@ -77,6 +77,9 @@ public:
 	class SHVCHAINPACK_DECL_EXPORT DateTime
 	{
 	public:
+		enum class MsecPolicy {Auto, Always, Never};
+		static constexpr bool IncludeTimeZone = true;
+	public:
 		DateTime() : m_dtm{TZ_INVALID, 0} {}
 		int64_t msecsSinceEpoch() const { return m_dtm.msec; }
 		int minutesFromUtc() const { return m_dtm.tz * 15; }
@@ -89,7 +92,8 @@ public:
 		void setTimeZone(int utc_offset_min) {m_dtm.tz = utc_offset_min / 15;}
 
 		std::string toLocalString() const;
-		std::string toUtcString() const;
+		std::string toIsoString() const {return toIsoString(MsecPolicy::Auto, IncludeTimeZone);}
+		std::string toIsoString(MsecPolicy msec_policy, bool include_tz) const;
 
 		bool operator ==(const DateTime &o) const
 		{

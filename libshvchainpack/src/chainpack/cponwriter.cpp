@@ -282,7 +282,7 @@ CponWriter &CponWriter::write(RpcValue::Decimal value)
 
 CponWriter &CponWriter::write(RpcValue::DateTime value)
 {
-	m_out << Cpon::STR_DATETIME_BEGIN << value.toUtcString() << '"';
+	m_out << Cpon::STR_DATETIME_BEGIN << value.toIsoString() << '"';
 	return *this;
 }
 

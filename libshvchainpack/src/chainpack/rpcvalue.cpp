@@ -239,7 +239,7 @@ public:
 
 class ChainPackDateTime final : public ValueData<RpcValue::Type::DateTime, RpcValue::DateTime>
 {
-	std::string toStdString() const override { return m_value.toUtcString(); }
+	std::string toStdString() const override { return m_value.toIsoString(); }
 
 	bool toBool() const override { return m_value.msecsSinceEpoch() != 0; }
 	int64_t toInt64() const override { return m_value.msecsSinceEpoch(); }
@@ -973,7 +973,7 @@ std::string RpcValue::DateTime::toLocalString() const
 	return ret;
 }
 
-std::string RpcValue::DateTime::toUtcString() const
+std::string RpcValue::DateTime::toIsoString(RpcValue::DateTime::MsecPolicy msec_policy, bool include_tz) const
 {
 	if(!isValid())
 		return std::string();
@@ -987,21 +987,23 @@ std::string RpcValue::DateTime::toUtcString() const
 	std::strftime(buffer, sizeof(buffer),"%Y-%m-%dT%H:%M:%S",tm);
 	std::string ret(buffer);
 	int msecs = m_dtm.msec % 1000;
-	if(msecs > 0)
+	if((msec_policy == MsecPolicy::Always) || (msecs > 0 && msec_policy != MsecPolicy::Auto))
 		ret += '.' + Utils::toString(msecs % 1000, 3);
-	if(m_dtm.tz == 0) {
-		ret += 'Z';
-	}
-	else {
-		int min = minutesFromUtc();
-		if(min < 0)
-			min = -min;
-		int hour = min / 60;
-		min = min % 60;
-		std::string tz = Utils::toString(hour, 2);
-		if(min != 0)
-			tz += Utils::toString(min, 2);
-		ret += ((m_dtm.tz < 0)? '-': '+') + tz;
+	if(include_tz) {
+		if(m_dtm.tz == 0) {
+			ret += 'Z';
+		}
+		else {
+			int min = minutesFromUtc();
+			if(min < 0)
+				min = -min;
+			int hour = min / 60;
+			min = min % 60;
+			std::string tz = Utils::toString(hour, 2);
+			if(min != 0)
+				tz += Utils::toString(min, 2);
+			ret += ((m_dtm.tz < 0)? '-': '+') + tz;
+		}
 	}
 	return ret;
 }
