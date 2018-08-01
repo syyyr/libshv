@@ -19,6 +19,8 @@ public:
 		, m_signature(ms)
 		, m_isSignal(is_sig) {}
 
+	static constexpr bool IsSignal = true;
+
 	const char *name() const {return m_name;}
 	RpcValue attributes(unsigned mask) const
 	{
