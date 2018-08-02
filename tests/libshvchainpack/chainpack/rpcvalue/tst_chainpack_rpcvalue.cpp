@@ -20,6 +20,62 @@
 #include <algorithm>
 #include <type_traits>
 
+#ifdef __linux
+
+#ifdef RUSAGE_USAGE
+#include <sys/time.h>
+#include <sys/resource.h>
+
+static void dump_memory()
+{
+	struct rusage ru;
+	getrusage(RUSAGE_SELF, &ru);
+	qDebug() << "integral shared memory size     :" << ru.ru_ixrss << "kB";
+	qDebug() << "integral unshared data size     :" << ru.ru_idrss;
+	qDebug() << "integral unshared stack size    :" << ru.ru_isrss;
+	qDebug() << "page reclaims (soft page faults):" << ru.ru_minflt;
+	qDebug() << "page faults (hard page faults)  :" << ru.ru_majflt;
+	qDebug() << "swaps                           :" << ru.ru_nswap;
+}
+#endif
+
+#include <unistd.h>
+#include <fstream>
+
+void process_mem_usage(double& vm_usage, double& resident_set)
+{
+	vm_usage     = 0.0;
+	resident_set = 0.0;
+
+	// the two fields we want
+	unsigned long vsize;
+	long rss;
+	{
+		std::string ignore;
+		std::ifstream ifs("/proc/self/stat", std::ios_base::in);
+		ifs >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore
+				>> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore
+				>> ignore >> ignore >> vsize >> rss;
+	}
+
+	long page_size_kb = ::sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
+	vm_usage = vsize / 1024.0;
+	resident_set = rss * page_size_kb;
+}
+
+static void dump_memory()
+{
+	double vm, rss;
+	process_mem_usage(vm, rss);
+	//cout << "VM: " << vm << "; RSS: " << rss << endl;
+	qDebug() << "\tVM :" << vm;
+	qDebug() << "\tRSS:" << rss;
+	//qDebug() << "\tNNN:" << shv::chainpack::RpcValue::AbstractValueData::nn();
+}
+
+
+#endif
+
 using namespace shv::chainpack;
 using std::string;
 
@@ -28,9 +84,9 @@ using std::string;
 CHECK_TRAIT(is_nothrow_constructible<RpcValue>);
 CHECK_TRAIT(is_nothrow_default_constructible<RpcValue>);
 CHECK_TRAIT(is_copy_constructible<RpcValue>);
-CHECK_TRAIT(is_nothrow_move_constructible<RpcValue>);
+CHECK_TRAIT(is_move_constructible<RpcValue>);
 CHECK_TRAIT(is_copy_assignable<RpcValue>);
-CHECK_TRAIT(is_nothrow_move_assignable<RpcValue>);
+CHECK_TRAIT(is_move_assignable<RpcValue>);
 CHECK_TRAIT(is_nothrow_destructible<RpcValue>);
 
 namespace {
@@ -852,6 +908,28 @@ private:
 			QVERIFY(cp1.type() == cp2.type());
 			QVERIFY(cp1.metaData() == cp2.metaData());
 		}
+#ifdef __linux
+		{
+			qDebug() << "------------- Memory usage";
+			static constexpr size_t count = 1000000;
+			qDebug() << "===before creating" << count << "values";
+			dump_memory();
+			{
+				RpcValue::List lst;
+				for (size_t i = 0; i < count; ++i) {
+					lst.push_back(i);
+				}
+				/*
+				std::vector<std::string> v;
+				v.resize(count);
+				*/
+				qDebug() << "===after creating" << count << "values";
+				dump_memory();
+			}
+			qDebug() << "===after releasing" << count << "values";
+			dump_memory();
+		}
+#endif
 	}
 
 private slots:
