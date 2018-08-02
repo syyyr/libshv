@@ -15,7 +15,8 @@ SOURCES += \
     $$PWD/chainpack.cpp \
     $$PWD/chainpackreader.cpp \
     $$PWD/abstractrpcconnection.cpp \
-    $$PWD/metamethod.cpp
+    $$PWD/metamethod.cpp \
+    $$PWD/shareddata.cpp
 
 HEADERS += \
     $$PWD/rpc.h \
@@ -34,7 +35,8 @@ HEADERS += \
     $$PWD/chainpack.h \
     $$PWD/chainpackreader.h \
     $$PWD/abstractrpcconnection.h \
-    $$PWD/metamethod.h
+    $$PWD/metamethod.h \
+    $$PWD/shareddata.h
 
 unix {
 SOURCES += \

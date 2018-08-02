@@ -27,9 +27,9 @@ using std::string;
 CHECK_TRAIT(is_nothrow_constructible<RpcValue>);
 CHECK_TRAIT(is_nothrow_default_constructible<RpcValue>);
 CHECK_TRAIT(is_copy_constructible<RpcValue>);
-CHECK_TRAIT(is_nothrow_move_constructible<RpcValue>);
+CHECK_TRAIT(is_move_constructible<RpcValue>);
 CHECK_TRAIT(is_copy_assignable<RpcValue>);
-CHECK_TRAIT(is_nothrow_move_assignable<RpcValue>);
+CHECK_TRAIT(is_move_assignable<RpcValue>);
 CHECK_TRAIT(is_nothrow_destructible<RpcValue>);
 
 namespace {

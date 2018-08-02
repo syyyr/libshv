@@ -3,6 +3,7 @@
 #include "../shvchainpackglobal.h"
 #include "exception.h"
 #include "metatypes.h"
+#include "shareddata.h"
 
 #include <string>
 #include <vector>
@@ -297,6 +298,7 @@ public:
 
 	// Constructors for the various types of JSON value.
 	RpcValue() noexcept;                // Null
+	//RpcValue(RpcValue&&) = default;
 #ifdef RPCVALUE_COPY_AND_SWAP
 	RpcValue(const RpcValue &other) noexcept : m_ptr(other.m_ptr) {}
 	RpcValue(RpcValue &&other) noexcept : RpcValue() { swap(other); }
@@ -422,8 +424,53 @@ public:
 	bool operator>  (const ChainPack &rhs) const { return  (rhs < *this); }
 	bool operator>= (const ChainPack &rhs) const { return !(*this < rhs); }
 	*/
+public:
+	class AbstractValueData : public SharedData
+	{
+	public:
+		AbstractValueData();
+		virtual ~AbstractValueData();
+
+		static int nn();
+
+		virtual RpcValue::Type type() const {return RpcValue::Type::Invalid;}
+		virtual RpcValue::Type arrayType() const {return RpcValue::Type::Invalid;}
+
+		virtual const RpcValue::MetaData &metaData() const = 0;
+		virtual void setMetaData(RpcValue::MetaData &&meta_data) = 0;
+		virtual void setMetaValue(RpcValue::UInt key, const RpcValue &val) = 0;
+		virtual void setMetaValue(RpcValue::String key, const RpcValue &val) = 0;
+
+		virtual bool equals(const AbstractValueData * other) const = 0;
+		//virtual bool less(const Data * other) const = 0;
+
+		virtual bool isNull() const {return false;}
+		virtual double toDouble() const {return 0;}
+		virtual RpcValue::Decimal toDecimal() const { return RpcValue::Decimal{}; }
+		virtual RpcValue::Int toInt() const {return 0;}
+		virtual RpcValue::UInt toUInt() const {return 0;}
+		virtual int64_t toInt64() const {return 0;}
+		virtual uint64_t toUInt64() const {return 0;}
+		virtual bool toBool() const {return false;}
+		virtual RpcValue::DateTime toDateTime() const { return RpcValue::DateTime{}; }
+		virtual const std::string &toString() const;
+		virtual const RpcValue::Blob &toBlob() const;
+		virtual const RpcValue::List &toList() const;
+		virtual const RpcValue::Array &toArray() const;
+		virtual const RpcValue::Map &toMap() const;
+		virtual const RpcValue::IMap &toIMap() const;
+		virtual size_t count() const {return 0;}
+
+		virtual RpcValue at(RpcValue::UInt i) const;
+		virtual RpcValue at(const RpcValue::String &key) const;
+		virtual void set(RpcValue::UInt ix, const RpcValue &val);
+		virtual void set(const RpcValue::String &key, const RpcValue &val);
+		virtual void append(const RpcValue &);
+
+		virtual std::string toStdString() const = 0;
+	};
 private:
-	std::shared_ptr<AbstractValueData> m_ptr;
+	ExplicitlySharedDataPointer<AbstractValueData> m_ptr;
 };
 
 template<typename T> RpcValue::Type guessType() { throw std::runtime_error("guessing of this type is not implemented"); }

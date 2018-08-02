@@ -8,6 +8,7 @@
 
 #include <necrolog.h>
 
+#include <atomic>
 #include <cassert>
 #include <cstdlib>
 #include <cstdio>
@@ -56,50 +57,23 @@ time_t timegm(struct tm *tm)
 namespace shv {
 namespace chainpack {
 
-/*
-using std::string;
-*/
-class RpcValue::AbstractValueData
+static int n = 0;
+
+RpcValue::AbstractValueData::AbstractValueData()
 {
-public:
-	virtual ~AbstractValueData() {}
+	++n;
+}
 
-	virtual RpcValue::Type type() const {return RpcValue::Type::Invalid;}
-	virtual RpcValue::Type arrayType() const {return RpcValue::Type::Invalid;}
+RpcValue::AbstractValueData::~AbstractValueData()
+{
+	n--;
+}
 
-	virtual const RpcValue::MetaData &metaData() const = 0;
-	virtual void setMetaData(RpcValue::MetaData &&meta_data) = 0;
-	virtual void setMetaValue(RpcValue::UInt key, const RpcValue &val) = 0;
-	virtual void setMetaValue(RpcValue::String key, const RpcValue &val) = 0;
+int RpcValue::AbstractValueData::nn()
+{
+	return n;
+}
 
-	virtual bool equals(const AbstractValueData * other) const = 0;
-	//virtual bool less(const Data * other) const = 0;
-
-	virtual bool isNull() const {return false;}
-	virtual double toDouble() const {return 0;}
-	virtual RpcValue::Decimal toDecimal() const { return RpcValue::Decimal{}; }
-	virtual RpcValue::Int toInt() const {return 0;}
-	virtual RpcValue::UInt toUInt() const {return 0;}
-	virtual int64_t toInt64() const {return 0;}
-	virtual uint64_t toUInt64() const {return 0;}
-	virtual bool toBool() const {return false;}
-	virtual RpcValue::DateTime toDateTime() const { return RpcValue::DateTime{}; }
-	virtual const std::string &toString() const;
-	virtual const RpcValue::Blob &toBlob() const;
-	virtual const RpcValue::List &toList() const;
-	virtual const RpcValue::Array &toArray() const;
-	virtual const RpcValue::Map &toMap() const;
-	virtual const RpcValue::IMap &toIMap() const;
-	virtual size_t count() const {return 0;}
-
-	virtual RpcValue at(RpcValue::UInt i) const;
-	virtual RpcValue at(const RpcValue::String &key) const;
-	virtual void set(RpcValue::UInt ix, const RpcValue &val);
-	virtual void set(const RpcValue::String &key, const RpcValue &val);
-	virtual void append(const RpcValue &);
-
-	virtual std::string toStdString() const = 0;
-};
 
 /* * * * * * * * * * * * * * * * * * * *
  * Value wrappers
@@ -367,9 +341,9 @@ public:
  */
 struct Statics
 {
-	const std::shared_ptr<RpcValue::AbstractValueData> null = std::make_shared<ChainPackNull>();
-	const std::shared_ptr<RpcValue::AbstractValueData> t = std::make_shared<ChainPackBoolean>(true);
-	const std::shared_ptr<RpcValue::AbstractValueData> f = std::make_shared<ChainPackBoolean>(false);
+	const ExplicitlySharedDataPointer<RpcValue::AbstractValueData> null = ExplicitlySharedDataPointer<RpcValue::AbstractValueData>{new ChainPackNull{}};
+	const ExplicitlySharedDataPointer<RpcValue::AbstractValueData> t = ExplicitlySharedDataPointer<RpcValue::AbstractValueData>{new ChainPackBoolean{true}};
+	const ExplicitlySharedDataPointer<RpcValue::AbstractValueData> f = ExplicitlySharedDataPointer<RpcValue::AbstractValueData>{new ChainPackBoolean{false}};
 	const RpcValue::String empty_string;
 	const RpcValue::Blob empty_blob;
 	//const std::vector<ChainPack> empty_vector;
@@ -399,32 +373,32 @@ static const RpcValue::IMap & static_empty_imap() { static const RpcValue::IMap 
 
 RpcValue::RpcValue() noexcept {}
 RpcValue::RpcValue(std::nullptr_t) noexcept : m_ptr(statics().null) {}
-RpcValue::RpcValue(double value) : m_ptr(std::make_shared<ChainPackDouble>(value)) {}
-RpcValue::RpcValue(RpcValue::Decimal value) : m_ptr(std::make_shared<ChainPackDecimal>(std::move(value))) {}
-RpcValue::RpcValue(int32_t value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
-RpcValue::RpcValue(uint32_t value) : m_ptr(std::make_shared<ChainPackUInt>(value)) {}
-RpcValue::RpcValue(int64_t value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
-RpcValue::RpcValue(uint64_t value) : m_ptr(std::make_shared<ChainPackUInt>(value)) {}
+RpcValue::RpcValue(double value) : m_ptr(new ChainPackDouble(value)) {}
+RpcValue::RpcValue(RpcValue::Decimal value) : m_ptr(new ChainPackDecimal(std::move(value))) {}
+RpcValue::RpcValue(int32_t value) : m_ptr(new ChainPackInt(value)) {}
+RpcValue::RpcValue(uint32_t value) : m_ptr(new ChainPackUInt(value)) {}
+RpcValue::RpcValue(int64_t value) : m_ptr(new ChainPackInt(value)) {}
+RpcValue::RpcValue(uint64_t value) : m_ptr(new ChainPackUInt(value)) {}
 RpcValue::RpcValue(bool value) : m_ptr(value ? statics().t : statics().f) {}
-RpcValue::RpcValue(const DateTime &value) : m_ptr(std::make_shared<ChainPackDateTime>(value)) {}
+RpcValue::RpcValue(const DateTime &value) : m_ptr(new ChainPackDateTime(value)) {}
 
-RpcValue::RpcValue(const RpcValue::Blob &value) : m_ptr(std::make_shared<ChainPackBlob>(value)) {}
-RpcValue::RpcValue(RpcValue::Blob &&value) : m_ptr(std::make_shared<ChainPackBlob>(std::move(value))) {}
-RpcValue::RpcValue(const uint8_t * value, size_t size) : m_ptr(std::make_shared<ChainPackBlob>(value, size)) {}
-RpcValue::RpcValue(const std::string &value) : m_ptr(std::make_shared<ChainPackString>(value)) {}
-RpcValue::RpcValue(std::string &&value) : m_ptr(std::make_shared<ChainPackString>(std::move(value))) {}
-RpcValue::RpcValue(const char * value) : m_ptr(std::make_shared<ChainPackString>(value)) {}
-RpcValue::RpcValue(const RpcValue::List &values) : m_ptr(std::make_shared<ChainPackList>(values)) {}
-RpcValue::RpcValue(RpcValue::List &&values) : m_ptr(std::make_shared<ChainPackList>(std::move(values))) {}
+RpcValue::RpcValue(const RpcValue::Blob &value) : m_ptr(new ChainPackBlob(value)) {}
+RpcValue::RpcValue(RpcValue::Blob &&value) : m_ptr(new ChainPackBlob(std::move(value))) {}
+RpcValue::RpcValue(const uint8_t * value, size_t size) : m_ptr(new ChainPackBlob(value, size)) {}
+RpcValue::RpcValue(const std::string &value) : m_ptr(new ChainPackString(value)) {}
+RpcValue::RpcValue(std::string &&value) : m_ptr(new ChainPackString(std::move(value))) {}
+RpcValue::RpcValue(const char * value) : m_ptr(new ChainPackString(value)) {}
+RpcValue::RpcValue(const RpcValue::List &values) : m_ptr(new ChainPackList(values)) {}
+RpcValue::RpcValue(RpcValue::List &&values) : m_ptr(new ChainPackList(std::move(values))) {}
 
-RpcValue::RpcValue(const Array &values) : m_ptr(std::make_shared<ChainPackArray>(values)) {}
-RpcValue::RpcValue(RpcValue::Array &&values) : m_ptr(std::make_shared<ChainPackArray>(std::move(values))) {}
+RpcValue::RpcValue(const Array &values) : m_ptr(new ChainPackArray(values)) {}
+RpcValue::RpcValue(RpcValue::Array &&values) : m_ptr(new ChainPackArray(std::move(values))) {}
 
-RpcValue::RpcValue(const RpcValue::Map &values) : m_ptr(std::make_shared<ChainPackMap>(values)) {}
-RpcValue::RpcValue(RpcValue::Map &&values) : m_ptr(std::make_shared<ChainPackMap>(std::move(values))) {}
+RpcValue::RpcValue(const RpcValue::Map &values) : m_ptr(new ChainPackMap(values)) {}
+RpcValue::RpcValue(RpcValue::Map &&values) : m_ptr(new ChainPackMap(std::move(values))) {}
 
-RpcValue::RpcValue(const RpcValue::IMap &values) : m_ptr(std::make_shared<ChainPackIMap>(values)) {}
-RpcValue::RpcValue(RpcValue::IMap &&values) : m_ptr(std::make_shared<ChainPackIMap>(std::move(values))) {}
+RpcValue::RpcValue(const RpcValue::IMap &values) : m_ptr(new ChainPackIMap(values)) {}
+RpcValue::RpcValue(RpcValue::IMap &&values) : m_ptr(new ChainPackIMap(std::move(values))) {}
 
 RpcValue::~RpcValue()
 {
@@ -650,7 +624,7 @@ bool RpcValue::operator== (const RpcValue &other) const
 			|| (m_ptr->type() == RpcValue::Type::UInt && other.m_ptr->type() == RpcValue::Type::Int)
 			|| (m_ptr->type() == RpcValue::Type::Int && other.m_ptr->type() == RpcValue::Type::UInt)
 		) {
-			return m_ptr->equals(other.m_ptr.get());
+			return m_ptr->equals(other.m_ptr.data());
 		}
 		return false;
 	}
