@@ -9,5 +9,9 @@ AbstractStreamWriter::AbstractStreamWriter(std::ostream &out)
 
 }
 
+AbstractStreamWriter::~AbstractStreamWriter()
+{
+}
+
 } // namespace chainpack
 } // namespace shv
