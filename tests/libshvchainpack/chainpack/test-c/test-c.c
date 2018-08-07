@@ -20,6 +20,36 @@ int test_pack_double(double d, const char *res)
 	return 0;
 }
 
+int test_pack_int(long i, const char *res)
+{
+	static const unsigned long BUFFLEN = 1024;
+	char buff[BUFFLEN];
+	ccpon_pack_context ctx;
+	ccpon_pack_context_init(&ctx, buff, BUFFLEN, NULL);
+	ccpon_pack_int(&ctx, i);
+	*ctx.current = '\0';
+	if(strcmp(buff, res)) {
+		printf("FAIL! pack signed %ld have: '%s' expected: '%s'\n", i, buff, res);
+		return -1;
+	}
+	return 0;
+}
+
+int test_pack_uint(unsigned long i, const char *res)
+{
+	static const unsigned long BUFFLEN = 1024;
+	char buff[BUFFLEN];
+	ccpon_pack_context ctx;
+	ccpon_pack_context_init(&ctx, buff, BUFFLEN, NULL);
+	ccpon_pack_uint(&ctx, i);
+	*ctx.current = '\0';
+	if(strcmp(buff, res)) {
+		printf("FAIL! pack unsigned %lu have: '%s' expected: '%s'\n", i, buff, res);
+		return -1;
+	}
+	return 0;
+}
+
 int test_unpack_number(const char *str, int expected_type, double expected_val)
 {
 	ccpon_unpack_context ctx;
@@ -117,10 +147,18 @@ int main(int argc, const char * argv[])
 	(void)argv;
 	printf("C Cpon test started.\n");
 
+	test_pack_int(1, "1");
+	test_pack_int(-1234567890l, "-1234567890");
+
+	test_pack_uint(1, "1u");
+	test_pack_uint(1234567890l, "1234567890u");
+
+	test_pack_double(0.1, "0.1");
 	test_pack_double(1, "1.");
 	test_pack_double(1.2, "1.2");
 
 	test_unpack_number("1", CCPON_ITEM_INT, 1);
+	test_unpack_number("123u", CCPON_ITEM_UINT, 123);
 	test_unpack_number("+123", CCPON_ITEM_INT, 123);
 	test_unpack_number("-1", CCPON_ITEM_INT, -1);
 	test_unpack_number("1u", CCPON_ITEM_UINT, 1);
