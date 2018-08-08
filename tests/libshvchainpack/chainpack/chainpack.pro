@@ -2,7 +2,7 @@ TEMPLATE = subdirs
 CONFIG += ordered
 
 SUBDIRS += \
-	test-c \
+	#test-c \
 	rpcvalue \
 	rpcmessage \
 

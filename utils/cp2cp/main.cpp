@@ -33,9 +33,9 @@ USAGE:
 	indent Cpon (default is no-indent "")
 -t
 	human readable metatypes in Cpon output
--ip
+--ip
 	input stream is Cpon (ChainPack otherwise)
--oc
+--oc
 	write output in ChainPack (Cpon otherwise)
 
 )";
@@ -85,9 +85,9 @@ int main(int argc, char *argv[])
 		}
 		else if(arg == "-t")
 			o_translate_meta_ids = true;
-		else if(arg == "-ip")
+		else if(arg == "--ip")
 			o_cpon_input = true;
-		else if(arg == "-oc")
+		else if(arg == "--oc")
 			o_chainpack_output = true;
 		else if(arg == "-h")
 			help(argv[0]);
