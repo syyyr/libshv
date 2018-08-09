@@ -28,8 +28,8 @@ public:
 		Int,
 		Double,
 		Bool,
-		Blob,
-		String,
+		//Blob //deprecated, not used
+		String = Bool + 1,
 		DateTime,
 		List,
 		Array,
@@ -123,6 +123,7 @@ public:
 		MsTz m_dtm = {0, 0};
 	};
 	using String = std::string;
+	/*
 	struct SHVCHAINPACK_DECL_EXPORT Blob : public std::basic_string<char>
 	{
 	private:
@@ -134,6 +135,7 @@ public:
 		Blob(Super &&str) : Super(std::move(str)) {}
 		//const std::string& toString() const {return *this;}
 	};
+	*/
 	class List : public std::vector<RpcValue>
 	{
 		using Super = std::vector<RpcValue>;
@@ -311,8 +313,8 @@ public:
 	RpcValue(double value);             // Double
 	RpcValue(Decimal value);             // Decimal
 	RpcValue(const DateTime &value);
-	RpcValue(const Blob &value); // Blob
-	RpcValue(Blob &&value);
+	//RpcValue(const Blob &value); // Blob
+	//RpcValue(Blob &&value);
 	RpcValue(const uint8_t *value, size_t size);
 	RpcValue(const std::string &value); // String
 	RpcValue(std::string &&value);      // String
@@ -368,7 +370,7 @@ public:
 	bool isDouble() const { return type() == Type::Double; }
 	bool isBool() const { return type() == Type::Bool; }
 	bool isString() const { return type() == Type::String; }
-	bool isBlob() const { return type() == Type::Blob; }
+	//bool isBlob() const { return type() == Type::Blob; }
 	bool isDateTime() const { return type() == Type::DateTime; }
 	bool isList() const { return type() == Type::List; }
 	bool isArray() const { return type() == Type::Array; }
@@ -384,7 +386,7 @@ public:
 	bool toBool() const;
 	DateTime toDateTime() const;
 	const RpcValue::String &toString() const;
-	const Blob &toBlob() const;
+	//const Blob &toBlob() const;
 	const List &toList() const;
 	const Array &toArray() const;
 	const Map &toMap() const;

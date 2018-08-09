@@ -62,7 +62,7 @@ size_t CponWriter::write(const RpcValue &value)
 	case RpcValue::Type::Int: write(value.toInt64()); break;
 	case RpcValue::Type::Double: write(value.toDouble()); break;
 	case RpcValue::Type::Bool: write(value.toBool()); break;
-	case RpcValue::Type::Blob: write(value.toBlob()); break;
+	//case RpcValue::Type::Blob: write(value.toBlob()); break;
 	case RpcValue::Type::String: write(value.toString()); break;
 	case RpcValue::Type::DateTime: write(value.toDateTime()); break;
 	case RpcValue::Type::List: write(value.toList()); break;
@@ -84,10 +84,10 @@ size_t CponWriter::write(const RpcValue::MetaData &meta_data)
 {
 	size_t len = m_out.tellp();
 	if(!meta_data.isEmpty()) {
-		m_out << Cpon::C_META_BEGIN;
-		startBlock();
 		const RpcValue::IMap &cim = meta_data.iValues();
 		if(!cim.empty()) {
+			m_out << Cpon::C_META_BEGIN;
+			startBlock();
 			int nsid = meta_data.metaTypeNameSpaceId();
 			int mtid = meta_data.metaTypeId();
 			size_t ix = 0;
@@ -134,15 +134,17 @@ size_t CponWriter::write(const RpcValue::MetaData &meta_data)
 				}
 				separateElement(++ix == cim.size());
 			}
+			endBlock();
+			m_out << Cpon::C_META_END;
 		}
 		const RpcValue::Map &csm = meta_data.sValues();
 		if(!csm.empty()) {
-			if(!cim.empty())
-				separateElement(false);
+			m_out << Cpon::C_META_BEGIN;
+			startBlock();
 			writeMapContent(csm);
+			endBlock();
+			m_out << Cpon::C_META_END;
 		}
-		endBlock();
-		m_out << Cpon::C_META_END;
 	}
 	return (size_t)m_out.tellp() - len;
 }
@@ -334,7 +336,7 @@ CponWriter &CponWriter::write(const std::string &value)
 	m_out << '"';
 	return *this;
 }
-
+/*
 CponWriter &CponWriter::write(const RpcValue::Blob &value)
 {
 	if(m_opts.isHexBlob()) {
@@ -370,7 +372,7 @@ CponWriter &CponWriter::write(const RpcValue::Blob &value)
 	}
 	return *this;
 }
-
+*/
 CponWriter &CponWriter::write(const RpcValue::Map &values)
 {
 	writeContainerBegin(RpcValue::Type::Map);

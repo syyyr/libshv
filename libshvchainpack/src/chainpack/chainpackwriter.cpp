@@ -232,7 +232,7 @@ static ChainPack::TypeInfo::Enum typeToTypeInfo(RpcValue::Type type)
 	case RpcValue::Type::Int: return ChainPack::TypeInfo::Int;
 	case RpcValue::Type::Double: return ChainPack::TypeInfo::Double;
 	case RpcValue::Type::Bool: return ChainPack::TypeInfo::Bool;
-	case RpcValue::Type::Blob: return ChainPack::TypeInfo::Blob;
+	//case RpcValue::Type::Blob: return ChainPack::TypeInfo::Blob;
 	case RpcValue::Type::String: return ChainPack::TypeInfo::String;
 	case RpcValue::Type::List: return ChainPack::TypeInfo::List;
 	case RpcValue::Type::Map: return ChainPack::TypeInfo::Map;
@@ -295,7 +295,7 @@ void ChainPackWriter::writeData(const RpcValue &val)
 	case RpcValue::Type::Decimal: writeData_Decimal(m_out, val.toDecimal()); break;
 	case RpcValue::Type::DateTime: writeData_DateTime(m_out, val.toDateTime()); break;
 	case RpcValue::Type::String: writeData_Blob(m_out, val.toString()); break;
-	case RpcValue::Type::Blob: writeData_Blob(m_out, val.toBlob()); break;
+	//case RpcValue::Type::Blob: writeData_Blob(m_out, val.toBlob()); break;
 	case RpcValue::Type::List: writeData_List(val.toList()); break;
 	case RpcValue::Type::Array: writeData_Array(val.toArray()); break;
 	case RpcValue::Type::Map: writeData_Map(val.toMap()); break;

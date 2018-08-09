@@ -11,7 +11,7 @@ RpcValue::Type ChainPack::typeInfoToArrayType(ChainPack::TypeInfo::Enum type_inf
 	case ChainPack::TypeInfo::Int: return RpcValue::Type::Int;
 	case ChainPack::TypeInfo::Double: return RpcValue::Type::Double;
 	case ChainPack::TypeInfo::Bool: return RpcValue::Type::Bool;
-	case ChainPack::TypeInfo::Blob: return RpcValue::Type::Blob;
+	//case ChainPack::TypeInfo::Blob: return RpcValue::Type::Blob;
 	case ChainPack::TypeInfo::String: return RpcValue::Type::String;
 	case ChainPack::TypeInfo::DateTimeEpoch: return RpcValue::Type::DateTime; // deprecated
 	case ChainPack::TypeInfo::DateTime: return RpcValue::Type::DateTime;

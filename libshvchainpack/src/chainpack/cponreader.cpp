@@ -29,8 +29,8 @@ const std::string S_FALSE("false");
 
 const char S_IMAP_BEGIN('i');
 const char S_ARRAY_BEGIN('a');
-const char S_ESC_BLOB_BEGIN('b');
-const char S_HEX_BLOB_BEGIN('x');
+//const char S_ESC_BLOB_BEGIN('b');
+//const char S_HEX_BLOB_BEGIN('x');
 const char S_DATETIME_BEGIN('d');
 //const char S_LIST_BEGIN('[');
 //const char S_LIST_END(']');
@@ -112,7 +112,7 @@ void CponReader::read(RpcValue &val)
 
 	RpcValue::Type type = RpcValue::Type::Invalid;
 	RpcValue::MetaData md;
-	bool hex_blob = false;
+	//bool hex_blob = false;
 	auto ch = getValidChar();
 	if(ch == '<') {
 		m_in.unget();
@@ -136,6 +136,7 @@ void CponReader::read(RpcValue &val)
 			PARSE_EXCEPTION("Invalid Array prefix.");
 		break;
 	}
+	/*
 	case S_ESC_BLOB_BEGIN: {
 		hex_blob = false;
 		ch = getChar();
@@ -154,6 +155,7 @@ void CponReader::read(RpcValue &val)
 			PARSE_EXCEPTION("Invalid Blob prefix.");
 		break;
 	}
+	*/
 	case S_DATETIME_BEGIN: {
 		ch = getChar();
 		if(ch == '"')
@@ -191,7 +193,7 @@ void CponReader::read(RpcValue &val)
 	case RpcValue::Type::IMap: parseIMap(val); break;
 	case RpcValue::Type::Null: parseNull(val); break;
 	case RpcValue::Type::Bool: parseBool(val); break;
-	case RpcValue::Type::Blob: parseBlob(val, hex_blob); break;
+	//case RpcValue::Type::Blob: parseBlob(val, hex_blob); break;
 	case RpcValue::Type::String: parseString(val); break;
 	case RpcValue::Type::DateTime: parseDateTime(val); break;
 	case RpcValue::Type::Int:
@@ -310,7 +312,7 @@ void CponReader::parseString(RpcValue &val)
 	parseStringHelper(s);
 	val = s;
 }
-
+/*
 void CponReader::parseBlob(RpcValue &val, bool hex_blob)
 {
 	std::string s;
@@ -323,7 +325,7 @@ void CponReader::parseBlob(RpcValue &val, bool hex_blob)
 	}
 	val = RpcValue::Blob{s};
 }
-
+*/
 void CponReader::parseNumber(RpcValue &val)
 {
 	int sign = 1;
@@ -468,32 +470,32 @@ void CponReader::read(RpcValue::MetaData &meta_data)
 	RpcValue::IMap imap;
 	RpcValue::Map smap;
 	char ch = getValidChar();
-	if(ch != Cpon::C_META_BEGIN) {
-		m_in.unget();
-		return;
-	}
-	while (true) {
+	while(ch == Cpon::C_META_BEGIN) {
+		while (true) {
+			ch = getValidChar();
+			if (ch == ',')
+				continue;
+			if(ch == '>')
+				break;
+			m_in.unget();
+			RpcValue key;
+			read(key);
+			if(!(key.type() == RpcValue::Type::Int || key.type() == RpcValue::Type::UInt)
+			   && !(key.type() == RpcValue::Type::String))
+				PARSE_EXCEPTION("key expected");
+			ch = getValidChar();
+			if (ch != ':')
+				PARSE_EXCEPTION("expected ':' in MetaData, got " + dump_char(ch));
+			RpcValue val;
+			read(val);
+			if(key.type() == RpcValue::Type::String)
+				smap[key.toString()] = val;
+			else
+				imap[key.toUInt()] = val;
+		}
 		ch = getValidChar();
-		if (ch == ',')
-			continue;
-		if(ch == '>')
-			break;
-		m_in.unget();
-		RpcValue key;
-		read(key);
-		if(!(key.type() == RpcValue::Type::Int || key.type() == RpcValue::Type::UInt)
-		   && !(key.type() == RpcValue::Type::String))
-			PARSE_EXCEPTION("key expected");
-		ch = getValidChar();
-		if (ch != ':')
-			PARSE_EXCEPTION("expected ':' in MetaData, got " + dump_char(ch));
-		RpcValue val;
-		read(val);
-		if(key.type() == RpcValue::Type::String)
-			smap[key.toString()] = val;
-		else
-			imap[key.toUInt()] = val;
 	}
+	m_in.unget();
 	meta_data = RpcValue::MetaData(std::move(imap), std::move(smap));
 }
 
@@ -697,12 +699,12 @@ void CponReader::parseCStringHelper(std::string &val)
 
 		ch = m_in.get();
 		//std::cout << "B -> " << ch << std::endl;
-
+		/*
 		if (ch == 'x') {
 			// Extract 2-byte escape sequence
 			std::string esc;
 			for (int i = 0; i < 2 && !m_in.eof(); ++i)
-				esc += m_in.get();
+				esc += (char)m_in.get();
 			if (esc.length() < 2)
 				PARSE_EXCEPTION("bad \\x escape: " + esc);
 
@@ -716,6 +718,7 @@ void CponReader::parseCStringHelper(std::string &val)
 			str_val += ch;
 			continue;
 		}
+		*/
 		switch (ch) {
 		case '\\': str_val += '\\'; break;
 		case '"' : str_val += '"'; break;
@@ -724,6 +727,7 @@ void CponReader::parseCStringHelper(std::string &val)
 		case 'n': str_val += '\n'; break;
 		case 'r': str_val += '\r'; break;
 		case 't': str_val += '\t'; break;
+		case '0': str_val += '\0'; break;
 		default:
 			PARSE_EXCEPTION("invalid escape character " + dump_char(ch));
 		}

@@ -218,7 +218,7 @@ RpcValue ChainPackReader::readData(ChainPack::TypeInfo::Enum type_info, bool is_
 		case ChainPack::TypeInfo::DateTimeEpoch: { RpcValue::DateTime val = readData_DateTimeEpoch(m_in); ret = RpcValue(val); break; }
 		case ChainPack::TypeInfo::DateTime: { RpcValue::DateTime val = readData_DateTime(m_in); ret = RpcValue(val); break; }
 		case ChainPack::TypeInfo::String: { RpcValue::String val = readData_Blob<RpcValue::String>(m_in); ret = RpcValue(val); break; }
-		case ChainPack::TypeInfo::Blob: { RpcValue::Blob val = readData_Blob<RpcValue::Blob>(m_in); ret = RpcValue(val); break; }
+		//case ChainPack::TypeInfo::Blob: { RpcValue::Blob val = readData_Blob<RpcValue::Blob>(m_in); ret = RpcValue(val); break; }
 		case ChainPack::TypeInfo::List: { RpcValue::List val = readData_List(); ret = RpcValue(val); break; }
 		case ChainPack::TypeInfo::Map: { RpcValue::Map val = readData_Map(); ret = RpcValue(val); break; }
 		case ChainPack::TypeInfo::IMap: { RpcValue::IMap val = readData_IMap(); ret = RpcValue(val); break; }
