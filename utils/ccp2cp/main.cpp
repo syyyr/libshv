@@ -147,6 +147,7 @@ int main(int argc, char *argv[])
 	};
 	std::vector<ContainerState> cont_states;
 
+	int meta_closed = false;
 	do {
 		ccpon_unpack_next(&in_ctx);
 		if(in_ctx.err_no != CCPON_RC_OK)
@@ -166,8 +167,10 @@ int main(int argc, char *argv[])
 				ContainerState &cs = cont_states[cont_states.size() - 1];
 				switch(cs.itemType) {
 				case ContainerState::ItemType::Field:
-					ccpon_pack_field_delim(&out_ctx, cs.itemCount == 0);
-					cs.itemCount++;
+					if(!meta_closed) {
+						ccpon_pack_field_delim(&out_ctx, cs.itemCount == 0);
+						cs.itemCount++;
+					}
 					break;
 				case ContainerState::ItemType::Key:
 					ccpon_pack_field_delim(&out_ctx, cs.itemCount == 0);
@@ -181,6 +184,7 @@ int main(int argc, char *argv[])
 				}
 			}
 		}
+		meta_closed = false;
 		switch(in_ctx.item.type) {
 		case CCPON_ITEM_INVALID: {
 			// end of input
@@ -227,6 +231,7 @@ int main(int argc, char *argv[])
 				break;
 			}
 			ContainerState &cs = cont_states[cont_states.size() - 1];
+			meta_closed = (cs.containerType == CCPON_ITEM_META);
 			if(cs.containerType == CCPON_ITEM_LIST)
 				ccpon_pack_list_end(&out_ctx);
 			else if(cs.containerType == CCPON_ITEM_ARRAY)
