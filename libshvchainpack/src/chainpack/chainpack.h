@@ -13,6 +13,7 @@ public:
 	static constexpr int64_t SHV_EPOCH_MSEC = 1517529600000;
 public:
 	static constexpr uint8_t ARRAY_FLAG_MASK = 64;
+	static constexpr uint8_t STRING_META_KEY_PREFIX = 0xFE;
 	struct SHVCHAINPACK_DECL_EXPORT TypeInfo {
 		enum Enum {
 			INVALID = -1,
@@ -28,10 +29,10 @@ public:
 			List,
 			Map,
 			IMap,
-			MetaIMap,
+			MetaMap,
 			Decimal,
 			DateTime,
-			MetaSMap,
+			//MetaSMap,
 
 			FALSE = 253,
 			TRUE = 254,

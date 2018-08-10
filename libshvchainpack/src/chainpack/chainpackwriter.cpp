@@ -197,14 +197,19 @@ size_t ChainPackWriter::write(const RpcValue::MetaData &meta_data)
 	size_t len = m_out.tellp();
 	if(!meta_data.isEmpty()) {
 		const RpcValue::IMap &cim = meta_data.iValues();
-		if(!cim.empty()) {
-			m_out << (uint8_t)ChainPack::TypeInfo::MetaIMap;
-			writeData_IMap(cim);
-		}
 		const RpcValue::Map &csm = meta_data.sValues();
-		if(!csm.empty()) {
-			m_out << (uint8_t)ChainPack::TypeInfo::MetaSMap;
-			writeData_Map(csm);
+		if(!cim.empty() || !csm.empty()) {
+			m_out << (uint8_t)ChainPack::TypeInfo::MetaMap;
+			for (const auto &kv : cim) {
+				writeMapElement(kv.first, kv.second);
+			}
+			for (const auto &kv : csm) {
+				/// we don't expect more tha 17 bytes long uint keys
+				/// so 0xFE can be used as string key prefix
+				m_out << ChainPack::STRING_META_KEY_PREFIX;
+				writeMapElement(kv.first, kv.second);
+			}
+			writeContainerEnd(RpcValue::Type::Map);
 		}
 	}
 	return (size_t)m_out.tellp() - len;

@@ -120,40 +120,27 @@ void ChainPackReader::read(RpcValue::MetaData &meta_data)
 {
 	RpcValue::IMap imap;
 	RpcValue::Map smap;
-	while(true) {
-		bool has_meta = true;
-		uint8_t type_info = m_in.peek();
-		switch(type_info) {
-		/*
-		case ChainPackProtocol::TypeInfo::META_TYPE_ID:  {
-			data.get();
-			RpcValue::UInt u = read_UIntData<RpcValue::UInt>(data);
-			ret.setMetaTypeId(u);
-			break;
+	uint8_t type_info = m_in.peek();
+	if(type_info == ChainPack::TypeInfo::MetaMap) {
+		m_in.get();
+		while(true) {
+			int b = m_in.peek();
+			if(b == ChainPack::TypeInfo::TERM) {
+				m_in.get();
+				break;
+			}
+			else if(b == ChainPack::STRING_META_KEY_PREFIX) {
+				m_in.get();
+				RpcValue::String key = readData_Blob<RpcValue::String>(m_in);
+				RpcValue cp = read();
+				smap[key] = cp;
+			}
+			else {
+				RpcValue::UInt key = readData_UInt<RpcValue::UInt>(m_in);
+				RpcValue cp = read();
+				imap[key] = cp;
+			}
 		}
-		case ChainPackProtocol::TypeInfo::META_TYPE_NAMESPACE_ID:  {
-			data.get();
-			RpcValue::UInt u = read_UIntData<RpcValue::UInt>(data);
-			ret.setMetaTypeNameSpaceId(u);
-			break;
-		}
-		*/
-		case ChainPack::TypeInfo::MetaIMap:  {
-			m_in.get();
-			imap = readData_IMap();
-			break;
-		}
-		case ChainPack::TypeInfo::MetaSMap:  {
-			m_in.get();
-			smap = readData_Map();
-			break;
-		}
-		default:
-			has_meta = false;
-			break;
-		}
-		if(!has_meta)
-			break;
 	}
 	meta_data = RpcValue::MetaData(std::move(imap), std::move(smap));
 }

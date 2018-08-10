@@ -44,8 +44,8 @@ const char *ChainPack::TypeInfo::name(ChainPack::TypeInfo::Enum e)
 	case IMap: return "IMap";
 	case DateTimeEpoch: return "DateTimeEpoch";
 	case DateTime: return "DateTime";
-	case MetaIMap: return "MetaIMap";
-	case MetaSMap: return "MetaSMap";
+	case MetaMap: return "MetaMap";
+	//case MetaSMap: return "MetaSMap";
 	case Decimal: return "Decimal";
 
 	case TERM: return "TERM";

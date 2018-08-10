@@ -390,7 +390,7 @@ private:
 		QVERIFY(points_json == "[[1, 2], [10, 20], [100, 200]]");
 		{
 			string err;
-			auto rpcval = RpcValue::fromCpon(R"(<1:2, 2:12, 8:"foo", 9:[1, 2, 3]><"bar":"baz",>["META", 17, 18, 19])", &err);
+			auto rpcval = RpcValue::fromCpon(R"(<1:2, 2:12, 8:"foo", 9:[1, 2, 3], "bar":"baz",>["META", 17, 18, 19])", &err);
 			QVERIFY(rpcval.isValid());
 			QVERIFY(err.empty());
 			QVERIFY(rpcval.metaValue("bar") == "baz");

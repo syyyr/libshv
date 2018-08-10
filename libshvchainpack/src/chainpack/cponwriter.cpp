@@ -134,17 +134,15 @@ size_t CponWriter::write(const RpcValue::MetaData &meta_data)
 				}
 				separateElement(++ix == cim.size());
 			}
-			endBlock();
-			m_out << Cpon::C_META_END;
 		}
 		const RpcValue::Map &csm = meta_data.sValues();
 		if(!csm.empty()) {
-			m_out << Cpon::C_META_BEGIN;
-			startBlock();
+			if(!cim.empty())
+				separateElement(false);
 			writeMapContent(csm);
-			endBlock();
-			m_out << Cpon::C_META_END;
 		}
+		endBlock();
+		m_out << Cpon::C_META_END;
 	}
 	return (size_t)m_out.tellp() - len;
 }

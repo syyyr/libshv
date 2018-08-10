@@ -470,7 +470,7 @@ void CponReader::read(RpcValue::MetaData &meta_data)
 	RpcValue::IMap imap;
 	RpcValue::Map smap;
 	char ch = getValidChar();
-	while(ch == Cpon::C_META_BEGIN) {
+	if(ch == Cpon::C_META_BEGIN) {
 		while (true) {
 			ch = getValidChar();
 			if (ch == ',')
