@@ -151,6 +151,36 @@ int main(int argc, char *argv[])
 		ccpon_unpack_next(&in_ctx);
 		if(in_ctx.err_no != CCPON_RC_OK)
 			break;
+		if(!cont_states.empty()) {
+			bool is_string_concat = 0;
+			if(in_ctx.item.type == CCPON_ITEM_STRING) {
+				ccpon_string *it = &in_ctx.item.as.String;
+				if(it->parse_status.chunk_cnt > 1) {
+					// multichunk string
+					// this can happen, when parsed string is greater than unpack_context buffer
+					// concatenate with previous chunk
+					is_string_concat = 1;
+				}
+			}
+			if(!is_string_concat && in_ctx.item.type != CCPON_ITEM_CONTAINER_END) {
+				ContainerState &cs = cont_states[cont_states.size() - 1];
+				switch(cs.itemType) {
+				case ContainerState::ItemType::Field:
+					ccpon_pack_field_delim(&out_ctx, cs.itemCount == 0);
+					cs.itemCount++;
+					break;
+				case ContainerState::ItemType::Key:
+					ccpon_pack_field_delim(&out_ctx, cs.itemCount == 0);
+					cs.itemType = ContainerState::ItemType::Val;
+					break;
+				case ContainerState::ItemType::Val:
+					ccpon_pack_key_delim(&out_ctx);
+					cs.itemType = ContainerState::ItemType::Key;
+					cs.itemCount++;
+					break;
+				}
+			}
+		}
 		switch(in_ctx.item.type) {
 		case CCPON_ITEM_INVALID: {
 			// end of input
@@ -197,10 +227,14 @@ int main(int argc, char *argv[])
 				break;
 			}
 			ContainerState &cs = cont_states[cont_states.size() - 1];
-			if(cs.containerType == CCPON_ITEM_LIST || cs.containerType == CCPON_ITEM_ARRAY)
+			if(cs.containerType == CCPON_ITEM_LIST)
 				ccpon_pack_list_end(&out_ctx);
-			else if(cs.containerType == CCPON_ITEM_MAP || cs.containerType == CCPON_ITEM_IMAP)
+			else if(cs.containerType == CCPON_ITEM_ARRAY)
+				ccpon_pack_array_end(&out_ctx);
+			else if(cs.containerType == CCPON_ITEM_MAP)
 				ccpon_pack_map_end(&out_ctx);
+			else if(cs.containerType == CCPON_ITEM_IMAP)
+				ccpon_pack_imap_end(&out_ctx);
 			else if(cs.containerType == CCPON_ITEM_META)
 				ccpon_pack_meta_end(&out_ctx);
 			else {
@@ -208,86 +242,51 @@ int main(int argc, char *argv[])
 				in_ctx.err_no = CCPON_RC_MALFORMED_INPUT;
 			}
 			cont_states.pop_back();
-			if(!o_indent.empty())
-				ccpon_pack_copy_str(&out_ctx, "\n", 1);
 			break;
 		}
-		default: {
-			if(in_ctx.item.type == CCPON_ITEM_STRING) {
-				ccpon_string *it = &in_ctx.item.as.String;
-				if(it->parse_status.chunk_cnt > 1) {
-					// multichunk string
-					// this can happen, when parsed string is greater than unpack_context buffer
-					// concatenate with previous chunk
-					ccpon_pack_copy_str(&out_ctx, it->start, it->length);
-					if(it->parse_status.last_chunk) {
-						ccpon_pack_copy_str(&out_ctx, "\"", 1);
-					}
-					break;
-				}
-			}
-			if(!cont_states.empty()) {
-				ContainerState &cs = cont_states[cont_states.size() - 1];
-				switch(cs.itemType) {
-				case ContainerState::ItemType::Field:
-					ccpon_pack_field_delim(&out_ctx, cs.itemCount == 0);
-					cs.itemCount++;
-					break;
-				case ContainerState::ItemType::Key:
-					ccpon_pack_field_delim(&out_ctx, cs.itemCount == 0);
-					cs.itemType = ContainerState::ItemType::Val;
-					break;
-				case ContainerState::ItemType::Val:
-					ccpon_pack_key_delim(&out_ctx);
-					cs.itemType = ContainerState::ItemType::Key;
-					cs.itemCount++;
-					break;
-				}
-				//nError() << "nesting error";
-				//in_ctx.err_no = CCPON_RC_MALFORMED_INPUT;
-				//break;
-			}
-			switch(in_ctx.item.type) {
-			case CCPON_ITEM_STRING: {
-				ccpon_string *it = &in_ctx.item.as.String;
-				//if(it->format == CCPON_STRING_FORMAT_HEX)
-				//	ccpon_pack_copy_str(&out_ctx, "x", 1);
+		case CCPON_ITEM_STRING: {
+			ccpon_string *it = &in_ctx.item.as.String;
+			if(it->parse_status.chunk_cnt == 1) {
+				// first string chunk
 				ccpon_pack_copy_str(&out_ctx, "\"", 1);
 				ccpon_pack_copy_str(&out_ctx, it->start, it->length);
-				if(it->parse_status.last_chunk)
-					ccpon_pack_copy_str(&out_ctx, "\"", 1);
-				break;
 			}
-			case CCPON_ITEM_BOOLEAN: {
-				ccpon_pack_boolean(&out_ctx, in_ctx.item.as.Bool);
-				break;
+			else {
+				// next string chunk
+				ccpon_pack_copy_str(&out_ctx, it->start, it->length);
 			}
-			case CCPON_ITEM_INT: {
-				ccpon_pack_int(&out_ctx, in_ctx.item.as.Int);
-				break;
-			}
-			case CCPON_ITEM_UINT: {
-				ccpon_pack_uint(&out_ctx, in_ctx.item.as.UInt);
-				break;
-			}
-			case CCPON_ITEM_DECIMAL: {
-				ccpon_pack_decimal(&out_ctx, in_ctx.item.as.Decimal.mantisa, in_ctx.item.as.Decimal.dec_places);
-				break;
-			}
-			case CCPON_ITEM_DOUBLE: {
-				ccpon_pack_double(&out_ctx, in_ctx.item.as.Double);
-				break;
-			}
-			case CCPON_ITEM_DATE_TIME: {
-				ccpon_date_time *it = &in_ctx.item.as.DateTime;
-				ccpon_pack_date_time(&out_ctx, it->msecs_since_epoch, it->minutes_from_utc);
-				break;
-			}
-			default:
-				ccpon_pack_null(&out_ctx);
-				break;
-			}
+			if(it->parse_status.last_chunk)
+				ccpon_pack_copy_str(&out_ctx, "\"", 1);
+			break;
 		}
+		case CCPON_ITEM_BOOLEAN: {
+			ccpon_pack_boolean(&out_ctx, in_ctx.item.as.Bool);
+			break;
+		}
+		case CCPON_ITEM_INT: {
+			ccpon_pack_int(&out_ctx, in_ctx.item.as.Int);
+			break;
+		}
+		case CCPON_ITEM_UINT: {
+			ccpon_pack_uint(&out_ctx, in_ctx.item.as.UInt);
+			break;
+		}
+		case CCPON_ITEM_DECIMAL: {
+			ccpon_pack_decimal(&out_ctx, in_ctx.item.as.Decimal.mantisa, in_ctx.item.as.Decimal.dec_places);
+			break;
+		}
+		case CCPON_ITEM_DOUBLE: {
+			ccpon_pack_double(&out_ctx, in_ctx.item.as.Double);
+			break;
+		}
+		case CCPON_ITEM_DATE_TIME: {
+			ccpon_date_time *it = &in_ctx.item.as.DateTime;
+			ccpon_pack_date_time(&out_ctx, it->msecs_since_epoch, it->minutes_from_utc);
+			break;
+		}
+		default:
+			ccpon_pack_null(&out_ctx);
+			break;
 		}
 	} while(in_ctx.err_no == CCPON_RC_OK && out_ctx.err_no == CCPON_RC_OK);
 	pack_overflow_handler(&out_ctx, 1);
