@@ -95,9 +95,9 @@ int main(int argc, char *argv[])
 		const std::string &arg = args[i];
 		if(arg == "-i" && i < args.size() - 1) {
 			std::string s = argv[++i];
-			replace_str(s, "\\t", "\t");
-			replace_str(s, "\\r", "\r");
-			replace_str(s, "\\n", "\n");
+			//replace_str(s, "\\t", "\t");
+			//replace_str(s, "\\r", "\r");
+			//replace_str(s, "\\n", "\n");
 			o_indent = s;
 		}
 		else if(arg == "-t")
@@ -132,6 +132,9 @@ int main(int argc, char *argv[])
 
 	ccpon_pack_context out_ctx;
 	ccpon_pack_context_init(&out_ctx, out_buff, sizeof (out_buff), pack_overflow_handler);
+	if(!o_indent.empty()) {
+		out_ctx.indent = o_indent.data();
+	}
 
 	struct ContainerState
 	{
@@ -205,6 +208,8 @@ int main(int argc, char *argv[])
 				in_ctx.err_no = CCPON_RC_MALFORMED_INPUT;
 			}
 			cont_states.pop_back();
+			if(!o_indent.empty())
+				ccpon_pack_copy_str(&out_ctx, "\n", 1);
 			break;
 		}
 		default: {
@@ -225,13 +230,11 @@ int main(int argc, char *argv[])
 				ContainerState &cs = cont_states[cont_states.size() - 1];
 				switch(cs.itemType) {
 				case ContainerState::ItemType::Field:
-					if(cs.itemCount > 0)
-						ccpon_pack_field_delim(&out_ctx);
+					ccpon_pack_field_delim(&out_ctx, cs.itemCount == 0);
 					cs.itemCount++;
 					break;
 				case ContainerState::ItemType::Key:
-					if(cs.itemCount > 0)
-						ccpon_pack_field_delim(&out_ctx);
+					ccpon_pack_field_delim(&out_ctx, cs.itemCount == 0);
 					cs.itemType = ContainerState::ItemType::Val;
 					break;
 				case ContainerState::ItemType::Val:

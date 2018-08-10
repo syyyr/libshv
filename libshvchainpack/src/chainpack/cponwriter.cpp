@@ -39,7 +39,7 @@ void CponWriter::separateElement(bool without_comma)
 {
 	if(m_opts.indent().empty()) {
 		if(!without_comma)
-			m_out << ", ";
+			m_out << ',';
 	}
 	else {
 		if(!without_comma)
@@ -152,20 +152,18 @@ void CponWriter::writeContainerBegin(RpcValue::Type container_type)
 	switch (container_type) {
 	case RpcValue::Type::List:
 		m_out << Cpon::C_LIST_BEGIN;
-		startBlock();
 		break;
 	case RpcValue::Type::Map:
 		m_out << Cpon::C_MAP_BEGIN;
-		startBlock();
 		break;
 	case RpcValue::Type::IMap:
 		m_out << Cpon::STR_IMAP_BEGIN;
-		startBlock();
 		break;
 	default:
 		SHVCHP_EXCEPTION(std::string("Cannot write begin of container type: ") + RpcValue::typeToName(container_type));
 		break;
 	}
+	startBlock();
 }
 
 void CponWriter::writeArrayBegin(RpcValue::Type , size_t )
