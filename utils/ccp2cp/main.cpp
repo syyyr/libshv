@@ -248,15 +248,15 @@ int main(int argc, char *argv[])
 			ccpon_string *it = &in_ctx.item.as.String;
 			if(it->parse_status.chunk_cnt == 1) {
 				// first string chunk
-				ccpon_pack_copy_str(&out_ctx, "\"", 1);
-				ccpon_pack_copy_str(&out_ctx, it->start, it->length);
+				ccpon_pack_copy_bytes(&out_ctx, "\"", 1);
+				ccpon_pack_copy_bytes(&out_ctx, it->start, it->length);
 			}
 			else {
 				// next string chunk
-				ccpon_pack_copy_str(&out_ctx, it->start, it->length);
+				ccpon_pack_copy_bytes(&out_ctx, it->start, it->length);
 			}
 			if(it->parse_status.last_chunk)
-				ccpon_pack_copy_str(&out_ctx, "\"", 1);
+				ccpon_pack_copy_bytes(&out_ctx, "\"", 1);
 			break;
 		}
 		case CCPON_ITEM_BOOLEAN: {
