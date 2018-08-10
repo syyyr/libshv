@@ -247,8 +247,8 @@ int main(int argc, char *argv[])
 			switch(in_ctx.item.type) {
 			case CCPON_ITEM_STRING: {
 				ccpon_string *it = &in_ctx.item.as.String;
-				if(it->format == CCPON_STRING_FORMAT_HEX)
-					ccpon_pack_copy_str(&out_ctx, "x", 1);
+				//if(it->format == CCPON_STRING_FORMAT_HEX)
+				//	ccpon_pack_copy_str(&out_ctx, "x", 1);
 				ccpon_pack_copy_str(&out_ctx, "\"", 1);
 				ccpon_pack_copy_str(&out_ctx, it->start, it->length);
 				if(it->parse_status.last_chunk)
@@ -288,6 +288,9 @@ int main(int argc, char *argv[])
 		}
 	} while(in_ctx.err_no == CCPON_RC_OK && out_ctx.err_no == CCPON_RC_OK);
 	pack_overflow_handler(&out_ctx, 1);
+
+	if(in_ctx.err_no != CCPON_RC_OK && in_ctx.err_no != CCPON_RC_BUFFER_UNDERFLOW)
+		nError() << "Parse error:" << in_ctx.err_no;
 
 	return 0;
 }
