@@ -70,7 +70,7 @@ static uint8_t out_buff[1024];
 
 size_t pack_overflow_handler(struct ccpon_pack_context *ctx, unsigned long)
 {
-	::fwrite(out_buff, 1, ctx->end - ctx->start, out_file);
+	::fwrite(out_buff, 1, ctx->current - ctx->start, out_file);
 	ctx->start = ctx->current = out_buff;
 	ctx->end = ctx->start + sizeof (out_buff);
 	return sizeof (out_buff);
@@ -280,6 +280,8 @@ int main(int argc, char *argv[])
 			break;
 		}
 		case CCPON_ITEM_DATE_TIME: {
+			//static int n = 0;
+			//printf("%d\n", n++);
 			ccpon_date_time *it = &in_ctx.item.as.DateTime;
 			ccpon_pack_date_time(&out_ctx, it->msecs_since_epoch, it->minutes_from_utc);
 			break;
