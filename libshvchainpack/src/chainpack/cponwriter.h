@@ -44,7 +44,7 @@ public:
 	void writeIMapKey(RpcValue::UInt key) override {write(key);}
 	void writeContainerBegin(RpcValue::Type container_type) override;
 	void writeContainerEnd(RpcValue::Type container_type) override;
-	void writeArrayBegin(RpcValue::Type, size_t) override;
+	void writeArrayBegin(RpcValue::Type, size_t size) override;
 
 	void writeListElement(const RpcValue &val) override {writeListElement(val, false);}
 	void writeMapElement(const std::string &key, const RpcValue &val) override {writeMapElement(key, val, false);}

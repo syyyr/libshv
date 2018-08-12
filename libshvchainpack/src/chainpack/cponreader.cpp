@@ -131,7 +131,15 @@ void CponReader::read(RpcValue &val)
 		break;
 	}
 	case S_ARRAY_BEGIN: {
-		ch = getChar();
+		ch = m_in.peek();
+		if(ch >= '0' && ch <= '9') {
+			int i;
+			parseInteger(i);
+			ch = getChar();
+		}
+		else {
+			ch = getChar();
+		}
 		if(ch == '[')
 			type = RpcValue::Type::Array;
 		else

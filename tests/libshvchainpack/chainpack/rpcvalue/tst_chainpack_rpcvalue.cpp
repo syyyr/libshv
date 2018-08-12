@@ -193,7 +193,7 @@ private:
 		}
 		{
 			string err;
-			for(auto test : {"a[]", "a[ ]", " a[ ]", "a[ 1, 2,3  , ]"}) {
+			for(auto test : {"a[]", "a[ ]", " a[ ]", "a3[ 1, 2,3  , ]"}) {
 				const RpcValue cp = RpcValue::fromCpon(test, &err);
 				qDebug() << test << "--->" << cp.toCpon();
 				QVERIFY(err.empty());
@@ -340,7 +340,7 @@ private:
 										   });
 
 		qDebug() << "obj: " << obj.toCpon();
-		QVERIFY(obj.toCpon() == "{\"k1\":\"v1\", \"k2\":42., \"k3\":[\"a\", 123., true, false, null]}");
+		QVERIFY(obj.toCpon() == "{\"k1\":\"v1\",\"k2\":42.,\"k3\":[\"a\",123.,true,false,null]}");
 
 		QCOMPARE(RpcValue("a").toDouble(), 0.);
 		QCOMPARE(RpcValue("a").toString().c_str(), "a");
@@ -374,7 +374,7 @@ private:
 		};
 		std::string json_obj_str = my_json.toCpon();
 		qDebug() << "json_obj_str: " << json_obj_str.c_str();
-		QCOMPARE(json_obj_str.c_str(), "{\"key1\":\"value1\", \"key2\":false, \"key3\":[1, 2, 3]}");
+		QCOMPARE(json_obj_str.c_str(), "{\"key1\":\"value1\",\"key2\":false,\"key3\":[1,2,3]}");
 
 		class Point {
 		public:
@@ -387,10 +387,10 @@ private:
 		std::vector<Point> points = { { 1, 2 }, { 10, 20 }, { 100, 200 } };
 		std::string points_json = RpcValue(points).toCpon();
 		qDebug() << "points_json: " << points_json.c_str();
-		QVERIFY(points_json == "[[1, 2], [10, 20], [100, 200]]");
+		QVERIFY(points_json == "[[1,2],[10,20],[100,200]]");
 		{
 			string err;
-			auto rpcval = RpcValue::fromCpon(R"(<1:2, 2:12, 8:"foo", 9:[1, 2, 3], "bar":"baz",>["META", 17, 18, 19])", &err);
+			auto rpcval = RpcValue::fromCpon(R"(<1:2,2:12,8:"foo",9:[1,2,3],"bar":"baz",>["META",17,18,19])", &err);
 			QVERIFY(rpcval.isValid());
 			QVERIFY(err.empty());
 			QVERIFY(rpcval.metaValue("bar") == "baz");
