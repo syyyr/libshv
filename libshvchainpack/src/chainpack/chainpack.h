@@ -23,16 +23,16 @@ public:
 			Int,
 			Double,
 			Bool,
-			Blob,
+			Blob_depr, // deprecated
 			String,
-			DateTimeEpoch, // deprecated
+			DateTimeEpoch_depr, // deprecated
 			List,
 			Map,
 			IMap,
 			MetaMap,
 			Decimal,
 			DateTime,
-			//MetaSMap,
+			CString,
 
 			FALSE = 253,
 			TRUE = 254,

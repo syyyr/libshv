@@ -23,19 +23,23 @@ unix {
 }
 
 NECROLOG_SRC_DIR = ../../3rdparty/necrolog/libnecrolog
-CCPON_SRC_DIR = ../../libshvchainpack/c
+CCPCP_SRC_DIR = ../../libshvchainpack/c
 
 INCLUDEPATH += \
 	$$NECROLOG_SRC_DIR \
-	$$CCPON_SRC_DIR \
+	$$CCPCP_SRC_DIR \
 
 SOURCES += \
 	main.cpp \
 	$$NECROLOG_SRC_DIR/necrolog.cpp \
-	$$CCPON_SRC_DIR/ccpon.c \
+	$$CCPCP_SRC_DIR/ccpon.c \
+	$$CCPCP_SRC_DIR/cchainpack.c \
+    ../../libshvchainpack/c/ccpcp.c
 
 
 HEADERS += \
 	$$NECROLOG_SRC_DIR/necrolog.h \
-	$$CCPON_SRC_DIR/ccpon.h \
+	$$CCPCP_SRC_DIR/ccpcp.h \
+	$$CCPCP_SRC_DIR/ccpon.h \
+	$$CCPCP_SRC_DIR/cchainpack.h \
 

@@ -88,12 +88,38 @@ T readData_Blob(std::istream &data)
 	return ret;
 }
 
+RpcValue::String readData_CString(std::istream &data)
+{
+	RpcValue::String ret;
+	bool is_esc = false;
+	while (true) {
+		int i = data.get();
+		if(is_esc) {
+			switch (i) {
+			case '\\': ret += '\\'; break;
+			case '0' : ret +=  '\0'; break;
+			default:
+				ret += (char)i;
+				break;
+			}
+			is_esc = false;
+		}
+		else {
+			if(i)
+				ret += (char)i;
+			else
+				break;
+		}
+	}
+	return ret;
+}
+/*
 RpcValue::DateTime readData_DateTimeEpoch(std::istream &data)
 {
 	RpcValue::DateTime dt = RpcValue::DateTime::fromMSecsSinceEpoch(readData_Int<int64_t>(data));
 	return dt;
 }
-
+*/
 RpcValue::DateTime readData_DateTime(std::istream &data)
 {
 	int64_t d = readData_Int<int64_t>(data);
@@ -202,9 +228,10 @@ RpcValue ChainPackReader::readData(ChainPack::TypeInfo::Enum type_info, bool is_
 		case ChainPack::TypeInfo::Decimal: { RpcValue::Decimal d = readData_Decimal(m_in); ret = RpcValue(d); break; }
 		case ChainPack::TypeInfo::TRUE: { bool b = true; ret = RpcValue(b); break; }
 		case ChainPack::TypeInfo::FALSE: { bool b = false; ret = RpcValue(b); break; }
-		case ChainPack::TypeInfo::DateTimeEpoch: { RpcValue::DateTime val = readData_DateTimeEpoch(m_in); ret = RpcValue(val); break; }
+		//case ChainPack::TypeInfo::DateTimeEpoch: { RpcValue::DateTime val = readData_DateTimeEpoch(m_in); ret = RpcValue(val); break; }
 		case ChainPack::TypeInfo::DateTime: { RpcValue::DateTime val = readData_DateTime(m_in); ret = RpcValue(val); break; }
 		case ChainPack::TypeInfo::String: { RpcValue::String val = readData_Blob<RpcValue::String>(m_in); ret = RpcValue(val); break; }
+		case ChainPack::TypeInfo::CString: { RpcValue::String val = readData_CString(m_in); ret = RpcValue(val); break; }
 		//case ChainPack::TypeInfo::Blob: { RpcValue::Blob val = readData_Blob<RpcValue::Blob>(m_in); ret = RpcValue(val); break; }
 		case ChainPack::TypeInfo::List: { RpcValue::List val = readData_List(); ret = RpcValue(val); break; }
 		case ChainPack::TypeInfo::Map: { RpcValue::Map val = readData_Map(); ret = RpcValue(val); break; }

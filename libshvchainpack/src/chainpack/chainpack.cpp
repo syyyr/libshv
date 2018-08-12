@@ -13,7 +13,8 @@ RpcValue::Type ChainPack::typeInfoToArrayType(ChainPack::TypeInfo::Enum type_inf
 	case ChainPack::TypeInfo::Bool: return RpcValue::Type::Bool;
 	//case ChainPack::TypeInfo::Blob: return RpcValue::Type::Blob;
 	case ChainPack::TypeInfo::String: return RpcValue::Type::String;
-	case ChainPack::TypeInfo::DateTimeEpoch: return RpcValue::Type::DateTime; // deprecated
+	case ChainPack::TypeInfo::CString: return RpcValue::Type::String;
+	//case ChainPack::TypeInfo::DateTimeEpoch: return RpcValue::Type::DateTime; // deprecated
 	case ChainPack::TypeInfo::DateTime: return RpcValue::Type::DateTime;
 	case ChainPack::TypeInfo::List: return RpcValue::Type::List;
 	case ChainPack::TypeInfo::Map: return RpcValue::Type::Map;
@@ -37,12 +38,13 @@ const char *ChainPack::TypeInfo::name(ChainPack::TypeInfo::Enum e)
 	case Int: return "Int";
 	case Double: return "Double";
 	case Bool: return "Bool";
-	case Blob: return "Blob";
+	case Blob_depr: return "Blob_depr";
 	case String: return "String";
+	case CString: return "CString";
 	case List: return "List";
 	case Map: return "Map";
 	case IMap: return "IMap";
-	case DateTimeEpoch: return "DateTimeEpoch";
+	case DateTimeEpoch_depr: return "DateTimeEpoch_depr";
 	case DateTime: return "DateTime";
 	case MetaMap: return "MetaMap";
 	//case MetaSMap: return "MetaSMap";
