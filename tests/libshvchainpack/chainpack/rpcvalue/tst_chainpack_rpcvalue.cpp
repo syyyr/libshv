@@ -20,6 +20,62 @@
 #include <algorithm>
 #include <type_traits>
 
+#ifdef __linux
+
+#ifdef RUSAGE_USAGE
+#include <sys/time.h>
+#include <sys/resource.h>
+
+static void dump_memory()
+{
+	struct rusage ru;
+	getrusage(RUSAGE_SELF, &ru);
+	qDebug() << "integral shared memory size     :" << ru.ru_ixrss << "kB";
+	qDebug() << "integral unshared data size     :" << ru.ru_idrss;
+	qDebug() << "integral unshared stack size    :" << ru.ru_isrss;
+	qDebug() << "page reclaims (soft page faults):" << ru.ru_minflt;
+	qDebug() << "page faults (hard page faults)  :" << ru.ru_majflt;
+	qDebug() << "swaps                           :" << ru.ru_nswap;
+}
+#endif
+
+#include <unistd.h>
+#include <fstream>
+
+void process_mem_usage(double& vm_usage, double& resident_set)
+{
+	vm_usage     = 0.0;
+	resident_set = 0.0;
+
+	// the two fields we want
+	unsigned long vsize;
+	long rss;
+	{
+		std::string ignore;
+		std::ifstream ifs("/proc/self/stat", std::ios_base::in);
+		ifs >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore
+				>> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore
+				>> ignore >> ignore >> vsize >> rss;
+	}
+
+	long page_size_kb = ::sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
+	vm_usage = vsize / 1024.0;
+	resident_set = rss * page_size_kb;
+}
+
+static void dump_memory()
+{
+	double vm, rss;
+	process_mem_usage(vm, rss);
+	//cout << "VM: " << vm << "; RSS: " << rss << endl;
+	qDebug() << "\tVM :" << vm;
+	qDebug() << "\tRSS:" << rss;
+	//qDebug() << "\tNNN:" << shv::chainpack::RpcValue::AbstractValueData::nn();
+}
+
+
+#endif
+
 using namespace shv::chainpack;
 using std::string;
 
@@ -28,9 +84,9 @@ using std::string;
 CHECK_TRAIT(is_nothrow_constructible<RpcValue>);
 CHECK_TRAIT(is_nothrow_default_constructible<RpcValue>);
 CHECK_TRAIT(is_copy_constructible<RpcValue>);
-CHECK_TRAIT(is_nothrow_move_constructible<RpcValue>);
+CHECK_TRAIT(is_move_constructible<RpcValue>);
 CHECK_TRAIT(is_copy_assignable<RpcValue>);
-CHECK_TRAIT(is_nothrow_move_assignable<RpcValue>);
+CHECK_TRAIT(is_move_assignable<RpcValue>);
 CHECK_TRAIT(is_nothrow_destructible<RpcValue>);
 
 namespace {
@@ -100,7 +156,6 @@ private:
 									456u,
 									0.123,
 									123.456n,
-									x"48656c6c6f",
 									d"2018-01-14T01:17:33.256-1045"
 									]
 								)";
@@ -116,11 +171,9 @@ private:
 			QVERIFY(cp[5] == RpcValue::UInt(456));
 			QVERIFY(cp[6] == 0.123);
 			QVERIFY(cp[7] == RpcValue::Decimal(123456, 3));
-			QVERIFY(cp[8] == RpcValue::Blob("Hello"));
-			RpcValue::DateTime dt = cp[9].toDateTime();
+			RpcValue::DateTime dt = cp[8].toDateTime();
 			QVERIFY(dt.msecsSinceEpoch() % 1000 == 256);
 			QVERIFY(dt.minutesFromUtc() == -(10*60+45));
-
 		}
 		{
 			string err;
@@ -302,21 +355,23 @@ private:
 			QVERIFY(uni[0].toString().size() == (sizeof utf8) - 1);
 			QVERIFY(std::memcmp(uni[0].toString().data(), utf8, sizeof utf8) == 0);
 		}
+		/*
 		{
 			const string escape_test = "b\"foo\\\\1\\r\\n2\\t\\b\\\"bar\\x0d\\x0A\"";
 			const char test[] = "foo\\1\r\n2\t\b\"bar\x0d\x0A";
-			RpcValue::Blob b = RpcValue::fromCpon(escape_test, &err).toBlob();
+			RpcValue::String b = RpcValue::fromCpon(escape_test, &err).toString();
 			//if(!err.empty())
 			//	qDebug() << "!!!!!!!!! " << err << "---" << escape_test;
 			//qDebug() << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% " << b.size() << "    " << b;
 			QVERIFY(b.size() == (sizeof test) - 1);
 			QVERIFY(std::memcmp(b.data(), test, b.size()) == 0);
 		}
+		*/
 		RpcValue my_json = RpcValue::Map {
-		{ "key1", "value1" },
-		{ "key2", false },
-		{ "key3", RpcValue::List { 1, 2, 3 } },
-	};
+			{ "key1", "value1" },
+			{ "key2", false },
+			{ "key3", RpcValue::List { 1, 2, 3 } },
+		};
 		std::string json_obj_str = my_json.toCpon();
 		qDebug() << "json_obj_str: " << json_obj_str.c_str();
 		QCOMPARE(json_obj_str.c_str(), "{\"key1\":\"value1\", \"key2\":false, \"key3\":[1, 2, 3]}");
@@ -333,9 +388,19 @@ private:
 		std::string points_json = RpcValue(points).toCpon();
 		qDebug() << "points_json: " << points_json.c_str();
 		QVERIFY(points_json == "[[1, 2], [10, 20], [100, 200]]");
+		{
+			string err;
+			auto rpcval = RpcValue::fromCpon(R"(<1:2, 2:12, 8:"foo", 9:[1, 2, 3], "bar":"baz",>["META", 17, 18, 19])", &err);
+			QVERIFY(rpcval.isValid());
+			QVERIFY(err.empty());
+			QVERIFY(rpcval.metaValue("bar") == "baz");
+			QVERIFY(rpcval.metaValue(1) == 2);
+			QVERIFY(rpcval.metaValue(8) == "foo");
+			QVERIFY(rpcval.at(3) == 19);
+		}
 	}
 
-	static std::string binary_dump(const RpcValue::Blob &out)
+	static std::string binary_dump(const RpcValue::String &out)
 	{
 		std::string ret;
 		for (size_t i = 0; i < out.size(); ++i) {
@@ -357,7 +422,7 @@ private:
 		return 'A' + (i - 10);
 	}
 
-	static std::string hex_dump(const RpcValue::Blob &out)
+	static std::string hex_dump(const RpcValue::String &out)
 	{
 		std::string ret;
 		for (size_t i = 0; i < out.size(); ++i) {
@@ -373,7 +438,7 @@ private:
 	{
 		qDebug() << "============= chainpack binary test ============";
 		for (int i = ChainPack::TypeInfo::Null; i <= ChainPack::TypeInfo::DateTime; ++i) {
-			RpcValue::Blob out;
+			RpcValue::String out;
 			out += i;
 			ChainPack::TypeInfo::Enum e = (ChainPack::TypeInfo::Enum)i;
 			std::ostringstream str;
@@ -391,8 +456,8 @@ private:
 		}
 		*/
 		for (int i = ChainPack::TypeInfo::FALSE; i <= ChainPack::TypeInfo::TERM; ++i) {
-			RpcValue::Blob out;
-			out += i;
+			RpcValue::String out;
+			out += (char)i;
 			ChainPack::TypeInfo::Enum e = (ChainPack::TypeInfo::Enum)i;
 			std::ostringstream str;
 			str << std::setw(3) << i << " " << std::hex << i << " " << binary_dump(out).c_str() << " "  << ChainPack::TypeInfo::name(e);
@@ -541,6 +606,7 @@ private:
 				QVERIFY(cp1.toBool() == cp2.toBool());
 			}
 		}
+#if 0
 		{
 			qDebug() << "------------- Blob";
 			RpcValue::Blob blob{"blob containing zero character"};
@@ -553,6 +619,7 @@ private:
 			QVERIFY(cp1.type() == cp2.type());
 			QVERIFY(cp1.toBlob() == cp2.toBlob());
 		}
+#endif
 		{
 			qDebug() << "------------- string";
 			RpcValue::String str{"string containing zero character"};
@@ -852,6 +919,28 @@ private:
 			QVERIFY(cp1.type() == cp2.type());
 			QVERIFY(cp1.metaData() == cp2.metaData());
 		}
+#ifdef __linux
+		{
+			qDebug() << "------------- Memory usage";
+			static constexpr size_t count = 1000000;
+			qDebug() << "===before creating" << count << "values";
+			dump_memory();
+			{
+				RpcValue::List lst;
+				for (size_t i = 0; i < count; ++i) {
+					lst.push_back(i);
+				}
+				/*
+				std::vector<std::string> v;
+				v.resize(count);
+				*/
+				qDebug() << "===after creating" << count << "values";
+				dump_memory();
+			}
+			qDebug() << "===after releasing" << count << "values";
+			dump_memory();
+		}
+#endif
 	}
 
 private slots:

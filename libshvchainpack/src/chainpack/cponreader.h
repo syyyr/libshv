@@ -48,7 +48,7 @@ private:
 	void parseNull(RpcValue &val);
 	void parseBool(RpcValue &val);
 	void parseString(RpcValue &val);
-	void parseBlob(RpcValue &val, bool hex_blob);
+	//void parseBlob(RpcValue &val, bool hex_blob);
 	void parseNumber(RpcValue &val);
 	void parseList(RpcValue &val);
 	void parseArray(RpcValue &ret_val);

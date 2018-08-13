@@ -19,6 +19,7 @@
 namespace {
 #if defined _WIN32 || defined LIBC_NEWLIB
 // see http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html#tag_04_15
+// see https://stackoverflow.com/questions/16647819/timegm-cross-platform
 int is_leap(unsigned y)
 {
 	y += 1900;
@@ -85,7 +86,7 @@ public:
 	virtual bool toBool() const {return false;}
 	virtual RpcValue::DateTime toDateTime() const { return RpcValue::DateTime{}; }
 	virtual const std::string &toString() const;
-	virtual const RpcValue::Blob &toBlob() const;
+	//virtual const RpcValue::Blob &toBlob() const;
 	virtual const RpcValue::List &toList() const;
 	virtual const RpcValue::Array &toArray() const;
 	virtual const RpcValue::Map &toMap() const;
@@ -260,7 +261,7 @@ public:
 	explicit ChainPackString(const RpcValue::String &value) : ValueData(value) {}
 	explicit ChainPackString(RpcValue::String &&value) : ValueData(std::move(value)) {}
 };
-
+/*
 class ChainPackBlob final : public ValueData<RpcValue::Type::Blob, RpcValue::Blob>
 {
 	std::string toStdString() const override { return toBlob(); }
@@ -277,7 +278,7 @@ public:
 		}
 	}
 };
-
+*/
 class ChainPackList final : public ValueData<RpcValue::Type::List, RpcValue::List>
 {
 	std::string toStdString() const override { return std::string(); }
@@ -371,9 +372,7 @@ struct Statics
 	const std::shared_ptr<RpcValue::AbstractValueData> t = std::make_shared<ChainPackBoolean>(true);
 	const std::shared_ptr<RpcValue::AbstractValueData> f = std::make_shared<ChainPackBoolean>(false);
 	const RpcValue::String empty_string;
-	const RpcValue::Blob empty_blob;
-	//const std::vector<ChainPack> empty_vector;
-	//const std::map<ChainPack::String, ChainPack> empty_map;
+	//const RpcValue::Blob empty_blob;
 	Statics() {}
 };
 
@@ -384,7 +383,7 @@ static const Statics & statics()
 }
 
 static const RpcValue::String & static_empty_string() { return statics().empty_string; }
-static const RpcValue::Blob & static_empty_blob() { return statics().empty_blob; }
+//static const RpcValue::Blob & static_empty_blob() { return statics().empty_blob; }
 
 static const RpcValue & static_chain_pack_invalid() { static const RpcValue s{}; return s; }
 //static const ChainPack & static_chain_pack_null() { static const ChainPack s{statics().null}; return s; }
@@ -408,9 +407,9 @@ RpcValue::RpcValue(uint64_t value) : m_ptr(std::make_shared<ChainPackUInt>(value
 RpcValue::RpcValue(bool value) : m_ptr(value ? statics().t : statics().f) {}
 RpcValue::RpcValue(const DateTime &value) : m_ptr(std::make_shared<ChainPackDateTime>(value)) {}
 
-RpcValue::RpcValue(const RpcValue::Blob &value) : m_ptr(std::make_shared<ChainPackBlob>(value)) {}
-RpcValue::RpcValue(RpcValue::Blob &&value) : m_ptr(std::make_shared<ChainPackBlob>(std::move(value))) {}
-RpcValue::RpcValue(const uint8_t * value, size_t size) : m_ptr(std::make_shared<ChainPackBlob>(value, size)) {}
+//RpcValue::RpcValue(const RpcValue::Blob &value) : m_ptr(std::make_shared<ChainPackBlob>(value)) {}
+//RpcValue::RpcValue(RpcValue::Blob &&value) : m_ptr(std::make_shared<ChainPackBlob>(std::move(value))) {}
+//RpcValue::RpcValue(const uint8_t * value, size_t size) : m_ptr(std::make_shared<ChainPackBlob>(value, size)) {}
 RpcValue::RpcValue(const std::string &value) : m_ptr(std::make_shared<ChainPackString>(value)) {}
 RpcValue::RpcValue(std::string &&value) : m_ptr(std::make_shared<ChainPackString>(std::move(value))) {}
 RpcValue::RpcValue(const char * value) : m_ptr(std::make_shared<ChainPackString>(value)) {}
@@ -523,7 +522,7 @@ bool RpcValue::toBool() const { return m_ptr? m_ptr->toBool(): false; }
 RpcValue::DateTime RpcValue::toDateTime() const { return m_ptr? m_ptr->toDateTime(): RpcValue::DateTime{}; }
 
 const std::string & RpcValue::toString() const { return m_ptr? m_ptr->toString(): static_empty_string(); }
-const RpcValue::Blob &RpcValue::toBlob() const { return m_ptr? m_ptr->toBlob(): static_empty_blob(); }
+//const RpcValue::Blob &RpcValue::toBlob() const { return m_ptr? m_ptr->toBlob(): static_empty_blob(); }
 
 size_t RpcValue::count() const { return m_ptr? m_ptr->count(): 0; }
 const RpcValue::List & RpcValue::toList() const { return m_ptr? m_ptr->toList(): static_empty_list(); }
@@ -584,7 +583,7 @@ std::string RpcValue::toCpon() const
 }
 
 const std::string & RpcValue::AbstractValueData::toString() const { return static_empty_string(); }
-const RpcValue::Blob & RpcValue::AbstractValueData::toBlob() const { return static_empty_blob(); }
+//const RpcValue::Blob & RpcValue::AbstractValueData::toBlob() const { return static_empty_blob(); }
 const RpcValue::List & RpcValue::AbstractValueData::toList() const { return static_empty_list(); }
 const RpcValue::Array &RpcValue::AbstractValueData::toArray() const { return static_empty_array(); }
 const RpcValue::Map & RpcValue::AbstractValueData::toMap() const { return static_empty_map(); }
@@ -707,7 +706,7 @@ const char *RpcValue::typeToName(RpcValue::Type t)
 	case Type::Int: return "Int";
 	case Type::Double: return "Double";
 	case Type::Bool: return "Bool";
-	case Type::Blob: return "Blob";
+	//case Type::Blob: return "Blob";
 	case Type::String: return "String";
 	case Type::List: return "List";
 	case Type::Array: return "Array";

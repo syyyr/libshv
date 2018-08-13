@@ -39,7 +39,7 @@ void CponWriter::separateElement(bool without_comma)
 {
 	if(m_opts.indent().empty()) {
 		if(!without_comma)
-			m_out << ", ";
+			m_out << ',';
 	}
 	else {
 		if(!without_comma)
@@ -62,7 +62,7 @@ size_t CponWriter::write(const RpcValue &value)
 	case RpcValue::Type::Int: write(value.toInt64()); break;
 	case RpcValue::Type::Double: write(value.toDouble()); break;
 	case RpcValue::Type::Bool: write(value.toBool()); break;
-	case RpcValue::Type::Blob: write(value.toBlob()); break;
+	//case RpcValue::Type::Blob: write(value.toBlob()); break;
 	case RpcValue::Type::String: write(value.toString()); break;
 	case RpcValue::Type::DateTime: write(value.toDateTime()); break;
 	case RpcValue::Type::List: write(value.toList()); break;
@@ -84,10 +84,10 @@ size_t CponWriter::write(const RpcValue::MetaData &meta_data)
 {
 	size_t len = m_out.tellp();
 	if(!meta_data.isEmpty()) {
-		m_out << Cpon::C_META_BEGIN;
-		startBlock();
 		const RpcValue::IMap &cim = meta_data.iValues();
 		if(!cim.empty()) {
+			m_out << Cpon::C_META_BEGIN;
+			startBlock();
 			int nsid = meta_data.metaTypeNameSpaceId();
 			int mtid = meta_data.metaTypeId();
 			size_t ix = 0;
@@ -152,20 +152,18 @@ void CponWriter::writeContainerBegin(RpcValue::Type container_type)
 	switch (container_type) {
 	case RpcValue::Type::List:
 		m_out << Cpon::C_LIST_BEGIN;
-		startBlock();
 		break;
 	case RpcValue::Type::Map:
 		m_out << Cpon::C_MAP_BEGIN;
-		startBlock();
 		break;
 	case RpcValue::Type::IMap:
 		m_out << Cpon::STR_IMAP_BEGIN;
-		startBlock();
 		break;
 	default:
 		SHVCHP_EXCEPTION(std::string("Cannot write begin of container type: ") + RpcValue::typeToName(container_type));
 		break;
 	}
+	startBlock();
 }
 
 void CponWriter::writeArrayBegin(RpcValue::Type , size_t )
@@ -334,7 +332,7 @@ CponWriter &CponWriter::write(const std::string &value)
 	m_out << '"';
 	return *this;
 }
-
+/*
 CponWriter &CponWriter::write(const RpcValue::Blob &value)
 {
 	if(m_opts.isHexBlob()) {
@@ -370,7 +368,7 @@ CponWriter &CponWriter::write(const RpcValue::Blob &value)
 	}
 	return *this;
 }
-
+*/
 CponWriter &CponWriter::write(const RpcValue::Map &values)
 {
 	writeContainerBegin(RpcValue::Type::Map);

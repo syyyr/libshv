@@ -11,7 +11,7 @@ class SHVCHAINPACK_DECL_EXPORT AbstractStreamWriter
 {
 public:
 	AbstractStreamWriter(std::ostream &out);
-	virtual ~AbstractStreamWriter() {}
+	virtual ~AbstractStreamWriter();
 
 	virtual size_t write(const RpcValue::MetaData &meta_data) = 0;
 	virtual size_t write(const RpcValue &val) = 0;

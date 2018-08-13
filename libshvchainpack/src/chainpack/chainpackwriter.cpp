@@ -197,14 +197,19 @@ size_t ChainPackWriter::write(const RpcValue::MetaData &meta_data)
 	size_t len = m_out.tellp();
 	if(!meta_data.isEmpty()) {
 		const RpcValue::IMap &cim = meta_data.iValues();
-		if(!cim.empty()) {
-			m_out << (uint8_t)ChainPack::TypeInfo::MetaIMap;
-			writeData_IMap(cim);
-		}
 		const RpcValue::Map &csm = meta_data.sValues();
-		if(!csm.empty()) {
-			m_out << (uint8_t)ChainPack::TypeInfo::MetaSMap;
-			writeData_Map(csm);
+		if(!cim.empty() || !csm.empty()) {
+			m_out << (uint8_t)ChainPack::TypeInfo::MetaMap;
+			for (const auto &kv : cim) {
+				writeMapElement(kv.first, kv.second);
+			}
+			for (const auto &kv : csm) {
+				/// we don't expect more tha 17 bytes long uint keys
+				/// so 0xFE can be used as string key prefix
+				m_out << ChainPack::STRING_META_KEY_PREFIX;
+				writeMapElement(kv.first, kv.second);
+			}
+			writeContainerEnd(RpcValue::Type::Map);
 		}
 	}
 	return (size_t)m_out.tellp() - len;
@@ -232,7 +237,7 @@ static ChainPack::TypeInfo::Enum typeToTypeInfo(RpcValue::Type type)
 	case RpcValue::Type::Int: return ChainPack::TypeInfo::Int;
 	case RpcValue::Type::Double: return ChainPack::TypeInfo::Double;
 	case RpcValue::Type::Bool: return ChainPack::TypeInfo::Bool;
-	case RpcValue::Type::Blob: return ChainPack::TypeInfo::Blob;
+	//case RpcValue::Type::Blob: return ChainPack::TypeInfo::Blob;
 	case RpcValue::Type::String: return ChainPack::TypeInfo::String;
 	case RpcValue::Type::List: return ChainPack::TypeInfo::List;
 	case RpcValue::Type::Map: return ChainPack::TypeInfo::Map;
@@ -295,7 +300,7 @@ void ChainPackWriter::writeData(const RpcValue &val)
 	case RpcValue::Type::Decimal: writeData_Decimal(m_out, val.toDecimal()); break;
 	case RpcValue::Type::DateTime: writeData_DateTime(m_out, val.toDateTime()); break;
 	case RpcValue::Type::String: writeData_Blob(m_out, val.toString()); break;
-	case RpcValue::Type::Blob: writeData_Blob(m_out, val.toBlob()); break;
+	//case RpcValue::Type::Blob: writeData_Blob(m_out, val.toBlob()); break;
 	case RpcValue::Type::List: writeData_List(val.toList()); break;
 	case RpcValue::Type::Array: writeData_Array(val.toArray()); break;
 	case RpcValue::Type::Map: writeData_Map(val.toMap()); break;

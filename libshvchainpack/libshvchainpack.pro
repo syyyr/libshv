@@ -31,3 +31,4 @@ LIBS += \
     #-lqfcore
 
 include($$PWD/src/src.pri)
+#include($$PWD/c/c.pri)

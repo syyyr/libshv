@@ -120,40 +120,27 @@ void ChainPackReader::read(RpcValue::MetaData &meta_data)
 {
 	RpcValue::IMap imap;
 	RpcValue::Map smap;
-	while(true) {
-		bool has_meta = true;
-		uint8_t type_info = m_in.peek();
-		switch(type_info) {
-		/*
-		case ChainPackProtocol::TypeInfo::META_TYPE_ID:  {
-			data.get();
-			RpcValue::UInt u = read_UIntData<RpcValue::UInt>(data);
-			ret.setMetaTypeId(u);
-			break;
+	uint8_t type_info = m_in.peek();
+	if(type_info == ChainPack::TypeInfo::MetaMap) {
+		m_in.get();
+		while(true) {
+			int b = m_in.peek();
+			if(b == ChainPack::TypeInfo::TERM) {
+				m_in.get();
+				break;
+			}
+			else if(b == ChainPack::STRING_META_KEY_PREFIX) {
+				m_in.get();
+				RpcValue::String key = readData_Blob<RpcValue::String>(m_in);
+				RpcValue cp = read();
+				smap[key] = cp;
+			}
+			else {
+				RpcValue::UInt key = readData_UInt<RpcValue::UInt>(m_in);
+				RpcValue cp = read();
+				imap[key] = cp;
+			}
 		}
-		case ChainPackProtocol::TypeInfo::META_TYPE_NAMESPACE_ID:  {
-			data.get();
-			RpcValue::UInt u = read_UIntData<RpcValue::UInt>(data);
-			ret.setMetaTypeNameSpaceId(u);
-			break;
-		}
-		*/
-		case ChainPack::TypeInfo::MetaIMap:  {
-			m_in.get();
-			imap = readData_IMap();
-			break;
-		}
-		case ChainPack::TypeInfo::MetaSMap:  {
-			m_in.get();
-			smap = readData_Map();
-			break;
-		}
-		default:
-			has_meta = false;
-			break;
-		}
-		if(!has_meta)
-			break;
 	}
 	meta_data = RpcValue::MetaData(std::move(imap), std::move(smap));
 }
@@ -218,7 +205,7 @@ RpcValue ChainPackReader::readData(ChainPack::TypeInfo::Enum type_info, bool is_
 		case ChainPack::TypeInfo::DateTimeEpoch: { RpcValue::DateTime val = readData_DateTimeEpoch(m_in); ret = RpcValue(val); break; }
 		case ChainPack::TypeInfo::DateTime: { RpcValue::DateTime val = readData_DateTime(m_in); ret = RpcValue(val); break; }
 		case ChainPack::TypeInfo::String: { RpcValue::String val = readData_Blob<RpcValue::String>(m_in); ret = RpcValue(val); break; }
-		case ChainPack::TypeInfo::Blob: { RpcValue::Blob val = readData_Blob<RpcValue::Blob>(m_in); ret = RpcValue(val); break; }
+		//case ChainPack::TypeInfo::Blob: { RpcValue::Blob val = readData_Blob<RpcValue::Blob>(m_in); ret = RpcValue(val); break; }
 		case ChainPack::TypeInfo::List: { RpcValue::List val = readData_List(); ret = RpcValue(val); break; }
 		case ChainPack::TypeInfo::Map: { RpcValue::Map val = readData_Map(); ret = RpcValue(val); break; }
 		case ChainPack::TypeInfo::IMap: { RpcValue::IMap val = readData_IMap(); ret = RpcValue(val); break; }
