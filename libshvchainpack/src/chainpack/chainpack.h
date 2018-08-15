@@ -14,7 +14,7 @@ public:
 public:
 	static constexpr uint8_t ARRAY_FLAG_MASK = 64;
 	static constexpr uint8_t STRING_META_KEY_PREFIX = 0xFE;
-	struct SHVCHAINPACK_DECL_EXPORT TypeInfo {
+	struct SHVCHAINPACK_DECL_EXPORT PackingSchema {
 		enum Enum {
 			INVALID = -1,
 
@@ -41,7 +41,7 @@ public:
 		static const char* name(Enum e);
 	};
 
-	static RpcValue::Type typeInfoToArrayType(TypeInfo::Enum type_info);
+	static RpcValue::Type typeInfoToArrayType(PackingSchema::Enum type_info);
 };
 
 }}

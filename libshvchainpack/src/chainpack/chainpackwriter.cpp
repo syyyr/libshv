@@ -199,12 +199,12 @@ size_t ChainPackWriter::write(const RpcValue::MetaData &meta_data)
 		const RpcValue::IMap &cim = meta_data.iValues();
 		const RpcValue::Map &csm = meta_data.sValues();
 		if(!cim.empty() || !csm.empty()) {
-			m_out << (uint8_t)ChainPack::TypeInfo::MetaMap;
+			m_out << (uint8_t)ChainPack::PackingSchema::MetaMap;
 			for (const auto &kv : cim) {
 				writeMapElement(kv.first, kv.second);
 			}
 			for (const auto &kv : csm) {
-				/// we don't expect more tha 17 bytes long uint keys
+				/// we don't expect more than 17 bytes long uint keys
 				/// so 0xFE can be used as string key prefix
 				m_out << ChainPack::STRING_META_KEY_PREFIX;
 				writeMapElement(kv.first, kv.second);
@@ -225,29 +225,29 @@ void ChainPackWriter::writeUIntData(std::ostream &os, uint64_t n)
 	writeData_UInt(os, n);
 }
 
-static ChainPack::TypeInfo::Enum typeToTypeInfo(RpcValue::Type type)
+static ChainPack::PackingSchema::Enum typeToTypeInfo(RpcValue::Type type)
 {
 	switch (type) {
 	case RpcValue::Type::Invalid:
 		SHVCHP_EXCEPTION("There is no type info for type Invalid");
 	case RpcValue::Type::Array:
 		SHVCHP_EXCEPTION("There is no type info for type Array");
-	case RpcValue::Type::Null: return ChainPack::TypeInfo::Null;
-	case RpcValue::Type::UInt: return ChainPack::TypeInfo::UInt;
-	case RpcValue::Type::Int: return ChainPack::TypeInfo::Int;
-	case RpcValue::Type::Double: return ChainPack::TypeInfo::Double;
-	case RpcValue::Type::Bool: return ChainPack::TypeInfo::Bool;
+	case RpcValue::Type::Null: return ChainPack::PackingSchema::Null;
+	case RpcValue::Type::UInt: return ChainPack::PackingSchema::UInt;
+	case RpcValue::Type::Int: return ChainPack::PackingSchema::Int;
+	case RpcValue::Type::Double: return ChainPack::PackingSchema::Double;
+	case RpcValue::Type::Bool: return ChainPack::PackingSchema::Bool;
 	//case RpcValue::Type::Blob: return ChainPack::TypeInfo::Blob;
-	case RpcValue::Type::String: return ChainPack::TypeInfo::String;
-	case RpcValue::Type::List: return ChainPack::TypeInfo::List;
-	case RpcValue::Type::Map: return ChainPack::TypeInfo::Map;
-	case RpcValue::Type::IMap: return ChainPack::TypeInfo::IMap;
+	case RpcValue::Type::String: return ChainPack::PackingSchema::String;
+	case RpcValue::Type::List: return ChainPack::PackingSchema::List;
+	case RpcValue::Type::Map: return ChainPack::PackingSchema::Map;
+	case RpcValue::Type::IMap: return ChainPack::PackingSchema::IMap;
 	//case RpcValue::Type::DateTimeEpoch: return TypeInfo::DateTimeEpoch;
-	case RpcValue::Type::DateTime: return ChainPack::TypeInfo::DateTime;
-	case RpcValue::Type::Decimal: return ChainPack::TypeInfo::Decimal;
+	case RpcValue::Type::DateTime: return ChainPack::PackingSchema::DateTime;
+	case RpcValue::Type::Decimal: return ChainPack::PackingSchema::Decimal;
 	}
 	SHVCHP_EXCEPTION("Unknown RpcValue::Type!");
-	return ChainPack::TypeInfo::INVALID; // just to remove mingw warning
+	return ChainPack::PackingSchema::INVALID; // just to remove mingw warning
 }
 
 bool ChainPackWriter::writeTypeInfo(const RpcValue &pack)
@@ -256,9 +256,9 @@ bool ChainPackWriter::writeTypeInfo(const RpcValue &pack)
 		SHVCHP_EXCEPTION("Cannot serialize invalid ChainPack.");
 	bool ret = false;
 	RpcValue::Type type = pack.type();
-	int t = ChainPack::TypeInfo::INVALID;
+	int t = ChainPack::PackingSchema::INVALID;
 	if(type == RpcValue::Type::Bool) {
-		t = pack.toBool()? ChainPack::TypeInfo::TRUE: ChainPack::TypeInfo::FALSE;
+		t = pack.toBool()? ChainPack::PackingSchema::TRUE: ChainPack::PackingSchema::FALSE;
 		ret = true;
 	}
 	else if(type == RpcValue::Type::UInt) {
@@ -281,7 +281,7 @@ bool ChainPackWriter::writeTypeInfo(const RpcValue &pack)
 		t = typeToTypeInfo(pack.arrayType());
 		t |= ChainPack::ARRAY_FLAG_MASK;
 	}
-	if(t == ChainPack::TypeInfo::INVALID) {
+	if(t == ChainPack::PackingSchema::INVALID) {
 		t = typeToTypeInfo(pack.type());
 	}
 	m_out << (uint8_t)t;
@@ -350,14 +350,14 @@ void ChainPackWriter::writeData_Array(const RpcValue::Array &array)
 
 void ChainPackWriter::writeContainerBegin(RpcValue::Type container_type)
 {
-	ChainPack::TypeInfo::Enum t = typeToTypeInfo(container_type);
+	ChainPack::PackingSchema::Enum t = typeToTypeInfo(container_type);
 	m_out << (uint8_t)t;
 }
 
 void ChainPackWriter::writeContainerEnd(RpcValue::Type container_type)
 {
 	(void)container_type;
-	m_out << (uint8_t)ChainPack::TypeInfo::TERM;
+	m_out << (uint8_t)ChainPack::PackingSchema::TERM;
 }
 
 void ChainPackWriter::writeListElement(const RpcValue &val)

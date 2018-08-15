@@ -437,12 +437,12 @@ private:
 	void binaryTest()
 	{
 		qDebug() << "============= chainpack binary test ============";
-		for (int i = ChainPack::TypeInfo::Null; i <= ChainPack::TypeInfo::DateTime; ++i) {
+		for (int i = ChainPack::PackingSchema::Null; i <= ChainPack::PackingSchema::DateTime; ++i) {
 			RpcValue::String out;
 			out += i;
-			ChainPack::TypeInfo::Enum e = (ChainPack::TypeInfo::Enum)i;
+			ChainPack::PackingSchema::Enum e = (ChainPack::PackingSchema::Enum)i;
 			std::ostringstream str;
-			str << std::setw(3) << i << " " << std::hex << i << " " << binary_dump(out).c_str() << " "  << ChainPack::TypeInfo::name(e);
+			str << std::setw(3) << i << " " << std::hex << i << " " << binary_dump(out).c_str() << " "  << ChainPack::PackingSchema::name(e);
 			qDebug() << str.str();
 		}
 		/*
@@ -455,12 +455,12 @@ private:
 			qDebug() << str.str();
 		}
 		*/
-		for (int i = ChainPack::TypeInfo::FALSE; i <= ChainPack::TypeInfo::TERM; ++i) {
+		for (int i = ChainPack::PackingSchema::FALSE; i <= ChainPack::PackingSchema::TERM; ++i) {
 			RpcValue::String out;
 			out += (char)i;
-			ChainPack::TypeInfo::Enum e = (ChainPack::TypeInfo::Enum)i;
+			ChainPack::PackingSchema::Enum e = (ChainPack::PackingSchema::Enum)i;
 			std::ostringstream str;
-			str << std::setw(3) << i << " " << std::hex << i << " " << binary_dump(out).c_str() << " "  << ChainPack::TypeInfo::name(e);
+			str << std::setw(3) << i << " " << std::hex << i << " " << binary_dump(out).c_str() << " "  << ChainPack::PackingSchema::name(e);
 			qDebug() << str.str();
 		}
 		{
