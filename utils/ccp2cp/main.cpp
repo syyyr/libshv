@@ -128,8 +128,12 @@ int main(int argc, char *argv[])
 
 	out_file = stdout;
 
+	static const size_t STATE_CNT = 100;
+	ccpcp_container_state states[STATE_CNT];
+	ccpcp_container_stack stack;
+	ccpc_container_stack_init(&stack, states, STATE_CNT, NULL);
 	ccpcp_unpack_context in_ctx;
-	ccpcp_unpack_context_init(&in_ctx, in_buff, 0, unpack_underflow_handler);
+	ccpcp_unpack_context_init(&in_ctx, in_buff, 0, unpack_underflow_handler, &stack);
 
 	ccpcp_pack_context out_ctx;
 	ccpcp_pack_context_init(&out_ctx, out_buff, sizeof (out_buff), pack_overflow_handler);

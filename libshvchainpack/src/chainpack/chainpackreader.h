@@ -18,10 +18,10 @@ public:
 
 	static uint64_t readUIntData(std::istream &data, bool *ok = nullptr);
 private:
-	RpcValue readData(ChainPack::TypeInfo::Enum type_info, bool is_array);
+	RpcValue readData(ChainPack::PackingSchema::Enum type_info, bool is_array);
 
 	RpcValue::List readData_List();
-	RpcValue::Array readData_Array(ChainPack::TypeInfo::Enum type_info);
+	RpcValue::Array readData_Array(ChainPack::PackingSchema::Enum type_info);
 	RpcValue::Map readData_Map();
 	RpcValue::IMap readData_IMap();
 };

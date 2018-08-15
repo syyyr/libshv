@@ -147,11 +147,11 @@ void ChainPackReader::read(RpcValue::MetaData &meta_data)
 	RpcValue::IMap imap;
 	RpcValue::Map smap;
 	uint8_t type_info = m_in.peek();
-	if(type_info == ChainPack::TypeInfo::MetaMap) {
+	if(type_info == ChainPack::PackingSchema::MetaMap) {
 		m_in.get();
 		while(true) {
 			int b = m_in.peek();
-			if(b == ChainPack::TypeInfo::TERM) {
+			if(b == ChainPack::PackingSchema::TERM) {
 				m_in.get();
 				break;
 			}
@@ -188,16 +188,16 @@ void ChainPackReader::read(RpcValue &val)
 			val = RpcValue(n);
 		}
 	}
-	else if(type == ChainPack::TypeInfo::FALSE) {
+	else if(type == ChainPack::PackingSchema::FALSE) {
 		val = RpcValue(false);
 	}
-	else if(type == ChainPack::TypeInfo::TRUE) {
+	else if(type == ChainPack::PackingSchema::TRUE) {
 		val = RpcValue(true);
 	}
 	if(!val.isValid()) {
 		bool is_array = type & ChainPack::ARRAY_FLAG_MASK;
 		type = type & ~ChainPack::ARRAY_FLAG_MASK;
-		val = readData((ChainPack::TypeInfo::Enum)type, is_array);
+		val = readData((ChainPack::PackingSchema::Enum)type, is_array);
 	}
 	if(!meta_data.isEmpty())
 		val.setMetaData(std::move(meta_data));
@@ -212,7 +212,7 @@ uint64_t ChainPackReader::readUIntData(std::istream &data, bool *ok)
 	return ret;
 }
 
-RpcValue ChainPackReader::readData(ChainPack::TypeInfo::Enum type_info, bool is_array)
+RpcValue ChainPackReader::readData(ChainPack::PackingSchema::Enum type_info, bool is_array)
 {
 	RpcValue ret;
 	if(is_array) {
@@ -221,24 +221,24 @@ RpcValue ChainPackReader::readData(ChainPack::TypeInfo::Enum type_info, bool is_
 	}
 	else {
 		switch (type_info) {
-		case ChainPack::TypeInfo::Null: { ret = RpcValue(nullptr); break; }
-		case ChainPack::TypeInfo::UInt: { uint64_t u = readData_UInt<uint64_t>(m_in); ret = RpcValue(u); break; }
-		case ChainPack::TypeInfo::Int: { int64_t i = readData_Int<int64_t>(m_in); ret = RpcValue(i); break; }
-		case ChainPack::TypeInfo::Double: { double d = readData_Double(m_in); ret = RpcValue(d); break; }
-		case ChainPack::TypeInfo::Decimal: { RpcValue::Decimal d = readData_Decimal(m_in); ret = RpcValue(d); break; }
-		case ChainPack::TypeInfo::TRUE: { bool b = true; ret = RpcValue(b); break; }
-		case ChainPack::TypeInfo::FALSE: { bool b = false; ret = RpcValue(b); break; }
+		case ChainPack::PackingSchema::Null: { ret = RpcValue(nullptr); break; }
+		case ChainPack::PackingSchema::UInt: { uint64_t u = readData_UInt<uint64_t>(m_in); ret = RpcValue(u); break; }
+		case ChainPack::PackingSchema::Int: { int64_t i = readData_Int<int64_t>(m_in); ret = RpcValue(i); break; }
+		case ChainPack::PackingSchema::Double: { double d = readData_Double(m_in); ret = RpcValue(d); break; }
+		case ChainPack::PackingSchema::Decimal: { RpcValue::Decimal d = readData_Decimal(m_in); ret = RpcValue(d); break; }
+		case ChainPack::PackingSchema::TRUE: { bool b = true; ret = RpcValue(b); break; }
+		case ChainPack::PackingSchema::FALSE: { bool b = false; ret = RpcValue(b); break; }
 		//case ChainPack::TypeInfo::DateTimeEpoch: { RpcValue::DateTime val = readData_DateTimeEpoch(m_in); ret = RpcValue(val); break; }
-		case ChainPack::TypeInfo::DateTime: { RpcValue::DateTime val = readData_DateTime(m_in); ret = RpcValue(val); break; }
-		case ChainPack::TypeInfo::String: { RpcValue::String val = readData_Blob<RpcValue::String>(m_in); ret = RpcValue(val); break; }
-		case ChainPack::TypeInfo::CString: { RpcValue::String val = readData_CString(m_in); ret = RpcValue(val); break; }
-		//case ChainPack::TypeInfo::Blob: { RpcValue::Blob val = readData_Blob<RpcValue::Blob>(m_in); ret = RpcValue(val); break; }
-		case ChainPack::TypeInfo::List: { RpcValue::List val = readData_List(); ret = RpcValue(val); break; }
-		case ChainPack::TypeInfo::Map: { RpcValue::Map val = readData_Map(); ret = RpcValue(val); break; }
-		case ChainPack::TypeInfo::IMap: { RpcValue::IMap val = readData_IMap(); ret = RpcValue(val); break; }
-		case ChainPack::TypeInfo::Bool: { uint8_t t = m_in.get(); ret = RpcValue(t != 0); break; }
+		case ChainPack::PackingSchema::DateTime: { RpcValue::DateTime val = readData_DateTime(m_in); ret = RpcValue(val); break; }
+		case ChainPack::PackingSchema::String: { RpcValue::String val = readData_Blob<RpcValue::String>(m_in); ret = RpcValue(val); break; }
+		case ChainPack::PackingSchema::CString: { RpcValue::String val = readData_CString(m_in); ret = RpcValue(val); break; }
+		case ChainPack::PackingSchema::Blob_depr: { RpcValue::String val = readData_Blob<RpcValue::String>(m_in); ret = RpcValue(val); break; }
+		case ChainPack::PackingSchema::List: { RpcValue::List val = readData_List(); ret = RpcValue(val); break; }
+		case ChainPack::PackingSchema::Map: { RpcValue::Map val = readData_Map(); ret = RpcValue(val); break; }
+		case ChainPack::PackingSchema::IMap: { RpcValue::IMap val = readData_IMap(); ret = RpcValue(val); break; }
+		case ChainPack::PackingSchema::Bool: { uint8_t t = m_in.get(); ret = RpcValue(t != 0); break; }
 		default:
-			SHVCHP_EXCEPTION("Internal error: attempt to read helper type directly. type: " + Utils::toString(type_info) + " " + ChainPack::TypeInfo::name(type_info));
+			SHVCHP_EXCEPTION("Internal error: attempt to read helper type directly. type: " + Utils::toString(type_info) + " " + ChainPack::PackingSchema::name(type_info));
 		}
 	}
 	return ret;
@@ -251,7 +251,7 @@ RpcValue::List ChainPackReader::readData_List()
 		int b = m_in.peek();
 		if(b < 0)
 			SHVCHP_EXCEPTION("Unexpected EOF!");
-		if(b == ChainPack::TypeInfo::TERM) {
+		if(b == ChainPack::PackingSchema::TERM) {
 			m_in.get();
 			break;
 		}
@@ -268,7 +268,7 @@ RpcValue::Map ChainPackReader::readData_Map()
 		int b = m_in.peek();
 		if(b < 0)
 			SHVCHP_EXCEPTION("Unexpected EOF!");
-		if(b == ChainPack::TypeInfo::TERM) {
+		if(b == ChainPack::PackingSchema::TERM) {
 			m_in.get();
 			break;
 		}
@@ -284,7 +284,7 @@ RpcValue::IMap ChainPackReader::readData_IMap()
 	RpcValue::IMap ret;
 	while(true) {
 		int b = m_in.peek();
-		if(b == ChainPack::TypeInfo::TERM) {
+		if(b == ChainPack::PackingSchema::TERM) {
 			m_in.get();
 			break;
 		}
@@ -295,7 +295,7 @@ RpcValue::IMap ChainPackReader::readData_IMap()
 	return ret;
 }
 
-RpcValue::Array ChainPackReader::readData_Array(ChainPack::TypeInfo::Enum array_type_info)
+RpcValue::Array ChainPackReader::readData_Array(ChainPack::PackingSchema::Enum array_type_info)
 {
 	RpcValue::Type type = ChainPack::typeInfoToArrayType(array_type_info);
 	RpcValue::Array ret(type);
