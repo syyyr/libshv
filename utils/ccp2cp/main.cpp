@@ -141,17 +141,6 @@ int main(int argc, char *argv[])
 		out_ctx.indent = o_indent.data();
 	}
 
-	struct ContainerState
-	{
-		enum class ItemType {Field, Key, Val};
-		ccpcp_item_types containerType;
-		ItemType itemType = ItemType::Field;
-		int itemCount = 0;
-
-		ContainerState(ccpcp_item_types ct) : containerType(ct) {}
-	};
-	std::vector<ContainerState> cont_states;
-
 	int meta_closed = false;
 	do {
 		if(o_cpon_input)
@@ -160,35 +149,47 @@ int main(int argc, char *argv[])
 			cchainpack_unpack_next(&in_ctx);
 		if(in_ctx.err_no != CCPCP_RC_OK)
 			break;
+
 		if(!o_chainpack_output) {
-			if(!cont_states.empty()) {
+			ccpcp_container_state *outer_cont_state = ccpc_unpack_context_top_container_state(&in_ctx);
+			if(outer_cont_state && outer_cont_state->item_count == 0) {
+				// container is just open, but it is on stack already
+				outer_cont_state = ccpc_unpack_context_subtop_container_state(&in_ctx);
+			}
+			if(outer_cont_state != nullptr) {
 				bool is_string_concat = 0;
 				if(in_ctx.item.type == CCPCP_ITEM_STRING) {
 					ccpcp_string *it = &in_ctx.item.as.String;
 					if(it->parse_status.chunk_cnt > 1) {
 						// multichunk string
 						// this can happen, when parsed string is greater than unpack_context buffer
-						// concatenate with previous chunk
+						// or escape sequence is encountered
+						// concatenate it with previous chunk
 						is_string_concat = 1;
 					}
 				}
-				if(!is_string_concat && in_ctx.item.type != CCPCP_ITEM_CONTAINER_END) {
-					ContainerState &cs = cont_states[cont_states.size() - 1];
-					switch(cs.itemType) {
-					case ContainerState::ItemType::Field:
-						if(!meta_closed) {
-							ccpon_pack_field_delim(&out_ctx, cs.itemCount == 0);
-							cs.itemCount++;
+				if(!is_string_concat && !ccpcp_item_type_is_container_end(in_ctx.item.type)) {
+					switch(outer_cont_state->container_type) {
+					case CCPCP_ITEM_LIST:
+					case CCPCP_ITEM_ARRAY:
+						if(!meta_closed && outer_cont_state) {
+							ccpon_pack_field_delim(&out_ctx, outer_cont_state->item_count == 1);
 						}
 						break;
-					case ContainerState::ItemType::Key:
-						ccpon_pack_field_delim(&out_ctx, cs.itemCount == 0);
-						cs.itemType = ContainerState::ItemType::Val;
+					case CCPCP_ITEM_MAP:
+					case CCPCP_ITEM_IMAP:
+					case CCPCP_ITEM_META: {
+						nError() << "cnt:" << outer_cont_state->item_count;
+						bool is_val = (outer_cont_state->item_count % 2) == 0;
+						if(is_val) {
+							ccpon_pack_key_delim(&out_ctx);
+						}
+						else {
+							ccpon_pack_field_delim(&out_ctx, outer_cont_state->item_count == 1);
+						}
 						break;
-					case ContainerState::ItemType::Val:
-						ccpon_pack_key_delim(&out_ctx);
-						cs.itemType = ContainerState::ItemType::Key;
-						cs.itemCount++;
+					}
+					default:
 						break;
 					}
 				}
@@ -205,8 +206,6 @@ int main(int argc, char *argv[])
 				cchainpack_pack_list_begin(&out_ctx);
 			else
 				ccpon_pack_list_begin(&out_ctx);
-			ContainerState cs(in_ctx.item.type);
-			cont_states.push_back(cs);
 			break;
 		}
 		case CCPCP_ITEM_ARRAY: {
@@ -214,8 +213,6 @@ int main(int argc, char *argv[])
 				cchainpack_pack_array_begin(&out_ctx, in_ctx.item.as.Array.size);
 			else
 				ccpon_pack_array_begin(&out_ctx, in_ctx.item.as.Array.size);
-			ContainerState cs(in_ctx.item.type);
-			cont_states.push_back(cs);
 			break;
 		}
 		case CCPCP_ITEM_MAP: {
@@ -223,9 +220,6 @@ int main(int argc, char *argv[])
 				cchainpack_pack_map_begin(&out_ctx);
 			else
 				ccpon_pack_map_begin(&out_ctx);
-			ContainerState cs(in_ctx.item.type);
-			cs.itemType = ContainerState::ItemType::Key;
-			cont_states.push_back(cs);
 			break;
 		}
 		case CCPCP_ITEM_IMAP: {
@@ -233,9 +227,6 @@ int main(int argc, char *argv[])
 				cchainpack_pack_imap_begin(&out_ctx);
 			else
 				ccpon_pack_imap_begin(&out_ctx);
-			ContainerState cs(in_ctx.item.type);
-			cs.itemType = ContainerState::ItemType::Key;
-			cont_states.push_back(cs);
 			break;
 		}
 		case CCPCP_ITEM_META: {
@@ -243,53 +234,41 @@ int main(int argc, char *argv[])
 				cchainpack_pack_meta_begin(&out_ctx);
 			else
 				ccpon_pack_meta_begin(&out_ctx);
-			ContainerState cs(in_ctx.item.type);
-			cs.itemType = ContainerState::ItemType::Key;
-			cont_states.push_back(cs);
 			break;
 		}
-		case CCPCP_ITEM_CONTAINER_END:
-		{
-			if(cont_states.empty()) {
-				nError() << "nesting error";
-				in_ctx.err_no = CCPCP_RC_MALFORMED_INPUT;
-				break;
-			}
-			ContainerState &cs = cont_states[cont_states.size() - 1];
-			if(o_chainpack_output) {
-				if(cs.containerType == CCPCP_ITEM_LIST)
-					cchainpack_pack_list_end(&out_ctx);
-				else if(cs.containerType == CCPCP_ITEM_ARRAY)
-					cchainpack_pack_array_end(&out_ctx);
-				else if(cs.containerType == CCPCP_ITEM_MAP)
-					cchainpack_pack_map_end(&out_ctx);
-				else if(cs.containerType == CCPCP_ITEM_IMAP)
-					cchainpack_pack_imap_end(&out_ctx);
-				else if(cs.containerType == CCPCP_ITEM_META)
-					cchainpack_pack_meta_end(&out_ctx);
-				else {
-					nError() << "wrong container end";
-					in_ctx.err_no = CCPCP_RC_MALFORMED_INPUT;
-				}
-			}
-			else {
-				meta_closed = (cs.containerType == CCPCP_ITEM_META);
-				if(cs.containerType == CCPCP_ITEM_LIST)
-					ccpon_pack_list_end(&out_ctx);
-				else if(cs.containerType == CCPCP_ITEM_ARRAY)
-					ccpon_pack_array_end(&out_ctx);
-				else if(cs.containerType == CCPCP_ITEM_MAP)
-					ccpon_pack_map_end(&out_ctx);
-				else if(cs.containerType == CCPCP_ITEM_IMAP)
-					ccpon_pack_imap_end(&out_ctx);
-				else if(cs.containerType == CCPCP_ITEM_META)
-					ccpon_pack_meta_end(&out_ctx);
-				else {
-					nError() << "wrong container end";
-					in_ctx.err_no = CCPCP_RC_MALFORMED_INPUT;
-				}
-			}
-			cont_states.pop_back();
+		case CCPCP_ITEM_LIST_END: {
+			if(o_chainpack_output)
+				cchainpack_pack_list_end(&out_ctx);
+			else
+				ccpon_pack_list_end(&out_ctx);
+			break;
+		}
+		case CCPCP_ITEM_ARRAY_END: {
+			if(o_chainpack_output)
+				;
+			else
+				ccpon_pack_list_end(&out_ctx);
+			break;
+		}
+		case CCPCP_ITEM_MAP_END: {
+			if(o_chainpack_output)
+				cchainpack_pack_map_end(&out_ctx);
+			else
+				ccpon_pack_map_end(&out_ctx);
+			break;
+		}
+		case CCPCP_ITEM_IMAP_END: {
+			if(o_chainpack_output)
+				cchainpack_pack_imap_end(&out_ctx);
+			else
+				ccpon_pack_imap_end(&out_ctx);
+			break;
+		}
+		case CCPCP_ITEM_META_END: {
+			if(o_chainpack_output)
+				cchainpack_pack_meta_end(&out_ctx);
+			else
+				ccpon_pack_meta_end(&out_ctx);
 			break;
 		}
 		case CCPCP_ITEM_STRING: {
