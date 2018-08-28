@@ -1,41 +1,25 @@
-#include <necrolog.h>
 #include <ccpon.h>
 #include <cchainpack.h>
 
-#include <numeric>
-#include <vector>
-#include <algorithm>
-#include <iostream>
-#include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-/*
-#define nFooInfo() nCInfo("foo")
-#define nBarDebug() nCDebug("bar")
-
-inline NecroLog &operator<<(NecroLog log, const std::vector<std::string> &sl)
-{
-	std::string s = std::accumulate(sl.begin(), sl.end(), std::string(),
-										  [](const std::string& a, const std::string& b) -> std::string {
-											  return a + (a.length() > 0 ? "," : "") + b;
-										  } );
-	return log << s;
-}
-*/
 static const char *cp2cp_help =
-R"( ChainPack to Cpon converter
-
-USAGE:
--i "indent_string"
-	indent Cpon (default is no-indent "")
--t
-	human readable metatypes in Cpon output
---ip
-	input stream is Cpon (ChainPack otherwise)
---oc
-	write output in ChainPack (Cpon otherwise)
-
-)";
-
+"\n"
+"ChainPack to Cpon converter/n"
+"\n"
+"USAGE:/n"
+"-i \"indent_string\"/n"
+"	indent Cpon (default is no-indent \"\")/n"
+"-t/n"
+"	human readable metatypes in Cpon output/n"
+"--ip/n"
+"	input stream is Cpon (ChainPack otherwise)/n"
+"--oc/n"
+"	write output in ChainPack (Cpon otherwise)/n"
+;
+/*
 int replace_str(std::string& str, const std::string& from, const std::string& to)
 {
 	int i = 0;
@@ -47,31 +31,30 @@ int replace_str(std::string& str, const std::string& from, const std::string& to
 	}
 	return i;
 }
-
-void help(const std::string &app_name)
+*/
+void help(const char *app_name)
 {
-	std::cout << app_name << cp2cp_help;
-	std::cout << NecroLog::cliHelp();
+	printf("%s%s", app_name, cp2cp_help);
 	exit(0);
 }
 
-static FILE *in_file = nullptr;
+static FILE *in_file = NULL;
 static uint8_t in_buff[1024];
 
-size_t unpack_underflow_handler(struct ccpcp_unpack_context *ctx, unsigned long)
+size_t unpack_underflow_handler(struct ccpcp_unpack_context *ctx)
 {
-	size_t n = ::fread(in_buff, 1, sizeof (in_buff), in_file);
+	size_t n = fread(in_buff, 1, sizeof (in_buff), in_file);
 	ctx->start = ctx->current = in_buff;
 	ctx->end = ctx->start + n;
 	return n;
 }
 
-static FILE *out_file = nullptr;
+static FILE *out_file = NULL;
 static uint8_t out_buff[1024];
 
-size_t pack_overflow_handler(struct ccpcp_pack_context *ctx, unsigned long)
+size_t pack_overflow_handler(struct ccpcp_pack_context *ctx)
 {
-	::fwrite(out_buff, 1, ctx->current - ctx->start, out_file);
+	fwrite(out_buff, 1, ctx->current - ctx->start, out_file);
 	ctx->start = ctx->current = out_buff;
 	ctx->end = ctx->start + sizeof (out_buff);
 	return sizeof (out_buff);
@@ -79,49 +62,44 @@ size_t pack_overflow_handler(struct ccpcp_pack_context *ctx, unsigned long)
 
 int main(int argc, char *argv[])
 {
-	std::vector<std::string> args = NecroLog::setCLIOptions(argc, argv);
-
-	if(std::find(args.begin(), args.end(), "--help") != args.end()) {
-		help(argv[0]);
-	}
-	nDebug() << NecroLog::tresholdsLogInfo();
-
-	std::string o_indent;
+	const char *o_indent = NULL;
 	bool o_translate_meta_ids = false;
 	bool o_cpon_input = false;
 	bool o_chainpack_output = false;
-	std::string file_name;
+	const char *file_name = NULL;
 
-	for (size_t i = 1; i < args.size(); ++i) {
-		const std::string &arg = args[i];
-		if(arg == "-i" && i < args.size() - 1) {
-			std::string s = argv[++i];
-			//replace_str(s, "\\t", "\t");
-			//replace_str(s, "\\r", "\r");
-			//replace_str(s, "\\n", "\n");
-			o_indent = s;
+	for(int i=1; i<argc; i++) {
+		const char *arg = argv[i];
+		if(strcmp(arg, "-h") == 0)
+			help(argv[0]);
+		if(strcmp(arg, "--help") == 0)
+			help(argv[0]);
+
+		if(!strcmp(arg, "-i")) {
+			if(i < argc - 1)
+				o_indent = argv[++i];
 		}
-		else if(arg == "-t")
+		else if(!strcmp(arg, "-t"))
 			o_translate_meta_ids = true;
-		else if(arg == "--ip")
+		else if(!strcmp(arg, "--ip"))
 			o_cpon_input = true;
-		else if(arg == "--oc")
+		else if(!strcmp(arg, "--oc"))
 			o_chainpack_output = true;
-		else if(arg == "-h" || arg == "--help")
+		else if(!strcmp(arg, "-h") || !strcmp(arg, "--help"))
 			help(argv[0]);
 		else
 			file_name = arg;
 	}
 
-	if(file_name.empty()) {
-		nDebug() << "reading stdin";
+	if(!file_name) {
+		//nDebug() << "reading stdin";
 		in_file = stdin;
 	}
 	else {
-		nDebug() << "reading:" << file_name;
-		in_file = ::fopen(file_name.c_str(), "rb");
+		//nDebug() << "reading:" << file_name;
+		in_file = fopen(file_name, "rb");
 		if(!in_file) {
-			nError() << "Cannot open" << file_name << "for reading";
+			fprintf(stderr, "Cannot open '%s' for reading\n", file_name);
 			exit(-1);
 		}
 	}
@@ -137,8 +115,8 @@ int main(int argc, char *argv[])
 
 	ccpcp_pack_context out_ctx;
 	ccpcp_pack_context_init(&out_ctx, out_buff, sizeof (out_buff), pack_overflow_handler);
-	if(!o_indent.empty()) {
-		out_ctx.indent = o_indent.data();
+	if(o_indent) {
+		out_ctx.indent = o_indent;
 	}
 
 	int meta_closed = false;
@@ -152,7 +130,7 @@ int main(int argc, char *argv[])
 
 		if(!o_chainpack_output) {
 			ccpcp_container_state *curr_item_cont_state = ccpc_unpack_context_current_item_container_state(&in_ctx);
-			if(curr_item_cont_state != nullptr) {
+			if(curr_item_cont_state != NULL) {
 				bool is_string_concat = 0;
 				if(in_ctx.item.type == CCPCP_ITEM_STRING) {
 					ccpcp_string *it = &in_ctx.item.as.String;
@@ -327,10 +305,10 @@ int main(int argc, char *argv[])
 			break;
 		}
 	} while(in_ctx.err_no == CCPCP_RC_OK && out_ctx.err_no == CCPCP_RC_OK);
-	pack_overflow_handler(&out_ctx, 1);
+	pack_overflow_handler(&out_ctx);
 
 	if(in_ctx.err_no != CCPCP_RC_OK && in_ctx.err_no != CCPCP_RC_BUFFER_UNDERFLOW)
-		nError() << "Parse error:" << in_ctx.err_no;
+		fprintf(stderr, "Parse error: %d\n", in_ctx.err_no);
 
 	return 0;
 }
