@@ -151,12 +151,8 @@ int main(int argc, char *argv[])
 			break;
 
 		if(!o_chainpack_output) {
-			ccpcp_container_state *outer_cont_state = ccpc_unpack_context_top_container_state(&in_ctx);
-			if(outer_cont_state && outer_cont_state->item_count == 0) {
-				// container is just open, but it is on stack already
-				outer_cont_state = ccpc_unpack_context_subtop_container_state(&in_ctx);
-			}
-			if(outer_cont_state != nullptr) {
+			ccpcp_container_state *curr_item_cont_state = ccpc_unpack_context_current_item_container_state(&in_ctx);
+			if(curr_item_cont_state != nullptr) {
 				bool is_string_concat = 0;
 				if(in_ctx.item.type == CCPCP_ITEM_STRING) {
 					ccpcp_string *it = &in_ctx.item.as.String;
@@ -169,23 +165,23 @@ int main(int argc, char *argv[])
 					}
 				}
 				if(!is_string_concat && !ccpcp_item_type_is_container_end(in_ctx.item.type)) {
-					switch(outer_cont_state->container_type) {
+					switch(curr_item_cont_state->container_type) {
 					case CCPCP_ITEM_LIST:
 					case CCPCP_ITEM_ARRAY:
-						if(!meta_closed && outer_cont_state) {
-							ccpon_pack_field_delim(&out_ctx, outer_cont_state->item_count == 1);
+						if(!meta_closed && curr_item_cont_state) {
+							ccpon_pack_field_delim(&out_ctx, curr_item_cont_state->item_count == 1);
 						}
 						break;
 					case CCPCP_ITEM_MAP:
 					case CCPCP_ITEM_IMAP:
 					case CCPCP_ITEM_META: {
-						nError() << "cnt:" << outer_cont_state->item_count;
-						bool is_val = (outer_cont_state->item_count % 2) == 0;
+						//nError() << "cnt:" << curr_item_cont_state->item_count;
+						bool is_val = (curr_item_cont_state->item_count % 2) == 0;
 						if(is_val) {
 							ccpon_pack_key_delim(&out_ctx);
 						}
 						else {
-							ccpon_pack_field_delim(&out_ctx, outer_cont_state->item_count == 1);
+							ccpon_pack_field_delim(&out_ctx, curr_item_cont_state->item_count == 1);
 						}
 						break;
 					}
