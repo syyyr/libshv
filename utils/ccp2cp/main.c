@@ -7,17 +7,17 @@
 
 static const char *cp2cp_help =
 "\n"
-"ChainPack to Cpon converter/n"
+"ChainPack to Cpon converter\n"
 "\n"
-"USAGE:/n"
-"-i \"indent_string\"/n"
-"	indent Cpon (default is no-indent \"\")/n"
-"-t/n"
-"	human readable metatypes in Cpon output/n"
-"--ip/n"
-"	input stream is Cpon (ChainPack otherwise)/n"
-"--oc/n"
-"	write output in ChainPack (Cpon otherwise)/n"
+"USAGE:\n"
+"-i \"indent_string\"\n"
+"	indent Cpon (default is no-indent \"\")\n"
+"-t\n"
+"	human readable metatypes in Cpon output\n"
+"--ip\n"
+"	input stream is Cpon (ChainPack otherwise)\n"
+"--oc\n"
+"	write output in ChainPack (Cpon otherwise)\n"
 ;
 /*
 int replace_str(std::string& str, const std::string& from, const std::string& to)
@@ -92,11 +92,9 @@ int main(int argc, char *argv[])
 	}
 
 	if(!file_name) {
-		//nDebug() << "reading stdin";
 		in_file = stdin;
 	}
 	else {
-		//nDebug() << "reading:" << file_name;
 		in_file = fopen(file_name, "rb");
 		if(!in_file) {
 			fprintf(stderr, "Cannot open '%s' for reading\n", file_name);
@@ -115,11 +113,9 @@ int main(int argc, char *argv[])
 
 	ccpcp_pack_context out_ctx;
 	ccpcp_pack_context_init(&out_ctx, out_buff, sizeof (out_buff), pack_overflow_handler);
-	if(o_indent) {
-		out_ctx.indent = o_indent;
-	}
+	out_ctx.indent = o_indent;
 
-	int meta_closed = false;
+	int prev_item = CCPCP_ITEM_INVALID;
 	do {
 		if(o_cpon_input)
 			ccpon_unpack_next(&in_ctx);
@@ -146,20 +142,19 @@ int main(int argc, char *argv[])
 					switch(curr_item_cont_state->container_type) {
 					case CCPCP_ITEM_LIST:
 					case CCPCP_ITEM_ARRAY:
-						if(!meta_closed && curr_item_cont_state) {
+						if(prev_item != CCPCP_ITEM_META_END)
 							ccpon_pack_field_delim(&out_ctx, curr_item_cont_state->item_count == 1);
-						}
 						break;
 					case CCPCP_ITEM_MAP:
 					case CCPCP_ITEM_IMAP:
 					case CCPCP_ITEM_META: {
-						//nError() << "cnt:" << curr_item_cont_state->item_count;
 						bool is_val = (curr_item_cont_state->item_count % 2) == 0;
 						if(is_val) {
 							ccpon_pack_key_delim(&out_ctx);
 						}
 						else {
-							ccpon_pack_field_delim(&out_ctx, curr_item_cont_state->item_count == 1);
+							if(prev_item != CCPCP_ITEM_META_END)
+								ccpon_pack_field_delim(&out_ctx, curr_item_cont_state->item_count == 1);
 						}
 						break;
 					}
@@ -168,7 +163,6 @@ int main(int argc, char *argv[])
 					}
 				}
 			}
-			meta_closed = false;
 		}
 		switch(in_ctx.item.type) {
 		case CCPCP_ITEM_INVALID: {
@@ -304,6 +298,7 @@ int main(int argc, char *argv[])
 			ccpon_pack_null(&out_ctx);
 			break;
 		}
+		prev_item = in_ctx.item.type;
 	} while(in_ctx.err_no == CCPCP_RC_OK && out_ctx.err_no == CCPCP_RC_OK);
 	pack_overflow_handler(&out_ctx);
 
