@@ -8,19 +8,6 @@ isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
 message ( SHV_PROJECT_TOP_BUILDDIR: '$$SHV_PROJECT_TOP_BUILDDIR' )
 
 DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin
-unix:LIBDIR = $$SHV_PROJECT_TOP_BUILDDIR/lib
-win32:LIBDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin
-
-LIBS += \
-#    -L$$LIBDIR \
-#    -lnecrolog \
-#    -lshvchainpack \
-   #-lshvcore \
-
-unix {
-#    LIBS += \
-#        -Wl,-rpath,\'\$\$ORIGIN/../lib\'
-}
 
 CCPCP_SRC_DIR = ../../libshvchainpack/c
 
@@ -29,13 +16,15 @@ INCLUDEPATH += \
 
 SOURCES += \
 	main.c \
+    $$CCPCP_SRC_DIR/ccpcp.c \
 	$$CCPCP_SRC_DIR/ccpon.c \
 	$$CCPCP_SRC_DIR/cchainpack.c \
-    $$CCPCP_SRC_DIR/ccpcp.c
+	$$CCPCP_SRC_DIR/ccpcp_convert.c \
 
 
 HEADERS += \
 	$$CCPCP_SRC_DIR/ccpcp.h \
 	$$CCPCP_SRC_DIR/ccpon.h \
 	$$CCPCP_SRC_DIR/cchainpack.h \
+	$$CCPCP_SRC_DIR/ccpcp_convert.h \
 
