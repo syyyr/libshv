@@ -437,7 +437,7 @@ private:
 	void binaryTest()
 	{
 		qDebug() << "============= chainpack binary test ============";
-		for (int i = ChainPack::PackingSchema::Null; i <= ChainPack::PackingSchema::DateTime; ++i) {
+		for (int i = ChainPack::PackingSchema::Null; i <= ChainPack::PackingSchema::CString; ++i) {
 			RpcValue::String out;
 			out += i;
 			ChainPack::PackingSchema::Enum e = (ChainPack::PackingSchema::Enum)i;
