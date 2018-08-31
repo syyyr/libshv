@@ -53,12 +53,12 @@ size_t unpack_underflow_handler(struct ccpcp_unpack_context *ctx)
 static FILE *out_file = NULL;
 static uint8_t out_buff[1024];
 
-size_t pack_overflow_handler(struct ccpcp_pack_context *ctx)
+size_t pack_overflow_handler(struct ccpcp_pack_context *ctx, size_t size_hint)
 {
+	(void)size_hint;
 	fwrite(out_buff, 1, ctx->current - ctx->start, out_file);
 	ctx->start = ctx->current = out_buff;
 	ctx->end = ctx->start + sizeof (out_buff);
-	return sizeof (out_buff);
 }
 
 int main(int argc, char *argv[])
