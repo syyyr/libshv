@@ -3,18 +3,19 @@
 #include <cchainpack.h>
 #include <ccpcp_convert.h>
 
-#define _XOPEN_SOURCE
+//#define _XOPEN_SOURCE
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <assert.h>
+#include <float.h>
 
 static bool o_silent = true;
 
-static void binary_dump(const uint8_t *buff, int len)
+static void binary_dump(const char *buff, int len)
 {
 	for (size_t i = 0; i < len; ++i) {
-		uint8_t u = buff[i];
+		char u = buff[i];
 		//ret += std::to_string(u);
 		if(i > 0)
 			printf("|");
@@ -188,7 +189,7 @@ int test_unpack_datetime(const char *str, int add_msecs, int expected_utc_offset
 	return -1;
 }
 
-void test_cpon(const char *cpon, const char *ref_cpon)
+static void test_cpon_helper(const char *cpon, const char *ref_cpon, bool compare_chainpack, bool compare_cpon)
 {
 
 
@@ -213,8 +214,8 @@ void test_cpon(const char *cpon, const char *ref_cpon)
 	ccpcp_unpack_context_init(&in_ctx, in_buff, strlen(in_buff), NULL, &stack);
 	ccpcp_pack_context_init(&out_ctx, out_buff1, sizeof (out_buff1), NULL);
 
-	if(!strcmp(cpon, "123n"))
-		printf("BREAK\n");
+	//if(!strcmp(cpon, "123n"))
+	//	printf("BREAK\n");
 	ccpcp_convert(&in_ctx, CCPCP_Cpon, &out_ctx, CCPCP_Cpon);
 	*out_ctx.current = 0;
 	if(!o_silent)
@@ -252,8 +253,10 @@ void test_cpon(const char *cpon, const char *ref_cpon)
 	}
 	//printf("DDD %d %d\n", in_ctx.current - in_ctx.start, out_ctx.current - out_ctx.start);
 	assert(in_ctx.err_no == CCPCP_RC_OK && out_ctx.err_no == CCPCP_RC_OK);
-	assert(in_ctx.current - in_ctx.start == out_ctx.current - out_ctx.start);
-	assert(!memcmp(in_ctx.start, out_ctx.start, out_ctx.current - out_ctx.start));
+	if(compare_chainpack) {
+		assert(in_ctx.current - in_ctx.start == out_ctx.current - out_ctx.start);
+		assert(!memcmp(in_ctx.start, out_ctx.start, out_ctx.current - out_ctx.start));
+	}
 
 	ccpc_container_stack_init(&stack, states, STATE_CNT, NULL);
 	ccpcp_unpack_context_init(&in_ctx, out_buff1, sizeof(out_buff1), NULL, &stack);
@@ -269,10 +272,27 @@ void test_cpon(const char *cpon, const char *ref_cpon)
 	if(!ref_buff)
 		ref_buff = cpon;
 
-	if(strcmp((const char*)out_ctx.start, ref_buff)) {
-		printf("FAIL! %s vs %s\n", out_ctx.start, ref_buff);
-		assert(false);
+	if(compare_cpon) {
+		if(strcmp(out_ctx.start, ref_buff)) {
+			printf("FAIL! %s vs %s\n", out_ctx.start, ref_buff);
+			assert(false);
+		}
 	}
+}
+
+static void test_cpon(const char *cpon, const char *ref_cpon)
+{
+	test_cpon_helper(cpon, ref_cpon, true, true);
+}
+
+static void test_cpon2(const char *cpon, const char *ref_cpon)
+{
+	test_cpon_helper(cpon, ref_cpon, false, true);
+}
+
+static void test_cpon3(const char *cpon, const char *ref_cpon)
+{
+	test_cpon_helper(cpon, ref_cpon, true, false);
 }
 
 #define INIT_BUFFS() \
@@ -374,6 +394,42 @@ void test_vals()
 			test_cpon((const char *)out_ctx.start, NULL);
 		}
 	}
+	{
+		printf("------------- double\n");
+		{
+			double n_max = 1000000.;
+			double n_min = -1000000.;
+			double step = (n_max - n_min) / 100.1;
+			for (double n = n_min; n < n_max; n += step) {
+				INIT_BUFFS();
+				cchainpack_pack_double(&out_ctx, n);
+				assert(out_ctx.current - out_ctx.start == sizeof(double) + 1);
+				ccpcp_unpack_context in_ctx;
+				ccpcp_unpack_context_init(&in_ctx, out_buff1, sizeof(out_buff1), NULL, NULL);
+				cchainpack_unpack_next(&in_ctx);
+				assert(in_ctx.current - in_ctx.start == sizeof(double) + 1);
+				assert(n == in_ctx.item.as.Double);
+			}
+		}
+		{
+			double n_max = DBL_MAX;
+			double n_min = DBL_MIN;
+			double step = -1.23456789e10;
+			//qDebug() << n_min << " - " << n_max << ": " << step << " === " << (n_max / step / 10);
+			for (double n = n_min; n < n_max / -step / 10; n *= step) {
+				INIT_BUFFS();
+				printf("%g\n", n);
+				cchainpack_pack_double(&out_ctx, n);
+				ccpcp_unpack_context in_ctx;
+				ccpcp_unpack_context_init(&in_ctx, out_buff1, sizeof(out_buff1), NULL, NULL);
+				cchainpack_unpack_next(&in_ctx);
+				//if(n > -100 && n < 100)
+				//	qDebug() << n << " - " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+				assert(in_ctx.current - in_ctx.start == sizeof(double) + 1);
+				assert(n == in_ctx.item.as.Double);
+			}
+		}
+	}
 	printf("------------- datetime \n");
 	{
 		const char *cpons[] = {
@@ -399,22 +455,27 @@ void test_vals()
 		const char *cpons[] = {
 			"", NULL,
 			"hello", NULL,
-			"escaped zero \\0 here \t\r\n\b", "escaped zero \\0 here \\t\\r\\n\\b",
+			"\t\r", "\"\\t\\r\"",
+			"\\0", "\"\\\\0\"",
+			"1\t\r\n\b", "\"1\\t\\r\\n\\b\"",
+			"escaped zero \\0 here \t\r\n\b", "\"escaped zero \\\\0 here \\t\\r\\n\\b\"",
 		};
-		for (int i = 0; i < sizeof (cpons) / sizeof(char*); i++) {
+		for (int i = 0; i < sizeof (cpons) / sizeof(char*); i+=2) {
 			const char *cpon = cpons[i];
 			INIT_BUFFS();
 			ccpon_pack_string_terminated(&out_ctx, cpon);
-			test_cpon((const char*)out_ctx.start, NULL);
+			*out_ctx.current = 0;
+			test_cpon2(out_ctx.start, cpons[i+1]);
 		}
 	}
 	{
 		INIT_BUFFS();
 		const char str[] = "zero \0 here";
-		ccpon_pack_string_start(&out_ctx, str, sizeof(str));
+		ccpon_pack_string_start(&out_ctx, str, sizeof(str)-1);
 		ccpon_pack_string_cont(&out_ctx, "ahoj", 4);
 		ccpon_pack_string_finish(&out_ctx);
-		test_cpon((const char*)out_ctx.start, "\"zero \\0 here""ahoj\"");
+		*out_ctx.current = 0;
+		test_cpon(out_ctx.start, "\"zero \\0 here""ahoj\"");
 	}
 }
 
@@ -427,6 +488,9 @@ void test_cpons()
 		"[1,]", "[1]",
 		"[1,2,3]", NULL,
 		"[[]]", NULL,
+		"{\n\t\"foo\": \"bar\",\n\t\"baz\" : 1,\n}", "{\"foo\":\"bar\",\"baz\":1}",
+		"i{\n\t1: \"bar\",\n\t345u : \"foo\",\n}", "{1u:\"bar\",345u:\"foo\"}",
+		"[1u,{\"a\":1},2.30n]", NULL,
 	};
 	size_t cpons_cnt = sizeof (cpons) / sizeof (char*);
 	for(size_t i = 0; i < cpons_cnt; i += 2) {
@@ -444,12 +508,12 @@ int main(int argc, const char * argv[])
 
 	for (int i = CP_Null; i <= CP_CString; ++i) {
 		printf("%d %x ", i, i);
-		binary_dump((uint8_t*)&i, 1);
+		binary_dump((const char*)&i, 1);
 		printf(" %s\n", cchainpack_packing_schema_name(i));
 	}
 	for (int i = CP_FALSE; i <= CP_TERM; ++i) {
 		printf("%d %x ", i, i);
-		binary_dump((uint8_t*)&i, 1);
+		binary_dump((const char*)&i, 1);
 		printf(" %s\n", cchainpack_packing_schema_name(i));
 	}
 
