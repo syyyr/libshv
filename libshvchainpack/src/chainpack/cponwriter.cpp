@@ -168,7 +168,7 @@ void CponWriter::writeContainerBegin(RpcValue::Type container_type)
 
 void CponWriter::writeArrayBegin(RpcValue::Type , size_t size)
 {
-	m_out << 'a' << size << '[';
+	m_out << 'a' << '[';
 	startBlock();
 }
 
