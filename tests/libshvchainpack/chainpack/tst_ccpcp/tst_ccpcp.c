@@ -494,8 +494,9 @@ void test_cpons()
 		"[1u,{\"a\":1},2.30n]", NULL,
 		"<>1", NULL,
 		"<1:2>3", NULL,
-		"<1:2,\"foo\":\"bar\">\"baz\"", NULL,
-		"<1:2,\"foo\":\"bar\">[1u,{\"a\":1},2.30n]", NULL,
+		"[1,<7:8>9]", NULL,
+		"<1:2,\"foo\":\"bar\">i{1:<7:8>9}", NULL,
+		"<1:2,\"foo\":<5:6>\"bar\">[1u,{\"a\":1},2.30n]", NULL,
 		"i{1:2 // comment to end of line\n}", "i{1:2}",
 		"/*comment 1*/{ /*comment 2*/ \n"
 		"\t\"foo\"/*comment \"3\"*/: \"bar\", //comment to end of line\n"
