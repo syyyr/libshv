@@ -507,6 +507,7 @@ void test_cpons()
 		"\t\"baz\" : 1, // single inside multi\n"
 		"*/\n"
 		"}", "{\"foo\":\"bar\",\"baz\":1}",
+		"a[1,2,3]", "[1,2,3]", // unsupported array type
 	};
 	size_t cpons_cnt = sizeof (cpons) / sizeof (char*);
 	for(size_t i = 0; i < cpons_cnt; i += 2) {
