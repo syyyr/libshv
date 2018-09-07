@@ -14,7 +14,7 @@ static bool o_silent = true;
 
 static void binary_dump(const char *buff, int len)
 {
-	for (size_t i = 0; i < len; ++i) {
+	for (int i = 0; i < len; ++i) {
 		char u = buff[i];
 		//ret += std::to_string(u);
 		if(i > 0)
@@ -25,6 +25,7 @@ static void binary_dump(const char *buff, int len)
 	}
 }
 
+/*
 static inline char hex_nibble(char i)
 {
 	if(i < 10)
@@ -34,14 +35,14 @@ static inline char hex_nibble(char i)
 
 static void hex_dump(const uint8_t *buff, int len)
 {
-	for (size_t i = 0; i < len; ++i) {
+	for (int i = 0; i < len; ++i) {
 		char h = buff[i] / 16;
 		char l = buff[i] % 16;
 		printf("%c", hex_nibble(h));
 		printf("%c", hex_nibble(l));
 	}
 }
-
+*/
 int test_pack_double(double d, const char *res)
 {
 	static const unsigned long BUFFLEN = 1024;
@@ -163,8 +164,8 @@ int test_unpack_datetime(const char *str, int add_msecs, int expected_utc_offset
 			break;
 		}
 	}
-	const char *dt_format = has_T? "%Y-%m-%dT%H:%M:%S": "%Y-%m-%d %H:%M:%S";
-	char *rest = strptime(str+2, dt_format, &tm);
+	//const char *dt_format = has_T? "%Y-%m-%dT%H:%M:%S": "%Y-%m-%d %H:%M:%S";
+	//char *rest = strptime(str+2, dt_format, &tm);
 	//printf("\tstr: '%s' year: %d month: %d day: %d rest: '%s'\n", str , tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday , rest);
 	int64_t expected_epoch_msec = timegm(&tm);
 	expected_epoch_msec *= 1000;
@@ -230,12 +231,12 @@ static void test_cpon_helper(const char *cpon, const char *ref_cpon, bool compar
 
 	ccpcp_convert(&in_ctx, CCPCP_Cpon, &out_ctx, CCPCP_ChainPack);
 	if(o_silent) {
-		printf("%s -> len: %d data: ", cpon, out_ctx.current - out_ctx.start);
+		printf("%s -> len: %ld data: ", cpon, out_ctx.current - out_ctx.start);
 		binary_dump(out_ctx.start, out_ctx.current - out_ctx.start);
 		printf("\n");
 	}
 	else {
-		printf("2. Cpon->CPack  len: %d data: ", out_ctx.current - out_ctx.start);
+		printf("2. Cpon->CPack  len: %ld data: ", out_ctx.current - out_ctx.start);
 		binary_dump(out_ctx.start, out_ctx.current - out_ctx.start);
 		printf("\n");
 	}
@@ -247,7 +248,7 @@ static void test_cpon_helper(const char *cpon, const char *ref_cpon, bool compar
 
 	ccpcp_convert(&in_ctx, CCPCP_ChainPack, &out_ctx, CCPCP_ChainPack);
 	if(!o_silent) {
-		printf("3. CPack->CPack len: %d data: ", out_ctx.current - out_ctx.start);
+		printf("3. CPack->CPack len: %ld data: ", out_ctx.current - out_ctx.start);
 		binary_dump(out_ctx.start, out_ctx.current - out_ctx.start);
 		printf("\n");
 	}
@@ -289,11 +290,16 @@ static void test_cpon2(const char *cpon, const char *ref_cpon)
 {
 	test_cpon_helper(cpon, ref_cpon, false, true);
 }
-
+/*
 static void test_cpon3(const char *cpon, const char *ref_cpon)
 {
 	test_cpon_helper(cpon, ref_cpon, true, false);
 }
+*/
+#define INIT_BUFF() \
+	char out_buff1[1024]; \
+	ccpcp_pack_context out_ctx; \
+	ccpcp_pack_context_init(&out_ctx, out_buff1, sizeof (out_buff1), NULL); \
 
 #define INIT_BUFFS() \
 	char out_buff1[1024]; \
@@ -388,7 +394,7 @@ void test_vals()
 		int prec_min = 1;
 		int step = 1;
 		for (int prec = prec_min; prec <= prec_max; prec += step) {
-			INIT_BUFFS();
+			INIT_BUFF();
 			ccpon_pack_decimal(&out_ctx, mant, prec);
 			*out_ctx.current = 0;
 			test_cpon((const char *)out_ctx.start, NULL);
@@ -401,7 +407,7 @@ void test_vals()
 			double n_min = -1000000.;
 			double step = (n_max - n_min) / 100.1;
 			for (double n = n_min; n < n_max; n += step) {
-				INIT_BUFFS();
+				INIT_BUFF();
 				cchainpack_pack_double(&out_ctx, n);
 				assert(out_ctx.current - out_ctx.start == sizeof(double) + 1);
 				ccpcp_unpack_context in_ctx;
@@ -417,7 +423,7 @@ void test_vals()
 			double step = -1.23456789e10;
 			//qDebug() << n_min << " - " << n_max << ": " << step << " === " << (n_max / step / 10);
 			for (double n = n_min; n < n_max / -step / 10; n *= step) {
-				INIT_BUFFS();
+				INIT_BUFF();
 				printf("%g\n", n);
 				cchainpack_pack_double(&out_ctx, n);
 				ccpcp_unpack_context in_ctx;
@@ -444,9 +450,9 @@ void test_vals()
 			"d\"2017-05-03T15:52:03.000-0130\"", "d\"2017-05-03T15:52:03-0130\"",
 			"d\"2017-05-03T15:52:03.923+00\"", "d\"2017-05-03T15:52:03.923Z\"",
 		};
-		for (int i = 0; i < sizeof (cpons) / sizeof(char*); i+=2) {
+		for (size_t i = 0; i < sizeof (cpons) / sizeof(char*); i+=2) {
 			const char *cpon = cpons[i];
-			INIT_BUFFS();
+			INIT_BUFF();
 			test_cpon(cpon, cpons[i+1]);
 		}
 	}
@@ -460,16 +466,16 @@ void test_vals()
 			"1\t\r\n\b", "\"1\\t\\r\\n\\b\"",
 			"escaped zero \\0 here \t\r\n\b", "\"escaped zero \\\\0 here \\t\\r\\n\\b\"",
 		};
-		for (int i = 0; i < sizeof (cpons) / sizeof(char*); i+=2) {
+		for (size_t i = 0; i < sizeof (cpons) / sizeof(char*); i+=2) {
 			const char *cpon = cpons[i];
-			INIT_BUFFS();
+			INIT_BUFF();
 			ccpon_pack_string_terminated(&out_ctx, cpon);
 			*out_ctx.current = 0;
 			test_cpon2(out_ctx.start, cpons[i+1]);
 		}
 	}
 	{
-		INIT_BUFFS();
+		INIT_BUFF();
 		const char str[] = "zero \0 here";
 		ccpon_pack_string_start(&out_ctx, str, sizeof(str)-1);
 		ccpon_pack_string_cont(&out_ctx, "ahoj", 4);
@@ -482,14 +488,14 @@ void test_vals()
 void test_cpons()
 {
 	const char* cpons[] = {
-		//"1", NULL,
+		"i{1u:2}", NULL,
 		"[]", NULL,
 		"[1]", NULL,
 		"[1,]", "[1]",
 		"[1,2,3]", NULL,
 		"[[]]", NULL,
 		"{\n\t\"foo\": \"bar\",\n\t\"baz\" : 1,\n}", "{\"foo\":\"bar\",\"baz\":1}",
-		"i{\n\t1: \"bar\",\n\t345u : \"foo\",\n}", "{1u:\"bar\",345u:\"foo\"}",
+		"i{\n\t1: \"bar\",\n\t345u : \"foo\",\n}", "i{1u:\"bar\",345u:\"foo\"}",
 		"[1u,{\"a\":1},2.30n]", NULL,
 	};
 	size_t cpons_cnt = sizeof (cpons) / sizeof (char*);
