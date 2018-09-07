@@ -3,7 +3,7 @@
 #include <cchainpack.h>
 #include <ccpcp_convert.h>
 
-//#define _XOPEN_SOURCE
+#define _XOPEN_SOURCE
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -53,7 +53,7 @@ int test_pack_double(double d, const char *res)
 	*ctx.current = '\0';
 	if(strcmp(buff, res)) {
 		printf("FAIL! pack double %lg have: '%s' expected: '%s'\n", d, buff, res);
-		return -1;
+		assert(false);
 	}
 	return 0;
 }
@@ -68,7 +68,7 @@ int test_pack_int(long i, const char *res)
 	*ctx.current = '\0';
 	if(strcmp(buff, res)) {
 		printf("FAIL! pack signed %ld have: '%s' expected: '%s'\n", i, buff, res);
-		return -1;
+		assert(false);
 	}
 	return 0;
 }
@@ -83,7 +83,7 @@ int test_pack_uint(unsigned long i, const char *res)
 	*ctx.current = '\0';
 	if(strcmp(buff, res)) {
 		printf("FAIL! pack unsigned %lu have: '%s' expected: '%s'\n", i, buff, res);
-		return -1;
+		assert(false);
 	}
 	return 0;
 }
@@ -101,11 +101,11 @@ int test_unpack_number(const char *str, int expected_type, double expected_val)
 	ccpon_unpack_next(&ctx);
 	if(ctx.err_no != CCPCP_RC_OK) {
 		printf("FAIL! unpack number str: '%s' error: %d\n", str, ctx.err_no);
-		return -1;
+		assert(false);
 	}
 	if(ctx.item.type != expected_type) {
 		printf("FAIL! unpack number str: '%s' have type: %d expected type: %d\n", str, ctx.item.type, expected_type);
-		return -1;
+		assert(false);
 	}
 	switch(ctx.item.type) {
 	case CCPCP_ITEM_DECIMAL: {
@@ -115,7 +115,7 @@ int test_unpack_number(const char *str, int expected_type, double expected_val)
 		if(d == expected_val)
 			return 0;
 		printf("FAIL! unpack decimal number str: '%s' have: %lg expected: %lg\n", str, d, expected_val);
-		return -1;
+		assert(false);
 	}
 	case CCPCP_ITEM_DOUBLE: {
 		double d = ctx.item.as.Double;
@@ -124,37 +124,33 @@ int test_unpack_number(const char *str, int expected_type, double expected_val)
 		if(diff > -epsilon && diff < epsilon)
 			return 0;
 		printf("FAIL! unpack double number str: '%s' have: %lg expected: %lg difference: %lg\n", str, d, expected_val, (d-expected_val));
-		return -1;
+		assert(false);
 	}
 	case CCPCP_ITEM_INT: {
 		int64_t d = ctx.item.as.Int;
 		if(d == (int64_t)expected_val)
 			return 0;
 		printf("FAIL! unpack int number str: '%s' have: %ld expected: %ld\n", str, d, (int64_t)expected_val);
-		return -1;
+		assert(false);
 	}
 	case CCPCP_ITEM_UINT: {
 		uint64_t d = ctx.item.as.UInt;
 		if(d == (uint64_t)expected_val)
 			return 0;
 		printf("FAIL! unpack int number str: '%s' have: %lu expected: %lu\n", str, d, (uint64_t)expected_val);
-		return -1;
+		assert(false);
 	}
 	default:
 		printf("FAIL! unpack number str: '%s' unexpected type: %d\n", str, ctx.item.type);
-		return -1;
+		assert(false);
 	}
 }
 
 int test_unpack_datetime(const char *str, int add_msecs, int expected_utc_offset_min)
 {
-	static const size_t STATE_CNT = 100;
-	ccpcp_container_state states[STATE_CNT];
-	ccpcp_container_stack stack;
-	ccpc_container_stack_init(&stack, states, STATE_CNT, NULL);
 	ccpcp_unpack_context ctx;
 	unsigned long n = strlen(str);
-	ccpcp_unpack_context_init(&ctx, (uint8_t*)str, n, NULL, &stack);
+	ccpcp_unpack_context_init(&ctx, (uint8_t*)str, n, NULL, NULL);
 
 	struct tm tm;
 	int has_T = 0;
@@ -164,8 +160,8 @@ int test_unpack_datetime(const char *str, int add_msecs, int expected_utc_offset
 			break;
 		}
 	}
-	//const char *dt_format = has_T? "%Y-%m-%dT%H:%M:%S": "%Y-%m-%d %H:%M:%S";
-	//char *rest = strptime(str+2, dt_format, &tm);
+	const char *dt_format = has_T? "%Y-%m-%dT%H:%M:%S": "%Y-%m-%d %H:%M:%S";
+	char *rest = strptime(str+2, dt_format, &tm);
 	//printf("\tstr: '%s' year: %d month: %d day: %d rest: '%s'\n", str , tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday , rest);
 	int64_t expected_epoch_msec = timegm(&tm);
 	expected_epoch_msec *= 1000;
@@ -174,11 +170,11 @@ int test_unpack_datetime(const char *str, int add_msecs, int expected_utc_offset
 	ccpon_unpack_next(&ctx);
 	if(ctx.err_no != CCPCP_RC_OK) {
 		printf("FAIL! unpack date time str: '%s' error: %d\n", str, ctx.err_no);
-		return -1;
+		assert(false);
 	}
 	if(ctx.item.type != CCPCP_ITEM_DATE_TIME) {
 		printf("FAIL! unpack number str: '%s' have type: %d expected type: %d\n", str, ctx.item.type, CCPCP_ITEM_DATE_TIME);
-		return -1;
+		assert(false);
 	}
 	ccpcp_date_time *dt = &ctx.item.as.DateTime;
 	if(dt->msecs_since_epoch == expected_epoch_msec && dt->minutes_from_utc == expected_utc_offset_min)
@@ -187,7 +183,7 @@ int test_unpack_datetime(const char *str, int add_msecs, int expected_utc_offset
 		   , str
 		   , dt->msecs_since_epoch, dt->minutes_from_utc
 		   , expected_epoch_msec, expected_utc_offset_min);
-	return -1;
+	assert(false);
 }
 
 static void test_cpon_helper(const char *cpon, const char *ref_cpon, bool compare_chainpack, bool compare_cpon)
@@ -567,4 +563,7 @@ int main(int argc, const char * argv[])
 
 	test_vals();
 	test_cpons();
+
+	printf("\nPASSED\n");
+
 }
