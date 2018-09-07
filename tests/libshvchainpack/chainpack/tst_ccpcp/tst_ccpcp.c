@@ -488,15 +488,19 @@ void test_vals()
 void test_cpons()
 {
 	const char* cpons[] = {
-		"i{1u:2}", NULL,
 		"[]", NULL,
 		"[1]", NULL,
 		"[1,]", "[1]",
 		"[1,2,3]", NULL,
 		"[[]]", NULL,
+		"i{1:2}", NULL,
 		"{\n\t\"foo\": \"bar\",\n\t\"baz\" : 1,\n}", "{\"foo\":\"bar\",\"baz\":1}",
-		"i{\n\t1: \"bar\",\n\t345u : \"foo\",\n}", "i{1u:\"bar\",345u:\"foo\"}",
+		"i{\n\t1: \"bar\",\n\t345u : \"foo\",\n}", "i{1:\"bar\",345u:\"foo\"}",
 		"[1u,{\"a\":1},2.30n]", NULL,
+		"<>1", NULL,
+		"<1:2>3", NULL,
+		"<1:2,\"foo\":\"bar\">\"baz\"", NULL,
+		"<1:2,\"foo\":\"bar\">[1u,{\"a\":1},2.30n]", NULL,
 	};
 	size_t cpons_cnt = sizeof (cpons) / sizeof (char*);
 	for(size_t i = 0; i < cpons_cnt; i += 2) {
