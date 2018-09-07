@@ -490,13 +490,22 @@ void test_cpons()
 		"[1,2,3]", NULL,
 		"[[]]", NULL,
 		"i{1:2}", NULL,
-		"{\n\t\"foo\": \"bar\",\n\t\"baz\" : 1,\n}", "{\"foo\":\"bar\",\"baz\":1}",
 		"i{\n\t1: \"bar\",\n\t345u : \"foo\",\n}", "i{1:\"bar\",345u:\"foo\"}",
 		"[1u,{\"a\":1},2.30n]", NULL,
 		"<>1", NULL,
 		"<1:2>3", NULL,
 		"<1:2,\"foo\":\"bar\">\"baz\"", NULL,
 		"<1:2,\"foo\":\"bar\">[1u,{\"a\":1},2.30n]", NULL,
+		"i{1:2 // comment to end of line\n}", "i{1:2}",
+		"/*comment 1*/{ /*comment 2*/ \n"
+		"\t\"foo\"/*comment \"3\"*/: \"bar\", //comment to end of line\n"
+		"\t\"baz\" : 1,\n"
+		"/*\n"
+		"\tmultiline comment\n"
+		"\t\"baz\" : 1,\n"
+		"\t\"baz\" : 1, // single inside multi\n"
+		"*/\n"
+		"}", "{\"foo\":\"bar\",\"baz\":1}",
 	};
 	size_t cpons_cnt = sizeof (cpons) / sizeof (char*);
 	for(size_t i = 0; i < cpons_cnt; i += 2) {
