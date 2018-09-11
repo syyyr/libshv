@@ -69,16 +69,16 @@ public:
 
 	static RpcValue callerIds(const RpcValue::MetaData &meta);
 	static void setCallerIds(RpcValue::MetaData &meta, const RpcValue &caller_id);
-	static void pushCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id);
-	static RpcValue popCallerId(const RpcValue &caller_ids, RpcValue::UInt &id);
-	static RpcValue::UInt popCallerId(RpcValue::MetaData &meta);
-	RpcValue::UInt popCallerId();
+	static void pushCallerId(RpcValue::MetaData &meta, RpcValue::Int caller_id);
+	static RpcValue popCallerId(const RpcValue &caller_ids, RpcValue::Int &id);
+	static RpcValue::Int popCallerId(RpcValue::MetaData &meta);
+	RpcValue::Int popCallerId();
 	RpcValue callerIds() const;
 	void setCallerIds(const RpcValue &callerIds);
 
 	static RpcValue revCallerIds(const RpcValue::MetaData &meta);
 	static void setRevCallerIds(RpcValue::MetaData &meta, const RpcValue &caller_ids);
-	static void pushRevCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id);
+	static void pushRevCallerId(RpcValue::MetaData &meta, RpcValue::Int caller_id);
 	RpcValue revCallerIds() const;
 	void setRegisterRevCallerIds();
 	static bool isRegisterRevCallerIds(const RpcValue::MetaData &meta);

@@ -194,7 +194,7 @@ void RpcMessage::setCallerIds(RpcValue::MetaData &meta, const RpcValue &caller_i
 	meta.setValue(RpcMessage::MetaType::Tag::CallerIds, caller_id);
 }
 
-void RpcMessage::pushCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id)
+void RpcMessage::pushCallerId(RpcValue::MetaData &meta, RpcValue::Int caller_id)
 {
 	RpcValue curr_caller_id = RpcMessage::callerIds(meta);
 	if(curr_caller_id.isList()) {
@@ -204,7 +204,7 @@ void RpcMessage::pushCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id
 	}
 	else if(curr_caller_id.isUInt()) {
 		RpcValue::List array;
-		array.push_back(curr_caller_id.toUInt());
+		array.push_back(curr_caller_id.toInt());
 		array.push_back(RpcValue(caller_id));
 		setCallerIds(meta, array);
 	}
@@ -213,7 +213,7 @@ void RpcMessage::pushCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id
 	}
 }
 
-RpcValue RpcMessage::popCallerId(const RpcValue &caller_ids, RpcValue::UInt &id)
+RpcValue RpcMessage::popCallerId(const RpcValue &caller_ids, RpcValue::Int &id)
 {
 	if(caller_ids.isList()) {
 		shv::chainpack::RpcValue::List array = caller_ids.toList();
@@ -221,27 +221,27 @@ RpcValue RpcMessage::popCallerId(const RpcValue &caller_ids, RpcValue::UInt &id)
 			id = 0;
 		}
 		else {
-			id = array.back().toUInt();
+			id = array.back().toInt();
 			array.pop_back();
 		}
 		return array;
 	}
 	else {
-		id = caller_ids.toUInt();
+		id = caller_ids.toInt();
 	}
 	return RpcValue();
 }
 
-RpcValue::UInt RpcMessage::popCallerId(RpcValue::MetaData &meta)
+RpcValue::Int RpcMessage::popCallerId(RpcValue::MetaData &meta)
 {
-	RpcValue::UInt ret = 0;
+	RpcValue::Int ret = 0;
 	setCallerIds(meta, popCallerId(callerIds(meta), ret));
 	return ret;
 }
 
-RpcValue::UInt RpcMessage::popCallerId()
+RpcValue::Int RpcMessage::popCallerId()
 {
-	RpcValue::UInt ret = 0;
+	RpcValue::Int ret = 0;
 	setCallerIds(popCallerId(callerIds(), ret));
 	return ret;
 }
@@ -266,7 +266,7 @@ void RpcMessage::setRevCallerIds(RpcValue::MetaData &meta, const RpcValue &calle
 	meta.setValue(RpcMessage::MetaType::Tag::RevCallerIds, caller_ids);
 }
 
-void RpcMessage::pushRevCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id)
+void RpcMessage::pushRevCallerId(RpcValue::MetaData &meta, RpcValue::Int caller_id)
 {
 	RpcValue curr_caller_id = RpcMessage::revCallerIds(meta);
 	if(curr_caller_id.isList()) {
@@ -276,7 +276,7 @@ void RpcMessage::pushRevCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller
 	}
 	else if(curr_caller_id.isUInt()) {
 		RpcValue::List array;
-		array.push_back(curr_caller_id.toUInt());
+		array.push_back(curr_caller_id.toInt());
 		array.push_back(RpcValue(caller_id));
 		setRevCallerIds(meta, array);
 	}
