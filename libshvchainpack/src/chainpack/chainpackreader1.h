@@ -1,16 +1,16 @@
 #pragma once
 
 #include "abstractstreamreader1.h"
-#include "chainpack1.h"
+#include "chainpack.h"
 
 namespace shv {
-namespace chainpack1 {
+namespace chainpack {
 
-class SHVCHAINPACK_DECL_EXPORT ChainPackReader : public AbstractStreamReader
+class SHVCHAINPACK_DECL_EXPORT ChainPackReader1 : public AbstractStreamReader1
 {
-	using Super = AbstractStreamReader;
+	using Super = AbstractStreamReader1;
 public:
-	ChainPackReader(std::istream &in) : Super(in) {}
+	ChainPackReader1(std::istream &in) : Super(in) {}
 
 	using Super::read;
 	void read(RpcValue::MetaData &meta_data) override;
@@ -21,7 +21,7 @@ private:
 	RpcValue readData(ChainPack::PackingSchema::Enum type_info, bool is_array);
 
 	RpcValue::List readData_List();
-	RpcValue::Array readData_Array(ChainPack::PackingSchema::Enum type_info);
+	RpcValue::List readData_Array(ChainPack::PackingSchema::Enum type_info);
 	RpcValue::Map readData_Map();
 	RpcValue::IMap readData_IMap();
 };
