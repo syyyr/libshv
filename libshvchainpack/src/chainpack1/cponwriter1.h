@@ -1,9 +1,9 @@
 #pragma once
 
-#include "abstractstreamwriter.h"
+#include "abstractstreamwriter1.h"
 
 namespace shv {
-namespace chainpack {
+namespace chainpack1 {
 
 class SHVCHAINPACK_DECL_EXPORT CponWriterOptions
 {
@@ -33,7 +33,7 @@ class SHVCHAINPACK_DECL_EXPORT CponWriter : public AbstractStreamWriter
 
 public:
 	CponWriter(std::ostream &out) : Super(out) {}
-	CponWriter(std::ostream &out, const CponWriterOptions &opts);
+	CponWriter(std::ostream &out, const CponWriterOptions &opts) : CponWriter(out) {m_opts = opts;}
 
 	CponWriter& operator <<(const RpcValue &value) {write(value); return *this;}
 	CponWriter& operator <<(const RpcValue::MetaData &meta_data) {write(meta_data); return *this;}
@@ -41,36 +41,48 @@ public:
 	size_t write(const RpcValue &val) override;
 	size_t write(const RpcValue::MetaData &meta_data) override;
 
+	void writeIMapKey(RpcValue::UInt key) override {write(key);}
 	void writeContainerBegin(RpcValue::Type container_type) override;
 	void writeContainerEnd(RpcValue::Type container_type) override;
+	void writeArrayBegin(RpcValue::Type, size_t size) override;
 
-	void writeIMapKey(RpcValue::Int key) override;
 	void writeListElement(const RpcValue &val) override {writeListElement(val, false);}
 	void writeMapElement(const std::string &key, const RpcValue &val) override {writeMapElement(key, val, false);}
-	void writeMapElement(RpcValue::Int key, const RpcValue &val) override {writeMapElement(key, val, false);}
+	void writeMapElement(RpcValue::UInt key, const RpcValue &val) override {writeMapElement(key, val, false);}
+	void writeArrayElement(const RpcValue &val) override {writeListElement(val);}
 
 	// terminating separator id OK in Cpon, but world is prettier without it
 	void writeListElement(const RpcValue &val, bool without_separator);
 	void writeMapElement(const std::string &key, const RpcValue &val, bool without_separator);
-	void writeMapElement(RpcValue::Int key, const RpcValue &val, bool without_separator);
-private:
-	CponWriter& write_p(std::nullptr_t);
-	CponWriter& write_p(bool value);
-	CponWriter& write_p(int32_t value);
-	CponWriter& write_p(uint32_t value);
-	CponWriter& write_p(int64_t value);
-	CponWriter& write_p(uint64_t value);
-	CponWriter& write_p(double value);
-	CponWriter& write_p(RpcValue::Decimal value);
-	CponWriter& write_p(RpcValue::DateTime value);
-	CponWriter& write_p(const std::string &value);
+	void writeMapElement(RpcValue::UInt key, const RpcValue &val, bool without_separator);
+	void writeArrayElement(const RpcValue &val, bool without_separator) {writeListElement(val, without_separator);}
+
+	CponWriter& write(std::nullptr_t);
+	CponWriter& write(bool value);
+	CponWriter& write(int32_t value);
+	CponWriter& write(uint32_t value);
+	CponWriter& write(int64_t value);
+	CponWriter& write(uint64_t value);
+	CponWriter& write(double value);
+	CponWriter& write(RpcValue::Decimal value);
+	CponWriter& write(RpcValue::DateTime value);
+	CponWriter& write(const std::string &value);
 	//CponWriter& write(const RpcValue::Blob &value);
-	CponWriter& write_p(const RpcValue::List &values);
-	//CponWriter& write(const RpcValue::Array &values);
-	CponWriter& write_p(const RpcValue::Map &values);
-	CponWriter& write_p(const RpcValue::IMap &values, const RpcValue::MetaData *meta_data = nullptr);
+	CponWriter& write(const RpcValue::List &values);
+	CponWriter& write(const RpcValue::Array &values);
+	CponWriter& write(const RpcValue::Map &values);
+	CponWriter& write(const RpcValue::IMap &values, const RpcValue::MetaData *meta_data = nullptr);
+private:
+	void writeIMapContent(const RpcValue::IMap &values, const RpcValue::MetaData *meta_data = nullptr);
+	void writeMapContent(const RpcValue::Map &values);
+
+	void startBlock();
+	void endBlock();
+	void indentElement();
+	void separateElement(bool without_comma);
 private:
 	CponWriterOptions m_opts;
+	int m_currentIndent = 0;
 };
 
 } // namespace chainpack

@@ -18,25 +18,31 @@ public:
 	size_t write(const RpcValue::MetaData &meta_data) override;
 
 	void writeUIntData(uint64_t n);
-	static void writeUIntData(std::ostream &os, uint64_t n);
+	//static void writeUIntData(std::ostream &os, uint64_t n);
 
-	void writeIMapKey(RpcValue::UInt key) override {writeUIntData(key);}
 	void writeContainerBegin(RpcValue::Type container_type) override;
 	/// ChainPack doesn't need to know container type to close it
 	void writeContainerEnd(RpcValue::Type container_type = RpcValue::Type::Invalid) override;
+	void writeIMapKey(RpcValue::Int key) override;
 	void writeListElement(const RpcValue &val) override;
 	void writeMapElement(const std::string &key, const RpcValue &val) override;
-	void writeMapElement(RpcValue::UInt key, const RpcValue &val) override;
-	void writeArrayBegin(RpcValue::Type array_type, size_t array_size) override;
-	void writeArrayElement(const RpcValue &val) override;
+	void writeMapElement(RpcValue::Int key, const RpcValue &val) override;
 private:
-	bool writeTypeInfo(const RpcValue &pack);
-	void writeData(const RpcValue &val);
-
-	void writeData_Map(const RpcValue::Map &map);
-	void writeData_IMap(const RpcValue::IMap &map);
-	void writeData_List(const RpcValue::List &list);
-	void writeData_Array(const RpcValue::Array &array);
+	ChainPackWriter& write_p(std::nullptr_t);
+	ChainPackWriter& write_p(bool value);
+	ChainPackWriter& write_p(int32_t value);
+	ChainPackWriter& write_p(uint32_t value);
+	ChainPackWriter& write_p(int64_t value);
+	ChainPackWriter& write_p(uint64_t value);
+	ChainPackWriter& write_p(double value);
+	ChainPackWriter& write_p(RpcValue::Decimal value);
+	ChainPackWriter& write_p(RpcValue::DateTime value);
+	ChainPackWriter& write_p(const std::string &value);
+	//ChainPackWriter& write_p(const RpcValue::Blob &value);
+	ChainPackWriter& write_p(const RpcValue::List &values);
+	//ChainPackWriter& write_p(const RpcValue::Array &values);
+	ChainPackWriter& write_p(const RpcValue::Map &values);
+	ChainPackWriter& write_p(const RpcValue::IMap &values);
 };
 
 } // namespace chainpack

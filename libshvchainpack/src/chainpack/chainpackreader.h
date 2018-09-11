@@ -12,18 +12,23 @@ class SHVCHAINPACK_DECL_EXPORT ChainPackReader : public AbstractStreamReader
 public:
 	ChainPackReader(std::istream &in) : Super(in) {}
 
+	ChainPackReader& operator >>(RpcValue &value);
+	ChainPackReader& operator >>(RpcValue::MetaData &meta_data);
+
 	using Super::read;
 	void read(RpcValue::MetaData &meta_data) override;
 	void read(RpcValue &val) override;
+	void read(RpcValue &val, std::string &err);
 
-	static uint64_t readUIntData(std::istream &data, bool *ok = nullptr);
+	uint64_t readUIntData(bool *ok);
+	static uint64_t readUIntData(std::istream &in, bool *ok);
 private:
-	RpcValue readData(ChainPack::PackingSchema::Enum type_info, bool is_array);
+	void unpackNext();
 
-	RpcValue::List readData_List();
-	RpcValue::Array readData_Array(ChainPack::PackingSchema::Enum type_info);
-	RpcValue::Map readData_Map();
-	RpcValue::IMap readData_IMap();
+	void parseList(RpcValue &val);
+	void parseMetaData(RpcValue::MetaData &meta_data);
+	void parseMap(RpcValue &val);
+	void parseIMap(RpcValue &val);
 };
 
 } // namespace chainpack

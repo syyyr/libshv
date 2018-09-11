@@ -197,15 +197,15 @@ void RpcMessage::setCallerIds(RpcValue::MetaData &meta, const RpcValue &caller_i
 void RpcMessage::pushCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id)
 {
 	RpcValue curr_caller_id = RpcMessage::callerIds(meta);
-	if(curr_caller_id.isArray()) {
-		RpcValue::Array array = curr_caller_id.toArray();
-		array.push_back(RpcValue::Array::makeElement(caller_id));
+	if(curr_caller_id.isList()) {
+		RpcValue::List array = curr_caller_id.toList();
+		array.push_back(RpcValue(caller_id));
 		setCallerIds(meta, array);
 	}
 	else if(curr_caller_id.isUInt()) {
-		RpcValue::Array array{RpcValue::Type::UInt};
+		RpcValue::List array;
 		array.push_back(curr_caller_id.toUInt());
-		array.push_back(RpcValue::Array::makeElement(caller_id));
+		array.push_back(RpcValue(caller_id));
 		setCallerIds(meta, array);
 	}
 	else {
@@ -215,13 +215,13 @@ void RpcMessage::pushCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id
 
 RpcValue RpcMessage::popCallerId(const RpcValue &caller_ids, RpcValue::UInt &id)
 {
-	if(caller_ids.isArray()) {
-		shv::chainpack::RpcValue::Array array = caller_ids.toArray();
+	if(caller_ids.isList()) {
+		shv::chainpack::RpcValue::List array = caller_ids.toList();
 		if(array.empty()) {
 			id = 0;
 		}
 		else {
-			id = array.back().uint_value;
+			id = array.back().toUInt();
 			array.pop_back();
 		}
 		return array;
@@ -269,15 +269,15 @@ void RpcMessage::setRevCallerIds(RpcValue::MetaData &meta, const RpcValue &calle
 void RpcMessage::pushRevCallerId(RpcValue::MetaData &meta, RpcValue::UInt caller_id)
 {
 	RpcValue curr_caller_id = RpcMessage::revCallerIds(meta);
-	if(curr_caller_id.isArray()) {
-		RpcValue::Array array = curr_caller_id.toArray();
-		array.push_back(RpcValue::Array::makeElement(caller_id));
+	if(curr_caller_id.isList()) {
+		RpcValue::List array = curr_caller_id.toList();
+		array.push_back(RpcValue(caller_id));
 		setRevCallerIds(meta, array);
 	}
 	else if(curr_caller_id.isUInt()) {
-		RpcValue::Array array{RpcValue::Type::UInt};
+		RpcValue::List array;
 		array.push_back(curr_caller_id.toUInt());
-		array.push_back(RpcValue::Array::makeElement(caller_id));
+		array.push_back(RpcValue(caller_id));
 		setRevCallerIds(meta, array);
 	}
 	else {
