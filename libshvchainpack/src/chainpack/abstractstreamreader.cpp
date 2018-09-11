@@ -3,10 +3,29 @@
 namespace shv {
 namespace chainpack {
 
+size_t unpack_underflow_handler(ccpcp_unpack_context *ctx)
+{
+	AbstractStreamReader *rd = reinterpret_cast<AbstractStreamReader*>(ctx->custom_context);
+	int c = rd->m_in.get();
+	if(rd->m_in.eof())
+		return 0;
+	rd->m_unpackBuff[0] = c;
+	ctx->start = rd->m_unpackBuff;
+	ctx->current = ctx->start;
+	ctx->end = ctx->start + 1;
+	return 1;
+}
+
 AbstractStreamReader::AbstractStreamReader(std::istream &in)
 	: m_in(in)
 {
+	ccpcp_container_stack_init(&m_containerStack, m_containerStates, CONTAINER_STATE_CNT, NULL);
+	ccpcp_unpack_context_init(&m_inCtx, m_unpackBuff, 0, unpack_underflow_handler, &m_containerStack);
+	m_inCtx.custom_context = this;
+}
 
+AbstractStreamReader::~AbstractStreamReader()
+{
 }
 
 RpcValue AbstractStreamReader::read()

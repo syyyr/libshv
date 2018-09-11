@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../shvchainpackglobal.h"
-#include "exception.h"
-#include "metatypes.h"
+#include "exception1.h"
+//#include "metatypes.h"
 
 #include <string>
 #include <vector>
@@ -14,7 +14,7 @@
 	#define CHAINPACK_UINT unsigned
 #endif
 namespace shv {
-namespace chainpack {
+namespace chainpack1 {
 
 class SHVCHAINPACK_DECL_EXPORT RpcValue
 {
@@ -29,10 +29,10 @@ public:
 		Double,
 		Bool,
 		//Blob //deprecated, not used
-		String,
+		String = Bool + 1,
 		DateTime,
 		List,
-		//Array,
+		Array,
 		Map,
 		IMap,
 		Decimal,
@@ -166,9 +166,9 @@ public:
 			return !(it == end());
 		}
 	};
-	class IMap : public std::map<RpcValue::Int, RpcValue>
+	class IMap : public std::map<RpcValue::UInt, RpcValue>
 	{
-		using Super = std::map<RpcValue::Int, RpcValue>;
+		using Super = std::map<RpcValue::UInt, RpcValue>;
 		using Super::Super; // expose base class constructors
 	public:
 		RpcValue value(unsigned key, const RpcValue &default_val = RpcValue()) const
@@ -184,7 +184,6 @@ public:
 			return !(it == end());
 		}
 	};
-#if 0
 	union ArrayElement
 	{
 		int64_t int_value;
@@ -262,7 +261,6 @@ public:
 	private:
 		Type m_type = Type::Invalid;
 	};
-#endif
 	class SHVCHAINPACK_DECL_EXPORT MetaData
 	{
 	public:
@@ -276,15 +274,15 @@ public:
 
 		MetaData& operator =(MetaData &&o) {swap(o); return *this;}
 
-		int metaTypeId() const {return value(meta::Tag::MetaTypeId).toInt();}
-		void setMetaTypeId(RpcValue::Int id) {setValue(meta::Tag::MetaTypeId, id);}
-		int metaTypeNameSpaceId() const {return value(meta::Tag::MetaTypeNameSpaceId).toInt();}
-		void setMetaTypeNameSpaceId(RpcValue::Int id) {setValue(meta::Tag::MetaTypeNameSpaceId, id);}
-		std::vector<RpcValue::Int> iKeys() const;
+		//int metaTypeId() const {return value(meta::Tag::MetaTypeId).toInt();}
+		//void setMetaTypeId(RpcValue::Int id) {setValue(meta::Tag::MetaTypeId, id);}
+		//int metaTypeNameSpaceId() const {return value(meta::Tag::MetaTypeNameSpaceId).toInt();}
+		//void setMetaTypeNameSpaceId(RpcValue::Int id) {setValue(meta::Tag::MetaTypeNameSpaceId, id);}
+		std::vector<RpcValue::UInt> iKeys() const;
 		std::vector<RpcValue::String> sKeys() const;
-		RpcValue value(RpcValue::Int key) const;
+		RpcValue value(RpcValue::UInt key) const;
 		RpcValue value(RpcValue::String key) const;
-		void setValue(RpcValue::Int key, const RpcValue &val);
+		void setValue(RpcValue::UInt key, const RpcValue &val);
 		void setValue(RpcValue::String key, const RpcValue &val);
 		bool isEmpty() const;
 		bool operator==(const MetaData &o) const;
@@ -323,8 +321,8 @@ public:
 	RpcValue(const char *value);       // String
 	RpcValue(const List &values);      // List
 	RpcValue(List &&values);           // List
-	//RpcValue(const Array &values);
-	//RpcValue(Array &&values);
+	RpcValue(const Array &values);
+	RpcValue(Array &&values);
 	RpcValue(const Map &values);     // Map
 	RpcValue(Map &&values);          // Map
 	RpcValue(const IMap &values);     // IMap
@@ -375,7 +373,7 @@ public:
 	//bool isBlob() const { return type() == Type::Blob; }
 	bool isDateTime() const { return type() == Type::DateTime; }
 	bool isList() const { return type() == Type::List; }
-	//bool isArray() const { return type() == Type::Array; }
+	bool isArray() const { return type() == Type::Array; }
 	bool isMap() const { return type() == Type::Map; }
 	bool isIMap() const { return type() == Type::IMap; }
 
@@ -390,7 +388,7 @@ public:
 	const RpcValue::String &toString() const;
 	//const Blob &toBlob() const;
 	const List &toList() const;
-	//const Array &toArray() const;
+	const Array &toArray() const;
 	const Map &toMap() const;
 	const IMap &toIMap() const;
 

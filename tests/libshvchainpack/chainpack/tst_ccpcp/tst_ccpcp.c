@@ -93,7 +93,7 @@ int test_unpack_number(const char *str, int expected_type, double expected_val)
 	static const size_t STATE_CNT = 100;
 	ccpcp_container_state states[STATE_CNT];
 	ccpcp_container_stack stack;
-	ccpc_container_stack_init(&stack, states, STATE_CNT, NULL);
+	ccpcp_container_stack_init(&stack, states, STATE_CNT, NULL);
 	unsigned long n = strlen(str);
 	ccpcp_unpack_context ctx;
 	ccpcp_unpack_context_init(&ctx, (uint8_t*)str, n, NULL, &stack);
@@ -207,7 +207,7 @@ static void test_cpon_helper(const char *cpon, const char *ref_cpon, bool compar
 	if(!o_silent)
 		printf("Cpon: %s\n", in_buff);
 
-	ccpc_container_stack_init(&stack, states, STATE_CNT, NULL);
+	ccpcp_container_stack_init(&stack, states, STATE_CNT, NULL);
 	ccpcp_unpack_context_init(&in_ctx, in_buff, strlen(in_buff), NULL, &stack);
 	ccpcp_pack_context_init(&out_ctx, out_buff1, sizeof (out_buff1), NULL);
 
@@ -221,7 +221,7 @@ static void test_cpon_helper(const char *cpon, const char *ref_cpon, bool compar
 	assert(in_ctx.err_no == CCPCP_RC_OK && out_ctx.err_no == CCPCP_RC_OK);
 	//assert(!strcmp(in_buff, (const char *)out_ctx.start));
 
-	ccpc_container_stack_init(&stack, states, STATE_CNT, NULL);
+	ccpcp_container_stack_init(&stack, states, STATE_CNT, NULL);
 	ccpcp_unpack_context_init(&in_ctx, out_buff1, sizeof(out_buff1), NULL, &stack);
 	ccpcp_pack_context_init(&out_ctx, out_buff2, sizeof (out_buff2), NULL);
 
@@ -238,7 +238,7 @@ static void test_cpon_helper(const char *cpon, const char *ref_cpon, bool compar
 	}
 	assert(in_ctx.err_no == CCPCP_RC_OK && out_ctx.err_no == CCPCP_RC_OK);
 
-	ccpc_container_stack_init(&stack, states, STATE_CNT, NULL);
+	ccpcp_container_stack_init(&stack, states, STATE_CNT, NULL);
 	ccpcp_unpack_context_init(&in_ctx, out_buff2, sizeof(out_buff2), NULL, &stack);
 	ccpcp_pack_context_init(&out_ctx, out_buff1, sizeof (out_buff1), NULL);
 
@@ -255,7 +255,7 @@ static void test_cpon_helper(const char *cpon, const char *ref_cpon, bool compar
 		assert(!memcmp(in_ctx.start, out_ctx.start, out_ctx.current - out_ctx.start));
 	}
 
-	ccpc_container_stack_init(&stack, states, STATE_CNT, NULL);
+	ccpcp_container_stack_init(&stack, states, STATE_CNT, NULL);
 	ccpcp_unpack_context_init(&in_ctx, out_buff1, sizeof(out_buff1), NULL, &stack);
 	ccpcp_pack_context_init(&out_ctx, out_buff2, sizeof (out_buff2), NULL);
 
