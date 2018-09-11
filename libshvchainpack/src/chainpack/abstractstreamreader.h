@@ -29,9 +29,9 @@ public:
 protected:
 	std::istream &m_in;
 	char m_unpackBuff[1];
-	static constexpr size_t CONTAINER_STATE_CNT = 100;
-	ccpcp_container_state m_containerStates[CONTAINER_STATE_CNT];
-	ccpcp_container_stack m_containerStack;
+	//static constexpr size_t CONTAINER_STATE_CNT = 100;
+	//ccpcp_container_state m_containerStates[CONTAINER_STATE_CNT];
+	//ccpcp_container_stack m_containerStack;
 	ccpcp_unpack_context m_inCtx;
 };
 
