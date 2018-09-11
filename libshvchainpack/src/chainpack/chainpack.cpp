@@ -3,29 +3,6 @@
 namespace shv {
 namespace chainpack {
 
-RpcValue::Type ChainPack::typeInfoToArrayType(ChainPack::PackingSchema::Enum type_info)
-{
-	switch (type_info) {
-	case ChainPack::PackingSchema::Null: return RpcValue::Type::Null;
-	case ChainPack::PackingSchema::UInt: return RpcValue::Type::UInt;
-	case ChainPack::PackingSchema::Int: return RpcValue::Type::Int;
-	case ChainPack::PackingSchema::Double: return RpcValue::Type::Double;
-	case ChainPack::PackingSchema::Bool: return RpcValue::Type::Bool;
-	//case ChainPack::TypeInfo::Blob: return RpcValue::Type::Blob;
-	case ChainPack::PackingSchema::String: return RpcValue::Type::String;
-	case ChainPack::PackingSchema::CString: return RpcValue::Type::String;
-	//case ChainPack::TypeInfo::DateTimeEpoch: return RpcValue::Type::DateTime; // deprecated
-	case ChainPack::PackingSchema::DateTime: return RpcValue::Type::DateTime;
-	case ChainPack::PackingSchema::List: return RpcValue::Type::List;
-	case ChainPack::PackingSchema::Map: return RpcValue::Type::Map;
-	case ChainPack::PackingSchema::IMap: return RpcValue::Type::IMap;
-	//case ChainPackProtocol::TypeInfo::MetaIMap: return RpcValue::Type::MetaIMap;
-	case ChainPack::PackingSchema::Decimal: return RpcValue::Type::Decimal;
-	default:
-		SHVCHP_EXCEPTION(std::string("There is type for type info ") + ChainPack::PackingSchema::name(type_info));
-	}
-}
-
 const char *ChainPack::PackingSchema::name(ChainPack::PackingSchema::Enum e)
 {
 	switch (e) {

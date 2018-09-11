@@ -7,6 +7,7 @@ SOURCES += \
     $$PWD/exception.cpp \
     $$PWD/utils.cpp \
     $$PWD/abstractstreamreader.cpp \
+    $$PWD/abstractstreamreader1.cpp \
     $$PWD/abstractstreamwriter.cpp \
     $$PWD/cponwriter.cpp \
     $$PWD/cponreader.cpp \
@@ -14,6 +15,7 @@ SOURCES += \
     $$PWD/cpon.cpp \
     $$PWD/chainpack.cpp \
     $$PWD/chainpackreader.cpp \
+    $$PWD/chainpackreader1.cpp \
     $$PWD/abstractrpcconnection.cpp \
     $$PWD/metamethod.cpp
 
@@ -26,12 +28,14 @@ HEADERS += \
     $$PWD/exception.h \
     $$PWD/utils.h \
     $$PWD/abstractstreamreader.h \
+    $$PWD/abstractstreamreader1.h \
     $$PWD/abstractstreamwriter.h \
     $$PWD/cponwriter.h \
     $$PWD/cponreader.h \
     $$PWD/chainpackwriter.h \
     $$PWD/cpon.h \
     $$PWD/chainpack.h \
+    $$PWD/chainpackreader1.h \
     $$PWD/chainpackreader.h \
     $$PWD/abstractrpcconnection.h \
     $$PWD/metamethod.h

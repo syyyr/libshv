@@ -40,8 +40,6 @@ public:
 		};
 		static const char* name(Enum e);
 	};
-
-	static RpcValue::Type typeInfoToArrayType(PackingSchema::Enum type_info);
 };
 
 }}
