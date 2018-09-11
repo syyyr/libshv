@@ -790,15 +790,16 @@ private:
 		{
 			qDebug() << "------------- List";
 			{
-				const std::string s = R"(["a",123,true,[1,2,3],null])";
-				string err;
-				RpcValue cp1 = RpcValue::fromCpon(s, &err);
-				std::stringstream out;
-				ChainPackWriter wr(out); size_t len = wr.write(cp1);
-				ChainPackReader rd(out); RpcValue cp2 = rd.read();
-				qDebug() << s << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
-				QVERIFY(cp1.type() == cp2.type());
-				QVERIFY(cp1.toList() == cp2.toList());
+				for(const std::string s : {"[]", R"(["a",123,true,[1,2,3],null])"}) {
+					string err;
+					RpcValue cp1 = RpcValue::fromCpon(s, &err);
+					std::stringstream out;
+					ChainPackWriter wr(out); size_t len = wr.write(cp1);
+					ChainPackReader rd(out); RpcValue cp2 = rd.read();
+					qDebug() << s << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
+					QVERIFY(cp1.type() == cp2.type());
+					QVERIFY(cp1.toList() == cp2.toList());
+				}
 			}
 			{
 				RpcValue cp1{RpcValue::List{1,2,3}};
