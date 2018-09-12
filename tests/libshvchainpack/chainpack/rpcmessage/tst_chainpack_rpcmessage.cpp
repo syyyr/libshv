@@ -45,7 +45,7 @@ std::string binary_dump(const RpcValue::String &out)
 {
 	std::string ret;
 	for (size_t i = 0; i < out.size(); ++i) {
-		uint8_t u = out[i];
+		uint8_t u = (uint8_t)out[i];
 		//ret += std::to_string(u);
 		if(i > 0)
 			ret += '|';
@@ -78,11 +78,10 @@ private:
 		rq.setMetaValue(RpcMessage::MetaType::Tag::ShvPath, "aus/mel/pres/A");
 		std::stringstream out;
 		RpcValue cp1 = rq.value();
-		ChainPackWriter wr(out);
-		int len = rq.write(wr);
+		{ ChainPackWriter wr(out); rq.write(wr); }
 		ChainPackReader rd(out);
 		RpcValue cp2 = rd.read();
-		qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
+		qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
 		QCOMPARE(cp1.type(), cp2.type());
 		RpcRequest rq2(cp2);
 		QVERIFY(rq2.isRequest());
@@ -96,11 +95,10 @@ private:
 		rs.setRequestId(123).setResult(42u);
 		std::stringstream out;
 		RpcValue cp1 = rs.value();
-		ChainPackWriter wr(out);
-		size_t len = rs.write(wr);
+		{ ChainPackWriter wr(out); rs.write(wr); }
 		ChainPackReader rd(out);
 		RpcValue cp2 = rd.read();
-		qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
+		qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
 		QVERIFY(cp1.type() == cp2.type());
 		RpcResponse rs2(cp2);
 		QVERIFY(rs2.isResponse());
@@ -113,11 +111,10 @@ private:
 				.setError(RpcResponse::Error::create(RpcResponse::Error::InvalidParams, "Paramter length should be greater than zero!"));
 		std::stringstream out;
 		RpcValue cp1 = rs.value();
-		ChainPackWriter wr(out);
-		size_t len = rs.write(wr);
+		{ ChainPackWriter wr(out); rs.write(wr); }
 		ChainPackReader rd(out);
 		RpcValue cp2 = rd.read();
-		qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
+		qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
 		QVERIFY(cp1.type() == cp2.type());
 		RpcResponse rs2(cp2);
 		QVERIFY(rs2.isResponse());
@@ -137,11 +134,10 @@ private:
 		QVERIFY(rq.isNotify());
 		std::stringstream out;
 		RpcValue cp1 = rq.value();
-		ChainPackWriter wr(out);
-		size_t len = rq.write(wr);
+		{ ChainPackWriter wr(out); rq.write(wr); }
 		ChainPackReader rd(out);
 		RpcValue cp2 = rd.read();
-		qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str());
+		qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
 		QVERIFY(cp1.type() == cp2.type());
 		RpcRequest rq2(cp2);
 		QVERIFY(rq2.isNotify());

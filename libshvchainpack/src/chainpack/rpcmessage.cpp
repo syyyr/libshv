@@ -320,10 +320,10 @@ void RpcMessage::setProtocolType(Rpc::ProtocolType ver)
 	setMetaValue(RpcMessage::MetaType::Tag::ProtocolType, ver == Rpc::ProtocolType::Invalid? RpcValue(): RpcValue((unsigned)ver));
 }
 
-size_t RpcMessage::write(AbstractStreamWriter &wr) const
+void RpcMessage::write(AbstractStreamWriter &wr) const
 {
 	assert(m_value.isValid());
-	return wr.write(m_value);
+	wr.write(m_value);
 }
 
 void RpcMessage::checkMetaValues()

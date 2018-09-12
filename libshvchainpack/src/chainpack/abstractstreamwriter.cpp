@@ -23,6 +23,7 @@ AbstractStreamWriter::AbstractStreamWriter(std::ostream &out)
 
 AbstractStreamWriter::~AbstractStreamWriter()
 {
+	flush();
 }
 
 void AbstractStreamWriter::flush()
