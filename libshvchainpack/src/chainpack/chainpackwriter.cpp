@@ -16,12 +16,10 @@ namespace chainpack {
 void ChainPackWriter::writeUIntData(uint64_t n)
 {
 	cchainpack_pack_uint_data(&m_outCtx, n);
-	flush();
 }
 
-size_t ChainPackWriter::write(const RpcValue &value)
+void ChainPackWriter::write(const RpcValue &value)
 {
-	auto len = m_out.tellp();
 	if(!value.metaData().isEmpty()) {
 		write(value.metaData());
 	}
@@ -44,13 +42,10 @@ size_t ChainPackWriter::write(const RpcValue &value)
 		}
 		break;
 	}
-	flush();
-	return (size_t)(m_out.tellp() - len);
 }
 
-size_t ChainPackWriter::write(const RpcValue::MetaData &meta_data)
+void ChainPackWriter::write(const RpcValue::MetaData &meta_data)
 {
-	auto len = m_out.tellp();
 	if(!meta_data.isEmpty()) {
 		cchainpack_pack_meta_begin(&m_outCtx);
 		const RpcValue::IMap &cim = meta_data.iValues();
@@ -63,8 +58,6 @@ size_t ChainPackWriter::write(const RpcValue::MetaData &meta_data)
 		}
 		cchainpack_pack_container_end(&m_outCtx);
 	}
-	flush();
-	return (size_t)(m_out.tellp() - len);
 }
 
 void ChainPackWriter::writeContainerBegin(RpcValue::Type container_type)
@@ -88,7 +81,6 @@ void ChainPackWriter::writeContainerEnd(RpcValue::Type container_type)
 {
 	(void)container_type;
 	cchainpack_pack_container_end(&m_outCtx);
-	flush();
 }
 
 void ChainPackWriter::writeIMapKey(RpcValue::Int key)

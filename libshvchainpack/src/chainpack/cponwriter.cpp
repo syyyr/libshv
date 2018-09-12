@@ -21,9 +21,8 @@ CponWriter::CponWriter(std::ostream &out, const CponWriterOptions &opts)
 	m_outCtx.cpon_options.indent = m_opts.indent().empty()? nullptr: m_opts.indent().data();
 }
 
-size_t CponWriter::write(const RpcValue &value)
+void CponWriter::write(const RpcValue &value)
 {
-	auto len = m_out.tellp();
 	if(!value.metaData().isEmpty()) {
 		write(value.metaData());
 	}
@@ -46,13 +45,10 @@ size_t CponWriter::write(const RpcValue &value)
 		}
 		break;
 	}
-	flush();
-	return (size_t)(m_out.tellp() - len);
 }
 
-size_t CponWriter::write(const RpcValue::MetaData &meta_data)
+void CponWriter::write(const RpcValue::MetaData &meta_data)
 {
-	size_t len = m_out.tellp();
 	if(!meta_data.isEmpty()) {
 		ccpon_pack_meta_begin(&m_outCtx);
 		size_t ix = 0;
@@ -104,8 +100,6 @@ size_t CponWriter::write(const RpcValue::MetaData &meta_data)
 		}
 		ccpon_pack_meta_end(&m_outCtx);
 	}
-	flush();
-	return (size_t)m_out.tellp() - len;
 }
 
 void CponWriter::writeContainerBegin(RpcValue::Type container_type)
@@ -140,7 +134,6 @@ void CponWriter::writeContainerEnd(RpcValue::Type container_type)
 	default:
 		SHVCHP_EXCEPTION(std::string("Cannot write end of container type: ") + RpcValue::typeToName(container_type));
 	}
-	flush();
 }
 
 void CponWriter::writeIMapKey(RpcValue::Int key)

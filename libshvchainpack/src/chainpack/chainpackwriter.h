@@ -14,8 +14,8 @@ public:
 	ChainPackWriter& operator <<(const RpcValue &value) {write(value); return *this;}
 	ChainPackWriter& operator <<(const RpcValue::MetaData &meta_data) {write(meta_data); return *this;}
 
-	size_t write(const RpcValue &val) override;
-	size_t write(const RpcValue::MetaData &meta_data) override;
+	void write(const RpcValue &val) override;
+	void write(const RpcValue::MetaData &meta_data) override;
 
 	void writeUIntData(uint64_t n);
 	//static void writeUIntData(std::ostream &os, uint64_t n);

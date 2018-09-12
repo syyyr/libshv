@@ -100,7 +100,7 @@ public:
 	RpcValue metaValue(RpcValue::UInt key) const;
 	void setMetaValue(RpcValue::UInt key, const RpcValue &val);
 
-	virtual size_t write(AbstractStreamWriter &wr) const;
+	virtual void write(AbstractStreamWriter &wr) const;
 
 	static void setMetaTypeExplicit(bool b) {m_isMetaTypeExplicit = b;}
 protected:
