@@ -245,6 +245,7 @@ public:
 	static RpcResponse forRequest(const RpcValue::MetaData &meta);
 	static RpcResponse forRequest(const RpcRequest &rq) {return forRequest(rq.metaData());}
 public:
+	bool hasRetVal() const {return isError() || result().isValid();}
 	bool isError() const {return !error().empty();}
 	RpcResponse& setError(Error err);
 	Error error() const;

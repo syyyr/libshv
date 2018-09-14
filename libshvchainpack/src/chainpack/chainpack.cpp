@@ -30,7 +30,7 @@ const char *ChainPack::PackingSchema::name(ChainPack::PackingSchema::Enum e)
 	case TERM: return "TERM";
 	}
 	//SHVCHP_EXCEPTION("Unknown TypeInfo: " + Utils::toString((int)e));
-	return "";
+	return "UNKNOWN";
 }
 
 }}

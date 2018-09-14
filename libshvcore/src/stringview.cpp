@@ -172,6 +172,19 @@ StringView::StringViewList StringView::split(char delim, StringView::SplitBehavi
 	return ret;
 }
 
+std::string StringView::join(StringViewList::const_iterator first, StringViewList::const_iterator last, const char delim)
+{
+	std::string ret;
+	int i = 0;
+	while(first != last) {
+		if(i++ > 0)
+			ret += delim;
+		ret += first->toString();
+		first++;
+	}
+	return ret;
+}
+
 std::string StringView::join(StringViewList::const_iterator first, StringViewList::const_iterator last, const std::string &delim)
 {
 	std::string ret;

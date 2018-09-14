@@ -484,6 +484,7 @@ void test_vals()
 void test_cpons()
 {
 	const char* cpons[] = {
+		"12.3e-10", "1.23e-9",
 		"[]", NULL,
 		"[1]", NULL,
 		"[1,]", "[1]",
@@ -495,6 +496,7 @@ void test_cpons()
 		"<>1", NULL,
 		"<1:2>3", NULL,
 		"[1,<7:8>9]", NULL,
+		"<8:3u>i{2:[[\".broker\",true]]}", NULL,
 		"<1:2,\"foo\":\"bar\">i{1:<7:8>9}", NULL,
 		"<1:2,\"foo\":<5:6>\"bar\">[1u,{\"a\":1},2.30n]", NULL,
 		"i{1:2 // comment to end of line\n}", "i{1:2}",
