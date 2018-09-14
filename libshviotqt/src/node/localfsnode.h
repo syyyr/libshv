@@ -21,7 +21,6 @@ public:
 
 	StringList childNames(const ShvNode::StringViewList &shv_path) override;
 	chainpack::RpcValue hasChildren(const StringViewList &shv_path) override;
-	//chainpack::RpcValue lsAttributes(const std::string &node_id, unsigned attributes, const std::string &shv_path) override;
 
 	size_t methodCount(const StringViewList &shv_path) override;
 	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
