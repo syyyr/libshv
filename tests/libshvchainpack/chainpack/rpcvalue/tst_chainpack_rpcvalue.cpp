@@ -134,7 +134,7 @@ private:
 			QVERIFY(RpcValue::fromCpon("0.123", &err) == RpcValue(.123) && err.empty());
 			QVERIFY(RpcValue::fromCpon("1e23", &err) == RpcValue(1e23) && err.empty());
 			QVERIFY(RpcValue::fromCpon("1e-3", &err) == RpcValue(1e-3) && err.empty());
-			//QVERIFY(RpcValue::fromCpon("0x123abc", &err) == RpcValue(0x123abc) && err.empty());
+			QVERIFY(RpcValue::fromCpon("12.3e-10", &err) == RpcValue(12.3e-10) && err.empty());
 			QVERIFY(RpcValue::fromCpon("0.0123n", &err) == RpcValue(RpcValue::Decimal(123, 4)) && err.empty());
 		}
 		qDebug() << "--------------- List test";
@@ -199,6 +199,15 @@ private:
 				const RpcValue cp = RpcValue::fromCpon(test, &err);
 				qDebug() << test << "--->" << cp.toCpon();
 				QVERIFY(err.empty());
+			}
+		}
+		{
+			string err;
+			for(auto test : {"[[]]", "[[[]]]", "{\"a\":{}}", "i{1:i{}}", "<8:3u>i{2:[[\".broker\",true]]}"}) {
+				const RpcValue cp = RpcValue::fromCpon(test, &err);
+				qDebug() << test << "--->" << cp.toCpon();
+				QVERIFY(err.empty());
+				QVERIFY(cp.toCpon() == test);
 			}
 		}
 		{
@@ -790,7 +799,7 @@ private:
 		{
 			qDebug() << "------------- List";
 			{
-				for(const std::string s : {"[]", R"(["a",123,true,[1,2,3],null])"}) {
+				for(const std::string s : {"[]", "[[]]", R"(["a",123,true,[1,2,3],null])"}) {
 					string err;
 					RpcValue cp1 = RpcValue::fromCpon(s, &err);
 					std::stringstream out;
@@ -867,6 +876,16 @@ private:
 				for(auto it : m2) {
 					QVERIFY(it.second == m[it.first]);
 				}
+			}
+			for(const std::string s : {"{}", R"({"a":{}})", R"({"foo":{"bar":"baz"}})"}) {
+				string err;
+				RpcValue cp1 = RpcValue::fromCpon(s, &err);
+				std::stringstream out;
+				{ ChainPackWriter wr(out);  wr.write(cp1); }
+				ChainPackReader rd(out); RpcValue cp2 = rd.read();
+				qDebug() << s << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str()).c_str();
+				QVERIFY(cp1.type() == cp2.type());
+				QVERIFY(cp1 == cp2);
 			}
 		}
 		{

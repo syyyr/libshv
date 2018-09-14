@@ -166,8 +166,10 @@ void ChainPackReader::parseList(RpcValue &val)
 	while (true) {
 		RpcValue v;
 		read(v);
-		if(m_inCtx.item.type == CCPCP_ITEM_CONTAINER_END)
+		if(m_inCtx.item.type == CCPCP_ITEM_CONTAINER_END) {
+			m_inCtx.item.type = CCPCP_ITEM_INVALID;
 			break;
+		}
 		lst.push_back(v);
 	}
 	val = lst;
@@ -178,8 +180,10 @@ void ChainPackReader::parseMetaData(RpcValue::MetaData &meta_data)
 	while (true) {
 		RpcValue key;
 		read(key);
-		if(m_inCtx.item.type == CCPCP_ITEM_CONTAINER_END)
+		if(m_inCtx.item.type == CCPCP_ITEM_CONTAINER_END) {
+			m_inCtx.item.type = CCPCP_ITEM_INVALID;
 			break;
+		}
 		RpcValue val;
 		read(val);
 		if(key.isString())
@@ -195,8 +199,10 @@ void ChainPackReader::parseMap(RpcValue &val)
 	while (true) {
 		RpcValue key;
 		read(key);
-		if(m_inCtx.item.type == CCPCP_ITEM_CONTAINER_END)
+		if(m_inCtx.item.type == CCPCP_ITEM_CONTAINER_END) {
+			m_inCtx.item.type = CCPCP_ITEM_INVALID;
 			break;
+		}
 		RpcValue val;
 		read(val);
 		map[key.toString()] = val;
@@ -210,8 +216,10 @@ void ChainPackReader::parseIMap(RpcValue &val)
 	while (true) {
 		RpcValue key;
 		read(key);
-		if(m_inCtx.item.type == CCPCP_ITEM_CONTAINER_END)
+		if(m_inCtx.item.type == CCPCP_ITEM_CONTAINER_END) {
+			m_inCtx.item.type = CCPCP_ITEM_INVALID;
 			break;
+		}
 		RpcValue val;
 		read(val);
 		map[key.toInt()] = val;
