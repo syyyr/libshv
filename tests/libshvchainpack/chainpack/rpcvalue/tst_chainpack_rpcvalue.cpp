@@ -635,15 +635,31 @@ private:
 #endif
 		{
 			qDebug() << "------------- string";
-			RpcValue::String str{"string containing zero character"};
-			str[str.size() - 10] = 0;
-			RpcValue cp1{str};
-			std::stringstream out;
-			{ ChainPackWriter wr(out);  wr.write(cp1); }
-			ChainPackReader rd(out); RpcValue cp2 = rd.read();
-			qDebug() << str << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
-			QVERIFY(cp1.type() == cp2.type());
-			QVERIFY(cp1.toString() == cp2.toString());
+			{
+				RpcValue::String str{"string containing zero character"};
+				str[str.size() - 10] = 0;
+				RpcValue cp1{str};
+				std::stringstream out;
+				{ ChainPackWriter wr(out);  wr.write(cp1); }
+				ChainPackReader rd(out); RpcValue cp2 = rd.read();
+				qDebug() << str << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
+				QVERIFY(cp1.type() == cp2.type());
+				QVERIFY(cp1.toString() == cp2.toString());
+			}
+			{
+				// long string
+				RpcValue::String str;
+				for (int i = 0; i < 1000; ++i)
+					str += std::to_string(i % 10);
+				RpcValue cp1{str};
+				std::stringstream out;
+				{ ChainPackWriter wr(out);  wr.write(cp1); }
+				ChainPackReader rd(out); RpcValue cp2 = rd.read();
+				//qDebug() << str << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
+				QVERIFY(cp1.type() == cp2.type());
+				QVERIFY(cp2.toString().size() == str.size());
+				QVERIFY(cp1 == cp2);
+			}
 		}
 		{
 			qDebug() << "------------- DateTime";
