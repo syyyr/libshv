@@ -48,6 +48,8 @@ public:
 
 	StringView getToken(char delim = ' ');
 	StringViewList split(char delim, SplitBehavior split_behavior = SkipEmptyParts) const;
+	static std::string join(StringViewList::const_iterator first, StringViewList::const_iterator last, const char delim);
+	static std::string join(const StringViewList &lst, const char delim) { return join(lst.begin(), lst.end(), delim); }
 	static std::string join(StringViewList::const_iterator first, StringViewList::const_iterator last, const std::string &delim);
 	static std::string join(const StringViewList &lst, const std::string &delim) { return join(lst.begin(), lst.end(), delim); }
 private:

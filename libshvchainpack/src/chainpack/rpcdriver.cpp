@@ -145,14 +145,12 @@ void RpcDriver::writeQueue()
 		std::string protocol_type_data;
 		{
 			std::ostringstream os;
-			ChainPackWriter wr(os);
-			wr.writeUIntData((unsigned)protocolType());
+			{ ChainPackWriter wr(os); wr.writeUIntData((unsigned)protocolType());}
 			protocol_type_data = os.str();
 		}
 		{
 			std::ostringstream os;
-			ChainPackWriter wr(os);
-			wr.writeUIntData(chunk.size() + protocol_type_data.length());
+			{ ChainPackWriter wr(os); wr.writeUIntData(chunk.size() + protocol_type_data.length()); }
 			std::string packet_len_data = os.str();
 			auto len = writeBytes(packet_len_data.data(), packet_len_data.length());
 			if(len < 0)
