@@ -4,11 +4,12 @@
 
 //#include <shv/chainpack/rpc.h>
 #include <shv/chainpack/rpcvalue.h>
+#include <shv/core/stringview.h>
 
 #include <QObject>
 
 namespace shv { namespace chainpack { class MetaMethod; class RpcValue; class RpcMessage; class RpcRequest; }}
-namespace shv { namespace core { class StringView; }}
+//namespace shv { namespace core { class StringView; }}
 
 namespace shv {
 namespace iotqt {
@@ -20,9 +21,10 @@ class SHVIOTQT_DECL_EXPORT ShvNode : public QObject
 {
 	Q_OBJECT
 public:
-	using StringList = std::vector<std::string>;
-	using StringViewList = std::vector<shv::core::StringView>;
 	using String = std::string;
+	using StringList = std::vector<String>;
+	using StringView = shv::core::StringView;
+	using StringViewList = shv::core::StringViewList;
 public:
 	explicit ShvNode(ShvNode *parent = nullptr);
 
@@ -42,22 +44,26 @@ public:
 
 	virtual bool isRootNode() const {return false;}
 
-	virtual void processRawData(const shv::chainpack::RpcValue::MetaData &meta, std::string &&data);
+	virtual void handleRawRpcRequest(chainpack::RpcValue::MetaData &&meta, std::string &&data);
+	virtual void handleRpcRequest(const chainpack::RpcRequest &rq);
 	virtual chainpack::RpcValue processRpcRequest(const shv::chainpack::RpcRequest &rq);
 
-	virtual shv::chainpack::RpcValue dir(const shv::chainpack::RpcValue &methods_params);
-	virtual StringList methodNames();
+	virtual shv::chainpack::RpcValue dir(const StringViewList &shv_path, const shv::chainpack::RpcValue &methods_params);
+	//virtual StringList methodNames(const StringViewList &shv_path);
 
-	virtual shv::chainpack::RpcValue ls(const shv::chainpack::RpcValue &methods_params);
-	virtual shv::chainpack::RpcValue hasChildren();
-	virtual shv::chainpack::RpcValue lsAttributes(unsigned attributes);
+	virtual shv::chainpack::RpcValue ls(const StringViewList &shv_path, const shv::chainpack::RpcValue &methods_params);
+	virtual shv::chainpack::RpcValue hasChildren(const StringViewList &shv_path);
+	virtual shv::chainpack::RpcValue lsAttributes(const StringViewList &shv_path, unsigned attributes);
 public:
-	virtual size_t methodCount();
-	virtual const shv::chainpack::MetaMethod* metaMethod(size_t ix);
+	virtual size_t methodCount(const StringViewList &shv_path);
+	virtual const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix);
+	virtual const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, const std::string &name);
 
-	virtual StringList childNames();
+	virtual StringList childNames(const StringViewList &shv_path);
+	virtual StringList childNames() {return childNames(StringViewList());}
 
-	virtual shv::chainpack::RpcValue call(const std::string &method, const shv::chainpack::RpcValue &params);
+	//virtual shv::chainpack::RpcValue callMethodRaw(const StringViewList &shv_path, const std::string &method, const std::string &data);
+	virtual shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params);
 private:
 	String m_nodeId;
 };
@@ -72,7 +78,7 @@ public:
 	bool isRootNode() const override {return true;}
 
 	Q_SIGNAL void sendRpcMesage(const shv::chainpack::RpcMessage &msg);
-	void emitSendRpcMesage(const shv::chainpack::RpcMessage &msg) {emit sendRpcMesage(msg);}
+	void emitSendRpcMesage(const shv::chainpack::RpcMessage &msg);
 };
 
 }}}

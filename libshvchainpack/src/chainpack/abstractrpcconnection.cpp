@@ -35,16 +35,16 @@ void AbstractRpcConnection::sendError(const RpcValue &request_id, const RpcRespo
 	sendMessage(resp);
 }
 
-unsigned AbstractRpcConnection::nextRequestId()
+int AbstractRpcConnection::nextRequestId()
 {
-	static unsigned n = 0;
+	static int n = 0;
 	return ++n;
 }
 
-unsigned AbstractRpcConnection::callMethod(const RpcRequest &rq)
+int AbstractRpcConnection::callMethod(const RpcRequest &rq)
 {
 	RpcRequest _rq(rq);
-	unsigned id = rq.requestId().toUInt();
+	int id = rq.requestId().toInt();
 	if(id == 0) {
 		id = nextRequestId();
 		_rq.setRequestId(id);
@@ -53,14 +53,14 @@ unsigned AbstractRpcConnection::callMethod(const RpcRequest &rq)
 	return id;
 }
 
-unsigned AbstractRpcConnection::callMethod(std::string method, const RpcValue &params)
+int AbstractRpcConnection::callMethod(std::string method, const RpcValue &params)
 {
 	return callShvMethod(std::string(), std::move(method), params);
 }
 
-unsigned AbstractRpcConnection::callShvMethod(const std::string &shv_path, std::string method, const RpcValue &params)
+int AbstractRpcConnection::callShvMethod(const std::string &shv_path, std::string method, const RpcValue &params)
 {
-	unsigned id = nextRequestId();
+	int id = nextRequestId();
 	RpcRequest rq;
 	rq.setRequestId(id);
 	rq.setMethod(std::move(method));
@@ -93,7 +93,7 @@ RpcResponse AbstractRpcConnection::callShvMethodSync(const std::string &shv_path
 	return RpcResponse(ret);
 }
 
-unsigned AbstractRpcConnection::createSubscription(const std::string &shv_path, std::string method)
+int AbstractRpcConnection::createSubscription(const std::string &shv_path, std::string method)
 {
 	return callShvMethod(Rpc::DIR_BROKER_APP
 					  , Rpc::METH_SUBSCRIBE

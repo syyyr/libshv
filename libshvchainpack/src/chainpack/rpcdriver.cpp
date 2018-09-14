@@ -272,8 +272,8 @@ size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolTyp
 		}
 		else {
 			const RpcValue::Map &map = msg.toMap();
-			unsigned id = map.value(Rpc::JSONRPC_REQUEST_ID).toUInt();
-			unsigned caller_id = map.value(Rpc::JSONRPC_CALLER_ID).toUInt();
+			int id = map.value(Rpc::JSONRPC_REQUEST_ID).toInt();
+			int caller_id = map.value(Rpc::JSONRPC_CALLER_ID).toInt();
 			RpcValue::String method = map.value(Rpc::JSONRPC_METHOD).toString();
 			std::string shv_path = map.value(Rpc::JSONRPC_SHV_PATH).toString();
 			if(id > 0)
