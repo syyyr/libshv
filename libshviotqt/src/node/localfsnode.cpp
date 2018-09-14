@@ -3,6 +3,7 @@
 #include <shv/chainpack/rpcmessage.h>
 #include <shv/chainpack/metamethod.h>
 #include <shv/core/exception.h>
+#include <shv/core/stringview.h>
 #include <shv/coreqt/log.h>
 
 namespace cp = shv::chainpack;
@@ -20,20 +21,20 @@ LocalFSNode::LocalFSNode(const QString &root_path, Super *parent)
 {
 }
 
-chainpack::RpcValue LocalFSNode::call2(const std::string &method, const chainpack::RpcValue &params, const std::string &shv_path)
+chainpack::RpcValue LocalFSNode::callMethod(const ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
 {
 	if(method == M_SIZE) {
-		return ndSize(shv_path);
+		return ndSize(QString::fromStdString(core::StringView::join(shv_path, '/')));
 	}
 	else if(method == M_READ) {
-		return ndRead(shv_path);
+		return ndRead(QString::fromStdString(core::StringView::join(shv_path, '/')));
 	}
-	return Super::call2(method, params, shv_path);
+	return Super::callMethod(shv_path, method, params);
 }
 
-ShvNode::StringList LocalFSNode::childNames2(const std::string &shv_path)
+ShvNode::StringList LocalFSNode::childNames(const ShvNode::StringViewList &shv_path)
 {
-	QString qpath = QString::fromStdString(shv_path);
+	QString qpath = QString::fromStdString(core::StringView::join(shv_path, '/'));
 	QFileInfo fi_path(m_rootDir.absolutePath() + '/' + qpath);
 	//shvInfo() << __FUNCTION__ << fi_path.absoluteFilePath() << "is dir:" << fi_path.isDir();
 	if(fi_path.isDir()) {
@@ -49,13 +50,13 @@ ShvNode::StringList LocalFSNode::childNames2(const std::string &shv_path)
 	return ShvNode::StringList();
 }
 
-chainpack::RpcValue LocalFSNode::hasChildren2(const std::string &shv_path)
+chainpack::RpcValue LocalFSNode::hasChildren(const ShvNode::StringViewList &shv_path)
 {
-	QString qpath = QString::fromStdString(shv_path);
+	QString qpath = QString::fromStdString(core::StringView::join(shv_path, '/'));
 	QFileInfo fi(m_rootDir.absolutePath() + '/' + qpath);
 	if(!fi.exists())
 		shvError() << "Invalid path:" << fi.absoluteFilePath();
-	shvDebug() << __FUNCTION__ << "shv path:" << shv_path << "file info:" << fi.absoluteFilePath() << "is dir:" << fi.isDir();
+	shvDebug() << __FUNCTION__ << "shv path:" << qpath << "file info:" << fi.absoluteFilePath() << "is dir:" << fi.isDir();
 	return fi.isDir();
 }
 
@@ -66,13 +67,13 @@ static std::vector<cp::MetaMethod> meta_methods {
 	{M_READ, cp::MetaMethod::Signature::RetVoid, false},
 };
 
-size_t LocalFSNode::methodCount2(const std::string &shv_path)
+size_t LocalFSNode::methodCount(const ShvNode::StringViewList &shv_path)
 {
-	QFileInfo fi = ndFileInfo(shv_path);
+	QFileInfo fi = ndFileInfo(QString::fromStdString(core::StringView::join(shv_path, '/')));
 	return fi.isFile()? 4: 2;
 }
 
-const chainpack::MetaMethod *LocalFSNode::metaMethod2(size_t ix, const std::string &shv_path)
+const chainpack::MetaMethod *LocalFSNode::metaMethod(const StringViewList &shv_path, size_t ix)
 {
 	Q_UNUSED(shv_path)
 	if(meta_methods.size() <= ix)
@@ -80,116 +81,27 @@ const chainpack::MetaMethod *LocalFSNode::metaMethod2(size_t ix, const std::stri
 	return &(meta_methods[ix]);
 }
 
-QFileInfo LocalFSNode::ndFileInfo(const std::string &path)
+QFileInfo LocalFSNode::ndFileInfo(const QString &path)
 {
-	QFileInfo fi(m_rootDir.absolutePath() + '/' + QString::fromStdString(path));
+	QFileInfo fi(m_rootDir.absolutePath() + '/' + path);
 	return fi;
 }
-/*
-cp::RpcValue LocalFSNode::ndLs(const std::string &path, const chainpack::RpcValue &methods_params)
-{
-	cp::RpcValue::List ret;
-	QDir d2(m_rootDir.absolutePath() + '/' + QString::fromStdString(path));
-	if(!d2.exists())
-		SHV_EXCEPTION("Path " + d2.absolutePath().toStdString() + " do not exists.");
 
-	MethParamsList mpl(methods_params);
-	for(const QFileInfo &fi : d2.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot)) {
-		std::string fn = fi.fileName().toStdString();
-		if(mpl.empty()) {
-			ret.push_back(fn);
-		}
-		else {
-			cp::RpcValue::List ret1;
-			ret1.push_back(fn);
-			for(const MethParams &mp : mpl) {
-				try {
-					std::string p2 = path + '/' + fn;
-					ret1.push_back(ndCall(p2, mp.method(), mp.params()));
-				} catch (shv::core::Exception &) {
-					ret1.push_back(nullptr);
-				}
-			}
-			ret.push_back(ret1);
-		}
-	}
-	return ret;
-}
-*/
-cp::RpcValue LocalFSNode::ndSize(const std::string &path)
+cp::RpcValue LocalFSNode::ndSize(const QString &path)
 {
 	return (unsigned)ndFileInfo(path).size();
 }
 
-chainpack::RpcValue LocalFSNode::ndRead(const std::string &path)
+chainpack::RpcValue LocalFSNode::ndRead(const QString &path)
 {
-	QFile f(m_rootDir.absolutePath() + '/' + QString::fromStdString(path));
+	QFile f(m_rootDir.absolutePath() + '/' + path);
 	if(f.open(QFile::ReadOnly)) {
 		QByteArray ba = f.readAll();
-		return cp::RpcValue::String(ba.constData(), ba.size());
+		return cp::RpcValue::String(ba.constData(), (size_t)ba.size());
 	}
 	SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for reading.");
 }
-/*
-chainpack::RpcValue LocalFSNode::ndCall(const std::string &path, const std::string &method, const chainpack::RpcValue &params)
-{
-	cp::RpcValue ret;
-	if(method == cp::Rpc::METH_LS) {
-		ret = ndLs(path, params);
-	}
-	else if(method == M_SIZE) {
-		ret = ndSize(path);
-	}
-	else if(method == M_READ) {
-		ret = ndRead(path);
-	}
-	else if(method == cp::Rpc::METH_DIR) {
-		QFileInfo fi = ndFileInfo(path);
-		cp::RpcValue::List lst{cp::Rpc::METH_DIR};
-		if(fi.isFile()) {
-			lst.push_back(M_SIZE);
-			lst.push_back(M_READ);
-		}
-		else if(fi.isDir()) {
-			lst.push_back(cp::Rpc::METH_LS);
-		}
-		ret = lst;
-	}
-	else {
-		SHV_EXCEPTION("Invalid method: " + method + " called for node: " + path);
-	}
-	return ret;
-}
 
-cp::RpcValue LocalFSNode::processRpcRequest(const chainpack::RpcRequest &rq)
-{
-	cp::RpcValue ret;
-	cp::RpcValue::String method = rq.method().toString();
-	chainpack::RpcValue shv_path = rq.shvPath();
-	if(method == cp::Rpc::METH_LS) {
-		ret = ndLs(shv_path.toString(), rq.params());
-	}
-	else if(method == M_SIZE) {
-		ret = ndSize(shv_path.toString());
-	}
-	else if(method == M_READ) {
-		ret = ndRead(shv_path.toString());
-	}
-	else if(method == cp::Rpc::METH_DIR) {
-		QFileInfo fi = ndFileInfo(shv_path.toString());
-		cp::RpcValue::List lst{cp::Rpc::METH_DIR, cp::Rpc::METH_LS};
-		if(fi.isFile()) {
-			lst.push_back(M_SIZE);
-			lst.push_back(M_READ);
-		}
-		ret = lst;
-	}
-	else {
-		SHV_EXCEPTION("Invalid method: " + method + " called for node: " + shv_path.toString());
-	}
-	return ret;
-}
-*/
 } // namespace node
 } // namespace iotqt
 } // namespace shv

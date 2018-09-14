@@ -127,7 +127,7 @@ public:
 	//RpcValue::String method() const;
 	RpcRequest& setParams(const RpcValue &p);
 	RpcValue params() const;
-	RpcRequest& setRequestId(const RpcValue::UInt id) {Super::setRequestId(id); return *this;}
+	RpcRequest& setRequestId(const RpcValue::Int id) {Super::setRequestId(id); return *this;}
 
 	//size_t write(AbstractStreamWriter &wr) const override;
 };
@@ -141,7 +141,7 @@ public:
 	//RpcRequest(const Value &id) : Super(Json()) {setId(id);}
 	RpcNotify(const RpcMessage &msg) : Super(msg) {}
 public:
-	RpcRequest& setRequestId(const RpcValue::UInt requestId) = delete;
+	RpcRequest& setRequestId(const RpcValue::Int requestId) = delete;
 
 	static void write(AbstractStreamWriter &wr, const std::string &method, std::function<void (AbstractStreamWriter &)> write_params_callback);
 };

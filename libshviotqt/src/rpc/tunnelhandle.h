@@ -32,18 +32,18 @@ public:
 	*/
 public:
 	TunnelHandle() {}
-	TunnelHandle(unsigned req_id, const shv::chainpack::RpcValue &caller_ids)
+	TunnelHandle(int req_id, const shv::chainpack::RpcValue &caller_ids)
 		: m_requestId(req_id)
 		, m_callerIds(caller_ids)
 	{}
 
-	unsigned requestId() const {return m_requestId;}
+	int requestId() const {return m_requestId;}
 	const shv::chainpack::RpcValue& callerIds() const {return m_callerIds;}
 	bool isValid() const {return requestId() > 0 && m_callerIds.isValid();}
 
 	//shv::chainpack::RpcValue toRpcValue() const;
 private:
-	unsigned m_requestId = 0;
+	int m_requestId = 0;
 	shv::chainpack::RpcValue m_callerIds;
 };
 

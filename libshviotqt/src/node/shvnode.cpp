@@ -1,12 +1,14 @@
 #include "shvnode.h"
 
+#include <shv/coreqt/log.h>
+
 #include <shv/chainpack/metamethod.h>
 #include <shv/chainpack/rpcmessage.h>
 #include <shv/chainpack/rpcvalue.h>
 #include <shv/chainpack/rpcdriver.h>
 #include <shv/core/stringview.h>
 #include <shv/core/exception.h>
-#include <shv/coreqt/log.h>
+#include <shv/core/stringview.h>
 
 namespace cp = shv::chainpack;
 
@@ -78,7 +80,7 @@ ShvRootNode *ShvNode::rootNode()
 			return qobject_cast<ShvRootNode*>(nd);
 		nd = nd->parentNode();
 	}
-	SHV_EXCEPTION("Cannot find root node!");
+	//SHV_EXCEPTION("Cannot find root node!");
 	return nullptr;
 }
 
@@ -94,31 +96,45 @@ void ShvNode::deleteDanglingPath()
 		delete dangling_nd;
 }
 
-void ShvNode::processRawData(const chainpack::RpcValue::MetaData &meta, std::string &&data)
+void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&data)
 {
-	shvLogFuncFrame() << meta.toStdString();
-	std::string errmsg;
-	cp::RpcMessage rpc_msg = cp::RpcDriver::composeRpcMessage(cp::RpcValue::MetaData(meta), data, &errmsg);
-	if(!errmsg.empty()) {
-		shvError() << errmsg;
-		return;
-	}
-	cp::RpcRequest rq(rpc_msg);
-	cp::RpcResponse resp = cp::RpcResponse::forRequest(rq.metaData());
-	bool response_deffered = false;
+	shvLogFuncFrame() << "node:" << nodeId() << "meta:" << meta.toStdString();
+	const chainpack::RpcValue::String &method = cp::RpcMessage::method(meta).toString();
+	const chainpack::RpcValue::String &shv_path_str = cp::RpcMessage::shvPath(meta).toString();
+	core::StringView::StringViewList shv_path = core::StringView(shv_path_str).split('/');
+	cp::RpcResponse resp = cp::RpcResponse::forRequest(meta);
 	try {
-		cp::RpcValue result = processRpcRequest(rq);
-		shvDebug() << result.toPrettyString();
-		if(result.isValid())
-			resp.setResult(result);
-		else
-			response_deffered = true;
+		const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
+		if(mm) {
+			std::string errmsg;
+			cp::RpcMessage rpc_msg = cp::RpcDriver::composeRpcMessage(std::move(meta), data, &errmsg);
+			if(!errmsg.empty())
+				SHV_EXCEPTION(errmsg);
+
+			cp::RpcRequest rq(rpc_msg);
+			chainpack::RpcValue ret_val = processRpcRequest(rq);
+			if(ret_val.isValid()) {
+				resp.setResult(ret_val);
+			}
+		}
+		else {
+			if(!shv_path.empty()) {
+				ShvNode *nd = childNode(shv_path.at(0).toString());
+				if(nd) {
+					std::string new_path = core::StringView::join(++shv_path.begin(), shv_path.end(), '/');
+					//cp::RpcValue::MetaData meta2(meta);
+					cp::RpcMessage::setShvPath(meta, new_path);
+					nd->handleRawRpcRequest(std::move(meta), std::move(data));
+					return;
+				}
+			}
+		}
 	}
 	catch (std::exception &e) {
 		shvError() << e.what();
 		resp.setError(cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodCallException, e.what()));
 	}
-	if(!response_deffered) {
+	if(resp.hasRetVal()) {
 		ShvRootNode *root = rootNode();
 		if(root) {
 			root->emitSendRpcMesage(resp);
@@ -126,6 +142,55 @@ void ShvNode::processRawData(const chainpack::RpcValue::MetaData &meta, std::str
 	}
 }
 
+void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
+{
+	shvLogFuncFrame() << "node:" << nodeId();
+	const chainpack::RpcValue::String &method = rq.method().toString();
+	const chainpack::RpcValue::String &shv_path_str = rq.shvPath().toString();
+	core::StringView::StringViewList shv_path = core::StringView(shv_path_str).split('/');
+	cp::RpcResponse resp = cp::RpcResponse::forRequest(rq);
+	try {
+		const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
+		if(mm) {
+			chainpack::RpcValue ret_val = processRpcRequest(rq);
+			if(ret_val.isValid()) {
+				resp.setResult(ret_val);
+			}
+		}
+		else {
+			if(!shv_path.empty()) {
+				ShvNode *nd = childNode(shv_path.at(0).toString());
+				if(nd) {
+					std::string new_path = core::StringView::join(++shv_path.begin(), shv_path.end(), '/');
+					chainpack::RpcRequest rq2(rq);
+					//cp::RpcValue::MetaData meta2(meta);
+					rq2.setShvPath(new_path);
+					nd->handleRpcRequest(rq2);
+					return;
+				}
+			}
+		}
+	}
+	catch (std::exception &e) {
+		shvError() << e.what();
+		resp.setError(cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodCallException, e.what()));
+	}
+	if(resp.hasRetVal()) {
+		ShvRootNode *root = rootNode();
+		if(root) {
+			root->emitSendRpcMesage(resp);
+		}
+	}
+}
+
+chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
+{
+	core::StringView::StringViewList shv_path = core::StringView(rq.shvPath().toString()).split('/');
+	const chainpack::RpcValue::String method = rq.method().toString();
+	chainpack::RpcValue ret_val = callMethod(shv_path, method, rq.params());
+	return ret_val;
+}
+/*
 shv::chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 {
 	if(!rq.shvPath().toString().empty())
@@ -135,32 +200,62 @@ shv::chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest 
 		return cp::RpcValue(); // RPC calls with requestID == 0 does not expect response
 	return ret;
 }
+*/
 
-ShvNode::StringList ShvNode::childNames()
+static std::string join_str(const ShvNode::StringList &sl, char sep)
 {
+	std::string ret;
+	for(const std::string &s : sl) {
+		if(ret.empty())
+			ret = s;
+		else
+			ret += sep + s;
+	}
+	return ret;
+}
+
+ShvNode::StringList ShvNode::childNames(const StringViewList &shv_path)
+{
+	shvLogFuncFrame() << "node:" << nodeId() << "shv_path:" << StringView::join(shv_path, '/');
 	ShvNode::StringList ret;
-	QList<ShvNode*> lst = findChildren<ShvNode*>(QString(), Qt::FindDirectChildrenOnly);
-	for (ShvNode *nd : lst) {
-		ret.push_back(nd->nodeId());
+	if(shv_path.empty()) {
+		QList<ShvNode*> lst = findChildren<ShvNode*>(QString(), Qt::FindDirectChildrenOnly);
+		for (ShvNode *nd : lst) {
+			ret.push_back(nd->nodeId());
+		}
 	}
+	else if(shv_path.size() == 1) {
+		ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
+		if(nd)
+			ret = nd->childNames(StringViewList());
+	}
+	shvDebug() << "\tret:" << join_str(ret, '+');
 	return ret;
 }
 
-chainpack::RpcValue ShvNode::hasChildren()
+chainpack::RpcValue ShvNode::hasChildren(const StringViewList &shv_path)
 {
-	return !childNames().empty();
+	return !childNames(shv_path).empty();
 }
 
-chainpack::RpcValue ShvNode::lsAttributes(unsigned attributes)
+chainpack::RpcValue ShvNode::lsAttributes(const StringViewList &shv_path, unsigned attributes)
 {
-	shvLogFuncFrame() << "attributes:" << attributes << "shv path:" << shvPath();
+	shvLogFuncFrame() << "node:" << nodeId() << "attributes:" << attributes << "shv path:" << StringView::join(shv_path, '/');
 	cp::RpcValue::List ret;
-	if(attributes & (int)cp::LsAttribute::HasChildren) {
-		ret.push_back(hasChildren());
+	if(shv_path.empty()) {
+		if(attributes & (int)cp::LsAttribute::HasChildren)
+			ret.push_back(hasChildren(shv_path));
+	}
+	else if(shv_path.size() == 1) {
+		ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
+		if(nd) {
+			if(attributes & (int)cp::LsAttribute::HasChildren)
+				ret.push_back(nd->hasChildren(StringViewList()));
+		}
 	}
 	return ret;
 }
-
+/*
 chainpack::RpcValue ShvNode::call(const std::string &method, const chainpack::RpcValue &params)
 {
 	shvLogFuncFrame() << "method:" << method << "params:" << params.toCpon() << "shv path:" << shvPath();
@@ -172,18 +267,39 @@ chainpack::RpcValue ShvNode::call(const std::string &method, const chainpack::Rp
 	}
 	SHV_EXCEPTION("Invalid method: " + method + " called for node: " + shvPath());
 }
-
-chainpack::RpcValue ShvNode::ls(const chainpack::RpcValue &methods_params)
+*/
+chainpack::RpcValue ShvNode::dir(const StringViewList &shv_path, const chainpack::RpcValue &methods_params)
 {
+	cp::RpcValue::List ret;
+	chainpack::RpcValueGenList params(methods_params);
+	const std::string method = params.value(0).toString();
+	unsigned attrs = params.value(1).toUInt();
+	size_t cnt = methodCount(shv_path);
+	for (size_t ix = 0; ix < cnt; ++ix) {
+		const chainpack::MetaMethod *mm = metaMethod(shv_path, ix);
+		if(method.empty()) {
+			ret.push_back(mm->attributes(attrs));
+		}
+		else if(method == mm->name()) {
+				ret.push_back(mm->attributes(attrs));
+				break;
+		}
+	}
+	return ret;
+}
+
+chainpack::RpcValue ShvNode::ls(const StringViewList &shv_path, const chainpack::RpcValue &methods_params)
+{
+	cp::RpcValue::List ret;
 	chainpack::RpcValueGenList mpl(methods_params);
 	const std::string child_name_pattern = mpl.value(0).toString();
 	unsigned attrs = mpl.value(1).toUInt();
-	cp::RpcValue::List ret;
-	for(const std::string &child_name : childNames()) {
+	for(const std::string &child_name : childNames(shv_path)) {
 		if(child_name_pattern.empty() || child_name_pattern == child_name) {
-			//std::string path = shv_path.empty()? child_name: shv_path + '/' + child_name;
 			try {
-				cp::RpcValue::List attrs_result = childNode(child_name)->lsAttributes(attrs).toList();
+				StringViewList ch_shv_path = shv_path;
+				ch_shv_path.push_back(shv::core::StringView(child_name));
+				cp::RpcValue::List attrs_result = lsAttributes(ch_shv_path, attrs).toList();
 				if(attrs_result.empty()) {
 					ret.push_back(child_name);
 				}
@@ -205,17 +321,31 @@ static std::vector<cp::MetaMethod> meta_methods {
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, false},
 };
 
-size_t ShvNode::methodCount()
+size_t ShvNode::methodCount(const StringViewList &shv_path)
 {
-	return meta_methods.size();
+	if(shv_path.empty())
+		return meta_methods.size();
+	return 0;
 }
 
-const chainpack::MetaMethod *ShvNode::metaMethod(size_t ix)
+const chainpack::MetaMethod *ShvNode::metaMethod(const StringViewList &shv_path, size_t ix)
 {
-	return &(meta_methods.at(ix));
+	if(shv_path.empty())
+		return &(meta_methods.at(ix));
+	return nullptr;
 }
 
-ShvNode::StringList ShvNode::methodNames()
+const chainpack::MetaMethod *ShvNode::metaMethod(const ShvNode::StringViewList &shv_path, const std::string &name)
+{
+	for (size_t i = 0; i < methodCount(shv_path); ++i) {
+		const chainpack::MetaMethod *mm = metaMethod(shv_path, i);
+		if(mm && name == mm->name())
+			return mm;
+	}
+	return nullptr;
+}
+/*
+ShvNode::StringList ShvNode::methodNames(const StringViewList &shv_path)
 {
 	ShvNode::StringList ret;
 	size_t cnt = methodCount();
@@ -224,25 +354,26 @@ ShvNode::StringList ShvNode::methodNames()
 	}
 	return ret;
 }
+*/
 
-chainpack::RpcValue ShvNode::dir(const chainpack::RpcValue &methods_params)
+chainpack::RpcValue ShvNode::callMethod(const ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
 {
-	cp::RpcValue::List ret;
-	chainpack::RpcValueGenList params(methods_params);
-	const std::string method = params.value(0).toString();
-	unsigned attrs = params.value(1).toUInt();
-	size_t cnt = methodCount();
-	for (size_t ix = 0; ix < cnt; ++ix) {
-		const chainpack::MetaMethod *mm = metaMethod(ix);
-		if(method.empty()) {
-			ret.push_back(mm->attributes(attrs));
-		}
-		else if(method == mm->name()) {
-				ret.push_back(mm->attributes(attrs));
-				break;
-		}
+	if(method == cp::Rpc::METH_DIR)
+		return dir(shv_path, params);
+	if(method == cp::Rpc::METH_LS)
+		return ls(shv_path, params);
+
+	SHV_EXCEPTION("Invalid method: " + method + " on path: " + core::StringView::join(shv_path, '/'));
+}
+
+void ShvRootNode::emitSendRpcMesage(const chainpack::RpcMessage &msg)
+{
+	if(msg.isResponse()) {
+		cp::RpcResponse resp(msg);
+		if(resp.requestId().toInt() == 0) // RPC calls with requestID == 0 does not expect response
+			return;
 	}
-	return ret;
+	emit sendRpcMesage(msg);
 }
 
 }}}

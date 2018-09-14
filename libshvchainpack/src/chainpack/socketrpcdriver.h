@@ -17,7 +17,7 @@ public:
 	virtual void closeConnection();
 	void exec();
 
-	void sendResponse(unsigned request_id, const RpcValue &result);
+	void sendResponse(int request_id, const RpcValue &result);
 	void sendNotify(std::string &&method, const RpcValue &result);
 protected:
 	bool isOpen() override;

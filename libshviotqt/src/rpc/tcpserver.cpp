@@ -40,7 +40,7 @@ std::vector<unsigned> TcpServer::connectionIds() const
 	return ret;
 }
 
-ServerConnection *TcpServer::connectionById(unsigned connection_id)
+ServerConnection *TcpServer::connectionById(int connection_id)
 {
 	auto it = m_connections.find(connection_id);
 	if(it == m_connections.end())

@@ -24,18 +24,18 @@ class SHVIOTQT_DECL_EXPORT TcpServer : public QTcpServer
 
 	//SHV_FIELD_IMPL(int, p, P, ort)
 public:
-	explicit TcpServer(QObject *parent = 0);
+	explicit TcpServer(QObject *parent = nullptr);
 	~TcpServer() override;
 
 	bool start(int port);
 	std::vector<unsigned> connectionIds() const;
-	ServerConnection* connectionById(unsigned connection_id);
+	ServerConnection* connectionById(int connection_id);
 protected:
 	virtual ServerConnection* createServerConnection(QTcpSocket *socket, QObject *parent) = 0;
 	void onNewConnection();
 	void onConnectionDeleted(int connection_id);
 protected:
-	std::map<unsigned, ServerConnection*> m_connections;
+	std::map<int, ServerConnection*> m_connections;
 };
 
 }}}
