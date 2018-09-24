@@ -1,10 +1,12 @@
 #include "rpcvalue.h"
-#include "cponwriter.h"
 
+#include "cponwriter.h"
 #include "chainpackwriter.h"
 #include "cponreader.h"
 #include "exception.h"
 #include "utils.h"
+
+#include "../../c/ccpon.h"
 
 #include <necrolog.h>
 
@@ -15,7 +17,7 @@
 #include <sstream>
 #include <iostream>
 #include <chrono>
-
+/*
 namespace {
 #if defined _WIN32 || defined LIBC_NEWLIB
 // see http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html#tag_04_15
@@ -53,7 +55,7 @@ time_t timegm(struct tm *tm)
 }
 #endif
 } // namespace
-
+*/
 namespace shv {
 namespace chainpack {
 
@@ -876,7 +878,7 @@ RpcValue::DateTime RpcValue::DateTime::fromUtcString(const std::string &utc_date
 	if(!parse_ISO_DateTime(utc_date_time_str, tm, msec, utc_offset))
 		return ret;
 
-	std::time_t tim = timegm(&tm);
+	std::time_t tim = ccpon_timegm(&tm);
 	if(tim == -1) {
 		nError() << "Invalid date time string:" << utc_date_time_str;
 		return ret;

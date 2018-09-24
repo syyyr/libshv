@@ -148,9 +148,9 @@ int test_unpack_number(const char *str, int expected_type, double expected_val)
 
 int test_unpack_datetime(const char *str, int add_msecs, int expected_utc_offset_min)
 {
-#ifdef Q_OS_WIN
+#ifdef _WIN32
 	return 0;
-#endif
+#else
 	ccpcp_unpack_context ctx;
 	unsigned long n = strlen(str);
 	ccpcp_unpack_context_init(&ctx, (uint8_t*)str, n, NULL, NULL);
@@ -187,6 +187,7 @@ int test_unpack_datetime(const char *str, int add_msecs, int expected_utc_offset
 		   , dt->msecs_since_epoch, dt->minutes_from_utc
 		   , expected_epoch_msec, expected_utc_offset_min);
 	assert(false);
+#endif
 }
 
 static void test_cpon_helper(const char *cpon, const char *ref_cpon, bool compare_chainpack, bool compare_cpon)
