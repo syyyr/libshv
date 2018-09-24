@@ -148,6 +148,9 @@ int test_unpack_number(const char *str, int expected_type, double expected_val)
 
 int test_unpack_datetime(const char *str, int add_msecs, int expected_utc_offset_min)
 {
+#ifdef Q_OS_WIN
+	return 0;
+#endif
 	ccpcp_unpack_context ctx;
 	unsigned long n = strlen(str);
 	ccpcp_unpack_context_init(&ctx, (uint8_t*)str, n, NULL, NULL);
