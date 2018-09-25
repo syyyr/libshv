@@ -52,7 +52,7 @@ public:
 	//virtual StringList methodNames(const StringViewList &shv_path);
 
 	virtual shv::chainpack::RpcValue ls(const StringViewList &shv_path, const shv::chainpack::RpcValue &methods_params);
-	virtual shv::chainpack::RpcValue hasChildren(const StringViewList &shv_path);
+	virtual bool hasChildren(const StringViewList &shv_path);
 	virtual shv::chainpack::RpcValue lsAttributes(const StringViewList &shv_path, unsigned attributes);
 public:
 	virtual size_t methodCount(const StringViewList &shv_path);
