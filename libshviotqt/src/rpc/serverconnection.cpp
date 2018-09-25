@@ -30,7 +30,7 @@ ServerConnection::ServerConnection(QTcpSocket *socket, QObject *parent)
 	connect(this, &ServerConnection::socketConnectedChanged, [this](bool is_connected) {
 		if(is_connected) {
 			m_helloReceived = m_loginReceived = false;
-			setConnectionName(peerAddress() + ':' + std::to_string(peerPort()));
+			setConnectionName(peerAddress() + ':' + shv::chainpack::Utils::toString(peerPort()));
 		}
 	});
 	QTimer::singleShot(s_initPhaseTimeout, this, [this]() {
@@ -110,7 +110,7 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 			//m_profile = profile;
 			m_helloReceived = true;
 			shvInfo() << "sending hello response:" << connectionName();// << "profile:" << m_profile;
-			m_pendingAuthNonce = std::to_string(std::rand());
+			m_pendingAuthNonce = shv::chainpack::Utils::toString(std::rand());
 			cp::RpcValue::Map params {
 				//{"protocol", cp::RpcValue::Map{{"version", protocol_version}}},
 				{"nonce", m_pendingAuthNonce}

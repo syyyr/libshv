@@ -160,7 +160,7 @@ protected:
 
 class ChainPackDouble final : public ValueData<RpcValue::Type::Double, double>
 {
-	std::string toStdString() const override { return std::to_string(m_value); }
+	std::string toStdString() const override { return shv::chainpack::Utils::toString(m_value); }
 	double toDouble() const override { return m_value; }
 	bool toBool() const override { return !(m_value == 0); }
 	RpcValue::Int toInt() const override { return static_cast<RpcValue::Int>(m_value); }

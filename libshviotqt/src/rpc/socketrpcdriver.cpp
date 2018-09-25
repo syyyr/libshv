@@ -204,7 +204,7 @@ void SocketRpcDriver:: sendRpcRequestSync_helper(const shv::chainpack::RpcReques
 		logRpcSyncCalls() << RCV_LOG_ARROW << "RECV SYNC message id:" << resp_msg.requestId().toCpon() << "msg:" << resp_msg.toCpon();
 		int elapsed = (int)tm_elapsed.elapsed();
 		if(elapsed >= time_out_ms) {
-			cp::RpcValue::String err_msg = "Receive message timeout after: " + std::to_string(elapsed) + " msec!";
+			cp::RpcValue::String err_msg = "Receive message timeout after: " + shv::chainpack::Utils::toString(elapsed) + " msec!";
 			shvError() << err_msg;
 			auto err = cp::RpcResponse::Error::createInternalError(err_msg);
 			resp_msg.setRequestId(msg_id);

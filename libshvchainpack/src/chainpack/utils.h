@@ -5,7 +5,7 @@
 #include <limits>
 #include <string>
 
-#ifdef LIBC_NEWLIB
+#if defined LIBC_NEWLIB || defined ANDROID_BUILD
 #include <sstream>
 #endif
 
@@ -28,7 +28,7 @@ public:
 	template<typename T>
 	static std::string toString(T i, size_t prepend_0s_to_len = 0)
 	{
-#ifdef LIBC_NEWLIB
+#if defined LIBC_NEWLIB || defined ANDROID_BUILD
 		std::ostringstream ss;
 		ss << i;
 		std::string ret = ss.str();

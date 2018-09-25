@@ -1,8 +1,10 @@
 #include "cpon.h"
 #include "cponreader.h"
+#include "utils.h"
 
 #include <iostream>
 #include <cmath>
+#include <cstdlib>
 
 namespace shv {
 namespace chainpack {
@@ -13,10 +15,10 @@ namespace chainpack {
 	if(exception_aborts) { \
 		std::clog << __FILE__ << ':' << __LINE__;  \
 		std::clog << ' ' << (msg) << " at pos: " << m_in.tellg() << " near to: " << buff << std::endl; \
-		abort(); \
+		std::abort(); \
 	} \
 	else { \
-		throw CponReader::ParseException(msg + std::string(" at pos: ") + std::to_string(m_in.tellg()) + " near to: " + buff); \
+		throw CponReader::ParseException(msg + std::string(" at pos: ") + shv::chainpack::Utils::toString(m_in.tellg()) + " near to: " + buff); \
 	} \
 }
 

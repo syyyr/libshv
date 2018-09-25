@@ -2,6 +2,8 @@
 
 #include <necrolog.h>
 
+#include <cstdlib>
+
 namespace shv {
 namespace chainpack {
 
