@@ -499,7 +499,7 @@ const RpcValue::IMap &RpcValue::toIMap() const { return m_ptr? m_ptr->toIMap(): 
 RpcValue RpcValue::at (RpcValue::UInt i) const { return m_ptr? m_ptr->at(i): RpcValue(); }
 RpcValue RpcValue::at (const RpcValue::String &key) const { return m_ptr? m_ptr->at(key): RpcValue(); }
 
-std::string RpcValue::toStdString() const { return m_ptr? m_ptr->toStdString(): std::string(); }
+//std::string RpcValue::toStdString() const { return m_ptr? m_ptr->toStdString(): std::string(); }
 
 void RpcValue::set(RpcValue::UInt ix, const RpcValue &val)
 {
