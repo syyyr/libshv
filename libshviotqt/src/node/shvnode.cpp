@@ -233,7 +233,7 @@ ShvNode::StringList ShvNode::childNames(const StringViewList &shv_path)
 	return ret;
 }
 
-bool ShvNode::hasChildren(const StringViewList &shv_path)
+chainpack::RpcValue ShvNode::hasChildren(const StringViewList &shv_path)
 {
 	return !childNames(shv_path).empty();
 }
