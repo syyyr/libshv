@@ -7,7 +7,6 @@ SOURCES += \
     $$PWD/exception.cpp \
     $$PWD/utils.cpp \
     $$PWD/abstractstreamreader.cpp \
-    $$PWD/abstractstreamreader1.cpp \
     $$PWD/abstractstreamwriter.cpp \
     $$PWD/cponwriter.cpp \
     $$PWD/cponreader.cpp \
@@ -28,7 +27,6 @@ HEADERS += \
     $$PWD/exception.h \
     $$PWD/utils.h \
     $$PWD/abstractstreamreader.h \
-    $$PWD/abstractstreamreader1.h \
     $$PWD/abstractstreamwriter.h \
     $$PWD/cponwriter.h \
     $$PWD/cponreader.h \

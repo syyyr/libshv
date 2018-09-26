@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rpcvalue.h"
+#include "../../c/cchainpack.h"
 
 namespace shv {
 namespace chainpack {
@@ -18,25 +19,25 @@ public:
 		enum Enum {
 			INVALID = -1,
 
-			Null = 128,
-			UInt,
-			Int,
-			Double,
-			Bool,
-			Blob_depr, // deprecated
-			String,
-			DateTimeEpoch_depr, // deprecated
-			List,
-			Map,
-			IMap,
-			MetaMap,
-			Decimal,
-			DateTime,
-			CString,
+			Null = CP_Null,
+			UInt = CP_UInt,
+			Int = CP_Int,
+			Double = CP_Double,
+			Bool = CP_Bool,
+			Blob_depr = CP_Blob_depr,
+			String = CP_String,
+			DateTimeEpoch_depr = CP_DateTimeEpoch_depr,
+			List = CP_List,
+			Map = CP_Map,
+			IMap = CP_IMap,
+			MetaMap = CP_MetaMap,
+			Decimal = CP_Decimal,
+			DateTime = CP_DateTime,
+			CString = CP_CString,
 
-			FALSE = 253,
-			TRUE = 254,
-			TERM = 255,
+			FALSE = CP_FALSE,
+			TRUE = CP_TRUE,
+			TERM = CP_TERM,
 		};
 		static const char* name(Enum e);
 	};

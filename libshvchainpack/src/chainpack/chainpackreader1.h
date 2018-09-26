@@ -1,14 +1,14 @@
 #pragma once
 
-#include "abstractstreamreader1.h"
+#include "abstractstreamreader.h"
 #include "chainpack.h"
 
 namespace shv {
 namespace chainpack {
 
-class SHVCHAINPACK_DECL_EXPORT ChainPackReader1 : public AbstractStreamReader1
+class SHVCHAINPACK_DECL_EXPORT ChainPackReader1 : public AbstractStreamReader
 {
-	using Super = AbstractStreamReader1;
+	using Super = AbstractStreamReader;
 public:
 	ChainPackReader1(std::istream &in) : Super(in) {}
 
