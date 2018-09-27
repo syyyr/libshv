@@ -24,10 +24,10 @@ public:
 	virtual void writeMapElement(const std::string &key, const RpcValue &val) = 0;
 	virtual void writeMapElement(RpcValue::Int key, const RpcValue &val) = 0;
 	virtual void writeContainerEnd(RpcValue::Type container_type) = 0;
+
+	virtual void flush();
 protected:
 	static constexpr bool WRITE_INVALID_AS_NULL = true;
-private:
-	void flush();
 protected:
 	std::ostream &m_out;
 	char m_packBuff[32];
