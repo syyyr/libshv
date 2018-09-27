@@ -488,6 +488,7 @@ void test_vals()
 void test_cpons()
 {
 	const char* cpons[] = {
+		//"m[]", NULL,
 		"12.3e-10", "1.23e-09",
 		"[]", NULL,
 		"[1]", NULL,
