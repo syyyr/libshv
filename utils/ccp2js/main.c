@@ -1,12 +1,12 @@
 #include "./ccpon.h"
 #include "./cchainpack.h"
-#include "./ccpcp_convert.h"
+//#include "./ccpcp_convert.h"
 
 #include "./common.h"
 
 #include <node_api.h>
-#include <assert.h>
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -52,6 +52,7 @@ static void log_var(napi_env env, const char * format, napi_value val)
 #define CALL_SAFE(env, the_call) \
 	if ((the_call) != napi_ok) { \
 		log(env, "napi call error %s", #the_call); \
+		napi_throw_error(env, NULL, "napi call error: " #the_call); \
 	}
 
 // static char in_buff[1024];
@@ -76,6 +77,8 @@ static void log_var(napi_env env, const char * format, napi_value val)
 
 typedef struct js_var
 {
+	napi_value type_str;
+	napi_value meta;
 	napi_value val;
 	napi_value map_key;
 } js_var;
@@ -87,7 +90,9 @@ static void js_make_null(napi_env env, js_var *self)
 
 static void js_var_init(napi_env env, js_var *self)
 {
-	js_make_null(env, self);
+	napi_get_null(env, &self->type_str);
+	napi_get_null(env, &self->meta);
+	napi_get_null(env, &self->val);
 	napi_get_null(env, &self->map_key);
 }
 
@@ -105,6 +110,34 @@ static void js_make_int(napi_env env, js_var *self, int64_t i)
 static void js_make_double(napi_env env, js_var *self, double i)
 {
 	napi_create_double(env, i, &self->val);
+}
+
+static void js_make_decimal(napi_env env, js_var *self, ccpcp_decimal *it)
+{
+	const char type_cstr[] = "Decimal";
+	CALL_SAFE(env, napi_create_string_utf8(env, type_cstr, sizeof(type_cstr) - 1, &self->type_str));
+
+	napi_value dc_mantisa;
+	napi_value dc_dec_places;
+	CALL_SAFE(env, napi_create_object(env, &self->val));
+	CALL_SAFE(env, napi_create_int64(env, it->mantisa, &dc_mantisa));
+	CALL_SAFE(env, napi_create_int32(env, it->dec_places, &dc_dec_places));
+	CALL_SAFE(env, napi_set_named_property(env, self->val, "mantisa", dc_mantisa));
+	CALL_SAFE(env, napi_set_named_property(env, self->val, "deccnt", dc_dec_places));
+}
+
+static void js_make_datetime(napi_env env, js_var *self, ccpcp_date_time *it)
+{
+	const char type_cstr[] = "DateTime";
+	CALL_SAFE(env, napi_create_string_utf8(env, type_cstr, sizeof(type_cstr) - 1, &self->type_str));
+
+	napi_value dt_msec_since_epoch;
+	napi_value dt_minutes_from_utc;
+	CALL_SAFE(env, napi_create_object(env, &self->val));
+	CALL_SAFE(env, napi_create_int64(env, it->msecs_since_epoch, &dt_msec_since_epoch));
+	CALL_SAFE(env, napi_create_int32(env, it->minutes_from_utc, &dt_minutes_from_utc));
+	CALL_SAFE(env, napi_set_named_property(env, self->val, "msec", dt_msec_since_epoch));
+	CALL_SAFE(env, napi_set_named_property(env, self->val, "tz", dt_minutes_from_utc));
 }
 
 static void js_make_string_concat(napi_env env, js_var *self, const char *str, size_t len)
@@ -188,8 +221,40 @@ static void js_add_map_val(napi_env env, js_var *self, js_var *val)
 {
 	log_var(env, "add map val", val->val);
 	napi_set_property(env, self->val, self->map_key, val->val);
-
 	log_var(env, "result", self->val);
+}
+
+static void js_add_meta_val(napi_env env, js_var *self, js_var *val)
+{
+	log_var(env, "add meta val", val->val);
+	napi_set_property(env, self->meta, self->map_key, val->val);
+	log_var(env, "result", self->meta);
+}
+
+static void js_wrap_meta(napi_env env, js_var *self)
+{
+	bool has_meta = false;
+	bool has_type = false;
+	{
+		napi_valuetype t;
+		CALL_SAFE(env, napi_typeof(env, self->type_str, &t));
+		has_type = (t == napi_string);
+	}
+	{
+		napi_valuetype t;
+		CALL_SAFE(env, napi_typeof(env, self->meta, &t));
+		has_meta = (t == napi_object);
+	}
+	if(has_type || has_meta) {
+		napi_value wrapped_val;
+		CALL_SAFE(env, napi_create_object(env, &wrapped_val));
+		if(has_type)
+			CALL_SAFE(env, napi_set_named_property(env, wrapped_val, "_type", self->type_str));
+		if(has_meta)
+			CALL_SAFE(env, napi_set_named_property(env, wrapped_val, "_meta", self->meta));
+		CALL_SAFE(env, napi_set_named_property(env, wrapped_val, "_val", self->val));
+		setf->val = wrapped_val;
+	}
 }
 
 js_var *top_js_var(ccpcp_unpack_context *self)
@@ -318,7 +383,7 @@ napi_value parse_cpon_buffer(napi_env env, napi_callback_info info)
 			// TODO convert decimal to double
 			ccpcp_decimal *it = &in_ctx.item.as.Decimal;
 			double d = 0;
-			js_make_double(env, var, d);
+			js_make_decimal(env, var, it);
 			break;
 		}
 		case CCPCP_ITEM_DOUBLE: {
@@ -328,33 +393,36 @@ napi_value parse_cpon_buffer(napi_env env, napi_callback_info info)
 		case CCPCP_ITEM_DATE_TIME: {
 			// TODO convert datetime to string
 			ccpcp_date_time *it = &in_ctx.item.as.DateTime;
-			js_make_string_concat(env, var, it, 0);
+			js_make_datetime(env, var, it);
 			break;
 		}
 		}
 
 		log_var(env, "1: ", js_vars[0].val);
 
+		bool is_value_complete = false;
+		switch(in_ctx.item.type) {
+		case CCPCP_ITEM_STRING: {
+			ccpcp_string *it = &(in_ctx.item.as.String);
+			is_value_complete = (it->last_chunk);
+		}
+		case CCPCP_ITEM_LIST:
+			break;
+		case CCPCP_ITEM_MAP:
+		case CCPCP_ITEM_IMAP:
+		case CCPCP_ITEM_META:
+			break;
+		default:
+			is_value_complete = true;
+			break;
+		}
+
+		if(is_value_complete && !meta_just_closed)
+			js_wrap_meta(env, var);
 
 		js_var *parent_var = parent_js_var(&in_ctx);
 		ccpcp_container_state *parent_state = ccpcp_unpack_context_parent_container_state(&in_ctx);
 		if(parent_state && parent_var) {
-			bool is_value_complete = false;
-			switch(in_ctx.item.type) {
-			case CCPCP_ITEM_STRING: {
-				ccpcp_string *it = &(in_ctx.item.as.String);
-				is_value_complete = (it->last_chunk);
-			}
-			case CCPCP_ITEM_LIST:
-				break;
-			case CCPCP_ITEM_MAP:
-			case CCPCP_ITEM_IMAP:
-			case CCPCP_ITEM_META:
-				break;
-			default:
-				is_value_complete = true;
-				break;
-			}
 			if(is_value_complete) {
 				switch(parent_state->container_type) {
 				case CCPCP_ITEM_LIST:
@@ -377,11 +445,14 @@ napi_value parse_cpon_buffer(napi_env env, napi_callback_info info)
 						}
 						else {
 							// invalid key type
-							//assert(false);
+							napi_throw_error(env, NULL, "Invalid key type");
 						}
 					}
 					else {
-						js_add_map_val(env, parent_var, var);
+						if(parent_state->container_type == CCPCP_ITEM_META)
+							js_add_meta_val(env, parent_var, var);
+						else
+							js_add_map_val(env, parent_var, var);
 					}
 					break;
 				}
