@@ -98,22 +98,26 @@ static void js_var_init(napi_env env, js_var *self)
 
 static void js_make_bool(napi_env env, js_var *self, bool b)
 {
+	js_var_init(env, self);
 	napi_get_boolean(env, b, &self->val);
 }
 
 static void js_make_int(napi_env env, js_var *self, int64_t i)
 {
 	//log(env, "%lld", i);
+	js_var_init(env, self);
 	napi_create_int64(env, i, &(self->val));
 }
 
 static void js_make_double(napi_env env, js_var *self, double i)
 {
+	js_var_init(env, self);
 	napi_create_double(env, i, &self->val);
 }
 
 static void js_make_decimal(napi_env env, js_var *self, ccpcp_decimal *it)
 {
+	js_var_init(env, self);
 	const char type_cstr[] = "Decimal";
 	CALL_SAFE(env, napi_create_string_utf8(env, type_cstr, sizeof(type_cstr) - 1, &self->type_str));
 
@@ -128,6 +132,7 @@ static void js_make_decimal(napi_env env, js_var *self, ccpcp_decimal *it)
 
 static void js_make_datetime(napi_env env, js_var *self, ccpcp_date_time *it)
 {
+	js_var_init(env, self);
 	const char type_cstr[] = "DateTime";
 	CALL_SAFE(env, napi_create_string_utf8(env, type_cstr, sizeof(type_cstr) - 1, &self->type_str));
 
@@ -167,12 +172,14 @@ static void js_make_string_concat(napi_env env, js_var *self, const char *str, s
 
 static void js_make_list(napi_env env, js_var *self)
 {
+	js_var_init(env, self);
 	napi_create_array(env, &(self->val));
 	log_var(env, "4: ", self->val);
 }
 
 static void js_make_map(napi_env env, js_var *self)
 {
+	js_var_init(env, self);
 	napi_create_object(env, &self->val);
 }
 
