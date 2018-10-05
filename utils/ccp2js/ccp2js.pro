@@ -13,10 +13,11 @@ CCPCP_SRC_DIR = ../../libshvchainpack/c
 
 INCLUDEPATH += \
 	$$CCPCP_SRC_DIR \
+	$$/home/fanda/proj/node/src \
 
 SOURCES += \
 	main.c \
-    $$CCPCP_SRC_DIR/ccpcp.c \
+	$$CCPCP_SRC_DIR/ccpcp.c \
 	$$CCPCP_SRC_DIR/ccpon.c \
 	$$CCPCP_SRC_DIR/cchainpack.c \
 	$$CCPCP_SRC_DIR/ccpcp_convert.c \
