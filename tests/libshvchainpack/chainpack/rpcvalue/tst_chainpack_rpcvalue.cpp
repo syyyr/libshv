@@ -443,6 +443,22 @@ private:
 		return ret;
 	}
 
+	static std::string binary_dump_rev(const void *data, size_t len)
+	{
+		std::string ret;
+		for (size_t i = len-1; ; --i) {
+			uint8_t u = ((uint8_t*)data)[i];
+			if(i < len-1)
+				ret += '|';
+			for (size_t j = 0; j < 8*sizeof(u); ++j) {
+				ret += (u & (((uint8_t)128) >> j))? '1': '0';
+			}
+			if(i == 0)
+				break;
+		}
+		return ret;
+	}
+
 	static inline char hex_nibble(char i)
 	{
 		if(i < 10)
@@ -1017,6 +1033,24 @@ private slots:
 	{
 		textTest();
 		binaryTest();
+		{
+			for (double d : {-1., 2., 3., 4., 5., 6., 7., 65535., 1.23, 0.123, 654.321}) {
+				uint64_t *pn = (uint64_t*)&d;
+				uint64_t mant_mask = ((static_cast<uint64_t>(1) << 52) - 1);
+				uint64_t mantisa = *pn & mant_mask;
+				uint64_t exp_mask = ((static_cast<uint64_t>(1) << 11) - 1) << 52;
+				uint exponent = (*pn & exp_mask) >> 52;
+				uint64_t sgn_mask = ~static_cast<uint64_t>(0x7fffffffffffffff);
+				bool sgn = *pn & sgn_mask;
+				qDebug() << d << "neg:" << sgn;
+				qDebug() << binary_dump_rev(pn, sizeof (*pn)).c_str();
+				qDebug() << binary_dump_rev((void*)&exp_mask, sizeof (exp_mask)).c_str();
+				qDebug() << binary_dump_rev((void*)&mant_mask, sizeof (mant_mask)).c_str();
+				qDebug() << binary_dump_rev((void*)&exponent, sizeof (exponent)).c_str();
+				qDebug() << binary_dump_rev((void*)&mantisa, sizeof (mantisa)).c_str();
+			}
+		}
+
 	}
 
 	void cleanupTestCase()
