@@ -44,34 +44,40 @@ public:
 	using UInt = unsigned; //uint64_t;
 	class SHVCHAINPACK_DECL_EXPORT Decimal
 	{
+		static constexpr int Base = 10;
 		struct Num {
-			int64_t precision: 16, mantisa: 48;
+			int64_t exponent: 16, mantisa: 48;
 		};
 		Num m_num = {0, 0};
 	public:
 		Decimal() : m_num{-1, 0} {}
-		Decimal(int64_t mantisa, int16_t precision) : m_num{precision, mantisa} {}
-		static Decimal fromDouble(double n, int16_t precision)
+		Decimal(int64_t mantisa, int16_t exponent) : m_num{exponent, mantisa} {}
+		static Decimal fromDouble(double n, int16_t exponent)
 		{
-			if(precision > 0) {
-				//m_num.mantisa = (int)(n * std::pow(10, precision) + 0.5);
-				for(; precision > 0; precision--) n *= 10;
+			int16_t exp = exponent;
+			if(exponent > 0) {
+				//m_num.mantisa = (int)(n * std::pow(Base, precision) + 0.5);
+				for(; exponent > 0; exponent--) n /= Base;
 			}
-			return Decimal((Int)(n + 0.5), precision);
+			else if(exponent < 0) {
+				//m_num.mantisa = (int)(n * std::pow(Base, precision) + 0.5);
+				for(; exponent < 0; exponent++) n *= Base;
+			}
+			return Decimal((int64_t)(n + 0.5), exp);
 		}
 		int64_t mantisa() const {return m_num.mantisa;}
-		int16_t precision() const {return m_num.precision;}
+		int16_t exponent() const {return m_num.exponent;}
 		double toDouble() const
 		{
 			double ret = mantisa();
-			int prec = precision();
-			if(prec > 0)
-				for(; prec > 0; prec--) ret /= 10;
+			int exp = exponent();
+			if(exp > 0)
+				for(; exp > 0; exp--) ret *= Base;
 			else
-				for(; prec < 0; prec++) ret *= 10;
+				for(; exp < 0; exp++) ret /= Base;
 			return ret;
 		}
-		bool isValid() const {return !(mantisa() == 0 && precision() != 0);}
+		bool isValid() const {return !(mantisa() == 0 && exponent() != 0);}
 		std::string toString() const;
 	};
 	class SHVCHAINPACK_DECL_EXPORT DateTime

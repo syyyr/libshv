@@ -208,10 +208,10 @@ static void cpjs_make_map(cpjs_env *jsenv, napi_value *obj)
 	}
 }
 
-static void cpjs_make_decimal(cpjs_env *jsenv, cpjs_var *var, int64_t mantisa, int dec_places)
+static void cpjs_make_decimal(cpjs_env *jsenv, cpjs_var *var, int64_t mantisa, int exponent)
 {
 	double d = mantisa;
-	d *= pow(10, -dec_places);
+	d *= pow(10, exponent);
 	napi_create_double(jsenv->env, d, &var->val);
 }
 
@@ -313,8 +313,8 @@ static void cpjs_get_value(cpjs_env *jsenv, napi_value *val)
 		break;
 	}
 	case CCPCP_ITEM_DECIMAL: {
-		ccpcp_decimal *it = &(jsenv->inCtx->item.as.Decimal);
-		cpjs_make_decimal(jsenv, &var, it->mantisa, it->dec_places);
+		ccpcp_exponential *it = &(jsenv->inCtx->item.as.Decimal);
+		cpjs_make_decimal(jsenv, &var, it->mantisa, it->exponent);
 		break;
 	}
 	case CCPCP_ITEM_DOUBLE: {

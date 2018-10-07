@@ -208,7 +208,7 @@ CponWriter &CponWriter::write_p(double value)
 
 CponWriter &CponWriter::write_p(RpcValue::Decimal value)
 {
-	ccpon_pack_decimal(&m_outCtx, value.mantisa(), value.precision());
+	ccpon_pack_decimal(&m_outCtx, value.mantisa(), value.exponent());
 	return *this;
 }
 

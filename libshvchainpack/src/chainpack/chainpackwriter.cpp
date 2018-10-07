@@ -149,7 +149,7 @@ ChainPackWriter &ChainPackWriter::write_p(double value)
 
 ChainPackWriter &ChainPackWriter::write_p(RpcValue::Decimal value)
 {
-	cchainpack_pack_decimal(&m_outCtx, value.mantisa(), value.precision());
+	cchainpack_pack_decimal(&m_outCtx, value.mantisa(), value.exponent());
 	return *this;
 }
 

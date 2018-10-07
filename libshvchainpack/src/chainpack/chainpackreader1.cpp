@@ -72,8 +72,8 @@ double readData_Double(std::istream &data)
 RpcValue::Decimal readData_Decimal(std::istream &data)
 {
 	int64_t mant = readData_Int<int64_t>(data);
-	int prec = readData_Int<int>(data);
-	return RpcValue::Decimal(mant, prec);
+	int exp = -readData_Int<int>(data);
+	return RpcValue::Decimal(mant, exp);
 }
 
 template<typename T>

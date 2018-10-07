@@ -1109,20 +1109,7 @@ void RpcValue::MetaData::swap(RpcValue::MetaData &o)
 
 std::string RpcValue::Decimal::toString() const
 {
-	std::string ret = Utils::toString(mantisa());
-	int prec = precision();
-	if(prec >= 0) {
-		int len = (int)ret.length();
-		if(prec > len)
-			ret.insert(0, prec - len, '0'); // insert '0' after dec point
-		ret.insert(ret.length() - prec, 1, '.');
-		if(prec >= len)
-			ret.insert(0, 1, '0'); // insert '0' before dec point
-	}
-	else {
-		ret.insert(ret.length(), -prec, '0');
-		ret.push_back('.');
-	}
+	std::string ret = Utils::toString(toDouble());
 	return ret;
 }
 

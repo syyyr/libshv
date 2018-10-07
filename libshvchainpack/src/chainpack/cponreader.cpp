@@ -130,7 +130,7 @@ void CponReader::read(RpcValue &val)
 	}
 	case CCPCP_ITEM_DECIMAL: {
 		auto *it = &(m_inCtx.item.as.Decimal);
-		val = RpcValue::Decimal(it->mantisa, it->dec_places);
+		val = RpcValue::Decimal(it->mantisa, it->exponent);
 		break;
 	}
 	case CCPCP_ITEM_DOUBLE: {

@@ -9,7 +9,7 @@
 #include <time.h>
 #include <assert.h>
 #include <float.h>
-
+#include <math.h>
 static bool o_silent = true;
 
 static void binary_dump(const char *buff, int len)
@@ -109,12 +109,10 @@ int test_unpack_number(const char *str, int expected_type, double expected_val)
 	}
 	switch(ctx.item.type) {
 	case CCPCP_ITEM_DECIMAL: {
-		double d = ctx.item.as.Decimal.mantisa;
-		for (int i = 0; i < ctx.item.as.Decimal.dec_places; ++i)
-			d /= 10;
-		if(d == expected_val)
+		double d = ccpcp_decimal_to_double(ctx.item.as.Decimal.mantisa, ctx.item.as.Decimal.exponent);
+		if(fabs(d - expected_val) < 1e-16)
 			return 0;
-		printf("FAIL! unpack decimal number str: '%s' have: %lg expected: %lg\n", str, d, expected_val);
+		printf("FAIL! unpack decimal number str: '%s' have: %lg expected: %lg difference: %lg\n", str, d, expected_val, d-expected_val);
 		assert(false);
 	}
 	case CCPCP_ITEM_DOUBLE: {
@@ -390,12 +388,12 @@ void test_vals()
 	printf("------------- decimal \n");
 	{
 		int mant = -123456;
-		int prec_max = 16;
-		int prec_min = 1;
+		int exp_min = 1;
+		int exp_max = 16;
 		int step = 1;
-		for (int prec = prec_min; prec <= prec_max; prec += step) {
+		for (int exp = exp_min; exp <= exp_max; exp += step) {
 			INIT_BUFF();
-			ccpon_pack_decimal(&out_ctx, mant, prec);
+			ccpon_pack_decimal(&out_ctx, mant, exp);
 			*out_ctx.current = 0;
 			test_cpon((const char *)out_ctx.start, NULL);
 		}
@@ -488,8 +486,10 @@ void test_vals()
 void test_cpons()
 {
 	const char* cpons[] = {
-		//"m[]", NULL,
-		"12.3e-10", "1.23e-09",
+		"2.30", "2.30",
+		"12.3e-10", "123e-11",
+		"-0.00012", "-12e-5",
+		"-1234567890.", "-1234567890.",
 		"[]", NULL,
 		"[1]", NULL,
 		"[1,]", "[1]",
@@ -497,13 +497,13 @@ void test_cpons()
 		"[[]]", NULL,
 		"i{1:2}", NULL,
 		"i{\n\t1: \"bar\",\n\t345u : \"foo\",\n}", "i{1:\"bar\",345u:\"foo\"}",
-		"[1u,{\"a\":1},2.30n]", NULL,
+		"[1u,{\"a\":1},2.30]", NULL,
 		"<>1", NULL,
 		"<1:2>3", NULL,
 		"[1,<7:8>9]", NULL,
 		"<8:3u>i{2:[[\".broker\",true]]}", NULL,
 		"<1:2,\"foo\":\"bar\">i{1:<7:8>9}", NULL,
-		"<1:2,\"foo\":<5:6>\"bar\">[1u,{\"a\":1},2.30n]", NULL,
+		"<1:2,\"foo\":<5:6>\"bar\">[1u,{\"a\":1},2.30]", NULL,
 		"i{1:2 // comment to end of line\n}", "i{1:2}",
 		"/*comment 1*/{ /*comment 2*/ \n"
 		"\t\"foo\"/*comment \"3\"*/: \"bar\", //comment to end of line\n"
@@ -558,14 +558,14 @@ int main(int argc, const char * argv[])
 	test_unpack_number("+123", CCPCP_ITEM_INT, 123);
 	test_unpack_number("-1", CCPCP_ITEM_INT, -1);
 	test_unpack_number("1u", CCPCP_ITEM_UINT, 1);
-	test_unpack_number("0.1", CCPCP_ITEM_DOUBLE, 0.1);
-	test_unpack_number("1.", CCPCP_ITEM_DOUBLE, 1);
-	test_unpack_number("1e2", CCPCP_ITEM_DOUBLE, 100);
-	test_unpack_number("1.e2", CCPCP_ITEM_DOUBLE, 100);
-	test_unpack_number("1.23", CCPCP_ITEM_DOUBLE, 1.23);
-	test_unpack_number("1.23e4", CCPCP_ITEM_DOUBLE, 1.23e4);
-	test_unpack_number("-21.23e-4", CCPCP_ITEM_DOUBLE, -21.23e-4);
-	test_unpack_number("-0.567e-3", CCPCP_ITEM_DOUBLE, -0.567e-3);
+	test_unpack_number("0.1", CCPCP_ITEM_DECIMAL, 0.1);
+	test_unpack_number("1.", CCPCP_ITEM_DECIMAL, 1);
+	test_unpack_number("1e2", CCPCP_ITEM_DECIMAL, 100);
+	test_unpack_number("1.e2", CCPCP_ITEM_DECIMAL, 100);
+	test_unpack_number("1.23", CCPCP_ITEM_DECIMAL, 1.23);
+	test_unpack_number("1.23e4", CCPCP_ITEM_DECIMAL, 1.23e4);
+	test_unpack_number("-21.23e-4", CCPCP_ITEM_DECIMAL, -21.23e-4);
+	test_unpack_number("-0.567e-3", CCPCP_ITEM_DECIMAL, -0.567e-3);
 	test_unpack_number("1.23n", CCPCP_ITEM_DECIMAL, 1.23);
 
 	test_unpack_datetime("d\"2018-02-02T0:00:00.001\"", 1, 0);
