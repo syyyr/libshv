@@ -1034,23 +1034,89 @@ private slots:
 		textTest();
 		binaryTest();
 		{
-			for (double d : {-1., 2., 3., 4., 5., 6., 7., 65535., 1.23, 0.123, 654.321}) {
+			for (double d : {
+				 0.,
+				// 1.,  2., 3., 4., 5., 6., 7.,
+				// -1., -2., -3.,
+				 static_cast<double>(1 << 0),
+				 static_cast<double>((static_cast<uint64_t>(1) << 2) + 1),
+				 static_cast<double>((static_cast<uint64_t>(1) << 4) + 1),
+				 static_cast<double>((static_cast<uint64_t>(1) << 8) + 1),
+				 static_cast<double>((static_cast<uint64_t>(1) << 16) + 1),
+				 static_cast<double>((static_cast<uint64_t>(1) << 32) + 1),
+				 static_cast<double>((static_cast<uint64_t>(1) << 51) + 0),
+				 static_cast<double>((static_cast<uint64_t>(1) << 52) - 1),
+				 static_cast<double>((static_cast<uint64_t>(1) << 53) - 1),
+				 static_cast<double>((static_cast<uint64_t>(1) << 54) - 1),
+				 -static_cast<double>((static_cast<uint64_t>(1) << 51) + 0),
+				 -static_cast<double>((static_cast<uint64_t>(1) << 52) - 1),
+				 1./3.,
+				 0.1,
+				 0.123,
+				 0.1234,
+				 0.12345,
+				 1.1,
+				 2.123,
+				 3.1234,
+				 4.12345,
+				 std::numeric_limits<double>::quiet_NaN(),
+				 std::numeric_limits<double>::infinity(),
+				}
+				 ) {
 				uint64_t *pn = (uint64_t*)&d;
 				uint64_t mant_mask = ((static_cast<uint64_t>(1) << 52) - 1);
-				uint64_t mantisa = *pn & mant_mask;
+				uint64_t umant = *pn & mant_mask;
 				uint64_t exp_mask = ((static_cast<uint64_t>(1) << 11) - 1) << 52;
-				uint exponent = (*pn & exp_mask) >> 52;
+				uint uexp = (*pn & exp_mask) >> 52;
 				uint64_t sgn_mask = ~static_cast<uint64_t>(0x7fffffffffffffff);
-				bool sgn = *pn & sgn_mask;
-				qDebug() << d << "neg:" << sgn;
+				int sgn = (*pn & sgn_mask)? -1: 1;
+				int exponent;
+				int64_t mantisa;
+				if(uexp == 0 && umant == 0) {
+					exponent = 0;
+					mantisa = 0;
+				}
+				else if(uexp == 0x7ff) {
+					exponent = static_cast<int>(uexp);
+					if(umant == 0) {
+						// infinity;
+						qDebug() << sgn << "* INF";
+						mantisa = 0;
+					}
+					else {
+						// NaN
+						qDebug() << "NaN";
+						mantisa = 1;
+					}
+				}
+				else {
+					if(uexp == 0) {
+						// subnormal
+						mantisa = static_cast<int64_t>(umant);
+					}
+					else {
+						mantisa = static_cast<int64_t>(umant | (static_cast<uint64_t>(1) << 52));
+					}
+					exponent = static_cast<int>(uexp) - 1023;
+					exponent -= 52;
+					for (int i=0; i<52; i--) {
+						if(mantisa & 1)
+							break;
+						mantisa >>= 1;
+						exponent++;
+					}
+					mantisa *= sgn;
+				}
+				qDebug() << d << "----------------------------------";
+				qDebug()<< "mantisa:" << mantisa << "exp:" << exponent;
+				qDebug()<< "neg:" << sgn << "umant:" << umant << "uexp:" << uexp;
 				qDebug() << binary_dump_rev(pn, sizeof (*pn)).c_str();
-				qDebug() << binary_dump_rev((void*)&exp_mask, sizeof (exp_mask)).c_str();
-				qDebug() << binary_dump_rev((void*)&mant_mask, sizeof (mant_mask)).c_str();
-				qDebug() << binary_dump_rev((void*)&exponent, sizeof (exponent)).c_str();
-				qDebug() << binary_dump_rev((void*)&mantisa, sizeof (mantisa)).c_str();
+				//qDebug() << binary_dump_rev((void*)&exp_mask, sizeof (exp_mask)).c_str();
+				//qDebug() << binary_dump_rev((void*)&mant_mask, sizeof (mant_mask)).c_str();
+				//qDebug() << binary_dump_rev((void*)&uexp, sizeof (uexp)).c_str();
+				//qDebug() << binary_dump_rev((void*)&umant, sizeof (umant)).c_str();
 			}
 		}
-
 	}
 
 	void cleanupTestCase()
