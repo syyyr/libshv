@@ -599,6 +599,8 @@ bool RpcValue::operator== (const RpcValue &other) const
 			(m_ptr->type() == other.m_ptr->type())
 			|| (m_ptr->type() == RpcValue::Type::UInt && other.m_ptr->type() == RpcValue::Type::Int)
 			|| (m_ptr->type() == RpcValue::Type::Int && other.m_ptr->type() == RpcValue::Type::UInt)
+			|| (m_ptr->type() == RpcValue::Type::Double && other.m_ptr->type() == RpcValue::Type::Decimal)
+			|| (m_ptr->type() == RpcValue::Type::Decimal && other.m_ptr->type() == RpcValue::Type::Double)
 		) {
 			return m_ptr->equals(other.m_ptr.get());
 		}
@@ -627,9 +629,12 @@ RpcValue RpcValue::fromCpon(const std::string &str, std::string *err)
 		err->clear();
 		try {
 			rd >> ret;
+			if(err)
+				*err = std::string();
 		}
 		catch(CponReader::ParseException &e) {
-			*err = e.what();
+			if(err)
+				*err = e.what();
 		}
 	}
 	else {

@@ -147,7 +147,7 @@ private:
 			QVERIFY(RpcValue::fromCpon("1e23", &err) == RpcValue(1e23) && err.empty());
 			QVERIFY(RpcValue::fromCpon("1e-3", &err) == RpcValue(1e-3) && err.empty());
 			QVERIFY(RpcValue::fromCpon("12.3e-10", &err) == RpcValue(12.3e-10) && err.empty());
-			QVERIFY(RpcValue::fromCpon("0.0123n", &err) == RpcValue(RpcValue::Decimal(123, 4)) && err.empty());
+			QVERIFY(RpcValue::fromCpon("0.0123", &err) == RpcValue(RpcValue::Decimal(123, -4)) && err.empty());
 		}
 		qDebug() << "--------------- List test";
 		{
@@ -169,7 +169,7 @@ private:
 									null,
 									456u,
 									0.123,
-									123.456n,
+									123.456,
 									d"2018-01-14T01:17:33.256-1045"
 									]
 								)";
@@ -184,7 +184,7 @@ private:
 			QVERIFY(cp[4] == RpcValue(nullptr));
 			QVERIFY(cp[5] == RpcValue::UInt(456));
 			QVERIFY(cp[6] == 0.123);
-			QVERIFY(cp[7] == RpcValue::Decimal(123456, 3));
+			QVERIFY(cp[7] == RpcValue::Decimal(123456, -3));
 			RpcValue::DateTime dt = cp[8].toDateTime();
 			QVERIFY(dt.msecsSinceEpoch() % 1000 == 256);
 			QVERIFY(dt.minutesFromUtc() == -(10*60+45));
@@ -241,7 +241,7 @@ private:
 									     true,
 									     false,
 									     null,
-									     123, 456u, 0.123, 123.456n
+									     123, 456u, 0.123, 123.456
 									   ]
 									 }
 									 )";
