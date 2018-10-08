@@ -17,7 +17,7 @@ public:
 
 	static const char* KEY_CONNECTION_OPTIONS;
 	static const char* KEY_CONNECTION_TYPE;
-	static const char* KEY_CLIENT_ID;
+	//static const char* KEY_CLIENT_ID;
 	static const char* KEY_MOUT_POINT;
 	static const char* KEY_RELATIVE_PATH;
 	static const char* KEY_DEVICE_ID;

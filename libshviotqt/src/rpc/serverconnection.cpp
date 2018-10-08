@@ -152,7 +152,7 @@ chainpack::RpcValue ServerConnection::login(const chainpack::RpcValue &auth_para
 	bool password_ok = checkPassword(login);
 	if(password_ok) {
 		cp::RpcValue::Map login_resp;
-		login_resp[cp::Rpc::KEY_CLIENT_ID] = connectionId();
+		//login_resp[cp::Rpc::KEY_CLIENT_ID] = connectionId();
 		return login_resp;
 	}
 	return cp::RpcValue();

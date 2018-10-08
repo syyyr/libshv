@@ -32,9 +32,9 @@ bool TcpServer::start(int port)
 	return true;
 }
 
-std::vector<unsigned> TcpServer::connectionIds() const
+std::vector<int> TcpServer::connectionIds() const
 {
-	std::vector<unsigned> ret;
+	std::vector<int> ret;
 	for(const auto &pair : m_connections)
 		ret.push_back(pair.first);
 	return ret;

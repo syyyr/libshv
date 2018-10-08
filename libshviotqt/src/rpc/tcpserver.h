@@ -28,7 +28,7 @@ public:
 	~TcpServer() override;
 
 	bool start(int port);
-	std::vector<unsigned> connectionIds() const;
+	std::vector<int> connectionIds() const;
 	ServerConnection* connectionById(int connection_id);
 protected:
 	virtual ServerConnection* createServerConnection(QTcpSocket *socket, QObject *parent) = 0;

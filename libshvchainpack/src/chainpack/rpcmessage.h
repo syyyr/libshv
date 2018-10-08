@@ -102,7 +102,7 @@ public:
 
 	virtual void write(AbstractStreamWriter &wr) const;
 
-	static void setMetaTypeExplicit(bool b) {m_isMetaTypeExplicit = b;}
+	static void setMetaTypeExplicit(bool b);
 protected:
 	//enum class RpcCallType { Undefined = 0, Request, Response, Notify };
 	//RpcCallType rpcType() const;

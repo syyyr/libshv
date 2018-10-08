@@ -56,6 +56,12 @@ RpcMessage::RpcMessage(const RpcValue &val)
 	m_value = val;
 }
 
+void RpcMessage::setMetaTypeExplicit(bool b)
+{
+	MetaType::registerMetaType();
+	m_isMetaTypeExplicit = b;
+}
+
 bool RpcMessage::hasKey(RpcValue::UInt key) const
 {
 	return m_value.toIMap().count(key);

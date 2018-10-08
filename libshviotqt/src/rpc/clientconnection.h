@@ -99,10 +99,9 @@ public:
 	bool isBrokerConnected() const {return m_connectionState.isBrokerConnected;}
 	Q_SIGNAL void brokerConnectedChanged(bool is_connected);
 	const shv::chainpack::RpcValue::Map& loginResult() const {return m_connectionState.loginResult.toMap();}
-	unsigned brokerClientId() const;
-	static std::string brokerClientPath(unsigned client_id);
-	std::string brokerClientPath() const {return brokerClientPath(brokerClientId());}
-	std::string brokerMountPoint() const;
+	//unsigned brokerClientId() const;
+	//std::string brokerClientPath() const {return brokerClientPath(brokerClientId());}
+	//std::string brokerMountPoint() const;
 public:
 	/// AbstractRpcConnection interface implementation
 	/// since RpcDriver is connected to SocketDriver using queued connection. it is safe to call sendMessage from different thread

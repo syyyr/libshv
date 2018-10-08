@@ -371,7 +371,7 @@ void ClientConnection::setBrokerConnected(bool b)
 	if(b != m_connectionState.isBrokerConnected) {
 		m_connectionState.isBrokerConnected = b;
 		if(b) {
-			shvInfo() << "Connected to broker, client id:" << brokerClientId() << "mount point:" << brokerMountPoint();
+			shvInfo() << "Connected to broker";// << "client id:" << brokerClientId();// << "mount point:" << brokerMountPoint();
 			if(m_pingTimer && m_pingTimer->interval() > 0)
 				//m_connStatus.pingRqId = 0;
 				m_pingTimer->start();
@@ -383,12 +383,7 @@ void ClientConnection::setBrokerConnected(bool b)
 		emit brokerConnectedChanged(b);
 	}
 }
-
-std::string ClientConnection::brokerClientPath(unsigned client_id)
-{
-	return std::string(cp::Rpc::DIR_BROKER) + "/clients/" + std::to_string(client_id) + "/app";
-}
-
+/*
 unsigned ClientConnection::brokerClientId() const
 {
 	return loginResult().value(cp::Rpc::KEY_CLIENT_ID).toUInt();
@@ -398,7 +393,7 @@ std::string ClientConnection::brokerMountPoint() const
 {
 	return loginResult().value(cp::Rpc::KEY_MOUT_POINT).toString();
 }
-
+*/
 }}}
 
 
