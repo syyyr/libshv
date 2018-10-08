@@ -30,6 +30,7 @@ public:
 
 	//size_t childNodeCount() const {return propertyNames().size();}
 	ShvNode* parentNode() const;
+	QList<ShvNode*> ownChildren() const;
 	virtual ShvNode* childNode(const String &name, bool throw_exc = true) const;
 	//ShvNode* childNode(const core::StringView &name) const;
 	virtual void setParentNode(ShvNode *parent);
@@ -54,6 +55,7 @@ public:
 	virtual shv::chainpack::RpcValue ls(const StringViewList &shv_path, const shv::chainpack::RpcValue &methods_params);
 	// returns null if does not know
 	virtual chainpack::RpcValue hasChildren(const StringViewList &shv_path);
+	//chainpack::RpcValue hasChildren() {return hasChildren(StringViewList());}
 	virtual shv::chainpack::RpcValue lsAttributes(const StringViewList &shv_path, unsigned attributes);
 public:
 	virtual size_t methodCount(const StringViewList &shv_path);
@@ -61,7 +63,7 @@ public:
 	virtual const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, const std::string &name);
 
 	virtual StringList childNames(const StringViewList &shv_path);
-	virtual StringList childNames() {return childNames(StringViewList());}
+	StringList childNames() {return childNames(StringViewList());}
 
 	//virtual shv::chainpack::RpcValue callMethodRaw(const StringViewList &shv_path, const std::string &method, const std::string &data);
 	virtual shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params);

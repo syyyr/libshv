@@ -214,13 +214,18 @@ static std::string join_str(const ShvNode::StringList &sl, char sep)
 	return ret;
 }
 
+QList<ShvNode *> ShvNode::ownChildren() const
+{
+	QList<ShvNode*> lst = findChildren<ShvNode*>(QString(), Qt::FindDirectChildrenOnly);
+	return lst;
+}
+
 ShvNode::StringList ShvNode::childNames(const StringViewList &shv_path)
 {
 	shvLogFuncFrame() << "node:" << nodeId() << "shv_path:" << StringView::join(shv_path, '/');
 	ShvNode::StringList ret;
 	if(shv_path.empty()) {
-		QList<ShvNode*> lst = findChildren<ShvNode*>(QString(), Qt::FindDirectChildrenOnly);
-		for (ShvNode *nd : lst) {
+		for (ShvNode *nd : ownChildren()) {
 			ret.push_back(nd->nodeId());
 		}
 	}
