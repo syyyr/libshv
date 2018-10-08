@@ -220,9 +220,18 @@ private:
 		}
 		{
 			string err;
-			for(auto test : {"[[]]", "[[[]]]", "{\"a\":{}}", "i{1:i{}}", "<8:3u>i{2:[[\".broker\",true]]}"}) {
+			for(auto test : {
+				"<1:2>i{3:<4:5>6}",
+				"<1:2>[3,<4:5>6]",
+				"[[]]", "[[[]]]",
+				"{\"a\":{}}", "i{1:i{}}",
+				"<8:3u>i{2:[[\".broker\",true]]}",
+				"<4:\"svete\">i{2:<4:\"svete\">[0,1]}",
+			}) {
 				const RpcValue cp = RpcValue::fromCpon(test, &err);
 				qDebug() << test << "--->" << cp.toCpon();
+				//if(!(cp.toCpon() == test) || err.empty())
+				//	abort();
 				QVERIFY(err.empty());
 				QVERIFY(cp.toCpon() == test);
 			}

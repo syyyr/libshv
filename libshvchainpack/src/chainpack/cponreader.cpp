@@ -245,7 +245,7 @@ void CponReader::parseIMap(RpcValue &val)
 
 void CponReader::read(RpcValue::MetaData &meta_data)
 {
-	const char *c = ccpon_unpack_skip_blank(&m_inCtx);
+	const char *c = ccpon_unpack_skip_insignificant(&m_inCtx);
 	m_inCtx.current--;
 	if(c && *c == '<') {
 		ccpon_unpack_next(&m_inCtx);

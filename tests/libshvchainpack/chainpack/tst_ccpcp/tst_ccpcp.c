@@ -502,7 +502,7 @@ void test_cpons()
 		"<>1", NULL,
 		"<1:2>3", NULL,
 		"[1,<7:8>9]", NULL,
-		"<8:3u>i{2:[[\".broker\",true]]}", NULL,
+		"<8:3u>i{2:[[\".broker\",<1:2>true]]}", NULL,
 		"<1:2,\"foo\":\"bar\">i{1:<7:8>9}", NULL,
 		"<1:2,\"foo\":<5:6>\"bar\">[1u,{\"a\":1},2.30]", NULL,
 		"i{1:2 // comment to end of line\n}", "i{1:2}",
@@ -516,6 +516,8 @@ void test_cpons()
 		"*/\n"
 		"}", "{\"foo\":\"bar\",\"baz\":1}",
 		"a[1,2,3]", "[1,2,3]", // unsupported array type
+		"<1:2>[3,<4:5>6]", NULL,
+		"<4:\"svete\">i{2:<4:\"svete\">[0,1]}", NULL,
 	};
 	size_t cpons_cnt = sizeof (cpons) / sizeof (char*);
 	for(size_t i = 0; i < cpons_cnt; i += 2) {
