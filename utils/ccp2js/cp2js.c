@@ -194,7 +194,7 @@ static void cpjs_make_list(cpjs_env *jsenv, napi_value *val)
 static void cpjs_make_map(cpjs_env *jsenv, napi_value *obj)
 {
 	CALL_SAFE(jsenv->env, napi_create_object(jsenv->env, obj));
-	ccpon_unpack_next(jsenv->inCtx);
+	// ccpon_unpack_next(jsenv->inCtx);
 	while (true) {
 		napi_value key;
 		cpjs_get_value(jsenv, &key);
@@ -229,7 +229,7 @@ static void cpjs_make_date_time(cpjs_env *jsenv, cpjs_var *var, int64_t msecs_si
 
 static void cpjs_get_meta(cpjs_env *jsenv, napi_value *meta)
 {
-	const char *c = ccpon_unpack_skip_blank(jsenv->inCtx);
+	const char *c = ccpon_unpack_skip_insignificant(jsenv->inCtx);
 	jsenv->inCtx->current--;
 	if(c && *c == '<') {
 		CALL_SAFE(jsenv->env, napi_create_object(jsenv->env, meta));
@@ -313,7 +313,7 @@ static void cpjs_get_value(cpjs_env *jsenv, napi_value *val)
 		break;
 	}
 	case CCPCP_ITEM_DECIMAL: {
-		ccpcp_exponential *it = &(jsenv->inCtx->item.as.Decimal);
+		ccpcp_exponentional *it = &(jsenv->inCtx->item.as.Decimal);
 		cpjs_make_decimal(jsenv, &var, it->mantisa, it->exponent);
 		break;
 	}
