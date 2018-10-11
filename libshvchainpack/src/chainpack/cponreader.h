@@ -23,6 +23,8 @@ public:
 	void read(RpcValue::MetaData &meta_data) override;
 	void read(RpcValue &val) override;
 	void read(RpcValue &val, std::string &err);
+
+	RpcValue::DateTime readDateTime();
 private:
 	void unpackNext();
 

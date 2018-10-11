@@ -67,6 +67,17 @@ void CponReader::read(RpcValue &val, std::string &err)
 	}
 }
 
+RpcValue::DateTime CponReader::readDateTime()
+{
+	struct tm tm;
+	int msec;
+	int utc_offset;
+	ccpon_unpack_date_time(&m_inCtx, &tm, &msec, &utc_offset);
+	if(m_inCtx.err_no != CCPCP_RC_OK)
+		return RpcValue::DateTime();
+	return RpcValue::DateTime::fromMSecsSinceEpoch(msec, utc_offset);
+}
+
 void CponReader::read(RpcValue &val)
 {
 	//if (m_depth > MAX_RECURSION_DEPTH)
