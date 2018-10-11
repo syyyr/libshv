@@ -19,6 +19,7 @@ public:
 	static bool equal(const std::string &a, const std::string &b, String::CaseSensitivity case_sensitivity);
 	static std::string::size_type indexOf(const std::string & str_haystack, const std::string &str_needle, String::CaseSensitivity case_sensitivity);
 	static bool startsWith(const std::string & str, const std::string &with) {return str.rfind(with, 0) == 0;}
+	static bool endsWith(const std::string & str, const std::string &with) {return str.find(with, str.size() - with.size()) == (str.size() - with.size());}
 	static const char * WhiteSpaceChars;
 	static std::string& rtrim(std::string& s, const char* t = WhiteSpaceChars)
 	{

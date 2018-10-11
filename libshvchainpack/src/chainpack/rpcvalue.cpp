@@ -782,8 +782,18 @@ std::string RpcValue::DateTimeEpoch::toUtcString() const
 }
 #endif
 
-static bool parse_ISO_DateTime(const std::string &s, std::tm &tm, unsigned &msec, int8_t &utc_offset)
+static bool parse_ISO_DateTime(const std::string &s, std::tm &tm, int &msec, int64_t &msec_since_epoch, int &minutes_from_utc)
 {
+	ccpcp_unpack_context ctx;
+	ccpcp_unpack_context_init(&ctx, s.data(), s.size(), nullptr, nullptr);
+	ccpon_unpack_date_time(&ctx, &tm, &msec, &minutes_from_utc);
+	if(ctx.err_no == CCPCP_RC_OK) {
+		msec_since_epoch = ctx.item.as.DateTime.msecs_since_epoch;
+		//minutes_from_utc = ctx.item.as.DateTime.minutes_from_utc;
+		return true;
+	}
+	return false;
+#if 0
 	std::istringstream iss(s);
 	char sep;
 
@@ -843,6 +853,7 @@ static bool parse_ISO_DateTime(const std::string &s, std::tm &tm, unsigned &msec
 	}
 
 	return true;
+#endif
 }
 
 RpcValue::DateTime RpcValue::DateTime::now()
@@ -855,18 +866,24 @@ RpcValue::DateTime RpcValue::DateTime::now()
 RpcValue::DateTime RpcValue::DateTime::fromLocalString(const std::string &local_date_time_str)
 {
 	std::tm tm;
-	unsigned msec;
-	int8_t utc_offset;
+	int msec;
+	int64_t epoch_msec;
+	int utc_offset;
 	DateTime ret;
-	if(!parse_ISO_DateTime(local_date_time_str, tm, msec, utc_offset))
-		return ret;
-
-	std::time_t tim = std::mktime(&tm);
-	if(tim == -1) {
+	if(!parse_ISO_DateTime(local_date_time_str, tm, msec, epoch_msec, utc_offset)) {
 		nError() << "Invalid date time string:" << local_date_time_str;
 		return ret;
 	}
-	ret.m_dtm.msec = (tim - utc_offset * 15 * 60) * 1000 + msec;
+
+	std::time_t tim = std::mktime(&tm);
+	std::time_t utc_tim = ccpon_timegm(&tm);
+	if(tim < 0 || utc_tim < 0) {
+		nError() << "Invalid date time string:" << local_date_time_str;
+		return ret;
+	}
+	utc_offset = (tim - utc_tim) / 60;
+	epoch_msec = static_cast<int64_t>(utc_tim) * 60 * 1000 + msec;
+	ret.m_dtm.msec = epoch_msec;
 	ret.m_dtm.tz = utc_offset;
 
 	return ret;
@@ -877,18 +894,15 @@ RpcValue::DateTime RpcValue::DateTime::fromUtcString(const std::string &utc_date
 	if(utc_date_time_str.empty())
 		return DateTime();
 	std::tm tm;
-	unsigned msec;
-	int8_t utc_offset;
+	int msec;
+	int64_t epoch_msec;
+	int utc_offset;
 	DateTime ret;
-	if(!parse_ISO_DateTime(utc_date_time_str, tm, msec, utc_offset))
-		return ret;
-
-	std::time_t tim = ccpon_timegm(&tm);
-	if(tim == -1) {
+	if(!parse_ISO_DateTime(utc_date_time_str, tm, msec, epoch_msec, utc_offset)) {
 		nError() << "Invalid date time string:" << utc_date_time_str;
 		return ret;
 	}
-	ret.m_dtm.msec = (tim - utc_offset * 15 * 60) * 1000 + msec;
+	ret.m_dtm.msec = epoch_msec;
 	ret.m_dtm.tz = utc_offset;
 
 	return ret;
@@ -931,6 +945,12 @@ std::string RpcValue::DateTime::toIsoString(RpcValue::DateTime::MsecPolicy msec_
 {
 	if(!isValid())
 		return std::string();
+	ccpcp_pack_context ctx;
+	char buff[32];
+	ccpcp_pack_context_init(&ctx, buff, sizeof(buff), nullptr);
+	ccpon_pack_date_time_str(&ctx, msecsSinceEpoch(), minutesFromUtc(), (ccpon_msec_policy)msec_policy, include_tz);
+	return std::string(buff, ctx.current);
+#if 0
 	std::time_t tim = m_dtm.msec / 1000 + m_dtm.tz * 15 * 60;
 	std::tm *tm = std::gmtime(&tim);
 	if(tm == nullptr) {
@@ -960,6 +980,7 @@ std::string RpcValue::DateTime::toIsoString(RpcValue::DateTime::MsecPolicy msec_
 		}
 	}
 	return ret;
+#endif
 }
 
 RpcValue::MetaData::MetaData(RpcValue::MetaData &&o)

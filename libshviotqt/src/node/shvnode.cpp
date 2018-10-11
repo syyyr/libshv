@@ -159,7 +159,7 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 		}
 		else {
 			if(!shv_path.empty()) {
-				ShvNode *nd = childNode(shv_path.at(0).toString());
+				ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
 				if(nd) {
 					std::string new_path = core::StringView::join(++shv_path.begin(), shv_path.end(), '/');
 					chainpack::RpcRequest rq2(rq);
@@ -167,6 +167,9 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 					rq2.setShvPath(new_path);
 					nd->handleRpcRequest(rq2);
 					return;
+				}
+				else {
+					SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + '/' + shv_path_str + "' doesn't exist" + shvPath());
 				}
 			}
 		}

@@ -83,7 +83,7 @@ public:
 	class SHVCHAINPACK_DECL_EXPORT DateTime
 	{
 	public:
-		enum class MsecPolicy {Auto, Always, Never};
+		enum class MsecPolicy {Auto = 0, Always, Never};
 		static constexpr bool IncludeTimeZone = true;
 	public:
 		DateTime() : m_dtm{TZ_INVALID, 0} {}
