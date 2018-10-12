@@ -92,7 +92,7 @@ public:
 
 		static DateTime now();
 		static DateTime fromLocalString(const std::string &local_date_time_str);
-		static DateTime fromUtcString(const std::string &utc_date_time_str);
+		static DateTime fromUtcString(const std::string &utc_date_time_str, long *plen = nullptr);
 		static DateTime fromMSecsSinceEpoch(int64_t msecs, int utc_offset_min = 0);
 
 		void setTimeZone(int utc_offset_min) {m_dtm.tz = utc_offset_min / 15;}

@@ -28,6 +28,7 @@ public:
 	FileShvJournal(SnapShotFn snf);
 
 	void setJournalDir(std::string s) {m_journalDir = std::move(s);}
+	void setFileSizeLimit(long n) {m_fileSizeLimit = n;}
 
 	void append(const ShvJournalEntry &entry);
 private:

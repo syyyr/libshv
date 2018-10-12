@@ -153,30 +153,42 @@ int FileShvJournal::lastFileNo()
 
 int64_t FileShvJournal::findLastEntryDateTime(const std::string &fn)
 {
+	shvLogFuncFrame();
 	std::ifstream in(fn, std::ios::in);
 	if (in) {
 		int64_t dt_msec = -1;
 		in.seekg(0, std::ios::end);
-		//long fpos = in.tellg();
+		long fpos = in.tellg();
 		static constexpr int SKIP_LEN = 64;
-		while(true) {
-			in.seekg(-SKIP_LEN, std::ios::cur);
-			bool last_try = in.tellg() == 0;
-			for (int i = 0; i < SKIP_LEN; ++i) {
+		while(fpos > 0) {
+			fpos -= SKIP_LEN;
+			long chunk_len = SKIP_LEN;
+			if(fpos < 0) {
+				chunk_len += fpos;
+				fpos = 0;
+			}
+			in.seekg(fpos, std::ios::beg);
+			for (int i = 0; i < chunk_len; ++i) {
 				int c = in.get();
 				if(c < 0)
 					break;
 				if(c == RECORD_SEPARATOR) {
-					cp::CponReader rd(in);
-					chainpack::RpcValue::DateTime dt = rd.readDateTime();
-					if(dt.isValid())
-						dt_msec = dt.msecsSinceEpoch();
+					char buff[32];
+					auto n = in.readsome(buff, sizeof(buff));
+					if(n > 0) {
+						std::string s(buff, (size_t)n);
+						long len;
+						chainpack::RpcValue::DateTime dt = chainpack::RpcValue::DateTime::fromUtcString(s, &len);
+						if(dt.isValid())
+							dt_msec = dt.msecsSinceEpoch();
+						i += len;
+					}
 				}
 			}
-			if(dt_msec > 0)
+			if(dt_msec > 0) {
+				shvDebug() << "\t return:" << dt_msec << chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(dt_msec).toIsoString();
 				return dt_msec;
-			if(last_try)
-				return -1;
+			}
 		}
 	}
 	throw std::runtime_error("Cannot open file: " + fn + " for reading.");
