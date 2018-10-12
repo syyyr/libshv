@@ -33,6 +33,7 @@ FileShvJournal::FileShvJournal(FileShvJournal::SnapShotFn snf)
 
 void FileShvJournal::append(const ShvJournalEntry &entry)
 {
+	shvLogFuncFrame() << "last file no:" << lastFileNo();
 	try {
 		int64_t last_msec = 0;
 		int max_n = lastFileNo();
@@ -51,13 +52,16 @@ void FileShvJournal::append(const ShvJournalEntry &entry)
 			}
 			else {
 				auto fsz = fileSize(fn);
+				shvDebug() << "\t current file size:" << fsz << "limit:" << m_fileSizeLimit;
 				if(fsz > m_fileSizeLimit) {
 					max_n++;
+					shvDebug() << "\t file size limit exceeded, createing new file:" << max_n;
 				}
 			}
 		}
 		setLastFileNo(max_n);
 		std::string fn = fileNoToName(max_n);
+		shvDebug() << "\t appending records to file:" << fn;
 
 		int64_t msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
 		if(msec < last_msec)
@@ -80,8 +84,7 @@ void FileShvJournal::append(const ShvJournalEntry &entry)
 			for(const ShvJournalEntry &e : snapshot)
 				appendEntry(out, msec, uptime_sec, e);
 		}
-		if(fsz >= 0)
-			appendEntry(out, msec, uptime_sec, entry);
+		appendEntry(out, msec, uptime_sec, entry);
 	}
 	catch (std::exception &e) {
 		shvError() << e.what();
@@ -153,45 +156,70 @@ int FileShvJournal::lastFileNo()
 
 int64_t FileShvJournal::findLastEntryDateTime(const std::string &fn)
 {
-	shvLogFuncFrame();
-	std::ifstream in(fn, std::ios::in);
-	if (in) {
-		int64_t dt_msec = -1;
-		in.seekg(0, std::ios::end);
-		long fpos = in.tellg();
-		static constexpr int SKIP_LEN = 64;
-		while(fpos > 0) {
-			fpos -= SKIP_LEN;
-			long chunk_len = SKIP_LEN;
-			if(fpos < 0) {
-				chunk_len += fpos;
-				fpos = 0;
-			}
-			in.seekg(fpos, std::ios::beg);
-			for (int i = 0; i < chunk_len; ++i) {
-				int c = in.get();
-				if(c < 0)
-					break;
-				if(c == RECORD_SEPARATOR) {
-					char buff[32];
-					auto n = in.readsome(buff, sizeof(buff));
-					if(n > 0) {
-						std::string s(buff, (size_t)n);
-						long len;
-						chainpack::RpcValue::DateTime dt = chainpack::RpcValue::DateTime::fromUtcString(s, &len);
-						if(dt.isValid())
-							dt_msec = dt.msecsSinceEpoch();
-						i += len;
+	shvLogFuncFrame() << "'" + fn + "'";
+	std::ifstream in(fn, std::ios::in | std::ios::binary);
+	if (!in)
+		throw std::runtime_error("Cannot open file: " + fn + " for reading.");
+	int64_t dt_msec = -1;
+	in.seekg(0, std::ios::end);
+	long fpos = in.tellg();
+	static constexpr int SKIP_LEN = 128;
+	while(fpos > 0) {
+		fpos -= SKIP_LEN;
+		long chunk_len = SKIP_LEN;
+		if(fpos < 0) {
+			chunk_len += fpos;
+			fpos = 0;
+		}
+		// date time string can be partialy on end of this chunk and at beggining of next,
+		// read little bit more data to cover this
+		// serialized date-time should never exceed 28 bytes see: 2018-01-10T12:03:56.123+0130
+		chunk_len += 30;
+		in.seekg(fpos, std::ios::beg);
+		char buff[chunk_len];
+		auto n = in.readsome(buff, sizeof(buff));
+		if(n > 0) {
+			std::string chunk(buff, static_cast<size_t>(n));
+			size_t lf_pos = 0;
+			while(lf_pos != std::string::npos) {
+				lf_pos = chunk.find(RECORD_SEPARATOR, lf_pos);
+				if(lf_pos != std::string::npos) {
+					lf_pos++;
+					auto tab_pos = chunk.find(FIELD_SEPARATOR, lf_pos);
+					auto lf2_pos = chunk.find(RECORD_SEPARATOR, lf_pos);
+					if(tab_pos != std::string::npos) {
+						if(lf2_pos == std::string::npos || tab_pos < lf2_pos) {
+							std::string s = chunk.substr(lf_pos, tab_pos - lf_pos);
+							shvDebug() << "\t checking:" << s;
+							chainpack::RpcValue::DateTime dt = chainpack::RpcValue::DateTime::fromUtcString(s);
+							if(dt.isValid())
+								dt_msec = dt.msecsSinceEpoch();
+							else
+								shvError() << "Malformed shv journal date time:" << s << "will be ignored.";
+						}
+						else {
+							shvDebug() << "\t malformed line LF before TAB:" << chunk.substr(lf_pos, lf2_pos - lf_pos);;
+						}
+					}
+					else if(chunk.size() - lf_pos > 0) {
+						shvError() << "Truncated shv journal date time:" << chunk.substr(lf_pos) << "will be ignored.";
 					}
 				}
 			}
-			if(dt_msec > 0) {
-				shvDebug() << "\t return:" << dt_msec << chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(dt_msec).toIsoString();
-				return dt_msec;
+			auto len = chunk.find(FIELD_SEPARATOR);
+			if(len == std::string::npos) {
+				break;
+			}
+			else {
 			}
 		}
+		if(dt_msec > 0) {
+			shvDebug() << "\t return:" << dt_msec << chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(dt_msec).toIsoString();
+			return dt_msec;
+		}
 	}
-	throw std::runtime_error("Cannot open file: " + fn + " for reading.");
+	shvDebug() << "\t file does not containt record with valid date time";
+	return -1;
 }
 
 } // namespace utils
