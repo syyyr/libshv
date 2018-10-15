@@ -22,6 +22,12 @@ ShvNode::ShvNode(ShvNode *parent)
 	shvDebug() << __FUNCTION__ << this;
 }
 
+ShvNode::ShvNode(const std::string &node_id, ShvNode *parent)
+	: ShvNode(parent)
+{
+	setNodeId(node_id);
+}
+
 ShvNode *ShvNode::parentNode() const
 {
 	return qobject_cast<ShvNode*>(parent());

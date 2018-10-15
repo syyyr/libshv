@@ -27,6 +27,7 @@ public:
 	using StringViewList = shv::core::StringViewList;
 public:
 	explicit ShvNode(ShvNode *parent = nullptr);
+	explicit ShvNode(const std::string &node_id, ShvNode *parent = nullptr);
 
 	//size_t childNodeCount() const {return propertyNames().size();}
 	ShvNode* parentNode() const;
