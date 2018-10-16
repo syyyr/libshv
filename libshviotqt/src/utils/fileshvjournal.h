@@ -22,8 +22,10 @@ struct SHVIOTQT_DECL_EXPORT ShvJournalEntry
 	bool isValid() const {return !path.empty() && value.isValid();}
 };
 
-struct SHVIOTQT_DECL_EXPORT ShvJournalGetOptions
+struct SHVIOTQT_DECL_EXPORT ShvJournalGetLogParams
 {
+	shv::chainpack::RpcValue::DateTime since;
+	shv::chainpack::RpcValue::DateTime until;
 	/// '*' and '**' wild-cards are supported
 	/// '*' stands for single path segment, shv/pol/*/discon match shv/pol/ols/discon but not shv/pol/ols/depot/discon
 	/// '**' stands for zero or more path segments, shv/pol/**/discon matches shv/pol/discon, shv/pol/ols/discon, shv/pol/ols/depot/discon
@@ -39,8 +41,8 @@ struct SHVIOTQT_DECL_EXPORT ShvJournalGetOptions
 	int maxRecordCount = 1000;
 	bool withSnapshot = true;
 
-	ShvJournalGetOptions() {}
-	ShvJournalGetOptions(const shv::chainpack::RpcValue &opts);
+	ShvJournalGetLogParams() {}
+	ShvJournalGetLogParams(const shv::chainpack::RpcValue &opts);
 };
 
 class SHVIOTQT_DECL_EXPORT FileShvJournal
@@ -57,7 +59,7 @@ public:
 
 	void append(const ShvJournalEntry &entry);
 
-	shv::chainpack::RpcValue getLog(const chainpack::RpcValue::DateTime &since, const chainpack::RpcValue::DateTime &until, const ShvJournalGetOptions &opts = ShvJournalGetOptions());
+	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params);
 
 	static bool pathMatch(const std::string &pattern, const std::string &path);
 private:

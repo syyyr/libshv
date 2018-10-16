@@ -10,6 +10,8 @@
 
 #include <dirent.h>
 
+#define logWShvJournal() nCWarning("ShvJournal")
+
 namespace cp = shv::chainpack;
 
 namespace shv {
@@ -25,10 +27,16 @@ static int uptimeSec()
 	return 0;
 }
 
-ShvJournalGetOptions::ShvJournalGetOptions(const chainpack::RpcValue &opts)
-	: ShvJournalGetOptions()
+ShvJournalGetLogParams::ShvJournalGetLogParams(const chainpack::RpcValue &opts)
+	: ShvJournalGetLogParams()
 {
 	const cp::RpcValue::Map m = opts.toMap();
+	since = m.value("since", since).toDateTime();
+	if(!since.isValid())
+		since = m.value("from").toDateTime();
+	until = m.value("since", until).toDateTime();
+	if(!until.isValid())
+		until = m.value("to").toDateTime();
 	pathPattern = m.value("pathPattern", pathPattern).toString();
 	headerOptions = m.value("headerOptions", headerOptions).toUInt();
 	maxRecordCount = m.value("maxRecordCount", maxRecordCount).toInt();
@@ -92,14 +100,14 @@ void FileShvJournal::append(const ShvJournalEntry &entry)
 			std::vector<ShvJournalEntry> snapshot;
 			m_snapShotFn(snapshot);
 			if(snapshot.empty())
-				shvError() << "Empty snapshot created";
+				logWShvJournal() << "Empty snapshot created";
 			for(const ShvJournalEntry &e : snapshot)
 				appendEntry(out, msec, uptime_sec, e);
 		}
 		appendEntry(out, msec, uptime_sec, entry);
 	}
 	catch (std::exception &e) {
-		shvError() << e.what();
+		logWShvJournal() << e.what();
 		m_lastFileNo = -1;
 	}
 }
@@ -208,14 +216,14 @@ int64_t FileShvJournal::findLastEntryDateTime(const std::string &fn)
 							if(dt.isValid())
 								dt_msec = dt.msecsSinceEpoch();
 							else
-								shvError() << "Malformed shv journal date time:" << s << "will be ignored.";
+								logWShvJournal() << fn << "Malformed shv journal date time:" << s << "will be ignored.";
 						}
 						else {
-							shvDebug() << "\t malformed line LF before TAB:" << chunk.substr(lf_pos, lf2_pos - lf_pos);;
+							logWShvJournal() << fn << "Malformed line LF before TAB:" << chunk.substr(lf_pos, lf2_pos - lf_pos);;
 						}
 					}
 					else if(chunk.size() - lf_pos > 0) {
-						shvError() << "Truncated shv journal date time:" << chunk.substr(lf_pos) << "will be ignored.";
+						logWShvJournal() << fn << "Truncated shv journal date time:" << chunk.substr(lf_pos) << "will be ignored.";
 					}
 				}
 			}
@@ -231,16 +239,16 @@ int64_t FileShvJournal::findLastEntryDateTime(const std::string &fn)
 			return dt_msec;
 		}
 	}
-	shvDebug() << "\t file does not containt record with valid date time";
+	logWShvJournal() << fn << "File does not containt record with valid date time";
 	return -1;
 }
 
-chainpack::RpcValue FileShvJournal::getLog(const chainpack::RpcValue::DateTime &since, const chainpack::RpcValue::DateTime &until, const ShvJournalGetOptions &opts)
+chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 {
 	//int file_no = findFileWithSnapshotFor(from);
 	//if(!since.isValid())
 	//	throw std::runtime_error("Invalid 'from' date-time.");
-	auto since_msec = since.isValid()? since.msecsSinceEpoch(): 0;
+	auto since_msec = params.since.isValid()? params.since.msecsSinceEpoch(): 0;
 	//auto until_msec = until.isValid()? until.msecsSinceEpoch(): std::numeric_limits<int64_t>::max();
 	int last_file_no = lastFileNo();
 	int min_file_no = 0;
@@ -268,15 +276,15 @@ chainpack::RpcValue FileShvJournal::getLog(const chainpack::RpcValue::DateTime &
 				}
 			}
 			else {
-				shvError() << "Malformed shv journal date time:" << s << "will be ignored.";
+				logWShvJournal() << fn << "Malformed shv journal date time:" << s << "will be ignored.";
 			}
 		}
 		else {
-			shvError() << "Cannot read date time string from: " + fn;
+			logWShvJournal() << "Cannot read date time string from: " + fn;
 		}
 	}
 	cp::RpcValue::List log;
-	if(!since.isValid()) {
+	if(!params.since.isValid()) {
 		file_no = min_file_no;
 		since_msec = min_msec;
 	}
@@ -287,7 +295,7 @@ chainpack::RpcValue FileShvJournal::getLog(const chainpack::RpcValue::DateTime &
 			std::string fn = fileNoToName(file_no);
 			std::ifstream in(fn, std::ios::in | std::ios::binary);
 			if(!in) {
-				shvError() << "Cannot open file: " + fn + " for reading, log file missing.";
+				logWShvJournal() << "Cannot open file: " + fn + " for reading, log file missing.";
 				continue;
 			}
 			while(in) {
@@ -297,23 +305,23 @@ chainpack::RpcValue FileShvJournal::getLog(const chainpack::RpcValue::DateTime &
 				std::string upstr = getLine(iss, FIELD_SEPARATOR);
 				std::string path = getLine(iss, FIELD_SEPARATOR);
 				std::string valstr = getLine(iss, FIELD_SEPARATOR);
-				if(!opts.pathPattern.empty() && !pathMatch(opts.pathPattern, path))
+				if(!params.pathPattern.empty() && !pathMatch(params.pathPattern, path))
 					continue;
 				cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr);
 				if(!dt.isValid()) {
-					shvError() << "invalid date time string:" << dtstr;
+					logWShvJournal() << fn << "invalid date time string:" << dtstr;
 					continue;
 				}
-				if(dt < since) {
-					if(opts.withSnapshot) {
+				if(dt < params.since) {
+					if(params.withSnapshot) {
 						snapshot[path] = std::move(valstr);
 					}
 				}
-				else if(!until.isValid() || dt <= until) {
-					if(opts.withSnapshot && !snapshot.empty()) {
+				else if(!params.until.isValid() || dt <= params.until) {
+					if(params.withSnapshot && !snapshot.empty()) {
 						for(const auto &kv : snapshot) {
 							cp::RpcValue::List rec;
-							rec.push_back(since);
+							rec.push_back(params.since);
 							//rec.push_back(0);
 							rec.push_back(kv.first);
 							rec.push_back(cp::RpcValue::fromCpon(kv.second));
@@ -329,7 +337,7 @@ chainpack::RpcValue FileShvJournal::getLog(const chainpack::RpcValue::DateTime &
 					rec.push_back(cp::RpcValue::fromCpon(valstr));
 					log.push_back(rec);
 					rec_cnt++;
-					if(rec_cnt > opts.maxRecordCount)
+					if(rec_cnt > params.maxRecordCount)
 						goto log_finish;
 				}
 				else {
@@ -341,23 +349,23 @@ chainpack::RpcValue FileShvJournal::getLog(const chainpack::RpcValue::DateTime &
 log_finish:
 	cp::RpcValue ret = log;
 	cp::RpcValue::MetaData md;
-	if(opts.headerOptions & static_cast<unsigned>(ShvJournalGetOptions::HeaderOptions::BasicInfo)) {
+	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::BasicInfo)) {
 		cp::RpcValue::Map device;
 		device["id"] = m_deviceId;
 		md.setValue("device", device); // required
 		md.setValue("logVersion", 1); // required
 		md.setValue("dateTime", cp::RpcValue::DateTime::now());
-		md.setValue("tsSince", since);
-		md.setValue("tsUntil", until.isValid()? until: cp::RpcValue(nullptr));
+		md.setValue("tsSince", params.since.isValid()? params.since: cp::RpcValue(nullptr));
+		md.setValue("tsUntil", params.until.isValid()? params.until: cp::RpcValue(nullptr));
 	}
-	if(opts.headerOptions & static_cast<unsigned>(ShvJournalGetOptions::HeaderOptions::FileldInfo)) {
+	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::FileldInfo)) {
 		md.setValue("fields", cp::RpcValue::List{
 						cp::RpcValue::Map{{"name", "timestamp"}},
 						cp::RpcValue::Map{{"name", "path"}},
 						cp::RpcValue::Map{{"name", "value"}},
 					});
 	}
-	if(opts.headerOptions & static_cast<unsigned>(ShvJournalGetOptions::HeaderOptions::TypeInfo)) {
+	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::TypeInfo)) {
 		if(m_typeInfo.isValid())
 			md.setValue("typeInfo", m_typeInfo);
 	}
