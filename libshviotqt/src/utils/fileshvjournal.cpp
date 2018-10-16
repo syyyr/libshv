@@ -3,8 +3,10 @@
 #include <shv/chainpack/cponreader.h>
 #include <shv/core/log.h>
 #include <shv/core/string.h>
+#include <shv/core/stringview.h>
 
 #include <fstream>
+#include <sstream>
 
 #include <dirent.h>
 
@@ -21,6 +23,16 @@ static int uptimeSec()
 		return uptime;
 	}
 	return 0;
+}
+
+ShvJournalGetOptions::ShvJournalGetOptions(const chainpack::RpcValue &opts)
+	: ShvJournalGetOptions()
+{
+	const cp::RpcValue::Map m = opts.toMap();
+	pathPattern = m.value("pathPattern", pathPattern).toString();
+	headerOptions = m.value("headerOptions", headerOptions).toUInt();
+	maxRecordCount = m.value("maxRecordCount", maxRecordCount).toInt();
+	withSnapshot = m.value("headerOptions", withSnapshot).toBool();
 }
 
 const char * FileShvJournal::FILE_EXT = ".log";
@@ -177,7 +189,8 @@ int64_t FileShvJournal::findLastEntryDateTime(const std::string &fn)
 		chunk_len += 30;
 		in.seekg(fpos, std::ios::beg);
 		char buff[chunk_len];
-		auto n = in.readsome(buff, sizeof(buff));
+		in.read(buff, chunk_len);
+		auto n = in.gcount();
 		if(n > 0) {
 			std::string chunk(buff, static_cast<size_t>(n));
 			size_t lf_pos = 0;
@@ -220,6 +233,208 @@ int64_t FileShvJournal::findLastEntryDateTime(const std::string &fn)
 	}
 	shvDebug() << "\t file does not containt record with valid date time";
 	return -1;
+}
+
+chainpack::RpcValue FileShvJournal::getLog(const chainpack::RpcValue::DateTime &since, const chainpack::RpcValue::DateTime &until, const ShvJournalGetOptions &opts)
+{
+	//int file_no = findFileWithSnapshotFor(from);
+	//if(!since.isValid())
+	//	throw std::runtime_error("Invalid 'from' date-time.");
+	auto since_msec = since.isValid()? since.msecsSinceEpoch(): 0;
+	//auto until_msec = until.isValid()? until.msecsSinceEpoch(): std::numeric_limits<int64_t>::max();
+	int last_file_no = lastFileNo();
+	int min_file_no = 0;
+	int64_t min_msec = 0;
+	int file_no = last_file_no;
+	for(; file_no > 0; file_no--) {
+		std::string fn = fileNoToName(file_no);
+		std::ifstream in(fn, std::ios::in | std::ios::binary);
+		if (!in) {
+			shvDebug() << "Cannot open file: " + fn + " for reading, log file missing.";
+			continue;
+		}
+		min_file_no = file_no;
+		char buff[32];
+		in.read(buff, sizeof(buff));
+		auto n = in.gcount();
+		if(n > 0) {
+			std::string s(buff, (size_t)n);
+			chainpack::RpcValue::DateTime dt = chainpack::RpcValue::DateTime::fromUtcString(s);
+			if(dt.isValid()) {
+				auto dt_msec = dt.msecsSinceEpoch();
+				min_msec = dt_msec;
+				if(dt_msec <= since_msec) {
+					break;
+				}
+			}
+			else {
+				shvError() << "Malformed shv journal date time:" << s << "will be ignored.";
+			}
+		}
+		else {
+			shvError() << "Cannot read date time string from: " + fn;
+		}
+	}
+	cp::RpcValue::List log;
+	if(!since.isValid()) {
+		file_no = min_file_no;
+		since_msec = min_msec;
+	}
+	if(file_no > 0) {
+		std::map<std::string, std::string> snapshot;
+		int rec_cnt = 0;
+		for(; file_no <= last_file_no; file_no++) {
+			std::string fn = fileNoToName(file_no);
+			std::ifstream in(fn, std::ios::in | std::ios::binary);
+			if(!in) {
+				shvError() << "Cannot open file: " + fn + " for reading, log file missing.";
+				continue;
+			}
+			while(in) {
+				std::string line = getLine(in, RECORD_SEPARATOR);
+				std::istringstream iss(line);
+				std::string dtstr = getLine(iss, FIELD_SEPARATOR);
+				std::string upstr = getLine(iss, FIELD_SEPARATOR);
+				std::string path = getLine(iss, FIELD_SEPARATOR);
+				std::string valstr = getLine(iss, FIELD_SEPARATOR);
+				if(!opts.pathPattern.empty() && !pathMatch(opts.pathPattern, path))
+					continue;
+				cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr);
+				if(!dt.isValid()) {
+					shvError() << "invalid date time string:" << dtstr;
+					continue;
+				}
+				if(dt < since) {
+					if(opts.withSnapshot) {
+						snapshot[path] = std::move(valstr);
+					}
+				}
+				else if(!until.isValid() || dt <= until) {
+					if(opts.withSnapshot && !snapshot.empty()) {
+						for(const auto &kv : snapshot) {
+							cp::RpcValue::List rec;
+							rec.push_back(since);
+							//rec.push_back(0);
+							rec.push_back(kv.first);
+							rec.push_back(cp::RpcValue::fromCpon(kv.second));
+							log.push_back(rec);
+							rec_cnt++;
+						}
+						snapshot.clear();
+					}
+					cp::RpcValue::List rec;
+					rec.push_back(cp::RpcValue::DateTime::fromUtcString(dtstr));
+					//rec.push_back(toLong(upstr));
+					rec.push_back(path);
+					rec.push_back(cp::RpcValue::fromCpon(valstr));
+					log.push_back(rec);
+					rec_cnt++;
+					if(rec_cnt > opts.maxRecordCount)
+						goto log_finish;
+				}
+				else {
+					goto log_finish;
+				}
+			}
+		}
+	}
+log_finish:
+	cp::RpcValue ret = log;
+	cp::RpcValue::MetaData md;
+	if(opts.headerOptions & static_cast<unsigned>(ShvJournalGetOptions::HeaderOptions::BasicInfo)) {
+		cp::RpcValue::Map device;
+		device["id"] = m_deviceId;
+		md.setValue("device", device); // required
+		md.setValue("logVersion", 1); // required
+		md.setValue("dateTime", cp::RpcValue::DateTime::now());
+		md.setValue("tsSince", since);
+		md.setValue("tsUntil", until.isValid()? until: cp::RpcValue(nullptr));
+	}
+	if(opts.headerOptions & static_cast<unsigned>(ShvJournalGetOptions::HeaderOptions::FileldInfo)) {
+		md.setValue("fields", cp::RpcValue::List{
+						cp::RpcValue::Map{{"name", "timestamp"}},
+						cp::RpcValue::Map{{"name", "path"}},
+						cp::RpcValue::Map{{"name", "value"}},
+					});
+	}
+	if(opts.headerOptions & static_cast<unsigned>(ShvJournalGetOptions::HeaderOptions::TypeInfo)) {
+		if(m_typeInfo.isValid())
+			md.setValue("typeInfo", m_typeInfo);
+	}
+	if(!md.isEmpty())
+		ret.setMetaData(std::move(md));
+	return ret;
+}
+
+std::string FileShvJournal::getLine(std::istream &in, char sep)
+{
+	std::string line;
+	while(in) {
+		char buff[1024];
+		in.getline(buff, sizeof (buff), sep);
+		std::string s(buff);
+		line += s;
+		if(in.gcount() == (long)s.size()) {
+			// LF not found
+			continue;
+		}
+		break;
+	}
+	return line;
+}
+
+long FileShvJournal::toLong(const std::string &s)
+{
+	try {
+		return std::stol(s);
+	} catch (std::logic_error &e) {
+		shvError() << s << "cannot be converted to int:" << e.what();
+	}
+	return 0;
+}
+
+bool FileShvJournal::pathMatch(const std::string &pattern, const std::string &path)
+{
+	const shv::core::StringViewList ptlst = shv::core::StringView(pattern).split('/');
+	const shv::core::StringViewList phlst = shv::core::StringView(path).split('/');
+	size_t ptix = 0;
+	size_t phix = 0;
+	while(true) {
+		if(phix == phlst.size() && ptix == ptlst.size())
+			return true;
+		if(ptix == ptlst.size() && phix < phlst.size())
+			return false;
+		if(phix == phlst.size() && ptix == ptlst.size() - 1 && ptlst[ptix] == "**")
+			return true;
+		if(phix == phlst.size() && ptix < ptlst.size())
+			return false;
+		const shv::core::StringView &pt = ptlst[ptix];
+		if(pt == "*") {
+			// match exactly one path segment
+		}
+		else if(pt == "**") {
+			// match zero or more path segments
+			ptix++;
+			if(ptix == ptlst.size())
+				return true;
+			const shv::core::StringView &pt2 = ptlst[ptix];
+			do {
+				const shv::core::StringView &ph = phlst[phix];
+				if(ph == pt2)
+					break;
+				phix++;
+			} while(phix < phlst.size());
+			if(phix == phlst.size())
+				return false;
+		}
+		else {
+			const shv::core::StringView &ph = phlst[phix];
+			if(!(ph == pt))
+				return false;
+		}
+		ptix++;
+		phix++;
+	}
 }
 
 } // namespace utils

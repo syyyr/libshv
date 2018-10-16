@@ -117,10 +117,17 @@ public:
 				return true;
 			return m_dtm.msec < o.m_dtm.msec;
 		}
-		bool isValid() const
+		bool operator >=(const DateTime &o) const { return !(*this < o); }
+		bool operator >(const DateTime &o) const
 		{
-			return m_dtm.tz != TZ_INVALID;
+			if(!o.isValid())
+				return isValid();
+			if(!isValid())
+				return false;
+			return m_dtm.msec > o.m_dtm.msec;
 		}
+		bool operator <=(const DateTime &o) const { return !(*this > o); }
+		bool isValid() const { return m_dtm.tz != TZ_INVALID; }
 	private:
 		static constexpr int8_t TZ_INVALID = -64;
 		struct MsTz {
