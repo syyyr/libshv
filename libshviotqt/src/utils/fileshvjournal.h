@@ -70,7 +70,7 @@ private:
 	int64_t findLastEntryDateTime(const std::string &fn);
 	void appendEntry(std::ofstream &out, int64_t msec, int uptime_sec, const ShvJournalEntry &e);
 
-	//int findFileWithSnapshotFor(const chainpack::RpcValue::DateTime &from);
+	void checkJournalDir();
 
 	std::string getLine(std::istream &in, char sep);
 	static long toLong(const std::string &s);

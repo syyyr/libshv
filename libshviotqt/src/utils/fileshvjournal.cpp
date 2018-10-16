@@ -9,6 +9,8 @@
 #include <sstream>
 
 #include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #define logWShvJournal() nCWarning("ShvJournal")
 
@@ -25,6 +27,42 @@ static int uptimeSec()
 		return uptime;
 	}
 	return 0;
+}
+
+#define QT_STATBUF              struct stat64
+#define QT_STAT                 ::stat64
+#define QT_MKDIR                ::mkdir
+
+static bool mkpath(const std::string &dir_name)
+{
+	// helper function to check if a given path is a directory, since mkdir can
+	// fail if the dir already exists (it may have been created by another
+	// thread or another process)
+	const auto is_dir = [](const std::string &dir_name) {
+		QT_STATBUF st;
+		return QT_STAT(dir_name.data(), &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR;
+	};
+	if(is_dir(dir_name))
+		return true;
+	if (QT_MKDIR(dir_name.data(), 0777) == 0)
+		return true;
+	if (errno == EEXIST)
+		return is_dir(dir_name);
+	if (errno != ENOENT)
+		return false;
+	// mkdir failed because the parent dir doesn't exist, so try to create it
+	auto const slash = dir_name.find_last_of('/');
+	//const auto leaf=path.substr(pos+1);
+
+	if (slash == std::string::npos)
+		return false;
+	std::string parent_dir_name = dir_name.substr(0, slash);
+	if (!mkpath(parent_dir_name))
+		return false;
+	// try again
+	if (QT_MKDIR(dir_name.data(), 0777) == 0)
+		return true;
+	return errno == EEXIST && is_dir(dir_name);
 }
 
 ShvJournalGetLogParams::ShvJournalGetLogParams(const chainpack::RpcValue &opts)
@@ -53,8 +91,9 @@ FileShvJournal::FileShvJournal(FileShvJournal::SnapShotFn snf)
 
 void FileShvJournal::append(const ShvJournalEntry &entry)
 {
-	shvLogFuncFrame() << "last file no:" << lastFileNo();
+	shvLogFuncFrame();// << "last file no:" << lastFileNo();
 	try {
+		checkJournalDir();
 		int64_t last_msec = 0;
 		int max_n = lastFileNo();
 		if(max_n < 0)
@@ -123,6 +162,12 @@ void FileShvJournal::appendEntry(std::ofstream &out, int64_t msec, int uptime_se
 	out << e.value.toCpon();
 	out << RECORD_SEPARATOR;
 	out.flush();
+}
+
+void FileShvJournal::checkJournalDir()
+{
+	if(!mkpath(m_journalDir))
+		throw std::runtime_error("Journal dir: " + m_journalDir + " do not exists and cannot be created");
 }
 
 std::string FileShvJournal::fileNoToName(int n)
