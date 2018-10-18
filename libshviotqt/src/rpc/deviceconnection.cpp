@@ -17,7 +17,7 @@ DeviceAppCliOptions::DeviceAppCliOptions(QObject *parent)
 	addOption("device.mountPoint").setType(QVariant::String).setNames({"-m", "--mount", "--mount-point"}).setComment(tr("Shv tree, where device should be mounted to. Only paths beginning with test/ are enabled. --mount-point version is deprecated"));
 	addOption("device.id").setType(QVariant::String).setNames("--id", "--device-id").setComment(tr("Device ID"));
 	addOption("device.idFile").setType(QVariant::String).setNames("--idf", "--device-id-file").setComment(tr("Device ID file"));
-	addOption("shvJournal.dir").setType(QVariant::String).setNames("--jd", "--shvjournal-dir").setComment(tr("SHV journal directory"));
+	addOption("shvJournal.dir").setType(QVariant::String).setNames("--jd", "--shvjournal-dir").setComment(tr("SHV journal directory")).setDefaultValue("/tmp/shvjournal");
 	addOption("shvJournal.fileSizeLimit").setType(QVariant::Int).setNames("--jfs", "--shvjournal-file-size-limit").setComment(tr("Maximum SHV journal file size")).setDefaultValue((int)utils::FileShvJournal::DEFAULT_FILE_SIZE_LIMIT);
 	addOption("shvJournal.dirSizeLimit").setType(QVariant::Int).setNames("--jds", "--shvjournal-dir-size-limit").setComment(tr("Maximum SHV journal directory size")).setDefaultValue((int)utils::FileShvJournal::DEFAULT_JOURNAL_SIZE_LIMIT);
 }
