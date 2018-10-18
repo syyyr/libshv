@@ -48,6 +48,13 @@ struct SHVIOTQT_DECL_EXPORT ShvJournalGetLogParams
 class SHVIOTQT_DECL_EXPORT FileShvJournal
 {
 public:
+	static constexpr long DEFAULT_FILE_SIZE_LIMIT = 100 * 1024;
+	static constexpr long DEFAULT_JOURNAL_SIZE_LIMIT = 100 * 100 * 1024;
+	static constexpr int FILE_DIGITS = 6;
+	static const char* FILE_EXT;
+	static constexpr char FIELD_SEPARATOR = '\t';
+	static constexpr char RECORD_SEPARATOR = '\n';
+public:
 	using SnapShotFn = std::function<void (std::vector<ShvJournalEntry>&)>;
 
 	FileShvJournal(SnapShotFn snf);
@@ -64,28 +71,31 @@ public:
 	static bool pathMatch(const std::string &pattern, const std::string &path);
 private:
 	std::string fileNoToName(int n);
-	long fileSize(const std::string &fn);
+	//long fileSize(const std::string &fn);
 	int lastFileNo();
-	void setLastFileNo(int n) {m_lastFileNo = n;}
+	void updateJournalDirStatus();
+	void setLastFileNo(int n) {m_journalDirStatus.maxFileNo = n;}
 	int64_t findLastEntryDateTime(const std::string &fn);
 	void appendEntry(std::ofstream &out, int64_t msec, int uptime_sec, const ShvJournalEntry &e);
 
 	void checkJournalDir();
+	void rotateJournal();
 
 	std::string getLine(std::istream &in, char sep);
 	static long toLong(const std::string &s);
 private:
-	static constexpr long DEFAULT_FILE_SIZE_LIMIT = 100 * 1024;
-	static constexpr int FILE_DIGITS = 4;
-	static const char* FILE_EXT;
-	static constexpr char FIELD_SEPARATOR = '\t';
-	static constexpr char RECORD_SEPARATOR = '\n';
 	std::string m_deviceId;
 	shv::chainpack::RpcValue m_typeInfo;
-	int m_lastFileNo = -1;
+	struct //JournalDirStatus
+	{
+		int minFileNo = -1;
+		int maxFileNo = -1;
+		long journalSize = -1;
+	} m_journalDirStatus;
 	SnapShotFn m_snapShotFn;
 	std::string m_journalDir;
 	long m_fileSizeLimit = DEFAULT_FILE_SIZE_LIMIT;
+	long m_journalSizeLimit = DEFAULT_JOURNAL_SIZE_LIMIT;
 };
 
 } // namespace utils

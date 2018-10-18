@@ -29,9 +29,10 @@ static int uptimeSec()
 	return 0;
 }
 
-#define QT_STATBUF              struct stat64
-#define QT_STAT                 ::stat64
-#define QT_MKDIR                ::mkdir
+#define SHV_STATBUF              struct stat64
+#define SHV_STAT                 ::stat64
+#define SHV_MKDIR                ::mkdir
+#define SHV_REMOVE_FILE          ::remove
 
 static bool mkpath(const std::string &dir_name)
 {
@@ -39,12 +40,12 @@ static bool mkpath(const std::string &dir_name)
 	// fail if the dir already exists (it may have been created by another
 	// thread or another process)
 	const auto is_dir = [](const std::string &dir_name) {
-		QT_STATBUF st;
-		return QT_STAT(dir_name.data(), &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR;
+		SHV_STATBUF st;
+		return SHV_STAT(dir_name.data(), &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR;
 	};
 	if(is_dir(dir_name))
 		return true;
-	if (QT_MKDIR(dir_name.data(), 0777) == 0)
+	if (SHV_MKDIR(dir_name.data(), 0777) == 0)
 		return true;
 	if (errno == EEXIST)
 		return is_dir(dir_name);
@@ -52,7 +53,6 @@ static bool mkpath(const std::string &dir_name)
 		return false;
 	// mkdir failed because the parent dir doesn't exist, so try to create it
 	auto const slash = dir_name.find_last_of('/');
-	//const auto leaf=path.substr(pos+1);
 
 	if (slash == std::string::npos)
 		return false;
@@ -60,9 +60,27 @@ static bool mkpath(const std::string &dir_name)
 	if (!mkpath(parent_dir_name))
 		return false;
 	// try again
-	if (QT_MKDIR(dir_name.data(), 0777) == 0)
+	if (SHV_MKDIR(dir_name.data(), 0777) == 0)
 		return true;
 	return errno == EEXIST && is_dir(dir_name);
+}
+
+static long file_size(const std::string &file_name)
+{
+	SHV_STATBUF st;
+	if(SHV_STAT(file_name.data(), &st) == 0)
+		return st.st_size;
+	logWShvJournal() << "Cannot stat file:" << file_name;
+	return -1;
+}
+
+static long rm_file(const std::string &file_name)
+{
+	long sz = file_size(file_name);
+	if(SHV_REMOVE_FILE(file_name.c_str()) == 0)
+		return sz;
+	logWShvJournal() << "Cannot delete file:" << file_name;
+	return 0;
 }
 
 ShvJournalGetLogParams::ShvJournalGetLogParams(const chainpack::RpcValue &opts)
@@ -110,11 +128,17 @@ void FileShvJournal::append(const ShvJournalEntry &entry)
 				max_n++;
 			}
 			else {
-				auto fsz = fileSize(fn);
+				auto fsz = file_size(fn);
 				shvDebug() << "\t current file size:" << fsz << "limit:" << m_fileSizeLimit;
 				if(fsz > m_fileSizeLimit) {
-					max_n++;
 					shvDebug() << "\t file size limit exceeded, createing new file:" << max_n;
+					// rotate journal before creating new file
+					rotateJournal();
+					if(m_journalDirStatus.maxFileNo != max_n) {
+						logWShvJournal() << "Max file no changed after log rotation, this should never happen !!!";
+						max_n = m_journalDirStatus.maxFileNo;
+					}
+					max_n++;
 				}
 			}
 		}
@@ -147,7 +171,7 @@ void FileShvJournal::append(const ShvJournalEntry &entry)
 	}
 	catch (std::exception &e) {
 		logWShvJournal() << e.what();
-		m_lastFileNo = -1;
+		m_journalDirStatus.maxFileNo = -1;
 	}
 }
 
@@ -170,13 +194,25 @@ void FileShvJournal::checkJournalDir()
 		throw std::runtime_error("Journal dir: " + m_journalDir + " do not exists and cannot be created");
 }
 
+void FileShvJournal::rotateJournal()
+{
+	updateJournalDirStatus();
+	if(m_journalDirStatus.journalSize > m_journalSizeLimit) {
+		for (int i = m_journalDirStatus.minFileNo; i < m_journalDirStatus.maxFileNo && m_journalDirStatus.journalSize > m_journalSizeLimit; ++i) {
+			std::string fn = fileNoToName(i);
+			m_journalDirStatus.journalSize -= rm_file(fn);
+		}
+		updateJournalDirStatus();
+	}
+}
+
 std::string FileShvJournal::fileNoToName(int n)
 {
 	char buff[10];
 	std::snprintf(buff, sizeof (buff), "%04d", n);
 	return m_journalDir + '/' + std::string(buff) + FILE_EXT;
 }
-
+/*
 long FileShvJournal::fileSize(const std::string &fn)
 {
 	std::ifstream in(fn, std::ios::in);
@@ -185,12 +221,18 @@ long FileShvJournal::fileSize(const std::string &fn)
 	in.seekg(0, std::ios::end);
 	return in.tellg();
 }
-
+*/
 int FileShvJournal::lastFileNo()
 {
-	if(m_lastFileNo > 0)
-		return m_lastFileNo;
-	int max_n = -1;
+	if(m_journalDirStatus.maxFileNo < 0)
+		updateJournalDirStatus();
+	return m_journalDirStatus.maxFileNo;
+}
+
+void FileShvJournal::updateJournalDirStatus()
+{
+	int min_n = std::numeric_limits<int>::max();
+	int max_n = -1;//std::numeric_limits<int>::min();
 	DIR *dir;
 	struct dirent *ent;
 	if ((dir = opendir (m_journalDir.c_str())) != nullptr) {
@@ -205,6 +247,8 @@ int FileShvJournal::lastFileNo()
 					int n = std::stoi(fn.substr(0, fn.size() - ext.size()));
 					if(n > max_n)
 						max_n = n;
+					if(n < min_n)
+						min_n = n;
 				} catch (std::logic_error &e) {
 					shvWarning() << "Mallformated shv journal file name" << fn << e.what();
 				}
@@ -215,8 +259,10 @@ int FileShvJournal::lastFileNo()
 	else {
 		throw std::runtime_error("Cannot read content of dir: " + m_journalDir);
 	}
-	m_lastFileNo = max_n;
-	return m_lastFileNo;
+	if(max_n == 0)
+		min_n = 0;
+	m_journalDirStatus.minFileNo = min_n;
+	m_journalDirStatus.maxFileNo = max_n;
 }
 
 int64_t FileShvJournal::findLastEntryDateTime(const std::string &fn)
@@ -299,7 +345,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 	int min_file_no = 0;
 	int64_t min_msec = 0;
 	int file_no = last_file_no;
-	for(; file_no > 0; file_no--) {
+	for(; file_no > 0 && file_no >= m_journalDirStatus.minFileNo; file_no--) {
 		std::string fn = fileNoToName(file_no);
 		std::ifstream in(fn, std::ios::in | std::ios::binary);
 		if (!in) {
