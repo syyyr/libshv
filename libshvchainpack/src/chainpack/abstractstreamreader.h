@@ -11,11 +11,18 @@ namespace chainpack {
 class SHVCHAINPACK_DECL_EXPORT AbstractStreamReader
 {
 public:
-	class SHVCHAINPACK_DECL_EXPORT ParseException : public std::runtime_error
+	class SHVCHAINPACK_DECL_EXPORT ParseException : public std::exception
 	{
-		using Super = std::runtime_error;
+		using Super = std::exception;
 	public:
-		using Super::Super;
+		ParseException(const std::string msg, long pos) : m_msg(msg), m_pos(pos) {}
+
+		const char *what() const noexcept override;
+		long pos() const {return m_pos;}
+		const std::string& msg() const {return m_msg;}
+	private:
+		std::string m_msg;
+		long m_pos = -1;
 	};
 	friend size_t unpack_underflow_handler(ccpcp_unpack_context *ctx);
 public:

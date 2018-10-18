@@ -17,7 +17,7 @@ namespace chainpack {
 		abort(); \
 	} \
 	else { \
-		throw ChainPackReader::ParseException(msg + std::string(" at pos: ") + std::to_string(m_in.tellg()) + " near to: " + buff); \
+		throw ChainPackReader::ParseException(msg + std::string(" at pos: ") + std::to_string(m_in.tellg()) + " near to: " + buff, m_in.tellg()); \
 	} \
 }
 
@@ -53,7 +53,7 @@ void ChainPackReader::unpackNext()
 {
 	cchainpack_unpack_next(&m_inCtx);
 	if(m_inCtx.err_no != CCPCP_RC_OK)
-		PARSE_EXCEPTION("Cpon parse error: " + std::to_string(m_inCtx.err_no));
+		PARSE_EXCEPTION("Parse error: " + std::to_string(m_inCtx.err_no));
 }
 
 void ChainPackReader::read(RpcValue &val, std::string &err)

@@ -393,10 +393,6 @@ RpcValue::RpcValue(RpcValue::Map &&values) : m_ptr(std::make_shared<ChainPackMap
 RpcValue::RpcValue(const RpcValue::IMap &values) : m_ptr(std::make_shared<ChainPackIMap>(values)) {}
 RpcValue::RpcValue(RpcValue::IMap &&values) : m_ptr(std::make_shared<ChainPackIMap>(std::move(values))) {}
 
-RpcValue::~RpcValue()
-{
-	//std::cerr << __FUNCTION__ << " >>>>>>>>>>>>> " << m_ptr.get() << " ref cnt: " << m_ptr.use_count() << " val: " << toStdString() << std::endl;
-}
 #ifdef RPCVALUE_COPY_AND_SWAP
 void RpcValue::swap(RpcValue& other) noexcept
 {

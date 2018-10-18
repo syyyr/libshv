@@ -355,9 +355,10 @@ RpcValue RpcDriver::decodeData(Rpc::ProtocolType protocol_type, const std::strin
 			break;
 		}
 	}
-	catch(CponReader::ParseException &e) {
-		nError() << "Cpon parse error:" << e.what();
-		nError().nospace() << "Start offset: " << start_pos << " Data:\n" << shv::chainpack::Utils::hexDump(data);
+	catch(AbstractStreamReader::ParseException &e) {
+		nError() << Rpc::protocolTypeToString(protocol_type) << "Decode data error:" << e.what();
+		std::string data_piece = data.substr(e.pos() - 10*16, 20*16);
+		nError().nospace() << "Start offset: " << start_pos << " Data: from pos:" << (e.pos() - 10*16) << "\n" << shv::chainpack::Utils::hexDump(data_piece);
 	}
 	return ret;
 }

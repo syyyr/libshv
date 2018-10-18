@@ -51,10 +51,10 @@ public:
 		Num m_num = {0, 0};
 	public:
 		Decimal() : m_num{-1, 0} {}
-		Decimal(int64_t mantisa, int16_t exponent) : m_num{exponent, mantisa} {}
-		static Decimal fromDouble(double n, int16_t exponent)
+		Decimal(int64_t mantisa, int exponent) : m_num{(int16_t)exponent, mantisa} {}
+		static Decimal fromDouble(double n, int exponent)
 		{
-			int16_t exp = exponent;
+			int exp = exponent;
 			if(exponent > 0) {
 				//m_num.mantisa = (int)(n * std::pow(Base, precision) + 0.5);
 				for(; exponent > 0; exponent--) n /= Base;
@@ -66,7 +66,7 @@ public:
 			return Decimal((int64_t)(n + 0.5), exp);
 		}
 		int64_t mantisa() const {return m_num.mantisa;}
-		int16_t exponent() const {return m_num.exponent;}
+		int exponent() const {return m_num.exponent;}
 		double toDouble() const
 		{
 			double ret = mantisa();
@@ -363,8 +363,6 @@ public:
 	// This prevents ChainPack(some_pointer) from accidentally producing a bool. Use
 	// ChainPack(bool(some_pointer)) if that behavior is desired.
 	RpcValue(void *) = delete;
-
-	~RpcValue();
 
 	Type type() const;
 	Type arrayType() const;
