@@ -17,6 +17,10 @@ public:
 
 	CLIOPTION_GETTER_SETTER2(QString, "device.mountPoint", m, setM, ountPoint)
 	CLIOPTION_GETTER_SETTER2(QString, "device.id", d, setD, eviceId)
+	CLIOPTION_GETTER_SETTER2(QString, "device.idFile", d, setD, eviceIdFile)
+	CLIOPTION_GETTER_SETTER2(QString, "shvJournal.dir", s, setS, hvJournalDir)
+	CLIOPTION_GETTER_SETTER2(int, "shvJournal.fileSizeLimit", s, setS, hvJournalFileSizeLimit)
+	CLIOPTION_GETTER_SETTER2(int, "shvJournal.dirSizeLimit", s, setS, hvJournalDirSizeLimit)
 };
 
 class SHVIOTQT_DECL_EXPORT DeviceConnection : public ClientConnection
