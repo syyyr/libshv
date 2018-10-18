@@ -90,7 +90,7 @@ ShvJournalGetLogParams::ShvJournalGetLogParams(const chainpack::RpcValue &opts)
 	since = m.value("since", since).toDateTime();
 	if(!since.isValid())
 		since = m.value("from").toDateTime();
-	until = m.value("since", until).toDateTime();
+	until = m.value("until", until).toDateTime();
 	if(!until.isValid())
 		until = m.value("to").toDateTime();
 	pathPattern = m.value("pathPattern", pathPattern).toString();
@@ -197,8 +197,8 @@ void FileShvJournal::checkJournalDir()
 void FileShvJournal::rotateJournal()
 {
 	updateJournalDirStatus();
-	if(m_journalDirStatus.journalSize > m_journalSizeLimit) {
-		for (int i = m_journalDirStatus.minFileNo; i < m_journalDirStatus.maxFileNo && m_journalDirStatus.journalSize > m_journalSizeLimit; ++i) {
+	if(m_journalDirStatus.journalSize > m_dirSizeLimit) {
+		for (int i = m_journalDirStatus.minFileNo; i < m_journalDirStatus.maxFileNo && m_journalDirStatus.journalSize > m_dirSizeLimit; ++i) {
 			std::string fn = fileNoToName(i);
 			m_journalDirStatus.journalSize -= rm_file(fn);
 		}

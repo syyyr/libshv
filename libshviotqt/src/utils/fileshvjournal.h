@@ -60,7 +60,11 @@ public:
 	FileShvJournal(SnapShotFn snf);
 
 	void setJournalDir(std::string s) {m_journalDir = std::move(s);}
+	const std::string& journalDir() const {return m_journalDir;}
 	void setFileSizeLimit(long n) {m_fileSizeLimit = n;}
+	long fileSizeLimit() const { return m_fileSizeLimit;}
+	void setDirSizeLimit(long n) {m_dirSizeLimit = n;}
+	long dirSizeLimit() const { return m_dirSizeLimit;}
 	void setDeviceId(std::string id) { m_deviceId = std::move(id); }
 	void setTypeInfo(const shv::chainpack::RpcValue &i) { m_typeInfo = i; }
 
@@ -95,7 +99,7 @@ private:
 	SnapShotFn m_snapShotFn;
 	std::string m_journalDir;
 	long m_fileSizeLimit = DEFAULT_FILE_SIZE_LIMIT;
-	long m_journalSizeLimit = DEFAULT_JOURNAL_SIZE_LIMIT;
+	long m_dirSizeLimit = DEFAULT_JOURNAL_SIZE_LIMIT;
 };
 
 } // namespace utils
