@@ -37,7 +37,7 @@ void DeviceConnection::setCliOptions(const DeviceAppCliOptions *cli_opts)
 		std::string device_id = cli_opts->deviceId().toStdString();
 		if(device_id.empty()) {
 			std::string device_id_file = cli_opts->deviceIdFile().toStdString();
-			if(!device_id.empty()) {
+			if(!device_id_file.empty()) {
 				std::ifstream ifs(device_id_file, std::ios::binary);
 				if(ifs)
 					ifs >> device_id;
