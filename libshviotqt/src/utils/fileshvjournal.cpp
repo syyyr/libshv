@@ -177,6 +177,7 @@ void FileShvJournal::append(const ShvJournalEntry &entry)
 
 void FileShvJournal::appendEntry(std::ofstream &out, int64_t msec, int uptime_sec, const ShvJournalEntry &e)
 {
+	auto p1 = out.tellp();
 	out << cp::RpcValue::DateTime::fromMSecsSinceEpoch(msec).toIsoString();
 	out << FIELD_SEPARATOR;
 	out << uptime_sec;
@@ -185,7 +186,9 @@ void FileShvJournal::appendEntry(std::ofstream &out, int64_t msec, int uptime_se
 	out << FIELD_SEPARATOR;
 	out << e.value.toCpon();
 	out << RECORD_SEPARATOR;
+	auto p2 = out.tellp();
 	out.flush();
+	m_journalDirStatus.journalSize += (p2 - p1);
 }
 
 void FileShvJournal::checkJournalDir()
@@ -209,7 +212,7 @@ void FileShvJournal::rotateJournal()
 std::string FileShvJournal::fileNoToName(int n)
 {
 	char buff[10];
-	std::snprintf(buff, sizeof (buff), "%04d", n);
+	std::snprintf(buff, sizeof (buff), "%0*d", FILE_DIGITS, n);
 	return m_journalDir + '/' + std::string(buff) + FILE_EXT;
 }
 /*
@@ -237,6 +240,7 @@ void FileShvJournal::updateJournalDirStatus()
 	struct dirent *ent;
 	if ((dir = opendir (m_journalDir.c_str())) != nullptr) {
 		max_n = 0;
+		m_journalDirStatus.journalSize = 0;
 		std::string ext = FILE_EXT;
 		while ((ent = readdir (dir)) != nullptr) {
 			if(ent->d_type == DT_REG) {
@@ -245,10 +249,14 @@ void FileShvJournal::updateJournalDirStatus()
 					continue;
 				try {
 					int n = std::stoi(fn.substr(0, fn.size() - ext.size()));
-					if(n > max_n)
-						max_n = n;
-					if(n < min_n)
-						min_n = n;
+					if(n > 0) {
+						if(n > max_n)
+							max_n = n;
+						if(n < min_n)
+							min_n = n;
+						std::string fn = m_journalDir + '/' + ent->d_name;
+						m_journalDirStatus.journalSize += file_size(fn);
+					}
 				} catch (std::logic_error &e) {
 					shvWarning() << "Mallformated shv journal file name" << fn << e.what();
 				}
@@ -298,31 +306,19 @@ int64_t FileShvJournal::findLastEntryDateTime(const std::string &fn)
 				if(lf_pos != std::string::npos) {
 					lf_pos++;
 					auto tab_pos = chunk.find(FIELD_SEPARATOR, lf_pos);
-					auto lf2_pos = chunk.find(RECORD_SEPARATOR, lf_pos);
 					if(tab_pos != std::string::npos) {
-						if(lf2_pos == std::string::npos || tab_pos < lf2_pos) {
-							std::string s = chunk.substr(lf_pos, tab_pos - lf_pos);
-							shvDebug() << "\t checking:" << s;
-							chainpack::RpcValue::DateTime dt = chainpack::RpcValue::DateTime::fromUtcString(s);
-							if(dt.isValid())
-								dt_msec = dt.msecsSinceEpoch();
-							else
-								logWShvJournal() << fn << "Malformed shv journal date time:" << s << "will be ignored.";
-						}
-						else {
-							logWShvJournal() << fn << "Malformed line LF before TAB:" << chunk.substr(lf_pos, lf2_pos - lf_pos);;
-						}
+						std::string s = chunk.substr(lf_pos, tab_pos - lf_pos);
+						shvDebug() << "\t checking:" << s;
+						chainpack::RpcValue::DateTime dt = chainpack::RpcValue::DateTime::fromUtcString(s);
+						if(dt.isValid())
+							dt_msec = dt.msecsSinceEpoch();
+						else
+							logWShvJournal() << fn << "Malformed shv journal date time:" << s << "will be ignored.";
 					}
 					else if(chunk.size() - lf_pos > 0) {
 						logWShvJournal() << fn << "Truncated shv journal date time:" << chunk.substr(lf_pos) << "will be ignored.";
 					}
 				}
-			}
-			auto len = chunk.find(FIELD_SEPARATOR);
-			if(len == std::string::npos) {
-				break;
-			}
-			else {
 			}
 		}
 		if(dt_msec > 0) {
@@ -336,9 +332,7 @@ int64_t FileShvJournal::findLastEntryDateTime(const std::string &fn)
 
 chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 {
-	//int file_no = findFileWithSnapshotFor(from);
-	//if(!since.isValid())
-	//	throw std::runtime_error("Invalid 'from' date-time.");
+	checkJournalDir();
 	auto since_msec = params.since.isValid()? params.since.msecsSinceEpoch(): 0;
 	//auto until_msec = until.isValid()? until.msecsSinceEpoch(): std::numeric_limits<int64_t>::max();
 	int last_file_no = lastFileNo();
@@ -379,6 +373,8 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 		file_no = min_file_no;
 		since_msec = min_msec;
 	}
+	if(file_no < m_journalDirStatus.minFileNo)
+		file_no = m_journalDirStatus.minFileNo;
 	if(file_no > 0) {
 		std::map<std::string, std::string> snapshot;
 		int rec_cnt = 0;
@@ -393,6 +389,8 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 				std::string line = getLine(in, RECORD_SEPARATOR);
 				std::istringstream iss(line);
 				std::string dtstr = getLine(iss, FIELD_SEPARATOR);
+				if(dtstr.empty())
+					continue; // skip empty line
 				std::string upstr = getLine(iss, FIELD_SEPARATOR);
 				std::string path = getLine(iss, FIELD_SEPARATOR);
 				std::string valstr = getLine(iss, FIELD_SEPARATOR);
