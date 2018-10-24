@@ -226,6 +226,7 @@ static std::string join_str(const ShvNode::StringList &sl, char sep)
 QList<ShvNode *> ShvNode::ownChildren() const
 {
 	QList<ShvNode*> lst = findChildren<ShvNode*>(QString(), Qt::FindDirectChildrenOnly);
+	qSort(lst);
 	return lst;
 }
 
