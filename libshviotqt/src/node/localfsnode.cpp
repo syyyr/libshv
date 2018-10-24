@@ -42,7 +42,8 @@ ShvNode::StringList LocalFSNode::childNames(const ShvNode::StringViewList &shv_p
 		if(!d2.exists())
 			SHV_EXCEPTION("Path " + d2.absolutePath().toStdString() + " do not exists.");
 		ShvNode::StringList lst;
-		for(const QFileInfo &fi : d2.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot)) {
+		for(const QFileInfo &fi : d2.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot, QDir::Name | QDir::IgnoreCase | QDir::DirsFirst)) {
+			//shvInfo() << fi.fileName();
 			lst.push_back(fi.fileName().toStdString());
 		}
 		return lst;
