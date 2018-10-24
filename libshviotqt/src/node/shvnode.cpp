@@ -226,7 +226,6 @@ static std::string join_str(const ShvNode::StringList &sl, char sep)
 QList<ShvNode *> ShvNode::ownChildren() const
 {
 	QList<ShvNode*> lst = findChildren<ShvNode*>(QString(), Qt::FindDirectChildrenOnly);
-	qSort(lst);
 	return lst;
 }
 
@@ -237,6 +236,7 @@ ShvNode::StringList ShvNode::childNames(const StringViewList &shv_path)
 	if(shv_path.empty()) {
 		for (ShvNode *nd : ownChildren()) {
 			ret.push_back(nd->nodeId());
+			std::sort(ret.begin(), ret.end());
 		}
 	}
 	else if(shv_path.size() == 1) {
