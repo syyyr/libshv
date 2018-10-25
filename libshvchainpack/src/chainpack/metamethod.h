@@ -9,26 +9,53 @@ class SHVCHAINPACK_DECL_EXPORT MetaMethod
 {
 public:
 	enum class Signature {VoidVoid = 0, VoidParam, RetVoid, RetParam};
-	enum class Attribute {
-		Signature = 1 << 0,
-		IsSignal = 1 << 1,
+	struct Flag {
+		enum {
+			IsSignal = 1 << 0,
+		};
+	};
+	struct AccessLevel {
+		enum {
+			Host = 0,
+			Read = 10,
+			Write = 20,
+			Command = 30,
+			Config = 40,
+			Service = 50,
+			Admin = 60,
+		};
+	};
+	struct DirAttribute {
+		enum {
+			Signature = 1 << 0,
+			IsSignal = 1 << 1,
+			AccessLevel = 1 << 2,
+		};
+	};
+	struct LsAttribute {
+		enum {
+			HasChildren = 1 << 0,
+		};
 	};
 public:
-	MetaMethod(const char *name, Signature ms, bool is_sig)
+	MetaMethod(const char *name, Signature ms, unsigned flags, int access_level = AccessLevel::Host)
 		: m_name(name)
 		, m_signature(ms)
-		, m_isSignal(is_sig) {}
+		, m_flags(flags)
+	    , m_accessLevel(access_level) {}
 
-	static constexpr bool IsSignal = true;
+	//static constexpr bool IsSignal = true;
 
 	const char *name() const {return m_name;}
 	RpcValue attributes(unsigned mask) const
 	{
 		RpcValue::List lst;
-		if(mask & (unsigned)Attribute::Signature)
+		if(mask & (unsigned)DirAttribute::Signature)
 			lst.push_back((unsigned)m_signature);
-		if(mask & (unsigned)Attribute::IsSignal)
-			lst.push_back(m_isSignal);
+		if(mask & DirAttribute::IsSignal)
+			lst.push_back(m_flags & Flag::IsSignal);
+		if(mask & DirAttribute::AccessLevel)
+			lst.push_back(m_accessLevel);
 		if(lst.empty())
 			return name();
 		lst.insert(lst.begin(), name());
@@ -37,11 +64,8 @@ public:
 private:
 	const char *m_name;
 	Signature m_signature;
-	bool m_isSignal;
-};
-
-enum class LsAttribute {
-	HasChildren = 1 << 0,
+	unsigned m_flags;
+	int m_accessLevel;
 };
 
 } // namespace chainpack

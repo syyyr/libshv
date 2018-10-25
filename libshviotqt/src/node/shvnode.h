@@ -72,6 +72,19 @@ private:
 	String m_nodeId;
 };
 
+class SHVIOTQT_DECL_EXPORT MethodsTableNode : public shv::iotqt::node::ShvNode
+{
+	using Super = shv::iotqt::node::ShvNode;
+public:
+	explicit MethodsTableNode(const std::string &node_id, const std::vector<shv::chainpack::MetaMethod> &methods, shv::iotqt::node::ShvNode *parent = nullptr)
+		: Super(node_id, parent), m_methods(methods) {}
+
+	size_t methodCount(const StringViewList &shv_path) override;
+	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
+protected:
+	const std::vector<shv::chainpack::MetaMethod> &m_methods;
+};
+
 class SHVIOTQT_DECL_EXPORT ShvRootNode : public ShvNode
 {
 	Q_OBJECT

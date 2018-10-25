@@ -258,13 +258,13 @@ chainpack::RpcValue ShvNode::lsAttributes(const StringViewList &shv_path, unsign
 	shvLogFuncFrame() << "node:" << nodeId() << "attributes:" << attributes << "shv path:" << StringView::join(shv_path, '/');
 	cp::RpcValue::List ret;
 	if(shv_path.empty()) {
-		if(attributes & (int)cp::LsAttribute::HasChildren)
+		if(attributes & cp::MetaMethod::LsAttribute::HasChildren)
 			ret.push_back(hasChildren(shv_path));
 	}
 	else if(shv_path.size() == 1) {
 		ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
 		if(nd) {
-			if(attributes & (int)cp::LsAttribute::HasChildren)
+			if(attributes & cp::MetaMethod::LsAttribute::HasChildren)
 				ret.push_back(nd->hasChildren(StringViewList()));
 		}
 	}
@@ -379,6 +379,24 @@ chainpack::RpcValue ShvNode::callMethod(const ShvNode::StringViewList &shv_path,
 		return ls(shv_path, params);
 
 	SHV_EXCEPTION("Invalid method: " + method + " on path: " + core::StringView::join(shv_path, '/'));
+}
+
+size_t MethodsTableNode::methodCount(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
+{
+	if(shv_path.empty()) {
+		return m_methods.size();
+	}
+	return Super::methodCount(shv_path);
+}
+
+const shv::chainpack::MetaMethod *MethodsTableNode::metaMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, size_t ix)
+{
+	if(shv_path.empty()) {
+		if(m_methods.size() <= ix)
+			SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(m_methods.size()));
+		return &(m_methods[ix]);
+	}
+	return Super::metaMethod(shv_path, ix);
 }
 
 void ShvRootNode::emitSendRpcMesage(const chainpack::RpcMessage &msg)
