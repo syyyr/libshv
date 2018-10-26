@@ -23,13 +23,11 @@ LocalFSNode::LocalFSNode(const QString &root_path, Super *parent)
 
 chainpack::RpcValue LocalFSNode::callMethod(const ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
 {
-	if(shv_path.empty()) {
-		if(method == M_SIZE) {
-			return ndSize(QString::fromStdString(core::StringView::join(shv_path, '/')));
-		}
-		else if(method == M_READ) {
-			return ndRead(QString::fromStdString(core::StringView::join(shv_path, '/')));
-		}
+	if(method == M_SIZE) {
+		return ndSize(QString::fromStdString(core::StringView::join(shv_path, '/')));
+	}
+	else if(method == M_READ) {
+		return ndRead(QString::fromStdString(core::StringView::join(shv_path, '/')));
 	}
 	return Super::callMethod(shv_path, method, params);
 }
