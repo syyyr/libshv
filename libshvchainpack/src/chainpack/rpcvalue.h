@@ -416,7 +416,7 @@ public:
 
 	std::string toPrettyString(const std::string &indent = std::string()) const;
 	//std::string toStdString() const;
-	std::string toCpon() const;
+	std::string toCpon(const std::string &indent = std::string()) const;
 	static RpcValue fromCpon(const std::string & str, std::string *err = nullptr);
 
 	std::string toChainPack() const;

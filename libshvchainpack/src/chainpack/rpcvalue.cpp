@@ -533,12 +533,12 @@ std::string RpcValue::toPrettyString(const std::string &indent) const
 	return out.str();
 }
 
-std::string RpcValue::toCpon() const
+std::string RpcValue::toCpon(const std::string &indent) const
 {
 	std::ostringstream out;
 	{
 		CponWriterOptions opts;
-		opts.setTranslateIds(false);
+		opts.setTranslateIds(false).setIndent(indent);
 		CponWriter wr(out, opts);
 		wr << *this;
 	}
