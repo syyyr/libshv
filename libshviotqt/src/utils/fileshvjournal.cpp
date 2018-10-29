@@ -97,7 +97,7 @@ ShvJournalGetLogParams::ShvJournalGetLogParams(const chainpack::RpcValue &opts)
 	pathPattern = m.value("pathPattern", pathPattern).toString();
 	headerOptions = m.value("headerOptions", headerOptions).toUInt();
 	maxRecordCount = m.value("maxRecordCount", maxRecordCount).toInt();
-	withSnapshot = m.value("headerOptions", withSnapshot).toBool();
+	withSnapshot = m.value("withSnapshot", withSnapshot).toBool();
 }
 
 const char * FileShvJournal::FILE_EXT = ".log";
@@ -446,8 +446,9 @@ log_finish:
 		md.setValue("device", device); // required
 		md.setValue("logVersion", 1); // required
 		md.setValue("dateTime", cp::RpcValue::DateTime::now());
-		md.setValue("tsSince", params.since.isValid()? params.since: cp::RpcValue(nullptr));
-		md.setValue("tsUntil", params.until.isValid()? params.until: cp::RpcValue(nullptr));
+		md.setValue("since", params.since.isValid()? params.since: cp::RpcValue(nullptr));
+		md.setValue("until", params.until.isValid()? params.until: cp::RpcValue(nullptr));
+		md.setValue("withSnapshot", params.withSnapshot);
 	}
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::FileldInfo)) {
 		md.setValue("fields", cp::RpcValue::List{
