@@ -236,7 +236,8 @@ ShvNode::StringList ShvNode::childNames(const StringViewList &shv_path)
 	if(shv_path.empty()) {
 		for (ShvNode *nd : ownChildren()) {
 			ret.push_back(nd->nodeId());
-			std::sort(ret.begin(), ret.end());
+			if(m_isSortedChildren)
+				std::sort(ret.begin(), ret.end());
 		}
 	}
 	else if(shv_path.size() == 1) {

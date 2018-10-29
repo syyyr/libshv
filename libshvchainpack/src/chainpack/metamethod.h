@@ -28,7 +28,7 @@ public:
 	struct DirAttribute {
 		enum {
 			Signature = 1 << 0,
-			IsSignal = 1 << 1,
+			Flags = 1 << 1,
 			AccessLevel = 1 << 2,
 		};
 	};
@@ -42,7 +42,7 @@ public:
 		: m_name(name)
 		, m_signature(ms)
 		, m_flags(flags)
-	    , m_accessLevel(access_level) {}
+		, m_accessLevel(access_level) {}
 
 	//static constexpr bool IsSignal = true;
 
@@ -52,8 +52,8 @@ public:
 		RpcValue::List lst;
 		if(mask & (unsigned)DirAttribute::Signature)
 			lst.push_back((unsigned)m_signature);
-		if(mask & DirAttribute::IsSignal)
-			lst.push_back(m_flags & Flag::IsSignal);
+		if(mask & DirAttribute::Flags)
+			lst.push_back(m_flags);
 		if(mask & DirAttribute::AccessLevel)
 			lst.push_back(m_accessLevel);
 		if(lst.empty())

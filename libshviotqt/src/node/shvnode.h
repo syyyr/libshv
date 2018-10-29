@@ -42,6 +42,8 @@ public:
 	String shvPath() const;
 	ShvRootNode* rootNode();
 
+	void setSortedChildren(bool b) {m_isSortedChildren = b;}
+
 	void deleteDanglingPath();
 
 	virtual bool isRootNode() const {return false;}
@@ -70,6 +72,7 @@ public:
 	virtual shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params);
 private:
 	String m_nodeId;
+	bool m_isSortedChildren = true;
 };
 
 class SHVIOTQT_DECL_EXPORT MethodsTableNode : public shv::iotqt::node::ShvNode

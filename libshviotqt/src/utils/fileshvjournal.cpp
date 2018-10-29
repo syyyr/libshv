@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 
 #define logWShvJournal() nCWarning("ShvJournal")
+//#define logDShvJournal() nCDebug("ShvJournal")
 
 namespace cp = shv::chainpack;
 
@@ -332,6 +333,7 @@ int64_t FileShvJournal::findLastEntryDateTime(const std::string &fn)
 
 chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 {
+	shvLogFuncFrame() << "since:" << params.since.toIsoString() << "until:" << params.until.toIsoString();
 	checkJournalDir();
 	auto since_msec = params.since.isValid()? params.since.msecsSinceEpoch(): 0;
 	//auto until_msec = until.isValid()? until.msecsSinceEpoch(): std::numeric_limits<int64_t>::max();
