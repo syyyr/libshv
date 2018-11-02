@@ -16,12 +16,13 @@ public:
 	};
 	struct AccessLevel {
 		enum {
-			Host = 0,
-			Read = 10,
-			Write = 20,
-			Command = 30,
-			Config = 40,
-			Service = 50,
+			None = 0,
+			Browse = 5,
+			Read = 15,
+			Write = 25,
+			Command = 35,
+			Config = 45,
+			Service = 55,
 			Admin = 60,
 		};
 	};
@@ -38,11 +39,13 @@ public:
 		};
 	};
 public:
-	MetaMethod(const char *name, Signature ms, unsigned flags, int access_level = AccessLevel::Host)
-		: m_name(name)
-		, m_signature(ms)
-		, m_flags(flags)
-		, m_accessLevel(access_level) {}
+	MetaMethod(const char *name, Signature ms, unsigned flags, int access_level = AccessLevel::Browse, const std::string access_grant = std::string())
+	    : m_name(name)
+	    , m_signature(ms)
+	    , m_flags(flags)
+	    , m_accessLevel(access_level)
+	    , m_accessGrant(access_grant)
+	{}
 
 	//static constexpr bool IsSignal = true;
 
@@ -66,6 +69,7 @@ private:
 	Signature m_signature;
 	unsigned m_flags;
 	int m_accessLevel;
+	std::string m_accessGrant;
 };
 
 } // namespace chainpack
