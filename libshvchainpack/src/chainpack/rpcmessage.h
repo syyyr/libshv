@@ -27,6 +27,7 @@ public:
 								CallerIds, // 11
 								ProtocolType, //needed when dest client is using different version than source one to translate raw message data to correct format
 								RevCallerIds,
+								AccessGrant,
 								MAX};};
 		struct Key { enum Enum {Params = 1, Result, Error, ErrorCode, ErrorMessage, MAX};};
 
@@ -66,6 +67,11 @@ public:
 	static void setShvPath(RpcValue::MetaData &meta, const RpcValue::String &path);
 	RpcValue shvPath() const;
 	void setShvPath(const RpcValue::String &path);
+
+	static RpcValue accessGrant(const RpcValue::MetaData &meta);
+	static void setAccessGrant(RpcValue::MetaData &meta, const RpcValue &ag);
+	RpcValue accessGrant() const;
+	void setAccessGrant(const RpcValue &ag);
 
 	static RpcValue callerIds(const RpcValue::MetaData &meta);
 	static void setCallerIds(RpcValue::MetaData &meta, const RpcValue &caller_id);

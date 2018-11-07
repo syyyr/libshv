@@ -42,6 +42,8 @@ public:
 	const std::string& connectionType() const {return m_connectionType;}
 	const shv::chainpack::RpcValue::Map& connectionOptions() const {return m_connectionOptions.toMap();}
 
+	const std::string& userName() const { return m_userName; }
+
 	bool isConnectedAndLoggedIn() const {return isSocketConnected() && !isInitPhase();}
 
 	Q_SIGNAL void rpcMessageReceived(const shv::chainpack::RpcMessage &msg);
@@ -63,7 +65,7 @@ protected:
 	virtual std::string passwordHash(PasswordHashType type, const std::string &user) = 0;
 protected:
 	std::string m_connectionName;
-	std::string m_user;
+	std::string m_userName;
 	std::string m_pendingAuthNonce;
 	bool m_helloReceived = false;
 	bool m_loginReceived = false;

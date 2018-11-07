@@ -13,6 +13,17 @@ public:
 	enum class ProtocolType {Invalid = 0, ChainPack, Cpon, JsonRpc};
 	static const char* protocolTypeToString(ProtocolType pv);
 
+	struct SHVCHAINPACK_DECL_EXPORT AccessGrant
+	{
+		std::string grant;
+		int weight = -1;
+
+		AccessGrant() {}
+		AccessGrant(const std::string &g, int w) : grant(g), weight(w) {}
+
+		bool isValid() const {return weight >= 0;}
+ 	};
+
 	static const char* OPT_IDLE_WD_TIMEOUT;
 
 	static const char* KEY_CONNECTION_OPTIONS;
@@ -33,6 +44,7 @@ public:
 	static const char* METH_SET;
 	static const char* METH_DIR;
 	static const char* METH_LS;
+	//static const char* METH_ACCESS_LEVELS;
 	static const char* METH_PING;
 	static const char* METH_ECHO;
 	static const char* METH_APP_NAME;
@@ -53,6 +65,15 @@ public:
 	//static const char* NTF_DISCONNECTED; /// obsolete
 	static const char* NTF_MOUNTED_CHANGED;
 	static const char* NTF_CONNECTED_CHANGED;
+
+	static const char* GRANT_BROWSE;
+	static const char* GRANT_READ;
+	static const char* GRANT_WRITE;
+	static const char* GRANT_COMMAND;
+	static const char* GRANT_CONFIG;
+	static const char* GRANT_SERVICE;
+	static const char* GRANT_DEVEL;
+	static const char* GRANT_ADMIN;
 
 	static const char* DIR_BROKER;
 	static const char* DIR_BROKER_APP;

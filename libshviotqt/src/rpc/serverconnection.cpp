@@ -125,8 +125,8 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 			m_connectionOptions = params.value(cp::Rpc::KEY_CONNECTION_OPTIONS);
 			cp::RpcValue login_resp = login(rq.params());
 			if(!login_resp.isValid())
-				SHV_EXCEPTION("Invalid authentication for user: " + m_user + " at: " + connectionName());
-			shvInfo().nospace() << "Client logged in user: " << m_user << " from: " << peerAddress() << ':' << peerPort();
+				SHV_EXCEPTION("Invalid authentication for user: " + m_userName + " at: " + connectionName());
+			shvInfo().nospace() << "Client logged in user: " << m_userName << " from: " << peerAddress() << ':' << peerPort();
 			sendResponse(rq.requestId(), login_resp);
 			m_loginReceived = true;
 			return;
@@ -144,11 +144,11 @@ chainpack::RpcValue ServerConnection::login(const chainpack::RpcValue &auth_para
 	const cp::RpcValue::Map params = auth_params.toMap();
 	const cp::RpcValue::Map login = params.value("login").toMap();
 
-	m_user = login.value("user").toString();
-	if(m_user.empty())
+	m_userName = login.value("user").toString();
+	if(m_userName.empty())
 		return false;
 
-	shvInfo() << "login - user:" << m_user;// << "password:" << password_hash;
+	shvInfo() << "login - user:" << m_userName;// << "password:" << password_hash;
 	bool password_ok = checkPassword(login);
 	if(password_ok) {
 		cp::RpcValue::Map login_resp;
@@ -167,27 +167,22 @@ bool ServerConnection::checkPassword(const chainpack::RpcValue::Map &login)
 		//std::string password_hash = passwordHash(PasswordHashType::RsaOaep, m_user);
 	}
 	else if(login_type == "PLAIN") {
-		std::string password_hash = passwordHash(PasswordHashType::Plain, m_user);
-		password_ok = password_hash.empty();
-		if(!password_ok) {
-			std::string pwd = login.value("password").toString();
-			password_ok = (pwd == password_hash);
-		}
+		std::string password_hash = passwordHash(PasswordHashType::Plain, m_userName);
+		std::string pwd = login.value("password").toString();
+		password_ok = (pwd == password_hash);
 	}
 	else {
 		/// login_type == "SHA1" is default
-		std::string password_hash = passwordHash(PasswordHashType::Sha1, m_user);
-		password_ok = password_hash.empty();
-		if(!password_ok) {
-			std::string nonce_sha1 = login.value("password").toString();
-			std::string nonce = m_pendingAuthNonce + password_hash;
-			//shvWarning() << m_pendingAuthNonce << "prd" << nonce;
-			QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-			hash.addData(nonce.data(), nonce.length());
-			std::string sha1 = std::string(hash.result().toHex().constData());
-			//shvInfo() << nonce_sha1 << "vs" << sha1;
-			password_ok = (nonce_sha1 == sha1);
-		}
+		std::string sent_sha1 = login.value("password").toString();
+
+		std::string password_hash = passwordHash(PasswordHashType::Sha1, m_userName);
+		std::string nonce = m_pendingAuthNonce + password_hash;
+		//shvWarning() << m_pendingAuthNonce << "prd" << nonce;
+		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
+		hash.addData(nonce.data(), nonce.length());
+		std::string correct_sha1 = std::string(hash.result().toHex().constData());
+		//shvInfo() << nonce_sha1 << "vs" << sha1;
+		password_ok = (sent_sha1 == correct_sha1);
 	}
 	return password_ok;
 }

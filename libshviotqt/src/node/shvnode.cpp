@@ -10,6 +10,8 @@
 #include <shv/core/exception.h>
 #include <shv/core/stringview.h>
 
+#include <cstring>
+
 namespace cp = shv::chainpack;
 
 namespace shv {
@@ -175,7 +177,7 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 					return;
 				}
 				else {
-					SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + '/' + shv_path_str + "' doesn't exist" + shvPath());
+					SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + '/' + shv_path_str + "' doesn't exist");
 				}
 			}
 		}
@@ -195,7 +197,14 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 {
 	core::StringView::StringViewList shv_path = core::StringView(rq.shvPath().toString()).split('/');
-	const chainpack::RpcValue::String method = rq.method().toString();
+	const chainpack::RpcValue::String &method = rq.method().toString();
+	const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
+	if(!mm)
+		SHV_EXCEPTION(std::string("Method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' doesn't exist.");
+	const chainpack::RpcValue::String &rq_grant = rq.accessGrant().toString();
+	const std::string &mm_grant = mm->accessGrant();
+	if(grantToAccessLevel(mm_grant.data()) > grantToAccessLevel(rq_grant.data()))
+		SHV_EXCEPTION(std::string("Call method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' operation not permited.");
 	chainpack::RpcValue ret_val = callMethod(shv_path, method, rq.params());
 	return ret_val;
 }
@@ -270,6 +279,19 @@ chainpack::RpcValue ShvNode::lsAttributes(const StringViewList &shv_path, unsign
 		}
 	}
 	return ret;
+}
+
+int ShvNode::grantToAccessLevel(const char *grant_name) const
+{
+	if(std::strcmp(grant_name, cp::Rpc::GRANT_BROWSE) == 0) return cp::MetaMethod::AccessLevel::Browse;
+	if(std::strcmp(grant_name, cp::Rpc::GRANT_READ) == 0) return cp::MetaMethod::AccessLevel::Read;
+	if(std::strcmp(grant_name, cp::Rpc::GRANT_WRITE) == 0) return cp::MetaMethod::AccessLevel::Write;
+	if(std::strcmp(grant_name, cp::Rpc::GRANT_COMMAND) == 0) return cp::MetaMethod::AccessLevel::Command;
+	if(std::strcmp(grant_name, cp::Rpc::GRANT_CONFIG) == 0) return cp::MetaMethod::AccessLevel::Config;
+	if(std::strcmp(grant_name, cp::Rpc::GRANT_SERVICE) == 0) return cp::MetaMethod::AccessLevel::Service;
+	if(std::strcmp(grant_name, cp::Rpc::GRANT_DEVEL) == 0) return cp::MetaMethod::AccessLevel::Devel;
+	if(std::strcmp(grant_name, cp::Rpc::GRANT_ADMIN) == 0) return cp::MetaMethod::AccessLevel::Admin;
+	return -1;
 }
 /*
 chainpack::RpcValue ShvNode::call(const std::string &method, const chainpack::RpcValue &params)

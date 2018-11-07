@@ -16,21 +16,22 @@ public:
 	};
 	struct AccessLevel {
 		enum {
-			None = 0,
-			Browse = 5,
-			Read = 15,
-			Write = 25,
-			Command = 35,
-			Config = 45,
-			Service = 55,
-			Admin = 60,
+			Browse = 0,
+			Read = 10,
+			Write = 20,
+			Command = 30,
+			Config = 40,
+			Service = 50,
+			Devel = 60,
+			Admin = 70,
 		};
 	};
 	struct DirAttribute {
 		enum {
 			Signature = 1 << 0,
 			Flags = 1 << 1,
-			AccessLevel = 1 << 2,
+			//AccessLevel = 1 << 2,
+			AccessGrant = 1 << 2,
 		};
 	};
 	struct LsAttribute {
@@ -39,17 +40,18 @@ public:
 		};
 	};
 public:
-	MetaMethod(const char *name, Signature ms, unsigned flags, int access_level = AccessLevel::Browse, const std::string access_grant = std::string())
+	MetaMethod(const char *name, Signature ms, unsigned flags = 0, /*int access_level = AccessLevel::Browse,*/ const std::string &access_grant = std::string())
 	    : m_name(name)
 	    , m_signature(ms)
 	    , m_flags(flags)
-	    , m_accessLevel(access_level)
+	    //, m_accessLevel(access_level)
 	    , m_accessGrant(access_grant)
 	{}
 
 	//static constexpr bool IsSignal = true;
 
 	const char *name() const {return m_name;}
+	const std::string& accessGrant() const {return m_accessGrant;}
 	RpcValue attributes(unsigned mask) const
 	{
 		RpcValue::List lst;
@@ -57,8 +59,10 @@ public:
 			lst.push_back((unsigned)m_signature);
 		if(mask & DirAttribute::Flags)
 			lst.push_back(m_flags);
-		if(mask & DirAttribute::AccessLevel)
-			lst.push_back(m_accessLevel);
+		//if(mask & DirAttribute::AccessLevel)
+		//	lst.push_back(m_accessLevel);
+		if(mask & DirAttribute::AccessGrant)
+			lst.push_back(m_accessGrant);
 		if(lst.empty())
 			return name();
 		lst.insert(lst.begin(), name());
@@ -68,7 +72,7 @@ private:
 	const char *m_name;
 	Signature m_signature;
 	unsigned m_flags;
-	int m_accessLevel;
+	//int m_accessLevel;
 	std::string m_accessGrant;
 };
 

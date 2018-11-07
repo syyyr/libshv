@@ -43,6 +43,8 @@ struct SHVIOTQT_DECL_EXPORT ShvJournalGetLogParams
 
 	ShvJournalGetLogParams() {}
 	ShvJournalGetLogParams(const shv::chainpack::RpcValue &opts);
+
+	shv::chainpack::RpcValue toRpcValue() const;
 };
 
 class SHVIOTQT_DECL_EXPORT FileShvJournal

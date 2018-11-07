@@ -190,6 +190,26 @@ void RpcMessage::setShvPath(const RpcValue::String &path)
 	setMetaValue(RpcMessage::MetaType::Tag::ShvPath, path);
 }
 
+RpcValue RpcMessage::accessGrant(const RpcValue::MetaData &meta)
+{
+	return meta.value(RpcMessage::MetaType::Tag::AccessGrant);
+}
+
+void RpcMessage::setAccessGrant(RpcValue::MetaData &meta, const RpcValue &ag)
+{
+	meta.setValue(RpcMessage::MetaType::Tag::AccessGrant, ag);
+}
+
+RpcValue RpcMessage::accessGrant() const
+{
+	return metaValue(RpcMessage::MetaType::Tag::AccessGrant);
+}
+
+void RpcMessage::setAccessGrant(const RpcValue &ag)
+{
+	setMetaValue(RpcMessage::MetaType::Tag::AccessGrant, ag);
+}
+
 RpcValue RpcMessage::callerIds(const RpcValue::MetaData &meta)
 {
 	return meta.value(RpcMessage::MetaType::Tag::CallerIds);

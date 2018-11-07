@@ -24,6 +24,7 @@ const char* Rpc::METH_GET = "get";
 const char* Rpc::METH_SET = "set";
 const char* Rpc::METH_DIR = "dir";
 const char* Rpc::METH_LS = "ls";
+//const char* Rpc::METH_ACCESS_LEVELS = "accessLevels";
 const char* Rpc::METH_PING = "ping";
 const char* Rpc::METH_ECHO = "echo";
 const char* Rpc::METH_APP_NAME = "appName";
@@ -44,6 +45,15 @@ const char* Rpc::NTF_VAL_CHANGED = "chng";
 //const char* Rpc::NTF_DISCONNECTED = "disconnected";
 const char* Rpc::NTF_MOUNTED_CHANGED = "mntchng";
 const char* Rpc::NTF_CONNECTED_CHANGED = "connchng";
+
+const char* Rpc::GRANT_BROWSE = "bws";
+const char* Rpc::GRANT_READ = "rd";
+const char* Rpc::GRANT_WRITE = "wr";
+const char* Rpc::GRANT_COMMAND = "cmd";
+const char* Rpc::GRANT_CONFIG = "cfg";
+const char* Rpc::GRANT_SERVICE = "srv";
+const char* Rpc::GRANT_DEVEL = "dev";
+const char* Rpc::GRANT_ADMIN = "su";
 
 const char* Rpc::DIR_BROKER = ".broker";
 const char* Rpc::DIR_BROKER_APP = ".broker/app";

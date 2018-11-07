@@ -100,6 +100,21 @@ ShvJournalGetLogParams::ShvJournalGetLogParams(const chainpack::RpcValue &opts)
 	withSnapshot = m.value("withSnapshot", withSnapshot).toBool();
 }
 
+chainpack::RpcValue ShvJournalGetLogParams::toRpcValue() const
+{
+	cp::RpcValue::Map m;
+	if(since.isValid())
+		m["since"] = since;
+	if(until.isValid())
+		m["until"] = until;
+	if(!pathPattern.empty())
+		m["pathPattern"] = pathPattern;
+	m["headerOptions"] = headerOptions;
+	m["maxRecordCount"] = maxRecordCount;
+	m["withSnapshot"] = withSnapshot;
+	return m;
+}
+
 const char * FileShvJournal::FILE_EXT = ".log";
 
 FileShvJournal::FileShvJournal(FileShvJournal::SnapShotFn snf)
@@ -333,7 +348,7 @@ int64_t FileShvJournal::findLastEntryDateTime(const std::string &fn)
 
 chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 {
-	shvLogFuncFrame() << "since:" << params.since.toIsoString() << "until:" << params.until.toIsoString();
+	shvLogFuncFrame() << params.toRpcValue().toCpon();
 	checkJournalDir();
 	auto since_msec = params.since.isValid()? params.since.msecsSinceEpoch(): 0;
 	//auto until_msec = until.isValid()? until.msecsSinceEpoch(): std::numeric_limits<int64_t>::max();
@@ -377,11 +392,12 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 	}
 	if(file_no < m_journalDirStatus.minFileNo)
 		file_no = m_journalDirStatus.minFileNo;
+	int rec_cnt = 0;
 	if(file_no > 0) {
 		std::map<std::string, std::string> snapshot;
-		int rec_cnt = 0;
 		for(; file_no <= last_file_no; file_no++) {
 			std::string fn = fileNoToName(file_no);
+			shvDebug() << "======================= opening file:" << fn;
 			std::ifstream in(fn, std::ios::in | std::ios::binary);
 			if(!in) {
 				logWShvJournal() << "Cannot open file: " + fn + " for reading, log file missing.";
@@ -389,10 +405,13 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 			}
 			while(in) {
 				std::string line = getLine(in, RECORD_SEPARATOR);
+				shvDebug() << "line:" << line;
 				std::istringstream iss(line);
 				std::string dtstr = getLine(iss, FIELD_SEPARATOR);
-				if(dtstr.empty())
+				if(dtstr.empty()) {
+					shvDebug() << "\t skipping empty line";
 					continue; // skip empty line
+				}
 				std::string upstr = getLine(iss, FIELD_SEPARATOR);
 				std::string path = getLine(iss, FIELD_SEPARATOR);
 				std::string valstr = getLine(iss, FIELD_SEPARATOR);
@@ -403,6 +422,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 					logWShvJournal() << fn << "invalid date time string:" << dtstr;
 					continue;
 				}
+				shvDebug() << "\t FIELDS:" << dtstr << '\t' << path << '\t' << valstr;
 				if(dt < params.since) {
 					if(params.withSnapshot) {
 						snapshot[path] = std::move(valstr);
@@ -410,6 +430,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 				}
 				else if(!params.until.isValid() || dt <= params.until) {
 					if(params.withSnapshot && !snapshot.empty()) {
+						shvDebug() << "\t -------------- Snapshot";
 						for(const auto &kv : snapshot) {
 							cp::RpcValue::List rec;
 							rec.push_back(params.since);
@@ -426,9 +447,10 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 					//rec.push_back(toLong(upstr));
 					rec.push_back(path);
 					rec.push_back(cp::RpcValue::fromCpon(valstr));
+					shvDebug() << "\t LOG:" << rec[0].toDateTime().toIsoString() << '\t' << path << '\t' << rec[2].toCpon();
 					log.push_back(rec);
 					rec_cnt++;
-					if(rec_cnt > params.maxRecordCount)
+					if(rec_cnt >= params.maxRecordCount)
 						goto log_finish;
 				}
 				else {
@@ -441,14 +463,15 @@ log_finish:
 	cp::RpcValue ret = log;
 	cp::RpcValue::MetaData md;
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::BasicInfo)) {
-		cp::RpcValue::Map device;
-		device["id"] = m_deviceId;
-		md.setValue("device", device); // required
+		if(!m_deviceId.empty()) {
+			cp::RpcValue::Map device;
+			device["id"] = m_deviceId;
+			md.setValue("device", device); // required
+		}
 		md.setValue("logVersion", 1); // required
 		md.setValue("dateTime", cp::RpcValue::DateTime::now());
-		md.setValue("since", params.since.isValid()? params.since: cp::RpcValue(nullptr));
-		md.setValue("until", params.until.isValid()? params.until: cp::RpcValue(nullptr));
-		md.setValue("withSnapshot", params.withSnapshot);
+		md.setValue("recordCount", rec_cnt);
+		md.setValue("params", params.toRpcValue());
 	}
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::FileldInfo)) {
 		md.setValue("fields", cp::RpcValue::List{
