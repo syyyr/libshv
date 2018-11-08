@@ -392,6 +392,21 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 	}
 	if(file_no < m_journalDirStatus.minFileNo)
 		file_no = m_journalDirStatus.minFileNo;
+
+	// this ensure that there be only one copy of each path in memory
+	cp::RpcValue::Map path_cache;
+	unsigned max_path_id = 0;
+	auto make_path_shared = [&path_cache, &max_path_id, &params](const std::string &path) -> cp::RpcValue {
+		cp::RpcValue ret = path_cache.value(path);
+		if(ret.isValid())
+			return ret;
+		if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::PathsDict))
+			ret = ++max_path_id;
+		else
+			ret = path;
+		path_cache[path] = ret;
+		return ret;
+	};
 	int rec_cnt = 0;
 	if(file_no > 0) {
 		std::map<std::string, std::string> snapshot;
@@ -435,7 +450,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 							cp::RpcValue::List rec;
 							rec.push_back(params.since);
 							//rec.push_back(0);
-							rec.push_back(kv.first);
+							rec.push_back(make_path_shared(kv.first));
 							rec.push_back(cp::RpcValue::fromCpon(kv.second));
 							log.push_back(rec);
 							rec_cnt++;
@@ -445,7 +460,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 					cp::RpcValue::List rec;
 					rec.push_back(cp::RpcValue::DateTime::fromUtcString(dtstr));
 					//rec.push_back(toLong(upstr));
-					rec.push_back(path);
+					rec.push_back(make_path_shared(path));
 					rec.push_back(cp::RpcValue::fromCpon(valstr));
 					shvDebug() << "\t LOG:" << rec[0].toDateTime().toIsoString() << '\t' << path << '\t' << rec[2].toCpon();
 					log.push_back(rec);
@@ -483,6 +498,13 @@ log_finish:
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::TypeInfo)) {
 		if(m_typeInfo.isValid())
 			md.setValue("typeInfo", m_typeInfo);
+	}
+	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::PathsDict)) {
+		cp::RpcValue::IMap path_dict;
+		for(auto kv : path_cache) {
+			path_dict[kv.second.toInt()] = kv.first;
+		}
+		md.setValue("pathsDict", path_dict);
 	}
 	if(!md.isEmpty())
 		ret.setMetaData(std::move(md));
