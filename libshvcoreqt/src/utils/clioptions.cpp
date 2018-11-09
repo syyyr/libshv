@@ -1,6 +1,8 @@
 #include "clioptions.h"
 #include "../log.h"
 
+#include <shv/chainpack/rpcvalue.h>
+
 #include <shv/core/log.h>
 #include <shv/core/utils.h>
 #include <shv/core/assert.h>
@@ -388,6 +390,73 @@ void CLIOptions::addParseError(const QString& err)
 	m_parseErrors << err;
 }
 
+QVariant CLIOptions::rpcValueToQVariant(const chainpack::RpcValue &v)
+{
+	switch (v.type()) {
+	case chainpack::RpcValue::Type::Invalid: return QVariant();
+	case chainpack::RpcValue::Type::Null: return QVariant();
+	case chainpack::RpcValue::Type::UInt: return QVariant(v.toUInt());
+	case chainpack::RpcValue::Type::Int: return QVariant(v.toInt());
+	case chainpack::RpcValue::Type::Double: return QVariant(v.toDouble());
+	case chainpack::RpcValue::Type::Bool: return QVariant(v.toBool());
+	case chainpack::RpcValue::Type::String: return QVariant(QString::fromStdString(v.toString()));
+	case chainpack::RpcValue::Type::DateTime: return QDateTime::fromMSecsSinceEpoch(v.toDateTime().msecsSinceEpoch());
+	case chainpack::RpcValue::Type::List: {
+		QVariantList lst;
+		for(const auto &rv : v.toList())
+			lst.insert(lst.size(), rpcValueToQVariant(rv));
+		return lst;
+	}
+	case chainpack::RpcValue::Type::Map: {
+		QVariantMap map;
+		for(const auto &kv : v.toMap())
+			map[QString::fromStdString(kv.first)] = rpcValueToQVariant(kv.second);
+		return map;
+	}
+	case chainpack::RpcValue::Type::IMap: {
+		QVariantMap map;
+		for(const auto &kv : v.toIMap())
+			map[QString::number(kv.first)] = rpcValueToQVariant(kv.second);
+		return map;
+	}
+	case chainpack::RpcValue::Type::Decimal: return QVariant(v.toDouble());
+	}
+	return QString::fromStdString(v.toString());
+}
+
+chainpack::RpcValue CLIOptions::qVariantToRpcValue(const QVariant &v)
+{
+	if(!v.isValid())
+		return chainpack::RpcValue();
+	if(v.isNull())
+		return chainpack::RpcValue(nullptr);
+	switch (v.type()) {
+	case QVariant::UInt: return chainpack::RpcValue(v.toUInt());
+	case QVariant::Int: return chainpack::RpcValue(v.toInt());
+	case QVariant::Double: return chainpack::RpcValue(v.toDouble());
+	case QVariant::Bool: return chainpack::RpcValue(v.toBool());
+	case QVariant::String: return v.toString().toStdString();
+	case QVariant::DateTime: return chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(v.toDateTime().toMSecsSinceEpoch());
+	case QVariant::List: {
+		chainpack::RpcValue::List lst;
+		for(const QVariant &rv : v.toList())
+			lst.push_back(qVariantToRpcValue(rv));
+		return lst;
+	}
+	case QVariant::Map: {
+		chainpack::RpcValue::Map map;
+		QMapIterator<QString, QVariant> it(v.toMap());
+		while (it.hasNext()) {
+			it.next();
+			map[it.key().toStdString()] = qVariantToRpcValue(it.value());
+		}
+		return map;
+	}
+	default:
+		return v.toString().toStdString();
+	}
+}
+
 ConfigCLIOptions::ConfigCLIOptions(QObject *parent)
 	: Super(parent)
 {
@@ -408,15 +477,16 @@ bool ConfigCLIOptions::loadConfigFile()
 	if(f.open(QFile::ReadOnly)) {
 		shvInfo() << "Reading config file:" << f.fileName();
 		QByteArray ba = f.readAll();
+		std::string cpon(ba.constData(), ba.size());
 		std::string str = shv::core::Utils::removeJsonComments(std::string(ba.constData()));
 		//shvDebug() << str;
-		QJsonParseError err;
-		auto jsd = QJsonDocument::fromJson(str.c_str(), &err);
-		if(err.error == QJsonParseError::NoError) {
-			mergeConfig(jsd.toVariant().toMap());
+		std::string err;
+		chainpack::RpcValue rv = shv::chainpack::RpcValue::fromCpon(cpon, &err);
+		if(err.empty()) {
+			mergeConfig(rv.toMap());
 		}
 		else {
-			shvError() << "Error parsing config file:" << f.fileName() << "on offset:" << err.offset << err.errorString();
+			shvError() << "Error parsing config file:" << f.fileName() << err;
 			return false;
 		}
 	}
@@ -454,39 +524,29 @@ QString ConfigCLIOptions::configFile()
 	return config_file;
 }
 
-void ConfigCLIOptions::mergeConfig_helper(const QString &key_prefix, const QVariantMap &config_map)
+void ConfigCLIOptions::mergeConfig_helper(const QString &key_prefix, const chainpack::RpcValue &config_map)
 {
 	//shvLogFuncFrame() << key_prefix;
-	QMapIterator<QString, QVariant> it(config_map);
-	while(it.hasNext()) {
-		it.next();
-		QString key = it.key().trimmed();
+	const chainpack::RpcValue::Map &cm = config_map.toMap();
+	for(const auto &kv : cm) {
+		QString key = QString::fromStdString(kv.first);
 		SHV_ASSERT(!key.isEmpty(), "Empty key!", continue);
 		if(!key_prefix.isEmpty()) {
 			key = key_prefix + '.' + key;
 		}
-		QVariant v = it.value();
-		if(v.type() == QVariant::Map) {
-			QVariantMap m = v.toMap();
-			mergeConfig_helper(key, m);
+		chainpack::RpcValue v = kv.second;
+		if(options().contains(key)) {
+			Option &opt = optionRef(key);
+			if(!opt.isSet()) {
+				//shvInfo() << key << "-->" << v;
+				opt.setValue(rpcValueToQVariant(v));
+			}
+		}
+		else if(v.isMap()) {
+			mergeConfig_helper(key, v);
 		}
 		else {
-			try {
-				bool opt_exists = !option(key, !shv::core::Exception::Throw).isNull();
-				if(opt_exists) {
-					Option &opt = optionRef(key);
-					if(!opt.isSet()) {
-						//shvInfo() << key << "-->" << v;
-						opt.setValue(v);
-					}
-				}
-				else {
-					shvWarning() << "Cannot merge nonexisting option key:" << key;
-				}
-			}
-			catch(const shv::core::Exception &e) {
-				shvWarning() << "Merge option" << key << "error:" << e.message();
-			}
+			shvWarning() << "Cannot merge nonexisting option key:" << key;
 		}
 	}
 }

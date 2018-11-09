@@ -12,6 +12,7 @@
 class QTextStream;
 
 namespace shv {
+namespace chainpack { class RpcValue; }
 namespace coreqt {
 namespace utils {
 
@@ -89,7 +90,7 @@ public:
 	Option& addOption(const QString key, const Option &opt = Option());
 	Option option(const QString &name, bool throw_exc = true) const;
 	Option& optionRef(const QString &name);
-	QMap<QString, Option> options() const {return m_options;}
+	const QMap<QString, Option>& options() const {return m_options;}
 
 	void parse(int argc, char *argv[]);
 	virtual void parse(const QStringList &cmd_line_args);
@@ -113,6 +114,9 @@ public:
 	/// defaultValue is not considered to be an explicitly set value
 	Q_INVOKABLE bool isValueSet(const QString &name) const;
 	bool setValue(const QString &name, const QVariant val, bool throw_exc = true);
+
+	static QVariant rpcValueToQVariant(const chainpack::RpcValue &v);
+	static chainpack::RpcValue qVariantToRpcValue(const QVariant &v);
 protected:
 	QVariant value_helper(const QString &name, bool throw_exception) const;
 	QPair<QString, QString> applicationDirAndName() const;
@@ -146,8 +150,8 @@ public:
 protected:
 	QString configFile();
 protected:
-	void mergeConfig(const QVariantMap &config_map) {mergeConfig_helper(QString(), config_map);}
-	void mergeConfig_helper(const QString &key_prefix, const QVariantMap &config_map);
+	void mergeConfig(const shv::chainpack::RpcValue &config_map) {mergeConfig_helper(QString(), config_map);}
+	void mergeConfig_helper(const QString &key_prefix, const shv::chainpack::RpcValue &config_map);
 };
 
 }}}
