@@ -120,12 +120,12 @@ private:
 			QVERIFY(sl[1].empty());
 		}
 		{
-			std::string str("a:b:c");
+			std::string str("a:\"b:b\":c");
 			shv::core::StringView s(str);
-			std::vector<shv::core::StringView> sl = s.split(':', shv::core::StringView::KeepEmptyParts);
+			std::vector<shv::core::StringView> sl = s.split(':', '"', shv::core::StringView::KeepEmptyParts);
 			QVERIFY(sl.size() == 3);
 			QVERIFY(sl[0] == "a");
-			QVERIFY(sl[1] == "b");
+			QVERIFY(sl[1] == "\"b:b\"");
 			QVERIFY(sl[2] == "c");
 		}
 		{

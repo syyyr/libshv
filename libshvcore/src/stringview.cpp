@@ -77,7 +77,7 @@ char StringView::at(size_t ix) const
 	return m_str->at(m_start + ix);
 }
 
-char StringView::at2(int ix) const
+char StringView::value(int ix) const
 {
 	if(ix < 0)
 		ix = m_length + ix;
@@ -142,19 +142,27 @@ StringView StringView::mid(size_t start, size_t len) const
 	return StringView(str(), this->start() + start, len);
 }
 
-StringView StringView::getToken(char delim)
+StringView StringView::getToken(char delim, char quote)
 {
 	if(empty())
 		return *this;
+	bool in_quotes = false;
 	const std::string &s = str();
-	size_t pos = s.find_first_of(delim, start());
-	if(pos != std::string::npos) {
-		return mid(0, pos - start());
+	for (size_t i = 0; i < length(); ++i) {
+		char c = at(i);
+		if(quote) {
+			if(c == quote) {
+				in_quotes = !in_quotes;
+				continue;
+			}
+		}
+		if(c == delim && !in_quotes)
+			return mid(0, i);
 	}
 	return *this;
 }
 
-StringView::StringViewList StringView::split(char delim, StringView::SplitBehavior split_behavior) const
+StringView::StringViewList StringView::split(char delim, char quote, StringView::SplitBehavior split_behavior) const
 {
 	using namespace std;
 	vector<StringView> ret;
@@ -162,7 +170,7 @@ StringView::StringViewList StringView::split(char delim, StringView::SplitBehavi
 		return ret;
 	StringView strv(*this);
 	while(true) {
-		StringView token = strv.getToken(delim);
+		StringView token = strv.getToken(delim, quote);
 		if(split_behavior == KeepEmptyParts || token.length())
 			ret.push_back(token);
 		if(token.end() >= strv.end())

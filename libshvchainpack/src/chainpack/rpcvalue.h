@@ -166,35 +166,49 @@ public:
 		using Super = std::map<String, RpcValue>;
 		using Super::Super; // expose base class constructors
 	public:
-		RpcValue value(const std::string &key, const RpcValue &default_val = RpcValue()) const
+		RpcValue value(const String &key, const RpcValue &default_val = RpcValue()) const
 		{
 			auto it = find(key);
 			if(it == end())
 				return default_val;
 			return it->second;
 		}
-		bool hasKey(const std::string &key) const
+		bool hasKey(const String &key) const
 		{
 			auto it = find(key);
 			return !(it == end());
+		}
+		std::vector<String> keys() const
+		{
+			std::vector<String> ret;
+			for(const auto &kv : *this)
+				ret.push_back(kv.first);
+			return ret;
 		}
 	};
-	class IMap : public std::map<RpcValue::Int, RpcValue>
+	class IMap : public std::map<Int, RpcValue>
 	{
-		using Super = std::map<RpcValue::Int, RpcValue>;
+		using Super = std::map<Int, RpcValue>;
 		using Super::Super; // expose base class constructors
 	public:
-		RpcValue value(unsigned key, const RpcValue &default_val = RpcValue()) const
+		RpcValue value(Int key, const RpcValue &default_val = RpcValue()) const
 		{
 			auto it = find(key);
 			if(it == end())
 				return default_val;
 			return it->second;
 		}
-		bool hasKey(unsigned key) const
+		bool hasKey(Int key) const
 		{
 			auto it = find(key);
 			return !(it == end());
+		}
+		std::vector<Int> keys() const
+		{
+			std::vector<Int> ret;
+			for(const auto &kv : *this)
+				ret.push_back(kv.first);
+			return ret;
 		}
 	};
 #if 0

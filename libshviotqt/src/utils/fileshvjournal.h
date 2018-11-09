@@ -40,7 +40,7 @@ struct SHVIOTQT_DECL_EXPORT ShvJournalGetLogParams
 	};
 	unsigned headerOptions = static_cast<unsigned>(HeaderOptions::BasicInfo);
 	int maxRecordCount = 1000;
-	bool withSnapshot = true;
+	bool withSnapshot = false;
 
 	ShvJournalGetLogParams() {}
 	ShvJournalGetLogParams(const shv::chainpack::RpcValue &opts);

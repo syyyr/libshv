@@ -27,7 +27,7 @@ public:
 	bool operator==(const char *o) const;
 	char operator[](size_t ix) const;
 	char at(size_t ix) const;
-	char at2(int ix) const;
+	char value(int ix) const;
 
 	const std::string &str() const {return *m_str;}
 	size_t start() const {return m_start;}
@@ -46,8 +46,9 @@ public:
 	StringView mid(size_t start)const {return mid(start, (length() > start)? length() - start: 0);}
 	StringView mid(size_t start, size_t len) const;
 
-	StringView getToken(char delim = ' ');
-	StringViewList split(char delim, SplitBehavior split_behavior = SkipEmptyParts) const;
+	StringView getToken(char delim = ' ', char quote = '\0');
+	StringViewList split(char delim, char quote, SplitBehavior split_behavior = SkipEmptyParts) const;
+	StringViewList split(char delim, SplitBehavior split_behavior = SkipEmptyParts) const { return  split(delim, '\0', split_behavior); }
 	static std::string join(StringViewList::const_iterator first, StringViewList::const_iterator last, const char delim);
 	static std::string join(const StringViewList &lst, const char delim) { return join(lst.begin(), lst.end(), delim); }
 	static std::string join(StringViewList::const_iterator first, StringViewList::const_iterator last, const std::string &delim);
