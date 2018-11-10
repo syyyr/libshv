@@ -2,6 +2,7 @@
 
 #include "shvcoreglobal.h"
 
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -40,6 +41,55 @@ public:
 	static std::string join(const std::vector<std::string> &lst, char delim);
 	static std::string join(const std::vector<shv::core::StringView> &lst, char delim);
 	static int replace(std::string &str, const std::string &from, const std::string &to);
+
+	template<typename T>
+	static std::string toString(T i, size_t width = 0, char fill_char = ' ')
+	{
+		std::ostringstream ss;
+		ss << i;
+		std::string ret = ss.str();
+		while(ret.size() < width)
+			ret = fill_char + ret;
+		return ret;
+	}
+	inline static int toInt(const std::string &str, bool *ok)
+	{
+		int ret = 0;
+		bool is_ok = false;
+		try {
+			size_t pos;
+			ret = std::stoi(str, &pos);
+			if(pos == str.length())
+				is_ok = true;
+			else
+				ret = 0;
+		}
+		catch (...) {
+			ret = 0;
+		}
+		if(ok)
+			*ok = is_ok;
+		return ret;
+	}
+	inline static double toDouble(const std::string &str, bool *ok)
+	{
+		double ret = 0;
+		bool is_ok = false;
+		try {
+			size_t pos;
+			ret = std::stod(str, &pos);
+			if(pos == str.length())
+				is_ok = true;
+			else
+				ret = 0;
+		}
+		catch (...) {
+			ret = 0;
+		}
+		if(ok)
+			*ok = is_ok;
+		return ret;
+	}
 };
 
 }}

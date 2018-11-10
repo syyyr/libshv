@@ -102,6 +102,7 @@ CLIOptions::Option& CLIOptions::Option::setValueString(const QString& val_str)
 CLIOptions::CLIOptions(QObject *parent)
 	: QObject(parent), m_parsedArgIndex(), m_isAppBreak()
 {
+#warning shv::coreqt::utils::CLIOptions is deprecated use shv::core::utils::CLIOptions instead
 	addOption("abortOnException").setType(QVariant::Bool).setNames("--abort-on-exception").setComment(tr("Abort application on exception"));
 	addOption("help").setType(QVariant::Bool).setNames("-h", "--help").setComment(tr("Print help"));
 	//addOption("config").setType(QVariant::String).setNames("--config").setComment(tr("Config name, it is loaded from {app-name}[.conf] if file exists in {config-path}"));
@@ -488,7 +489,7 @@ bool ConfigCLIOptions::loadConfigFile()
 		std::string err;
 		chainpack::RpcValue rv = shv::chainpack::RpcValue::fromCpon(cpon, &err);
 		if(err.empty()) {
-			mergeConfig(rv.toMap());
+			mergeConfig(rv);
 		}
 		else {
 			shvError() << "Error parsing config file:" << f.fileName() << err;

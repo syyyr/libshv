@@ -25,12 +25,12 @@ DEFINES += ANDROID_BUILD
 DEFINES += SHVCORE_BUILD_DLL
 
 INCLUDEPATH += \
-	#$$QUICKBOX_HOME/libqf/libqfcore/include \
 	../3rdparty/necrolog/include \
+	../libshvchainpack/include \
 
 LIBS += \
     -L$$DESTDIR \
     -lnecrolog
-    #-lqfcore
+    -lshvchainpack
 
 include($$PWD/src/src.pri)

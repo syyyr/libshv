@@ -68,7 +68,7 @@ public:
 	virtual ~AbstractValueData() {}
 
 	virtual RpcValue::Type type() const {return RpcValue::Type::Invalid;}
-	virtual RpcValue::Type arrayType() const {return RpcValue::Type::Invalid;}
+	//virtual RpcValue::Type arrayType() const {return RpcValue::Type::Invalid;}
 
 	virtual const RpcValue::MetaData &metaData() const = 0;
 	virtual void setMetaData(RpcValue::MetaData &&meta_data) = 0;
@@ -368,6 +368,24 @@ static const RpcValue::IMap & static_empty_imap() { static const RpcValue::IMap 
  */
 
 RpcValue::RpcValue() noexcept {}
+
+RpcValue RpcValue::fromType(RpcValue::Type t) noexcept
+{
+	switch(t) {
+	case Type::Invalid: return RpcValue{};
+	case Type::Null: return RpcValue{nullptr};
+	case Type::UInt: return RpcValue{static_cast<UInt>(0)};
+	case Type::Int: return RpcValue{static_cast<Int>(0)};
+	case Type::Double: return RpcValue{static_cast<double>(0)};
+	case Type::Bool: return RpcValue{false};
+	case Type::String: return RpcValue{std::string()};
+	case Type::DateTime: return RpcValue{DateTime()};
+	case Type::List: return RpcValue{List()};
+	case Type::Map: return RpcValue{Map()};
+	case Type::IMap: return RpcValue{IMap()};
+	case Type::Decimal: return RpcValue{Decimal()};
+	}
+}
 RpcValue::RpcValue(std::nullptr_t) noexcept : m_ptr(statics().null) {}
 RpcValue::RpcValue(double value) : m_ptr(std::make_shared<ChainPackDouble>(value)) {}
 RpcValue::RpcValue(RpcValue::Decimal value) : m_ptr(std::make_shared<ChainPackDecimal>(std::move(value))) {}
@@ -419,12 +437,12 @@ RpcValue::Type RpcValue::type() const
 {
 	return m_ptr? m_ptr->type(): Type::Invalid;
 }
-
+/*
 RpcValue::Type RpcValue::arrayType() const
 {
 	return m_ptr? m_ptr->arrayType(): Type::Invalid;
 }
-
+*/
 const RpcValue::MetaData &RpcValue::metaData() const
 {
 	static MetaData md;

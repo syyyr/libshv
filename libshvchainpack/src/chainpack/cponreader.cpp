@@ -66,6 +66,14 @@ void CponReader::read(RpcValue &val, std::string &err)
 		err = e.what();
 	}
 }
+
+void CponReader::read(RpcValue &val, std::string *err)
+{
+	if(err)
+		read(val, *err);
+	else
+		read(val);
+}
 /*
 RpcValue::DateTime CponReader::readDateTime()
 {
