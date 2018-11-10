@@ -204,7 +204,7 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 	const chainpack::RpcValue::String &rq_grant = rq.accessGrant().toString();
 	const std::string &mm_grant = mm->accessGrant();
 	if(grantToAccessLevel(mm_grant.data()) > grantToAccessLevel(rq_grant.data()))
-		SHV_EXCEPTION(std::string("Call method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' operation not permited.");
+		SHV_EXCEPTION(std::string("Call method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' permission denied.");
 	chainpack::RpcValue ret_val = callMethod(shv_path, method, rq.params());
 	return ret_val;
 }
@@ -355,8 +355,8 @@ chainpack::RpcValue ShvNode::ls(const StringViewList &shv_path, const chainpack:
 }
 
 static std::vector<cp::MetaMethod> meta_methods {
-	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, false},
-	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, false},
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_BROWSE},
+	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_BROWSE},
 };
 
 size_t ShvNode::methodCount(const StringViewList &shv_path)
@@ -407,7 +407,7 @@ chainpack::RpcValue ShvNode::callMethod(const ShvNode::StringViewList &shv_path,
 size_t MethodsTableNode::methodCount(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
 {
 	if(shv_path.empty()) {
-		return m_methods.size();
+		return m_methods->size();
 	}
 	return Super::methodCount(shv_path);
 }
@@ -415,9 +415,9 @@ size_t MethodsTableNode::methodCount(const shv::iotqt::node::ShvNode::StringView
 const shv::chainpack::MetaMethod *MethodsTableNode::metaMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, size_t ix)
 {
 	if(shv_path.empty()) {
-		if(m_methods.size() <= ix)
-			SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(m_methods.size()));
-		return &(m_methods[ix]);
+		if(!m_methods || m_methods->size() <= ix)
+			SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(m_methods->size()));
+		return &((*m_methods)[ix]);
 	}
 	return Super::metaMethod(shv_path, ix);
 }

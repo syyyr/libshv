@@ -88,6 +88,7 @@ public:
 	};
 public:
 	Option& addOption(const QString key, const Option &opt = Option());
+	bool removeOption(const QString key);
 	Option option(const QString &name, bool throw_exc = true) const;
 	Option& optionRef(const QString &name);
 	const QMap<QString, Option>& options() const {return m_options;}
@@ -151,6 +152,7 @@ protected:
 	QString configFile();
 protected:
 	void mergeConfig(const shv::chainpack::RpcValue &config_map) {mergeConfig_helper(QString(), config_map);}
+	void mergeConfig(const QVariant &config_map);
 	void mergeConfig_helper(const QString &key_prefix, const shv::chainpack::RpcValue &config_map);
 };
 

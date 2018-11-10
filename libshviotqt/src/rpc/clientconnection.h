@@ -66,7 +66,7 @@ class SHVIOTQT_DECL_EXPORT ClientConnection : public QObject, public shv::chainp
 	SHV_FIELD_IMPL2(int, p, P, ort, shv::chainpack::AbstractRpcConnection::DEFAULT_RPC_BROKER_PORT)
 	SHV_FIELD_IMPL(std::string, p, P, assword)
 
-	SHV_FIELD_IMPL(std::string,c, C, onnectionType) // [device | tunnel | client]
+	//SHV_FIELD_IMPL(std::string,c, C, onnectionType) // [device | tunnel | client]
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, c, C, onnectionOptions)
 
 	//SHV_FIELD_IMPL2(int, b, B, rokerClientId, 0)

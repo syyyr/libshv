@@ -6,6 +6,7 @@ SOURCES += \
     $$PWD/socketrpcconnection.cpp \
     $$PWD/serverconnection.cpp \
     $$PWD/deviceconnection.cpp \
+    $$PWD/brokerconnection.cpp \
     $$PWD/clientappclioptions.cpp \
     $$PWD/tunnelhandle.cpp
 
@@ -17,6 +18,7 @@ HEADERS += \
     $$PWD/socketrpcconnection.h \
     $$PWD/serverconnection.h \
     $$PWD/deviceconnection.h \
+    $$PWD/brokerconnection.h \
     $$PWD/clientappclioptions.h \
     $$PWD/tunnelhandle.h
 

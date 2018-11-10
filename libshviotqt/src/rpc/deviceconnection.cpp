@@ -25,7 +25,7 @@ DeviceAppCliOptions::DeviceAppCliOptions(QObject *parent)
 DeviceConnection::DeviceConnection(QObject *parent)
 	: Super(SyncCalls::Disabled, parent)
 {
-	setConnectionType(cp::Rpc::TYPE_DEVICE);
+	//setConnectionType(cp::Rpc::TYPE_DEVICE);
 }
 
 void DeviceConnection::setCliOptions(const DeviceAppCliOptions *cli_opts)
@@ -48,7 +48,7 @@ void DeviceConnection::setCliOptions(const DeviceAppCliOptions *cli_opts)
 		if(!device_id.empty())
 			dev[cp::Rpc::KEY_DEVICE_ID] = device_id;
 		dev[cp::Rpc::KEY_MOUT_POINT] = cli_opts->mountPoint().toStdString();
-		opts[cp::Rpc::TYPE_DEVICE] = dev;
+		//opts[cp::Rpc::TYPE_DEVICE] = dev;
 		setConnectionOptions(opts);
 	}
 }

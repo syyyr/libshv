@@ -121,8 +121,18 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 		if(m_helloReceived && !m_loginReceived && rq.method() == shv::chainpack::Rpc::METH_LOGIN) {
 			shvInfo() << "Client login received";// << profile;// << "device id::" << m.value("deviceId").toStdString();
 			cp::RpcValue::Map params = rq.params().toMap();
-			m_connectionType = params.value(cp::Rpc::KEY_CONNECTION_TYPE).toString();
 			m_connectionOptions = params.value(cp::Rpc::KEY_CONNECTION_OPTIONS);
+			/*
+			{
+				const chainpack::RpcValue::Map omap = m_connectionOptions.toMap();
+				if(omap.hasKey("broker"))
+					m_connectionType = ConnectionType::Broker;
+				else if(omap.hasKey("device"))
+					m_connectionType = ConnectionType::Device;
+				else
+					m_connectionType = ConnectionType::Client;
+			}
+			*/
 			cp::RpcValue login_resp = login(rq.params());
 			if(!login_resp.isValid())
 				SHV_EXCEPTION("Invalid authentication for user: " + m_userName + " at: " + connectionName());

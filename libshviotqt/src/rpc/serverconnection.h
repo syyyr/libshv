@@ -26,12 +26,13 @@ class SHVIOTQT_DECL_EXPORT ServerConnection : public SocketRpcDriver, public shv
 	Q_OBJECT
 
 	using Super = SocketRpcDriver;
-
-	//SHV_FIELD_BOOL_IMPL(e, E, choEnabled)
-
 public:
+	//enum class ConnectionType {Unknown, Client, Device, Broker};
+
 	explicit ServerConnection(QTcpSocket* socket, QObject *parent = 0);
 	~ServerConnection() Q_DECL_OVERRIDE;
+
+	//ConnectionType connectionType() const {return m_connectionType;}
 
 	const std::string& connectionName() {return m_connectionName;}
 	void setConnectionName(const std::string &n) {m_connectionName = n; setObjectName(QString::fromStdString(n));}
@@ -39,7 +40,6 @@ public:
 	void close() Q_DECL_OVERRIDE {closeConnection();}
 	void abort() Q_DECL_OVERRIDE {abortConnection();}
 
-	const std::string& connectionType() const {return m_connectionType;}
 	const shv::chainpack::RpcValue::Map& connectionOptions() const {return m_connectionOptions.toMap();}
 
 	const std::string& userName() const { return m_userName; }
@@ -69,8 +69,9 @@ protected:
 	std::string m_pendingAuthNonce;
 	bool m_helloReceived = false;
 	bool m_loginReceived = false;
+	//ConnectionType m_connectionType = ConnectionType::Unknown;
 
-	std::string m_connectionType;
+	//std::string m_connectionType;
 	shv::chainpack::RpcValue m_connectionOptions;
 };
 

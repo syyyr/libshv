@@ -147,7 +147,6 @@ StringView StringView::getToken(char delim, char quote)
 	if(empty())
 		return *this;
 	bool in_quotes = false;
-	const std::string &s = str();
 	for (size_t i = 0; i < length(); ++i) {
 		char c = at(i);
 		if(quote) {

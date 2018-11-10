@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rpcvalue.h"
+#include "rpc.h"
 
 namespace shv {
 namespace chainpack {
@@ -40,7 +41,7 @@ public:
 		};
 	};
 public:
-	MetaMethod(const char *name, Signature ms, unsigned flags = 0, /*int access_level = AccessLevel::Browse,*/ const std::string &access_grant = std::string())
+	MetaMethod(const char *name, Signature ms, unsigned flags = 0, const std::string &access_grant = shv::chainpack::Rpc::GRANT_BROWSE)
 	    : m_name(name)
 	    , m_signature(ms)
 	    , m_flags(flags)

@@ -118,6 +118,11 @@ CLIOptions::Option& CLIOptions::addOption(const QString key, const CLIOptions::O
 	return m_options[key];
 }
 
+bool CLIOptions::removeOption(const QString key)
+{
+	return m_options.remove(key) > 0;
+}
+
 CLIOptions::Option CLIOptions::option(const QString& name, bool throw_exc) const
 {
 	Option ret = m_options.value(name);
@@ -524,7 +529,12 @@ QString ConfigCLIOptions::configFile()
 	return config_file;
 }
 
-void ConfigCLIOptions::mergeConfig_helper(const QString &key_prefix, const chainpack::RpcValue &config_map)
+void ConfigCLIOptions::mergeConfig(const QVariant &config_map)
+{
+	mergeConfig_helper(QString(), qVariantToRpcValue(config_map));
+}
+
+void ConfigCLIOptions::mergeConfig_helper(const QString &key_prefix, const shv::chainpack::RpcValue &config_map)
 {
 	//shvLogFuncFrame() << key_prefix;
 	const chainpack::RpcValue::Map &cm = config_map.toMap();

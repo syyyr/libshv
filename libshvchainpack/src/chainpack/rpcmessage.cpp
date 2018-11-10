@@ -460,13 +460,13 @@ RpcResponse& RpcResponse::setResult(const RpcValue& res)
 	return *this;
 }
 
-RpcResponse::Error::ErrorType RpcResponse::Error::code() const
+RpcResponse::Error::ErrorCode RpcResponse::Error::code() const
 {
 	auto iter = find(KeyCode);
-	return (iter == end()) ? NoError : (ErrorType)(iter->second.toUInt());
+	return (iter == end()) ? NoError : (ErrorCode)(iter->second.toUInt());
 }
 
-RpcResponse::Error& RpcResponse::Error::setCode(ErrorType c)
+RpcResponse::Error& RpcResponse::Error::setCode(ErrorCode c)
 {
 	(*this)[KeyCode] = RpcValue{(RpcValue::UInt)c};
 	return *this;
@@ -482,6 +482,23 @@ RpcValue::String RpcResponse::Error::message() const
 {
 	auto iter = find(KeyMessage);
 	return (iter == end()) ? RpcValue::String{} : iter->second.toString();
+}
+
+const char *RpcResponse::Error::errorCodeToString(int code)
+{
+	switch(code) {
+	case ErrorCode::NoError: return "NoError";
+	case ErrorCode::InvalidRequest: return "InvalidRequest";
+	case ErrorCode::MethodNotFound: return "MethodNotFound";
+	case ErrorCode::InvalidParams: return "InvalidParams";
+	case ErrorCode::InternalError: return "InternalError";
+	case ErrorCode::ParseError: return "ParseError";
+	case ErrorCode::SyncMethodCallTimeout: return "SyncMethodCallTimeout";
+	case ErrorCode::SyncMethodCallCancelled: return "SyncMethodCallCancelled";
+	case ErrorCode::MethodCallException: return "MethodCallException";
+	case ErrorCode::Unknown:  return "Unknown";
+	};
+	return "Invalid";
 }
 
 } // namespace chainpackrpc

@@ -163,7 +163,7 @@ public:
 		using Super = RpcValue::IMap;
 		enum {KeyCode = 1, KeyMessage};
 	public:
-		enum ErrorType {
+		enum ErrorCode {
 			NoError = 0,
 			InvalidRequest,	// The JSON sent is not a valid Request object.
 			MethodNotFound,	// The method does not exist / is not available.
@@ -177,13 +177,14 @@ public:
 		};
 	public:
 		Error(const Super &m = Super()) : Super(m) {}
-		Error& setCode(ErrorType c);
-		ErrorType code() const;
+		Error& setCode(ErrorCode c);
+		ErrorCode code() const;
 		Error& setMessage(RpcValue::String &&m);
 		RpcValue::String message() const;
 		//Error& setData(const Value &data);
 		//Value data() const;
-		RpcValue::String toString() const {return "RPC ERROR " + Utils::toString(code()) + ": " + message();}
+		static const char* errorCodeToString(int code);
+		RpcValue::String toString() const {return std::string("RPC ERROR ") + errorCodeToString(code()) + ": " + message();}
 		RpcValue::Map toJson() const
 		{
 			return RpcValue::Map {
@@ -205,7 +206,7 @@ public:
 			};
 		}
 	public:
-		static Error create(ErrorType c, RpcValue::String msg) {
+		static Error create(ErrorCode c, RpcValue::String msg) {
 			Error ret;
 			ret.setCode(c).setMessage(std::move(msg));
 			return ret;

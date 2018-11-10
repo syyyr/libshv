@@ -80,7 +80,7 @@ ClientConnection::ClientConnection(SyncCalls sync_calls, QObject *parent)
 {
 	Rpc::registerMetatTypes();
 
-	setConnectionType(cp::Rpc::TYPE_CLIENT);
+	//setConnectionType(cp::Rpc::TYPE_CLIENT);
 
 	m_rpcDriver = new SocketRpcDriver();
 	m_rpcDriver->setProtocolType(cp::Rpc::ProtocolType::ChainPack);
@@ -350,7 +350,7 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 			 {"password", std::string(sha1.constData())},
 		 },
 		},
-		{"type", connectionType()},
+		//{"type", connectionType()},
 		{"options", connectionOptions()},
 	};
 }
