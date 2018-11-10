@@ -4,6 +4,7 @@ QT -= gui
 
 INCLUDEPATH += \
 	$$PWD/../../3rdparty/necrolog/include \
+	$$PWD/../../libshvchainpack/include \
 	$$PWD/../../libshvcore/include \
 
 win32:LIB_DIR = $$DESTDIR
@@ -15,6 +16,7 @@ message (DESTDIR $$DESTDIR)
 LIBS += \
     -L$$LIB_DIR \
     -lnecrolog \
+    -lshvchainpack \
     -lshvcore \
 
 unix {
