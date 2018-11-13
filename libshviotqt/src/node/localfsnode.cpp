@@ -64,7 +64,8 @@ ShvNode::StringList LocalFSNode::childNames(const ShvNode::StringViewList &shv_p
 		if(!d2.exists())
 			SHV_EXCEPTION("Path " + d2.absolutePath().toStdString() + " do not exists.");
 		ShvNode::StringList lst;
-		for(const QFileInfo &fi : d2.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot)) {
+		for(const QFileInfo &fi : d2.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot, QDir::Name | QDir::IgnoreCase | QDir::DirsFirst)) {
+			//shvInfo() << fi.fileName();
 			lst.push_back(fi.fileName().toStdString());
 		}
 		return lst;
@@ -96,7 +97,7 @@ static std::vector<cp::MetaMethod> meta_methods_file {
 	{M_SIZE, cp::MetaMethod::Signature::RetVoid, false},
 	{M_READ, cp::MetaMethod::Signature::RetVoid, false},
 	{M_WRITE, cp::MetaMethod::Signature::RetParam, false},
-	{M_DELETE, cp::MetaMethod::Signature::RetParam, false}
+	{M_DELETE, cp::MetaMethod::Signature::RetVoid, false}
 };
 
 size_t LocalFSNode::methodCount(const ShvNode::StringViewList &shv_path)
@@ -184,7 +185,7 @@ chainpack::RpcValue LocalFSNode::ndMkdir(const QString &path, const chainpack::R
 	QDir d(m_rootDir.absolutePath()+ '/' + path);
 
 	if (!methods_params.isString()){
-		SHV_EXCEPTION("Cannot create directory in directory " + d.absolutePath().toStdString() + ". Invalid parameter: " + methods_params.toString());
+		SHV_EXCEPTION("Cannot create directory in directory " + d.absolutePath().toStdString() + ". Invalid parameter: " + methods_params.toCpon());
 	}
 
 	return d.mkpath(m_rootDir.absolutePath()+ '/' + path + '/' + QString::fromStdString(methods_params.toString()));
