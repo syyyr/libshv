@@ -156,7 +156,6 @@ chainpack::RpcValue LocalFSNode::ndWrite(const QString &path, const chainpack::R
 chainpack::RpcValue LocalFSNode::ndDelete(const QString &path)
 {
 	QFile file (m_rootDir.absolutePath() + '/' + path);
-	shvDebug() << "delete file" << m_rootDir.absolutePath() + '/' + path;
 	return file.remove();
 }
 
@@ -188,26 +187,23 @@ chainpack::RpcValue LocalFSNode::ndMkdir(const QString &path, const chainpack::R
 		SHV_EXCEPTION("Cannot create directory in directory " + d.absolutePath().toStdString() + ". Invalid parameter: " + methods_params.toString());
 	}
 
-	shvDebug() << m_rootDir.absolutePath()  << " : " << path << " : " << methods_params.toString();
 	return d.mkpath(m_rootDir.absolutePath()+ '/' + path + '/' + QString::fromStdString(methods_params.toString()));
 }
 
 chainpack::RpcValue LocalFSNode::ndRmdir(const QString &path, bool recursively)
 {
+	QDir d(m_rootDir.absolutePath() + '/' + path);
+
 	if (path.isEmpty()){
-		return false;
+		SHV_EXCEPTION("Cannot remove root directory " + d.absolutePath().toStdString());
 	}
 
-	QDir dir(m_rootDir.absolutePath() + '/' + path);
-	shvDebug() << "delete dir" << m_rootDir.absolutePath() + '/' + path << "path" << path << recursively;
-
-	/*
 	if (recursively){
-		return dir.removeRecursively();
+		return d.removeRecursively();
 	}
 	else{
-		return dir.remove(m_rootDir.absolutePath() + '/' + path);
-	}*/
+		return d.rmdir(m_rootDir.absolutePath() + '/' + path);
+	}
 }
 
 } // namespace node
