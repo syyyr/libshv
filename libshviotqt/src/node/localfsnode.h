@@ -28,6 +28,11 @@ private:
 	QFileInfo ndFileInfo(const QString &path);
 	chainpack::RpcValue ndSize(const QString &path);
 	chainpack::RpcValue ndRead(const QString &path);
+	chainpack::RpcValue ndWrite(const QString &path, const chainpack::RpcValue &methods_params);
+	chainpack::RpcValue ndDelete(const QString &path);
+	chainpack::RpcValue ndMkfile(const QString &path, const shv::chainpack::RpcValue &methods_params);
+	chainpack::RpcValue ndMkdir(const QString &path, const shv::chainpack::RpcValue &methods_params);
+	chainpack::RpcValue ndRmdir(const QString &path, bool recursively);
 private:
 	QDir m_rootDir;
 };
