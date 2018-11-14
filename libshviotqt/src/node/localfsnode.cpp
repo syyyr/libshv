@@ -84,20 +84,20 @@ chainpack::RpcValue LocalFSNode::hasChildren(const ShvNode::StringViewList &shv_
 }
 
 static std::vector<cp::MetaMethod> meta_methods_dir {
-	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, false},
-	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, false},
-	{M_MKFILE, cp::MetaMethod::Signature::RetParam, false},
-	{M_MKDIR, cp::MetaMethod::Signature::RetParam, false},
-	{M_RMDIR, cp::MetaMethod::Signature::RetParam, false}
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_BROWSE},
+	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_BROWSE},
+	{M_MKFILE, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_WRITE},
+	{M_MKDIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_WRITE},
+	{M_RMDIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_SERVICE}
 };
 
 static std::vector<cp::MetaMethod> meta_methods_file {
-	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, false},
-	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, false},
-	{M_SIZE, cp::MetaMethod::Signature::RetVoid, false},
-	{M_READ, cp::MetaMethod::Signature::RetVoid, false},
-	{M_WRITE, cp::MetaMethod::Signature::RetParam, false},
-	{M_DELETE, cp::MetaMethod::Signature::RetVoid, false}
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_BROWSE},
+	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_BROWSE},
+	{M_SIZE, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_BROWSE},
+	{M_READ, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_READ},
+	{M_WRITE, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_WRITE},
+	{M_DELETE, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_SERVICE}
 };
 
 size_t LocalFSNode::methodCount(const ShvNode::StringViewList &shv_path)
