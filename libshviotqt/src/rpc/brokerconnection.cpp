@@ -42,8 +42,6 @@ void BrokerConnection::setOptions(const chainpack::RpcValue &slave_broker_option
 			device_opts.setHeartbeatInterval(rpc.value("heartbeatInterval").toInt());
 		if(rpc.count("reconnectInterval") == 1)
 			device_opts.setReconnectInterval(rpc.value("reconnectInterval").toInt());
-		if(rpc.count("metaTypeExplicit") == 1)
-			device_opts.setMetaTypeExplicit(rpc.value("metaTypeExplicit").toBool());
 
 		const cp::RpcValue::Map &device = m.value(cp::Rpc::KEY_DEVICE).toMap();
 		if(device.count("id") == 1)
@@ -53,7 +51,7 @@ void BrokerConnection::setOptions(const chainpack::RpcValue &slave_broker_option
 		if(device.count("mountPoint") == 1)
 			device_opts.setMountPoint(device.value("mountPoint").toString());
 
-		Super::setCliOptions(&device_opts);
+		setCliOptions(&device_opts);
 	}
 }
 

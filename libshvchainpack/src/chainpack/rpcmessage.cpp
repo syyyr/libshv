@@ -228,7 +228,7 @@ void RpcMessage::pushCallerId(RpcValue::MetaData &meta, RpcValue::Int caller_id)
 		array.push_back(RpcValue(caller_id));
 		setCallerIds(meta, array);
 	}
-	else if(curr_caller_id.isUInt()) {
+	else if(curr_caller_id.isInt()) {
 		RpcValue::List array;
 		array.push_back(curr_caller_id.toInt());
 		array.push_back(RpcValue(caller_id));

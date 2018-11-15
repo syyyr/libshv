@@ -101,7 +101,8 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 
 	setCheckBrokerConnectedInterval(cli_opts->reconnectInterval() * 1000);
 
-	cp::RpcMessage::setMetaTypeExplicit(cli_opts->isMetaTypeExplicit());
+	if(cli_opts->isMetaTypeExplicit_isset())
+		cp::RpcMessage::setMetaTypeExplicit(cli_opts->isMetaTypeExplicit());
 
 	const std::string pv = cli_opts->protocolType();
 	if(pv == "cpon")
@@ -116,27 +117,11 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 	setUser(cli_opts->user());
 	setPassword(cli_opts->password());
 
+	m_heartbeatInterval = cli_opts->heartbeatInterval();
 	{
 		cp::RpcValue::Map opts;
-		opts[cp::Rpc::OPT_IDLE_WD_TIMEOUT] = 3 * cli_opts->heartbeatInterval();
+		opts[cp::Rpc::OPT_IDLE_WD_TIMEOUT] = 3 * m_heartbeatInterval;
 		setConnectionOptions(opts);
-	}
-	int hbi = cli_opts->heartbeatInterval();
-	if(hbi > 0) {
-		if(!m_pingTimer) {
-			shvInfo() << "Preparing heart-beat timer, interval:" << hbi << "sec.";
-			m_pingTimer = new QTimer(this);
-			m_pingTimer->setInterval(hbi * 1000);
-			connect(m_pingTimer, &QTimer::timeout, this, [this]() {
-				if(m_connectionState.pingRqId > 0) {
-					shvError() << "PING response not received within" << (m_pingTimer->interval() / 1000) << "seconds, restarting conection to broker.";
-					resetConnection();
-				}
-				else {
-					m_connectionState.pingRqId = callShvMethod(".broker/app", cp::Rpc::METH_PING);
-				}
-			});
-		}
 	}
 }
 
@@ -234,9 +219,23 @@ void ClientConnection::setBrokerConnected(bool b)
 		m_connectionState.isBrokerConnected = b;
 		if(b) {
 			shvInfo() << "Connected to broker";// << "client id:" << brokerClientId();// << "mount point:" << brokerMountPoint();
-			if(m_pingTimer && m_pingTimer->interval() > 0)
-				//m_connStatus.pingRqId = 0;
+			if(m_heartbeatInterval > 0) {
+				if(!m_pingTimer) {
+					shvInfo() << "Creating heart-beat timer, interval:" << m_heartbeatInterval << "sec.";
+					m_pingTimer = new QTimer(this);
+					m_pingTimer->setInterval(m_heartbeatInterval * 1000);
+					connect(m_pingTimer, &QTimer::timeout, this, [this]() {
+						if(m_connectionState.pingRqId > 0) {
+							shvError() << "PING response not received within" << (m_pingTimer->interval() / 1000) << "seconds, restarting conection to broker.";
+							resetConnection();
+						}
+						else {
+							m_connectionState.pingRqId = callShvMethod(".broker/app", cp::Rpc::METH_PING);
+						}
+					});
+				}
 				m_pingTimer->start();
+			}
 		}
 		else {
 			if(m_pingTimer)

@@ -97,6 +97,7 @@ protected:
 private:
 	QTimer *m_checkConnectedTimer;
 	QTimer *m_pingTimer = nullptr;
+	int m_heartbeatInterval = 0;
 };
 
 } // namespace chainpack
