@@ -89,8 +89,6 @@ CLIOptions::CLIOptions()
 {
 	addOption("abortOnException").setType(cp::RpcValue::Type::Bool).setNames("--abort-on-exception").setComment("Abort application on exception");
 	addOption("help").setType(cp::RpcValue::Type::Bool).setNames("-h", "--help").setComment("Print help");
-	//addOption("config").setType(cp::RpcValue::String).setNames("--config").setComment(tr("Config name, it is loaded from {app-name}[.conf] if file exists in {config-path}"));
-	//addOption("configDir").setType(cp::RpcValue::String).setNames("--config-dir").setComment("Directory where server config fiels are searched, default value: {app-dir-path}.");
 }
 
 CLIOptions::~CLIOptions()
@@ -467,7 +465,7 @@ void ConfigCLIOptions::mergeConfig_helper(const std::string &key_prefix, const s
 		if(options().find(key) != options().end()) {
 			Option &opt = optionRef(key);
 			if(!opt.isSet()) {
-				//shvInfo() << key << "-->" << v;
+				//shvInfo() << key << "-->" << rv.toCpon();
 				opt.setValue(rv);
 			}
 		}
@@ -478,6 +476,17 @@ void ConfigCLIOptions::mergeConfig_helper(const std::string &key_prefix, const s
 			shvWarning() << "Cannot merge nonexisting option key:" << key;
 		}
 	}
+}
+
+void ConfigCLIOptions::mergeConfig(const chainpack::RpcValue &config_map)
+{
+	mergeConfig_helper(std::string(), config_map);
+	/*
+	for(const auto &kv : options()) {
+		std::string key = kv.first;
+		shvInfo() << key << "-->" << option(key).value().toCpon();
+	}
+	*/
 }
 
 }}}

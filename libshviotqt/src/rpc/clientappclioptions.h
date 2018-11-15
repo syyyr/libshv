@@ -1,6 +1,6 @@
 #pragma once
 
-#include <shv/coreqt/utils/clioptions.h>
+#include <shv/core/utils/clioptions.h>
 
 #include "../shviotqtglobal.h"
 
@@ -8,22 +8,22 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
-class SHVIOTQT_DECL_EXPORT ClientAppCliOptions : public shv::coreqt::utils::ConfigCLIOptions
+class SHVIOTQT_DECL_EXPORT ClientAppCliOptions : public shv::core::utils::ConfigCLIOptions
 {
-	Q_OBJECT
 private:
-	using Super = shv::coreqt::utils::ConfigCLIOptions;
+	using Super = shv::core::utils::ConfigCLIOptions;
 public:
-	ClientAppCliOptions(QObject *parent = NULL);
-	~ClientAppCliOptions() Q_DECL_OVERRIDE {}
+	ClientAppCliOptions();
+	//~ClientAppCliOptions() Q_DECL_OVERRIDE {}
 
 	//CLIOPTION_GETTER_SETTER(QString, l, setL, ocale)
-	CLIOPTION_GETTER_SETTER2(QString, "login.user", u, setU, ser)
-	CLIOPTION_GETTER_SETTER2(QString, "login.password", p, setP, assword)
-	CLIOPTION_GETTER_SETTER2(QString, "server.host", s, setS, erverHost)
+	CLIOPTION_GETTER_SETTER2(std::string, "login.user", u, setU, ser)
+	CLIOPTION_GETTER_SETTER2(std::string, "login.password", p, setP, assword)
+	CLIOPTION_GETTER_SETTER2(std::string, "login.type", l, setL, oginType)
+	CLIOPTION_GETTER_SETTER2(std::string, "server.host", s, setS, erverHost)
 	CLIOPTION_GETTER_SETTER2(int, "server.port", s, setS, erverPort)
 
-	CLIOPTION_GETTER_SETTER2(QString, "rpc.protocolType", p, setP, rotocolType)
+	CLIOPTION_GETTER_SETTER2(std::string, "rpc.protocolType", p, setP, rotocolType)
 
 	//CLIOPTION_GETTER_SETTER2(int, "rpc.timeout", r, setR, pcTimeout)
 	CLIOPTION_GETTER_SETTER2(bool, "rpc.metaTypeExplicit", is, set, MetaTypeExplicit)

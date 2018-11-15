@@ -39,8 +39,6 @@ public:
 	bool isSocketConnected() const;
 	Q_SIGNAL void socketConnectedChanged(bool is_connected);
 
-	int connectionId() const {return m_connectionId;}
-
 	std::string peerAddress() const;
 	int peerPort() const;
 public:
@@ -59,8 +57,6 @@ protected:
 	void onProcessReadDataException(std::exception &e) override {Q_UNUSED(e) abortConnection();}
 protected:
 	QTcpSocket *m_socket = nullptr;
-private:
-	int m_connectionId;
 };
 
 }}}

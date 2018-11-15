@@ -33,11 +33,8 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
-static int s_connectionId = 0;
-
 SocketRpcDriver::SocketRpcDriver(QObject *parent)
 	: QObject(parent)
-	, m_connectionId(++s_connectionId)
 {
 	Rpc::registerMetatTypes();
 	/*

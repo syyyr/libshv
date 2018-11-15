@@ -39,7 +39,9 @@ public:
 
 	CLIOPTION_GETTER_SETTER2(bool, "abortOnException", is, set, AbortOnException)
 	CLIOPTION_GETTER_SETTER2(bool, "help", is, set, Help)
+
 public:
+
 	class SHVCORE_DECL_EXPORT Option
 	{
 	private:
@@ -138,7 +140,7 @@ public:
 protected:
 	std::string configFile();
 protected:
-	void mergeConfig(const shv::chainpack::RpcValue &config_map) {mergeConfig_helper(std::string(), config_map);}
+	void mergeConfig(const shv::chainpack::RpcValue &config_map);
 	void mergeConfig_helper(const std::string &key_prefix, const shv::chainpack::RpcValue &config_map);
 };
 

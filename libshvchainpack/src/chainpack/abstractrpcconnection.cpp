@@ -4,6 +4,11 @@
 namespace shv {
 namespace chainpack {
 
+AbstractRpcConnection::AbstractRpcConnection()
+	: m_connectionId(nextConnectionId())
+{
+}
+
 void AbstractRpcConnection::sendNotify(std::string method, const RpcValue &params)
 {
 	sendShvNotify(std::string(), std::move(method), params);
@@ -41,6 +46,12 @@ int AbstractRpcConnection::nextRequestId()
 	return ++n;
 }
 
+int AbstractRpcConnection::nextConnectionId()
+{
+	static int n = 0;
+	return ++n;
+}
+
 int AbstractRpcConnection::callMethod(const RpcRequest &rq)
 {
 	RpcRequest _rq(rq);
@@ -71,7 +82,7 @@ int AbstractRpcConnection::callShvMethod(const std::string &shv_path, std::strin
 	sendMessage(rq);
 	return id;
 }
-
+/*
 RpcResponse AbstractRpcConnection::callMethodSync(const std::string &method, const RpcValue &params, int rpc_timeout)
 {
 	return callShvMethodSync(std::string(), method, params, rpc_timeout);
@@ -92,7 +103,7 @@ RpcResponse AbstractRpcConnection::callShvMethodSync(const std::string &shv_path
 	//logRpc() << "<-- sync method call ret:" << ret.id();
 	return RpcResponse(ret);
 }
-
+*/
 int AbstractRpcConnection::createSubscription(const std::string &shv_path, std::string method)
 {
 	return callShvMethod(Rpc::DIR_BROKER_APP
@@ -101,20 +112,6 @@ int AbstractRpcConnection::createSubscription(const std::string &shv_path, std::
 						  {Rpc::PAR_PATH, shv_path},
 						  {Rpc::PAR_METHOD, std::move(method)},
 					  });
-}
-
-static int s_defaultRpcTimeout = 5000;
-
-int AbstractRpcConnection::defaultRpcTimeout()
-{
-	return s_defaultRpcTimeout;
-}
-
-int AbstractRpcConnection::setDefaultRpcTimeout(int rpc_timeout)
-{
-	int old = s_defaultRpcTimeout;
-	s_defaultRpcTimeout = rpc_timeout;
-	return old;
 }
 
 } // namespace chainpack

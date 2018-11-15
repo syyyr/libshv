@@ -42,6 +42,9 @@ public:
 	static std::string join(const std::vector<shv::core::StringView> &lst, char delim);
 	static int replace(std::string &str, const std::string &from, const std::string &to);
 
+	static std::string& upper(std::string& s);
+	static std::string& lower(std::string& s);
+
 	template<typename T>
 	static std::string toString(T i, size_t width = 0, char fill_char = ' ')
 	{

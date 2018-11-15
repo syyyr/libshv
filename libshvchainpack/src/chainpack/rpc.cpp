@@ -6,16 +6,16 @@ namespace chainpack {
 const char* Rpc::OPT_IDLE_WD_TIMEOUT = "idleWatchDogTimeOut";
 
 const char* Rpc::KEY_CONNECTION_OPTIONS = "options";
-//const char* Rpc::KEY_CLIENT_ID = "clientId";
+const char* Rpc::KEY_CLIENT_ID = "clientId";
 const char* Rpc::KEY_MOUT_POINT = "mountPoint";
-const char* Rpc::KEY_RELATIVE_PATH = "relPath";
+const char* Rpc::KEY_SHV_PATH = "shvPath";
 const char* Rpc::KEY_DEVICE_ID = "deviceId";
-
 const char* Rpc::KEY_DEVICE = "device";
-const char* Rpc::KEY_BROKER = "broker";
+//const char* Rpc::KEY_BROKER = "broker";
+const char* Rpc::KEY_LOGIN = "login";
 
 const char* Rpc::METH_HELLO = "hello";
-const char* Rpc::METH_LOGIN = "login";
+const char* Rpc::METH_LOGIN = Rpc::KEY_LOGIN;
 
 const char* Rpc::METH_GET = "get";
 const char* Rpc::METH_SET = "set";

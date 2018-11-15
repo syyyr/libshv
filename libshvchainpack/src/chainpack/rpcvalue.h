@@ -496,6 +496,7 @@ template<typename T> inline T rpcvalue_cast(const shv::chainpack::RpcValue &v)
 	return T{v.toString()};
 }
 
+template<> inline shv::chainpack::RpcValue rpcvalue_cast<shv::chainpack::RpcValue>(const shv::chainpack::RpcValue &v) { return v; }
 template<> inline bool rpcvalue_cast<bool>(const shv::chainpack::RpcValue &v) { return v.toBool(); }
 template<> inline shv::chainpack::RpcValue::Int rpcvalue_cast<shv::chainpack::RpcValue::Int>(const shv::chainpack::RpcValue &v) { return v.toInt(); }
 template<> inline shv::chainpack::RpcValue::UInt rpcvalue_cast<shv::chainpack::RpcValue::UInt>(const shv::chainpack::RpcValue &v) { return v.toUInt(); }

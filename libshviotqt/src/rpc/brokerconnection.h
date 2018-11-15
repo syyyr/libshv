@@ -5,18 +5,18 @@
 namespace shv {
 namespace iotqt {
 namespace rpc {
-
+/*
 class SHVIOTQT_DECL_EXPORT BrokerConnectionAppCliOptions : public DeviceAppCliOptions
 {
 	Q_OBJECT
 private:
 	using Super = DeviceAppCliOptions;
 public:
-	BrokerConnectionAppCliOptions(QObject *parent = nullptr);
+	BrokerConnectionAppCliOptions();
 
-	CLIOPTION_GETTER_SETTER2(QString, "exports.shvPath", e, setE, xportedShvPath)
+	CLIOPTION_GETTER_SETTER2(std::string, "exports.shvPath", b, setB, rokerExportedShvPath)
 };
-
+*/
 class SHVIOTQT_DECL_EXPORT BrokerConnection : public DeviceConnection
 {
 	Q_OBJECT
@@ -24,7 +24,7 @@ class SHVIOTQT_DECL_EXPORT BrokerConnection : public DeviceConnection
 public:
 	BrokerConnection(QObject *parent = nullptr);
 
-	void setCliOptions(const BrokerConnectionAppCliOptions *cli_opts);
+	virtual void setOptions(const chainpack::RpcValue &slave_broker_options);
 protected:
 	//shv::chainpack::RpcValue createLoginParams(const shv::chainpack::RpcValue &server_hello) override;
 };

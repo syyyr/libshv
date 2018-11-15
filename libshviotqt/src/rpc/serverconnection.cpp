@@ -4,6 +4,7 @@
 #include <shv/coreqt/log.h>
 
 #include <shv/core/exception.h>
+#include <shv/core/string.h>
 
 //#include <shv/chainpack/chainpackprotocol.h>
 #include <shv/chainpack/rpcmessage.h>
@@ -51,7 +52,7 @@ void ServerConnection::sendMessage(const chainpack::RpcMessage &rpc_msg)
 {
 	sendRpcValue(rpc_msg.value());
 }
-
+/*
 chainpack::RpcResponse ServerConnection::sendMessageSync(const chainpack::RpcRequest &rpc_request, int time_out_ms)
 {
 	Q_UNUSED(rpc_request)
@@ -59,7 +60,7 @@ chainpack::RpcResponse ServerConnection::sendMessageSync(const chainpack::RpcReq
 	SHV_EXCEPTION("Sync mesage are nott supported by server connection!");
 	return chainpack::RpcResponse();
 }
-
+*/
 void ServerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
 {
 	//shvInfo() << __FILE__ << RCV_LOG_ARROW << md.toStdString() << shv::chainpack::Utils::toHexElided(data, start_pos, 100);
@@ -152,7 +153,7 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 chainpack::RpcValue ServerConnection::login(const chainpack::RpcValue &auth_params)
 {
 	const cp::RpcValue::Map params = auth_params.toMap();
-	const cp::RpcValue::Map login = params.value("login").toMap();
+	const cp::RpcValue::Map login = params.value(cp::Rpc::KEY_LOGIN).toMap();
 
 	m_userName = login.value("user").toString();
 	if(m_userName.empty())
@@ -172,12 +173,13 @@ bool ServerConnection::checkPassword(const chainpack::RpcValue::Map &login)
 {
 	bool password_ok = false;
 	std::string login_type = login.value("type").toString();
+	shv::core::String::upper(login_type);
 	if(login_type == "RSA-OAEP") {
 		shvError() << "RSA-OAEP" << "login type not supported yet";
 		//std::string password_hash = passwordHash(PasswordHashType::RsaOaep, m_user);
 	}
 	else if(login_type == "PLAIN") {
-		std::string password_hash = passwordHash(PasswordHashType::Plain, m_userName);
+		std::string password_hash = passwordHash(LoginType::Plain, m_userName);
 		std::string pwd = login.value("password").toString();
 		password_ok = (pwd == password_hash);
 	}
@@ -185,7 +187,7 @@ bool ServerConnection::checkPassword(const chainpack::RpcValue::Map &login)
 		/// login_type == "SHA1" is default
 		std::string sent_sha1 = login.value("password").toString();
 
-		std::string password_hash = passwordHash(PasswordHashType::Sha1, m_userName);
+		std::string password_hash = passwordHash(LoginType::Sha1, m_userName);
 		std::string nonce = m_pendingAuthNonce + password_hash;
 		//shvWarning() << m_pendingAuthNonce << "prd" << nonce;
 		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);

@@ -9,6 +9,9 @@
 #include <shv/core/stringview.h>
 #include <shv/core/exception.h>
 #include <shv/core/stringview.h>
+#include <shv/core/string.h>
+
+#include <QTimer>
 
 #include <cstring>
 
@@ -28,6 +31,17 @@ ShvNode::ShvNode(const std::string &node_id, ShvNode *parent)
 	: ShvNode(parent)
 {
 	setNodeId(node_id);
+}
+
+ShvNode::~ShvNode()
+{
+	/*
+	ShvNode *pnd = this->parentNode();
+	if(pnd && !pnd->isRootNode() && pnd->ownChildren().isEmpty()) {
+		pnd->deleteLater();
+	}
+	setParentNode(nullptr);
+	*/
 }
 
 ShvNode *ShvNode::parentNode() const
@@ -92,16 +106,19 @@ ShvRootNode *ShvNode::rootNode()
 	return nullptr;
 }
 
-void ShvNode::deleteDanglingPath()
+void ShvNode::deleteIfEmptyWithParents()
 {
 	ShvNode *nd = this;
-	ShvNode *dangling_nd = nullptr;
-	while(!nd->isRootNode() && nd->childNames().empty()) {
-		dangling_nd = nd;
+	if(!nd->isRootNode() && nd->childNames().empty()) {
+		ShvNode *lowest_empty_parent_nd = nd;
 		nd = nd->parentNode();
+		while(nd && !nd->isRootNode() && nd->childNames().size() == 1) {
+			lowest_empty_parent_nd = nd;
+			nd = nd->parentNode();
+		}
+		if(lowest_empty_parent_nd)
+			delete lowest_empty_parent_nd;
 	}
-	if(dangling_nd)
-		delete dangling_nd;
 }
 
 void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&data)
@@ -328,6 +345,7 @@ chainpack::RpcValue ShvNode::dir(const StringViewList &shv_path, const chainpack
 
 chainpack::RpcValue ShvNode::ls(const StringViewList &shv_path, const chainpack::RpcValue &methods_params)
 {
+	//shvInfo() << __FUNCTION__ << "path:" << shvPath() << "shvPath:" << shv::core::StringView::join(shv_path, '/');
 	cp::RpcValue::List ret;
 	chainpack::RpcValueGenList mpl(methods_params);
 	const std::string child_name_pattern = mpl.value(0).toString();
@@ -407,7 +425,7 @@ chainpack::RpcValue ShvNode::callMethod(const ShvNode::StringViewList &shv_path,
 size_t MethodsTableNode::methodCount(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
 {
 	if(shv_path.empty()) {
-		return m_methods->size();
+		return m_methods.size();
 	}
 	return Super::methodCount(shv_path);
 }
@@ -415,9 +433,9 @@ size_t MethodsTableNode::methodCount(const shv::iotqt::node::ShvNode::StringView
 const shv::chainpack::MetaMethod *MethodsTableNode::metaMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, size_t ix)
 {
 	if(shv_path.empty()) {
-		if(!m_methods || m_methods->size() <= ix)
-			SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(m_methods->size()));
-		return &((*m_methods)[ix]);
+		if(m_methods.size() <= ix)
+			SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(m_methods.size()));
+		return &(m_methods[ix]);
 	}
 	return Super::metaMethod(shv_path, ix);
 }

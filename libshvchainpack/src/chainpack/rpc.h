@@ -27,13 +27,13 @@ public:
 	static const char* OPT_IDLE_WD_TIMEOUT;
 
 	static const char* KEY_CONNECTION_OPTIONS;
-	//static const char* KEY_CLIENT_ID;
 	static const char* KEY_MOUT_POINT;
-	static const char* KEY_RELATIVE_PATH;
+	static const char* KEY_SHV_PATH;
 	static const char* KEY_DEVICE_ID;
-
+	static const char* KEY_CLIENT_ID;
+	static const char* KEY_LOGIN;
 	static const char* KEY_DEVICE;
-	static const char* KEY_BROKER;
+	//static const char* KEY_BROKER;
 
 	static const char* METH_HELLO;
 	static const char* METH_LOGIN;

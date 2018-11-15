@@ -54,6 +54,7 @@ void TcpServer::onNewConnection()
 	if(sock) {
 		shvInfo().nospace() << "client connected: " << sock->peerAddress().toString() << ':' << sock->peerPort();// << "socket:" << sock << sock->socketDescriptor() << "state:" << sock->state();
 		ServerConnection *c = createServerConnection(sock, this);
+		c->setConnectionName(sock->peerAddress().toString().toStdString() + ':' + std::to_string(sock->peerPort()));
 		m_connections[c->connectionId()] = c;
 		int cid = c->connectionId();
 		connect(c, &ServerConnection::destroyed, [this, cid]() {

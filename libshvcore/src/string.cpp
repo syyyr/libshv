@@ -100,4 +100,18 @@ int String::replace(std::string& str, const std::string& from, const std::string
 	return i;
 }
 
+std::string &String::upper(std::string &s)
+{
+	for (size_t i = 0; i < s.size(); ++i)
+		s[i] = std::toupper(s[i]);
+	return s;
+}
+
+std::string &String::lower(std::string &s)
+{
+	for (size_t i = 0; i < s.size(); ++i)
+		s[i] = std::tolower(s[i]);
+	return s;
+}
+
 }}

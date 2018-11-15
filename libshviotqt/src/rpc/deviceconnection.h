@@ -9,16 +9,15 @@ namespace rpc {
 
 class SHVIOTQT_DECL_EXPORT DeviceAppCliOptions : public ClientAppCliOptions
 {
-	Q_OBJECT
 private:
 	using Super = ClientAppCliOptions;
 public:
-	DeviceAppCliOptions(QObject *parent = NULL);
+	DeviceAppCliOptions();
 
-	CLIOPTION_GETTER_SETTER2(QString, "device.mountPoint", m, setM, ountPoint)
-	CLIOPTION_GETTER_SETTER2(QString, "device.id", d, setD, eviceId)
-	CLIOPTION_GETTER_SETTER2(QString, "device.idFile", d, setD, eviceIdFile)
-	CLIOPTION_GETTER_SETTER2(QString, "shvJournal.dir", s, setS, hvJournalDir)
+	CLIOPTION_GETTER_SETTER2(std::string, "device.mountPoint", m, setM, ountPoint)
+	CLIOPTION_GETTER_SETTER2(std::string, "device.id", d, setD, eviceId)
+	CLIOPTION_GETTER_SETTER2(std::string, "device.idFile", d, setD, eviceIdFile)
+	CLIOPTION_GETTER_SETTER2(std::string, "shvJournal.dir", s, setS, hvJournalDir)
 	CLIOPTION_GETTER_SETTER2(int, "shvJournal.fileSizeLimit", s, setS, hvJournalFileSizeLimit)
 	CLIOPTION_GETTER_SETTER2(int, "shvJournal.dirSizeLimit", s, setS, hvJournalDirSizeLimit)
 };
@@ -28,7 +27,10 @@ class SHVIOTQT_DECL_EXPORT DeviceConnection : public ClientConnection
 	Q_OBJECT
 	using Super = ClientConnection;
 public:
-	DeviceConnection(QObject *parent = 0);
+	DeviceConnection(QObject *parent = nullptr);
+
+	const shv::chainpack::RpcValue::Map& deviceOptions() const;
+	shv::chainpack::RpcValue deviceId() const;
 
 	void setCliOptions(const DeviceAppCliOptions *cli_opts);
 protected:
