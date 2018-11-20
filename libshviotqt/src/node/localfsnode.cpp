@@ -35,20 +35,20 @@ chainpack::RpcValue LocalFSNode::callMethod(const ShvNode::StringViewList &shv_p
 		return ndRead(QString::fromStdString(shv_path.join('/')));
 	}
 	else if(method == M_WRITE) {
-		return ndWrite(QString::fromStdString(core::StringView::join(shv_path, '/')), params);
+		return ndWrite(QString::fromStdString(shv_path.join('/')), params);
 	}
 	else if(method == M_DELETE) {
-		return ndDelete(QString::fromStdString(core::StringView::join(shv_path, '/')));
+		return ndDelete(QString::fromStdString(shv_path.join('/')));
 	}
 	else if(method == M_MKFILE) {
-		return ndMkfile(QString::fromStdString(core::StringView::join(shv_path, '/')), params);
+		return ndMkfile(QString::fromStdString(shv_path.join('/')), params);
 	}
 	else if(method == M_MKDIR) {
-		return ndMkdir(QString::fromStdString(core::StringView::join(shv_path, '/')), params);
+		return ndMkdir(QString::fromStdString(shv_path.join('/')), params);
 	}
 	else if(method == M_RMDIR) {
 		bool recursively = (params.isBool()) ? params.toBool() : false;
-		return ndRmdir(QString::fromStdString(core::StringView::join(shv_path, '/')), recursively);
+		return ndRmdir(QString::fromStdString(shv_path.join('/')), recursively);
 	}
 
 	return Super::callMethod(shv_path, method, params);
@@ -134,7 +134,6 @@ chainpack::RpcValue LocalFSNode::ndRead(const QString &path)
 	QFile f(m_rootDir.absolutePath() + '/' + path);
 	if(f.open(QFile::ReadOnly)) {
 		QByteArray ba = f.readAll();
-		f.close();
 		return cp::RpcValue::String(ba.constData(), (size_t)ba.size());
 	}
 	SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for reading.");
@@ -146,12 +145,9 @@ chainpack::RpcValue LocalFSNode::ndWrite(const QString &path, const chainpack::R
 	if(f.open(QFile::WriteOnly)) {
 		const chainpack::RpcValue::String &content = methods_params.toString();
 		f.write(content.data(), content.size());
-		f.close();
 		return true;
 	}
 	SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for writing.");
-
-	return false;
 }
 
 chainpack::RpcValue LocalFSNode::ndDelete(const QString &path)
@@ -163,30 +159,25 @@ chainpack::RpcValue LocalFSNode::ndDelete(const QString &path)
 chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::RpcValue &methods_params)
 {
 	QString dir_path = m_rootDir.absolutePath() + '/' + path;
-	if (!methods_params.isString()){
+	if (!methods_params.isString())
 		SHV_EXCEPTION("Cannot create file in directory " + dir_path.toStdString() + ". Invalid parameter: " + methods_params.toCpon());
-	}
 
 	QString file_path = dir_path + "/" + QString::fromStdString(methods_params.toString());
 
 	QFile f(file_path);
 	if(f.open(QFile::WriteOnly)) {
-		f.close();
 		return true;
 	}
 
 	SHV_EXCEPTION("Cannot create file " + file_path.toStdString() + ".");
-
-	return false;
 }
 
 chainpack::RpcValue LocalFSNode::ndMkdir(const QString &path, const chainpack::RpcValue &methods_params)
 {
 	QDir d(m_rootDir.absolutePath()+ '/' + path);
 
-	if (!methods_params.isString()){
+	if (!methods_params.isString())
 		SHV_EXCEPTION("Cannot create directory in directory " + d.absolutePath().toStdString() + ". Invalid parameter: " + methods_params.toCpon());
-	}
 
 	return d.mkpath(m_rootDir.absolutePath()+ '/' + path + '/' + QString::fromStdString(methods_params.toString()));
 }
@@ -195,16 +186,13 @@ chainpack::RpcValue LocalFSNode::ndRmdir(const QString &path, bool recursively)
 {
 	QDir d(m_rootDir.absolutePath() + '/' + path);
 
-	if (path.isEmpty()){
+	if (path.isEmpty())
 		SHV_EXCEPTION("Cannot remove root directory " + d.absolutePath().toStdString());
-	}
 
-	if (recursively){
+	if (recursively)
 		return d.removeRecursively();
-	}
-	else{
+	else
 		return d.rmdir(m_rootDir.absolutePath() + '/' + path);
-	}
 }
 
 } // namespace node
