@@ -13,7 +13,9 @@ ClientAppCliOptions::ClientAppCliOptions()
 	//addOption("locale").setType(cp::RpcValue::Type::String).setNames("--locale").setComment(tr("Application locale")).setDefaultValue("system");
 	addOption("login.user").setType(cp::RpcValue::Type::String).setNames("-u", "--user").setComment("Login user");
 	addOption("login.password").setType(cp::RpcValue::Type::String).setNames("--password").setComment("Login password");
-	addOption("login.type").setType(cp::RpcValue::Type::String).setNames("--lt", "--login-type").setComment("Login type [PLAIN | SHA1 | RSA-OAEP]").setDefaultValue("SHA1");
+	addOption("login.passwordFile").setType(cp::RpcValue::Type::String).setNames("--password-file").setComment("Login password file");
+	addOption("login.passwordFormat").setType(cp::RpcValue::Type::String).setNames("--pf", "--password-format").setComment("Password format [PLAIN | SHA1]").setDefaultValue("PLAIN");
+	addOption("login.type").setType(cp::RpcValue::Type::String).setNames("--lt", "--login-type").setComment("Login type [PLAIN | SHA1 | RSAOAEP]").setDefaultValue("SHA1");
 	addOption("server.host").setType(cp::RpcValue::Type::String).setNames("-s", "--server-host").setComment("server host").setDefaultValue("localhost");
 	addOption("server.port").setType(cp::RpcValue::Type::Int).setNames("-p", "--server-port").setComment("server port").setDefaultValue(shv::chainpack::AbstractRpcConnection::DEFAULT_RPC_BROKER_PORT);
 

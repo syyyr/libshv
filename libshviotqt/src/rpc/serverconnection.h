@@ -45,6 +45,7 @@ public:
 	const std::string& userName() const { return m_userName; }
 
 	virtual bool isConnectedAndLoggedIn() const {return isSocketConnected() && !isInitPhase();}
+	virtual bool isSlaveBrokerConnection() const;
 
 	Q_SIGNAL void rpcMessageReceived(const shv::chainpack::RpcMessage &msg);
 
@@ -61,7 +62,6 @@ protected:
 	virtual void processInitPhase(const chainpack::RpcMessage &msg);
 	virtual shv::chainpack::RpcValue login(const shv::chainpack::RpcValue &auth_params);
 	virtual bool checkPassword(const shv::chainpack::RpcValue::Map &login);
-	enum class LoginType {Invalid, Plain, Sha1, RsaOaep};
 	virtual std::string passwordHash(LoginType type, const std::string &user) = 0;
 protected:
 	std::string m_connectionName;

@@ -166,7 +166,7 @@ std::string Utils::simplifyPath(const std::string &p)
 		}
 		ret.push_back(s);
 	}
-	return StringView::join(ret, "/");
+	return ret.join('/');
 }
 
 std::vector<char> Utils::readAllFd(int fd)

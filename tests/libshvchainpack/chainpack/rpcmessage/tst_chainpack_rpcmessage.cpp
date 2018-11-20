@@ -131,7 +131,7 @@ private:
 							   {"c", RpcValue::List{1,2,3}},
 						   }});
 		qDebug() << rq.toCpon();
-		QVERIFY(rq.isNotify());
+		QVERIFY(rq.isSignal());
 		std::stringstream out;
 		RpcValue cp1 = rq.value();
 		{ ChainPackWriter wr(out); rq.write(wr); }
@@ -140,7 +140,7 @@ private:
 		qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
 		QVERIFY(cp1.type() == cp2.type());
 		RpcRequest rq2(cp2);
-		QVERIFY(rq2.isNotify());
+		QVERIFY(rq2.isSignal());
 		QCOMPARE(rq2.method(), rq.method());
 		QCOMPARE(rq2.params(), rq.params());
 	}

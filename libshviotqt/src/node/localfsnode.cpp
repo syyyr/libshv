@@ -29,10 +29,10 @@ LocalFSNode::LocalFSNode(const QString &root_path, Super *parent)
 chainpack::RpcValue LocalFSNode::callMethod(const ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
 {
 	if(method == M_SIZE) {
-		return ndSize(QString::fromStdString(core::StringView::join(shv_path, '/')));
+		return ndSize(QString::fromStdString(shv_path.join('/')));
 	}
 	else if(method == M_READ) {
-		return ndRead(QString::fromStdString(core::StringView::join(shv_path, '/')));
+		return ndRead(QString::fromStdString(shv_path.join('/')));
 	}
 	else if(method == M_WRITE) {
 		return ndWrite(QString::fromStdString(core::StringView::join(shv_path, '/')), params);
@@ -56,7 +56,7 @@ chainpack::RpcValue LocalFSNode::callMethod(const ShvNode::StringViewList &shv_p
 
 ShvNode::StringList LocalFSNode::childNames(const ShvNode::StringViewList &shv_path)
 {
-	QString qpath = QString::fromStdString(core::StringView::join(shv_path, '/'));
+	QString qpath = QString::fromStdString(shv_path.join('/'));
 	QFileInfo fi_path(m_rootDir.absolutePath() + '/' + qpath);
 	//shvInfo() << __FUNCTION__ << fi_path.absoluteFilePath() << "is dir:" << fi_path.isDir();
 	if(fi_path.isDir()) {
@@ -75,7 +75,7 @@ ShvNode::StringList LocalFSNode::childNames(const ShvNode::StringViewList &shv_p
 
 chainpack::RpcValue LocalFSNode::hasChildren(const ShvNode::StringViewList &shv_path)
 {
-	QString qpath = QString::fromStdString(core::StringView::join(shv_path, '/'));
+	QString qpath = QString::fromStdString(shv_path.join('/'));
 	QFileInfo fi(m_rootDir.absolutePath() + '/' + qpath);
 	if(!fi.exists())
 		shvError() << "Invalid path:" << fi.absoluteFilePath();

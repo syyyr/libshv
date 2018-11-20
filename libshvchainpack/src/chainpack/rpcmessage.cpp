@@ -135,7 +135,7 @@ bool RpcMessage::isRequest() const
 	return requestId().isValid() && !method().toString().empty();
 }
 
-bool RpcMessage::isNotify() const
+bool RpcMessage::isSignal() const
 {
 	return !requestId().isValid() && !method().toString().empty();
 }
@@ -155,7 +155,7 @@ bool RpcMessage::isResponse(const RpcValue::MetaData &meta)
 	return requestId(meta).isValid() && method(meta).toString().empty();
 }
 
-bool RpcMessage::isNotify(const RpcValue::MetaData &meta)
+bool RpcMessage::isSignal(const RpcValue::MetaData &meta)
 {
 	return !requestId(meta).isValid() && !method(meta).toString().empty();
 }
@@ -270,6 +270,23 @@ RpcValue::Int RpcMessage::popCallerId()
 	RpcValue::Int ret = 0;
 	setCallerIds(popCallerId(callerIds(), ret));
 	return ret;
+}
+
+RpcValue::Int RpcMessage::peekCallerId() const
+{
+	RpcValue caller_ids = callerIds();
+	if(caller_ids.isList()) {
+		const shv::chainpack::RpcValue::List &array = caller_ids.toList();
+		if(array.empty()) {
+			return 0;
+		}
+		else {
+			return array.back().toInt();
+		}
+	}
+	else {
+		return  caller_ids.toInt();
+	}
 }
 
 RpcValue RpcMessage::callerIds() const
@@ -409,7 +426,7 @@ RpcRequest& RpcRequest::setParams(const RpcValue& p)
 //==================================================================
 // RpcNotify
 //==================================================================
-void RpcNotify::write(AbstractStreamWriter &wr, const std::string &method, std::function<void (AbstractStreamWriter &)> write_params_callback)
+void RpcSignal::write(AbstractStreamWriter &wr, const std::string &method, std::function<void (AbstractStreamWriter &)> write_params_callback)
 {
 	RpcValue::MetaData md;
 	md.setMetaTypeId(RpcMessage::MetaType::ID);

@@ -9,6 +9,9 @@ class SHVCHAINPACK_DECL_EXPORT AbstractRpcConnection
 {
 public:
 	static constexpr int DEFAULT_RPC_BROKER_PORT = 3755;
+
+	enum class LoginType {Invalid, Plain, Sha1, RsaOaep};
+	enum class PasswordFormat {Invalid, Plain, Sha1};
 public:
 	AbstractRpcConnection();
 
@@ -33,6 +36,11 @@ public:
 	//RpcResponse callMethodSync(const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = DEFAULT_RPC_TIMEOUT);
 	//RpcResponse callShvMethodSync(const std::string &shv_path, const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = DEFAULT_RPC_TIMEOUT);
 	int createSubscription(const std::string &shv_path, std::string method);
+
+	static std::string loginTypeToString(LoginType t);
+	static LoginType loginTypeFromString(const std::string &s);
+	static std::string passwordFormatToString(PasswordFormat f);
+	static PasswordFormat passwordFormatFromString(const std::string &s);
 protected:
 	static int nextConnectionId();
 protected:

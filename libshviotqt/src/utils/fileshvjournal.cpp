@@ -485,7 +485,6 @@ log_finish:
 		}
 		md.setValue("logVersion", 1); // required
 		md.setValue("dateTime", cp::RpcValue::DateTime::now());
-		md.setValue("recordCount", rec_cnt);
 		md.setValue("params", params.toRpcValue());
 	}
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::FileldInfo)) {

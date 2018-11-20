@@ -139,7 +139,6 @@ public:
 	bool loadConfigFile();
 protected:
 	std::string configFile();
-protected:
 	void mergeConfig(const shv::chainpack::RpcValue &config_map);
 	void mergeConfig_helper(const std::string &key_prefix, const shv::chainpack::RpcValue &config_map);
 };

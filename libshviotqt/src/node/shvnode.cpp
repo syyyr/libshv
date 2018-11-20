@@ -126,7 +126,7 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 	shvLogFuncFrame() << "node:" << nodeId() << "meta:" << meta.toStdString();
 	const chainpack::RpcValue::String &method = cp::RpcMessage::method(meta).toString();
 	const chainpack::RpcValue::String &shv_path_str = cp::RpcMessage::shvPath(meta).toString();
-	core::StringView::StringViewList shv_path = splitPath(shv_path_str);
+	core::StringViewList shv_path = splitPath(shv_path_str);
 	cp::RpcResponse resp = cp::RpcResponse::forRequest(meta);
 	try {
 		const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
@@ -172,7 +172,7 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 	shvLogFuncFrame() << "node:" << nodeId();
 	const chainpack::RpcValue::String &method = rq.method().toString();
 	const chainpack::RpcValue::String &shv_path_str = rq.shvPath().toString();
-	core::StringView::StringViewList shv_path = splitPath(shv_path_str);
+	core::StringViewList shv_path = splitPath(shv_path_str);
 	cp::RpcResponse resp = cp::RpcResponse::forRequest(rq);
 	try {
 		const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
@@ -213,7 +213,7 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 
 chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 {
-	core::StringView::StringViewList shv_path = splitPath(rq.shvPath().toString());
+	core::StringViewList shv_path = splitPath(rq.shvPath().toString());
 	const chainpack::RpcValue::String &method = rq.method().toString();
 	const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
 	if(!mm)
@@ -257,7 +257,7 @@ QList<ShvNode *> ShvNode::ownChildren() const
 
 ShvNode::StringList ShvNode::childNames(const StringViewList &shv_path)
 {
-	shvLogFuncFrame() << "node:" << nodeId() << "shv_path:" << StringView::join(shv_path, '/');
+	shvLogFuncFrame() << "node:" << nodeId() << "shv_path:" << shv_path.join('/');
 	ShvNode::StringList ret;
 	if(shv_path.empty()) {
 		for (ShvNode *nd : ownChildren()) {
@@ -282,7 +282,7 @@ chainpack::RpcValue ShvNode::hasChildren(const StringViewList &shv_path)
 
 chainpack::RpcValue ShvNode::lsAttributes(const StringViewList &shv_path, unsigned attributes)
 {
-	shvLogFuncFrame() << "node:" << nodeId() << "attributes:" << attributes << "shv path:" << StringView::join(shv_path, '/');
+	shvLogFuncFrame() << "node:" << nodeId() << "attributes:" << attributes << "shv path:" << shv_path.join('/');
 	cp::RpcValue::List ret;
 	if(shv_path.empty()) {
 		if(attributes & cp::MetaMethod::LsAttribute::HasChildren)
@@ -345,7 +345,7 @@ chainpack::RpcValue ShvNode::dir(const StringViewList &shv_path, const chainpack
 
 chainpack::RpcValue ShvNode::ls(const StringViewList &shv_path, const chainpack::RpcValue &methods_params)
 {
-	//shvInfo() << __FUNCTION__ << "path:" << shvPath() << "shvPath:" << shv::core::StringView::join(shv_path, '/');
+	//shvInfo() << __FUNCTION__ << "path:" << shvPath() << "shvPath:" << shv_path.join('/');
 	cp::RpcValue::List ret;
 	chainpack::RpcValueGenList mpl(methods_params);
 	const std::string child_name_pattern = mpl.value(0).toString();
@@ -419,7 +419,7 @@ chainpack::RpcValue ShvNode::callMethod(const ShvNode::StringViewList &shv_path,
 	if(method == cp::Rpc::METH_LS)
 		return ls(shv_path, params);
 
-	SHV_EXCEPTION("Invalid method: " + method + " on path: " + core::StringView::join(shv_path, '/'));
+	SHV_EXCEPTION("Invalid method: " + method + " on path: " + shv_path.join('/'));
 }
 
 size_t MethodsTableNode::methodCount(const shv::iotqt::node::ShvNode::StringViewList &shv_path)

@@ -13,8 +13,6 @@ class SHVCORE_DECL_EXPORT StringView
 {
 public:
 	enum SplitBehavior {KeepEmptyParts, SkipEmptyParts};
-
-	using StringViewList = std::vector<StringView>;
 public:
 	StringView();
 	StringView(const StringView &strv);
@@ -47,19 +45,34 @@ public:
 	StringView mid(size_t start, size_t len) const;
 
 	StringView getToken(char delim = ' ', char quote = '\0');
-	StringViewList split(char delim, char quote, SplitBehavior split_behavior = SkipEmptyParts) const;
-	StringViewList split(char delim, SplitBehavior split_behavior = SkipEmptyParts) const { return  split(delim, '\0', split_behavior); }
-	static std::string join(StringViewList::const_iterator first, StringViewList::const_iterator last, const char delim);
-	static std::string join(const StringViewList &lst, const char delim) { return join(lst.begin(), lst.end(), delim); }
-	static std::string join(StringViewList::const_iterator first, StringViewList::const_iterator last, const std::string &delim);
-	static std::string join(const StringViewList &lst, const std::string &delim) { return join(lst.begin(), lst.end(), delim); }
+	std::vector<StringView> split(char delim, char quote, SplitBehavior split_behavior = SkipEmptyParts) const;
+	std::vector<StringView> split(char delim, SplitBehavior split_behavior = SkipEmptyParts) const { return  split(delim, '\0', split_behavior); }
+
+	static std::string join(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last, const char delim);
+	static std::string join(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last, const std::string &delim);
 private:
 	const std::string *m_str;
 	size_t m_start;
 	size_t m_length;
 };
 
-using StringViewList = StringView::StringViewList;
+class SHVCORE_DECL_EXPORT StringViewList : public std::vector<StringView>
+{
+	using Super = std::vector<StringView>;
+public:
+	using Super::Super;
+	StringViewList() {}
+	StringViewList(const std::vector<StringView> &o) : Super(o) {}
+
+	StringViewList mid(long start)const {return mid(start, (length() > start)? length() - start: 0);}
+	StringViewList mid(long start, long len) const;
+
+	std::string join(const char delim) const { return StringView::join(begin(), end(), delim); }
+	std::string join(const std::string &delim) const { return StringView::join(begin(), end(), delim); }
+
+	bool startsWith(const StringViewList &lst) const;
+	long length() const {return (long)size();}
+};
 
 } // namespace core
 } // namespace shv

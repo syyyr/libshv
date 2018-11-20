@@ -5,13 +5,13 @@ namespace chainpack {
 
 const char* Rpc::OPT_IDLE_WD_TIMEOUT = "idleWatchDogTimeOut";
 
-const char* Rpc::KEY_CONNECTION_OPTIONS = "options";
+const char* Rpc::KEY_OPTIONS = "options";
 const char* Rpc::KEY_CLIENT_ID = "clientId";
 const char* Rpc::KEY_MOUT_POINT = "mountPoint";
 const char* Rpc::KEY_SHV_PATH = "shvPath";
 const char* Rpc::KEY_DEVICE_ID = "deviceId";
 const char* Rpc::KEY_DEVICE = "device";
-//const char* Rpc::KEY_BROKER = "broker";
+const char* Rpc::KEY_BROKER = "broker";
 const char* Rpc::KEY_LOGIN = "login";
 
 const char* Rpc::METH_HELLO = "hello";
@@ -28,6 +28,7 @@ const char* Rpc::METH_DEVICE_ID = "deviceId";
 const char* Rpc::METH_MOUNT_POINT = "mountPoint";
 //const char* Rpc::METH_CONNECTION_TYPE = "connectionType";
 const char* Rpc::METH_SUBSCRIBE = "subscribe";
+const char* Rpc::METH_REJECT_NOT_SUBSCRIBED = "rejectNotSubscribed";
 const char* Rpc::METH_RUN_CMD = "runCmd";
 const char* Rpc::METH_LAUNCH_REXEC = "launchRexec";
 const char* Rpc::METH_HELP = "help";
@@ -36,9 +37,9 @@ const char* Rpc::METH_GET_LOG = "getLog";
 const char* Rpc::PAR_PATH = "path";
 const char* Rpc::PAR_METHOD = "method";
 
-const char* Rpc::NTF_VAL_CHANGED = "chng";
-const char* Rpc::NTF_MOUNTED_CHANGED = "mntchng";
-const char* Rpc::NTF_CONNECTED_CHANGED = "connchng";
+const char* Rpc::SIG_VAL_CHANGED = "chng";
+const char* Rpc::SIG_MOUNTED_CHANGED = "mntchng";
+//const char* Rpc::SIG_CONNECTED_CHANGED = "connchng";
 
 const char* Rpc::GRANT_BROWSE = "bws";
 const char* Rpc::GRANT_READ = "rd";

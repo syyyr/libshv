@@ -33,10 +33,10 @@ void BrokerConnection::setOptions(const chainpack::RpcValue &slave_broker_option
 		DeviceAppCliOptions device_opts;
 
 		const cp::RpcValue::Map &login = m.value(cp::Rpc::KEY_LOGIN).toMap();
-		device_opts.setUser(login.value("user").toString());
-		device_opts.setPassword(login.value("password").toString());
-		device_opts.setLoginType(login.value("type").toString());
-
+		for(const std::string &key : {"user", "password", "passwordFile", "passwordFormat", "type"}) {
+			if(login.hasKey(key))
+				device_opts.setPasswordFormat(login.value(key).toString());
+		}
 		const cp::RpcValue::Map &rpc = m.value("rpc").toMap();
 		if(rpc.count("heartbeatInterval") == 1)
 			device_opts.setHeartbeatInterval(rpc.value("heartbeatInterval").toInt());
@@ -52,6 +52,12 @@ void BrokerConnection::setOptions(const chainpack::RpcValue &slave_broker_option
 			device_opts.setMountPoint(device.value("mountPoint").toString());
 
 		setCliOptions(&device_opts);
+		{
+			chainpack::RpcValue::Map opts = connectionOptions().toMap();
+			cp::RpcValue::Map broker;
+			opts[cp::Rpc::KEY_BROKER] = broker;
+			setConnectionOptions(opts);
+		}
 	}
 }
 

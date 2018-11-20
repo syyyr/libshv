@@ -111,7 +111,56 @@ int AbstractRpcConnection::createSubscription(const std::string &shv_path, std::
 					  , RpcValue::Map{
 						  {Rpc::PAR_PATH, shv_path},
 						  {Rpc::PAR_METHOD, std::move(method)},
-					  });
+						 });
+}
+
+static std::string to_upper(const std::string &s)
+{
+	std::string ret(s);
+	for (size_t i = 0; i < ret.size(); ++i)
+		ret[i] = std::toupper(ret[i]);
+	return ret;
+}
+
+std::string AbstractRpcConnection::loginTypeToString(AbstractRpcConnection::LoginType t)
+{
+	switch(t) {
+	case LoginType::Plain: return "PLAIN";
+	case LoginType::Sha1: return "SHA1";
+	case LoginType::RsaOaep: return "RSAOAEP";
+	default: return "INVALID";
+	}
+}
+
+AbstractRpcConnection::LoginType AbstractRpcConnection::loginTypeFromString(const std::string &s)
+{
+	std::string typestr = to_upper(s);
+	if(typestr == loginTypeToString(LoginType::Plain))
+		return LoginType::Plain;
+	if(typestr == loginTypeToString(LoginType::Sha1))
+		return LoginType::Sha1;
+	if(typestr == loginTypeToString(LoginType::RsaOaep))
+		return LoginType::RsaOaep;
+	return LoginType::Invalid;
+}
+
+std::string AbstractRpcConnection::passwordFormatToString(AbstractRpcConnection::PasswordFormat f)
+{
+	switch(f) {
+	case PasswordFormat::Plain: return "PLAIN";
+	case PasswordFormat::Sha1: return "SHA1";
+	default: return "INVALID";
+	}
+}
+
+AbstractRpcConnection::PasswordFormat AbstractRpcConnection::passwordFormatFromString(const std::string &s)
+{
+	std::string typestr = to_upper(s);
+	if(typestr == passwordFormatToString(PasswordFormat::Plain))
+		return PasswordFormat::Plain;
+	if(typestr == passwordFormatToString(PasswordFormat::Sha1))
+		return PasswordFormat::Sha1;
+	return PasswordFormat::Invalid;
 }
 
 } // namespace chainpack

@@ -19,16 +19,28 @@ IClientConnection::~IClientConnection()
 {
 }
 
-std::string IClientConnection::passwordHash(const std::string &user)
+std::string IClientConnection::passwordHash()
 {
-	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-	std::string pass = password();
-	if(pass.empty())
-		pass = user;
-	hash.addData(pass.data(), pass.size());
-	QByteArray sha1 = hash.result().toHex();
-	//shvWarning() << user << pass << sha1;
-	return std::string(sha1.constData(), sha1.length());
+	if(loginType() == chainpack::AbstractRpcConnection::LoginType::Sha1) {
+		if(passwordFormat() == chainpack::AbstractRpcConnection::PasswordFormat::Plain) {
+			QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
+			std::string pass = password();
+			hash.addData(pass.data(), pass.size());
+			QByteArray sha1 = hash.result().toHex();
+			//shvWarning() << user << pass << sha1;
+			return std::string(sha1.constData(), sha1.length());
+		}
+		if(passwordFormat() == chainpack::AbstractRpcConnection::PasswordFormat::Sha1) {
+			return password();
+		}
+	}
+	if(loginType() == chainpack::AbstractRpcConnection::LoginType::Plain) {
+		if(passwordFormat() == chainpack::AbstractRpcConnection::PasswordFormat::Plain) {
+			return password();
+		}
+	}
+	shvWarning() << "cannot generate password hash for user:" << user();
+	return std::string();
 }
 
 void IClientConnection::onSocketConnectedChanged(bool is_connected)
@@ -48,19 +60,30 @@ void IClientConnection::onSocketConnectedChanged(bool is_connected)
 
 chainpack::RpcValue IClientConnection::createLoginParams(const chainpack::RpcValue &server_hello)
 {
-	std::string server_nonce = server_hello.toMap().value("nonce").toString();
-	std::string password = server_nonce + passwordHash(user());
-	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-	hash.addData(password.c_str(), password.length());
-	QByteArray sha1 = hash.result().toHex();
+	std::string pass;
+	if(loginType() == chainpack::AbstractRpcConnection::LoginType::Sha1) {
+		std::string server_nonce = server_hello.toMap().value("nonce").toString();
+		std::string pn = server_nonce + passwordHash();
+		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
+		hash.addData(pn.data(), pn.length());
+		QByteArray sha1 = hash.result().toHex();
+		pass = std::string(sha1.constData(), sha1.size());
+	}
+	else if(loginType() == chainpack::AbstractRpcConnection::LoginType::Plain) {
+		pass = password();
+	}
+	else {
+		shvError() << "Login type:" << chainpack::AbstractRpcConnection::loginTypeToString(loginType()) << "not supported";
+	}
 	//shvWarning() << password << sha1;
 	return cp::RpcValue::Map {
 		{"login", cp::RpcValue::Map {
-			 {"user", user()},
-			 {"password", std::string(sha1.constData())},
+			{"user", user()},
+			{"password", pass},
+			//{"passwordFormat", chainpack::AbstractRpcConnection::passwordFormatToString(password_format)},
+			{"loginType", chainpack::AbstractRpcConnection::loginTypeToString(loginType())},
 		 },
 		},
-		//{"type", connectionType()},
 		{"options", connectionOptions()},
 	};
 }

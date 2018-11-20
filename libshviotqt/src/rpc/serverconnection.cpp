@@ -48,6 +48,11 @@ ServerConnection::~ServerConnection()
 	abort();
 }
 
+bool ServerConnection::isSlaveBrokerConnection() const
+{
+	return m_connectionOptions.toMap().hasKey(cp::Rpc::KEY_BROKER);
+}
+
 void ServerConnection::sendMessage(const chainpack::RpcMessage &rpc_msg)
 {
 	sendRpcValue(rpc_msg.value());
@@ -122,7 +127,7 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 		if(m_helloReceived && !m_loginReceived && rq.method() == shv::chainpack::Rpc::METH_LOGIN) {
 			shvInfo() << "Client login received";// << profile;// << "device id::" << m.value("deviceId").toStdString();
 			cp::RpcValue::Map params = rq.params().toMap();
-			m_connectionOptions = params.value(cp::Rpc::KEY_CONNECTION_OPTIONS);
+			m_connectionOptions = params.value(cp::Rpc::KEY_OPTIONS);
 			/*
 			{
 				const chainpack::RpcValue::Map omap = m_connectionOptions.toMap();
@@ -172,13 +177,12 @@ chainpack::RpcValue ServerConnection::login(const chainpack::RpcValue &auth_para
 bool ServerConnection::checkPassword(const chainpack::RpcValue::Map &login)
 {
 	bool password_ok = false;
-	std::string login_type = login.value("type").toString();
-	shv::core::String::upper(login_type);
-	if(login_type == "RSA-OAEP") {
+	LoginType login_type = loginTypeFromString(login.value("type").toString());
+	if(login_type == LoginType::RsaOaep) {
 		shvError() << "RSA-OAEP" << "login type not supported yet";
 		//std::string password_hash = passwordHash(PasswordHashType::RsaOaep, m_user);
 	}
-	else if(login_type == "PLAIN") {
+	else if(login_type == LoginType::Plain) {
 		std::string password_hash = passwordHash(LoginType::Plain, m_userName);
 		std::string pwd = login.value("password").toString();
 		password_ok = (pwd == password_hash);

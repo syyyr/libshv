@@ -161,7 +161,7 @@ StringView StringView::getToken(char delim, char quote)
 	return *this;
 }
 
-StringView::StringViewList StringView::split(char delim, char quote, StringView::SplitBehavior split_behavior) const
+std::vector<StringView> StringView::split(char delim, char quote, StringView::SplitBehavior split_behavior) const
 {
 	using namespace std;
 	vector<StringView> ret;
@@ -179,7 +179,7 @@ StringView::StringViewList StringView::split(char delim, char quote, StringView:
 	return ret;
 }
 
-std::string StringView::join(StringViewList::const_iterator first, StringViewList::const_iterator last, const char delim)
+std::string StringView::join(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last, const char delim)
 {
 	std::string ret;
 	int i = 0;
@@ -192,7 +192,7 @@ std::string StringView::join(StringViewList::const_iterator first, StringViewLis
 	return ret;
 }
 
-std::string StringView::join(StringViewList::const_iterator first, StringViewList::const_iterator last, const std::string &delim)
+std::string StringView::join(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last, const std::string &delim)
 {
 	std::string ret;
 	int i = 0;
@@ -203,6 +203,21 @@ std::string StringView::join(StringViewList::const_iterator first, StringViewLis
 		first++;
 	}
 	return ret;
+}
+
+StringViewList StringViewList::mid(long start, long len) const
+{
+	return StringViewList(begin() + start, begin() + start + len);
+}
+
+bool StringViewList::startsWith(const StringViewList &lst) const
+{
+	size_t i;
+	for (i = 0; i < size() && i < lst.size(); ++i) {
+		if(!(this->at(i) == lst.at(i)))
+			return false;
+	}
+	return i == lst.size();
 }
 
 } // namespace core

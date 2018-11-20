@@ -17,6 +17,8 @@
 #include <QCryptographicHash>
 #include <QThread>
 
+#include <fstream>
+
 //#define logRpcMsg() shvCDebug("RpcMsg")
 #define logRpcSyncCalls() shvCDebug("RpcSyncCalls")
 
@@ -115,7 +117,22 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 	setHost(cli_opts->serverHost());
 	setPort(cli_opts->serverPort());
 	setUser(cli_opts->user());
-	setPassword(cli_opts->password());
+	if(cli_opts->password_isset()) {
+		setPassword(cli_opts->password());
+	}
+	else if(cli_opts->passwordFile_isset()) {
+		std::ifstream is(cli_opts->passwordFile(), std::ios::binary);
+		if(is) {
+			std::string pwd;
+			is >> pwd;
+			setPassword(pwd);
+		}
+		else {
+			shvError() << "Cannot open password file";
+		}
+	}
+	setPasswordFormat(shv::chainpack::AbstractRpcConnection::passwordFormatFromString(cli_opts->passwordFormat()));
+	setLoginType(shv::chainpack::AbstractRpcConnection::loginTypeFromString(cli_opts->loginType()));
 
 	m_heartbeatInterval = cli_opts->heartbeatInterval();
 	{

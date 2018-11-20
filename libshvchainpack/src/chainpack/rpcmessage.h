@@ -47,11 +47,11 @@ public:
 	bool isValid() const;
 	bool isRequest() const;
 	bool isResponse() const;
-	bool isNotify() const;
+	bool isSignal() const;
 
 	static bool isRequest(const RpcValue::MetaData &meta);
 	static bool isResponse(const RpcValue::MetaData &meta);
-	static bool isNotify(const RpcValue::MetaData &meta);
+	static bool isSignal(const RpcValue::MetaData &meta);
 
 	static RpcValue requestId(const RpcValue::MetaData &meta);
 	static void setRequestId(RpcValue::MetaData &meta, const RpcValue &requestId);
@@ -79,6 +79,7 @@ public:
 	static RpcValue popCallerId(const RpcValue &caller_ids, RpcValue::Int &id);
 	static RpcValue::Int popCallerId(RpcValue::MetaData &meta);
 	RpcValue::Int popCallerId();
+	RpcValue::Int peekCallerId() const;
 	RpcValue callerIds() const;
 	void setCallerIds(const RpcValue &callerIds);
 
@@ -138,14 +139,14 @@ public:
 	//size_t write(AbstractStreamWriter &wr) const override;
 };
 
-class SHVCHAINPACK_DECL_EXPORT RpcNotify : public RpcRequest
+class SHVCHAINPACK_DECL_EXPORT RpcSignal : public RpcRequest
 {
 private:
 	using Super = RpcRequest;
 public:
-	RpcNotify() : Super() {}
+	RpcSignal() : Super() {}
 	//RpcRequest(const Value &id) : Super(Json()) {setId(id);}
-	RpcNotify(const RpcMessage &msg) : Super(msg) {}
+	RpcSignal(const RpcMessage &msg) : Super(msg) {}
 public:
 	RpcRequest& setRequestId(const RpcValue::Int requestId) = delete;
 

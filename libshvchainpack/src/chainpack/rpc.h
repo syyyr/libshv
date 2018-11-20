@@ -26,14 +26,14 @@ public:
 
 	static const char* OPT_IDLE_WD_TIMEOUT;
 
-	static const char* KEY_CONNECTION_OPTIONS;
+	static const char* KEY_OPTIONS;
 	static const char* KEY_MOUT_POINT;
 	static const char* KEY_SHV_PATH;
 	static const char* KEY_DEVICE_ID;
 	static const char* KEY_CLIENT_ID;
 	static const char* KEY_LOGIN;
 	static const char* KEY_DEVICE;
-	//static const char* KEY_BROKER;
+	static const char* KEY_BROKER;
 
 	static const char* METH_HELLO;
 	static const char* METH_LOGIN;
@@ -47,6 +47,7 @@ public:
 	static const char* METH_DEVICE_ID;
 	static const char* METH_MOUNT_POINT;
 	static const char* METH_SUBSCRIBE;
+	static const char* METH_REJECT_NOT_SUBSCRIBED;
 	static const char* METH_RUN_CMD;
 	static const char* METH_LAUNCH_REXEC;
 	static const char* METH_HELP;
@@ -55,9 +56,9 @@ public:
 	static const char* PAR_PATH;
 	static const char* PAR_METHOD;
 
-	static const char* NTF_VAL_CHANGED;
-	static const char* NTF_MOUNTED_CHANGED;
-	static const char* NTF_CONNECTED_CHANGED;
+	static const char* SIG_VAL_CHANGED;
+	static const char* SIG_MOUNTED_CHANGED;
+	//static const char* SIG_CONNECTED_CHANGED;
 
 	static const char* GRANT_BROWSE;
 	static const char* GRANT_READ;
