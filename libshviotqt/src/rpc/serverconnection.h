@@ -54,6 +54,10 @@ public:
 	//shv::chainpack::RpcResponse sendMessageSync(const shv::chainpack::RpcRequest &rpc_request, int time_out_ms = DEFAULT_RPC_TIMEOUT) override;
 	void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg) override;
 protected:
+	enum class PasswordFormat {Invalid, Plain, Sha1};
+	static std::string passwordFormatToString(PasswordFormat f);
+	static PasswordFormat passwordFormatFromString(const std::string &s);
+protected:
 	void onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len) override;
 	void onRpcValueReceived(const shv::chainpack::RpcValue &msg) override;
 
@@ -62,7 +66,7 @@ protected:
 	virtual void processInitPhase(const chainpack::RpcMessage &msg);
 	virtual shv::chainpack::RpcValue login(const shv::chainpack::RpcValue &auth_params);
 	virtual bool checkPassword(const shv::chainpack::RpcValue::Map &login);
-	virtual std::string passwordHash(LoginType type, const std::string &user) = 0;
+	virtual std::string passwordHash(LoginType login_type, const std::string &user) = 0;
 protected:
 	std::string m_connectionName;
 	std::string m_userName;

@@ -161,10 +161,7 @@ chainpack::RpcValue ServerConnection::login(const chainpack::RpcValue &auth_para
 	const cp::RpcValue::Map login = params.value(cp::Rpc::KEY_LOGIN).toMap();
 
 	m_userName = login.value("user").toString();
-	if(m_userName.empty())
-		return false;
-
-	shvInfo() << "login - user:" << m_userName;// << "password:" << password_hash;
+	shvInfo() << "login - user:" << userName();// << "password:" << password_hash;
 	bool password_ok = checkPassword(login);
 	if(password_ok) {
 		cp::RpcValue::Map login_resp;
@@ -176,31 +173,54 @@ chainpack::RpcValue ServerConnection::login(const chainpack::RpcValue &auth_para
 
 bool ServerConnection::checkPassword(const chainpack::RpcValue::Map &login)
 {
-	bool password_ok = false;
 	LoginType login_type = loginTypeFromString(login.value("type").toString());
-	if(login_type == LoginType::RsaOaep) {
-		shvError() << "RSA-OAEP" << "login type not supported yet";
-		//std::string password_hash = passwordHash(PasswordHashType::RsaOaep, m_user);
+	if(login_type == LoginType::Invalid)
+		login_type = LoginType::Sha1;
+	std::string password_hash = passwordHash(login_type, userName());
+	if(password_hash.empty()) {
+		shvError() << "Invalid user name:" << userName();
+		return false;
 	}
-	else if(login_type == LoginType::Plain) {
-		std::string password_hash = passwordHash(LoginType::Plain, m_userName);
+	if(login_type == LoginType::Plain) {
+		std::string password_hash = passwordHash(LoginType::Plain, userName());
 		std::string pwd = login.value("password").toString();
-		password_ok = (pwd == password_hash);
+		return (pwd == password_hash);
 	}
-	else {
+	else if(login_type == LoginType::Sha1) {
 		/// login_type == "SHA1" is default
 		std::string sent_sha1 = login.value("password").toString();
 
-		std::string password_hash = passwordHash(LoginType::Sha1, m_userName);
 		std::string nonce = m_pendingAuthNonce + password_hash;
 		//shvWarning() << m_pendingAuthNonce << "prd" << nonce;
 		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
 		hash.addData(nonce.data(), nonce.length());
 		std::string correct_sha1 = std::string(hash.result().toHex().constData());
 		//shvInfo() << nonce_sha1 << "vs" << sha1;
-		password_ok = (sent_sha1 == correct_sha1);
+		return (sent_sha1 == correct_sha1);
 	}
-	return password_ok;
+	else {
+		shvError() << "Unsupported login type" << loginTypeToString(login_type) << "for user:" << userName();
+		return false;
+	}
+}
+
+std::string ServerConnection::passwordFormatToString(ServerConnection::PasswordFormat f)
+{
+	switch(f) {
+	case PasswordFormat::Plain: return "PLAIN";
+	case PasswordFormat::Sha1: return "SHA1";
+	default: return "INVALID";
+	}
+}
+
+ServerConnection::PasswordFormat ServerConnection::passwordFormatFromString(const std::string &s)
+{
+	std::string typestr = shv::core::String::toUpper(s);
+	if(typestr == passwordFormatToString(PasswordFormat::Plain))
+		return PasswordFormat::Plain;
+	if(typestr == passwordFormatToString(PasswordFormat::Sha1))
+		return PasswordFormat::Sha1;
+	return PasswordFormat::Invalid;
 }
 
 }}}

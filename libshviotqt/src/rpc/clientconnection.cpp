@@ -131,7 +131,6 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 			shvError() << "Cannot open password file";
 		}
 	}
-	setPasswordFormat(shv::chainpack::AbstractRpcConnection::passwordFormatFromString(cli_opts->passwordFormat()));
 	setLoginType(shv::chainpack::AbstractRpcConnection::loginTypeFromString(cli_opts->loginType()));
 
 	m_heartbeatInterval = cli_opts->heartbeatInterval();

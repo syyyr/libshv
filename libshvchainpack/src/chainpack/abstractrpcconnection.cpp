@@ -4,6 +4,14 @@
 namespace shv {
 namespace chainpack {
 
+static std::string to_upper(const std::string &s)
+{
+	std::string ret(s);
+	for (size_t i = 0; i < ret.size(); ++i)
+		ret[i] = std::toupper(ret[i]);
+	return ret;
+}
+
 AbstractRpcConnection::AbstractRpcConnection()
 	: m_connectionId(nextConnectionId())
 {
@@ -114,14 +122,6 @@ int AbstractRpcConnection::createSubscription(const std::string &shv_path, std::
 						 });
 }
 
-static std::string to_upper(const std::string &s)
-{
-	std::string ret(s);
-	for (size_t i = 0; i < ret.size(); ++i)
-		ret[i] = std::toupper(ret[i]);
-	return ret;
-}
-
 std::string AbstractRpcConnection::loginTypeToString(AbstractRpcConnection::LoginType t)
 {
 	switch(t) {
@@ -142,25 +142,6 @@ AbstractRpcConnection::LoginType AbstractRpcConnection::loginTypeFromString(cons
 	if(typestr == loginTypeToString(LoginType::RsaOaep))
 		return LoginType::RsaOaep;
 	return LoginType::Invalid;
-}
-
-std::string AbstractRpcConnection::passwordFormatToString(AbstractRpcConnection::PasswordFormat f)
-{
-	switch(f) {
-	case PasswordFormat::Plain: return "PLAIN";
-	case PasswordFormat::Sha1: return "SHA1";
-	default: return "INVALID";
-	}
-}
-
-AbstractRpcConnection::PasswordFormat AbstractRpcConnection::passwordFormatFromString(const std::string &s)
-{
-	std::string typestr = to_upper(s);
-	if(typestr == passwordFormatToString(PasswordFormat::Plain))
-		return PasswordFormat::Plain;
-	if(typestr == passwordFormatToString(PasswordFormat::Sha1))
-		return PasswordFormat::Sha1;
-	return PasswordFormat::Invalid;
 }
 
 } // namespace chainpack

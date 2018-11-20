@@ -11,7 +11,6 @@ public:
 	static constexpr int DEFAULT_RPC_BROKER_PORT = 3755;
 
 	enum class LoginType {Invalid, Plain, Sha1, RsaOaep};
-	enum class PasswordFormat {Invalid, Plain, Sha1};
 public:
 	AbstractRpcConnection();
 
@@ -39,8 +38,6 @@ public:
 
 	static std::string loginTypeToString(LoginType t);
 	static LoginType loginTypeFromString(const std::string &s);
-	static std::string passwordFormatToString(PasswordFormat f);
-	static PasswordFormat passwordFormatFromString(const std::string &s);
 protected:
 	static int nextConnectionId();
 protected:

@@ -19,30 +19,6 @@ IClientConnection::~IClientConnection()
 {
 }
 
-std::string IClientConnection::passwordHash()
-{
-	if(loginType() == chainpack::AbstractRpcConnection::LoginType::Sha1) {
-		if(passwordFormat() == chainpack::AbstractRpcConnection::PasswordFormat::Plain) {
-			QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-			std::string pass = password();
-			hash.addData(pass.data(), pass.size());
-			QByteArray sha1 = hash.result().toHex();
-			//shvWarning() << user << pass << sha1;
-			return std::string(sha1.constData(), sha1.length());
-		}
-		if(passwordFormat() == chainpack::AbstractRpcConnection::PasswordFormat::Sha1) {
-			return password();
-		}
-	}
-	if(loginType() == chainpack::AbstractRpcConnection::LoginType::Plain) {
-		if(passwordFormat() == chainpack::AbstractRpcConnection::PasswordFormat::Plain) {
-			return password();
-		}
-	}
-	shvWarning() << "cannot generate password hash for user:" << user();
-	return std::string();
-}
-
 void IClientConnection::onSocketConnectedChanged(bool is_connected)
 {
 	setBrokerConnected(false);
@@ -63,7 +39,7 @@ chainpack::RpcValue IClientConnection::createLoginParams(const chainpack::RpcVal
 	std::string pass;
 	if(loginType() == chainpack::AbstractRpcConnection::LoginType::Sha1) {
 		std::string server_nonce = server_hello.toMap().value("nonce").toString();
-		std::string pn = server_nonce + passwordHash();
+		std::string pn = server_nonce + password();
 		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
 		hash.addData(pn.data(), pn.length());
 		QByteArray sha1 = hash.result().toHex();
@@ -81,7 +57,7 @@ chainpack::RpcValue IClientConnection::createLoginParams(const chainpack::RpcVal
 			{"user", user()},
 			{"password", pass},
 			//{"passwordFormat", chainpack::AbstractRpcConnection::passwordFormatToString(password_format)},
-			{"loginType", chainpack::AbstractRpcConnection::loginTypeToString(loginType())},
+			{"type", chainpack::AbstractRpcConnection::loginTypeToString(loginType())},
 		 },
 		},
 		{"options", connectionOptions()},

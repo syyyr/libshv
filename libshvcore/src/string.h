@@ -43,7 +43,9 @@ public:
 	static int replace(std::string &str, const std::string &from, const std::string &to);
 
 	static std::string& upper(std::string& s);
+	static std::string toUpper(const std::string& s) {std::string ret(s); return upper(ret);}
 	static std::string& lower(std::string& s);
+	static std::string toLower(const std::string& s) {std::string ret(s); return lower(ret);}
 
 	template<typename T>
 	static std::string toString(T i, size_t width = 0, char fill_char = ' ')

@@ -33,9 +33,9 @@ void BrokerConnection::setOptions(const chainpack::RpcValue &slave_broker_option
 		DeviceAppCliOptions device_opts;
 
 		const cp::RpcValue::Map &login = m.value(cp::Rpc::KEY_LOGIN).toMap();
-		for(const std::string &key : {"user", "password", "passwordFile", "passwordFormat", "type"}) {
+		for(const std::string &key : {"user", "password", "passwordFile", "type"}) {
 			if(login.hasKey(key))
-				device_opts.setPasswordFormat(login.value(key).toString());
+				device_opts.setValue("login." + key, login.value(key).toString());
 		}
 		const cp::RpcValue::Map &rpc = m.value("rpc").toMap();
 		if(rpc.count("heartbeatInterval") == 1)
