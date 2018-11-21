@@ -66,7 +66,7 @@ protected:
 	virtual void processInitPhase(const chainpack::RpcMessage &msg);
 	virtual shv::chainpack::RpcValue login(const shv::chainpack::RpcValue &auth_params);
 	virtual bool checkPassword(const shv::chainpack::RpcValue::Map &login);
-	virtual std::string passwordHash(LoginType login_type, const std::string &user) = 0;
+	virtual std::tuple<std::string, PasswordFormat> password(const std::string &user) = 0;
 protected:
 	std::string m_connectionName;
 	std::string m_userName;
