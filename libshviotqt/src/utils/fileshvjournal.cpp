@@ -1,4 +1,5 @@
 #include "fileshvjournal.h"
+#include "shvpath.h"
 
 #include <shv/chainpack/cponreader.h>
 #include <shv/core/log.h>
@@ -428,9 +429,9 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 					continue; // skip empty line
 				}
 				std::string upstr = getLine(iss, FIELD_SEPARATOR);
-				std::string path = getLine(iss, FIELD_SEPARATOR);
+				ShvPath path = getLine(iss, FIELD_SEPARATOR);
 				std::string valstr = getLine(iss, FIELD_SEPARATOR);
-				if(!params.pathPattern.empty() && !pathMatch(params.pathPattern, path))
+				if(!params.pathPattern.empty() && !path.matchWild(params.pathPattern))
 					continue;
 				cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr);
 				if(!dt.isValid()) {
@@ -535,50 +536,6 @@ long FileShvJournal::toLong(const std::string &s)
 		shvError() << s << "cannot be converted to int:" << e.what();
 	}
 	return 0;
-}
-
-bool FileShvJournal::pathMatch(const std::string &pattern, const std::string &path)
-{
-	const shv::core::StringViewList ptlst = shv::core::StringView(pattern).split('/');
-	const shv::core::StringViewList phlst = shv::core::StringView(path).split('/');
-	size_t ptix = 0;
-	size_t phix = 0;
-	while(true) {
-		if(phix == phlst.size() && ptix == ptlst.size())
-			return true;
-		if(ptix == ptlst.size() && phix < phlst.size())
-			return false;
-		if(phix == phlst.size() && ptix == ptlst.size() - 1 && ptlst[ptix] == "**")
-			return true;
-		if(phix == phlst.size() && ptix < ptlst.size())
-			return false;
-		const shv::core::StringView &pt = ptlst[ptix];
-		if(pt == "*") {
-			// match exactly one path segment
-		}
-		else if(pt == "**") {
-			// match zero or more path segments
-			ptix++;
-			if(ptix == ptlst.size())
-				return true;
-			const shv::core::StringView &pt2 = ptlst[ptix];
-			do {
-				const shv::core::StringView &ph = phlst[phix];
-				if(ph == pt2)
-					break;
-				phix++;
-			} while(phix < phlst.size());
-			if(phix == phlst.size())
-				return false;
-		}
-		else {
-			const shv::core::StringView &ph = phlst[phix];
-			if(!(ph == pt))
-				return false;
-		}
-		ptix++;
-		phix++;
-	}
 }
 
 } // namespace utils

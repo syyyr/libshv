@@ -41,7 +41,7 @@ public:
 	void setNodeId(const String &n);
 
 	String shvPath() const;
-	static StringViewList splitPath(const std::string &shv_path) { return StringView{shv_path}.split('/', '"'); }
+	static StringViewList splitShvPath(const std::string &shv_path) { return StringView{shv_path}.split('/', '"'); }
 
 	ShvRootNode* rootNode();
 

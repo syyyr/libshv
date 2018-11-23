@@ -1,8 +1,10 @@
 unix {
 HEADERS += \
-    $$PWD/fileshvjournal.h
+    $$PWD/shvpath.h \
+    $$PWD/fileshvjournal.h \
 
 SOURCES += \
-    $$PWD/fileshvjournal.cpp
+    $$PWD/shvpath.cpp \
+    $$PWD/fileshvjournal.cpp \
 }
 

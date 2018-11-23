@@ -11,14 +11,20 @@ namespace core {
 
 class StringView;
 
-class SHVCORE_DECL_EXPORT String
+class SHVCORE_DECL_EXPORT String : public std::string
 {
+	using Super = std::string;
 public:
 	enum CaseSensitivity {CaseSensitive, CaseInsensitive};
 	enum SplitBehavior {KeepEmptyParts, SkipEmptyParts};
 
+	using Super::Super;
+	String(const std::string &o) : Super(o) {}
+	String(std::string &&o) : Super(o) {}
+
 	static bool equal(const std::string &a, const std::string &b, String::CaseSensitivity case_sensitivity);
 	static std::string::size_type indexOf(const std::string & str_haystack, const std::string &str_needle, String::CaseSensitivity case_sensitivity);
+	bool startsWith(const std::string &with) const {return startsWith(*this, with);}
 	static bool startsWith(const std::string & str, const std::string &with) {return str.rfind(with, 0) == 0;}
 	static bool endsWith(const std::string & str, const std::string &with) {return str.find(with, str.size() - with.size()) == (str.size() - with.size());}
 	static const char * WhiteSpaceChars;

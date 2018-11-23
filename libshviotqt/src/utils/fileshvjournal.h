@@ -74,8 +74,6 @@ public:
 	void append(const ShvJournalEntry &entry);
 
 	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params);
-
-	static bool pathMatch(const std::string &pattern, const std::string &path);
 private:
 	std::string fileNoToName(int n);
 	//long fileSize(const std::string &fn);

@@ -1,6 +1,10 @@
 #include "abstractrpcconnection.h"
 #include "exception.h"
 
+#include <necrolog.h>
+
+#define logSubscriptionsD() nCDebug("Subs")
+
 namespace shv {
 namespace chainpack {
 
@@ -90,30 +94,10 @@ int AbstractRpcConnection::callShvMethod(const std::string &shv_path, std::strin
 	sendMessage(rq);
 	return id;
 }
-/*
-RpcResponse AbstractRpcConnection::callMethodSync(const std::string &method, const RpcValue &params, int rpc_timeout)
-{
-	return callShvMethodSync(std::string(), method, params, rpc_timeout);
-}
 
-RpcResponse AbstractRpcConnection::callShvMethodSync(const std::string &shv_path, const std::string &method, const RpcValue &params, int rpc_timeout)
+int AbstractRpcConnection::callMethodSubscribe(const std::string &shv_path, std::string method)
 {
-	RpcRequest rq;
-	rq.setRequestId(nextRequestId());
-	rq.setMethod(method);
-	rq.setParams(params);
-	if(!shv_path.empty())
-		rq.setShvPath(shv_path);
-	//logRpc() << "--> sync method call:" << id << method;
-	RpcMessage ret = sendMessageSync(rq, rpc_timeout);
-	if(!ret.isResponse())
-		SHVCHP_EXCEPTION("Invalid response!");
-	//logRpc() << "<-- sync method call ret:" << ret.id();
-	return RpcResponse(ret);
-}
-*/
-int AbstractRpcConnection::createSubscription(const std::string &shv_path, std::string method)
-{
+	logSubscriptionsD() << "call subscribe for connection id:" << connectionId() << "path:" << shv_path << "method:" << method;
 	return callShvMethod(Rpc::DIR_BROKER_APP
 					  , Rpc::METH_SUBSCRIBE
 					  , RpcValue::Map{

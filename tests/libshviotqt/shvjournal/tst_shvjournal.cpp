@@ -1,4 +1,5 @@
 #include <shv/iotqt/utils/fileshvjournal.h>
+#include <shv/iotqt/utils/shvpath.h>
 
 #include <QtTest/QtTest>
 #include <QDebug>
@@ -19,9 +20,9 @@ class TestFileShvJournal: public QObject
 {
 	Q_OBJECT
 private:
-	void testFileShvJournal()
+	void testShvPath()
 	{
-		qDebug() << "============= FileShvJournal test ============\n";
+		qDebug() << "============= ShvPath test ============\n";
 		{
 			qDebug() << "------------- pattern match";
 			struct Test {
@@ -64,7 +65,7 @@ private:
 			};
 			for(const Test &t : cases) {
 				qDebug() << t.path << "vs. pattern" << t.pattern << "should be:" << t.result;
-				QVERIFY(shv::iotqt::utils::FileShvJournal::pathMatch(t.pattern, t.path) == t.result);
+				QVERIFY(shv::iotqt::utils::ShvPath(t.path).matchWild(t.pattern) == t.result);
 			}
 		}
 	}
@@ -75,7 +76,7 @@ private slots:
 	}
 	void tests()
 	{
-		testFileShvJournal();
+		testShvPath();
 	}
 
 	void cleanupTestCase()

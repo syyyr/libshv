@@ -126,7 +126,7 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 	shvLogFuncFrame() << "node:" << nodeId() << "meta:" << meta.toStdString();
 	const chainpack::RpcValue::String &method = cp::RpcMessage::method(meta).toString();
 	const chainpack::RpcValue::String &shv_path_str = cp::RpcMessage::shvPath(meta).toString();
-	core::StringViewList shv_path = splitPath(shv_path_str);
+	core::StringViewList shv_path = splitShvPath(shv_path_str);
 	cp::RpcResponse resp = cp::RpcResponse::forRequest(meta);
 	try {
 		const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
@@ -172,7 +172,7 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 	shvLogFuncFrame() << "node:" << nodeId();
 	const chainpack::RpcValue::String &method = rq.method().toString();
 	const chainpack::RpcValue::String &shv_path_str = rq.shvPath().toString();
-	core::StringViewList shv_path = splitPath(shv_path_str);
+	core::StringViewList shv_path = splitShvPath(shv_path_str);
 	cp::RpcResponse resp = cp::RpcResponse::forRequest(rq);
 	try {
 		const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
@@ -213,7 +213,7 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 
 chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 {
-	core::StringViewList shv_path = splitPath(rq.shvPath().toString());
+	core::StringViewList shv_path = splitShvPath(rq.shvPath().toString());
 	const chainpack::RpcValue::String &method = rq.method().toString();
 	const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
 	if(!mm)
