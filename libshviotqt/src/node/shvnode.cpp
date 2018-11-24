@@ -156,8 +156,9 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 		}
 	}
 	catch (std::exception &e) {
-		shvError() << e.what();
-		resp.setError(cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodCallException, e.what()));
+		shvError() << "method:" << method << "path:" << shv_path_str << "what:" << e.what();
+		resp.setError(cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodCallException
+													 , "method: " + method + " path: " + shv_path_str + " what: " +  e.what()));
 	}
 	if(resp.hasRetVal()) {
 		ShvRootNode *root = rootNode();

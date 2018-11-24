@@ -68,6 +68,7 @@ public:
 	static const char* GRANT_SERVICE;
 	static const char* GRANT_DEVEL;
 	static const char* GRANT_ADMIN;
+	static const char* GRANT_MASTER_BROKER;
 
 	static const char* DIR_BROKER;
 	static const char* DIR_BROKER_APP;

@@ -50,6 +50,8 @@ const char* Rpc::GRANT_SERVICE = "srv";
 const char* Rpc::GRANT_DEVEL = "dev";
 const char* Rpc::GRANT_ADMIN = "su";
 
+const char* Rpc::GRANT_MASTER_BROKER = "masterBroker";
+
 const char* Rpc::DIR_BROKER = ".broker";
 const char* Rpc::DIR_BROKER_APP = ".broker/app";
 const char* Rpc::DIR_CLIENTS = "clients";

@@ -81,7 +81,7 @@ int AbstractRpcConnection::callMethod(std::string method, const RpcValue &params
 	return callShvMethod(std::string(), std::move(method), params);
 }
 
-int AbstractRpcConnection::callShvMethod(const std::string &shv_path, std::string method, const RpcValue &params)
+int AbstractRpcConnection::callShvMethod(const std::string &shv_path, std::string method, const RpcValue &params, const RpcValue &grant)
 {
 	int id = nextRequestId();
 	RpcRequest rq;
@@ -89,21 +89,24 @@ int AbstractRpcConnection::callShvMethod(const std::string &shv_path, std::strin
 	rq.setMethod(std::move(method));
 	if(params.isValid())
 		rq.setParams(params);
+	if(grant.isValid())
+		rq.setAccessGrant(grant);
 	if(!shv_path.empty())
 		rq.setShvPath(shv_path);
 	sendMessage(rq);
 	return id;
 }
 
-int AbstractRpcConnection::callMethodSubscribe(const std::string &shv_path, std::string method)
+int AbstractRpcConnection::callMethodSubscribe(const std::string &shv_path, std::string method, const RpcValue &grant)
 {
-	logSubscriptionsD() << "call subscribe for connection id:" << connectionId() << "path:" << shv_path << "method:" << method;
+	logSubscriptionsD() << "call subscribe for connection id:" << connectionId() << "path:" << shv_path << "method:" << method << "grant:" << grant.toCpon();
 	return callShvMethod(Rpc::DIR_BROKER_APP
 					  , Rpc::METH_SUBSCRIBE
 					  , RpcValue::Map{
 						  {Rpc::PAR_PATH, shv_path},
 						  {Rpc::PAR_METHOD, std::move(method)},
-						 });
+						 }
+					  , grant);
 }
 
 std::string AbstractRpcConnection::loginTypeToString(AbstractRpcConnection::LoginType t)

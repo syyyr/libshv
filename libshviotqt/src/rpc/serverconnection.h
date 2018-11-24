@@ -45,6 +45,7 @@ public:
 	const std::string& userName() const { return m_userName; }
 
 	virtual bool isConnectedAndLoggedIn() const {return isSocketConnected() && !isInitPhase();}
+
 	virtual bool isSlaveBrokerConnection() const;
 
 	Q_SIGNAL void rpcMessageReceived(const shv::chainpack::RpcMessage &msg);

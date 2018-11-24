@@ -8,10 +8,15 @@ namespace utils {
 
 bool ShvPath::startsWithPath(const std::string &path) const
 {
-	if(startsWith(path)) {
-		if(size() == path.size())
+	return startsWithPath(*this, path);
+}
+
+bool ShvPath::startsWithPath(const std::string &str, const std::string &path)
+{
+	if(startsWith(str, path)) {
+		if(str.size() == path.size())
 			return true;
-		return (*this)[path.size()] == '/';
+		return str[path.size()] == '/';
 	}
 	return false;
 }

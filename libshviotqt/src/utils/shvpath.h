@@ -20,6 +20,7 @@ public:
 	using Super::Super;
 
 	bool startsWithPath(const std::string &path) const;
+	static bool startsWithPath(const std::string &str, const std::string &path);
 
 	bool matchWild(const std::string &pattern) const;
 	bool matchWild(const shv::core::StringViewList &pattern_lst) const;
