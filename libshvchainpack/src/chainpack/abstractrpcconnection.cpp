@@ -3,7 +3,7 @@
 
 #include <necrolog.h>
 
-#define logSubscriptionsD() nCDebug("Subs")
+#define logSubscriptionsD() nCDebug("Subscr").color(NecroLog::Color::Yellow)
 
 namespace shv {
 namespace chainpack {
