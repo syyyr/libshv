@@ -34,12 +34,22 @@ void IClientConnection::onSocketConnectedChanged(bool is_connected)
 	}
 }
 
+static std::string sha1_hex(const std::string &s)
+{
+	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
+	hash.addData(s.data(), s.length());
+	return std::string(hash.result().toHex().constData());
+}
+
 chainpack::RpcValue IClientConnection::createLoginParams(const chainpack::RpcValue &server_hello)
 {
 	std::string pass;
 	if(loginType() == chainpack::AbstractRpcConnection::LoginType::Sha1) {
 		std::string server_nonce = server_hello.toMap().value("nonce").toString();
-		std::string pn = server_nonce + password();
+		std::string pwd = password();
+		if(pwd.size() < 40)
+			pwd = sha1_hex(pwd); /// SHA1 password must be 40 chars long, it is considered to be plain if shorter
+		std::string pn = server_nonce + pwd;
 		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
 		hash.addData(pn.data(), pn.length());
 		QByteArray sha1 = hash.result().toHex();

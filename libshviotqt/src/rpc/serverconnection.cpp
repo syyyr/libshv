@@ -171,7 +171,7 @@ chainpack::RpcValue ServerConnection::login(const chainpack::RpcValue &auth_para
 	return cp::RpcValue();
 }
 
-static std::string sha1(const std::string &s)
+static std::string sha1_hex(const std::string &s)
 {
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
 	hash.addData(s.data(), s.length());
@@ -196,12 +196,12 @@ bool ServerConnection::checkPassword(const chainpack::RpcValue::Map &login)
 		if(pwdsrvfmt == PasswordFormat::Plain)
 			return (pwdsrv == pwdusr);
 		if(pwdsrvfmt == PasswordFormat::Sha1)
-			return pwdsrv == sha1(pwdusr);
+			return pwdsrv == sha1_hex(pwdusr);
 	}
 	if(login_type == LoginType::Sha1) {
 		/// login_type == "SHA1" is default
 		if(pwdsrvfmt == PasswordFormat::Plain)
-			pwdsrv = sha1(pwdsrv);
+			pwdsrv = sha1_hex(pwdsrv);
 
 		std::string nonce = m_pendingAuthNonce + pwdsrv;
 		//shvWarning() << m_pendingAuthNonce << "prd" << nonce;
