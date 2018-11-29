@@ -63,6 +63,8 @@ protected:
 	/// @return true if write buffer length has changed (some data was written to the socket)
 	virtual bool flush() = 0;
 
+	virtual void clearBuffers();
+
 	/// add data to the output queue, send data from top of the queue
 	virtual void enqueueDataToSend(Chunk &&chunk_to_enqueue);
 

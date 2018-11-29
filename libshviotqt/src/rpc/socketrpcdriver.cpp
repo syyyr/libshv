@@ -74,10 +74,12 @@ void SocketRpcDriver::setSocket(QTcpSocket *socket)
 	connect(socket, &QTcpSocket::connected, [this]() {
 		shvDebug() << this << "Socket connected!!!";
 		//shvWarning() << (peerAddress().toStdString() + ':' + std::to_string(peerPort()));
+		clearBuffers();
 		emit socketConnectedChanged(isSocketConnected());
 	});
 	connect(socket, &QTcpSocket::disconnected, [this]() {
 		shvDebug() << this << "Socket disconnected!!!";
+		clearBuffers();
 		emit socketConnectedChanged(isSocketConnected());
 	});
 }

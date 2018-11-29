@@ -212,6 +212,14 @@ void RpcDriver::onBytesRead(std::string &&bytes)
 	}
 }
 
+void RpcDriver::clearBuffers()
+{
+	m_chunkQueue.clear();
+	m_topChunkHeaderWritten = false;
+	m_topChunkBytesWrittenSoFar = 0;
+	m_readData.clear();
+}
+
 int RpcDriver::processReadData(const std::string &read_data)
 {
 	logRpcData() << __FUNCTION__ << "data len:" << read_data.length();
