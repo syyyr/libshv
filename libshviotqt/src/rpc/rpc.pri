@@ -8,9 +8,10 @@ SOURCES += \
     $$PWD/deviceconnection.cpp \
     $$PWD/brokerconnection.cpp \
     $$PWD/clientappclioptions.cpp \
-    $$PWD/tunnelhandle.cpp \
+    #$$PWD/tunnelhandle.cpp \
     $$PWD/syncclientconnection.cpp \
-    $$PWD/iclientconnection.cpp
+    $$PWD/iclientconnection.cpp \
+    $$PWD/rpcresponsecallback.cpp
 
 HEADERS += \
     $$PWD/rpc.h \
@@ -22,7 +23,8 @@ HEADERS += \
     $$PWD/deviceconnection.h \
     $$PWD/brokerconnection.h \
     $$PWD/clientappclioptions.h \
-    $$PWD/tunnelhandle.h \
+    #$$PWD/tunnelhandle.h \
     $$PWD/syncclientconnection.h \
-    $$PWD/iclientconnection.h
+    $$PWD/iclientconnection.h \
+    $$PWD/rpcresponsecallback.h
 

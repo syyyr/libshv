@@ -17,6 +17,7 @@ SOURCES += \
     $$PWD/chainpackreader1.cpp \
     $$PWD/abstractrpcconnection.cpp \
     $$PWD/metamethod.cpp \
+    $$PWD/tunnelctl.cpp \
 
 HEADERS += \
     $$PWD/rpc.h \
@@ -37,6 +38,7 @@ HEADERS += \
     $$PWD/chainpackreader.h \
     $$PWD/abstractrpcconnection.h \
     $$PWD/metamethod.h \
+    $$PWD/tunnelctl.h \
 
 unix {
 SOURCES += \

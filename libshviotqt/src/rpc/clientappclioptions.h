@@ -27,7 +27,7 @@ public:
 	CLIOPTION_GETTER_SETTER2(std::string, "rpc.protocolType", p, setP, rotocolType)
 
 	//CLIOPTION_GETTER_SETTER2(int, "rpc.timeout", r, setR, pcTimeout)
-	CLIOPTION_GETTER_SETTER2(bool, "rpc.metaTypeExplicit", is, set, MetaTypeExplicit)
+	//CLIOPTION_GETTER_SETTER2(bool, "rpc.metaTypeExplicit", is, set, MetaTypeExplicit)
 	CLIOPTION_GETTER_SETTER2(int, "rpc.reconnectInterval", r, setR, econnectInterval)
 	CLIOPTION_GETTER_SETTER2(int, "rpc.heartbeatInterval", h, setH, eartbeatInterval)
 };

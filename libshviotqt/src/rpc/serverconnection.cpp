@@ -12,6 +12,7 @@
 #include <QTcpSocket>
 #include <QTimer>
 #include <QCryptographicHash>
+#include <QHostAddress>
 
 //#define logRpcMsg() shvCDebug("RpcMsg")
 
@@ -111,14 +112,11 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 			}
 			*/
 		if(!m_helloReceived && !m_loginReceived && rq.method() == shv::chainpack::Rpc::METH_HELLO) {
-			shvInfo() << "Client hello received";// << profile;// << "device id::" << m.value("deviceId").toStdString();
-			//const shv::chainpack::RpcValue::String profile = m.value("profile").toString();
-			//m_profile = profile;
+			shvInfo().nospace() << "Client hello received from: " << socket()->peerAddress().toString().toStdString() << ':' << socket()->peerPort();
 			m_helloReceived = true;
-			shvInfo() << "sending hello response:" << connectionName();// << "profile:" << m_profile;
+			shvInfo() << "sending hello response:" << connectionName();
 			m_pendingAuthNonce = shv::chainpack::Utils::toString(std::rand());
 			cp::RpcValue::Map params {
-				//{"protocol", cp::RpcValue::Map{{"version", protocol_version}}},
 				{"nonce", m_pendingAuthNonce}
 			};
 			sendResponse(rq.requestId(), params);

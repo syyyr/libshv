@@ -44,3 +44,14 @@ public:
 
 } // namespace chainpack
 } // namespace shv
+
+//#define SHV_QUOTE(x) #x
+
+#define SHV_IMAP_FIELD_IMPL(ptype, int_key, getter_prefix, setter_prefix, name_rest) \
+	SHV_IMAP_FIELD_IMPL2(ptype, int_key, getter_prefix, setter_prefix, name_rest, shv::chainpack::RpcValue())
+
+#define SHV_IMAP_FIELD_IMPL2(ptype, int_key, getter_prefix, setter_prefix, name_rest, default_value) \
+	public: bool getter_prefix##name_rest##_isset() const {return has(static_cast<shv::chainpack::RpcValue::Int>(int_key));} \
+	public: ptype getter_prefix##name_rest() const {return rpcvalue_cast<ptype>(at(static_cast<shv::chainpack::RpcValue::Int>(int_key), default_value));} \
+	public: shv::chainpack::RpcValue& setter_prefix##name_rest(const ptype &val) {set(static_cast<shv::chainpack::RpcValue::Int>(int_key), shv::chainpack::RpcValue(val)); return *this;}
+

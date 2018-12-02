@@ -33,7 +33,9 @@ public:
 	static const char* KEY_CLIENT_ID;
 	static const char* KEY_LOGIN;
 	static const char* KEY_DEVICE;
+	static const char* KEY_TUNNEL;
 	static const char* KEY_BROKER;
+	static const char* KEY_SECRET;
 
 	static const char* METH_HELLO;
 	static const char* METH_LOGIN;

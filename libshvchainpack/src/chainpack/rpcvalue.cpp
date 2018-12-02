@@ -72,7 +72,7 @@ public:
 
 	virtual const RpcValue::MetaData &metaData() const = 0;
 	virtual void setMetaData(RpcValue::MetaData &&meta_data) = 0;
-	virtual void setMetaValue(RpcValue::UInt key, const RpcValue &val) = 0;
+	virtual void setMetaValue(RpcValue::Int key, const RpcValue &val) = 0;
 	virtual void setMetaValue(RpcValue::String key, const RpcValue &val) = 0;
 
 	virtual bool equals(const AbstractValueData * other) const = 0;
@@ -94,9 +94,11 @@ public:
 	virtual const RpcValue::IMap &toIMap() const;
 	virtual size_t count() const {return 0;}
 
-	virtual RpcValue at(RpcValue::UInt i) const;
-	virtual RpcValue at(const RpcValue::String &key) const;
-	virtual void set(RpcValue::UInt ix, const RpcValue &val);
+	virtual bool has(RpcValue::Int i) const { (void)i; return false; }
+	virtual bool has(const RpcValue::String &key) const { (void)key; return false; }
+	virtual RpcValue at(RpcValue::Int i) const { (void)i; return RpcValue(); }
+	virtual RpcValue at(const RpcValue::String &key) const { (void)key; return RpcValue(); }
+	virtual void set(RpcValue::Int ix, const RpcValue &val);
 	virtual void set(const RpcValue::String &key, const RpcValue &val);
 	virtual void append(const RpcValue &);
 
@@ -142,7 +144,7 @@ protected:
 			m_metaData = new RpcValue::MetaData(std::move(d));
 	}
 
-	void setMetaValue(RpcValue::UInt key, const RpcValue &val) override
+	void setMetaValue(RpcValue::Int key, const RpcValue &val) override
 	{
 		if(!m_metaData)
 			m_metaData = new RpcValue::MetaData();
@@ -285,8 +287,8 @@ class ChainPackList final : public ValueData<RpcValue::Type::List, RpcValue::Lis
 	std::string toStdString() const override { return std::string(); }
 
 	size_t count() const override {return m_value.size();}
-	RpcValue at(RpcValue::UInt i) const override;
-	void set(RpcValue::UInt key, const RpcValue &val) override;
+	RpcValue at(RpcValue::Int i) const override;
+	void set(RpcValue::Int i, const RpcValue &val) override;
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toList(); }
 public:
 	explicit ChainPackList(const RpcValue::List &value) : ValueData(value) {}
@@ -300,6 +302,7 @@ class ChainPackMap final : public ValueData<RpcValue::Type::Map, RpcValue::Map>
 	std::string toStdString() const override { return std::string(); }
 
 	size_t count() const override {return m_value.size();}
+	bool has(const RpcValue::String &key) const override;
 	RpcValue at(const RpcValue::String &key) const override;
 	void set(const RpcValue::String &key, const RpcValue &val) override;
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toMap(); }
@@ -315,8 +318,9 @@ class ChainPackIMap final : public ValueData<RpcValue::Type::IMap, RpcValue::IMa
 	std::string toStdString() const override { return std::string(); }
 	//const ChainPack::Map &toMap() const override { return m_value; }
 	size_t count() const override {return m_value.size();}
-	RpcValue at(RpcValue::UInt key) const override;
-	void set(RpcValue::UInt key, const RpcValue &val) override;
+	bool has(RpcValue::Int key) const override;
+	RpcValue at(RpcValue::Int key) const override;
+	void set(RpcValue::Int key, const RpcValue &val) override;
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toIMap(); }
 public:
 	explicit ChainPackIMap(const RpcValue::IMap &value) : ValueData(value) {}
@@ -451,7 +455,7 @@ const RpcValue::MetaData &RpcValue::metaData() const
 	return md;
 }
 
-RpcValue RpcValue::metaValue(RpcValue::UInt key) const
+RpcValue RpcValue::metaValue(RpcValue::Int key) const
 {
 	const MetaData &md = metaData();
 	RpcValue ret = md.value(key);
@@ -473,7 +477,7 @@ void RpcValue::setMetaData(RpcValue::MetaData &&meta_data)
 		m_ptr->setMetaData(std::move(meta_data));
 }
 
-void RpcValue::setMetaValue(RpcValue::UInt key, const RpcValue &val)
+void RpcValue::setMetaValue(RpcValue::Int key, const RpcValue &val)
 {
 	if(!m_ptr && val.isValid())
 		SHVCHP_EXCEPTION("Cannot set valid meta value to invalid ChainPack value!");
@@ -510,12 +514,14 @@ size_t RpcValue::count() const { return m_ptr? m_ptr->count(): 0; }
 const RpcValue::List & RpcValue::toList() const { return m_ptr? m_ptr->toList(): static_empty_list(); }
 const RpcValue::Map & RpcValue::toMap() const { return m_ptr? m_ptr->toMap(): static_empty_map(); }
 const RpcValue::IMap &RpcValue::toIMap() const { return m_ptr? m_ptr->toIMap(): static_empty_imap(); }
-RpcValue RpcValue::at (RpcValue::UInt i) const { return m_ptr? m_ptr->at(i): RpcValue(); }
+RpcValue RpcValue::at (RpcValue::Int i) const { return m_ptr? m_ptr->at(i): RpcValue(); }
 RpcValue RpcValue::at (const RpcValue::String &key) const { return m_ptr? m_ptr->at(key): RpcValue(); }
+bool RpcValue::has (RpcValue::Int i) const { return m_ptr? m_ptr->has(i): false; }
+bool RpcValue::has (const RpcValue::String &key) const { return m_ptr? m_ptr->has(key): false; }
 
 //std::string RpcValue::toStdString() const { return m_ptr? m_ptr->toStdString(): std::string(); }
 
-void RpcValue::set(RpcValue::UInt ix, const RpcValue &val)
+void RpcValue::set(RpcValue::Int ix, const RpcValue &val)
 {
 	if(m_ptr)
 		m_ptr->set(ix, val);
@@ -569,10 +575,7 @@ const RpcValue::List & RpcValue::AbstractValueData::toList() const { return stat
 const RpcValue::Map & RpcValue::AbstractValueData::toMap() const { return static_empty_map(); }
 const RpcValue::IMap & RpcValue::AbstractValueData::toIMap() const { return static_empty_imap(); }
 
-RpcValue RpcValue::AbstractValueData::at(RpcValue::UInt) const { return RpcValue(); }
-RpcValue RpcValue::AbstractValueData::at(const RpcValue::String &) const { return RpcValue(); }
-
-void RpcValue::AbstractValueData::set(RpcValue::UInt ix, const RpcValue &)
+void RpcValue::AbstractValueData::set(RpcValue::Int ix, const RpcValue &)
 {
 	nError() << "RpcValue::AbstractValueData::set: trivial implementation called! Key: " << ix;
 }
@@ -588,19 +591,25 @@ void RpcValue::AbstractValueData::append(const RpcValue &)
 }
 
 
-RpcValue ChainPackList::at(RpcValue::UInt i) const
+RpcValue ChainPackList::at(RpcValue::Int ix) const
 {
-	if (i >= m_value.size())
+	if(ix < 0)
+		ix = static_cast<RpcValue::Int>(m_value.size()) + ix;
+	if (ix < 0 || ix >= (int)m_value.size())
 		return static_chain_pack_invalid();
 	else
-		return m_value[i];
+		return m_value[static_cast<size_t>(ix)];
 }
 
-void ChainPackList::set(RpcValue::UInt key, const RpcValue &val)
+void ChainPackList::set(RpcValue::Int ix, const RpcValue &val)
 {
-	if(key >= m_value.size())
-		m_value.resize(key + 1);
-	m_value[key] = val;
+	if(ix < 0)
+		ix = static_cast<RpcValue::Int>(m_value.size()) + ix;
+	if(ix > 0) {
+		if (ix == (int)m_value.size())
+			m_value.resize(static_cast<size_t>(ix) + 1);
+		m_value[static_cast<size_t>(ix)] = val;
+	}
 }
 
 /* * * * * * * * * * * * * * * * * * * *
@@ -688,6 +697,12 @@ const char *RpcValue::typeToName(RpcValue::Type t)
 	return "UNKNOWN"; // just to remove mingw warning
 }
 
+bool ChainPackMap::has(const RpcValue::String &key) const
+{
+	auto iter = m_value.find(key);
+	return (iter != m_value.end());
+}
+
 RpcValue ChainPackMap::at(const RpcValue::String &key) const
 {
 	auto iter = m_value.find(key);
@@ -702,13 +717,19 @@ void ChainPackMap::set(const RpcValue::String &key, const RpcValue &val)
 		m_value.erase(key);
 }
 
-RpcValue ChainPackIMap::at(RpcValue::UInt key) const
+bool ChainPackIMap::has(RpcValue::Int key) const
+{
+	auto iter = m_value.find(key);
+	return (iter != m_value.end());
+}
+
+RpcValue ChainPackIMap::at(RpcValue::Int key) const
 {
 	auto iter = m_value.find(key);
 	return (iter == m_value.end()) ? static_chain_pack_invalid() : iter->second;
 }
 
-void ChainPackIMap::set(RpcValue::UInt key, const RpcValue &val)
+void ChainPackIMap::set(RpcValue::Int key, const RpcValue &val)
 {
 	if(val.isValid())
 		m_value[key] = val;

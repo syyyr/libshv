@@ -20,6 +20,7 @@ namespace rpc {
 
 class ClientAppCliOptions;
 
+#if 0
 class SHVIOTQT_DECL_EXPORT ConnectionParams : public shv::chainpack::RpcValue::IMap
 {
 	using Super = shv::chainpack::RpcValue::IMap;
@@ -56,6 +57,7 @@ public:
 	shv::chainpack::RpcValue toRpcValue() const;
 	//shv::chainpack::RpcValue callerClientIds() const;
 };
+#endif
 
 class SHVIOTQT_DECL_EXPORT ClientConnection : public SocketRpcDriver, public IClientConnection, public shv::chainpack::AbstractRpcConnection
 {
@@ -72,6 +74,8 @@ public:
 	void resetConnection() override;
 
 	void setCliOptions(const ClientAppCliOptions *cli_opts);
+
+	void setTunnelOptions(const shv::chainpack::RpcValue &opts);
 
 	void setCheckBrokerConnectedInterval(unsigned ms);
 

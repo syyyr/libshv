@@ -28,6 +28,7 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
+#if 0
 ConnectionParams::MetaType::MetaType()
 	: Super("TunnelParams")
 {
@@ -75,6 +76,7 @@ chainpack::RpcValue ConnectionParams::toRpcValue() const
 	ret.setMetaValue(cp::meta::Tag::MetaTypeId, ConnectionParams::MetaType::ID);
 	return ret;
 }
+#endif
 
 ClientConnection::ClientConnection(QObject *parent)
 	: Super(parent)
@@ -103,8 +105,8 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 
 	setCheckBrokerConnectedInterval(cli_opts->reconnectInterval() * 1000);
 
-	if(cli_opts->isMetaTypeExplicit_isset())
-		cp::RpcMessage::setMetaTypeExplicit(cli_opts->isMetaTypeExplicit());
+	//if(cli_opts->isMetaTypeExplicit_isset())
+	//	cp::RpcMessage::setMetaTypeExplicit(cli_opts->isMetaTypeExplicit());
 
 	const std::string pv = cli_opts->protocolType();
 	if(pv == "cpon")
@@ -139,6 +141,13 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 		opts[cp::Rpc::OPT_IDLE_WD_TIMEOUT] = 3 * m_heartbeatInterval;
 		setConnectionOptions(opts);
 	}
+}
+
+void ClientConnection::setTunnelOptions(const chainpack::RpcValue &opts)
+{
+	shv::chainpack::RpcValue::Map conn_opts = connectionOptions().toMap();
+	conn_opts[cp::Rpc::KEY_TUNNEL] = opts;
+	setConnectionOptions(conn_opts);
 }
 
 void ClientConnection::open()

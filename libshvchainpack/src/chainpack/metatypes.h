@@ -88,6 +88,7 @@ public:
 		enum Enum {
 			ChainPackRpcMessage = 1,
 			RpcConnectionParams,
+			TunnelCtl,
 		};
 	};
 };

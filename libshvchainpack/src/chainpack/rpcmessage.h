@@ -12,6 +12,7 @@ namespace shv {
 namespace chainpack {
 
 class AbstractStreamWriter;
+class TunnelCtl;
 
 class SHVCHAINPACK_DECL_EXPORT RpcMessage
 {
@@ -28,6 +29,7 @@ public:
 								ProtocolType, //needed when dest client is using different version than source one to translate raw message data to correct format
 								RevCallerIds,
 								AccessGrant,
+								TunnelCtl,
 								MAX};};
 		struct Key { enum Enum {Params = 1, Result, Error, ErrorCode, ErrorMessage, MAX};};
 
@@ -73,6 +75,11 @@ public:
 	RpcValue accessGrant() const;
 	void setAccessGrant(const RpcValue &ag);
 
+	static TunnelCtl tunnelCtl(const RpcValue::MetaData &meta);
+	static void setTunnelCtl(RpcValue::MetaData &meta, const TunnelCtl &tc);
+	TunnelCtl tunnelCtl() const;
+	void setTunnelCtl(const TunnelCtl &tc);
+
 	static RpcValue callerIds(const RpcValue::MetaData &meta);
 	static void setCallerIds(RpcValue::MetaData &meta, const RpcValue &caller_id);
 	static void pushCallerId(RpcValue::MetaData &meta, RpcValue::Int caller_id);
@@ -81,12 +88,14 @@ public:
 	RpcValue::Int popCallerId();
 	RpcValue::Int peekCallerId() const;
 	RpcValue callerIds() const;
+	//RpcValue::List callerIdsList() const;
 	void setCallerIds(const RpcValue &callerIds);
 
 	static RpcValue revCallerIds(const RpcValue::MetaData &meta);
 	static void setRevCallerIds(RpcValue::MetaData &meta, const RpcValue &caller_ids);
 	static void pushRevCallerId(RpcValue::MetaData &meta, RpcValue::Int caller_id);
 	RpcValue revCallerIds() const;
+	//RpcValue::List revCallerIdsList() const;
 	void setRegisterRevCallerIds();
 	static bool isRegisterRevCallerIds(const RpcValue::MetaData &meta);
 	/*
@@ -109,7 +118,7 @@ public:
 
 	virtual void write(AbstractStreamWriter &wr) const;
 
-	static void setMetaTypeExplicit(bool b);
+	//static void setMetaTypeExplicit(bool b);
 protected:
 	//enum class RpcCallType { Undefined = 0, Request, Response, Notify };
 	//RpcCallType rpcType() const;
@@ -119,6 +128,8 @@ protected:
 	RpcValue m_value;
 	static bool m_isMetaTypeExplicit;
 };
+
+class RpcResponse;
 
 class SHVCHAINPACK_DECL_EXPORT RpcRequest : public RpcMessage
 {
@@ -135,6 +146,8 @@ public:
 	RpcRequest& setParams(const RpcValue &p);
 	RpcValue params() const;
 	RpcRequest& setRequestId(const RpcValue::Int id) {Super::setRequestId(id); return *this;}
+
+	RpcResponse makeResponse() const;
 
 	//size_t write(AbstractStreamWriter &wr) const override;
 };

@@ -81,7 +81,7 @@ void SyncClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 
 	setCheckBrokerConnectedInterval(cli_opts->reconnectInterval() * 1000);
 
-	cp::RpcMessage::setMetaTypeExplicit(cli_opts->isMetaTypeExplicit());
+	//cp::RpcMessage::setMetaTypeExplicit(cli_opts->isMetaTypeExplicit());
 
 	const std::string pv = cli_opts->protocolType();
 	if(pv == "cpon")

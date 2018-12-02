@@ -383,10 +383,10 @@ public:
 	static RpcValue fromType(RpcValue::Type t) noexcept;
 
 	const MetaData &metaData() const;
-	RpcValue metaValue(RpcValue::UInt key) const;
+	RpcValue metaValue(RpcValue::Int key) const;
 	RpcValue metaValue(const RpcValue::String &key) const;
 	void setMetaData(MetaData &&meta_data);
-	void setMetaValue(UInt key, const RpcValue &val);
+	void setMetaValue(Int key, const RpcValue &val);
 	void setMetaValue(const String &key, const RpcValue &val);
 
 	template<typename T> static Type guessType();
@@ -421,11 +421,15 @@ public:
 	const IMap &toIMap() const;
 
 	size_t count() const;
-	RpcValue at(UInt i) const;
+	bool has(Int i) const;
+	bool has(const RpcValue::String &key) const;
+	RpcValue at(Int i) const;
+	RpcValue at(Int i, const RpcValue &def_val) const  { return has(i)? at(i): def_val; }
 	RpcValue at(const RpcValue::String &key) const;
-	RpcValue operator[](UInt i) const {return at(i);}
+	RpcValue at(const RpcValue::String &key, const RpcValue &def_val) const  { return has(key)? at(key): def_val; }
+	RpcValue operator[](Int i) const {return at(i);}
 	RpcValue operator[](const RpcValue::String &key) const {return at(key);}
-	void set(UInt ix, const RpcValue &val);
+	void set(Int ix, const RpcValue &val);
 	void set(const RpcValue::String &key, const RpcValue &val);
 	void append(const RpcValue &val);
 
@@ -484,6 +488,12 @@ public:
 		return m_val.isValid()? 1: 0;
 	}
 	bool empty() const {return size() == 0;}
+	RpcValue::List toList() const
+	{
+		if(m_val.isList())
+			return m_val.toList();
+		return m_val.isValid()? RpcValue::List{m_val}: RpcValue::List{};
+	}
 private:
 	RpcValue m_val;
 };

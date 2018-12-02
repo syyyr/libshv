@@ -1,6 +1,7 @@
 #include "rpcmessage.h"
 #include "chainpack.h"
 #include "metatypes.h"
+#include "tunnelctl.h"
 #include "abstractstreamwriter.h"
 
 #include <cassert>
@@ -25,6 +26,8 @@ RpcMessage::MetaType::MetaType()
 		{(int)Tag::CallerIds, {(int)Tag::CallerIds, "cid"}},
 		{(int)Tag::ProtocolType, {(int)Tag::ProtocolType, "protocol"}},
 		{(int)Tag::RevCallerIds, {(int)Tag::RevCallerIds, "rcid"}},
+		{(int)Tag::AccessGrant, {(int)Tag::AccessGrant, "grant"}},
+		{(int)Tag::TunnelCtl, {(int)Tag::TunnelCtl, "tctl"}},
 	};
 }
 
@@ -41,7 +44,7 @@ void RpcMessage::MetaType::registerMetaType()
 //==================================================================
 // RpcMessage
 //==================================================================
-bool RpcMessage::m_isMetaTypeExplicit = false;
+bool RpcMessage::m_isMetaTypeExplicit = true;
 
 RpcMessage::RpcMessage()
 {
@@ -55,13 +58,13 @@ RpcMessage::RpcMessage(const RpcValue &val)
 		SHVCHP_EXCEPTION("Value is not IMap");
 	m_value = val;
 }
-
+/*
 void RpcMessage::setMetaTypeExplicit(bool b)
 {
 	MetaType::registerMetaType();
 	m_isMetaTypeExplicit = b;
 }
-
+*/
 bool RpcMessage::hasKey(RpcValue::UInt key) const
 {
 	return m_value.toIMap().count(key);
@@ -210,6 +213,26 @@ void RpcMessage::setAccessGrant(const RpcValue &ag)
 	setMetaValue(RpcMessage::MetaType::Tag::AccessGrant, ag);
 }
 
+TunnelCtl RpcMessage::tunnelCtl(const RpcValue::MetaData &meta)
+{
+	return meta.value(RpcMessage::MetaType::Tag::TunnelCtl);
+}
+
+void RpcMessage::setTunnelCtl(RpcValue::MetaData &meta, const TunnelCtl &tc)
+{
+	meta.setValue(RpcMessage::MetaType::Tag::TunnelCtl, tc);
+}
+
+TunnelCtl RpcMessage::tunnelCtl() const
+{
+	return metaValue(RpcMessage::MetaType::Tag::TunnelCtl);
+}
+
+void RpcMessage::setTunnelCtl(const TunnelCtl &tc)
+{
+	setMetaValue(RpcMessage::MetaType::Tag::TunnelCtl, tc);
+}
+
 RpcValue RpcMessage::callerIds(const RpcValue::MetaData &meta)
 {
 	return meta.value(RpcMessage::MetaType::Tag::CallerIds);
@@ -293,7 +316,18 @@ RpcValue RpcMessage::callerIds() const
 {
 	return metaValue(RpcMessage::MetaType::Tag::CallerIds);
 }
-
+/*
+RpcValue::List RpcMessage::callerIdsList() const
+{
+	RpcValue ids = callerIds();
+	if(ids.isList())
+		return ids.toList();
+	RpcValue::Int id = ids.toInt();
+	if(id == 0)
+		return RpcValue::List{};
+	return RpcValue::List{id};
+}
+*/
 void RpcMessage::setCallerIds(const RpcValue &callerId)
 {
 	setMetaValue(RpcMessage::MetaType::Tag::CallerIds, callerId);
@@ -332,7 +366,18 @@ RpcValue RpcMessage::revCallerIds() const
 {
 	return metaValue(RpcMessage::MetaType::Tag::RevCallerIds);
 }
-
+/*
+RpcValue::List RpcMessage::revCallerIdsList() const
+{
+	RpcValue ids = revCallerIds();
+	if(ids.isList())
+		return ids.toList();
+	RpcValue::Int id = ids.toInt();
+	if(id == 0)
+		return RpcValue::List{};
+	return RpcValue::List{id};
+}
+*/
 void RpcMessage::setRegisterRevCallerIds()
 {
 	setMetaValue(RpcMessage::MetaType::Tag::RevCallerIds, nullptr);
@@ -415,6 +460,11 @@ RpcRequest &RpcRequest::setMethod(RpcValue::String &&met)
 RpcValue RpcRequest::params() const
 {
 	return value(RpcMessage::MetaType::Key::Params);
+}
+
+RpcResponse RpcRequest::makeResponse() const
+{
+	return RpcResponse::forRequest(*this);
 }
 
 RpcRequest& RpcRequest::setParams(const RpcValue& p)
