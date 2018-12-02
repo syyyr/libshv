@@ -26,8 +26,8 @@ static int s_initPhaseTimeout = 10000;
 ServerConnection::ServerConnection(QTcpSocket *socket, QObject *parent)
 	: Super(parent)
 {
+	//socket->setParent(nullptr);
 	setSocket(socket);
-	socket->setParent(nullptr);
 	connect(this, &ServerConnection::socketConnectedChanged, [this](bool is_connected) {
 		if(is_connected) {
 			m_helloReceived = m_loginReceived = false;

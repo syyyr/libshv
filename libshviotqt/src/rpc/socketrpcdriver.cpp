@@ -57,10 +57,12 @@ SocketRpcDriver::~SocketRpcDriver()
 {
 	shvDebug() << __FUNCTION__;
 	abortConnection();
+	SHV_SAFE_DELETE(m_socket);
 }
 
 void SocketRpcDriver::setSocket(QTcpSocket *socket)
 {
+	socket->setParent(nullptr);
 	socket->moveToThread(this->thread());
 	m_socket = socket;
 	connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this,
@@ -79,7 +81,6 @@ void SocketRpcDriver::setSocket(QTcpSocket *socket)
 	});
 	connect(socket, &QTcpSocket::disconnected, [this]() {
 		shvDebug() << this << "Socket disconnected!!!";
-		clearBuffers();
 		emit socketConnectedChanged(isSocketConnected());
 	});
 }
