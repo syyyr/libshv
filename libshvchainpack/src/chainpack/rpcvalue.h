@@ -317,7 +317,7 @@ public:
 		bool operator==(const MetaData &o) const;
 		const RpcValue::IMap& iValues() const;
 		const RpcValue::Map& sValues() const;
-		std::string toStdString() const;
+		std::string toPrettyString() const;
 	private:
 		MetaData& operator =(const MetaData &o);
 		void swap(MetaData &o);

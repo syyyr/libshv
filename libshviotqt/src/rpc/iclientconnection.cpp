@@ -47,7 +47,7 @@ chainpack::RpcValue IClientConnection::createLoginParams(const chainpack::RpcVal
 	if(loginType() == chainpack::AbstractRpcConnection::LoginType::Sha1) {
 		std::string server_nonce = server_hello.toMap().value("nonce").toString();
 		std::string pwd = password();
-		if(pwd.size() < 40)
+		if(pwd.size() > 0 && pwd.size() < 40)
 			pwd = sha1_hex(pwd); /// SHA1 password must be 40 chars long, it is considered to be plain if shorter
 		std::string pn = server_nonce + pwd;
 		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);

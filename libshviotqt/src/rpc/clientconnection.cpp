@@ -164,13 +164,13 @@ void ClientConnection::open()
 void ClientConnection::close()
 {
 	m_checkConnectedTimer->stop();
-	emit closeConnection();
+	closeConnection();
 }
 
 void ClientConnection::abort()
 {
 	m_checkConnectedTimer->stop();
-	emit abortConnection();
+	abortConnection();
 }
 
 void ClientConnection::setCheckBrokerConnectedInterval(unsigned ms)

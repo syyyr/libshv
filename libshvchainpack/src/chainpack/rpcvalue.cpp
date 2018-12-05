@@ -1013,7 +1013,7 @@ const RpcValue::Map &RpcValue::MetaData::sValues() const
 	return m_smap? *m_smap: m;
 }
 
-std::string RpcValue::MetaData::toStdString() const
+std::string RpcValue::MetaData::toPrettyString() const
 {
 	std::ostringstream out;
 	{

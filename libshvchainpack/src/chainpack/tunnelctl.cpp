@@ -55,9 +55,9 @@ TunnelCtl::TunnelCtl(const RpcValue &o)
 //================================================================
 // FindTunnelResponse
 //================================================================
-FindTunnelResponse FindTunnelResponse::fromFindTunnelRequest(const FindTunnelRequest &rq)
+FindTunnelRespCtl FindTunnelRespCtl::fromFindTunnelRequest(const FindTunnelReqCtl &rq)
 {
-	FindTunnelResponse ret;
+	FindTunnelRespCtl ret;
 	ret.setHost(rq.host());
 	ret.setPort(rq.port());
 	ret.setCallerIds(rq.callerIds());
@@ -68,9 +68,9 @@ FindTunnelResponse FindTunnelResponse::fromFindTunnelRequest(const FindTunnelReq
 //================================================================
 // CreateTunnelRequest
 //================================================================
-CreateTunnelRequest CreateTunnelRequest::fromFindTunnelResponse(const FindTunnelResponse &resp)
+CreateTunnelReqCtl CreateTunnelReqCtl::fromFindTunnelResponse(const FindTunnelRespCtl &resp)
 {
-	CreateTunnelRequest ret;
+	CreateTunnelReqCtl ret;
 	ret.setHost(resp.host());
 	ret.setPort(resp.port());
 	ret.setSecret(resp.secret());
