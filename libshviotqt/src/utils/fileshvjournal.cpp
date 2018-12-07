@@ -444,7 +444,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 						snapshot[path] = std::move(valstr);
 					}
 				}
-				else if(!params.until.isValid() || dt <= params.until) {
+				else {
 					if(params.withSnapshot && !snapshot.empty()) {
 						shvDebug() << "\t -------------- Snapshot";
 						for(const auto &kv : snapshot) {
@@ -458,19 +458,21 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 						}
 						snapshot.clear();
 					}
-					cp::RpcValue::List rec;
-					rec.push_back(cp::RpcValue::DateTime::fromUtcString(dtstr));
-					//rec.push_back(toLong(upstr));
-					rec.push_back(make_path_shared(path));
-					rec.push_back(cp::RpcValue::fromCpon(valstr));
-					shvDebug() << "\t LOG:" << rec[0].toDateTime().toIsoString() << '\t' << path << '\t' << rec[2].toCpon();
-					log.push_back(rec);
-					rec_cnt++;
-					if(rec_cnt >= params.maxRecordCount)
+					if(!params.until.isValid() || dt <= params.until) {
+						cp::RpcValue::List rec;
+						rec.push_back(cp::RpcValue::DateTime::fromUtcString(dtstr));
+						//rec.push_back(toLong(upstr));
+						rec.push_back(make_path_shared(path));
+						rec.push_back(cp::RpcValue::fromCpon(valstr));
+						shvDebug() << "\t LOG:" << rec[0].toDateTime().toIsoString() << '\t' << path << '\t' << rec[2].toCpon();
+						log.push_back(rec);
+						rec_cnt++;
+						if(rec_cnt >= params.maxRecordCount)
+							goto log_finish;
+					}
+					else {
 						goto log_finish;
-				}
-				else {
-					goto log_finish;
+					}
 				}
 			}
 		}
