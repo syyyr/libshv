@@ -123,7 +123,7 @@ void ShvNode::deleteIfEmptyWithParents()
 
 void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&data)
 {
-	shvLogFuncFrame() << "node:" << nodeId() << "meta:" << meta.toStdString();
+	shvLogFuncFrame() << "node:" << nodeId() << "meta:" << meta.toPrettyString();
 	const chainpack::RpcValue::String &method = cp::RpcMessage::method(meta).toString();
 	const chainpack::RpcValue::String &shv_path_str = cp::RpcMessage::shvPath(meta).toString();
 	core::StringViewList shv_path = splitShvPath(shv_path_str);

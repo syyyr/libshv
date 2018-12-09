@@ -55,7 +55,7 @@ public:
 	//static TunnelCtl fromIMap(const shv::chainpack::RpcValue::IMap &m);
 };
 
-class SHVCHAINPACK_DECL_EXPORT FindTunnelRequest : public TunnelCtl
+class SHVCHAINPACK_DECL_EXPORT FindTunnelReqCtl : public TunnelCtl
 {
 	using Super = TunnelCtl;
 
@@ -65,29 +65,11 @@ class SHVCHAINPACK_DECL_EXPORT FindTunnelRequest : public TunnelCtl
 	SHV_IMAP_FIELD_IMPL(shv::chainpack::RpcValue, MetaType::Key::CallerIds, c, setC, allerIds)
 
 public:
-	FindTunnelRequest() : Super(State::FindTunnelRequest) {}
-	FindTunnelRequest(const TunnelCtl &o) : Super(o) {}
+	FindTunnelReqCtl() : Super(State::FindTunnelRequest) {}
+	FindTunnelReqCtl(const TunnelCtl &o) : Super(o) {}
 };
 
-class SHVCHAINPACK_DECL_EXPORT FindTunnelResponse : public TunnelCtl
-{
-	using Super = TunnelCtl;
-
-	SHV_IMAP_FIELD_IMPL(std::string, MetaType::Key::Host, h, setH, ost)
-	SHV_IMAP_FIELD_IMPL(int, MetaType::Key::Port, p, setP, ort)
-	SHV_IMAP_FIELD_IMPL(std::string, MetaType::Key::Secret, s, setS, ecret)
-	SHV_IMAP_FIELD_IMPL(int, MetaType::Key::RequestId, r, setR, equestId)
-	SHV_IMAP_FIELD_IMPL(shv::chainpack::RpcValue, MetaType::Key::CallerIds, c, setC, allerIds)
-
-public:
-	FindTunnelResponse() : Super(State::FindTunnelResponse) {}
-	FindTunnelResponse(const TunnelCtl &o) : Super(o) {}
-
-	static FindTunnelResponse fromFindTunnelRequest(const FindTunnelRequest &rq);
-
-};
-
-class SHVCHAINPACK_DECL_EXPORT CreateTunnelRequest : public TunnelCtl
+class SHVCHAINPACK_DECL_EXPORT FindTunnelRespCtl : public TunnelCtl
 {
 	using Super = TunnelCtl;
 
@@ -98,19 +80,37 @@ class SHVCHAINPACK_DECL_EXPORT CreateTunnelRequest : public TunnelCtl
 	SHV_IMAP_FIELD_IMPL(shv::chainpack::RpcValue, MetaType::Key::CallerIds, c, setC, allerIds)
 
 public:
-	CreateTunnelRequest() : Super(State::CreateTunnelRequest) {}
-	CreateTunnelRequest(const TunnelCtl &o) : Super(o) {}
+	FindTunnelRespCtl() : Super(State::FindTunnelResponse) {}
+	FindTunnelRespCtl(const TunnelCtl &o) : Super(o) {}
 
-	static CreateTunnelRequest fromFindTunnelResponse(const FindTunnelResponse &resp);
+	static FindTunnelRespCtl fromFindTunnelRequest(const FindTunnelReqCtl &rq);
+
 };
 
-class SHVCHAINPACK_DECL_EXPORT CreateTunnelResponse : public TunnelCtl
+class SHVCHAINPACK_DECL_EXPORT CreateTunnelReqCtl : public TunnelCtl
+{
+	using Super = TunnelCtl;
+
+	SHV_IMAP_FIELD_IMPL(std::string, MetaType::Key::Host, h, setH, ost)
+	SHV_IMAP_FIELD_IMPL(int, MetaType::Key::Port, p, setP, ort)
+	SHV_IMAP_FIELD_IMPL(std::string, MetaType::Key::Secret, s, setS, ecret)
+	SHV_IMAP_FIELD_IMPL(int, MetaType::Key::RequestId, r, setR, equestId)
+	SHV_IMAP_FIELD_IMPL(shv::chainpack::RpcValue, MetaType::Key::CallerIds, c, setC, allerIds)
+
+public:
+	CreateTunnelReqCtl() : Super(State::CreateTunnelRequest) {}
+	CreateTunnelReqCtl(const TunnelCtl &o) : Super(o) {}
+
+	static CreateTunnelReqCtl fromFindTunnelResponse(const FindTunnelRespCtl &resp);
+};
+
+class SHVCHAINPACK_DECL_EXPORT CreateTunnelRespCtl : public TunnelCtl
 {
 	using Super = TunnelCtl;
 
 public:
-	CreateTunnelResponse() : Super(State::CreateTunnelResponse) {}
-	CreateTunnelResponse(const TunnelCtl &o) : Super(o) {}
+	CreateTunnelRespCtl() : Super(State::CreateTunnelResponse) {}
+	CreateTunnelRespCtl(const TunnelCtl &o) : Super(o) {}
 };
 
 }}

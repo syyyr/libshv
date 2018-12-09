@@ -414,6 +414,12 @@ void RpcMessage::write(AbstractStreamWriter &wr) const
 	wr.write(m_value);
 }
 
+void RpcMessage::registerMetaTypes()
+{
+	RpcMessage::MetaType::registerMetaType();
+	TunnelCtl::MetaType::registerMetaType();
+}
+
 void RpcMessage::checkMetaValues()
 {
 	if(!m_value.isValid()) {
@@ -560,8 +566,8 @@ const char *RpcResponse::Error::errorCodeToString(int code)
 	case ErrorCode::InvalidParams: return "InvalidParams";
 	case ErrorCode::InternalError: return "InternalError";
 	case ErrorCode::ParseError: return "ParseError";
-	case ErrorCode::SyncMethodCallTimeout: return "SyncMethodCallTimeout";
-	case ErrorCode::SyncMethodCallCancelled: return "SyncMethodCallCancelled";
+	case ErrorCode::MethodCallTimeout: return "SyncMethodCallTimeout";
+	case ErrorCode::MethodCallCancelled: return "SyncMethodCallCancelled";
 	case ErrorCode::MethodCallException: return "MethodCallException";
 	case ErrorCode::Unknown:  return "Unknown";
 	};

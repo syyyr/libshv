@@ -54,7 +54,7 @@ void RpcDriver::sendRawData(std::string &&data)
 
 void RpcDriver::sendRawData(const RpcValue::MetaData &meta_data, std::string &&data)
 {
-	logRpcRawMsg() << SND_LOG_ARROW << "protocol:" << Rpc::protocolTypeToString(protocolType()) << "send raw meta + data: " << meta_data.toStdString()
+	logRpcRawMsg() << SND_LOG_ARROW << "protocol:" << Rpc::protocolTypeToString(protocolType()) << "send raw meta + data: " << meta_data.toPrettyString()
 				<< Utils::toHex(data, 0, 250);
 	using namespace std;
 	//shvLogFuncFrame() << msg.toStdString();

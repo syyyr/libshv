@@ -259,7 +259,7 @@ private:
 				CponReader rd(in);
 				RpcValue::MetaData md;
 				rd.read(md);
-				qDebug().nospace() << "metadata test: \n" << md.toStdString();
+				qDebug().nospace() << "metadata test: \n" << md.toPrettyString();
 				QVERIFY(!md.isEmpty());
 			}
 			{

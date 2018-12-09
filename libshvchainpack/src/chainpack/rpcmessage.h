@@ -119,6 +119,7 @@ public:
 	virtual void write(AbstractStreamWriter &wr) const;
 
 	//static void setMetaTypeExplicit(bool b);
+	static void registerMetaTypes();
 protected:
 	//enum class RpcCallType { Undefined = 0, Request, Response, Notify };
 	//RpcCallType rpcType() const;
@@ -184,8 +185,8 @@ public:
 			InvalidParams,		// Invalid method parameter(s).
 			InternalError,		// Internal JSON-RPC error.
 			ParseError,		// Invalid JSON was received by the server. An error occurred on the server while parsing the JSON text.
-			SyncMethodCallTimeout,
-			SyncMethodCallCancelled,
+			MethodCallTimeout,
+			MethodCallCancelled,
 			MethodCallException,
 			Unknown
 		};
@@ -254,7 +255,7 @@ public:
 			return create(InternalError, (msg.empty())? "Internal error": msg);
 		}
 		static Error createSyncMethodCallTimeout(const RpcValue::String &msg = RpcValue::String()) {
-			return create(SyncMethodCallTimeout, (msg.empty())? "Sync method call timeout": msg);
+			return create(MethodCallTimeout, (msg.empty())? "Sync method call timeout": msg);
 		}
 	};
 public:
