@@ -221,11 +221,7 @@ public:
 			};
 		}
 	public:
-		static Error create(ErrorCode c, RpcValue::String msg) {
-			Error ret;
-			ret.setCode(c).setMessage(std::move(msg));
-			return ret;
-		}
+		static Error create(ErrorCode c, RpcValue::String msg);
 		/*
 		static Error createParseError(const Value::String &msg = Value::String(), const Value &data = Value()) {
 			return createError(ParseError,

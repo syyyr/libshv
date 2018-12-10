@@ -389,6 +389,7 @@ RpcValue RpcValue::fromType(RpcValue::Type t) noexcept
 	case Type::IMap: return RpcValue{IMap()};
 	case Type::Decimal: return RpcValue{Decimal()};
 	}
+	return RpcValue();
 }
 RpcValue::RpcValue(std::nullptr_t) noexcept : m_ptr(statics().null) {}
 RpcValue::RpcValue(double value) : m_ptr(std::make_shared<ChainPackDouble>(value)) {}

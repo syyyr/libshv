@@ -29,7 +29,7 @@ namespace rpc {
 SyncClientConnection::SyncClientConnection(QObject *parent)
 	: QObject(parent)
 {
-	Rpc::registerMetatTypes();
+	Rpc::registerMetaTypes();
 
 	//setConnectionType(cp::Rpc::TYPE_CLIENT);
 

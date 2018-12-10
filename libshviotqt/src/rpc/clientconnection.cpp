@@ -81,8 +81,6 @@ chainpack::RpcValue ConnectionParams::toRpcValue() const
 ClientConnection::ClientConnection(QObject *parent)
 	: Super(parent)
 {
-	Rpc::registerMetatTypes();
-
 	//setConnectionType(cp::Rpc::TYPE_CLIENT);
 
 	connect(this, &SocketRpcDriver::socketConnectedChanged, this, &ClientConnection::onSocketConnectedChanged);

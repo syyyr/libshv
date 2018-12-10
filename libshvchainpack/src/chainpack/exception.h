@@ -15,7 +15,7 @@ public:
 	static constexpr bool Throw = true;
 public:
 	Exception(const std::string& _msg, const std::string& _where = std::string());
-	~Exception() throw() override {}
+	~Exception() override {}
 public:
 	//virtual void log();
 	virtual std::string message() const {return m_msg;}

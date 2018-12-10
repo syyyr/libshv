@@ -57,6 +57,7 @@ const char* Rpc::GRANT_MASTER_BROKER = "masterBroker";
 const char* Rpc::DIR_BROKER = ".broker";
 const char* Rpc::DIR_BROKER_APP = ".broker/app";
 const char* Rpc::DIR_CLIENTS = "clients";
+const char* Rpc::DIR_MASTERS = "masters";
 
 const char* Rpc::JSONRPC_REQUEST_ID = "id";
 const char* Rpc::JSONRPC_METHOD = "method";

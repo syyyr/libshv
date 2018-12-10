@@ -574,5 +574,12 @@ const char *RpcResponse::Error::errorCodeToString(int code)
 	return "Invalid";
 }
 
+RpcResponse::Error RpcResponse::Error::create(RpcResponse::Error::ErrorCode c, RpcValue::String msg)
+{
+	Error ret;
+	ret.setCode(c).setMessage(std::move(msg));
+	return ret;
+}
+
 } // namespace chainpackrpc
 } // namespace shv

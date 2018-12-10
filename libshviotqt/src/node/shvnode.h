@@ -94,6 +94,38 @@ protected:
 	const std::vector<shv::chainpack::MetaMethod> &m_methods;
 };
 
+
+class SHVIOTQT_DECL_EXPORT RpcValueMapNode : public shv::iotqt::node::ShvNode
+{
+	using Super = shv::iotqt::node::ShvNode;
+public:
+	static const char *M_LOAD;
+	static const char *M_SAVE;
+	static const char *M_COMMIT;
+public:
+	RpcValueMapNode(const std::string &node_id, shv::iotqt::node::ShvNode *parent = nullptr);
+	RpcValueMapNode(const std::string &node_id, const shv::chainpack::RpcValue &values, shv::iotqt::node::ShvNode *parent = nullptr);
+	//~RpcValueMapNode() override;
+
+	size_t methodCount(const StringViewList &shv_path) override;
+	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
+
+	StringList childNames(const ShvNode::StringViewList &shv_path) override;
+	shv::chainpack::RpcValue hasChildren(const StringViewList &shv_path) override;
+
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+protected:
+	virtual shv::chainpack::RpcValue loadValues();
+	virtual bool saveValues(const shv::chainpack::RpcValue &vals);
+	const shv::chainpack::RpcValue &values();
+	virtual shv::chainpack::RpcValue valueOnPath(const StringViewList &shv_path);
+	void setValueOnPath(const StringViewList &shv_path, const shv::chainpack::RpcValue &val);
+	bool isDir(const StringViewList &shv_path);
+protected:
+	bool m_valuesLoaded = false;
+	shv::chainpack::RpcValue m_values;
+};
+
 class SHVIOTQT_DECL_EXPORT ShvRootNode : public ShvNode
 {
 	Q_OBJECT

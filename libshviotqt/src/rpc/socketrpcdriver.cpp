@@ -36,7 +36,7 @@ namespace rpc {
 SocketRpcDriver::SocketRpcDriver(QObject *parent)
 	: QObject(parent)
 {
-	Rpc::registerMetatTypes();
+	Rpc::registerMetaTypes();
 	/*
 	setMessageReceivedCallback([this](const shv::shv::chainpack::RpcValue &msg) {
 		emit messageReceived(msg);
@@ -67,7 +67,10 @@ void SocketRpcDriver::setSocket(QTcpSocket *socket)
 	m_socket = socket;
 	connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this,
 		  [this](QAbstractSocket::SocketError socket_error) {
-		shvInfo() << "Socket error:" << socket_error << m_socket->errorString();
+		shvWarning() << "Socket error:" << socket_error << m_socket->errorString();
+		if(socket_error == QAbstractSocket::HostNotFoundError) {
+			//m_socket->close();
+		}
 	});
 	connect(socket, &QTcpSocket::readyRead, this, &SocketRpcDriver::onReadyRead);
 	// queued connection here is to write data in next event loop, not directly when previous chunk is written
