@@ -439,6 +439,7 @@ public:
 	static RpcValue fromCpon(const std::string & str, std::string *err = nullptr);
 
 	std::string toChainPack() const;
+	static RpcValue fromChainPack(const std::string & str, std::string *err = nullptr);
 
 	bool operator== (const RpcValue &rhs) const;
 #ifdef RPCVALUE_COPY_AND_SWAP

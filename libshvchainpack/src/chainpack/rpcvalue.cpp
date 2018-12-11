@@ -1,8 +1,9 @@
 #include "rpcvalue.h"
 
 #include "cponwriter.h"
-#include "chainpackwriter.h"
 #include "cponreader.h"
+#include "chainpackwriter.h"
+#include "chainpackreader.h"
 #include "exception.h"
 #include "utils.h"
 
@@ -675,6 +676,29 @@ std::string RpcValue::toChainPack() const
 		wr << *this;
 	}
 	return out.str();
+}
+
+RpcValue RpcValue::fromChainPack(const std::string &str, std::string *err)
+{
+	RpcValue ret;
+	std::istringstream in(str);
+	ChainPackReader rd(in);
+	if(err) {
+		err->clear();
+		try {
+			rd >> ret;
+			if(err)
+				*err = std::string();
+		}
+		catch(ChainPackReader::ParseException &e) {
+			if(err)
+				*err = e.what();
+		}
+	}
+	else {
+		rd >> ret;
+	}
+	return ret;
 }
 
 const char *RpcValue::typeToName(RpcValue::Type t)

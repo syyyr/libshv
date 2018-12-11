@@ -251,7 +251,7 @@ void RpcMessage::pushCallerId(RpcValue::MetaData &meta, RpcValue::Int caller_id)
 		array.push_back(RpcValue(caller_id));
 		setCallerIds(meta, array);
 	}
-	else if(curr_caller_id.isInt()) {
+	else if(curr_caller_id.isInt() || curr_caller_id.isUInt()) {
 		RpcValue::List array;
 		array.push_back(curr_caller_id.toInt());
 		array.push_back(RpcValue(caller_id));
@@ -351,7 +351,7 @@ void RpcMessage::pushRevCallerId(RpcValue::MetaData &meta, RpcValue::Int caller_
 		array.push_back(RpcValue(caller_id));
 		setRevCallerIds(meta, array);
 	}
-	else if(curr_caller_id.isUInt()) {
+	else if(curr_caller_id.isInt() || curr_caller_id.isUInt()) {
 		RpcValue::List array;
 		array.push_back(curr_caller_id.toInt());
 		array.push_back(RpcValue(caller_id));

@@ -13,6 +13,8 @@ public:
 	struct Flag {
 		enum {
 			IsSignal = 1 << 0,
+			IsGetter = 1 << 1,
+			IsSetter = 1 << 2,
 		};
 	};
 	struct AccessLevel {

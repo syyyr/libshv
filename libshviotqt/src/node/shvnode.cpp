@@ -297,7 +297,7 @@ chainpack::RpcValue ShvNode::lsAttributes(const StringViewList &shv_path, unsign
 				ret.push_back(nd->hasChildren(StringViewList()));
 		}
 	}
-	return ret;
+	return cp::RpcValue{ret};
 }
 
 int ShvNode::grantToAccessLevel(const char *grant_name) const
@@ -342,7 +342,7 @@ chainpack::RpcValue ShvNode::dir(const StringViewList &shv_path, const chainpack
 				break;
 		}
 	}
-	return ret;
+	return cp::RpcValue{ret};
 }
 
 chainpack::RpcValue ShvNode::ls(const StringViewList &shv_path, const chainpack::RpcValue &methods_params)
@@ -460,8 +460,8 @@ static std::vector<cp::MetaMethod> meta_methods_value_map_root_node {
 static std::vector<cp::MetaMethod> meta_methods_value_map_node {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_CONFIG},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_CONFIG},
-	{cp::Rpc::METH_GET, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_CONFIG},
-	{cp::Rpc::METH_SET, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_DEVEL},
+	{cp::Rpc::METH_GET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::GRANT_CONFIG},
+	{cp::Rpc::METH_SET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsSetter, cp::Rpc::GRANT_DEVEL},
 	//{M_WRITE, cp::MetaMethod::Signature::RetParam, 0, cp::MetaMethod::AccessLevel::Service},
 };
 

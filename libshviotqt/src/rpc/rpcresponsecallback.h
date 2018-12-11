@@ -24,7 +24,7 @@ public:
 	using CallBackFunction = std::function<void (const shv::chainpack::RpcResponse &rsp)>;
 
 	SHV_FIELD_IMPL(int, r, R, equestId)
-	SHV_FIELD_IMPL2(int, t, T, imeout, 30*60*1000)
+	SHV_FIELD_IMPL2(int, t, T, imeout, 1*60*1000)
 
 public:
 	explicit RpcResponseCallBack(int rq_id, QObject *parent = nullptr);
