@@ -71,7 +71,7 @@ public:
 	void setDeviceId(std::string id) { m_deviceId = std::move(id); }
 	void setTypeInfo(const shv::chainpack::RpcValue &i) { m_typeInfo = i; }
 
-	void append(const ShvJournalEntry &entry);
+	void append(const ShvJournalEntry &entry, int64_t msec = 0);
 
 	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params);
 private:

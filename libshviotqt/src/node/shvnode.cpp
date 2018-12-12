@@ -224,20 +224,16 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 	const std::string &mm_grant = mm->accessGrant();
 	if(grantToAccessLevel(mm_grant.data()) > grantToAccessLevel(rq_grant.data()))
 		SHV_EXCEPTION(std::string("Call method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' permission denied.");
+	return callMethod(rq);
+}
+
+chainpack::RpcValue ShvNode::callMethod(const chainpack::RpcRequest &rq)
+{
+	core::StringViewList shv_path = splitShvPath(rq.shvPath().toString());
+	const chainpack::RpcValue::String &method = rq.method().toString();
 	chainpack::RpcValue ret_val = callMethod(shv_path, method, rq.params());
 	return ret_val;
 }
-/*
-shv::chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
-{
-	if(!rq.shvPath().toString().empty())
-		SHV_EXCEPTION("Invalid subpath: " + rq.shvPath().toCpon() + " method: " + rq.method().toCpon() + " called for node: " + shvPath());
-	shv::chainpack::RpcValue ret = call(rq.method().toString(), rq.params());
-	if(rq.requestId().toUInt() == 0)
-		return cp::RpcValue(); // RPC calls with requestID == 0 does not expect response
-	return ret;
-}
-*/
 
 static std::string join_str(const ShvNode::StringList &sl, char sep)
 {

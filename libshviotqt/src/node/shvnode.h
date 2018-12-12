@@ -73,6 +73,7 @@ public:
 	virtual StringList childNames(const StringViewList &shv_path);
 	StringList childNames() {return childNames(StringViewList());}
 
+	virtual shv::chainpack::RpcValue callMethod(const chainpack::RpcRequest &rq);
 	virtual shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params);
 private:
 	String m_nodeId;

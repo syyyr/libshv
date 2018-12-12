@@ -124,7 +124,7 @@ FileShvJournal::FileShvJournal(FileShvJournal::SnapShotFn snf)
 {
 }
 
-void FileShvJournal::append(const ShvJournalEntry &entry)
+void FileShvJournal::append(const ShvJournalEntry &entry, int64_t msec)
 {
 	shvLogFuncFrame();// << "last file no:" << lastFileNo();
 	try {
@@ -163,7 +163,8 @@ void FileShvJournal::append(const ShvJournalEntry &entry)
 		std::string fn = fileNoToName(max_n);
 		shvDebug() << "\t appending records to file:" << fn;
 
-		int64_t msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
+		if(msec == 0)
+			msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
 		if(msec < last_msec)
 			msec = last_msec;
 		int uptime_sec = uptimeSec();
