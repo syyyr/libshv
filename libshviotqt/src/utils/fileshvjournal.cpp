@@ -67,7 +67,7 @@ static bool mkpath(const std::string &dir_name)
 	return errno == EEXIST && is_dir(dir_name);
 }
 
-static long file_size(const std::string &file_name)
+static int64_t file_size(const std::string &file_name)
 {
 	SHV_STATBUF st;
 	if(SHV_STAT(file_name.data(), &st) == 0)
@@ -76,9 +76,9 @@ static long file_size(const std::string &file_name)
 	return -1;
 }
 
-static long rm_file(const std::string &file_name)
+static int64_t rm_file(const std::string &file_name)
 {
-	long sz = file_size(file_name);
+	int64_t sz = file_size(file_name);
 	if(SHV_REMOVE_FILE(file_name.c_str()) == 0)
 		return sz;
 	logWShvJournal() << "Cannot delete file:" << file_name;
@@ -124,6 +124,32 @@ FileShvJournal::FileShvJournal(FileShvJournal::SnapShotFn snf)
 {
 }
 
+static int64_t str_to_size(const std::string &str)
+{
+	std::istringstream is(str);
+	int64_t n;
+	char c;
+	is >> n >> c;
+	switch(std::toupper(c)) {
+	case 'K': n *= 1024; break;
+	case 'M': n *= 1024 * 1024; break;
+	case 'G': n *= 1024 * 1024 * 1024; break;
+	}
+	if(n < 1024)
+		n = 1024;
+	return n;
+}
+
+void FileShvJournal::setFileSizeLimit(const std::string &n)
+{
+	setFileSizeLimit(str_to_size(n));
+}
+
+void FileShvJournal::setJournalSizeLimit(const std::string &n)
+{
+	setJournalSizeLimit(str_to_size(n));
+}
+
 void FileShvJournal::append(const ShvJournalEntry &entry, int64_t msec)
 {
 	shvLogFuncFrame();// << "last file no:" << lastFileNo();
@@ -145,7 +171,7 @@ void FileShvJournal::append(const ShvJournalEntry &entry, int64_t msec)
 				max_n++;
 			}
 			else {
-				auto fsz = file_size(fn);
+				int64_t fsz = file_size(fn);
 				shvDebug() << "\t current file size:" << fsz << "limit:" << m_fileSizeLimit;
 				if(fsz > m_fileSizeLimit) {
 					shvDebug() << "\t file size limit exceeded, createing new file:" << max_n;
@@ -218,8 +244,8 @@ void FileShvJournal::checkJournalDir()
 void FileShvJournal::rotateJournal()
 {
 	updateJournalDirStatus();
-	if(m_journalDirStatus.journalSize > m_dirSizeLimit) {
-		for (int i = m_journalDirStatus.minFileNo; i < m_journalDirStatus.maxFileNo && m_journalDirStatus.journalSize > m_dirSizeLimit; ++i) {
+	if(m_journalDirStatus.journalSize > m_journalSizeLimit) {
+		for (int i = m_journalDirStatus.minFileNo; i < m_journalDirStatus.maxFileNo && m_journalDirStatus.journalSize > m_journalSizeLimit; ++i) {
 			std::string fn = fileNoToName(i);
 			m_journalDirStatus.journalSize -= rm_file(fn);
 		}

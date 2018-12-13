@@ -202,9 +202,9 @@ class ChainPackInt final : public ValueData<RpcValue::Type::Int, int64_t>
 
 	double toDouble() const override { return m_value; }
 	bool toBool() const override { return !(m_value == 0); }
-	RpcValue::Int toInt() const override { return m_value; }
-	RpcValue::UInt toUInt() const override { return (RpcValue::UInt)m_value; }
-	int64_t toInt64() const override { return static_cast<int64_t>(m_value); }
+	RpcValue::Int toInt() const override { return static_cast<RpcValue::Int>(m_value); }
+	RpcValue::UInt toUInt() const override { return static_cast<RpcValue::UInt>(m_value); }
+	int64_t toInt64() const override { return m_value; }
 	uint64_t toUInt64() const override { return static_cast<uint64_t>(m_value); }
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toInt64(); }
 	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
@@ -218,9 +218,9 @@ class ChainPackUInt final : public ValueData<RpcValue::Type::UInt, uint64_t>
 
 	double toDouble() const override { return m_value; }
 	bool toBool() const override { return !(m_value == 0); }
-	RpcValue::Int toInt() const override { return m_value; }
-	RpcValue::UInt toUInt() const override { return m_value; }
-	int64_t toInt64() const override { return m_value; }
+	RpcValue::Int toInt() const override { return static_cast<RpcValue::Int>(m_value); }
+	RpcValue::UInt toUInt() const override { return static_cast<RpcValue::UInt>(m_value); }
+	int64_t toInt64() const override { return static_cast<int64_t>(m_value); }
 	uint64_t toUInt64() const override { return m_value; }
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toUInt64(); }
 	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
@@ -521,7 +521,7 @@ RpcValue RpcValue::at (const RpcValue::String &key) const { return m_ptr? m_ptr-
 bool RpcValue::has (RpcValue::Int i) const { return m_ptr? m_ptr->has(i): false; }
 bool RpcValue::has (const RpcValue::String &key) const { return m_ptr? m_ptr->has(key): false; }
 
-//std::string RpcValue::toStdString() const { return m_ptr? m_ptr->toStdString(): std::string(); }
+std::string RpcValue::toStdString() const { return m_ptr? m_ptr->toStdString(): std::string(); }
 
 void RpcValue::set(RpcValue::Int ix, const RpcValue &val)
 {
