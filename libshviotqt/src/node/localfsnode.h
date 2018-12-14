@@ -25,6 +25,8 @@ public:
 	size_t methodCount(const StringViewList &shv_path) override;
 	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
 private:
+	bool isDir(const ShvNode::StringViewList &shv_path) const;
+
 	QFileInfo ndFileInfo(const QString &path);
 	chainpack::RpcValue ndSize(const QString &path);
 	chainpack::RpcValue ndRead(const QString &path);
