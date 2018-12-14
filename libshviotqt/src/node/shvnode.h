@@ -7,6 +7,7 @@
 #include <shv/core/stringview.h>
 
 #include <QObject>
+#include <QMetaProperty>
 
 namespace shv { namespace chainpack { class MetaMethod; class RpcValue; class RpcMessage; class RpcRequest; }}
 //namespace shv { namespace core { class StringView; }}
@@ -80,6 +81,19 @@ private:
 	bool m_isSortedChildren = true;
 };
 
+class SHVIOTQT_DECL_EXPORT ShvRootNode : public ShvNode
+{
+	Q_OBJECT
+	using Super = ShvNode;
+public:
+	explicit ShvRootNode(QObject *parent) : Super() {setParent(parent);}
+
+	bool isRootNode() const override {return true;}
+
+	Q_SIGNAL void sendRpcMesage(const shv::chainpack::RpcMessage &msg);
+	void emitSendRpcMesage(const shv::chainpack::RpcMessage &msg);
+};
+
 class SHVIOTQT_DECL_EXPORT MethodsTableNode : public shv::iotqt::node::ShvNode
 {
 	using Super = shv::iotqt::node::ShvNode;
@@ -127,17 +141,22 @@ protected:
 	shv::chainpack::RpcValue m_values;
 };
 
-class SHVIOTQT_DECL_EXPORT ShvRootNode : public ShvNode
+class SHVIOTQT_DECL_EXPORT PropertyShvNode : public shv::iotqt::node::ShvNode
 {
-	Q_OBJECT
-	using Super = ShvNode;
+	using Super = shv::iotqt::node::ShvNode;
 public:
-	explicit ShvRootNode(QObject *parent) : Super() {setParent(parent);}
+	//explicit MethodsTableNode(const std::string &node_id, shv::iotqt::node::ShvNode *parent = nullptr)
+	//	: Super(node_id, parent) {}
+	explicit PropertyShvNode(const char *property_name, QObject *property_obj, shv::iotqt::node::ShvNode *parent = nullptr);
 
-	bool isRootNode() const override {return true;}
+	size_t methodCount(const StringViewList &shv_path) override;
+	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
 
-	Q_SIGNAL void sendRpcMesage(const shv::chainpack::RpcMessage &msg);
-	void emitSendRpcMesage(const shv::chainpack::RpcMessage &msg);
+	shv::chainpack::RpcValue callMethod(const shv::chainpack::RpcRequest &rq) override {return  Super::callMethod(rq);}
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+protected:
+	QMetaProperty m_metaProperty;
+	QObject *m_propertyObj = nullptr;
 };
 
 }}}
