@@ -85,6 +85,7 @@ public:
 	public:
 		enum class MsecPolicy {Auto = 0, Always, Never};
 		static constexpr bool IncludeTimeZone = true;
+		static constexpr int INVALID_MIN_FROM_UTC = (-64 * 15);
 	public:
 		DateTime() : m_dtm{TZ_INVALID, 0} {}
 		int64_t msecsSinceEpoch() const { return m_dtm.msec; }
@@ -129,7 +130,7 @@ public:
 		bool operator <=(const DateTime &o) const { return !(*this > o); }
 		bool isValid() const { return m_dtm.tz != TZ_INVALID; }
 	private:
-		static constexpr int8_t TZ_INVALID = -64;
+		static constexpr int8_t TZ_INVALID = INVALID_MIN_FROM_UTC / 15;
 		struct MsTz {
 			int64_t tz: 7, msec: 57;
 		};
