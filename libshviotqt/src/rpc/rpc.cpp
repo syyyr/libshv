@@ -20,3 +20,14 @@ void Rpc::registerMetatTypes()
 } // namespace chainack
 } // namespace iotqt
 } // namespace shv
+
+shv::chainpack::RpcValue::DateTime toRpcDateTime(const QDateTime &d)
+{
+	if (d.isValid()) {
+		return shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(d.toUTC().toMSecsSinceEpoch());
+	}
+	else {
+		return shv::chainpack::RpcValue::DateTime();
+	}
+}
+
