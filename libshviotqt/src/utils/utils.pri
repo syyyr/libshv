@@ -8,3 +8,9 @@ SOURCES += \
     $$PWD/fileshvjournal.cpp \
 }
 
+HEADERS += \
+    $$PWD/shvjournalgetlogparams.h
+
+SOURCES += \
+    $$PWD/shvjournalgetlogparams.cpp
+
