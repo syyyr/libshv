@@ -18,8 +18,8 @@ public:
 	CLIOPTION_GETTER_SETTER2(std::string, "device.id", d, setD, eviceId)
 	CLIOPTION_GETTER_SETTER2(std::string, "device.idFile", d, setD, eviceIdFile)
 	CLIOPTION_GETTER_SETTER2(std::string, "shvJournal.dir", s, setS, hvJournalDir)
-	CLIOPTION_GETTER_SETTER2(int, "shvJournal.fileSizeLimit", s, setS, hvJournalFileSizeLimit)
-	CLIOPTION_GETTER_SETTER2(int, "shvJournal.sizeLimit", s, setS, hvJournalSizeLimit)
+	CLIOPTION_GETTER_SETTER2(std::string, "shvJournal.fileSizeLimit", s, setS, hvJournalFileSizeLimit)
+	CLIOPTION_GETTER_SETTER2(std::string, "shvJournal.sizeLimit", s, setS, hvJournalSizeLimit)
 };
 
 class SHVIOTQT_DECL_EXPORT DeviceConnection : public ClientConnection
