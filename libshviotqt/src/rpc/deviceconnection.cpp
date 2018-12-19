@@ -52,7 +52,7 @@ void DeviceConnection::setCliOptions(const DeviceAppCliOptions *cli_opts)
 		cp::RpcValue::Map dev;
 		std::string device_id = cli_opts->deviceId();
 		std::string device_id_file;
-		if(device_id.empty()) {
+		{
 			std::string fn = cli_opts->deviceIdFile();
 			if(!fn.empty()) {
 				std::ifstream ifs(fn, std::ios::binary);
