@@ -18,12 +18,14 @@ public:
 	virtual void write(const RpcValue::MetaData &meta_data) = 0;
 	virtual void write(const RpcValue &val) = 0;
 
+	virtual void writeMapKey(const std::string &key) = 0;
 	virtual void writeIMapKey(RpcValue::Int key) = 0;
 	virtual void writeContainerBegin(RpcValue::Type container_type) = 0;
 	virtual void writeListElement(const RpcValue &val) = 0;
 	virtual void writeMapElement(const std::string &key, const RpcValue &val) = 0;
 	virtual void writeMapElement(RpcValue::Int key, const RpcValue &val) = 0;
-	virtual void writeContainerEnd(RpcValue::Type container_type) = 0;
+	virtual void writeContainerEnd() = 0;
+	virtual void writeRawData(const std::string &data) = 0;
 
 	virtual void flush();
 protected:

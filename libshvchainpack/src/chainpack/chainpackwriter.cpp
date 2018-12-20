@@ -77,10 +77,14 @@ void ChainPackWriter::writeContainerBegin(RpcValue::Type container_type)
 	}
 }
 
-void ChainPackWriter::writeContainerEnd(RpcValue::Type container_type)
+void ChainPackWriter::writeContainerEnd()
 {
-	(void)container_type;
 	cchainpack_pack_container_end(&m_outCtx);
+}
+
+void ChainPackWriter::writeMapKey(const std::string &key)
+{
+	write(key);
 }
 
 void ChainPackWriter::writeIMapKey(RpcValue::Int key)
@@ -95,14 +99,19 @@ void ChainPackWriter::writeListElement(const RpcValue &val)
 
 void ChainPackWriter::writeMapElement(const std::string &key, const RpcValue &val)
 {
-	write(key);
+	writeMapKey(key);
 	write(val);
 }
 
 void ChainPackWriter::writeMapElement(RpcValue::Int key, const RpcValue &val)
 {
-	write(key);
+	writeIMapKey(key);
 	write(val);
+}
+
+void ChainPackWriter::writeRawData(const std::string &data)
+{
+	ccpcp_pack_copy_bytes(&m_outCtx, data.data(), data.size());
 }
 
 ChainPackWriter &ChainPackWriter::write_p(std::nullptr_t)
@@ -171,7 +180,7 @@ ChainPackWriter &ChainPackWriter::write_p(const RpcValue::Map &values)
 	for (const auto &kv : values) {
 		writeMapElement(kv.first, kv.second);
 	}
-	writeContainerEnd(RpcValue::Type::Map);
+	writeContainerEnd();
 	return *this;
 }
 
@@ -181,7 +190,7 @@ ChainPackWriter &ChainPackWriter::write_p(const RpcValue::IMap &values)
 	for (const auto &kv : values) {
 		writeMapElement(kv.first, kv.second);
 	}
-	writeContainerEnd(RpcValue::Type::IMap);
+	writeContainerEnd();
 	return *this;
 }
 
@@ -192,7 +201,7 @@ ChainPackWriter &ChainPackWriter::write_p(const RpcValue::List &values)
 		const RpcValue &value = values[ix];
 		writeListElement(value);
 	}
-	writeContainerEnd(RpcValue::Type::List);
+	writeContainerEnd();
 	return *this;
 }
 

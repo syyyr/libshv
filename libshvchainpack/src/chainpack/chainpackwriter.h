@@ -22,11 +22,13 @@ public:
 
 	void writeContainerBegin(RpcValue::Type container_type) override;
 	/// ChainPack doesn't need to know container type to close it
-	void writeContainerEnd(RpcValue::Type container_type = RpcValue::Type::Invalid) override;
+	void writeContainerEnd() override;
+	void writeMapKey(const std::string &key) override;
 	void writeIMapKey(RpcValue::Int key) override;
 	void writeListElement(const RpcValue &val) override;
 	void writeMapElement(const std::string &key, const RpcValue &val) override;
 	void writeMapElement(RpcValue::Int key, const RpcValue &val) override;
+	void writeRawData(const std::string &data) override;
 private:
 	ChainPackWriter& write_p(std::nullptr_t);
 	ChainPackWriter& write_p(bool value);

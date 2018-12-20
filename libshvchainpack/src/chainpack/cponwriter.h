@@ -2,6 +2,8 @@
 
 #include "abstractstreamwriter.h"
 
+#include <vector>
+
 namespace shv {
 namespace chainpack {
 
@@ -42,18 +44,18 @@ public:
 	void write(const RpcValue::MetaData &meta_data) override;
 
 	void writeContainerBegin(RpcValue::Type container_type) override;
-	void writeContainerEnd(RpcValue::Type container_type) override;
+	void writeContainerEnd() override;
 
+	void writeMapKey(const std::string &key) override;
 	void writeIMapKey(RpcValue::Int key) override;
-	void writeListElement(const RpcValue &val) override {writeListElement(val, false);}
-	void writeMapElement(const std::string &key, const RpcValue &val) override {writeMapElement(key, val, false);}
-	void writeMapElement(RpcValue::Int key, const RpcValue &val) override {writeMapElement(key, val, false);}
-
-	// terminating separator id OK in Cpon, but world is prettier without it
-	void writeListElement(const RpcValue &val, bool without_separator);
-	void writeMapElement(const std::string &key, const RpcValue &val, bool without_separator);
-	void writeMapElement(RpcValue::Int key, const RpcValue &val, bool without_separator);
+	void writeListElement(const RpcValue &val) override;
+	void writeMapElement(const std::string &key, const RpcValue &val) override;
+	void writeMapElement(RpcValue::Int key, const RpcValue &val) override;
+	void writeRawData(const std::string &data) override;
 private:
+	void writeMetaBegin();
+	void writeMetaEnd();
+
 	CponWriter& write_p(std::nullptr_t);
 	CponWriter& write_p(bool value);
 	CponWriter& write_p(int32_t value);
@@ -71,6 +73,15 @@ private:
 	CponWriter& write_p(const RpcValue::IMap &values, const RpcValue::MetaData *meta_data = nullptr);
 private:
 	CponWriterOptions m_opts;
+
+	struct ContainerState
+	{
+		RpcValue::Type containerType = RpcValue::Type::Invalid;
+		int elementCount = 0;
+		ContainerState() {}
+		ContainerState(RpcValue::Type t) : containerType(t) {}
+	};
+	std::vector<ContainerState> m_containerStates;
 };
 
 } // namespace chainpack
