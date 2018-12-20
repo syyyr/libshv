@@ -83,6 +83,8 @@ public:
 
 	bool isBrokerConnected() const {return m_connectionState.isBrokerConnected;}
 	Q_SIGNAL void brokerConnectedChanged(bool is_connected);
+	Q_SIGNAL void brokerLoginError(const std::string &err);
+
 	//std::string brokerClientPath() const {return brokerClientPath(brokerClientId());}
 	//std::string brokerMountPoint() const;
 public:
@@ -95,6 +97,7 @@ protected:
 
 	void checkBrokerConnected();
 	void setBrokerConnected(bool b) override;
+	void emitInitPhaseError(const std::string &err) override;
 
 	void onSocketConnectedChanged(bool is_connected) override;
 	void onRpcValueReceived(const shv::chainpack::RpcValue &rpc_val) override;

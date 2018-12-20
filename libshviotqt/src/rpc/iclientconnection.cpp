@@ -81,8 +81,10 @@ void IClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
 			break;
 		cp::RpcResponse resp(msg);
 		//shvInfo() << "Handshake response received:" << resp.toCpon();
-		if(resp.isError())
+		if(resp.isError()) {
+			emitInitPhaseError(resp.error().message());
 			break;
+		}
 		int id = resp.requestId().toInt();
 		if(id == 0)
 			break;
