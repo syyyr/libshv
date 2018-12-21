@@ -23,9 +23,10 @@ struct SHVIOTQT_DECL_EXPORT ShvJournalGetLogParams
 	//PatternType patternType = PatternType::WildCard;
 	enum class HeaderOptions : unsigned {
 		BasicInfo = 1 << 0,
-		FileldInfo = 1 << 1,
+		FieldInfo = 1 << 1,
 		TypeInfo = 1 << 2,
 		PathsDict = 1 << 3,
+		CompleteInfo = BasicInfo & FieldInfo & TypeInfo & PathsDict,
 	};
 	unsigned headerOptions = static_cast<unsigned>(HeaderOptions::BasicInfo);
 	int maxRecordCount = 1000;
