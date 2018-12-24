@@ -129,6 +129,8 @@ public:
 	shv::chainpack::RpcValue hasChildren(const StringViewList &shv_path) override;
 
 	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+
+	void clearValuesCache() {m_valuesLoaded = false;}
 protected:
 	virtual shv::chainpack::RpcValue loadValues();
 	virtual bool saveValues(const shv::chainpack::RpcValue &vals);
