@@ -486,7 +486,7 @@ log_finish:
 		md.setValue("dateTime", cp::RpcValue::DateTime::now());
 		md.setValue("params", params.toRpcValue());
 	}
-	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::FileldInfo)) {
+	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::FieldInfo)) {
 		md.setValue("fields", cp::RpcValue::List{
 						cp::RpcValue::Map{{"name", "timestamp"}},
 						cp::RpcValue::Map{{"name", "path"}},
