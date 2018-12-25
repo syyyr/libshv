@@ -39,6 +39,7 @@ protected:
 	virtual void sendLogin(const shv::chainpack::RpcValue &server_hello) = 0;
 	virtual void setBrokerConnected(bool b) = 0;
 	virtual void resetConnection() = 0;
+	virtual void emitInitPhaseError(const std::string &err) = 0;
 	bool isBrokerConnected() const {return m_connectionState.isBrokerConnected;}
 protected:
 	struct ConnectionState
