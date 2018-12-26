@@ -117,10 +117,8 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 	setHost(cli_opts->serverHost());
 	setPort(cli_opts->serverPort());
 	setUser(cli_opts->user());
-	if(cli_opts->password_isset()) {
-		setPassword(cli_opts->password());
-	}
-	else if(cli_opts->passwordFile_isset()) {
+	setPassword(cli_opts->password());
+	if(password().empty() && !cli_opts->passwordFile().empty()) {
 		std::ifstream is(cli_opts->passwordFile(), std::ios::binary);
 		if(is) {
 			std::string pwd;
@@ -131,6 +129,7 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 			shvError() << "Cannot open password file";
 		}
 	}
+	shvDebug() << cli_opts->loginType() << "-->" << (int)shv::chainpack::AbstractRpcConnection::loginTypeFromString(cli_opts->loginType());
 	setLoginType(shv::chainpack::AbstractRpcConnection::loginTypeFromString(cli_opts->loginType()));
 
 	m_heartbeatInterval = cli_opts->heartbeatInterval();
@@ -171,7 +170,7 @@ void ClientConnection::abort()
 	abortConnection();
 }
 
-void ClientConnection::setCheckBrokerConnectedInterval(unsigned ms)
+void ClientConnection::setCheckBrokerConnectedInterval(int ms)
 {
 	m_checkBrokerConnectedInterval = ms;
 	if(ms == 0)

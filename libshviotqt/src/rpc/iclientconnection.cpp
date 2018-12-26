@@ -43,6 +43,7 @@ static std::string sha1_hex(const std::string &s)
 
 chainpack::RpcValue IClientConnection::createLoginParams(const chainpack::RpcValue &server_hello)
 {
+	shvDebug() << server_hello.toCpon() << "login type:" << (int)loginType();
 	std::string pass;
 	if(loginType() == chainpack::AbstractRpcConnection::LoginType::Sha1) {
 		std::string server_nonce = server_hello.toMap().value("nonce").toString();
@@ -57,6 +58,7 @@ chainpack::RpcValue IClientConnection::createLoginParams(const chainpack::RpcVal
 	}
 	else if(loginType() == chainpack::AbstractRpcConnection::LoginType::Plain) {
 		pass = password();
+		shvDebug() << "plain password:" << pass;
 	}
 	else {
 		shvError() << "Login type:" << chainpack::AbstractRpcConnection::loginTypeToString(loginType()) << "not supported";

@@ -10,7 +10,7 @@ class SHVCHAINPACK_DECL_EXPORT AbstractRpcConnection
 public:
 	static constexpr int DEFAULT_RPC_BROKER_PORT = 3755;
 
-	enum class LoginType {Invalid, Plain, Sha1, RsaOaep};
+	enum class LoginType {Invalid = 0, Plain, Sha1, RsaOaep};
 public:
 	AbstractRpcConnection();
 
