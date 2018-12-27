@@ -26,7 +26,7 @@ struct SHVIOTQT_DECL_EXPORT ShvJournalGetLogParams
 		FieldInfo = 1 << 1,
 		TypeInfo = 1 << 2,
 		PathsDict = 1 << 3,
-		CompleteInfo = BasicInfo & FieldInfo & TypeInfo & PathsDict,
+		CompleteInfo = BasicInfo | FieldInfo | TypeInfo | PathsDict,
 	};
 	unsigned headerOptions = static_cast<unsigned>(HeaderOptions::BasicInfo);
 	int maxRecordCount = 1000;
