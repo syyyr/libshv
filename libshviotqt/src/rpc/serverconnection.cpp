@@ -1,5 +1,6 @@
 ﻿#include "serverconnection.h"
 #include "socketrpcconnection.h"
+#include "socket.h"
 
 #include <shv/coreqt/log.h>
 
@@ -24,7 +25,7 @@ namespace rpc {
 
 static int s_initPhaseTimeout = 10000;
 
-ServerConnection::ServerConnection(QTcpSocket *socket, QObject *parent)
+ServerConnection::ServerConnection(Socket *socket, QObject *parent)
 	: Super(parent)
 {
 	//socket->setParent(nullptr);
@@ -98,19 +99,8 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 	try {
 		if(!msg.isRequest())
 			SHV_EXCEPTION("Initial message is not RPC request! Dropping client connection. " + connectionName() + " " + msg.toCpon());
-		//shvInfo() << "RPC request received:" << rq.toStdString();
-		/*
-			if(!m_helloReceived && !m_loginReceived && rq.method() == "echo" && isEchoEnabled()) {
-				shvInfo() << "Client ECHO request received";// << profile;// << "device id::" << m.value("deviceId").toStdString();
-				sendResponse(rq.requestId(), rq.params());
-				return;
-			}
-			if(rq.method() == "ping") {
-				shvInfo() << "Client PING request received";// << profile;// << "device id::" << m.value("deviceId").toStdString();
-				sendResponse(rq.requestId(), true);
-				return;
-			}
-			*/
+			//shvInfo() << "RPC request received:" << rq.toStdString();
+
 		if(!m_helloReceived && !m_loginReceived && rq.method() == shv::chainpack::Rpc::METH_HELLO) {
 			shvInfo().nospace() << "Client hello received from: " << socket()->peerAddress().toString().toStdString() << ':' << socket()->peerPort();
 			m_helloReceived = true;

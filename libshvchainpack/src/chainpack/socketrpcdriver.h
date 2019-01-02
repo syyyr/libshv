@@ -21,12 +21,16 @@ public:
 	void sendNotify(std::string &&method, const RpcValue &result);
 protected:
 	bool isOpen() override;
+	void writeMessageBegin() override {}
+	void writeMessageEnd() override {flush();}
 	int64_t writeBytes(const char *bytes, size_t length) override;
-	bool flush() override;
+	//void onProcessReadDataException(std::exception &e) override;
 
 	virtual void idleTaskOnSelectTimeout() {}
 	//virtual void connectedToHost(bool ) {}
 	//virtual void connectionClosed() {}
+private:
+	bool flush();
 private:
 	int m_socket = -1;
 	std::string m_writeBuffer;

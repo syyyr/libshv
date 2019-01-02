@@ -1,9 +1,9 @@
 #pragma once
 
 #include "../shviotqtglobal.h"
-#include "socketrpcdriver.h"
+#include "socketrpcconnection.h"
 
-#include <shv/chainpack/abstractrpcconnection.h>
+#include <shv/chainpack/irpcconnection.h>
 #include <shv/chainpack/rpcmessage.h>
 
 #include <shv/core/utils.h>
@@ -12,8 +12,6 @@
 
 #include <string>
 
-class QTcpSocket;
-
 //namespace shv { namespace chainpack { class RpcMessage; class RpcValue; }}
 //namespace shv { namespace coreqt { namespace chainpack { class RpcConnection; }}}
 
@@ -21,15 +19,17 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
-class SHVIOTQT_DECL_EXPORT ServerConnection : public SocketRpcDriver, public shv::chainpack::AbstractRpcConnection
+class Socket;
+
+class SHVIOTQT_DECL_EXPORT ServerConnection : public SocketRpcConnection
 {
 	Q_OBJECT
 
-	using Super = SocketRpcDriver;
+	using Super = SocketRpcConnection;
 public:
 	//enum class ConnectionType {Unknown, Client, Device, Broker};
 
-	explicit ServerConnection(QTcpSocket* socket, QObject *parent = nullptr);
+	explicit ServerConnection(Socket *socket, QObject *parent = nullptr);
 	~ServerConnection() Q_DECL_OVERRIDE;
 
 	//ConnectionType connectionType() const {return m_connectionType;}
