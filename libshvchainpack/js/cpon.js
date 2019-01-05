@@ -164,11 +164,6 @@ CponReader.prototype.readList = function(rpc_val)
 	while(true) {
 		this.skipWhiteIsignificant();
 		let b = this.ctx.peekByte();
-		if(b == ",".charCodeAt(0)) {
-			this.ctx.getByte();
-			this.skipWhiteIsignificant();
-			b = this.ctx.peekByte();
-		}
 		if(b == "]".charCodeAt(0)) {
 			this.ctx.getByte();
 			break;
@@ -187,11 +182,6 @@ CponReader.prototype.readMap = function(rpc_val, terminator = "}".charCodeAt(0))
 	while(true) {
 		this.skipWhiteIsignificant();
 		let b = this.ctx.peekByte();
-		if(b == ",".charCodeAt(0)) {
-			this.ctx.getByte();
-			this.skipWhiteIsignificant();
-			b = this.ctx.peekByte();
-		}
 		if(b == terminator) {
 			this.ctx.getByte();
 			break;
@@ -200,10 +190,6 @@ CponReader.prototype.readMap = function(rpc_val, terminator = "}".charCodeAt(0))
 		if(!key.isValid())
 			throw new TypeError("Malformed map, invalid key");
 		this.skipWhiteIsignificant();
-		b = this.ctx.peekByte();
-		if(b != ":".charCodeAt(0))
-			throw new TypeError("Malformed map, key-val separator missing");
-		this.ctx.getByte();
 		let val = this.read()
 		if(key.type === RpcValue.Type.String)
 			map[key.toString().slice(1, -1)] = val;

@@ -51,7 +51,7 @@ class Test
 				\t\"baz\" : 1,
 				\t\"baz\" : 1, // single inside multi
 				*/
-				}", "{\"foo\":\"bar\",\"baz\":1}`],
+				}`, "{\"foo\":\"bar\",\"baz\":1}"],
 				//["a[1,2,3]", "[1,2,3]"], // unsupported array type
 				["<1:2>[3,<4:5>6]", null],
 				["<4:\"svete\">i{2:<4:\"svete\">[0,1]}", null],
