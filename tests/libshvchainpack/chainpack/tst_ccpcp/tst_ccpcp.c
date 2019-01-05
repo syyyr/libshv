@@ -178,14 +178,33 @@ int test_unpack_datetime(const char *str, int add_msecs, int expected_utc_offset
 		assert(false);
 	}
 	ccpcp_date_time *dt = &ctx.item.as.DateTime;
-	if(dt->msecs_since_epoch == expected_epoch_msec && dt->minutes_from_utc == expected_utc_offset_min)
+	if(dt->msecs_since_epoch == (expected_epoch_msec - 60000 * expected_utc_offset_min) && dt->minutes_from_utc == expected_utc_offset_min)
 		return 0;
 	printf("FAIL! unpack datetime str: '%s' have: %ld msec + %d utc min expected: %ld msec + %d utc min\n"
 		   , str
 		   , dt->msecs_since_epoch, dt->minutes_from_utc
-		   , expected_epoch_msec, expected_utc_offset_min);
+		   , expected_epoch_msec - 60000 * expected_utc_offset_min, expected_utc_offset_min);
 	assert(false);
 #endif
+}
+
+int64_t datetime_str_to_msec_utc(const char *str)
+{
+	ccpcp_unpack_context ctx;
+	unsigned long n = strlen(str);
+	ccpcp_unpack_context_init(&ctx, (uint8_t*)str, n, NULL, NULL);
+
+	ccpon_unpack_next(&ctx);
+	if(ctx.err_no != CCPCP_RC_OK) {
+		printf("FAIL! unpack date time str: '%s' error: %d\n", str, ctx.err_no);
+		assert(false);
+	}
+	if(ctx.item.type != CCPCP_ITEM_DATE_TIME) {
+		printf("FAIL! unpack number str: '%s' have type: %d expected type: %d\n", str, ctx.item.type, CCPCP_ITEM_DATE_TIME);
+		assert(false);
+	}
+	ccpcp_date_time *dt = &ctx.item.as.DateTime;
+	return dt->msecs_since_epoch;
 }
 
 static void test_cpon_helper(const char *cpon, const char *ref_cpon, bool compare_chainpack, bool compare_cpon)
@@ -573,6 +592,7 @@ int main(int argc, const char * argv[])
 	test_unpack_number("1.23n", CCPCP_ITEM_DECIMAL, 1.23);
 
 	test_unpack_datetime("d\"2018-02-02T0:00:00.001\"", 1, 0);
+	test_unpack_datetime("d\"1970-01-01 00:00:00-01\"", 0, -60);
 	test_unpack_datetime("d\"2018-02-02 01:00:00.001+01\"", 1, 60);
 	test_unpack_datetime("d\"2018-12-02 0:00:00\"", 0, 0);
 	test_unpack_datetime("d\"2041-03-04 0:00:00-1015\"", 0, -(10*60+15));
@@ -582,6 +602,15 @@ int main(int argc, const char * argv[])
 	test_unpack_datetime("d\"2017-05-03T15:52:03.923Z\"", 923, 0);
 	test_unpack_datetime("d\"2017-05-03T15:52:03.000-0130\"", 0, -(1*60+30));
 	test_unpack_datetime("d\"2017-05-03T15:52:03.923+00\"", 923, 0);
+
+	if(datetime_str_to_msec_utc("d\"2017-05-03T18:30:00Z\"") != datetime_str_to_msec_utc("d\"2017-05-03T22:30:00+04\"")) {
+		printf("FAIL! UTC offsets shall be the same\n");
+		assert(false);
+	}
+	if(datetime_str_to_msec_utc("d\"2017-05-03T11:30:00-0700\"") != datetime_str_to_msec_utc("d\"2017-05-03T15:00:00-0330\"")) {
+		printf("FAIL! UTC offsets shall be the same\n");
+		assert(false);
+	}
 
 	test_vals();
 	test_cpons();
