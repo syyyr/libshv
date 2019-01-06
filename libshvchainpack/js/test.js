@@ -55,15 +55,30 @@ class Test
 				//["a[1,2,3]", "[1,2,3]"], // unsupported array type
 				["<1:2>[3,<4:5>6]", null],
 				["<4:\"svete\">i{2:<4:\"svete\">[0,1]}", null],
+				['d""', null],
+				['d"2017-05-03T11:30:00-0700"', 'd"2017-05-03T11:30:00-07"'],
+				['d"2017-05-03T11:30:12.345+01"', null],
 				]) {
 				let cpon1 = lst[0]
-				console.log(cpon1)
+				//console.log(cpon1)
 				let rpc_val = RpcValue.fromCpon(cpon1);
 				let cpon2 = rpc_val.toString();
-				console.log(cpon2)
+				console.log(cpon1, "vs.", cpon2)
 				if(lst[1])
 					cpon1 = lst[1]
 				Test.checkEq(cpon1, cpon2);
+				{
+					// same points in time
+					let v1 = RpcValue.fromCpon('d"2017-05-03T18:30:00Z"');
+					let v2 = RpcValue.fromCpon('d"2017-05-03T22:30:00+04"');
+					let v3 = RpcValue.fromCpon('d"2017-05-03T11:30:00-0700"');
+					let v4 = RpcValue.fromCpon('d"2017-05-03T15:00:00-0330"');
+					Test.checkEq(v1.value.epochMsec, v2.value.epochMsec);
+					Test.checkEq(v2.value.epochMsec, v3.value.epochMsec);
+					Test.checkEq(v3.value.epochMsec, v4.value.epochMsec);
+					Test.checkEq(v4.value.epochMsec, v1.value.epochMsec);
+
+				}
 			}
 			console.log("PASSED")
 		}
