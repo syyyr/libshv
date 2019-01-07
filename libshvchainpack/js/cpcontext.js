@@ -1,8 +1,8 @@
 "use strict"
 
-function UnpackContext(array_bufer)
+function UnpackContext(uint8_array)
 {
-	this.data = new Uint8Array(array_bufer)
+	this.data = uint8_array
 	this.index = 0;
 }
 
@@ -70,5 +70,5 @@ PackContext.prototype.putBytes = function(bytes)
 
 PackContext.prototype.bytes = function()
 {
-	return this.data.buffer.slice(this.data.byteOffset, this.length)
+	return this.data.subarray(0, this.length)
 }

@@ -27,11 +27,7 @@ RpcValue.fromCpon = function(cpon)
 {
 	let unpack_context = null;
 	if(typeof cpon === 'string') {
-		let unpack_buff = new ArrayBuffer(cpon.length)
-		let arr = new Uint8Array(unpack_buff);
-		for(let i=0; i<cpon.length; i++)
-			arr[i] = cpon.charCodeAt(i)
-		unpack_context = new UnpackContext(unpack_buff);
+		unpack_context = new UnpackContext(Cpon.stringToUtf8(cpon));
 	}
 	if(unpack_context === null)
 		throw new TypeError("Invalid input data type")
@@ -56,7 +52,7 @@ RpcValue.prototype.toInt = function()
 RpcValue.prototype.toString = function()
 {
 	let ba = this.toCpon();
-	return CponWriter.utf8BytesToString(ba);
+	return Cpon.utf8ToString(ba);
 }
 
 RpcValue.prototype.toCpon = function()

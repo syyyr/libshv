@@ -1,5 +1,46 @@
 "use strict"
 
+function Cpon()
+{
+}
+
+Cpon.ProtocolType = 2;
+
+Cpon.utf8ToString = function(uint8_array)
+{
+	var str = '';
+	for (let i = 0; i < uint8_array.length; i++) {
+		var value = uint8_array[i];
+
+		if (value < 0x80) {
+			str += String.fromCharCode(value);
+		}
+		else if (value > 0xBF && value < 0xE0) {
+			str += String.fromCharCode((value & 0x1F) << 6 | uint8_array[i + 1] & 0x3F);
+			i += 1;
+		}
+		else if (value > 0xDF && value < 0xF0) {
+			str += String.fromCharCode((value & 0x0F) << 12 | (uint8_array[i + 1] & 0x3F) << 6 | uint8_array[i + 2] & 0x3F);
+			i += 2;
+		}
+		else {
+			// surrogate pair
+			var char_code = ((value & 0x07) << 18 | (uint8_array[i + 1] & 0x3F) << 12 | (uint8_array[i + 2] & 0x3F) << 6 | data[i + 3] & 0x3F) - 0x010000;
+
+			str += String.fromCharCode(char_code >> 10 | 0xD800, char_code & 0x03FF | 0xDC00);
+			i += 3;
+		}
+	}
+	return str;
+}
+
+Cpon.stringToUtf8 = function(str)
+{
+	let wr = new CponWriter();
+	wr.writeStringUtf8(str);
+	return wr.ctx.bytes();
+}
+
 function CponReader(unpack_context)
 {
 	this.ctx = unpack_context;
@@ -454,35 +495,6 @@ CponReader.prototype.readNumber = function(rpc_val)
 function CponWriter()
 {
 	this.ctx = new PackContext();
-}
-
-CponWriter.utf8BytesToString = function(bytes)
-{
-	var str = '';
-	let uint8_array = new Uint8Array(bytes);
-	for (let i = 0; i < uint8_array.length; i++) {
-		var value = uint8_array[i];
-
-		if (value < 0x80) {
-			str += String.fromCharCode(value);
-		}
-		else if (value > 0xBF && value < 0xE0) {
-			str += String.fromCharCode((value & 0x1F) << 6 | uint8_array[i + 1] & 0x3F);
-			i += 1;
-		}
-		else if (value > 0xDF && value < 0xF0) {
-			str += String.fromCharCode((value & 0x0F) << 12 | (uint8_array[i + 1] & 0x3F) << 6 | uint8_array[i + 2] & 0x3F);
-			i += 2;
-		}
-		else {
-			// surrogate pair
-			var char_code = ((value & 0x07) << 18 | (uint8_array[i + 1] & 0x3F) << 12 | (uint8_array[i + 2] & 0x3F) << 6 | data[i + 3] & 0x3F) - 0x010000;
-
-			str += String.fromCharCode(char_code >> 10 | 0xD800, char_code & 0x03FF | 0xDC00);
-			i += 3;
-		}
-	}
-	return str;
 }
 
 CponWriter.prototype.write = function(rpc_val)
