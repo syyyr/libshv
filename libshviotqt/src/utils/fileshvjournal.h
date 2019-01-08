@@ -16,9 +16,18 @@ namespace utils {
 struct SHVIOTQT_DECL_EXPORT ShvJournalEntry
 {
 	std::string path;
-	shv::chainpack::RpcValue value;
+	shv::chainpack::RpcValue::List values;
 
-	bool isValid() const {return !path.empty() && value.isValid();}
+	ShvJournalEntry() {}
+	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value)
+		: path(std::move(path))
+		, values{value}
+	{}
+	ShvJournalEntry(std::string path, shv::chainpack::RpcValue::List values)
+		: path(std::move(path))
+		, values(std::move(values))
+	{}
+	bool isValid() const {return !path.empty() && !values.empty();}
 };
 
 class SHVIOTQT_DECL_EXPORT FileShvJournal
@@ -30,6 +39,16 @@ public:
 	static const char* FILE_EXT;
 	static constexpr char FIELD_SEPARATOR = '\t';
 	static constexpr char RECORD_SEPARATOR = '\n';
+
+	struct Column
+	{
+		enum Enum {
+			Timestamp = 0,
+			Uptime,
+			Path,
+			Value,
+		};
+	};
 public:
 	using SnapShotFn = std::function<void (std::vector<ShvJournalEntry>&)>;
 

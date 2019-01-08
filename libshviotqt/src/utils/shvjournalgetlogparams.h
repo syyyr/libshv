@@ -28,6 +28,9 @@ struct SHVIOTQT_DECL_EXPORT ShvJournalGetLogParams
 		PathsDict = 1 << 3,
 		CompleteInfo = BasicInfo | FieldInfo | TypeInfo | PathsDict,
 	};
+	/// every entry can have more values,
+	/// valuesMask contains mask of indicies returned by getLog() function
+	uint32_t valuesMask = 1;
 	unsigned headerOptions = static_cast<unsigned>(HeaderOptions::BasicInfo);
 	int maxRecordCount = 1000;
 	bool withSnapshot = false;
@@ -36,6 +39,7 @@ struct SHVIOTQT_DECL_EXPORT ShvJournalGetLogParams
 	ShvJournalGetLogParams(const shv::chainpack::RpcValue &opts);
 
 	shv::chainpack::RpcValue toRpcValue() const;
+	std::vector<unsigned> requestedValuesIndicies() const;
 };
 
 } // namespace utils
