@@ -1,12 +1,12 @@
 "use strict"
 
-function ChainPack = function()
+function ChainPack()
 {
 }
 
 ChainPack.ProtocolType = 1;
 
-function ChainPackReader = function(unpack_context)
+function ChainPackReader(unpack_context)
 {
 	this.ctx = unpack_context;
 }

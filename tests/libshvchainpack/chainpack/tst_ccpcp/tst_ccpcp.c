@@ -204,6 +204,7 @@ int64_t datetime_str_to_msec_utc(const char *str)
 		assert(false);
 	}
 	ccpcp_date_time *dt = &ctx.item.as.DateTime;
+	printf("datetime str: '%s' have: %ld msec + %d utc min offset\n" , str , dt->msecs_since_epoch, dt->minutes_from_utc);
 	return dt->msecs_since_epoch;
 }
 
@@ -566,6 +567,8 @@ int main(int argc, const char * argv[])
 
 	printf("\nC Cpon test started.\n");
 
+	test_vals();
+
 	test_pack_int(1, "1");
 	test_pack_int(-1234567890l, "-1234567890");
 
@@ -612,7 +615,6 @@ int main(int argc, const char * argv[])
 		assert(false);
 	}
 
-	test_vals();
 	test_cpons();
 
 	printf("\nPASSED\n");
