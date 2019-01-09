@@ -196,10 +196,8 @@ void FileShvJournal::appendEntry(std::ofstream &out, int64_t msec, int uptime_se
 	out << uptime_sec;
 	out << FIELD_SEPARATOR;
 	out << e.path;
-	for(const cp::RpcValue &v : e.values) {
-		out << FIELD_SEPARATOR;
-		out << v.toCpon();
-	}
+	out << FIELD_SEPARATOR;
+	out << e.value.toCpon();
 	out << RECORD_SEPARATOR;
 	auto p2 = out.tellp();
 	out.flush();
@@ -411,8 +409,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 	};
 	int rec_cnt = 0;
 	if(file_no > 0) {
-		std::vector<unsigned> value_columns = params.requestedValuesIndicies();
-		std::map<std::string, std::vector<std::string>> snapshot;
+		std::map<std::string, std::string> snapshot;
 		for(; file_no <= last_file_no; file_no++) {
 			std::string fn = fileNoToName(file_no);
 			logDShvJournal() << "---------------------------------- opening file:" << fn;
@@ -431,7 +428,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 					continue; // skip empty line
 				}
 				std::string dtstr = lst[Column::Timestamp].toString();
-				ShvPath path = lst[Column::Path].toString();
+				ShvPath path = lst.value(Column::Path).toString();
 				if(!params.pathPattern.empty() && !path.matchWild(params.pathPattern))
 					continue;
 				cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr);
@@ -441,14 +438,8 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 				}
 				logDShvJournal() << "\t FIELDS:" << dtstr << '\t' << path << "vals:" << lst.join('|');
 				if(dt < params.since) {
-					if(params.withSnapshot) {
-						std::vector<std::string> vals;
-						for(unsigned i : value_columns) {
-							if(Column::Value + i < lst.size())
-								vals.push_back(lst[i].toString());
-						}
-						snapshot[path] = std::move(vals);
-					}
+					if(params.withSnapshot)
+						snapshot[path] = lst.value(Column::Value).toString();
 				}
 				else {
 					if(params.withSnapshot && !snapshot.empty()) {
@@ -457,26 +448,23 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 						for(const auto &kv : snapshot) {
 							cp::RpcValue::List rec;
 							rec.push_back(params.since);
-							//rec.push_back(0);
 							rec.push_back(make_path_shared(kv.first));
-							for(const std::string &s : kv.second)
-								rec.push_back(cp::RpcValue::fromCpon(s, &err));
+							rec.push_back(cp::RpcValue::fromCpon(kv.second, &err));
+
 							log.push_back(rec);
 							rec_cnt++;
 						}
 						snapshot.clear();
 					}
 					if(!params.until.isValid() || dt <= params.until) {
+						std::string err;
 						cp::RpcValue::List rec;
 						rec.push_back(cp::RpcValue::DateTime::fromUtcString(dtstr));
-						//rec.push_back(toLong(upstr));
+						if(params.withUptime)
+							rec.push_back(cp::RpcValue::fromCpon(lst.value(Column::Uptime).toString(), &err));
 						rec.push_back(make_path_shared(path));
-						std::string err;
-						for(unsigned i : value_columns) {
-							if(Column::Value + i < lst.size())
-								rec.push_back(cp::RpcValue::fromCpon(lst[Column::Value + i].toString(), &err));
-						}
-						logDShvJournal() << "\t LOG:" << rec[Column::Timestamp].toDateTime().toIsoString() << '\t' << path << '\t' << rec[2].toCpon();
+						rec.push_back(cp::RpcValue::fromCpon(lst.value(Column::Value).toString(), &err));
+						//logDShvJournal() << "\t LOG:" << rec[Column::Timestamp].toDateTime().toIsoString() << '\t' << path << '\t' << rec[2].toCpon();
 						log.push_back(rec);
 						rec_cnt++;
 						if(rec_cnt >= params.maxRecordCount)

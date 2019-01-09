@@ -205,6 +205,15 @@ std::string StringView::join(std::vector<StringView>::const_iterator first, std:
 	return ret;
 }
 
+StringView StringViewList::value(int ix) const
+{
+	if(ix < 0)
+		ix = static_cast<int>(size()) + ix;
+	if(ix < 0 || ix >= static_cast<int>(size()))
+		return StringView();
+	return this->at(static_cast<size_t>(ix));
+}
+
 StringViewList StringViewList::mid(long start, long len) const
 {
 	return StringViewList(begin() + start, begin() + start + len);

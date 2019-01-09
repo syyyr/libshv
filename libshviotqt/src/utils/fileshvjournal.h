@@ -16,18 +16,14 @@ namespace utils {
 struct SHVIOTQT_DECL_EXPORT ShvJournalEntry
 {
 	std::string path;
-	shv::chainpack::RpcValue::List values;
+	shv::chainpack::RpcValue value;
 
 	ShvJournalEntry() {}
 	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value)
 		: path(std::move(path))
-		, values{value}
+		, value{value}
 	{}
-	ShvJournalEntry(std::string path, shv::chainpack::RpcValue::List values)
-		: path(std::move(path))
-		, values(std::move(values))
-	{}
-	bool isValid() const {return !path.empty() && !values.empty();}
+	bool isValid() const {return !path.empty() && value.isValid();}
 };
 
 class SHVIOTQT_DECL_EXPORT FileShvJournal

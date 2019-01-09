@@ -64,6 +64,8 @@ public:
 	StringViewList() {}
 	StringViewList(const std::vector<StringView> &o) : Super(o) {}
 
+	StringView value(int ix) const;
+
 	StringViewList mid(long start)const {return mid(start, (length() > start)? length() - start: 0);}
 	StringViewList mid(long start, long len) const;
 
