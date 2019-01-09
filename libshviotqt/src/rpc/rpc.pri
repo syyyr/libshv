@@ -1,6 +1,6 @@
 SOURCES += \
     $$PWD/rpc.cpp \
-    $$PWD/socketrpcdriver.cpp \
+    #$$PWD/socketrpcdriver.cpp \
     $$PWD/clientconnection.cpp \
     $$PWD/tcpserver.cpp \
     $$PWD/socketrpcconnection.cpp \
@@ -9,13 +9,14 @@ SOURCES += \
     $$PWD/brokerconnection.cpp \
     $$PWD/clientappclioptions.cpp \
     #$$PWD/tunnelhandle.cpp \
-    $$PWD/syncclientconnection.cpp \
-    $$PWD/iclientconnection.cpp \
-    $$PWD/rpcresponsecallback.cpp
+    #$$PWD/syncclientconnection.cpp \
+    #$$PWD/iclientconnection.cpp \
+    $$PWD/rpcresponsecallback.cpp \
+    $$PWD/socket.cpp
 
 HEADERS += \
     $$PWD/rpc.h \
-    $$PWD/socketrpcdriver.h \
+    #$$PWD/socketrpcdriver.h \
     $$PWD/clientconnection.h \
     $$PWD/tcpserver.h \
     $$PWD/socketrpcconnection.h \
@@ -24,7 +25,8 @@ HEADERS += \
     $$PWD/brokerconnection.h \
     $$PWD/clientappclioptions.h \
     #$$PWD/tunnelhandle.h \
-    $$PWD/syncclientconnection.h \
-    $$PWD/iclientconnection.h \
-    $$PWD/rpcresponsecallback.h
+    #$$PWD/syncclientconnection.h \
+    #$$PWD/iclientconnection.h \
+    $$PWD/rpcresponsecallback.h \
+    $$PWD/socket.h
 

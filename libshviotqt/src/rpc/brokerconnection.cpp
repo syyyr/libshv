@@ -32,6 +32,10 @@ void BrokerConnection::setOptions(const chainpack::RpcValue &slave_broker_option
 
 		DeviceAppCliOptions device_opts;
 
+		const cp::RpcValue::Map &server = m.value("server").toMap();
+		device_opts.setServerHost(server.value("host").toString());
+		device_opts.setServerPort(server.value("port").toInt());
+
 		const cp::RpcValue::Map &login = m.value(cp::Rpc::KEY_LOGIN).toMap();
 		for(const std::string &key : {"user", "password", "passwordFile", "type"}) {
 			if(login.hasKey(key))

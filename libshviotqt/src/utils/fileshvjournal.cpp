@@ -13,8 +13,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#define logWShvJournal() nCWarning("ShvJournal")
-//#define logDShvJournal() nCDebug("ShvJournal")
+#define logWShvJournal() shvCWarning("ShvJournal")
+#define logDShvJournal() shvCDebug("ShvJournal")
 
 namespace cp = shv::chainpack;
 
@@ -67,7 +67,7 @@ static bool mkpath(const std::string &dir_name)
 	return errno == EEXIST && is_dir(dir_name);
 }
 
-static long file_size(const std::string &file_name)
+static int64_t file_size(const std::string &file_name)
 {
 	SHV_STATBUF st;
 	if(SHV_STAT(file_name.data(), &st) == 0)
@@ -76,44 +76,13 @@ static long file_size(const std::string &file_name)
 	return -1;
 }
 
-static long rm_file(const std::string &file_name)
+static int64_t rm_file(const std::string &file_name)
 {
-	long sz = file_size(file_name);
+	int64_t sz = file_size(file_name);
 	if(SHV_REMOVE_FILE(file_name.c_str()) == 0)
 		return sz;
 	logWShvJournal() << "Cannot delete file:" << file_name;
 	return 0;
-}
-
-ShvJournalGetLogParams::ShvJournalGetLogParams(const chainpack::RpcValue &opts)
-	: ShvJournalGetLogParams()
-{
-	const cp::RpcValue::Map m = opts.toMap();
-	since = m.value("since", since).toDateTime();
-	if(!since.isValid())
-		since = m.value("from").toDateTime();
-	until = m.value("until", until).toDateTime();
-	if(!until.isValid())
-		until = m.value("to").toDateTime();
-	pathPattern = m.value("pathPattern", pathPattern).toString();
-	headerOptions = m.value("headerOptions", headerOptions).toUInt();
-	maxRecordCount = m.value("maxRecordCount", maxRecordCount).toInt();
-	withSnapshot = m.value("withSnapshot", withSnapshot).toBool();
-}
-
-chainpack::RpcValue ShvJournalGetLogParams::toRpcValue() const
-{
-	cp::RpcValue::Map m;
-	if(since.isValid())
-		m["since"] = since;
-	if(until.isValid())
-		m["until"] = until;
-	if(!pathPattern.empty())
-		m["pathPattern"] = pathPattern;
-	m["headerOptions"] = headerOptions;
-	m["maxRecordCount"] = maxRecordCount;
-	m["withSnapshot"] = withSnapshot;
-	return m;
 }
 
 const char * FileShvJournal::FILE_EXT = ".log";
@@ -122,6 +91,32 @@ FileShvJournal::FileShvJournal(FileShvJournal::SnapShotFn snf)
 	: m_snapShotFn(snf)
 	, m_journalDir("/tmp/shvjournal")
 {
+}
+
+static int64_t str_to_size(const std::string &str)
+{
+	std::istringstream is(str);
+	int64_t n;
+	char c;
+	is >> n >> c;
+	switch(std::toupper(c)) {
+	case 'K': n *= 1024; break;
+	case 'M': n *= 1024 * 1024; break;
+	case 'G': n *= 1024 * 1024 * 1024; break;
+	}
+	if(n < 1024)
+		n = 1024;
+	return n;
+}
+
+void FileShvJournal::setFileSizeLimit(const std::string &n)
+{
+	setFileSizeLimit(str_to_size(n));
+}
+
+void FileShvJournal::setJournalSizeLimit(const std::string &n)
+{
+	setJournalSizeLimit(str_to_size(n));
 }
 
 void FileShvJournal::append(const ShvJournalEntry &entry, int64_t msec)
@@ -145,14 +140,14 @@ void FileShvJournal::append(const ShvJournalEntry &entry, int64_t msec)
 				max_n++;
 			}
 			else {
-				auto fsz = file_size(fn);
+				int64_t fsz = file_size(fn);
 				shvDebug() << "\t current file size:" << fsz << "limit:" << m_fileSizeLimit;
 				if(fsz > m_fileSizeLimit) {
 					shvDebug() << "\t file size limit exceeded, createing new file:" << max_n;
 					// rotate journal before creating new file
 					rotateJournal();
 					if(m_journalDirStatus.maxFileNo != max_n) {
-						logWShvJournal() << "Max file no changed after log rotation, this should never happen !!!";
+						logWShvJournal() << "Max file not changed after log rotation, this should never happen !!!";
 						max_n = m_journalDirStatus.maxFileNo;
 					}
 					max_n++;
@@ -218,8 +213,8 @@ void FileShvJournal::checkJournalDir()
 void FileShvJournal::rotateJournal()
 {
 	updateJournalDirStatus();
-	if(m_journalDirStatus.journalSize > m_dirSizeLimit) {
-		for (int i = m_journalDirStatus.minFileNo; i < m_journalDirStatus.maxFileNo && m_journalDirStatus.journalSize > m_dirSizeLimit; ++i) {
+	if(m_journalDirStatus.journalSize > m_journalSizeLimit) {
+		for (int i = m_journalDirStatus.minFileNo; i < m_journalDirStatus.maxFileNo && m_journalDirStatus.journalSize > m_journalSizeLimit; ++i) {
 			std::string fn = fileNoToName(i);
 			m_journalDirStatus.journalSize -= rm_file(fn);
 		}
@@ -350,7 +345,8 @@ int64_t FileShvJournal::findLastEntryDateTime(const std::string &fn)
 
 chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 {
-	shvLogFuncFrame() << params.toRpcValue().toCpon();
+	logDShvJournal() << "========================= getLog ==================" << params.toRpcValue().toCpon();
+	logDShvJournal() << "params:" << params.toRpcValue().toCpon();
 	checkJournalDir();
 	auto since_msec = params.since.isValid()? params.since.msecsSinceEpoch(): 0;
 	//auto until_msec = until.isValid()? until.msecsSinceEpoch(): std::numeric_limits<int64_t>::max();
@@ -360,9 +356,10 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 	int file_no = last_file_no;
 	for(; file_no > 0 && file_no >= m_journalDirStatus.minFileNo; file_no--) {
 		std::string fn = fileNoToName(file_no);
+		logDShvJournal() << "checking file:" << fn;
 		std::ifstream in(fn, std::ios::in | std::ios::binary);
 		if (!in) {
-			shvDebug() << "Cannot open file: " + fn + " for reading, log file missing.";
+			logWShvJournal() << "Cannot open file: " + fn + " for reading, log file missing.";
 			continue;
 		}
 		min_file_no = file_no;
@@ -372,6 +369,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 		if(n > 0) {
 			std::string s(buff, (size_t)n);
 			chainpack::RpcValue::DateTime dt = chainpack::RpcValue::DateTime::fromUtcString(s);
+			logDShvJournal() << "\tfirst timestamp:" << dt.toIsoString();
 			if(dt.isValid()) {
 				auto dt_msec = dt.msecsSinceEpoch();
 				min_msec = dt_msec;
@@ -414,7 +412,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 		std::map<std::string, std::string> snapshot;
 		for(; file_no <= last_file_no; file_no++) {
 			std::string fn = fileNoToName(file_no);
-			shvDebug() << "======================= opening file:" << fn;
+			logDShvJournal() << "---------------------------------- opening file:" << fn;
 			std::ifstream in(fn, std::ios::in | std::ios::binary);
 			if(!in) {
 				logWShvJournal() << "Cannot open file: " + fn + " for reading, log file missing.";
@@ -422,16 +420,15 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 			}
 			while(in) {
 				std::string line = getLine(in, RECORD_SEPARATOR);
-				shvDebug() << "line:" << line;
-				std::istringstream iss(line);
-				std::string dtstr = getLine(iss, FIELD_SEPARATOR);
-				if(dtstr.empty()) {
-					shvDebug() << "\t skipping empty line";
+				//logDShvJournal() << "line:" << line;
+				shv::core::StringView sv(line);
+				shv::core::StringViewList lst = sv.split(FIELD_SEPARATOR, shv::core::StringView::KeepEmptyParts);
+				if(lst.empty()) {
+					logDShvJournal() << "\t skipping empty line";
 					continue; // skip empty line
 				}
-				std::string upstr = getLine(iss, FIELD_SEPARATOR);
-				ShvPath path = getLine(iss, FIELD_SEPARATOR);
-				std::string valstr = getLine(iss, FIELD_SEPARATOR);
+				std::string dtstr = lst[Column::Timestamp].toString();
+				ShvPath path = lst.value(Column::Path).toString();
 				if(!params.pathPattern.empty() && !path.matchWild(params.pathPattern))
 					continue;
 				cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr);
@@ -439,33 +436,35 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 					logWShvJournal() << fn << "invalid date time string:" << dtstr;
 					continue;
 				}
-				shvDebug() << "\t FIELDS:" << dtstr << '\t' << path << '\t' << valstr;
+				logDShvJournal() << "\t FIELDS:" << dtstr << '\t' << path << "vals:" << lst.join('|');
 				if(dt < params.since) {
-					if(params.withSnapshot) {
-						snapshot[path] = std::move(valstr);
-					}
+					if(params.withSnapshot)
+						snapshot[path] = lst.value(Column::Value).toString();
 				}
 				else {
 					if(params.withSnapshot && !snapshot.empty()) {
-						shvDebug() << "\t -------------- Snapshot";
+						logDShvJournal() << "\t -------------- Snapshot";
+						std::string err;
 						for(const auto &kv : snapshot) {
 							cp::RpcValue::List rec;
 							rec.push_back(params.since);
-							//rec.push_back(0);
 							rec.push_back(make_path_shared(kv.first));
-							rec.push_back(cp::RpcValue::fromCpon(kv.second));
+							rec.push_back(cp::RpcValue::fromCpon(kv.second, &err));
+
 							log.push_back(rec);
 							rec_cnt++;
 						}
 						snapshot.clear();
 					}
 					if(!params.until.isValid() || dt <= params.until) {
+						std::string err;
 						cp::RpcValue::List rec;
 						rec.push_back(cp::RpcValue::DateTime::fromUtcString(dtstr));
-						//rec.push_back(toLong(upstr));
+						if(params.withUptime)
+							rec.push_back(cp::RpcValue::fromCpon(lst.value(Column::Uptime).toString(), &err));
 						rec.push_back(make_path_shared(path));
-						rec.push_back(cp::RpcValue::fromCpon(valstr));
-						shvDebug() << "\t LOG:" << rec[0].toDateTime().toIsoString() << '\t' << path << '\t' << rec[2].toCpon();
+						rec.push_back(cp::RpcValue::fromCpon(lst.value(Column::Value).toString(), &err));
+						//logDShvJournal() << "\t LOG:" << rec[Column::Timestamp].toDateTime().toIsoString() << '\t' << path << '\t' << rec[2].toCpon();
 						log.push_back(rec);
 						rec_cnt++;
 						if(rec_cnt >= params.maxRecordCount)
@@ -491,7 +490,7 @@ log_finish:
 		md.setValue("dateTime", cp::RpcValue::DateTime::now());
 		md.setValue("params", params.toRpcValue());
 	}
-	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::FileldInfo)) {
+	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::FieldInfo)) {
 		md.setValue("fields", cp::RpcValue::List{
 						cp::RpcValue::Map{{"name", "timestamp"}},
 						cp::RpcValue::Map{{"name", "path"}},
@@ -523,7 +522,7 @@ std::string FileShvJournal::getLine(std::istream &in, char sep)
 		std::string s(buff);
 		line += s;
 		if(in.gcount() == (long)s.size()) {
-			// LF not found
+			// separator not found
 			continue;
 		}
 		break;

@@ -50,13 +50,13 @@ void CponWriter::write(const RpcValue &value)
 void CponWriter::write(const RpcValue::MetaData &meta_data)
 {
 	if(!meta_data.isEmpty()) {
-		ccpon_pack_meta_begin(&m_outCtx);
-		size_t ix = 0;
+		writeMetaBegin();
 		const RpcValue::IMap &cim = meta_data.iValues();
 		if(!cim.empty()) {
 			for (const auto &kv : cim) {
 				if(m_opts.isTranslateIds()) {
-					ccpon_pack_field_delim(&m_outCtx, ix++ == 0);
+					ContainerState &cs = m_containerStates[m_containerStates.size() - 1];
+					ccpon_pack_field_delim(&m_outCtx, cs.elementCount++ == 0);
 					int nsid = meta_data.metaTypeNameSpaceId();
 					int mtid = meta_data.metaTypeId();
 					int tag = kv.first;
@@ -90,16 +90,28 @@ void CponWriter::write(const RpcValue::MetaData &meta_data)
 					}
 				}
 				else {
-					writeMapElement(kv.first, kv.second, ix++ == 0);
+					writeMapElement(kv.first, kv.second);
 				}
 			}
 		}
 		const RpcValue::Map &csm = meta_data.sValues();
 		for (const auto &kv : csm) {
-			writeMapElement(kv.first, kv.second, ix++ == 0);
+			writeMapElement(kv.first, kv.second);
 		}
-		ccpon_pack_meta_end(&m_outCtx);
+		writeMetaEnd();
 	}
+}
+
+void CponWriter::writeMetaBegin()
+{
+	ccpon_pack_meta_begin(&m_outCtx);
+	m_containerStates.push_back(ContainerState());
+}
+
+void CponWriter::writeMetaEnd()
+{
+	ccpon_pack_meta_end(&m_outCtx);
+	m_containerStates.pop_back();
 }
 
 void CponWriter::writeContainerBegin(RpcValue::Type container_type)
@@ -117,11 +129,13 @@ void CponWriter::writeContainerBegin(RpcValue::Type container_type)
 	default:
 		SHVCHP_EXCEPTION(std::string("Cannot write begin of container type: ") + RpcValue::typeToName(container_type));
 	}
+	m_containerStates.push_back(ContainerState(container_type));
 }
 
-void CponWriter::writeContainerEnd(RpcValue::Type container_type)
+void CponWriter::writeContainerEnd()
 {
-	switch (container_type) {
+	ContainerState &cs = m_containerStates[m_containerStates.size() - 1];
+	switch (cs.containerType) {
 	case RpcValue::Type::List:
 		ccpon_pack_list_end(&m_outCtx);
 		break;
@@ -132,36 +146,49 @@ void CponWriter::writeContainerEnd(RpcValue::Type container_type)
 		ccpon_pack_imap_end(&m_outCtx);
 		break;
 	default:
-		SHVCHP_EXCEPTION(std::string("Cannot write end of container type: ") + RpcValue::typeToName(container_type));
+		SHVCHP_EXCEPTION(std::string("Cannot write end of container type: ") + RpcValue::typeToName(cs.containerType));
 	}
+	m_containerStates.pop_back();
+}
+
+void CponWriter::writeMapKey(const std::string &key)
+{
+	ContainerState &cs = m_containerStates[m_containerStates.size() - 1];
+	ccpon_pack_field_delim(&m_outCtx, cs.elementCount++ == 0);
+	write(key);
+	ccpon_pack_key_val_delim(&m_outCtx);
 }
 
 void CponWriter::writeIMapKey(RpcValue::Int key)
 {
+	ContainerState &cs = m_containerStates[m_containerStates.size() - 1];
+	ccpon_pack_field_delim(&m_outCtx, cs.elementCount++ == 0);
 	write(key);
 	ccpon_pack_key_val_delim(&m_outCtx);
 }
 
-void CponWriter::writeListElement(const RpcValue &val, bool without_separator)
+void CponWriter::writeListElement(const RpcValue &val)
 {
-	ccpon_pack_field_delim(&m_outCtx, without_separator);
+	ContainerState &cs = m_containerStates[m_containerStates.size() - 1];
+	ccpon_pack_field_delim(&m_outCtx, cs.elementCount++ == 0);
 	write(val);
 }
 
-void CponWriter::writeMapElement(const std::string &key, const RpcValue &val, bool without_separator)
+void CponWriter::writeMapElement(const std::string &key, const RpcValue &val)
 {
-	ccpon_pack_field_delim(&m_outCtx, without_separator);
-	write(key);
-	ccpon_pack_key_val_delim(&m_outCtx);
+	writeMapKey(key);
 	write(val);
 }
 
-void CponWriter::writeMapElement(RpcValue::Int key, const RpcValue &val, bool without_separator)
+void CponWriter::writeMapElement(RpcValue::Int key, const RpcValue &val)
 {
-	ccpon_pack_field_delim(&m_outCtx, without_separator);
-	write(key);
-	ccpon_pack_key_val_delim(&m_outCtx);
+	writeIMapKey(key);
 	write(val);
+}
+
+void CponWriter::writeRawData(const std::string &data)
+{
+	ccpcp_pack_copy_bytes(&m_outCtx, data.data(), data.size());
 }
 
 CponWriter &CponWriter::write_p(std::nullptr_t)
@@ -227,21 +254,20 @@ CponWriter &CponWriter::write_p(const std::string &value)
 CponWriter &CponWriter::write_p(const RpcValue::Map &values)
 {
 	writeContainerBegin(RpcValue::Type::Map);
-	size_t ix = 0;
 	for (const auto &kv : values) {
-		writeMapElement(kv.first, kv.second, ix++ == 0);
+		writeMapElement(kv.first, kv.second);
 	}
-	writeContainerEnd(RpcValue::Type::Map);
+	writeContainerEnd();
 	return *this;
 }
 
 CponWriter &CponWriter::write_p(const RpcValue::IMap &values, const RpcValue::MetaData *meta_data)
 {
 	writeContainerBegin(RpcValue::Type::IMap);
-	size_t ix = 0;
 	for (const auto &kv : values) {
 		if(m_opts.isTranslateIds() && meta_data) {
-			ccpon_pack_field_delim(&m_outCtx, ix++ == 0);
+			ContainerState &cs = m_containerStates[m_containerStates.size() - 1];
+			ccpon_pack_field_delim(&m_outCtx, cs.elementCount++ == 0);
 			int mtid = meta_data->metaTypeId();
 			int nsid = meta_data->metaTypeNameSpaceId();
 			auto key = kv.first;
@@ -256,10 +282,10 @@ CponWriter &CponWriter::write_p(const RpcValue::IMap &values, const RpcValue::Me
 			write(kv.second);
 		}
 		else {
-			writeMapElement(kv.first, kv.second, ix++ == 0);
+			writeMapElement(kv.first, kv.second);
 		}
 	}
-	writeContainerEnd(RpcValue::Type::IMap);
+	writeContainerEnd();
 	return *this;
 }
 
@@ -268,9 +294,9 @@ CponWriter &CponWriter::write_p(const RpcValue::List &values)
 	writeContainerBegin(RpcValue::Type::List);
 	for (size_t ix = 0; ix < values.size(); ix++) {
 		const RpcValue &value = values[ix];
-		writeListElement(value, ix == 0);
+		writeListElement(value);
 	}
-	writeContainerEnd(RpcValue::Type::List);
+	writeContainerEnd();
 	return *this;
 }
 

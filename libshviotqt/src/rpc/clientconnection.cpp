@@ -2,6 +2,7 @@
 
 #include "clientappclioptions.h"
 #include "rpc.h"
+#include "socket.h"
 #include "socketrpcconnection.h"
 
 #include <shv/coreqt/log.h>
@@ -28,62 +29,12 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
-#if 0
-ConnectionParams::MetaType::MetaType()
-	: Super("TunnelParams")
-{
-	m_keys = {
-		RPC_META_KEY_DEF(Host),
-		RPC_META_KEY_DEF(Port),
-		RPC_META_KEY_DEF(User),
-		RPC_META_KEY_DEF(Password),
-		RPC_META_KEY_DEF(OnConnectedCall),
-		//RPC_META_KEY_DEF(CallerClientIds),
-		//RPC_META_KEY_DEF(RequestId),
-		//RPC_META_KEY_DEF(TunName),
-	};
-	//m_tags = {
-	//	{(int)Tag::RequestId, {(int)Tag::RequestId, "id"}},
-	//	{(int)Tag::ShvPath, {(int)Tag::ShvPath, "shvPath"}},
-	//};
-}
-
-void ConnectionParams::MetaType::registerMetaType()
-{
-	static bool is_init = false;
-	if(!is_init) {
-		is_init = true;
-		static MetaType s;
-		shv::chainpack::meta::registerType(shv::chainpack::meta::GlobalNS::ID, MetaType::ID, &s);
-	}
-}
-
-ConnectionParams::ConnectionParams()
-	: Super()
-{
-	MetaType::registerMetaType();
-}
-
-ConnectionParams::ConnectionParams(const IMap &m)
-	: Super(m)
-{
-	MetaType::registerMetaType();
-}
-
-chainpack::RpcValue ConnectionParams::toRpcValue() const
-{
-	cp::RpcValue ret(*this);
-	ret.setMetaValue(cp::meta::Tag::MetaTypeId, ConnectionParams::MetaType::ID);
-	return ret;
-}
-#endif
-
 ClientConnection::ClientConnection(QObject *parent)
 	: Super(parent)
 {
 	//setConnectionType(cp::Rpc::TYPE_CLIENT);
 
-	connect(this, &SocketRpcDriver::socketConnectedChanged, this, &ClientConnection::onSocketConnectedChanged);
+	connect(this, &SocketRpcConnection::socketConnectedChanged, this, &ClientConnection::onSocketConnectedChanged);
 
 	m_checkConnectedTimer = new QTimer(this);
 	m_checkConnectedTimer->setInterval(10*1000);
@@ -117,10 +68,8 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 	setHost(cli_opts->serverHost());
 	setPort(cli_opts->serverPort());
 	setUser(cli_opts->user());
-	if(cli_opts->password_isset()) {
-		setPassword(cli_opts->password());
-	}
-	else if(cli_opts->passwordFile_isset()) {
+	setPassword(cli_opts->password());
+	if(password().empty() && !cli_opts->passwordFile().empty()) {
 		std::ifstream is(cli_opts->passwordFile(), std::ios::binary);
 		if(is) {
 			std::string pwd;
@@ -131,7 +80,8 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 			shvError() << "Cannot open password file";
 		}
 	}
-	setLoginType(shv::chainpack::AbstractRpcConnection::loginTypeFromString(cli_opts->loginType()));
+	shvDebug() << cli_opts->loginType() << "-->" << (int)shv::chainpack::IRpcConnection::loginTypeFromString(cli_opts->loginType());
+	setLoginType(shv::chainpack::IRpcConnection::loginTypeFromString(cli_opts->loginType()));
 
 	m_heartbeatInterval = cli_opts->heartbeatInterval();
 	{
@@ -151,7 +101,7 @@ void ClientConnection::setTunnelOptions(const chainpack::RpcValue &opts)
 void ClientConnection::open()
 {
 	if(!hasSocket()) {
-		QTcpSocket *socket = new QTcpSocket();
+		TcpSocket *socket = new TcpSocket(new QTcpSocket());
 		setSocket(socket);
 	}
 	checkBrokerConnected();
@@ -171,7 +121,7 @@ void ClientConnection::abort()
 	abortConnection();
 }
 
-void ClientConnection::setCheckBrokerConnectedInterval(unsigned ms)
+void ClientConnection::setCheckBrokerConnectedInterval(int ms)
 {
 	m_checkBrokerConnectedInterval = ms;
 	if(ms == 0)
@@ -268,9 +218,95 @@ void ClientConnection::setBrokerConnected(bool b)
 	}
 }
 
+void ClientConnection::emitInitPhaseError(const std::string &err)
+{
+	Q_EMIT brokerLoginError(err);
+}
+
 void ClientConnection::onSocketConnectedChanged(bool is_connected)
 {
-	IClientConnection::onSocketConnectedChanged(is_connected);
+	setBrokerConnected(false);
+	if(is_connected) {
+		shvInfo() << "Socket connected to RPC server";
+		//sendKnockKnock(cp::RpcDriver::ChainPack);
+		//RpcResponse resp = callMethodSync("echo", "ahoj babi");
+		//shvInfo() << "+++" << resp.toStdString();
+		clearBuffers();
+		sendHello();
+	}
+	else {
+		shvInfo() << "Socket disconnected from RPC server";
+	}
+}
+
+static std::string sha1_hex(const std::string &s)
+{
+	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
+	hash.addData(s.data(), s.length());
+	return std::string(hash.result().toHex().constData());
+}
+
+chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValue &server_hello)
+{
+	shvDebug() << server_hello.toCpon() << "login type:" << (int)loginType();
+	std::string pass;
+	if(loginType() == chainpack::IRpcConnection::LoginType::Sha1) {
+		std::string server_nonce = server_hello.toMap().value("nonce").toString();
+		std::string pwd = password();
+		if(pwd.size() > 0 && pwd.size() < 40)
+			pwd = sha1_hex(pwd); /// SHA1 password must be 40 chars long, it is considered to be plain if shorter
+		std::string pn = server_nonce + pwd;
+		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
+		hash.addData(pn.data(), pn.length());
+		QByteArray sha1 = hash.result().toHex();
+		pass = std::string(sha1.constData(), sha1.size());
+	}
+	else if(loginType() == chainpack::IRpcConnection::LoginType::Plain) {
+		pass = password();
+		shvDebug() << "plain password:" << pass;
+	}
+	else {
+		shvError() << "Login type:" << chainpack::IRpcConnection::loginTypeToString(loginType()) << "not supported";
+	}
+	//shvWarning() << password << sha1;
+	return cp::RpcValue::Map {
+		{"login", cp::RpcValue::Map {
+			{"user", user()},
+			{"password", pass},
+			//{"passwordFormat", chainpack::AbstractRpcConnection::passwordFormatToString(password_format)},
+			{"type", chainpack::IRpcConnection::loginTypeToString(loginType())},
+		 },
+		},
+		{"options", connectionOptions()},
+	};
+}
+
+void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
+{
+	do {
+		if(!msg.isResponse())
+			break;
+		cp::RpcResponse resp(msg);
+		//shvInfo() << "Handshake response received:" << resp.toCpon();
+		if(resp.isError()) {
+			emitInitPhaseError(resp.error().message());
+			break;
+		}
+		int id = resp.requestId().toInt();
+		if(id == 0)
+			break;
+		if(m_connectionState.helloRequestId == id) {
+			sendLogin(resp.result());
+			return;
+		}
+		else if(m_connectionState.loginRequestId == id) {
+			m_connectionState.loginResult = resp.result();
+			setBrokerConnected(true);
+			return;
+		}
+	} while(false);
+	shvError() << "Invalid handshake message! Dropping connection." << msg.toCpon();
+	resetConnection();
 }
 
 }}}

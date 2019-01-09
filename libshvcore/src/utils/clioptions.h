@@ -6,28 +6,24 @@
 
 #include <shv/chainpack/rpcvalue.h>
 
-namespace shv {
-namespace chainpack { class RpcValue; }
-namespace core {
-namespace utils {
-
 #define CLIOPTION_QUOTE_ME(x) #x
 
 #define CLIOPTION_GETTER_SETTER(ptype, getter_prefix, setter_prefix, name_rest) \
-	public: ptype getter_prefix##name_rest() const { \
-		shv::chainpack::RpcValue val = value(CLIOPTION_QUOTE_ME(getter_prefix##name_rest)); \
-		return rpcvalue_cast<ptype>(val); \
-	} \
-	public: bool getter_prefix##name_rest##_isset() const {return isValueSet(CLIOPTION_QUOTE_ME(getter_prefix##name_rest));} \
-	public: bool setter_prefix##name_rest(const ptype &val) {return setValue(CLIOPTION_QUOTE_ME(getter_prefix##name_rest), val);}
+	CLIOPTION_GETTER_SETTER2(ptype, CLIOPTION_QUOTE_ME(getter_prefix##name_rest), getter_prefix, setter_prefix, name_rest)
 
 #define CLIOPTION_GETTER_SETTER2(ptype, pkey, getter_prefix, setter_prefix, name_rest) \
 	public: ptype getter_prefix##name_rest() const { \
 		shv::chainpack::RpcValue val = value(pkey); \
 		return rpcvalue_cast<ptype>(val); \
 	} \
+	protected: shv::core::utils::CLIOptions::Option& getter_prefix##name_rest##_optionRef() {return optionRef(pkey);} \
 	public: bool getter_prefix##name_rest##_isset() const {return isValueSet(pkey);} \
 	public: bool setter_prefix##name_rest(const ptype &val) {return setValue(pkey, val);}
+
+namespace shv {
+namespace chainpack { class RpcValue; }
+namespace core {
+namespace utils {
 
 class SHVCORE_DECL_EXPORT CLIOptions
 {
@@ -36,12 +32,7 @@ public:
 	virtual ~CLIOptions();
 
 	using StringList = std::vector<std::string>;
-
-	CLIOPTION_GETTER_SETTER2(bool, "abortOnException", is, set, AbortOnException)
-	CLIOPTION_GETTER_SETTER2(bool, "help", is, set, Help)
-
 public:
-
 	class SHVCORE_DECL_EXPORT Option
 	{
 	private:
@@ -80,6 +71,9 @@ public:
 		Option() {}
 	};
 public:
+	CLIOPTION_GETTER_SETTER2(bool, "abortOnException", is, set, AbortOnException)
+	CLIOPTION_GETTER_SETTER2(bool, "help", is, set, Help)
+
 	Option& addOption(const std::string &key, const Option &opt = Option());
 	bool removeOption(const std::string &key);
 	const Option& option(const std::string &name, bool throw_exc = true) const;

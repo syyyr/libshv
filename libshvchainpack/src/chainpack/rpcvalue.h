@@ -85,6 +85,7 @@ public:
 	public:
 		enum class MsecPolicy {Auto = 0, Always, Never};
 		static constexpr bool IncludeTimeZone = true;
+		static constexpr int INVALID_MIN_FROM_UTC = (-64 * 15);
 	public:
 		DateTime() : m_dtm{TZ_INVALID, 0} {}
 		int64_t msecsSinceEpoch() const { return m_dtm.msec; }
@@ -129,7 +130,7 @@ public:
 		bool operator <=(const DateTime &o) const { return !(*this > o); }
 		bool isValid() const { return m_dtm.tz != TZ_INVALID; }
 	private:
-		static constexpr int8_t TZ_INVALID = -64;
+		static constexpr int8_t TZ_INVALID = INVALID_MIN_FROM_UTC / 15;
 		struct MsTz {
 			int64_t tz: 7, msec: 57;
 		};
@@ -434,7 +435,7 @@ public:
 	void append(const RpcValue &val);
 
 	std::string toPrettyString(const std::string &indent = std::string()) const;
-	//std::string toStdString() const;
+	std::string toStdString() const;
 	std::string toCpon(const std::string &indent = std::string()) const;
 	static RpcValue fromCpon(const std::string & str, std::string *err = nullptr);
 
@@ -511,6 +512,6 @@ template<> inline shv::chainpack::RpcValue rpcvalue_cast<shv::chainpack::RpcValu
 template<> inline bool rpcvalue_cast<bool>(const shv::chainpack::RpcValue &v) { return v.toBool(); }
 template<> inline shv::chainpack::RpcValue::Int rpcvalue_cast<shv::chainpack::RpcValue::Int>(const shv::chainpack::RpcValue &v) { return v.toInt(); }
 template<> inline shv::chainpack::RpcValue::UInt rpcvalue_cast<shv::chainpack::RpcValue::UInt>(const shv::chainpack::RpcValue &v) { return v.toUInt(); }
-template<> inline shv::chainpack::RpcValue::String rpcvalue_cast<shv::chainpack::RpcValue::String>(const shv::chainpack::RpcValue &v) { return v.toString(); }
+template<> inline shv::chainpack::RpcValue::String rpcvalue_cast<shv::chainpack::RpcValue::String>(const shv::chainpack::RpcValue &v) { return v.toStdString(); }
 template<> inline shv::chainpack::RpcValue::DateTime rpcvalue_cast<shv::chainpack::RpcValue::DateTime>(const shv::chainpack::RpcValue &v) { return v.toDateTime(); }
 template<> inline shv::chainpack::RpcValue::Decimal rpcvalue_cast<shv::chainpack::RpcValue::Decimal>(const shv::chainpack::RpcValue &v) { return v.toDecimal(); }

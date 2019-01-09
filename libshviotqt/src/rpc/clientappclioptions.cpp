@@ -1,6 +1,6 @@
 #include "clientappclioptions.h"
 
-#include <shv/chainpack/abstractrpcconnection.h>
+#include <shv/chainpack/irpcconnection.h>
 
 namespace cp = shv::chainpack;
 
@@ -16,7 +16,7 @@ ClientAppCliOptions::ClientAppCliOptions()
 	addOption("login.passwordFile").setType(cp::RpcValue::Type::String).setNames("--password-file").setComment("Login password file");
 	addOption("login.type").setType(cp::RpcValue::Type::String).setNames("--lt", "--login-type").setComment("Login type [PLAIN | SHA1 | RSAOAEP]").setDefaultValue("SHA1");
 	addOption("server.host").setType(cp::RpcValue::Type::String).setNames("-s", "--server-host").setComment("server host").setDefaultValue("localhost");
-	addOption("server.port").setType(cp::RpcValue::Type::Int).setNames("-p", "--server-port").setComment("server port").setDefaultValue(shv::chainpack::AbstractRpcConnection::DEFAULT_RPC_BROKER_PORT);
+	addOption("server.port").setType(cp::RpcValue::Type::Int).setNames("-p", "--server-port").setComment("server port").setDefaultValue(shv::chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT);
 
 	addOption("rpc.protocolType").setType(cp::RpcValue::Type::String).setNames("--protocol-type").setComment("Protocol type [chainpack | cpon | jsonrpc]").setDefaultValue("chainpack");
 	//addOption("rpc.timeout").setType(cp::RpcValue::Type::Int).setNames("--rpc-timeout").setComment(tr("RPC timeout msec")).setDefaultValue(shv::chainpack::AbstractRpcConnection::DEFAULT_RPC_TIMEOUT);

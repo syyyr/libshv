@@ -22,7 +22,7 @@
 //public: ptype& lower_letter##name_rest##Ref() {return m_##lower_letter##name_rest;}
 
 #define SHV_FIELD_IMPL(ptype, lower_letter, upper_letter, name_rest) \
-	private: ptype m_##lower_letter##name_rest; \
+	protected: ptype m_##lower_letter##name_rest; \
 	public: ptype lower_letter##name_rest() const {return m_##lower_letter##name_rest;} \
 	public: const ptype& lower_letter##name_rest##Ref() const {return m_##lower_letter##name_rest;} \
 	public: bool set##upper_letter##name_rest(const ptype &val) { \
@@ -31,7 +31,7 @@
 	}
 
 #define SHV_FIELD_IMPL2(ptype, lower_letter, upper_letter, name_rest, default_value) \
-	private: ptype m_##lower_letter##name_rest = default_value; \
+	protected: ptype m_##lower_letter##name_rest = default_value; \
 	public: ptype lower_letter##name_rest() const {return m_##lower_letter##name_rest;} \
 	public: const ptype& lower_letter##name_rest##Ref() const {return m_##lower_letter##name_rest;} \
 	public: bool set##upper_letter##name_rest(const ptype &val) { \
@@ -40,7 +40,7 @@
 	}
 
 #define SHV_FIELD_BOOL_IMPL2(lower_letter, upper_letter, name_rest, default_value) \
-	private: bool m_##lower_letter##name_rest = default_value; \
+	protected: bool m_##lower_letter##name_rest = default_value; \
 	public: bool is##upper_letter##name_rest() const {return m_##lower_letter##name_rest;} \
 	public: bool set##upper_letter##name_rest(bool val) { \
 		if(!(m_##lower_letter##name_rest == val)) { m_##lower_letter##name_rest = val; return true; } \

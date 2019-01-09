@@ -491,7 +491,7 @@ void RpcSignal::write(AbstractStreamWriter &wr, const std::string &method, std::
 	wr.writeContainerBegin(RpcValue::Type::IMap);
 	wr.writeIMapKey(RpcMessage::MetaType::Key::Params);
 	write_params_callback(wr);
-	wr.writeContainerEnd(RpcValue::Type::IMap);
+	wr.writeContainerEnd();
 }
 
 //==================================================================

@@ -43,13 +43,13 @@ void RpcDriver::sendRpcValue(const RpcValue &msg)
 	logRpcData() << "protocol:" << Rpc::protocolTypeToString(protocolType())
 				 << "packed data:"
 				 << ((protocolType() == Rpc::ProtocolType::ChainPack)? Utils::toHex(packed_data, 0, 250): packed_data.substr(0, 250));
-	enqueueDataToSend(Chunk{std::move(packed_data)});
+	enqueueDataToSend(MessageData{std::move(packed_data)});
 }
 
 void RpcDriver::sendRawData(std::string &&data)
 {
 	logRpcRawMsg() << SND_LOG_ARROW << "send raw data: " << (data.size() > 250? "<... long data ...>" : Utils::toHex(data));
-	enqueueDataToSend(Chunk{std::move(data)});
+	enqueueDataToSend(MessageData{std::move(data)});
 }
 
 void RpcDriver::sendRawData(const RpcValue::MetaData &meta_data, std::string &&data)
@@ -84,16 +84,16 @@ void RpcDriver::sendRawData(const RpcValue::MetaData &meta_data, std::string &&d
 		// recode data;
 		RpcValue val = decodeData(packed_data_ver, data, 0);
 		val.setMetaData(RpcValue::MetaData(meta_data));
-		enqueueDataToSend(Chunk(codeRpcValue(Rpc::ProtocolType::JsonRpc, val)));
+		enqueueDataToSend(MessageData(codeRpcValue(Rpc::ProtocolType::JsonRpc, val)));
 	}
 	else {
 		if(packed_data_ver == Rpc::ProtocolType::Invalid || packed_data_ver == protocolType()) {
-			enqueueDataToSend(Chunk(os_packed_meta_data.str(), std::move(data)));
+			enqueueDataToSend(MessageData(os_packed_meta_data.str(), std::move(data)));
 		}
 		else {
 			// recode data;
 			RpcValue val = decodeData(packed_data_ver, data, 0);
-			enqueueDataToSend(Chunk(os_packed_meta_data.str(), codeRpcValue(protocolType(), val)));
+			enqueueDataToSend(MessageData(os_packed_meta_data.str(), codeRpcValue(protocolType(), val)));
 		}
 	}
 }
@@ -116,18 +116,18 @@ RpcMessage RpcDriver::composeRpcMessage(RpcValue::MetaData &&meta_data, const st
 	return RpcMessage(val);
 }
 
-void RpcDriver::enqueueDataToSend(RpcDriver::Chunk &&chunk_to_enqueue)
+void RpcDriver::enqueueDataToSend(RpcDriver::MessageData &&chunk_to_enqueue)
 {
 	/// LOCK_FOR_SEND lock mutex here in the multithreaded environment
 	lockSendQueue();
 	if(!chunk_to_enqueue.empty()) {
-		m_chunkQueue.push_back(std::move(chunk_to_enqueue));
+		m_sendQueue.push_back(std::move(chunk_to_enqueue));
 	}
 	if(!isOpen()) {
 		nError() << "write data error, socket is not open!";
 		return;
 	}
-	flush();
+	//flush();
 	writeQueue();
 	/// UNLOCK_FOR_SEND unlock mutex here in the multithreaded environment
 	unlockSendQueue();
@@ -135,14 +135,15 @@ void RpcDriver::enqueueDataToSend(RpcDriver::Chunk &&chunk_to_enqueue)
 
 void RpcDriver::writeQueue()
 {
-	if(m_chunkQueue.empty())
+	if(m_sendQueue.empty())
 		return;
-	logRpcData() << "writePendingData(), queue len:" << m_chunkQueue.size();
+	logRpcData() << "writePendingData(), queue len:" << m_sendQueue.size();
 	//static int hi_cnt = 0;
-	const Chunk &chunk = m_chunkQueue[0];
+	const MessageData &chunk = m_sendQueue[0];
 	//nInfo() << "M:" << chunk.metaData;
 	//nInfo() << "D:" << chunk.data;
-	if(!m_topChunkHeaderWritten) {
+	if(!m_topMessageDataHeaderWritten) {
+		writeMessageBegin();
 		std::string protocol_type_data;
 		{
 			std::ostringstream os;
@@ -166,21 +167,22 @@ void RpcDriver::writeQueue()
 			if(len != 1)
 				SHVCHP_EXCEPTION("Design error! Protocol version shall be always written at once to the socket");
 		}
-		m_topChunkHeaderWritten = true;
+		m_topMessageDataHeaderWritten = true;
 	}
-	if(m_topChunkBytesWrittenSoFar < chunk.metaData.size()) {
-		m_topChunkBytesWrittenSoFar += writeBytes_helper(chunk.metaData, m_topChunkBytesWrittenSoFar, chunk.metaData.size() - m_topChunkBytesWrittenSoFar);
+	if(m_topMessageDataBytesWrittenSoFar < chunk.metaData.size()) {
+		m_topMessageDataBytesWrittenSoFar += writeBytes_helper(chunk.metaData, m_topMessageDataBytesWrittenSoFar, chunk.metaData.size() - m_topMessageDataBytesWrittenSoFar);
 	}
-	if(m_topChunkBytesWrittenSoFar >= chunk.metaData.size()) {
-		m_topChunkBytesWrittenSoFar += writeBytes_helper(chunk.data
-														 , m_topChunkBytesWrittenSoFar - chunk.metaData.size()
-														 , chunk.data.size() - (m_topChunkBytesWrittenSoFar - chunk.metaData.size()));
+	if(m_topMessageDataBytesWrittenSoFar >= chunk.metaData.size()) {
+		m_topMessageDataBytesWrittenSoFar += writeBytes_helper(chunk.data
+														 , m_topMessageDataBytesWrittenSoFar - chunk.metaData.size()
+														 , chunk.data.size() - (m_topMessageDataBytesWrittenSoFar - chunk.metaData.size()));
 		//logRpc() << "writeQueue - data len:" << chunk.length() << "start index:" << m_topChunkBytesWrittenSoFar << "bytes written:" << len << "remaining:" << (chunk.length() - m_topChunkBytesWrittenSoFar - len);
 	}
-	if(m_topChunkBytesWrittenSoFar == chunk.size()) {
-		m_topChunkHeaderWritten = false;
-		m_topChunkBytesWrittenSoFar = 0;
-		m_chunkQueue.pop_front();
+	if(m_topMessageDataBytesWrittenSoFar == chunk.size()) {
+		writeMessageEnd();
+		m_topMessageDataHeaderWritten = false;
+		m_topMessageDataBytesWrittenSoFar = 0;
+		m_sendQueue.pop_front();
 	}
 }
 
@@ -214,9 +216,9 @@ void RpcDriver::onBytesRead(std::string &&bytes)
 
 void RpcDriver::clearBuffers()
 {
-	m_chunkQueue.clear();
-	m_topChunkHeaderWritten = false;
-	m_topChunkBytesWrittenSoFar = 0;
+	m_sendQueue.clear();
+	m_topMessageDataHeaderWritten = false;
+	m_topMessageDataBytesWrittenSoFar = 0;
 	m_readData.clear();
 }
 
@@ -312,7 +314,7 @@ size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolTyp
 		SHVCHP_EXCEPTION("Unknown protocol type: " + Utils::toString((int)protocol_type));
 		//meta_data_end_pos = data.size();
 		//nError() << "Throwing away message with unknown protocol version:" << (unsigned)protocol_type;
-		break;
+		//break;
 	}
 
 	return meta_data_end_pos;

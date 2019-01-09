@@ -1,4 +1,4 @@
-#include "abstractrpcconnection.h"
+#include "irpcconnection.h"
 #include "exception.h"
 
 #include <necrolog.h>
@@ -16,17 +16,21 @@ static std::string to_upper(const std::string &s)
 	return ret;
 }
 
-AbstractRpcConnection::AbstractRpcConnection()
+IRpcConnection::IRpcConnection()
 	: m_connectionId(nextConnectionId())
 {
 }
 
-void AbstractRpcConnection::sendNotify(std::string method, const RpcValue &params)
+IRpcConnection::~IRpcConnection()
+{
+}
+
+void IRpcConnection::sendNotify(std::string method, const RpcValue &params)
 {
 	sendShvNotify(std::string(), std::move(method), params);
 }
 
-void AbstractRpcConnection::sendShvNotify(const std::string &shv_path, std::string method, const RpcValue &params)
+void IRpcConnection::sendShvNotify(const std::string &shv_path, std::string method, const RpcValue &params)
 {
 	RpcRequest rq;
 	if(!shv_path.empty())
@@ -36,7 +40,7 @@ void AbstractRpcConnection::sendShvNotify(const std::string &shv_path, std::stri
 	sendMessage(rq);
 }
 
-void AbstractRpcConnection::sendResponse(const RpcValue &request_id, const RpcValue &result)
+void IRpcConnection::sendResponse(const RpcValue &request_id, const RpcValue &result)
 {
 	RpcResponse resp;
 	resp.setRequestId(request_id);
@@ -44,7 +48,7 @@ void AbstractRpcConnection::sendResponse(const RpcValue &request_id, const RpcVa
 	sendMessage(resp);
 }
 
-void AbstractRpcConnection::sendError(const RpcValue &request_id, const RpcResponse::Error &error)
+void IRpcConnection::sendError(const RpcValue &request_id, const RpcResponse::Error &error)
 {
 	RpcResponse resp;
 	resp.setRequestId(request_id);
@@ -52,19 +56,19 @@ void AbstractRpcConnection::sendError(const RpcValue &request_id, const RpcRespo
 	sendMessage(resp);
 }
 
-int AbstractRpcConnection::nextRequestId()
+int IRpcConnection::nextRequestId()
 {
 	static int n = 0;
 	return ++n;
 }
 
-int AbstractRpcConnection::nextConnectionId()
+int IRpcConnection::nextConnectionId()
 {
 	static int n = 0;
 	return ++n;
 }
 
-int AbstractRpcConnection::callMethod(const RpcRequest &rq)
+int IRpcConnection::callMethod(const RpcRequest &rq)
 {
 	RpcRequest _rq(rq);
 	int id = rq.requestId().toInt();
@@ -76,12 +80,12 @@ int AbstractRpcConnection::callMethod(const RpcRequest &rq)
 	return id;
 }
 
-int AbstractRpcConnection::callMethod(std::string method, const RpcValue &params)
+int IRpcConnection::callMethod(std::string method, const RpcValue &params)
 {
 	return callShvMethod(std::string(), std::move(method), params);
 }
 
-int AbstractRpcConnection::callShvMethod(const std::string &shv_path, std::string method, const RpcValue &params, const RpcValue &grant)
+int IRpcConnection::callShvMethod(const std::string &shv_path, std::string method, const RpcValue &params, const RpcValue &grant)
 {
 	int id = nextRequestId();
 	RpcRequest rq;
@@ -97,7 +101,7 @@ int AbstractRpcConnection::callShvMethod(const std::string &shv_path, std::strin
 	return id;
 }
 
-int AbstractRpcConnection::callMethodSubscribe(const std::string &shv_path, std::string method, const RpcValue &grant)
+int IRpcConnection::callMethodSubscribe(const std::string &shv_path, std::string method, const RpcValue &grant)
 {
 	logSubscriptionsD() << "call subscribe for connection id:" << connectionId() << "path:" << shv_path << "method:" << method << "grant:" << grant.toCpon();
 	return callShvMethod(Rpc::DIR_BROKER_APP
@@ -109,7 +113,7 @@ int AbstractRpcConnection::callMethodSubscribe(const std::string &shv_path, std:
 					  , grant);
 }
 
-std::string AbstractRpcConnection::loginTypeToString(AbstractRpcConnection::LoginType t)
+std::string IRpcConnection::loginTypeToString(IRpcConnection::LoginType t)
 {
 	switch(t) {
 	case LoginType::Plain: return "PLAIN";
@@ -119,7 +123,7 @@ std::string AbstractRpcConnection::loginTypeToString(AbstractRpcConnection::Logi
 	}
 }
 
-AbstractRpcConnection::LoginType AbstractRpcConnection::loginTypeFromString(const std::string &s)
+IRpcConnection::LoginType IRpcConnection::loginTypeFromString(const std::string &s)
 {
 	std::string typestr = to_upper(s);
 	if(typestr == loginTypeToString(LoginType::Plain))

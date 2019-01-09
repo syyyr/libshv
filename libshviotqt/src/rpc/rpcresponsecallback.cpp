@@ -1,4 +1,5 @@
 #include "rpcresponsecallback.h"
+#include "clientconnection.h"
 
 #include <shv/chainpack/rpcmessage.h>
 #include <shv/coreqt/log.h>
@@ -15,6 +16,12 @@ RpcResponseCallBack::RpcResponseCallBack(int rq_id, QObject *parent)
 	: QObject(parent)
 {
 	setRequestId(rq_id);
+}
+
+RpcResponseCallBack::RpcResponseCallBack(ClientConnection *conn, int rq_id, QObject *parent)
+	: RpcResponseCallBack(rq_id, parent)
+{
+	connect(conn, &ClientConnection::rpcMessageReceived, this, &RpcResponseCallBack::onRpcMessageReceived);
 }
 
 void RpcResponseCallBack::start(RpcResponseCallBack::CallBackFunction cb)

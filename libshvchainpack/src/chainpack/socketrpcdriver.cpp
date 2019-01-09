@@ -51,9 +51,9 @@ int64_t SocketRpcDriver::writeBytes(const char *bytes, size_t length)
 		return 0;
 	}
 	flush();
-	size_t bytes_to_write_len = (m_writeBuffer.size() + length > m_maxWriteBufferLength)? m_maxWriteBufferLength - m_writeBuffer.size(): length;
+	ssize_t bytes_to_write_len = (m_writeBuffer.size() + length > m_maxWriteBufferLength)? m_maxWriteBufferLength - m_writeBuffer.size(): length;
 	if(bytes_to_write_len > 0)
-		m_writeBuffer += std::string(bytes, bytes_to_write_len);
+		m_writeBuffer += std::string(bytes, static_cast<size_t>(bytes_to_write_len));
 	flush();
 	return bytes_to_write_len;
 }
@@ -180,7 +180,7 @@ void SocketRpcDriver::exec()
 		if(FD_ISSET(m_socket, &write_flags)) {
 			nInfo() << "\t write fd is set";
 			FD_CLR(m_socket, &write_flags);
-			enqueueDataToSend(Chunk());
+			enqueueDataToSend(MessageData());
 		}
 	}
 }

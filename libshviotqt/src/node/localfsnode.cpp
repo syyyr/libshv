@@ -75,12 +75,7 @@ ShvNode::StringList LocalFSNode::childNames(const ShvNode::StringViewList &shv_p
 
 chainpack::RpcValue LocalFSNode::hasChildren(const ShvNode::StringViewList &shv_path)
 {
-	QString qpath = QString::fromStdString(shv_path.join('/'));
-	QFileInfo fi(m_rootDir.absolutePath() + '/' + qpath);
-	if(!fi.exists())
-		shvError() << "Invalid path:" << fi.absoluteFilePath();
-	shvDebug() << __FUNCTION__ << "shv path:" << qpath << "file info:" << fi.absoluteFilePath() << "is dir:" << fi.isDir();
-	return fi.isDir();
+	return isDir(shv_path);
 }
 
 static std::vector<cp::MetaMethod> meta_methods_dir {
@@ -89,6 +84,10 @@ static std::vector<cp::MetaMethod> meta_methods_dir {
 	{M_MKFILE, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_WRITE},
 	{M_MKDIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_WRITE},
 	{M_RMDIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_SERVICE}
+};
+
+static std::vector<cp::MetaMethod> meta_methods_dir_write_file {
+	{M_WRITE, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_WRITE},
 };
 
 static std::vector<cp::MetaMethod> meta_methods_file {
@@ -102,20 +101,46 @@ static std::vector<cp::MetaMethod> meta_methods_file {
 
 size_t LocalFSNode::methodCount(const ShvNode::StringViewList &shv_path)
 {
-	return hasChildren(shv_path).toBool() ? meta_methods_dir.size() : meta_methods_file.size();
+	QFileInfo fi = ndFileInfo(QString::fromStdString(shv_path.join('/')));
+	if(fi.exists())
+		return isDir(shv_path) ? meta_methods_dir.size() : meta_methods_file.size();
+	if(!shv_path.empty()) {
+		StringViewList dir_path = shv_path.mid(0, shv_path.size() - 1);
+		fi = ndFileInfo(QString::fromStdString(dir_path.join('/')));
+		if(fi.isDir())
+			return meta_methods_dir_write_file.size();
+	}
+	return 0;
 }
 
 const chainpack::MetaMethod *LocalFSNode::metaMethod(const StringViewList &shv_path, size_t ix)
 {
-	Q_UNUSED(shv_path)
+	QFileInfo fi = ndFileInfo(QString::fromStdString(shv_path.join('/')));
+	if(fi.exists()) {
+		size_t meta_methods_size = (fi.isDir()) ? meta_methods_dir.size() : meta_methods_file.size();
 
-	bool has_children = hasChildren(shv_path).toBool();
-	size_t meta_methods_size = (has_children) ? meta_methods_dir.size() : meta_methods_file.size();
+		if(meta_methods_size <= ix)
+			SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(meta_methods_size));
 
-	if(meta_methods_size <= ix)
-		SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(meta_methods_size));
+		return (fi.isDir()) ? &(meta_methods_dir[ix]) : &(meta_methods_file[ix]);
+	}
+	if(!shv_path.empty()) {
+		StringViewList dir_path = shv_path.mid(0, shv_path.size() - 1);
+		fi = ndFileInfo(QString::fromStdString(dir_path.join('/')));
+		if(fi.isDir() && ix < meta_methods_dir_write_file.size())
+			return &(meta_methods_dir_write_file[ix]);
+	}
+	SHV_EXCEPTION("Invalid method index: " + std::to_string(ix));
+}
 
-	return (has_children) ? &(meta_methods_dir[ix]) : &(meta_methods_file[ix]);
+bool LocalFSNode::isDir(const ShvNode::StringViewList &shv_path) const
+{
+	QString qpath = QString::fromStdString(shv_path.join('/'));
+	QFileInfo fi(m_rootDir.absolutePath() + '/' + qpath);
+	if(!fi.exists())
+		shvError() << "Invalid path:" << fi.absoluteFilePath();
+	shvDebug() << __FUNCTION__ << "shv path:" << qpath << "file info:" << fi.absoluteFilePath() << "is dir:" << fi.isDir();
+	return fi.isDir();
 }
 
 QFileInfo LocalFSNode::ndFileInfo(const QString &path)

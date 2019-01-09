@@ -17,6 +17,8 @@ namespace chainpack { class RpcMessage; class RpcResponse; }
 namespace iotqt {
 namespace rpc {
 
+class ClientConnection;
+
 class SHVIOTQT_DECL_EXPORT RpcResponseCallBack : public QObject
 {
 	Q_OBJECT
@@ -28,6 +30,7 @@ public:
 
 public:
 	explicit RpcResponseCallBack(int rq_id, QObject *parent = nullptr);
+	explicit RpcResponseCallBack(shv::iotqt::rpc::ClientConnection *conn, int rq_id, QObject *parent = nullptr);
 	void start(CallBackFunction cb);
 	virtual void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg);
 private:

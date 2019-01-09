@@ -1,4 +1,5 @@
 #include "shvnode.h"
+#include "../utils.h"
 
 #include <shv/coreqt/log.h>
 
@@ -143,7 +144,10 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 			}
 		}
 		else {
-			if(!shv_path.empty()) {
+			if(shv_path.empty()) {
+				SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + "' doesn't exist");
+			}
+			else {
 				ShvNode *nd = childNode(shv_path.at(0).toString());
 				if(nd) {
 					std::string new_path = core::StringView::join(++shv_path.begin(), shv_path.end(), '/');
@@ -151,6 +155,9 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 					cp::RpcMessage::setShvPath(meta, new_path);
 					nd->handleRawRpcRequest(std::move(meta), std::move(data));
 					return;
+				}
+				else {
+					SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + '/' + shv_path_str + "' doesn't exist");
 				}
 			}
 		}
@@ -185,7 +192,10 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 			}
 		}
 		else {
-			if(!shv_path.empty()) {
+			if(shv_path.empty()) {
+				SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + "' doesn't exist");
+			}
+			else {
 				ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
 				if(nd) {
 					std::string new_path = core::StringView::join(++shv_path.begin(), shv_path.end(), '/');
@@ -448,9 +458,9 @@ const char *RpcValueMapNode::M_COMMIT = "commitChanges";
 static std::vector<cp::MetaMethod> meta_methods_value_map_root_node {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_CONFIG},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_CONFIG},
-	//{RpcValueMapNode::M_LOAD, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_SERVICE},
-	//{RpcValueMapNode::M_SAVE, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_ADMIN},
-	//{RpcValueMapNode::M_COMMIT, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_ADMIN},
+	{RpcValueMapNode::M_LOAD, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_SERVICE},
+	{RpcValueMapNode::M_SAVE, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_ADMIN},
+	{RpcValueMapNode::M_COMMIT, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_ADMIN},
 };
 
 static std::vector<cp::MetaMethod> meta_methods_value_map_node {
@@ -600,6 +610,67 @@ void ShvRootNode::emitSendRpcMesage(const chainpack::RpcMessage &msg)
 			return;
 	}
 	emit sendRpcMesage(msg);
+}
+
+static std::vector<cp::MetaMethod> meta_methods_pn {
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_BROWSE},
+	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_BROWSE},
+	{cp::Rpc::METH_GET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::GRANT_READ},
+	{cp::Rpc::METH_SET, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::IsSetter, cp::Rpc::GRANT_WRITE},
+	{cp::Rpc::SIG_VAL_CHANGED, cp::MetaMethod::Signature::VoidParam, cp::MetaMethod::Flag::IsSignal, cp::Rpc::GRANT_READ},
+};
+
+PropertyShvNode::PropertyShvNode(const char *property_name, QObject *property_obj, shv::iotqt::node::ShvNode *parent)
+	: Super(std::string(property_name), parent)
+	, m_propertyObj(property_obj)
+{
+	const QMetaObject *mo = m_propertyObj->metaObject();
+	m_metaProperty = mo->property(mo->indexOfProperty(property_name));
+}
+
+size_t PropertyShvNode::methodCount(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
+{
+	if(shv_path.empty()) {
+		if(m_metaProperty.isWritable() && m_metaProperty.hasNotifySignal())
+			return 5;
+		if(m_metaProperty.isWritable() && !m_metaProperty.hasNotifySignal())
+			return 4;
+		if(!m_metaProperty.isWritable() && m_metaProperty.hasNotifySignal())
+			return 4;
+		return 3;
+	}
+	return  Super::methodCount(shv_path);
+}
+
+const shv::chainpack::MetaMethod *PropertyShvNode::metaMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, size_t ix)
+{
+	if(shv_path.empty()) {
+		if(ix < methodCount(shv_path)) {
+			if(!m_metaProperty.isWritable() && m_metaProperty.hasNotifySignal())
+				return &(meta_methods_pn[ix+1]);
+			return &(meta_methods_pn[ix]);
+		}
+		else {
+			SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " on path: " + shv_path.join('/'));
+		}
+	}
+	return  Super::metaMethod(shv_path, ix);
+}
+
+shv::chainpack::RpcValue PropertyShvNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
+{
+	if(shv_path.empty()) {
+		if(method == cp::Rpc::METH_GET) {
+			QVariant qv = m_propertyObj->property(m_metaProperty.name());
+			return shv::iotqt::Utils::qVariantToRpcValue(qv);
+		}
+		if(method == cp::Rpc::METH_SET) {
+			QVariant qv = shv::iotqt::Utils::rpcValueToQVariant(params);
+			bool ok = m_propertyObj->setProperty(m_metaProperty.name(), qv);
+			return ok;
+		}
+	}
+	return  Super::callMethod(shv_path, method, params);
 }
 
 }}}
