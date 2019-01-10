@@ -2,6 +2,10 @@
 
 function UnpackContext(uint8_array)
 {
+	if(uint8_array.constructor.name === "ArrayBuffer")
+		uint8_array = new Uint8Array(uint8_array)
+	else if(uint8_array.constructor.name !== "Uint8Array")
+		throw new TypeError("UnpackContext must be constructed with Uint8Array")
 	this.data = uint8_array
 	this.index = 0;
 }
@@ -43,8 +47,8 @@ PackContext.transfer = function(source, length)
 		throw new TypeError('Source must be an instance of ArrayBuffer');
 	if (length <= source.byteLength)
 		return source.slice(0, length);
-	var source_view = new Uint8Array(source),
-		dest_view = new Uint8Array(new ArrayBuffer(length));
+	let source_view = new Uint8Array(source)
+	let dest_view = new Uint8Array(new ArrayBuffer(length));
 	dest_view.set(source_view);
 	return dest_view.buffer;
 }

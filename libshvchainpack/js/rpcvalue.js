@@ -1,11 +1,39 @@
 "use strict"
 
-function RpcValue(value, meta)
+function RpcValue(value, meta, type)
 {
 	if(value)
 		this.value = value;
 	if(meta)
 		this.meta = meta;
+	if(type) {
+		this.type = type;
+	}
+	else {
+		if(typeof value == "null")
+			this.type = RpcValue.Type.Null;
+		else if(typeof value == "boolean")
+			this.type = RpcValue.Type.Bool;
+		else if(typeof value == "string") {
+			this.value = Cpon.stringToUtf8(value);
+			this.type = RpcValue.Type.String;
+		}
+		else if(Array.isArray(value))
+			this.type = RpcValue.Type.List;
+		else if(typeof value == "Object") {
+			if(value.constructor.name === "Date") {
+				this.value = {epochMsec: value.valueOf(), utcOffsetMin: -value.getTimezoneOffset()}
+				this.type = RpcValue.Type.DateTime;
+			}
+			else {
+				this.type = RpcValue.Type.Map;
+			}
+		}
+		else if(Number.isInteger(value))
+			this.type = RpcValue.Type.Int;
+		else if(Number.isFinite(value))
+			this.type = RpcValue.Type.Double;
+	}
 }
 
 RpcValue.Type = Object.freeze({

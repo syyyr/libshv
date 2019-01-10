@@ -499,28 +499,32 @@ function CponWriter()
 
 CponWriter.prototype.write = function(rpc_val)
 {
-	if(rpc_val.meta) {
-		this.writeMeta(rpc_val.meta);
-	}
-	switch (rpc_val.type) {
-	case RpcValue.Type.Null: this.writeStringUtf8("null"); break;
-	case RpcValue.Type.Bool: this.writeBool(rpc_val.value); break;
-	case RpcValue.Type.String: this.writeCString(rpc_val.value); break;
-	case RpcValue.Type.UInt: this.writeUInt(rpc_val.value); break;
-	case RpcValue.Type.Int: this.writeInt(rpc_val.value); break;
-	case RpcValue.Type.Double: this.writeDouble(rpc_val.value); break;
-	case RpcValue.Type.Decimal: this.writeDecimal(rpc_val.value); break;
-	case RpcValue.Type.List: this.writeList(rpc_val.value); break;
-	case RpcValue.Type.Map: this.writeMap(rpc_val.value); break;
-	case RpcValue.Type.IMap: this.writeIMap(rpc_val.value); break;
-	case RpcValue.Type.DateTime: this.writeDateTime(rpc_val.value); break;
-	/*
-	case RpcValue::Type::Invalid:
-		if(WRITE_INVALID_AS_NULL) {
-			write_p(nullptr);
+	if(!(rpc_val && rpc_val.constructor.name === "RpcValue"))
+		rpc_val = new RpcValue(rpc_val)
+	if(rpc_val && rpc_val.constructor.name === "RpcValue") {
+		if(rpc_val.meta) {
+			this.writeMeta(rpc_val.meta);
 		}
-		break;
-		*/
+		switch (rpc_val.type) {
+		case RpcValue.Type.Null: this.writeStringUtf8("null"); break;
+		case RpcValue.Type.Bool: this.writeBool(rpc_val.value); break;
+		case RpcValue.Type.String: this.writeCString(rpc_val.value); break;
+		case RpcValue.Type.UInt: this.writeUInt(rpc_val.value); break;
+		case RpcValue.Type.Int: this.writeInt(rpc_val.value); break;
+		case RpcValue.Type.Double: this.writeDouble(rpc_val.value); break;
+		case RpcValue.Type.Decimal: this.writeDecimal(rpc_val.value); break;
+		case RpcValue.Type.List: this.writeList(rpc_val.value); break;
+		case RpcValue.Type.Map: this.writeMap(rpc_val.value); break;
+		case RpcValue.Type.IMap: this.writeIMap(rpc_val.value); break;
+		case RpcValue.Type.DateTime: this.writeDateTime(rpc_val.value); break;
+		/*
+		case RpcValue::Type::Invalid:
+			if(WRITE_INVALID_AS_NULL) {
+				write_p(nullptr);
+			}
+			break;
+			*/
+		}
 	}
 }
 

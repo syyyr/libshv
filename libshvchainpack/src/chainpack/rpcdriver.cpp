@@ -257,6 +257,8 @@ int RpcDriver::processReadData(const std::string &read_data)
 	try {
 		RpcValue::MetaData meta_data;
 		size_t meta_data_end_pos = decodeMetaData(meta_data, protocol_type, read_data, in.tellg());
+		if(meta_data_end_pos > read_len)
+			throw std::runtime_error("Data header corrupted");
 		onRpcDataReceived(protocol_type, std::move(meta_data), read_data, meta_data_end_pos, read_len - meta_data_end_pos);
 	}
 	catch (std::exception &e) {
