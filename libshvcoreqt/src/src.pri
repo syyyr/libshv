@@ -10,4 +10,6 @@ SOURCES += \
 	$$PWD/utils.cpp
 
 include ($$PWD/utils/utils.pri)
+include ($$PWD/data/data.pri)
+
 
