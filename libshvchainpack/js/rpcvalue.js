@@ -59,8 +59,15 @@ RpcValue.fromCpon = function(cpon)
 	}
 	if(unpack_context === null)
 		throw new TypeError("Invalid input data type")
-	let rc = new CponReader(unpack_context);
-	return rc.read();
+	let rd = new CponReader(unpack_context);
+	return rd.read();
+}
+
+RpcValue.fromChainPack = function(data)
+{
+	let unpack_context = new UnpackContext(data);
+	let rd = new ChainPackReader(unpack_context);
+	return rd.read();
 }
 
 RpcValue.prototype.toInt = function()
@@ -87,7 +94,14 @@ RpcValue.prototype.toCpon = function()
 {
 	let wr = new CponWriter();
 	wr.write(this);
-	return wr.ctx.bytes();
+	return wr.ctx.buffer();
+}
+
+RpcValue.prototype.toChainPack = function()
+{
+	let wr = new ChainPackWriter();
+	wr.write(this);
+	return wr.ctx.buffer();
 }
 
 RpcValue.prototype.isValid = function()

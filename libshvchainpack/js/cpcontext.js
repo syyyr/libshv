@@ -62,17 +62,39 @@ PackContext.prototype.putByte = function(b)
 	this.data[this.length++] = b;
 }
 
-PackContext.prototype.putBytes = function(bytes)
+PackContext.prototype.writeStringUtf8 = function(str)
 {
-	if(typeof bytes === "string") {
-		for (let i = 0; i < bytes.length; i++) {
-			let b = bytes.charCodeAt(i) % 256;
-			this.putByte(b);
+	for (let i=0; i < str.length; i++) {
+		let charcode = str.charCodeAt(i);
+		if (charcode < 0x80)
+			this.putByte(charcode);
+		else if (charcode < 0x800) {
+			this.putByte(0xc0 | (charcode >> 6));
+			this.putByte(0x80 | (charcode & 0x3f));
+		}
+		else if (charcode < 0xd800 || charcode >= 0xe000) {
+			this.putByte(0xe0 | (charcode >> 12));
+			this.putByte(0x80 | ((charcode>>6) & 0x3f));
+			this.putByte(0x80 | (charcode & 0x3f));
+		}
+		// surrogate pair
+		else {
+			i++;
+			charcode = ((charcode&0x3ff)<<10)|(str.charCodeAt(i)&0x3ff)
+			this.putByte(0xf0 | (charcode >>18));
+			this.putByte(0x80 | ((charcode>>12) & 0x3f));
+			this.putByte(0x80 | ((charcode>>6) & 0x3f));
+			this.putByte(0x80 | (charcode & 0x3f));
 		}
 	}
 }
-
+/*
 PackContext.prototype.bytes = function()
 {
 	return this.data.subarray(0, this.length)
+}
+*/
+PackContext.prototype.buffer = function()
+{
+	return this.data.buffer.slice(0, this.length)
 }

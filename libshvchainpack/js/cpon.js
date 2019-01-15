@@ -6,8 +6,9 @@ function Cpon()
 
 Cpon.ProtocolType = 2;
 
-Cpon.utf8ToString = function(uint8_array)
+Cpon.utf8ToString = function(bytearray)
 {
+	let uint8_array = new Uint8Array(bytearray)
 	var str = '';
 	for (let i = 0; i < uint8_array.length; i++) {
 		var value = uint8_array[i];
@@ -37,8 +38,8 @@ Cpon.utf8ToString = function(uint8_array)
 Cpon.stringToUtf8 = function(str)
 {
 	let wr = new CponWriter();
-	wr.writeStringUtf8(str);
-	return wr.ctx.bytes();
+	wr.ctx.writeStringUtf8(str);
+	return wr.ctx.buffer();
 }
 
 function CponReader(unpack_context)
@@ -310,8 +311,7 @@ CponReader.prototype.readCString = function(rpc_val)
 {
 	let pctx = new PackContext();
 	this.ctx.getByte(); // eat '"'
-	let n = 0;
-	while(n < 100) {
+	while(true) {
 		let b = this.ctx.getByte();
 		if(b == '\\'.charCodeAt(0)) {
 			b = this.ctx.getByte();
@@ -336,9 +336,8 @@ CponReader.prototype.readCString = function(rpc_val)
 				pctx.putByte(b);
 			}
 		}
-		n++;
 	}
-	rpc_val.value = pctx.bytes();
+	rpc_val.value = pctx.buffer();
 	rpc_val.type = RpcValue.Type.String;
 }
 
@@ -506,7 +505,7 @@ CponWriter.prototype.write = function(rpc_val)
 			this.writeMeta(rpc_val.meta);
 		}
 		switch (rpc_val.type) {
-		case RpcValue.Type.Null: this.writeStringUtf8("null"); break;
+		case RpcValue.Type.Null: this.ctx.writeStringUtf8("null"); break;
 		case RpcValue.Type.Bool: this.writeBool(rpc_val.value); break;
 		case RpcValue.Type.String: this.writeCString(rpc_val.value); break;
 		case RpcValue.Type.UInt: this.writeUInt(rpc_val.value); break;
@@ -527,7 +526,7 @@ CponWriter.prototype.write = function(rpc_val)
 		}
 	}
 }
-
+/*
 CponWriter.prototype.writeStringUtf8 = function(str)
 {
 	for (let i=0; i < str.length; i++) {
@@ -554,46 +553,46 @@ CponWriter.prototype.writeStringUtf8 = function(str)
 		}
 	}
 }
-
+*/
 CponWriter.prototype.writeCString = function(buffer)
 {
-	this.ctx.putBytes("\"");
+	this.ctx.writeStringUtf8("\"");
 	let data = new Uint8Array(buffer);
 	for (let i=0; i < data.length; i++) {
 		let b = data[i];
 		switch(b) {
 		case 0:
-			this.ctx.putBytes("\\0");
+			this.ctx.writeStringUtf8("\\0");
 			break;
 		case '\\'.charCodeAt(0):
-			this.ctx.putBytes("\\\\");
+			this.ctx.writeStringUtf8("\\\\");
 			break;
 		case '\t'.charCodeAt(0):
-			this.ctx.putBytes("\\t");
+			this.ctx.writeStringUtf8("\\t");
 			break;
 		case '\b'.charCodeAt(0):
-			this.ctx.putBytes("\\b");
+			this.ctx.writeStringUtf8("\\b");
 			break;
 		case '\r'.charCodeAt(0):
-			this.ctx.putBytes("\\r");
+			this.ctx.writeStringUtf8("\\r");
 			break;
 		case '\n'.charCodeAt(0):
-			this.ctx.putBytes("\\n");
+			this.ctx.writeStringUtf8("\\n");
 			break;
 		case '"'.charCodeAt(0):
-			this.ctx.putBytes("\\\"");
+			this.ctx.writeStringUtf8("\\\"");
 			break;
 		default:
 			this.ctx.putByte(b);
 		}
 	}
-	this.ctx.putBytes("\"");
+	this.ctx.writeStringUtf8("\"");
 }
 
 CponWriter.prototype.writeDateTime = function(dt)
 {
 	if(!dt) {
-		this.ctx.putBytes('d""');
+		this.ctx.writeStringUtf8('d""');
 		return;
 	}
 	let epoch_msec = dt.epochMsec;
@@ -601,19 +600,19 @@ CponWriter.prototype.writeDateTime = function(dt)
 	let msec = epoch_msec + 60000 * utc_offset;
 	let s = new Date(msec).toISOString();
 	let rtrim = (msec % 1000)? 1: 5;
-	this.ctx.putBytes('d"');
+	this.ctx.writeStringUtf8('d"');
 	for (let i = 0; i < s.length-rtrim; i++)
 		this.ctx.putByte(s.charCodeAt(i));
 	if(!utc_offset) {
-		this.ctx.putBytes('Z');
+		this.ctx.writeStringUtf8('Z');
 	}
 	else {
 		if(utc_offset < 0) {
-			this.ctx.putBytes('-');
+			this.ctx.writeStringUtf8('-');
 			utc_offset = -utc_offset;
 		}
 		else {
-			this.ctx.putBytes('+');
+			this.ctx.writeStringUtf8('+');
 		}
 		s = ((utc_offset / 60) >> 0).toString().padStart(2, "0");
 		if(utc_offset % 60)
@@ -621,33 +620,33 @@ CponWriter.prototype.writeDateTime = function(dt)
 		for (let i = 0; i < s.length; i++)
 			this.ctx.putByte(s.charCodeAt(i));
 	}
-	this.ctx.putBytes('"');
+	this.ctx.writeStringUtf8('"');
 }
 
 CponWriter.prototype.writeBool = function(b)
 {
-	this.ctx.putBytes(b? "true": "false");
+	this.ctx.writeStringUtf8(b? "true": "false");
 }
 
 CponWriter.prototype.writeMeta = function(map)
 {
-	this.ctx.putBytes("<");
+	this.ctx.writeStringUtf8("<");
 	this.writeMapContent(map);
-	this.ctx.putBytes(">")
+	this.ctx.writeStringUtf8(">")
 }
 
 CponWriter.prototype.writeIMap = function(map)
 {
-	this.ctx.putBytes("i{");
+	this.ctx.writeStringUtf8("i{");
 	this.writeMapContent(map);
-	this.ctx.putBytes("}")
+	this.ctx.writeStringUtf8("}")
 }
 
 CponWriter.prototype.writeMap = function(map)
 {
-	this.ctx.putBytes("{")
+	this.ctx.writeStringUtf8("{")
 	this.writeMapContent(map);
-	this.ctx.putBytes("}")
+	this.ctx.writeStringUtf8("}")
 }
 
 CponWriter.prototype.writeMapContent = function(map)
@@ -663,10 +662,10 @@ CponWriter.prototype.writeMapContent = function(map)
 			}
 			else {
 				this.ctx.putByte('"'.charCodeAt(0))
-				this.writeStringUtf8(p);
+				this.ctx.writeStringUtf8(p);
 				this.ctx.putByte('"'.charCodeAt(0))
 			}
-			this.ctx.putBytes(":")
+			this.ctx.writeStringUtf8(":")
 			this.write(map[p]);
 		}
 	}
@@ -686,20 +685,20 @@ CponWriter.prototype.writeList = function(lst)
 CponWriter.prototype.writeUInt = function(num)
 {
 	var s = num.toString();
-	this.writeStringUtf8(s);
+	this.ctx.writeStringUtf8(s);
 	this.ctx.putByte("u".charCodeAt(0))
 }
 CponWriter.prototype.writeInt = function(num)
 {
 	var s = num.toString();
-	this.writeStringUtf8(s);
+	this.ctx.writeStringUtf8(s);
 }
 CponWriter.prototype.writeDouble = function(num)
 {
 	var s = num.toString();
 	if(s.indexOf(".") < 0)
 		s += "."
-	this.writeStringUtf8(s);
+	this.ctx.writeStringUtf8(s);
 }
 CponWriter.prototype.writeDecimal = function(val)
 {

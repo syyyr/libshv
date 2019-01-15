@@ -25,6 +25,23 @@ ChainPack.CP_FALSE = 253;
 ChainPack.CP_TRUE = 254;
 ChainPack.CP_TERM = 255;
 
+// UTC msec since 2.2. 2018
+// Fri Feb 02 2018 00:00:00 == 1517529600 EPOCH
+ChainPack.SHV_EPOCH_MSEC = 1517529600000;
+
+ChainPack.isLittleEndian = (function() {
+	let buffer = new ArrayBuffer(2);
+	new DataView(buffer).setInt16(0, 256, true /* littleEndian */);
+	// Int16Array uses the platform's endianness.
+	return new Int16Array(buffer)[0] === 256;
+})();
+
+ChainPack.div = function(n, d)
+{
+	let r = n % d;
+	return [(n - r) / d, r];
+}
+
 function ChainPackReader(unpack_context)
 {
 	if(unpack_context.constructor.name === "ArrayBuffer")
@@ -36,7 +53,153 @@ function ChainPackReader(unpack_context)
 	this.ctx = unpack_context;
 }
 
-ChainPackReader.prototype.readUInt = function()
+ChainPackReader.prototype.read = function()
+{
+	let rpc_val = new RpcValue();
+	let packing_schema = this.ctx.getByte();
+
+	if(packing_schema == ChainPack.CP_MetaMap) {
+		rpc_val.meta = this.readMap();
+	}
+
+	if(packing_schema < 128) {
+		if(packing_schema & 64) {
+			// tiny Int
+			rpc_val.type = RpcValue.Type.Int;
+			rpc_val.value = packing_schema & 63;
+		}
+		else {
+			// tiny UInt
+			rpc_val.type = RpcValue.Type.UInt;
+			rpc_val.value = packing_schema & 63;
+		}
+	}
+	else {
+		switch(packing_schema) {
+		case ChainPack.CP_Null: {
+			rpc_val.type = RpcValue.Type.Null;
+			rpc_val.value = null;
+			break;
+		}
+		case ChainPack.CP_TRUE: {
+			rpc_val.type = RpcValue.Type.Bool;
+			rpc_val.value = true;
+			break;
+		}
+		case ChainPack.CP_FALSE: {
+			rpc_val.type = RpcValue.Type.Bool;
+			rpc_val.value = false;
+			break;
+		}
+		case ChainPack.CP_Int: {
+			rpc_val.value = this.readUIntData()
+			rpc_val.type = RpcValue.Type.Int;
+			break;
+		}
+		case ChainPack.CP_UInt: {
+			rpc_val.value = this.readUIntData()
+			rpc_val.type = RpcValue.Type.UInt;
+			break;
+		}
+		case ChainPack.CP_Double: {
+			let data = new Uint8Array(8);
+			for (var i = 0; i < 8; i++)
+				data[i] = this.ctx.getByte();
+			rpc_val.value = new DataView(dat.buffer).getFloat64(0, true); //little endian
+			rpc_val.type = RpcValue.Type.Double;
+			break;
+		}
+		case ChainPack.CP_Decimal: {
+			let mant = this.readIntData();
+			let exp = this.readIntData();
+			rpc_val.value = {mantisa: mant, exponent: exp};
+			rpc_val.type = RpcValue.Type.Decimal;
+			break;
+		}
+		case ChainPack.CP_DateTime: {
+			let d = this.readUIntData();
+			let offset = 0;
+			let has_tz_offset = d & 1;
+			let has_not_msec = d & 2;
+			d >>= 2;
+			if(has_tz_offset) {
+				offset = d & 0x7F;
+				if(offset & 0x40) {
+					// sign extension
+					offset &= 0x3F;
+					offset = -offset;
+				}
+				d >>= 7;
+			}
+			if(has_not_msec)
+				d *= 1000;
+			d += ChainPack.SHV_EPOCH_MSEC;
+
+			rpc_val.value = {epochMsec: d, utcOffsetMin: offset * 15};
+			rpc_val.type = RpcValue.Type.DateTime;
+			break;
+		}
+		case ChainPack.CP_Map: {
+			rpc_val.value = this.readMap();
+			rpc_val.type = RpcValue.Type.Map;
+			break;
+		}
+		case ChainPack.CP_IMap: {
+			rpc_val.value = this.readMap();
+			rpc_val.type = RpcValue.Type.IMap;
+			break;
+		}
+		case ChainPack.CP_List: {
+			rpc_val.value = this.readList();
+			rpc_val.type = RpcValue.Type.Map;
+			break;
+		}
+		case ChainPack.CP_String: {
+			let str_len = this.readUInt();
+			let arr = Uint8Array(str_len)
+			for (var i = 0; i < str_len; i++)
+				arr[i] = getByte()
+			rpc_val.value = arr.buffer;
+			rpc_val.type = RpcValue.Type.String;
+			break;
+		}
+		case ChainPack.CP_CString:
+		{
+			// variation of CponReader.readCString()
+			let pctx = new PackContext();
+			while(true) {
+				let b = this.ctx.getByte();
+				if(b == '\\'.charCodeAt(0)) {
+					b = this.ctx.getByte();
+					switch (b) {
+					case '\\'.charCodeAt(0): pctx.putByte("\\"); break;
+					case '0'.charCodeAt(0): pctx.putByte(0); break;
+					default: pctx.putByte(b); break;
+					}
+				}
+				else {
+					if (b == 0) {
+						// end of string
+						break;
+					}
+					else {
+						pctx.putByte(b);
+					}
+				}
+			}
+			rpc_val.value = pctx.buffer();
+			rpc_val.type = RpcValue.Type.String;
+
+			break;
+		}
+		default:
+			throw new TypeError("ChainPack - Invalid type info.");
+		}
+	}
+	return rpc_val;
+}
+
+ChainPackReader.prototype.readUIntData = function(info)
 {
 	let bitlen = 0;
 	let num = 0;
@@ -57,13 +220,56 @@ ChainPackReader.prototype.readUInt = function()
 		let r = this.ctx.getByte();
 		num = (num << 8) + r;
 	}
-
+	if(info)
+		info.bitlen = bitlen
 	return num;
+}
+
+ChainPackReader.prototype.readIntData = function()
+{
+	let info = {};
+	let num = this.readUIntData(info);
+	let sign_bit_mask = 1 << (info.bitlen - 1);
+	let neg = num & sign_bit_mask;
+	let snum = num;
+	if(neg) {
+		snum &= ~sign_bit_mask;
+		snum = -snum;
+	}
+	return snum;
 }
 
 function ChainPackWriter()
 {
 	this.ctx = new PackContext();
+}
+
+ChainPackWriter.prototype.write = function(rpc_val)
+{
+	if(!(rpc_val && rpc_val.constructor.name === "RpcValue"))
+		rpc_val = new RpcValue(rpc_val)
+	if(rpc_val && rpc_val.constructor.name === "RpcValue") {
+		if(rpc_val.meta) {
+			this.writeMeta(rpc_val.meta);
+		}
+		switch (rpc_val.type) {
+		case RpcValue.Type.Null: this.ctx.putByte(ChainPack.CP_Null); break;
+		case RpcValue.Type.Bool: this.ctx.putByte(rpc_val.value? ChainPack.CP_TRUE: ChainPack.CP_FALSE); break;
+		case RpcValue.Type.String: this.writeString(rpc_val.value); break;
+		case RpcValue.Type.UInt: this.writeUInt(rpc_val.value); break;
+		case RpcValue.Type.Int: this.writeInt(rpc_val.value); break;
+		case RpcValue.Type.Double: this.writeDouble(rpc_val.value); break;
+		case RpcValue.Type.Decimal: this.writeDecimal(rpc_val.value); break;
+		case RpcValue.Type.List: this.writeList(rpc_val.value); break;
+		case RpcValue.Type.Map: this.writeMap(rpc_val.value); break;
+		case RpcValue.Type.IMap: this.writeIMap(rpc_val.value); break;
+		case RpcValue.Type.DateTime: this.writeDateTime(rpc_val.value); break;
+		default:
+			// better to write null than create invalid chain-pack
+			this.ctx.putByte(ChainPack.CP_Null);
+			break;
+		}
+	}
 }
 
 //ChainPackWriter.MAX_BIT_LEN = Math.log(Number.MAX_SAFE_INTEGER) / Math.log(2);
@@ -85,8 +291,8 @@ ChainPackWriter.MAX_BIT_LEN = 32;
 
 ChainPackWriter.significantBitsPartLength = function(n)
 {
-	if(n >= 2**32)
-		throw new RangeError("Cannot pack int wider than 32 bits")
+	if(n >= 2**31)
+		throw new RangeError("Cannot pack int wider than 31 bits")
 	const mask = 1 << (ChainPackWriter.MAX_BIT_LEN - 1);
 	let len = ChainPackWriter.MAX_BIT_LEN;
 	for (; n && !(n & mask); --len) {
@@ -109,7 +315,7 @@ ChainPackWriter.bytesNeeded = function(bit_len)
 ChainPackWriter.expandBitLen = function(bit_len)
 {
 	let ret;
-	let byte_cnt = ChainPack.bytesNeeded(bit_len);
+	let byte_cnt = ChainPackWriter.bytesNeeded(bit_len);
 	if(bit_len <= 28) {
 		ret = byte_cnt * (8 - 1) - 1;
 	}
@@ -156,15 +362,21 @@ ChainPackWriter.prototype.writeUIntData = function(num)
 
 ChainPackWriter.prototype.writeIntData = function(snum)
 {
-	let num = snum < 0? -snum: snum;
 	let neg = (snum < 0);
+	let num = neg? -snum: snum;
 
 	let bitlen = ChainPackWriter.significantBitsPartLength(num);
 	bitlen++; // add sign bit
 	if(neg) {
-		let sign_pos = ChainPack.expandBitLen(bitlen);
+		if(bitlen >= 32)
+			throw new RangeError("Cannot pack negative int leser than " + (-(2**31 - 1)))
+		let sign_pos = ChainPackWriter.expandBitLen(bitlen);
 		let sign_bit_mask = 1 << sign_pos;
 		num |= sign_bit_mask;
+	}
+	else {
+		if(bitlen >= 33)
+			throw new RangeError("Cannot pack int greater than " + (2**32 - 1))
 	}
 	this.writeUIntDataHelper(num, bitlen);
 }
@@ -186,7 +398,76 @@ ChainPackWriter.prototype.writeInt = function(n)
 		this.ctx.putByte((n % 64) + 64);
 	}
 	else {
-		this.ctx.putByte(CP_Int);
+		this.ctx.putByte(ChainPack.CP_Int);
 		this.writeIntData(n);
 	}
+}
+
+ChainPackWriter.prototype.writeDecimal = function(val)
+{
+	this.ctx.putByte(ChainPack.CP_Decimal);
+	this.writeIntData(val.mantisa);
+	this.writeIntData(val.exponent);
+}
+
+ChainPackWriter.prototype.writeList = function(lst)
+{
+	this.ctx.putByte(ChainPack.CP_List);
+	for(let i=0; i<lst.length; i++)
+		this.write(lst[i])
+	this.ctx.putByte(ChainPack.CP_TERM);
+}
+
+ChainPackWriter.prototype.writeMapData = function(map)
+{
+	for (let p in map) {
+		if (map.hasOwnProperty(p)) {
+			let c = p.charCodeAt(0);
+			if(c >= 48 && c <= 57) {
+				this.writeInt(parseInt(p))
+			}
+			else {
+				this.writeJSString(p);
+			}
+			this.write(map[p]);
+		}
+	}
+	this.ctx.putByte(ChainPack.CP_TERM);
+}
+
+ChainPackWriter.prototype.writeMap = function(map)
+{
+	this.ctx.putByte(ChainPack.CP_Map);
+	this.writeMapData(map);
+}
+
+ChainPackWriter.prototype.writeIMap = function(map)
+{
+	this.ctx.putByte(ChainPack.CP_IMap);
+	this.writeMapData(map);
+}
+
+ChainPackWriter.prototype.writeMeta = function(map)
+{
+	this.ctx.putByte(ChainPack.CP_MetaMap);
+	this.writeMapData(map);
+}
+
+ChainPackWriter.prototype.writeString = function(str)
+{
+	this.ctx.putByte(ChainPack.CP_String);
+	let arr = new Uint8Array(str)
+	this.writeUIntData(arr.length)
+	for (let i=0; i < arr.length; i++)
+		this.ctx.putByte(arr[i])
+}
+
+ChainPackWriter.prototype.writeJSString = function(str)
+{
+	this.ctx.putByte(ChainPack.CP_String);
+	let pctx = new PackContext();
+	pctx.writeStringUtf8(str);
+	this.writeUIntData(pctx.length)
+	for (let i=0; i < pctx.length; i++)
+		this.ctx.putByte(pctx.data[i])
 }
