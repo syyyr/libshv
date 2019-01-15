@@ -58,6 +58,10 @@ RpcMessage::RpcMessage(const RpcValue &val)
 		SHVCHP_EXCEPTION("Value is not IMap");
 	m_value = val;
 }
+
+RpcMessage::~RpcMessage()
+{
+}
 /*
 void RpcMessage::setMetaTypeExplicit(bool b)
 {
@@ -65,29 +69,29 @@ void RpcMessage::setMetaTypeExplicit(bool b)
 	m_isMetaTypeExplicit = b;
 }
 */
-bool RpcMessage::hasKey(RpcValue::UInt key) const
+bool RpcMessage::hasKey(RpcValue::Int key) const
 {
 	return m_value.toIMap().count(key);
 }
 
-RpcValue RpcMessage::value(RpcValue::UInt key) const
+RpcValue RpcMessage::value(RpcValue::Int key) const
 {
 	return m_value.at(key);
 }
 
-void RpcMessage::setValue(RpcValue::UInt key, const RpcValue &val)
+void RpcMessage::setValue(RpcValue::Int key, const RpcValue &val)
 {
 	assert(key >= RpcMessage::MetaType::Key::Params && key < RpcMessage::MetaType::Key::MAX);
 	checkMetaValues();
 	m_value.set(key, val);
 }
 
-RpcValue RpcMessage::metaValue(RpcValue::UInt key) const
+RpcValue RpcMessage::metaValue(RpcValue::Int key) const
 {
 	return m_value.metaValue(key);
 }
 
-void RpcMessage::setMetaValue(RpcValue::UInt key, const RpcValue &val)
+void RpcMessage::setMetaValue(RpcValue::Int key, const RpcValue &val)
 {
 	checkMetaValues();
 	m_value.setMetaValue(key, val);
@@ -445,12 +449,10 @@ std::string RpcMessage::toCpon() const
 //==================================================================
 // RpcRequest
 //==================================================================
-/*
-RpcValue::String RpcRequest::method() const
+RpcRequest::~RpcRequest()
 {
-	return value(RpcMessage::MetaType::Key::Method).toString();
 }
-*/
+
 RpcRequest &RpcRequest::setMethod(const RpcValue::String &met)
 {
 	return setMethod(RpcValue::String(met));
@@ -482,6 +484,10 @@ RpcRequest& RpcRequest::setParams(const RpcValue& p)
 //==================================================================
 // RpcNotify
 //==================================================================
+RpcSignal::~RpcSignal()
+{
+}
+
 void RpcSignal::write(AbstractStreamWriter &wr, const std::string &method, std::function<void (AbstractStreamWriter &)> write_params_callback)
 {
 	RpcValue::MetaData md;
@@ -497,6 +503,10 @@ void RpcSignal::write(AbstractStreamWriter &wr, const std::string &method, std::
 //==================================================================
 // RpcResponse
 //==================================================================
+RpcResponse::~RpcResponse()
+{
+}
+
 RpcResponse RpcResponse::forRequest(const RpcValue::MetaData &meta)
 {
 	RpcResponse ret;

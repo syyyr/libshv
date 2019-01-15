@@ -40,11 +40,14 @@ public:
 public:
 	RpcMessage();
 	RpcMessage(const RpcValue &val);
+	RpcMessage(const RpcMessage &val) = default;
+	virtual ~RpcMessage();
+
 	const RpcValue& value() const {return m_value;}
 protected:
-	bool hasKey(RpcValue::UInt key) const;
-	RpcValue value(RpcValue::UInt key) const;
-	void setValue(RpcValue::UInt key, const RpcValue &val);
+	bool hasKey(RpcValue::Int key) const;
+	RpcValue value(RpcValue::Int key) const;
+	void setValue(RpcValue::Int key, const RpcValue &val);
 public:
 	bool isValid() const;
 	bool isRequest() const;
@@ -113,8 +116,8 @@ public:
 	std::string toCpon() const;
 
 	const RpcValue::MetaData& metaData() const {return m_value.metaData();}
-	RpcValue metaValue(RpcValue::UInt key) const;
-	void setMetaValue(RpcValue::UInt key, const RpcValue &val);
+	RpcValue metaValue(RpcValue::Int key) const;
+	void setMetaValue(RpcValue::Int key, const RpcValue &val);
 
 	virtual void write(AbstractStreamWriter &wr) const;
 
@@ -138,8 +141,8 @@ private:
 	using Super = RpcMessage;
 public:
 	RpcRequest() : Super() {}
-	//RpcRequest(const Value &id) : Super(Json()) {setId(id);}
 	RpcRequest(const RpcMessage &msg) : Super(msg) {}
+	~RpcRequest() override;
 public:
 	RpcRequest& setMethod(const RpcValue::String &met);
 	RpcRequest& setMethod(RpcValue::String &&met);
@@ -159,8 +162,8 @@ private:
 	using Super = RpcRequest;
 public:
 	RpcSignal() : Super() {}
-	//RpcRequest(const Value &id) : Super(Json()) {setId(id);}
 	RpcSignal(const RpcMessage &msg) : Super(msg) {}
+	~RpcSignal() override;
 public:
 	RpcRequest& setRequestId(const RpcValue::Int requestId) = delete;
 
@@ -259,6 +262,8 @@ public:
 	//RpcResponse(const Value &request_id) : Super(Json()) { setId(request_id); }
 	RpcResponse() : Super() {}
 	RpcResponse(const RpcMessage &msg) : Super(msg) {}
+	RpcResponse(const RpcResponse &msg) = default;
+	~RpcResponse() override;
 
 	static RpcResponse forRequest(const RpcValue::MetaData &meta);
 	static RpcResponse forRequest(const RpcRequest &rq) {return forRequest(rq.metaData());}
