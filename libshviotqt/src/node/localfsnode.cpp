@@ -177,15 +177,16 @@ chainpack::RpcValue LocalFSNode::ndWrite(const QString &path, const chainpack::R
 		SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for writing.");
 	}
 	else if (methods_params.isList()){
-		chainpack::RpcValue::List params_list = methods_params.toList();
+		chainpack::RpcValue::List params = methods_params.toList();
 
-		if (params_list.size() != 2){
+		if (params.size() != 2){
 			SHV_EXCEPTION("Cannot write to file " + f.fileName().toStdString() + ". Invalid parameters count.");
 		}
-		chainpack::RpcValue::Map flags = params_list[0].toMap();
-		QFile::OpenMode open_mode = (flags.value("append").toBool()) ? QFile::Append : QFile::WriteOnly;
+		chainpack::RpcValue::Map flags = (params[1].isMap()) ? params[1].toMap() : chainpack::RpcValue::Map();
+		QFile::OpenMode open_mode = (flags.hasKey("append") && flags.value("append").toBool()) ? QFile::Append : QFile::WriteOnly;
+
 		if(f.open(open_mode)) {
-			const chainpack::RpcValue::String &content = params_list[0].toString();
+			const chainpack::RpcValue::String &content = (params[0].isString()) ? params[0].toString() : "";
 			f.write(content.data(), content.size());
 			return true;
 		}
@@ -244,8 +245,10 @@ chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::
 		}
 		SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for writing.");
 	}
+	else{
+		SHV_EXCEPTION("Unsupported param type.");
+	}
 
-	SHV_EXCEPTION("Unsupported param type.");
 	return false;
 }
 
