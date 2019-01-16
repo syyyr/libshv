@@ -221,27 +221,31 @@ chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::
 	else if (methods_params.isList()){
 		chainpack::RpcValue::List params = methods_params.toList();
 
-		if (!params.empty()){
-			QString file_path = dir_path + QString::fromStdString(params[0].toString());
+		if (params.size() != 2){
+			SHV_EXCEPTION("Invalid params count.");
+		}
 
-			QDir d = QFileInfo(file_path).dir();
-			if (d.mkpath(d.absolutePath())){
-				QFile f(file_path);
-				if(f.open(QFile::WriteOnly)) {
-					if ((params.size() >= 2)){
-						f.write(params[1].toString().data(), params[1].toString().size());
-					}
-					return true;
-				}
-				SHV_EXCEPTION("Cannot open file " + file_path.toStdString() + " for writing.");
-			}
+		QString file_path = dir_path + QString::fromStdString(params[0].toString());
+		QDir d = QFileInfo(file_path).dir();
+
+		if (!d.mkpath(d.absolutePath())){
 			SHV_EXCEPTION("Cannot create path " + file_path.toStdString() + ".");
 		}
-		SHV_EXCEPTION("Empty params.");
+
+		QFile f(file_path);
+
+		if (f.exists()){
+			SHV_EXCEPTION("File " + f.fileName().toStdString() + " already exists.");
+		}
+
+		if(f.open(QFile::WriteOnly)) {
+			f.write(params[1].toString().data(), params[1].toString().size());
+			return true;
+		}
+		SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for writing.");
 	}
-	else{
-		SHV_EXCEPTION("Unsupported param type.");
-	}
+
+	SHV_EXCEPTION("Unsupported param type.");
 	return false;
 }
 
