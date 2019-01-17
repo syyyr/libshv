@@ -182,11 +182,11 @@ chainpack::RpcValue LocalFSNode::ndWrite(const QString &path, const chainpack::R
 		if (params.size() != 2){
 			SHV_EXCEPTION("Cannot write to file " + f.fileName().toStdString() + ". Invalid parameters count.");
 		}
-		chainpack::RpcValue::Map flags = (params[1].isMap()) ? params[1].toMap() : chainpack::RpcValue::Map();
-		QFile::OpenMode open_mode = (flags.hasKey("append") && flags.value("append").toBool()) ? QFile::Append : QFile::WriteOnly;
+		chainpack::RpcValue::Map flags = params[1].toMap();
+		QFile::OpenMode open_mode = (flags.value("append").toBool()) ? QFile::Append : QFile::WriteOnly;
 
 		if(f.open(open_mode)) {
-			const chainpack::RpcValue::String &content = (params[0].isString()) ? params[0].toString() : "";
+			const chainpack::RpcValue::String &content = params[0].toString();
 			f.write(content.data(), content.size());
 			return true;
 		}
@@ -227,7 +227,7 @@ chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::
 		}
 
 		QString file_path = dir_path + QString::fromStdString(params[0].toString());
-		QDir d = QFileInfo(file_path).dir();
+		QDir d(dir_path);
 
 		if (!d.mkpath(d.absolutePath())){
 			SHV_EXCEPTION("Cannot create path " + file_path.toStdString() + ".");
