@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-QT -= core widgets
+QT -= core widgets gui
 
 isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
 	SHV_PROJECT_TOP_BUILDDIR=$$shadowed($$PWD)/..
