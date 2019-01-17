@@ -35,7 +35,7 @@ private:
 	chainpack::RpcValue ndMkfile(const QString &path, const shv::chainpack::RpcValue &methods_params);
 	chainpack::RpcValue ndMkdir(const QString &path, const shv::chainpack::RpcValue &methods_params);
 	chainpack::RpcValue ndRmdir(const QString &path, bool recursively);
-private:
+protected:
 	QDir m_rootDir;
 };
 
