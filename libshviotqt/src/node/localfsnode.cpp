@@ -207,11 +207,10 @@ chainpack::RpcValue LocalFSNode::ndDelete(const QString &path)
 
 chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::RpcValue &methods_params)
 {
-	QString dir_path = m_rootDir.absolutePath() + '/' + path;
 	std::string error;
 
 	if (methods_params.isString()){
-		QString file_path = dir_path + "/" + QString::fromStdString(methods_params.toString());
+		QString file_path = m_rootDir.absolutePath() + '/' + path + '/' + QString::fromStdString(methods_params.toString());
 
 		QFile f(file_path);
 		if(f.open(QFile::WriteOnly)) {
@@ -226,8 +225,8 @@ chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::
 			SHV_EXCEPTION("Invalid params count.");
 		}
 
-		QString file_path = dir_path + QString::fromStdString(params[0].toString());
-		QDir d(dir_path);
+		QString file_path = m_rootDir.absolutePath() + '/' + path + '/' + QString::fromStdString(params[0].toString());
+		QDir d(QFileInfo(file_path).dir());
 
 		if (!d.mkpath(d.absolutePath())){
 			SHV_EXCEPTION("Cannot create path " + file_path.toStdString() + ".");
