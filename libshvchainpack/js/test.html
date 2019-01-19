@@ -19,13 +19,13 @@
 		</p>
 		<script type="text/javascript">
 			let txtLog = document.getElementById("txtLog");
-			function log()
+			function log(...args)
 			{
 				let line = "";
-				for (let i=0; i < arguments.length; i++) {
+				for (let i=0; i < args.length; i++) {
 					if(i > 0)
 						line += " "
-      				line += arguments[i];
+      				line += args[i];
 				}
 				txtLog.value += line + "\n";
 				txtLog.scrollTop = txtLog.scrollHeight;

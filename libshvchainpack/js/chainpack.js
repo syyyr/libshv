@@ -39,7 +39,66 @@ ChainPack.isLittleEndian = (function() {
 ChainPack.div = function(n, d)
 {
 	let r = n % d;
+	if(!Number.isInteger(r))
+		throw new RangeError("Number too big for current implementation of DIV function: " + n + " DIV " + d)
 	return [(n - r) / d, r];
+}
+
+ChainPack.uIntToBBE = function(num)
+{
+	let bytes = new Uint8Array(24);
+	let len = 0;
+	while(true) {
+		[num, bytes[len++]] = ChainPack.div(num, 256)
+		if(num == 0)
+			break;
+	}
+	/*
+	for(let i=0; i<len / 2 | 0; i++) {
+		[bytes[i], bytes[len-i-1]] = [bytes[len-i-1], bytes[i]];
+		//let b = bytes[i]
+		//bytes[i] = bytes[len-i-1]
+		//bytes[len-i-1] = b
+	}
+	*/
+	bytes = bytes.subarray(0, len)
+	bytes.reverse();
+	return bytes
+}
+
+ChainPack.rotateLeftBBE = function(bytes, cnt)
+{
+	let nbytes = new Uint8Array(bytes.length)
+	nbytes.set(bytes)
+	let is_neg = nbytes[0] & 128;
+
+	for(let j=0; j<cnt; j++) {
+		let cy = 0;
+		for(let i=nbytes.length - 1; i >= 0; i--) {
+			let cy1 = nbytes[i] & 128;
+			nbytes[i] <<= 1;
+			if(cy)
+				nbytes[i] |= 1
+			cy = cy1
+		}
+		if(cy) {
+			// prepend byte
+			let nbytes2 = new Uint8Array(nbytes.length + 1)
+			nbytes2.set(nbytes, 1);
+			nbytes = nbytes2
+			nbytes[0] = 1
+		}
+	}
+	if(is_neg) for(let i=0; i<cnt; i++) {
+		let mask = 128;
+		for(let j = 0; j < 8; j++) {
+			if(nbytes[i] & mask)
+				return nbytes;
+			nbytes[i] |= mask;
+			mask >>= 1;
+		}
+	}
+	return nbytes;
 }
 
 function ChainPackReader(unpack_context)

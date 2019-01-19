@@ -97,6 +97,17 @@ class Test
 	static run()
 	{
 		//try {
+			/*
+			for(let i=0; i<7; i++) {
+				log("---------", i, '---------------')
+				for(const n of [1,255,256,65535, 65536, -1, -255, -65535, -65536]) {
+					let bytes1 = ChainPack.uIntToBBE(n)
+					let bytes2 = ChainPack.rotateLeftBBE(bytes1, i)
+					log(n, "<<", i, '\t', bytes1, "->", bytes2)
+				}
+			}
+			return
+			*/
 			let t = new Test();
 
 			t.testConversions();
