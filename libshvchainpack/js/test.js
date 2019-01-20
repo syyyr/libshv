@@ -16,11 +16,13 @@ class Test
 	testConversions()
 	{
 		for(const lst of [
+			["-2", null],
 			[(2**31 - 1) + "u", null],
 			//[(2**32 - 1) + "u", null],  // too big for JS bitwise operations
 			["" + (2**31 - 1), null],
 			["" + (-(2**30 - 1)), null],
-			//["" + (-(2**31 - 1)), null], // too big for JS bitwise operations
+			["" + (2**53 - 1), null], // Number.MAX_SAFE_INTEGER
+			["" + (-(2**53 - 1)), null], // Number.MIN_SAFE_INTEGER
 			//["" + (2**32 - 1), null], // too big for JS bitwise operations
 			["true", null],
 			["false", null],
@@ -70,13 +72,13 @@ class Test
 
 			let rv1 = RpcValue.fromCpon(cpon1);
 			let cpn1 = rv1.toString();
-			log(cpon1, "--->", cpn1)
+			log(cpon1, "\t--cpon------>\t", cpn1)
 			this.checkEq(cpn1, cpon2);
 
 			let cpk1 = rv1.toChainPack();
 			let rv2 = RpcValue.fromChainPack(cpk1);
 			let cpn2 = rv2.toString();
-			log(cpn1, "--->", cpn2)
+			log(cpn1, "\t--chainpack->\t", cpn2, "\n")
 			this.checkEq(cpn1, cpn2);
 		}
 	}

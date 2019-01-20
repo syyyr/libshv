@@ -36,71 +36,6 @@ ChainPack.isLittleEndian = (function() {
 	return new Int16Array(buffer)[0] === 256;
 })();
 
-ChainPack.div = function(n, d)
-{
-	let r = n % d;
-	if(!Number.isInteger(r))
-		throw new RangeError("Number too big for current implementation of DIV function: " + n + " DIV " + d)
-	return [(n - r) / d, r];
-}
-
-ChainPack.uIntToBBE = function(num)
-{
-	let bytes = new Uint8Array(24);
-	let len = 0;
-	while(true) {
-		[num, bytes[len++]] = ChainPack.div(num, 256)
-		if(num == 0)
-			break;
-	}
-	/*
-	for(let i=0; i<len / 2 | 0; i++) {
-		[bytes[i], bytes[len-i-1]] = [bytes[len-i-1], bytes[i]];
-		//let b = bytes[i]
-		//bytes[i] = bytes[len-i-1]
-		//bytes[len-i-1] = b
-	}
-	*/
-	bytes = bytes.subarray(0, len)
-	bytes.reverse();
-	return bytes
-}
-
-ChainPack.rotateLeftBBE = function(bytes, cnt)
-{
-	let nbytes = new Uint8Array(bytes.length)
-	nbytes.set(bytes)
-	let is_neg = nbytes[0] & 128;
-
-	for(let j=0; j<cnt; j++) {
-		let cy = 0;
-		for(let i=nbytes.length - 1; i >= 0; i--) {
-			let cy1 = nbytes[i] & 128;
-			nbytes[i] <<= 1;
-			if(cy)
-				nbytes[i] |= 1
-			cy = cy1
-		}
-		if(cy) {
-			// prepend byte
-			let nbytes2 = new Uint8Array(nbytes.length + 1)
-			nbytes2.set(nbytes, 1);
-			nbytes = nbytes2
-			nbytes[0] = 1
-		}
-	}
-	if(is_neg) for(let i=0; i<cnt; i++) {
-		let mask = 128;
-		for(let j = 0; j < 8; j++) {
-			if(nbytes[i] & mask)
-				return nbytes;
-			nbytes[i] |= mask;
-			mask >>= 1;
-		}
-	}
-	return nbytes;
-}
-
 function ChainPackReader(unpack_context)
 {
 	if(unpack_context.constructor.name === "ArrayBuffer")
@@ -151,7 +86,7 @@ ChainPackReader.prototype.read = function()
 			break;
 		}
 		case ChainPack.CP_Int: {
-			rpc_val.value = this.readUIntData()
+			rpc_val.value = this.readIntData()
 			rpc_val.type = RpcValue.Type.Int;
 			break;
 		}
@@ -258,44 +193,50 @@ ChainPackReader.prototype.read = function()
 	return rpc_val;
 }
 
-ChainPackReader.prototype.readUIntData = function(info)
+ChainPackReader.prototype.readUIntDataHelper = function()
 {
-	let bitlen = 0;
 	let num = 0;
-	let ix = 0;
-
 	let head = this.ctx.getByte();
 	let bytes_to_read_cnt;
-	if     ((head & 128) === 0) {bytes_to_read_cnt = 0; num = head & 127; bitlen = 7;}
-	else if((head &  64) === 0) {bytes_to_read_cnt = 1; num = head & 63; bitlen = 6 + 8;}
-	else if((head &  32) === 0) {bytes_to_read_cnt = 2; num = head & 31; bitlen = 5 + 2*8;}
-	else if((head &  16) === 0) {bytes_to_read_cnt = 3; num = head & 15; bitlen = 4 + 3*8;}
+	if     ((head & 128) === 0) {bytes_to_read_cnt = 0; num = head & 127;}
+	else if((head &  64) === 0) {bytes_to_read_cnt = 1; num = head & 63;}
+	else if((head &  32) === 0) {bytes_to_read_cnt = 2; num = head & 31;}
+	else if((head &  16) === 0) {bytes_to_read_cnt = 3; num = head & 15;}
 	else {
 		bytes_to_read_cnt = (head & 0xf) + 4;
-		bitlen = bytes_to_read_cnt * 8;
 	}
-
+	let bytes = new Uint8Array(bytes_to_read_cnt + 1)
+	bytes[0] = num;
 	for (let i=0; i < bytes_to_read_cnt; i++) {
 		let r = this.ctx.getByte();
-		num = (num << 8) + r;
+		bytes[i + 1] = r;
 	}
-	if(info)
-		info.bitlen = bitlen
-	return num;
+	return new BInt(bytes)
+}
+
+ChainPackReader.prototype.readUIntData = function(info)
+{
+	let bi = this.readUIntDataHelper();
+	return bi.toNumber();
 }
 
 ChainPackReader.prototype.readIntData = function()
 {
-	let info = {};
-	let num = this.readUIntData(info);
-	let sign_bit_mask = 1 << (info.bitlen - 1);
-	let neg = num & sign_bit_mask;
-	let snum = num;
-	if(neg) {
-		snum &= ~sign_bit_mask;
-		snum = -snum;
+	let bi = this.readUIntDataHelper();
+	let is_neg;
+	if(bi.byteCount() < 5) {
+		let sign_mask = 0x80 >> bi.byteCount();
+		is_neg = bi.val[0] & sign_mask;
+		bi.val[0] &= ~sign_mask;
 	}
-	return snum;
+	else {
+		is_neg = bi.val[1] & 128;
+		bi.val[1] &= ~128;
+	}
+	let num = bi.toNumber();
+	if(is_neg)
+		num = -num;
+	return num;
 }
 
 function ChainPackWriter()
@@ -348,18 +289,6 @@ ChainPackWriter.MAX_BIT_LEN = 32;
 
 	// return max bit length >= bit_len, which can be encoded by same number of bytes
 
-ChainPackWriter.significantBitsPartLength = function(n)
-{
-	if(n >= 2**31)
-		throw new RangeError("Cannot pack int wider than 31 bits")
-	const mask = 1 << (ChainPackWriter.MAX_BIT_LEN - 1);
-	let len = ChainPackWriter.MAX_BIT_LEN;
-	for (; n && !(n & mask); --len) {
-		n <<= 1;
-	}
-	return n? len: 0;
-}
-
 // number of bytes needed to encode bit_len
 ChainPackWriter.bytesNeeded = function(bit_len)
 {
@@ -384,30 +313,24 @@ ChainPackWriter.expandBitLen = function(bit_len)
 	return ret;
 }
 
-ChainPackWriter.prototype.writeUIntDataHelper = function(num, bit_len)
+ChainPackWriter.prototype.writeUIntDataHelper = function(bint)
 {
-	let byte_cnt = ChainPackWriter.bytesNeeded(bit_len);
-	let bytes = new Uint8Array(byte_cnt);
-	for (let i = byte_cnt-1; i >= 0; --i) {
-		let r = num % 256;
-		bytes[i] = r;
-		num = num / 256 | 0;
-	}
+	let bytes = bint.val;
+	//let byte_cnt = bint.byteCount();
 
 	let head = bytes[0];
-	if(bit_len <= 28) {
-		let mask = (0xf0 << (4 - byte_cnt)) & 0xff;
+	if(bytes.length < 5) {
+		let mask = (0xf0 << (4 - bytes.length)) & 0xff;
 		head = head & ~mask;
 		mask <<= 1;
 		mask &= 0xff;
 		head = head | mask;
 	}
 	else {
-		head = 0xf0 | (byte_cnt - 5);
+		head = 0xf0 | (bytes.length - 5);
 	}
-	bytes[0] = head;
-
-	for (let i = 0; i < byte_cnt; ++i) {
+	this.ctx.putByte(head);
+	for (let i = 1; i < bytes.length; ++i) {
 		let r = bytes[i];
 		this.ctx.putByte(r);
 	}
@@ -415,29 +338,29 @@ ChainPackWriter.prototype.writeUIntDataHelper = function(num, bit_len)
 
 ChainPackWriter.prototype.writeUIntData = function(num)
 {
-	let bitlen = ChainPackWriter.significantBitsPartLength(num);
-	this.writeUIntDataHelper(num, bitlen);
+	let bi = new BInt(num)
+	let bitcnt = bi.significantBitsCount();
+	bi.resize(ChainPackWriter.bytesNeeded(bitcnt));
+	this.writeUIntDataHelper(bi);
 }
 
 ChainPackWriter.prototype.writeIntData = function(snum)
 {
 	let neg = (snum < 0);
 	let num = neg? -snum: snum;
-
-	let bitlen = ChainPackWriter.significantBitsPartLength(num);
-	bitlen++; // add sign bit
+	let bi = new BInt(num)
+	let bitcnt = bi.significantBitsCount() + 1;
+	bi.resize(ChainPackWriter.bytesNeeded(bitcnt));
 	if(neg) {
-		if(bitlen >= 32)
-			throw new RangeError("Cannot pack negative int leser than " + (-(2**31 - 1)))
-		let sign_pos = ChainPackWriter.expandBitLen(bitlen);
-		let sign_bit_mask = 1 << sign_pos;
-		num |= sign_bit_mask;
+		if(bi.byteCount() < 5) {
+			let sign_mask = 0x80 >> bi.byteCount();
+			bi.val[0] |= sign_mask;
+		}
+		else {
+			bi.val[1] |= 128;
+		}
 	}
-	else {
-		if(bitlen >= 33)
-			throw new RangeError("Cannot pack int greater than " + (2**32 - 1))
-	}
-	this.writeUIntDataHelper(num, bitlen);
+	this.writeUIntDataHelper(bi);
 }
 
 ChainPackWriter.prototype.writeUInt = function(n)
