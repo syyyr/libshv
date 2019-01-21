@@ -22,6 +22,9 @@ namespace shv {
 namespace iotqt {
 namespace node {
 
+//===========================================================
+// ShvNode
+//===========================================================
 ShvNode::ShvNode(ShvNode *parent)
 	: QObject(parent)
 {
@@ -93,18 +96,6 @@ ShvNode::String ShvNode::shvPath() const
 		nd = nd->parentNode();
 	}
 	return ret;
-}
-
-ShvRootNode *ShvNode::rootNode()
-{
-	ShvNode *nd = this;
-	while(nd) {
-		if(nd->isRootNode())
-			return qobject_cast<ShvRootNode*>(nd);
-		nd = nd->parentNode();
-	}
-	//SHV_EXCEPTION("Cannot find root node!");
-	return nullptr;
 }
 
 void ShvNode::deleteIfEmptyWithParents()
@@ -430,6 +421,49 @@ chainpack::RpcValue ShvNode::callMethod(const ShvNode::StringViewList &shv_path,
 	SHV_EXCEPTION("Invalid method: " + method + " on path: " + shv_path.join('/'));
 }
 
+ShvRootNode *ShvNode::rootNode()
+{
+	ShvNode *nd = this;
+	while(nd) {
+		if(nd->isRootNode())
+			return qobject_cast<ShvRootNode*>(nd);
+		nd = nd->parentNode();
+	}
+	//SHV_EXCEPTION("Cannot find root node!");
+	return nullptr;
+}
+
+void ShvNode::emitSendRpcMesage(const chainpack::RpcMessage &msg)
+{
+	ShvRootNode *rnd = rootNode();
+	if(rnd) {
+		rnd->emitSendRpcMesage(msg);
+	}
+	else {
+		shvError() << "Cannot fing root node to send RPC message";
+	}
+}
+
+//===========================================================
+// ShvRootNode
+//===========================================================
+void ShvRootNode::emitSendRpcMesage(const chainpack::RpcMessage &msg)
+{
+	if(msg.isResponse()) {
+		cp::RpcResponse resp(msg);
+		// RPC calls with requestID == 0 does not expect response
+		// whoo is using this?
+		if(resp.requestId().toInt() == 0) {
+			shvWarning() << "throwing away response with invalid request ID:" << resp.requestId().toCpon();
+			return;
+		}
+	}
+	emit sendRpcMesage(msg);
+}
+
+//===========================================================
+// MethodsTableNode
+//===========================================================
 size_t MethodsTableNode::methodCount(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
 {
 	if(shv_path.empty()) {
@@ -471,6 +505,9 @@ static std::vector<cp::MetaMethod> meta_methods_value_map_node {
 	//{M_WRITE, cp::MetaMethod::Signature::RetParam, 0, cp::MetaMethod::AccessLevel::Service},
 };
 
+//===========================================================
+// RpcValueMapNode
+//===========================================================
 RpcValueMapNode::RpcValueMapNode(const std::string &node_id, ShvNode *parent)
 	: Super(node_id, parent)
 {
@@ -602,16 +639,9 @@ bool RpcValueMapNode::isDir(const shv::iotqt::node::ShvNode::StringViewList &shv
 	return valueOnPath(shv_path).isMap();
 }
 
-void ShvRootNode::emitSendRpcMesage(const chainpack::RpcMessage &msg)
-{
-	if(msg.isResponse()) {
-		cp::RpcResponse resp(msg);
-		if(resp.requestId().toInt() == 0) // RPC calls with requestID == 0 does not expect response
-			return;
-	}
-	emit sendRpcMesage(msg);
-}
-
+//===========================================================
+// ObjectPropertyProxyShvNode
+//===========================================================
 static std::vector<cp::MetaMethod> meta_methods_pn {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_BROWSE},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_BROWSE},
@@ -620,29 +650,39 @@ static std::vector<cp::MetaMethod> meta_methods_pn {
 	{cp::Rpc::SIG_VAL_CHANGED, cp::MetaMethod::Signature::VoidParam, cp::MetaMethod::Flag::IsSignal, cp::Rpc::GRANT_READ},
 };
 
-PropertyShvNode::PropertyShvNode(const char *property_name, QObject *property_obj, shv::iotqt::node::ShvNode *parent)
+enum {
+	IX_DIR = 0,
+	IX_LS,
+	IX_GET,
+	IX_SET,
+	IX_CHNG,
+	IX_Count,
+};
+
+ObjectPropertyProxyShvNode::ObjectPropertyProxyShvNode(const char *property_name, QObject *property_obj, shv::iotqt::node::ShvNode *parent)
 	: Super(std::string(property_name), parent)
 	, m_propertyObj(property_obj)
 {
+	shvWarning() << "ObjectPropertyProxyShvNode is deprecated use PropertyShvNode instead.";
 	const QMetaObject *mo = m_propertyObj->metaObject();
 	m_metaProperty = mo->property(mo->indexOfProperty(property_name));
 }
 
-size_t PropertyShvNode::methodCount(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
+size_t ObjectPropertyProxyShvNode::methodCount(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
 {
 	if(shv_path.empty()) {
 		if(m_metaProperty.isWritable() && m_metaProperty.hasNotifySignal())
-			return 5;
+			return IX_Count;
 		if(m_metaProperty.isWritable() && !m_metaProperty.hasNotifySignal())
-			return 4;
+			return IX_CHNG;
 		if(!m_metaProperty.isWritable() && m_metaProperty.hasNotifySignal())
-			return 4;
-		return 3;
+			return IX_CHNG;
+		return IX_SET;
 	}
 	return  Super::methodCount(shv_path);
 }
 
-const shv::chainpack::MetaMethod *PropertyShvNode::metaMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, size_t ix)
+const shv::chainpack::MetaMethod *ObjectPropertyProxyShvNode::metaMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, size_t ix)
 {
 	if(shv_path.empty()) {
 		if(ix < methodCount(shv_path)) {
@@ -657,7 +697,7 @@ const shv::chainpack::MetaMethod *PropertyShvNode::metaMethod(const shv::iotqt::
 	return  Super::metaMethod(shv_path, ix);
 }
 
-shv::chainpack::RpcValue PropertyShvNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
+shv::chainpack::RpcValue ObjectPropertyProxyShvNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
 {
 	if(shv_path.empty()) {
 		if(method == cp::Rpc::METH_GET) {
@@ -668,6 +708,108 @@ shv::chainpack::RpcValue PropertyShvNode::callMethod(const shv::iotqt::node::Shv
 			QVariant qv = shv::iotqt::Utils::rpcValueToQVariant(params);
 			bool ok = m_propertyObj->setProperty(m_metaProperty.name(), qv);
 			return ok;
+		}
+	}
+	return  Super::callMethod(shv_path, method, params);
+}
+
+//===========================================================
+// PropertyShvNode
+//===========================================================
+ValueProxyShvNode::Handle::~Handle()
+{
+}
+
+ValueProxyShvNode::ValueProxyShvNode(const std::string &node_id, int value_id, ValueProxyShvNode::Type type, ValueProxyShvNode::Handle *handled_obj, ShvNode *parent)
+	: Super(node_id, parent)
+	, m_valueId(value_id)
+	, m_type(type)
+	, m_handledObject(handled_obj)
+{
+	QObject *handled_qobj = dynamic_cast<QObject*>(handled_obj);
+	if(handled_qobj) {
+		bool ok = connect(handled_qobj, SIGNAL(shvValueChanged(const char *, shv::chainpack::RpcValue)), this, SLOT(onShvValueChanged(const char *, shv::chainpack::RpcValue)), Qt::QueuedConnection);
+		if(!ok)
+			shvWarning() << nodeId() << "cannot connect shvValueChanged signal";
+	}
+	else {
+		shvWarning() << nodeId() << "CHNG notification cannot be delivered, because handle object is not QObject";
+	}
+}
+
+void ValueProxyShvNode::onShvValueChanged(int value_id, chainpack::RpcValue val)
+{
+	if(value_id == m_valueId) {
+		cp::RpcSignal sig;
+		sig.setMethod(cp::Rpc::SIG_VAL_CHANGED);
+		sig.setShvPath(shvPath());
+		sig.setParams(val);
+		emitSendRpcMesage(sig);
+	}
+}
+
+void ValueProxyShvNode::addMetaMethod(chainpack::MetaMethod &&mm)
+{
+	m_extraMetaMethods.push_back(std::move(mm));
+}
+
+static std::map<int, std::vector<size_t>> method_indexes = {
+	{static_cast<int>(ValueProxyShvNode::Type::Invalid), {IX_DIR, IX_LS} },
+	{static_cast<int>(ValueProxyShvNode::Type::Read), {IX_DIR, IX_LS, IX_GET} },
+	{static_cast<int>(ValueProxyShvNode::Type::Write), {IX_DIR, IX_LS, IX_SET} },
+	{static_cast<int>(ValueProxyShvNode::Type::ReadWrite), {IX_DIR, IX_LS, IX_GET, IX_SET} },
+	{static_cast<int>(ValueProxyShvNode::Type::ReadSignal), {IX_DIR, IX_LS, IX_GET, IX_CHNG} },
+	{static_cast<int>(ValueProxyShvNode::Type::WriteSignal), {IX_DIR, IX_LS, IX_SET, IX_CHNG} },
+	{static_cast<int>(ValueProxyShvNode::Type::Signal), {IX_DIR, IX_LS, IX_CHNG} },
+	{static_cast<int>(ValueProxyShvNode::Type::ReadWriteSignal), {IX_DIR, IX_LS, IX_GET, IX_SET, IX_CHNG} },
+};
+
+size_t ValueProxyShvNode::methodCount(const ShvNode::StringViewList &shv_path)
+{
+	if(shv_path.empty()) {
+		size_t ret = IX_LS + 1;
+		if(isReadable())
+			ret++;
+		if(isWriteable())
+			ret++;
+		if(isSignal())
+			ret++;
+		return ret + m_extraMetaMethods.size();
+	}
+	return  Super::methodCount(shv_path);
+}
+
+const chainpack::MetaMethod *ValueProxyShvNode::metaMethod(const ShvNode::StringViewList &shv_path, size_t ix)
+{
+	if(shv_path.empty()) {
+		const std::vector<size_t> &ixs = method_indexes[static_cast<int>(m_type)];
+		if(ix < ixs.size()) {
+			return &(meta_methods_pn[ixs[ix]]);
+		}
+		size_t extra_ix = ix - ixs.size();
+		if(extra_ix < m_extraMetaMethods.size()) {
+			return &(m_extraMetaMethods[extra_ix]);
+		}
+		SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " on path: " + shv_path.join('/'));
+	}
+	return  Super::metaMethod(shv_path, ix);
+
+}
+
+chainpack::RpcValue ValueProxyShvNode::callMethod(const ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
+{
+	if(shv_path.empty()) {
+		if(method == cp::Rpc::METH_GET) {
+			if(isReadable())
+				return m_handledObject->shvValue(m_valueId);
+			SHV_EXCEPTION("Property " + nodeId() + " on path: " + shv_path.join('/') + " is not readable");
+		}
+		if(method == cp::Rpc::METH_SET) {
+			if(isWriteable()) {
+				m_handledObject->setShvValue(m_valueId, params);
+				return true;
+			}
+			SHV_EXCEPTION("Property " + nodeId() + " on path: " + shv_path.join('/') + " is not writeable");
 		}
 	}
 	return  Super::callMethod(shv_path, method, params);

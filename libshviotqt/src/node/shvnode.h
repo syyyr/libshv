@@ -45,6 +45,7 @@ public:
 	static StringViewList splitShvPath(const std::string &shv_path) { return StringView{shv_path}.split('/', '"'); }
 
 	ShvRootNode* rootNode();
+	virtual void emitSendRpcMesage(const shv::chainpack::RpcMessage &msg);
 
 	void setSortedChildren(bool b) {m_isSortedChildren = b;}
 
@@ -91,7 +92,7 @@ public:
 	bool isRootNode() const override {return true;}
 
 	Q_SIGNAL void sendRpcMesage(const shv::chainpack::RpcMessage &msg);
-	void emitSendRpcMesage(const shv::chainpack::RpcMessage &msg);
+	void emitSendRpcMesage(const shv::chainpack::RpcMessage &msg) override;
 };
 
 class SHVIOTQT_DECL_EXPORT MethodsTableNode : public shv::iotqt::node::ShvNode
@@ -143,13 +144,14 @@ protected:
 	shv::chainpack::RpcValue m_values;
 };
 
-class SHVIOTQT_DECL_EXPORT PropertyShvNode : public shv::iotqt::node::ShvNode
+/// Deprecated
+class SHVIOTQT_DECL_EXPORT ObjectPropertyProxyShvNode : public shv::iotqt::node::ShvNode
 {
 	using Super = shv::iotqt::node::ShvNode;
 public:
 	//explicit MethodsTableNode(const std::string &node_id, shv::iotqt::node::ShvNode *parent = nullptr)
 	//	: Super(node_id, parent) {}
-	explicit PropertyShvNode(const char *property_name, QObject *property_obj, shv::iotqt::node::ShvNode *parent = nullptr);
+	explicit ObjectPropertyProxyShvNode(const char *property_name, QObject *property_obj, shv::iotqt::node::ShvNode *parent = nullptr);
 
 	size_t methodCount(const StringViewList &shv_path) override;
 	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
@@ -159,6 +161,55 @@ public:
 protected:
 	QMetaProperty m_metaProperty;
 	QObject *m_propertyObj = nullptr;
+};
+
+class SHVIOTQT_DECL_EXPORT ValueProxyShvNode : public shv::iotqt::node::ShvNode
+{
+	using Super = shv::iotqt::node::ShvNode;
+public:
+	enum class Type {
+		Invalid = 0,
+		Read = 1,
+		Write = 2,
+		ReadWrite = 3,
+		Signal = 4,
+		ReadSignal = 5,
+		WriteSignal = 6,
+		ReadWriteSignal = 7,
+	};
+	class SHVIOTQT_DECL_EXPORT Handle
+	{
+	public:
+		Handle() {}
+		virtual ~Handle();
+
+		virtual shv::chainpack::RpcValue shvValue(int value_id) = 0;
+		virtual bool setShvValue(int value_id, const shv::chainpack::RpcValue &val) = 0;
+		//void callShvValueChanged(const char *name, const shv::chainpack::RpcValue &val);
+	private:
+		//PropertyShvNode *m_propertyNode;
+	};
+public:
+	explicit ValueProxyShvNode(const std::string &node_id, int value_id, Type type, Handle *handled_obj, shv::iotqt::node::ShvNode *parent = nullptr);
+
+	void addMetaMethod(shv::chainpack::MetaMethod &&mm);
+
+	size_t methodCount(const StringViewList &shv_path) override;
+	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
+
+	shv::chainpack::RpcValue callMethod(const shv::chainpack::RpcRequest &rq) override {return  Super::callMethod(rq);}
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+protected:
+	bool isWriteable() {return static_cast<int>(m_type) & static_cast<int>(Type::Write);}
+	bool isReadable() {return static_cast<int>(m_type) & static_cast<int>(Type::Read);}
+	bool isSignal() {return static_cast<int>(m_type) & static_cast<int>(Type::Signal);}
+
+	void onShvValueChanged(int value_id, shv::chainpack::RpcValue val);
+protected:
+	int m_valueId;
+	Type m_type;
+	Handle *m_handledObject = nullptr;
+	std::vector<shv::chainpack::MetaMethod> m_extraMetaMethods;
 };
 
 }}}
