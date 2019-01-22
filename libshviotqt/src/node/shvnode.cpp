@@ -728,7 +728,7 @@ ValueProxyShvNode::ValueProxyShvNode(const std::string &node_id, int value_id, V
 {
 	QObject *handled_qobj = dynamic_cast<QObject*>(handled_obj);
 	if(handled_qobj) {
-		bool ok = connect(handled_qobj, SIGNAL(shvValueChanged(const char *, shv::chainpack::RpcValue)), this, SLOT(onShvValueChanged(const char *, shv::chainpack::RpcValue)), Qt::QueuedConnection);
+		bool ok = connect(handled_qobj, SIGNAL(shvValueChanged(int, shv::chainpack::RpcValue)), this, SLOT(onShvValueChanged(int, shv::chainpack::RpcValue)), Qt::QueuedConnection);
 		if(!ok)
 			shvWarning() << nodeId() << "cannot connect shvValueChanged signal";
 	}
@@ -739,7 +739,7 @@ ValueProxyShvNode::ValueProxyShvNode(const std::string &node_id, int value_id, V
 
 void ValueProxyShvNode::onShvValueChanged(int value_id, chainpack::RpcValue val)
 {
-	if(value_id == m_valueId) {
+	if(value_id == m_valueId && isSignal()) {
 		cp::RpcSignal sig;
 		sig.setMethod(cp::Rpc::SIG_VAL_CHANGED);
 		sig.setShvPath(shvPath());
@@ -794,6 +794,14 @@ const chainpack::MetaMethod *ValueProxyShvNode::metaMethod(const ShvNode::String
 	}
 	return  Super::metaMethod(shv_path, ix);
 
+}
+
+chainpack::RpcValue ValueProxyShvNode::callMethod(const chainpack::RpcRequest &rq)
+{
+	m_handledObject->m_servedRpcRequest = rq;
+	cp::RpcValue ret = Super::callMethod(rq);
+	m_handledObject->m_servedRpcRequest = cp::RpcRequest();
+	return ret;
 }
 
 chainpack::RpcValue ValueProxyShvNode::callMethod(const ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)

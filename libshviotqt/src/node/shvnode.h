@@ -2,14 +2,16 @@
 
 #include "../shviotqtglobal.h"
 
-//#include <shv/chainpack/rpc.h>
+#include <shv/chainpack/metamethod.h>
 #include <shv/chainpack/rpcvalue.h>
+#include <shv/chainpack/rpcmessage.h>
 #include <shv/core/stringview.h>
 
 #include <QObject>
 #include <QMetaProperty>
 
-namespace shv { namespace chainpack { class MetaMethod; class RpcValue; class RpcMessage; class RpcRequest; }}
+//namespace shv { namespace chainpack { class MetaMethod; }}
+//namespace shv { namespace chainpack { class MetaMethod; class RpcValue; class RpcMessage; class RpcRequest; }}
 //namespace shv { namespace core { class StringView; }}
 
 namespace shv {
@@ -165,6 +167,8 @@ protected:
 
 class SHVIOTQT_DECL_EXPORT ValueProxyShvNode : public shv::iotqt::node::ShvNode
 {
+	Q_OBJECT
+
 	using Super = shv::iotqt::node::ShvNode;
 public:
 	enum class Type {
@@ -179,15 +183,17 @@ public:
 	};
 	class SHVIOTQT_DECL_EXPORT Handle
 	{
+		friend class ValueProxyShvNode;
 	public:
 		Handle() {}
 		virtual ~Handle();
 
 		virtual shv::chainpack::RpcValue shvValue(int value_id) = 0;
-		virtual bool setShvValue(int value_id, const shv::chainpack::RpcValue &val) = 0;
-		//void callShvValueChanged(const char *name, const shv::chainpack::RpcValue &val);
-	private:
-		//PropertyShvNode *m_propertyNode;
+		virtual void setShvValue(int value_id, const shv::chainpack::RpcValue &val) = 0;
+		virtual const char* valueIdToName(int value_id) = 0;
+		const shv::chainpack::RpcRequest& servedRpcRequest() const {return m_servedRpcRequest;}
+	protected:
+		shv::chainpack::RpcRequest m_servedRpcRequest;
 	};
 public:
 	explicit ValueProxyShvNode(const std::string &node_id, int value_id, Type type, Handle *handled_obj, shv::iotqt::node::ShvNode *parent = nullptr);
@@ -197,14 +203,14 @@ public:
 	size_t methodCount(const StringViewList &shv_path) override;
 	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
 
-	shv::chainpack::RpcValue callMethod(const shv::chainpack::RpcRequest &rq) override {return  Super::callMethod(rq);}
+	shv::chainpack::RpcValue callMethod(const shv::chainpack::RpcRequest &rq) override;
 	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
 protected:
 	bool isWriteable() {return static_cast<int>(m_type) & static_cast<int>(Type::Write);}
 	bool isReadable() {return static_cast<int>(m_type) & static_cast<int>(Type::Read);}
 	bool isSignal() {return static_cast<int>(m_type) & static_cast<int>(Type::Signal);}
 
-	void onShvValueChanged(int value_id, shv::chainpack::RpcValue val);
+	Q_SLOT void onShvValueChanged(int value_id, shv::chainpack::RpcValue val);
 protected:
 	int m_valueId;
 	Type m_type;
