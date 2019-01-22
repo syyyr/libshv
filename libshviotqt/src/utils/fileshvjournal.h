@@ -65,16 +65,15 @@ public:
 
 	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params);
 private:
-	std::string fileNoToName(int n);
-	//long fileSize(const std::string &fn);
-	int lastFileNo();
-	void updateJournalDirStatus();
-	void setLastFileNo(int n) {m_journalDirStatus.maxFileNo = n;}
-	int64_t findLastEntryDateTime(const std::string &fn);
-	void appendEntry(std::ofstream &out, int64_t msec, int uptime_sec, const ShvJournalEntry &e);
-
-	void checkJournalDir();
+	void checkJournalConsistecy();
 	void rotateJournal();
+
+	std::string fileNoToName(int n);
+	void updateJournalStatus();
+	void checkJournalDir();
+	int64_t findLastEntryDateTime(const std::string &fn);
+
+	void appendEntry(std::ofstream &out, int64_t msec, int uptime_sec, const ShvJournalEntry &e);
 
 	std::string getLine(std::istream &in, char sep);
 	static long toLong(const std::string &s);
@@ -83,10 +82,14 @@ private:
 	shv::chainpack::RpcValue m_typeInfo;
 	struct //JournalDirStatus
 	{
+		bool journalDirExists = false;
 		int minFileNo = -1;
 		int maxFileNo = -1;
 		int64_t journalSize = -1;
-	} m_journalDirStatus;
+		int64_t recentTimeStamp = 0;
+
+		bool isConsistent() const {return recentTimeStamp > 0 && maxFileNo >= 0 && journalDirExists && journalSize >= 0;}
+	} m_journalStatus;
 	SnapShotFn m_snapShotFn;
 	std::string m_journalDir;
 	int64_t m_fileSizeLimit = DEFAULT_FILE_SIZE_LIMIT;

@@ -123,45 +123,14 @@ void FileShvJournal::append(const ShvJournalEntry &entry, int64_t msec)
 {
 	shvLogFuncFrame();// << "last file no:" << lastFileNo();
 	try {
-		checkJournalDir();
-		int64_t last_msec = 0;
-		int max_n = lastFileNo();
-		if(max_n < 0)
-			return;
-		if(max_n == 0) {
-			// journal dir is empty
-			max_n++;
-		}
-		else {
-			std::string fn = fileNoToName(max_n);
-			last_msec = findLastEntryDateTime(fn);
-			if(last_msec < 0) {
-				// read date time error, log file might be corrupted, open new one
-				max_n++;
-			}
-			else {
-				int64_t fsz = file_size(fn);
-				shvDebug() << "\t current file size:" << fsz << "limit:" << m_fileSizeLimit;
-				if(fsz > m_fileSizeLimit) {
-					shvDebug() << "\t file size limit exceeded, createing new file:" << max_n;
-					// rotate journal before creating new file
-					rotateJournal();
-					if(m_journalDirStatus.maxFileNo != max_n) {
-						logWShvJournal() << "Max file not changed after log rotation, this should never happen !!!";
-						max_n = m_journalDirStatus.maxFileNo;
-					}
-					max_n++;
-				}
-			}
-		}
-		setLastFileNo(max_n);
-		std::string fn = fileNoToName(max_n);
+		checkJournalConsistecy();
+		std::string fn = fileNoToName(m_journalStatus.maxFileNo);
 		shvDebug() << "\t appending records to file:" << fn;
 
 		if(msec == 0)
 			msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
-		if(msec < last_msec)
-			msec = last_msec;
+		if(msec < m_journalStatus.recentTimeStamp)
+			msec = m_journalStatus.recentTimeStamp;
 		int uptime_sec = uptimeSec();
 
 		std::ofstream out(fn, std::ios::binary | std::ios::out | std::ios::app);
@@ -181,16 +150,23 @@ void FileShvJournal::append(const ShvJournalEntry &entry, int64_t msec)
 				appendEntry(out, msec, uptime_sec, e);
 		}
 		appendEntry(out, msec, uptime_sec, entry);
+		auto file_size = out.tellp();
+		m_journalStatus.journalSize += (file_size - fsz);
+		if(m_journalStatus.journalSize > m_journalSizeLimit) {
+			rotateJournal();
+		}
+		if(fsz > m_fileSizeLimit) {
+			m_journalStatus.maxFileNo++;
+		}
 	}
 	catch (std::exception &e) {
 		logWShvJournal() << e.what();
-		m_journalDirStatus.maxFileNo = -1;
+		m_journalStatus.maxFileNo = -1;
 	}
 }
 
 void FileShvJournal::appendEntry(std::ofstream &out, int64_t msec, int uptime_sec, const ShvJournalEntry &e)
 {
-	auto p1 = out.tellp();
 	out << cp::RpcValue::DateTime::fromMSecsSinceEpoch(msec).toIsoString();
 	out << FIELD_SEPARATOR;
 	out << uptime_sec;
@@ -199,27 +175,37 @@ void FileShvJournal::appendEntry(std::ofstream &out, int64_t msec, int uptime_se
 	out << FIELD_SEPARATOR;
 	out << e.value.toCpon();
 	out << RECORD_SEPARATOR;
-	auto p2 = out.tellp();
 	out.flush();
-	m_journalDirStatus.journalSize += (p2 - p1);
+}
+
+void FileShvJournal::checkJournalConsistecy()
+{
+	if(!m_journalStatus.isConsistent()) {
+		checkJournalDir();
+		updateJournalStatus();
+	}
+	if(!m_journalStatus.isConsistent()) {
+		throw std::runtime_error("Journal cannot be bring to consistent state.");
+	}
 }
 
 void FileShvJournal::checkJournalDir()
 {
-	if(!mkpath(m_journalDir))
+	if(!mkpath(m_journalDir)) {
+		m_journalStatus.journalDirExists = false;
 		throw std::runtime_error("Journal dir: " + m_journalDir + " do not exists and cannot be created");
+	}
+	m_journalStatus.journalDirExists = true;
 }
 
 void FileShvJournal::rotateJournal()
 {
-	updateJournalDirStatus();
-	if(m_journalDirStatus.journalSize > m_journalSizeLimit) {
-		for (int i = m_journalDirStatus.minFileNo; i < m_journalDirStatus.maxFileNo && m_journalDirStatus.journalSize > m_journalSizeLimit; ++i) {
-			std::string fn = fileNoToName(i);
-			m_journalDirStatus.journalSize -= rm_file(fn);
-		}
-		updateJournalDirStatus();
+	updateJournalStatus();
+	for (int i = m_journalStatus.minFileNo; i < m_journalStatus.maxFileNo && m_journalStatus.journalSize > m_journalSizeLimit; ++i) {
+		std::string fn = fileNoToName(i);
+		m_journalStatus.journalSize -= rm_file(fn);
 	}
+	updateJournalStatus();
 }
 
 std::string FileShvJournal::fileNoToName(int n)
@@ -228,24 +214,8 @@ std::string FileShvJournal::fileNoToName(int n)
 	std::snprintf(buff, sizeof (buff), "%0*d", FILE_DIGITS, n);
 	return m_journalDir + '/' + std::string(buff) + FILE_EXT;
 }
-/*
-long FileShvJournal::fileSize(const std::string &fn)
-{
-	std::ifstream in(fn, std::ios::in);
-	if(!in)
-		return -1;
-	in.seekg(0, std::ios::end);
-	return in.tellg();
-}
-*/
-int FileShvJournal::lastFileNo()
-{
-	if(m_journalDirStatus.maxFileNo < 0)
-		updateJournalDirStatus();
-	return m_journalDirStatus.maxFileNo;
-}
 
-void FileShvJournal::updateJournalDirStatus()
+void FileShvJournal::updateJournalStatus()
 {
 	int min_n = std::numeric_limits<int>::max();
 	int max_n = -1;//std::numeric_limits<int>::min();
@@ -253,7 +223,7 @@ void FileShvJournal::updateJournalDirStatus()
 	struct dirent *ent;
 	if ((dir = opendir (m_journalDir.c_str())) != nullptr) {
 		max_n = 0;
-		m_journalDirStatus.journalSize = 0;
+		m_journalStatus.journalSize = 0;
 		std::string ext = FILE_EXT;
 		while ((ent = readdir (dir)) != nullptr) {
 			if(ent->d_type == DT_REG) {
@@ -268,7 +238,7 @@ void FileShvJournal::updateJournalDirStatus()
 						if(n < min_n)
 							min_n = n;
 						std::string fn = m_journalDir + '/' + ent->d_name;
-						m_journalDirStatus.journalSize += file_size(fn);
+						m_journalStatus.journalSize += file_size(fn);
 					}
 				} catch (std::logic_error &e) {
 					shvWarning() << "Mallformated shv journal file name" << fn << e.what();
@@ -282,8 +252,21 @@ void FileShvJournal::updateJournalDirStatus()
 	}
 	if(max_n == 0)
 		min_n = 0;
-	m_journalDirStatus.minFileNo = min_n;
-	m_journalDirStatus.maxFileNo = max_n;
+	m_journalStatus.minFileNo = min_n;
+	m_journalStatus.maxFileNo = max_n;
+	if(m_journalStatus.maxFileNo == 0) {
+		m_journalStatus.maxFileNo++;
+		m_journalStatus.recentTimeStamp = cp::RpcValue::DateTime::now().msecsSinceEpoch();
+	}
+	else {
+		std::string fn = fileNoToName(m_journalStatus.maxFileNo);
+		m_journalStatus.recentTimeStamp = findLastEntryDateTime(fn);
+		if(m_journalStatus.recentTimeStamp < 0) {
+			// corrupted file, start new one
+			m_journalStatus.maxFileNo++;
+			m_journalStatus.recentTimeStamp = cp::RpcValue::DateTime::now().msecsSinceEpoch();
+		}
+	}
 }
 
 int64_t FileShvJournal::findLastEntryDateTime(const std::string &fn)
@@ -347,14 +330,14 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 {
 	logDShvJournal() << "========================= getLog ==================" << params.toRpcValue().toCpon();
 	logDShvJournal() << "params:" << params.toRpcValue().toCpon();
-	checkJournalDir();
+	checkJournalConsistecy();
 	auto since_msec = params.since.isValid()? params.since.msecsSinceEpoch(): 0;
 	//auto until_msec = until.isValid()? until.msecsSinceEpoch(): std::numeric_limits<int64_t>::max();
-	int last_file_no = lastFileNo();
+	//int last_file_no = lastFileNo();
 	int min_file_no = 0;
 	int64_t min_msec = 0;
-	int file_no = last_file_no;
-	for(; file_no > 0 && file_no >= m_journalDirStatus.minFileNo; file_no--) {
+	int file_no = m_journalStatus.maxFileNo;
+	for(; file_no > 0 && file_no >= m_journalStatus.minFileNo; file_no--) {
 		std::string fn = fileNoToName(file_no);
 		logDShvJournal() << "checking file:" << fn;
 		std::ifstream in(fn, std::ios::in | std::ios::binary);
@@ -390,8 +373,8 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 		file_no = min_file_no;
 		since_msec = min_msec;
 	}
-	if(file_no < m_journalDirStatus.minFileNo)
-		file_no = m_journalDirStatus.minFileNo;
+	if(file_no < m_journalStatus.minFileNo)
+		file_no = m_journalStatus.minFileNo;
 
 	// this ensure that there be only one copy of each path in memory
 	cp::RpcValue::Map path_cache;
@@ -410,7 +393,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 	int rec_cnt = 0;
 	if(file_no > 0) {
 		std::map<std::string, std::string> snapshot;
-		for(; file_no <= last_file_no; file_no++) {
+		for(; file_no <= m_journalStatus.maxFileNo; file_no++) {
 			std::string fn = fileNoToName(file_no);
 			logDShvJournal() << "---------------------------------- opening file:" << fn;
 			std::ifstream in(fn, std::ios::in | std::ios::binary);
