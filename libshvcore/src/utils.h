@@ -84,36 +84,23 @@ public:
 #endif
 	}
 
-#if 0
-	static const QString &nullValueString();
-	static void parseFieldName(const QString& full_field_name, QString *pfield_name = NULL, QString *ptable_name = NULL, QString *pdb_name = NULL);
-	static QString composeFieldName(const QString &field_name, const QString &table_name = QString(), const QString &db_name = QString());
-	/// @returns: True if @a field_name1 ends with @a field_name2. Comparision is case insensitive
-	static bool fieldNameEndsWith(const QString &field_name1, const QString &field_name2);
-	static bool fieldNameCmp(const QString &fld_name1, const QString &fld_name2);
-	static QVariant retypeVariant(const QVariant &_val, int meta_type_id);
-	static QVariant retypeStringValue(const QString &str_val, const QString &type_name);
-
-	static int findCaption(const QString &caption_format, int from_ix, QString *caption);
-	/**
-	 * @brief findCaptions
-	 * Finds in string all captions in form {{captionName}}
-	 * @param str
-	 * @return Set of found captions.
-	 */
-	static QSet<QString> findCaptions(const QString caption_format);
-	static QString replaceCaptions(const QString format_str, const QString &caption_name, const QVariant &caption_value);
-	static QString replaceCaptions(const QString format_str, const QVariantMap &replacements);
-
-	/// invoke method of prototype bool method()
-	static bool invokeMethod_B_V(QObject *obj, const char *method_name);
-
-	template <typename V, typename... T>
-	constexpr static inline auto make_array(T&&... t) -> std::array < V, sizeof...(T) >
+	template<typename T>
+	static T getIntLE(const char *buff, unsigned len)
 	{
-		return {{ std::forward<T>(t)... }};
+		using uT = typename std::make_unsigned<T>::type;
+		uT val = 0;
+		unsigned i;
+		for (i = len; i > 0; --i) {
+			val = val * 256 + static_cast<unsigned char>(buff[i - 1]);
+		}
+		if(std::is_signed<T>::value && len < sizeof(T)) {
+			uT mask = ~0;
+			for (unsigned i = 0; i < len; i++)
+				mask <<= 8;
+			val |= mask;
+		}
+		return static_cast<T>(val);
 	}
-#endif
 };
 
 }}
