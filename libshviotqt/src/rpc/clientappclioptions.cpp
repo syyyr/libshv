@@ -1,6 +1,7 @@
 #include "clientappclioptions.h"
 
 #include <shv/chainpack/irpcconnection.h>
+#include <shv/chainpack/rpcdriver.h>
 
 namespace cp = shv::chainpack;
 
@@ -21,6 +22,7 @@ ClientAppCliOptions::ClientAppCliOptions()
 	addOption("rpc.protocolType").setType(cp::RpcValue::Type::String).setNames("--protocol-type").setComment("Protocol type [chainpack | cpon | jsonrpc]").setDefaultValue("chainpack");
 	//addOption("rpc.timeout").setType(cp::RpcValue::Type::Int).setNames("--rpc-timeout").setComment(tr("RPC timeout msec")).setDefaultValue(shv::chainpack::AbstractRpcConnection::DEFAULT_RPC_TIMEOUT);
 	//addOption("rpc.metaTypeExplicit").setType(cp::RpcValue::Type::Bool).setNames("--mtid", "--rpc-metatype-explicit").setComment("RpcMessage Type ID is included in RpcMessage when set, for more verbose -v rpcmsg log output").setDefaultValue(false);
+	addOption("rpc.defaultRpcTimeout").setType(cp::RpcValue::Type::Int).setNames("--rto", "--rpc-time-out").setComment("Set default RPC calls timeout [sec].").setDefaultValue(shv::chainpack::RpcDriver::defaultRpcTimeoutMsec() / 1000);
 	addOption("rpc.reconnectInterval").setType(cp::RpcValue::Type::Int).setNames("--rci", "--rpc-reconnect-interval").setComment("Reconnect to broker if connection lost at least after recoonect-interval seconds. Disabled when set to 0").setDefaultValue(10);
 	addOption("rpc.heartbeatInterval").setType(cp::RpcValue::Type::Int).setNames("--hbi", "--rpc-heartbeat-interval").setComment("Send heart beat to broker every n sec. Disabled when set to 0").setDefaultValue(60);
 }

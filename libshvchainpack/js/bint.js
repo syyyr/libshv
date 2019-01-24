@@ -84,8 +84,8 @@ BInt.prototype.significantBitsCount = function()
 
 BInt.prototype.leftShift = function(cnt)
 {
-	let nbytes = new Uint8Array(this.value.length)
-	nbytes.set(this.value)
+	let nbytes = new Uint8Array(this.val.length)
+	nbytes.set(this.val)
 	let is_neg = nbytes[0] & 128;
 
 	for(let j=0; j<cnt; j++) {
@@ -109,14 +109,34 @@ BInt.prototype.leftShift = function(cnt)
 		let mask = 128;
 		for(let j = 0; j < 8; j++) {
 			if(nbytes[i] & mask) {
-				this.value = nbytes;
+				this.val = nbytes;
 				return;
 			}
 			nbytes[i] |= mask;
 			mask >>= 1;
 		}
 	}
-	this.value = nbytes;
+	this.val = nbytes;
+}
+
+BInt.prototype.signedRightShift = function(cnt)
+{
+	let bytes = this.val;
+	for(let j=0; j<cnt; j++) {
+		let cy = 0;
+		for(let i=0; i < bytes.length; i++) {
+			let cy1 = bytes[i] & 1;
+			if(i == 0) {
+				bytes[i] >>>= 1;
+			}
+			else {
+				bytes[i] >>= 1;
+				if(cy)
+					bytes[i] |= 128
+			}
+			cy = cy1
+		}
+	}
 }
 
 BInt.prototype.toNumber = function()

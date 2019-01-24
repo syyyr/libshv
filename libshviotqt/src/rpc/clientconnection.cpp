@@ -56,6 +56,10 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 
 	//if(cli_opts->isMetaTypeExplicit_isset())
 	//	cp::RpcMessage::setMetaTypeExplicit(cli_opts->isMetaTypeExplicit());
+	if(cli_opts->defaultRpcTimeout_isset()) {
+		cp::RpcDriver::setDefaultRpcTimeoutMsec(cli_opts->defaultRpcTimeout() * 1000);
+		shvInfo() << "Default RPC timeout set to:" << cp::RpcDriver::defaultRpcTimeoutMsec() << "msec.";
+	}
 
 	const std::string pv = cli_opts->protocolType();
 	if(pv == "cpon")

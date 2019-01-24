@@ -127,9 +127,11 @@ CponReader.prototype.read = function()
 	}
 	else if(b == "[".charCodeAt(0)) {
 		this.readList(ret);
+		ret.type = RpcValue.Type.List;
 	}
 	else if(b == "{".charCodeAt(0)) {
 		this.readMap(ret);
+		ret.type = RpcValue.Type.Map;
 	}
 	else if(b == "i".charCodeAt(0)) {
 		this.ctx.getByte();
@@ -381,7 +383,6 @@ CponReader.prototype.readMap = function(rpc_val, terminator = "}".charCodeAt(0))
 			map[key.toInt()] = val;
 	}
 	rpc_val.value = map;
-	rpc_val.type = RpcValue.Type.Map;
 }
 
 CponReader.prototype.readInt = function()

@@ -24,7 +24,7 @@ namespace chainpack {
 const char * RpcDriver::SND_LOG_ARROW = "==>";
 const char * RpcDriver::RCV_LOG_ARROW = "<==";
 
-int RpcDriver::s_defaultRpcTimeout = 5000;
+int RpcDriver::s_defaultRpcTimeoutMsec = 5000;
 
 RpcDriver::RpcDriver()
 {

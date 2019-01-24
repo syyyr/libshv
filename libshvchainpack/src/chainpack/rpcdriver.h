@@ -30,8 +30,8 @@ public:
 	using MessageReceivedCallback = std::function< void (const RpcValue &msg)>;
 	void setMessageReceivedCallback(const MessageReceivedCallback &callback) {m_messageReceivedCallback = callback;}
 
-	static int defaultRpcTimeout() {return s_defaultRpcTimeout;}
-	static void setDefaultRpcTimeout(int tm) {s_defaultRpcTimeout = tm;}
+	static int defaultRpcTimeoutMsec() {return s_defaultRpcTimeoutMsec;}
+	static void setDefaultRpcTimeoutMsec(int msec) {s_defaultRpcTimeoutMsec = msec;}
 
 	static RpcMessage composeRpcMessage(RpcValue::MetaData &&meta_data, const std::string &data, std::string *errmsg = nullptr);
 
@@ -91,7 +91,7 @@ private:
 	size_t m_topMessageDataBytesWrittenSoFar = 0;
 	std::string m_readData;
 	Rpc::ProtocolType m_protocolType = Rpc::ProtocolType::Invalid;
-	static int s_defaultRpcTimeout;
+	static int s_defaultRpcTimeoutMsec;
 };
 
 } // namespace chainpack

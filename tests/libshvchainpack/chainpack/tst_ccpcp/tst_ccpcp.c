@@ -539,6 +539,10 @@ void test_cpons()
 		"a[1,2,3]", "[1,2,3]", // unsupported array type
 		"<1:2>[3,<4:5>6]", NULL,
 		"<4:\"svete\">i{2:<4:\"svete\">[0,1]}", NULL,
+		"d\"\"", NULL,
+		"d\"2018-02-02T00:00:00Z\"", NULL,
+		"d\"2017-05-03T11:30:00-0700\"", "d\"2017-05-03T11:30:00-07\"",
+		"d\"2017-05-03T11:30:12.345+01\"", NULL,
 	};
 	size_t cpons_cnt = sizeof (cpons) / sizeof (char*);
 	for(size_t i = 0; i < cpons_cnt; i += 2) {

@@ -28,6 +28,7 @@ ChainPack.CP_TERM = 255;
 // UTC msec since 2.2. 2018
 // Fri Feb 02 2018 00:00:00 == 1517529600 EPOCH
 ChainPack.SHV_EPOCH_MSEC = 1517529600000;
+ChainPack.INVALID_MIN_OFFSET_FROM_UTC = (-64 * 15);
 
 ChainPack.isLittleEndian = (function() {
 	let buffer = new ArrayBuffer(2);
@@ -54,6 +55,7 @@ ChainPackReader.prototype.read = function()
 
 	if(packing_schema == ChainPack.CP_MetaMap) {
 		rpc_val.meta = this.readMap();
+		packing_schema = this.ctx.getByte();
 	}
 
 	if(packing_schema < 128) {
@@ -111,25 +113,34 @@ ChainPackReader.prototype.read = function()
 			break;
 		}
 		case ChainPack.CP_DateTime: {
-			let d = this.readUIntData();
+			let bi = this.readUIntDataHelper();
+			let lsb = bi.val[bi.val.length - 1]
+			let has_tz_offset = lsb & 1;
+			let has_not_msec = lsb & 2;
+			bi.signedRightShift(2);
+			lsb = bi.val[bi.val.length - 1]
+
 			let offset = 0;
-			let has_tz_offset = d & 1;
-			let has_not_msec = d & 2;
-			d >>= 2;
 			if(has_tz_offset) {
-				offset = d & 0x7F;
+				offset = lsb & 0x7F;
 				if(offset & 0x40) {
 					// sign extension
-					offset &= 0x3F;
-					offset = -offset;
+					offset = offset - 128;
 				}
-				d >>= 7;
+				bi.signedRightShift(7);
 			}
-			if(has_not_msec)
-				d *= 1000;
-			d += ChainPack.SHV_EPOCH_MSEC;
+			offset *= 15;
+			if(offset == ChainPack.INVALID_MIN_OFFSET_FROM_UTC) {
+				rpc_val.value = null;
+			}
+			else {
+				let msec = bi.toNumber();
+				if(has_not_msec)
+					msec *= 1000;
+				msec += ChainPack.SHV_EPOCH_MSEC;
 
-			rpc_val.value = {epochMsec: d, utcOffsetMin: offset * 15};
+				rpc_val.value = {epochMsec: msec, utcOffsetMin: offset};
+			}
 			rpc_val.type = RpcValue.Type.DateTime;
 			break;
 		}
@@ -145,14 +156,14 @@ ChainPackReader.prototype.read = function()
 		}
 		case ChainPack.CP_List: {
 			rpc_val.value = this.readList();
-			rpc_val.type = RpcValue.Type.Map;
+			rpc_val.type = RpcValue.Type.List;
 			break;
 		}
 		case ChainPack.CP_String: {
-			let str_len = this.readUInt();
-			let arr = Uint8Array(str_len)
+			let str_len = this.readUIntData();
+			let arr = new Uint8Array(str_len)
 			for (var i = 0; i < str_len; i++)
-				arr[i] = getByte()
+				arr[i] = this.ctx.getByte()
 			rpc_val.value = arr.buffer;
 			rpc_val.type = RpcValue.Type.String;
 			break;
@@ -187,7 +198,7 @@ ChainPackReader.prototype.read = function()
 			break;
 		}
 		default:
-			throw new TypeError("ChainPack - Invalid type info.");
+			throw new TypeError("ChainPack - Invalid type info: " + packing_schema);
 		}
 	}
 	return rpc_val;
@@ -214,7 +225,7 @@ ChainPackReader.prototype.readUIntDataHelper = function()
 	return new BInt(bytes)
 }
 
-ChainPackReader.prototype.readUIntData = function(info)
+ChainPackReader.prototype.readUIntData = function()
 {
 	let bi = this.readUIntDataHelper();
 	return bi.toNumber();
@@ -237,6 +248,42 @@ ChainPackReader.prototype.readIntData = function()
 	if(is_neg)
 		num = -num;
 	return num;
+}
+
+ChainPackReader.prototype.readList = function()
+{
+	let lst = []
+	while(true) {
+		let b = this.ctx.peekByte();
+		if(b == ChainPack.CP_TERM) {
+			this.ctx.getByte();
+			break;
+		}
+		let item = this.read()
+		lst.push(item);
+	}
+	return lst;
+}
+
+ChainPackReader.prototype.readMap = function()
+{
+	let map = {}
+	while(true) {
+		let b = this.ctx.peekByte();
+		if(b == ChainPack.CP_TERM) {
+			this.ctx.getByte();
+			break;
+		}
+		let key = this.read()
+		if(!key.isValid())
+			throw new TypeError("Malformed map, invalid key");
+		let val = this.read()
+		if(key.type === RpcValue.Type.String)
+			map[key.toString().slice(1, -1)] = val;
+		else
+			map[key.toInt()] = val;
+	}
+	return map;
 }
 
 function ChainPackWriter()
@@ -452,4 +499,40 @@ ChainPackWriter.prototype.writeJSString = function(str)
 	this.writeUIntData(pctx.length)
 	for (let i=0; i < pctx.length; i++)
 		this.ctx.putByte(pctx.data[i])
+}
+
+ChainPackWriter.prototype.writeDateTime = function(dt)
+{
+	if(!dt || typeof(dt) !== "object" || dt.utcOffsetMin == ChainPack.INVALID_MIN_OFFSET_FROM_UTC) {
+		// invalid datetime
+		dt = {epochMsec: ChainPack.SHV_EPOCH_MSEC, utcOffsetMin: ChainPack.INVALID_MIN_OFFSET_FROM_UTC}
+	}
+
+	this.ctx.putByte(ChainPack.CP_DateTime);
+
+	let msecs = dt.epochMsec;
+	msecs = msecs - ChainPack.SHV_EPOCH_MSEC;
+	if(msecs < 0)
+		throw new RangeError("DateTime prior to 2018-02-02 are not supported in current ChainPack implementation.");
+
+	let offset = (dt.utcOffsetMin / 15) & 0x7F;
+
+	let ms = msecs % 1000;
+	if(ms == 0)
+		msecs /= 1000;
+	let bi = new BInt(msecs);
+	if(offset != 0) {
+		bi.leftShift(7);
+		bi.val[bi.val.length - 1] |= offset;
+	}
+	bi.leftShift(2);
+	if(offset != 0)
+		bi.val[bi.val.length - 1] |= 1;
+	if(ms == 0)
+		bi.val[bi.val.length - 1] |= 2;
+
+	// save as signed int
+	let bitcnt = bi.significantBitsCount() + 1;
+	bi.resize(ChainPackWriter.bytesNeeded(bitcnt));
+	this.writeUIntDataHelper(bi);
 }
