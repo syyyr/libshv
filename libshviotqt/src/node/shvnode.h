@@ -29,7 +29,7 @@ public:
 	using StringView = shv::core::StringView;
 	using StringViewList = shv::core::StringViewList;
 public:
-	explicit ShvNode(ShvNode *parent = nullptr);
+	explicit ShvNode(ShvNode *parent);
 	explicit ShvNode(const std::string &node_id, ShvNode *parent = nullptr);
 	~ShvNode() override;
 
@@ -46,14 +46,14 @@ public:
 	String shvPath() const;
 	static StringViewList splitShvPath(const std::string &shv_path) { return StringView{shv_path}.split('/', '"'); }
 
-	ShvRootNode* rootNode();
+	ShvNode* rootNode();
 	virtual void emitSendRpcMesage(const shv::chainpack::RpcMessage &msg);
 
 	void setSortedChildren(bool b) {m_isSortedChildren = b;}
 
 	void deleteIfEmptyWithParents();
 
-	virtual bool isRootNode() const {return false;}
+	bool isRootNode() const {return m_isRootNode;}
 
 	virtual void handleRawRpcRequest(chainpack::RpcValue::MetaData &&meta, std::string &&data);
 	virtual void handleRpcRequest(const chainpack::RpcRequest &rq);
@@ -79,22 +79,23 @@ public:
 
 	virtual shv::chainpack::RpcValue callMethod(const chainpack::RpcRequest &rq);
 	virtual shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params);
+public:
+	Q_SIGNAL void sendRpcMesage(const shv::chainpack::RpcMessage &msg);
+protected:
+	bool m_isRootNode = false;
 private:
 	String m_nodeId;
 	bool m_isSortedChildren = true;
 };
 
+/// helper class to save lines when creating root node
+/// root node must be ShvNode to enable derived types to be root nodes
 class SHVIOTQT_DECL_EXPORT ShvRootNode : public ShvNode
 {
-	Q_OBJECT
 	using Super = ShvNode;
 public:
-	explicit ShvRootNode(QObject *parent) : Super() {setParent(parent);}
-
-	bool isRootNode() const override {return true;}
-
-	Q_SIGNAL void sendRpcMesage(const shv::chainpack::RpcMessage &msg);
-	void emitSendRpcMesage(const shv::chainpack::RpcMessage &msg) override;
+	explicit ShvRootNode(QObject *parent) : Super(nullptr) {setParent(parent); m_isRootNode = true;}
+	~ShvRootNode() override;
 };
 
 class SHVIOTQT_DECL_EXPORT MethodsTableNode : public shv::iotqt::node::ShvNode

@@ -160,7 +160,7 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 		resp.setError(err);
 	}
 	if(resp.hasRetVal()) {
-		ShvRootNode *root = rootNode();
+		ShvNode *root = rootNode();
 		if(root) {
 			root->emitSendRpcMesage(resp);
 		}
@@ -207,7 +207,7 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 		resp.setError(cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodCallException, e.what()));
 	}
 	if(resp.hasRetVal()) {
-		ShvRootNode *root = rootNode();
+		ShvNode *root = rootNode();
 		if(root) {
 			root->emitSendRpcMesage(resp);
 		}
@@ -421,12 +421,12 @@ chainpack::RpcValue ShvNode::callMethod(const ShvNode::StringViewList &shv_path,
 	SHV_EXCEPTION("Invalid method: " + method + " on path: " + shv_path.join('/'));
 }
 
-ShvRootNode *ShvNode::rootNode()
+ShvNode *ShvNode::rootNode()
 {
 	ShvNode *nd = this;
 	while(nd) {
 		if(nd->isRootNode())
-			return qobject_cast<ShvRootNode*>(nd);
+			return nd;
 		nd = nd->parentNode();
 	}
 	//SHV_EXCEPTION("Cannot find root node!");
@@ -435,30 +435,34 @@ ShvRootNode *ShvNode::rootNode()
 
 void ShvNode::emitSendRpcMesage(const chainpack::RpcMessage &msg)
 {
-	ShvRootNode *rnd = rootNode();
-	if(rnd) {
-		rnd->emitSendRpcMesage(msg);
+	if(isRootNode()) {
+		if(msg.isResponse()) {
+			cp::RpcResponse resp(msg);
+			// RPC calls with requestID == 0 does not expect response
+			// whoo is using this?
+			if(resp.requestId().toInt() == 0) {
+				shvWarning() << "throwing away response with invalid request ID:" << resp.requestId().toCpon();
+				return;
+			}
+		}
+		emit sendRpcMesage(msg);
 	}
 	else {
-		shvError() << "Cannot fing root node to send RPC message";
+		ShvNode *rnd = rootNode();
+		if(rnd) {
+			rnd->emitSendRpcMesage(msg);
+		}
+		else {
+			shvError() << "Cannot fing root node to send RPC message";
+		}
 	}
 }
 
 //===========================================================
 // ShvRootNode
 //===========================================================
-void ShvRootNode::emitSendRpcMesage(const chainpack::RpcMessage &msg)
+ShvRootNode::~ShvRootNode()
 {
-	if(msg.isResponse()) {
-		cp::RpcResponse resp(msg);
-		// RPC calls with requestID == 0 does not expect response
-		// whoo is using this?
-		if(resp.requestId().toInt() == 0) {
-			shvWarning() << "throwing away response with invalid request ID:" << resp.requestId().toCpon();
-			return;
-		}
-	}
-	emit sendRpcMesage(msg);
 }
 
 //===========================================================
