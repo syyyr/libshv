@@ -191,7 +191,7 @@ public:
 
 		virtual shv::chainpack::RpcValue shvValue(int value_id) = 0;
 		virtual void setShvValue(int value_id, const shv::chainpack::RpcValue &val) = 0;
-		virtual const char* valueIdToName(int value_id) = 0;
+		virtual const char* shvValueIdToName(int value_id) = 0;
 		const shv::chainpack::RpcRequest& servedRpcRequest() const {return m_servedRpcRequest;}
 	protected:
 		shv::chainpack::RpcRequest m_servedRpcRequest;

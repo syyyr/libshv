@@ -1058,7 +1058,7 @@ void RpcValue::MetaData::swap(RpcValue::MetaData &o)
 
 std::string RpcValue::Decimal::toString() const
 {
-	std::string ret = Utils::toString(toDouble());
+	std::string ret = RpcValue(*this).toCpon();
 	return ret;
 }
 

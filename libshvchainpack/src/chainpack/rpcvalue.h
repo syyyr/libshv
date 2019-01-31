@@ -46,27 +46,37 @@ public:
 	{
 		static constexpr int Base = 10;
 		struct Num {
-			int64_t exponent: 16, mantisa: 48;
+			int64_t mantisa = 0;
+			int exponent = 0;
+
+			Num() : mantisa(0), exponent(-1) {}
+			Num(int64_t m, int e) : mantisa(m), exponent(e) {}
 		};
-		Num m_num = {0, 0};
+		Num m_num;
 	public:
-		Decimal() : m_num{-1, 0} {}
-		Decimal(int64_t mantisa, int exponent) : m_num{(int16_t)exponent, mantisa} {}
-		static Decimal fromDouble(double n, int exponent)
-		{
-			int exp = exponent;
-			if(exponent > 0) {
-				//m_num.mantisa = (int)(n * std::pow(Base, precision) + 0.5);
-				for(; exponent > 0; exponent--) n /= Base;
-			}
-			else if(exponent < 0) {
-				//m_num.mantisa = (int)(n * std::pow(Base, precision) + 0.5);
-				for(; exponent < 0; exponent++) n *= Base;
-			}
-			return Decimal((int64_t)(n + 0.5), exp);
-		}
+		Decimal() {}
+		Decimal(int64_t mantisa, int exponent) : m_num{mantisa, exponent} {}
+		Decimal(int dec_places) : Decimal(0, -dec_places) {}
+
 		int64_t mantisa() const {return m_num.mantisa;}
 		int exponent() const {return m_num.exponent;}
+
+		static Decimal fromDouble(double d, int round_to_dec_places)
+		{
+			int exponent = -round_to_dec_places;
+			if(round_to_dec_places > 0) {
+				for(; round_to_dec_places > 0; round_to_dec_places--) d *= Base;
+			}
+			else if(round_to_dec_places < 0) {
+				for(; round_to_dec_places < 0; round_to_dec_places++) d /= Base;
+			}
+			return Decimal(static_cast<int64_t>(d + 0.5), exponent);
+		}
+		void setDouble(double d)
+		{
+			Decimal dc = fromDouble(d, -m_num.exponent);
+			m_num.mantisa = dc.mantisa();
+		}
 		double toDouble() const
 		{
 			double ret = mantisa();
@@ -77,7 +87,7 @@ public:
 				for(; exp < 0; exp++) ret /= Base;
 			return ret;
 		}
-		bool isValid() const {return !(mantisa() == 0 && exponent() != 0);}
+		//bool isValid() const {return !(mantisa() == 0 && exponent() != 0);}
 		std::string toString() const;
 	};
 	class SHVCHAINPACK_DECL_EXPORT DateTime
@@ -212,85 +222,7 @@ public:
 			return ret;
 		}
 	};
-#if 0
-	union ArrayElement
-	{
-		int64_t int_value;
-		uint64_t uint_value;
-		double double_value;
-		bool bool_value;
-		std::nullptr_t null_value;
-		DateTime datetime_value;
-		Decimal decimal_value;
 
-		ArrayElement() {}
-		ArrayElement(std::nullptr_t) : null_value(nullptr) {}
-		ArrayElement(int32_t i) : int_value(i) {}
-		ArrayElement(int64_t i) : int_value(i) {}
-		ArrayElement(uint32_t i) : uint_value(i) {}
-		ArrayElement(uint64_t i) : uint_value(i) {}
-		ArrayElement(double d) : double_value(d) {}
-		ArrayElement(bool b) : bool_value(b) {}
-		ArrayElement(DateTime dt) : datetime_value(dt) {}
-		ArrayElement(Decimal dt) : decimal_value(dt) {}
-	};
-	class SHVCHAINPACK_DECL_EXPORT Array : public std::vector<ArrayElement>
-	{
-		using Super = std::vector<ArrayElement>;
-	public:
-		Array() {}
-		Array(Type type) : m_type(type) {}
-		template<typename T, size_t sz>
-		Array(const T(&arr)[sz])
-		{
-			reserve(sz);
-			m_type = RpcValue::guessType<T>();
-			for (size_t i = 0; i < sz; ++i) {
-				ArrayElement el(arr[i]);
-				push_back(std::move(el));
-			}
-		}
-		bool operator ==(const Array &o) const
-		{
-			for (size_t i = 0; i < size(); ++i) {
-				if(!(valueAt(i) == o.valueAt(i)))
-					return false;
-			}
-			return true;
-		}
-		Type type() const {return m_type;}
-		RpcValue valueAt(size_t ix) const
-		{
-			switch(type()) {
-			case RpcValue::Type::Null: return RpcValue(nullptr);
-			case RpcValue::Type::Int: return RpcValue(Super::at(ix).int_value);
-			case RpcValue::Type::UInt: return RpcValue(Super::at(ix).uint_value);
-			case RpcValue::Type::Double: return RpcValue(Super::at(ix).double_value);
-			case RpcValue::Type::Bool: return RpcValue(Super::at(ix).bool_value);
-			case RpcValue::Type::DateTime: return RpcValue(Super::at(ix).datetime_value);
-			case RpcValue::Type::Decimal: return RpcValue(Super::at(ix).decimal_value);
-			default: SHVCHP_EXCEPTION("Unsupported array type");
-			}
-		}
-		static ArrayElement makeElement(const RpcValue &val)
-		{
-			ArrayElement el;
-			switch(val.type()) {
-			case RpcValue::Type::Null: el.null_value = nullptr; break;
-			case RpcValue::Type::Int: el.int_value = val.toInt(); break;
-			case RpcValue::Type::UInt: el.uint_value = val.toUInt(); break;
-			case RpcValue::Type::Double: el.double_value = val.toDouble(); break;
-			case RpcValue::Type::Bool: el.bool_value = val.toBool(); break;
-			case RpcValue::Type::DateTime: el.datetime_value = val.toDateTime(); break;
-			case RpcValue::Type::Decimal: el.decimal_value = val.toDecimal(); break;
-			default: SHVCHP_EXCEPTION("Unsupported array type");
-			}
-			return el;
-		}
-	private:
-		Type m_type = Type::Invalid;
-	};
-#endif
 	class SHVCHAINPACK_DECL_EXPORT MetaData
 	{
 	public:
@@ -399,7 +331,7 @@ public:
 	bool isDouble() const { return type() == Type::Double; }
 	bool isBool() const { return type() == Type::Bool; }
 	bool isString() const { return type() == Type::String; }
-	//bool isBlob() const { return type() == Type::Blob; }
+	bool isDecimal() const { return type() == Type::Decimal; }
 	bool isDateTime() const { return type() == Type::DateTime; }
 	bool isList() const { return type() == Type::List; }
 	//bool isArray() const { return type() == Type::Array; }
