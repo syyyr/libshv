@@ -88,6 +88,23 @@ int test_pack_uint(unsigned long i, const char *res)
 	return 0;
 }
 
+void test_pack_decimal(int mantisa, int exponent, const char *res)
+{
+	static const unsigned long BUFFLEN = 1024;
+	char buff[BUFFLEN];
+	ccpcp_pack_context ctx;
+	ccpcp_pack_context_init(&ctx, buff, BUFFLEN, NULL);
+	ccpon_pack_decimal(&ctx, mantisa, exponent);
+	*ctx.current = '\0';
+	if(!o_silent) {
+		printf("pack decimal mantisa %d, exponent %d have: '%s' expected: '%s'\n", mantisa, exponent, buff, res);
+	}
+	if(strcmp(buff, res)) {
+		printf("FAIL! pack decimal mantisa %d, exponent %d have: '%s' expected: '%s'\n", mantisa, exponent, buff, res);
+		assert(false);
+	}
+}
+
 int test_unpack_number(const char *str, int expected_type, double expected_val)
 {
 	static const size_t STATE_CNT = 100;
@@ -620,6 +637,12 @@ int main(int argc, const char * argv[])
 	}
 
 	test_cpons();
+
+	test_pack_decimal(83, 1, "830.");
+	test_pack_decimal(83, 0, "83.");
+	test_pack_decimal(83, -1, "8.3");
+	test_pack_decimal(83, -2, "0.83");
+	test_pack_decimal(83, -3, "0.083");
 
 	printf("\nPASSED\n");
 
