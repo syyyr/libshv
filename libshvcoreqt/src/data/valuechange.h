@@ -123,18 +123,21 @@ SHVCOREQT_DECL_EXPORT bool compareValueX(const ValueChange::ValueX &value1, cons
 SHVCOREQT_DECL_EXPORT bool compareValueY(const ValueChange &value1, const ValueChange &value2, ValueType type);
 SHVCOREQT_DECL_EXPORT bool compareValueY(const ValueChange::ValueY &value1, const ValueChange::ValueY &value2, ValueType type);
 
-class SHVCOREQT_DECL_EXPORT ValueRecord : public std::vector<ValueChange>
+class SHVCOREQT_DECL_EXPORT ValueRecord : public QVector<ValueChange::ValueY>
 {
-    using Super = std::vector<ValueChange>;
+    using Super = QVector<ValueChange>;
 
 public:
-    void addColumn(ValueType type, ValueChange value);
-    void setValue(int index, ValueChange value);
-    ValueChange value(int index) const;
+    void addColumn(ValueType type, ValueChange::ValueY value_y);
+    void setValueY(int index, ValueChange::ValueY value_y);
+    ValueChange::ValueY valueY(int index) const;
     ValueType type(int index) const;
+	ValueChange::ValueX valueX() const { return m_valueX; }
+	void setValueX(const ValueChange::ValueX value_x) { m_valueX = value_x; }
 
 private:
-    std::vector<ValueType> m_types;
+	ValueChange::ValueX m_valueX;
+    QVector<ValueType> m_types;
 };
 
 class SHVCOREQT_DECL_EXPORT SerieData : public std::vector<ValueChange>
