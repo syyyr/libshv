@@ -256,26 +256,6 @@ ValueChange::ValueX ValueXInterval::length() const
     SHV_EXCEPTION("Invalid interval type");
 }
 
-void ValueRecord::addColumn(ValueType type, ValueChange::ValueY value_y)
-{
-    push_back(value_y);
-    m_types.push_back(type);
-}
-
-void ValueRecord::setValueY(int index, ValueChange::ValueY value_y)
-{
-    (*this)[(size_type)index] = value_y;
-}
-
-ValueChange::ValueY ValueRecord::valueY(int index) const
-{
-    return (*this)[(size_type)index];
-}
-
-ValueType ValueRecord::type(int index) const
-{
-    return m_types[(size_type)index];
-}
 
 }
 }
