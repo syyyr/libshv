@@ -137,7 +137,7 @@ public:
 
 private:
 	ValueChange::ValueX m_valueX;
-    QVector<ValueType> m_types;
+	QVector<ValueType> m_types;
 };
 
 class SHVCOREQT_DECL_EXPORT SerieData : public std::vector<ValueChange>
