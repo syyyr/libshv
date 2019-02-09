@@ -53,6 +53,8 @@ public:
 	Q_SIGNAL void brokerConnectedChanged(bool is_connected);
 	Q_SIGNAL void brokerLoginError(const std::string &err);
 
+	const shv::chainpack::RpcValue::Map &loginResult() const { return m_connectionState.loginResult.toMap(); }
+
 	//std::string brokerClientPath() const {return brokerClientPath(brokerClientId());}
 	//std::string brokerMountPoint() const;
 public:
