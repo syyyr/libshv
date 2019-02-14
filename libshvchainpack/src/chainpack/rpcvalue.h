@@ -375,6 +375,7 @@ public:
 	static RpcValue fromChainPack(const std::string & str, std::string *err = nullptr);
 
 	bool operator== (const RpcValue &rhs) const;
+	bool operator!= (const RpcValue &rhs) const {return !operator==(rhs);}
 #ifdef RPCVALUE_COPY_AND_SWAP
 	RpcValue& operator= (RpcValue rhs) noexcept
 	{
