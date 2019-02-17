@@ -24,15 +24,26 @@ RpcResponseCallBack::RpcResponseCallBack(ClientConnection *conn, int rq_id, QObj
 	connect(conn, &ClientConnection::rpcMessageReceived, this, &RpcResponseCallBack::onRpcMessageReceived);
 }
 
-void RpcResponseCallBack::start(RpcResponseCallBack::CallBackFunction cb)
+void RpcResponseCallBack::start()
 {
-	m_callBackFunction = cb;
 	if(!m_timeoutTimer) {
 		m_timeoutTimer = new QTimer(this);
 		m_timeoutTimer->setSingleShot(true);
-		connect(m_timeoutTimer, &QTimer::timeout, this, &RpcResponseCallBack::deleteLater);
+		connect(m_timeoutTimer, &QTimer::timeout, this, [this]() {
+			if(m_callBackFunction)
+				m_callBackFunction(shv::chainpack::RpcResponse());
+			else
+				emit finished(shv::chainpack::RpcResponse());
+			deleteLater();
+		});
 	}
 	m_timeoutTimer->start(timeout());
+}
+
+void RpcResponseCallBack::start(RpcResponseCallBack::CallBackFunction cb)
+{
+	m_callBackFunction = cb;
+	start();
 }
 
 void RpcResponseCallBack::onRpcMessageReceived(const chainpack::RpcMessage &msg)
@@ -45,6 +56,8 @@ void RpcResponseCallBack::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 		return;
 	if(m_callBackFunction)
 		m_callBackFunction(rsp);
+	else
+		emit finished(rsp);
 	deleteLater();
 }
 

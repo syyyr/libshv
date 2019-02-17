@@ -31,6 +31,10 @@ public:
 public:
 	explicit RpcResponseCallBack(int rq_id, QObject *parent = nullptr);
 	explicit RpcResponseCallBack(shv::iotqt::rpc::ClientConnection *conn, int rq_id, QObject *parent = nullptr);
+
+	Q_SIGNAL void finished(const shv::chainpack::RpcResponse &response);
+
+	void start();
 	void start(CallBackFunction cb);
 	virtual void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg);
 private:
