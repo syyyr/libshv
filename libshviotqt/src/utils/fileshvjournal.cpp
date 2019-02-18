@@ -89,7 +89,7 @@ const char * FileShvJournal::FILE_EXT = ".log";
 
 FileShvJournal::FileShvJournal(FileShvJournal::SnapShotFn snf)
 	: m_snapShotFn(snf)
-	, m_journalDir("/tmp/shvjournal")
+	, m_journalDir("/tmp/shvjournal/noname")
 {
 }
 
