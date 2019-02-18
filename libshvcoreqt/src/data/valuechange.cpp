@@ -85,10 +85,16 @@ SerieData::iterator SerieData::insertValueChange(const_iterator position, const 
 
 void SerieData::updateValueChange(const_iterator position, const ValueChange &new_value)
 {
-
-	long index = position - cbegin();
-	ValueChange &old_value = at((unsigned long)index);
-	Q_ASSERT_X(compareValueX(old_value, new_value, m_xType), __FUNCTION__, "ValueX should not be changed");
+	Q_ASSERT(position >= cbegin());
+	unsigned long index = (unsigned long)(position - cbegin());
+	ValueChange &old_value = at(index);
+	if (!compareValueX(old_value, new_value, m_xType)) {
+		if ((index > 0 && (compareValueX(new_value, at(index - 1), m_xType) || lessThenValueX(new_value, at(index - 1), m_xType)))
+			||
+			(index < size() - 1 && (compareValueX(new_value, at(index + 1), m_xType) || greaterThenValueX(new_value, at(index + 1), m_xType)))) {
+			SHV_EXCEPTION("updateValueChange: requested change of ValueX would break time sequence");
+		}
+	}
 	old_value = new_value;
 }
 
@@ -256,6 +262,43 @@ ValueChange::ValueX ValueXInterval::length() const
     SHV_EXCEPTION("Invalid interval type");
 }
 
+bool lessThenValueX(const ValueChange &value1, const ValueChange &value2, ValueType type)
+{
+	return lessThenValueX(value1.valueX, value2.valueX, type);
+}
+
+bool lessThenValueX(const ValueChange::ValueX &value1, const ValueChange::ValueX &value2, ValueType type)
+{
+	switch (type) {
+	case ValueType::TimeStamp:
+		return value1.timeStamp < value2.timeStamp;
+	case ValueType::Double:
+		return value1.doubleValue < value2.doubleValue;
+	case ValueType::Int:
+		return value1.intValue < value2.intValue;
+	default:
+		SHV_EXCEPTION("Invalid type on valueX");
+	}
+}
+
+bool greaterThenValueX(const ValueChange &value1, const ValueChange &value2, ValueType type)
+{
+	return greaterThenValueX(value1.valueX, value2.valueX, type);
+}
+
+bool greaterThenValueX(const ValueChange::ValueX &value1, const ValueChange::ValueX &value2, ValueType type)
+{
+	switch (type) {
+	case ValueType::TimeStamp:
+		return value1.timeStamp > value2.timeStamp;
+	case ValueType::Double:
+		return value1.doubleValue > value2.doubleValue;
+	case ValueType::Int:
+		return value1.intValue > value2.intValue;
+	default:
+		SHV_EXCEPTION("Invalid type on valueX");
+	}
+}
 
 }
 }
