@@ -160,7 +160,7 @@ void FileShvJournal::append(const ShvJournalEntry &entry, int64_t msec)
 		}
 	}
 	catch (std::exception &e) {
-		logWShvJournal() << e.what();
+		shvWarning() << e.what();
 		m_journalStatus.maxFileNo = -1;
 	}
 }
