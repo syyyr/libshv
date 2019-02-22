@@ -31,6 +31,7 @@ namespace rpc {
 
 ClientConnection::ClientConnection(QObject *parent)
 	: Super(parent)
+	, m_loginType(IRpcConnection::LoginType::Sha1)
 {
 	//setConnectionType(cp::Rpc::TYPE_CLIENT);
 
