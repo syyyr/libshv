@@ -120,6 +120,12 @@ struct SHVCOREQT_DECL_EXPORT ValueXInterval
 SHVCOREQT_DECL_EXPORT bool compareValueX(const ValueChange &value1, const ValueChange &value2, ValueType type);
 SHVCOREQT_DECL_EXPORT bool compareValueX(const ValueChange::ValueX &value1, const ValueChange::ValueX &value2, ValueType type);
 
+SHVCOREQT_DECL_EXPORT bool lessThenValueX(const ValueChange &value1, const ValueChange &value2, ValueType type);
+SHVCOREQT_DECL_EXPORT bool lessThenValueX(const ValueChange::ValueX &value1, const ValueChange::ValueX &value2, ValueType type);
+
+SHVCOREQT_DECL_EXPORT bool greaterThenValueX(const ValueChange &value1, const ValueChange &value2, ValueType type);
+SHVCOREQT_DECL_EXPORT bool greaterThenValueX(const ValueChange::ValueX &value1, const ValueChange::ValueX &value2, ValueType type);
+
 SHVCOREQT_DECL_EXPORT bool compareValueY(const ValueChange &value1, const ValueChange &value2, ValueType type);
 SHVCOREQT_DECL_EXPORT bool compareValueY(const ValueChange::ValueY &value1, const ValueChange::ValueY &value2, ValueType type);
 
