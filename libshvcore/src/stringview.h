@@ -64,16 +64,17 @@ public:
 	StringViewList() {}
 	StringViewList(const std::vector<StringView> &o) : Super(o) {}
 
-	StringView value(int ix) const;
+	StringView value(ssize_t ix) const;
+	ssize_t indexOf(const std::string &str) const;
 
-	StringViewList mid(long start)const {return mid(start, (length() > start)? length() - start: 0);}
-	StringViewList mid(long start, long len) const;
+	StringViewList mid(size_t start)const {return mid(start, (size() > start)? size() - start: 0);}
+	StringViewList mid(size_t start, size_t len) const;
 
 	std::string join(const char delim) const { return StringView::join(begin(), end(), delim); }
 	std::string join(const std::string &delim) const { return StringView::join(begin(), end(), delim); }
 
 	bool startsWith(const StringViewList &lst) const;
-	long length() const {return (long)size();}
+	ssize_t length() const {return (ssize_t)size();}
 };
 
 } // namespace core
