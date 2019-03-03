@@ -30,6 +30,7 @@ const char* Rpc::METH_GIT_COMMIT = "gitCommit";
 const char* Rpc::METH_DEVICE_ID = "deviceId";
 const char* Rpc::METH_MOUNT_POINT = "mountPoint";
 const char* Rpc::METH_SUBSCRIBE = "subscribe";
+const char* Rpc::METH_UNSUBSCRIBE = "unsubscribe";
 const char* Rpc::METH_REJECT_NOT_SUBSCRIBED = "rejectNotSubscribed";
 const char* Rpc::METH_RUN_CMD = "runCmd";
 const char* Rpc::METH_LAUNCH_REXEC = "launchRexec";

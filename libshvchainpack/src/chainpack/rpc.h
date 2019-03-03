@@ -50,6 +50,7 @@ public:
 	static const char* METH_GIT_COMMIT;
 	static const char* METH_MOUNT_POINT;
 	static const char* METH_SUBSCRIBE;
+	static const char* METH_UNSUBSCRIBE;
 	static const char* METH_REJECT_NOT_SUBSCRIBED;
 	static const char* METH_RUN_CMD;
 	static const char* METH_LAUNCH_REXEC;
