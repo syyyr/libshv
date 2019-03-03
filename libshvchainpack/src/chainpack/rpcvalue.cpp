@@ -964,6 +964,20 @@ std::vector<RpcValue::String> RpcValue::MetaData::sKeys() const
 	return ret;
 }
 
+bool RpcValue::MetaData::hasKey(RpcValue::Int key) const
+{
+	const IMap &m = iValues();
+	auto it = m.find(key);
+	return (it != m.end());
+}
+
+bool RpcValue::MetaData::hasKey(const RpcValue::String &key) const
+{
+	const Map &m = sValues();
+	auto it = m.find(key);
+	return (it != m.end());
+}
+
 RpcValue RpcValue::MetaData::value(RpcValue::Int key) const
 {
 	const IMap &m = iValues();
@@ -973,7 +987,7 @@ RpcValue RpcValue::MetaData::value(RpcValue::Int key) const
 	return RpcValue();
 }
 
-RpcValue RpcValue::MetaData::value(RpcValue::String key) const
+RpcValue RpcValue::MetaData::value(const String &key) const
 {
 	const Map &m = sValues();
 	auto it = m.find(key);
@@ -995,7 +1009,7 @@ void RpcValue::MetaData::setValue(RpcValue::Int key, const RpcValue &val)
 	}
 }
 
-void RpcValue::MetaData::setValue(RpcValue::String key, const RpcValue &val)
+void RpcValue::MetaData::setValue(const RpcValue::String &key, const RpcValue &val)
 {
 	if(val.isValid()) {
 		if(!m_smap)

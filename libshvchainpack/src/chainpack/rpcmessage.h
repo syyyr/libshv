@@ -58,13 +58,17 @@ public:
 	static bool isResponse(const RpcValue::MetaData &meta);
 	static bool isSignal(const RpcValue::MetaData &meta);
 
+	static bool hasRequestId(const RpcValue::MetaData &meta);
 	static RpcValue requestId(const RpcValue::MetaData &meta);
 	static void setRequestId(RpcValue::MetaData &meta, const RpcValue &requestId);
+	bool hasRequestId() const;
 	RpcValue requestId() const;
 	void setRequestId(const RpcValue &requestId);
 
+	static bool hasMethod(const RpcValue::MetaData &meta);
 	static RpcValue method(const RpcValue::MetaData &meta);
 	static void setMethod(RpcValue::MetaData &meta, const RpcValue::String &method);
+	bool hasMethod() const;
 	RpcValue method() const;
 	void setMethod(const RpcValue::String &method);
 

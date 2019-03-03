@@ -111,6 +111,11 @@ void RpcMessage::setRequestId(const RpcValue &id)
 	setMetaValue(RpcMessage::MetaType::Tag::RequestId, id);
 }
 
+bool RpcMessage::hasMethod(const RpcValue::MetaData &meta)
+{
+	return meta.hasKey(RpcMessage::MetaType::Tag::Method);
+}
+
 RpcValue RpcMessage::method(const RpcValue::MetaData &meta)
 {
 	return meta.value(RpcMessage::MetaType::Tag::Method);
@@ -119,6 +124,11 @@ RpcValue RpcMessage::method(const RpcValue::MetaData &meta)
 void RpcMessage::setMethod(RpcValue::MetaData &meta, const RpcValue::String &method)
 {
 	meta.setValue(RpcMessage::MetaType::Tag::Method, method);
+}
+
+bool RpcMessage::hasMethod() const
+{
+	return m_value.metaData().hasKey(RpcMessage::MetaType::Tag::Method);
 }
 
 RpcValue RpcMessage::method() const
@@ -139,32 +149,37 @@ bool RpcMessage::isValid() const
 
 bool RpcMessage::isRequest() const
 {
-	return requestId().isValid() && !method().toString().empty();
+	return hasRequestId() && hasMethod();
 }
 
 bool RpcMessage::isSignal() const
 {
-	return !requestId().isValid() && !method().toString().empty();
+	return !hasRequestId() && hasMethod();
 }
 
 bool RpcMessage::isResponse() const
 {
-	return requestId().isValid() && method().toString().empty();
+	return hasRequestId() && !hasMethod();
 }
 
 bool RpcMessage::isRequest(const RpcValue::MetaData &meta)
 {
-	return requestId(meta).isValid() && !method(meta).toString().empty();
+	return hasRequestId(meta) && hasMethod(meta);
 }
 
 bool RpcMessage::isResponse(const RpcValue::MetaData &meta)
 {
-	return requestId(meta).isValid() && method(meta).toString().empty();
+	return hasRequestId(meta) && !hasMethod(meta);
 }
 
 bool RpcMessage::isSignal(const RpcValue::MetaData &meta)
 {
-	return !requestId(meta).isValid() && !method(meta).toString().empty();
+	return !hasRequestId(meta) && hasMethod(meta);
+}
+
+bool RpcMessage::hasRequestId(const RpcValue::MetaData &meta)
+{
+	return meta.hasKey(RpcMessage::MetaType::Tag::RequestId);
 }
 
 RpcValue RpcMessage::requestId(const RpcValue::MetaData &meta)
@@ -175,6 +190,11 @@ RpcValue RpcMessage::requestId(const RpcValue::MetaData &meta)
 void RpcMessage::setRequestId(RpcValue::MetaData &meta, const RpcValue &id)
 {
 	meta.setValue(RpcMessage::MetaType::Tag::RequestId, id);
+}
+
+bool RpcMessage::hasRequestId() const
+{
+	return m_value.metaData().hasKey(RpcMessage::MetaType::Tag::RequestId);
 }
 
 RpcValue RpcMessage::shvPath(const RpcValue::MetaData &meta)

@@ -345,8 +345,10 @@ void CLIOptions::printHelp(std::ostream &os) const
 		}
 		//os << ':';
 		cp::RpcValue def_val = opt.defaultValue();
-		if(def_val.isValid()) os << " [default(" << def_val.toString() << ")]";
-		if(opt.isMandatory()) os << " [MANDATORY]";
+		if(def_val.isValid())
+			os << " DEFAULT=" << def_val.toStdString();
+		if(opt.isMandatory())
+			os << " MANDATORY";
 		os << endl;
 		const std::string& oc = opt.comment();
 		if(!oc.empty())

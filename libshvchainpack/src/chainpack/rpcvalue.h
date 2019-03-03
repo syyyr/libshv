@@ -242,10 +242,12 @@ public:
 		void setMetaTypeNameSpaceId(RpcValue::Int id) {setValue(meta::Tag::MetaTypeNameSpaceId, id);}
 		std::vector<RpcValue::Int> iKeys() const;
 		std::vector<RpcValue::String> sKeys() const;
+		bool hasKey(RpcValue::Int key) const;
+		bool hasKey(const RpcValue::String &key) const;
 		RpcValue value(RpcValue::Int key) const;
-		RpcValue value(RpcValue::String key) const;
+		RpcValue value(const RpcValue::String &key) const;
 		void setValue(RpcValue::Int key, const RpcValue &val);
-		void setValue(RpcValue::String key, const RpcValue &val);
+		void setValue(const RpcValue::String &key, const RpcValue &val);
 		bool isEmpty() const;
 		bool operator==(const MetaData &o) const;
 		const RpcValue::IMap& iValues() const;
