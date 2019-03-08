@@ -378,6 +378,9 @@ int ccpcp_decimal_to_string(char *buff, size_t buff_len, int64_t mantisa, int ex
 		str[n++] = '.';
 	}
 	else if(dec_places == 0) {
+		if (n == 0) {
+			str[n++] = '0';
+		}
 		str[n++] = '.';
 	}
 	else {
