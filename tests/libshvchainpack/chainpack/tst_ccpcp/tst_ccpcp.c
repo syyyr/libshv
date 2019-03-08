@@ -524,6 +524,8 @@ void test_vals()
 void test_cpons()
 {
 	const char* cpons[] = {
+		"0.", NULL,
+		"0.0", NULL,
 		"223.", NULL,
 		"2.30", NULL,
 		"12.3e-10", "123e-11",
@@ -606,6 +608,7 @@ int main(int argc, const char * argv[])
 	test_unpack_number("-1", CCPCP_ITEM_INT, -1);
 	test_unpack_number("1u", CCPCP_ITEM_UINT, 1);
 	test_unpack_number("0.1", CCPCP_ITEM_DECIMAL, 0.1);
+	test_unpack_number("0.", CCPCP_ITEM_DECIMAL, 0);
 	test_unpack_number("1.", CCPCP_ITEM_DECIMAL, 1);
 	test_unpack_number("1e2", CCPCP_ITEM_DECIMAL, 100);
 	test_unpack_number("1.e2", CCPCP_ITEM_DECIMAL, 100);
@@ -638,6 +641,7 @@ int main(int argc, const char * argv[])
 
 	test_cpons();
 
+	test_pack_decimal(0, 0, "0.");
 	test_pack_decimal(83, 1, "830.");
 	test_pack_decimal(83, 0, "83.");
 	test_pack_decimal(83, -1, "8.3");
