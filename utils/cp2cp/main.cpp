@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
 				while(true) {
 					int c = pin->get();
 					if(c < 0)
-						return 0;
+						goto clean_exit;
 					if(c > ' ') {
 						pin->unget();
 						break;
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
 		nError() << e.what();
 		exit(-1);
 	}
-
+clean_exit:
 	delete prd;
 	delete pwr;
 

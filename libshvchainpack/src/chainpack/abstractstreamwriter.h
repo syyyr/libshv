@@ -27,7 +27,7 @@ public:
 	virtual void writeContainerEnd() = 0;
 	virtual void writeRawData(const std::string &data) = 0;
 
-	virtual void flush();
+	void flush();
 protected:
 	static constexpr bool WRITE_INVALID_AS_NULL = true;
 protected:
