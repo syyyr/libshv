@@ -150,7 +150,7 @@ void FileShvJournal::append(const ShvJournalEntry &entry, int64_t msec)
 				appendEntry(out, msec, uptime_sec, e);
 		}
 		appendEntry(out, msec, uptime_sec, entry);
-		auto file_size = out.tellp();
+		ssize_t file_size = out.tellp();
 		m_journalStatus.journalSize += (file_size - fsz);
 		if(m_journalStatus.journalSize > m_journalSizeLimit) {
 			rotateJournal();
