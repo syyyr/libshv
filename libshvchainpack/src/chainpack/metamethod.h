@@ -12,6 +12,7 @@ public:
 	enum class Signature {VoidVoid = 0, VoidParam, RetVoid, RetParam};
 	struct Flag {
 		enum {
+			None = 0,
 			IsSignal = 1 << 0,
 			IsGetter = 1 << 1,
 			IsSetter = 1 << 2,
