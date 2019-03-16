@@ -137,6 +137,14 @@ bool StringView::startsWith(const StringView &str) const
 	return i == str.length();
 }
 
+ssize_t StringView::indexOf(char c) const
+{
+	for (size_t i = 0; i < length(); i++)
+		if(at(i) == c)
+			return static_cast<ssize_t>(i);
+	return -1;
+}
+
 StringView StringView::mid(size_t start, size_t len) const
 {
 	return StringView(str(), this->start() + start, len);

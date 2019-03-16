@@ -16,6 +16,7 @@ public:
 			IsSignal = 1 << 0,
 			IsGetter = 1 << 1,
 			IsSetter = 1 << 2,
+			LargeResultHint = 1 << 3,
 		};
 	};
 	struct AccessLevel {
@@ -70,7 +71,7 @@ public:
 		if(lst.empty())
 			return name();
 		lst.insert(lst.begin(), name());
-		return lst;
+		return RpcValue{lst};
 	}
 private:
 	const char *m_name;

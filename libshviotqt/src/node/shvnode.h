@@ -16,6 +16,9 @@
 
 namespace shv {
 namespace iotqt {
+
+namespace utils { class ShvPath; }
+
 namespace node {
 
 class ShvRootNode;
@@ -43,8 +46,9 @@ public:
 	void setNodeId(String &&n);
 	void setNodeId(const String &n);
 
-	String shvPath() const;
-	static StringViewList splitShvPath(const std::string &shv_path) { return StringView{shv_path}.split('/', '"'); }
+	utils::ShvPath shvPath() const;
+	//static StringViewList splitShvPath(const std::string &shv_path) { return StringView{shv_path}.split(SHV_PATH_DELIM, SHV_PATH_QUOTE); }
+	//static String joinShvPath(const StringViewList &shv_path);
 
 	ShvNode* rootNode();
 	virtual void emitSendRpcMesage(const shv::chainpack::RpcMessage &msg);

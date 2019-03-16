@@ -56,7 +56,7 @@ static char out_buff[1024];
 void pack_overflow_handler(struct ccpcp_pack_context *ctx, size_t size_hint)
 {
 	(void)size_hint;
-	fwrite(out_buff, 1, ctx->current - ctx->start, out_file);
+	fwrite(out_buff, 1, (size_t)(ctx->current - ctx->start), out_file);
 	ctx->start = ctx->current = out_buff;
 	ctx->end = ctx->start + sizeof (out_buff);
 }
@@ -64,7 +64,7 @@ void pack_overflow_handler(struct ccpcp_pack_context *ctx, size_t size_hint)
 int main(int argc, char *argv[])
 {
 	const char *o_indent = NULL;
-	bool o_translate_meta_ids = false;
+	//bool o_translate_meta_ids = false;
 	bool o_cpon_input = false;
 	bool o_chainpack_output = false;
 	const char *file_name = NULL;
@@ -84,8 +84,8 @@ int main(int argc, char *argv[])
 				//fprintf(stderr, "indent: >>>%s<<<\n", o_indent);
 			}
 		}
-		else if(!strcmp(arg, "-t"))
-			o_translate_meta_ids = true;
+		//else if(!strcmp(arg, "-t"))
+		//	o_translate_meta_ids = true;
 		else if(!strcmp(arg, "--ip"))
 			o_cpon_input = true;
 		else if(!strcmp(arg, "--oc"))
@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
 
 	out_file = stdout;
 
-	static const size_t STATE_CNT = 100;
+	#define STATE_CNT 100
 	ccpcp_container_state states[STATE_CNT];
 	ccpcp_container_stack stack;
 	ccpcp_container_stack_init(&stack, states, STATE_CNT, NULL);

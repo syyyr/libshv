@@ -20,8 +20,8 @@
 
 #include <fstream>
 
-//#define logRpcMsg() shvCDebug("RpcMsg")
-#define logRpcSyncCalls() shvCDebug("RpcSyncCalls")
+#define logRpcMsg() shvCDebug("RpcMsg")
+//#define logRpcSyncCalls() shvCDebug("RpcSyncCalls")
 
 namespace cp = shv::chainpack;
 
@@ -142,13 +142,13 @@ void ClientConnection::resetConnection()
 
 void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
 {
-	//logRpcMsg() << cp::RpcDriver::SND_LOG_ARROW << rpc_msg.toStdString();
+	logRpcMsg() << cp::RpcDriver::SND_LOG_ARROW << rpc_msg.toCpon();
 	sendRpcValue(rpc_msg.value());
 }
 
 void ClientConnection::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 {
-	//logRpcMsg() << msg.toCpon();
+	logRpcMsg() << cp::RpcDriver::RCV_LOG_ARROW << msg.toCpon();
 	if(isInitPhase()) {
 		processInitPhase(msg);
 		return;

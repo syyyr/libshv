@@ -18,7 +18,15 @@ std::string::size_type String::indexOf(const std::string & str_haystack, const s
 					  [](char a, char b) { return std::tolower(a) == std::tolower(b); }:
 	[](char a, char b) { return a == b;}
 	);
-	return (it == str_haystack.end())? std::string::npos: it - str_haystack.begin();
+	return (it == str_haystack.end())? std::string::npos: static_cast<std::string::size_type>(it - str_haystack.begin());
+}
+
+std::string::size_type String::indexOf(const std::string &haystack, char needle)
+{
+	for (std::string::size_type i = 0; i < haystack.length(); i++)
+		if(haystack[i] == needle)
+			return i;
+	return std::string::npos;
 }
 
 bool String::equal(std::string const& a, std::string const& b, String::CaseSensitivity case_sensitivity)

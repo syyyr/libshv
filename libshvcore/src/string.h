@@ -19,14 +19,22 @@ public:
 	enum SplitBehavior {KeepEmptyParts, SkipEmptyParts};
 
 	using Super::Super;
+	String() : Super() {}
 	String(const std::string &o) : Super(o) {}
 	String(std::string &&o) : Super(o) {}
 
 	static bool equal(const std::string &a, const std::string &b, String::CaseSensitivity case_sensitivity);
 	static std::string::size_type indexOf(const std::string & str_haystack, const std::string &str_needle, String::CaseSensitivity case_sensitivity);
+	static std::string::size_type indexOf(const std::string &haystack, char needle);
+	std::string::size_type indexOf(char needle) const { return indexOf(*this, needle); }
+
 	bool startsWith(const std::string &with) const {return startsWith(*this, with);}
 	static bool startsWith(const std::string & str, const std::string &with) {return str.rfind(with, 0) == 0;}
+	static bool startsWith(const std::string & str, const char c) { return str.size() > 0 && str[0] == c; }
+
 	static bool endsWith(const std::string & str, const std::string &with) {return str.find(with, str.size() - with.size()) == (str.size() - with.size());}
+	static bool endsWith(const std::string & str, const char c) { return str.size() > 0 && str[str.size() - 1] == c; }
+
 	static const char * WhiteSpaceChars;
 	static std::string& rtrim(std::string& s, const char* t = WhiteSpaceChars)
 	{

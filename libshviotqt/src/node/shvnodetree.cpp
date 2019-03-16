@@ -1,4 +1,5 @@
 #include "shvnodetree.h"
+#include "../utils/shvpath.h"
 
 #include <shv/chainpack/rpcvalue.h>
 #include <shv/core/exception.h>
@@ -30,7 +31,7 @@ ShvNodeTree::~ShvNodeTree()
 
 ShvNode *ShvNodeTree::mkdir(const ShvNode::String &path)
 {
-	ShvNode::StringViewList lst = ShvNode::splitShvPath(path);
+	ShvNode::StringViewList lst = utils::ShvPath::split(path);
 	return mkdir(lst);
 }
 
@@ -42,7 +43,7 @@ ShvNode *ShvNodeTree::mkdir(const ShvNode::StringViewList &path)
 ShvNode *ShvNodeTree::cd(const ShvNode::String &path)
 {
 	std::string path_rest;
-	ShvNode::StringViewList lst = ShvNode::splitShvPath(path);
+	ShvNode::StringViewList lst = utils::ShvPath::split(path);
 	ShvNode *nd = mdcd(lst, false, &path_rest);
 	if(path_rest.empty())
 		return nd;
@@ -51,7 +52,7 @@ ShvNode *ShvNodeTree::cd(const ShvNode::String &path)
 
 ShvNode *ShvNodeTree::cd(const ShvNode::String &path, ShvNode::String *path_rest)
 {
-	ShvNode::StringViewList lst = ShvNode::splitShvPath(path);
+	ShvNode::StringViewList lst = utils::ShvPath::split(path);
 	//shvWarning() << path << "->" << shv::core::String::join(lst, '-');
 	return mdcd(lst, false, path_rest);
 }
@@ -85,7 +86,7 @@ ShvNode *ShvNodeTree::mdcd(const ShvNode::StringViewList &path, bool create_dirs
 
 bool ShvNodeTree::mount(const ShvNode::String &path, ShvNode *node)
 {
-	ShvNode::StringViewList lst = ShvNode::splitShvPath(path);
+	ShvNode::StringViewList lst = utils::ShvPath::split(path);
 	if(lst.empty()) {
 		shvError() << "Cannot mount node on empty path:" << path;
 		return false;
