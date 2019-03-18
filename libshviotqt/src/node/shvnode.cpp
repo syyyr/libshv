@@ -222,9 +222,9 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 	const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
 	if(!mm)
 		SHV_EXCEPTION(std::string("Method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' doesn't exist.");
-	const chainpack::RpcValue::String &rq_grant = rq.accessGrant().toString();
-	const std::string &mm_grant = mm->accessGrant();
-	if(grantToAccessLevel(mm_grant.data()) > grantToAccessLevel(rq_grant.data()))
+	const chainpack::RpcValue &rq_grant = rq.accessGrant();
+	const cp::RpcValue &mm_grant = mm->accessGrant();
+	if(grantToAccessLevel(mm_grant) > grantToAccessLevel(rq_grant))
 		SHV_EXCEPTION(std::string("Call method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' permission denied.");
 	return callMethod(rq);
 }
@@ -298,16 +298,24 @@ chainpack::RpcValue ShvNode::lsAttributes(const StringViewList &shv_path, unsign
 	return cp::RpcValue{ret};
 }
 
-int ShvNode::grantToAccessLevel(const char *grant_name) const
+int ShvNode::grantToAccessLevel(const chainpack::RpcValue &acces_token) const
 {
-	if(std::strcmp(grant_name, cp::Rpc::GRANT_BROWSE) == 0) return cp::MetaMethod::AccessLevel::Browse;
-	if(std::strcmp(grant_name, cp::Rpc::GRANT_READ) == 0) return cp::MetaMethod::AccessLevel::Read;
-	if(std::strcmp(grant_name, cp::Rpc::GRANT_WRITE) == 0) return cp::MetaMethod::AccessLevel::Write;
-	if(std::strcmp(grant_name, cp::Rpc::GRANT_COMMAND) == 0) return cp::MetaMethod::AccessLevel::Command;
-	if(std::strcmp(grant_name, cp::Rpc::GRANT_CONFIG) == 0) return cp::MetaMethod::AccessLevel::Config;
-	if(std::strcmp(grant_name, cp::Rpc::GRANT_SERVICE) == 0) return cp::MetaMethod::AccessLevel::Service;
-	if(std::strcmp(grant_name, cp::Rpc::GRANT_DEVEL) == 0) return cp::MetaMethod::AccessLevel::Devel;
-	if(std::strcmp(grant_name, cp::Rpc::GRANT_ADMIN) == 0) return cp::MetaMethod::AccessLevel::Admin;
+	if(acces_token.isString()) {
+		const chainpack::RpcValue::String &acl = acces_token.toString();
+		const char *acces_level = acl.data();
+		if(std::strcmp(acces_level, cp::Rpc::GRANT_BROWSE) == 0) return cp::MetaMethod::AccessLevel::Browse;
+		if(std::strcmp(acces_level, cp::Rpc::GRANT_READ) == 0) return cp::MetaMethod::AccessLevel::Read;
+		if(std::strcmp(acces_level, cp::Rpc::GRANT_WRITE) == 0) return cp::MetaMethod::AccessLevel::Write;
+		if(std::strcmp(acces_level, cp::Rpc::GRANT_COMMAND) == 0) return cp::MetaMethod::AccessLevel::Command;
+		if(std::strcmp(acces_level, cp::Rpc::GRANT_CONFIG) == 0) return cp::MetaMethod::AccessLevel::Config;
+		if(std::strcmp(acces_level, cp::Rpc::GRANT_SERVICE) == 0) return cp::MetaMethod::AccessLevel::Service;
+		if(std::strcmp(acces_level, cp::Rpc::GRANT_DEVEL) == 0) return cp::MetaMethod::AccessLevel::Devel;
+		if(std::strcmp(acces_level, cp::Rpc::GRANT_ADMIN) == 0) return cp::MetaMethod::AccessLevel::Admin;
+		return -1;
+	}
+	else if(acces_token.isInt() || acces_token.isUInt()) {
+		return acces_token.toInt();
+	}
 	return -1;
 }
 /*
