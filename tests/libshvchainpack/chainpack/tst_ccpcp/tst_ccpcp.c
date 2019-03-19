@@ -598,9 +598,24 @@ int main(int argc, const char * argv[])
 	test_pack_uint(1, "1u");
 	test_pack_uint(1234567890l, "1234567890u");
 
+	test_pack_double(0., "0.");
 	test_pack_double(0.1, "0.1");
 	test_pack_double(1, "1.");
 	test_pack_double(1.2, "1.2");
+	test_pack_double(1e-1, "0.1");
+	test_pack_double(1.23e-1, "0.123");
+	test_pack_double(1.23e-2, "1.23e-2");
+	test_pack_double(1.23e3, "1230.");
+	test_pack_double(1.23e6, "1230000.");
+	test_pack_double(1.23e7, "1.23e7");
+	test_pack_double(1e8, "1e8");
+	test_pack_double(-1e8, "-1e8");
+	test_pack_double(-123456789e-8, "-1.234567");
+	test_pack_double(-123456789e-9, "-0.123456");
+	test_pack_double(-123456789e-10, "-1.234567e-2");
+	test_pack_double(123456789., "1.234567e8");
+	test_pack_double(123456789e1, "1.234567e9");
+	test_pack_double(123456789e2, "1.234567e10");
 
 	test_unpack_number("1", CCPCP_ITEM_INT, 1);
 	test_unpack_number("123u", CCPCP_ITEM_UINT, 123);
