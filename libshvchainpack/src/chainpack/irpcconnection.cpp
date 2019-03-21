@@ -113,6 +113,18 @@ int IRpcConnection::callMethodSubscribe(const std::string &shv_path, std::string
 					  , grant);
 }
 
+int IRpcConnection::callMethodUnsubscribe(const std::string &shv_path, std::string method, const RpcValue &grant)
+{
+	logSubscriptionsD() << "call unsubscribe for connection id:" << connectionId() << "path:" << shv_path << "method:" << method << "grant:" << grant.toCpon();
+	return callShvMethod(Rpc::DIR_BROKER_APP
+					  , Rpc::METH_UNSUBSCRIBE
+					  , RpcValue::Map{
+						  {Rpc::PAR_PATH, shv_path},
+						  {Rpc::PAR_METHOD, std::move(method)},
+						 }
+						 , grant);
+}
+
 std::string IRpcConnection::loginTypeToString(IRpcConnection::LoginType t)
 {
 	switch(t) {
