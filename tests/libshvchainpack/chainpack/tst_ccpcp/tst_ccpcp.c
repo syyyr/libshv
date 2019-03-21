@@ -4,15 +4,15 @@
 #include <ccpcp_convert.h>
 
 #define _XOPEN_SOURCE
+#include <time.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 #include <assert.h>
 #include <float.h>
 #include <math.h>
 static bool o_silent = true;
 
-static void binary_dump(const char *buff, int len)
+static void binary_dump(const char *buff, ssize_t len)
 {
 	for (int i = 0; i < len; ++i) {
 		char u = buff[i];
@@ -113,14 +113,14 @@ int test_unpack_number(const char *str, int expected_type, double expected_val)
 	ccpcp_container_stack_init(&stack, states, STATE_CNT, NULL);
 	unsigned long n = strlen(str);
 	ccpcp_unpack_context ctx;
-	ccpcp_unpack_context_init(&ctx, (uint8_t*)str, n, NULL, &stack);
+	ccpcp_unpack_context_init(&ctx, (const uint8_t*)str, n, NULL, &stack);
 
 	ccpon_unpack_next(&ctx);
 	if(ctx.err_no != CCPCP_RC_OK) {
 		printf("FAIL! unpack number str: '%s' error: %d\n", str, ctx.err_no);
 		assert(false);
 	}
-	if(ctx.item.type != expected_type) {
+	if((int)ctx.item.type != expected_type) {
 		printf("FAIL! unpack number str: '%s' have type: %d expected type: %d\n", str, ctx.item.type, expected_type);
 		assert(false);
 	}
@@ -168,7 +168,7 @@ int test_unpack_datetime(const char *str, int add_msecs, int expected_utc_offset
 #else
 	ccpcp_unpack_context ctx;
 	unsigned long n = strlen(str);
-	ccpcp_unpack_context_init(&ctx, (uint8_t*)str, n, NULL, NULL);
+	ccpcp_unpack_context_init(&ctx, (const uint8_t*)str, n, NULL, NULL);
 
 	struct tm tm;
 	int has_T = 0;

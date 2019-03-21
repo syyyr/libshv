@@ -12,7 +12,8 @@ SOURCES += \
     #$$PWD/syncclientconnection.cpp \
     #$$PWD/iclientconnection.cpp \
     $$PWD/rpcresponsecallback.cpp \
-    $$PWD/socket.cpp
+    $$PWD/socket.cpp \
+    $$PWD/deviceappclioptions.cpp
 
 HEADERS += \
     $$PWD/rpc.h \
@@ -28,5 +29,6 @@ HEADERS += \
     #$$PWD/syncclientconnection.h \
     #$$PWD/iclientconnection.h \
     $$PWD/rpcresponsecallback.h \
-    $$PWD/socket.h
+    $$PWD/socket.h \
+    $$PWD/deviceappclioptions.h
 

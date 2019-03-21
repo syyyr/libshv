@@ -1,4 +1,5 @@
 #include "brokerconnection.h"
+#include "deviceappclioptions.h"
 #include "../utils/fileshvjournal.h"
 
 #include <shv/core/log.h>

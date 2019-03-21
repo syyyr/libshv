@@ -7,20 +7,7 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
-class SHVIOTQT_DECL_EXPORT DeviceAppCliOptions : public ClientAppCliOptions
-{
-private:
-	using Super = ClientAppCliOptions;
-public:
-	DeviceAppCliOptions();
-
-	CLIOPTION_GETTER_SETTER2(std::string, "device.mountPoint", m, setM, ountPoint)
-	CLIOPTION_GETTER_SETTER2(std::string, "device.id", d, setD, eviceId)
-	CLIOPTION_GETTER_SETTER2(std::string, "device.idFile", d, setD, eviceIdFile)
-	CLIOPTION_GETTER_SETTER2(std::string, "shvJournal.dir", s, setS, hvJournalDir)
-	CLIOPTION_GETTER_SETTER2(std::string, "shvJournal.fileSizeLimit", s, setS, hvJournalFileSizeLimit)
-	CLIOPTION_GETTER_SETTER2(std::string, "shvJournal.sizeLimit", s, setS, hvJournalSizeLimit)
-};
+class DeviceAppCliOptions;
 
 class SHVIOTQT_DECL_EXPORT DeviceConnection : public ClientConnection
 {

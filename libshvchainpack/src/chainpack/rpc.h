@@ -47,6 +47,7 @@ public:
 	static const char* METH_ECHO;
 	static const char* METH_APP_NAME;
 	static const char* METH_DEVICE_ID;
+	static const char* METH_CLIENT_ID;
 	static const char* METH_GIT_COMMIT;
 	static const char* METH_MOUNT_POINT;
 	static const char* METH_SUBSCRIBE;
