@@ -140,11 +140,11 @@ public:
 
 	void clearValuesCache() {m_valuesLoaded = false;}
 protected:
-	virtual shv::chainpack::RpcValue loadValues();
-	virtual bool saveValues(const shv::chainpack::RpcValue &vals);
+	virtual void loadValues();
+	virtual bool saveValues();
 	const shv::chainpack::RpcValue &values();
 	virtual shv::chainpack::RpcValue valueOnPath(const StringViewList &shv_path);
-	void setValueOnPath(const StringViewList &shv_path, const shv::chainpack::RpcValue &val);
+	virtual void setValueOnPath(const StringViewList &shv_path, const shv::chainpack::RpcValue &val);
 	bool isDir(const StringViewList &shv_path);
 protected:
 	bool m_valuesLoaded = false;

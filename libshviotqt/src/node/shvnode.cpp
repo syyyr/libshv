@@ -583,10 +583,10 @@ chainpack::RpcValue RpcValueMapNode::callMethod(const ShvNode::StringViewList &s
 		if(method == M_SAVE) {
 			m_valuesLoaded = true;
 			m_values = params;
-			return saveValues(m_values);
+			return saveValues();
 		}
 		if(method == M_COMMIT) {
-			return saveValues(m_values);
+			return saveValues();
 		}
 	}
 	if(method == cp::Rpc::METH_GET) {
@@ -600,22 +600,20 @@ chainpack::RpcValue RpcValueMapNode::callMethod(const ShvNode::StringViewList &s
 	return Super::callMethod(shv_path, method, params);
 }
 
-chainpack::RpcValue RpcValueMapNode::loadValues()
+void RpcValueMapNode::loadValues()
 {
-	return cp::RpcValue();
+	m_valuesLoaded = true;
 }
 
-bool RpcValueMapNode::saveValues(const shv::chainpack::RpcValue &vals)
+bool RpcValueMapNode::saveValues()
 {
-	(void)vals;
 	return true;
 }
 
 const shv::chainpack::RpcValue &RpcValueMapNode::values()
 {
 	if(!m_valuesLoaded) {
-		m_valuesLoaded = true;
-		m_values = loadValues();
+		loadValues();
 	}
 	return m_values;
 }
@@ -634,8 +632,9 @@ shv::chainpack::RpcValue RpcValueMapNode::valueOnPath(const shv::iotqt::node::Sh
 
 void RpcValueMapNode::setValueOnPath(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const shv::chainpack::RpcValue &val)
 {
+	values();
 	if(shv_path.empty())
-		SHV_EXCEPTION("Invalid path: " + shv_path.join('/'));
+		SHV_EXCEPTION("Empty path");
 	shv::chainpack::RpcValue v = values();
 	for (size_t i = 0; i < shv_path.size()-1; ++i) {
 		auto dir = shv_path.at(i);
