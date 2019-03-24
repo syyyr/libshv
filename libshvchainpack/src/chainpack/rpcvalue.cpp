@@ -549,14 +549,17 @@ void RpcValue::append(const RpcValue &val)
 
 std::string RpcValue::toPrettyString(const std::string &indent) const
 {
-	std::ostringstream out;
-	{
-		CponWriterOptions opts;
-		opts.setTranslateIds(true).setIndent(indent);
-		CponWriter wr(out, opts);
-		wr << *this;
+	if(isValid()) {
+		std::ostringstream out;
+		{
+			CponWriterOptions opts;
+			opts.setTranslateIds(true).setIndent(indent);
+			CponWriter wr(out, opts);
+			wr << *this;
+		}
+		return out.str();
 	}
-	return out.str();
+	return "<invalid>";
 }
 
 std::string RpcValue::toCpon(const std::string &indent) const

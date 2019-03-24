@@ -359,8 +359,9 @@ chainpack::RpcValue ShvNode::ls(const StringViewList &shv_path, const chainpack:
 	const std::string child_name_pattern = mpl.value(0).toString();
 	unsigned attrs = mpl.value(1).toUInt();
 	for(const std::string &child_name : childNames(shv_path)) {
+		//shvInfo() << "\tchild_name:" << child_name;
 		if(child_name_pattern.empty() || child_name_pattern == child_name) {
-			try {
+			//try {
 				StringViewList ch_shv_path = shv_path;
 				ch_shv_path.push_back(shv::core::StringView(child_name));
 				cp::RpcValue::List attrs_result = lsAttributes(ch_shv_path, attrs).toList();
@@ -371,12 +372,14 @@ chainpack::RpcValue ShvNode::ls(const StringViewList &shv_path, const chainpack:
 					attrs_result.insert(attrs_result.begin(), child_name);
 					ret.push_back(attrs_result);
 				}
-			}
-			catch (std::exception &) {
-				ret.push_back(nullptr);
-			}
+			//}
+			//catch (std::exception &e) {
+			//	shvError() << "ShvNode::ls exception - " + std::string(e.what());
+			//	ret.push_back(nullptr);
+			//}
 		}
 	}
+	//shvInfo() << "\t return:" << chainpack::RpcValue{ret}.toCpon();
 	return chainpack::RpcValue{ret};
 }
 
@@ -539,7 +542,7 @@ size_t RpcValueMapNode::methodCount(const shv::iotqt::node::ShvNode::StringViewL
 		return meta_methods_value_map_root_node.size();
 	}
 	else {
-		return isDir(shv_path)? meta_methods_value_map_node.size() - 2: meta_methods_value_map_node.size();
+		return isDir(shv_path)? 2: meta_methods_value_map_node.size();
 	}
 }
 
@@ -551,7 +554,7 @@ const shv::chainpack::MetaMethod *RpcValueMapNode::metaMethod(const shv::iotqt::
 		size = meta_methods_value_map_root_node.size();
 	}
 	else {
-		size = isDir(shv_path)? meta_methods_value_map_node.size() - 2: meta_methods_value_map_node.size();
+		size = isDir(shv_path)? 2: meta_methods_value_map_node.size();
 	}
 	if(size <= ix)
 		SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(size));
