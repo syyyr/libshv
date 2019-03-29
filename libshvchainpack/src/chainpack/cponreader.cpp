@@ -55,7 +55,7 @@ void CponReader::unpackNext()
 	if(m_inCtx.err_no != CCPCP_RC_OK)
 		PARSE_EXCEPTION("Parse error: " + std::to_string(m_inCtx.err_no) + " " + ccpcp_error_string(m_inCtx.err_no) + " - " + std::string(m_inCtx.err_msg));
 }
-
+/*
 void CponReader::read(RpcValue &val, std::string &err)
 {
 	err.clear();
@@ -74,7 +74,7 @@ void CponReader::read(RpcValue &val, std::string *err)
 	else
 		read(val);
 }
-/*
+
 RpcValue::DateTime CponReader::readDateTime()
 {
 	struct tm tm;

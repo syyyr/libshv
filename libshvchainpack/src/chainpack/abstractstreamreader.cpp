@@ -35,11 +35,22 @@ AbstractStreamReader::~AbstractStreamReader()
 {
 }
 
-RpcValue AbstractStreamReader::read()
+RpcValue AbstractStreamReader::read(std::string *error)
 {
-	RpcValue value;
-	read(value);
-	return value;
+	RpcValue ret;
+	if(error) {
+		error->clear();
+		try {
+			read(ret);
+		}
+		catch (ParseException &e) {
+			*error = e.what();
+		}
+	}
+	else {
+		read(ret);
+	}
+	return ret;
 }
 
 } // namespace chainpack

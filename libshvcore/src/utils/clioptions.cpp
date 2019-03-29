@@ -408,7 +408,7 @@ bool ConfigCLIOptions::loadConfigFile()
 		shv::chainpack::RpcValue rv;
 		shv::chainpack::CponReader rd(fis);
 		std::string err;
-		rd.read(rv, err);
+		rv = rd.read(&err);
 		if(err.empty()) {
 			mergeConfig(rv);
 		}

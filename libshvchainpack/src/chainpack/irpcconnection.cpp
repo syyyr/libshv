@@ -25,12 +25,12 @@ IRpcConnection::~IRpcConnection()
 {
 }
 
-void IRpcConnection::sendNotify(std::string method, const RpcValue &params)
+void IRpcConnection::sendSignal(std::string method, const RpcValue &params)
 {
 	sendShvNotify(std::string(), std::move(method), params);
 }
 
-void IRpcConnection::sendShvNotify(const std::string &shv_path, std::string method, const RpcValue &params)
+void IRpcConnection::sendShvSignal(const std::string &shv_path, std::string method, const RpcValue &params)
 {
 	RpcRequest rq;
 	if(!shv_path.empty())

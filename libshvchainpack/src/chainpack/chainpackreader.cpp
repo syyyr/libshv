@@ -55,7 +55,7 @@ void ChainPackReader::unpackNext()
 	if(m_inCtx.err_no != CCPCP_RC_OK)
 		PARSE_EXCEPTION("Parse error: " + std::string(m_inCtx.err_msg) + " at: " + std::to_string(m_inCtx.err_no));
 }
-
+/*
 void ChainPackReader::read(RpcValue &val, std::string &err)
 {
 	err.clear();
@@ -66,7 +66,7 @@ void ChainPackReader::read(RpcValue &val, std::string &err)
 		err = e.what();
 	}
 }
-
+*/
 uint64_t ChainPackReader::readUIntData(bool *ok)
 {
 	return cchainpack_unpack_uint_data(&m_inCtx, ok);

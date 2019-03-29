@@ -29,7 +29,7 @@ public:
 	AbstractStreamReader(std::istream &in);
 	virtual ~AbstractStreamReader();
 
-	RpcValue read();
+	RpcValue read(std::string *error = nullptr);
 
 	virtual void read(RpcValue::MetaData &meta_data) = 0;
 	virtual void read(RpcValue &val) = 0;

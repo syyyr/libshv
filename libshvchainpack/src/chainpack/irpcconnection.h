@@ -26,8 +26,17 @@ public:
 
 	int nextRequestId();
 
-	void sendNotify(std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
-	void sendShvNotify(const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
+	void sendSignal(std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
+	void sendShvSignal(const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
+	/// obsolete
+	void sendNotify(std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue()) {
+		sendSignal(method, params);
+	}
+	/// obsolete
+	void sendShvNotify(const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue()) {
+		sendShvSignal(shv_path, method, params);
+	}
+
 	void sendResponse(const shv::chainpack::RpcValue &request_id, const shv::chainpack::RpcValue &result);
 	void sendError(const shv::chainpack::RpcValue &request_id, const shv::chainpack::RpcResponse::Error &error);
 	int callMethod(const shv::chainpack::RpcRequest &rq);

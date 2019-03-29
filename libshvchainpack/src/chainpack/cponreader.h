@@ -22,8 +22,8 @@ public:
 	using Super::read;
 	void read(RpcValue::MetaData &meta_data) override;
 	void read(RpcValue &val) override;
-	void read(RpcValue &val, std::string &err);
-	void read(RpcValue &val, std::string *err);
+	//void read(RpcValue &val, std::string &err);
+	//void read(RpcValue &val, std::string *err);
 
 	//RpcValue::DateTime readDateTime();
 private:
