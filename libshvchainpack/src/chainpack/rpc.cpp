@@ -34,6 +34,7 @@ const char* Rpc::METH_SUBSCRIBE = "subscribe";
 const char* Rpc::METH_UNSUBSCRIBE = "unsubscribe";
 const char* Rpc::METH_REJECT_NOT_SUBSCRIBED = "rejectNotSubscribed";
 const char* Rpc::METH_RUN_CMD = "runCmd";
+const char* Rpc::METH_RUN_SCRIPT = "runScript";
 const char* Rpc::METH_LAUNCH_REXEC = "launchRexec";
 const char* Rpc::METH_HELP = "help";
 const char* Rpc::METH_GET_LOG = "getLog";

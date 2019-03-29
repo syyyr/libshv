@@ -226,10 +226,10 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 	const cp::RpcValue &mm_grant = mm->accessGrant();
 	if(grantToAccessLevel(mm_grant) > grantToAccessLevel(rq_grant))
 		SHV_EXCEPTION(std::string("Call method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' permission denied.");
-	return callMethod(rq);
+	return callMethodRq(rq);
 }
 
-chainpack::RpcValue ShvNode::callMethod(const chainpack::RpcRequest &rq)
+chainpack::RpcValue ShvNode::callMethodRq(const chainpack::RpcRequest &rq)
 {
 	core::StringViewList shv_path = utils::ShvPath::split(rq.shvPath().toString());
 	const chainpack::RpcValue::String &method = rq.method().toString();
@@ -482,18 +482,22 @@ ShvRootNode::~ShvRootNode()
 //===========================================================
 size_t MethodsTableNode::methodCount(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
 {
+	if(m_methods == nullptr)
+		SHV_EXCEPTION("Methods table not set!");
 	if(shv_path.empty()) {
-		return m_methods.size();
+		return m_methods->size();
 	}
 	return Super::methodCount(shv_path);
 }
 
 const shv::chainpack::MetaMethod *MethodsTableNode::metaMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, size_t ix)
 {
+	if(m_methods == nullptr)
+		SHV_EXCEPTION("Methods table not set!");
 	if(shv_path.empty()) {
-		if(m_methods.size() <= ix)
-			SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(m_methods.size()));
-		return &(m_methods[ix]);
+		if(m_methods->size() <= ix)
+			SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(m_methods->size()));
+		return &(m_methods->operator[](ix));
 	}
 	return Super::metaMethod(shv_path, ix);
 }
@@ -621,14 +625,17 @@ const shv::chainpack::RpcValue &RpcValueMapNode::values()
 	return m_values;
 }
 
-shv::chainpack::RpcValue RpcValueMapNode::valueOnPath(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
+shv::chainpack::RpcValue RpcValueMapNode::valueOnPath(const shv::iotqt::node::ShvNode::StringViewList &shv_path, bool throw_exc)
 {
 	shv::chainpack::RpcValue v = values();
 	for(const auto & dir : shv_path) {
 		const shv::chainpack::RpcValue::Map &m = v.toMap();
 		v = m.value(dir.toString());
-		if(!v.isValid())
-			SHV_EXCEPTION("Invalid path: " + shv_path.join('/'));
+		if(!v.isValid()) {
+			if(throw_exc)
+				SHV_EXCEPTION("Invalid path: " + shv_path.join('/'));
+			return v;
+		}
 	}
 	return v;
 }
@@ -811,10 +818,10 @@ const chainpack::MetaMethod *ValueProxyShvNode::metaMethod(const ShvNode::String
 
 }
 
-chainpack::RpcValue ValueProxyShvNode::callMethod(const chainpack::RpcRequest &rq)
+chainpack::RpcValue ValueProxyShvNode::callMethodRq(const chainpack::RpcRequest &rq)
 {
 	m_handledObject->m_servedRpcRequest = rq;
-	cp::RpcValue ret = Super::callMethod(rq);
+	cp::RpcValue ret = Super::callMethodRq(rq);
 	m_handledObject->m_servedRpcRequest = cp::RpcRequest();
 	return ret;
 }

@@ -32,6 +32,9 @@ class SHVIOTQT_DECL_EXPORT ClientConnection : public SocketRpcConnection
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, c, C, onnectionOptions)
 
 public:
+	enum class State {NotConnected = 0, Connecting, SocketConnected, BrokerConnected, ConnectionError};
+	static const char* stateToString(State state);
+public:
 	explicit ClientConnection(QObject *parent = nullptr);
 	~ClientConnection() Q_DECL_OVERRIDE;
 
@@ -49,9 +52,12 @@ public:
 
 	Q_SIGNAL void rpcMessageReceived(const shv::chainpack::RpcMessage &msg);
 
-	bool isBrokerConnected() const {return m_connectionState.isBrokerConnected;}
+	bool isBrokerConnected() const {return state() == State::BrokerConnected;}
 	Q_SIGNAL void brokerConnectedChanged(bool is_connected);
 	Q_SIGNAL void brokerLoginError(const std::string &err);
+
+	State state() const { return m_connectionState.state; }
+	Q_SIGNAL void stateChanged(State state);
 
 	const shv::chainpack::RpcValue::Map &loginResult() const { return m_connectionState.loginResult.toMap(); }
 
@@ -62,23 +68,25 @@ public:
 	void sendMessage(const shv::chainpack::RpcMessage &rpc_msg) override;
 	void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg) override;
 protected:
+	void setState(State state);
+
 	void sendHello();
 	void sendLogin(const shv::chainpack::RpcValue &server_hello);
 
 	void checkBrokerConnected();
-	void setBrokerConnected(bool b);
+	void whenBrokerConnectedChanged(bool b);
 	void emitInitPhaseError(const std::string &err);
 
 	void onSocketConnectedChanged(bool is_connected);
 	void onRpcValueReceived(const shv::chainpack::RpcValue &rpc_val) override;
 
-	bool isInitPhase() const {return !isBrokerConnected();}
+	bool isInitPhase() const {return state() == State::SocketConnected;}
 	void processInitPhase(const chainpack::RpcMessage &msg);
 	shv::chainpack::RpcValue createLoginParams(const shv::chainpack::RpcValue &server_hello);
 
 	struct ConnectionState
 	{
-		bool isBrokerConnected = false;
+		State state = State::NotConnected;
 		int helloRequestId = 0;
 		int loginRequestId = 0;
 		int pingRqId = 0;

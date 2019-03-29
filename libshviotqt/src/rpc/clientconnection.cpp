@@ -118,12 +118,14 @@ void ClientConnection::close()
 {
 	m_checkConnectedTimer->stop();
 	closeConnection();
+	setState(State::NotConnected);
 }
 
 void ClientConnection::abort()
 {
 	m_checkConnectedTimer->stop();
 	abortConnection();
+	setState(State::NotConnected);
 }
 
 void ClientConnection::setCheckBrokerConnectedInterval(int ms)
@@ -163,6 +165,19 @@ void ClientConnection::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 	emit rpcMessageReceived(msg);
 }
 
+void ClientConnection::setState(ClientConnection::State state)
+{
+	if(m_connectionState.state == state)
+		return;
+	State old_state = m_connectionState.state;
+	m_connectionState.state = state;
+	emit stateChanged(state);
+	if(old_state == State::BrokerConnected)
+		whenBrokerConnectedChanged(false);
+	else if(state == State::BrokerConnected)
+		whenBrokerConnectedChanged(true);
+}
+
 void ClientConnection::onRpcValueReceived(const chainpack::RpcValue &rpc_val)
 {
 	cp::RpcMessage msg(rpc_val);
@@ -171,7 +186,6 @@ void ClientConnection::onRpcValueReceived(const chainpack::RpcValue &rpc_val)
 
 void ClientConnection::sendHello()
 {
-	setBrokerConnected(false);
 	m_connectionState.helloRequestId = callMethod(cp::Rpc::METH_HELLO);
 }
 
@@ -187,40 +201,38 @@ void ClientConnection::checkBrokerConnected()
 		abortConnection();
 		shvInfo().nospace() << "connecting to: " << user() << "@" << host() << ":" << port();
 		m_connectionState = ConnectionState();
+		setState(State::Connecting);
 		connectToHost(QString::fromStdString(host()), port());
 	}
 }
 
-void ClientConnection::setBrokerConnected(bool b)
+void ClientConnection::whenBrokerConnectedChanged(bool b)
 {
-	if(b != m_connectionState.isBrokerConnected) {
-		m_connectionState.isBrokerConnected = b;
-		if(b) {
-			shvInfo() << "Connected to broker";// << "client id:" << brokerClientId();// << "mount point:" << brokerMountPoint();
-			if(m_heartbeatInterval > 0) {
-				if(!m_pingTimer) {
-					shvInfo() << "Creating heart-beat timer, interval:" << m_heartbeatInterval << "sec.";
-					m_pingTimer = new QTimer(this);
-					m_pingTimer->setInterval(m_heartbeatInterval * 1000);
-					connect(m_pingTimer, &QTimer::timeout, this, [this]() {
-						if(m_connectionState.pingRqId > 0) {
-							shvError() << "PING response not received within" << (m_pingTimer->interval() / 1000) << "seconds, restarting conection to broker.";
-							resetConnection();
-						}
-						else {
-							m_connectionState.pingRqId = callShvMethod(".broker/app", cp::Rpc::METH_PING);
-						}
-					});
-				}
-				m_pingTimer->start();
+	if(b) {
+		shvInfo() << "Connected to broker";// << "client id:" << brokerClientId();// << "mount point:" << brokerMountPoint();
+		if(m_heartbeatInterval > 0) {
+			if(!m_pingTimer) {
+				shvInfo() << "Creating heart-beat timer, interval:" << m_heartbeatInterval << "sec.";
+				m_pingTimer = new QTimer(this);
+				m_pingTimer->setInterval(m_heartbeatInterval * 1000);
+				connect(m_pingTimer, &QTimer::timeout, this, [this]() {
+					if(m_connectionState.pingRqId > 0) {
+						shvError() << "PING response not received within" << (m_pingTimer->interval() / 1000) << "seconds, restarting conection to broker.";
+						resetConnection();
+					}
+					else {
+						m_connectionState.pingRqId = callShvMethod(".broker/app", cp::Rpc::METH_PING);
+					}
+				});
 			}
+			m_pingTimer->start();
 		}
-		else {
-			if(m_pingTimer)
-				m_pingTimer->stop();
-		}
-		emit brokerConnectedChanged(b);
 	}
+	else {
+		if(m_pingTimer)
+			m_pingTimer->stop();
+	}
+	emit brokerConnectedChanged(b);
 }
 
 void ClientConnection::emitInitPhaseError(const std::string &err)
@@ -230,17 +242,18 @@ void ClientConnection::emitInitPhaseError(const std::string &err)
 
 void ClientConnection::onSocketConnectedChanged(bool is_connected)
 {
-	setBrokerConnected(false);
 	if(is_connected) {
 		shvInfo() << "Socket connected to RPC server";
 		//sendKnockKnock(cp::RpcDriver::ChainPack);
 		//RpcResponse resp = callMethodSync("echo", "ahoj babi");
 		//shvInfo() << "+++" << resp.toStdString();
+		setState(State::SocketConnected);
 		clearBuffers();
 		sendHello();
 	}
 	else {
 		shvInfo() << "Socket disconnected from RPC server";
+		setState(State::NotConnected);
 	}
 }
 
@@ -294,6 +307,7 @@ void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
 		cp::RpcResponse resp(msg);
 		//shvInfo() << "Handshake response received:" << resp.toCpon();
 		if(resp.isError()) {
+			setState(State::ConnectionError);
 			emitInitPhaseError(resp.error().message());
 			break;
 		}
@@ -306,12 +320,24 @@ void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
 		}
 		else if(m_connectionState.loginRequestId == id) {
 			m_connectionState.loginResult = resp.result();
-			setBrokerConnected(true);
+			setState(State::BrokerConnected);
 			return;
 		}
 	} while(false);
 	shvError() << "Invalid handshake message! Dropping connection." << msg.toCpon();
 	resetConnection();
+}
+
+const char *ClientConnection::stateToString(ClientConnection::State state)
+{
+	switch (state) {
+	case State::NotConnected: return "NotConnected";
+	case State::Connecting: return "Connecting";
+	case State::SocketConnected: return "SocketConnected";
+	case State::BrokerConnected: return "BrokerConnected";
+	case State::ConnectionError: return "ConnectionError";
+	}
+	return "this could never happen";
 }
 
 }}}

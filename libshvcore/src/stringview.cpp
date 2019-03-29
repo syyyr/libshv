@@ -1,4 +1,5 @@
 #include "stringview.h"
+#include "string.h"
 
 namespace shv {
 namespace core {
@@ -137,6 +138,16 @@ bool StringView::startsWith(const StringView &str) const
 	return i == str.length();
 }
 
+bool StringView::startsWith(char c) const
+{
+	return value(0) == c;
+}
+
+bool StringView::endsWith(char c) const
+{
+	return value(-1) == c;
+}
+
 ssize_t StringView::indexOf(char c) const
 {
 	for (size_t i = 0; i < length(); i++)
@@ -185,6 +196,11 @@ std::vector<StringView> StringView::split(char delim, char quote, StringView::Sp
 		strv = strv.mid(token.length() + 1);
 	}
 	return ret;
+}
+
+int StringView::toInt(bool *ok) const
+{
+	return shv::core::String::toInt(toString(), ok);
 }
 
 std::string StringView::join(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last, const char delim)

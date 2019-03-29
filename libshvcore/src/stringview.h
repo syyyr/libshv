@@ -41,6 +41,8 @@ public:
 	std::string toString() const;
 
 	bool startsWith(const StringView &str) const;
+	bool startsWith(char c) const;
+	bool endsWith(char c) const;
 	ssize_t indexOf(char c) const;
 
 	StringView mid(size_t start)const {return mid(start, (length() > start)? length() - start: 0);}
@@ -49,6 +51,8 @@ public:
 	StringView getToken(char delim = ' ', char quote = '\0');
 	std::vector<StringView> split(char delim, char quote, SplitBehavior split_behavior = SkipEmptyParts) const;
 	std::vector<StringView> split(char delim, SplitBehavior split_behavior = SkipEmptyParts) const { return  split(delim, '\0', split_behavior); }
+
+	int toInt(bool *ok = nullptr) const;
 
 	static std::string join(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last, const char delim);
 	static std::string join(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last, const std::string &delim);
