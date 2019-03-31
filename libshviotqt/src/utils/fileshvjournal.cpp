@@ -6,6 +6,8 @@
 #include <shv/core/string.h>
 #include <shv/core/stringview.h>
 
+#include <QCoreApplication>
+
 #include <fstream>
 #include <sstream>
 
@@ -89,8 +91,26 @@ const char * FileShvJournal::FILE_EXT = ".log";
 
 FileShvJournal::FileShvJournal(FileShvJournal::SnapShotFn snf)
 	: m_snapShotFn(snf)
-	, m_journalDir("/tmp/shvjournal/noname")
+	, m_journalDir(defaultApplicationJournaldir())
 {
+}
+
+std::string FileShvJournal::defaultApplicationJournaldir()
+{
+	QString appn = QCoreApplication::applicationName();
+	appn.replace(' ', '_');
+	return "/tmp/shvjournal/" + appn.toStdString();
+}
+
+void FileShvJournal::setJournalDir(std::string s)
+{
+	if(s.empty()) {
+		shvWarning() << "Cannot set shv journal dir to empty path, default journal dir will be set instead:" << defaultApplicationJournaldir();
+		setJournalDir(defaultApplicationJournaldir());
+	}
+	else {
+		m_journalDir = std::move(s);
+	}
 }
 
 static int64_t str_to_size(const std::string &str)

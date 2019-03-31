@@ -138,13 +138,14 @@ public:
 
 	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
 
-	void clearValuesCache() {m_valuesLoaded = false;}
-protected:
-	virtual void loadValues();
-	virtual bool saveValues();
-	const shv::chainpack::RpcValue &values();
 	virtual shv::chainpack::RpcValue valueOnPath(const StringViewList &shv_path, bool throw_exc = true);
 	virtual void setValueOnPath(const StringViewList &shv_path, const shv::chainpack::RpcValue &val);
+
+	void clearValuesCache() {m_valuesLoaded = false;}
+protected:
+	virtual const shv::chainpack::RpcValue &values();
+	virtual void loadValues();
+	virtual void saveValues();
 	bool isDir(const StringViewList &shv_path);
 protected:
 	bool m_valuesLoaded = false;

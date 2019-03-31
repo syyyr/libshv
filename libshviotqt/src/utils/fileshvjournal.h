@@ -50,7 +50,7 @@ public:
 
 	FileShvJournal(SnapShotFn snf);
 
-	void setJournalDir(std::string s) {m_journalDir = std::move(s);}
+	void setJournalDir(std::string s);
 	const std::string& journalDir() const {return m_journalDir;}
 	void setFileSizeLimit(const std::string &n);
 	void setFileSizeLimit(int64_t n) {m_fileSizeLimit = n;}
@@ -64,6 +64,7 @@ public:
 	void append(const ShvJournalEntry &entry, int64_t msec = 0);
 
 	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params);
+	static std::string defaultApplicationJournaldir();
 private:
 	void checkJournalConsistecy();
 	void rotateJournal();

@@ -590,10 +590,12 @@ chainpack::RpcValue RpcValueMapNode::callMethod(const ShvNode::StringViewList &s
 		if(method == M_SAVE) {
 			m_valuesLoaded = true;
 			m_values = params;
-			return saveValues();
+			saveValues();
+			return true;
 		}
 		if(method == M_COMMIT) {
-			return saveValues();
+			saveValues();
+			return true;
 		}
 	}
 	if(method == cp::Rpc::METH_GET) {
@@ -612,12 +614,11 @@ void RpcValueMapNode::loadValues()
 	m_valuesLoaded = true;
 }
 
-bool RpcValueMapNode::saveValues()
+void RpcValueMapNode::saveValues()
 {
-	return true;
 }
 
-const shv::chainpack::RpcValue &RpcValueMapNode::values()
+const chainpack::RpcValue &RpcValueMapNode::values()
 {
 	if(!m_valuesLoaded) {
 		loadValues();
