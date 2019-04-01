@@ -38,18 +38,11 @@ public:
 		};};
 
 	SHV_IMAP_FIELD_IMPL2(int, MetaType::Key::State, s, setS, tate, State::Invalid)
-	/*
-	SHV_IMAP_FIELD_IMPL(std::string, MetaType::Key::Host, h, setH, ost)
-	SHV_IMAP_FIELD_IMPL(int, MetaType::Key::Port, p, setP, ort)
-	SHV_IMAP_FIELD_IMPL(std::string, MetaType::Key::Secret, s, setS, ecret)
-	SHV_IMAP_FIELD_IMPL(int, MetaType::Key::RequestId, r, setR, equestId)
-	SHV_IMAP_FIELD_IMPL(shv::chainpack::RpcValue, MetaType::Key::CallerIds, c, setC, allerIds)
-	*/
 public:
 	//using Super::Super;
 	TunnelCtl() {}
 	TunnelCtl(State::Enum st);
-	TunnelCtl(const RpcValue::Map &o);
+	//TunnelCtl(const RpcValue::IMap &o);
 	TunnelCtl(const RpcValue &o);
 
 	//static TunnelCtl fromIMap(const shv::chainpack::RpcValue::IMap &m);

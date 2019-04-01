@@ -39,14 +39,14 @@ TunnelCtl::TunnelCtl(State::Enum st)
 	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
 	setState(st);
 }
-
-TunnelCtl::TunnelCtl(const RpcValue::Map &o)
+/*
+TunnelCtl::TunnelCtl(const RpcValue::IMap &o)
 	: Super(o)
 {
 	MetaType::registerMetaType();
 	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
 }
-
+*/
 TunnelCtl::TunnelCtl(const RpcValue &o)
 	: Super(o)
 {

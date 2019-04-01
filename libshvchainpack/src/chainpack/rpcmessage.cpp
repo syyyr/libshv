@@ -2,6 +2,7 @@
 #include "chainpack.h"
 #include "metatypes.h"
 #include "tunnelctl.h"
+#include "accessgrant.h"
 #include "abstractstreamwriter.h"
 
 #include <cassert>
@@ -297,7 +298,7 @@ RpcValue RpcMessage::popCallerId(const RpcValue &caller_ids, RpcValue::Int &id)
 			id = array.back().toInt();
 			array.pop_back();
 		}
-		return array;
+		return RpcValue(array);
 	}
 	else {
 		id = caller_ids.toInt();
@@ -442,6 +443,7 @@ void RpcMessage::registerMetaTypes()
 {
 	RpcMessage::MetaType::registerMetaType();
 	TunnelCtl::MetaType::registerMetaType();
+	AccessGrant::MetaType::registerMetaType();
 }
 
 void RpcMessage::checkMetaValues()
