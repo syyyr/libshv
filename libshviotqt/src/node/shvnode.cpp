@@ -626,9 +626,9 @@ const chainpack::RpcValue &RpcValueMapNode::values()
 	return m_values;
 }
 
-shv::chainpack::RpcValue RpcValueMapNode::valueOnPath(const shv::iotqt::node::ShvNode::StringViewList &shv_path, bool throw_exc)
+chainpack::RpcValue RpcValueMapNode::valueOnPath(const chainpack::RpcValue &val, const ShvNode::StringViewList &shv_path, bool throw_exc)
 {
-	shv::chainpack::RpcValue v = values();
+	shv::chainpack::RpcValue v = val;
 	for(const auto & dir : shv_path) {
 		const shv::chainpack::RpcValue::Map &m = v.toMap();
 		v = m.value(dir.toString());
@@ -639,6 +639,11 @@ shv::chainpack::RpcValue RpcValueMapNode::valueOnPath(const shv::iotqt::node::Sh
 		}
 	}
 	return v;
+}
+
+shv::chainpack::RpcValue RpcValueMapNode::valueOnPath(const shv::iotqt::node::ShvNode::StringViewList &shv_path, bool throw_exc)
+{
+	return valueOnPath(values(), shv_path, throw_exc);
 }
 
 void RpcValueMapNode::setValueOnPath(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const shv::chainpack::RpcValue &val)

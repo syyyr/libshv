@@ -143,6 +143,7 @@ public:
 
 	void clearValuesCache() {m_valuesLoaded = false;}
 protected:
+	static shv::chainpack::RpcValue valueOnPath(const shv::chainpack::RpcValue &val, const StringViewList &shv_path, bool throw_exc);
 	virtual const shv::chainpack::RpcValue &values();
 	virtual void loadValues();
 	virtual void saveValues();
