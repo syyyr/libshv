@@ -5,6 +5,8 @@
 namespace shv {
 namespace chainpack {
 
+class AccessGrant;
+
 class SHVCHAINPACK_DECL_EXPORT IRpcConnection
 {
 public:
@@ -41,7 +43,8 @@ public:
 	void sendError(const shv::chainpack::RpcValue &request_id, const shv::chainpack::RpcResponse::Error &error);
 	int callMethod(const shv::chainpack::RpcRequest &rq);
 	int callMethod(std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
-	int callShvMethod(const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), const RpcValue &grant = shv::chainpack::RpcValue());
+	int callShvMethod(const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
+	int callShvMethod(const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params, const AccessGrant &grant);
 	//RpcResponse callMethodSync(const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = DEFAULT_RPC_TIMEOUT);
 	//RpcResponse callShvMethodSync(const std::string &shv_path, const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = DEFAULT_RPC_TIMEOUT);
 	int callMethodSubscribe(const std::string &shv_path, std::string method, const RpcValue &grant = shv::chainpack::RpcValue());

@@ -1,4 +1,5 @@
 #include "irpcconnection.h"
+#include "accessgrant.h"
 #include "exception.h"
 
 #include <necrolog.h>
@@ -85,7 +86,12 @@ int IRpcConnection::callMethod(std::string method, const RpcValue &params)
 	return callShvMethod(std::string(), std::move(method), params);
 }
 
-int IRpcConnection::callShvMethod(const std::string &shv_path, std::string method, const RpcValue &params, const RpcValue &grant)
+int IRpcConnection::callShvMethod(const std::string &shv_path, std::string method, const RpcValue &params)
+{
+	return callShvMethod(shv_path, method, params, AccessGrant());
+}
+
+int IRpcConnection::callShvMethod(const std::string &shv_path, std::string method, const RpcValue &params, const AccessGrant &grant)
 {
 	int id = nextRequestId();
 	RpcRequest rq;
