@@ -40,15 +40,45 @@ void RpcResponseCallBack::start()
 	m_timeoutTimer->start(timeout());
 }
 
+void RpcResponseCallBack::start(int time_out)
+{
+	setTimeout(time_out);
+	start();
+}
+
 void RpcResponseCallBack::start(RpcResponseCallBack::CallBackFunction cb)
 {
 	m_callBackFunction = cb;
 	start();
 }
 
+void RpcResponseCallBack::start(int time_out, RpcResponseCallBack::CallBackFunction cb)
+{
+	setTimeout(time_out);
+	start(cb);
+}
+
+void RpcResponseCallBack::start(QObject *context, RpcResponseCallBack::CallBackFunction cb)
+{
+	start(timeout(), context, cb);
+}
+
+void RpcResponseCallBack::start(int time_out, QObject *context, RpcResponseCallBack::CallBackFunction cb)
+{
+	if(context) {
+		connect(context, &QObject::destroyed, this, [this]() {
+			m_callBackFunction = nullptr;
+			deleteLater();
+		});
+	}
+	start(time_out,cb);
+}
+
 void RpcResponseCallBack::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 {
 	shvLogFuncFrame() << this << msg.toPrettyString();
+	if(!m_timeoutTimer)
+		shvWarning() << "Callback was not started, time-out functionality cannot be provided!";
 	if(!msg.isResponse())
 		return;
 	cp::RpcResponse rsp(msg);

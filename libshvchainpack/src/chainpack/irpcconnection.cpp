@@ -94,8 +94,18 @@ int IRpcConnection::callShvMethod(const std::string &shv_path, std::string metho
 int IRpcConnection::callShvMethod(const std::string &shv_path, std::string method, const RpcValue &params, const AccessGrant &grant)
 {
 	int id = nextRequestId();
+	return callShvMethod(id, shv_path, method, params, grant);
+}
+
+int IRpcConnection::callShvMethod(int rq_id, const std::string &shv_path, std::string method, const RpcValue &params)
+{
+	return callShvMethod(rq_id, shv_path, method, params, AccessGrant());
+}
+
+int IRpcConnection::callShvMethod(int rq_id, const std::string &shv_path, std::string method, const RpcValue &params, const AccessGrant &grant)
+{
 	RpcRequest rq;
-	rq.setRequestId(id);
+	rq.setRequestId(rq_id);
 	rq.setMethod(std::move(method));
 	if(params.isValid())
 		rq.setParams(params);
@@ -104,7 +114,7 @@ int IRpcConnection::callShvMethod(const std::string &shv_path, std::string metho
 	if(!shv_path.empty())
 		rq.setShvPath(shv_path);
 	sendMessage(rq);
-	return id;
+	return rq_id;
 }
 
 int IRpcConnection::callMethodSubscribe(const std::string &shv_path, std::string method, const RpcValue &grant)
