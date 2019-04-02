@@ -7,6 +7,8 @@ isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
 }
 message ( SHV_PROJECT_TOP_BUILDDIR: '$$SHV_PROJECT_TOP_BUILDDIR' )
 
+QMAKE_CFLAGS += -std=gnu11
+
 DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin
 
 CCPCP_SRC_DIR = ../../libshvchainpack/c

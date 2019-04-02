@@ -2,6 +2,8 @@
 
 QT -= core gui
 
+QMAKE_CFLAGS += -std=gnu11
+
 TARGET = tst_ccpcp
 
 isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
