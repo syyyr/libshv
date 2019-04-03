@@ -6,6 +6,7 @@
 #include <shv/chainpack/rpcvalue.h>
 #include <shv/chainpack/rpcmessage.h>
 #include <shv/core/stringview.h>
+#include <shv/core/utils.h>
 
 #include <QObject>
 #include <QMetaProperty>
@@ -120,6 +121,7 @@ protected:
 
 class SHVIOTQT_DECL_EXPORT RpcValueMapNode : public shv::iotqt::node::ShvNode
 {
+	Q_OBJECT
 	using Super = shv::iotqt::node::ShvNode;
 public:
 	static const char *M_LOAD;
@@ -138,10 +140,16 @@ public:
 
 	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
 
+	shv::chainpack::RpcValue valueOnPath(const std::string &shv_path, bool throw_exc = true);
 	virtual shv::chainpack::RpcValue valueOnPath(const StringViewList &shv_path, bool throw_exc = true);
+	void setValueOnPath(const std::string &shv_path, const shv::chainpack::RpcValue &val);
 	virtual void setValueOnPath(const StringViewList &shv_path, const shv::chainpack::RpcValue &val);
 
+	void commitChanges() {saveValues();}
+
 	void clearValuesCache() {m_valuesLoaded = false;}
+
+	Q_SIGNAL void configSaved();
 protected:
 	static shv::chainpack::RpcValue valueOnPath(const shv::chainpack::RpcValue &val, const StringViewList &shv_path, bool throw_exc);
 	virtual const shv::chainpack::RpcValue &values();
@@ -151,6 +159,39 @@ protected:
 protected:
 	bool m_valuesLoaded = false;
 	shv::chainpack::RpcValue m_values;
+};
+
+class SHVIOTQT_DECL_EXPORT RpcValueConfigNode : public RpcValueMapNode
+{
+	Q_OBJECT
+
+	using Super = RpcValueMapNode;
+
+	SHV_FIELD_IMPL2(std::string, c, C, onfigName, "config")
+	SHV_FIELD_IMPL2(std::string, c, C, onfigDir, ".")
+	SHV_FIELD_IMPL(std::string, u, U, serConfigName)
+	SHV_FIELD_IMPL(std::string, u, U, serConfigDir)
+	SHV_FIELD_IMPL(std::string, t, T, emplateConfigName)
+	SHV_FIELD_IMPL(std::string, t, T, emplateDir)
+public:
+	RpcValueConfigNode(const std::string &node_id, shv::iotqt::node::ShvNode *parent);
+
+	//shv::chainpack::RpcValue valueOnPath(const StringViewList &shv_path, bool throv_exc = true) override;
+protected:
+	//HNode* parentHNode();
+
+	shv::chainpack::RpcValue loadConfigTemplate(const std::string &file_name);
+	std::string resolvedUserConfigName();
+	std::string resolvedUserConfigDir();
+
+	void loadValues() override;
+	void saveValues() override;
+
+	size_t methodCount(const StringViewList &shv_path) override;
+	const shv::chainpack::MetaMethod *metaMethod(const StringViewList &shv_path, size_t ix) override;
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+protected:
+	shv::chainpack::RpcValue m_templateValues;
 };
 
 /// Deprecated
