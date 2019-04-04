@@ -523,6 +523,14 @@ void RpcSignal::write(AbstractStreamWriter &wr, const std::string &method, std::
 }
 
 //==================================================================
+// RpcException
+//==================================================================
+RpcException::RpcException(int err_code, const std::string &_msg, const std::string &_where)
+	: Super(_msg, _where)
+	, m_errorCode(err_code)
+{}
+
+//==================================================================
 // RpcResponse
 //==================================================================
 RpcResponse::~RpcResponse()
@@ -565,15 +573,15 @@ RpcResponse& RpcResponse::setResult(const RpcValue& res)
 	return *this;
 }
 
-RpcResponse::Error::ErrorCode RpcResponse::Error::code() const
+int RpcResponse::Error::code() const
 {
 	auto iter = find(KeyCode);
-	return (iter == end()) ? NoError : (ErrorCode)(iter->second.toUInt());
+	return (iter == end()) ? NoError : (ErrorCode)(iter->second.toInt());
 }
 
-RpcResponse::Error& RpcResponse::Error::setCode(ErrorCode c)
+RpcResponse::Error& RpcResponse::Error::setCode(int c)
 {
-	(*this)[KeyCode] = RpcValue{(RpcValue::UInt)c};
+	(*this)[KeyCode] = c;
 	return *this;
 }
 
@@ -589,7 +597,7 @@ RpcValue::String RpcResponse::Error::message() const
 	return (iter == end()) ? RpcValue::String{} : iter->second.toString();
 }
 
-const char *RpcResponse::Error::errorCodeToString(int code)
+std:: string RpcResponse::Error::errorCodeToString(int code)
 {
 	switch(code) {
 	case ErrorCode::NoError: return "NoError";
@@ -603,10 +611,10 @@ const char *RpcResponse::Error::errorCodeToString(int code)
 	case ErrorCode::MethodCallException: return "MethodCallException";
 	case ErrorCode::Unknown:  return "Unknown";
 	};
-	return "Invalid";
+	return Utils::toString(code);
 }
 
-RpcResponse::Error RpcResponse::Error::create(RpcResponse::Error::ErrorCode c, RpcValue::String msg)
+RpcResponse::Error RpcResponse::Error::create(int c, RpcValue::String msg)
 {
 	Error ret;
 	ret.setCode(c).setMessage(std::move(msg));

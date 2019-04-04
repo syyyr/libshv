@@ -174,6 +174,18 @@ public:
 	static void write(AbstractStreamWriter &wr, const std::string &method, std::function<void (AbstractStreamWriter &)> write_params_callback);
 };
 
+class SHVCHAINPACK_DECL_EXPORT RpcException : public Exception
+{
+	using Super = Exception;
+public:
+	RpcException(int err_code, const std::string& _msg, const std::string& _where = std::string());
+	~RpcException() override {}
+
+	int errorCode() const { return m_errorCode; }
+protected:
+	int m_errorCode;
+};
+
 class SHVCHAINPACK_DECL_EXPORT RpcResponse : public RpcMessage
 {
 private:
@@ -195,17 +207,18 @@ public:
 			MethodCallTimeout,
 			MethodCallCancelled,
 			MethodCallException,
-			Unknown
+			Unknown,
+			UserCode = 32
 		};
 	public:
 		Error(const Super &m = Super()) : Super(m) {}
-		Error& setCode(ErrorCode c);
-		ErrorCode code() const;
+		Error& setCode(int c);
+		int code() const;
 		Error& setMessage(RpcValue::String &&m);
 		RpcValue::String message() const;
 		//Error& setData(const Value &data);
 		//Value data() const;
-		static const char* errorCodeToString(int code);
+		static std::string errorCodeToString(int code);
 		RpcValue::String toString() const {return std::string("RPC ERROR ") + errorCodeToString(code()) + ": " + message();}
 		RpcValue::Map toJson() const
 		{
@@ -228,7 +241,7 @@ public:
 			};
 		}
 	public:
-		static Error create(ErrorCode c, RpcValue::String msg);
+		static Error create(int c, RpcValue::String msg);
 		/*
 		static Error createParseError(const Value::String &msg = Value::String(), const Value &data = Value()) {
 			return createError(ParseError,
