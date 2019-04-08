@@ -362,7 +362,7 @@ static const Statics & statics()
 static const RpcValue::String & static_empty_string() { return statics().empty_string; }
 //static const RpcValue::Blob & static_empty_blob() { return statics().empty_blob; }
 
-static const RpcValue & static_chain_pack_invalid() { static const RpcValue s{}; return s; }
+//static const RpcValue & static_chain_pack_invalid() { static const RpcValue s{}; return s; }
 //static const ChainPack & static_chain_pack_null() { static const ChainPack s{statics().null}; return s; }
 static const RpcValue::List & static_empty_list() { static const RpcValue::List s{}; return s; }
 static const RpcValue::Map & static_empty_map() { static const RpcValue::Map s{}; return s; }
@@ -601,7 +601,7 @@ RpcValue ChainPackList::at(RpcValue::Int ix) const
 	if(ix < 0)
 		ix = static_cast<RpcValue::Int>(m_value.size()) + ix;
 	if (ix < 0 || ix >= (int)m_value.size())
-		return static_chain_pack_invalid();
+		return RpcValue();
 	else
 		return m_value[static_cast<size_t>(ix)];
 }
@@ -734,7 +734,7 @@ bool ChainPackMap::has(const RpcValue::String &key) const
 RpcValue ChainPackMap::at(const RpcValue::String &key) const
 {
 	auto iter = m_value.find(key);
-	return (iter == m_value.end()) ? static_chain_pack_invalid() : iter->second;
+	return (iter == m_value.end()) ? RpcValue() : iter->second;
 }
 
 void ChainPackMap::set(const RpcValue::String &key, const RpcValue &val)
@@ -754,7 +754,7 @@ bool ChainPackIMap::has(RpcValue::Int key) const
 RpcValue ChainPackIMap::at(RpcValue::Int key) const
 {
 	auto iter = m_value.find(key);
-	return (iter == m_value.end()) ? static_chain_pack_invalid() : iter->second;
+	return (iter == m_value.end()) ? RpcValue() : iter->second;
 }
 
 void ChainPackIMap::set(RpcValue::Int key, const RpcValue &val)

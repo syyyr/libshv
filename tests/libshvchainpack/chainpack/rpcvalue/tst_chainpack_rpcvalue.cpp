@@ -177,15 +177,15 @@ private:
 			QVERIFY(err.empty());
 			qDebug() << "List test:" << test << "==" << cp.toCpon();
 			qDebug() << "Cpon writer:" << cp.toPrettyString();
-			QVERIFY(cp[0] == "foo bar");
-			QVERIFY(cp[1] == 123);
-			QVERIFY(cp[2] == true);
-			QVERIFY(cp[3] == false);
-			QVERIFY(cp[4] == RpcValue(nullptr));
-			QVERIFY(cp[5] == RpcValue::UInt(456));
-			QVERIFY(cp[6] == 0.123);
-			QVERIFY(cp[7] == RpcValue::Decimal(123456, -3));
-			RpcValue::DateTime dt = cp[8].toDateTime();
+			QVERIFY(cp.at(0) == "foo bar");
+			QVERIFY(cp.at(1) == 123);
+			QVERIFY(cp.at(2) == true);
+			QVERIFY(cp.at(3) == false);
+			QVERIFY(cp.at(4) == RpcValue(nullptr));
+			QVERIFY(cp.at(5) == RpcValue::UInt(456));
+			QVERIFY(cp.at(6) == 0.123);
+			QVERIFY(cp.at(7) == RpcValue::Decimal(123456, -3));
+			RpcValue::DateTime dt = cp.at(8).toDateTime();
 			QVERIFY(dt.msecsSinceEpoch() % 1000 == 256);
 			QVERIFY(dt.minutesFromUtc() == -(10*60+45));
 		}
@@ -289,8 +289,8 @@ private:
 		string err;
 		const auto json = RpcValue::fromCpon(simple_test, &err);
 
-		qDebug() << "k1: " << json["k1"].toCpon().c_str();
-		qDebug() << "k3: " << json["k3"].toCpon().c_str();
+		qDebug() << "k1: " << json.at("k1").toCpon().c_str();
+		qDebug() << "k3: " << json.at("k3").toCpon().c_str();
 
 		RpcValue cp = json;
 		//cp.setMeta(json["k1"]);

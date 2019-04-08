@@ -362,8 +362,8 @@ public:
 	RpcValue at(Int i, const RpcValue &def_val) const  { return has(i)? at(i): def_val; }
 	RpcValue at(const RpcValue::String &key) const;
 	RpcValue at(const RpcValue::String &key, const RpcValue &def_val) const  { return has(key)? at(key): def_val; }
-	RpcValue operator[](Int i) const {return at(i);}
-	RpcValue operator[](const RpcValue::String &key) const {return at(key);}
+	//RpcValue operator[](Int i) const {return at(i);}
+	//RpcValue operator[](const RpcValue::String &key) const {return at(key);}
 	void set(Int ix, const RpcValue &val);
 	void set(const RpcValue::String &key, const RpcValue &val);
 	void append(const RpcValue &val);
