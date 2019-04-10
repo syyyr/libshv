@@ -95,15 +95,14 @@ public:
 	public:
 		enum class MsecPolicy {Auto = 0, Always, Never};
 		static constexpr bool IncludeTimeZone = true;
-		static constexpr int INVALID_MIN_OFFSET_FROM_UTC = (-64 * 15);
 	public:
-		DateTime() : m_dtm{TZ_INVALID, 0} {}
+		DateTime() : m_dtm{0, 0} {}
 		int64_t msecsSinceEpoch() const { return m_dtm.msec; }
 		int minutesFromUtc() const { return m_dtm.tz * 15; }
 
 		static DateTime now();
 		static DateTime fromLocalString(const std::string &local_date_time_str);
-		static DateTime fromUtcString(const std::string &utc_date_time_str, long *plen = nullptr);
+		static DateTime fromUtcString(const std::string &utc_date_time_str, size_t *plen = nullptr);
 		static DateTime fromMSecsSinceEpoch(int64_t msecs, int utc_offset_min = 0);
 
 		void setTimeZone(int utc_offset_min) {m_dtm.tz = utc_offset_min / 15;}
@@ -112,35 +111,12 @@ public:
 		std::string toIsoString() const {return toIsoString(MsecPolicy::Auto, IncludeTimeZone);}
 		std::string toIsoString(MsecPolicy msec_policy, bool include_tz) const;
 
-		bool operator ==(const DateTime &o) const
-		{
-			if(!o.isValid())
-				return !o.isValid();
-			if(!isValid())
-				return false;
-			return (m_dtm.msec == o.m_dtm.msec);
-		}
-		bool operator <(const DateTime &o) const
-		{
-			if(!o.isValid())
-				return false;
-			if(!isValid())
-				return true;
-			return m_dtm.msec < o.m_dtm.msec;
-		}
+		bool operator ==(const DateTime &o) const { return (m_dtm.msec == o.m_dtm.msec); }
+		bool operator <(const DateTime &o) const { return m_dtm.msec < o.m_dtm.msec; }
 		bool operator >=(const DateTime &o) const { return !(*this < o); }
-		bool operator >(const DateTime &o) const
-		{
-			if(!o.isValid())
-				return isValid();
-			if(!isValid())
-				return false;
-			return m_dtm.msec > o.m_dtm.msec;
-		}
+		bool operator >(const DateTime &o) const { return m_dtm.msec > o.m_dtm.msec; }
 		bool operator <=(const DateTime &o) const { return !(*this > o); }
-		bool isValid() const { return m_dtm.tz != TZ_INVALID; }
 	private:
-		static constexpr int8_t TZ_INVALID = INVALID_MIN_OFFSET_FROM_UTC / 15;
 		struct MsTz {
 			int64_t tz: 7, msec: 57;
 		};

@@ -26,7 +26,7 @@ public:
 template<> inline QString rpcvalue_cast<QString>(const shv::chainpack::RpcValue &v) { return QString::fromStdString(v.toString()); }
 template<> inline QDateTime rpcvalue_cast<QDateTime>(const shv::chainpack::RpcValue &v)
 {
-	if (!v.isDateTime() || !v.toDateTime().isValid()) {
+	if (!v.isValid() || !v.isDateTime()) {
 		return QDateTime();
 	}
 	return QDateTime::fromMSecsSinceEpoch(v.toDateTime().msecsSinceEpoch(), Qt::TimeSpec::UTC);

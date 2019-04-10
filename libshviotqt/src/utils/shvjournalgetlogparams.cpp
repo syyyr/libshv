@@ -10,12 +10,12 @@ ShvJournalGetLogParams::ShvJournalGetLogParams(const chainpack::RpcValue &opts)
 	: ShvJournalGetLogParams()
 {
 	const cp::RpcValue::Map m = opts.toMap();
-	since = m.value("since", since).toDateTime();
+	since = m.value("since", since);
 	if(!since.isValid())
-		since = m.value("from").toDateTime();
-	until = m.value("until", until).toDateTime();
+		since = m.value("from");
+	until = m.value("until", until);
 	if(!until.isValid())
-		until = m.value("to").toDateTime();
+		until = m.value("to");
 	pathPattern = m.value("pathPattern", pathPattern).toString();
 	headerOptions = m.value("headerOptions", headerOptions).toUInt();
 	maxRecordCount = m.value("maxRecordCount", maxRecordCount).toInt();

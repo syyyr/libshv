@@ -13,8 +13,8 @@ namespace utils {
 
 struct SHVIOTQT_DECL_EXPORT ShvJournalGetLogParams
 {
-	shv::chainpack::RpcValue::DateTime since;
-	shv::chainpack::RpcValue::DateTime until;
+	shv::chainpack::RpcValue since;
+	shv::chainpack::RpcValue until;
 	/// '*' and '**' wild-cards are supported
 	/// '*' stands for single path segment, shv/pol/*/discon match shv/pol/ols/discon but not shv/pol/ols/depot/discon
 	/// '**' stands for zero or more path segments, shv/pol/**/discon matches shv/pol/discon, shv/pol/ols/discon, shv/pol/ols/depot/discon

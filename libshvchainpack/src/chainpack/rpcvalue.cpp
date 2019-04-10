@@ -811,10 +811,13 @@ RpcValue::DateTime RpcValue::DateTime::fromLocalString(const std::string &local_
 	return ret;
 }
 
-RpcValue::DateTime RpcValue::DateTime::fromUtcString(const std::string &utc_date_time_str, long *plen)
+RpcValue::DateTime RpcValue::DateTime::fromUtcString(const std::string &utc_date_time_str, size_t *plen)
 {
-	if(utc_date_time_str.empty())
+	if(utc_date_time_str.empty()) {
+		if(plen)
+			*plen = 0;
 		return DateTime();
+	}
 	std::tm tm;
 	int msec;
 	int64_t epoch_msec;
@@ -823,6 +826,8 @@ RpcValue::DateTime RpcValue::DateTime::fromUtcString(const std::string &utc_date
 	long len = parse_ISO_DateTime(utc_date_time_str, tm, msec, epoch_msec, utc_offset);
 	if(len == 0) {
 		nError() << "Invalid date time string:" << utc_date_time_str;
+		if(plen)
+			*plen = 0;
 		return ret;
 	}
 	ret.m_dtm.msec = epoch_msec;
@@ -869,8 +874,6 @@ std::string RpcValue::DateTime::toLocalString() const
 
 std::string RpcValue::DateTime::toIsoString(RpcValue::DateTime::MsecPolicy msec_policy, bool include_tz) const
 {
-	if(!isValid())
-		return std::string();
 	ccpcp_pack_context ctx;
 	char buff[32];
 	ccpcp_pack_context_init(&ctx, buff, sizeof(buff), nullptr);

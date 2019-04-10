@@ -325,8 +325,9 @@ int64_t FileShvJournal::findLastEntryDateTime(const std::string &fn)
 					if(tab_pos != std::string::npos) {
 						std::string s = chunk.substr(lf_pos, tab_pos - lf_pos);
 						shvDebug() << "\t checking:" << s;
-						chainpack::RpcValue::DateTime dt = chainpack::RpcValue::DateTime::fromUtcString(s);
-						if(dt.isValid())
+						size_t len;
+						chainpack::RpcValue::DateTime dt = chainpack::RpcValue::DateTime::fromUtcString(s, &len);
+						if(len > 0)
 							dt_msec = dt.msecsSinceEpoch();
 						else
 							logWShvJournal() << fn << "Malformed shv journal date time:" << s << "will be ignored.";
@@ -351,7 +352,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 	logDShvJournal() << "========================= getLog ==================" << params.toRpcValue().toCpon();
 	logDShvJournal() << "params:" << params.toRpcValue().toCpon();
 	checkJournalConsistecy();
-	auto since_msec = params.since.isValid()? params.since.msecsSinceEpoch(): 0;
+	auto since_msec = params.since.isValid()? params.since.toDateTime().msecsSinceEpoch(): 0;
 	//auto until_msec = until.isValid()? until.msecsSinceEpoch(): std::numeric_limits<int64_t>::max();
 	//int last_file_no = lastFileNo();
 	int min_file_no = 0;
@@ -371,9 +372,10 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 		auto n = in.gcount();
 		if(n > 0) {
 			std::string s(buff, (size_t)n);
-			chainpack::RpcValue::DateTime dt = chainpack::RpcValue::DateTime::fromUtcString(s);
+			size_t len;
+			chainpack::RpcValue::DateTime dt = chainpack::RpcValue::DateTime::fromUtcString(s, &len);
 			logDShvJournal() << "\tfirst timestamp:" << dt.toIsoString();
-			if(dt.isValid()) {
+			if(len > 0) {
 				auto dt_msec = dt.msecsSinceEpoch();
 				min_msec = dt_msec;
 				if(dt_msec <= since_msec) {
@@ -389,7 +391,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 		}
 	}
 	cp::RpcValue::List log;
-	if(!params.since.isValid()) {
+	if(!params.since.isDateTime()) {
 		file_no = min_file_no;
 		since_msec = min_msec;
 	}
@@ -434,13 +436,14 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 				ShvPath path = lst.value(Column::Path).toString();
 				if(!params.pathPattern.empty() && !path.matchWild(params.pathPattern))
 					continue;
-				cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr);
-				if(!dt.isValid()) {
+				size_t len;
+				cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr, &len);
+				if(len == 0) {
 					logWShvJournal() << fn << "invalid date time string:" << dtstr;
 					continue;
 				}
 				logDShvJournal() << "\t FIELDS:" << dtstr << '\t' << path << "vals:" << lst.join('|');
-				if(dt < params.since) {
+				if(dt < params.since.toDateTime()) {
 					if(params.withSnapshot)
 						snapshot[path] = lst.value(Column::Value).toString();
 				}
@@ -459,7 +462,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 						}
 						snapshot.clear();
 					}
-					if(!params.until.isValid() || dt <= params.until) {
+					if(!params.until.isDateTime() || dt <= params.until.toDateTime()) {
 						std::string err;
 						cp::RpcValue::List rec;
 						rec.push_back(cp::RpcValue::DateTime::fromUtcString(dtstr));
