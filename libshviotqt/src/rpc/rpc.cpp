@@ -17,17 +17,21 @@ void Rpc::registerMetaTypes()
 	}
 }
 
-} // namespace chainack
-} // namespace iotqt
-} // namespace shv
-
-shv::chainpack::RpcValue::DateTime toRpcDateTime(const QDateTime &d)
+shv::chainpack::RpcValue::DateTime Rpc::toRpcDateTime(const QDateTime &d)
 {
 	if (d.isValid()) {
-		return shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(d.toUTC().toMSecsSinceEpoch());
+		shv::chainpack::RpcValue::DateTime dt = shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(d.toUTC().toMSecsSinceEpoch());
+		int offset = d.offsetFromUtc();
+		dt.setTimeZone(offset / 60);
+		return dt;
 	}
 	else {
 		return shv::chainpack::RpcValue::DateTime();
 	}
 }
+
+} // namespace chainack
+} // namespace iotqt
+} // namespace shv
+
 

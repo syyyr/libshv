@@ -98,14 +98,19 @@ public:
 	public:
 		DateTime() : m_dtm{0, 0} {}
 		int64_t msecsSinceEpoch() const { return m_dtm.msec; }
-		int minutesFromUtc() const { return m_dtm.tz * 15; }
+		int utcOffsetMin() const { return m_dtm.tz * 15; }
+		/// @deprecated
+		int minutesFromUtc() const { return utcOffsetMin(); }
 
 		static DateTime now();
 		static DateTime fromLocalString(const std::string &local_date_time_str);
 		static DateTime fromUtcString(const std::string &utc_date_time_str, size_t *plen = nullptr);
 		static DateTime fromMSecsSinceEpoch(int64_t msecs, int utc_offset_min = 0);
 
-		void setTimeZone(int utc_offset_min) {m_dtm.tz = utc_offset_min / 15;}
+		void setMsecsSinceEpoch(int64_t msecs) { m_dtm.msec = msecs; }
+		void setUtcOffsetMin(int utc_offset_min) {m_dtm.tz = utc_offset_min / 15;}
+		/// @deprecated
+		void setTimeZone(int utc_offset_min) {setUtcOffsetMin(utc_offset_min);}
 
 		std::string toLocalString() const;
 		std::string toIsoString() const {return toIsoString(MsecPolicy::Auto, IncludeTimeZone);}
@@ -300,8 +305,6 @@ public:
 	void setMetaValue(Int key, const RpcValue &val);
 	void setMetaValue(const String &key, const RpcValue &val);
 
-	template<typename T> static Type guessType();
-
 	bool isValid() const;
 	bool isNull() const { return type() == Type::Null; }
 	bool isInt() const { return type() == Type::Int; }
@@ -369,17 +372,22 @@ public:
 	bool operator>  (const ChainPack &rhs) const { return  (rhs < *this); }
 	bool operator>= (const ChainPack &rhs) const { return !(*this < rhs); }
 	*/
+	template<typename T> static inline Type guessType();
+	template<typename T> static inline RpcValue fromValue(const T &t);
+
 private:
 	std::shared_ptr<AbstractValueData> m_ptr;
 };
 
-template<typename T> RpcValue::Type guessType() { throw std::runtime_error("guessing of this type is not implemented"); }
+template<typename T> RpcValue::Type RpcValue::guessType() { throw std::runtime_error("guessing of this type is not implemented"); }
 template<> inline RpcValue::Type RpcValue::guessType<RpcValue::Int>() { return Type::Int; }
 template<> inline RpcValue::Type RpcValue::guessType<RpcValue::UInt>() { return Type::UInt; }
 template<> inline RpcValue::Type RpcValue::guessType<uint16_t>() { return Type::UInt; }
 template<> inline RpcValue::Type RpcValue::guessType<bool>() { return Type::Bool; }
 template<> inline RpcValue::Type RpcValue::guessType<RpcValue::DateTime>() { return Type::DateTime; }
 template<> inline RpcValue::Type RpcValue::guessType<RpcValue::Decimal>() { return Type::Decimal; }
+
+template<typename T> inline RpcValue RpcValue::fromValue(const T &t) { return RpcValue{t}; }
 
 class RpcValueGenList
 {
