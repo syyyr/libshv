@@ -473,7 +473,7 @@ void ShvNode::emitSendRpcMesage(const chainpack::RpcMessage &msg)
 				return;
 			}
 		}
-		emit sendRpcMesage(msg);
+		emit sendRpcMessage(msg);
 	}
 	else {
 		ShvNode *rnd = rootNode();

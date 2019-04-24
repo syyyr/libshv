@@ -85,7 +85,7 @@ public:
 	virtual shv::chainpack::RpcValue callMethodRq(const chainpack::RpcRequest &rq);
 	virtual shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params);
 public:
-	Q_SIGNAL void sendRpcMesage(const shv::chainpack::RpcMessage &msg);
+	Q_SIGNAL void sendRpcMessage(const shv::chainpack::RpcMessage &msg);
 protected:
 	bool m_isRootNode = false;
 private:
