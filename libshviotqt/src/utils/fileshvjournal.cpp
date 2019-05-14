@@ -465,7 +465,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 					if(!params.until.isDateTime() || dt <= params.until.toDateTime()) {
 						std::string err;
 						cp::RpcValue::List rec;
-						rec.push_back(cp::RpcValue::DateTime::fromUtcString(dtstr));
+						rec.push_back(dt);
 						if(params.withUptime)
 							rec.push_back(cp::RpcValue::fromCpon(lst.value(Column::Uptime).toString(), &err));
 						rec.push_back(make_path_shared(path));
