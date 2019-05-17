@@ -17,13 +17,24 @@ struct SHVIOTQT_DECL_EXPORT ShvJournalEntry
 {
 	std::string path;
 	shv::chainpack::RpcValue value;
+	//int64_t time = 0;
+	uint16_t shortTime = 0;
+	bool isShortTimeSet = false;
 
 	ShvJournalEntry() {}
 	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value)
 		: path(std::move(path))
 		, value{value}
 	{}
+	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, uint16_t short_time)
+		: path(std::move(path))
+		, value{value}
+		, shortTime(short_time)
+		, isShortTimeSet(true)
+	{}
+
 	bool isValid() const {return !path.empty() && value.isValid();}
+	void setShortTime(uint16_t short_time) {shortTime = short_time; isShortTimeSet = true;}
 };
 
 class SHVIOTQT_DECL_EXPORT FileShvJournal
@@ -74,7 +85,7 @@ private:
 	void checkJournalDir();
 	int64_t findLastEntryDateTime(const std::string &fn);
 
-	void appendEntry(std::ofstream &out, int64_t msec, int uptime_sec, const ShvJournalEntry &e);
+	void appendEntry(std::ofstream &out, int64_t msec, const ShvJournalEntry &e);
 
 	std::string getLine(std::istream &in, char sep);
 	static long toLong(const std::string &s);

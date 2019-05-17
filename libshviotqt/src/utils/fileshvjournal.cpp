@@ -32,7 +32,14 @@ static int uptimeSec()
 	}
 	return 0;
 }
-
+/*
+static uint16_t shortTime()
+{
+	std::chrono::time_point<std::chrono::system_clock> p1 = std::chrono::system_clock::now();
+	int64_t msecs = std::chrono::duration_cast<std::chrono:: milliseconds>(p1.time_since_epoch()).count();
+	return static_cast<uint16_t>(msecs % 65536);
+}
+*/
 #define SHV_STATBUF              struct stat64
 #define SHV_STAT                 ::stat64
 #define SHV_MKDIR                ::mkdir
@@ -151,7 +158,8 @@ void FileShvJournal::append(const ShvJournalEntry &entry, int64_t msec)
 			msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
 		if(msec < m_journalStatus.recentTimeStamp)
 			msec = m_journalStatus.recentTimeStamp;
-		int uptime_sec = uptimeSec();
+
+		//int short_time = entry.isShortTimeSet? entry.shortTime: shortTime();
 
 		std::ofstream out(fn, std::ios::binary | std::ios::out | std::ios::app);
 		if(!out)
@@ -167,9 +175,9 @@ void FileShvJournal::append(const ShvJournalEntry &entry, int64_t msec)
 			if(snapshot.empty())
 				logWShvJournal() << "Empty snapshot created";
 			for(const ShvJournalEntry &e : snapshot)
-				appendEntry(out, msec, uptime_sec, e);
+				appendEntry(out, msec, e);
 		}
-		appendEntry(out, msec, uptime_sec, entry);
+		appendEntry(out, msec, entry);
 		ssize_t file_size = out.tellp();
 		m_journalStatus.journalSize += (file_size - fsz);
 		if(m_journalStatus.journalSize > m_journalSizeLimit) {
@@ -185,15 +193,19 @@ void FileShvJournal::append(const ShvJournalEntry &entry, int64_t msec)
 	}
 }
 
-void FileShvJournal::appendEntry(std::ofstream &out, int64_t msec, int uptime_sec, const ShvJournalEntry &e)
+void FileShvJournal::appendEntry(std::ofstream &out, int64_t msec, const ShvJournalEntry &e)
 {
 	out << cp::RpcValue::DateTime::fromMSecsSinceEpoch(msec).toIsoString();
 	out << FIELD_SEPARATOR;
-	out << uptime_sec;
+	out << uptimeSec();
 	out << FIELD_SEPARATOR;
 	out << e.path;
 	out << FIELD_SEPARATOR;
 	out << e.value.toCpon();
+	if(e.isShortTimeSet) {
+		out << FIELD_SEPARATOR;
+		out << e.shortTime;
+	}
 	out << RECORD_SEPARATOR;
 	out.flush();
 }
@@ -497,11 +509,14 @@ log_finish:
 		md.setValue("params", params.toRpcValue());
 	}
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::FieldInfo)) {
-		md.setValue("fields", cp::RpcValue::List{
-						cp::RpcValue::Map{{"name", "timestamp"}},
-						cp::RpcValue::Map{{"name", "path"}},
-						cp::RpcValue::Map{{"name", "value"}},
-					});
+		cp::RpcValue::List fields;
+		fields.push_back(cp::RpcValue::Map{{"name", "timestamp"}});
+		if(params.withUptime)
+			fields.push_back(cp::RpcValue::Map{{"name", "upTime"}});
+		fields.push_back(cp::RpcValue::Map{{"name", "path"}});
+		fields.push_back(cp::RpcValue::Map{{"name", "value"}});
+		fields.push_back(cp::RpcValue::Map{{"name", "shortTime"}});
+		md.setValue("fields", std::move(fields));
 	}
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::TypeInfo)) {
 		if(m_typeInfo.isValid())
