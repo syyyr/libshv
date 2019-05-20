@@ -54,6 +54,7 @@ public:
 			Uptime,
 			Path,
 			Value,
+			ShortTime,
 		};
 	};
 public:

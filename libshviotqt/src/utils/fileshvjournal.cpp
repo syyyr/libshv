@@ -426,7 +426,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 	};
 	int rec_cnt = 0;
 	if(file_no > 0) {
-		std::map<std::string, std::string> snapshot;
+		std::map<std::string, std::tuple<std::string, std::string>> snapshot;
 		for(; file_no <= m_journalStatus.maxFileNo; file_no++) {
 			std::string fn = fileNoToName(file_no);
 			logDShvJournal() << "---------------------------------- opening file:" << fn;
@@ -457,7 +457,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 				logDShvJournal() << "\t FIELDS:" << dtstr << '\t' << path << "vals:" << lst.join('|');
 				if(dt < params.since.toDateTime()) {
 					if(params.withSnapshot)
-						snapshot[path] = lst.value(Column::Value).toString();
+						snapshot[path] = std::tuple<std::string, std::string>{lst.value(Column::Value).toString(), lst.value(Column::ShortTime).toString()};
 				}
 				else {
 					if(params.withSnapshot && !snapshot.empty()) {
@@ -467,8 +467,10 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 							cp::RpcValue::List rec;
 							rec.push_back(params.since);
 							rec.push_back(make_path_shared(kv.first));
-							rec.push_back(cp::RpcValue::fromCpon(kv.second, &err));
-
+							rec.push_back(cp::RpcValue::fromCpon(std::get<0>(kv.second), &err));
+							std::string short_time_str = std::get<1>(kv.second);
+							if(!short_time_str.empty())
+								rec.push_back(cp::RpcValue::fromCpon(short_time_str, &err));
 							log.push_back(rec);
 							rec_cnt++;
 						}
@@ -482,6 +484,9 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 							rec.push_back(cp::RpcValue::fromCpon(lst.value(Column::Uptime).toString(), &err));
 						rec.push_back(make_path_shared(path));
 						rec.push_back(cp::RpcValue::fromCpon(lst.value(Column::Value).toString(), &err));
+						std::string short_time_str = lst.value(Column::ShortTime).toString();
+						if(!short_time_str.empty())
+							rec.push_back(cp::RpcValue::fromCpon(short_time_str, &err));
 						//logDShvJournal() << "\t LOG:" << rec[Column::Timestamp].toDateTime().toIsoString() << '\t' << path << '\t' << rec[2].toCpon();
 						log.push_back(rec);
 						rec_cnt++;
