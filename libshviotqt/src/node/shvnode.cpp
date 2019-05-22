@@ -174,7 +174,7 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 	if(resp.hasRetVal()) {
 		ShvNode *root = rootNode();
 		if(root) {
-			root->emitSendRpcMesage(resp);
+			root->emitSendRpcMessage(resp);
 		}
 	}
 }
@@ -226,7 +226,7 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 	if(resp.hasRetVal()) {
 		ShvNode *root = rootNode();
 		if(root) {
-			root->emitSendRpcMesage(resp);
+			root->emitSendRpcMessage(resp);
 		}
 	}
 }
@@ -461,7 +461,7 @@ ShvNode *ShvNode::rootNode()
 	return nullptr;
 }
 
-void ShvNode::emitSendRpcMesage(const chainpack::RpcMessage &msg)
+void ShvNode::emitSendRpcMessage(const chainpack::RpcMessage &msg)
 {
 	if(isRootNode()) {
 		if(msg.isResponse()) {
@@ -478,10 +478,10 @@ void ShvNode::emitSendRpcMesage(const chainpack::RpcMessage &msg)
 	else {
 		ShvNode *rnd = rootNode();
 		if(rnd) {
-			rnd->emitSendRpcMesage(msg);
+			rnd->emitSendRpcMessage(msg);
 		}
 		else {
-			shvError() << "Cannot fing root node to send RPC message";
+			shvError() << "Cannot find root node to send RPC message";
 		}
 	}
 }
@@ -1020,7 +1020,7 @@ void ValueProxyShvNode::onShvValueChanged(int value_id, chainpack::RpcValue val)
 		sig.setMethod(cp::Rpc::SIG_VAL_CHANGED);
 		sig.setShvPath(shvPath());
 		sig.setParams(val);
-		emitSendRpcMesage(sig);
+		emitSendRpcMessage(sig);
 	}
 }
 

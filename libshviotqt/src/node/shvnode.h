@@ -52,7 +52,7 @@ public:
 	//static String joinShvPath(const StringViewList &shv_path);
 
 	ShvNode* rootNode();
-	virtual void emitSendRpcMesage(const shv::chainpack::RpcMessage &msg);
+	virtual void emitSendRpcMessage(const shv::chainpack::RpcMessage &msg);
 
 	void setSortedChildren(bool b) {m_isSortedChildren = b;}
 
