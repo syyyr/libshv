@@ -30,10 +30,13 @@ public:
 public:
 	SHV_IMAP_FIELD_IMPL(shv::chainpack::RpcValue, MetaType::Key::Value, v, setV, alue)
 	SHV_IMAP_FIELD_IMPL(shv::chainpack::RpcValue::DateTime, MetaType::Key::DateTime, d, setD, ateTime)
-	SHV_IMAP_FIELD_IMPL(unsigned, MetaType::Key::ShortTime, s, setS, ortTime)
+	SHV_IMAP_FIELD_IMPL(unsigned, MetaType::Key::ShortTime, s, setS, hortTime)
 public:
 	//using Super::Super;
 	ValueChange() {}
+	ValueChange(const RpcValue &val, unsigned short_time);
+	ValueChange(const RpcValue &val, const shv::chainpack::RpcValue::DateTime &date_time);
+	ValueChange(const RpcValue &val, const shv::chainpack::RpcValue::DateTime &date_time, unsigned short_time);
 	ValueChange(const RpcValue &o);
 };
 

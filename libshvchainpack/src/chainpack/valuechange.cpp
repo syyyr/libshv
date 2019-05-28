@@ -29,6 +29,34 @@ void ValueChange::MetaType::registerMetaType()
 	}
 }
 
+ValueChange::ValueChange(const RpcValue &val, unsigned short_time)
+	: Super(RpcValue::IMap())
+{
+	MetaType::registerMetaType();
+	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
+	setValue(val);
+	setShortTime(short_time);
+}
+
+ValueChange::ValueChange(const RpcValue &val, const RpcValue::DateTime &date_time)
+	: Super(RpcValue::IMap())
+{
+	MetaType::registerMetaType();
+	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
+	setValue(val);
+	setDateTime(date_time);
+}
+
+ValueChange::ValueChange(const RpcValue &val, const RpcValue::DateTime &date_time, unsigned short_time)
+	: Super(RpcValue::IMap())
+{
+	MetaType::registerMetaType();
+	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
+	setValue(val);
+	setDateTime(date_time);
+	setShortTime(short_time);
+}
+
 ValueChange::ValueChange(const RpcValue &o)
 	: Super(o)
 {
