@@ -90,6 +90,7 @@ public:
 			RpcConnectionParams,
 			TunnelCtl,
 			AccessGrantLogin,
+			ValueChange,
 		};
 	};
 };
