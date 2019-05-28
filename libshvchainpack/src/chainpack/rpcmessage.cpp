@@ -2,6 +2,7 @@
 #include "chainpack.h"
 #include "metatypes.h"
 #include "tunnelctl.h"
+#include "valuechange.h"
 #include "accessgrant.h"
 #include "abstractstreamwriter.h"
 
@@ -444,6 +445,7 @@ void RpcMessage::registerMetaTypes()
 	RpcMessage::MetaType::registerMetaType();
 	TunnelCtl::MetaType::registerMetaType();
 	AccessGrant::MetaType::registerMetaType();
+	ValueChange::MetaType::registerMetaType();
 }
 
 void RpcMessage::checkMetaValues()
