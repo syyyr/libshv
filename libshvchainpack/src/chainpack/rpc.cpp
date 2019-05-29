@@ -43,6 +43,7 @@ const char* Rpc::PAR_PATH = "path";
 const char* Rpc::PAR_METHOD = "method";
 
 const char* Rpc::SIG_VAL_CHANGED = "chng";
+const char* Rpc::SIG_VAL_FASTCHANGED = "fastchng";
 const char* Rpc::SIG_MOUNTED_CHANGED = "mntchng";
 //const char* Rpc::SIG_CONNECTED_CHANGED = "connchng";
 

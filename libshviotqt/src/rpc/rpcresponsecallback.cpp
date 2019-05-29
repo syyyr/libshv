@@ -77,7 +77,9 @@ void RpcResponseCallBack::start(int time_out, QObject *context, RpcResponseCallB
 void RpcResponseCallBack::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 {
 	shvLogFuncFrame() << this << msg.toPrettyString();
-	if(!m_timeoutTimer)
+	if(m_timeoutTimer)
+		m_timeoutTimer->stop();
+	else
 		shvWarning() << "Callback was not started, time-out functionality cannot be provided!";
 	if(!msg.isResponse())
 		return;
