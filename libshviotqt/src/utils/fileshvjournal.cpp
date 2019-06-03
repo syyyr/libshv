@@ -95,6 +95,8 @@ static int64_t rm_file(const std::string &file_name)
 }
 
 const char * FileShvJournal::FILE_EXT = ".log";
+const char * FileShvJournal::KEY_NAME = "name";
+const char *FileShvJournal::KEY_RECORD_COUNT = "recordCount";
 
 FileShvJournal::FileShvJournal(FileShvJournal::SnapShotFn snf)
 	: m_snapShotFn(snf)
@@ -473,6 +475,8 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 								rec.push_back(cp::RpcValue::fromCpon(short_time_str, &err));
 							log.push_back(rec);
 							rec_cnt++;
+							if(rec_cnt >= params.maxRecordCount)
+								goto log_finish;
 						}
 						snapshot.clear();
 					}
@@ -481,7 +485,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 						cp::RpcValue::List rec;
 						rec.push_back(dt);
 						if(params.withUptime)
-							rec.push_back(cp::RpcValue::fromCpon(lst.value(Column::Uptime).toString(), &err));
+							rec.push_back(cp::RpcValue::fromCpon(lst.value(Column::UpTime).toString(), &err));
 						rec.push_back(make_path_shared(path));
 						rec.push_back(cp::RpcValue::fromCpon(lst.value(Column::Value).toString(), &err));
 						std::string short_time_str = lst.value(Column::ShortTime).toString();
@@ -504,23 +508,25 @@ log_finish:
 	cp::RpcValue ret = log;
 	cp::RpcValue::MetaData md;
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::BasicInfo)) {
-		if(!m_deviceId.empty()) {
+		{
 			cp::RpcValue::Map device;
 			device["id"] = m_deviceId;
+			device["type"] = m_deviceType;
 			md.setValue("device", device); // required
 		}
 		md.setValue("logVersion", 1); // required
 		md.setValue("dateTime", cp::RpcValue::DateTime::now());
 		md.setValue("params", params.toRpcValue());
+		md.setValue(KEY_RECORD_COUNT, rec_cnt);
 	}
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::FieldInfo)) {
 		cp::RpcValue::List fields;
-		fields.push_back(cp::RpcValue::Map{{"name", "timestamp"}});
+		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Timestamp)}});
 		if(params.withUptime)
-			fields.push_back(cp::RpcValue::Map{{"name", "upTime"}});
-		fields.push_back(cp::RpcValue::Map{{"name", "path"}});
-		fields.push_back(cp::RpcValue::Map{{"name", "value"}});
-		fields.push_back(cp::RpcValue::Map{{"name", "shortTime"}});
+			fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::UpTime)}});
+		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Path)}});
+		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Value)}});
+		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::ShortTime)}});
 		md.setValue("fields", std::move(fields));
 	}
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::TypeInfo)) {
@@ -564,6 +570,18 @@ long FileShvJournal::toLong(const std::string &s)
 		shvError() << s << "cannot be converted to int:" << e.what();
 	}
 	return 0;
+}
+
+const char *FileShvJournal::Column::name(FileShvJournal::Column::Enum e)
+{
+	switch (e) {
+	case Column::Enum::Timestamp: return "timestamp";
+	case Column::Enum::UpTime: return "upTime";
+	case Column::Enum::Path: return "path";
+	case Column::Enum::Value: return "value";
+	case Column::Enum::ShortTime: return "shortTime";
+	}
+	return "invalid";
 }
 
 } // namespace utils

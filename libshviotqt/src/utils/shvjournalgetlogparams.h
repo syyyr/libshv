@@ -13,6 +13,14 @@ namespace utils {
 
 struct SHVIOTQT_DECL_EXPORT ShvJournalGetLogParams
 {
+	static const char *KEY_HEADER_OPTIONS;
+	static const char *KEY_MAX_RECORD_COUNT;
+	static const char *KEY_WITH_SNAPSHOT;
+	static const char *KEY_WITH_UPTIME;
+	static const char *KEY_WITH_SINCE;
+	static const char *KEY_WITH_UNTIL;
+	static const char *KEY_PATH_PATTERN;
+
 	shv::chainpack::RpcValue since;
 	shv::chainpack::RpcValue until;
 	/// '*' and '**' wild-cards are supported

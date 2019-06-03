@@ -47,15 +47,19 @@ public:
 	static constexpr char FIELD_SEPARATOR = '\t';
 	static constexpr char RECORD_SEPARATOR = '\n';
 
+	static const char* KEY_NAME;
+	static const char *KEY_RECORD_COUNT;
+
 	struct Column
 	{
 		enum Enum {
 			Timestamp = 0,
-			Uptime,
+			UpTime,
 			Path,
 			Value,
 			ShortTime,
 		};
+		static const char* name(Enum e);
 	};
 public:
 	using SnapShotFn = std::function<void (std::vector<ShvJournalEntry>&)>;
@@ -71,6 +75,7 @@ public:
 	void setJournalSizeLimit(int64_t n) {m_journalSizeLimit = n;}
 	int64_t journalSizeLimit() const { return m_journalSizeLimit;}
 	void setDeviceId(std::string id) { m_deviceId = std::move(id); }
+	void setDeviceType(std::string type) { m_deviceType = std::move(type); }
 	void setTypeInfo(const shv::chainpack::RpcValue &i) { m_typeInfo = i; }
 
 	void append(const ShvJournalEntry &entry, int64_t msec = 0);
@@ -92,6 +97,7 @@ private:
 	static long toLong(const std::string &s);
 private:
 	std::string m_deviceId;
+	std::string m_deviceType;
 	shv::chainpack::RpcValue m_typeInfo;
 	struct //JournalDirStatus
 	{
