@@ -42,6 +42,7 @@ class SHVIOTQT_DECL_EXPORT FileShvJournal
 public:
 	static constexpr long DEFAULT_FILE_SIZE_LIMIT = 100 * 1024;
 	static constexpr long DEFAULT_JOURNAL_SIZE_LIMIT = 100 * 100 * 1024;
+	static constexpr int DEFAULT_GET_LOG_RECORD_COUNT_LIMIT = 100 * 1000;
 	static constexpr int FILE_DIGITS = 6;
 	static const char* FILE_EXT;
 	static constexpr char FIELD_SEPARATOR = '\t';
@@ -113,6 +114,7 @@ private:
 	std::string m_journalDir;
 	int64_t m_fileSizeLimit = DEFAULT_FILE_SIZE_LIMIT;
 	int64_t m_journalSizeLimit = DEFAULT_JOURNAL_SIZE_LIMIT;
+	int m_getLogRecordCountLimit = DEFAULT_GET_LOG_RECORD_COUNT_LIMIT;
 };
 
 } // namespace utils

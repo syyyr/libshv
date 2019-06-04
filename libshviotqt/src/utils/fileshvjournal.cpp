@@ -428,6 +428,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 	};
 	int rec_cnt = 0;
 	if(file_no > 0) {
+		int max_rec_cnt = qMin(params.maxRecordCount, m_getLogRecordCountLimit);
 		std::map<std::string, std::tuple<std::string, std::string>> snapshot;
 		for(; file_no <= m_journalStatus.maxFileNo; file_no++) {
 			std::string fn = fileNoToName(file_no);
@@ -475,7 +476,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 								rec.push_back(cp::RpcValue::fromCpon(short_time_str, &err));
 							log.push_back(rec);
 							rec_cnt++;
-							if(rec_cnt >= params.maxRecordCount)
+							if(rec_cnt >= max_rec_cnt)
 								goto log_finish;
 						}
 						snapshot.clear();
@@ -494,7 +495,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 						//logDShvJournal() << "\t LOG:" << rec[Column::Timestamp].toDateTime().toIsoString() << '\t' << path << '\t' << rec[2].toCpon();
 						log.push_back(rec);
 						rec_cnt++;
-						if(rec_cnt >= params.maxRecordCount)
+						if(rec_cnt >= max_rec_cnt)
 							goto log_finish;
 					}
 					else {
