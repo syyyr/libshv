@@ -22,7 +22,7 @@ android {
 DEFINES += ANDROID_BUILD
 }
 
-DEFINES += SHVGUIQT_BUILD_DLL
+DEFINES += SHVVISU_BUILD_DLL
 
 INCLUDEPATH += \
 	$$PWD/../libshvcore/include \

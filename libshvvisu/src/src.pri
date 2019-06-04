@@ -1,5 +1,5 @@
 HEADERS += \
-	$$PWD/shvcoreqtglobal.h \
+    $$PWD/shvvisuglobal.h \
 
 SOURCES += \
 
