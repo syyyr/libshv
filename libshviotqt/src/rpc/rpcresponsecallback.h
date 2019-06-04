@@ -39,7 +39,8 @@ public:
 	void start(CallBackFunction cb);
 	void start(int time_out, CallBackFunction cb);
 	void start(QObject *context, CallBackFunction cb);
-	void start(int time_out, QObject *context, CallBackFunction cb);
+	void start(int time_out_msec, QObject *context, CallBackFunction cb);
+	void abort();
 	virtual void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg);
 private:
 	CallBackFunction m_callBackFunction;

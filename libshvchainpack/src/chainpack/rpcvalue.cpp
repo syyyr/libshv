@@ -1070,6 +1070,18 @@ std::string RpcValue::MetaData::toPrettyString() const
 	return out.str();
 }
 
+std::string RpcValue::MetaData::toString() const
+{
+	std::ostringstream out;
+	{
+		CponWriterOptions opts;
+		opts.setTranslateIds(false);
+		CponWriter wr(out, opts);
+		wr << *this;
+	}
+	return out.str();
+}
+
 void RpcValue::MetaData::swap(RpcValue::MetaData &o)
 {
 	std::swap(m_imap, o.m_imap);

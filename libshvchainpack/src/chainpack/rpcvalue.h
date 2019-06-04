@@ -234,6 +234,7 @@ public:
 		const RpcValue::IMap& iValues() const;
 		const RpcValue::Map& sValues() const;
 		std::string toPrettyString() const;
+		std::string toString() const;
 	private:
 		MetaData& operator =(const MetaData &o);
 		void swap(MetaData &o);

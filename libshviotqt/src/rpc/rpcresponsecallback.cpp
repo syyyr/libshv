@@ -63,7 +63,7 @@ void RpcResponseCallBack::start(QObject *context, RpcResponseCallBack::CallBackF
 	start(timeout(), context, cb);
 }
 
-void RpcResponseCallBack::start(int time_out, QObject *context, RpcResponseCallBack::CallBackFunction cb)
+void RpcResponseCallBack::start(int time_out_msec, QObject *context, RpcResponseCallBack::CallBackFunction cb)
 {
 	if(context) {
 		connect(context, &QObject::destroyed, this, [this]() {
@@ -71,7 +71,16 @@ void RpcResponseCallBack::start(int time_out, QObject *context, RpcResponseCallB
 			deleteLater();
 		});
 	}
-	start(time_out,cb);
+	start(time_out_msec, cb);
+}
+
+void RpcResponseCallBack::abort()
+{
+	if(m_callBackFunction)
+		m_callBackFunction(shv::chainpack::RpcResponse());
+	else
+		emit finished(shv::chainpack::RpcResponse());
+	deleteLater();
 }
 
 void RpcResponseCallBack::onRpcMessageReceived(const chainpack::RpcMessage &msg)
