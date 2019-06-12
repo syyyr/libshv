@@ -7,8 +7,12 @@ SUBDIRS += \
     libshvcore \
     libshvcoreqt \
     libshviotqt \
-    libshvvisu \
     utils \
+
+qtHaveModule(gui) {
+SUBDIRS += \
+    libshvvisu \
+}
 
 CONFIG(debug, debug|release) {
 SUBDIRS += \
