@@ -387,6 +387,7 @@ CponReader.prototype.readMap = function(rpc_val, terminator = "}".charCodeAt(0))
 
 CponReader.prototype.readInt = function()
 {
+	let base = 10;
 	let val = 0;
 	let neg = 0;
 	let n = 0;
@@ -401,10 +402,32 @@ CponReader.prototype.readInt = function()
 			if(b === 45)
 				neg = 1;
 		}
+		else if (b === 120) { // 'x'
+			if(n === 1 && val !== 0)
+				break;
+			if(n !== 1)
+				break;
+			this.ctx.getByte();
+			base = 16;
+		}
 		else if( b >= 48 && b <= 57) { // '0' - '9'
 			this.ctx.getByte();
-			val *= 10;
+			val *= base;
 			val += b - 48;
+		}
+		else if( b >= 65 && b <= 70) { // 'A' - 'F'
+			if(base !== 16)
+				break;
+			this.ctx.getByte();
+			val *= base;
+			val += b - 65 + 10;
+		}
+		else if( b >= 97 && b <= 102) { // 'a' - 'f'
+			if(base !== 16)
+				break;
+			this.ctx.getByte();
+			val *= base;
+			val += b - 97 + 10;
 		}
 		else {
 			break;
@@ -465,12 +488,6 @@ CponReader.prototype.readNumber = function(rpc_val)
 				throw "Malformed number exponetional part."
 			break;
 		}
-		/*
-		if(*p != '.') {
-			// unget char
-			unpack_context->current--;
-		}
-		*/
 		break;
 	}
 	if(is_decimal) {
