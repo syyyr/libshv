@@ -621,10 +621,18 @@ int main(int argc, const char * argv[])
 	test_unpack_number("123u", CCPCP_ITEM_UINT, 123);
 	test_unpack_number("+123", CCPCP_ITEM_INT, 123);
 	test_unpack_number("-1", CCPCP_ITEM_INT, -1);
+	test_unpack_number("0x1", CCPCP_ITEM_INT, 1);
+	test_unpack_number("-0x1", CCPCP_ITEM_INT, -1);
+	test_unpack_number("0xaB", CCPCP_ITEM_INT, 10*16+11);
+	test_unpack_number("0aB", CCPCP_ITEM_INT, 0);
+	test_unpack_number("00xaB", CCPCP_ITEM_INT, 0);
+	test_unpack_number("1xaB", CCPCP_ITEM_INT, 1);
 	test_unpack_number("1u", CCPCP_ITEM_UINT, 1);
+	test_unpack_number("0x1a2b3c4d", CCPCP_ITEM_INT, 439041101);
 	test_unpack_number("0.1", CCPCP_ITEM_DECIMAL, 0.1);
 	test_unpack_number("0.", CCPCP_ITEM_DECIMAL, 0);
 	test_unpack_number("1.", CCPCP_ITEM_DECIMAL, 1);
+	test_unpack_number("0xa1.", CCPCP_ITEM_DECIMAL, 10*16+1);
 	test_unpack_number("1e2", CCPCP_ITEM_DECIMAL, 100);
 	test_unpack_number("1.e2", CCPCP_ITEM_DECIMAL, 100);
 	test_unpack_number("1.23", CCPCP_ITEM_DECIMAL, 1.23);
