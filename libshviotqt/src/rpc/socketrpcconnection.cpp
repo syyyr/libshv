@@ -23,12 +23,9 @@
 
 #define smcDebug QNoDebug
 
-//#define logRpcMsg() shvCDebug("RpcMsg")
 #define logRpcData() shvCDebug("RpcData")
-//#define logRpcSyncCalls() shvCDebug("RpcSyncCalls")
 
 namespace cp = shv::chainpack;
-//namespace cpq = shv::iotqt::rpc;
 
 namespace shv {
 namespace iotqt {

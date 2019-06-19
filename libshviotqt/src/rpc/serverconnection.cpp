@@ -15,8 +15,6 @@
 #include <QCryptographicHash>
 #include <QHostAddress>
 
-//#define logRpcMsg() shvCDebug("RpcMsg")
-
 namespace cp = shv::chainpack;
 
 namespace shv {
@@ -59,15 +57,7 @@ void ServerConnection::sendMessage(const chainpack::RpcMessage &rpc_msg)
 {
 	sendRpcValue(rpc_msg.value());
 }
-/*
-chainpack::RpcResponse ServerConnection::sendMessageSync(const chainpack::RpcRequest &rpc_request, int time_out_ms)
-{
-	Q_UNUSED(rpc_request)
-	Q_UNUSED(time_out_ms)
-	SHV_EXCEPTION("Sync mesage are nott supported by server connection!");
-	return chainpack::RpcResponse();
-}
-*/
+
 void ServerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
 {
 	//shvInfo() << __FILE__ << RCV_LOG_ARROW << md.toStdString() << shv::chainpack::Utils::toHexElided(data, start_pos, 100);
@@ -75,7 +65,6 @@ void ServerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType proto
 		shv::chainpack::RpcValue rpc_val = decodeData(protocol_type, data, start_pos);
 		rpc_val.setMetaData(std::move(md));
 		cp::RpcMessage msg(rpc_val);
-		//logRpcMsg() << msg.toCpon();
 		processInitPhase(msg);
 		return;
 	}

@@ -20,9 +20,6 @@
 
 #include <fstream>
 
-#define logRpcMsg() shvCDebug("RpcMsg")
-//#define logRpcSyncCalls() shvCDebug("RpcSyncCalls")
-
 namespace cp = shv::chainpack;
 
 namespace shv {

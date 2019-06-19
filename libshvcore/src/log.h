@@ -61,3 +61,5 @@ shvDebug() << ">>>> ENTER FN" << __FUNCTION__
 #define shvWarning() shvCWarning("")
 #define shvError() shvCError("")
 
+#define logRpcMsg() shvCInfo("RpcMsg").color(NecroLog::Color::LightGray)
+
