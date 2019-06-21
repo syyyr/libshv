@@ -1070,12 +1070,13 @@ std::string RpcValue::MetaData::toPrettyString() const
 	return out.str();
 }
 
-std::string RpcValue::MetaData::toString() const
+std::string RpcValue::MetaData::toString(const std::string &indent) const
 {
 	std::ostringstream out;
 	{
 		CponWriterOptions opts;
 		opts.setTranslateIds(false);
+		opts.setIndent(indent);
 		CponWriter wr(out, opts);
 		wr << *this;
 	}

@@ -26,8 +26,9 @@ DEFINES += SHVVISU_BUILD_DLL
 
 INCLUDEPATH += \
 	$$PWD/../libshvcore/include \
-	$$PWD/../libshvcoreqt/include \
-	$$PWD/../libshvchainpack/include \
+    $$PWD/../libshvcoreqt/include \
+    $$PWD/../libshviotqt/include \
+    $$PWD/../libshvchainpack/include \
 	$$PWD/../3rdparty/necrolog/include \
 
 LIBS += \
@@ -35,6 +36,7 @@ LIBS += \
     -lnecrolog \
     -lshvcore \
     -lshvcoreqt \
+    -lshviotqt \
     -lshvchainpack
 
 include($$PWD/src/src.pri)
