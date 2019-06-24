@@ -97,6 +97,7 @@ static int64_t rm_file(const std::string &file_name)
 const char * FileShvJournal::FILE_EXT = ".log";
 const char * FileShvJournal::KEY_NAME = "name";
 const char *FileShvJournal::KEY_RECORD_COUNT = "recordCount";
+const char *FileShvJournal::KEY_PATHS_DICT = "pathsDict";
 
 FileShvJournal::FileShvJournal(FileShvJournal::SnapShotFn snf)
 	: m_snapShotFn(snf)
@@ -539,7 +540,7 @@ log_finish:
 		for(auto kv : path_cache) {
 			path_dict[kv.second.toInt()] = kv.first;
 		}
-		md.setValue("pathsDict", path_dict);
+		md.setValue(KEY_PATHS_DICT, path_dict);
 	}
 	if(!md.isEmpty())
 		ret.setMetaData(std::move(md));

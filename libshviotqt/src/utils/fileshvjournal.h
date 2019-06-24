@@ -50,6 +50,7 @@ public:
 
 	static const char* KEY_NAME;
 	static const char *KEY_RECORD_COUNT;
+	static const char *KEY_PATHS_DICT;
 
 	struct Column
 	{
