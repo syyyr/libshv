@@ -1,12 +1,13 @@
 #include "fileshvjournal.h"
 #include "shvpath.h"
 
-#include <shv/chainpack/cponreader.h>
-#include <shv/core/log.h>
-#include <shv/core/string.h>
-#include <shv/core/stringview.h>
+#include "../log.h"
+#include "../string.h"
+#include "../stringview.h"
 
-#include <QCoreApplication>
+#include <shv/chainpack/cponreader.h>
+
+//#include <QCoreApplication>
 
 #include <fstream>
 #include <sstream>
@@ -21,7 +22,7 @@
 namespace cp = shv::chainpack;
 
 namespace shv {
-namespace iotqt {
+namespace core {
 namespace utils {
 
 static int uptimeSec()
@@ -99,28 +100,44 @@ const char * FileShvJournal::KEY_NAME = "name";
 const char *FileShvJournal::KEY_RECORD_COUNT = "recordCount";
 const char *FileShvJournal::KEY_PATHS_DICT = "pathsDict";
 
-FileShvJournal::FileShvJournal(FileShvJournal::SnapShotFn snf)
-	: m_snapShotFn(snf)
-	, m_journalDir(defaultApplicationJournaldir())
+FileShvJournal::FileShvJournal(std::string device_id, FileShvJournal::SnapShotFn snf)
+	: m_deviceId(std::move(device_id))
+	, m_snapShotFn(snf)
 {
-}
-
-std::string FileShvJournal::defaultApplicationJournaldir()
-{
-	QString appn = QCoreApplication::applicationName();
-	appn.replace(' ', '_');
-	return "/tmp/shvjournal/" + appn.toStdString();
 }
 
 void FileShvJournal::setJournalDir(std::string s)
 {
+	/*
 	if(s.empty()) {
+		defaultApplicationJournaldir();
 		shvWarning() << "Cannot set shv journal dir to empty path, default journal dir will be set instead:" << defaultApplicationJournaldir();
-		setJournalDir(defaultApplicationJournaldir());
+		setJournalDir();
 	}
 	else {
-		m_journalDir = std::move(s);
 	}
+	*/
+	m_journalDir = std::move(s);
+}
+
+const std::string &FileShvJournal::journalDir() const
+{
+	if(m_journalDir.empty()) {
+		std::string d = "/tmp/shvjournal/";
+		if(m_deviceId.empty()) {
+			d += "default";
+		}
+		else {
+			std::string id = m_deviceId;
+			String::replace(id, '/', '-');
+			String::replace(id, ':', '-');
+			String::replace(id, '.', '-');
+			d += id;
+		}
+		m_journalDir = d;
+		shvWarning() << "Journal dir not set, falling back to default value:" << journalDir();
+	}
+	return m_journalDir;
 }
 
 static int64_t str_to_size(const std::string &str)
@@ -429,7 +446,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 	};
 	int rec_cnt = 0;
 	if(file_no > 0) {
-		int max_rec_cnt = qMin(params.maxRecordCount, m_getLogRecordCountLimit);
+		int max_rec_cnt = std::min(params.maxRecordCount, m_getLogRecordCountLimit);
 		std::map<std::string, std::tuple<std::string, std::string>> snapshot;
 		for(; file_no <= m_journalStatus.maxFileNo; file_no++) {
 			std::string fn = fileNoToName(file_no);

@@ -1,7 +1,7 @@
 #include "brokerconnection.h"
 #include "deviceappclioptions.h"
-#include "../utils/fileshvjournal.h"
 
+#include <shv/core/utils/fileshvjournal.h>
 #include <shv/core/log.h>
 
 #include <fstream>

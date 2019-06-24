@@ -1,17 +1,15 @@
 #pragma once
 
-#include "../shviotqtglobal.h"
+#include "../shvcoreglobal.h"
 
-#include <shv/core/string.h>
+#include "../string.h"
 
 namespace shv {
-
-namespace core { class StringViewList; }
-
-namespace iotqt {
+namespace core {
+class StringViewList;
 namespace utils {
 
-class SHVIOTQT_DECL_EXPORT ShvPath : public shv::core::String
+class SHVCORE_DECL_EXPORT ShvPath : public shv::core::String
 {
 	using Super = shv::core::String;
 public:

@@ -1,11 +1,10 @@
 #include "shvpath.h"
 
-#include <shv/coreqt/log.h>
-
-#include <shv/core/stringview.h>
+#include "../log.h"
+#include "../stringview.h"
 
 namespace shv {
-namespace iotqt {
+namespace core {
 namespace utils {
 
 static const std::string DDOT_SLASH("../");

@@ -55,6 +55,7 @@ public:
 	static std::string join(const std::vector<std::string> &lst, char delim);
 	static std::string join(const std::vector<shv::core::StringView> &lst, char delim);
 	static int replace(std::string &str, const std::string &from, const std::string &to);
+	static int replace(std::string &str, const char from, const char to);
 
 	static std::string& upper(std::string& s);
 	static std::string toUpper(const std::string& s) {std::string ret(s); return upper(ret);}

@@ -1,17 +1,17 @@
-#ifndef SHV_IOTQT_UTILS_SHVJOURNALGETLOGPARAMS_H
-#define SHV_IOTQT_UTILS_SHVJOURNALGETLOGPARAMS_H
+#ifndef SHV_CORE_UTILS_SHVJOURNALGETLOGPARAMS_H
+#define SHV_CORE_UTILS_SHVJOURNALGETLOGPARAMS_H
 
-#include "../shviotqtglobal.h"
+#include "../shvcoreglobal.h"
 
 #include <shv/chainpack/rpcvalue.h>
 
 #include <string>
 
 namespace shv {
-namespace iotqt {
+namespace core {
 namespace utils {
 
-struct SHVIOTQT_DECL_EXPORT ShvJournalGetLogParams
+struct SHVCORE_DECL_EXPORT ShvJournalGetLogParams
 {
 	static const char *KEY_HEADER_OPTIONS;
 	static const char *KEY_MAX_RECORD_COUNT;

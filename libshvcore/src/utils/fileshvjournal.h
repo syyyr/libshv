@@ -1,7 +1,7 @@
-#ifndef SHV_IOTQT_UTILS_FILESHVJOURNAL_H
-#define SHV_IOTQT_UTILS_FILESHVJOURNAL_H
+#ifndef SHV_CORE_UTILS_FILESHVJOURNAL_H
+#define SHV_CORE_UTILS_FILESHVJOURNAL_H
 
-#include "../shviotqtglobal.h"
+#include "../shvcoreglobal.h"
 #include "shvjournalgetlogparams.h"
 
 #include <shv/chainpack/rpcvalue.h>
@@ -10,10 +10,10 @@
 #include <vector>
 
 namespace shv {
-namespace iotqt {
+namespace core {
 namespace utils {
 
-struct SHVIOTQT_DECL_EXPORT ShvJournalEntry
+struct SHVCORE_DECL_EXPORT ShvJournalEntry
 {
 	std::string path;
 	shv::chainpack::RpcValue value;
@@ -37,7 +37,7 @@ struct SHVIOTQT_DECL_EXPORT ShvJournalEntry
 	void setShortTime(uint16_t short_time) {shortTime = short_time; isShortTimeSet = true;}
 };
 
-class SHVIOTQT_DECL_EXPORT FileShvJournal
+class SHVCORE_DECL_EXPORT FileShvJournal
 {
 public:
 	static constexpr long DEFAULT_FILE_SIZE_LIMIT = 100 * 1024;
@@ -66,10 +66,10 @@ public:
 public:
 	using SnapShotFn = std::function<void (std::vector<ShvJournalEntry>&)>;
 
-	FileShvJournal(SnapShotFn snf);
+	FileShvJournal(std::string device_id, SnapShotFn snf);
 
 	void setJournalDir(std::string s);
-	const std::string& journalDir() const {return m_journalDir;}
+	const std::string& journalDir() const;
 	void setFileSizeLimit(const std::string &n);
 	void setFileSizeLimit(int64_t n) {m_fileSizeLimit = n;}
 	int64_t fileSizeLimit() const { return m_fileSizeLimit;}
@@ -83,7 +83,7 @@ public:
 	void append(const ShvJournalEntry &entry, int64_t msec = 0);
 
 	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params);
-	static std::string defaultApplicationJournaldir();
+	//virtual std::string defaultJournaldir();
 private:
 	void checkJournalConsistecy();
 	void rotateJournal();
@@ -112,7 +112,7 @@ private:
 		bool isConsistent() const {return recentTimeStamp > 0 && maxFileNo >= 0 && journalDirExists && journalSize >= 0;}
 	} m_journalStatus;
 	SnapShotFn m_snapShotFn;
-	std::string m_journalDir;
+	mutable std::string m_journalDir;
 	int64_t m_fileSizeLimit = DEFAULT_FILE_SIZE_LIMIT;
 	int64_t m_journalSizeLimit = DEFAULT_JOURNAL_SIZE_LIMIT;
 	int m_getLogRecordCountLimit = DEFAULT_GET_LOG_RECORD_COUNT_LIMIT;

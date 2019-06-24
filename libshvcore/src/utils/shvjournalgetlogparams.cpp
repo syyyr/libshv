@@ -3,7 +3,7 @@
 namespace cp = shv::chainpack;
 
 namespace shv {
-namespace iotqt {
+namespace core {
 namespace utils {
 
 const char *ShvJournalGetLogParams::KEY_HEADER_OPTIONS = "headerOptions";

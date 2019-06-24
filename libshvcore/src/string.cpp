@@ -96,7 +96,7 @@ std::string String::join(const std::vector<StringView> &lst, char delim)
 	return ret;
 }
 
-int String::replace(std::string& str, const std::string& from, const std::string& to)
+int String::replace(std::string &str, const std::string &from, const std::string &to)
 {
 	int i = 0;
 	for (i = 0; ; ++i) {
@@ -106,6 +106,18 @@ int String::replace(std::string& str, const std::string& from, const std::string
 		str.replace(start_pos, from.length(), to);
 	}
 	return i;
+}
+
+int String::replace(std::string& str, const char from, const char to)
+{
+	int n = 0;
+	for (size_t i = 0; i < str.length(); ++i) {
+		if(str[i] == from) {
+			str[i] = to;
+			n++;
+		}
+	}
+	return n;
 }
 
 std::string &String::upper(std::string &s)

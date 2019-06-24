@@ -13,7 +13,7 @@
 
 //namespace shv { namespace chainpack { class MetaMethod; }}
 //namespace shv { namespace chainpack { class MetaMethod; class RpcValue; class RpcMessage; class RpcRequest; }}
-//namespace shv { namespace core { class StringView; }}
+namespace shv { namespace core { namespace utils { class ShvPath; }}}
 
 namespace shv {
 namespace iotqt {
@@ -47,7 +47,7 @@ public:
 	void setNodeId(String &&n);
 	void setNodeId(const String &n);
 
-	utils::ShvPath shvPath() const;
+	shv::core::utils::ShvPath shvPath() const;
 	//static StringViewList splitShvPath(const std::string &shv_path) { return StringView{shv_path}.split(SHV_PATH_DELIM, SHV_PATH_QUOTE); }
 	//static String joinShvPath(const StringViewList &shv_path);
 

@@ -1,5 +1,5 @@
-#include <shv/iotqt/utils/fileshvjournal.h>
-#include <shv/iotqt/utils/shvpath.h>
+#include <shv/core/utils/fileshvjournal.h>
+#include <shv/core/utils/shvpath.h>
 
 #include <QtTest/QtTest>
 #include <QDebug>
@@ -65,7 +65,7 @@ private:
 			};
 			for(const Test &t : cases) {
 				qDebug() << t.path << "vs. pattern" << t.pattern << "should be:" << t.result;
-				QVERIFY(shv::iotqt::utils::ShvPath(t.path).matchWild(t.pattern) == t.result);
+				QVERIFY(shv::core::utils::ShvPath(t.path).matchWild(t.pattern) == t.result);
 			}
 		}
 	}

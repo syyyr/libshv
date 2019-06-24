@@ -1,9 +1,8 @@
 #include "shvnode.h"
 #include "../utils.h"
-#include "../utils/shvpath.h"
 
+#include <shv/core/utils/fileshvjournal.h>
 #include <shv/coreqt/log.h>
-
 #include <shv/chainpack/metamethod.h>
 #include <shv/chainpack/rpcmessage.h>
 #include <shv/chainpack/rpcvalue.h>
@@ -14,9 +13,9 @@
 #include <shv/core/exception.h>
 #include <shv/core/stringview.h>
 #include <shv/core/string.h>
+#include <shv/core/utils/shvpath.h>
 
 #include <QTimer>
-
 #include <QFile>
 #include <cstring>
 #include <fstream>
@@ -87,9 +86,9 @@ void ShvNode::setNodeId(const ShvNode::String &n)
 	m_nodeId = n;
 }
 
-utils::ShvPath ShvNode::shvPath() const
+shv::core::utils::ShvPath ShvNode::shvPath() const
 {
-	utils::ShvPath ret;
+	shv::core::utils::ShvPath ret;
 	const ShvNode *nd = this;
 	while(nd) {
 		if(!nd->isRootNode()) {
@@ -125,7 +124,7 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 	shvLogFuncFrame() << "node:" << nodeId() << "meta:" << meta.toPrettyString();
 	const chainpack::RpcValue::String method = cp::RpcMessage::method(meta).toString();
 	const chainpack::RpcValue::String shv_path_str = cp::RpcMessage::shvPath(meta).toString();
-	core::StringViewList shv_path = utils::ShvPath::split(shv_path_str);
+	core::StringViewList shv_path = shv::core::utils::ShvPath::split(shv_path_str);
 	cp::RpcResponse resp = cp::RpcResponse::forRequest(meta);
 	try {
 		const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
@@ -184,7 +183,7 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 	shvLogFuncFrame() << "node:" << nodeId();
 	const chainpack::RpcValue::String &method = rq.method().toString();
 	const chainpack::RpcValue::String &shv_path_str = rq.shvPath().toString();
-	core::StringViewList shv_path = utils::ShvPath::split(shv_path_str);
+	core::StringViewList shv_path = shv::core::utils::ShvPath::split(shv_path_str);
 	cp::RpcResponse resp = cp::RpcResponse::forRequest(rq);
 	try {
 		const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
@@ -233,7 +232,7 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 
 chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 {
-	core::StringViewList shv_path = utils::ShvPath::split(rq.shvPath().toString());
+	core::StringViewList shv_path = core::utils::ShvPath::split(rq.shvPath().toString());
 	const chainpack::RpcValue::String &method = rq.method().toString();
 	const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
 	if(!mm)
@@ -247,7 +246,7 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 
 chainpack::RpcValue ShvNode::callMethodRq(const chainpack::RpcRequest &rq)
 {
-	core::StringViewList shv_path = utils::ShvPath::split(rq.shvPath().toString());
+	core::StringViewList shv_path = shv::core::utils::ShvPath::split(rq.shvPath().toString());
 	const chainpack::RpcValue::String &method = rq.method().toString();
 	chainpack::RpcValue ret_val = callMethod(shv_path, method, rq.params());
 	return ret_val;
@@ -660,7 +659,7 @@ chainpack::RpcValue RpcValueMapNode::valueOnPath(const chainpack::RpcValue &val,
 
 chainpack::RpcValue RpcValueMapNode::valueOnPath(const std::string &shv_path, bool throw_exc)
 {
-	StringViewList lst = shv::iotqt::utils::ShvPath::split(shv_path);
+	StringViewList lst = shv::core::utils::ShvPath::split(shv_path);
 	return  valueOnPath(lst, throw_exc);
 }
 
@@ -671,7 +670,7 @@ shv::chainpack::RpcValue RpcValueMapNode::valueOnPath(const shv::iotqt::node::Sh
 
 void RpcValueMapNode::setValueOnPath(const std::string &shv_path, const chainpack::RpcValue &val)
 {
-	StringViewList lst = shv::iotqt::utils::ShvPath::split(shv_path);
+	StringViewList lst = shv::core::utils::ShvPath::split(shv_path);
 	setValueOnPath(lst, val);
 }
 
