@@ -1,5 +1,6 @@
 #include "graphmodel.h"
 
+#include <shv/chainpack/rpcvalue.h>
 #include <shv/coreqt/log.h>
 
 namespace shv {
@@ -174,7 +175,10 @@ void GraphModel::appendValue(int channel, Sample &&sample)
 	ChannelSamples &dat = m_samples[channel];
 	if(!dat.isEmpty() && dat.last().time > sample.time) {
 		shvWarning() << channelData(channel, ChannelDataRole::ShvPath).toString() << "channel:" << channel
-					 << "ignoring value with lower timestamp than last value:" << dat.last().time << "val:" << sample.time;
+					 << "ignoring value with lower timestamp than last value:"
+					 << dat.last().time << shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(dat.last().time).toIsoString()
+					 << "val:"
+					 << sample.time << shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(sample.time).toIsoString();
 		return;
 	}
 	//m_appendSince = qMin(sampleAt.time, m_appendSince);

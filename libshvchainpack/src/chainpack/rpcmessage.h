@@ -21,7 +21,7 @@ public:
 	{
 		using Super = meta::MetaType;
 	public:
-		enum {ID = meta::GlobalNS::RegisteredMetaTypes::ChainPackRpcMessage};
+		enum {ID = meta::GlobalNS::MetaTypeId::ChainPackRpcMessage};
 		struct Tag { enum Enum {RequestId = meta::Tag::USER, // 8
 								ShvPath, // 9
 								Method,  // 10

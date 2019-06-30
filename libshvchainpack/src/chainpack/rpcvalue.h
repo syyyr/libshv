@@ -305,6 +305,7 @@ public:
 	void setMetaData(MetaData &&meta_data);
 	void setMetaValue(Int key, const RpcValue &val);
 	void setMetaValue(const String &key, const RpcValue &val);
+	int metaTypeId() const {return metaValue(meta::Tag::MetaTypeId).toInt();}
 
 	bool isValid() const;
 	bool isNull() const { return type() == Type::Null; }

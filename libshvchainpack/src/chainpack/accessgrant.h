@@ -15,7 +15,7 @@ public:
 	{
 		using Super = chainpack::meta::MetaType;
 	public:
-		enum {ID = chainpack::meta::GlobalNS::RegisteredMetaTypes::AccessGrantLogin};
+		enum {ID = chainpack::meta::GlobalNS::MetaTypeId::AccessGrantLogin};
 		/*
 		struct Tag { enum Enum {RequestId = chainpack::meta::Tag::USER, // 8
 								MAX};};

@@ -83,7 +83,7 @@ public:
 	enum {ID = (int)NameSpaceID::Global};
 	GlobalNS();
 
-	struct RegisteredMetaTypes
+	struct MetaTypeId
 	{
 		enum Enum {
 			ChainPackRpcMessage = 1,
@@ -102,7 +102,7 @@ public:
 	enum {ID = (int)NameSpaceID::Elesys};
 	ElesysNS();
 
-	struct RegisteredMetaTypes
+	struct MetaTypeId
 	{
 		enum Enum {
 			VTKEventData = 1,
