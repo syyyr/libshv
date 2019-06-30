@@ -48,9 +48,9 @@ public:
 	static constexpr char FIELD_SEPARATOR = '\t';
 	static constexpr char RECORD_SEPARATOR = '\n';
 
-	SHVCORE_DECL_EXPORT static const char* KEY_NAME;
-	SHVCORE_DECL_EXPORT static const char *KEY_RECORD_COUNT;
-	SHVCORE_DECL_EXPORT static const char *KEY_PATHS_DICT;
+	static const char* KEY_NAME;
+	static const char *KEY_RECORD_COUNT;
+	static const char *KEY_PATHS_DICT;
 
 	struct SHVCORE_DECL_EXPORT Column
 	{

@@ -43,7 +43,11 @@ static uint16_t shortTime()
 */
 #define SHV_STATBUF              struct stat64
 #define SHV_STAT                 ::stat64
-#define SHV_MKDIR                ::mkdir
+#ifdef __unix
+#define SHV_MKDIR(dir_name)      ::mkdir(dir_name, 0777)
+#else
+#define SHV_MKDIR(dir_name)      ::mkdir(dir_name)
+#endif
 #define SHV_REMOVE_FILE          ::remove
 
 static bool mkpath(const std::string &dir_name)
@@ -57,7 +61,7 @@ static bool mkpath(const std::string &dir_name)
 	};
 	if(is_dir(dir_name))
 		return true;
-	if (SHV_MKDIR(dir_name.data(), 0777) == 0)
+	if (SHV_MKDIR(dir_name.data()) == 0)
 		return true;
 	if (errno == EEXIST)
 		return is_dir(dir_name);
@@ -72,7 +76,7 @@ static bool mkpath(const std::string &dir_name)
 	if (!mkpath(parent_dir_name))
 		return false;
 	// try again
-	if (SHV_MKDIR(dir_name.data(), 0777) == 0)
+	if (SHV_MKDIR(dir_name.data()) == 0)
 		return true;
 	return errno == EEXIST && is_dir(dir_name);
 }
@@ -108,15 +112,6 @@ FileShvJournal::FileShvJournal(std::string device_id, FileShvJournal::SnapShotFn
 
 void FileShvJournal::setJournalDir(std::string s)
 {
-	/*
-	if(s.empty()) {
-		defaultApplicationJournaldir();
-		shvWarning() << "Cannot set shv journal dir to empty path, default journal dir will be set instead:" << defaultApplicationJournaldir();
-		setJournalDir();
-	}
-	else {
-	}
-	*/
 	m_journalDir = std::move(s);
 }
 
@@ -266,7 +261,9 @@ std::string FileShvJournal::fileNoToName(int n)
 	std::snprintf(buff, sizeof (buff), "%0*d", FILE_DIGITS, n);
 	return m_journalDir + '/' + std::string(buff) + FILE_EXT;
 }
-
+#ifdef __unix
+#define DIRENT_HAS_TYPE_FIELD
+#endif
 void FileShvJournal::updateJournalStatus()
 {
 	int min_n = std::numeric_limits<int>::max();
@@ -278,7 +275,9 @@ void FileShvJournal::updateJournalStatus()
 		m_journalStatus.journalSize = 0;
 		std::string ext = FILE_EXT;
 		while ((ent = readdir (dir)) != nullptr) {
+#ifdef DIRENT_HAS_TYPE_FIELD
 			if(ent->d_type == DT_REG) {
+#endif
 				std::string fn = ent->d_name;
 				if(!shv::core::String::endsWith(fn, ext))
 					continue;
@@ -295,7 +294,9 @@ void FileShvJournal::updateJournalStatus()
 				} catch (std::logic_error &e) {
 					shvWarning() << "Mallformated shv journal file name" << fn << e.what();
 				}
+#ifdef DIRENT_HAS_TYPE_FIELD
 			}
+#endif
 		}
 		closedir (dir);
 	}
