@@ -166,14 +166,15 @@ public:
 
 	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params);
 
-	void convertLog1JournalDir(const std::string &journal_dir) const;
+	void convertLog1JournalDir();
 private:
 	void checkJournalConsistecy(bool force = false);
 	void rotateJournal();
 	void updateJournalStatus();
 	void updateJournalFiles();
 	void updateRecentTimeStamp();
-	void checkJournalDir();
+	void ensureJournalDir();
+	bool journalDirExists();
 	int64_t findLastEntryDateTime(const std::string &fn);
 
 	shv::chainpack::RpcValue getLogThrow(const ShvJournalGetLogParams &params);

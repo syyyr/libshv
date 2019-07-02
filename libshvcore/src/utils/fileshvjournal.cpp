@@ -50,15 +50,17 @@ static uint16_t shortTime()
 #endif
 #define SHV_REMOVE_FILE          ::remove
 
+static bool is_dir(const std::string &dir_name)
+{
+	SHV_STATBUF st;
+	return SHV_STAT(dir_name.data(), &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR;
+}
+
 static bool mkpath(const std::string &dir_name)
 {
 	// helper function to check if a given path is a directory, since mkdir can
 	// fail if the dir already exists (it may have been created by another
 	// thread or another process)
-	const auto is_dir = [](const std::string &dir_name) {
-		SHV_STATBUF st;
-		return SHV_STAT(dir_name.data(), &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR;
-	};
 	if(is_dir(dir_name))
 		return true;
 	if (SHV_MKDIR(dir_name.data()) == 0)
@@ -88,6 +90,12 @@ static int64_t file_size(const std::string &file_name)
 		return st.st_size;
 	logWShvJournal() << "Cannot stat file:" << file_name;
 	return -1;
+}
+
+static bool file_exists(const std::string &file_name)
+{
+	SHV_STATBUF st;
+	return (SHV_STAT(file_name.data(), &st) == 0);
 }
 
 static int64_t rm_file(const std::string &file_name)
@@ -691,6 +699,7 @@ void FileShvJournal2::append(const ShvJournalEntry &entry, int64_t msec)
 void FileShvJournal2::appendThrow(const ShvJournalEntry &entry, int64_t msec)
 {
 	shvLogFuncFrame();// << "last file no:" << lastFileNo();
+	ensureJournalDir();
 	checkJournalConsistecy();
 	if(msec == 0)
 		msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
@@ -791,21 +800,29 @@ std::string FileShvJournal2::fileMsecToFilePath(int64_t file_msec) const
 void FileShvJournal2::checkJournalConsistecy(bool force)
 {
 	if(!m_journalStatus.isConsistent() || force) {
-		checkJournalDir();
-		updateJournalStatus();
+		logDShvJournal() << "journal status not consistent or check forced";
+		m_journalStatus.journalDirExists = journalDirExists();
+		if(m_journalStatus.journalDirExists)
+			updateJournalStatus();
 	}
 	if(!m_journalStatus.isConsistent()) {
 		throw std::runtime_error("Journal cannot be brought to consistent state.");
 	}
 }
 
-void FileShvJournal2::checkJournalDir()
+void FileShvJournal2::ensureJournalDir()
 {
 	if(!mkpath(m_journalDir)) {
 		m_journalStatus.journalDirExists = false;
 		throw std::runtime_error("Journal dir: " + m_journalDir + " do not exists and cannot be created");
 	}
+	logDShvJournal() << "journal dir:" << m_journalDir << "exists";
 	m_journalStatus.journalDirExists = true;
+}
+
+bool FileShvJournal2::journalDirExists()
+{
+	return is_dir(m_journalDir);
 }
 
 void FileShvJournal2::rotateJournal()
@@ -820,12 +837,14 @@ void FileShvJournal2::rotateJournal()
 	updateJournalStatus();
 }
 
-void FileShvJournal2::convertLog1JournalDir(const std::string &journal_dir) const
+void FileShvJournal2::convertLog1JournalDir()
 {
+	const std::string &journal_dir = journalDir();
 	DIR *dir;
 	struct dirent *ent;
 	if ((dir = opendir (journal_dir.c_str())) != nullptr) {
 		const std::string ext = ".log";
+		int n_files = 0;
 		while ((ent = readdir (dir)) != nullptr) {
 #ifdef DIRENT_HAS_TYPE_FIELD
 			if(ent->d_type == DT_REG) {
@@ -833,6 +852,8 @@ void FileShvJournal2::convertLog1JournalDir(const std::string &journal_dir) cons
 				std::string fn = ent->d_name;
 				if(!shv::core::String::endsWith(fn, ext))
 					continue;
+				if(n_files++ == 0)
+					shvInfo() << "======= Journal1 format file(s) found, converting to format 2";
 				int n = 0;
 				try {
 					n = std::stoi(fn.substr(0, fn.size() - ext.size()));
@@ -923,6 +944,15 @@ void FileShvJournal2::updateJournalFiles()
 		}
 		closedir (dir);
 		std::sort(m_journalStatus.files.begin(), m_journalStatus.files.end());
+		logDShvJournal() << "journal dir contains:" << m_journalStatus.files.size() << "files";
+		if(m_journalStatus.files.size()) {
+			logDShvJournal() << "first file:"
+							 << m_journalStatus.files[0]
+							 << cp::RpcValue::DateTime::fromMSecsSinceEpoch(m_journalStatus.files[0]).toIsoString();
+			logDShvJournal() << "last file:"
+							 << m_journalStatus.files[m_journalStatus.files.size()-1]
+							 << cp::RpcValue::DateTime::fromMSecsSinceEpoch(m_journalStatus.files[m_journalStatus.files.size()-1]).toIsoString();
+		}
 	}
 	else {
 		throw std::runtime_error("Cannot read content of dir: " + m_journalDir);
@@ -942,6 +972,7 @@ void FileShvJournal2::updateRecentTimeStamp()
 			m_journalStatus.recentTimeStamp = cp::RpcValue::DateTime::now().msecsSinceEpoch();
 		}
 	}
+	logDShvJournal() << "update recent time stamp:" << m_journalStatus.recentTimeStamp << cp::RpcValue::DateTime::fromMSecsSinceEpoch(m_journalStatus.recentTimeStamp).toIsoString();
 }
 
 int64_t FileShvJournal2::findLastEntryDateTime(const std::string &fn)
@@ -1008,7 +1039,7 @@ chainpack::RpcValue FileShvJournal2::getLog(const ShvJournalGetLogParams &params
 		return getLogThrow(params);
 	}
 	catch (std::exception &e) {
-		logIShvJournal() << "Get log failed, journal dir will be read again, SD card might be replaced:" << e.what();
+		logIShvJournal() << "Get log failed, journal dir will be read again, SD card might be replaced, error:" << e.what();
 	}
 	checkJournalConsistecy(true);
 	return getLogThrow(params);
@@ -1016,30 +1047,35 @@ chainpack::RpcValue FileShvJournal2::getLog(const ShvJournalGetLogParams &params
 
 chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &params)
 {
-	logDShvJournal() << "========================= getLog ==================" << params.toRpcValue().toCpon();
-	logDShvJournal() << "params:" << params.toRpcValue().toCpon();
+	logIShvJournal() << "========================= getLog ==================";
+	logIShvJournal() << "params:" << params.toRpcValue().toCpon();
 	checkJournalConsistecy();
 	cp::RpcValue::List log;
 	cp::RpcValue::Map path_dict;
 	int rec_cnt = 0;
+	auto since_msec = params.since.isDateTime()? params.since.toDateTime().msecsSinceEpoch(): 0;
+	auto until_msec = params.until.isDateTime()? params.until.toDateTime().msecsSinceEpoch(): 0;
 	if(m_journalStatus.files.size()) {
-		auto since_msec = params.since.isDateTime()? params.since.toDateTime().msecsSinceEpoch(): 0;
-		auto until_msec = params.until.isDateTime()? params.until.toDateTime().msecsSinceEpoch(): 0;
 		std::vector<int64_t>::const_iterator file_it = m_journalStatus.files.begin();
 		if(since_msec > 0) {
+			logDShvJournal() << "since:" << params.since.toCpon() << "msec:" << since_msec;
 			file_it = std::lower_bound(m_journalStatus.files.begin(), m_journalStatus.files.end(), since_msec);
 			if(file_it == m_journalStatus.files.end()) {
 				/// take last file
 				--file_it;
+				logDShvJournal() << "\t" << "not found, taking last file:" << *file_it << fileMsecToFileName(*file_it);
 			}
 			else if(*file_it == since_msec) {
 				/// take exactly this file
+				logDShvJournal() << "\t" << "found exactly:" << *file_it << fileMsecToFileName(*file_it);
 			}
 			else if(file_it == m_journalStatus.files.begin()) {
 				/// take first file
+				logDShvJournal() << "\t" << "begin, taking first file:" << *file_it << fileMsecToFileName(*file_it);
 			}
 			else {
 				/// take previous file
+				logDShvJournal() << "\t" << "lower bound found, taking previous file:" << *file_it << fileMsecToFileName(*file_it);
 				--file_it;
 			}
 		}
@@ -1066,10 +1102,12 @@ chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &p
 		std::map<std::string, SnapshotEntry> snapshot;
 		for(; file_it != m_journalStatus.files.end(); file_it++) {
 			std::string fn = fileMsecToFilePath(*file_it);
-			logDShvJournal() << "---------------------------------- opening file:" << fn;
+			logDShvJournal() << "-------- opening file:" << fn;
+			if(!file_exists(fn))
+				throw std::runtime_error("File: " + fn + " doesn't exist, journal state is corrupted.");
 			std::ifstream in(fn, std::ios::in | std::ios::binary);
 			if(!in) {
-				logWShvJournal() << "Cannot open file: " + fn + " for reading.";
+				logWShvJournal() << "Cannot open file:" << fn << "for reading.";
 				continue;
 			}
 			while(in) {
@@ -1091,7 +1129,7 @@ chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &p
 					logWShvJournal() << fn << "invalid date time string:" << dtstr;
 					continue;
 				}
-				logDShvJournal() << "\t FIELDS:" << dtstr << '\t' << path << "vals:" << lst.join('|');
+				//logDShvJournal() << "\t FIELDS:" << dtstr << '\t' << path << "vals:" << lst.join('|');
 				if(since_msec > 0 && dt.msecsSinceEpoch() < since_msec) {
 					if(params.withSnapshot)
 						snapshot[path] = SnapshotEntry{
@@ -1156,7 +1194,10 @@ log_finish:
 		}
 		md.setValue("logVersion", 1); // required
 		md.setValue("dateTime", cp::RpcValue::DateTime::now());
-		md.setValue("params", params.toRpcValue());
+		ShvJournalGetLogParams params2 = params;
+		params2.since = (since_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec)): cp::RpcValue(nullptr);
+		params2.until = (until_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(until_msec)): cp::RpcValue(nullptr);
+		md.setValue("params", params2.toRpcValue());
 		md.setValue(KEY_RECORD_COUNT, rec_cnt);
 	}
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::FieldInfo)) {
