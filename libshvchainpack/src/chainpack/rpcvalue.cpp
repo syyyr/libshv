@@ -834,7 +834,7 @@ RpcValue::DateTime RpcValue::DateTime::fromUtcString(const std::string &utc_date
 	ret.m_dtm.tz = utc_offset;
 
 	if(plen)
-		*plen = len;
+		*plen = static_cast<size_t>(len);
 
 	return ret;
 }

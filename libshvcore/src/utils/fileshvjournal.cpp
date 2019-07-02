@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 
 #define logWShvJournal() shvCWarning("ShvJournal")
+#define logIShvJournal() shvCInfo("ShvJournal")
 #define logDShvJournal() shvCDebug("ShvJournal")
 
 namespace cp = shv::chainpack;
@@ -293,7 +294,7 @@ void FileShvJournal::updateJournalStatus()
 						m_journalStatus.journalSize += file_size(fn);
 					}
 				} catch (std::logic_error &e) {
-					shvWarning() << "Mallformated shv journal file name" << fn << e.what();
+					shvWarning() << "Malformed shv journal file name: " << fn << e.what();
 				}
 #ifdef DIRENT_HAS_TYPE_FIELD
 			}
@@ -619,7 +620,6 @@ const char *FileShvJournal::Column::name(FileShvJournal::Column::Enum e)
 //==============================================================
 // FileShvJournal2
 //==============================================================
-const char * FileShvJournal2::FILE_EXT = ".log";
 const char * FileShvJournal2::KEY_NAME = "name";
 const char *FileShvJournal2::KEY_RECORD_COUNT = "recordCount";
 const char *FileShvJournal2::KEY_PATHS_DICT = "pathsDict";
@@ -628,33 +628,11 @@ static constexpr size_t MIN_SEP_POS = 13;
 static constexpr size_t SEC_SEP_POS = MIN_SEP_POS + 3;
 static constexpr size_t MSEC_SEP_POS = SEC_SEP_POS + 3;
 
-static int64_t fn2msec(const std::string &fn)
-{
-	std::string utc_str = fn;
-	if(MSEC_SEP_POS >= utc_str.size())
-		throw std::runtime_error("fn2msec(): File name: '" + fn + "' too short.");
-	utc_str[MIN_SEP_POS] = ':';
-	utc_str[SEC_SEP_POS] = ':';
-	utc_str[MSEC_SEP_POS] = '.';
-	int64_t msec = cp::RpcValue::DateTime::fromUtcString(utc_str).msecsSinceEpoch();
-	if(msec == 0)
-		throw std::runtime_error("fn2msec(): Invalid file name: '" + fn + "' cannot be converted to date time");
-	return msec;
-}
-
-static std::string msec2fn(int64_t msec)
-{
-	std::string fn = cp::RpcValue::DateTime::fromMSecsSinceEpoch(msec).toIsoString(cp::RpcValue::DateTime::MsecPolicy::Always, false);
-	fn[MIN_SEP_POS] = '-';
-	fn[SEC_SEP_POS] = '-';
-	fn[MSEC_SEP_POS] = '-';
-	return fn + FileShvJournal2::FILE_EXT;
-}
-
 FileShvJournal2::FileShvJournal2(std::string device_id, FileShvJournal2::SnapShotFn snf)
 	: m_deviceId(std::move(device_id))
 	, m_snapShotFn(snf)
 {
+	setFileExtension(".log2");
 }
 
 void FileShvJournal2::setJournalDir(std::string s)
@@ -694,59 +672,72 @@ void FileShvJournal2::setJournalSizeLimit(const std::string &n)
 
 void FileShvJournal2::append(const ShvJournalEntry &entry, int64_t msec)
 {
-	shvLogFuncFrame();// << "last file no:" << lastFileNo();
 	try {
-		checkJournalConsistecy();
-		if(msec == 0)
-			msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
-		/// keep journal monotonic
-		if(msec < m_journalStatus.recentTimeStamp)
-			msec = m_journalStatus.recentTimeStamp;
-		int64_t last_file_msec = 0;
-		if(m_journalStatus.files.empty()) {
-			last_file_msec = msec;
-		}
-		else if(m_journalStatus.lastFileSize > m_fileSizeLimit) {
-			last_file_msec = m_journalStatus.files[m_journalStatus.files.size() - 1];
-			if(msec > last_file_msec) {
-				/// create new file when it has different name only
-				last_file_msec = msec;
-			}
-		}
-		else {
-			last_file_msec = m_journalStatus.files[m_journalStatus.files.size() - 1];
-		}
-		std::string fn = fileMsecNoToName(last_file_msec);
-		{
-			shvDebug() << "\t appending records to file:" << fn;
-			std::ofstream out(fn, std::ios::binary | std::ios::out | std::ios::app);
-			if(!out)
-				throw std::runtime_error("Cannot open file " + fn + " for writing");
-
-			long fsz = out.tellp();
-			if(fsz == 0) {
-				// new file should start with snapshot
-				if(!m_snapShotFn)
-					throw std::runtime_error("SnapShot function not defined");
-				std::vector<ShvJournalEntry> snapshot;
-				m_snapShotFn(snapshot);
-				if(snapshot.empty())
-					logWShvJournal() << "Empty snapshot created";
-				for(const ShvJournalEntry &e : snapshot)
-					appendEntry(out, msec, e);
-				m_journalStatus.files.push_back(last_file_msec);
-			}
-			appendEntry(out, msec, entry);
-			ssize_t file_size = out.tellp();
-			m_journalStatus.lastFileSize += file_size;
-			m_journalStatus.journalSize += file_size - fsz;;
-		}
-		if(m_journalStatus.journalSize > m_journalSizeLimit) {
-			rotateJournal();
-		}
+		appendThrow(entry, msec);
+		return;
 	}
 	catch (std::exception &e) {
-		shvWarning() << e.what();
+		logIShvJournal() << "Append to log failed, journal dir will be read again, SD card might be replaced:" << e.what();
+	}
+	checkJournalConsistecy(true);
+	try {
+		appendThrow(entry, msec);
+	}
+	catch (std::exception &e) {
+		logWShvJournal() << "Append to log failed after journal dir check:" << e.what();
+	}
+}
+
+void FileShvJournal2::appendThrow(const ShvJournalEntry &entry, int64_t msec)
+{
+	shvLogFuncFrame();// << "last file no:" << lastFileNo();
+	checkJournalConsistecy();
+	if(msec == 0)
+		msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
+	/// keep journal monotonic
+	if(msec < m_journalStatus.recentTimeStamp)
+		msec = m_journalStatus.recentTimeStamp;
+	int64_t last_file_msec = 0;
+	if(m_journalStatus.files.empty()) {
+		last_file_msec = msec;
+	}
+	else if(m_journalStatus.lastFileSize > m_fileSizeLimit) {
+		last_file_msec = m_journalStatus.files[m_journalStatus.files.size() - 1];
+		if(msec > last_file_msec) {
+			/// create new file when it has different name only
+			last_file_msec = msec;
+		}
+	}
+	else {
+		last_file_msec = m_journalStatus.files[m_journalStatus.files.size() - 1];
+	}
+	std::string fn = fileMsecToFilePath(last_file_msec);
+	{
+		shvDebug() << "\t appending records to file:" << fn;
+		std::ofstream out(fn, std::ios::binary | std::ios::out | std::ios::app);
+		if(!out)
+			throw std::runtime_error("Cannot open file " + fn + " for writing");
+
+		long fsz = out.tellp();
+		if(fsz == 0) {
+			// new file should start with snapshot
+			if(!m_snapShotFn)
+				throw std::runtime_error("SnapShot function not defined");
+			std::vector<ShvJournalEntry> snapshot;
+			m_snapShotFn(snapshot);
+			if(snapshot.empty())
+				logWShvJournal() << "Empty snapshot created";
+			for(const ShvJournalEntry &e : snapshot)
+				appendEntry(out, msec, e);
+			m_journalStatus.files.push_back(last_file_msec);
+		}
+		appendEntry(out, msec, entry);
+		ssize_t file_size = out.tellp();
+		m_journalStatus.lastFileSize += file_size;
+		m_journalStatus.journalSize += file_size - fsz;;
+	}
+	if(m_journalStatus.journalSize > m_journalSizeLimit) {
+		rotateJournal();
 	}
 }
 
@@ -768,15 +759,38 @@ void FileShvJournal2::appendEntry(std::ofstream &out, int64_t msec, const ShvJou
 	m_journalStatus.recentTimeStamp = msec;
 }
 
-std::string FileShvJournal2::fileMsecNoToName(int64_t file_msec)
+int64_t FileShvJournal2::fileNameToFileMsec(const std::string &fn) const
 {
-	std::string fn = msec2fn(file_msec);
+	std::string utc_str = fn;
+	if(MSEC_SEP_POS >= utc_str.size())
+		throw std::runtime_error("fn2msec(): File name: '" + fn + "' too short.");
+	utc_str[MIN_SEP_POS] = ':';
+	utc_str[SEC_SEP_POS] = ':';
+	utc_str[MSEC_SEP_POS] = '.';
+	int64_t msec = cp::RpcValue::DateTime::fromUtcString(utc_str).msecsSinceEpoch();
+	if(msec == 0)
+		throw std::runtime_error("fn2msec(): Invalid file name: '" + fn + "' cannot be converted to date time");
+	return msec;
+}
+
+std::string FileShvJournal2::fileMsecToFileName(int64_t msec) const
+{
+	std::string fn = cp::RpcValue::DateTime::fromMSecsSinceEpoch(msec).toIsoString(cp::RpcValue::DateTime::MsecPolicy::Always, false);
+	fn[MIN_SEP_POS] = '-';
+	fn[SEC_SEP_POS] = '-';
+	fn[MSEC_SEP_POS] = '-';
+	return fn + fileExtensionRef();
+}
+
+std::string FileShvJournal2::fileMsecToFilePath(int64_t file_msec) const
+{
+	std::string fn = fileMsecToFileName(file_msec);
 	return m_journalDir + '/' + fn;
 }
 
-void FileShvJournal2::checkJournalConsistecy()
+void FileShvJournal2::checkJournalConsistecy(bool force)
 {
-	if(!m_journalStatus.isConsistent()) {
+	if(!m_journalStatus.isConsistent() || force) {
 		checkJournalDir();
 		updateJournalStatus();
 	}
@@ -798,12 +812,69 @@ void FileShvJournal2::rotateJournal()
 {
 	updateJournalFiles();
 	for(int64_t file_msec : m_journalStatus.files) {
-		std::string fn = fileMsecNoToName(file_msec);
+		std::string fn = fileMsecToFilePath(file_msec);
 		m_journalStatus.journalSize -= rm_file(fn);
 		if(m_journalStatus.journalSize < m_journalSizeLimit)
 			break;
 	}
 	updateJournalStatus();
+}
+
+void FileShvJournal2::convertLog1JournalDir(const std::string &journal_dir) const
+{
+	DIR *dir;
+	struct dirent *ent;
+	if ((dir = opendir (journal_dir.c_str())) != nullptr) {
+		const std::string ext = ".log";
+		while ((ent = readdir (dir)) != nullptr) {
+#ifdef DIRENT_HAS_TYPE_FIELD
+			if(ent->d_type == DT_REG) {
+#endif
+				std::string fn = ent->d_name;
+				if(!shv::core::String::endsWith(fn, ext))
+					continue;
+				int n = 0;
+				try {
+					n = std::stoi(fn.substr(0, fn.size() - ext.size()));
+				} catch (std::logic_error &e) {
+					shvWarning() << "Malformed shv journal file name" << fn << e.what();
+				}
+				if(n > 0) {
+					fn = journal_dir + '/' + ent->d_name;
+					std::ifstream in(fn, std::ios::in | std::ios::binary);
+					if (!in) {
+						shvWarning() << "Cannot open file:" << fn << "for reading.";
+					}
+					else {
+						static constexpr size_t DT_LEN = 30;
+						char buff[DT_LEN];
+						in.read(buff, sizeof (buff));
+						auto n = in.gcount();
+						if(n > 0) {
+							std::string s(buff, (unsigned)n);
+							int64_t file_msec = chainpack::RpcValue::DateTime::fromUtcString(s).msecsSinceEpoch();
+							if(file_msec == 0) {
+								shvWarning() << "cannot read date time from first line of file:" << fn << "line:" << s;
+							}
+							else {
+								std::string new_fn = journal_dir + '/' + fileMsecToFileName(file_msec);
+								shvInfo() << "renaming" << fn << "->" << new_fn;
+								if (std::rename(fn.c_str(), new_fn.c_str())) {
+									shvError() << "cannot rename:" << fn << "to:" << new_fn;
+								}
+							}
+						}
+					}
+				}
+#ifdef DIRENT_HAS_TYPE_FIELD
+			}
+#endif
+		}
+		closedir (dir);
+	}
+	else {
+		shvError() << "Cannot read content of dir:" << journal_dir;
+	}
 }
 
 #ifdef __unix
@@ -825,7 +896,7 @@ void FileShvJournal2::updateJournalFiles()
 	struct dirent *ent;
 	if ((dir = opendir (m_journalDir.c_str())) != nullptr) {
 		m_journalStatus.journalSize = 0;
-		std::string ext = FILE_EXT;
+		const std::string &ext = fileExtensionRef();
 		while ((ent = readdir (dir)) != nullptr) {
 #ifdef DIRENT_HAS_TYPE_FIELD
 			if(ent->d_type == DT_REG) {
@@ -834,7 +905,7 @@ void FileShvJournal2::updateJournalFiles()
 				if(!shv::core::String::endsWith(fn, ext))
 					continue;
 				try {
-					int64_t msec = fn2msec(fn);
+					int64_t msec = fileNameToFileMsec(fn);
 					m_journalStatus.files.push_back(msec);
 					fn = m_journalDir + '/' + fn;
 					int64_t sz = file_size(fn);
@@ -864,7 +935,7 @@ void FileShvJournal2::updateRecentTimeStamp()
 		m_journalStatus.recentTimeStamp = cp::RpcValue::DateTime::now().msecsSinceEpoch();
 	}
 	else {
-		std::string fn = fileMsecNoToName(m_journalStatus.files[m_journalStatus.files.size() - 1]);
+		std::string fn = fileMsecToFilePath(m_journalStatus.files[m_journalStatus.files.size() - 1]);
 		m_journalStatus.recentTimeStamp = findLastEntryDateTime(fn);
 		if(m_journalStatus.recentTimeStamp < 0) {
 			// corrupted file, start new one
@@ -933,6 +1004,18 @@ int64_t FileShvJournal2::findLastEntryDateTime(const std::string &fn)
 
 chainpack::RpcValue FileShvJournal2::getLog(const ShvJournalGetLogParams &params)
 {
+	try {
+		return getLogThrow(params);
+	}
+	catch (std::exception &e) {
+		logIShvJournal() << "Get log failed, journal dir will be read again, SD card might be replaced:" << e.what();
+	}
+	checkJournalConsistecy(true);
+	return getLogThrow(params);
+}
+
+chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &params)
+{
 	logDShvJournal() << "========================= getLog ==================" << params.toRpcValue().toCpon();
 	logDShvJournal() << "params:" << params.toRpcValue().toCpon();
 	checkJournalConsistecy();
@@ -982,7 +1065,7 @@ chainpack::RpcValue FileShvJournal2::getLog(const ShvJournalGetLogParams &params
 		};
 		std::map<std::string, SnapshotEntry> snapshot;
 		for(; file_it != m_journalStatus.files.end(); file_it++) {
-			std::string fn = fileMsecNoToName(*file_it);
+			std::string fn = fileMsecToFilePath(*file_it);
 			logDShvJournal() << "---------------------------------- opening file:" << fn;
 			std::ifstream in(fn, std::ios::in | std::ios::binary);
 			if(!in) {

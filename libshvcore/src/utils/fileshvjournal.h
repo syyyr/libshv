@@ -3,6 +3,7 @@
 
 #include "../shvcoreglobal.h"
 #include "shvjournalgetlogparams.h"
+#include "../utils.h"
 
 #include <shv/chainpack/rpcvalue.h>
 
@@ -124,7 +125,6 @@ public:
 	static constexpr long DEFAULT_FILE_SIZE_LIMIT = 100 * 1024;
 	static constexpr long DEFAULT_JOURNAL_SIZE_LIMIT = 100 * 100 * 1024;
 	static constexpr int DEFAULT_GET_LOG_RECORD_COUNT_LIMIT = 100 * 1000;
-	static const char* FILE_EXT;
 	static constexpr char FIELD_SEPARATOR = '\t';
 	static constexpr char RECORD_SEPARATOR = '\n';
 
@@ -143,6 +143,8 @@ public:
 		};
 		static const char* name(Enum e);
 	};
+
+	SHV_FIELD_IMPL(std::string, f, F, ileExtension)
 public:
 	using SnapShotFn = std::function<void (std::vector<ShvJournalEntry>&)>;
 
@@ -163,8 +165,10 @@ public:
 	void append(const ShvJournalEntry &entry, int64_t msec = 0);
 
 	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params);
+
+	void convertLog1JournalDir(const std::string &journal_dir) const;
 private:
-	void checkJournalConsistecy();
+	void checkJournalConsistecy(bool force = false);
 	void rotateJournal();
 	void updateJournalStatus();
 	void updateJournalFiles();
@@ -172,9 +176,14 @@ private:
 	void checkJournalDir();
 	int64_t findLastEntryDateTime(const std::string &fn);
 
+	shv::chainpack::RpcValue getLogThrow(const ShvJournalGetLogParams &params);
+
+	void appendThrow(const ShvJournalEntry &entry, int64_t msec);
 	void appendEntry(std::ofstream &out, int64_t msec, const ShvJournalEntry &e);
 
-	std::string fileMsecNoToName(int64_t file_msec);
+	int64_t fileNameToFileMsec(const std::string &fn) const;
+	std::string fileMsecToFileName(int64_t msec) const;
+	std::string fileMsecToFilePath(int64_t file_msec) const;
 	std::string getLine(std::istream &in, char sep);
 private:
 	std::string m_deviceId;
