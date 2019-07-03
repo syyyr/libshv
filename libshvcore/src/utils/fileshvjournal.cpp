@@ -722,7 +722,7 @@ void FileShvJournal2::appendThrow(const ShvJournalEntry &entry, int64_t msec)
 	}
 	std::string fn = fileMsecToFilePath(last_file_msec);
 	{
-		shvDebug() << "\t appending records to file:" << fn;
+		//logDShvJournal() << "\t appending records to file:" << fn;
 		std::ofstream out(fn, std::ios::binary | std::ios::out | std::ios::app);
 		if(!out)
 			throw std::runtime_error("Cannot open file " + fn + " for writing");
@@ -730,6 +730,7 @@ void FileShvJournal2::appendThrow(const ShvJournalEntry &entry, int64_t msec)
 		long fsz = out.tellp();
 		if(fsz == 0) {
 			// new file should start with snapshot
+			logDShvJournal() << "\t new file, snapshot will be written to:" << fn;
 			if(!m_snapShotFn)
 				throw std::runtime_error("SnapShot function not defined");
 			std::vector<ShvJournalEntry> snapshot;
@@ -742,7 +743,7 @@ void FileShvJournal2::appendThrow(const ShvJournalEntry &entry, int64_t msec)
 		}
 		appendEntry(out, msec, entry);
 		ssize_t file_size = out.tellp();
-		m_journalStatus.lastFileSize += file_size;
+		m_journalStatus.lastFileSize = file_size;
 		m_journalStatus.journalSize += file_size - fsz;;
 	}
 	if(m_journalStatus.journalSize > m_journalSizeLimit) {
@@ -752,6 +753,14 @@ void FileShvJournal2::appendThrow(const ShvJournalEntry &entry, int64_t msec)
 
 void FileShvJournal2::appendEntry(std::ofstream &out, int64_t msec, const ShvJournalEntry &e)
 {
+	/*
+	logDShvJournal() << "\t appending entry:"
+					 << cp::RpcValue::DateTime::fromMSecsSinceEpoch(msec).toIsoString()
+					 << uptimeSec()
+					 << e.path
+					 << e.value.toCpon()
+					 << e.shortTime;
+	*/
 	out << cp::RpcValue::DateTime::fromMSecsSinceEpoch(msec).toIsoString();
 	out << FIELD_SEPARATOR;
 	out << uptimeSec();
@@ -804,6 +813,8 @@ void FileShvJournal2::checkJournalConsistecy(bool force)
 		m_journalStatus.journalDirExists = journalDirExists();
 		if(m_journalStatus.journalDirExists)
 			updateJournalStatus();
+		else
+			shvWarning() << "Journal dir:" << journalDir() << "does not exist!";
 	}
 	if(!m_journalStatus.isConsistent()) {
 		throw std::runtime_error("Journal cannot be brought to consistent state.");
@@ -816,23 +827,29 @@ void FileShvJournal2::ensureJournalDir()
 		m_journalStatus.journalDirExists = false;
 		throw std::runtime_error("Journal dir: " + m_journalDir + " do not exists and cannot be created");
 	}
-	logDShvJournal() << "journal dir:" << m_journalDir << "exists";
+	//logDShvJournal() << "journal dir:" << m_journalDir << "exists";
 	m_journalStatus.journalDirExists = true;
 }
 
 bool FileShvJournal2::journalDirExists()
 {
-	return is_dir(m_journalDir);
+	return is_dir(journalDir());
 }
 
 void FileShvJournal2::rotateJournal()
 {
 	updateJournalFiles();
+	size_t file_cnt = m_journalStatus.files.size();
 	for(int64_t file_msec : m_journalStatus.files) {
-		std::string fn = fileMsecToFilePath(file_msec);
-		m_journalStatus.journalSize -= rm_file(fn);
+		if(file_cnt == 1) {
+			/// keep at least one file in case of bad limits configuration
+			break;
+		}
 		if(m_journalStatus.journalSize < m_journalSizeLimit)
 			break;
+		std::string fn = fileMsecToFilePath(file_msec);
+		m_journalStatus.journalSize -= rm_file(fn);
+		file_cnt--;
 	}
 	updateJournalStatus();
 }
