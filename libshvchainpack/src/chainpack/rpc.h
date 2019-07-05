@@ -65,8 +65,8 @@ public:
 
 	static const char* SIG_VAL_CHANGED;
 	static const char* SIG_VAL_FASTCHANGED;
+	static const char* SIG_SERVICE_VAL_CHANGED;
 	static const char* SIG_MOUNTED_CHANGED;
-	//static const char* SIG_CONNECTED_CHANGED;
 
 	static const char* GRANT_BROWSE;
 	static const char* GRANT_READ;

@@ -20,6 +20,7 @@ struct SHVCORE_DECL_EXPORT ShvJournalGetLogParams
 	static const char *KEY_WITH_SINCE;
 	static const char *KEY_WITH_UNTIL;
 	static const char *KEY_PATH_PATTERN;
+	static const char *KEY_DOMAIN_PATTERN;
 
 	shv::chainpack::RpcValue since;
 	shv::chainpack::RpcValue until;
@@ -40,7 +41,7 @@ struct SHVCORE_DECL_EXPORT ShvJournalGetLogParams
 	int maxRecordCount = 1000;
 	bool withSnapshot = false;
 	bool withUptime = false;
-
+	std::string domainPattern;
 	ShvJournalGetLogParams() {}
 	ShvJournalGetLogParams(const shv::chainpack::RpcValue &opts);
 

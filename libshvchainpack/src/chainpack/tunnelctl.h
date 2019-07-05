@@ -106,4 +106,13 @@ public:
 	CreateTunnelRespCtl(const TunnelCtl &o) : Super(o) {}
 };
 
+class SHVCHAINPACK_DECL_EXPORT CloseTunnelCtl : public TunnelCtl
+{
+	using Super = TunnelCtl;
+
+public:
+	CloseTunnelCtl() : Super(State::CreateTunnelResponse) {}
+	CloseTunnelCtl(const TunnelCtl &o) : Super(o) {}
+};
+
 }}

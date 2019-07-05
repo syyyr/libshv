@@ -524,6 +524,8 @@ void test_vals()
 void test_cpons()
 {
 	const char* cpons[] = {
+		"null", NULL,
+		//"@", "null",
 		"0.", NULL,
 		"0.0", NULL,
 		"223.", NULL,

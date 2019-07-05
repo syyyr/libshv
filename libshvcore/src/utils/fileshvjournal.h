@@ -14,28 +14,37 @@ namespace shv {
 namespace core {
 namespace utils {
 
-struct SHVCORE_DECL_EXPORT ShvJournalEntry
+class SHVCORE_DECL_EXPORT ShvJournalEntry
 {
+public:
+	static const char *DOMAIN_VAL_CHANGE; /// see shv::chainpack::Rpc::SIG_VAL_CHANGED
+	static const char *DOMAIN_VAL_FASTCHANGE; /// see shv::chainpack::Rpc::SIG_VAL_FASTCHANGED
+	static const char *DOMAIN_VAL_SERVICECHANGE; /// see shv::chainpack::Rpc::SIG_SERVICE_VAL_CHANGED
+
+	static constexpr int NO_SHORT_TIME = -1;
+
 	std::string path;
 	shv::chainpack::RpcValue value;
-	//int64_t time = 0;
-	uint16_t shortTime = 0;
-	bool isShortTimeSet = false;
+	int shortTime = NO_SHORT_TIME;
+	std::string domain;
 
 	ShvJournalEntry() {}
-	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value)
-		: path(std::move(path))
-		, value{value}
-	{}
-	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, uint16_t short_time)
+	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, std::string domain, int short_time)
 		: path(std::move(path))
 		, value{value}
 		, shortTime(short_time)
-		, isShortTimeSet(true)
-	{}
+		, domain(std::move(domain))
+	{
+	}
+	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value)
+		: ShvJournalEntry(path, value, DOMAIN_VAL_CHANGE, NO_SHORT_TIME) {}
+	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, int short_time)
+		: ShvJournalEntry(path, value, DOMAIN_VAL_FASTCHANGE, short_time) {}
+	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, std::string domain)
+		: ShvJournalEntry(path, value, std::move(domain), NO_SHORT_TIME) {}
 
 	bool isValid() const {return !path.empty() && value.isValid();}
-	void setShortTime(uint16_t short_time) {shortTime = short_time; isShortTimeSet = true;}
+	void setShortTime(int short_time) {shortTime = short_time;}
 };
 
 class SHVCORE_DECL_EXPORT FileShvJournal
@@ -140,6 +149,7 @@ public:
 			Path,
 			Value,
 			ShortTime,
+			Domain,
 		};
 		static const char* name(Enum e);
 	};
