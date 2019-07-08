@@ -693,8 +693,8 @@ void FileShvJournal2::append(const ShvJournalEntry &entry, int64_t msec)
 	catch (std::exception &e) {
 		logIShvJournal() << "Append to log failed, journal dir will be read again, SD card might be replaced:" << e.what();
 	}
-	checkJournalConsistecy(true);
 	try {
+		checkJournalConsistecy(true);
 		appendThrow(entry, msec);
 	}
 	catch (std::exception &e) {
