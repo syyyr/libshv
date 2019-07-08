@@ -62,7 +62,8 @@ CLIOptions::Option& CLIOptions::Option::setValueString(const std::string &val_st
 		}
 		break;
 	}
-	case(cp::RpcValue::Type::Int):
+	case cp::RpcValue::Type::Int:
+	case cp::RpcValue::Type::UInt:
 	{
 		bool ok;
 		setValue(String::toInt(val_str, &ok));
@@ -340,7 +341,9 @@ void CLIOptions::printHelp(std::ostream &os) const
 		const Option &opt = kv.second;
 		os << String::join(opt.names(), ", ");
 		if(opt.type() != cp::RpcValue::Type::Bool) {
-			if(opt.type() == cp::RpcValue::Type::Int || opt.type() == cp::RpcValue::Type::Double) os << " " << "number";
+			if(opt.type() == cp::RpcValue::Type::Int
+					|| opt.type() == cp::RpcValue::Type::UInt
+					|| opt.type() == cp::RpcValue::Type::Double) os << " " << "number";
 			else os << " " << "'string'";
 		}
 		//os << ':';
