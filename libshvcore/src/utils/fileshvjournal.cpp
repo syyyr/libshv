@@ -1106,7 +1106,7 @@ chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &p
 			}
 		}
 		/// this ensure that there be only one copy of each path in memory
-		unsigned max_path_id = 0;
+		int max_path_id = 0;
 		auto make_path_shared = [&path_cache, &max_path_id, &params](const std::string &path) -> cp::RpcValue {
 			cp::RpcValue ret = path_cache.value(path);
 			if(ret.isValid())
