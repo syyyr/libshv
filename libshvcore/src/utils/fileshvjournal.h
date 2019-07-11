@@ -93,7 +93,6 @@ public:
 	void append(const ShvJournalEntry &entry, int64_t msec = 0);
 
 	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params);
-	//virtual std::string defaultJournaldir();
 private:
 	void checkJournalConsistecy();
 	void rotateJournal();

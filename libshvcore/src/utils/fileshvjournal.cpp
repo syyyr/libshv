@@ -1077,7 +1077,7 @@ chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &p
 	logIShvJournal() << "params:" << params.toRpcValue().toCpon();
 	checkJournalConsistecy();
 	cp::RpcValue::List log;
-	cp::RpcValue::Map path_dict;
+	cp::RpcValue::Map path_cache;
 	int rec_cnt = 0;
 	auto since_msec = params.since.isDateTime()? params.since.toDateTime().msecsSinceEpoch(): 0;
 	auto until_msec = params.until.isDateTime()? params.until.toDateTime().msecsSinceEpoch(): 0;
@@ -1107,15 +1107,15 @@ chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &p
 		}
 		/// this ensure that there be only one copy of each path in memory
 		unsigned max_path_id = 0;
-		auto make_path_shared = [&path_dict, &max_path_id, &params](const std::string &path) -> cp::RpcValue {
-			cp::RpcValue ret = path_dict.value(path);
+		auto make_path_shared = [&path_cache, &max_path_id, &params](const std::string &path) -> cp::RpcValue {
+			cp::RpcValue ret = path_cache.value(path);
 			if(ret.isValid())
 				return ret;
 			if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::PathsDict))
 				ret = ++max_path_id;
 			else
 				ret = path;
-			path_dict[path] = ret;
+			path_cache[path] = ret;
 			return ret;
 		};
 		int max_rec_cnt = std::min(params.maxRecordCount, m_getLogRecordCountLimit);
@@ -1254,7 +1254,7 @@ log_finish:
 	}
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::PathsDict)) {
 		cp::RpcValue::IMap path_dict;
-		for(auto kv : path_dict) {
+		for(auto kv : path_cache) {
 			path_dict[kv.second.toInt()] = kv.first;
 		}
 		md.setValue(KEY_PATHS_DICT, path_dict);
