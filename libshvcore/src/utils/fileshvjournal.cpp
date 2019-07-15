@@ -1115,6 +1115,7 @@ chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &p
 				ret = ++max_path_id;
 			else
 				ret = path;
+			logIShvJournal() << "Adding record to path cache:" << path << "-->" << ret.toCpon();
 			path_cache[path] = ret;
 			return ret;
 		};
@@ -1253,8 +1254,10 @@ log_finish:
 			md.setValue("typeInfo", m_typeInfo);
 	}
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::PathsDict)) {
+		logIShvJournal() << "Generating paths dict";
 		cp::RpcValue::IMap path_dict;
 		for(auto kv : path_cache) {
+			logIShvJournal() << "Adding record to paths dict:" << kv.second.toInt() << "-->" << kv.first;
 			path_dict[kv.second.toInt()] = kv.first;
 		}
 		md.setValue(KEY_PATHS_DICT, path_dict);
