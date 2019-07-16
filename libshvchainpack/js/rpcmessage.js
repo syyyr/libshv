@@ -28,29 +28,48 @@ RpcMessage.KeyParams = "1";
 RpcMessage.KeyResult = "2";
 RpcMessage.KeyError = "3";
 
-RpcMessage.prototype.isValid = function() {return this.rpcValue? true: false; }
-RpcMessage.prototype.isRequest = function() {return this.requestId() && this.method(); }
-RpcMessage.prototype.isResponse = function() {return this.requestId() && !this.method(); }
-RpcMessage.prototype.isSignal = function() {return !this.requestId() && this.method(); }
+	def isValid():
+		return this.rpcValue? true: false;
+	def isRequest():
+		return this.requestId() && this.method();
+	def isResponse():
+		return this.requestId() && !this.method();
+	def isSignal():
+		return !this.requestId() && this.method();
 
-RpcMessage.prototype.requestId = function() {return this.isValid()? this.rpcValue.meta[RpcMessage.TagRequestId]: 0; }
-RpcMessage.prototype.setRequestId = function(id) {return this.rpcValue.meta[RpcMessage.TagRequestId] = id; }
+	def requestId():
+		return this.isValid()? this.rpcValue.meta[RpcMessage.TagRequestId]: 0;
+	def setRequestId(id):
+		return this.rpcValue.meta[RpcMessage.TagRequestId] = id;
 
-RpcMessage.prototype.shvPath = function() {return this.isValid()? this.rpcValue.meta[RpcMessage.TagShvPath]: null; }
-RpcMessage.prototype.setShvPath = function(val) {return this.rpcValue.meta[RpcMessage.TagShvPath] = val; }
+	def shvPath():
+		return this.isValid()? this.rpcValue.meta[RpcMessage.TagShvPath]: null;
+	def setShvPath(val):
+		return this.rpcValue.meta[RpcMessage.TagShvPath] = val;
 
-RpcMessage.prototype.method = function() {return this.isValid()? this.rpcValue.meta[RpcMessage.TagMethod]: null; }
-RpcMessage.prototype.setMethod = function(val) {return this.rpcValue.meta[RpcMessage.TagMethod] = val; }
+	def method():
+		return this.isValid()? this.rpcValue.meta[RpcMessage.TagMethod]: null;
+	def setMethod(val):
+		return this.rpcValue.meta[RpcMessage.TagMethod] = val;
 
-RpcMessage.prototype.params = function() {return this.isValid()? this.rpcValue.value[RpcMessage.KeyParams]: null; }
-RpcMessage.prototype.setParams = function(params) {return this.rpcValue.value[RpcMessage.KeyParams] = params; }
+	def params():
+		return this.isValid()? this.rpcValue.value[RpcMessage.KeyParams]: null;
+	def setParams(params):
+		return this.rpcValue.value[RpcMessage.KeyParams] = params;
 
-RpcMessage.prototype.result = function() {return this.isValid()? this.rpcValue.value[RpcMessage.KeyResult]: null; }
-RpcMessage.prototype.setResult = function(result) {return this.rpcValue.value[RpcMessage.KeyResult] = result; }
+	def result():
+		return this.isValid()? this.rpcValue.value[RpcMessage.KeyResult]: null;
+	def setResult(result):
+		return this.rpcValue.value[RpcMessage.KeyResult] = result;
 
-RpcMessage.prototype.error = function() {return this.isValid()? this.rpcValue.value[RpcMessage.KeyError]: null; }
-RpcMessage.prototype.setError = function(err) {return this.rpcValue.value[RpcMessage.KeyError] = err; }
+	def error():
+		return this.isValid()? this.rpcValue.value[RpcMessage.KeyError]: null;
+	def setError(err):
+		return this.rpcValue.value[RpcMessage.KeyError] = err;
 
-RpcMessage.prototype.toString = function() {return this.isValid()? this.rpcValue.toString(): ""; }
-RpcMessage.prototype.toCpon = function() {return this.isValid()? this.rpcValue.toCpon(): ""; }
-RpcMessage.prototype.toChainPack = function() {return this.isValid()? this.rpcValue.toChainPack(): ""; }
+	def toString():
+		return this.isValid()? this.rpcValue.toString(): "";
+	def toCpon():
+		return this.isValid()? this.rpcValue.toCpon(): "";
+	def toChainPack():
+		return this.isValid()? this.rpcValue.toChainPack(): "";

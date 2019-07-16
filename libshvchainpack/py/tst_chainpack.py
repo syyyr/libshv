@@ -1,6 +1,5 @@
 import logging
 
-from chainpack.rpcvalue import RpcValue
 from chainpack.cpon import CponReader, CponWriter
 from chainpack.chainpack import ChainPackReader, ChainPackWriter
 

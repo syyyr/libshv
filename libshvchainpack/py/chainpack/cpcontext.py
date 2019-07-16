@@ -1,4 +1,8 @@
 class UnpackContext:
+
+	class BufferUnderflow(Exception):
+		pass
+
 	def __init__(self, data):
 		# assert isinstance(data, bytes)
 		self.data = data
@@ -6,7 +10,7 @@ class UnpackContext:
 
 	def get_byte(self):
 		if self.index >= len(self.data):
-			raise IndexError("Index out of range")
+			raise UnpackContext.BufferUnderflow()
 		ret = self.data[self.index]
 		self.index += 1
 		return ret
@@ -36,7 +40,7 @@ class PackContext:
 			new_data = bytearray(new_len)
 			new_data[0:self.length] = self.data[0:self.length]
 			self.data = new_data
-		self.data[self.length] = b;
+		self.data[self.length] = b
 		self.length += 1
 
 	def write_bytes(self, data):

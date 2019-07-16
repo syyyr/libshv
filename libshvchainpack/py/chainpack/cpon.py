@@ -4,7 +4,9 @@ from .cpcontext import PackContext
 from .cpcontext import UnpackContext
 from .rpcvalue import RpcValue
 
+
 class Cpon:
+
 	ProtocolType = 2
 
 
@@ -30,7 +32,7 @@ class CponReader:
 					self.ctx.get_byte()
 					b = self.ctx.get_byte()
 					if b == CponReader.STAR:
-						#multiline_comment_entered
+						# multiline_comment_entered
 						while True:
 							b = self.ctx.get_byte()
 							if b == CponReader.STAR:
@@ -58,7 +60,6 @@ class CponReader:
 
 	def read(self):
 		meta = None
-		val_type = RpcValue.Type.Undefined
 
 		self.skip_white_insignificant()
 		b = self.ctx.peek_byte()
@@ -122,16 +123,10 @@ class CponReader:
 		return rd.read()
 
 	def _read_datetime(self):
-		year = 0
-		month = 0
-		day = 1
-		hour = 0
-		min = 0
-		sec = 0
 		msec = 0
 		utc_offset = 0
 
-		self.ctx.get_byte() # eat '"'
+		self.ctx.get_byte()  # eat '"'
 		b = self.ctx.peek_byte()
 		if b == ord('"'):
 			# d"" invalid data time
@@ -157,7 +152,7 @@ class CponReader:
 		b = self.ctx.get_byte()
 		if b != ord(':'):
 			raise TypeError('Malformed year-month separator in DateTime')
-		min = self._read_int()
+		mins = self._read_int()
 
 		b = self.ctx.get_byte()
 		if b != ord(':'):
@@ -191,27 +186,36 @@ class CponReader:
 		b = self.ctx.get_byte()
 		if b != ord('"'):
 			raise TypeError('DateTime literal should be terminated by ".')
-		#d = datetime.datetime(year, month, day, hour, min, sec, msec, datetime.timezone.utc)
-		d = datetime.datetime(year, month, day, hour, min, sec, msec, datetime.timezone(datetime.timedelta(minutes=utc_offset)))
+		# d = datetime.datetime(year, month, day, hour, min, sec, msec, datetime.timezone.utc)
+		d = datetime.datetime(year, month, day, hour, mins, sec, msec, datetime.timezone(datetime.timedelta(minutes=utc_offset)))
 		epoch_msec = int(d.timestamp() * 1000)
 		return RpcValue.DateTime(epoch_msec + msec, utc_offset)
 
 	def _read_cstring(self):
 		pctx = PackContext()
-		self.ctx.get_byte() # eat '"'
+		self.ctx.get_byte()  # eat '"'
 		while True:
 			b = self.ctx.get_byte()
 			if b == ord('\\'):
 				b = self.ctx.get_byte()
-				if ord('\\'): pctx.put_byte(ord('\\'))
-				elif ord('"'): pctx.put_byte(ord('"'))
-				elif ord('b'): pctx.put_byte(ord('\b'))
-				elif ord('f'): pctx.put_byte(ord('\f'))
-				elif ord('n'): pctx.put_byte(ord('\n'))
-				elif ord('r'): pctx.put_byte(ord('\r'))
-				elif ord('t'): pctx.put_byte(ord('\t'))
-				elif ord('0'): pctx.put_byte(0)
-				else: pctx.put_byte(b)
+				if ord('\\'):
+					pctx.put_byte(ord('\\'))
+				elif ord('b'):
+					pctx.put_byte(ord('\b'))
+				elif ord('"'):
+					pctx.put_byte(ord('"'))
+				elif ord('f'):
+					pctx.put_byte(ord('\f'))
+				elif ord('n'):
+					pctx.put_byte(ord('\n'))
+				elif ord('r'):
+					pctx.put_byte(ord('\r'))
+				elif ord('t'):
+					pctx.put_byte(ord('\t'))
+				elif ord('0'):
+					pctx.put_byte(0)
+				else:
+					pctx.put_byte(b)
 			else:
 				if b == ord('"'):
 					# end of string
@@ -222,7 +226,7 @@ class CponReader:
 
 	def _read_list(self):
 		lst = []
-		self.ctx.get_byte() # eat '['
+		self.ctx.get_byte()  # eat '['
 		while True:
 			self.skip_white_insignificant()
 			b = self.ctx.peek_byte()
@@ -235,7 +239,7 @@ class CponReader:
 
 	def _read_map(self, terminator='}'):
 		mmap = {}
-		self.ctx.get_byte() # eat '{'
+		self.ctx.get_byte()  # eat '{'
 		while True:
 			self.skip_white_insignificant()
 			b = self.ctx.peek_byte()
@@ -303,7 +307,7 @@ class CponReader:
 		return val
 
 	def _read_number(self):
-		mantisa = 0
+		# mantisa = 0
 		exponent = 0
 		decimals = 0
 		dec_cnt = 0
@@ -311,15 +315,15 @@ class CponReader:
 		is_uint = False
 		is_neg = False
 
-		val_type = RpcValue.Type.Undefined
-		value = None
+		# val_type = RpcValue.Type.Undefined
+		# value = None
 
 		b = self.ctx.peek_byte()
 		if b == ord('+'):
 			is_neg = False
 		elif b == ord('-'):
 			is_neg = True
-			b = self.ctx.get_byte()
+			self.ctx.get_byte()
 
 		mantisa = self._read_int()
 		b = self.ctx.peek_byte()
@@ -371,18 +375,30 @@ class CponWriter:
 		if rpc_val.meta is not None:
 			self._write_meta(rpc_val.meta)
 
-		if rpc_val.type == RpcValue.Type.Null: self.ctx.write_utf8_string('null')
-		elif rpc_val.type == RpcValue.Type.Undefined: self.ctx.write_utf8_string('null')
-		elif rpc_val.type == RpcValue.Type.Bool: self._write_bool(rpc_val.value)
-		elif rpc_val.type == RpcValue.Type.String: self._write_cstring(rpc_val.value)
-		elif rpc_val.type == RpcValue.Type.UInt: self._write_uint(rpc_val.value)
-		elif rpc_val.type == RpcValue.Type.Int: self._write_int(rpc_val.value)
-		elif rpc_val.type == RpcValue.Type.Double: self._write_double(rpc_val.value)
-		elif rpc_val.type == RpcValue.Type.Decimal: self._write_decimal(rpc_val.value)
-		elif rpc_val.type == RpcValue.Type.List: self._write_list(rpc_val.value)
-		elif rpc_val.type == RpcValue.Type.Map: self._write_map(rpc_val.value)
-		elif rpc_val.type == RpcValue.Type.IMap: self._write_imap(rpc_val.value)
-		elif rpc_val.type == RpcValue.Type.DateTime: self._write_datetime(rpc_val.value)
+		if rpc_val.type == RpcValue.Type.Null:
+			self.ctx.write_utf8_string('null')
+		elif rpc_val.type == RpcValue.Type.Undefined:
+			self.ctx.write_utf8_string('null')
+		elif rpc_val.type == RpcValue.Type.Bool:
+			self._write_bool(rpc_val.value)
+		elif rpc_val.type == RpcValue.Type.String:
+			self._write_cstring(rpc_val.value)
+		elif rpc_val.type == RpcValue.Type.UInt:
+			self._write_uint(rpc_val.value)
+		elif rpc_val.type == RpcValue.Type.Int:
+			self._write_int(rpc_val.value)
+		elif rpc_val.type == RpcValue.Type.Double:
+			self._write_double(rpc_val.value)
+		elif rpc_val.type == RpcValue.Type.Decimal:
+			self._write_decimal(rpc_val.value)
+		elif rpc_val.type == RpcValue.Type.List:
+			self._write_list(rpc_val.value)
+		elif rpc_val.type == RpcValue.Type.Map:
+			self._write_map(rpc_val.value)
+		elif rpc_val.type == RpcValue.Type.IMap:
+			self._write_imap(rpc_val.value)
+		elif rpc_val.type == RpcValue.Type.DateTime:
+			self._write_datetime(rpc_val.value)
 
 	@classmethod
 	def pack(cls, rpc_val):
@@ -515,7 +531,7 @@ class CponWriter:
 		mstr = str(mantisa)
 		n = len(mstr)
 		dec_places = -exponent
-		if 0  < dec_places < n:
+		if 0 < dec_places < n:
 			dot_ix = n - dec_places
 			mstr = mstr[0: dot_ix] + "." + mstr[dot_ix:]
 		elif 0 < dec_places <= 3:
@@ -533,4 +549,3 @@ class CponWriter:
 		else:
 			mstr += 'e' + str(exponent)
 		self.ctx.write_utf8_string(mstr)
-

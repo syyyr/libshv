@@ -1,56 +1,100 @@
-"use strict"
+from .rpcvalue import RpcValue
+from .cpon import CponWriter
+from .chainpack import ChainPackWriter
 
-function RpcMessage(rpc_val)
-{
-	if(typeof rpc_val === 'undefined')
-		this.rpcValue = new RpcValue();
-	else if(typeof rpc_val === 'null')
-		this.rpcValue = null;
-	else if(rpc_val && rpc_val.constructor.name === "RpcValue")
-		this.rpcValue = rpc_val;
-	else
-		throw new TypeError("RpcMessage cannot be constructed with " + typeof rpc_val)
 
-	if(this.rpcValue) {
-		if(!this.rpcValue.meta)
-			this.rpcValue.meta = {}
-		if(!this.rpcValue.value)
-			this.rpcValue.value = {}
-		this.rpcValue.type = RpcValue.Type.IMap
-	}
-}
+class RpcMessage:
+	def __init__(self, rpc_val=None):
+		if rpc_val is None:
+			self.rpcValue = RpcValue()
+		elif isinstance(rpc_val, RpcValue):
+			self.rpcValue = rpc_val
+		else:
+			raise TypeError("RpcMessage cannot be constructed with: " + type(rpc_val))
+	
+		if self.rpcValue:
+			if not self.rpcValue.meta:
+				self.rpcValue.meta = {}
+			if not self.rpcValue.value:
+				self.rpcValue.value = {}
+			self.rpcValue.type = RpcValue.Type.IMap
 
-RpcMessage.TagRequestId = "8";
-RpcMessage.TagShvPath = "9";
-RpcMessage.TagMethod = "10";
+	TagRequestId = 8
+	TagShvPath = 9
+	TagMethod = 10
 
-RpcMessage.KeyParams = "1";
-RpcMessage.KeyResult = "2";
-RpcMessage.KeyError = "3";
+	KeyParams = 1
+	KeyResult = 2
+	KeyError = 3
+	
+	def is_valid(self):
+		return True if isinstance(self.rpcValue, RpcValue) else False
+	
+	def is_request(self):
+		return self.request_id() and self.method()
+	
+	def is_response(self):
+		return self.request_id() and not self.method()
 
-RpcMessage.prototype.isValid = function() {return this.rpcValue? true: false; }
-RpcMessage.prototype.isRequest = function() {return this.requestId() && this.method(); }
-RpcMessage.prototype.isResponse = function() {return this.requestId() && !this.method(); }
-RpcMessage.prototype.isSignal = function() {return !this.requestId() && this.method(); }
+	def is_signal(self):
+		return not self.request_id() and self.method()
 
-RpcMessage.prototype.requestId = function() {return this.isValid()? this.rpcValue.meta[RpcMessage.TagRequestId]: 0; }
-RpcMessage.prototype.setRequestId = function(id) {return this.rpcValue.meta[RpcMessage.TagRequestId] = id; }
+	def request_id(self):
+		return self.rpcValue.meta.get(RpcMessage.TagRequestId) if self.is_valid() else None
 
-RpcMessage.prototype.shvPath = function() {return this.isValid()? this.rpcValue.meta[RpcMessage.TagShvPath]: null; }
-RpcMessage.prototype.setShvPath = function(val) {return this.rpcValue.meta[RpcMessage.TagShvPath] = val; }
+	def set_request_id(self, rqid):
+		self.rpcValue.meta[RpcMessage.TagRequestId] = rqid
+	
+	def shv_path(self):
+		return self.rpcValue.meta.get(RpcMessage.TagShvPath) if self.is_valid() else None
 
-RpcMessage.prototype.method = function() {return this.isValid()? this.rpcValue.meta[RpcMessage.TagMethod]: null; }
-RpcMessage.prototype.setMethod = function(val) {return this.rpcValue.meta[RpcMessage.TagMethod] = val; }
+	def set_shv_path(self, val):
+		if val is None:
+			self.rpcValue.meta.pop(RpcMessage.TagShvPath, None)
+		else:
+			self.rpcValue.meta[RpcMessage.TagShvPath] = val
 
-RpcMessage.prototype.params = function() {return this.isValid()? this.rpcValue.value[RpcMessage.KeyParams]: null; }
-RpcMessage.prototype.setParams = function(params) {return this.rpcValue.value[RpcMessage.KeyParams] = params; }
+	def method(self):
+		return self.rpcValue.meta.get(RpcMessage.TagMethod) if self.is_valid() else None
 
-RpcMessage.prototype.result = function() {return this.isValid()? this.rpcValue.value[RpcMessage.KeyResult]: null; }
-RpcMessage.prototype.setResult = function(result) {return this.rpcValue.value[RpcMessage.KeyResult] = result; }
+	def set_method(self, val):
+		if val is None:
+			self.rpcValue.meta.pop(RpcMessage.TagMethod, None)
+		else:
+			self.rpcValue.meta[RpcMessage.TagMethod] = val
 
-RpcMessage.prototype.error = function() {return this.isValid()? this.rpcValue.value[RpcMessage.KeyError]: null; }
-RpcMessage.prototype.setError = function(err) {return this.rpcValue.value[RpcMessage.KeyError] = err; }
+	def params(self):
+		return self.rpcValue.value.get(RpcMessage.KeyParams) if self.is_valid() else None
 
-RpcMessage.prototype.toString = function() {return this.isValid()? this.rpcValue.toString(): ""; }
-RpcMessage.prototype.toCpon = function() {return this.isValid()? this.rpcValue.toCpon(): ""; }
-RpcMessage.prototype.toChainPack = function() {return this.isValid()? this.rpcValue.toChainPack(): ""; }
+	def set_params(self, params):
+		if params is None:
+			self.rpcValue.value.pop(RpcMessage.KeyParams, None)
+		else:
+			self.rpcValue.value[RpcMessage.KeyParams] = params
+
+	def result(self):
+		return self.rpcValue.value.get(RpcMessage.KeyResult) if self.is_valid() else None
+
+	def set_result(self, result):
+		if result is None:
+			self.rpcValue.value.pop(RpcMessage.KeyResult, None)
+		else:
+			self.rpcValue.value[RpcMessage.KeyResult] = result
+
+	def error(self):
+		return self.rpcValue.value.get(RpcMessage.KeyError) if self.is_valid() else None
+
+	def set_error(self, err):
+		if err is None:
+			self.rpcValue.value.pop(RpcMessage.KeyError, None)
+		else:
+			self.rpcValue.value[RpcMessage.KeyError] = err
+
+	def to_string(self):
+		return CponWriter.pack(self.rpcValue).decode() if self.is_valid() else ''
+
+	def to_cpon(self):
+		return CponWriter.pack(self.rpcValue) if self.is_valid() else b''
+
+	def to_chainpack(self):
+		return ChainPackWriter.pack(self.rpcValue) if self.is_valid() else b''

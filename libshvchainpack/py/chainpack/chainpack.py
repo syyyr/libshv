@@ -4,6 +4,7 @@ import sys
 from .rpcvalue import RpcValue
 from .cpcontext import UnpackContext, PackContext
 
+
 class ChainPack:
 	def __init__(self):
 		pass
@@ -15,9 +16,7 @@ class ChainPack:
 	CP_Int = 130
 	CP_Double = 131
 	CP_Bool = 132
-	#CP_Blob_depr; # deprecated
 	CP_String = 134
-	#CP_DateTimeEpoch_depr; # deprecated
 	CP_List = 136
 	CP_Map = 137
 	CP_IMap = 138
@@ -34,11 +33,15 @@ class ChainPack:
 	SHV_EPOCH_MSEC = 1517529600000
 	# ChainPack.INVALID_MIN_OFFSET_FROM_UTC = (-64 * 15)
 
-	def is_little_endian(cls):
+	@staticmethod
+	def is_little_endian():
 		return sys.byteorder == 'little'
+
 
 class ChainPackReader:
 	def __init__(self, unpack_context):
+		if isinstance(unpack_context, (bytes, bytearray)):
+			unpack_context = UnpackContext(unpack_context)
 		self.ctx = unpack_context
 
 	def read(self):
@@ -46,7 +49,7 @@ class ChainPackReader:
 		packing_schema = self.ctx.get_byte()
 
 		if packing_schema == ChainPack.CP_MetaMap:
-			rpc_val.meta = self.read_map()
+			rpc_val.meta = self._read_map()
 			packing_schema = self.ctx.get_byte()
 
 		if packing_schema < 128:
@@ -71,7 +74,7 @@ class ChainPackReader:
 				rpc_val.value = False
 
 			elif packing_schema == ChainPack.CP_Int:
-				rpc_val.value = self.read_int_data()
+				rpc_val.value = self._read_int_data()
 				rpc_val.type = RpcValue.Type.Int
 			elif packing_schema == ChainPack.CP_UInt:
 				rpc_val.value = self.read_uint_data()
@@ -80,11 +83,11 @@ class ChainPackReader:
 				data = bytearray(8)
 				for i in range(8):
 					data[i] = self.ctx.get_byte()
-				rpc_val.value = struct.unpack("<d", data) #little endian
+				rpc_val.value = struct.unpack("<d", data)  # little endian
 				rpc_val.type = RpcValue.Type.Double
 			elif packing_schema == ChainPack.CP_Decimal:
-				mant = self.read_int_data()
-				exp = self.read_int_data()
+				mant = self._read_int_data()
+				exp = self._read_int_data()
 				rpc_val.value = RpcValue.Decimal(mant, exp)
 				rpc_val.type = RpcValue.Type.Decimal
 			elif packing_schema == ChainPack.CP_DateTime:
@@ -100,20 +103,20 @@ class ChainPackReader:
 					d >>= 7
 				if has_not_msec:
 					d *= 1000
-				d += ChainPack.SHV_EPOCH_MSEC;
+				d += ChainPack.SHV_EPOCH_MSEC
 				rpc_val.value = RpcValue.DateTime(d, offset * 15)
 				rpc_val.type = RpcValue.Type.DateTime
 
 			elif packing_schema == ChainPack.CP_Map:
-				rpc_val.value = self.read_map()
+				rpc_val.value = self._read_map()
 				rpc_val.type = RpcValue.Type.Map
 
 			elif packing_schema == ChainPack.CP_IMap:
-				rpc_val.value = self.read_map()
+				rpc_val.value = self._read_map()
 				rpc_val.type = RpcValue.Type.IMap
 
 			elif packing_schema == ChainPack.CP_List:
-				rpc_val.value = self.read_list()
+				rpc_val.value = self._read_list()
 				rpc_val.type = RpcValue.Type.List
 
 			elif packing_schema == ChainPack.CP_String:
@@ -132,11 +135,11 @@ class ChainPackReader:
 					if b == ord('\\'):
 						b = self.ctx.get_byte()
 						if b == ord('\\'):
-							pctx.put_byte(ord("\\"));
+							pctx.put_byte(ord("\\"))
 						elif b == ord('0'):
-							pctx.put_byte(0);
+							pctx.put_byte(0)
 						else:
-							pctx.put_byte(b);
+							pctx.put_byte(b)
 					else:
 						if b == 0:
 							break # end of string
@@ -156,9 +159,9 @@ class ChainPackReader:
 			raise TypeError('Unsupported type: ' + type(chainpack))
 		return rd.read()
 
-	def read_uint_dataHelper(self):
-		num = 0;
-		bitlen = 0;
+	def _read_uint_dataHelper(self):
+		num = 0
+		bitlen = 0
 		head = self.ctx.get_byte()
 		if (head & 128) == 0:
 			bytes_to_read_cnt = 0
@@ -186,22 +189,20 @@ class ChainPackReader:
 		return num, bitlen
 
 	def read_uint_data(self):
-		num, bitlen = self.read_uint_dataHelper()
+		num, bitlen = self._read_uint_dataHelper()
 		return num
 
-	def read_int_data(self):
-		snum = 0;
-		num, bitlen = self.read_uint_dataHelper()
+	def _read_int_data(self):
+		num, bitlen = self._read_uint_dataHelper()
 		sign_bit_mask = 1 << (bitlen - 1)
 		neg = num & sign_bit_mask
-		snum = num;
+		snum = num
 		if neg:
 			snum &= ~sign_bit_mask
 			snum = -snum
 		return snum
 
-
-	def read_list(self):
+	def _read_list(self):
 		lst = []
 		while True:
 			b = self.ctx.peek_byte()
@@ -212,7 +213,7 @@ class ChainPackReader:
 			lst.append(item)
 		return lst
 
-	def read_map(self):
+	def _read_map(self):
 		mmap = {}
 		while True:
 			b = self.ctx.peek_byte()
@@ -238,17 +239,28 @@ class ChainPackWriter:
 			rpc_val = RpcValue(rpc_val)
 		if isinstance(rpc_val.meta, dict):
 			self.write_meta(rpc_val.meta)
-		if rpc_val.type == RpcValue.Type.Null: self.ctx.put_byte(ChainPack.CP_Null)
-		elif rpc_val.type == RpcValue.Type.Bool: self.ctx.put_byte(ChainPack.CP_TRUE if rpc_val.value else ChainPack.CP_FALSE)
-		elif rpc_val.type == RpcValue.Type.String: self.write_tring(rpc_val.value)
-		elif rpc_val.type == RpcValue.Type.UInt: self.write_uint(rpc_val.value)
-		elif rpc_val.type == RpcValue.Type.Int: self.write_int(rpc_val.value)
-		elif rpc_val.type == RpcValue.Type.Double: self.writeDouble(rpc_val.value)
-		elif rpc_val.type == RpcValue.Type.Decimal: self.write_decimal(rpc_val.value)
-		elif rpc_val.type == RpcValue.Type.List: self.write_list(rpc_val.value)
-		elif rpc_val.type == RpcValue.Type.Map: self.write_map(rpc_val.value)
-		elif rpc_val.type == RpcValue.Type.IMap: self.write_imap(rpc_val.value)
-		elif rpc_val.type == RpcValue.Type.DateTime: self.write_datetime(rpc_val.value)
+		if rpc_val.type == RpcValue.Type.Null:
+			self.ctx.put_byte(ChainPack.CP_Null)
+		elif rpc_val.type == RpcValue.Type.Bool:
+			self.ctx.put_byte(ChainPack.CP_TRUE if rpc_val.value else ChainPack.CP_FALSE)
+		elif rpc_val.type == RpcValue.Type.String:
+			self.write_string(rpc_val.value)
+		elif rpc_val.type == RpcValue.Type.UInt:
+			self.write_uint(rpc_val.value)
+		elif rpc_val.type == RpcValue.Type.Int:
+			self.write_int(rpc_val.value)
+		elif rpc_val.type == RpcValue.Type.Double:
+			self.write_double(rpc_val.value)
+		elif rpc_val.type == RpcValue.Type.Decimal:
+			self.write_decimal(rpc_val.value)
+		elif rpc_val.type == RpcValue.Type.List:
+			self.write_list(rpc_val.value)
+		elif rpc_val.type == RpcValue.Type.Map:
+			self.write_map(rpc_val.value)
+		elif rpc_val.type == RpcValue.Type.IMap:
+			self.write_imap(rpc_val.value)
+		elif rpc_val.type == RpcValue.Type.DateTime:
+			self.write_datetime(rpc_val.value)
 		else:
 			# better to write null than create invalid chain-pack
 			self.ctx.put_byte(ChainPack.CP_Null)
@@ -263,7 +275,7 @@ class ChainPackWriter:
 	sig_table_4bit =  [0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4]
 
 	@staticmethod
-	def significant_bits_part_length(n):
+	def _significant_bits_part_length(n):
 		len = 0
 		if n & 0xFFFFFFFF00000000:
 			len += 32
@@ -280,10 +292,6 @@ class ChainPackWriter:
 		len += ChainPackWriter.sig_table_4bit[n]
 		return len
 
-#	MAX_BIT_LEN = Math.log(Number.MAX_SAFE_INTEGER) / Math.log(2)
-# logcal operator in JS works on 32 bit only
-		MAX_BIT_LEN = 32
-
 #  0 ...  7 bits  1  byte  |0|s|x|x|x|x|x|x|<-- LSB
 #  8 ... 14 bits  2  bytes |1|0|s|x|x|x|x|x| |x|x|x|x|x|x|x|x|<-- LSB
 # 15 ... 21 bits  3  bytes |1|1|0|s|x|x|x|x| |x|x|x|x|x|x|x|x| |x|x|x|x|x|x|x|x|<-- LSB
@@ -294,12 +302,10 @@ class ChainPackWriter:
 # 										n == 14 -> 18 bytes number
 # 										n == 15 -> for future (number of bytes will be specified in next byte)
 
-
 # return max bit length >= bit_len, which can be encoded by same number of bytes
-
 # number of bytes needed to encode bit_len
 	@classmethod
-	def bytes_needed(cls, bit_len):
+	def _bytes_needed(cls, bit_len):
 		if bit_len <= 28:
 			cnt = ((bit_len - 1) // 7) + 1
 		else:
@@ -307,16 +313,16 @@ class ChainPackWriter:
 		return cnt
 
 	@classmethod
-	def expand_bit_len(cls, bit_len):
-		byte_cnt = 	cls.bytes_needed(bit_len)
+	def _expand_bit_len(cls, bit_len):
+		byte_cnt = 	cls._bytes_needed(bit_len)
 		if bit_len <= 28:
 			ret = byte_cnt * (8 - 1) - 1
 		else:
 			ret = (byte_cnt - 1) * 8 - 1
 		return ret
 
-	def write_uint_data_helper(self, num, bit_len):
-		byte_cnt = self.bytes_needed(bit_len)
+	def _write_uint_data_helper(self, num, bit_len):
+		byte_cnt = self._bytes_needed(bit_len)
 		data = bytearray(byte_cnt)
 		for i in range(byte_cnt-1, -1, -1):
 			r = num & 255
@@ -336,20 +342,20 @@ class ChainPackWriter:
 			self.ctx.put_byte(r)
 
 	def write_uint_data(self, num):
-		bitcnt = self.significant_bits_part_length(num)
-		self.write_uint_data_helper(num, bitcnt)
+		bitcnt = self._significant_bits_part_length(num)
+		self._write_uint_data_helper(num, bitcnt)
 
 	def write_int_data(self, snum):
 		num = -snum if snum < 0 else snum
 		neg = (snum < 0)
 
-		bitlen = self.significant_bits_part_length(num)
+		bitlen = self._significant_bits_part_length(num)
 		bitlen += 1 # add sign bit
 		if neg:
-			sign_pos = self.expand_bit_len(bitlen);
+			sign_pos = self._expand_bit_len(bitlen)
 			sign_bit_mask = 1 << sign_pos
-			num |= sign_bit_mask;
-		self.write_uint_data_helper(num, bitlen)
+			num |= sign_bit_mask
+		self._write_uint_data_helper(num, bitlen)
 
 	def write_uint(self, n):
 		if n < 64:
@@ -369,6 +375,11 @@ class ChainPackWriter:
 		self.ctx.put_byte(ChainPack.CP_Decimal)
 		self.write_int_data(val.mantisa)
 		self.write_int_data(val.exponent)
+
+	def write_double(self, val:float):
+		self.ctx.put_byte(ChainPack.CP_Double)
+		data = struct.pack("<d", val)  # little endian
+		self.ctx.write_bytes(data)
 
 	def write_list(self, lst):
 		self.ctx.put_byte(ChainPack.CP_List)
@@ -394,17 +405,14 @@ class ChainPackWriter:
 		self.ctx.put_byte(ChainPack.CP_MetaMap)
 		self.write_map_data(mmap)
 
-	def write_tring(self, bin_str):
+	def write_string(self, sstr):
+		if isinstance(sstr, str):
+			sstr = sstr.encode()
+		if not isinstance(sstr, (bytes, bytearray)):
+			raise TypeError("Unsupported type: " + type(sstr))
 		self.ctx.put_byte(ChainPack.CP_String)
-		self.write_uint_data(len(bin_str))
-		for b in bin_str:
-			self.ctx.put_byte(b)
-
-	def write_unicode_string(self, ustr):
-		self.ctx.put_byte(ChainPack.CP_String)
-		data = ustr.encode('utf8')
-		self.write_uint_data(len(data))
-		for b in data:
+		self.write_uint_data(len(sstr))
+		for b in sstr:
 			self.ctx.put_byte(b)
 
 	def write_datetime(self, dt):
