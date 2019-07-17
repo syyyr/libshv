@@ -73,7 +73,8 @@ SHVCHAINPACK_DECL_EXPORT const MetaType& registeredType(int ns_id, int type_id);
 enum class NameSpaceID
 {
 	Global = 0,
-	Elesys
+	Elesys,
+	Eyas,
 };
 
 class GlobalNS : public meta::MetaNameSpace

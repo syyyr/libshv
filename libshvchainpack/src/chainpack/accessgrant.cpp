@@ -7,7 +7,7 @@ namespace chainpack {
 // AccessGrant
 //================================================================
 AccessGrant::MetaType::MetaType()
-	: Super("AccessGrantLogin")
+	: Super("AccessGrant")
 {
 	m_keys = {
 		RPC_META_KEY_DEF(User),

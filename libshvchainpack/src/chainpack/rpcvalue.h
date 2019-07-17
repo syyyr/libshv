@@ -306,6 +306,9 @@ public:
 	void setMetaValue(Int key, const RpcValue &val);
 	void setMetaValue(const String &key, const RpcValue &val);
 	int metaTypeId() const {return metaValue(meta::Tag::MetaTypeId).toInt();}
+	int metaTypeNameSpaceId() const {return metaValue(meta::Tag::MetaTypeNameSpaceId).toInt();}
+	void setMetaTypeId(int id) {setMetaValue(meta::Tag::MetaTypeId, id);}
+	void setMetaTypeId(int ns, int id) {setMetaValue(meta::Tag::MetaTypeNameSpaceId, ns); setMetaValue(meta::Tag::MetaTypeId, id);}
 
 	bool isValid() const;
 	bool isNull() const { return type() == Type::Null; }

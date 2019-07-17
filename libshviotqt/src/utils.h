@@ -11,8 +11,8 @@ namespace iotqt {
 class SHVIOTQT_DECL_EXPORT Utils
 {
 public:
-	static QVariant rpcValueToQVariant(const chainpack::RpcValue &v);
-	static chainpack::RpcValue qVariantToRpcValue(const QVariant &v);
+	static QVariant rpcValueToQVariant(const shv::chainpack::RpcValue &v);
+	static shv::chainpack::RpcValue qVariantToRpcValue(const QVariant &v);
 };
 
 }}

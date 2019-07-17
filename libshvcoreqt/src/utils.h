@@ -75,16 +75,20 @@
 	public: ptype getter_prefix##name_rest() const {return d->getter_prefix##name_rest;} \
 	public: void setter_prefix##name_rest(const ptype &val) {d->getter_prefix##name_rest = val;}
 
-
-class QByteArray;
+class QVariant;
+class QStringList;
 
 namespace shv {
+namespace chainpack { class RpcValue; }
 namespace coreqt {
 
 class SHVCOREQT_DECL_EXPORT Utils
 {
 public:
-	//static QByteArray readAllFd(int fd);
+	static QVariant rpcValueToQVariant(const chainpack::RpcValue &v, bool *ok = nullptr);
+	static chainpack::RpcValue qVariantToRpcValue(const QVariant &v, bool *ok = nullptr);
+	static QStringList rpcValueToStringList(const shv::chainpack::RpcValue &rpcval);
+	static shv::chainpack::RpcValue stringListToRpcValue(const QStringList &sl);
 };
 
 } // namespace coreqt
