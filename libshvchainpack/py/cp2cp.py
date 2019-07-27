@@ -15,8 +15,6 @@ help_msg = '''cp2cp.py - ChainPack to Cpon and vice versa converter
 USAGE:
 -i "indent_string"
  indent Cpon (default is no-indent "")
--t
- human readable metatypes in Cpon output
 --ip
  input stream is Cpon (ChainPack otherwise)
 --oc
@@ -24,13 +22,13 @@ USAGE:
 '''
 
 
-def help(exit_code=os.EX_OK):
+def help_exit(exit_code=os.EX_OK):
 	print(help_msg)
 	sys.exit(exit_code)
 
-if __name__ == "__main__":
+
+def cp2cp():
 	o_indent = None
-	o_verbose_metatypes = False
 	o_chainpack_output = False
 	o_cpon_input = False
 	o_file_name = None
@@ -44,7 +42,7 @@ if __name__ == "__main__":
 			self.message = msg
 
 	def get_arg(error_msg=''):
-		global args
+		nonlocal args
 		if len(args):
 			ret = args[0]
 			args = args[1:]
@@ -66,7 +64,7 @@ if __name__ == "__main__":
 				elif arg == 'oc':
 					o_chainpack_output = True
 				elif arg == 'help':
-					help()
+					help_exit()
 				else:
 					raise InvalidCLIArg('--' + arg)
 			elif arg[:1] == '-':
@@ -77,9 +75,7 @@ if __name__ == "__main__":
 					o_indent = o_indent.replace("\\r", "\r")
 					o_indent = o_indent.replace("\\n", "\n")
 				elif arg == 'h':
-						help()
-				elif arg == 't':
-					o_verbose_metatypes = True
+					help_exit()
 				else:
 					raise InvalidCLIArg('-' + arg)
 			else:
@@ -90,7 +86,7 @@ if __name__ == "__main__":
 		pass
 	except InvalidCLIArg as e:
 		errprint("InvalidCLIArg:", e.message)
-		help(os.EX_DATAERR)
+		help_exit(os.EX_DATAERR)
 
 	if o_file_name:
 		data = open(o_file_name, "rb").read()
@@ -112,6 +108,7 @@ if __name__ == "__main__":
 	val = rd.read()
 	wr.write(val)
 	sys.stdout.buffer.write(wr.data_bytes())
-	# except Exception as e:
-	# 	errprint(e)
 
+
+if __name__ == "__main__":
+	cp2cp()
