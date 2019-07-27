@@ -225,7 +225,7 @@ class ChainPackReader:
 			#	raise TypeError("Malformed map, invalid key")
 			val = self.read()
 			if key.type == RpcValue.Type.String:
-				mmap[key.value.decode('utf8')] = val
+				mmap[key.value.decode()] = val
 			else:
 				mmap[int(key.value)] = val
 		return mmap
@@ -264,6 +264,9 @@ class ChainPackWriter:
 		else:
 			# better to write null than create invalid chain-pack
 			self.ctx.put_byte(ChainPack.CP_Null)
+
+	def data_bytes(self):
+		return self.ctx.data_bytes()
 
 	@classmethod
 	def pack(cls, rpc_val):

@@ -19,7 +19,10 @@ class CponReader:
 	KEY_DELIM = ord(':')
 	FIELD_DELIM = ord(',')
 
-	def __init__(self, unpack_context: UnpackContext):
+	def __init__(self, unpack_context):
+		#assert type(unpack_context) == UnpackContext
+		if isinstance(unpack_context, (bytes, bytearray)):
+			unpack_context = UnpackContext(unpack_context)
 		self.ctx = unpack_context
 
 	def skip_white_insignificant(self):
@@ -248,7 +251,7 @@ class CponReader:
 				break
 			key = self.read()
 			if key.type == RpcValue.Type.String:
-				key = key.value
+				key = key.value.decode()
 			elif key.type == RpcValue.Type.UInt:
 				key = key.value
 			elif key.type == RpcValue.Type.Int:
@@ -366,8 +369,15 @@ class CponReader:
 
 
 class CponWriter:
-	def __init__(self):
+
+	class Options:
+		def __init__(self, indent=None):
+			self.indent = indent.encode() if isinstance(indent, str) else indent
+
+	def __init__(self, options=Options()):
 		self.ctx = PackContext()
+		self.options = options
+		self._nest_level = 0
 
 	def write(self, rpc_val):
 		if not isinstance(rpc_val, RpcValue):
@@ -400,11 +410,21 @@ class CponWriter:
 		elif rpc_val.type == RpcValue.Type.DateTime:
 			self._write_datetime(rpc_val.value)
 
+	def data_bytes(self):
+		return self.ctx.data_bytes()
+
 	@classmethod
 	def pack(cls, rpc_val):
 		wr = cls()
 		wr.write(rpc_val)
 		return wr.ctx.data_bytes()
+
+	def _indent_item(self):
+		if not self.options.indent:
+			return
+		self.ctx.put_byte(ord('\n'))
+		s = self.options.indent * self._nest_level
+		self.ctx.write_bytes(s)
 
 	def _write_cstring(self, cstr):
 		self.ctx.put_byte(ord('"'))
@@ -472,6 +492,7 @@ class CponWriter:
 		self.ctx.put_byte(ord('}'))
 
 	def _write_map_content(self, mmap):
+		self._nest_level += 1
 		int_keys = []
 		string_keys = []
 		for k in mmap.keys():
@@ -487,6 +508,7 @@ class CponWriter:
 			i += 1
 			if i > 0:
 				self.ctx.put_byte(ord(','))
+			self._indent_item()
 			self._write_int(k)
 			self.ctx.put_byte(ord(':'))
 			self.write(v)
@@ -495,18 +517,25 @@ class CponWriter:
 			i += 1
 			if i > 0:
 				self.ctx.put_byte(ord(','))
+			self._indent_item()
 			self.ctx.put_byte(ord('"'))
 			self.ctx.write_utf8_string(k)
 			self.ctx.put_byte(ord('"'))
 			self.ctx.put_byte(ord(':'))
 			self.write(v)
+		self._nest_level -= 1
+		self._indent_item()
 
 	def _write_list(self, lst):
+		self._nest_level += 1
 		self.ctx.put_byte(ord('['))
 		for i in range(len(lst)):
 			if i > 0:
 				self.ctx.put_byte(ord(','))
+			self._indent_item()
 			self.write(lst[i])
+		self._nest_level -= 1
+		self._indent_item()
 		self.ctx.put_byte(ord(']'))
 
 	def _write_uint(self, num):
