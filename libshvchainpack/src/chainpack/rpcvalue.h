@@ -229,6 +229,7 @@ public:
 		RpcValue value(const RpcValue::String &key) const;
 		void setValue(RpcValue::Int key, const RpcValue &val);
 		void setValue(const RpcValue::String &key, const RpcValue &val);
+		size_t size() const;
 		bool isEmpty() const;
 		bool operator==(const MetaData &o) const;
 		const RpcValue::IMap& iValues() const;

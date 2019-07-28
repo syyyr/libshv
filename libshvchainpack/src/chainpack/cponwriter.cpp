@@ -13,6 +13,68 @@
 namespace shv {
 namespace chainpack {
 
+static bool is_oneline_list(const RpcValue::List &lst)
+{
+	if(lst.size() > 10)
+		return false;
+	for (const RpcValue &it : lst) {
+		switch (it.type()) {
+		case RpcValue::Type::Map:
+		case RpcValue::Type::IMap:
+		case RpcValue::Type::List:
+			return false;
+		default:
+			break;
+		}
+	}
+	return true;
+}
+
+template<typename T>
+static bool is_oneline_map(const T &map)
+{
+	if(map.size() > 5)
+		return false;
+	for (const auto &kv : map) {
+		switch (kv.second.type()) {
+		case RpcValue::Type::Map:
+		case RpcValue::Type::IMap:
+		case RpcValue::Type::List:
+			return false;
+		default:
+			break;
+		}
+	}
+	return true;
+}
+
+static bool is_oneline_meta(const RpcValue::MetaData &meta)
+{
+	if(meta.size() > 5)
+		return false;
+	for (const auto &kv : meta.iValues()) {
+		switch (kv.second.type()) {
+		case RpcValue::Type::Map:
+		case RpcValue::Type::IMap:
+		case RpcValue::Type::List:
+			return false;
+		default:
+			break;
+		}
+	}
+	for (const auto &kv : meta.sValues()) {
+		switch (kv.second.type()) {
+		case RpcValue::Type::Map:
+		case RpcValue::Type::IMap:
+		case RpcValue::Type::List:
+			return false;
+		default:
+			break;
+		}
+	}
+	return true;
+}
+
 CponWriter::CponWriter(std::ostream &out, const CponWriterOptions &opts)
 	: Super(out)
 	, m_opts(opts)
@@ -50,13 +112,13 @@ void CponWriter::write(const RpcValue &value)
 void CponWriter::write(const RpcValue::MetaData &meta_data)
 {
 	if(!meta_data.isEmpty()) {
-		writeMetaBegin();
+		writeMetaBegin(is_oneline_meta(meta_data));
 		const RpcValue::IMap &cim = meta_data.iValues();
 		if(!cim.empty()) {
 			for (const auto &kv : cim) {
 				if(m_opts.isTranslateIds()) {
 					ContainerState &cs = m_containerStates[m_containerStates.size() - 1];
-					ccpon_pack_field_delim(&m_outCtx, cs.elementCount++ == 0);
+					ccpon_pack_field_delim(&m_outCtx, cs.elementCount++ == 0, cs.isOneLiner);
 					int nsid = meta_data.metaTypeNameSpaceId();
 					int mtid = meta_data.metaTypeId();
 					int tag = kv.first;
@@ -102,19 +164,20 @@ void CponWriter::write(const RpcValue::MetaData &meta_data)
 	}
 }
 
-void CponWriter::writeMetaBegin()
+void CponWriter::writeMetaBegin(bool is_oneliner)
 {
 	ccpon_pack_meta_begin(&m_outCtx);
-	m_containerStates.push_back(ContainerState());
+	m_containerStates.push_back(ContainerState(RpcValue::Type::Invalid, is_oneliner));
 }
 
 void CponWriter::writeMetaEnd()
 {
-	ccpon_pack_meta_end(&m_outCtx);
+	const ContainerState &cs = m_containerStates[m_containerStates.size() - 1];
+	ccpon_pack_meta_end(&m_outCtx, cs.isOneLiner);
 	m_containerStates.pop_back();
 }
 
-void CponWriter::writeContainerBegin(RpcValue::Type container_type)
+void CponWriter::writeContainerBegin(RpcValue::Type container_type, bool is_oneliner)
 {
 	switch (container_type) {
 	case RpcValue::Type::List:
@@ -129,7 +192,7 @@ void CponWriter::writeContainerBegin(RpcValue::Type container_type)
 	default:
 		SHVCHP_EXCEPTION(std::string("Cannot write begin of container type: ") + RpcValue::typeToName(container_type));
 	}
-	m_containerStates.push_back(ContainerState(container_type));
+	m_containerStates.push_back(ContainerState(container_type, is_oneliner));
 }
 
 void CponWriter::writeContainerEnd()
@@ -137,13 +200,13 @@ void CponWriter::writeContainerEnd()
 	ContainerState &cs = m_containerStates[m_containerStates.size() - 1];
 	switch (cs.containerType) {
 	case RpcValue::Type::List:
-		ccpon_pack_list_end(&m_outCtx);
+		ccpon_pack_list_end(&m_outCtx, cs.isOneLiner);
 		break;
 	case RpcValue::Type::Map:
-		ccpon_pack_map_end(&m_outCtx);
+		ccpon_pack_map_end(&m_outCtx, cs.isOneLiner);
 		break;
 	case RpcValue::Type::IMap:
-		ccpon_pack_imap_end(&m_outCtx);
+		ccpon_pack_imap_end(&m_outCtx, cs.isOneLiner);
 		break;
 	default:
 		SHVCHP_EXCEPTION(std::string("Cannot write end of container type: ") + RpcValue::typeToName(cs.containerType));
@@ -154,7 +217,7 @@ void CponWriter::writeContainerEnd()
 void CponWriter::writeMapKey(const std::string &key)
 {
 	ContainerState &cs = m_containerStates[m_containerStates.size() - 1];
-	ccpon_pack_field_delim(&m_outCtx, cs.elementCount++ == 0);
+	ccpon_pack_field_delim(&m_outCtx, cs.elementCount++ == 0, cs.isOneLiner);
 	write(key);
 	ccpon_pack_key_val_delim(&m_outCtx);
 }
@@ -162,7 +225,7 @@ void CponWriter::writeMapKey(const std::string &key)
 void CponWriter::writeIMapKey(RpcValue::Int key)
 {
 	ContainerState &cs = m_containerStates[m_containerStates.size() - 1];
-	ccpon_pack_field_delim(&m_outCtx, cs.elementCount++ == 0);
+	ccpon_pack_field_delim(&m_outCtx, cs.elementCount++ == 0, cs.isOneLiner);
 	write(key);
 	ccpon_pack_key_val_delim(&m_outCtx);
 }
@@ -170,7 +233,7 @@ void CponWriter::writeIMapKey(RpcValue::Int key)
 void CponWriter::writeListElement(const RpcValue &val)
 {
 	ContainerState &cs = m_containerStates[m_containerStates.size() - 1];
-	ccpon_pack_field_delim(&m_outCtx, cs.elementCount++ == 0);
+	ccpon_pack_field_delim(&m_outCtx, cs.elementCount++ == 0, cs.isOneLiner);
 	write(val);
 }
 
@@ -253,7 +316,7 @@ CponWriter &CponWriter::write_p(const std::string &value)
 
 CponWriter &CponWriter::write_p(const RpcValue::Map &values)
 {
-	writeContainerBegin(RpcValue::Type::Map);
+	writeContainerBegin(RpcValue::Type::Map, is_oneline_map(values));
 	for (const auto &kv : values) {
 		writeMapElement(kv.first, kv.second);
 	}
@@ -263,11 +326,11 @@ CponWriter &CponWriter::write_p(const RpcValue::Map &values)
 
 CponWriter &CponWriter::write_p(const RpcValue::IMap &values, const RpcValue::MetaData *meta_data)
 {
-	writeContainerBegin(RpcValue::Type::IMap);
+	writeContainerBegin(RpcValue::Type::IMap, is_oneline_map(values));
 	for (const auto &kv : values) {
 		if(m_opts.isTranslateIds() && meta_data) {
 			ContainerState &cs = m_containerStates[m_containerStates.size() - 1];
-			ccpon_pack_field_delim(&m_outCtx, cs.elementCount++ == 0);
+			ccpon_pack_field_delim(&m_outCtx, cs.elementCount++ == 0, cs.isOneLiner);
 			int mtid = meta_data->metaTypeId();
 			int nsid = meta_data->metaTypeNameSpaceId();
 			auto key = kv.first;
@@ -291,7 +354,7 @@ CponWriter &CponWriter::write_p(const RpcValue::IMap &values, const RpcValue::Me
 
 CponWriter &CponWriter::write_p(const RpcValue::List &values)
 {
-	writeContainerBegin(RpcValue::Type::List);
+	writeContainerBegin(RpcValue::Type::List, is_oneline_list(values));
 	for (size_t ix = 0; ix < values.size(); ix++) {
 		const RpcValue &value = values[ix];
 		writeListElement(value);

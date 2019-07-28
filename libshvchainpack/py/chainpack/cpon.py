@@ -419,12 +419,16 @@ class CponWriter:
 		wr.write(rpc_val)
 		return wr.ctx.data_bytes()
 
-	def _indent_item(self):
+	def _indent_item(self, is_online_container, item_index):
 		if not self.options.indent:
 			return
-		self.ctx.put_byte(ord('\n'))
-		s = self.options.indent * self._nest_level
-		self.ctx.write_bytes(s)
+		if is_online_container:
+			if item_index > 0:
+				self.ctx.put_byte(ord(' '))
+		else:
+			self.ctx.put_byte(ord('\n'))
+			s = self.options.indent * self._nest_level
+			self.ctx.write_bytes(s)
 
 	def _write_cstring(self, cstr):
 		self.ctx.put_byte(ord('"'))
@@ -491,8 +495,18 @@ class CponWriter:
 		self._write_map_content(mmap)
 		self.ctx.put_byte(ord('}'))
 
+	@staticmethod
+	def _is_oneline_map(mmap):
+		if len(mmap) > 10:
+			return False
+		for k, v in mmap.items():
+			if v.type in (RpcValue.Type.Map, RpcValue.Type.IMap, RpcValue.Type.List):
+				return False
+		return True
+
 	def _write_map_content(self, mmap):
 		self._nest_level += 1
+		is_oneliner = CponWriter._is_oneline_map(mmap)
 		int_keys = []
 		string_keys = []
 		for k in mmap.keys():
@@ -508,7 +522,7 @@ class CponWriter:
 			i += 1
 			if i > 0:
 				self.ctx.put_byte(ord(','))
-			self._indent_item()
+			self._indent_item(is_oneliner, i)
 			self._write_int(k)
 			self.ctx.put_byte(ord(':'))
 			self.write(v)
@@ -517,25 +531,35 @@ class CponWriter:
 			i += 1
 			if i > 0:
 				self.ctx.put_byte(ord(','))
-			self._indent_item()
+			self._indent_item(is_oneliner, i)
 			self.ctx.put_byte(ord('"'))
 			self.ctx.write_utf8_string(k)
 			self.ctx.put_byte(ord('"'))
 			self.ctx.put_byte(ord(':'))
 			self.write(v)
 		self._nest_level -= 1
-		self._indent_item()
+		self._indent_item(is_oneliner, 0)
+
+	@staticmethod
+	def _is_online_list(lst):
+		if len(lst) > 10:
+			return False
+		for item in lst:
+			if item.type in (RpcValue.Type.Map, RpcValue.Type.IMap, RpcValue.Type.List):
+				return False
+		return True
 
 	def _write_list(self, lst):
 		self._nest_level += 1
+		is_oneliner = CponWriter._is_online_list(lst)
 		self.ctx.put_byte(ord('['))
 		for i in range(len(lst)):
 			if i > 0:
 				self.ctx.put_byte(ord(','))
-			self._indent_item()
+			self._indent_item(is_oneliner, i)
 			self.write(lst[i])
 		self._nest_level -= 1
-		self._indent_item()
+		self._indent_item(is_oneliner, 0)
 		self.ctx.put_byte(ord(']'))
 
 	def _write_uint(self, num):

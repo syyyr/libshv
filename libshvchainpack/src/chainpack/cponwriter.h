@@ -43,7 +43,7 @@ public:
 	void write(const RpcValue &val) override;
 	void write(const RpcValue::MetaData &meta_data) override;
 
-	void writeContainerBegin(RpcValue::Type container_type) override;
+	void writeContainerBegin(RpcValue::Type container_type, bool is_oneliner = false) override;
 	void writeContainerEnd() override;
 
 	void writeMapKey(const std::string &key) override;
@@ -53,7 +53,7 @@ public:
 	void writeMapElement(RpcValue::Int key, const RpcValue &val) override;
 	void writeRawData(const std::string &data) override;
 private:
-	void writeMetaBegin();
+	void writeMetaBegin(bool is_oneliner);
 	void writeMetaEnd();
 
 	CponWriter& write_p(std::nullptr_t);
@@ -78,8 +78,9 @@ private:
 	{
 		RpcValue::Type containerType = RpcValue::Type::Invalid;
 		int elementCount = 0;
+		bool isOneLiner = false;
 		ContainerState() {}
-		ContainerState(RpcValue::Type t) : containerType(t) {}
+		ContainerState(RpcValue::Type t, bool one_liner) : containerType(t), isOneLiner(one_liner) {}
 	};
 	std::vector<ContainerState> m_containerStates;
 };

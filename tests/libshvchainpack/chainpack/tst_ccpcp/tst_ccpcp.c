@@ -131,6 +131,7 @@ int test_unpack_number(const char *str, int expected_type, double expected_val)
 			return 0;
 		printf("FAIL! unpack decimal number str: '%s' have: %lg expected: %lg difference: %lg\n", str, d, expected_val, d-expected_val);
 		assert(false);
+		break;
 	}
 	case CCPCP_ITEM_DOUBLE: {
 		double d = ctx.item.as.Double;
@@ -140,6 +141,7 @@ int test_unpack_number(const char *str, int expected_type, double expected_val)
 			return 0;
 		printf("FAIL! unpack double number str: '%s' have: %lg expected: %lg difference: %lg\n", str, d, expected_val, (d-expected_val));
 		assert(false);
+		break;
 	}
 	case CCPCP_ITEM_INT: {
 		int64_t d = ctx.item.as.Int;
@@ -147,6 +149,7 @@ int test_unpack_number(const char *str, int expected_type, double expected_val)
 			return 0;
 		printf("FAIL! unpack int number str: '%s' have: %ld expected: %ld\n", str, d, (int64_t)expected_val);
 		assert(false);
+		break;
 	}
 	case CCPCP_ITEM_UINT: {
 		uint64_t d = ctx.item.as.UInt;
@@ -154,6 +157,7 @@ int test_unpack_number(const char *str, int expected_type, double expected_val)
 			return 0;
 		printf("FAIL! unpack int number str: '%s' have: %lu expected: %lu\n", str, d, (uint64_t)expected_val);
 		assert(false);
+		break;
 	}
 	default:
 		printf("FAIL! unpack number str: '%s' unexpected type: %d\n", str, ctx.item.type);

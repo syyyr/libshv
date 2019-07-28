@@ -20,7 +20,7 @@ public:
 	void writeUIntData(uint64_t n);
 	//static void writeUIntData(std::ostream &os, uint64_t n);
 
-	void writeContainerBegin(RpcValue::Type container_type) override;
+	void writeContainerBegin(RpcValue::Type container_type, bool /*is_oneliner*/ = false) override;
 	/// ChainPack doesn't need to know container type to close it
 	void writeContainerEnd() override;
 	void writeMapKey(const std::string &key) override;

@@ -1028,9 +1028,14 @@ void RpcValue::MetaData::setValue(const RpcValue::String &key, const RpcValue &v
 	}
 }
 
+size_t RpcValue::MetaData::size() const
+{
+	return (m_imap? m_imap->size(): 0) + (m_smap? m_smap->size(): 0);
+}
+
 bool RpcValue::MetaData::isEmpty() const
 {
-	return (!m_imap || m_imap->empty()) && (!m_smap || m_smap->empty());
+	return size() == 0;
 }
 
 bool RpcValue::MetaData::operator==(const RpcValue::MetaData &o) const

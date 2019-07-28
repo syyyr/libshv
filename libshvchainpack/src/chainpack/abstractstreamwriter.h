@@ -20,7 +20,7 @@ public:
 
 	virtual void writeMapKey(const std::string &key) = 0;
 	virtual void writeIMapKey(RpcValue::Int key) = 0;
-	virtual void writeContainerBegin(RpcValue::Type container_type) = 0;
+	virtual void writeContainerBegin(RpcValue::Type container_type, bool is_oneliner = false) = 0;
 	virtual void writeListElement(const RpcValue &val) = 0;
 	virtual void writeMapElement(const std::string &key, const RpcValue &val) = 0;
 	virtual void writeMapElement(RpcValue::Int key, const RpcValue &val) = 0;

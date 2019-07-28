@@ -583,7 +583,11 @@ void Graph::drawRectText(QPainter *painter, const QRect &rect, const QString &te
 	painter->drawRect(rect);
 	painter->setFont(font);
 	QFontMetrics fm(font);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+	painter->drawText(rect.left() + fm.horizontalAdvance('i'), rect.top() + fm.leading() + fm.ascent(), text);
+#else
 	painter->drawText(rect.left() + fm.width('i'), rect.top() + fm.leading() + fm.ascent(), text);
+#endif
 	painter->restore();
 }
 

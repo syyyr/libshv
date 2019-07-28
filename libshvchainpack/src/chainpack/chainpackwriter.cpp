@@ -60,7 +60,7 @@ void ChainPackWriter::write(const RpcValue::MetaData &meta_data)
 	}
 }
 
-void ChainPackWriter::writeContainerBegin(RpcValue::Type container_type)
+void ChainPackWriter::writeContainerBegin(RpcValue::Type container_type, bool )
 {
 	switch (container_type) {
 	case RpcValue::Type::List:
