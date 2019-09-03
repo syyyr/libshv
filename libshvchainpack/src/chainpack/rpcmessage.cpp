@@ -30,6 +30,7 @@ RpcMessage::MetaType::MetaType()
 		{(int)Tag::RevCallerIds, {(int)Tag::RevCallerIds, "rcid"}},
 		{(int)Tag::AccessGrant, {(int)Tag::AccessGrant, "grant"}},
 		{(int)Tag::TunnelCtl, {(int)Tag::TunnelCtl, "tctl"}},
+		{(int)Tag::UserId, {(int)Tag::UserId, "userId"}},
 	};
 }
 
@@ -412,6 +413,16 @@ void RpcMessage::setRegisterRevCallerIds()
 bool RpcMessage::isRegisterRevCallerIds(const RpcValue::MetaData &meta)
 {
 	return revCallerIds(meta).isValid();
+}
+
+RpcValue RpcMessage::userId() const
+{
+	return metaValue(RpcMessage::MetaType::Tag::UserId);
+}
+
+void RpcMessage::setUserId(const RpcValue &user_id)
+{
+	setMetaValue(RpcMessage::MetaType::Tag::UserId, user_id);
 }
 
 Rpc::ProtocolType RpcMessage::protocolType(const RpcValue::MetaData &meta)
