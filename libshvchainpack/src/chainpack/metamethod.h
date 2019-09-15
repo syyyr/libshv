@@ -45,8 +45,8 @@ public:
 		};
 	};
 public:
-	MetaMethod(const char *name, Signature ms, unsigned flags = 0, const shv::chainpack::RpcValue &access_grant = shv::chainpack::Rpc::GRANT_BROWSE)
-	    : m_name(name)
+	MetaMethod(std::string name, Signature ms, unsigned flags = 0, const shv::chainpack::RpcValue &access_grant = shv::chainpack::Rpc::GRANT_BROWSE)
+	    : m_name(std::move(name))
 	    , m_signature(ms)
 	    , m_flags(flags)
 	    //, m_accessLevel(access_level)
@@ -55,7 +55,7 @@ public:
 
 	//static constexpr bool IsSignal = true;
 
-	const char *name() const {return m_name;}
+	const std::string& name() const {return m_name;}
 	const shv::chainpack::RpcValue& accessGrant() const {return m_accessGrant;}
 	RpcValue attributes(unsigned mask) const
 	{
@@ -74,7 +74,7 @@ public:
 		return RpcValue{lst};
 	}
 private:
-	const char *m_name;
+	std::string m_name;
 	Signature m_signature;
 	unsigned m_flags;
 	//int m_accessLevel;
