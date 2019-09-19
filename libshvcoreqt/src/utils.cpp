@@ -63,21 +63,22 @@ chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v, bool *ok)
 		return chainpack::RpcValue();
 	if(v.isNull())
 		return chainpack::RpcValue(nullptr);
-	switch (v.type()) {
-	case QVariant::UInt: return chainpack::RpcValue(v.toUInt());
-	case QVariant::Int: return chainpack::RpcValue(v.toInt());
-	case QVariant::Double: return chainpack::RpcValue(v.toDouble());
-	case QVariant::Bool: return chainpack::RpcValue(v.toBool());
-	case QVariant::String: return v.toString().toStdString();
-	case QVariant::DateTime: return chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(v.toDateTime().toMSecsSinceEpoch());
-	case QVariant::List: {
+	switch (v.userType()) {
+	case QMetaType::UInt: return chainpack::RpcValue(v.toUInt());
+	case QMetaType::Int: return chainpack::RpcValue(v.toInt());
+	case QMetaType::Float:
+	case QMetaType::Double: return chainpack::RpcValue(v.toDouble());
+	case QMetaType::Bool: return chainpack::RpcValue(v.toBool());
+	case QMetaType::QString: return v.toString().toStdString();
+	case QMetaType::QDateTime: return chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(v.toDateTime().toMSecsSinceEpoch());
+	case QMetaType::QVariantList: {
 		chainpack::RpcValue::List lst;
 		for(const QVariant &qv : v.toList()) {
 			lst.push_back(qVariantToRpcValue(qv));
 		}
 		return chainpack::RpcValue{lst};
 	}
-	case QVariant::Map: {
+	case QMetaType::QVariantMap: {
 		chainpack::RpcValue::Map map;
 		QMapIterator<QString, QVariant> it(v.toMap());
 		while (it.hasNext()) {
