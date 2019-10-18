@@ -15,6 +15,7 @@
 #include <necrolog.h>
 
 #define shvCDebug(category) nCDebug(category)
+#define shvCMessage(category) nCMessage(category)
 #define shvCInfo(category) nCInfo(category)
 #define shvCWarning(category) nCWarning(category)
 #define shvCError(category) nCError(category)
@@ -57,6 +58,7 @@ shvDebug() << ">>>> ENTER FN" << __FUNCTION__
 #endif
 
 #define shvDebug() shvCDebug("")
+#define shvMessage() shvCMessage("")
 #define shvInfo() shvCInfo("")
 #define shvWarning() shvCWarning("")
 #define shvError() shvCError("")
