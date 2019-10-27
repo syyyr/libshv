@@ -932,7 +932,7 @@ void SaxHandler::parse()
 		switch (m_xml->readNext()) {
 		case QXmlStreamReader::StartElement:
 		{
-			logSvgD() << "start element:" << m_xml->name();
+			logSvgD() << QString(m_elementStack.count(), '-') << ">" << "start element:" << m_xml->name();
 			SvgElement el(m_xml->name().toString());
 			el.xmlAttributes = parseXmlAttributes(m_xml->attributes());
 			if(!m_elementStack.isEmpty())
@@ -1197,27 +1197,31 @@ void SaxHandler::setStyle(QAbstractGraphicsShapeItem *it, const CssAttributes &a
 		QPen pen(parseColor(stroke, opacity));
 		pen.setWidthF(toDouble(attributes.value(QStringLiteral("stroke-width"))));
 		QString linecap = attributes.value(QStringLiteral("stroke-linecap"));
-		if(linecap == QLatin1String("butt"))
-			pen.setCapStyle(Qt::FlatCap);
-		else if(linecap == QLatin1String("round"))
+		if(linecap == QLatin1String("round"))
 			pen.setCapStyle(Qt::RoundCap);
 		else if(linecap == QLatin1String("square"))
 			pen.setCapStyle(Qt::SquareCap);
-		QString join = attributes.value(QStringLiteral("stroke-join"));
+		else //if(linecap == QLatin1String("butt"))
+			pen.setCapStyle(Qt::FlatCap);
+		QString join = attributes.value(QStringLiteral("stroke-linejoin"));
 		if(join == QLatin1String("round"))
 			pen.setJoinStyle(Qt::RoundJoin);
-		else if(join == QLatin1String("miter"))
-			pen.setJoinStyle(Qt::MiterJoin);
 		else if(join == QLatin1String("bevel"))
 			pen.setJoinStyle(Qt::BevelJoin);
+		else //if( join == QLatin1String("miter"))
+			pen.setJoinStyle(Qt::MiterJoin);
 		it->setPen(pen);
 	}
 }
 
 void SaxHandler::setTextStyle(QFont &font, const CssAttributes &attributes)
 {
+	logSvgD() << "orig font" << font.toString();
+	//font.setStyleName(QString());
+	font.setStyleName(QStringLiteral("Normal"));
 	QString font_size = attributes.value(QStringLiteral("font-size"));
 	if(!font_size.isEmpty()) {
+		logSvgD() << "font_size:" << font_size;
 		if(font_size.endsWith(QLatin1String("px")))
 			font.setPixelSize((int)toDouble(font_size.mid(0, font_size.size() - 2)));
 		else if(font_size.endsWith(QLatin1String("pt")))
@@ -1225,10 +1229,13 @@ void SaxHandler::setTextStyle(QFont &font, const CssAttributes &attributes)
 	}
 	QString font_family = attributes.value(QStringLiteral("font-family"));
 	if(!font_family.isEmpty()) {
+		logSvgD() << "font_family:" << font_family;
 		font.setFamily(font_family);
 	}
+	font.setWeight(QFont::Normal);
 	QString font_weight = attributes.value(QStringLiteral("font-weight"));
 	if(!font_weight.isEmpty()) {
+		logSvgD() << "font_weight:" << font_weight;
 		if(font_weight == QLatin1String("thin"))
 			font.setWeight(QFont::Thin);
 		else if(font_weight == QLatin1String("light"))
@@ -1242,6 +1249,30 @@ void SaxHandler::setTextStyle(QFont &font, const CssAttributes &attributes)
 		else if(font_weight == QLatin1String("black"))
 			font.setWeight(QFont::Black);
 	}
+	font.setStretch(QFont::Unstretched);
+	QString font_stretch = attributes.value(QStringLiteral("font-stretch"));
+	if(!font_stretch.isEmpty()) {
+		logSvgD() << "font_stretch:" << font_stretch;
+		if(font_stretch == QLatin1String("ultra-condensed"))
+			font.setStretch(QFont::UltraCondensed);
+		else if(font_stretch == QLatin1String("extra-condensed"))
+			font.setStretch(QFont::ExtraCondensed);
+		else if(font_stretch == QLatin1String("condensed"))
+			font.setStretch(QFont::Condensed);
+		else if(font_stretch == QLatin1String("semi-condensed"))
+			font.setStretch(QFont::SemiCondensed);
+		else if(font_stretch == QLatin1String("semi-expanded"))
+			font.setStretch(QFont::SemiExpanded);
+		else if(font_stretch == QLatin1String("expanded"))
+			font.setStretch(QFont::Expanded);
+		else if(font_stretch == QLatin1String("extra-expanded"))
+			font.setStretch(QFont::ExtraExpanded);
+		else if(font_stretch == QLatin1String("ultra-expanded"))
+			font.setStretch(QFont::UltraExpanded);
+		else // if(font_stretch == QLatin1String("normal"))
+			font.setStretch(QFont::Unstretched);
+	}
+	font.setStyle(QFont::StyleNormal);
 	QString font_style = attributes.value(QStringLiteral("font-style"));
 	if(!font_style.isEmpty()) {
 		if(font_style == QLatin1String("normal"))
@@ -1251,7 +1282,12 @@ void SaxHandler::setTextStyle(QFont &font, const CssAttributes &attributes)
 		else if(font_style == QLatin1String("oblique"))
 			font.setStyle(QFont::StyleOblique);
 	}
-	//shvInfo() << "font" << "px size:" << font.pixelSize() << "pt size:" << font.pointSize();
+	logSvgD() << "font"
+			  << "px size:" << font.pixelSize()
+			  << "pt size:" << font.pointSize()
+			  << "stretch:" << font.stretch()
+			  << "weight:" << font.weight();
+	logSvgD() << "new font" << font.toString();
 }
 
 void SaxHandler::setTextStyle(QGraphicsSimpleTextItem *text, const CssAttributes &attributes)
