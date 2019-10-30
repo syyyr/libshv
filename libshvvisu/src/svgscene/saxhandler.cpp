@@ -1,5 +1,6 @@
 ﻿#include "saxhandler.h"
 
+#include "types.h"
 #include "log.h"
 #include "simpletextitem.h"
 
@@ -932,7 +933,7 @@ void SaxHandler::parse()
 		switch (m_xml->readNext()) {
 		case QXmlStreamReader::StartElement:
 		{
-			logSvgD() << QString(m_elementStack.count(), '-') << ">" << "start element:" << m_xml->name();
+			logSvgD() << QString(m_elementStack.count(), '-') << ">" << "+ start element:" << m_xml->name();
 			SvgElement el(m_xml->name().toString());
 			el.xmlAttributes = parseXmlAttributes(m_xml->attributes());
 			if(!m_elementStack.isEmpty())
@@ -947,9 +948,12 @@ void SaxHandler::parse()
 		case QXmlStreamReader::EndElement:
 		{
 			SvgElement svg_element = m_elementStack.pop();
-			logSvgD() << "end element:" << m_xml->name() << "item created:" << svg_element.itemCreated;
-			if(svg_element.itemCreated && m_topLevelItem)
+			logSvgD() << QString(m_elementStack.count(), '-') << ">" << "- end element:" << m_xml->name() << "item created:" << svg_element.itemCreated;
+			if(svg_element.itemCreated && m_topLevelItem) {
+				logSvgI() << "m_topLevelItem:" << m_topLevelItem << typeid (*m_topLevelItem).name() << svg_element.name;
+				createVisuController(m_topLevelItem, svg_element);
 				m_topLevelItem = m_topLevelItem->parentItem();
+			}
 			break;
 		}
 		case QXmlStreamReader::Characters:
@@ -996,6 +1000,7 @@ bool SaxHandler::startElement()
 		else {
 			nWarning() << "unsupported root element:" << el.name;
 		}
+		return false;
 	}
 	else {
 		if (el.name == QLatin1String("g")) {
@@ -1007,7 +1012,6 @@ bool SaxHandler::startElement()
 				}
 				setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
 				addItem(item);
-				//g->setRotation(45);
 				return true;
 			}
 			return false;
@@ -1022,7 +1026,6 @@ bool SaxHandler::startElement()
 				t.translate(x, y);
 				text_item->setTransform(t, true);
 				text_item->setTextWidth(w);
-				return false;
 			}
 			else {
 				QGraphicsRectItem *item = new QGraphicsRectItem();
@@ -1033,6 +1036,7 @@ bool SaxHandler::startElement()
 				addItem(item);
 				return true;
 			}
+			return false;
 		}
 		else if (el.name == QLatin1String("circle")) {
 			QGraphicsEllipseItem *item = new QGraphicsEllipseItem();
@@ -1119,8 +1123,8 @@ bool SaxHandler::startElement()
 		else {
 			nWarning() << "unsupported element:" << el.name;
 		}
+		return false;
 	}
-	return false;
 }
 
 QGraphicsItem *SaxHandler::createGroupItem(const SaxHandler::SvgElement &el)
@@ -1128,6 +1132,12 @@ QGraphicsItem *SaxHandler::createGroupItem(const SaxHandler::SvgElement &el)
 	Q_UNUSED(el)
 	QGraphicsItem *item = new QGraphicsRectItem();
 	return item;
+}
+
+void SaxHandler::createVisuController(QGraphicsItem *it, const SaxHandler::SvgElement &el)
+{
+	Q_UNUSED(it)
+	Q_UNUSED(el)
 }
 
 void SaxHandler::setXmlAttributes(QGraphicsItem *git, const SaxHandler::SvgElement &el)
@@ -1140,7 +1150,7 @@ void SaxHandler::setXmlAttributes(QGraphicsItem *git, const SaxHandler::SvgEleme
 		if(known_attrs.contains(it.key()))
 			attrs[it.key()] = it.value();
 	}
-	git->setData(XmlAttributesKey, QVariant::fromValue(attrs));
+	git->setData(Types::DataKey::XmlAttributes, QVariant::fromValue(attrs));
 }
 
 void SaxHandler::setTransform(QGraphicsItem *it, const QString &str_val)

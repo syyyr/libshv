@@ -21,8 +21,6 @@ namespace svgscene {
 using XmlAttributes = QMap<QString, QString>;
 using CssAttributes = QMap<QString, QString>;
 
-enum {XmlAttributesKey = 1};
-
 class SHVVISU_DECL_EXPORT SaxHandler
 {
 public:
@@ -43,6 +41,7 @@ public:
 	void load(QXmlStreamReader *data);
 protected:
 	virtual QGraphicsItem *createGroupItem(const SvgElement &el);
+	virtual void createVisuController(QGraphicsItem *it, const SvgElement &el);
 	virtual void setXmlAttributes(QGraphicsItem *git, const SvgElement &el);
 private:
 	void parse();
