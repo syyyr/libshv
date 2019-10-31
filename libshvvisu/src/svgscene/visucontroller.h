@@ -3,6 +3,8 @@
 #include "saxhandler.h"
 #include "types.h"
 
+#include <shv/core/utils.h>
+
 #include <QObject>
 #include <QGraphicsItem>
 
@@ -15,16 +17,21 @@ class SHVVISU_DECL_EXPORT VisuController : public QObject
 	Q_OBJECT
 
 	using Super = QObject;
+
+	SHV_FIELD_IMPL(QString, i, I, d)
+	SHV_FIELD_IMPL(QString, s, S, hvType)
+	SHV_FIELD_IMPL(QString, s, S, hvPath)
 public:
 	VisuController(QGraphicsItem *graphics_item, QObject *parent = nullptr);
 protected:
 	template<typename T>
-	T findChild(const QString &attr_name = QString(), const QString &attr_value = QString()) const
+	T findChildGraphicsItem(const QString &attr_name = QString(), const QString &attr_value = QString()) const
 	{
-		return findChild<T>(this, attr_name, attr_value);
+		return findChildGraphicsItem<T>(m_graphicsItem, attr_name, attr_value);
 	}
+
 	template<typename T>
-	static T findChild(const QGraphicsItem *parent_it, const QString &attr_name, const QString &attr_value)
+	static T findChildGraphicsItem(const QGraphicsItem *parent_it, const QString &attr_name, const QString &attr_value)
 	{
 		for(QGraphicsItem *it : parent_it->childItems()) {
 			if(T tit = dynamic_cast<T>(it)) {
@@ -37,7 +44,7 @@ protected:
 						return tit;
 				}
 			}
-			T tit = findChild<T>(it, attr_name, attr_value);
+			T tit = findChildGraphicsItem<T>(it, attr_name, attr_value);
 			if(tit)
 				return tit;
 		}

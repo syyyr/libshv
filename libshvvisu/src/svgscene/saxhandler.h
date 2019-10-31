@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../shvvisuglobal.h"
+#include "types.h"
 
 #include <QPen>
 #include <QMap>
@@ -18,8 +18,8 @@ namespace shv {
 namespace visu {
 namespace svgscene {
 
-using XmlAttributes = QMap<QString, QString>;
-using CssAttributes = QMap<QString, QString>;
+using XmlAttributes = Types::XmlAttributes;
+using CssAttributes = Types::CssAttributes;
 
 class SHVVISU_DECL_EXPORT SaxHandler
 {

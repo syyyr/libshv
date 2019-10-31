@@ -13,7 +13,7 @@
 #include <QFontMetrics>
 #include <QSet>
 
-#define logSvgI() nCInfo("svg")
+#define logSvgM() nCMessage("svg")
 #define logSvgD() nCDebug("svg")
 
 namespace shv {
@@ -950,7 +950,7 @@ void SaxHandler::parse()
 			SvgElement svg_element = m_elementStack.pop();
 			logSvgD() << QString(m_elementStack.count(), '-') << ">" << "- end element:" << m_xml->name() << "item created:" << svg_element.itemCreated;
 			if(svg_element.itemCreated && m_topLevelItem) {
-				logSvgI() << "m_topLevelItem:" << m_topLevelItem << typeid (*m_topLevelItem).name() << svg_element.name;
+				//logSvgI() << "m_topLevelItem:" << m_topLevelItem << typeid (*m_topLevelItem).name() << svg_element.name;
 				createVisuController(m_topLevelItem, svg_element);
 				m_topLevelItem = m_topLevelItem->parentItem();
 			}
@@ -1143,7 +1143,7 @@ void SaxHandler::createVisuController(QGraphicsItem *it, const SaxHandler::SvgEl
 void SaxHandler::setXmlAttributes(QGraphicsItem *git, const SaxHandler::SvgElement &el)
 {
 	XmlAttributes attrs;
-	static QSet<QString> known_attrs {"id"};
+	static QSet<QString> known_attrs {"shvPath", "shvType", "id", "chid"};
 	QMapIterator<QString, QString> it(el.xmlAttributes);
 	while (it.hasNext()) {
 		it.next();
@@ -1159,7 +1159,7 @@ void SaxHandler::setTransform(QGraphicsItem *it, const QString &str_val)
 	QMatrix mx = parseTransformationMatrix(transform.trimmed());
 	if(!mx.isIdentity()) {
 		QTransform t(mx);
-		logSvgI() << typeid (*it).name() << "setting matrix:" << t.dx() << t.dy();
+		//logSvgI() << typeid (*it).name() << "setting matrix:" << t.dx() << t.dy();
 		it->setTransform(t);
 	}
 }
@@ -1328,7 +1328,7 @@ void SaxHandler::addItem(QGraphicsItem *it)
 {
 	if(!m_topLevelItem)
 		return;
-	logSvgI() << "adding element:" << it << typeid (*it).name();
+	//logSvgI() << "adding element:" << it << typeid (*it).name();
 	if(QGraphicsItemGroup *grp = dynamic_cast<QGraphicsItemGroup*>(m_topLevelItem)) {
 		grp->addToGroup(it);
 	}
