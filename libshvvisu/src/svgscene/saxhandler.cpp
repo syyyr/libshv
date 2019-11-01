@@ -951,7 +951,7 @@ void SaxHandler::parse()
 			logSvgD() << QString(m_elementStack.count(), '-') << ">" << "- end element:" << m_xml->name() << "item created:" << svg_element.itemCreated;
 			if(svg_element.itemCreated && m_topLevelItem) {
 				//logSvgI() << "m_topLevelItem:" << m_topLevelItem << typeid (*m_topLevelItem).name() << svg_element.name;
-				createVisuController(m_topLevelItem, svg_element);
+				installVisuController(m_topLevelItem, svg_element);
 				m_topLevelItem = m_topLevelItem->parentItem();
 			}
 			break;
@@ -1134,7 +1134,7 @@ QGraphicsItem *SaxHandler::createGroupItem(const SaxHandler::SvgElement &el)
 	return item;
 }
 
-void SaxHandler::createVisuController(QGraphicsItem *it, const SaxHandler::SvgElement &el)
+void SaxHandler::installVisuController(QGraphicsItem *it, const SaxHandler::SvgElement &el)
 {
 	Q_UNUSED(it)
 	Q_UNUSED(el)

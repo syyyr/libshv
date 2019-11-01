@@ -36,6 +36,7 @@ VisuController::VisuController(QGraphicsItem *graphics_item, QObject *parent)
 {
 	XmlAttributes attrs = qvariant_cast<Types::XmlAttributes>(graphics_item->data(Types::DataKey::XmlAttributes));
 	setId(attrs.value(Types::ATTR_ID));
+	setObjectName(id());
 	setShvType(attrs.value(Types::ATTR_SHV_TYPE));
 	setShvPath(attrs.value(Types::ATTR_SHV_PATH));
 	for(auto key : attrs.keys())

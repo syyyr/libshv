@@ -41,7 +41,7 @@ public:
 	void load(QXmlStreamReader *data);
 protected:
 	virtual QGraphicsItem *createGroupItem(const SvgElement &el);
-	virtual void createVisuController(QGraphicsItem *it, const SvgElement &el);
+	virtual void installVisuController(QGraphicsItem *it, const SvgElement &el);
 	virtual void setXmlAttributes(QGraphicsItem *git, const SvgElement &el);
 private:
 	void parse();
