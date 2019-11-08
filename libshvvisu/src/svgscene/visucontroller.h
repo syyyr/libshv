@@ -31,8 +31,10 @@ protected:
 	}
 
 	template<typename T>
-	static T findChildGraphicsItem(const QGraphicsItem *parent_it, const QString &attr_name, const QString &attr_value)
+	static T findChildGraphicsItem(const QGraphicsItem *parent_it, const QString &attr_name = QString(), const QString &attr_value = QString())
 	{
+		if(!parent_it)
+			return nullptr;
 		for(QGraphicsItem *it : parent_it->childItems()) {
 			if(T tit = dynamic_cast<T>(it)) {
 				if(attr_name.isEmpty()) {

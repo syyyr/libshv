@@ -933,9 +933,9 @@ void SaxHandler::parse()
 		switch (m_xml->readNext()) {
 		case QXmlStreamReader::StartElement:
 		{
-			logSvgD() << QString(m_elementStack.count(), '-') << ">" << "+ start element:" << m_xml->name();
 			SvgElement el(m_xml->name().toString());
 			el.xmlAttributes = parseXmlAttributes(m_xml->attributes());
+			logSvgD() << QString(m_elementStack.count(), '-') << ">" << "+ start element:" << el.name << "id:" << el.xmlAttributes.value("id");
 			if(!m_elementStack.isEmpty())
 				el.styleAttributes = m_elementStack.last().styleAttributes;
 			mergeCSSAttributes(el.styleAttributes, QStringLiteral("style"), el.xmlAttributes);
@@ -974,6 +974,7 @@ void SaxHandler::parse()
 				//nInfo() << text_item->toPlainText();
 			}
 			else {
+				logSvgD() << "characters are not part of text item, will be ignored";
 				//nWarning() << "top:" << m_topLevelItem << (m_topLevelItem? typeid (*m_topLevelItem).name(): "NULL");
 			}
 			break;
@@ -1324,11 +1325,25 @@ void SaxHandler::setTextStyle(QGraphicsTextItem *text, const CssAttributes &attr
 	}
 }
 
+QString SaxHandler::point2str(QPointF r)
+{
+	auto ret = QStringLiteral("Point(%1, %2)");
+	return ret.arg(r.x()).arg(r.y());
+}
+
+QString SaxHandler::rect2str(QRectF r)
+{
+	auto ret = QStringLiteral("Rect(%1, %2 %3 x %4)");
+	return ret.arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
+}
+
 void SaxHandler::addItem(QGraphicsItem *it)
 {
 	if(!m_topLevelItem)
 		return;
-	//logSvgI() << "adding element:" << it << typeid (*it).name();
+	logSvgD() << "adding item:" << typeid (*it).name()
+			  << "pos:" << point2str(it->pos())
+			  << "bounding rect:" << rect2str(it->boundingRect());
 	if(QGraphicsItemGroup *grp = dynamic_cast<QGraphicsItemGroup*>(m_topLevelItem)) {
 		grp->addToGroup(it);
 	}

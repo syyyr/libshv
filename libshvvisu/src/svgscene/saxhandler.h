@@ -39,6 +39,9 @@ public:
 	virtual ~SaxHandler();
 
 	void load(QXmlStreamReader *data);
+
+	static QString point2str(QPointF r);
+	static QString rect2str(QRectF r);
 protected:
 	virtual QGraphicsItem *createGroupItem(const SvgElement &el);
 	virtual void installVisuController(QGraphicsItem *it, const SvgElement &el);
