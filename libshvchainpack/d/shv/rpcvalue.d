@@ -11,6 +11,10 @@ import std.conv;
 import std.range.primitives;
 import std.traits;
 import std.typecons;
+import std.datetime.systime;
+import std.datetime.date;
+import std.datetime.timezone;
+import core.time;
 ///
 /+
 @system unittest
@@ -66,16 +70,18 @@ Rpc type enumeration
 */
 enum RpcType : byte
 {
-	/// Indicates the type of a `RpcValue`.
+	Invalid,
 	Null,
-	String,   /// ditto
-	Integer,  /// ditto
-	UInteger, /// ditto
-	Float,   /// ditto
-	List,    /// ditto
-	Map,   /// ditto
-	IMap,   /// ditto
-	Bool,    /// ditto
+	Bool,
+	Integer,
+	UInteger,
+	Float,
+	Decimal,
+	DateTime,
+	String,
+	List,
+	Map,
+	IMap,
 }
 
 struct Meta
@@ -225,6 +231,7 @@ struct Meta
 
 	private RpcValue[Key] m_values;
 }
+
 unittest {
 	Meta m;
 	m["foo"] = "bar";
@@ -248,26 +255,169 @@ unittest {
 	assert(list == [`0:"baz"`, `1:42`, `foo:"bar"`]);
 }
 
+unittest {
+	alias K = Meta.Key;
+	Meta m;
+	m["a"] = "foo";
+	m[1] = 42;
 
-/**
-Rpc value node
-*/
+	assert("a" in m);
+	assert(("a" in m).str == "foo");
+	assert("b" !in m);
+	assert(1 in m);
+	assert((1 in m).integer == 42);
+	assert(2 !in m);
+}
+
 struct RpcValue
 {
 	import std.exception : enforce;
 
-	unittest {
-		alias K = Meta.Key;
-		Meta m;
-		m["a"] = "foo";
-		m[1] = 42;
+	struct Decimal
+	{
+		enum int Base = 10;
 
-		assert("a" in m);
-		assert(("a" in m).str == "foo");
-		assert("b" !in m);
-		assert(1 in m);
-		assert((1 in m).integer == 42);
-		assert(2 !in m);
+		long mantisa;
+		int exponent;
+
+		this(long mantisa, int exponent) @safe
+		{
+			this.mantisa = mantisa;
+			this.exponent = exponent;
+		}
+		this(int dec_places) @safe
+		{
+			this(0, -dec_places);
+		}
+
+		static Decimal fromDouble(double d, int round_to_dec_places) @safe
+		{
+			int exponent = -round_to_dec_places;
+			if(round_to_dec_places > 0) {
+				for(; round_to_dec_places > 0; round_to_dec_places--) d *= Base;
+			}
+			else if(round_to_dec_places < 0) {
+				for(; round_to_dec_places < 0; round_to_dec_places++) d /= Base;
+			}
+			return Decimal(cast(long)(d + 0.5), exponent);
+		}
+
+		void setDouble(double d) @safe
+		{
+			Decimal dc = fromDouble(d, -this.exponent);
+			this.mantisa = dc.mantisa;
+		}
+
+		double toDouble() const @safe
+		{
+			double ret = mantisa;
+			int exp = exponent;
+			if(exp > 0)
+				for(; exp > 0; exp--) ret *= Base;
+			else
+				for(; exp < 0; exp++) ret /= Base;
+			return ret;
+		}
+
+		string toString() const @safe
+		{
+			return RpcValue(this).toCpon();
+		}
+	}
+
+	struct DateTime
+	{
+	private:
+		struct MsTz
+		{
+			//import std.bitmanip : bitfields;
+			//mixin(bitfields!(
+			//	int, "tz", 7,
+			//	long,  "msec", 57));
+			long hnsec;
+			short tz;
+		}
+		MsTz msecs_tz;
+		this(MsTz mz) @safe { msecs_tz = mz; }
+		enum long epoch_hnsec = SysTime(std.datetime.date.DateTime(1970, 1, 1, 0, 0, 0), UTC()).stdTime();
+	public:
+		long msecsSinceEpoch() const @safe { return (msecs_tz.hnsec - epoch_hnsec) / 10_000; }
+		int utcOffsetMin() const @safe { return msecs_tz.tz; }
+
+		static DateTime now() @safe
+		{
+			SysTime t = Clock.currTime();
+			return fromSysTime(t);
+		}
+		static DateTime fromSysTime(SysTime t) @safe
+		{
+			MsTz mz;
+			mz.hnsec = t.stdTime;
+			mz.tz = cast(typeof(MsTz.tz)) t.utcOffset.split!("minutes")().minutes;
+			return DateTime(mz);
+		}
+		//static DateTime fromLocalString(string local_date_time_str) @safe
+		//{
+		//	SysTime t = SysTime.fromISOExtString(local_date_time_str);
+		//	return fromSysTime(t);
+		//}
+		static DateTime fromISOExtString(string utc_date_time_str) @safe
+		{
+			auto ix = utc_date_time_str.indexOfAny("+-");
+			if(ix > 0) {
+				string tzs = utc_date_time_str[ix+1 .. $];
+				if(tzs.length == 4)
+					utc_date_time_str = utc_date_time_str[0 .. ix+1] ~ tzs[0 .. 2] ~ ':' ~ tzs[2 .. $];
+			}
+			SysTime t = SysTime.fromISOExtString(utc_date_time_str);
+			return fromSysTime(t);
+		}
+
+		static DateTime fromMSecsSinceEpoch(long msecs, short utc_offset_min = 0) @safe
+		{
+			MsTz mz;
+			mz.hnsec = epoch_hnsec + msecs * 10_000;
+			mz.tz = utc_offset_min;
+			return DateTime(mz);
+		}
+
+		void setMsecsSinceEpoch(long msecs) @safe
+		{
+			msecs_tz.hnsec = epoch_hnsec + msecs * 10_000;
+		}
+
+		void setUtcOffsetMin(short utc_offset_min) @safe {msecs_tz.tz = utc_offset_min;}
+
+		string toLocalString() @safe const
+		{
+			SysTime t;
+			t.stdTime = msecs_tz.hnsec;
+			t.timezone = new immutable SimpleTimeZone(minutes(msecs_tz.tz));
+			string s = t.toISOExtString();
+			auto ix = s.indexOfAny("+-Z");
+			if(ix > 0)
+				s = s[0 .. ix];
+			return s;
+		}
+		string toISOExtString() @safe const
+		{
+			SysTime t;
+			t.stdTime = msecs_tz.hnsec;
+			t.timezone = new immutable SimpleTimeZone(minutes(msecs_tz.tz));
+			string s = t.toISOExtString();
+			auto ix = s.indexOfAny("+-");
+			if(ix > 0) {
+				string tz = s[ix .. $];
+				if(tz.length == 5) {
+					tz = tz[0 .. 2] ~ tz[3 .. 5];
+					s = s[0 .. ix+1] ~ tz;
+				}
+			}
+			return s;
+		}
+		@safe string toString() const {return toISOExtString();}
+		//@safe bool operator ==(const DateTime &o) const { return (msecs_tz.msec == o.msecs_tz.msec); }
+		@safe int opCmp(ref const DateTime o) const { return cast(int) (msecs_tz.hnsec - o.msecs_tz.hnsec); }
 	}
 
 	union Store
@@ -277,6 +427,8 @@ struct RpcValue
 		long integer;
 		ulong uinteger;
 		double floating;
+		Decimal decimal;
+		DateTime datetime;
 		RpcValue[string] map;
 		RpcValue[int] imap;
 		RpcValue[] list;
@@ -288,7 +440,7 @@ struct RpcValue
 	/**
 	  Returns the RpcType of the value stored in this structure.
 	*/
-	@property RpcType type() const pure nothrow @safe @nogc
+	RpcType type() const pure nothrow @safe @nogc
 	{
 		return type_tag;
 	}
@@ -311,14 +463,14 @@ struct RpcValue
 	 * Throws: `RpcException` for read access if `type` is not
 	 * `RpcType.String`.
 	 */
-	@property string str() const pure @trusted
+	string str() const pure @trusted
 	{
 		enforce!RpcException(type == RpcType.String,
 								"RpcValue is not a string");
 		return store.str;
 	}
-	/// ditto
-	@property string str(string v) pure nothrow @nogc @safe
+
+	string str(string v) pure nothrow @nogc @safe
 	{
 		assign(v);
 		return v;
@@ -341,14 +493,14 @@ struct RpcValue
 	 * Throws: `RpcException` for read access if `type` is not
 	 * `RpcType.Integer`.
 	 */
-	@property long integer() const pure @safe
+	long integer() const pure @safe
 	{
 		enforce!RpcException(type == RpcType.Integer,
 								"RpcValue is not an integer");
 		return store.integer;
 	}
-	/// ditto
-	@property long integer(long v) pure nothrow @safe @nogc
+
+	long integer(long v) pure nothrow @safe @nogc
 	{
 		assign(v);
 		return store.integer;
@@ -359,14 +511,14 @@ struct RpcValue
 	 * Throws: `RpcException` for read access if `type` is not
 	 * `RpcType.UInteger`.
 	 */
-	@property ulong uinteger() const pure @safe
+	ulong uinteger() const pure @safe
 	{
 		enforce!RpcException(type == RpcType.UInteger,
 								"RpcValue is not an unsigned integer");
 		return store.uinteger;
 	}
-	/// ditto
-	@property ulong uinteger(ulong v) pure nothrow @safe @nogc
+
+	ulong uinteger(ulong v) pure nothrow @safe @nogc
 	{
 		assign(v);
 		return store.uinteger;
@@ -378,14 +530,14 @@ struct RpcValue
 	 * Throws: `RpcException` for read access if `type` is not
 	 * `RpcType.Float`.
 	 */
-	@property double floating() const pure @safe
+	double floating() const pure @safe
 	{
 		enforce!RpcException(type == RpcType.Float,
 								"RpcValue is not a floating type");
 		return store.floating;
 	}
-	/// ditto
-	@property double floating(double v) pure nothrow @safe @nogc
+
+	double floating(double v) pure nothrow @safe @nogc
 	{
 		assign(v);
 		return store.floating;
@@ -396,16 +548,16 @@ struct RpcValue
 	 * Throws: `RpcException` for read access if `this.type` is not
 	 * `RpcType.true_` or `RpcType.false_`.
 	 */
-	@property bool boolean() const pure @safe
+	bool boolean() const pure @safe
 	{
 		if (type == RpcType.Bool) return store.boolean;
 		throw new RpcException("RpcValue is not a boolean type");
 	}
-	/// ditto
-	@property bool boolean(bool v) pure nothrow @safe @nogc
+
+	bool boolean(bool v) pure nothrow @safe @nogc
 	{
 		assign(v);
-		return v;
+		return store.boolean;
 	}
 	///
 	@safe unittest
@@ -421,6 +573,32 @@ struct RpcValue
 		assertThrown!RpcException(j.boolean);
 	}
 
+	Decimal decimal() const pure @safe
+	{
+		if (type == RpcType.Decimal)
+			return store.decimal;
+		throw new RpcException("RpcValue is not a decimal type");
+	}
+
+	Decimal decimal(Decimal v) pure nothrow @safe @nogc
+	{
+		assign(v);
+		return store.decimal;
+	}
+
+	DateTime datetime() const pure @safe
+	{
+		if (type == RpcType.DateTime)
+			return store.datetime;
+		throw new RpcException("RpcValue is not a datetime type");
+	}
+
+	Decimal decimal(Decimal v) pure nothrow @safe @nogc
+	{
+		assign(v);
+		return store.decimal;
+	}
+
 	/***
 	 * Value getter/setter for `RpcType.Map`.
 	 * Throws: `RpcException` for read access if `type` is not
@@ -432,14 +610,14 @@ struct RpcValue
 	   (*a)["hello"] = "world";  // segmentation fault
 	   ---
 	 */
-	@property ref inout(RpcValue[string]) map() inout pure @system
+	ref inout(RpcValue[string]) map() inout pure @system
 	{
 		enforce!RpcException(type == RpcType.Map,
 								"RpcValue is not an object");
 		return store.map;
 	}
-	/// ditto
-	@property RpcValue[string] map(RpcValue[string] v) pure nothrow @nogc @safe
+
+	RpcValue[string] map(RpcValue[string] v) pure nothrow @nogc @safe
 	{
 		assign(v);
 		return v;
@@ -460,27 +638,27 @@ struct RpcValue
 	 * Throws: `RpcException` for read access if `type` is not
 	 * `RpcType.Map`.
 	 */
-	@property inout(RpcValue[string]) mapNoRef() inout pure @trusted
+	inout(RpcValue[string]) mapNoRef() inout pure @trusted
 	{
 		enforce!RpcException(type == RpcType.Map,
 								"RpcValue is not an map");
 		return store.map;
 	}
 
-	@property ref inout(RpcValue[int]) imap() inout pure @system
+	ref inout(RpcValue[int]) imap() inout pure @system
 	{
 		enforce!RpcException(type == RpcType.IMap,
 								"RpcValue is not an IMap");
 		return store.imap;
 	}
-	/// ditto
-	@property RpcValue[int] imap(RpcValue[int] v) pure nothrow @nogc @safe
+
+	RpcValue[int] imap(RpcValue[int] v) pure nothrow @nogc @safe
 	{
 		assign(v);
 		return v;
 	}
 
-	@property inout(RpcValue[int]) imapNoRef() inout pure @trusted
+	inout(RpcValue[int]) imapNoRef() inout pure @trusted
 	{
 		enforce!RpcException(type == RpcType.IMap,
 								"RpcValue is not an IMap");
@@ -498,14 +676,14 @@ struct RpcValue
 	   (*a)[0] = "world";  // segmentation fault
 	   ---
 	 */
-	@property ref inout(RpcValue[]) list() inout pure @system
+	ref inout(RpcValue[]) list() inout pure @system
 	{
 		enforce!RpcException(type == RpcType.List,
 								"RpcValue is not an list");
 		return store.list;
 	}
-	/// ditto
-	@property RpcValue[] list(RpcValue[] v) pure nothrow @nogc @safe
+
+	RpcValue[] list(RpcValue[] v) pure nothrow @nogc @safe
 	{
 		assign(v);
 		return v;
@@ -527,7 +705,7 @@ struct RpcValue
 	 * Throws: `RpcException` for read access if `type` is not
 	 * `RpcType.List`.
 	 */
-	@property inout(RpcValue[]) listNoRef() inout pure @trusted
+	inout(RpcValue[]) listNoRef() inout pure @trusted
 	{
 		enforce!RpcException(type == RpcType.List,
 								"RpcValue is not an list");
@@ -535,7 +713,7 @@ struct RpcValue
 	}
 
 	/// Test whether the type is `RpcType.null_`
-	@property bool isNull() const pure nothrow @safe @nogc
+	bool isNull() const pure nothrow @safe @nogc
 	{
 		return type == RpcType.Null;
 	}
@@ -557,6 +735,12 @@ struct RpcValue
 			type_tag = RpcType.String;
 			string t = arg;
 			() @trusted { store.str = t; }();
+		}
+		else static if (is(T : Decimal))
+		{
+			type_tag = RpcType.Decimal;
+			Decimal t = arg;
+			() @trusted { store.decimal = t; }();
 		}
 		else static if (isSomeString!T) // issue 15884
 		{
@@ -585,6 +769,18 @@ struct RpcValue
 		{
 			type_tag = RpcType.Float;
 			store.floating = arg;
+		}
+		else static if (is(T : Decimal)) {
+			type_tag = RpcType.Decimal;
+			store.datetime = arg;
+		}
+		else static if (is(T : DateTime)) {
+			type_tag = RpcType.DateTime;
+			store.datetime = arg;
+		}
+		else static if (is(T : SysTime)) {
+			type_tag = RpcType.DateTime;
+			store.datetime = DateTime.fromSysTime(arg);
 		}
 		else static if (is(T : Value[Key], Key, Value))
 		{
@@ -853,6 +1049,14 @@ struct RpcValue
 
 		final switch (type_tag)
 		{
+		case RpcType.Invalid:
+			switch (rhs.type_tag)
+			{
+				case RpcType.Invalid:
+					return true;
+				default:
+					return false;
+			}
 		case RpcType.Integer:
 			switch (rhs.type_tag)
 			{
@@ -891,6 +1095,10 @@ struct RpcValue
 			}
 		case RpcType.Bool:
 			return type_tag == rhs.type_tag && store.boolean == rhs.store.boolean;
+		case RpcType.Decimal:
+			return type_tag == rhs.type_tag && store.decimal == rhs.store.decimal;
+		case RpcType.DateTime:
+			return type_tag == rhs.type_tag && store.datetime == rhs.store.datetime;
 		case RpcType.String:
 			return type_tag == rhs.type_tag && store.str == rhs.store.str;
 		case RpcType.Map:
@@ -951,7 +1159,7 @@ struct RpcValue
 	 */
 	string toString(Flag!"pretty" pretty = No.pretty) const @safe
 	{
-		import shv.cpon : Writer, WriteOptions;
+		import shv.cpon : write, WriteOptions;
 		/+
 		static struct A
 		{
@@ -967,11 +1175,11 @@ struct RpcValue
 		}
 		A a;
 		+/
-	    auto app = appender!string();
+		auto app = appender!string();
 		WriteOptions opts;
-		opts.setSortKeys(true).setIndent(pretty? "\t": "");
-		Writer wr = opts;
-		wr.write(app, this);
+		opts.sortKeys = true;
+		opts.indent = pretty? "\t": "";
+		write(app, this, opts);
 		//import std.stdio : writeln;
 		//writeln('*', a.data);
 		return app.data;

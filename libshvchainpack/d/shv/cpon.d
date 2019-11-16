@@ -3,9 +3,14 @@ module shv.cpon;
 import shv.rpcvalue;
 import std.range.primitives;
 import std.conv;
-import std.traits : isSomeChar;
+import std.traits;// : isSomeChar;
 import std.string;
-
+import std.utf;
+import std.exception;
+debug {
+	import std.stdio : writeln;
+}
+/*
 struct WriteOptions
 {
 private:
@@ -18,26 +23,152 @@ public:
 	ref WriteOptions setIndent(string s) nothrow @safe { m_indent = s; return this; }
 	string indent() const nothrow @safe { return m_indent; }
 }
-
-struct Writer
+*/
+struct WriteOptions
 {
-public:
-	this(WriteOptions opts) @safe
+	bool sortKeys = false;
+	string indent;
+	bool writeInvalidAsNull = true;
+}
+
+enum CponFloatLiteral : string
+{
+	Nan = "NaN",       /// string representation of floating-point NaN
+	Inf = "Inf",  /// string representation of floating-point Infinity
+	NegInf = "-Inf", /// string representation of floating-point negative Infinity
+}
+
+void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = WriteOptions()) @safe
+{
+	int m_nestLevel = 0;
+
+	void putc(char c) { out_range.put(c); }
+	void puts(string s) { foreach(c; s) out_range.put(c); }
+
+	bool is_oneline_list(T)(const ref T lst) @safe
 	{
-		m_options = opts;
+		if (lst.length > 10)
+			return false;
+		foreach(v; lst) {
+			if(v.type == RpcType.Map
+				|| v.type == RpcType.IMap
+				|| v.type == RpcType.List)
+				return false;
+		}
+		return true;
 	}
 
-	void write(T)(ref T out_range, const ref RpcValue rpcval) @safe
+	bool is_oneline_map(M)(const ref M map) @safe
 	{
-		auto putc = (char c) { out_range.put(c); };
-		auto puts = (string s) { foreach(c; s) out_range.put(c); };
+		if (map.length > 10)
+			return false;
+		foreach(v; map.byValue()) {
+			if(v.type == RpcType.Map
+				|| v.type == RpcType.IMap
+				|| v.type == RpcType.List)
+				return false;
+		}
+		return true;
+	}
+
+	void indent_item(bool is_online_container, bool first_item) @safe
+	{
+		if (opts.indent.length == 0)
+			return;
+		if(is_online_container) {
+			if(!first_item)
+				putc(' ');
+		}
+		else {
+			putc('\n');
+			foreach (i; 0 .. m_nestLevel)
+				puts(opts.indent);
+		}
+	}
+
+	void write_map(R, M)(R keys, const ref M map) @safe
+	{
+		auto is_oneliner = is_oneline_map(map);
+		m_nestLevel++;
+		bool first = true;
+		foreach(k; keys) {
+			if (!first)
+				putc(',');
+			indent_item(is_oneliner, first);
+			static if (is(string : typeof(k))) {
+				putc('"');
+				puts(k);
+				putc('"');
+			}
+			else {
+				puts(to!string(k));
+			}
+			putc(':');
+			auto rv = map[k];
+			write_rpcval(rv);
+			first = false;
+		}
+		m_nestLevel--;
+		indent_item(is_oneliner, true);
+	}
+
+	T[] sorted_keys(T)(const ref RpcValue[T] m) @safe {
+		T[] ret;
+		foreach(k; m.byKey())
+			ret ~= k;
+		import std.algorithm : sort;
+		sort(ret);
+		return ret;
+	}
+
+	void write_cstring(string str) @safe
+	{
+		putc('"');
+		while(str.length > 0) {
+			auto c = str.decodeFront();
+			debug(cstring) {
+				writeln(">", c, " ", c == '\t');
+			}
+			switch (c)
+			{
+				case '"':       puts("\\\"");       break;
+				case '\\':      puts("\\\\");       break;
+				case '\b':      puts("\\b");        break;
+				case '\f':      puts("\\f");        break;
+				case '\n':      puts("\\n");        break;
+				case '\r':      puts("\\r");        break;
+				case '\t':      puts("\\t");        break;
+				default:
+				{
+					import std.ascii : isControl;
+					import std.utf : encode;
+
+					if (c >= 0x80) {
+						char[4] chars;
+						size_t n = encode(chars, c); // number of UTF-8 code units
+						foreach (wc; chars[0 .. n])
+							putc(wc);
+					}
+					else {
+						putc(c % 256);
+					}
+				}
+			}
+		}
+
+		putc('"');
+	}
+
+	@safe
+	void write_rpcval(const ref RpcValue rpcval)
+	{
 		auto meta = rpcval.meta;
 		if(meta.length > 0) {
 			putc('<');
-			if((m_options.isSortKeys) != 0)
-				write_map(out_range, meta.bySortedKey(), meta);
+			if((opts.sortKeys) != 0)
+				write_map(meta.bySortedKey(), meta);
 			else
-				write_map(out_range, meta.byKey(), meta);
+				write_map(meta.byKey(), meta);
 			putc('>');
 		}
 		final switch (rpcval.type)
@@ -45,19 +176,19 @@ public:
 			case RpcType.Map:
 				auto map = rpcval.mapNoRef;
 				putc('{');
-				if((m_options.isSortKeys) != 0)
-					write_map(out_range, sorted_keys!string(map), map);
+				if((opts.sortKeys) != 0)
+					write_map(sorted_keys!string(map), map);
 				else
-					write_map(out_range, map.byKey(), map);
+					write_map(map.byKey(), map);
 				putc('}');
 				break;
 			case RpcType.IMap:
 				auto map = rpcval.imapNoRef;
 				puts("i{");
-				if((m_options.isSortKeys) != 0)
-					write_map(out_range, sorted_keys!int(map), map);
+				if((opts.sortKeys) != 0)
+					write_map(sorted_keys!int(map), map);
 				else
-					write_map(out_range, map.byKey(), map);
+					write_map(map.byKey(), map);
 				putc('}');
 				break;
 
@@ -65,24 +196,22 @@ public:
 				auto lst = rpcval.listNoRef;
 				putc('[');
 				m_nestLevel++;
-				auto is_oneliner = Writer.is_oneline_list(lst);
+				auto is_oneliner = is_oneline_list(lst);
 				bool first = true;
 				foreach(v; lst) {
 					if (!first)
 						putc(',');
-					indent_item(out_range, is_oneliner, first);
-					write(out_range, v);
+					indent_item(is_oneliner, first);
+					write_rpcval(v);
 					first = false;
 				}
 				m_nestLevel--;
-				indent_item(out_range, is_oneliner, true);
+				indent_item(is_oneliner, true);
 				putc(']');
 				break;
 
 			case RpcType.String:
-				putc('"');
-				puts(rpcval.str);
-				putc('"');
+				write_cstring(rpcval.str);
 				break;
 
 			case RpcType.Integer:
@@ -120,239 +249,469 @@ public:
 			case RpcType.Bool:
 				puts(rpcval.boolean? "true": "false");
 				break;
-
+			case RpcType.Decimal:
+				puts(rpcval.decimal.toString());
+				break;
+			case RpcType.DateTime:
+				puts(rpcval.datetime.toISOExtString());
+				break;
 			case RpcType.Null:
 				puts("null");
 				break;
-		}
-	}
-private:
-	enum CponFloatLiteral : string
-	{
-		Nan = "NaN",       /// string representation of floating-point NaN
-		Inf = "Inf",  /// string representation of floating-point Infinity
-		NegInf = "-Inf", /// string representation of floating-point negative Infinity
-	}
-
-	static bool is_oneline_list(T)(const ref T lst) @safe
-	{
-		if (lst.length > 10)
-			return false;
-		foreach(v; lst) {
-			if(v.type == RpcType.Map
-				|| v.type == RpcType.IMap
-				|| v.type == RpcType.List)
-				return false;
-		}
-		return true;
-	}
-
-	static bool is_oneline_map(M)(const ref M map) @safe
-	{
-		if (map.length > 10)
-			return false;
-		foreach(v; map.byValue()) {
-			if(v.type == RpcType.Map
-				|| v.type == RpcType.IMap
-				|| v.type == RpcType.List)
-				return false;
-		}
-		return true;
-	}
-
-	void indent_item(T)(ref T out_range, bool is_online_container, bool first_item) @safe
-	{
-		auto putc = (char c) { out_range.put(c); };
-		auto puts = (string s) { foreach(c; s) out_range.put(c); };
-		if (m_options.indent.length == 0)
-			return;
-		if(is_online_container) {
-			if(!first_item)
-				putc(' ');
-		}
-		else {
-			putc('\n');
-            foreach (i; 0 .. m_nestLevel)
-				puts(m_options.indent);
+			case RpcType.Invalid:
+				enforce(opts.writeInvalidAsNull, "Cannot write Invalid RpcValue.");
+				break;
 		}
 	}
 
-	void write_map(T, R, M)(ref T out_range, R keys, const ref M map) @safe
-	{
-		auto putc = (char c) { out_range.put(c); };
-		auto puts = (string s) { foreach(c; s) out_range.put(c); };
-		auto is_oneliner = Writer.is_oneline_map(map);
-		m_nestLevel++;
-		bool first = true;
-		foreach(k; keys) {
-			if (!first)
-				putc(',');
-			indent_item(out_range, is_oneliner, first);
-	        static if (is(string : typeof(k))) {
-				putc('"');
-				puts(k);
-				putc('"');
-	        }
-	        else {
-				puts(to!string(k));
-	        }
-			putc(':');
-			auto rv = map[k];
-			write(out_range, rv);
-			first = false;
-		}
-		m_nestLevel--;
-		indent_item(out_range, is_oneliner, true);
-	}
-
-	private T[] sorted_keys(T)(const ref RpcValue[T] m) @safe {
-		T[] ret;
-		foreach(k; m.byKey())
-			ret ~= k;
-		import std.algorithm : sort;
-		sort(ret);
-		return ret;
-	}
-private:
-	int m_nestLevel = 0;
-	WriteOptions m_options;
+	write_rpcval(rpcval);
 }
-
 
 unittest
 {
 	RpcValue rv = ["foo": "bar"];
 	rv["baz"] = 42;
 	auto cpon = rv.toCpon();
-	import std.stdio : writeln;
-	writeln("cpon: ", cpon);
 	assert(cpon == `{"baz":42,"foo":"bar"}`);
 	rv.meta[1] = 2;
 	cpon = rv.toCpon();
-	writeln("cpon: ", cpon);
 	assert(cpon == `<1:2>{"baz":42,"foo":"bar"}`);
 }
-/**
-Takes a tree of Rpc values and returns the serialized string.
 
-Any Object types will be serialized in a key-sorted order.
-
-If `pretty` is false no whitespaces are generated.
-If `pretty` is true serialized string is formatted to be human-readable.
-Set the $(LREF RpcOptions.specialFloatLiterals) flag is set in `options` to encode NaN/Infinity as strings.
-*/
-/+
-string toCpon(const ref RpcValue root, in ToCponOptions options = ToCponOptions()) @safe
+@safe unittest
 {
-	auto json = appender!string();
+	RpcValue jv0 = RpcValue("\test测试");
+	debug(cstring) {
+		writeln(jv0.str(), " cpon: ", jv0.toCpon());
+	}
+	assert(jv0.toCpon() == `"\test测试"`);
+}
 
-	void toStringImpl(Char)(string str) @safe
+class CponParseException : Exception
+{
+	this(string msg, int line = 0, int pos = 0) pure nothrow @safe
 	{
-		json.put('"');
+		if (line)
+			super(text(msg, " (Line ", line, ":", pos, ")"));
+		else
+			super(msg);
+	}
+}
 
-		foreach (Char c; str)
-		{
-			switch (c)
-			{
-				case '"':       json.put("\\\"");       break;
-				case '\\':      json.put("\\\\");       break;
+RpcValue parse(int max_depth = -1)(string cpon) @safe
+{
+	auto a = cast(immutable (ubyte)[]) cpon;
+	return parse!(immutable (ubyte)[], max_depth)(a);
+}
 
-				case '/':
-					if (!(options & RpcOptions.doNotEscapeSlashes))
-						json.put('\\');
-					json.put('/');
-					break;
+RpcValue parse(T, int max_depth = -1)(T cpon) @safe
+if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
+{
+	//import std.ascii : isDigit, isHexDigit, toUpper, toLower;
+	//import std.typecons : Nullable, Yes;
+	//debug writeln("neco: ", typeid(Unqual!(ElementType!T)));
 
-				case '\b':      json.put("\\b");        break;
-				case '\f':      json.put("\\f");        break;
-				case '\n':      json.put("\\n");        break;
-				case '\r':      json.put("\\r");        break;
-				case '\t':      json.put("\\t");        break;
-				default:
-				{
-					import std.ascii : isControl;
-					import std.utf : encode;
+	int depth = -1;
+	//Nullable!Char next;
+	int line = 1, pos = 0;
+	enum NO_CHAR = -1;
+	alias Char = int; //Unqual!(ElementType!T);
 
-					// Make sure we do UTF decoding iff we want to
-					// escape Unicode characters.
-					assert(((options & RpcOptions.escapeNonAsciiChars) != 0)
-						== is(Char == dchar), "RpcOptions.escapeNonAsciiChars needs dchar strings");
+	void error(string msg) @safe
+	{
+		throw new CponParseException(msg, line, pos);
+	}
 
-					with (RpcOptions) if (isControl(c) ||
-						((options & escapeNonAsciiChars) >= escapeNonAsciiChars && c >= 0x80))
-					{
-						// Ensure non-BMP characters are encoded as a pair
-						// of UTF-16 surrogate characters, as per RFC 4627.
-						wchar[2] wchars; // 1 or 2 UTF-16 code units
-						size_t wNum = encode(wchars, c); // number of UTF-16 code units
-						foreach (wc; wchars[0 .. wNum])
-						{
-							json.put("\\u");
-							foreach_reverse (i; 0 .. 4)
-							{
-								char ch = (wc >>> (4 * i)) & 0x0f;
-								ch += ch < 10 ? '0' : 'A' - 10;
-								json.put(ch);
+	Char peek_char() @safe
+	{
+		if(cpon.empty())
+			return NO_CHAR;
+		return cpon.front();
+	}
+
+	Char get_char() @safe
+	{
+		Char ret = cpon.front();
+		cpon.popFront();
+		if(ret == '\n') {
+			line++;
+			pos = 0;
+		}
+		else {
+			pos++;
+		}
+		return ret;
+	}
+
+	void get_token(string s) @safe
+	{
+		foreach(c; s) {
+			if(c != get_char())
+				error("Token '" ~ s ~ "' expected.");
+		}
+	}
+
+	void skip_white_insignificant() @safe
+	{
+		while (true) {
+			auto b = peek_char();
+			if (b < 0)
+				return;
+			if (b > ' ') {
+				if (b == '/') {
+					get_char();
+					b = get_char();
+					if (b == '*') {
+						// multiline_comment_entered
+						while (true) {
+							b = get_char();
+							if (b == '*') {
+								b = get_char();
+								if (b == '/')
+									break;
 							}
 						}
 					}
-					else
-					{
-						json.put(c);
+					else if (b == '/') {
+						// to end of line comment entered
+						while (true) {
+							b = get_char();
+							if (b == '\n')
+								break;
+						}
 					}
+					else
+						error("Malformed comment");
+				}
+				else if (b == ':') {
+					get_char();
+					continue;
+				}
+				else if (b == ',') {
+					get_char();
+					continue;
+				}
+				else {
+					break;
+				}
+			}
+			else {
+				get_char();
+			}
+		}
+	}
+
+	long read_int(out int digit_cnt) @safe
+	{
+		auto base = 10;
+		long val = 0;
+		bool neg = false;
+		int n = 0;
+		while (true) {
+			auto b = peek_char();
+			if(b < 0)
+				break;
+			if (b == '+' || b == '-') { // '+','-'
+				if(n != 0)
+					break;
+				get_char();
+				if(b == '-')
+					neg = true;
+			}
+			else if (b == 'x') { // 'x'
+				if(n == 1 && val != 0)
+					break;
+				if(n != 1)
+					break;
+				get_char();
+				base = 16;
+			}
+			else if( b >= '0' && b <= '9') { // '0' - '9'
+				get_char();
+				val *= base;
+				val += b - 48;
+				digit_cnt++;
+			}
+			else if( b >= 'A' && b <= 'F') { // 'A' - 'F'
+				if(base != 16)
+					break;
+				get_char();
+				val *= base;
+				val += b - 65 + 10;
+				digit_cnt++;
+			}
+			else if( b >= 'a' && b <= 'f') { // 'a' - 'f'
+				if(base != 16)
+					break;
+				get_char();
+				val *= base;
+				val += b - 97 + 10;
+				digit_cnt++;
+			}
+			else {
+				break;
+			}
+			n++;
+		}
+
+		if(neg)
+			val = -val;
+		return val;
+
+	}
+
+	@safe RpcValue read_number()
+	{
+		long mantisa = 0;
+		int exponent = 0;
+		int decimals = 0;
+		int dec_cnt = 0;
+		bool is_decimal = false;
+		bool is_uint = false;
+		bool is_neg = false;
+		int digit_cnt;
+
+		auto b = peek_char();
+		if(b == '+') {// '+'
+			is_neg = false;
+			get_char();
+		}
+		else if(b == '-') {// '-'
+			is_neg = true;
+			get_char();
+		}
+
+		mantisa = read_int(digit_cnt);
+		b = peek_char();
+		while(b > 0) {
+			if(b == 'u') {
+				is_uint = true;
+				get_char();
+				break;
+			}
+			if(b == '.') {
+				is_decimal = true;
+				get_char();
+				decimals = cast(int) read_int(dec_cnt);
+				b = peek_char();
+				if(b == NO_CHAR)
+					break;
+			}
+			if(b == 'e' || b == 'E') {
+				is_decimal = true;
+				get_char();
+				exponent = cast(int) read_int(digit_cnt);
+				if(digit_cnt == 0)
+					error("Malformed number exponetional part.");
+				break;
+			}
+			break;
+		}
+		if(is_decimal) {
+			for (int i = 0; i < dec_cnt; ++i)
+				mantisa *= 10;
+			mantisa += decimals;
+			mantisa = is_neg? -mantisa: mantisa;
+			return RpcValue(RpcValue.Decimal(mantisa, exponent - dec_cnt));
+		}
+		else if(is_uint) {
+			return RpcValue(cast(ulong) mantisa);
+		}
+		else {
+			return RpcValue(mantisa);
+		}
+	}
+
+	RpcValue read_datetime()
+	{
+		get_char(); // eat '"'
+		string s;
+		while (true) {
+			auto c = get_char();
+			if(c == '"')
+				break;
+		}
+		auto dt = RpcValue.DateTime.fromISOExtString(s);
+		return RpcValue(dt);
+	}
+
+	@safe RpcValue read_cstring()
+	{
+		import std.array;
+		auto app = appender!string();
+		get_char(); // eat '"'
+		while(true) {
+			auto b = get_char();
+			if(b == '\\') {
+				b = get_char();
+				switch (b) {
+				case '\\': app.put('\\'); break;
+				case '"': app.put('"'); break;
+				case 'b': app.put('\b'); break;
+				case 'f': app.put('\f'); break;
+				case 'n': app.put('\n'); break;
+				case 'r': app.put('\r'); break;
+				case 't': app.put('\t'); break;
+				case '0': app.put('\0'); break;
+				default: app.put(cast(dchar) b); break;
+				}
+			}
+			else {
+				if (b == '"') {
+					// end of string
+					break;
+				}
+				else {
+					app.put(cast(dchar) b);
 				}
 			}
 		}
-
-		json.put('"');
+		return RpcValue(app.data);
 	}
 
-	void toString(string str) @safe
+	RpcValue read_val() @safe
 	{
-		// Avoid UTF decoding when possible, as it is unnecessary when
-		// processing Rpc.
-		if (options & RpcOptions.escapeNonAsciiChars)
-			toStringImpl!dchar(str);
-		else
-			toStringImpl!char(str);
+		depth++;
+		if(depth > 0 && depth > max_depth)
+			error("Max depth: " ~ to!string(max_depth) ~ " exceeded.");
+		skip_white_insignificant();
+		RpcValue value;
+		Meta meta;
+		auto b = peek_char();
+
+		if (b == '<') {
+			b = get_char();  // eat '<'
+			while (true) {
+				skip_white_insignificant();
+				b = peek_char();
+				if (b == '>') {
+					get_char();
+					break;
+				}
+				auto key = read_val();
+				skip_white_insignificant();
+				auto val = read_val();
+				if (key.type == RpcType.String)
+					meta[key.str] = val;
+				else if (key.type == RpcType.Integer)
+					meta[ cast(int) key.integer] = val;
+				else if (key.type == RpcType.UInteger)
+					meta[ cast(int) key.uinteger] = val;
+				else
+					error("Malformed meta, invalid key: " ~ to!string(key));
+			}
+		}
+
+		skip_white_insignificant();
+		b = peek_char();
+		switch(b) {
+		case '0': .. case '9':
+		case '+':
+		case '-':
+			value = read_number();
+			break;
+		case '"':
+			value = read_cstring();
+			break;
+		case '[': {
+			get_char();  // eat '['
+			RpcValue[] lst;
+			while (true) {
+				skip_white_insignificant();
+				b = peek_char();
+				if (b == ']') {
+					get_char();
+					break;
+				}
+				auto val = read_val();
+			}
+			value = lst;
+			break;
+		}
+		case '{': {
+			get_char();  // eat '{'
+			RpcValue[string] mmap;
+			while (true) {
+				skip_white_insignificant();
+				b = peek_char();
+				if (b == '}') {
+					get_char();
+					break;
+				}
+				auto key = read_val();
+				skip_white_insignificant();
+				auto val = read_val();
+				if (key.type == RpcType.String)
+					mmap[key.str] = val;
+				else
+					error("Malformed map, invalid key: " ~ to!string(key));
+			}
+			value = mmap;
+			break;
+		}
+		case 'i': {
+			get_char();
+			b = peek_char();
+			if (b == '{') {
+				get_char();  // eat '{'
+				RpcValue[int] mmap;
+				while (true) {
+					skip_white_insignificant();
+					b = peek_char();
+					if (b == '}') {
+						get_char();
+						break;
+					}
+					auto key = read_val();
+					skip_white_insignificant();
+					auto val = read_val();
+					if (key.type == RpcType.Integer)
+						mmap[cast(int) key.integer] = val;
+					else if (key.type == RpcType.UInteger)
+						mmap[cast(int) key.uinteger] = val;
+					else
+						error("Malformed imap, invalid key: " ~ to!string(key));
+				}
+				value = mmap;
+			}
+			else
+				error("Invalid IMap prefix.");
+			break;
+		}
+		case 'd':
+			get_char();
+			b = peek_char();
+			if (b == '"')
+				value = read_datetime();
+			else
+				error("Invalid DateTime prefix.");
+			break;
+		case 't':
+			get_token("true");
+			value = true;
+			break;
+		case 'f':
+			get_token("false");
+			value = false;
+			break;
+		case 'n':
+			get_token("null");
+			value = null;
+			break;
+		default:
+			error("Malformed Cpon input.");
+		}
+		value.meta = meta;
+		depth--;
+		return value;
 	}
-
-	void toValue(ref in RpcValue value, ulong indentLevel) @safe
-	{
-		void putTabs(ulong additionalIndent = 0)
-		{
-			if (pretty)
-				foreach (i; 0 .. indentLevel + additionalIndent)
-					json.put("    ");
-		}
-		void putEOL()
-		{
-			if (pretty)
-				json.put('\n');
-		}
-		void putCharAndEOL(char ch)
-		{
-			json.put(ch);
-			putEOL();
-		}
-
-	}
-
-	toValue(root, 0);
-	return json.data;
+	return read_val();
 }
-+/
-/+ @safe unittest // bugzilla 12897
+
+@system unittest
 {
-	RpcValue jv0 = RpcValue("test测试");
-	assert(toRpc(jv0, false, RpcOptions.escapeNonAsciiChars) == `"test\u6D4B\u8BD5"`);
-	RpcValue jv00 = RpcValue("test\u6D4B\u8BD5");
-	assert(toRpc(jv00, false, RpcOptions.none) == `"test测试"`);
-	assert(toRpc(jv0, false, RpcOptions.none) == `"test测试"`);
-	RpcValue jv1 = RpcValue("été");
-	assert(toRpc(jv1, false, RpcOptions.escapeNonAsciiChars) == `"\u00E9t\u00E9"`);
-	RpcValue jv11 = RpcValue("\u00E9t\u00E9");
-	assert(toRpc(jv11, false, RpcOptions.none) == `"été"`);
-	assert(toRpc(jv1, false, RpcOptions.none) == `"été"`);
+	string s1 = "abc";
+	RpcValue rv = parse(s1);
+	assert(rv.type == RpcType.String);
+	assert(rv.str == s1);
 }
-+/
