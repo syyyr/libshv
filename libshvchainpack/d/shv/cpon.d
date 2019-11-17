@@ -1,6 +1,7 @@
 module shv.cpon;
 
 import shv.rpcvalue;
+import std.array;
 import std.range.primitives;
 import std.conv;
 import std.traits;// : isSomeChar;
@@ -124,7 +125,7 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 	void write_cstring(string str) @safe
 	{
 		putc('"');
-		while(str.length > 0) {
+		while(!str.empty) {
 			auto c = str.decodeFront();
 			debug(cstring) {
 				writeln(">", c, " ", c == '\t');
@@ -315,12 +316,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 	//Nullable!Char next;
 	int line = 1, pos = 0;
 	enum NO_CHAR = -1;
-	alias Char = int; //Unqual!(ElementType!T);
-
-	void error(string msg) @safe
-	{
-		throw new CponParseException(msg, line, pos);
-	}
+	alias Char = short; //Unqual!(ElementType!T);
 
 	Char peek_char() @safe
 	{
@@ -341,6 +337,19 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 			pos++;
 		}
 		return ret;
+	}
+
+	void error(string msg) @safe
+	{
+		string near;
+		for(int i=0; i<100; i++) {
+			auto c = peek_char();
+			if(c < 0)
+				break;
+			get_char();
+			near ~= cast(char) c;
+		}
+		throw new CponParseException(msg ~ " near: " ~ near, line, pos);
 	}
 
 	void get_token(string s) @safe
@@ -537,7 +546,6 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 
 	@safe RpcValue read_cstring()
 	{
-		import std.array;
 		auto app = appender!string();
 		get_char(); // eat '"'
 		while(true) {
@@ -604,6 +612,9 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 
 		skip_white_insignificant();
 		b = peek_char();
+		debug {
+			writeln("c: ", cast(char) b);
+		}
 		switch(b) {
 		case '0': .. case '9':
 		case '+':
@@ -710,8 +721,8 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 
 @system unittest
 {
-	string s1 = "abc";
+	string s1 = `"abc"`;
 	RpcValue rv = parse(s1);
 	assert(rv.type == RpcType.String);
-	assert(rv.str == s1);
+	assert(('"' ~ rv.str ~ '"') == s1);
 }

@@ -1186,19 +1186,11 @@ struct RpcValue
 	}
 
 	string toCpon() const @safe { return toString(No.pretty); }
-
-	/***
-	 * Implicitly calls `toRpc` on this RpcValue, like `toString`, but
-	 * also passes $(I true) as $(I pretty) argument.
-	 *
-	 * $(I options) can be used to tweak the conversion behavior
-	 */
-	 /*
-	string toPrettyString(in RpcOptions options = RpcOptions.none) const @safe
+	static RpcValue fromCpon(string cpon) @safe
 	{
-		return toRpc(this, true, options);
+		import shv.cpon : parse;
+		return parse(cpon);
 	}
-	*/
 }
 
 /**
