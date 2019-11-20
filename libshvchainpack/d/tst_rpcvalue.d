@@ -45,12 +45,12 @@ void testConversions()
 		["[1u,{\"a\":1},2.30]", null],
 		["<1:2>3", null],
 		["[1,<7:8>9]", null],
-		["<>1", null],
+		["<>1", "1"],
 		["<8:3u>i{2:[[\".broker\",<1:2>true]]}", null],
 		["<1:2,\"foo\":\"bar\">i{1:<7:8>9}", null],
 		["<1:2,\"foo\":<5:6>\"bar\">[1u,{\"a\":1},2.30]", null],
 		["i{1:2 // comment to end of line\n}", "i{1:2}"],
-		[`/*comment 1*/{ /*comment 2*/
+		["/*comment 1*/{ /*comment 2*/
 		\t\"foo\"/*comment \"3\"*/: \"bar\", //comment to end of line
 		\t\"baz\" : 1,
 		/*
@@ -58,12 +58,12 @@ void testConversions()
 		\t\"baz\" : 1,
 		\t\"baz\" : 1, // single inside multi
 		*/
-		}`, "{\"foo\":\"bar\",\"baz\":1}"],
+		}", "{\"baz\":1,\"foo\":\"bar\"}"],
 		//["a[1,2,3]", "[1,2,3]"], // unsupported array type
 		["<1:2>[3,<4:5>6]", null],
 		["<4:\"svete\">i{2:<4:\"svete\">[0,1]}", null],
 		[`d"2019-05-03T11:30:00-0700"`, `d"2019-05-03T11:30:00-07"`],
-		[`d""`, null],
+		//[`d""`, null],
 		[`d"2018-02-02T00:00:00Z"`, null],
 		[`d"2027-05-03T11:30:12.345+01"`, null],
 		])
@@ -71,8 +71,9 @@ void testConversions()
 		string cpon1 = lst[0];
 		string cpon2 = lst[1]? lst[1]: cpon1;
 
+		//log("src:", cpon1);
 		RpcValue rv1 = RpcValue.fromCpon(cpon1);
-		log(rv1.integer);
+		//log(cpon1, rv1.type, rv1.integer);
 		string cpn1 = rv1.toCpon();
 		log(cpon1, "\t--cpon------>\t", cpn1);
 		assert(cpn1 == cpon2);
@@ -134,7 +135,7 @@ int main()
 		writeln("rpcval: ", v);
 		//writemeta("rpcval.meta", v.meta);
 		writeln(v.toCpon());
-		writeln(v.toString(Yes.pretty));
+		writeln(v.toCpon(Yes.pretty));
 	}
 	testConversions();
 	testDateTime();

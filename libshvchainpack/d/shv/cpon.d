@@ -254,7 +254,7 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 				puts(rpcval.decimal.toString());
 				break;
 			case RpcType.DateTime:
-				puts(rpcval.datetime.toISOExtString());
+				puts("d\"" ~ rpcval.datetime.toISOExtString() ~ '"');
 				break;
 			case RpcType.Null:
 				puts("null");
@@ -527,6 +527,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 			return RpcValue(cast(ulong) mantisa);
 		}
 		else {
+			mantisa = is_neg? -mantisa: mantisa;
 			return RpcValue(mantisa);
 		}
 	}
@@ -539,6 +540,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 			auto c = get_char();
 			if(c == '"')
 				break;
+			s ~= cast(char) c;
 		}
 		auto dt = RpcValue.DateTime.fromISOExtString(s);
 		return RpcValue(dt);
@@ -580,7 +582,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 	RpcValue read_val() @safe
 	{
 		depth++;
-		if(depth > 0 && depth > max_depth)
+		if(max_depth > 0 && depth > max_depth)
 			error("Max depth: " ~ to!string(max_depth) ~ " exceeded.");
 		skip_white_insignificant();
 		RpcValue value;
@@ -606,7 +608,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 				else if (key.type == RpcType.UInteger)
 					meta[ cast(int) key.uinteger] = val;
 				else
-					error("Malformed meta, invalid key: " ~ to!string(key));
+					error("Malformed meta, invalid key: " ~ key.toCpon());
 			}
 		}
 
@@ -635,6 +637,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 					break;
 				}
 				auto val = read_val();
+				lst ~= val;
 			}
 			value = lst;
 			break;
@@ -655,7 +658,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 				if (key.type == RpcType.String)
 					mmap[key.str] = val;
 				else
-					error("Malformed map, invalid key: " ~ to!string(key));
+					error("Malformed map, invalid key: " ~ key.toCpon());
 			}
 			value = mmap;
 			break;
@@ -681,7 +684,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 					else if (key.type == RpcType.UInteger)
 						mmap[cast(int) key.uinteger] = val;
 					else
-						error("Malformed imap, invalid key: " ~ to!string(key));
+						error("Malformed imap, invalid key: " ~ key.toCpon());
 				}
 				value = mmap;
 			}

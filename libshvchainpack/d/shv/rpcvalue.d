@@ -15,43 +15,6 @@ import std.datetime.systime;
 import std.datetime.date;
 import std.datetime.timezone;
 import core.time;
-///
-/+
-@system unittest
-{
-	import std.conv : to;
-
-	// parse a file or string of json into a usable structure
-	string s = `{ "language": "D", "rating": 3.5, "code": "42" }`;
-	RpcValue j = parseRpc(s);
-	// j and j["language"] return RpcValue,
-	// j["language"].str returns a string
-
-	assert(j["language"].str == "D");
-	assert(j["rating"].floating == 3.5);
-	// check a type
-	long x;
-	if (const(RpcValue)* code = "code" in j)
-	{
-		if (code.type() == RpcType.Integer)
-			x = code.integer;
-		else
-			x = to!int(code.str);
-	}
-
-	// create a json struct
-	RpcValue jj = [ "language": "D" ];
-	// rating doesnt exist yet, so use .object to assign
-	jj.object["rating"] = RpcValue(3.5);
-	// create an array to assign to list
-	jj.object["list"] = RpcValue( ["a", "b", "c"] );
-	// list already exists, so .object optional
-	jj["list"].array ~= RpcValue("D");
-
-	string jjStr = `{"language":"D","list":["a","b","c","D"],"rating":3.5}`;
-	assert(jj.toString == jjStr);
-}
-+/
 
 /**
 Flags that control how json is encoded and parsed.
@@ -321,7 +284,39 @@ struct RpcValue
 
 		string toString() const @safe
 		{
-			return RpcValue(this).toCpon();
+			auto app = appender!string();
+			long mant = mantisa;
+			if(mant < 0) {
+				mant = -mant;
+				app.put('-');
+			}
+			auto str = to!string(mant);
+			auto n = str.length;
+			auto dec_places = -exponent;
+			if(dec_places > 0 && dec_places < n) {
+				auto dot_ix = n - dec_places;
+				str = str[0 .. dot_ix] ~ '.' ~ str[dot_ix .. $];
+			}
+			else if(dec_places > 0 && dec_places <= 3) {
+				auto extra_0_cnt = dec_places - n;
+				string str0 = "0.";
+				for (int i = 0; i < extra_0_cnt; ++i)
+					str0 ~= '0';
+				str = str0 ~ str;
+			}
+			else if(dec_places < 0 && n + exponent <= 9) {
+				for (int i = 0; i < exponent; ++i)
+					str ~= '0';
+				str ~= '.';
+			}
+			else if(dec_places == 0) {
+				str ~= '.';
+			}
+			else {
+				str ~= 'e' ~ to!string(exponent);
+			}
+			app.put(str);
+			return app.data;
 		}
 	}
 
@@ -363,8 +358,8 @@ struct RpcValue
 		//}
 		static DateTime fromISOExtString(string utc_date_time_str) @safe
 		{
-			auto ix = utc_date_time_str.indexOfAny("+-");
-			if(ix > 0) {
+			auto ix = utc_date_time_str.lastIndexOfAny("+-");
+			if(ix >= 19) {
 				string tzs = utc_date_time_str[ix+1 .. $];
 				if(tzs.length == 4)
 					utc_date_time_str = utc_date_time_str[0 .. ix+1] ~ tzs[0 .. 2] ~ ':' ~ tzs[2 .. $];
@@ -404,16 +399,25 @@ struct RpcValue
 			SysTime t;
 			t.stdTime = msecs_tz.hnsec;
 			t.timezone = new immutable SimpleTimeZone(minutes(msecs_tz.tz));
-			string s = t.toISOExtString();
-			auto ix = s.indexOfAny("+-");
-			if(ix > 0) {
-				string tz = s[ix .. $];
-				if(tz.length == 5) {
-					tz = tz[0 .. 2] ~ tz[3 .. 5];
-					s = s[0 .. ix+1] ~ tz;
-				}
+			if(msecs_tz.tz == 0) {
+				string s = t.toISOExtString();
+				s = s[0 .. $-6] ~ 'Z';
+				return s;
 			}
-			return s;
+			else {
+				string s = t.toISOExtString();
+				auto ix = s.lastIndexOfAny("+-");
+				if(ix >= 19) {
+					string tz = s[ix+1 .. $];
+					if(tz.length == 5) {
+						string tz2 = tz[0 .. 2];
+						if(tz[3 .. 5] != "00")
+							tz2 ~= tz[3 .. 5];
+						s = s[0 .. ix+1] ~ tz2;
+					}
+				}
+				return s;
+			}
 		}
 		@safe string toString() const {return toISOExtString();}
 		//@safe bool operator ==(const DateTime &o) const { return (msecs_tz.msec == o.msecs_tz.msec); }
@@ -495,8 +499,12 @@ struct RpcValue
 	 */
 	long integer() const pure @safe
 	{
-		enforce!RpcException(type == RpcType.Integer,
+		enforce!RpcException(type == RpcType.Integer || type == RpcType.UInteger,
 								"RpcValue is not an integer");
+		if(type == RpcType.UInteger) {
+			enforce!RpcException(store.uinteger <= typeof(store.integer).max, "UInt too big to be converted to Int");
+			return cast(typeof(store.integer)) store.uinteger;
+		}
 		return store.integer;
 	}
 
@@ -513,8 +521,12 @@ struct RpcValue
 	 */
 	ulong uinteger() const pure @safe
 	{
-		enforce!RpcException(type == RpcType.UInteger,
+		enforce!RpcException(type == RpcType.Integer || type == RpcType.UInteger,
 								"RpcValue is not an unsigned integer");
+		if(type == RpcType.Integer) {
+			enforce!RpcException(store.integer >= 0, "Negative Int cannot be converted to UInt");
+			return cast(typeof(store.uinteger)) store.integer;
+		}
 		return store.uinteger;
 	}
 
@@ -1157,24 +1169,9 @@ struct RpcValue
 	 *
 	 * $(I options) can be used to tweak the conversion behavior.
 	 */
-	string toString(Flag!"pretty" pretty = No.pretty) const @safe
+	string toCpon(Flag!"pretty" pretty = No.pretty) const @safe
 	{
 		import shv.cpon : write, WriteOptions;
-		/+
-		static struct A
-		{
-			string data;
-
-			void put(C)(C c) if (isSomeChar!C)
-			{
-				//import std.stdio : writeln;
-				//writeln(data, '+', c);
-				data ~= c;
-				//writeln('=', this.data);
-			}
-		}
-		A a;
-		+/
 		auto app = appender!string();
 		WriteOptions opts;
 		opts.sortKeys = true;
@@ -1185,7 +1182,7 @@ struct RpcValue
 		return app.data;
 	}
 
-	string toCpon() const @safe { return toString(No.pretty); }
+	//string toString() const @safe { return toCpon(No.pretty); }
 	static RpcValue fromCpon(string cpon) @safe
 	{
 		import shv.cpon : parse;
