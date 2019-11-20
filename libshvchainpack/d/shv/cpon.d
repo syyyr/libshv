@@ -51,9 +51,9 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 		if (lst.length > 10)
 			return false;
 		foreach(v; lst) {
-			if(v.type == RpcType.Map
-				|| v.type == RpcType.IMap
-				|| v.type == RpcType.List)
+			if(v.type == RpcValue.Type.Map
+				|| v.type == RpcValue.Type.IMap
+				|| v.type == RpcValue.Type.List)
 				return false;
 		}
 		return true;
@@ -64,9 +64,9 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 		if (map.length > 10)
 			return false;
 		foreach(v; map.byValue()) {
-			if(v.type == RpcType.Map
-				|| v.type == RpcType.IMap
-				|| v.type == RpcType.List)
+			if(v.type == RpcValue.Type.Map
+				|| v.type == RpcValue.Type.IMap
+				|| v.type == RpcValue.Type.List)
 				return false;
 		}
 		return true;
@@ -174,7 +174,7 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 		}
 		final switch (rpcval.type)
 		{
-			case RpcType.Map:
+			case RpcValue.Type.Map:
 				auto map = rpcval.mapNoRef;
 				putc('{');
 				if((opts.sortKeys) != 0)
@@ -183,7 +183,7 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 					write_map(map.byKey(), map);
 				putc('}');
 				break;
-			case RpcType.IMap:
+			case RpcValue.Type.IMap:
 				auto map = rpcval.imapNoRef;
 				puts("i{");
 				if((opts.sortKeys) != 0)
@@ -193,7 +193,7 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 				putc('}');
 				break;
 
-			case RpcType.List:
+			case RpcValue.Type.List:
 				auto lst = rpcval.listNoRef;
 				putc('[');
 				m_nestLevel++;
@@ -211,20 +211,20 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 				putc(']');
 				break;
 
-			case RpcType.String:
+			case RpcValue.Type.String:
 				write_cstring(rpcval.str);
 				break;
 
-			case RpcType.Integer:
+			case RpcValue.Type.Integer:
 				puts(to!string(rpcval.integer));
 				break;
 
-			case RpcType.UInteger:
+			case RpcValue.Type.UInteger:
 				puts(to!string(rpcval.uinteger));
 				putc('u');
 				break;
 
-			case RpcType.Float:
+			case RpcValue.Type.Float:
 				import std.math : isNaN, isInfinity;
 
 				auto val = rpcval.floating;
@@ -247,19 +247,19 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 				}
 				break;
 
-			case RpcType.Bool:
+			case RpcValue.Type.Bool:
 				puts(rpcval.boolean? "true": "false");
 				break;
-			case RpcType.Decimal:
+			case RpcValue.Type.Decimal:
 				puts(rpcval.decimal.toString());
 				break;
-			case RpcType.DateTime:
+			case RpcValue.Type.DateTime:
 				puts("d\"" ~ rpcval.datetime.toISOExtString() ~ '"');
 				break;
-			case RpcType.Null:
+			case RpcValue.Type.Null:
 				puts("null");
 				break;
-			case RpcType.Invalid:
+			case RpcValue.Type.Invalid:
 				enforce(opts.writeInvalidAsNull, "Cannot write Invalid RpcValue.");
 				break;
 		}
@@ -601,11 +601,11 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 				auto key = read_val();
 				skip_white_insignificant();
 				auto val = read_val();
-				if (key.type == RpcType.String)
+				if (key.type == RpcValue.Type.String)
 					meta[key.str] = val;
-				else if (key.type == RpcType.Integer)
+				else if (key.type == RpcValue.Type.Integer)
 					meta[ cast(int) key.integer] = val;
-				else if (key.type == RpcType.UInteger)
+				else if (key.type == RpcValue.Type.UInteger)
 					meta[ cast(int) key.uinteger] = val;
 				else
 					error("Malformed meta, invalid key: " ~ key.toCpon());
@@ -655,7 +655,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 				auto key = read_val();
 				skip_white_insignificant();
 				auto val = read_val();
-				if (key.type == RpcType.String)
+				if (key.type == RpcValue.Type.String)
 					mmap[key.str] = val;
 				else
 					error("Malformed map, invalid key: " ~ key.toCpon());
@@ -679,9 +679,9 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 					auto key = read_val();
 					skip_white_insignificant();
 					auto val = read_val();
-					if (key.type == RpcType.Integer)
+					if (key.type == RpcValue.Type.Integer)
 						mmap[cast(int) key.integer] = val;
-					else if (key.type == RpcType.UInteger)
+					else if (key.type == RpcValue.Type.UInteger)
 						mmap[cast(int) key.uinteger] = val;
 					else
 						error("Malformed imap, invalid key: " ~ key.toCpon());
@@ -726,6 +726,6 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 {
 	string s1 = `"abc"`;
 	RpcValue rv = parse(s1);
-	assert(rv.type == RpcType.String);
+	assert(rv.type == RpcValue.Type.String);
 	assert(('"' ~ rv.str ~ '"') == s1);
 }

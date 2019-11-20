@@ -28,25 +28,6 @@ enum RpcOptions
 	strictParsing = 0x8,        /// Strictly follow RFC-8259 grammar when parsing
 }
 
-/**
-Rpc type enumeration
-*/
-enum RpcType : byte
-{
-	Invalid,
-	Null,
-	Bool,
-	Integer,
-	UInteger,
-	Float,
-	Decimal,
-	DateTime,
-	String,
-	List,
-	Map,
-	IMap,
-}
-
 struct Meta
 {
 	public static struct Key
@@ -235,6 +216,22 @@ unittest {
 struct RpcValue
 {
 	import std.exception : enforce;
+
+	enum Type : byte
+	{
+		Invalid,
+		Null,
+		Bool,
+		Integer,
+		UInteger,
+		Float,
+		Decimal,
+		DateTime,
+		String,
+		List,
+		Map,
+		IMap,
+	}
 
 	struct Decimal
 	{
@@ -438,13 +435,13 @@ struct RpcValue
 		RpcValue[] list;
 	}
 	private Store store;
-	private RpcType type_tag;
+	private Type type_tag;
 	public Meta m_meta;
 
 	/**
 	  Returns the RpcType of the value stored in this structure.
 	*/
-	RpcType type() const pure nothrow @safe @nogc
+	Type type() const pure nothrow @safe @nogc
 	{
 		return type_tag;
 	}
@@ -453,8 +450,8 @@ struct RpcValue
 	{
 		  string s = "{ \"language\": \"D\" }";
 		  RpcValue j = parseRpc(s);
-		  assert(j.type == RpcType.Map);
-		  assert(j["language"].type == RpcType.String);
+		  assert(j.type == Type.Map);
+		  assert(j["language"].type == Type.String);
 	}
 	+/
 
@@ -463,13 +460,13 @@ struct RpcValue
 	void meta(Meta m) @safe { m_meta = m; }
 
 	/***
-	 * Value getter/setter for `RpcType.String`.
+	 * Value getter/setter for `Type.String`.
 	 * Throws: `RpcException` for read access if `type` is not
-	 * `RpcType.String`.
+	 * `Type.String`.
 	 */
 	string str() const pure @trusted
 	{
-		enforce!RpcException(type == RpcType.String,
+		enforce!RpcException(type == Type.String,
 								"RpcValue is not a string");
 		return store.str;
 	}
@@ -493,15 +490,15 @@ struct RpcValue
 	}
 
 	/***
-	 * Value getter/setter for `RpcType.Integer`.
+	 * Value getter/setter for `Type.Integer`.
 	 * Throws: `RpcException` for read access if `type` is not
-	 * `RpcType.Integer`.
+	 * `Type.Integer`.
 	 */
 	long integer() const pure @safe
 	{
-		enforce!RpcException(type == RpcType.Integer || type == RpcType.UInteger,
+		enforce!RpcException(type == Type.Integer || type == Type.UInteger,
 								"RpcValue is not an integer");
-		if(type == RpcType.UInteger) {
+		if(type == Type.UInteger) {
 			enforce!RpcException(store.uinteger <= typeof(store.integer).max, "UInt too big to be converted to Int");
 			return cast(typeof(store.integer)) store.uinteger;
 		}
@@ -515,15 +512,15 @@ struct RpcValue
 	}
 
 	/***
-	 * Value getter/setter for `RpcType.UInteger`.
+	 * Value getter/setter for `Type.UInteger`.
 	 * Throws: `RpcException` for read access if `type` is not
-	 * `RpcType.UInteger`.
+	 * `Type.UInteger`.
 	 */
 	ulong uinteger() const pure @safe
 	{
-		enforce!RpcException(type == RpcType.Integer || type == RpcType.UInteger,
+		enforce!RpcException(type == Type.Integer || type == Type.UInteger,
 								"RpcValue is not an unsigned integer");
-		if(type == RpcType.Integer) {
+		if(type == Type.Integer) {
 			enforce!RpcException(store.integer >= 0, "Negative Int cannot be converted to UInt");
 			return cast(typeof(store.uinteger)) store.integer;
 		}
@@ -537,14 +534,14 @@ struct RpcValue
 	}
 
 	/***
-	 * Value getter/setter for `RpcType.Float`. Note that despite
+	 * Value getter/setter for `Type.Float`. Note that despite
 	 * the name, this is a $(B 64)-bit `double`, not a 32-bit `float`.
 	 * Throws: `RpcException` for read access if `type` is not
-	 * `RpcType.Float`.
+	 * `Type.Float`.
 	 */
 	double floating() const pure @safe
 	{
-		enforce!RpcException(type == RpcType.Float,
+		enforce!RpcException(type == Type.Float,
 								"RpcValue is not a floating type");
 		return store.floating;
 	}
@@ -555,14 +552,9 @@ struct RpcValue
 		return store.floating;
 	}
 
-	/***
-	 * Value getter/setter for boolean stored in Rpc.
-	 * Throws: `RpcException` for read access if `this.type` is not
-	 * `RpcType.true_` or `RpcType.false_`.
-	 */
 	bool boolean() const pure @safe
 	{
-		if (type == RpcType.Bool) return store.boolean;
+		if (type == Type.Bool) return store.boolean;
 		throw new RpcException("RpcValue is not a boolean type");
 	}
 
@@ -587,7 +579,7 @@ struct RpcValue
 
 	Decimal decimal() const pure @safe
 	{
-		if (type == RpcType.Decimal)
+		if (type == Type.Decimal)
 			return store.decimal;
 		throw new RpcException("RpcValue is not a decimal type");
 	}
@@ -600,7 +592,7 @@ struct RpcValue
 
 	DateTime datetime() const pure @safe
 	{
-		if (type == RpcType.DateTime)
+		if (type == Type.DateTime)
 			return store.datetime;
 		throw new RpcException("RpcValue is not a datetime type");
 	}
@@ -612,9 +604,9 @@ struct RpcValue
 	}
 
 	/***
-	 * Value getter/setter for `RpcType.Map`.
+	 * Value getter/setter for `Type.Map`.
 	 * Throws: `RpcException` for read access if `type` is not
-	 * `RpcType.Map`.
+	 * `Type.Map`.
 	 * Note: this is @system because of the following pattern:
 	   ---
 	   auto a = &(json.object());
@@ -624,7 +616,7 @@ struct RpcValue
 	 */
 	ref inout(RpcValue[string]) map() inout pure @system
 	{
-		enforce!RpcException(type == RpcType.Map,
+		enforce!RpcException(type == Type.Map,
 								"RpcValue is not an object");
 		return store.map;
 	}
@@ -636,7 +628,7 @@ struct RpcValue
 	}
 
 	/***
-	 * Value getter for `RpcType.Map`.
+	 * Value getter for `Type.Map`.
 	 * Unlike `object`, this retrieves the object by value and can be used in @safe code.
 	 *
 	 * A caveat is that, if the returned value is null, modifications will not be visible:
@@ -648,18 +640,18 @@ struct RpcValue
 	 * ---
 	 *
 	 * Throws: `RpcException` for read access if `type` is not
-	 * `RpcType.Map`.
+	 * `Type.Map`.
 	 */
 	inout(RpcValue[string]) mapNoRef() inout pure @trusted
 	{
-		enforce!RpcException(type == RpcType.Map,
+		enforce!RpcException(type == Type.Map,
 								"RpcValue is not an map");
 		return store.map;
 	}
 
 	ref inout(RpcValue[int]) imap() inout pure @system
 	{
-		enforce!RpcException(type == RpcType.IMap,
+		enforce!RpcException(type == Type.IMap,
 								"RpcValue is not an IMap");
 		return store.imap;
 	}
@@ -672,15 +664,15 @@ struct RpcValue
 
 	inout(RpcValue[int]) imapNoRef() inout pure @trusted
 	{
-		enforce!RpcException(type == RpcType.IMap,
+		enforce!RpcException(type == Type.IMap,
 								"RpcValue is not an IMap");
 		return store.imap;
 	}
 
 	/***
-	 * Value getter/setter for `RpcType.List`.
+	 * Value getter/setter for `Type.List`.
 	 * Throws: `RpcException` for read access if `type` is not
-	 * `RpcType.List`.
+	 * `Type.List`.
 	 * Note: this is @system because of the following pattern:
 	   ---
 	   auto a = &(json.array());
@@ -690,7 +682,7 @@ struct RpcValue
 	 */
 	ref inout(RpcValue[]) list() inout pure @system
 	{
-		enforce!RpcException(type == RpcType.List,
+		enforce!RpcException(type == Type.List,
 								"RpcValue is not an list");
 		return store.list;
 	}
@@ -702,7 +694,7 @@ struct RpcValue
 	}
 
 	/***
-	 * Value getter for `RpcType.List`.
+	 * Value getter for `Type.List`.
 	 * Unlike `array`, this retrieves the array by value and can be used in @safe code.
 	 *
 	 * A caveat is that, if you append to the returned array, the new values aren't visible in the
@@ -715,48 +707,48 @@ struct RpcValue
 	 * ---
 	 *
 	 * Throws: `RpcException` for read access if `type` is not
-	 * `RpcType.List`.
+	 * `Type.List`.
 	 */
 	inout(RpcValue[]) listNoRef() inout pure @trusted
 	{
-		enforce!RpcException(type == RpcType.List,
+		enforce!RpcException(type == Type.List,
 								"RpcValue is not an list");
 		return store.list;
 	}
 
-	/// Test whether the type is `RpcType.null_`
+	/// Test whether the type is `Type.null_`
 	bool isNull() const pure nothrow @safe @nogc
 	{
-		return type == RpcType.Null;
+		return type == Type.Null;
 	}
 
 	private void assign(T)(T arg) @safe
 	{
 		static if (is(T : typeof(null)))
 		{
-			type_tag = RpcType.Null;
+			type_tag = Type.Null;
 		}
 		else static if (is(T : bool))
 		{
-			type_tag = RpcType.Bool;
+			type_tag = Type.Bool;
 			bool t = arg;
 			() @trusted { store.boolean = t; }();
 		}
 		else static if (is(T : string))
 		{
-			type_tag = RpcType.String;
+			type_tag = Type.String;
 			string t = arg;
 			() @trusted { store.str = t; }();
 		}
 		else static if (is(T : Decimal))
 		{
-			type_tag = RpcType.Decimal;
+			type_tag = Type.Decimal;
 			Decimal t = arg;
 			() @trusted { store.decimal = t; }();
 		}
 		else static if (isSomeString!T) // issue 15884
 		{
-			type_tag = RpcType.String;
+			type_tag = Type.String;
 			// FIXME: std.Array.Array(Range) is not deduced as 'pure'
 			() @trusted {
 				import std.utf : byUTF;
@@ -765,39 +757,40 @@ struct RpcValue
 		}
 		else static if (is(T : bool))
 		{
-			type_tag = arg ? RpcType.true_ : RpcType.false_;
+			type_tag = Type.Bool;
+			store.boolean = arg;
 		}
 		else static if (is(T : ulong) && isUnsigned!T)
 		{
-			type_tag = RpcType.UInteger;
+			type_tag = Type.UInteger;
 			store.uinteger = arg;
 		}
 		else static if (is(T : long))
 		{
-			type_tag = RpcType.Integer;
+			type_tag = Type.Integer;
 			store.integer = arg;
 		}
 		else static if (isFloatingPoint!T)
 		{
-			type_tag = RpcType.Float;
+			type_tag = Type.Float;
 			store.floating = arg;
 		}
 		else static if (is(T : Decimal)) {
-			type_tag = RpcType.Decimal;
+			type_tag = Type.Decimal;
 			store.datetime = arg;
 		}
 		else static if (is(T : DateTime)) {
-			type_tag = RpcType.DateTime;
+			type_tag = Type.DateTime;
 			store.datetime = arg;
 		}
 		else static if (is(T : SysTime)) {
-			type_tag = RpcType.DateTime;
+			type_tag = Type.DateTime;
 			store.datetime = DateTime.fromSysTime(arg);
 		}
 		else static if (is(T : Value[Key], Key, Value))
 		{
 			static if(is(Key : string)) {
-				type_tag = RpcType.Map;
+				type_tag = Type.Map;
 				static if (is(Value : RpcValue))
 				{
 					RpcValue[Key] t = arg;
@@ -812,7 +805,7 @@ struct RpcValue
 				}
 			}
 			else static if(is(Key : int)) {
-				type_tag = RpcType.IMap;
+				type_tag = Type.IMap;
 				static if (is(Value : RpcValue))
 				{
 					RpcValue[Key] t = arg;
@@ -832,7 +825,7 @@ struct RpcValue
 		}
 		else static if (isArray!T)
 		{
-			type_tag = RpcType.List;
+			type_tag = Type.List;
 			static if (is(ElementEncodingType!T : RpcValue))
 			{
 				RpcValue[] t = arg;
@@ -859,7 +852,7 @@ struct RpcValue
 
 	private void assignRef(T)(ref T arg) if (isStaticArray!T)
 	{
-		type_tag = RpcType.List;
+		type_tag = Type.List;
 		static if (is(ElementEncodingType!T : RpcValue))
 		{
 			store.list = arg;
@@ -876,8 +869,8 @@ struct RpcValue
 	/**
 	 * Constructor for `RpcValue`. If `arg` is a `RpcValue`
 	 * its value and type will be copied to the new `RpcValue`.
-	 * Note that this is a shallow copy: if type is `RpcType.Map`
-	 * or `RpcType.List` then only the reference to the data will
+	 * Note that this is a shallow copy: if type is `Type.Map`
+	 * or `Type.List` then only the reference to the data will
 	 * be copied.
 	 * Otherwise, `arg` must be implicitly convertible to one of the
 	 * following types: `typeof(null)`, `string`, `ulong`,
@@ -907,10 +900,10 @@ struct RpcValue
 		j = RpcValue(42);
 
 		j = RpcValue( [1, 2, 3] );
-		assert(j.type == RpcType.List);
+		assert(j.type == Type.List);
 
 		j = RpcValue( ["language": "D"] );
-		assert(j.type == RpcType.Map);
+		assert(j.type == Type.Map);
 	}
 
 	void opAssign(T)(T arg) if (!isStaticArray!T && !is(T : RpcValue))
@@ -925,7 +918,7 @@ struct RpcValue
 
 	/***
 	 * Array syntax for json arrays.
-	 * Throws: `RpcException` if `type` is not `RpcType.List`.
+	 * Throws: `RpcException` if `type` is not `Type.List`.
 	 */
 	ref inout(RpcValue) opIndex(size_t i) inout pure @safe
 	{
@@ -944,7 +937,7 @@ struct RpcValue
 
 	/***
 	 * Hash syntax for json objects.
-	 * Throws: `RpcException` if `type` is not `RpcType.Map`.
+	 * Throws: `RpcException` if `type` is not `Type.Map`.
 	 */
 	ref inout(RpcValue) opIndex(string k) inout pure @safe
 	{
@@ -959,15 +952,15 @@ struct RpcValue
 	 * If Rpc value is null, then operator initializes it with object and then
 	 * sets `value` for it.
 	 *
-	 * Throws: `RpcException` if `type` is not `RpcType.Map`
-	 * or `RpcType.null_`.
+	 * Throws: `RpcException` if `type` is not `Type.Map`
+	 * or `Type.null_`.
 	 */
 	void opIndexAssign(T)(auto ref T value, string key) pure
 	{
-		enforce!RpcException(type == RpcType.Map || type == RpcType.Null,
+		enforce!RpcException(type == Type.Map || type == Type.Null,
 								"RpcValue must be object or null");
 		RpcValue[string] aa = null;
-		if (type == RpcType.Map) {
+		if (type == Type.Map) {
 			aa = this.mapNoRef;
 		}
 
@@ -1061,65 +1054,65 @@ struct RpcValue
 
 		final switch (type_tag)
 		{
-		case RpcType.Invalid:
+		case Type.Invalid:
 			switch (rhs.type_tag)
 			{
-				case RpcType.Invalid:
+				case Type.Invalid:
 					return true;
 				default:
 					return false;
 			}
-		case RpcType.Integer:
+		case Type.Integer:
 			switch (rhs.type_tag)
 			{
-				case RpcType.Integer:
+				case Type.Integer:
 					return store.integer == rhs.store.integer;
-				case RpcType.UInteger:
+				case Type.UInteger:
 					return store.integer == rhs.store.uinteger;
-				case RpcType.Float:
+				case Type.Float:
 					return store.integer == rhs.store.floating;
 				default:
 					return false;
 			}
-		case RpcType.UInteger:
+		case Type.UInteger:
 			switch (rhs.type_tag)
 			{
-				case RpcType.Integer:
+				case Type.Integer:
 					return store.uinteger == rhs.store.integer;
-				case RpcType.UInteger:
+				case Type.UInteger:
 					return store.uinteger == rhs.store.uinteger;
-				case RpcType.Float:
+				case Type.Float:
 					return store.uinteger == rhs.store.floating;
 				default:
 					return false;
 			}
-		case RpcType.Float:
+		case Type.Float:
 			switch (rhs.type_tag)
 			{
-				case RpcType.Integer:
+				case Type.Integer:
 					return store.floating == rhs.store.integer;
-				case RpcType.UInteger:
+				case Type.UInteger:
 					return store.floating == rhs.store.uinteger;
-				case RpcType.Float:
+				case Type.Float:
 					return store.floating == rhs.store.floating;
 				default:
 					return false;
 			}
-		case RpcType.Bool:
+		case Type.Bool:
 			return type_tag == rhs.type_tag && store.boolean == rhs.store.boolean;
-		case RpcType.Decimal:
+		case Type.Decimal:
 			return type_tag == rhs.type_tag && store.decimal == rhs.store.decimal;
-		case RpcType.DateTime:
+		case Type.DateTime:
 			return type_tag == rhs.type_tag && store.datetime == rhs.store.datetime;
-		case RpcType.String:
+		case Type.String:
 			return type_tag == rhs.type_tag && store.str == rhs.store.str;
-		case RpcType.Map:
+		case Type.Map:
 			return type_tag == rhs.type_tag && store.map == rhs.store.map;
-		case RpcType.IMap:
+		case Type.IMap:
 			return type_tag == rhs.type_tag && store.imap == rhs.store.imap;
-		case RpcType.List:
+		case Type.List:
 			return type_tag == rhs.type_tag && store.list == rhs.store.list;
-		case RpcType.Null:
+		case Type.Null:
 			return type_tag == rhs.type_tag;
 		}
 	}
@@ -1150,7 +1143,7 @@ struct RpcValue
 	/// Implements the foreach `opApply` interface for json objects.
 	int opApply(scope int delegate(string key, ref RpcValue) dg) @system
 	{
-		enforce!RpcException(type == RpcType.Map,
+		enforce!RpcException(type == Type.Map,
 								"RpcValue is not an object");
 		int result;
 
@@ -1190,471 +1183,13 @@ struct RpcValue
 	}
 }
 
-/**
-Parses a serialized string and returns a tree of Rpc values.
-Throws: $(LREF RpcException) if string does not follow the Rpc grammar or the depth exceeds the max depth,
-		$(LREF ConvException) if a number in the input cannot be represented by a native D type.
-Params:
-	json = json-formatted string to parse
-	maxDepth = maximum depth of nesting allowed, -1 disables depth checking
-	options = enable decoding string representations of NaN/Inf as float values
-*/
-RpcValue parseRpc(T)(T json, int maxDepth = -1, RpcOptions options = RpcOptions.none)
-if (isInputRange!T && !isInfinite!T && isSomeChar!(ElementEncodingType!T))
-{
-	import std.ascii : isDigit, isHexDigit, toUpper, toLower;
-	import std.typecons : Nullable, Yes;
-	RpcValue root;
-	root.type_tag = RpcType.null_;
-
-	// Avoid UTF decoding when possible, as it is unnecessary when
-	// processing Rpc.
-	static if (is(T : const(char)[]))
-		alias Char = char;
-	else
-		alias Char = Unqual!(ElementType!T);
-
-	int depth = -1;
-	Nullable!Char next;
-	int line = 1, pos = 0;
-	immutable bool strict = (options & RpcOptions.strictParsing) != 0;
-
-	void error(string msg)
-	{
-		throw new RpcException(msg, line, pos);
-	}
-
-	if (json.empty)
-	{
-		if (strict)
-		{
-			error("Empty Rpc body");
-		}
-		return root;
-	}
-
-	bool isWhite(dchar c)
-	{
-		if (strict)
-		{
-			// RFC 7159 has a stricter definition of whitespace than general ASCII.
-			return c == ' ' || c == '\t' || c == '\n' || c == '\r';
-		}
-		import std.ascii : isWhite;
-		// Accept ASCII NUL as whitespace in non-strict mode.
-		return c == 0 || isWhite(c);
-	}
-
-	Char popChar()
-	{
-		if (json.empty) error("Unexpected end of data.");
-		static if (is(T : const(char)[]))
-		{
-			Char c = json[0];
-			json = json[1..$];
-		}
-		else
-		{
-			Char c = json.front;
-			json.popFront();
-		}
-
-		if (c == '\n')
-		{
-			line++;
-			pos = 0;
-		}
-		else
-		{
-			pos++;
-		}
-
-		return c;
-	}
-
-	Char peekChar()
-	{
-		if (next.isNull)
-		{
-			if (json.empty) return '\0';
-			next = popChar();
-		}
-		return next.get;
-	}
-
-	Nullable!Char peekCharNullable()
-	{
-		if (next.isNull && !json.empty)
-		{
-			next = popChar();
-		}
-		return next;
-	}
-
-	void skipWhitespace()
-	{
-		while (true)
-		{
-			auto c = peekCharNullable();
-			if (c.isNull ||
-				!isWhite(c.get))
-			{
-				return;
-			}
-			next.nullify();
-		}
-	}
-
-	Char getChar(bool SkipWhitespace = false)()
-	{
-		static if (SkipWhitespace) skipWhitespace();
-
-		Char c;
-		if (!next.isNull)
-		{
-			c = next.get;
-			next.nullify();
-		}
-		else
-			c = popChar();
-
-		return c;
-	}
-
-	void checkChar(bool SkipWhitespace = true)(char c, bool caseSensitive = true)
-	{
-		static if (SkipWhitespace) skipWhitespace();
-		auto c2 = getChar();
-		if (!caseSensitive) c2 = toLower(c2);
-
-		if (c2 != c) error(text("Found '", c2, "' when expecting '", c, "'."));
-	}
-
-	bool testChar(bool SkipWhitespace = true, bool CaseSensitive = true)(char c)
-	{
-		static if (SkipWhitespace) skipWhitespace();
-		auto c2 = peekChar();
-		static if (!CaseSensitive) c2 = toLower(c2);
-
-		if (c2 != c) return false;
-
-		getChar();
-		return true;
-	}
-
-	wchar parseWChar()
-	{
-		wchar val = 0;
-		foreach_reverse (i; 0 .. 4)
-		{
-			auto hex = toUpper(getChar());
-			if (!isHexDigit(hex)) error("Expecting hex character");
-			val += (isDigit(hex) ? hex - '0' : hex - ('A' - 10)) << (4 * i);
-		}
-		return val;
-	}
-
-	string parseString()
-	{
-		import std.uni : isSurrogateHi, isSurrogateLo;
-		import std.utf : encode, decode;
-
-		auto str = appender!string();
-
-	Next:
-		switch (peekChar())
-		{
-			case '"':
-				getChar();
-				break;
-
-			case '\\':
-				getChar();
-				auto c = getChar();
-				switch (c)
-				{
-					case '"':       str.put('"');   break;
-					case '\\':      str.put('\\');  break;
-					case '/':       str.put('/');   break;
-					case 'b':       str.put('\b');  break;
-					case 'f':       str.put('\f');  break;
-					case 'n':       str.put('\n');  break;
-					case 'r':       str.put('\r');  break;
-					case 't':       str.put('\t');  break;
-					case 'u':
-						wchar wc = parseWChar();
-						dchar val;
-						// Non-BMP characters are escaped as a pair of
-						// UTF-16 surrogate characters (see RFC 4627).
-						if (isSurrogateHi(wc))
-						{
-							wchar[2] pair;
-							pair[0] = wc;
-							if (getChar() != '\\') error("Expected escaped low surrogate after escaped high surrogate");
-							if (getChar() != 'u') error("Expected escaped low surrogate after escaped high surrogate");
-							pair[1] = parseWChar();
-							size_t index = 0;
-							val = decode(pair[], index);
-							if (index != 2) error("Invalid escaped surrogate pair");
-						}
-						else
-						if (isSurrogateLo(wc))
-							error(text("Unexpected low surrogate"));
-						else
-							val = wc;
-
-						char[4] buf;
-						immutable len = encode!(Yes.useReplacementDchar)(buf, val);
-						str.put(buf[0 .. len]);
-						break;
-
-					default:
-						error(text("Invalid escape sequence '\\", c, "'."));
-				}
-				goto Next;
-
-			default:
-				// RFC 7159 states that control characters U+0000 through
-				// U+001F must not appear unescaped in a Rpc string.
-				// Note: std.ascii.isControl can't be used for this test
-				// because it considers ASCII DEL (0x7f) to be a control
-				// character but RFC 7159 does not.
-				// Accept unescaped ASCII NULs in non-strict mode.
-				auto c = getChar();
-				if (c < 0x20 && (strict || c != 0))
-					error("Illegal control character.");
-				str.put(c);
-				goto Next;
-		}
-
-		return str.data.length ? str.data : "";
-	}
-
-	bool tryGetSpecialFloat(string str, out double val) {
-		switch (str)
-		{
-			case RpcFloatLiteral.nan:
-				val = double.nan;
-				return true;
-			case RpcFloatLiteral.inf:
-				val = double.infinity;
-				return true;
-			case RpcFloatLiteral.negativeInf:
-				val = -double.infinity;
-				return true;
-			default:
-				return false;
-		}
-	}
-
-	void parseValue(ref RpcValue value)
-	{
-		depth++;
-
-		if (maxDepth != -1 && depth > maxDepth) error("Nesting too deep.");
-
-		auto c = getChar!true();
-
-		switch (c)
-		{
-			case '{':
-				if (testChar('}'))
-				{
-					value.object = null;
-					break;
-				}
-
-				RpcValue[string] obj;
-				do
-				{
-					skipWhitespace();
-					if (!strict && peekChar() == '}')
-					{
-						break;
-					}
-					checkChar('"');
-					string name = parseString();
-					checkChar(':');
-					RpcValue member;
-					parseValue(member);
-					obj[name] = member;
-				}
-				while (testChar(','));
-				value.object = obj;
-
-				checkChar('}');
-				break;
-
-			case '[':
-				if (testChar(']'))
-				{
-					value.type_tag = RpcType.List;
-					break;
-				}
-
-				RpcValue[] arr;
-				do
-				{
-					skipWhitespace();
-					if (!strict && peekChar() == ']')
-					{
-						break;
-					}
-					RpcValue element;
-					parseValue(element);
-					arr ~= element;
-				}
-				while (testChar(','));
-
-				checkChar(']');
-				value.array = arr;
-				break;
-
-			case '"':
-				auto str = parseString();
-
-				// if special float parsing is enabled, check if string represents NaN/Inf
-				if ((options & RpcOptions.specialFloatLiterals) &&
-					tryGetSpecialFloat(str, value.store.floating))
-				{
-					// found a special float, its value was placed in value.store.floating
-					value.type_tag = RpcType.Float;
-					break;
-				}
-
-				value.type_tag = RpcType.String;
-				value.store.str = str;
-				break;
-
-			case '0': .. case '9':
-			case '-':
-				auto number = appender!string();
-				bool isFloat, isNegative;
-
-				void readInteger()
-				{
-					if (!isDigit(c)) error("Digit expected");
-
-				Next: number.put(c);
-
-					if (isDigit(peekChar()))
-					{
-						c = getChar();
-						goto Next;
-					}
-				}
-
-				if (c == '-')
-				{
-					number.put('-');
-					c = getChar();
-					isNegative = true;
-				}
-
-				if (strict && c == '0')
-				{
-					number.put('0');
-					if (isDigit(peekChar()))
-					{
-						error("Additional digits not allowed after initial zero digit");
-					}
-				}
-				else
-				{
-					readInteger();
-				}
-
-				if (testChar('.'))
-				{
-					isFloat = true;
-					number.put('.');
-					c = getChar();
-					readInteger();
-				}
-				if (testChar!(false, false)('e'))
-				{
-					isFloat = true;
-					number.put('e');
-					if (testChar('+')) number.put('+');
-					else if (testChar('-')) number.put('-');
-					c = getChar();
-					readInteger();
-				}
-
-				string data = number.data;
-				if (isFloat)
-				{
-					value.type_tag = RpcType.Float;
-					value.store.floating = parse!double(data);
-				}
-				else
-				{
-					if (isNegative)
-						value.store.integer = parse!long(data);
-					else
-						value.store.uinteger = parse!ulong(data);
-
-					value.type_tag = !isNegative && value.store.uinteger & (1UL << 63) ?
-						RpcType.UInteger : RpcType.Integer;
-				}
-				break;
-
-			case 'T':
-				if (strict) goto default;
-				goto case;
-			case 't':
-				value.type_tag = RpcType.Bool;
-				value.store.boolean = true;
-				checkChar!false('r', strict);
-				checkChar!false('u', strict);
-				checkChar!false('e', strict);
-				break;
-
-			case 'F':
-				if (strict) goto default;
-				goto case;
-			case 'f':
-				value.type_tag = RpcType.Bool;
-				value.store.boolean = false;
-				checkChar!false('a', strict);
-				checkChar!false('l', strict);
-				checkChar!false('s', strict);
-				checkChar!false('e', strict);
-				break;
-
-			case 'N':
-				if (strict) goto default;
-				goto case;
-			case 'n':
-				value.type_tag = RpcType.null_;
-				checkChar!false('u', strict);
-				checkChar!false('l', strict);
-				checkChar!false('l', strict);
-				break;
-
-			default:
-				error(text("Unexpected character '", c, "'."));
-		}
-
-		depth--;
-	}
-
-	parseValue(root);
-	if (strict)
-	{
-		skipWhitespace();
-		if (!peekCharNullable().isNull) error("Trailing non-whitespace characters");
-	}
-	return root;
-}
-
 /+ @safe unittest
 {
 	enum issue15742objectOfObject = `{ "key1": { "key2": 1 }}`;
-	static assert(parseRpc(issue15742objectOfObject).type == RpcType.Map);
+	static assert(parseRpc(issue15742objectOfObject).type == Type.Map);
 
 	enum issue15742arrayOfArray = `[[1]]`;
-	static assert(parseRpc(issue15742arrayOfArray).type == RpcType.List);
+	static assert(parseRpc(issue15742arrayOfArray).type == Type.List);
 }
 +/
 
@@ -1688,19 +1223,6 @@ if (isInputRange!T && !isInfinite!T && isSomeChar!(ElementEncodingType!T))
 +/
 
 /**
-Parses a serialized string and returns a tree of Rpc values.
-Throws: $(LREF RpcException) if the depth exceeds the max depth.
-Params:
-	json = json-formatted string to parse
-	options = enable decoding string representations of NaN/Inf as float values
-*/
-RpcValue parseRpc(T)(T json, RpcOptions options)
-if (isInputRange!T && !isInfinite!T && isSomeChar!(ElementEncodingType!T))
-{
-	return parseRpc!T(json, -1, options);
-}
-
-/**
 Exception thrown on Rpc errors
 */
 class RpcException : Exception
@@ -1720,570 +1242,3 @@ class RpcException : Exception
 }
 
 
-/+ @system unittest
-{
-	import std.exception;
-	RpcValue jv = "123";
-	assert(jv.type == RpcType.String);
-	assertNotThrown(jv.str);
-	assertThrown!RpcException(jv.integer);
-	assertThrown!RpcException(jv.uinteger);
-	assertThrown!RpcException(jv.floating);
-	assertThrown!RpcException(jv.object);
-	assertThrown!RpcException(jv.array);
-	assertThrown!RpcException(jv["aa"]);
-	assertThrown!RpcException(jv[2]);
-
-	jv = -3;
-	assert(jv.type == RpcType.Integer);
-	assertNotThrown(jv.integer);
-
-	jv = cast(uint) 3;
-	assert(jv.type == RpcType.UInteger);
-	assertNotThrown(jv.uinteger);
-
-	jv = 3.0;
-	assert(jv.type == RpcType.Float);
-	assertNotThrown(jv.floating);
-
-	jv = ["key" : "value"];
-	assert(jv.type == RpcType.Map);
-	assertNotThrown(jv.object);
-	assertNotThrown(jv["key"]);
-	assert("key" in jv);
-	assert("notAnElement" !in jv);
-	assertThrown!RpcException(jv["notAnElement"]);
-	const cjv = jv;
-	assert("key" in cjv);
-	assertThrown!RpcException(cjv["notAnElement"]);
-
-	foreach (string key, value; jv)
-	{
-		static assert(is(typeof(value) == RpcValue));
-		assert(key == "key");
-		assert(value.type == RpcType.String);
-		assertNotThrown(value.str);
-		assert(value.str == "value");
-	}
-
-	jv = [3, 4, 5];
-	assert(jv.type == RpcType.List);
-	assertNotThrown(jv.array);
-	assertNotThrown(jv[2]);
-	foreach (size_t index, value; jv)
-	{
-		static assert(is(typeof(value) == RpcValue));
-		assert(value.type == RpcType.Integer);
-		assertNotThrown(value.integer);
-		assert(index == (value.integer-3));
-	}
-
-	jv = null;
-	assert(jv.type == RpcType.null_);
-	assert(jv.isNull);
-	jv = "foo";
-	assert(!jv.isNull);
-
-	jv = RpcValue("value");
-	assert(jv.type == RpcType.String);
-	assert(jv.str == "value");
-
-	RpcValue jv2 = RpcValue("value");
-	assert(jv2.type == RpcType.String);
-	assert(jv2.str == "value");
-
-	RpcValue jv3 = RpcValue("\u001c");
-	assert(jv3.type == RpcType.String);
-	assert(jv3.str == "\u001C");
-}
-+/
-
-/+ @system unittest
-{
-	// Bugzilla 11504
-
-	RpcValue jv = 1;
-	assert(jv.type == RpcType.Integer);
-
-	jv.str = "123";
-	assert(jv.type == RpcType.String);
-	assert(jv.str == "123");
-
-	jv.integer = 1;
-	assert(jv.type == RpcType.Integer);
-	assert(jv.integer == 1);
-
-	jv.uinteger = 2u;
-	assert(jv.type == RpcType.UInteger);
-	assert(jv.uinteger == 2u);
-
-	jv.floating = 1.5;
-	assert(jv.type == RpcType.Float);
-	assert(jv.floating == 1.5);
-
-	jv.object = ["key" : RpcValue("value")];
-	assert(jv.type == RpcType.Map);
-	assert(jv.object == ["key" : RpcValue("value")]);
-
-	jv.array = [RpcValue(1), RpcValue(2), RpcValue(3)];
-	assert(jv.type == RpcType.List);
-	assert(jv.array == [RpcValue(1), RpcValue(2), RpcValue(3)]);
-
-	jv = true;
-	assert(jv.type == RpcType.true_);
-
-	jv = false;
-	assert(jv.type == RpcType.false_);
-
-	enum E{True = true}
-	jv = E.True;
-	assert(jv.type == RpcType.true_);
-}
-+/
-
-/+ @system pure unittest
-{
-	// Adding new json element via array() / object() directly
-
-	RpcValue jarr = RpcValue([10]);
-	foreach (i; 0 .. 9)
-		jarr.array ~= RpcValue(i);
-	assert(jarr.array.length == 10);
-
-	RpcValue jobj = RpcValue(["key" : RpcValue("value")]);
-	foreach (i; 0 .. 9)
-		jobj.object[text("key", i)] = RpcValue(text("value", i));
-	assert(jobj.object.length == 10);
-}
-+/
-
-/+ @system pure unittest
-{
-	// Adding new json element without array() / object() access
-
-	RpcValue jarr = RpcValue([10]);
-	foreach (i; 0 .. 9)
-		jarr ~= [RpcValue(i)];
-	assert(jarr.array.length == 10);
-
-	RpcValue jobj = RpcValue(["key" : RpcValue("value")]);
-	foreach (i; 0 .. 9)
-		jobj[text("key", i)] = RpcValue(text("value", i));
-	assert(jobj.object.length == 10);
-
-	// No array alias
-	auto jarr2 = jarr ~ [1,2,3];
-	jarr2[0] = 999;
-	assert(jarr[0] == RpcValue(10));
-}
-+/
-
-/+ @system unittest
-{
-	// @system because RpcValue.array is @system
-	import std.exception;
-
-	// An overly simple test suite, if it can parse a serializated string and
-	// then use the resulting values tree to generate an identical
-	// serialization, both the decoder and encoder works.
-
-	auto jsons = [
-		`null`,
-		`true`,
-		`false`,
-		`0`,
-		`123`,
-		`-4321`,
-		`0.25`,
-		`-0.25`,
-		`""`,
-		`"hello\nworld"`,
-		`"\"\\\/\b\f\n\r\t"`,
-		`[]`,
-		`[12,"foo",true,false]`,
-		`{}`,
-		`{"a":1,"b":null}`,
-		`{"goodbye":[true,"or",false,["test",42,{"nested":{"a":23.5,"b":0.140625}}]],`
-		~`"hello":{"array":[12,null,{}],"json":"is great"}}`,
-	];
-
-	enum dbl1_844 = `1.8446744073709568`;
-	version (MinGW)
-		jsons ~= dbl1_844 ~ `e+019`;
-	else
-		jsons ~= dbl1_844 ~ `e+19`;
-
-	RpcValue val;
-	string result;
-	foreach (json; jsons)
-	{
-		try
-		{
-			val = parseRpc(json);
-			enum pretty = false;
-			result = toRpc(val, pretty);
-			assert(result == json, text(result, " should be ", json));
-		}
-		catch (RpcException e)
-		{
-			import std.stdio : writefln;
-			writefln(text(json, "\n", e.toString()));
-		}
-	}
-
-	// Should be able to correctly interpret unicode entities
-	val = parseRpc(`"\u003C\u003E"`);
-	assert(toRpc(val) == "\"\&lt;\&gt;\"");
-	assert(val.to!string() == "\"\&lt;\&gt;\"");
-	val = parseRpc(`"\u0391\u0392\u0393"`);
-	assert(toRpc(val) == "\"\&Alpha;\&Beta;\&Gamma;\"");
-	assert(val.to!string() == "\"\&Alpha;\&Beta;\&Gamma;\"");
-	val = parseRpc(`"\u2660\u2666"`);
-	assert(toRpc(val) == "\"\&spades;\&diams;\"");
-	assert(val.to!string() == "\"\&spades;\&diams;\"");
-
-	//0x7F is a control character (see Unicode spec)
-	val = parseRpc(`"\u007F"`);
-	assert(toRpc(val) == "\"\\u007F\"");
-	assert(val.to!string() == "\"\\u007F\"");
-
-	with(parseRpc(`""`))
-		assert(str == "" && str !is null);
-	with(parseRpc(`[]`))
-		assert(!array.length);
-
-	// Formatting
-	val = parseRpc(`{"a":[null,{"x":1},{},[]]}`);
-	assert(toRpc(val, true) == `{
-	"a": [
-		null,
-		{
-			"x": 1
-		},
-		{},
-		[]
-	]
-}`);
-}
-+/
-
-/+ @safe unittest
-{
-  auto json = `"hello\nworld"`;
-  const jv = parseRpc(json);
-  assert(jv.toString == json);
-  assert(jv.toPrettyString == json);
-}
-+/
-
-/+ @system pure unittest
-{
-	// Bugzilla 12969
-
-	RpcValue jv;
-	jv["int"] = 123;
-
-	assert(jv.type == RpcType.Map);
-	assert("int" in jv);
-	assert(jv["int"].integer == 123);
-
-	jv["array"] = [1, 2, 3, 4, 5];
-
-	assert(jv["array"].type == RpcType.List);
-	assert(jv["array"][2].integer == 3);
-
-	jv["str"] = "D language";
-	assert(jv["str"].type == RpcType.String);
-	assert(jv["str"].str == "D language");
-
-	jv["bool"] = false;
-	assert(jv["bool"].type == RpcType.false_);
-
-	assert(jv.object.length == 4);
-
-	jv = [5, 4, 3, 2, 1];
-	assert(jv.type == RpcType.List);
-	assert(jv[3].integer == 2);
-}
-+/
-
-/+ @safe unittest
-{
-	auto s = q"EOF
-[
-  1,
-  2,
-  3,
-  potato
-]
-EOF";
-
-	import std.exception;
-
-	auto e = collectException!RpcException(parseRpc(s));
-	assert(e.msg == "Unexpected character 'p'. (Line 5:3)", e.msg);
-}
-+/
-
-// handling of special float values (NaN, Inf, -Inf)
-/+ @safe unittest
-{
-	import std.exception : assertThrown;
-	import std.math : isNaN, isInfinity;
-
-	// expected representations of NaN and Inf
-	enum {
-		nanString         = '"' ~ RpcFloatLiteral.nan         ~ '"',
-		infString         = '"' ~ RpcFloatLiteral.inf         ~ '"',
-		negativeInfString = '"' ~ RpcFloatLiteral.negativeInf ~ '"',
-	}
-
-	// with the specialFloatLiterals option, encode NaN/Inf as strings
-	assert(RpcValue(float.nan).toString(RpcOptions.specialFloatLiterals)       == nanString);
-	assert(RpcValue(double.infinity).toString(RpcOptions.specialFloatLiterals) == infString);
-	assert(RpcValue(-real.infinity).toString(RpcOptions.specialFloatLiterals)  == negativeInfString);
-
-	// without the specialFloatLiterals option, throw on encoding NaN/Inf
-	assertThrown!RpcException(RpcValue(float.nan).toString);
-	assertThrown!RpcException(RpcValue(double.infinity).toString);
-	assertThrown!RpcException(RpcValue(-real.infinity).toString);
-
-	// when parsing json with specialFloatLiterals option, decode special strings as floats
-	RpcValue jvNan    = parseRpc(nanString, RpcOptions.specialFloatLiterals);
-	RpcValue jvInf    = parseRpc(infString, RpcOptions.specialFloatLiterals);
-	RpcValue jvNegInf = parseRpc(negativeInfString, RpcOptions.specialFloatLiterals);
-
-	assert(jvNan.floating.isNaN);
-	assert(jvInf.floating.isInfinity    && jvInf.floating > 0);
-	assert(jvNegInf.floating.isInfinity && jvNegInf.floating < 0);
-
-	// when parsing json without the specialFloatLiterals option, decode special strings as strings
-	jvNan    = parseRpc(nanString);
-	jvInf    = parseRpc(infString);
-	jvNegInf = parseRpc(negativeInfString);
-
-	assert(jvNan.str    == RpcFloatLiteral.nan);
-	assert(jvInf.str    == RpcFloatLiteral.inf);
-	assert(jvNegInf.str == RpcFloatLiteral.negativeInf);
-}
-+/
-
-/+ pure nothrow @safe @nogc unittest
-{
-	RpcValue testVal;
-	testVal = "test";
-	testVal = 10;
-	testVal = 10u;
-	testVal = 1.0;
-	testVal = (RpcValue[string]).init;
-	testVal = RpcValue[].init;
-	testVal = null;
-	assert(testVal.isNull);
-}
-+/
-
-/+ pure nothrow @safe unittest // issue 15884
-{
-	import std.typecons;
-	void Test(C)() {
-		C[] a = ['x'];
-		RpcValue testVal = a;
-		assert(testVal.type == RpcType.String);
-		testVal = a.idup;
-		assert(testVal.type == RpcType.String);
-	}
-	Test!char();
-	Test!wchar();
-	Test!dchar();
-}
-+/
-
-/+ @safe unittest // issue 15885
-{
-	enum bool realInDoublePrecision = real.mant_dig == double.mant_dig;
-
-	static bool test(const double num0)
-	{
-		import std.math : feqrel;
-		const json0 = RpcValue(num0);
-		const num1 = to!double(toRpc(json0));
-		static if (realInDoublePrecision)
-			return feqrel(num1, num0) >= (double.mant_dig - 1);
-		else
-			return num1 == num0;
-	}
-
-	assert(test( 0.23));
-	assert(test(-0.23));
-	assert(test(1.223e+24));
-	assert(test(23.4));
-	assert(test(0.0012));
-	assert(test(30738.22));
-
-	assert(test(1 + double.epsilon));
-	assert(test(double.min_normal));
-	static if (realInDoublePrecision)
-		assert(test(-double.max / 2));
-	else
-		assert(test(-double.max));
-
-	const minSub = double.min_normal * double.epsilon;
-	assert(test(minSub));
-	assert(test(3*minSub));
-}
-+/
-
-/+ @safe unittest // issue 17555
-{
-	import std.exception : assertThrown;
-
-	assertThrown!RpcException(parseRpc("\"a\nb\""));
-}
-+/
-
-/+ @safe unittest // issue 17556
-{
-	auto v = RpcValue("\U0001D11E");
-	auto j = toRpc(v, false, RpcOptions.escapeNonAsciiChars);
-	assert(j == `"\uD834\uDD1E"`);
-}
-+/
-
-/+ @safe unittest // issue 5904
-{
-	string s = `"\uD834\uDD1E"`;
-	auto j = parseRpc(s);
-	assert(j.str == "\U0001D11E");
-}
-+/
-
-/+ @safe unittest // issue 17557
-{
-	assert(parseRpc("\"\xFF\"").str == "\xFF");
-	assert(parseRpc("\"\U0001D11E\"").str == "\U0001D11E");
-}
-+/
-
-/+ @safe unittest // issue 17553
-{
-	auto v = RpcValue("\xFF");
-	assert(toRpc(v) == "\"\xFF\"");
-}
-+/
-
-/+ @safe unittest
-{
-	import std.utf;
-	assert(parseRpc("\"\xFF\"".byChar).str == "\xFF");
-	assert(parseRpc("\"\U0001D11E\"".byChar).str == "\U0001D11E");
-}
-+/
-
-/+ @safe unittest // RpcOptions.doNotEscapeSlashes (issue 17587)
-{
-	assert(parseRpc(`"/"`).toString == `"\/"`);
-	assert(parseRpc(`"\/"`).toString == `"\/"`);
-	assert(parseRpc(`"/"`).toString(RpcOptions.doNotEscapeSlashes) == `"/"`);
-	assert(parseRpc(`"\/"`).toString(RpcOptions.doNotEscapeSlashes) == `"/"`);
-}
-+/
-
-/+ @safe unittest // RpcOptions.strictParsing (issue 16639)
-{
-	import std.exception : assertThrown;
-
-	// Unescaped ASCII NULs
-	assert(parseRpc("[\0]").type == RpcType.List);
-	assertThrown!RpcException(parseRpc("[\0]", RpcOptions.strictParsing));
-	assert(parseRpc("\"\0\"").str == "\0");
-	assertThrown!RpcException(parseRpc("\"\0\"", RpcOptions.strictParsing));
-
-	// Unescaped ASCII DEL (0x7f) in strings
-	assert(parseRpc("\"\x7f\"").str == "\x7f");
-	assert(parseRpc("\"\x7f\"", RpcOptions.strictParsing).str == "\x7f");
-
-	// "true", "false", "null" case sensitivity
-	assert(parseRpc("true").type == RpcType.true_);
-	assert(parseRpc("true", RpcOptions.strictParsing).type == RpcType.true_);
-	assert(parseRpc("True").type == RpcType.true_);
-	assertThrown!RpcException(parseRpc("True", RpcOptions.strictParsing));
-	assert(parseRpc("tRUE").type == RpcType.true_);
-	assertThrown!RpcException(parseRpc("tRUE", RpcOptions.strictParsing));
-
-	assert(parseRpc("false").type == RpcType.false_);
-	assert(parseRpc("false", RpcOptions.strictParsing).type == RpcType.false_);
-	assert(parseRpc("False").type == RpcType.false_);
-	assertThrown!RpcException(parseRpc("False", RpcOptions.strictParsing));
-	assert(parseRpc("fALSE").type == RpcType.false_);
-	assertThrown!RpcException(parseRpc("fALSE", RpcOptions.strictParsing));
-
-	assert(parseRpc("null").type == RpcType.null_);
-	assert(parseRpc("null", RpcOptions.strictParsing).type == RpcType.null_);
-	assert(parseRpc("Null").type == RpcType.null_);
-	assertThrown!RpcException(parseRpc("Null", RpcOptions.strictParsing));
-	assert(parseRpc("nULL").type == RpcType.null_);
-	assertThrown!RpcException(parseRpc("nULL", RpcOptions.strictParsing));
-
-	// Whitespace characters
-	assert(parseRpc("[\f\v]").type == RpcType.List);
-	assertThrown!RpcException(parseRpc("[\f\v]", RpcOptions.strictParsing));
-	assert(parseRpc("[ \t\r\n]").type == RpcType.List);
-	assert(parseRpc("[ \t\r\n]", RpcOptions.strictParsing).type == RpcType.List);
-
-	// Empty input
-	assert(parseRpc("").type == RpcType.null_);
-	assertThrown!RpcException(parseRpc("", RpcOptions.strictParsing));
-
-	// Numbers with leading '0's
-	assert(parseRpc("01").integer == 1);
-	assertThrown!RpcException(parseRpc("01", RpcOptions.strictParsing));
-	assert(parseRpc("-01").integer == -1);
-	assertThrown!RpcException(parseRpc("-01", RpcOptions.strictParsing));
-	assert(parseRpc("0.01").floating == 0.01);
-	assert(parseRpc("0.01", RpcOptions.strictParsing).floating == 0.01);
-	assert(parseRpc("0e1").floating == 0);
-	assert(parseRpc("0e1", RpcOptions.strictParsing).floating == 0);
-
-	// Trailing characters after Rpc value
-	assert(parseRpc(`""asdf`).str == "");
-	assertThrown!RpcException(parseRpc(`""asdf`, RpcOptions.strictParsing));
-	assert(parseRpc("987\0").integer == 987);
-	assertThrown!RpcException(parseRpc("987\0", RpcOptions.strictParsing));
-	assert(parseRpc("987\0\0").integer == 987);
-	assertThrown!RpcException(parseRpc("987\0\0", RpcOptions.strictParsing));
-	assert(parseRpc("[]]").type == RpcType.List);
-	assertThrown!RpcException(parseRpc("[]]", RpcOptions.strictParsing));
-	assert(parseRpc("123 \t\r\n").integer == 123); // Trailing whitespace is OK
-	assert(parseRpc("123 \t\r\n", RpcOptions.strictParsing).integer == 123);
-}
-+/
-
-/+ @system unittest
-{
-	import std.algorithm.iteration : map;
-	import std.array : array;
-	import std.exception : assertThrown;
-
-	string s = `{ "a" : [1,2,3,], }`;
-	RpcValue j = parseRpc(s);
-	assert(j["a"].array().map!(i => i.integer()).array == [1,2,3]);
-
-	assertThrown(parseRpc(s, -1, RpcOptions.strictParsing));
-}
-+/
-
-/+ @system unittest
-{
-	import std.algorithm.iteration : map;
-	import std.array : array;
-	import std.exception : assertThrown;
-
-	string s = `{ "a" : { }  , }`;
-	RpcValue j = parseRpc(s);
-	assert("a" in j);
-	auto t = j["a"].object();
-	assert(t.empty);
-
-	assertThrown(parseRpc(s, -1, RpcOptions.strictParsing));
-}
-+/
