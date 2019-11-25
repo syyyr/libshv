@@ -261,6 +261,7 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 				break;
 			case RpcValue.Type.Invalid:
 				enforce(opts.writeInvalidAsNull, "Cannot write Invalid RpcValue.");
+				puts("null");
 				break;
 		}
 	}
@@ -288,7 +289,7 @@ unittest
 	assert(jv0.toCpon() == `"\test测试"`);
 }
 
-class CponParseException : Exception
+class CponReadException : Exception
 {
 	this(string msg, int line = 0, int pos = 0) pure nothrow @safe
 	{
@@ -299,13 +300,13 @@ class CponParseException : Exception
 	}
 }
 
-RpcValue parse(int max_depth = -1)(string cpon) @safe
+RpcValue read(int max_depth = -1)(string cpon) @safe
 {
 	auto a = cast(immutable (ubyte)[]) cpon;
-	return parse!(immutable (ubyte)[], max_depth)(a);
+	return read!(immutable (ubyte)[], max_depth)(a);
 }
 
-RpcValue parse(T, int max_depth = -1)(T cpon) @safe
+RpcValue read(T, int max_depth = -1)(ref T cpon) @safe
 if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 {
 	//import std.ascii : isDigit, isHexDigit, toUpper, toLower;
@@ -349,7 +350,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 			get_char();
 			near ~= cast(char) c;
 		}
-		throw new CponParseException(msg ~ " near: " ~ near, line, pos);
+		throw new CponReadException(msg ~ " near: " ~ near, line, pos);
 	}
 
 	void get_token(string s) @safe
@@ -586,7 +587,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 			error("Max depth: " ~ to!string(max_depth) ~ " exceeded.");
 		skip_white_insignificant();
 		RpcValue value;
-		Meta meta;
+		RpcValue.Meta meta;
 		auto b = peek_char();
 
 		if (b == '<') {
@@ -725,7 +726,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 @system unittest
 {
 	string s1 = `"abc"`;
-	RpcValue rv = parse(s1);
+	RpcValue rv = read(s1);
 	assert(rv.type == RpcValue.Type.String);
 	assert(('"' ~ rv.str ~ '"') == s1);
 }

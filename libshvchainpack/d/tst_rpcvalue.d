@@ -73,17 +73,11 @@ void testConversions()
 
 		//log("src:", cpon1);
 		RpcValue rv1 = RpcValue.fromCpon(cpon1);
-		//log(cpon1, rv1.type, rv1.integer);
-		string cpn1 = rv1.toCpon();
-		log(cpon1, "\t--cpon------>\t", cpn1);
-		assert(cpn1 == cpon2);
-		/*
-		let cpk1 = rv1.toChainPack();
-		let rv2 = RpcValue.fromChainPack(cpk1);
-		let cpn2 = rv2.toString();
-		log(cpn1, "\t--chainpack->\t", cpn2, "\n")
-		this.checkEq(cpn1, cpn2);
-		*/
+		auto cpk1 = rv1.toChainPack();
+		RpcValue rv2 = RpcValue.fromChainPack(cpk1);
+		string cpn2 = rv2.toCpon();
+		log(cpon1, "\t--cpon------>\t", cpn2);
+		assert(cpn2 == cpon2);
 	}
 }
 

@@ -28,154 +28,6 @@ enum RpcOptions
 	strictParsing = 0x8,        /// Strictly follow RFC-8259 grammar when parsing
 }
 
-struct Meta
-{
-	public static struct Key
-	{
-		private string m_skey;
-		private int m_ikey;
-
-		@disable this();
-		this(int i) @safe nothrow {m_ikey = i;}
-		this(string s) @safe nothrow {m_skey = s;}
-
-		string skey() const @safe pure nothrow {return m_skey; }
-		int ikey() const @safe pure nothrow { return m_ikey; }
-
-		size_t toHash() const @safe nothrow
-		{
-			size_t hash;
-			if(m_skey.length > 0) {
-				hash = typeid(m_skey).getHash(&m_skey);
-			}
-			else {
-				hash = typeid(m_ikey).getHash(&m_ikey);
-			}
-			return hash;
-		}
-
-		bool opEquals(ref const Key o) const @safe pure nothrow
-		{
-			return m_ikey == o.m_ikey && m_skey == o.m_skey;
-		}
-		bool opEquals(string s) const @safe pure nothrow
-		{
-			return m_skey.length > 0 && m_skey == s;
-		}
-		bool opEquals(int i) const @safe pure nothrow
-		{
-			return m_skey.length == 0 && m_ikey == i;
-		}
-		int opCmp(K)(auto ref K o) const @safe pure nothrow
-			if(is(K : Key))
-		{
-			if(m_skey.length > 0 && o.m_skey.length > 0)
-				return std.string.cmp(this.m_skey, o.m_skey);
-			if(m_skey.length > 0 && o.m_skey.length == 0)
-				return cast(int) m_skey.length;
-			if(m_skey.length == 0 && o.m_skey.length > 0)
-				return - cast(int) o.m_skey.length;
-			return m_ikey - o.m_ikey;
-		}
-		int opCmp(string s) const @safe nothrow
-		{
-			return opCmp(Key(s));
-		}
-		int opCmp(int i) const @safe nothrow
-		{
-			return opCmp(Key(i));
-		}
-		unittest {
-			assert(Key(1) == 1);
-			assert(Key("foo") == "foo");
-			assert(Key("foo") > 1);
-		}
-
-		void opAssign(T : int)(T arg)
-		{
-			m_ikey = arg;
-			m_skey = null;
-		}
-		void opAssign(T : string)(T arg)
-		{
-			m_ikey = 0;
-			m_skey = arg;
-		}
-
-		unittest {
-			import std.algorithm : sort;
-			alias K = Key;
-			K k1 = 42;
-			K k2 = "foo";
-			//K[] keys = [1, 2];
-			K[] keys = [K(8), K(9), K("Foo"), K("bar"), K(-42), K("Baz")];
-			sort(keys);
-			K[] sorted = [K(-42), K(8), K(9), K("Baz"), K("Foo"), K("bar")];
-			assert(keys == sorted);
-		}
-		string toString() const pure nothrow @safe
-		{
-			if(m_skey.length)
-				return '"' ~ m_skey ~ '"';
-			return to!string(m_ikey);
-		}
-	}
-
-	//this(ref return scope const Meta o)
-	//{
-	//	m_values = o.m_values;
-	//}
-
-	auto opBinaryRight(string op : "in")(int k) const @safe
-	{
-		auto key = Key(k);
-		return key in m_values;
-	}
-	auto opBinaryRight(string op : "in")(string k) const @safe
-	{
-		auto key = Key(k);
-		return key in m_values;
-	}
-
-	ref inout(RpcValue) opIndex(inout Key key) inout @safe { return m_values[key]; }
-	ref inout(RpcValue) opIndex(int key) inout @safe { auto k = Key(key); return m_values[k]; }
-	ref inout(RpcValue) opIndex(string key) inout @safe { auto k = Key(key); return m_values[k]; }
-
-	void opIndexAssign(T, K)(auto ref T val, K key)
-		if(is(K : int) || is(K : string))
-	{
-		auto k = Key(key);
-		m_values[k] = val;
-	}
-
-	Key[] bySortedKey() const @safe {
-		Key[] ret;
-		foreach(k; byKey())
-			ret ~= k;
-		import std.algorithm : sort;
-		sort(ret);
-		return ret;
-	}
-	auto byKey() const @safe { return m_values.byKey();}
-	auto byValue() const @safe { return m_values.byValue();}
-	auto byKeyValue() const @safe { return m_values.byKeyValue();}
-	auto length() const @safe { return m_values.length;}
-
-	int opApply(scope int delegate(Key key, ref RpcValue) dg) @system
-	{
-		int result;
-		foreach (k, v; m_values)
-		{
-			result = dg(k, v);
-			if (result)
-				break;
-		}
-		return result;
-	}
-
-	private RpcValue[Key] m_values;
-}
-
 unittest {
 	Meta m;
 	m["foo"] = "bar";
@@ -233,7 +85,159 @@ struct RpcValue
 		IMap,
 	}
 
-	struct Decimal
+	static struct Meta
+	{
+		public static struct Key
+		{
+			private string m_skey;
+			private int m_ikey;
+
+			@disable this();
+			this(int i) @safe nothrow {m_ikey = i;}
+			this(string s) @safe nothrow {m_skey = s;}
+
+			@safe bool isIntKey() const { return m_skey.length == 0; }
+			@safe bool isStringKey() const { return m_skey.length > 0; }
+
+			string skey() const @safe pure nothrow {return m_skey; }
+			int ikey() const @safe pure nothrow { return m_ikey; }
+
+			size_t toHash() const @safe nothrow
+			{
+				size_t hash;
+				if(m_skey.length > 0) {
+					hash = typeid(m_skey).getHash(&m_skey);
+				}
+				else {
+					hash = typeid(m_ikey).getHash(&m_ikey);
+				}
+				return hash;
+			}
+
+			bool opEquals(ref const Key o) const @safe pure nothrow
+			{
+				return m_ikey == o.m_ikey && m_skey == o.m_skey;
+			}
+			bool opEquals(string s) const @safe pure nothrow
+			{
+				return m_skey.length > 0 && m_skey == s;
+			}
+			bool opEquals(int i) const @safe pure nothrow
+			{
+				return m_skey.length == 0 && m_ikey == i;
+			}
+			int opCmp(K)(auto ref K o) const @safe pure nothrow
+				if(is(K : Key))
+			{
+				if(m_skey.length > 0 && o.m_skey.length > 0)
+					return std.string.cmp(this.m_skey, o.m_skey);
+				if(m_skey.length > 0 && o.m_skey.length == 0)
+					return cast(int) m_skey.length;
+				if(m_skey.length == 0 && o.m_skey.length > 0)
+					return - cast(int) o.m_skey.length;
+				return m_ikey - o.m_ikey;
+			}
+			int opCmp(string s) const @safe nothrow
+			{
+				return opCmp(Key(s));
+			}
+			int opCmp(int i) const @safe nothrow
+			{
+				return opCmp(Key(i));
+			}
+			unittest {
+				assert(Key(1) == 1);
+				assert(Key("foo") == "foo");
+				assert(Key("foo") > 1);
+			}
+
+			void opAssign(T : int)(T arg)
+			{
+				m_ikey = arg;
+				m_skey = null;
+			}
+			void opAssign(T : string)(T arg)
+			{
+				m_ikey = 0;
+				m_skey = arg;
+			}
+
+			unittest {
+				import std.algorithm : sort;
+				alias K = Key;
+				K k1 = 42;
+				K k2 = "foo";
+				//K[] keys = [1, 2];
+				K[] keys = [K(8), K(9), K("Foo"), K("bar"), K(-42), K("Baz")];
+				sort(keys);
+				K[] sorted = [K(-42), K(8), K(9), K("Baz"), K("Foo"), K("bar")];
+				assert(keys == sorted);
+			}
+			string toString() const pure nothrow @safe
+			{
+				if(m_skey.length)
+					return '"' ~ m_skey ~ '"';
+				return to!string(m_ikey);
+			}
+		}
+
+		//this(ref return scope const Meta o)
+		//{
+		//	m_values = o.m_values;
+		//}
+
+		auto opBinaryRight(string op : "in")(int k) const @safe
+		{
+			auto key = Key(k);
+			return key in m_values;
+		}
+		auto opBinaryRight(string op : "in")(string k) const @safe
+		{
+			auto key = Key(k);
+			return key in m_values;
+		}
+
+		ref inout(RpcValue) opIndex(inout Key key) inout @safe { return m_values[key]; }
+		ref inout(RpcValue) opIndex(int key) inout @safe { auto k = Key(key); return m_values[k]; }
+		ref inout(RpcValue) opIndex(string key) inout @safe { auto k = Key(key); return m_values[k]; }
+
+		void opIndexAssign(T, K)(auto ref T val, K key)
+			if(is(K : int) || is(K : string))
+		{
+			auto k = Key(key);
+			m_values[k] = val;
+		}
+
+		Key[] bySortedKey() const @safe {
+			Key[] ret;
+			foreach(k; byKey())
+				ret ~= k;
+			import std.algorithm : sort;
+			sort(ret);
+			return ret;
+		}
+		auto byKey() const @safe { return m_values.byKey();}
+		auto byValue() const @safe { return m_values.byValue();}
+		auto byKeyValue() const @safe { return m_values.byKeyValue();}
+		auto length() const @safe { return m_values.length;}
+
+		int opApply(scope int delegate(Key key, ref RpcValue) dg) @system
+		{
+			int result;
+			foreach (k, v; m_values)
+			{
+				result = dg(k, v);
+				if (result)
+					break;
+			}
+			return result;
+		}
+
+		private RpcValue[Key] m_values;
+	}
+
+
+	static struct Decimal
 	{
 		enum int Base = 10;
 
@@ -317,10 +321,10 @@ struct RpcValue
 		}
 	}
 
-	struct DateTime
+	static struct DateTime
 	{
 	private:
-		struct MsTz
+		static  struct MsTz
 		{
 			//import std.bitmanip : bitfields;
 			//mixin(bitfields!(
@@ -333,6 +337,11 @@ struct RpcValue
 		this(MsTz mz) @safe { msecs_tz = mz; }
 		enum long epoch_hnsec = SysTime(std.datetime.date.DateTime(1970, 1, 1, 0, 0, 0), UTC()).stdTime();
 	public:
+		this(long epoch_msec, int utc_offset_min) @safe
+		{
+			msecs_tz = MsTz(epoch_msec * 10_000, cast(short) utc_offset_min);
+		}
+
 		long msecsSinceEpoch() const @safe { return (msecs_tz.hnsec - epoch_hnsec) / 10_000; }
 		int utcOffsetMin() const @safe { return msecs_tz.tz; }
 
@@ -420,7 +429,9 @@ struct RpcValue
 		//@safe bool operator ==(const DateTime &o) const { return (msecs_tz.msec == o.msecs_tz.msec); }
 		@safe int opCmp(ref const DateTime o) const { return cast(int) (msecs_tz.hnsec - o.msecs_tz.hnsec); }
 	}
-
+	alias List = RpcValue[];
+	alias Map = RpcValue[string];
+	alias IMap = RpcValue[int];
 	union Store
 	{
 		string str;
@@ -432,7 +443,7 @@ struct RpcValue
 		DateTime datetime;
 		RpcValue[string] map;
 		RpcValue[int] imap;
-		RpcValue[] list;
+		List list;
 	}
 	private Store store;
 	private Type type_tag;
@@ -1178,8 +1189,20 @@ struct RpcValue
 	//string toString() const @safe { return toCpon(No.pretty); }
 	static RpcValue fromCpon(string cpon) @safe
 	{
-		import shv.cpon : parse;
-		return parse(cpon);
+		import shv.cpon : read;
+		return read(cpon);
+	}
+	ubyte[] toChainPack() const @safe
+	{
+		import shv.chainpack : write;
+		auto app = appender!(ubyte[])();
+		write(app, this);
+		return app.data;
+	}
+	static RpcValue fromChainPack(R)(ref R input_range) @safe
+	{
+		import shv.chainpack : read;
+		return read!R(input_range);
 	}
 }
 
@@ -1195,7 +1218,7 @@ struct RpcValue
 
 /+ @safe unittest
 {
-	// Ensure we can parse and use Rpc from @safe code
+	// Ensure we can read and use Rpc from @safe code
 	auto a = `{ "key1": { "key2": 1 }}`.parseRpc;
 	assert(a["key1"]["key2"].integer == 1);
 	assert(a.toString == `{"key1":{"key2":1}}`);
@@ -1204,7 +1227,7 @@ struct RpcValue
 
 /+ @system unittest
 {
-	// Ensure we can parse Rpc from a @system range.
+	// Ensure we can read Rpc from a @system range.
 	struct Range
 	{
 		string s;
