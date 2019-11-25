@@ -242,6 +242,15 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 		long msecs = dt.msecsSinceEpoch - SHV_EPOCH_MSEC;
 		int offset = (dt.utcOffsetMin / 15) & 0x7F;
 		long ms = msecs % 1000;
+		/*
+		debug(chainpack) {
+			import std.stdio : writeln;
+			writeln("write datetime: ", dt);
+			writeln("msecs: ", msecs);
+			writeln("offset: ", offset);
+			writeln("ms: ", ms);
+		}
+		*/
 		if(ms == 0)
 			msecs /= 1000;
 		if(offset != 0) {
@@ -263,6 +272,7 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 			write_string(k);
 			write_rpcval(map[k]);
 		}
+		putb(PackingSchema.TERM);
 	}
 
 	void write_imap(R)(R keys, const ref RpcValue[int] map) @safe
@@ -272,6 +282,7 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 			write_int(k);
 			write_rpcval(map[k]);
 		}
+		putb(PackingSchema.TERM);
 	}
 
 	void write_meta(R)(R keys, const ref RpcValue.Meta map) @safe
@@ -284,8 +295,8 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 				write_string(k.skey);
 			write_rpcval(map[k]);
 		}
+		putb(PackingSchema.TERM);
 	}
-
 
 	T[] sorted_keys(T)(const ref RpcValue[T] m) @safe {
 		T[] ret;
@@ -333,7 +344,6 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 		{
 			case RpcValue.Type.Map:
 				auto map = rpcval.mapNoRef;
-				putb('{');
 				if((opts.sortKeys) != 0)
 					write_map(sorted_keys!string(map), map);
 				else
@@ -353,6 +363,7 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 				foreach(v; lst) {
 					write_rpcval(v);
 				}
+				putb(PackingSchema.TERM);
 				break;
 			case RpcValue.Type.String:
 				write_string(rpcval.str);
@@ -404,22 +415,6 @@ class ChainPackReadException : Exception
 	}
 }
 
-/*
-short peek_byte_helper(R)(ref R input_range) @safe
-{
-	if(chainpack.empty())
-		return R.NO_BYTE;
-	return chainpack.front();
-}
-
-ubyte get_byte_helper(R)(ref R input_range, ref int cnt) @safe
-{
-	ubyte ret = chainpack.front();
-	chainpack.popFront();
-	cnt++;
-	return ret;
-}
-*/
 /// @pbitlen is used to enable same function usage for signed int unpacking
 static ulong unpack_uint_data_helper(R)(ref R reader, out int bitlen) @safe
 {
@@ -479,8 +474,8 @@ static long unpack_int(R)(ref R reader) @safe
 	enforce(b == PackingSchema.Int, new ChainPackReadException("Data type must be Int", reader.count));
 	return unpack_int_data(reader);
 }
-
-mixin template GenReader()
+/*
+mixin template Genreader
 {
 	struct Reader
 	{
@@ -504,39 +499,59 @@ mixin template GenReader()
 		}
 	}
 }
-/*
-short peek_byte_helper(R)(ref R input_range) @safe
+*/
+enum short NO_BYTE = -1;
+
+struct Reader(R)
 {
-	if(chainpack.empty())
-		return R.NO_BYTE;
-	return chainpack.front();
+	int count = 0;
+
+	short delegate() @safe peek_byte;
+	ubyte delegate() @safe get_byte;
+
+	this(ref R input_range) @safe
+	{
+		short peek_byte() @safe
+		{
+			if(input_range.empty())
+				return NO_BYTE;
+			return input_range.front();
+		}
+
+		ubyte get_byte() @safe
+		{
+			ubyte ret = input_range.front();
+			input_range.popFront();
+			debug(chainpack) {
+				import std.stdio : writeln;
+				writeln("get byte [", count, "] ", ret);
+			}
+			count++;
+			return ret;
+		}
+
+		this.peek_byte = &peek_byte;
+		this.get_byte = &get_byte;
+	}
 }
 
-ubyte get_byte_helper(R)(ref R input_range, ref int pos) @safe
-{
-	ubyte ret = chainpack.front();
-	chainpack.popFront();
-	pos++;
-	return ret;
-}
-*/
 ulong readUIntData(R)(ref R input_range) @safe
 {
-	mixin GenReader;
+	auto reader = Reader!R(input_range);
 	int bitlen;
-	return unpack_uint_data_helper(Reader(), bitlen);
+	return unpack_uint_data_helper(reader, bitlen);
 }
 
 ulong readUInt(R)(ref R input_range) @safe
 {
-	mixin GenReader;
-	return unpack_uint(Reader());
+	auto reader = Reader!R(input_range);
+	return unpack_uint(reader);
 }
 
 ulong readInt(R)(ref R input_range) @safe
 {
-	mixin GenReader;
-	return unpack_int(Reader());
+	auto reader = Reader!R(input_range);
+	return unpack_int(reader);
 }
 
 RpcValue read(R, int max_depth = -1)(ref R input_range) @safe
@@ -545,11 +560,10 @@ if (isInputRange!R && !isInfinite!R && is(Unqual!(ElementType!R) == ubyte))
 	int depth = -1;
 	//int pos = 0;
 
-	mixin GenReader;
-	Reader reader;
+	auto reader = Reader!R(input_range);
 
-	auto peek_byte() @safe {return reader.peek_byte();}
-	auto get_byte() @safe {return reader.get_byte();}
+	auto peek_byte() @safe { return reader.peek_byte(); }
+	auto get_byte() @safe { return reader.get_byte(); }
 
 	void error(string msg, int pos) @safe
 	{
@@ -611,8 +625,10 @@ if (isInputRange!R && !isInfinite!R && is(Unqual!(ElementType!R) == ubyte))
 			get_byte();
 			while (true) {
 				b = peek_byte();
-				if(b == PackingSchema.TERM)
+				if(b == PackingSchema.TERM) {
+					get_byte();
 					break;
+				}
 				RpcValue k = read_val();
 				RpcValue v = read_val();
 				if(k.type == RpcValue.Type.String) {
@@ -625,143 +641,174 @@ if (isInputRange!R && !isInfinite!R && is(Unqual!(ElementType!R) == ubyte))
 		}
 
 		b = peek_byte();
-		switch(b) {
-		case PackingSchema.List: {
+		if(b < 128) {
 			get_byte();
-			RpcValue.List lst;
-			while (true) {
-				b = peek_byte();
-				if(b == PackingSchema.TERM)
-					break;
-				RpcValue v = read_val();
-				lst ~= v;
+			if((b & 64) != 0) {
+				// tiny Int
+				value = cast(int) (b & 63);
 			}
-			value = lst;
-			break;
-		}
-		case PackingSchema.Map: {
-			get_byte();
-			RpcValue.Map map;
-			while (true) {
-				b = peek_byte();
-				if(b == PackingSchema.TERM)
-					break;
-				RpcValue k = read_val();
-				RpcValue v = read_val();
-				map[k.str] = v;
+			else {
+				// tiny UInt
+				value = cast(uint) (b & 63);
 			}
-			value = map;
-			break;
 		}
-		case PackingSchema.IMap: {
-			get_byte();
-			RpcValue.IMap map;
-			while (true) {
-				b = peek_byte();
-				if(b == PackingSchema.TERM)
-					break;
-				RpcValue k = read_val();
-				RpcValue v = read_val();
-				map[cast(int) k.integer] = v;
+		else {
+			switch(b) {
+			case PackingSchema.List: {
+				get_byte();
+				RpcValue.List lst;
+				while (true) {
+					b = peek_byte();
+					if(b == PackingSchema.TERM) {
+						get_byte();
+						break;
+					}
+					RpcValue v = read_val();
+					lst ~= v;
+				}
+				value = lst;
+				break;
 			}
-			value = map;
-			break;
-		}
-		case PackingSchema.Null: {
-			value = null;
-			break;
-		}
-		case PackingSchema.String: {
-			get_byte();
-			auto len = unpack_uint_data(reader);
-			string str;
-			for(size_t i=0; i<len; i++) {
-				str ~= cast(char) get_byte();
+			case PackingSchema.Map: {
+				get_byte();
+				RpcValue.Map map;
+				while (true) {
+					b = peek_byte();
+					if(b == PackingSchema.TERM) {
+						get_byte();
+						break;
+					}
+					RpcValue k = read_val();
+					RpcValue v = read_val();
+					map[k.str] = v;
+				}
+				value = map;
+				break;
 			}
-			value = str;
-			break;
-		}
-		case PackingSchema.CString: {
-			get_byte();
-			string str;
-			while(true) {
-				b = get_byte();
-				if(b == 0)
-					break;
-				if(b == '\\') {
+			case PackingSchema.IMap: {
+				get_byte();
+				RpcValue.IMap map;
+				while (true) {
+					b = peek_byte();
+					if(b == PackingSchema.TERM) {
+						get_byte();
+						break;
+					}
+					RpcValue k = read_val();
+					RpcValue v = read_val();
+					map[cast(int) k.integer] = v;
+				}
+				value = map;
+				break;
+			}
+			case PackingSchema.Null: {
+				get_byte();
+				value = null;
+				break;
+			}
+			case PackingSchema.String: {
+				get_byte();
+				auto len = unpack_uint_data(reader);
+				string str;
+				for(size_t i=0; i<len; i++) {
+					str ~= cast(char) get_byte();
+				}
+				value = str;
+				break;
+			}
+			case PackingSchema.CString: {
+				get_byte();
+				string str;
+				while(true) {
 					b = get_byte();
-					switch (b) {
-					case '\\': str ~= '\\'; break;
-					case '0': str ~= '\0'; break;
-					default: str ~= cast(char) b; break;
+					if(b == 0)
+						break;
+					if(b == '\\') {
+						b = get_byte();
+						switch (b) {
+						case '\\': str ~= '\\'; break;
+						case '0': str ~= '\0'; break;
+						default: str ~= cast(char) b; break;
+						}
+					}
+					else {
+						str ~= cast(char) b;
 					}
 				}
-				else {
-					str ~= cast(char) b;
+				value = str;
+				break;
+			}
+			case PackingSchema.TRUE: {
+				get_byte();
+				value = true;
+				break;
+			}
+			case PackingSchema.FALSE: {
+				get_byte();
+				value = false;
+				break;
+			}
+			case PackingSchema.Int: {
+				value = read_int();
+				break;
+			}
+			case PackingSchema.UInt: {
+				value = read_uint();
+				break;
+			}
+			case PackingSchema.Decimal: {
+				get_byte();
+				auto mant = unpack_int_data(reader);
+				auto exp = unpack_int_data(reader);
+				value = RpcValue.Decimal(mant, cast(int) exp);
+				break;
+			}
+			case PackingSchema.Double: {
+				get_byte();
+				union U {
+					ubyte[double.sizeof] data;
+					double d;
 				}
+				U u;
+				for (int i = 0; i < 8; i++)
+					u.data[i] = cast(ubyte) get_byte();
+				value = u.d;
+				break;
 			}
-			value = str;
-			break;
-		}
-		case PackingSchema.TRUE: {
-			get_byte();
-			value = true;
-			break;
-		}
-		case PackingSchema.FALSE: {
-			get_byte();
-			value = false;
-			break;
-		}
-		case PackingSchema.Int: {
-			value = read_int();
-			break;
-		}
-		case PackingSchema.UInt: {
-			value = read_uint();
-			break;
-		}
-		case PackingSchema.Decimal: {
-			auto mant = unpack_int_data(reader);
-			auto exp = unpack_int_data(reader);
-			value = RpcValue.Decimal(mant, cast(int) exp);
-			break;
-		}
-		case PackingSchema.Double: {
-			union U {
-				ubyte[double.sizeof] data;
-				double d;
+			case PackingSchema.DateTime: {
+				get_byte();
+				long d = unpack_int_data(reader);
+				byte offset = 0;
+				bool has_tz_offset = (d & 1) != 0;
+				bool has_not_msec = (d & 2) != 0;
+				d >>= 2;
+				if(has_tz_offset) {
+					offset = d & 0x7F;
+					offset <<= 1;
+					offset >>= 1; // sign extension
+					d >>= 7;
+				}
+				if(has_not_msec)
+					d *= 1000;
+				/*
+				debug(chainpack) {
+					import std.stdio : writeln;
+					writeln("read datetime");
+					writeln("has_tz_offset: ", has_tz_offset, "has_not_msec: ", has_not_msec);
+					writeln("msecs: ", d);
+					writeln("offset: ", offset);
+				}
+				*/
+				d += SHV_EPOCH_MSEC;
+				value = RpcValue.DateTime(d, offset * 15);
+				break;
 			}
-			U u;
-			for (int i = 0; i < 8; i++)
-				u.data[i] = cast(ubyte) get_byte();
-			value = u.d;
-			break;
-		}
-		case PackingSchema.DateTime: {
-			get_byte();
-			long d = unpack_int_data(reader);
-			byte offset = 0;
-			bool has_tz_offset = (d & 1) != 0;
-			bool has_not_msec = (d & 2) != 0;
-			d >>>= 2;
-			if(has_tz_offset) {
-				offset = d & 0x7F;
-				offset <<= 1;
-				offset >>>= 1; // sign extension
-				d >>>= 7;
+			default: {
+				throw new Exception("Invalid packing schema: " ~ to!string(b));
+				break;
 			}
-			if(has_not_msec)
-				d *= 1000;
-			d += SHV_EPOCH_MSEC;
-			value = RpcValue.DateTime(d, offset * 15);
-			break;
+			} // switch
 		}
-		default: {
-			throw new Exception("Invalid packing schema: " ~ to!string(b));
-			break;
-		}
-		} // switch
 		value.meta = meta;
 		return value;
 	}

@@ -326,10 +326,6 @@ struct RpcValue
 	private:
 		static  struct MsTz
 		{
-			//import std.bitmanip : bitfields;
-			//mixin(bitfields!(
-			//	int, "tz", 7,
-			//	long,  "msec", 57));
 			long hnsec;
 			short tz;
 		}
@@ -339,7 +335,7 @@ struct RpcValue
 	public:
 		this(long epoch_msec, int utc_offset_min) @safe
 		{
-			msecs_tz = MsTz(epoch_msec * 10_000, cast(short) utc_offset_min);
+			msecs_tz = MsTz(epoch_msec * 10_000 + epoch_hnsec, cast(short) utc_offset_min);
 		}
 
 		long msecsSinceEpoch() const @safe { return (msecs_tz.hnsec - epoch_hnsec) / 10_000; }

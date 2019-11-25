@@ -7,7 +7,7 @@ import std.algorithm;
 import std.typecons;
 import std.conv;
 
-alias log = logInfo;
+alias log = logMessage;
 
 void testConversions()
 {
@@ -71,12 +71,14 @@ void testConversions()
 		string cpon1 = lst[0];
 		string cpon2 = lst[1]? lst[1]: cpon1;
 
-		//log("src:", cpon1);
+		debug(chainpack) {log("cpon:", cpon1);}
 		RpcValue rv1 = RpcValue.fromCpon(cpon1);
+		debug(chainpack) {log("rv:", rv1);}
 		auto cpk1 = rv1.toChainPack();
+		debug(chainpack) {log("chainpack:", cpk1);}
 		RpcValue rv2 = RpcValue.fromChainPack(cpk1);
 		string cpn2 = rv2.toCpon();
-		log(cpon1, "\t--cpon------>\t", cpn2);
+		log(cpon2, "\t--cpon------>\t", cpn2);
 		assert(cpn2 == cpon2);
 	}
 }
@@ -95,8 +97,9 @@ void testDateTime()
 	assert(v4.datetime.msecsSinceEpoch == v1.datetime.msecsSinceEpoch);
 }
 
-int main()
+int main(string[] args)
 {
+	args = globalLog.setCLIOptions(args);
 	debug {
 		auto writemeta = (string s, Meta m) {
 			writeln("Meta ", s, ":");
@@ -133,5 +136,6 @@ int main()
 	}
 	testConversions();
 	testDateTime();
+	logInfo("PASSED");
 	return 0;
 }

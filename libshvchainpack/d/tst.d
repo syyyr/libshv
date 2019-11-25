@@ -5,14 +5,23 @@ import std.utf;
 import std.file;
 import std.algorithm;
 
-mixin template RT()
+import shv.log;
+
+struct Reader(R)
 {
-	struct Reader
+	enum short NO_BYTE = -1;
+
+	int count = 0;
+
+	short delegate() @safe peek_byte;
+	ubyte delegate() @safe get_byte;
+
+	this(ref R input_range) @safe
 	{
 		short peek_byte() @safe
 		{
 			if(input_range.empty())
-				return -1;
+				return NO_BYTE;
 			return input_range.front();
 		}
 
@@ -20,73 +29,22 @@ mixin template RT()
 		{
 			ubyte ret = input_range.front();
 			input_range.popFront();
-			//pos++;
+			count++;
 			return ret;
 		}
+
+		this.peek_byte = &peek_byte;
+		this.get_byte = &get_byte;
 	}
-}
-
-@safe get_n(Reader)(Reader reader, int n)
-{
-	for(int i=0; i<n; i++)
-		reader.get_byte();
-}
-
-@safe range_test(R)(ref R input_range)
-{
-	mixin RT;
-	get_n(Reader(), 2);
 }
 
 void main()
 {
 	ubyte[] data = [1,2,3,4,5,6,7,8,9];
-	range_test(data);
-	int n = 1;
-	writeln(n, " not: ", ~n);
-	ubyte b = 1;
-	writeln(b, " not b: ", cast(ubyte)~cast(int)b);
-	writeln(double.sizeof);
-
-	try
-	{
-		/+
-		std.file.write("test.txt", "ščřžýáí");
-		auto f = File("test.txt", "r");
-		/*
-		foreach (ubyte[] s; f.byChunk(4)) {
-			int n;
-			while(!s.empty) {
-				auto c = s.front();
-				if(n++ == 0) {
-					writeln(typeid(c));
-					writeln(s.length);
-				}
-
-				writeln(n, ": ", c);
-				s.popFront();
-			}
-		}
-		*/
-		{
-			auto s = f.byChunk(10).joiner;
-			int n;
-			while(!s.empty) {
-				size_t cnt;
-				auto c = s.decodeFront(cnt);
-				if(n++ == 0) {
-					writeln(typeid(c));
-					//writeln(s.length);
-				}
-
-				writeln(n, " cnt: ", cnt, " : ", c);
-				//s.popFront();
-			}
-		}
-		+/
-	}
-	catch (Exception ex)
-	{
-		writeln("errro: ", ex);
+	auto reader = Reader!(ubyte[])(data);
+	while (reader.peek_byte() != reader.NO_BYTE) {
+		auto b = reader.get_byte();
+		logInfo("byte:", b, reader.peek_byte(), reader.NO_BYTE, (reader.peek_byte() != reader.NO_BYTE));
+		//logInfo("data:", data);
 	}
 }
