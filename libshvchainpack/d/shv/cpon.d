@@ -615,9 +615,6 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 
 		skip_white_insignificant();
 		b = peek_char();
-		debug {
-			writeln("c: ", cast(char) b);
-		}
 		switch(b) {
 		case '0': .. case '9':
 		case '+':
