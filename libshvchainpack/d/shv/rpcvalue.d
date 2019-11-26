@@ -353,11 +353,6 @@ struct RpcValue
 			mz.tz = cast(typeof(MsTz.tz)) t.utcOffset.split!("minutes")().minutes;
 			return DateTime(mz);
 		}
-		//static DateTime fromLocalString(string local_date_time_str) @safe
-		//{
-		//	SysTime t = SysTime.fromISOExtString(local_date_time_str);
-		//	return fromSysTime(t);
-		//}
 		static DateTime fromISOExtString(string utc_date_time_str) @safe
 		{
 			auto ix = utc_date_time_str.lastIndexOfAny("+-");

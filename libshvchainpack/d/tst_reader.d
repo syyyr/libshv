@@ -8,7 +8,7 @@ import std.array;
 //import shv.log;
 
 enum ImplType {Mixin, Struct, Inlined, Pointer}
-enum impl_type = ImplType.Pointer;
+enum impl_type = ImplType.Inlined;
 
 static if(impl_type == ImplType.Mixin) {
 	pragma(msg, "Mixin");
@@ -103,16 +103,15 @@ else static if (impl_type == ImplType.Pointer) {
 	}
 }
 
-void main()
+void read(R)(ref R data)
 {
-	ubyte[] data = [1,2,3,4,5,6,7,8,9];
 	static if(impl_type == ImplType.Mixin) {
 		alias input_range = data;
-		mixin GenReader!(ubyte[]);
+		mixin GenReader!R;
 		auto reader = Reader();
 	}
 	else static if (impl_type == ImplType.Struct) {
-		auto reader = Reader!(ubyte[])(data);
+		auto reader = Reader!R(data);
 	}
 	else static if (impl_type == ImplType.Inlined) {
 		alias input_range = data;
@@ -140,13 +139,19 @@ void main()
 		auto reader = Reader();
 	}
 	else static if (impl_type == ImplType.Pointer) {
-		auto reader = Reader!(ubyte[])(data);
+		auto reader = Reader!R(data);
 	}
 	while (reader.peek_byte() != reader.NO_BYTE) {
-		auto b1 = data[0];
+		auto b1 = reader.peek_byte();
 		auto b = reader.get_byte();
 		assert(b1 == b);
 		//logInfo("byte:", b, reader.peek_byte(), reader.NO_BYTE, (reader.peek_byte() != reader.NO_BYTE));
 		//logInfo("data:", data);
 	}
+}
+
+void main()
+{
+	ubyte[] data = [1,2,3,4,5,6,7,8,9];
+	read(data);
 }

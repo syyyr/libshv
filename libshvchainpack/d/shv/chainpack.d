@@ -501,27 +501,28 @@ mixin template Genreader
 }
 */
 enum short NO_BYTE = -1;
-
-struct Reader(R)
-{
-	int count = 0;
-
-	short delegate() @safe peek_byte;
-	ubyte delegate() @safe get_byte;
-
-	this(ref R input_range) @safe
+enum use_nogc_trusted = true;
+static if(use_nogc_trusted) {
+	// only this does not not allocate
+	struct Reader(R)
 	{
+		int count = 0;
+		R *pinput_range;
+
+		this(ref R input_range) @trusted @nogc
+		{
+			pinput_range = &input_range;
+		}
 		short peek_byte() @safe
 		{
-			if(input_range.empty())
+			if((*pinput_range).empty())
 				return NO_BYTE;
-			return input_range.front();
+			return (*pinput_range).front();
 		}
-
 		ubyte get_byte() @safe
 		{
-			ubyte ret = input_range.front();
-			input_range.popFront();
+			ubyte ret = (*pinput_range).front();
+			(*pinput_range).popFront();
 			debug(chainpack) {
 				import std.stdio : writeln;
 				writeln("get byte [", count, "] ", ret);
@@ -529,9 +530,40 @@ struct Reader(R)
 			count++;
 			return ret;
 		}
+	}
+}
+else {
+	struct Reader(R)
+	{
+		int count = 0;
 
-		this.peek_byte = &peek_byte;
-		this.get_byte = &get_byte;
+		short delegate() @safe peek_byte;
+		ubyte delegate() @safe get_byte;
+
+		this(ref R input_range) @safe
+		{
+			short peek_byte() @safe
+			{
+				if(input_range.empty())
+					return NO_BYTE;
+				return input_range.front();
+			}
+
+			ubyte get_byte() @safe
+			{
+				ubyte ret = input_range.front();
+				input_range.popFront();
+				debug(chainpack) {
+					import std.stdio : writeln;
+					writeln("get byte [", count, "] ", ret);
+				}
+				count++;
+				return ret;
+			}
+
+			this.peek_byte = &peek_byte;
+			this.get_byte = &get_byte;
+		}
 	}
 }
 
