@@ -272,7 +272,7 @@ struct RpcValue
 			this.mantisa = dc.mantisa;
 		}
 
-		double toDouble() const @safe
+		double toDouble() const @safe @nogc pure nothrow
 		{
 			double ret = mantisa;
 			int exp = exponent;
@@ -319,6 +319,18 @@ struct RpcValue
 			app.put(str);
 			return app.data;
 		}
+		@safe @nogc int opCmp(ref const Decimal o) const pure nothrow
+		{
+			if(exponent == o.exponent)
+				return cast(int) (mantisa - o.mantisa);
+			return cast(int) (toDouble() - o.toDouble());
+		}
+		@safe @nogc bool opEquals(ref const Decimal o) const pure nothrow
+		{
+			if(exponent == o.exponent)
+				return mantisa == o.mantisa;
+			return (toDouble() == o.toDouble());
+		}
 	}
 
 	static struct DateTime
@@ -360,6 +372,8 @@ struct RpcValue
 				string tzs = utc_date_time_str[ix+1 .. $];
 				if(tzs.length == 4)
 					utc_date_time_str = utc_date_time_str[0 .. ix+1] ~ tzs[0 .. 2] ~ ':' ~ tzs[2 .. $];
+				else if(tzs.length == 2)
+					utc_date_time_str = utc_date_time_str ~ ":00";
 			}
 			SysTime t = SysTime.fromISOExtString(utc_date_time_str);
 			return fromSysTime(t);
@@ -417,7 +431,6 @@ struct RpcValue
 			}
 		}
 		@safe string toString() const {return toISOExtString();}
-		//@safe bool operator ==(const DateTime &o) const { return (msecs_tz.msec == o.msecs_tz.msec); }
 		@safe int opCmp(ref const DateTime o) const { return cast(int) (msecs_tz.hnsec - o.msecs_tz.hnsec); }
 	}
 	alias List = RpcValue[];

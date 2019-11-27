@@ -501,6 +501,7 @@ mixin template Genreader
 }
 */
 enum short NO_BYTE = -1;
+/+
 enum use_nogc_trusted = true;
 static if(use_nogc_trusted) {
 	// only this does not not allocate
@@ -566,27 +567,55 @@ else {
 		}
 	}
 }
++/
+struct Reader(R)
+{
+	int count = 0;
+	R input_range;
 
-ulong readUIntData(R)(ref R input_range) @safe
+	this(R input_range) @trusted @nogc
+	{
+		this.input_range = input_range;
+	}
+	short peek_byte() @safe
+	{
+		if(input_range.empty())
+			return NO_BYTE;
+		return input_range.front();
+	}
+	ubyte get_byte() @safe
+	{
+		ubyte ret = input_range.front();
+		input_range.popFront();
+		debug(chainpack) {
+			import std.stdio : writeln;
+			writeln("get byte [", count, "] ", ret);
+		}
+		count++;
+		return ret;
+	}
+}
+
+ulong readUIntData(R)(R input_range) @safe
 {
 	auto reader = Reader!R(input_range);
 	int bitlen;
 	return unpack_uint_data_helper(reader, bitlen);
 }
 
-ulong readUInt(R)(ref R input_range) @safe
+ulong readUInt(R)(R input_range) @safe
 {
 	auto reader = Reader!R(input_range);
 	return unpack_uint(reader);
 }
 
-ulong readInt(R)(ref R input_range) @safe
+ulong readInt(R)(R input_range) @safe
 {
 	auto reader = Reader!R(input_range);
 	return unpack_int(reader);
 }
 
-RpcValue read(R, int max_depth = -1)(ref R input_range) @safe
+RpcValue read(R, int max_depth = -1)(R input_range) @safe
 if (isInputRange!R && !isInfinite!R && is(Unqual!(ElementType!R) == ubyte))
 {
 	int depth = -1;

@@ -306,7 +306,7 @@ RpcValue read(int max_depth = -1)(string cpon) @safe
 	return read!(immutable (ubyte)[], max_depth)(a);
 }
 
-RpcValue read(T, int max_depth = -1)(ref T cpon) @safe
+RpcValue read(T, int max_depth = -1)(T cpon) @safe
 if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 {
 	//import std.ascii : isDigit, isHexDigit, toUpper, toLower;

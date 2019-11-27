@@ -34,18 +34,13 @@ void test_vals()
 	log("------------- uint ");
 	for (uint i = 0; i < ulong.sizeof; ++i) {
 		for (uint j = 0; j < 3; ++j) {
-			ulong n = (cast(ulong)1) << (i*8 + j*3+1);
+			ulong n = ((cast(ulong)1) << (i*8 + j*3+1)) + 1;
 			auto rv = RpcValue(n);
 			auto cpon = rv.toCpon();
 			auto cpk = rv.toChainPack();
 			auto rv_cpon = RpcValue.fromCpon(cpon);
 			auto rv_cpk = RpcValue.fromChainPack(cpk);
 			logD(n, cpon, cpk);
-			{
-				import std.stdio : writeln;
-				writeln(cpk);
-				writeln(cpk.length, rv_cpon.uinteger, rv_cpk);
-			}
 			assert((to!string(n) ~ 'u') == cpon);
 			assert(rv_cpon == rv_cpk);
 			assert(rv_cpk.uinteger == n);
@@ -61,7 +56,7 @@ void test_vals()
 	for (int sig = 1; sig >= -1; sig-=2) {
 		for (uint i = 0; i < long.sizeof; ++i) {
 			for (uint j = 0; j < 3; ++j) {
-				long n = sig * (cast(long)1) << (i*8 + j*2+2);
+				long n = (sig * (cast(long)1) << (i*8 + j*2+2)) + 1;
 				auto rv = RpcValue(n);
 				auto cpon = rv.toCpon();
 				auto cpk = rv.toChainPack();
@@ -74,20 +69,6 @@ void test_vals()
 			}
 		}
 	}
-	/+
-	for (int i = 0; i < 2; i++) {
-		long n = 1;
-		n <<= sizeof (n) * 8 - 1; // -MIN INT
-		if(i)
-			n = ~n; // MAX INT
-		else
-			n = n + 1; // MIN INT + 1
-		INIT_BUFFS();
-		ccpon_pack_int(&out_ctx, n);
-		*out_ctx.current = 0;
-		logsn(out_buff2, sizeof (out_buff2), "%lli", (long long)n);
-		test_cpon((const char *)out_ctx.start, out_buff2);
-	}
 	log("------------- decimal ");
 	{
 		int mant = -123456;
@@ -95,10 +76,19 @@ void test_vals()
 		int exp_max = 16;
 		int step = 1;
 		for (int exp = exp_min; exp <= exp_max; exp += step) {
-			INIT_BUFF();
-			ccpon_pack_decimal(&out_ctx, mant, exp);
-			*out_ctx.current = 0;
-			test_cpon((const char *)out_ctx.start, NULL);
+			auto n = RpcValue.Decimal(mant, exp);
+			RpcValue rv = n;
+			auto cpon = rv.toCpon();
+			auto cpk = rv.toChainPack();
+			auto rv_cpon = RpcValue.fromCpon(cpon);
+			auto rv_cpk = RpcValue.fromChainPack(cpk);
+			logD(n, cpon, cpk);
+			//logD(rv.decimal, rv.type, rv.decimal.mantisa, rv.decimal.exponent);
+			//logD(rv_cpon.decimal, rv_cpon.type, rv_cpon.decimal.mantisa, rv_cpon.decimal.exponent);
+			//logD(rv_cpk.decimal, rv_cpk.type, rv_cpk.decimal.mantisa, rv_cpk.decimal.exponent);
+			assert(to!string(n) == cpon);
+			assert(rv_cpk.decimal == n);
+			assert(rv_cpon == rv_cpk);
 		}
 	}
 	{
@@ -108,84 +98,72 @@ void test_vals()
 			double n_min = -1000000.;
 			double step = (n_max - n_min) / 100.1;
 			for (double n = n_min; n < n_max; n += step) {
-				INIT_BUFF();
-				cchainpack_pack_double(&out_ctx, n);
-				assert(out_ctx.current - out_ctx.start == sizeof(double) + 1);
-				ccpcp_unpack_context in_ctx;
-				ccpcp_unpack_context_init(&in_ctx, out_buff1, sizeof(out_buff1), NULL, NULL);
-				cchainpack_unpack_next(&in_ctx);
-				assert(in_ctx.current - in_ctx.start == sizeof(double) + 1);
-				assert(n == in_ctx.item.as.Double);
+				RpcValue rv = n;
+				auto cpon = rv.toCpon();
+				auto cpk = rv.toChainPack();
+				auto rv_cpk = RpcValue.fromChainPack(cpk);
+				logD(n, cpon, cpk);
+				assert(rv_cpk.floating == n);
 			}
 		}
 		{
-			double n_max = DBL_MAX;
-			double n_min = DBL_MIN;
 			double step = -1.23456789e10;
-			//qDebug() << n_min << " - " << n_max << ": " << step << " === " << (n_max / step / 10);
-			for (double n = n_min; n < n_max / -step / 10; n *= step) {
-				INIT_BUFF();
-				log("%g\n", n);
-				cchainpack_pack_double(&out_ctx, n);
-				ccpcp_unpack_context in_ctx;
-				ccpcp_unpack_context_init(&in_ctx, out_buff1, sizeof(out_buff1), NULL, NULL);
-				cchainpack_unpack_next(&in_ctx);
-				//if(n > -100 && n < 100)
-				//	qDebug() << n << " - " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << len << " dump: " << binary_dump(out.str()).c_str();
-				assert(in_ctx.current - in_ctx.start == sizeof(double) + 1);
-				assert(n == in_ctx.item.as.Double);
+			for (double n = -double.max; n < double.max / -step / 10; n *= step) {
+				RpcValue rv = n;
+				auto cpon = rv.toCpon();
+				auto cpk = rv.toChainPack();
+				auto rv_cpon = RpcValue.fromCpon(cpon);
+				auto rv_cpk = RpcValue.fromChainPack(cpk);
+				logD(n, rv_cpk.floating, cpon, cpk);
+				assert(rv_cpk.floating == n);
 			}
 		}
 	}
 	log("------------- datetime ");
 	{
-		const char *cpons[] = {
+		auto cpons = [
 			//"d\"\"", NULL,
-			"d\"2018-02-02T0:00:00.001\"", "d\"2018-02-02T00:00:00.001Z\"",
-			"d\"2018-02-02 01:00:00.001+01\"", "d\"2018-02-02T01:00:00.001+01\"",
-			"d\"2018-12-02 0:00:00\"", "d\"2018-12-02T00:00:00Z\"",
-			"d\"2041-03-04 0:00:00-1015\"", "d\"2041-03-04T00:00:00-1015\"",
-			"d\"2041-03-04T0:00:00.123-1015\"", "d\"2041-03-04T00:00:00.123-1015\"",
-			"d\"1970-01-01T0:00:00\"", "d\"1970-01-01T00:00:00Z\"",
-			"d\"2017-05-03T5:52:03\"", "d\"2017-05-03T05:52:03Z\"",
-			"d\"2017-05-03T15:52:03.923Z\"", NULL,
-			"d\"2017-05-03T15:52:03.000-0130\"", "d\"2017-05-03T15:52:03-0130\"",
-			"d\"2017-05-03T15:52:03.923+00\"", "d\"2017-05-03T15:52:03.923Z\"",
-		};
-		for (size_t i = 0; i < sizeof (cpons) / sizeof(char*); i+=2) {
-			const char *cpon = cpons[i];
-			INIT_BUFF();
-			test_cpon(cpon, cpons[i+1]);
+			["d\"2018-02-02T00:00:00.001Z\"", "d\"2018-02-02T00:00:00.001Z\""],
+			["d\"2018-02-02T01:00:00.001+01\"", "d\"2018-02-02T01:00:00.001+01\""],
+			["d\"2018-12-02T00:00:00Z\"", "d\"2018-12-02T00:00:00Z\""],
+			["d\"2041-03-04T00:00:00-1015\"", "d\"2041-03-04T00:00:00-1015\""],
+			["d\"2041-03-04T00:00:00.123-1015\"", "d\"2041-03-04T00:00:00.123-1015\""],
+			["d\"1970-01-01T00:00:00Z\"", "d\"1970-01-01T00:00:00Z\""],
+			["d\"2017-05-03T05:52:03Z\"", "d\"2017-05-03T05:52:03Z\""],
+			["d\"2017-05-03T15:52:03.923Z\"", "d\"2017-05-03T15:52:03.923Z\""],
+			["d\"2017-05-03T15:52:03.000-0130\"", "d\"2017-05-03T15:52:03-0130\""],
+			["d\"2017-05-03T15:52:03.923+00\"", "d\"2017-05-03T15:52:03.923Z\""],
+		];
+		foreach (cpon; cpons) {
+			auto rv1 = RpcValue.fromCpon(cpon[0]);
+			auto cpk = rv1.toChainPack();
+			auto rv2 = RpcValue.fromChainPack(cpk);
+			auto cpon2 = rv2.toCpon();
+			log(cpon[0], cpon2, cpk);
+			assert(cpon2 == cpon[1]);
 		}
 	}
 	log("------------- cstring ");
 	{
-		const char *cpons[] = {
-			"", NULL,
-			"hello", NULL,
-			"\t\r", "\"\\t\\r\"",
-			"\\0", "\"\\\\0\"",
-			"1\t\r\n\b", "\"1\\t\\r\\n\\b\"",
-			"escaped zero \\0 here \t\r\n\b", "\"escaped zero \\\\0 here \\t\\r\\n\\b\"",
-		};
-		for (size_t i = 0; i < sizeof (cpons) / sizeof(char*); i+=2) {
-			const char *cpon = cpons[i];
-			INIT_BUFF();
-			ccpon_pack_string_terminated(&out_ctx, cpon);
-			*out_ctx.current = 0;
-			test_cpon2(out_ctx.start, cpons[i+1]);
+		auto cpons = [
+			["", `""`],
+			["hello", `"hello"`],
+			["\t\r", "\"\\t\\r\""],
+			["\\0", "\"\\\\0\""],
+			["1\t\r\n\b", "\"1\\t\\r\\n\\b\""],
+			["escaped zero \\0 here \t\r\n\b", "\"escaped zero \\\\0 here \\t\\r\\n\\b\""],
+		];
+		foreach (cpon; cpons) {
+			RpcValue rv1 = cpon[0];
+			auto cpk = rv1.toChainPack();
+			auto rv2 = RpcValue.fromChainPack(cpk);
+			auto cpon2 = rv2.toCpon();
+			log(cpon[1], cpon2, cpk);
+			assert(cpon2 == cpon[1]);
+			auto rv3 = RpcValue.fromCpon(cpon2);
+			assert(rv3.str == cpon[0]);
 		}
 	}
-	{
-		INIT_BUFF();
-		const char str[] = "zero \0 here";
-		ccpon_pack_string_start(&out_ctx, str, sizeof(str)-1);
-		ccpon_pack_string_cont(&out_ctx, "ahoj", 4);
-		ccpon_pack_string_finish(&out_ctx);
-		*out_ctx.current = 0;
-		test_cpon(out_ctx.start, "\"zero \\0 here""ahoj\"");
-	}
-	+/
 }
 
 void testConversions()
