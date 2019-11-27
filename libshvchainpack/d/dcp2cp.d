@@ -29,7 +29,7 @@ void help(string app_name)
 	exit(0);
 }
 
-enum CHUNK_SIZE = 4 * 1024;
+enum CHUNK_SIZE = 4 * 1024 * 1024;
 
 int main(string[] orig_args)
 {
@@ -88,7 +88,37 @@ int main(string[] orig_args)
 
 	auto in_range = in_file.byChunk(CHUNK_SIZE).joiner;
 
-	auto out_range = out_file.lockingBinaryWriter;
+	enum own_writer = false;
+	static if(own_writer) {
+		struct Writer
+		{
+			ubyte[CHUNK_SIZE] buff;
+			size_t len = 0;
+
+			~this()
+			{
+				flush();
+			}
+			void put(ubyte b)
+			{
+				buff[len++] = b;
+				if(len == buff.length)
+					flush();
+			}
+		private:
+			void flush()
+			{
+				if(len > 0) {
+					out_file.rawWrite(buff[0 .. len]);
+					len = 0;
+				}
+			}
+		}
+		auto out_range = Writer();
+	}
+	else {
+		auto out_range = out_file.lockingBinaryWriter;
+	}
 
 	try {
 		RpcValue val;
