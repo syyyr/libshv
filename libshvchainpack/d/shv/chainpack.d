@@ -89,7 +89,7 @@ static int bytes_needed(int bit_len) pure @safe
                     n == 15 -> for future (number of bytes will be specified in next byte)
 */
 
-void pack_uint_data_helper(R)(ref R out_range, ulong num, int bit_len) @safe
+void pack_uint_data_helper(R)(ref R out_range, ulong num, int bit_len)
 {
 	enum BYTE_CNT_MAX = 32;
 	int byte_cnt = bytes_needed(bit_len);
@@ -119,7 +119,7 @@ void pack_uint_data_helper(R)(ref R out_range, ulong num, int bit_len) @safe
 	}
 }
 
-void pack_uint_data(R)(ref R out_range, ulong num) @safe
+void pack_uint_data(R)(ref R out_range, ulong num)
 {
 	//const size_t UINT_BYTES_MAX = 18;
 	//if(sizeof(num) > UINT_BYTES_MAX) {
@@ -157,7 +157,7 @@ static int expand_bit_len(int bit_len) @safe
 	return ret;
 }
 
-void pack_int_data(R)(ref R out_range, long snum) @safe
+void pack_int_data(R)(ref R out_range, long snum)
 {
 	ulong num = snum < 0? -snum: snum;
 	bool neg = (snum < 0);
@@ -172,7 +172,7 @@ void pack_int_data(R)(ref R out_range, long snum) @safe
 	pack_uint_data_helper!R(out_range, num, bitlen);
 }
 
-void pack_uint(R)(ref R out_range, ulong i) @safe
+void pack_uint(R)(ref R out_range, ulong i)
 {
 	if(i < 64) {
 		out_range.put(cast(ubyte)(i % 64));
@@ -183,7 +183,7 @@ void pack_uint(R)(ref R out_range, ulong i) @safe
 	}
 }
 
-void pack_int(R)(ref R out_range, long i) @safe
+void pack_int(R)(ref R out_range, long i)
 {
 	if(i >= 0 && i < 64) {
 		out_range.put(cast(ubyte)((i % 64) + 64));
@@ -201,22 +201,23 @@ struct WriteOptions
 	bool writeInvalidAsNull = true;
 }
 
-void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = WriteOptions()) @safe
+void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = WriteOptions())
+if (isOutputRange!(T, ubyte))
 {
 	void putb(ubyte b) { out_range.put(b); }
 	void puts(string s) { foreach(c; s) out_range.put(c); }
 
-	void write_int(long n) @safe
+	void write_int(long n)
 	{
 		pack_int(out_range, n);
 	}
 
-	void write_uint(ulong n) @safe
+	void write_uint(ulong n)
 	{
 		pack_uint(out_range, n);
 	}
 
-	void write_double(double n) @safe
+	void write_double(double n)
 	{
 		putb(PackingSchema.Double);
 		union U {
@@ -229,14 +230,14 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 			putb(u.data[i]);
 	}
 
-	void write_decimal(RpcValue.Decimal n) @safe
+	void write_decimal(RpcValue.Decimal n)
 	{
 		putb(PackingSchema.Decimal);
 		pack_int_data(out_range, n.mantisa);
 		pack_int_data(out_range, n.exponent);
 	}
 
-	void write_datetime(RpcValue.DateTime dt) @safe
+	void write_datetime(RpcValue.DateTime dt)
 	{
 		putb(PackingSchema.DateTime);
 		long msecs = dt.msecsSinceEpoch - SHV_EPOCH_MSEC;
@@ -265,7 +266,7 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 		pack_int_data(out_range, msecs);
 	}
 
-	void write_map(R)(R keys, const ref RpcValue[string] map) @safe
+	void write_map(R)(R keys, const ref RpcValue[string] map)
 	{
 		putb(PackingSchema.Map);
 		foreach(k; keys) {
@@ -275,7 +276,7 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 		putb(PackingSchema.TERM);
 	}
 
-	void write_imap(R)(R keys, const ref RpcValue[int] map) @safe
+	void write_imap(R)(R keys, const ref RpcValue[int] map)
 	{
 		putb(PackingSchema.IMap);
 		foreach(k; keys) {
@@ -285,7 +286,7 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 		putb(PackingSchema.TERM);
 	}
 
-	void write_meta(R)(R keys, const ref RpcValue.Meta map) @safe
+	void write_meta(R)(R keys, const ref RpcValue.Meta map)
 	{
 		putb(PackingSchema.MetaMap);
 		foreach(k; keys) {
@@ -307,7 +308,7 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 		return ret;
 	}
 
-	void write_cstring(string str) @safe
+	void write_cstring(string str)
 	{
 		putb(PackingSchema.CString);
 		foreach (char c; str) {
@@ -323,14 +324,13 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 		}
 	}
 
-	void write_string(string str) @safe
+	void write_string(string str)
 	{
 		putb(PackingSchema.String);
 		pack_uint_data(out_range, str.length);
 		puts(str);
 	}
 
-	@safe
 	void write_rpcval(const ref RpcValue rpcval)
 	{
 		auto meta = rpcval.meta;
@@ -416,7 +416,7 @@ class ChainPackReadException : Exception
 }
 
 /// @pbitlen is used to enable same function usage for signed int unpacking
-static ulong unpack_uint_data_helper(R)(ref R reader, out int bitlen) @safe
+static ulong unpack_uint_data_helper(R)(ref R reader, out int bitlen)
 {
 	ulong num = 0;
 
@@ -440,20 +440,20 @@ static ulong unpack_uint_data_helper(R)(ref R reader, out int bitlen) @safe
 	return num;
 }
 
-static ulong unpack_uint_data(R)(ref R reader) @safe
+static ulong unpack_uint_data(R)(ref R reader)
 {
 	int bitlen = 0;
 	return unpack_uint_data_helper(reader, bitlen);
 }
 
-static ulong unpack_uint(R)(ref R reader) @safe
+static ulong unpack_uint(R)(ref R reader)
 {
 	auto b = reader.get_byte();
 	enforce(b == PackingSchema.UInt, new ChainPackReadException("Data type must be UInt", reader.count));
 	return unpack_uint_data(reader);
 }
 
-static long unpack_int_data(R)(ref R reader) @safe
+static long unpack_int_data(R)(ref R reader)
 {
 	long snum = 0;
 	int bitlen;
@@ -468,7 +468,7 @@ static long unpack_int_data(R)(ref R reader) @safe
 	return snum;
 }
 
-static long unpack_int(R)(ref R reader) @safe
+static long unpack_int(R)(ref R reader)
 {
 	auto b = reader.get_byte();
 	enforce(b == PackingSchema.Int, new ChainPackReadException("Data type must be Int", reader.count));
@@ -573,17 +573,17 @@ struct Reader(R)
 	int count = 0;
 	R input_range;
 
-	this(R input_range) @trusted @nogc
+	this(R input_range)
 	{
 		this.input_range = input_range;
 	}
-	short peek_byte() @safe
+	short peek_byte()
 	{
 		if(input_range.empty())
 			return NO_BYTE;
 		return input_range.front();
 	}
-	ubyte get_byte() @safe
+	ubyte get_byte()
 	{
 		ubyte ret = input_range.front();
 		input_range.popFront();
@@ -596,26 +596,26 @@ struct Reader(R)
 	}
 }
 
-ulong readUIntData(R)(R input_range) @safe
+ulong readUIntData(R)(R input_range)
 {
 	auto reader = Reader!R(input_range);
 	int bitlen;
 	return unpack_uint_data_helper(reader, bitlen);
 }
 
-ulong readUInt(R)(R input_range) @safe
+ulong readUInt(R)(R input_range)
 {
 	auto reader = Reader!R(input_range);
 	return unpack_uint(reader);
 }
 
-ulong readInt(R)(R input_range) @safe
+ulong readInt(R)(R input_range)
 {
 	auto reader = Reader!R(input_range);
 	return unpack_int(reader);
 }
 
-RpcValue read(R, int max_depth = -1)(R input_range) @safe
+RpcValue read(R, int max_depth = -1)(R input_range)
 if (isInputRange!R && !isInfinite!R && is(Unqual!(ElementType!R) == ubyte))
 {
 	int depth = -1;
@@ -623,25 +623,25 @@ if (isInputRange!R && !isInfinite!R && is(Unqual!(ElementType!R) == ubyte))
 
 	auto reader = Reader!R(input_range);
 
-	auto peek_byte() @safe { return reader.peek_byte(); }
-	auto get_byte() @safe { return reader.get_byte(); }
+	auto peek_byte()  { return reader.peek_byte(); }
+	auto get_byte()  { return reader.get_byte(); }
 
-	void error(string msg, int pos) @safe
+	void error(string msg, int pos)
 	{
 		throw new ChainPackReadException(msg, pos);
 	}
 
-	long read_int() @safe
+	long read_int()
 	{
 		return unpack_int(reader);
 	}
 
-	@safe ulong read_uint()
+	ulong read_uint()
 	{
 		return unpack_uint(reader);
 	}
 
-	@safe RpcValue read_cstring()
+	RpcValue read_cstring()
 	{
 		auto app = appender!string();
 		get_byte(); // eat '"'
@@ -674,7 +674,7 @@ if (isInputRange!R && !isInfinite!R && is(Unqual!(ElementType!R) == ubyte))
 		return RpcValue(app.data);
 	}
 
-	RpcValue read_val() @safe
+	RpcValue read_val()
 	{
 		depth++;
 		if(max_depth > 0 && depth > max_depth)

@@ -201,7 +201,7 @@ private:
 		SysTime currentTime = Clock.currTime();
 
 		set_TTY_color(is_colorized, os, TTYColor.Green);
-		os.write(currentTime.toISOExtString());
+		os.write(currentTime.toISOExtString()[0 .. 23]);
 		set_TTY_color(is_colorized, os, TTYColor.Brown);
 		os.write('[', context.moduleName, ':', context.line, ']');
 		if(context.topic.length) {

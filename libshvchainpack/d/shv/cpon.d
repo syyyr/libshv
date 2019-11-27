@@ -39,7 +39,8 @@ enum CponFloatLiteral : string
 	NegInf = "-Inf", /// string representation of floating-point negative Infinity
 }
 
-void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = WriteOptions()) @safe
+void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = WriteOptions())
+if (isOutputRange!(T, ubyte))
 {
 	int m_nestLevel = 0;
 
@@ -72,7 +73,7 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 		return true;
 	}
 
-	void indent_item(bool is_online_container, bool first_item) @safe
+	void indent_item(bool is_online_container, bool first_item)
 	{
 		if (opts.indent.length == 0)
 			return;
@@ -87,7 +88,7 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 		}
 	}
 
-	void write_map(R, M)(R keys, const ref M map) @safe
+	void write_map(R, M)(R keys, const ref M map)
 	{
 		auto is_oneliner = is_oneline_map(map);
 		m_nestLevel++;
@@ -113,7 +114,8 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 		indent_item(is_oneliner, true);
 	}
 
-	T[] sorted_keys(T)(const ref RpcValue[T] m) @safe {
+	T[] sorted_keys(T)(const ref RpcValue[T] m) @safe
+	{
 		T[] ret;
 		foreach(k; m.byKey())
 			ret ~= k;
@@ -122,7 +124,7 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 		return ret;
 	}
 
-	void write_cstring(string str) @safe
+	void write_cstring(string str)
 	{
 		putc('"');
 		while(!str.empty) {
@@ -160,7 +162,6 @@ void write(T)(ref T out_range, const ref RpcValue rpcval, WriteOptions opts = Wr
 		putc('"');
 	}
 
-	@safe
 	void write_rpcval(const ref RpcValue rpcval)
 	{
 		auto meta = rpcval.meta;
@@ -300,35 +301,35 @@ class CponReadException : Exception
 	}
 }
 
-RpcValue read(int max_depth = -1)(string cpon) @safe
+RpcValue read(int max_depth = -1)(string cpon)
 {
 	auto a = cast(immutable (ubyte)[]) cpon;
 	return read!(immutable (ubyte)[], max_depth)(a);
 }
 
-RpcValue read(T, int max_depth = -1)(T cpon) @safe
+RpcValue read(T, int max_depth = -1)(T cpon)
 if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 {
-	//import std.ascii : isDigit, isHexDigit, toUpper, toLower;
-	//import std.typecons : Nullable, Yes;
-	//debug writeln("neco: ", typeid(Unqual!(ElementType!T)));
-
 	int depth = -1;
 	//Nullable!Char next;
 	int line = 1, pos = 0;
 	enum NO_CHAR = -1;
 	alias Char = short; //Unqual!(ElementType!T);
 
-	Char peek_char() @safe
+	Char peek_char()
 	{
 		if(cpon.empty())
 			return NO_CHAR;
 		return cpon.front();
 	}
 
-	Char get_char() @safe
+	Char get_char()
 	{
 		Char ret = cpon.front();
+		debug(cpon) {
+			import std.stdio : writeln;
+			writeln("get byte: ", ret);
+		}
 		cpon.popFront();
 		if(ret == '\n') {
 			line++;
@@ -340,7 +341,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 		return ret;
 	}
 
-	void error(string msg) @safe
+	void error(string msg)
 	{
 		string near;
 		for(int i=0; i<100; i++) {
@@ -353,7 +354,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 		throw new CponReadException(msg ~ " near: " ~ near, line, pos);
 	}
 
-	void get_token(string s) @safe
+	void get_token(string s)
 	{
 		foreach(c; s) {
 			if(c != get_char())
@@ -361,7 +362,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 		}
 	}
 
-	void skip_white_insignificant() @safe
+	void skip_white_insignificant()
 	{
 		while (true) {
 			auto b = peek_char();
@@ -411,7 +412,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 		}
 	}
 
-	long read_int(out int digit_cnt) @safe
+	long read_int(out int digit_cnt)
 	{
 		auto base = 10;
 		long val = 0;
@@ -470,7 +471,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 
 	}
 
-	@safe RpcValue read_number()
+	RpcValue read_number()
 	{
 		long mantisa = 0;
 		int exponent = 0;
@@ -547,7 +548,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 		return RpcValue(dt);
 	}
 
-	@safe RpcValue read_cstring()
+	RpcValue read_cstring()
 	{
 		auto app = appender!string();
 		get_char(); // eat '"'
@@ -580,7 +581,7 @@ if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 		return RpcValue(app.data);
 	}
 
-	RpcValue read_val() @safe
+	RpcValue read_val()
 	{
 		depth++;
 		if(max_depth > 0 && depth > max_depth)

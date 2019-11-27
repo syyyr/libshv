@@ -1177,7 +1177,7 @@ struct RpcValue
 	 *
 	 * $(I options) can be used to tweak the conversion behavior.
 	 */
-	string toCpon(Flag!"pretty" pretty = No.pretty) const @safe
+	string toCpon(Flag!"pretty" pretty = No.pretty) const
 	{
 		import shv.cpon : write, WriteOptions;
 		auto app = appender!string();
@@ -1191,19 +1191,19 @@ struct RpcValue
 	}
 
 	//string toString() const @safe { return toCpon(No.pretty); }
-	static RpcValue fromCpon(string cpon) @safe
+	static RpcValue fromCpon(string cpon)
 	{
 		import shv.cpon : read;
 		return read(cpon);
 	}
-	ubyte[] toChainPack() const @safe
+	ubyte[] toChainPack() const
 	{
 		import shv.chainpack : write;
 		auto app = appender!(ubyte[])();
 		write(app, this);
 		return app.data;
 	}
-	static RpcValue fromChainPack(R)(ref R input_range) @safe
+	static RpcValue fromChainPack(R)(ref R input_range)
 	{
 		import shv.chainpack : read;
 		return read!R(input_range);
