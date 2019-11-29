@@ -404,6 +404,19 @@ if (isOutputRange!(T, ubyte))
 	write_rpcval(rpcval);
 }
 
+
+ubyte[] write(const ref RpcValue val, WriteOptions opts = WriteOptions())
+{
+	auto app = appender!(ubyte[]);
+	app.write(val, opts);
+	return app.data;
+}
+
+ubyte[] toChainPack(const ref RpcValue val)
+{
+	return write(val);
+}
+
 class ChainPackReadException : Exception
 {
 	this(string msg, int pos = -1) pure nothrow @safe
@@ -571,22 +584,22 @@ else {
 struct Reader(R)
 {
 	int count = 0;
-	R input_range;
+	R *input_range;
 
-	this(R input_range)
+	this(ref R input_range)
 	{
-		this.input_range = input_range;
+		this.input_range = &input_range;
 	}
 	short peek_byte()
 	{
-		if(input_range.empty())
+		if((*input_range).empty())
 			return NO_BYTE;
-		return input_range.front();
+		return (*input_range).front();
 	}
 	ubyte get_byte()
 	{
-		ubyte ret = input_range.front();
-		input_range.popFront();
+		ubyte ret = (*input_range).front();
+		(*input_range).popFront();
 		debug(chainpack) {
 			import std.stdio : writeln;
 			writeln("get byte [", count, "] ", ret);
@@ -596,26 +609,26 @@ struct Reader(R)
 	}
 }
 
-ulong readUIntData(R)(R input_range)
+ulong readUIntData(R)(ref R input_range)
 {
 	auto reader = Reader!R(input_range);
 	int bitlen;
 	return unpack_uint_data_helper(reader, bitlen);
 }
 
-ulong readUInt(R)(R input_range)
+ulong readUInt(R)(ref R input_range)
 {
 	auto reader = Reader!R(input_range);
 	return unpack_uint(reader);
 }
 
-ulong readInt(R)(R input_range)
+ulong readInt(R)(ref R input_range)
 {
 	auto reader = Reader!R(input_range);
 	return unpack_int(reader);
 }
 
-RpcValue read(R, int max_depth = -1)(R input_range)
+RpcValue read(R, int max_depth = -1)(ref R input_range)
 if (isInputRange!R && !isInfinite!R && is(Unqual!(ElementType!R) == ubyte))
 {
 	int depth = -1;

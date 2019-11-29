@@ -11,6 +11,26 @@ import std.conv;
 alias log = logInfo;
 alias logD = logMessage;
 
+RpcValue fromChainPack(ubyte[] data)
+{
+	return shv.chainpack.read(data);
+}
+
+ubyte[] toChainPack(const ref RpcValue rv)
+{
+	return shv.chainpack.write(rv);
+}
+
+RpcValue fromCpon(string str)
+{
+	return shv.cpon.read(str);
+}
+
+string toCpon(const ref RpcValue rv)
+{
+	return shv.cpon.write(rv);
+}
+
 void test_vals()
 {
 	log("------------- NULL ");
@@ -38,8 +58,8 @@ void test_vals()
 			auto rv = RpcValue(n);
 			auto cpon = rv.toCpon();
 			auto cpk = rv.toChainPack();
-			auto rv_cpon = RpcValue.fromCpon(cpon);
-			auto rv_cpk = RpcValue.fromChainPack(cpk);
+			auto rv_cpon = fromCpon(cpon);
+			auto rv_cpk = fromChainPack(cpk);
 			logD(n, cpon, cpk);
 			assert((to!string(n) ~ 'u') == cpon);
 			assert(rv_cpon == rv_cpk);
@@ -60,8 +80,8 @@ void test_vals()
 				auto rv = RpcValue(n);
 				auto cpon = rv.toCpon();
 				auto cpk = rv.toChainPack();
-				auto rv_cpon = RpcValue.fromCpon(cpon);
-				auto rv_cpk = RpcValue.fromChainPack(cpk);
+				auto rv_cpon = fromCpon(cpon);
+				auto rv_cpk = fromChainPack(cpk);
 				logD(n, cpon, cpk);
 				assert(to!string(n) == cpon);
 				assert(rv_cpon == rv_cpk);
@@ -80,8 +100,8 @@ void test_vals()
 			RpcValue rv = n;
 			auto cpon = rv.toCpon();
 			auto cpk = rv.toChainPack();
-			auto rv_cpon = RpcValue.fromCpon(cpon);
-			auto rv_cpk = RpcValue.fromChainPack(cpk);
+			auto rv_cpon = fromCpon(cpon);
+			auto rv_cpk = fromChainPack(cpk);
 			logD(n, cpon, cpk);
 			//logD(rv.decimal, rv.type, rv.decimal.mantisa, rv.decimal.exponent);
 			//logD(rv_cpon.decimal, rv_cpon.type, rv_cpon.decimal.mantisa, rv_cpon.decimal.exponent);
@@ -101,7 +121,7 @@ void test_vals()
 				RpcValue rv = n;
 				auto cpon = rv.toCpon();
 				auto cpk = rv.toChainPack();
-				auto rv_cpk = RpcValue.fromChainPack(cpk);
+				auto rv_cpk = fromChainPack(cpk);
 				logD(n, cpon, cpk);
 				assert(rv_cpk.floating == n);
 			}
@@ -112,8 +132,8 @@ void test_vals()
 				RpcValue rv = n;
 				auto cpon = rv.toCpon();
 				auto cpk = rv.toChainPack();
-				auto rv_cpon = RpcValue.fromCpon(cpon);
-				auto rv_cpk = RpcValue.fromChainPack(cpk);
+				auto rv_cpon = fromCpon(cpon);
+				auto rv_cpk = fromChainPack(cpk);
 				logD(n, rv_cpk.floating, cpon, cpk);
 				assert(rv_cpk.floating == n);
 			}
@@ -135,9 +155,9 @@ void test_vals()
 			["d\"2017-05-03T15:52:03.923+00\"", "d\"2017-05-03T15:52:03.923Z\""],
 		];
 		foreach (cpon; cpons) {
-			auto rv1 = RpcValue.fromCpon(cpon[0]);
+			auto rv1 = fromCpon(cpon[0]);
 			auto cpk = rv1.toChainPack();
-			auto rv2 = RpcValue.fromChainPack(cpk);
+			auto rv2 = fromChainPack(cpk);
 			auto cpon2 = rv2.toCpon();
 			log(cpon[0], cpon2, cpk);
 			assert(cpon2 == cpon[1]);
@@ -156,11 +176,11 @@ void test_vals()
 		foreach (cpon; cpons) {
 			RpcValue rv1 = cpon[0];
 			auto cpk = rv1.toChainPack();
-			auto rv2 = RpcValue.fromChainPack(cpk);
+			auto rv2 = fromChainPack(cpk);
 			auto cpon2 = rv2.toCpon();
 			log(cpon[1], cpon2, cpk);
 			assert(cpon2 == cpon[1]);
-			auto rv3 = RpcValue.fromCpon(cpon2);
+			auto rv3 = fromCpon(cpon2);
 			assert(rv3.str == cpon[0]);
 		}
 	}
@@ -230,25 +250,24 @@ void testConversions()
 		string cpon2 = lst[1]? lst[1]: cpon1;
 
 		debug(chainpack) {log("cpon:", cpon1);}
-		RpcValue rv1 = RpcValue.fromCpon(cpon1);
+		RpcValue rv1 = fromCpon(cpon1);
 		debug(chainpack) {log("rv:", rv1);}
 		auto cpk1 = rv1.toChainPack();
 		debug(chainpack) {log("chainpack:", cpk1);}
-		RpcValue rv2 = RpcValue.fromChainPack(cpk1);
+		RpcValue rv2 = fromChainPack(cpk1);
 		string cpn2 = rv2.toCpon();
 		logD(cpon2, "\t--cpon------>\t", cpn2);
 		assert(cpn2 == cpon2);
 	}
 }
 
-@safe
 void testDateTime()
 {
 	// same points in time
-	RpcValue v1 = RpcValue.fromCpon(`d"2017-05-03T18:30:00Z"`);
-	RpcValue v2 = RpcValue.fromCpon(`d"2017-05-03T22:30:00+04"`);
-	RpcValue v3 = RpcValue.fromCpon(`d"2017-05-03T11:30:00-0700"`);
-	RpcValue v4 = RpcValue.fromCpon(`d"2017-05-03T15:00:00-0330"`);
+	RpcValue v1 = fromCpon(`d"2017-05-03T18:30:00Z"`);
+	RpcValue v2 = fromCpon(`d"2017-05-03T22:30:00+04"`);
+	RpcValue v3 = fromCpon(`d"2017-05-03T11:30:00-0700"`);
+	RpcValue v4 = fromCpon(`d"2017-05-03T15:00:00-0330"`);
 	assert(v1.datetime.msecsSinceEpoch == v2.datetime.msecsSinceEpoch);
 	assert(v2.datetime.msecsSinceEpoch == v3.datetime.msecsSinceEpoch);
 	assert(v3.datetime.msecsSinceEpoch == v4.datetime.msecsSinceEpoch);

@@ -407,28 +407,48 @@ struct RpcValue
 		}
 		string toISOExtString() @safe const
 		{
-			SysTime t;
-			t.stdTime = msecs_tz.hnsec;
-			t.timezone = new immutable SimpleTimeZone(minutes(msecs_tz.tz));
+			static string slice(string str, size_t from, size_t to = size_t.max)
+			{
+				long len = cast(int) str.length;
+				if(len == 0)
+					return str;
+				if(from >= len)
+					from = len - 1;
+				if(to > len)
+					to = len;
+				return str[from .. to];
+			}
+			enum DT_LEN = 19;
+			int msec = (msecs_tz.hnsec / 10_000) % 1000;
+			auto t = SysTime(msecs_tz.hnsec + msecs_tz.tz * 60UL * 10_000_000, UTC());
+			//t.timezone = UTC();
+			//t.timezone = new immutable SimpleTimeZone(minutes(msecs_tz.tz));
+			string s1 = t.toISOExtString();
+			string s_dt = slice(s1, 0, DT_LEN);
+			if(msec > 0)
+				s_dt ~= slice(s1, DT_LEN, DT_LEN + 4);
 			if(msecs_tz.tz == 0) {
-				string s = t.toISOExtString();
-				s = s[0 .. $-6] ~ 'Z';
-				return s;
+				s_dt ~= 'Z';
 			}
 			else {
-				string s = t.toISOExtString();
-				auto ix = s.lastIndexOfAny("+-");
-				if(ix >= 19) {
-					string tz = s[ix+1 .. $];
-					if(tz.length == 5) {
-						string tz2 = tz[0 .. 2];
-						if(tz[3 .. 5] != "00")
-							tz2 ~= tz[3 .. 5];
-						s = s[0 .. ix+1] ~ tz2;
-					}
+				int tz = msecs_tz.tz;
+				if(tz < 0) {
+					s_dt ~= '-';
+					tz = -tz;
 				}
-				return s;
+				else {
+					s_dt ~= '+';
+				}
+				int h = tz / 60;
+				int m = tz % 60;
+				s_dt ~= cast(char) ('0' + (h / 10));
+				s_dt ~= cast(char) ('0' + (h % 10));
+				if(m > 0) {
+					s_dt ~= cast(char) ('0' + (m / 10));
+					s_dt ~= cast(char) ('0' + (m % 10));
+				}
 			}
+			return s_dt;
 		}
 		@safe string toString() const {return toISOExtString();}
 		@safe int opCmp(ref const DateTime o) const { return cast(int) (msecs_tz.hnsec - o.msecs_tz.hnsec); }
@@ -1172,11 +1192,7 @@ struct RpcValue
 		return result;
 	}
 
-	/***
-	 * Implicitly calls `toRpc` on this RpcValue.
-	 *
-	 * $(I options) can be used to tweak the conversion behavior.
-	 */
+	/*
 	string toCpon(Flag!"pretty" pretty = No.pretty) const
 	{
 		import shv.cpon : write, WriteOptions;
@@ -1208,6 +1224,7 @@ struct RpcValue
 		import shv.chainpack : read;
 		return read!R(input_range);
 	}
+	*/
 }
 
 /+ @safe unittest

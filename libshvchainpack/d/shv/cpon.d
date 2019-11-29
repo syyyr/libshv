@@ -27,7 +27,7 @@ public:
 */
 struct WriteOptions
 {
-	bool sortKeys = false;
+	bool sortKeys = true;
 	string indent;
 	bool writeInvalidAsNull = true;
 }
@@ -270,6 +270,18 @@ if (isOutputRange!(T, ubyte))
 	write_rpcval(rpcval);
 }
 
+string write(const ref RpcValue val, WriteOptions opts = WriteOptions())
+{
+	auto app = appender!string;
+	app.write(val, opts);
+	return app.data;
+}
+
+string toCpon(const ref RpcValue val)
+{
+	return write(val);
+}
+
 unittest
 {
 	RpcValue rv = ["foo": "bar"];
@@ -303,11 +315,20 @@ class CponReadException : Exception
 
 RpcValue read(int max_depth = -1)(string cpon)
 {
-	auto a = cast(immutable (ubyte)[]) cpon;
-	return read!(immutable (ubyte)[], max_depth)(a);
+	size_t len;
+	return read(cpon, len);
 }
 
-RpcValue read(T, int max_depth = -1)(T cpon)
+RpcValue read(int max_depth = -1)(string cpon, out size_t read_len)
+{
+	auto a = cast(immutable (ubyte)[]) cpon;
+	size_t old_len = a.length;
+	RpcValue ret = read!(immutable (ubyte)[], max_depth)(a);
+	read_len = old_len - a.length;
+	return ret;
+}
+
+RpcValue read(T, int max_depth = -1)(ref T cpon)
 if (isInputRange!T && !isInfinite!T && is(Unqual!(ElementType!T) == ubyte))
 {
 	int depth = -1;

@@ -1,10 +1,16 @@
-import std.stdio;
+import shv.cpon;
+//import shv.chainpack;
+import shv.rpcvalue;
+import std.array;
 
 void main()
 {
-    // Read standard input 4KB at a time
-    foreach (ubyte[] buffer; stdin.byChunk(4096))
-    {
-        writeln(buffer);
-    }
+	foreach(i; 0 .. 1000) {
+		RpcValue v = RpcValue.DateTime.now();
+		string cpon = write(v);
+		debug {
+			import std.stdio : writeln;
+			writeln(cpon);
+		}
+	}
 }
