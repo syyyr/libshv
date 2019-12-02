@@ -181,11 +181,6 @@ struct RpcValue
 			}
 		}
 
-		//this(ref return scope const Meta o)
-		//{
-		//	m_values = o.m_values;
-		//}
-
 		auto opBinaryRight(string op : "in")(int k) const @safe
 		{
 			auto key = Key(k);
@@ -195,6 +190,11 @@ struct RpcValue
 		{
 			auto key = Key(k);
 			return key in m_values;
+		}
+		const(RpcValue) value(K)(K k, RpcValue default_val = RpcValue()) const @safe
+		{
+			auto p = k in this;
+			return (p is null)? default_val: *p;
 		}
 
 		ref inout(RpcValue) opIndex(inout Key key) inout @safe { return m_values[key]; }
@@ -365,6 +365,7 @@ struct RpcValue
 			mz.tz = cast(typeof(MsTz.tz)) t.utcOffset.split!("minutes")().minutes;
 			return DateTime(mz);
 		}
+
 		static DateTime fromISOExtString(string utc_date_time_str) @safe
 		{
 			auto ix = utc_date_time_str.lastIndexOfAny("+-");
@@ -378,7 +379,34 @@ struct RpcValue
 			SysTime t = SysTime.fromISOExtString(utc_date_time_str);
 			return fromSysTime(t);
 		}
-
+/*
+		static DateTime fromISOExtString(string utc_date_time_str) @safe
+		{
+			enum DT_LEN = 19;
+			int ix;
+			bool is_neg_offset = false;
+			for(ix=DT_LEN; ix<utc_date_time_str.length; ix++) {
+				auto c = utc_date_time_str[ix];
+				if(c == '+' || c == '-' || c == 'Z') {
+					is_neg_offset = (c == '-');
+					break;
+				}
+			}
+			static int to_int(char a, char b) { return (a - '0') * 10 + (b - '0'); }
+			enforce!Exception(ix < utc_date_time_str.length, "Malformed DateTime string: " ~ utc_date_time_str);
+			//auto ix = utc_date_time_str.lastIndexOfAny("+-");
+			string tzs = utc_date_time_str[ix+1 .. $];
+			int offset_min = 0;
+			if(tzs.length >= 2)
+				offset_min += 60 * to_int(tzs[0], tzs[1]);
+			if(tzs.length == 4)
+				offset_min += to_int(tzs[3], tzs[4]);
+			string str = utc_date_time_str[0 .. ix] ~ 'Z';
+			SysTime t = SysTime.fromISOExtString(str);
+			t.stdTime = t.stdTime - offset_min * 60UL * 10_000_000;
+			return fromSysTime(t);
+		}
+*/
 		static DateTime fromMSecsSinceEpoch(long msecs, short utc_offset_min = 0) @safe
 		{
 			MsTz mz;
@@ -425,8 +453,14 @@ struct RpcValue
 			//t.timezone = new immutable SimpleTimeZone(minutes(msecs_tz.tz));
 			string s1 = t.toISOExtString();
 			string s_dt = slice(s1, 0, DT_LEN);
-			if(msec > 0)
-				s_dt ~= slice(s1, DT_LEN, DT_LEN + 4);
+			if(msec > 0) {
+				s_dt ~= '.';
+				s_dt ~= cast(char) ('0' + (msec / 100));
+				msec = msec % 100;
+				s_dt ~= cast(char) ('0' + (msec / 10));
+				msec = msec % 10;
+				s_dt ~= cast(char) ('0' + msec);
+			}
 			if(msecs_tz.tz == 0) {
 				s_dt ~= 'Z';
 			}
@@ -470,8 +504,8 @@ struct RpcValue
 		List list;
 	}
 	private Store store;
-	private Type type_tag;
-	public Meta m_meta;
+	private Type type_tag = Type.Invalid;
+	private Meta m_meta;
 
 	/**
 	  Returns the RpcType of the value stored in this structure.
@@ -490,8 +524,9 @@ struct RpcValue
 	}
 	+/
 
+	bool isValid() const @safe { return type() != Type.Invalid; }
+
 	ref inout(Meta) meta() inout @safe { return m_meta; }
-	//const(Meta) meta() const @safe { return m_meta; }
 	void meta(Meta m) @safe { m_meta = m; }
 
 	/***
