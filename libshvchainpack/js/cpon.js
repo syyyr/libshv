@@ -453,6 +453,7 @@ CponReader.prototype.readNumber = function(rpc_val)
 	let b = this.ctx.peekByte();
 	if(b == 43) {// '+'
 		is_neg = false
+		b = this.ctx.getByte();
 	}
 	else if(b == 45) {// '-'
 		is_neg = true

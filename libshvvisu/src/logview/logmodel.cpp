@@ -35,6 +35,8 @@ QVariant LogModel::headerData(int section, Qt::Orientation orientation, int role
 			case ColDateTime: return tr("DateTime");
 			case ColPath: return tr("Path");
 			case ColValue: return tr("Value");
+			case ColShortTime: return tr("ShortTime");
+			case ColDomain: return tr("Domain");
 			}
 		}
 	}

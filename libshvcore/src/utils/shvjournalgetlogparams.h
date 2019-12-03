@@ -13,6 +13,7 @@ namespace utils {
 
 struct SHVCORE_DECL_EXPORT ShvJournalGetLogParams
 {
+	static const char *KEY_DEVICE_TYPE;
 	static const char *KEY_HEADER_OPTIONS;
 	static const char *KEY_MAX_RECORD_COUNT;
 	static const char *KEY_WITH_SNAPSHOT;
@@ -28,6 +29,7 @@ struct SHVCORE_DECL_EXPORT ShvJournalGetLogParams
 	/// '*' stands for single path segment, shv/pol/*/discon match shv/pol/ols/discon but not shv/pol/ols/depot/discon
 	/// '**' stands for zero or more path segments, shv/pol/**/discon matches shv/pol/discon, shv/pol/ols/discon, shv/pol/ols/depot/discon
 	std::string pathPattern;
+	std::string deviceType;
 	//enum class PatternType {None = 0, WildCard, RegExp};
 	//PatternType patternType = PatternType::WildCard;
 	enum class HeaderOptions : unsigned {

@@ -14,7 +14,7 @@ class LogModel : public QAbstractTableModel
 
 	using Super = QAbstractTableModel;
 public:
-	enum {ColDateTime = 0, ColPath, ColValue,  ColCnt};
+	enum {ColDateTime = 0, ColPath, ColValue, ColShortTime, ColDomain,  ColCnt};
 public:
 	LogModel(QObject *parent = nullptr);
 

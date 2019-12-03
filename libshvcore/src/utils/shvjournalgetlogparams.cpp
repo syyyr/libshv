@@ -6,6 +6,7 @@ namespace shv {
 namespace core {
 namespace utils {
 
+const char *ShvJournalGetLogParams::KEY_DEVICE_TYPE = "deviceType";
 const char *ShvJournalGetLogParams::KEY_HEADER_OPTIONS = "headerOptions";
 const char *ShvJournalGetLogParams::KEY_MAX_RECORD_COUNT = "maxRecordCount";
 const char *ShvJournalGetLogParams::KEY_WITH_SNAPSHOT = "withSnapshot";
@@ -25,6 +26,7 @@ ShvJournalGetLogParams::ShvJournalGetLogParams(const chainpack::RpcValue &opts)
 	until = m.value(KEY_WITH_UNTIL, until);
 	if(!until.isValid())
 		until = m.value("to");
+	deviceType = m.value(KEY_DEVICE_TYPE, pathPattern).toString();
 	pathPattern = m.value(KEY_PATH_PATTERN, pathPattern).toString();
 	domainPattern = m.value(KEY_DOMAIN_PATTERN, domainPattern).toString();
 	headerOptions = m.value(KEY_HEADER_OPTIONS, headerOptions).toUInt();
@@ -44,6 +46,8 @@ chainpack::RpcValue ShvJournalGetLogParams::toRpcValue() const
 		m[KEY_PATH_PATTERN] = pathPattern;
 	if(!domainPattern.empty())
 		m[KEY_DOMAIN_PATTERN] = domainPattern;
+	if(!deviceType.empty())
+		m[KEY_DEVICE_TYPE] = deviceType;
 	m[KEY_HEADER_OPTIONS] = headerOptions;
 	m[KEY_MAX_RECORD_COUNT] = maxRecordCount;
 	m[KEY_WITH_SNAPSHOT] = withSnapshot;

@@ -183,10 +183,23 @@ void DlgLogInspector::parseLog(shv::chainpack::RpcValue log)
 		ui->tblData->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
 	}
 	{
+		struct ShortTime {
+			int64_t msec_sum = 0;
+			uint16_t last_msec = 0;
+
+			int64_t addShortTime(uint16_t msec)
+			{
+				msec_sum += static_cast<uint16_t>(msec - last_msec);
+				last_msec = msec;
+				return msec_sum;
+			}
+		};
+		QMap<std::string, ShortTime> short_times;
 		const shv::chainpack::RpcValue::IMap &dict = log.metaValue("pathsDict").toIMap();
 		const shv::chainpack::RpcValue::List lst = log.toList();
 		m_graphModel->clear();
 		m_graphModel->beginAppendValues();
+		ShortTime anca_hook_short_time;
 		for(const cp::RpcValue &rec : lst) {
 			const cp::RpcValue::List &row = rec.toList();
 
@@ -200,11 +213,33 @@ void DlgLogInspector::parseLog(shv::chainpack::RpcValue log)
 				continue;
 			}
 			cp::RpcValue rv = row.value(2);
-			//cp::RpcValue short_time = row.value(3);
 			int64_t msec = dt.msecsSinceEpoch();
+			cp::RpcValue short_time = row.value(3);
+			if(short_time.isUInt() || short_time.isInt()) {
+				uint16_t short_msec = static_cast<uint16_t>(short_time.toUInt());
+				ShortTime &st = short_times[path];
+				if(st.msec_sum == 0)
+					st.msec_sum = msec;
+				msec = st.addShortTime(short_msec);
+			}
 			QVariant v = shv::iotqt::Utils::rpcValueToQVariant(rv);
-			if(v.isValid())
-				m_graphModel->appendValueShvPath(path, tl::Sample{msec, v});
+			if(v.isValid()) {
+				shvDebug() << path << v.typeName();
+				if(path == "data" && v.type() == QVariant::List) {
+					// Anca hook
+					QVariantList vl = v.toList();
+					uint16_t short_msec = static_cast<uint16_t>(vl.value(0).toInt());
+					if(anca_hook_short_time.msec_sum == 0)
+						anca_hook_short_time.msec_sum = msec;
+					msec = anca_hook_short_time.addShortTime(short_msec);
+					m_graphModel->appendValueShvPath("U", tl::Sample{msec, vl.value(1)});
+					m_graphModel->appendValueShvPath("I", tl::Sample{msec, vl.value(2)});
+					m_graphModel->appendValueShvPath("P", tl::Sample{msec, vl.value(3)});
+				}
+				else {
+					m_graphModel->appendValueShvPath(path, tl::Sample{msec, v});
+				}
+			}
 		}
 		m_graphModel->endAppendValues();
 	}

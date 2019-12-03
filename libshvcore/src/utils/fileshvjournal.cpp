@@ -1129,7 +1129,7 @@ chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &p
 		};
 		std::map<std::string, SnapshotEntry> snapshot;
 
-		const std::string fnames[] = {"foo.txt", "bar.txt", "baz.dat", "zoidberg"};
+		//const std::string fnames[] = {"foo.txt", "bar.txt", "baz.dat", "zoidberg"};
 		std::regex domain_regex;
 		if(!params.domainPattern.empty())
 			domain_regex = std::regex{params.domainPattern};
