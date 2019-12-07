@@ -7,35 +7,67 @@
 namespace shv {
 namespace chainpack {
 
-class SHVCHAINPACK_DECL_EXPORT AccessGrant : public shv::chainpack::RpcValue
+struct SHVCHAINPACK_DECL_EXPORT AccessGrant
 {
-	using Super = shv::chainpack::RpcValue;
+	enum class LoginType {Invalid = 0, Plain, Sha1, RsaOaep};
+
+	enum class Type { Invalid = 0, AccessLevel, Role, UserLogin, };
+	Type type = Type::Invalid;
+
+	bool notResolved = false;
+
+	int accessLevel;
+
+	std::string role;
+
+	std::string user;
+	std::string password;
+	LoginType loginType;
 public:
 	class MetaType : public chainpack::meta::MetaType
 	{
 		using Super = chainpack::meta::MetaType;
 	public:
-		enum {ID = chainpack::meta::GlobalNS::MetaTypeId::AccessGrantLogin};
-		/*
-		struct Tag { enum Enum {RequestId = chainpack::meta::Tag::USER, // 8
-								MAX};};
-		*/
-		struct Key { enum Enum {User = 1, Password, LoginType, MAX};};
+		enum {ID = chainpack::meta::GlobalNS::MetaTypeId::AccessGrant};
+		struct Key { enum Enum {Type = 1, NotResolved, Role, AccessLevel, User, Password, LoginType, MAX};};
 
 		MetaType();
-
 		static void registerMetaType();
 	};
 public:
-	AccessGrant() : Super() {}
-	AccessGrant(const shv::chainpack::RpcValue &o) : Super(o) {}
+	bool isValid() const;
+	bool isUserLogin() const;
+	bool isRole() const;
+	bool isAccessLevel() const;
 
-	bool isLogin() const { return type() == shv::chainpack::RpcValue::Type::IMap; }
-	bool isGrantName() const { return type() == shv::chainpack::RpcValue::Type::String; }
-	bool isAccessLevel() const { return type() == shv::chainpack::RpcValue::Type::Int; }
+	chainpack::RpcValue toRpcValue() const;
+	static AccessGrant fromRpcValue(const chainpack::RpcValue &rpcval);
+};
+#if 0
+class SHVCHAINPACK_DECL_EXPORT AccessGrantRole : public AccessGrant
+{
+	using Super = AccessGrant;
+
+	SHV_IMAP_FIELD_IMPL(std::string, MetaType::Key::Role, r, setR, ole)
+public:
+	AccessGrantRole() : Super() {}
+	AccessGrantRole(const std::string &role_name);
+	AccessGrantRole(const std::string &role_name, bool not_resolved);
+	AccessGrantRole(const AccessGrant &o) : Super(o) {}
 };
 
-class SHVCHAINPACK_DECL_EXPORT AccessGrantLogin : public AccessGrant
+class SHVCHAINPACK_DECL_EXPORT AccessGrantAccessLevel : public AccessGrant
+{
+	using Super = AccessGrant;
+
+	SHV_IMAP_FIELD_IMPL(int, MetaType::Key::AccessLevel, a, setA, ccessLevel)
+public:
+	AccessGrantAccessLevel() : Super() {}
+	AccessGrantAccessLevel(int access_level);
+	AccessGrantAccessLevel(const AccessGrant &o) : Super(o) {}
+};
+
+class SHVCHAINPACK_DECL_EXPORT AccessGrantUserLogin : public AccessGrant
 {
 	using Super = AccessGrant;
 
@@ -44,27 +76,9 @@ class SHVCHAINPACK_DECL_EXPORT AccessGrantLogin : public AccessGrant
 	SHV_IMAP_FIELD_IMPL(std::string, MetaType::Key::LoginType, l, setL, oginType)
 
 public:
-	AccessGrantLogin() : Super() {}
-	AccessGrantLogin(const AccessGrant &o) : Super(o) {}
+	AccessGrantUserLogin() : Super() {}
+	AccessGrantUserLogin(const AccessGrant &o) : Super(o) {}
 };
-
-class SHVCHAINPACK_DECL_EXPORT AccessGrantName : public AccessGrant
-{
-	using Super = AccessGrant;
-public:
-	AccessGrantName() : Super() {}
-	AccessGrantName(const std::string &grant_name);
-	AccessGrantName(const AccessGrant &o) : Super(o) {}
-};
-
-class SHVCHAINPACK_DECL_EXPORT AccessGrantLevel : public AccessGrant
-{
-	using Super = AccessGrant;
-public:
-	AccessGrantLevel() : Super() {}
-	AccessGrantLevel(int access_level);
-	AccessGrantLevel(const AccessGrant &o) : Super(o) {}
-};
-
+#endif
 } // namespace chainpack
 } // namespace shv

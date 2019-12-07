@@ -7,6 +7,7 @@ SUBDIRS += \
     libshvcore \
     libshvcoreqt \
     libshviotqt \
+    libshvbroker \
     utils \
 
 qtHaveModule(gui) {
