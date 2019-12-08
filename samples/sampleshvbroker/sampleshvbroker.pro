@@ -1,10 +1,14 @@
-SHV_PROJECT_TOP_SRCDIR = $$PWD/../..
-SHV_PROJECT_TOP_BUILDDIR = $$OUT_PWD/../..
-
-message ( SHV_PROJECT_TOP_SRCDIR == '$$SHV_PROJECT_TOP_SRCDIR' )
+#message ( AAA SHV_PROJECT_TOP_BUILDDIR == '$$SHV_PROJECT_TOP_BUILDDIR' )
+isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
+        SHV_PROJECT_TOP_BUILDDIR = $$OUT_PWD/..
+}
+else {
+        message ( SHV_PROJECT_TOP_BUILDDIR is not empty and set to $$SHV_PROJECT_TOP_BUILDDIR )
+        message ( This is obviously done in file $$SHV_PROJECT_TOP_SRCDIR/.qmake.conf )
+}
 message ( SHV_PROJECT_TOP_BUILDDIR == '$$SHV_PROJECT_TOP_BUILDDIR' )
 
-LIBSHV_SRC_DIR = $$SHV_PROJECT_TOP_SRCDIR
+LIBSHV_SRC_DIR = $$PWD/../..
 
 QT -= gui
 QT += core network
@@ -20,9 +24,8 @@ TEMPLATE = app
 TARGET = sampleshvbroker
 
 DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin
-
-LIBDIR = $$DESTDIR
-unix: LIBDIR = $$SHV_PROJECT_TOP_BUILDDIR/lib
+unix:LIBDIR = $$SHV_PROJECT_TOP_BUILDDIR/lib
+win32:LIBDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin
 
 LIBS += \
         -L$$LIBDIR \
