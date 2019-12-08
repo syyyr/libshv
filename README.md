@@ -2,6 +2,6 @@
 
 ## Build
 ```sh
-qmake
+qmake SHV_PROJECT_TOP_BUILDDIR=`pwd`
 make
 ```
