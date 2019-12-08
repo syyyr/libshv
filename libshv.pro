@@ -9,6 +9,7 @@ SUBDIRS += \
     libshviotqt \
     libshvbroker \
     utils \
+    samples \
 
 qtHaveModule(gui) {
 SUBDIRS += \
