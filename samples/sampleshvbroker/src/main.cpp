@@ -1,4 +1,4 @@
-#include "brokerapp.h"
+#include "samplebrokerapp.h"
 #include "version.h"
 #include "appclioptions.h"
 
@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 	QCoreApplication::setApplicationName("eyassrvctl");
 	QCoreApplication::setApplicationVersion(APP_VERSION);
 
-	BrokerApp::registerLogTopics();
+	SampleBrokerApp::registerLogTopics();
 
 	std::vector<std::string> shv_args = NecroLog::setCLIOptions(argc, argv);
 
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 	shvInfo() << "Primary public IPv4 address:" << shv::iotqt::utils::Network::primaryPublicIPv4Address().toString();
 	shvInfo() << "--------------------------------------------------------------------------------------";
 
-	BrokerApp a(argc, argv, &cli_opts);
+	SampleBrokerApp a(argc, argv, &cli_opts);
 
 	shvInfo() << "starting main thread event loop";
 	ret = a.exec();

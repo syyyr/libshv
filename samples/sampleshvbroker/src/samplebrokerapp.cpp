@@ -1,4 +1,4 @@
-#include "brokerapp.h"
+#include "samplebrokerapp.h"
 
 #include <shv/iotqt/node/shvnodetree.h>
 #include <shv/coreqt/log.h>
@@ -9,11 +9,11 @@ namespace cp = shv::chainpack;
 static const char METH_STATUS[] = "status";
 static const char METH_RESTART[] = "restart";
 
-class EyasSrvNode : public shv::iotqt::node::MethodsTableNode
+class TestNode : public shv::iotqt::node::MethodsTableNode
 {
 	using Super = shv::iotqt::node::MethodsTableNode;
 public:
-	EyasSrvNode(shv::iotqt::node::ShvNode *parent = nullptr)
+	TestNode(shv::iotqt::node::ShvNode *parent = nullptr)
 		: Super(std::string(), &m_metaMethods, parent)
 		, m_metaMethods{
 			{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Browse},
@@ -39,28 +39,28 @@ private:
 	std::vector<cp::MetaMethod> m_metaMethods;
 };
 
-BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
+SampleBrokerApp::SampleBrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 	: Super(argc, argv, cli_opts)
 {
-	m_nodesTree->mount("eyassrv", new EyasSrvNode());
+	m_nodesTree->mount("tet", new TestNode());
 }
 
-BrokerApp::~BrokerApp()
+SampleBrokerApp::~SampleBrokerApp()
 {
 	shvInfo() << "Destroying SHV BROKER application object";
 }
 
-QString BrokerApp::versionString() const
+QString SampleBrokerApp::versionString() const
 {
 	return QCoreApplication::applicationVersion();
 }
 
-AppCliOptions *BrokerApp::cliOptions()
+AppCliOptions *SampleBrokerApp::cliOptions()
 {
 	return dynamic_cast<AppCliOptions*>(Super::cliOptions());
 }
 
-shv::iotqt::rpc::Password BrokerApp::password(const std::string &user)
+shv::iotqt::rpc::Password SampleBrokerApp::password(const std::string &user)
 {
 	if(user == "eyas") {
 		shv::iotqt::rpc::Password ret;
@@ -77,7 +77,7 @@ shv::iotqt::rpc::Password BrokerApp::password(const std::string &user)
 	return shv::iotqt::rpc::Password();
 }
 
-std::set<std::string> BrokerApp::aclUserFlattenRoles(const std::string &user_name)
+std::set<std::string> SampleBrokerApp::aclUserFlattenRoles(const std::string &user_name)
 {
 	std::set<std::string> ret;
 	if(user_name == "eyas")
@@ -87,14 +87,14 @@ std::set<std::string> BrokerApp::aclUserFlattenRoles(const std::string &user_nam
 	return ret;
 }
 
-cp::AclRole BrokerApp::aclRole(const std::string &role_name)
+cp::AclRole SampleBrokerApp::aclRole(const std::string &role_name)
 {
 	cp::AclRole ret;
 	ret.name = role_name;
 	return ret;
 }
 
-cp::AclRolePaths BrokerApp::aclRolePaths(const std::string &role_name)
+cp::AclRolePaths SampleBrokerApp::aclRolePaths(const std::string &role_name)
 {
 	cp::AclRolePaths ret;
 	if(role_name == "eyas") {

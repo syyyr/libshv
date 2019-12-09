@@ -34,19 +34,7 @@ void AccessGrant::MetaType::registerMetaType()
 		shv::chainpack::meta::registerType(shv::chainpack::meta::GlobalNS::ID, MetaType::ID, &s);
 	}
 }
-/*
-AccessGrant::AccessGrant()
-	: Super()
-{
-}
 
-AccessGrant::AccessGrant(const RpcValue &o)
-	: Super(o)
-{
-	MetaType::registerMetaType();
-	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
-}
-*/
 bool AccessGrant::isValid() const
 {
 	return type != Type::Invalid;
@@ -139,31 +127,9 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 	}
 	return ret;
 }
-#if 0
 //================================================================
-// AccessGrantRole
+// PathAccessGrantRole
 //================================================================
-AccessGrantRole::AccessGrantRole(const std::string &role_name)
-	: Super(role_name)
-{
-}
-
-AccessGrantRole::AccessGrantRole(const std::string &role_name, bool not_resolved)
-	: Super(RpcValue::Map{})
-{
-	setGrantType(GrantType::Role);
-	setRole(role_name);
-	setNotResolved(not_resolved);
-}
-
-//================================================================
-// AccessGrantName
-//================================================================
-AccessGrantAccessLevel::AccessGrantAccessLevel(int access_level)
-	: Super(access_level)
-{
-}
-#endif
 
 } // namespace chainpack
 } // namespace shv

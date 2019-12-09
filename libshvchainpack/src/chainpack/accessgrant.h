@@ -43,42 +43,10 @@ public:
 	chainpack::RpcValue toRpcValue() const;
 	static AccessGrant fromRpcValue(const chainpack::RpcValue &rpcval);
 };
-#if 0
-class SHVCHAINPACK_DECL_EXPORT AccessGrantRole : public AccessGrant
+
+struct SHVCHAINPACK_DECL_EXPORT PathAccessGrant : public AccessGrant
 {
-	using Super = AccessGrant;
-
-	SHV_IMAP_FIELD_IMPL(std::string, MetaType::Key::Role, r, setR, ole)
-public:
-	AccessGrantRole() : Super() {}
-	AccessGrantRole(const std::string &role_name);
-	AccessGrantRole(const std::string &role_name, bool not_resolved);
-	AccessGrantRole(const AccessGrant &o) : Super(o) {}
+	bool forwardGrantFromRequest = false;
 };
-
-class SHVCHAINPACK_DECL_EXPORT AccessGrantAccessLevel : public AccessGrant
-{
-	using Super = AccessGrant;
-
-	SHV_IMAP_FIELD_IMPL(int, MetaType::Key::AccessLevel, a, setA, ccessLevel)
-public:
-	AccessGrantAccessLevel() : Super() {}
-	AccessGrantAccessLevel(int access_level);
-	AccessGrantAccessLevel(const AccessGrant &o) : Super(o) {}
-};
-
-class SHVCHAINPACK_DECL_EXPORT AccessGrantUserLogin : public AccessGrant
-{
-	using Super = AccessGrant;
-
-	SHV_IMAP_FIELD_IMPL(std::string, MetaType::Key::User, u, setU, ser)
-	SHV_IMAP_FIELD_IMPL(int, MetaType::Key::Password, p, setP, assword)
-	SHV_IMAP_FIELD_IMPL(std::string, MetaType::Key::LoginType, l, setL, oginType)
-
-public:
-	AccessGrantUserLogin() : Super() {}
-	AccessGrantUserLogin(const AccessGrant &o) : Super(o) {}
-};
-#endif
 } // namespace chainpack
 } // namespace shv

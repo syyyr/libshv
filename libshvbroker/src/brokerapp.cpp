@@ -684,12 +684,15 @@ chainpack::AclRolePaths BrokerApp::aclRolePaths(const std::string &role_name)
 	cp::RpcValue paths = pathsConfig().toMap().value(role_name);
 	for(const auto &kv : paths.toMap()) {
 		const std::string &path = kv.first;
-		chainpack::AccessGrant grant;
+		chainpack::PathAccessGrant grant;
 		auto m = kv.second.toMap();
-		bool fwd_role = m.value("forwardGrant").toBool();
-		grant.role = fwd_role? role_name: m.value("grant").toString();
+		grant.forwardGrantFromRequest = m.value("forwardGrant").toBool();
+		grant.role = m.value("grant").toString();
 		if(!grant.role.empty()) {
 			grant.type = chainpack::AccessGrant::Type::Role;
+		}
+		else if(grant.forwardGrantFromRequest) {
+			// forward grant from master broker forwarded request
 		}
 		else {
 			shvError() << "unsupported ACL path definition, path:" << path << "def:" << kv.second.toCpon();
@@ -778,7 +781,7 @@ static std::string join_string_list(const std::vector<std::string> &ss, char sep
 	return ret;
 }
 */
-cp::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHandle *conn, const std::string &rq_shv_path, const shv::chainpack::RpcValue &rq_grant)
+chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHandle *conn, const std::string &rq_shv_path, const shv::chainpack::RpcValue &rq_grant)
 {
 	logAclD() << "accessGrantForShvPath user:" << conn->loggedUserName() << "shv path:" << rq_shv_path << "request grant:" << rq_grant.toCpon();
 #ifdef USE_SHV_PATHS_GRANTS_CACHE
@@ -794,20 +797,20 @@ cp::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHandle *con
 	//shv::chainpack::RpcValue user = usersConfig().toMap().value(user_name);
 	shv::iotqt::node::ShvNode::StringViewList shv_path_lst = shv::core::utils::ShvPath::split(rq_shv_path);
 	bool is_request_from_master_broker = conn->isMasterBrokerConnection();
-	auto gr = cp::AccessGrant::fromRpcValue(rq_grant);
+	auto request_grant = cp::AccessGrant::fromRpcValue(rq_grant);
 	if(is_request_from_master_broker) {
-		if(!gr.notResolved)
-			return gr;
-		if(!gr.isRole()) {
-			logAclM() << "Cannot resolve grant:" << gr.toRpcValue().toCpon();
+		if(!request_grant.notResolved)
+			return request_grant;
+		if(!request_grant.isRole()) {
+			logAclM() << "Cannot resolve grant:" << request_grant.toRpcValue().toCpon();
 			return cp::AccessGrant();
 		}
 	}
 	const std::vector<std::string> &user_flattent_grants = is_request_from_master_broker
-			? std::vector<std::string>{gr.role} // master broker has allways grant masterBroker
+			? std::vector<std::string>{request_grant.role} // master broker has allways grant masterBroker
 			: m_aclCache.aclUserFlattenRoles(conn->loggedUserName());
 	std::string most_specific_role;
-	cp::AccessGrant most_specific_path_grant;
+	cp::PathAccessGrant most_specific_path_grant;
 	size_t most_specific_path_len = 0;
 	// find most specific path grant for role with highest weight
 	// user_flattent_grants are sorted by weight DESC
@@ -851,7 +854,9 @@ cp::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHandle *con
 				 << "rq_grant:" << (rq_grant.isValid()? rq_grant.toCpon(): "<none>")
 				 //<< "grants:" << join_string_list(user_flattent_grants, ',')
 				 << " => " << most_specific_path_grant.toRpcValue().toCpon();
-	return most_specific_path_grant;
+	if(most_specific_path_grant.forwardGrantFromRequest)
+		return  request_grant;
+	return cp::AccessGrant(most_specific_path_grant);
 }
 
 void BrokerApp::onClientLogin(int connection_id)

@@ -6,7 +6,7 @@
 namespace shv {
 namespace chainpack {
 
-struct SHVCHAINPACK_DECL_EXPORT AclRolePaths : public std::map<std::string, AccessGrant>
+struct SHVCHAINPACK_DECL_EXPORT AclRolePaths : public std::map<std::string, PathAccessGrant>
 {
 };
 

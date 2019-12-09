@@ -90,12 +90,15 @@ public:
 
 	std::string dataToCpon(shv::chainpack::Rpc::ProtocolType protocol_type, const shv::chainpack::RpcValue::MetaData &md, const std::string &data, size_t start_pos = 0, size_t data_len = 0);
 
+	/// ACL API begin
+public:
 	virtual shv::iotqt::rpc::Password password(const std::string &user);
 protected:
-	/// ACL API
 	virtual std::set<std::string> aclUserFlattenRoles(const std::string &user_name);
 	virtual shv::chainpack::AclRole aclRole(const std::string &role_name);
 	virtual shv::chainpack::AclRolePaths aclRolePaths(const std::string &role_name);
+	/// ACL API end
+
 private:
 	std::set<std::string> flattenRole_helper(const std::string &role_name);
 private:
