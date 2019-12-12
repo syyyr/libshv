@@ -90,7 +90,7 @@ public:
 			ChainPackRpcMessage = 1,
 			RpcConnectionParams,
 			TunnelCtl,
-			AccessGrantLogin,
+			AccessGrant,
 			ValueChange,
 		};
 	};

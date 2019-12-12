@@ -157,10 +157,10 @@ static std::string sha1_hex(const std::string &s)
 
 bool ServerConnection::checkPassword(const chainpack::RpcValue::Map &login)
 {
-	std::tuple<std::string, PasswordFormat> pwdt = password(userName());
-	std::string pwdsrv = std::get<0>(pwdt);
-	PasswordFormat pwdsrvfmt = std::get<1>(pwdt);
-	if(pwdsrv.empty()) {
+	Password pwd = password(userName());
+	//std::string pwdsrv = std::get<0>(pwdt);
+	//PasswordFormat pwdsrvfmt = std::get<1>(pwdt);
+	if(pwd.password.empty()) {
 		shvError() << "Invalid user name:" << userName();
 		return false;
 	}
@@ -170,17 +170,17 @@ bool ServerConnection::checkPassword(const chainpack::RpcValue::Map &login)
 
 	std::string pwdusr = login.value("password").toString();
 	if(login_type == LoginType::Plain) {
-		if(pwdsrvfmt == PasswordFormat::Plain)
-			return (pwdsrv == pwdusr);
-		if(pwdsrvfmt == PasswordFormat::Sha1)
-			return pwdsrv == sha1_hex(pwdusr);
+		if(pwd.format == Password::Format::Plain)
+			return (pwd.password == pwdusr);
+		if(pwd.format == Password::Format::Sha1)
+			return pwd.password == sha1_hex(pwdusr);
 	}
 	if(login_type == LoginType::Sha1) {
 		/// login_type == "SHA1" is default
-		if(pwdsrvfmt == PasswordFormat::Plain)
-			pwdsrv = sha1_hex(pwdsrv);
+		if(pwd.format == Password::Format::Plain)
+			pwd.password = sha1_hex(pwd.password);
 
-		std::string nonce = m_pendingAuthNonce + pwdsrv;
+		std::string nonce = m_pendingAuthNonce + pwd.password;
 		//shvWarning() << m_pendingAuthNonce << "prd" << nonce;
 		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
 		hash.addData(nonce.data(), nonce.length());
@@ -192,25 +192,6 @@ bool ServerConnection::checkPassword(const chainpack::RpcValue::Map &login)
 		shvError() << "Unsupported login type" << loginTypeToString(login_type) << "for user:" << userName();
 		return false;
 	}
-}
-
-std::string ServerConnection::passwordFormatToString(ServerConnection::PasswordFormat f)
-{
-	switch(f) {
-	case PasswordFormat::Plain: return "PLAIN";
-	case PasswordFormat::Sha1: return "SHA1";
-	default: return "INVALID";
-	}
-}
-
-ServerConnection::PasswordFormat ServerConnection::passwordFormatFromString(const std::string &s)
-{
-	std::string typestr = shv::core::String::toUpper(s);
-	if(typestr == passwordFormatToString(PasswordFormat::Plain))
-		return PasswordFormat::Plain;
-	if(typestr == passwordFormatToString(PasswordFormat::Sha1))
-		return PasswordFormat::Sha1;
-	return PasswordFormat::Invalid;
 }
 
 }}}

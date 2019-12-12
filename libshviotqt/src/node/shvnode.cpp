@@ -9,6 +9,7 @@
 #include <shv/chainpack/rpcdriver.h>
 #include <shv/chainpack/cponreader.h>
 #include <shv/chainpack/cponwriter.h>
+#include <shv/chainpack/accessgrant.h>
 #include <shv/core/stringview.h>
 #include <shv/core/exception.h>
 #include <shv/core/stringview.h>
@@ -313,25 +314,25 @@ chainpack::RpcValue ShvNode::lsAttributes(const StringViewList &shv_path, unsign
 	return cp::RpcValue{ret};
 }
 
-int ShvNode::grantToAccessLevel(const chainpack::RpcValue &acces_token) const
+int ShvNode::grantToAccessLevel(const chainpack::RpcValue &acces_grant) const
 {
-	if(acces_token.isString()) {
-		const chainpack::RpcValue::String &acl = acces_token.toString();
-		const char *acces_level = acl.data();
-		if(std::strcmp(acces_level, cp::Rpc::GRANT_BROWSE) == 0) return cp::MetaMethod::AccessLevel::Browse;
-		if(std::strcmp(acces_level, cp::Rpc::GRANT_READ) == 0) return cp::MetaMethod::AccessLevel::Read;
-		if(std::strcmp(acces_level, cp::Rpc::GRANT_WRITE) == 0) return cp::MetaMethod::AccessLevel::Write;
-		if(std::strcmp(acces_level, cp::Rpc::GRANT_COMMAND) == 0) return cp::MetaMethod::AccessLevel::Command;
-		if(std::strcmp(acces_level, cp::Rpc::GRANT_CONFIG) == 0) return cp::MetaMethod::AccessLevel::Config;
-		if(std::strcmp(acces_level, cp::Rpc::GRANT_SERVICE) == 0) return cp::MetaMethod::AccessLevel::Service;
-		if(std::strcmp(acces_level, cp::Rpc::GRANT_DEVEL) == 0) return cp::MetaMethod::AccessLevel::Devel;
-		if(std::strcmp(acces_level, cp::Rpc::GRANT_ADMIN) == 0) return cp::MetaMethod::AccessLevel::Admin;
+	cp::AccessGrant grant = cp::AccessGrant::fromRpcValue(acces_grant);
+	if(grant.isRole()) {
+		const char *acces_level = grant.role.data();
+		if(std::strcmp(acces_level, cp::Rpc::ROLE_BROWSE) == 0) return cp::MetaMethod::AccessLevel::Browse;
+		if(std::strcmp(acces_level, cp::Rpc::ROLE_READ) == 0) return cp::MetaMethod::AccessLevel::Read;
+		if(std::strcmp(acces_level, cp::Rpc::ROLE_WRITE) == 0) return cp::MetaMethod::AccessLevel::Write;
+		if(std::strcmp(acces_level, cp::Rpc::ROLE_COMMAND) == 0) return cp::MetaMethod::AccessLevel::Command;
+		if(std::strcmp(acces_level, cp::Rpc::ROLE_CONFIG) == 0) return cp::MetaMethod::AccessLevel::Config;
+		if(std::strcmp(acces_level, cp::Rpc::ROLE_SERVICE) == 0) return cp::MetaMethod::AccessLevel::Service;
+		if(std::strcmp(acces_level, cp::Rpc::ROLE_DEVEL) == 0) return cp::MetaMethod::AccessLevel::Devel;
+		if(std::strcmp(acces_level, cp::Rpc::ROLE_ADMIN) == 0) return cp::MetaMethod::AccessLevel::Admin;
 		return -1;
 	}
-	else if(acces_token.isInt() || acces_token.isUInt()) {
-		return acces_token.toInt();
+	else if(grant.isAccessLevel()) {
+		return grant.accessLevel;
 	}
-	return -1;
+	return shv::chainpack::MetaMethod::AccessLevel::None;
 }
 /*
 chainpack::RpcValue ShvNode::call(const std::string &method, const chainpack::RpcValue &params)
@@ -399,8 +400,8 @@ chainpack::RpcValue ShvNode::ls(const StringViewList &shv_path, const chainpack:
 }
 
 static std::vector<cp::MetaMethod> meta_methods {
-	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_BROWSE},
-	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_BROWSE},
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_BROWSE},
+	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_BROWSE},
 };
 
 size_t ShvNode::methodCount(const StringViewList &shv_path)
@@ -525,18 +526,18 @@ const char *RpcValueMapNode::M_COMMIT = "commitChanges";
 //static const char M_RELOAD[] = "serverReload";
 
 static std::vector<cp::MetaMethod> meta_methods_value_map_root_node {
-	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_CONFIG},
-	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_CONFIG},
-	{RpcValueMapNode::M_LOAD, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_SERVICE},
-	{RpcValueMapNode::M_SAVE, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_ADMIN},
-	{RpcValueMapNode::M_COMMIT, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_ADMIN},
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_CONFIG},
+	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_CONFIG},
+	{RpcValueMapNode::M_LOAD, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::ROLE_SERVICE},
+	{RpcValueMapNode::M_SAVE, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::ROLE_ADMIN},
+	{RpcValueMapNode::M_COMMIT, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::ROLE_ADMIN},
 };
 
 static std::vector<cp::MetaMethod> meta_methods_value_map_node {
-	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_CONFIG},
-	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_CONFIG},
-	{cp::Rpc::METH_GET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::GRANT_CONFIG},
-	{cp::Rpc::METH_SET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsSetter, cp::Rpc::GRANT_DEVEL},
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_CONFIG},
+	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_CONFIG},
+	{cp::Rpc::METH_GET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_CONFIG},
+	{cp::Rpc::METH_SET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsSetter, cp::Rpc::ROLE_DEVEL},
 	//{M_WRITE, cp::MetaMethod::Signature::RetParam, 0, cp::MetaMethod::AccessLevel::Service},
 };
 
@@ -702,20 +703,20 @@ static const char METH_ORIG_VALUE[] = "origValue";
 static const char METH_RESET_TO_ORIG_VALUE[] = "resetValue";
 
 static std::vector<cp::MetaMethod> meta_methods_root_node {
-	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_CONFIG},
-	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_CONFIG},
-	{shv::iotqt::node::RpcValueMapNode::M_LOAD, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_SERVICE},
-	{shv::iotqt::node::RpcValueMapNode::M_SAVE, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_ADMIN},
-	{shv::iotqt::node::RpcValueMapNode::M_COMMIT, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_ADMIN},
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_CONFIG},
+	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_CONFIG},
+	{shv::iotqt::node::RpcValueMapNode::M_LOAD, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::ROLE_SERVICE},
+	{shv::iotqt::node::RpcValueMapNode::M_SAVE, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::ROLE_ADMIN},
+	{shv::iotqt::node::RpcValueMapNode::M_COMMIT, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::ROLE_ADMIN},
 };
 
 static std::vector<cp::MetaMethod> meta_methods_node {
-	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_CONFIG},
-	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_CONFIG},
-	{cp::Rpc::METH_GET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::GRANT_CONFIG},
-	{cp::Rpc::METH_SET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsSetter, cp::Rpc::GRANT_DEVEL},
-	{METH_ORIG_VALUE, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::GRANT_READ},
-	{METH_RESET_TO_ORIG_VALUE, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::Rpc::GRANT_WRITE},
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_CONFIG},
+	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_CONFIG},
+	{cp::Rpc::METH_GET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_CONFIG},
+	{cp::Rpc::METH_SET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsSetter, cp::Rpc::ROLE_DEVEL},
+	{METH_ORIG_VALUE, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
+	{METH_RESET_TO_ORIG_VALUE, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_WRITE},
 };
 
 RpcValueConfigNode::RpcValueConfigNode(const std::string &node_id, ShvNode *parent)
@@ -918,11 +919,11 @@ void RpcValueConfigNode::saveValues()
 // ObjectPropertyProxyShvNode
 //===========================================================
 static std::vector<cp::MetaMethod> meta_methods_pn {
-	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_BROWSE},
-	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::GRANT_BROWSE},
-	{cp::Rpc::METH_GET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::GRANT_READ},
-	{cp::Rpc::METH_SET, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::IsSetter, cp::Rpc::GRANT_WRITE},
-	{cp::Rpc::SIG_VAL_CHANGED, cp::MetaMethod::Signature::VoidParam, cp::MetaMethod::Flag::IsSignal, cp::Rpc::GRANT_READ},
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_BROWSE},
+	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_BROWSE},
+	{cp::Rpc::METH_GET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
+	{cp::Rpc::METH_SET, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::IsSetter, cp::Rpc::ROLE_WRITE},
+	{cp::Rpc::SIG_VAL_CHANGED, cp::MetaMethod::Signature::VoidParam, cp::MetaMethod::Flag::IsSignal, cp::Rpc::ROLE_READ},
 };
 
 enum {

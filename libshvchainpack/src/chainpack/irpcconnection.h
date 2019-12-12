@@ -1,18 +1,17 @@
 #pragma once
 
 #include "rpcmessage.h"
+#include "accessgrant.h"
 
 namespace shv {
 namespace chainpack {
-
-class AccessGrant;
 
 class SHVCHAINPACK_DECL_EXPORT IRpcConnection
 {
 public:
 	static constexpr int DEFAULT_RPC_BROKER_PORT = 3755;
 
-	enum class LoginType {Invalid = 0, Plain, Sha1, RsaOaep};
+	using LoginType = AccessGrant::LoginType;
 public:
 	IRpcConnection();
 	virtual ~IRpcConnection();
@@ -53,8 +52,8 @@ public:
 	static std::string loginTypeToString(LoginType t);
 	static LoginType loginTypeFromString(const std::string &s);
 protected:
-	int callShvMethod(const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params, const AccessGrant &grant);
-	int callShvMethod(int rq_id, const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params, const AccessGrant &grant);
+	int callShvMethod(const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params, const RpcValue &grant);
+	int callShvMethod(int rq_id, const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params, const RpcValue &grant);
 	static int nextConnectionId();
 protected:
 	int m_connectionId;

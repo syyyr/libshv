@@ -21,7 +21,8 @@ public:
 	};
 	struct AccessLevel {
 		enum {
-			Browse = 0,
+			None = 0,
+			Browse = 1,
 			Read = 10,
 			Write = 20,
 			Command = 30,
@@ -45,7 +46,7 @@ public:
 		};
 	};
 public:
-	MetaMethod(std::string name, Signature ms, unsigned flags = 0, const shv::chainpack::RpcValue &access_grant = shv::chainpack::Rpc::GRANT_BROWSE)
+	MetaMethod(std::string name, Signature ms, unsigned flags = 0, const shv::chainpack::RpcValue &access_grant = shv::chainpack::Rpc::ROLE_BROWSE)
 	    : m_name(std::move(name))
 	    , m_signature(ms)
 	    , m_flags(flags)

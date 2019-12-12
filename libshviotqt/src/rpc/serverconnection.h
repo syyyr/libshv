@@ -2,6 +2,7 @@
 
 #include "../shviotqtglobal.h"
 #include "socketrpcconnection.h"
+#include "password.h"
 
 #include <shv/chainpack/irpcconnection.h>
 #include <shv/chainpack/rpcmessage.h>
@@ -27,8 +28,6 @@ class SHVIOTQT_DECL_EXPORT ServerConnection : public SocketRpcConnection
 
 	using Super = SocketRpcConnection;
 public:
-	//enum class ConnectionType {Unknown, Client, Device, Broker};
-
 	explicit ServerConnection(Socket *socket, QObject *parent = nullptr);
 	~ServerConnection() Q_DECL_OVERRIDE;
 
@@ -55,10 +54,6 @@ public:
 	//shv::chainpack::RpcResponse sendMessageSync(const shv::chainpack::RpcRequest &rpc_request, int time_out_ms = DEFAULT_RPC_TIMEOUT) override;
 	void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg) override;
 protected:
-	enum class PasswordFormat {Invalid, Plain, Sha1};
-	static std::string passwordFormatToString(PasswordFormat f);
-	static PasswordFormat passwordFormatFromString(const std::string &s);
-protected:
 	void onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len) override;
 	void onRpcValueReceived(const shv::chainpack::RpcValue &msg) override;
 
@@ -67,7 +62,7 @@ protected:
 	virtual void processInitPhase(const chainpack::RpcMessage &msg);
 	virtual shv::chainpack::RpcValue login(const shv::chainpack::RpcValue &auth_params);
 	virtual bool checkPassword(const shv::chainpack::RpcValue::Map &login);
-	virtual std::tuple<std::string, PasswordFormat> password(const std::string &user) = 0;
+	virtual Password password(const std::string &user) = 0;
 protected:
 	std::string m_connectionName;
 	std::string m_userName;

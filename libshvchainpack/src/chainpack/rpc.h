@@ -13,17 +13,6 @@ public:
 	enum class ProtocolType {Invalid = 0, ChainPack, Cpon, JsonRpc};
 	static const char* protocolTypeToString(ProtocolType pv);
 
-	struct SHVCHAINPACK_DECL_EXPORT AccessGrant
-	{
-		std::string grant;
-		int weight = -1;
-
-		AccessGrant() {}
-		AccessGrant(const std::string &g, int w) : grant(g), weight(w) {}
-
-		bool isValid() const {return weight >= 0;}
- 	};
-
 	static const char* OPT_IDLE_WD_TIMEOUT;
 
 	static const char* KEY_OPTIONS;
@@ -68,15 +57,15 @@ public:
 	static const char* SIG_SERVICE_VAL_CHANGED;
 	static const char* SIG_MOUNTED_CHANGED;
 
-	static const char* GRANT_BROWSE;
-	static const char* GRANT_READ;
-	static const char* GRANT_WRITE;
-	static const char* GRANT_COMMAND;
-	static const char* GRANT_CONFIG;
-	static const char* GRANT_SERVICE;
-	static const char* GRANT_DEVEL;
-	static const char* GRANT_ADMIN;
-	static const char* GRANT_MASTER_BROKER;
+	static const char* ROLE_BROWSE;
+	static const char* ROLE_READ;
+	static const char* ROLE_WRITE;
+	static const char* ROLE_COMMAND;
+	static const char* ROLE_CONFIG;
+	static const char* ROLE_SERVICE;
+	static const char* ROLE_DEVEL;
+	static const char* ROLE_ADMIN;
+	static const char* ROLE_MASTER_BROKER;
 
 	static const char* DIR_BROKER;
 	static const char* DIR_BROKER_APP;

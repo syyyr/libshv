@@ -48,16 +48,16 @@ const char* Rpc::SIG_VAL_FASTCHANGED = "fastchng";
 const char* Rpc::SIG_SERVICE_VAL_CHANGED = "svcchng";
 const char* Rpc::SIG_MOUNTED_CHANGED = "mntchng";
 
-const char* Rpc::GRANT_BROWSE = "bws";
-const char* Rpc::GRANT_READ = "rd";
-const char* Rpc::GRANT_WRITE = "wr";
-const char* Rpc::GRANT_COMMAND = "cmd";
-const char* Rpc::GRANT_CONFIG = "cfg";
-const char* Rpc::GRANT_SERVICE = "srv";
-const char* Rpc::GRANT_DEVEL = "dev";
-const char* Rpc::GRANT_ADMIN = "su";
+const char* Rpc::ROLE_BROWSE = "bws";
+const char* Rpc::ROLE_READ = "rd";
+const char* Rpc::ROLE_WRITE = "wr";
+const char* Rpc::ROLE_COMMAND = "cmd";
+const char* Rpc::ROLE_CONFIG = "cfg";
+const char* Rpc::ROLE_SERVICE = "srv";
+const char* Rpc::ROLE_DEVEL = "dev";
+const char* Rpc::ROLE_ADMIN = "su";
 
-const char* Rpc::GRANT_MASTER_BROKER = "masterBroker";
+const char* Rpc::ROLE_MASTER_BROKER = "masterBroker";
 
 const char* Rpc::DIR_BROKER = ".broker";
 const char* Rpc::DIR_BROKER_APP = ".broker/app";
