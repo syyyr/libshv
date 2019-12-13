@@ -7,9 +7,11 @@ size_t unpack_underflow_handler(ccpcp_unpack_context *ctx)
 {
 	AbstractStreamReader *rd = reinterpret_cast<AbstractStreamReader*>(ctx->custom_context);
 	int c = rd->m_in.get();
-	if(rd->m_in.eof())
+	if(c < 0 || rd->m_in.eof()) {
+		// id directory is open then c == -1 but eof() == false, strange
 		return 0;
-	rd->m_unpackBuff[0] = c;
+	}
+	rd->m_unpackBuff[0] = (char)c;
 	ctx->start = rd->m_unpackBuff;
 	ctx->current = ctx->start;
 	ctx->end = ctx->start + 1;
