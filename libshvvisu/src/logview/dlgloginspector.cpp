@@ -16,6 +16,8 @@
 #include <shv/iotqt/rpc/rpcresponsecallback.h>
 #include <shv/iotqt/utils.h>
 
+#include <QAction>
+#include <QClipboard>
 #include <QSettings>
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
@@ -53,6 +55,50 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 		//}
 		//m_sortFilterProxy->setFilterWildcard("*" + str + "*");
 	});
+	ui->tblData->setContextMenuPolicy(Qt::ActionsContextMenu);
+	{
+		QAction *copy = new QAction(tr("&Copy"));
+		copy->setShortcut(QKeySequence::Copy);
+		ui->tblData->addAction(copy);
+		connect(copy, &QAction::triggered, [this]() {
+			auto table_view = ui->tblData;
+			auto *m = table_view->model();
+			if(!m)
+				return;
+			int n = 0;
+			QString rows;
+			QItemSelection sel = table_view->selectionModel()->selection();
+			foreach(const QItemSelectionRange &sel1, sel) {
+				if(sel1.isValid()) {
+					for(int row=sel1.top(); row<=sel1.bottom(); row++) {
+						QString cells;
+						for(int col=sel1.left(); col<=sel1.right(); col++) {
+							QModelIndex ix = m->index(row, col);
+							QString s;
+							s = ix.data(Qt::DisplayRole).toString();
+							static constexpr bool replace_escapes = true;
+							if(replace_escapes) {
+								s.replace('\r', QStringLiteral("\\r"));
+								s.replace('\n', QStringLiteral("\\n"));
+								s.replace('\t', QStringLiteral("\\t"));
+							}
+							if(col > sel1.left())
+								cells += '\t';
+							cells += s;
+						}
+						if(n++ > 0)
+							rows += '\n';
+						rows += cells;
+					}
+				}
+			}
+			if(!rows.isEmpty()) {
+				//qfInfo() << "\tSetting clipboard:" << rows;
+				QClipboard *clipboard = QApplication::clipboard();
+				clipboard->setText(rows);
+			}
+		});
+	}
 
 	m_graphModel = new tl::GraphModel(this);
 	//connect(m_dataModel, &tl::GraphModel::xRangeChanged, this, &MainWindow::onGraphXRangeChanged);
@@ -125,6 +171,7 @@ shv::chainpack::RpcValue DlgLogInspector::getLogParams()
 	};
 	params.since = get_dt(ui->edSince);
 	params.until = get_dt(ui->edUntil);
+	params.pathPattern = ui->edPathPattern->text().trimmed().toStdString();
 	if(ui->edMaxRecordCount->value() > ui->edMaxRecordCount->minimum())
 		params.maxRecordCount = ui->edMaxRecordCount->value();
 	params.withUptime = ui->chkWithUptime->isChecked();
