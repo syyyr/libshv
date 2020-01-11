@@ -490,15 +490,19 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 				}
 				std::string dtstr = lst[Column::Timestamp].toString();
 				ShvPath path = lst.value(Column::Path).toString();
-				if(!params.pathPattern.empty() && !path.matchWild(params.pathPattern))
-					continue;
+				if(!params.pathPattern.empty()) {
+					logDShvJournal() << "\t MATCHING:" << params.pathPattern << "vs:" << path;
+					if(!path.matchWild(params.pathPattern))
+						continue;
+					logDShvJournal() << "\t\t MATCH";
+				}
 				size_t len;
 				cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr, &len);
 				if(len == 0) {
 					logWShvJournal() << fn << "invalid date time string:" << dtstr;
 					continue;
 				}
-				logDShvJournal() << "\t FIELDS:" << dtstr << '\t' << path << "vals:" << lst.join('|');
+				logDShvJournal() << "\t" << dtstr << '\t' << path << "vals:" << lst.join('|');
 				if(dt < params.since.toDateTime()) {
 					if(params.withSnapshot)
 						snapshot[path] = SnapshotEntry{
@@ -1154,8 +1158,12 @@ chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &p
 				}
 				std::string dtstr = line_record[Column::Timestamp].toString();
 				ShvPath path = line_record.value(Column::Path).toString();
-				if(!params.pathPattern.empty() && !path.matchWild(params.pathPattern))
-					continue;
+				if(!params.pathPattern.empty()) {
+					logDShvJournal() << "\t MATCHING:" << params.pathPattern << "vs:" << path;
+					if(!path.matchWild(params.pathPattern))
+						continue;
+					logDShvJournal() << "\t\t MATCH";
+				}
 				std::string domain_str = line_record.value(Column::Domain).toString();
 				if(!params.domainPattern.empty()) {
 					if(!std::regex_match(domain_str, domain_regex))

@@ -18,6 +18,9 @@
 
 #include <QAction>
 #include <QClipboard>
+#include <QFileDialog>
+#include <QMenu>
+#include <QMessageBox>
 #include <QSettings>
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
@@ -34,6 +37,48 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 	ui(new Ui::DlgLogInspector)
 {
 	ui->setupUi(this);
+	{
+		QMenu *m = new QMenu(this);
+		{
+			QAction *a = new QAction(tr("ChainPack"), m);
+			connect(a, &QAction::triggered, [this]() {
+				auto log = m_logModel->log();
+				std::string data = log.toChainPack();
+				saveData(data, ".chainpack");
+			});
+			m->addAction(a);
+		}
+		{
+			QAction *a = new QAction(tr("Cpon"), m);
+			connect(a, &QAction::triggered, [this]() {
+				auto log = m_logModel->log();
+				std::string data = log.toCpon("\t");
+				saveData(data, ".cpon");
+			});
+			m->addAction(a);
+		}
+		{
+			QAction *a = new QAction(tr("CSV"), m);
+			connect(a, &QAction::triggered, [this]() {
+				std::string data;
+				for(int row=0; row<m_logModel->rowCount(); row++) {
+					std::string row_data;
+					for(int col=0; col<m_logModel->columnCount(); col++) {
+						QModelIndex ix = m_logModel->index(row, col);
+						if(col > 0)
+							row_data += '\t';
+						row_data += ix.data(Qt::DisplayRole).toString().toStdString();
+					}
+					if(row > 0)
+						data += '\n';
+					data += row_data;
+				}
+				saveData(data, ".csv");
+			});
+			m->addAction(a);
+		}
+		ui->btSaveData->setMenu(m);
+	}
 	ui->lblInfo->hide();
 	ui->btMoreOptions->setChecked(false);
 	QDateTime dt2 = QDateTime::currentDateTime();
@@ -186,6 +231,7 @@ shv::chainpack::RpcValue DlgLogInspector::getLogParams()
 	if(ui->chkPathsDict->isChecked())
 		header_opts |= static_cast<unsigned>(shv::core::utils::ShvJournalGetLogParams::HeaderOptions::PathsDict);
 	params.headerOptions = header_opts;
+	shvDebug() << params.toRpcValue().toCpon();
 	return params.toRpcValue();
 }
 
@@ -304,6 +350,22 @@ void DlgLogInspector::showInfo(const QString &msg, bool is_error)
 		ui->lblInfo->setStyleSheet(ss);
 		ui->lblInfo->setText(msg);
 		ui->lblInfo->show();
+	}
+}
+
+void DlgLogInspector::saveData(const std::string &data, QString ext)
+{
+	QString fn = QFileDialog::getSaveFileName(this, tr("Savefile"), QString(), "*" + ext);
+	if(fn.isEmpty())
+		return;
+	if(!fn.endsWith(ext))
+		fn = fn + ext;
+	QFile f(fn);
+	if(f.open(QFile::WriteOnly)) {
+		f.write(data.data(), (qint64)data.size());
+	}
+	else {
+		QMessageBox::warning(this, tr("Warning"), tr("Cannot open file '%1' for write.").arg(fn));
 	}
 }
 

@@ -19,6 +19,7 @@ public:
 	LogModel(QObject *parent = nullptr);
 
 	void setLog(const shv::chainpack::RpcValue &log);
+	shv::chainpack::RpcValue log() const { return m_log; }
 
 	int rowCount(const QModelIndex & = QModelIndex()) const override;
 	int columnCount(const QModelIndex & = QModelIndex()) const override {return ColCnt;}

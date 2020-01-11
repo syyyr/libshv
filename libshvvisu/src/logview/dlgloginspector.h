@@ -44,6 +44,7 @@ private:
 	void parseLog(shv::chainpack::RpcValue log);
 
 	void showInfo(const QString &msg = QString(), bool is_error = false);
+	void saveData(const std::string &data, QString ext);
 private:
 	Ui::DlgLogInspector *ui;
 
