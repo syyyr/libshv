@@ -155,6 +155,20 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 			event->accept();
 			return;
 		}
+		else if(isMouseAboveGraphArea(pos) && event->modifiers() == Qt::NoModifier) {
+			Graph *gr = graph();
+			gr->setCrossBarPos1(pos);
+			event->accept();
+			update();
+			return;
+		}
+		else if(isMouseAboveGraphArea(pos) && event->modifiers() == Qt::ShiftModifier) {
+			Graph *gr = graph();
+			gr->setCrossBarPos2(pos);
+			event->accept();
+			update();
+			return;
+		}
 	}
 	Super::mousePressEvent(event);
 }
@@ -238,6 +252,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 	case MouseOperation::None:
 		break;
 	}
+	/*
 	int ch_ix = gr->posToChannel(pos);
 	if(ch_ix >= 0) {
 		setCursor(Qt::BlankCursor);
@@ -267,6 +282,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 			update();
 		}
 	}
+	*/
 }
 
 void GraphWidget::wheelEvent(QWheelEvent *event)
