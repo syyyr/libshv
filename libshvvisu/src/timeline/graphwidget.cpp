@@ -16,6 +16,8 @@
 
 #include <cmath>
 
+#define logMouseSelection() nCDebug("MouseSelection")
+
 namespace cp = shv::chainpack;
 
 namespace shv {
@@ -150,23 +152,16 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 			return;
 		}
 		else if(isMouseAboveGraphArea(pos) && event->modifiers() == Qt::ControlModifier) {
-			m_mouseOperation = MouseOperation::GraphAreaMoveOrZoom;
+			m_mouseOperation = MouseOperation::GraphAreaMove;
 			m_recentMousePos = pos;
 			event->accept();
 			return;
 		}
-		else if(isMouseAboveGraphArea(pos) && event->modifiers() == Qt::NoModifier) {
-			Graph *gr = graph();
-			gr->setCrossBarPos1(pos);
+		else if(isMouseAboveGraphArea(pos)) {
+			logMouseSelection() << "GraphAreaPress";
+			m_mouseOperation = MouseOperation::GraphAreaPress;
+			m_recentMousePos = pos;
 			event->accept();
-			update();
-			return;
-		}
-		else if(isMouseAboveGraphArea(pos) && event->modifiers() == Qt::ShiftModifier) {
-			Graph *gr = graph();
-			gr->setCrossBarPos2(pos);
-			event->accept();
-			update();
 			return;
 		}
 	}
@@ -175,15 +170,41 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 
 void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 {
+	logMouseSelection() << "mouseReleaseEvent, button:" << event->button() << "op:" << (int)m_mouseOperation;
+	auto old_mouse_op = m_mouseOperation;
+	m_mouseOperation = MouseOperation::None;
 	if(event->button() == Qt::LeftButton) {
-		m_mouseOperation = MouseOperation::None;
+		if(old_mouse_op == MouseOperation::GraphAreaPress) {
+			QPoint pos = event->pos();
+			if(event->modifiers() == Qt::NoModifier) {
+				Graph *gr = graph();
+				gr->setCrossBarPos1(pos);
+				event->accept();
+				update();
+				return;
+			}
+			else if(event->modifiers() == Qt::ShiftModifier) {
+				Graph *gr = graph();
+				gr->setCrossBarPos2(pos);
+				event->accept();
+				update();
+				return;
+			}
+		}
+		else if(old_mouse_op == MouseOperation::GraphAreaSelection) {
+			graph()->zoomToSelection();
+			graph()->setSelectionRect(QRect());
+			event->accept();
+			update();
+			return;
+		}
 	}
 	Super::mouseReleaseEvent(event);
 }
 
 void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 {
-	//shvDebug() << event->pos().x() << event->pos().y();
+	logMouseSelection() << event->pos().x() << event->pos().y() << (int)m_mouseOperation;
 	Super::mouseMoveEvent(event);
 	QPoint pos = event->pos();
 	Graph *gr = graph();
@@ -237,7 +258,19 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		}
 		return;
 	}
-	case MouseOperation::GraphAreaMoveOrZoom: {
+	case MouseOperation::GraphAreaPress: {
+		QPoint point = pos - m_recentMousePos;
+		if (point.manhattanLength() > 3) {
+			m_mouseOperation = MouseOperation::GraphAreaSelection;
+		}
+		break;
+	}
+	case MouseOperation::GraphAreaSelection: {
+		gr->setSelectionRect(QRect(m_recentMousePos, pos));
+		update();
+		break;
+	}
+	case MouseOperation::GraphAreaMove: {
 		timemsec_t t0 = gr->posToTime(m_recentMousePos.x());
 		timemsec_t t1 = gr->posToTime(pos.x());
 		timemsec_t dt = t0 - t1;

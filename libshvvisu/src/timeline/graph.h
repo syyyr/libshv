@@ -55,8 +55,9 @@ public:
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorBackground, QColor(Qt::darkGray).darker(400))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorGrid, QColor(Qt::darkGreen))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorAxis, QColor(Qt::green))
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCrossBar1, QColor(QStringLiteral("yellow")))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCrossBar1, QColor(QStringLiteral("white")))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCrossBar2, QColor(QStringLiteral("salmon")))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorSelection, QColor(QStringLiteral("deepskyblue")))
 
 		SHV_VARIANTMAP_FIELD(QFont, f, setF, ont)
 	public:
@@ -181,6 +182,8 @@ public:
 	void setCrossBarPos1(const QPoint &pos);
 	void setCrossBarPos2(const QPoint &pos);
 
+	void setSelectionRect(const QRect &rect);
+
 	XRange xRange() const { return m_state.xRange; }
 	XRange xRangeZoom() const { return m_state.xRangeZoom; }
 	void setXRange(const XRange &r, bool keep_zoom = false);
@@ -190,6 +193,7 @@ public:
 	void enlargeYRange(int channel_ix, double step);
 	void setYRangeZoom(int channel_ix, const YRange &r);
 	void resetZoom(int channel_ix);
+	void zoomToSelection();
 
 	const GraphStyle& style() const { return m_style; }
 	void setStyle(const GraphStyle &st);
@@ -229,6 +233,7 @@ protected:
 			, const QRect &dest_rect = QRect()
 			, const ChannelStyle &channel_style = ChannelStyle());
 	virtual void drawCrossBar(QPainter *painter, int channel_ix, const QPoint &crossbar_pos, const QColor &color);
+	virtual void drawSelection(QPainter *painter);
 
 	QVariantMap mergeMaps(const QVariantMap &base, const QVariantMap &overlay) const;
 	void makeXAxis();
@@ -262,6 +267,7 @@ protected:
 		XRange xRangeZoom;
 		QPoint crossBarPos1;
 		QPoint crossBarPos2;
+		QRect selectionRect;
 		XAxis axis;
 	} m_state;
 

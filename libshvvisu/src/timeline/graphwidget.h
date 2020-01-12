@@ -47,7 +47,7 @@ protected:
 protected:
 	Graph *m_graph = nullptr;
 
-	enum class MouseOperation { None, MiniMapLeftResize, MiniMapRightResize, MiniMapScrollZoom, GraphAreaMoveOrZoom };
+	enum class MouseOperation { None = 0, MiniMapLeftResize, MiniMapRightResize, MiniMapScrollZoom, GraphAreaPress, GraphAreaMove, GraphAreaSelection };
 	MouseOperation m_mouseOperation = MouseOperation::None;
 	QPoint m_recentMousePos;
 };

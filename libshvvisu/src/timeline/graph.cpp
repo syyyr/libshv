@@ -213,6 +213,11 @@ void Graph::setCrossBarPos2(const QPoint &pos)
 {
 	m_state.crossBarPos2 = pos;
 }
+
+void Graph::setSelectionRect(const QRect &rect)
+{
+	m_state.selectionRect = rect;
+}
 /*
 void Graph::setCrossBarPos(const QPoint &pos)
 {
@@ -313,6 +318,15 @@ void Graph::resetZoom(int channel_ix)
 	Channel &ch = m_channels[channel_ix];
 	setYRangeZoom(channel_ix, ch.yRange());
 	makeYAxis(channel_ix);
+}
+
+void Graph::zoomToSelection()
+{
+	shvLogFuncFrame();
+	XRange xrange;
+	xrange.min = posToTime(m_state.selectionRect.left());
+	xrange.max = posToTime(m_state.selectionRect.right());
+	setXRangeZoom(xrange);
 }
 
 void Graph::sanityXRangeZoom()
@@ -632,6 +646,8 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect)
 		drawMiniMap(painter);
 	if(dirty_rect.intersects(m_layout.xAxisRect))
 		drawXAxis(painter);
+	if(dirty_rect.intersects(m_state.selectionRect))
+		drawSelection(painter);
 }
 
 void Graph::drawBackground(QPainter *painter)
@@ -1270,6 +1286,15 @@ void Graph::drawCrossBar(QPainter *painter, int channel_ix, const QPoint &crossb
 
 	}
 	painter->restore();
+}
+
+void Graph::drawSelection(QPainter *painter)
+{
+	if(m_state.selectionRect.isNull())
+		return;
+	QColor c = effectiveStyle.colorSelection();
+	c.setAlphaF(0.3);
+	painter->fillRect(m_state.selectionRect, c);
 }
 
 }}}
