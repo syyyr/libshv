@@ -20,6 +20,7 @@ struct SHVCORE_DECL_EXPORT ShvJournalGetLogParams
 	static const char *KEY_WITH_SINCE;
 	static const char *KEY_WITH_UNTIL;
 	static const char *KEY_PATH_PATTERN;
+	static const char *KEY_PATH_PATTERN_TYPE;
 	static const char *KEY_DOMAIN_PATTERN;
 
 	shv::chainpack::RpcValue since;
@@ -27,9 +28,11 @@ struct SHVCORE_DECL_EXPORT ShvJournalGetLogParams
 	/// '*' and '**' wild-cards are supported
 	/// '*' stands for single path segment, shv/pol/*/discon match shv/pol/ols/discon but not shv/pol/ols/depot/discon
 	/// '**' stands for zero or more path segments, shv/pol/**/discon matches shv/pol/discon, shv/pol/ols/discon, shv/pol/ols/depot/discon
+	/// std::regex::regex_math is checked for RegExp type
 	std::string pathPattern;
-	//enum class PatternType {None = 0, WildCard, RegExp};
-	//PatternType patternType = PatternType::WildCard;
+	enum class PatternType {WildCard, RegEx};
+	PatternType pathPatternType = PatternType::WildCard;
+
 	enum class HeaderOptions : unsigned {
 		BasicInfo = 1 << 0,
 		FieldInfo = 1 << 1,
@@ -41,7 +44,7 @@ struct SHVCORE_DECL_EXPORT ShvJournalGetLogParams
 	int maxRecordCount = 1000;
 	bool withSnapshot = false;
 	bool withUptime = false;
-	std::string domainPattern;
+	std::string domainPattern; /// always regexp
 	ShvJournalGetLogParams() {}
 	ShvJournalGetLogParams(const shv::chainpack::RpcValue &opts);
 

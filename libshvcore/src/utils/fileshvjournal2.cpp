@@ -623,8 +623,21 @@ chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &p
 
 		//const std::string fnames[] = {"foo.txt", "bar.txt", "baz.dat", "zoidberg"};
 		std::regex domain_regex;
-		if(!params.domainPattern.empty())
+		if(!params.domainPattern.empty()) try {
 			domain_regex = std::regex{params.domainPattern};
+		}
+		catch (const std::regex_error &e) {
+			logWShvJournal() << "Invalid domain pattern regex:" << params.domainPattern << "-" << e.what();
+		}
+		std::regex path_regex;
+		bool use_path_regex = false;
+		if(!params.pathPattern.empty() && params.pathPatternType == ShvJournalGetLogParams::PatternType::RegEx) try {
+			use_path_regex = true;
+			path_regex = std::regex{params.pathPattern};
+		}
+		catch (const std::regex_error &e) {
+			logWShvJournal() << "Invalid path pattern regex:" << params.pathPattern << "-" << e.what();
+		}
 		for(; file_it != m_journalStatus.files.end(); file_it++) {
 			std::string fn = fileMsecToFilePath(*file_it);
 			logDShvJournal() << "-------- opening file:" << fn;
@@ -648,8 +661,14 @@ chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &p
 				ShvPath path = line_record.value(Column::Path).toString();
 				if(!params.pathPattern.empty()) {
 					logDShvJournal() << "\t MATCHING:" << params.pathPattern << "vs:" << path;
-					if(!path.matchWild(params.pathPattern))
-						continue;
+					if(use_path_regex) {
+						if(!std::regex_match(path, path_regex))
+								continue;
+					}
+					else {
+						if(!path.matchWild(params.pathPattern))
+							continue;
+					}
 					logDShvJournal() << "\t\t MATCH";
 				}
 				std::string domain_str = line_record.value(Column::Domain).toString();

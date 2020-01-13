@@ -12,8 +12,11 @@ const char *ShvJournalGetLogParams::KEY_WITH_SNAPSHOT = "withSnapshot";
 const char *ShvJournalGetLogParams::KEY_WITH_UPTIME = "withUptime";
 const char *ShvJournalGetLogParams::KEY_WITH_SINCE = "since";
 const char *ShvJournalGetLogParams::KEY_WITH_UNTIL = "until";
+const char *ShvJournalGetLogParams::KEY_PATH_PATTERN_TYPE = "pathPatternType";
 const char *ShvJournalGetLogParams::KEY_PATH_PATTERN = "pathPattern";
 const char *ShvJournalGetLogParams::KEY_DOMAIN_PATTERN = "domainPattern";
+
+static const char REG_EX[] = "regex";
 
 ShvJournalGetLogParams::ShvJournalGetLogParams(const chainpack::RpcValue &opts)
 	: ShvJournalGetLogParams()
@@ -26,6 +29,7 @@ ShvJournalGetLogParams::ShvJournalGetLogParams(const chainpack::RpcValue &opts)
 	if(!until.isValid())
 		until = m.value("to");
 	pathPattern = m.value(KEY_PATH_PATTERN, pathPattern).toString();
+	pathPatternType = (m.value(KEY_PATH_PATTERN_TYPE).toString() == REG_EX)? PatternType::RegEx: PatternType::WildCard;
 	domainPattern = m.value(KEY_DOMAIN_PATTERN, domainPattern).toString();
 	headerOptions = m.value(KEY_HEADER_OPTIONS, headerOptions).toUInt();
 	maxRecordCount = m.value(KEY_MAX_RECORD_COUNT, maxRecordCount).toInt();
@@ -40,8 +44,11 @@ chainpack::RpcValue ShvJournalGetLogParams::toRpcValue() const
 		m[KEY_WITH_SINCE] = since;
 	if(until.isValid())
 		m[KEY_WITH_UNTIL] = until;
-	if(!pathPattern.empty())
+	if(!pathPattern.empty()) {
 		m[KEY_PATH_PATTERN] = pathPattern;
+		if(pathPatternType == PatternType::RegEx)
+			m[KEY_PATH_PATTERN_TYPE] = REG_EX;
+	}
 	if(!domainPattern.empty())
 		m[KEY_DOMAIN_PATTERN] = domainPattern;
 	m[KEY_HEADER_OPTIONS] = headerOptions;
