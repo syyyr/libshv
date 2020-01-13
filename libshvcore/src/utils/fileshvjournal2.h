@@ -1,28 +1,23 @@
-#ifndef SHV_CORE_UTILS_FILESHVJOURNAL_H
-#define SHV_CORE_UTILS_FILESHVJOURNAL_H
+#ifndef SHV_CORE_UTILS_FILESHVJOURNAL2_H
+#define SHV_CORE_UTILS_FILESHVJOURNAL2_H
 
 #include "../shvcoreglobal.h"
-#include "shvjournalgetlogparams.h"
-#include "shvjournalentry.h"
 #include "../utils.h"
-
-#include <shv/chainpack/rpcvalue.h>
+#include "shvjournalentry.h"
+#include "shvjournalgetlogparams.h"
 
 #include <functional>
-#include <vector>
 
 namespace shv {
 namespace core {
 namespace utils {
 
-class SHVCORE_DECL_EXPORT FileShvJournal
+class SHVCORE_DECL_EXPORT FileShvJournal2
 {
 public:
 	static constexpr long DEFAULT_FILE_SIZE_LIMIT = 100 * 1024;
 	static constexpr long DEFAULT_JOURNAL_SIZE_LIMIT = 100 * 100 * 1024;
 	static constexpr int DEFAULT_GET_LOG_RECORD_COUNT_LIMIT = 100 * 1000;
-	static constexpr int FILE_DIGITS = 6;
-	static const char* FILE_EXT;
 	static constexpr char FIELD_SEPARATOR = '\t';
 	static constexpr char RECORD_SEPARATOR = '\n';
 
@@ -38,13 +33,17 @@ public:
 			Path,
 			Value,
 			ShortTime,
+			Domain,
+			Course,
 		};
 		static const char* name(Enum e);
 	};
+
+	SHV_FIELD_IMPL(std::string, f, F, ileExtension)
 public:
 	using SnapShotFn = std::function<void (std::vector<ShvJournalEntry>&)>;
 
-	FileShvJournal(std::string device_id, SnapShotFn snf);
+	FileShvJournal2(std::string device_id, SnapShotFn snf);
 
 	void setJournalDir(std::string s);
 	const std::string& journalDir();
@@ -61,32 +60,42 @@ public:
 	void append(const ShvJournalEntry &entry, int64_t msec = 0);
 
 	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params);
-private:
-	void checkJournalConsistecy();
-	void rotateJournal();
 
-	std::string fileNoToName(int n);
+	void convertLog1JournalDir();
+private:
+	void checkJournalConsistecy(bool force = false);
+	void rotateJournal();
 	void updateJournalStatus();
-	void checkJournalDir();
+	void updateJournalFiles();
+	void updateRecentTimeStamp();
+	void ensureJournalDir();
+	bool journalDirExists();
 	int64_t findLastEntryDateTime(const std::string &fn);
 
+	shv::chainpack::RpcValue getLogThrow(const ShvJournalGetLogParams &params);
+
+	void appendThrow(const ShvJournalEntry &entry, int64_t msec);
 	void appendEntry(std::ofstream &out, int64_t msec, const ShvJournalEntry &e);
 
+	int64_t fileNameToFileMsec(const std::string &fn) const;
+	std::string fileMsecToFileName(int64_t msec) const;
+	std::string fileMsecToFilePath(int64_t file_msec) const;
 	std::string getLine(std::istream &in, char sep);
-	//static long toLong(const std::string &s);
 private:
 	std::string m_deviceId;
 	std::string m_deviceType;
 	shv::chainpack::RpcValue m_typeInfo;
-	struct //JournalDirStatus
+	struct
 	{
 		bool journalDirExists = false;
-		int minFileNo = -1;
-		int maxFileNo = -1;
+		std::vector<int64_t> files;
 		int64_t journalSize = -1;
+		//bool isConsistent = false;
+		int64_t lastFileSize = -1;
 		int64_t recentTimeStamp = 0;
 
-		bool isConsistent() const {return recentTimeStamp > 0 && maxFileNo >= 0 && journalDirExists && journalSize >= 0;}
+		bool isConsistent() const {return journalDirExists && journalSize >= 0;}
+		//void setNotConsistent() {journalSize = -1;}
 	} m_journalStatus;
 	SnapShotFn m_snapShotFn;
 	std::string m_journalDir;
@@ -99,4 +108,4 @@ private:
 } // namespace core
 } // namespace shv
 
-#endif
+#endif // SHV_CORE_UTILS_FILESHVJOURNAL2_H
