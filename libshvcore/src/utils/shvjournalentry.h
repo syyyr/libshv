@@ -17,8 +17,6 @@ public:
 	static const char *DOMAIN_VAL_SERVICECHANGE; /// see shv::chainpack::Rpc::SIG_SERVICE_VAL_CHANGED
 
 	enum CourseType {Continuous = 0, Discrete};
-	static const char* courseTypeToString(CourseType ct);
-	static CourseType courseTypeFromString(CourseType ct);
 
 	static constexpr int NO_SHORT_TIME = -1;
 
