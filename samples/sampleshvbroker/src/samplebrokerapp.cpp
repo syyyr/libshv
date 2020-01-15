@@ -42,7 +42,7 @@ private:
 SampleBrokerApp::SampleBrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 	: Super(argc, argv, cli_opts)
 {
-	m_nodesTree->mount("tet", new TestNode());
+	m_nodesTree->mount("test", new TestNode());
 }
 
 SampleBrokerApp::~SampleBrokerApp()
@@ -62,10 +62,10 @@ AppCliOptions *SampleBrokerApp::cliOptions()
 
 shv::iotqt::rpc::Password SampleBrokerApp::password(const std::string &user)
 {
-	if(user == "eyas") {
+	if(user == "foo") {
 		shv::iotqt::rpc::Password ret;
-		ret.password = "19b9eab2dea2882d328caa6bc26b0b66c002813b";
-		ret.format = shv::iotqt::rpc::Password::Format::Sha1;
+		ret.password = "bar";
+		ret.format = shv::iotqt::rpc::Password::Format::Plain;
 		return ret;
 	}
 	if(user == "admin") {
@@ -80,10 +80,10 @@ shv::iotqt::rpc::Password SampleBrokerApp::password(const std::string &user)
 std::set<std::string> SampleBrokerApp::aclUserFlattenRoles(const std::string &user_name)
 {
 	std::set<std::string> ret;
-	if(user_name == "eyas")
-		ret.insert("eyas");
+	if(user_name == "foo")
+		ret.insert("user");
 	else if(user_name == "admin")
-		ret.insert("admin");
+		ret.insert("poweruser");
 	return ret;
 }
 
@@ -97,7 +97,7 @@ cp::AclRole SampleBrokerApp::aclRole(const std::string &role_name)
 cp::AclRolePaths SampleBrokerApp::aclRolePaths(const std::string &role_name)
 {
 	cp::AclRolePaths ret;
-	if(role_name == "eyas") {
+	if(role_name == "user") {
 		{
 			cp::AccessGrant &grant = ret["**"];
 			grant.type = cp::AccessGrant::Type::AccessLevel;
@@ -110,7 +110,7 @@ cp::AclRolePaths SampleBrokerApp::aclRolePaths(const std::string &role_name)
 			grant.role = cp::Rpc::ROLE_COMMAND;
 		}
 	}
-	else if(role_name == "admin") {
+	else if(role_name == "poweruser") {
 		{
 			cp::AccessGrant &grant = ret["**"];
 			grant.type = cp::AccessGrant::Type::AccessLevel;
