@@ -1,4 +1,5 @@
 #include "accessgrant.h"
+#include "irpcconnection.h"
 
 #include <necrolog.h>
 
@@ -121,12 +122,54 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 		}
 		break;
 	}
-	default:
-		nError() << "Invalid access grant:" << rpcval.toCpon();
+	case RpcValue::Type::Map: {
+		const RpcValue::Map &m = rpcval.toMap();
+		static const std::string KEY_TYPE = "type";
+		static const std::string KEY_ACCESS_LEVEL = "accessLevel";
+		static const std::string KEY_ROLE = "role";
+		static const std::string KEY_USER = "user";
+		static const std::string KEY_PASSWORD = "password";
+		static const std::string KEY_LOGIN_TYPE = "loginType";
+		do {
+			{
+				auto access_level = m.value(KEY_TYPE).toInt();
+				if(access_level > 0) {
+					ret.type = Type::AccessLevel;
+					ret.accessLevel = access_level;
+					break;
+				}
+			}
+			{
+				auto role = m.value(KEY_ROLE).toString();
+				if(!role.empty()) {
+					ret.type = Type::Role;
+					ret.role = role;
+					break;
+				}
+			}
+			{
+				auto user = m.value(KEY_USER).toString();
+				if(!user.empty()) {
+					ret.type = Type::UserLogin;
+					ret.user = user;
+					ret.password = m.value(KEY_PASSWORD).toString();
+					auto login_type = m.value(KEY_LOGIN_TYPE).toString();
+					ret.loginType = IRpcConnection::loginTypeFromString(login_type);
+					break;
+				}
+			}
+			ret.type = Type::Invalid;
+		} while(false);
 		break;
 	}
+	default:
+		break;
+	}
+	if(ret.type == Type::Invalid)
+		nError() << "Invalid access grant:" << rpcval.toCpon();
 	return ret;
 }
+
 //================================================================
 // PathAccessGrantRole
 //================================================================

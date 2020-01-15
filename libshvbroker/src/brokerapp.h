@@ -20,6 +20,8 @@ inline unsigned qHash(const std::string &s) noexcept //Q_DECL_NOEXCEPT_EXPR(noex
 #include <shv/chainpack/rpcvalue.h>
 #include <shv/chainpack/aclrole.h>
 #include <shv/chainpack/aclrolepaths.h>
+#include <shv/chainpack/aclmountdef.h>
+#include <shv/chainpack/acluserdef.h>
 
 #include <QCoreApplication>
 #include <QDateTime>
@@ -92,11 +94,20 @@ public:
 
 	/// ACL API begin
 public:
-	virtual shv::iotqt::rpc::Password password(const std::string &user);
-protected:
-	virtual std::set<std::string> aclUserFlattenRoles(const std::string &user_name);
+	virtual std::vector<std::string> aclMountDeviceIds();
+	virtual shv::chainpack::AclMountDef aclMountDef(const std::string &device_id);
+
+	virtual std::vector<std::string> aclUsers();
+	virtual shv::chainpack::AclUserDef aclUserDef(const std::string &user_name);
+
+	virtual std::vector<std::string> aclRoles();
 	virtual shv::chainpack::AclRole aclRole(const std::string &role_name);
+
+	virtual std::vector<std::string> aclPathRoles();
+
 	virtual shv::chainpack::AclRolePaths aclRolePaths(const std::string &role_name);
+	virtual shv::iotqt::rpc::Password password(const std::string &user);
+	virtual std::set<std::string> aclUserFlattenRoles(const std::string &user_name);
 	/// ACL API end
 
 private:

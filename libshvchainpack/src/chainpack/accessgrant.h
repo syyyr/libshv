@@ -46,6 +46,9 @@ public:
 
 struct SHVCHAINPACK_DECL_EXPORT PathAccessGrant : public AccessGrant
 {
+private:
+	using Super = AccessGrant;
+public:
 	bool forwardGrantFromRequest = false;
 };
 } // namespace chainpack

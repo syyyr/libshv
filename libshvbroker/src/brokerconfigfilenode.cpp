@@ -60,15 +60,15 @@ EtcAclNode::EtcAclNode(shv::iotqt::node::ShvNode *parent)
 		connect(BrokerApp::instance(), &BrokerApp::configReloaded, nd, &shv::iotqt::node::RpcValueMapNode::clearValuesCache);
 	}
 	{
-		auto *nd = new BrokerUsersConfigFileNode("users", this);
+		auto *nd = new AclUsersNode("users", this);
 		connect(BrokerApp::instance(), &BrokerApp::configReloaded, nd, &shv::iotqt::node::RpcValueMapNode::clearValuesCache);
 	}
 	{
-		auto *nd = new BrokerGrantsConfigFileNode("grants", this);
+		auto *nd = new AclGrantsNode("grants", this);
 		connect(BrokerApp::instance(), &BrokerApp::configReloaded, nd, &shv::iotqt::node::RpcValueMapNode::clearValuesCache);
 	}
 	{
-		auto *nd = new BrokerPathsConfigFileNode("paths", this);
+		auto *nd = new AclPathsNode("paths", this);
 		connect(BrokerApp::instance(), &BrokerApp::configReloaded, nd, &shv::iotqt::node::RpcValueMapNode::clearValuesCache);
 	}
 }
@@ -94,17 +94,17 @@ void BrokerConfigFileNode::saveValues()
 //========================================================
 // BrokerGrantsConfigFileNode
 //========================================================
-BrokerGrantsConfigFileNode::BrokerGrantsConfigFileNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent)
+AclGrantsNode::AclGrantsNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent)
 	: Super(config_name, parent)
 {
 }
 
-size_t BrokerGrantsConfigFileNode::methodCount(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
+size_t AclGrantsNode::methodCount(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
 {
 	return (shv_path.empty()) ? meta_methods_acl_grants.size() + Super::methodCount(shv_path) : Super::methodCount(shv_path);
 }
 
-const shv::chainpack::MetaMethod *BrokerGrantsConfigFileNode::metaMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, size_t ix)
+const shv::chainpack::MetaMethod *AclGrantsNode::metaMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, size_t ix)
 {
 	if(shv_path.empty()) {
 		size_t all_method_count = meta_methods_acl_grants.size() + Super::methodCount(shv_path);
@@ -120,7 +120,7 @@ const shv::chainpack::MetaMethod *BrokerGrantsConfigFileNode::metaMethod(const s
 	return Super::metaMethod(shv_path, ix);
 }
 
-shv::chainpack::RpcValue BrokerGrantsConfigFileNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
+shv::chainpack::RpcValue AclGrantsNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
 {
 	if(shv_path.empty()) {
 		if(method == M_ADD_GRANT) {
@@ -137,7 +137,7 @@ shv::chainpack::RpcValue BrokerGrantsConfigFileNode::callMethod(const shv::iotqt
 	return Super::callMethod(shv_path, method, params);
 }
 
-bool BrokerGrantsConfigFileNode::addGrant(const shv::chainpack::RpcValue &params)
+bool AclGrantsNode::addGrant(const shv::chainpack::RpcValue &params)
 {
 	if (!params.isMap() || !params.toMap().hasKey(GRANT_NAME)){
 		SHV_EXCEPTION("Invalid parameters format. Params must be a RpcValue::Map and it must contains key: grantName.");
@@ -179,7 +179,7 @@ bool BrokerGrantsConfigFileNode::addGrant(const shv::chainpack::RpcValue &params
 	return true;
 }
 
-bool BrokerGrantsConfigFileNode::editGrant(const shv::chainpack::RpcValue &params)
+bool AclGrantsNode::editGrant(const shv::chainpack::RpcValue &params)
 {
 	if (!params.isMap() || !params.toMap().hasKey(GRANT_NAME)){
 		SHV_EXCEPTION("Invalid parameters format. Params must be a RpcValue::Map and it must contains key: grantName.");
@@ -222,7 +222,7 @@ bool BrokerGrantsConfigFileNode::editGrant(const shv::chainpack::RpcValue &param
 	return true;
 }
 
-bool BrokerGrantsConfigFileNode::delGrant(const shv::chainpack::RpcValue &params)
+bool AclGrantsNode::delGrant(const shv::chainpack::RpcValue &params)
 {
 	if (!params.isString() || params.toString().empty()){
 		SHV_EXCEPTION("Invalid parameters format. Param must be non empty RpcValue::String.");
@@ -244,17 +244,17 @@ bool BrokerGrantsConfigFileNode::delGrant(const shv::chainpack::RpcValue &params
 //========================================================
 // BrokerUsersConfigFileNode
 //========================================================
-BrokerUsersConfigFileNode::BrokerUsersConfigFileNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent)
+AclUsersNode::AclUsersNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent)
 	: Super(config_name, parent)
 {
 }
 
-size_t BrokerUsersConfigFileNode::methodCount(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
+size_t AclUsersNode::methodCount(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
 {
 	return (shv_path.empty()) ? meta_methods_acl_users.size() + Super::methodCount(shv_path) : Super::methodCount(shv_path);
 }
 
-const shv::chainpack::MetaMethod *BrokerUsersConfigFileNode::metaMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, size_t ix)
+const shv::chainpack::MetaMethod *AclUsersNode::metaMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, size_t ix)
 {
 	if(shv_path.empty()) {
 		size_t all_method_count = meta_methods_acl_users.size() + Super::methodCount(shv_path);
@@ -270,7 +270,7 @@ const shv::chainpack::MetaMethod *BrokerUsersConfigFileNode::metaMethod(const sh
 	return Super::metaMethod(shv_path, ix);
 }
 
-shv::chainpack::RpcValue BrokerUsersConfigFileNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
+shv::chainpack::RpcValue AclUsersNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
 {
 	if(shv_path.empty()) {
 		if(method == M_ADD_USER) {
@@ -284,7 +284,7 @@ shv::chainpack::RpcValue BrokerUsersConfigFileNode::callMethod(const shv::iotqt:
 	return Super::callMethod(shv_path, method, params);
 }
 
-bool BrokerUsersConfigFileNode::addUser(const shv::chainpack::RpcValue &params)
+bool AclUsersNode::addUser(const shv::chainpack::RpcValue &params)
 {
 	if (!params.isMap() || !params.toMap().hasKey("user") || !params.toMap().hasKey("password")){
 		SHV_EXCEPTION("Invalid parameters format. Params must be a RpcValue::Map and it must contains keys: user, password.");
@@ -311,7 +311,7 @@ bool BrokerUsersConfigFileNode::addUser(const shv::chainpack::RpcValue &params)
 	return true;
 }
 
-bool BrokerUsersConfigFileNode::delUser(const shv::chainpack::RpcValue &params)
+bool AclUsersNode::delUser(const shv::chainpack::RpcValue &params)
 {
 	if (!params.isString() || params.toString().empty()){
 		SHV_EXCEPTION("Invalid parameters format. Param must be non empty string.");
@@ -334,18 +334,18 @@ bool BrokerUsersConfigFileNode::delUser(const shv::chainpack::RpcValue &params)
 // BrokerPathsConfigFileNode
 //========================================================
 
-BrokerPathsConfigFileNode::BrokerPathsConfigFileNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent)
+AclPathsNode::AclPathsNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent)
 	: Super(config_name, parent)
 {
 
 }
 
-size_t BrokerPathsConfigFileNode::methodCount(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
+size_t AclPathsNode::methodCount(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
 {
 	return (shv_path.empty()) ? meta_methods_acl_paths.size() + Super::methodCount(shv_path) : Super::methodCount(shv_path);
 }
 
-const shv::chainpack::MetaMethod *BrokerPathsConfigFileNode::metaMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, size_t ix)
+const shv::chainpack::MetaMethod *AclPathsNode::metaMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, size_t ix)
 {
 	if(shv_path.empty()) {
 		size_t all_method_count = meta_methods_acl_paths.size() + Super::methodCount(shv_path);
@@ -361,7 +361,7 @@ const shv::chainpack::MetaMethod *BrokerPathsConfigFileNode::metaMethod(const sh
 	return Super::metaMethod(shv_path, ix);
 }
 
-shv::chainpack::RpcValue BrokerPathsConfigFileNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
+shv::chainpack::RpcValue AclPathsNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
 {
 	if(shv_path.empty()) {
 		if(method == M_SET_GRANT_PATHS) {
@@ -378,7 +378,7 @@ shv::chainpack::RpcValue BrokerPathsConfigFileNode::callMethod(const shv::iotqt:
 	return Super::callMethod(shv_path, method, params);
 }
 
-bool BrokerPathsConfigFileNode::setGrantPaths(const shv::chainpack::RpcValue &params)
+bool AclPathsNode::setGrantPaths(const shv::chainpack::RpcValue &params)
 {
 	if (!params.isList() || (params.toList().size() != 2)){
 		SHV_EXCEPTION("Invalid parameters format. Params must be RpcValue::List with 2 items [grant_name, paths]");
@@ -399,7 +399,7 @@ bool BrokerPathsConfigFileNode::setGrantPaths(const shv::chainpack::RpcValue &pa
 	return true;
 }
 
-bool BrokerPathsConfigFileNode::delGrantPaths(const shv::chainpack::RpcValue &params)
+bool AclPathsNode::delGrantPaths(const shv::chainpack::RpcValue &params)
 {
 	if (!params.isString() || params.toString().empty()){
 		SHV_EXCEPTION("Invalid parameters format. Param must be non empty RpcValue::String.");
@@ -416,7 +416,7 @@ bool BrokerPathsConfigFileNode::delGrantPaths(const shv::chainpack::RpcValue &pa
 	return true;
 }
 
-shv::chainpack::RpcValue BrokerPathsConfigFileNode::getGrantPaths(const shv::chainpack::RpcValue &params)
+shv::chainpack::RpcValue AclPathsNode::getGrantPaths(const shv::chainpack::RpcValue &params)
 {
 	if (!params.isString() || params.toString().empty()){
 		SHV_EXCEPTION("Invalid parameters format. Param must be non empty RpcValue::String.");
@@ -428,7 +428,7 @@ shv::chainpack::RpcValue BrokerPathsConfigFileNode::getGrantPaths(const shv::cha
 	return (paths_config.hasKey(grant_name)) ? paths_config.value(grant_name) : cp::RpcValue::Map();
 }
 
-shv::iotqt::node::ShvNode::StringList BrokerPathsConfigFileNode::childNames(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
+shv::iotqt::node::ShvNode::StringList AclPathsNode::childNames(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
 {
 	if(shv_path.size() == 1) {
 		std::vector<std::string> keys = values().at(shv_path[0].toString()).toMap().keys();
@@ -442,7 +442,7 @@ shv::iotqt::node::ShvNode::StringList BrokerPathsConfigFileNode::childNames(cons
 	}
 }
 
-shv::chainpack::RpcValue BrokerPathsConfigFileNode::valueOnPath(const shv::iotqt::node::ShvNode::StringViewList &shv_path, bool throw_exc)
+shv::chainpack::RpcValue AclPathsNode::valueOnPath(const shv::iotqt::node::ShvNode::StringViewList &shv_path, bool throw_exc)
 {
 	//shvInfo() << "valueOnPath:" << shv_path.join('/');
 	shv::chainpack::RpcValue v = values();

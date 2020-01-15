@@ -26,11 +26,11 @@ protected:
 	void saveValues() override;
 };
 
-class BrokerGrantsConfigFileNode : public BrokerConfigFileNode
+class AclGrantsNode : public BrokerConfigFileNode
 {
 	using Super = BrokerConfigFileNode;
 public:
-	BrokerGrantsConfigFileNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent = nullptr);
+	AclGrantsNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent = nullptr);
 
 	size_t methodCount(const StringViewList &shv_path) override;
 	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
@@ -41,11 +41,11 @@ public:
 	bool delGrant(const shv::chainpack::RpcValue &params);
 };
 
-class BrokerUsersConfigFileNode : public BrokerConfigFileNode
+class AclUsersNode : public BrokerConfigFileNode
 {
 	using Super = BrokerConfigFileNode;
 public:
-	BrokerUsersConfigFileNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent = nullptr);
+	AclUsersNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent = nullptr);
 
 	size_t methodCount(const StringViewList &shv_path) override;
 	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
@@ -55,11 +55,11 @@ public:
 	bool delUser(const shv::chainpack::RpcValue &params);
 };
 
-class BrokerPathsConfigFileNode : public BrokerConfigFileNode
+class AclPathsNode : public BrokerConfigFileNode
 {
 	using Super = BrokerConfigFileNode;
 public:
-	BrokerPathsConfigFileNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent = nullptr);
+	AclPathsNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent = nullptr);
 
 	size_t methodCount(const StringViewList &shv_path) override;
 	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;

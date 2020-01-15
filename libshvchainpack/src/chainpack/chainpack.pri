@@ -1,6 +1,8 @@
 SOURCES += \
+    $$PWD/aclmountdef.cpp \
     $$PWD/aclrole.cpp \
     $$PWD/aclrolepaths.cpp \
+    $$PWD/acluserdef.cpp \
     $$PWD/rpc.cpp \
     $$PWD/rpcmessage.cpp \
     $$PWD/rpcvalue.cpp \
@@ -24,8 +26,10 @@ SOURCES += \
     $$PWD/valuechange.cpp
 
 HEADERS += \
+    $$PWD/aclmountdef.h \
     $$PWD/aclrole.h \
     $$PWD/aclrolepaths.h \
+    $$PWD/acluserdef.h \
     $$PWD/rpc.h \
     $$PWD/rpcmessage.h \
     $$PWD/rpcvalue.h \
