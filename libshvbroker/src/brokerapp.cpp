@@ -1,4 +1,5 @@
 #include "brokerapp.h"
+#include "aclmanager.h"
 #include "clientshvnode.h"
 #include "brokernode.h"
 #include "subscriptionsnode.h"
@@ -175,7 +176,6 @@ std::vector<cp::MetaMethod> MountsNode::m_metaMethods = {
 BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 	: Super(argc, argv)
 	, m_cliOptions(cli_opts)
-	, m_aclCache(this)
 {
 	//shvInfo() << "creating SHV BROKER application object ver." << versionString();
 	std::srand(std::time(nullptr));
@@ -198,8 +198,6 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 BrokerApp::~BrokerApp()
 {
 	shvInfo() << "Destroying SHV BROKER application object";
-	//QF_SAFE_DELETE(m_tcpServer);
-	//QF_SAFE_DELETE(m_sqlConnector);
 }
 
 void BrokerApp::registerLogTopics()
@@ -290,70 +288,12 @@ void BrokerApp::reloadConfig()
 	emit configReloaded();
 }
 
-void BrokerApp::clearAccessGrantCache()
-{
-	m_aclCache.clear();
-#ifdef USE_SHV_PATHS_GRANTS_CACHE
-	m_userPathGrantCache.clear();
-#endif
-}
-
 void BrokerApp::reloadAcl()
 {
-	m_usersConfig = cp::RpcValue();
-	m_grantsConfig = cp::RpcValue();
-	m_pathsConfig = cp::RpcValue();
-	clearAccessGrantCache();
+	//clearAccessGrantCache();
+	if(m_aclManager)
+		m_aclManager->reload();
 }
-
-/*
-sql::SqlConnector *TheApp::sqlConnector()
-{
-	if(!m_sqlConnector || !m_sqlConnector->isOpen())
-		QF_EXCEPTION("SQL server not connected!");
-	return m_sqlConnector;
-}
-
-QString TheApp::serverProfile()
-{
-	return cliOptions()->profile();
-}
-
-QVariantMap TheApp::cliOptionsMap()
-{
-	return cliOptions()->values();
-}
-
-void TheApp::reconnectSqlServer()
-{
-	if(m_sqlConnector && m_sqlConnector->isOpen())
-		return;
-	QF_SAFE_DELETE(m_sqlConnector);
-	m_sqlConnector = new sql::SqlConnector(this);
-	connect(m_sqlConnector, SIGNAL(sqlServerError(QString)), this, SLOT(onSqlServerError(QString)), Qt::QueuedConnection);
-	//connect(m_sqlConnection, SIGNAL(openChanged(bool)), this, SLOT(onSqlServerConnectedChanged(bool)), Qt::QueuedConnection);
-
-	QString host = cliOptions()->sqlHost();
-	int port = cliOptions()->sqlPort();
-	m_sqlConnector->open(host, port);
-	if (m_sqlConnector->isOpen()) {
-		emit sqlServerConnected();
-	}
-}
-void BrokerApp::onSqlServerError(const QString &err_mesg)
-{
-	Q_UNUSED(err_mesg)
-	//SHV_SAFE_DELETE(m_sqlConnector);
-	//m_sqlConnectionWatchDog->start(SQL_RECONNECT_INTERVAL);
-}
-
-void BrokerApp::onSqlServerConnected()
-{
-	//connect(depotModel(), &DepotModel::valueChangedWillBeEmitted, m_sqlConnector, &sql::SqlConnector::saveDepotModelJournal, Qt::UniqueConnection);
-	//connect(this, &TheApp::opcValueWillBeSet, m_sqlConnector, &sql::SqlConnector::saveDepotModelJournal, Qt::UniqueConnection);
-	//m_depotModel->setValue(QStringList() << QStringLiteral("server") << QStringLiteral("startTime"), QVariant::fromValue(QDateTime::currentDateTime()), !shv::core::Exception::Throw);
-}
-*/
 
 void BrokerApp::startTcpServer()
 {
@@ -412,48 +352,6 @@ void BrokerApp::lazyInit()
 	createMasterBrokerConnections();
 }
 
-shv::chainpack::RpcValue BrokerApp::aclConfig(const std::string &config_name, bool throw_exc)
-{
-	shv::chainpack::RpcValue *config_val = aclConfigVariable(config_name, throw_exc);
-	if(config_val) {
-		if(!config_val->isValid()) {
-			*config_val = loadAclConfig(config_name, throw_exc);
-			logAclD() << "ACL config:" << config_name << "loaded:\n" << config_val->toCpon("\t");
-		}
-		if(!config_val->isValid())
-			*config_val = cp::RpcValue::Map{}; /// will not be loaded next time
-		return *config_val;
-	}
-	else {
-		if(throw_exc) {
-			throw std::runtime_error("Config " + config_name + " does not exist.");
-		}
-		else {
-			//shvError().nospace() << "Config '" << config_name << "' does not exist.";
-			return cp::RpcValue();
-		}
-	}
-}
-
-bool BrokerApp::setAclConfig(const std::string &config_name, const shv::chainpack::RpcValue &config, bool throw_exc)
-{
-	shv::chainpack::RpcValue *config_val = aclConfigVariable(config_name, throw_exc);
-	if(config_val) {
-		if(saveAclConfig(config_name, config, throw_exc)) {
-			*config_val = config;
-			clearAccessGrantCache();
-			return true;
-		}
-		return false;
-	}
-	else {
-		if(throw_exc)
-			throw std::runtime_error("Config " + config_name + " does not exist.");
-		else
-			return false;
-	}
-}
-
 bool BrokerApp::checkTunnelSecret(const std::string &s)
 {
 	return m_tunnelSecretList.checkSecret(s);
@@ -474,32 +372,10 @@ std::string BrokerApp::dataToCpon(shv::chainpack::Rpc::ProtocolType protocol_typ
 	return rpc_val.toPrettyString();
 }
 
-iotqt::rpc::Password BrokerApp::password(const std::string &user)
-{
-	iotqt::rpc::Password ret;
-	const shv::chainpack::RpcValue::Map &user_def = usersConfig().toMap().value(user).toMap();
-	if(user_def.empty()) {
-		shvWarning() << "Invalid user:" << user;
-		return ret;
-	}
-	ret.password = user_def.value("password").toString();
-	std::string password_format_str = user_def.value("passwordFormat").toString();
-	if(password_format_str.empty()) {
-		// obsolete users.cpon files used "loginType" key for passwordFormat
-		password_format_str = user_def.value("loginType").toString();
-	}
-	ret.format = iotqt::rpc::Password::formatFromString(password_format_str);
-	if(ret.format == iotqt::rpc::Password::Format::Invalid) {
-		shvWarning() << "Invalid password format for user:" << user;
-		return iotqt::rpc::Password();
-	}
-	return ret;
-}
-
 void BrokerApp::remountDevices()
 {
 	shvInfo() << "Remounting devices by dropping their connection";
-	m_fstabConfig = cp::RpcValue();
+	reloadAcl();
 	for(int conn_id : clientConnectionIds()) {
 		rpc::ClientBrokerConnection *conn = clientConnectionById(conn_id);
 		if(conn && !conn->mountPoints().empty()) {
@@ -509,98 +385,12 @@ void BrokerApp::remountDevices()
 	}
 }
 
-shv::chainpack::RpcValue *BrokerApp::aclConfigVariable(const std::string &config_name, bool throw_exc)
-{
-	shv::chainpack::RpcValue *config_val = nullptr;
-	if(config_name == "fstab")
-		config_val = &m_fstabConfig;
-	else if(config_name == "users")
-		config_val = &m_usersConfig;
-	else if(config_name == "grants")
-		config_val = &m_grantsConfig;
-	else if(config_name == "paths")
-		config_val = &m_pathsConfig;
-	if(config_val) {
-		return config_val;
-	}
-	else {
-		if(throw_exc)
-			throw std::runtime_error("Config " + config_name + " does not exist.");
-		else
-			return nullptr;
-	}
-}
-
-shv::chainpack::RpcValue BrokerApp::loadAclConfig(const std::string &config_name, bool throw_exc)
-{
-	std::string fn = config_name;
-	fn = cliOptions()->value("etc.acl." + fn).toString();
-	if(fn.empty()) {
-		if(throw_exc)
-			throw std::runtime_error("config file name is empty.");
-		else
-			return cp::RpcValue();
-	}
-	if(fn[0] != '/')
-		fn = cliOptions()->configDir() + '/' + fn;
-	std::ifstream fis(fn);
-	QFile f(QString::fromStdString(fn));
-	if (!fis.good()) {
-		if(throw_exc)
-			throw std::runtime_error("Cannot open config file " + fn + " for reading");
-		else
-			return cp::RpcValue();
-	}
-	shv::chainpack::CponReader rd(fis);
-	shv::chainpack::RpcValue rv;
-	std::string err;
-	rv = rd.read(throw_exc? nullptr: &err);
-	return rv;
-}
-
-bool BrokerApp::saveAclConfig(const std::string &config_name, const shv::chainpack::RpcValue &config, bool throw_exc)
-{
-	logAclD() << "saveAclConfig" << config_name << "config type:" << config.typeToName(config.type());
-	//logAclD() << "config:" << config.toCpon();
-	std::string fn = config_name;
-	fn = cliOptions()->value("etc.acl." + fn).toString();
-	if(fn.empty()) {
-		if(throw_exc)
-			throw std::runtime_error("config file name is empty.");
-		else
-			return false;
-	}
-	if(fn[0] != '/')
-		fn = cliOptions()->configDir() + '/' + fn;
-
-	if(config.isMap()) {
-		std::ofstream fos(fn, std::ios::binary | std::ios::trunc);
-		if (!fos) {
-			if(throw_exc)
-				throw std::runtime_error("Cannot open config file " + fn + " for writing");
-			else
-				return false;
-		}
-		shv::chainpack::CponWriterOptions opts;
-		opts.setIndent("  ");
-		shv::chainpack::CponWriter wr(fos, opts);
-		wr << config;
-		return true;
-	}
-	else {
-		if(throw_exc)
-			throw std::runtime_error("Config must be RpcValue::Map type, config name: " + config_name);
-		else
-			return false;
-	}
-}
-
 std::string BrokerApp::resolveMountPoint(const shv::chainpack::RpcValue::Map &device_opts)
 {
 	std::string mount_point;
 	shv::chainpack::RpcValue device_id = device_opts.value(cp::Rpc::KEY_DEVICE_ID);
 	if(device_id.isValid())
-		mount_point = mountPointForDevice(device_id);
+		mount_point = aclManager()->mountPointForDevice(device_id);
 	if(mount_point.empty()) {
 		mount_point = device_opts.value(cp::Rpc::KEY_MOUT_POINT).toString();
 		std::vector<shv::core::StringView> path = shv::core::utils::ShvPath::split(mount_point);
@@ -613,126 +403,6 @@ std::string BrokerApp::resolveMountPoint(const shv::chainpack::RpcValue::Map &de
 		shvWarning() << "cannot find mount point for device id:" << device_id.toCpon();// << "connection id:" << connection_id;
 	}
 	return mount_point;
-}
-
-std::string BrokerApp::mountPointForDevice(const shv::chainpack::RpcValue &device_id)
-{
-	shv::chainpack::RpcValue fstab = fstabConfig();
-	const std::string dev_id = device_id.toString();
-	shv::chainpack::RpcValue mp_record = m_fstabConfig.toMap().value(dev_id);
-	std::string mount_point;
-	if(mp_record.isString())
-		mount_point = mp_record.toString();
-	else
-		mount_point = mp_record.toMap().value(cp::Rpc::KEY_MOUT_POINT).toString();
-	return mount_point;
-}
-
-std::set<std::string> BrokerApp::flattenRole_helper(const std::string &role_name)
-{
-	std::set<std::string> ret;
-	chainpack::AclRole ar = aclRole(role_name);
-	if(ar.isValid()) {
-		ret.insert(ar.name);
-		for(auto g : ar.roles) {
-			if(ret.count(g)) {
-				shvWarning() << "Cyclic reference in grants detected for grant name:" << g;
-			}
-			else {
-				std::set<std::string> gg = flattenRole_helper(g);
-				ret.insert(gg.begin(), gg.end());
-			}
-		}
-	}
-	return ret;
-}
-
-std::set<std::string> BrokerApp::aclUserFlattenRoles(const std::string &user_name)
-{
-	std::set<std::string> ret;
-	cp::RpcValue user_def = usersConfig().toMap().value(user_name);
-	if(!user_def.isMap())
-		return ret;
-
-	for(auto gv : user_def.toMap().value("grants").toList()) {
-		const std::string &gn = gv.toString();
-		std::set<std::string> gg = flattenRole_helper(gn);
-		ret.insert(gg.begin(), gg.end());
-	}
-	return ret;
-}
-
-chainpack::AclRole BrokerApp::aclRole(const std::string &role_name)
-{
-	chainpack::AclRole ret;
-	chainpack::RpcValue rv = grantsConfig().toMap().value(role_name);
-	if(rv.isMap()) {
-		chainpack::RpcValue::Map rm = grantsConfig().toMap().value(role_name).toMap();
-		ret.name = role_name;
-		ret.weight = rm.value("weight").toInt();
-		for(auto v : rm.value("grants").toList()) {
-			ret.roles.push_back(v.toString());
-		}
-	}
-	return ret;
-}
-
-chainpack::AclRolePaths BrokerApp::aclRolePaths(const std::string &role_name)
-{
-	chainpack::RpcValue::Map rm = pathsConfig().toMap().value(role_name).toMap();
-	chainpack::AclRolePaths ret;
-	cp::RpcValue paths = pathsConfig().toMap().value(role_name);
-	for(const auto &kv : paths.toMap()) {
-		const std::string &path = kv.first;
-		chainpack::PathAccessGrant grant;
-		auto m = kv.second.toMap();
-		grant.forwardGrantFromRequest = m.value("forwardGrant").toBool();
-		grant.role = m.value("grant").toString();
-		if(!grant.role.empty()) {
-			grant.type = chainpack::AccessGrant::Type::Role;
-		}
-		else if(grant.forwardGrantFromRequest) {
-			// forward grant from master broker forwarded request
-		}
-		else {
-			shvError() << "unsupported ACL path definition, path:" << path << "def:" << kv.second.toCpon();
-		}
-		ret[path] = grant;
-	}
-	return ret;
-}
-
-const std::vector<std::string> &BrokerApp::AclCache::aclUserFlattenRoles(const std::string &user_name)
-{
-	if(m_userFlattenGrants.count(user_name))
-		return m_userFlattenGrants.at(user_name);
-	auto not_sorted = m_app->aclUserFlattenRoles(user_name);
-	std::vector<std::string> ret;
-	for(auto s : not_sorted)
-		ret.push_back(s);
-	std::sort(ret.begin(), ret.end(), [this](const std::string &a, const std::string &b) {
-		return aclRole(a).weight > aclRole(b).weight;
-	});
-	m_userFlattenGrants[user_name] = ret;
-	return m_userFlattenGrants.at(user_name);
-}
-
-const chainpack::AclRole &BrokerApp::AclCache::aclRole(const std::string &role_name)
-{
-	if(m_aclRoles.count(role_name))
-		return m_aclRoles.at(role_name);
-	auto ret = m_app->aclRole(role_name);
-	m_aclRoles[role_name] = ret;
-	return m_aclRoles.at(role_name);
-}
-
-const chainpack::AclRolePaths &BrokerApp::AclCache::aclRolePaths(const std::string &role_name)
-{
-	if(m_aclRolePaths.count(role_name))
-		return m_aclRolePaths.at(role_name);
-	auto ret = m_app->aclRolePaths(role_name);
-	m_aclRolePaths[role_name] = ret;
-	return m_aclRolePaths.at(role_name);
 }
 
 std::string BrokerApp::primaryIPAddress(bool &is_public)
@@ -808,15 +478,15 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	}
 	const std::vector<std::string> &user_flattent_grants = is_request_from_master_broker
 			? std::vector<std::string>{request_grant.role} // master broker has allways grant masterBroker
-			: m_aclCache.aclUserFlattenRoles(conn->loggedUserName());
+			: aclManager()->userFlattenRolesSortedByWeight(conn->loggedUserName());
 	std::string most_specific_role;
 	cp::PathAccessGrant most_specific_path_grant;
 	size_t most_specific_path_len = 0;
 	// find most specific path grant for role with highest weight
 	// user_flattent_grants are sorted by weight DESC
 	for(const std::string &role : user_flattent_grants) {
-		logAclD() << "cheking role:" << role << "weight:" << m_aclCache.aclRole(role).weight;
-		const chainpack::AclRolePaths &role_paths = m_aclCache.aclRolePaths(role);
+		logAclD() << "cheking role:" << role << "weight:" << aclManager()->role(role).weight;
+		const chainpack::AclRolePaths &role_paths = aclManager()->pathsRolePaths(role);
 		for(const auto &kv : role_paths) {
 			const std::string &role_path = kv.first;
 			logAclD().nospace() << "\t checking if path: '" << rq_shv_path << "' match granted path: '" << role_path << "'";
@@ -1360,6 +1030,18 @@ rpc::CommonRpcClientHandle *BrokerApp::commonClientConnectionById(int connection
 		return ret;
 	ret = masterBrokerConnectionById(connection_id);
 	return ret;
+}
+
+AclManager *BrokerApp::aclManager()
+{
+	if(m_aclManager == nullptr)
+		SHV_EXCEPTION("AclManager is NULL")
+	return m_aclManager;
+}
+
+void BrokerApp::setAclManager(AclManager *mng)
+{
+	m_aclManager = mng;
 }
 
 }}

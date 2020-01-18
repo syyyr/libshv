@@ -7,22 +7,36 @@
 namespace shv {
 namespace chainpack {
 
-struct SHVCHAINPACK_DECL_EXPORT AccessGrant
+struct SHVCHAINPACK_DECL_EXPORT UserLoginContext
 {
+	std::string serverNounce;
+};
+
+struct SHVCHAINPACK_DECL_EXPORT UserLogin
+{
+public:
 	enum class LoginType {Invalid = 0, Plain, Sha1, RsaOaep};
-
-	enum class Type { Invalid = 0, AccessLevel, Role, UserLogin, };
-	Type type = Type::Invalid;
-
-	bool notResolved = false;
-
-	int accessLevel;
-
-	std::string role;
 
 	std::string user;
 	std::string password;
 	LoginType loginType;
+
+	bool isValid() const {return !user.empty();}
+
+	static const char *loginTypeToString(LoginType t);
+	static LoginType loginTypeFromString(const std::string &s);
+	static UserLogin fromRpcValue(const RpcValue &val);
+};
+
+struct SHVCHAINPACK_DECL_EXPORT AccessGrant
+{
+
+	enum class Type { Invalid = 0, AccessLevel, Role, UserLogin, };
+	Type type = Type::Invalid;
+	bool notResolved = false;
+	int accessLevel;
+	std::string role;
+	UserLogin login;
 public:
 	class MetaType : public chainpack::meta::MetaType
 	{
@@ -42,6 +56,7 @@ public:
 
 	chainpack::RpcValue toRpcValue() const;
 	static AccessGrant fromRpcValue(const chainpack::RpcValue &rpcval);
+	//static AccessGrant fromAccessLevel(int access_level);
 };
 
 struct SHVCHAINPACK_DECL_EXPORT PathAccessGrant : public AccessGrant

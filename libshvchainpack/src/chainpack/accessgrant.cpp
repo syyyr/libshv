@@ -6,6 +6,59 @@
 namespace shv {
 namespace chainpack {
 
+static bool str_eq(const std::string &s1, const char *s2)
+{
+	size_t i;
+	for (i = 0; i < s1.size(); ++i) {
+		char c2 = s2[i];
+		if(!c2)
+			return false;
+		if(toupper(c2 != toupper(s1[i])))
+			return false;
+	}
+	return s2[i] == 0;
+}
+
+//================================================================
+// UserLogin
+//================================================================
+const char* UserLogin::loginTypeToString(UserLogin::LoginType t)
+{
+	switch(t) {
+	case LoginType::Plain: return "PLAIN";
+	case LoginType::Sha1: return "SHA1";
+	case LoginType::RsaOaep: return "RSAOAEP";
+	default: return "INVALID";
+	}
+}
+
+UserLogin::LoginType UserLogin::loginTypeFromString(const std::string &s)
+{
+	if(str_eq(s, loginTypeToString(LoginType::Plain)))
+		return LoginType::Plain;
+	if(str_eq(s, loginTypeToString(LoginType::Sha1)))
+		return LoginType::Sha1;
+	if(str_eq(s, loginTypeToString(LoginType::RsaOaep)))
+		return LoginType::RsaOaep;
+	return LoginType::Invalid;
+}
+
+UserLogin UserLogin::fromRpcValue(const RpcValue &val)
+{
+	UserLogin ret;
+	if(val.isMap()) {
+		const RpcValue::Map &m = val.toMap();
+		ret.user = m.value("user").toString();
+		ret.password = m.value("password").toString();
+		const RpcValue::String lts = m.value("type").toString();
+		if(lts.empty())
+			ret.loginType = LoginType::Sha1;
+		else
+			ret.loginType = loginTypeFromString(lts);
+	}
+	return ret;
+}
+
 //================================================================
 // AccessGrant
 //================================================================
@@ -78,9 +131,9 @@ RpcValue AccessGrant::toRpcValue() const
 		ret.set(MetaType::Key::Role, role);
 		break;
 	case Type::UserLogin:
-		ret.set(MetaType::Key::User, user);
-		ret.set(MetaType::Key::Password, password);
-		ret.set(MetaType::Key::LoginType, (int)loginType);
+		ret.set(MetaType::Key::User, login.user);
+		ret.set(MetaType::Key::Password, login.password);
+		ret.set(MetaType::Key::LoginType, (int)login.loginType);
 		break;
 	case Type::Invalid:
 		break;
@@ -112,9 +165,9 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 			ret.role = m.value(MetaType::Key::Role).toString();
 			break;
 		case Type::UserLogin:
-			ret.user = m.value(MetaType::Key::User).toString();
-			ret.password = m.value(MetaType::Key::Password).toString();
-			ret.loginType = static_cast<LoginType>(m.value(MetaType::Key::LoginType).toInt());
+			ret.login.user = m.value(MetaType::Key::User).toString();
+			ret.login.password = m.value(MetaType::Key::Password).toString();
+			ret.login.loginType = static_cast<UserLogin::LoginType>(m.value(MetaType::Key::LoginType).toInt());
 			break;
 		default:
 			nError() << "Invalid access grant type:" << rpcval.toCpon();
@@ -151,10 +204,10 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 				auto user = m.value(KEY_USER).toString();
 				if(!user.empty()) {
 					ret.type = Type::UserLogin;
-					ret.user = user;
-					ret.password = m.value(KEY_PASSWORD).toString();
+					ret.login.user = user;
+					ret.login.password = m.value(KEY_PASSWORD).toString();
 					auto login_type = m.value(KEY_LOGIN_TYPE).toString();
-					ret.loginType = IRpcConnection::loginTypeFromString(login_type);
+					ret.login.loginType = UserLogin::loginTypeFromString(login_type);
 					break;
 				}
 			}

@@ -8,6 +8,7 @@ namespace chainpack {
 
 struct SHVCHAINPACK_DECL_EXPORT AclRolePaths : public std::map<std::string, PathAccessGrant>
 {
+	bool isValid() const {return !empty();}
 };
 
 } // namespace chainpack

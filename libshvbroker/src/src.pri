@@ -1,5 +1,6 @@
 
 HEADERS += \
+    $$PWD/aclmanager.h \
     $$PWD/shvbrokerglobal.h \
     $$PWD/appclioptions.h \
     $$PWD/brokerapp.h \
@@ -14,6 +15,7 @@ SOURCES += \
     $$PWD/appclioptions.cpp \
     $$PWD/brokerapp.cpp \
     $$PWD/brokernode.cpp \
+    $$PWD/aclmanager.cpp \
     $$PWD/subscriptionsnode.cpp \
     $$PWD/brokerconfigfilenode.cpp \
     $$PWD/clientconnectionnode.cpp \

@@ -87,22 +87,6 @@ void ClientBrokerConnection::setIdleWatchDogTimeOut(int sec)
 	}
 }
 
-iotqt::rpc::Password ClientBrokerConnection::password(const std::string &user)
-{
-	/*
-	const std::map<std::string, std::string> passwds {
-		{"iot", "lub42DUB"},
-		{"elviz", "brch3900PRD"},
-		{"revitest", "lautrhovno271828"},
-	};
-	*/
-	shv::iotqt::rpc::Password invalid;
-	if(user.empty())
-		return invalid;
-	BrokerApp *app = BrokerApp::instance();
-	return app->password(user);
-}
-
 void ClientBrokerConnection::sendMessage(const shv::chainpack::RpcMessage &rpc_msg)
 {
 	logRpcMsg() << SND_LOG_ARROW
@@ -183,6 +167,11 @@ void ClientBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 	catch (std::exception &e) {
 		shvError() << e.what();
 	}
+}
+
+bool ClientBrokerConnection::checkPassword(const chainpack::UserLogin &login)
+{
+	return BrokerApp::instance()->aclManager()->checkPassword(login, m_userLoginContext);
 }
 
 shv::chainpack::RpcValue ClientBrokerConnection::login(const shv::chainpack::RpcValue &auth_params)

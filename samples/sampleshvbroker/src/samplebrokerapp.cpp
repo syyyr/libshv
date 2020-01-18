@@ -1,4 +1,5 @@
 #include "samplebrokerapp.h"
+#include "aclmanager.h"
 
 #include <shv/iotqt/node/shvnodetree.h>
 #include <shv/coreqt/log.h>
@@ -42,6 +43,8 @@ private:
 SampleBrokerApp::SampleBrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 	: Super(argc, argv, cli_opts)
 {
+	auto *m = new AclManager(this);
+	setAclManager(m);
 	m_nodesTree->mount("test", new TestNode());
 }
 
@@ -59,7 +62,7 @@ AppCliOptions *SampleBrokerApp::cliOptions()
 {
 	return dynamic_cast<AppCliOptions*>(Super::cliOptions());
 }
-
+#if 0
 shv::iotqt::rpc::Password SampleBrokerApp::password(const std::string &user)
 {
 	if(user == "foo") {
@@ -76,7 +79,7 @@ shv::iotqt::rpc::Password SampleBrokerApp::password(const std::string &user)
 	}
 	return shv::iotqt::rpc::Password();
 }
-
+/*
 std::set<std::string> SampleBrokerApp::aclUserFlattenRoles(const std::string &user_name)
 {
 	std::set<std::string> ret;
@@ -86,7 +89,7 @@ std::set<std::string> SampleBrokerApp::aclUserFlattenRoles(const std::string &us
 		ret.insert("poweruser");
 	return ret;
 }
-
+*/
 cp::AclRole SampleBrokerApp::aclRole(const std::string &role_name)
 {
 	cp::AclRole ret;
@@ -94,7 +97,7 @@ cp::AclRole SampleBrokerApp::aclRole(const std::string &role_name)
 	return ret;
 }
 
-cp::AclRolePaths SampleBrokerApp::aclRolePaths(const std::string &role_name)
+cp::AclRolePaths SampleBrokerApp::aclPathsRolePaths(const std::string &role_name)
 {
 	cp::AclRolePaths ret;
 	if(role_name == "user") {
@@ -120,5 +123,5 @@ cp::AclRolePaths SampleBrokerApp::aclRolePaths(const std::string &role_name)
 	}
 	return ret;
 }
-
+#endif
 

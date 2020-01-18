@@ -3,23 +3,13 @@
 
 #include "../shviotqtglobal.h"
 
-#include <string>
+#include <shv/chainpack/aclpassword.h>
 
 namespace shv {
 namespace iotqt {
 namespace rpc {
 
-struct SHVIOTQT_DECL_EXPORT Password
-{
-public:
-	enum class Format {Invalid, Plain, Sha1};
-
-	std::string password;
-	Format format = Format::Invalid;
-
-	static const char *formatToString(Format f);
-	static Format formatFromString(const std::string &s);
-};
+using Password = shv::chainpack::AclPassword;
 
 } // namespace rpc
 } // namespace iotqt

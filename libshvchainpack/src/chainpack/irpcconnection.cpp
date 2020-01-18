@@ -141,27 +141,5 @@ int IRpcConnection::callMethodUnsubscribe(const std::string &shv_path, std::stri
 						 , grant);
 }
 
-std::string IRpcConnection::loginTypeToString(IRpcConnection::LoginType t)
-{
-	switch(t) {
-	case LoginType::Plain: return "PLAIN";
-	case LoginType::Sha1: return "SHA1";
-	case LoginType::RsaOaep: return "RSAOAEP";
-	default: return "INVALID";
-	}
-}
-
-IRpcConnection::LoginType IRpcConnection::loginTypeFromString(const std::string &s)
-{
-	std::string typestr = to_upper(s);
-	if(typestr == loginTypeToString(LoginType::Plain))
-		return LoginType::Plain;
-	if(typestr == loginTypeToString(LoginType::Sha1))
-		return LoginType::Sha1;
-	if(typestr == loginTypeToString(LoginType::RsaOaep))
-		return LoginType::RsaOaep;
-	return LoginType::Invalid;
-}
-
 } // namespace chainpack
 } // namespace shv

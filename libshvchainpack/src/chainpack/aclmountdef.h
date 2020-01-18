@@ -12,6 +12,8 @@ struct SHVCHAINPACK_DECL_EXPORT AclMountDef
 {
 	std::string description;
 	std::string mountPoint;
+
+	bool isValid() const {return !mountPoint.empty();}
 };
 
 } // namespace chainpack

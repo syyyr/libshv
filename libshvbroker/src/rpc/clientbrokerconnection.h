@@ -53,7 +53,8 @@ public:
 private:
 	void onSocketConnectedChanged(bool is_connected);
 	void onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len) override;
-	shv::iotqt::rpc::Password password(const std::string &user) override;
+	//shv::iotqt::rpc::Password password(const std::string &user) override;
+	bool checkPassword(const shv::chainpack::UserLogin &login) override;
 	shv::chainpack::RpcValue login(const shv::chainpack::RpcValue &auth_params) override;
 	bool checkTunnelSecret(const std::string &s);
 private:

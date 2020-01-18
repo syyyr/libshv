@@ -79,7 +79,7 @@ BrokerConfigFileNode::BrokerConfigFileNode(const std::string &config_name, shv::
 	: Super(config_name, parent)
 {
 }
-
+/*
 void BrokerConfigFileNode::loadValues()
 {
 	m_values = BrokerApp::instance()->aclConfig(nodeId(), !shv::core::Exception::Throw);
@@ -90,7 +90,7 @@ void BrokerConfigFileNode::saveValues()
 {
 	BrokerApp::instance()->setAclConfig(nodeId(), m_values, shv::core::Exception::Throw);
 }
-
+*/
 //========================================================
 // BrokerGrantsConfigFileNode
 //========================================================

@@ -1,8 +1,9 @@
 SOURCES += \
     $$PWD/aclmountdef.cpp \
+    $$PWD/aclpassword.cpp \
     $$PWD/aclrole.cpp \
     $$PWD/aclrolepaths.cpp \
-    $$PWD/acluserdef.cpp \
+    $$PWD/acluser.cpp \
     $$PWD/rpc.cpp \
     $$PWD/rpcmessage.cpp \
     $$PWD/rpcvalue.cpp \
@@ -27,9 +28,10 @@ SOURCES += \
 
 HEADERS += \
     $$PWD/aclmountdef.h \
+    $$PWD/aclpassword.h \
     $$PWD/aclrole.h \
     $$PWD/aclrolepaths.h \
-    $$PWD/acluserdef.h \
+    $$PWD/acluser.h \
     $$PWD/rpc.h \
     $$PWD/rpcmessage.h \
     $$PWD/rpcvalue.h \
