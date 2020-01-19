@@ -12,25 +12,14 @@ namespace cp = shv::chainpack;
 
 namespace shv {
 namespace broker {
-
+namespace {
 static std::string sha1_hex(const std::string &s)
 {
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
 	hash.addData(s.data(), s.length());
 	return std::string(hash.result().toHex().constData());
 }
-
-template<typename M>
-std::vector<std::string> map_keys(const M &m, bool sorted = true)
-{
-	std::vector<std::string> ret;
-	for(auto kv : m)
-		ret.push_back(kv.first);
-	if(sorted)
-		std::sort(ret.begin(), ret.end());
-	return ret;
 }
-
 //================================================================
 // AclManagerBase
 //================================================================
@@ -46,7 +35,7 @@ std::vector<std::string> AclManager::mountDeviceIds()
 		for(auto id : aclMountDeviceIds())
 			m_aclMountDefs[id];
 	}
-	return map_keys(m_aclMountDefs);
+	return cp::Utils::mapKeys(m_aclMountDefs);
 }
 
 chainpack::AclMountDef AclManager::mountDef(const std::string &device_id)
@@ -68,7 +57,7 @@ std::vector<std::string> AclManager::users()
 		for(auto id : aclUsers())
 			m_aclUsers[id];
 	}
-	return map_keys(m_aclUsers);
+	return cp::Utils::mapKeys(m_aclUsers);
 }
 
 chainpack::AclUser AclManager::user(const std::string &user_name)
@@ -90,7 +79,7 @@ std::vector<std::string> AclManager::roles()
 		for(auto id : aclRoles())
 			m_aclRoles[id];
 	}
-	return map_keys(m_aclRoles);
+	return cp::Utils::mapKeys(m_aclRoles);
 }
 
 chainpack::AclRole AclManager::role(const std::string &role_name)
@@ -112,7 +101,7 @@ std::vector<std::string> AclManager::pathsRoles()
 		for(auto id : aclPathsRoles())
 			m_aclPathsRoles[id];
 	}
-	return map_keys(m_aclPathsRoles);
+	return cp::Utils::mapKeys(m_aclPathsRoles);
 }
 
 chainpack::AclRolePaths AclManager::pathsRolePaths(const std::string &role_name)

@@ -13,66 +13,71 @@ public:
 	//~EtcAclNode() override;
 };
 
-class BrokerConfigFileNode : public shv::iotqt::node::RpcValueMapNode
+class BrokerAclNode : public shv::iotqt::node::MethodsTableNode
 {
-	using Super = shv::iotqt::node::RpcValueMapNode;
+	using Super = shv::iotqt::node::MethodsTableNode;
 public:
-	BrokerConfigFileNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent = nullptr);
+	BrokerAclNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent = nullptr);
 	//~BrokerConfigFileNode() override;
 
+	virtual void reload() {}
 	//shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
 protected:
 	//void loadValues() override;
 	//void saveValues() override;
 };
 
-class AclGrantsNode : public BrokerConfigFileNode
+class RolesAclNode : public BrokerAclNode
 {
-	using Super = BrokerConfigFileNode;
+	using Super = BrokerAclNode;
 public:
-	AclGrantsNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent = nullptr);
+	RolesAclNode(shv::iotqt::node::ShvNode *parent = nullptr);
 
-	size_t methodCount(const StringViewList &shv_path) override;
-	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
-
-	bool addGrant(const shv::chainpack::RpcValue &params);
-	bool editGrant(const shv::chainpack::RpcValue &params);
-	bool delGrant(const shv::chainpack::RpcValue &params);
-};
-
-class AclUsersNode : public BrokerConfigFileNode
-{
-	using Super = BrokerConfigFileNode;
-public:
-	AclUsersNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent = nullptr);
-
-	size_t methodCount(const StringViewList &shv_path) override;
-	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
-
-	bool addUser(const shv::chainpack::RpcValue &params);
-	bool delUser(const shv::chainpack::RpcValue &params);
-};
-
-class AclPathsNode : public BrokerConfigFileNode
-{
-	using Super = BrokerConfigFileNode;
-public:
-	AclPathsNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent = nullptr);
-
-	size_t methodCount(const StringViewList &shv_path) override;
-	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+protected:
 	StringList childNames(const ShvNode::StringViewList &shv_path) override;
+	size_t methodCount(const StringViewList &shv_path) override;
+	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
 
-	bool setGrantPaths(const shv::chainpack::RpcValue &params);
-	bool delGrantPaths(const shv::chainpack::RpcValue &params);
-	shv::chainpack::RpcValue getGrantPaths(const shv::chainpack::RpcValue &params);
+	//bool addGrant(const shv::chainpack::RpcValue &params);
+	//bool editGrant(const shv::chainpack::RpcValue &params);
+	//bool delGrant(const shv::chainpack::RpcValue &params);
+};
+
+class UsersAclNode : public BrokerAclNode
+{
+	using Super = BrokerAclNode;
+public:
+	UsersAclNode(shv::iotqt::node::ShvNode *parent = nullptr);
+protected:
+	StringList childNames(const ShvNode::StringViewList &shv_path) override;
+	size_t methodCount(const StringViewList &shv_path) override;
+	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+
+	//bool addUser(const shv::chainpack::RpcValue &params);
+	//bool delUser(const shv::chainpack::RpcValue &params);
+};
+
+class PathsAclNode : public BrokerAclNode
+{
+	using Super = BrokerAclNode;
+public:
+	PathsAclNode(shv::iotqt::node::ShvNode *parent = nullptr);
+
+protected:
+	StringList childNames(const ShvNode::StringViewList &shv_path) override;
+	size_t methodCount(const StringViewList &shv_path) override;
+	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+
+	//bool setGrantPaths(const shv::chainpack::RpcValue &params);
+	//bool delGrantPaths(const shv::chainpack::RpcValue &params);
+	//shv::chainpack::RpcValue getGrantPaths(const shv::chainpack::RpcValue &params);
 
 	//shv::chainpack::RpcValue hasChildren(const StringViewList &shv_path) override {return Super::hasChildren(rewriteShvPath(shv_path));}
 protected:
-	shv::chainpack::RpcValue valueOnPath(const StringViewList &shv_path, bool throw_exc = true) override;
+	//shv::chainpack::RpcValue valueOnPath(const StringViewList &shv_path, bool throw_exc = true) override;
 private:
 	//StringViewList rewriteShvPath(const StringViewList &shv_path);
 };

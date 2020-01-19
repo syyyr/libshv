@@ -152,6 +152,13 @@ public:
 				return RpcValue();
 			return operator [](ix);
 		}
+		static List fromStringList(const std::vector<std::string> &sl)
+		{
+			List ret;
+			for(const std::string &s : sl)
+				ret.push_back(s);
+			return ret;
+		}
 	};
 	class Map : public std::map<String, RpcValue>
 	{

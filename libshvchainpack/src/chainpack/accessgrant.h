@@ -56,7 +56,7 @@ public:
 
 	chainpack::RpcValue toRpcValue() const;
 	static AccessGrant fromRpcValue(const chainpack::RpcValue &rpcval);
-	//static AccessGrant fromAccessLevel(int access_level);
+	static const char* typeToString(Type t);
 };
 
 struct SHVCHAINPACK_DECL_EXPORT PathAccessGrant : public AccessGrant

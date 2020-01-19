@@ -9,14 +9,6 @@
 namespace shv {
 namespace chainpack {
 
-static std::string to_upper(const std::string &s)
-{
-	std::string ret(s);
-	for (size_t i = 0; i < ret.size(); ++i)
-		ret[i] = std::toupper(ret[i]);
-	return ret;
-}
-
 IRpcConnection::IRpcConnection()
 	: m_connectionId(nextConnectionId())
 {

@@ -3,7 +3,7 @@
 #include "clientshvnode.h"
 #include "brokernode.h"
 #include "subscriptionsnode.h"
-#include "brokerconfigfilenode.h"
+#include "brokeraclnode.h"
 #include "clientconnectionnode.h"
 #include "rpc/brokertcpserver.h"
 #include "rpc/clientbrokerconnection.h"

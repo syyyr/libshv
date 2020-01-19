@@ -64,7 +64,7 @@ ShvNode *ShvNode::childNode(const ShvNode::String &name, bool throw_exc) const
 {
 	ShvNode *nd = findChild<ShvNode*>(QString::fromStdString(name), Qt::FindDirectChildrenOnly);
 	if(throw_exc && !nd)
-		SHV_EXCEPTION("Child node id: " + name + " doesn't exist, parent node: " + shvPath());
+		SHV_EXCEPTION("Child node id: " + name + " doesn't exist, parent node: " + shvPath())
 	return nd;
 }
 
@@ -133,7 +133,7 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 			std::string errmsg;
 			cp::RpcMessage rpc_msg = cp::RpcDriver::composeRpcMessage(std::move(meta), data, &errmsg);
 			if(!errmsg.empty())
-				SHV_EXCEPTION(errmsg);
+				SHV_EXCEPTION(errmsg)
 
 			cp::RpcRequest rq(rpc_msg);
 			chainpack::RpcValue ret_val = processRpcRequest(rq);
@@ -143,7 +143,7 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 		}
 		else {
 			if(shv_path.empty()) {
-				SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + "' doesn't exist");
+				SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + "' doesn't exist")
 			}
 			else {
 				ShvNode *nd = childNode(shv_path.at(0).toString());
@@ -155,7 +155,7 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 					return;
 				}
 				else {
-					SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + '/' + shv_path_str + "' doesn't exist");
+					SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + '/' + shv_path_str + "' doesn't exist")
 				}
 			}
 		}
@@ -196,7 +196,7 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 		}
 		else {
 			if(shv_path.empty()) {
-				SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + "' doesn't exist");
+				SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + "' doesn't exist")
 			}
 			else {
 				ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
@@ -209,7 +209,7 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 					return;
 				}
 				else {
-					SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + '/' + shv_path_str + "' doesn't exist");
+					SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + '/' + shv_path_str + "' doesn't exist")
 				}
 			}
 		}
@@ -237,11 +237,11 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 	const chainpack::RpcValue::String &method = rq.method().toString();
 	const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
 	if(!mm)
-		SHV_EXCEPTION(std::string("Method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' doesn't exist.");
+		SHV_EXCEPTION(std::string("Method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' doesn't exist.")
 	const chainpack::RpcValue &rq_grant = rq.accessGrant();
 	const cp::RpcValue &mm_grant = mm->accessGrant();
 	if(grantToAccessLevel(mm_grant) > grantToAccessLevel(rq_grant))
-		SHV_EXCEPTION(std::string("Call method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' permission denied.");
+		SHV_EXCEPTION(std::string("Call method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' permission denied.")
 	return callMethodRq(rq);
 }
 
@@ -252,7 +252,7 @@ chainpack::RpcValue ShvNode::callMethodRq(const chainpack::RpcRequest &rq)
 	chainpack::RpcValue ret_val = callMethod(shv_path, method, rq.params());
 	return ret_val;
 }
-
+/*
 static std::string join_str(const ShvNode::StringList &sl, char sep)
 {
 	std::string ret;
@@ -264,7 +264,7 @@ static std::string join_str(const ShvNode::StringList &sl, char sep)
 	}
 	return ret;
 }
-
+*/
 QList<ShvNode *> ShvNode::ownChildren() const
 {
 	QList<ShvNode*> lst = findChildren<ShvNode*>(QString(), Qt::FindDirectChildrenOnly);
@@ -287,7 +287,7 @@ ShvNode::StringList ShvNode::childNames(const StringViewList &shv_path)
 		if(nd)
 			ret = nd->childNames(StringViewList());
 	}
-	shvDebug() << "\tret:" << join_str(ret, '+');
+	shvDebug() << "\tret:" << shv::core::String::join(ret, '+');
 	return ret;
 }
 
@@ -446,7 +446,7 @@ chainpack::RpcValue ShvNode::callMethod(const ShvNode::StringViewList &shv_path,
 	if(method == cp::Rpc::METH_LS)
 		return ls(shv_path, params);
 
-	SHV_EXCEPTION("Invalid method: " + method + " on path: " + shv_path.join('/'));
+	SHV_EXCEPTION("Invalid method: " + method + " on path: " + shv_path.join('/'))
 }
 
 ShvNode *ShvNode::rootNode()
@@ -499,7 +499,7 @@ ShvRootNode::~ShvRootNode()
 size_t MethodsTableNode::methodCount(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
 {
 	if(m_methods == nullptr)
-		SHV_EXCEPTION("Methods table not set!");
+		SHV_EXCEPTION("Methods table not set!")
 	if(shv_path.empty()) {
 		return m_methods->size();
 	}
@@ -509,10 +509,10 @@ size_t MethodsTableNode::methodCount(const shv::iotqt::node::ShvNode::StringView
 const shv::chainpack::MetaMethod *MethodsTableNode::metaMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, size_t ix)
 {
 	if(m_methods == nullptr)
-		SHV_EXCEPTION("Methods table not set!");
+		SHV_EXCEPTION("Methods table not set!")
 	if(shv_path.empty()) {
 		if(m_methods->size() <= ix)
-			SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(m_methods->size()));
+			SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(m_methods->size()))
 		return &(m_methods->operator[](ix));
 	}
 	return Super::metaMethod(shv_path, ix);
@@ -577,7 +577,7 @@ const shv::chainpack::MetaMethod *RpcValueMapNode::metaMethod(const shv::iotqt::
 		size = isDir(shv_path)? 2: meta_methods_value_map_node.size();
 	}
 	if(size <= ix)
-		SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(size));
+		SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(size))
 	return &(methods[ix]);
 }
 
@@ -651,7 +651,7 @@ chainpack::RpcValue RpcValueMapNode::valueOnPath(const chainpack::RpcValue &val,
 		v = m.value(dir.toString());
 		if(!v.isValid()) {
 			if(throw_exc)
-				SHV_EXCEPTION("Invalid path: " + shv_path.join('/'));
+				SHV_EXCEPTION("Invalid path: " + shv_path.join('/'))
 			return v;
 		}
 	}
@@ -679,14 +679,14 @@ void RpcValueMapNode::setValueOnPath(const shv::iotqt::node::ShvNode::StringView
 {
 	values();
 	if(shv_path.empty())
-		SHV_EXCEPTION("Empty path");
+		SHV_EXCEPTION("Empty path")
 	shv::chainpack::RpcValue v = values();
 	for (size_t i = 0; i < shv_path.size()-1; ++i) {
 		auto dir = shv_path.at(i);
 		const shv::chainpack::RpcValue::Map &m = v.toMap();
 		v = m.value(dir.toString());
 		if(!v.isValid())
-			SHV_EXCEPTION("Invalid path: " + shv_path.join('/'));
+			SHV_EXCEPTION("Invalid path: " + shv_path.join('/'))
 	}
 	v.set(shv_path.at(shv_path.size() - 1).toString(), val);
 }
@@ -746,7 +746,7 @@ const shv::chainpack::MetaMethod *RpcValueConfigNode::metaMethod(const shv::iotq
 		size = isDir(shv_path)? 2: meta_methods_node.size();
 	}
 	if(size <= ix)
-		SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(size));
+		SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(size))
 	return &(methods[ix]);
 }
 
@@ -912,7 +912,7 @@ void RpcValueConfigNode::saveValues()
 		Super::saveValues();
 		return;
 	}
-	SHV_EXCEPTION("Cannot open file '" + cfg_file + "' for writing!");
+	SHV_EXCEPTION("Cannot open file '" + cfg_file + "' for writing!")
 }
 
 //===========================================================
@@ -967,7 +967,7 @@ const shv::chainpack::MetaMethod *ObjectPropertyProxyShvNode::metaMethod(const s
 			return &(meta_methods_pn[ix]);
 		}
 		else {
-			SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " on path: " + shv_path.join('/'));
+			SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " on path: " + shv_path.join('/'))
 		}
 	}
 	return  Super::metaMethod(shv_path, ix);
@@ -1066,7 +1066,7 @@ const chainpack::MetaMethod *ValueProxyShvNode::metaMethod(const ShvNode::String
 		if(extra_ix < m_extraMetaMethods.size()) {
 			return &(m_extraMetaMethods[extra_ix]);
 		}
-		SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " on path: " + shv_path.join('/'));
+		SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " on path: " + shv_path.join('/'))
 	}
 	return  Super::metaMethod(shv_path, ix);
 
@@ -1086,14 +1086,14 @@ chainpack::RpcValue ValueProxyShvNode::callMethod(const ShvNode::StringViewList 
 		if(method == cp::Rpc::METH_GET) {
 			if(isReadable())
 				return m_handledObject->shvValue(m_valueId);
-			SHV_EXCEPTION("Property " + nodeId() + " on path: " + shv_path.join('/') + " is not readable");
+			SHV_EXCEPTION("Property " + nodeId() + " on path: " + shv_path.join('/') + " is not readable")
 		}
 		if(method == cp::Rpc::METH_SET) {
 			if(isWriteable()) {
 				m_handledObject->setShvValue(m_valueId, params);
 				return true;
 			}
-			SHV_EXCEPTION("Property " + nodeId() + " on path: " + shv_path.join('/') + " is not writeable");
+			SHV_EXCEPTION("Property " + nodeId() + " on path: " + shv_path.join('/') + " is not writeable")
 		}
 	}
 	return  Super::callMethod(shv_path, method, params);

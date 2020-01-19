@@ -223,8 +223,19 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 	return ret;
 }
 
+const char *AccessGrant::typeToString(AccessGrant::Type t)
+{
+	switch (t) {
+	case Type::Invalid: return "Invalid";
+	case Type::AccessLevel: return "AccessLevel";
+	case Type::Role: return "Role";
+	case Type::UserLogin: return "UserLogin";
+	}
+	return "???";
+}
+
 //================================================================
-// PathAccessGrantRole
+// PathAccessGrant
 //================================================================
 
 } // namespace chainpack

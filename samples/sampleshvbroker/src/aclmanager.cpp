@@ -10,18 +10,6 @@ AclManager::AclManager(shv::broker::BrokerApp *broker_app)
 }
 
 namespace {
-template<typename M>
-std::vector<std::string> map_keys(const M &m, bool sorted = true)
-{
-	std::vector<std::string> ret;
-	for(auto kv : m)
-		ret.push_back(kv.first);
-	if(sorted)
-		std::sort(ret.begin(), ret.end());
-	return ret;
-}
-}
-namespace {
 std::map<std::string, shv::chainpack::AclUser> s_aclUsers = {
 	{"guest", {"guest", {"password", cp::AclPassword::Format::Plain}, {"user"}}},
 	{"poweruser", {"poweruser", {"weakpassword", cp::AclPassword::Format::Plain}, {"user", "system"}}},
@@ -31,7 +19,7 @@ std::map<std::string, shv::chainpack::AclUser> s_aclUsers = {
 
 std::vector<std::string> AclManager::aclUsers()
 {
-	return map_keys(s_aclUsers);
+	return cp::Utils::mapKeys(s_aclUsers);
 }
 
 shv::chainpack::AclUser AclManager::aclUser(const std::string &user_name)
@@ -50,7 +38,7 @@ std::map<std::string, shv::chainpack::AclRole> s_aclRoles = {
 
 std::vector<std::string> AclManager::aclRoles()
 {
-	return map_keys(s_aclRoles);
+	return cp::Utils::mapKeys(s_aclRoles);
 }
 
 shv::chainpack::AclRole AclManager::aclRole(const std::string &role_name)
@@ -62,7 +50,7 @@ shv::chainpack::AclRole AclManager::aclRole(const std::string &role_name)
 
 std::vector<std::string> AclManager::aclPathsRoles()
 {
-	return map_keys(s_aclRoles);
+	return cp::Utils::mapKeys(s_aclRoles);
 }
 
 shv::chainpack::AclRolePaths AclManager::aclPathsRolePaths(const std::string &role_name)
