@@ -3,6 +3,7 @@
 
 #include "../shvcoreglobal.h"
 #include "../utils.h"
+#include "shvjournalcommon.h"
 #include "shvjournalentry.h"
 #include "shvjournalgetlogparams.h"
 
@@ -12,32 +13,12 @@ namespace shv {
 namespace core {
 namespace utils {
 
-class SHVCORE_DECL_EXPORT FileShvJournal2
+class SHVCORE_DECL_EXPORT FileShvJournal2 : public ShvJournalCommon
 {
 public:
-	static constexpr long DEFAULT_FILE_SIZE_LIMIT = 100 * 1024;
 	static constexpr long DEFAULT_JOURNAL_SIZE_LIMIT = 100 * 100 * 1024;
-	static constexpr int DEFAULT_GET_LOG_RECORD_COUNT_LIMIT = 100 * 1000;
 	static constexpr char FIELD_SEPARATOR = '\t';
 	static constexpr char RECORD_SEPARATOR = '\n';
-
-	static const char* KEY_NAME;
-	static const char *KEY_RECORD_COUNT;
-	static const char *KEY_PATHS_DICT;
-
-	struct SHVCORE_DECL_EXPORT Column
-	{
-		enum Enum {
-			Timestamp = 0,
-			UpTime,
-			Path,
-			Value,
-			ShortTime,
-			Domain,
-			Course,
-		};
-		static const char* name(Enum e);
-	};
 
 	SHV_FIELD_IMPL(std::string, f, F, ileExtension)
 public:
@@ -101,7 +82,6 @@ private:
 	std::string m_journalDir;
 	int64_t m_fileSizeLimit = DEFAULT_FILE_SIZE_LIMIT;
 	int64_t m_journalSizeLimit = DEFAULT_JOURNAL_SIZE_LIMIT;
-	int m_getLogRecordCountLimit = DEFAULT_GET_LOG_RECORD_COUNT_LIMIT;
 };
 
 } // namespace utils

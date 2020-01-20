@@ -1,6 +1,8 @@
 HEADERS += \
     $$PWD/crypt.h \
     $$PWD/fileshvjournal2.h \
+    $$PWD/memoryshvjournal.h \
+    $$PWD/shvjournalcommon.h \
     $$PWD/shvjournalentry.h \
     $$PWD/versioninfo.h \
     $$PWD/clioptions.h \
@@ -11,6 +13,8 @@ HEADERS += \
 SOURCES += \
     $$PWD/crypt.cpp \
     $$PWD/fileshvjournal2.cpp \
+    $$PWD/memoryshvjournal.cpp \
+    $$PWD/shvjournalcommon.cpp \
     $$PWD/shvjournalentry.cpp \
     $$PWD/versioninfo.cpp \
     $$PWD/clioptions.cpp \
