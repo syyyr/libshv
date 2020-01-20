@@ -124,10 +124,6 @@ static int64_t str_to_size(const std::string &str)
 //==============================================================
 // FileShvJournal2
 //==============================================================
-const char * FileShvJournal2::KEY_NAME = "name";
-const char *FileShvJournal2::KEY_RECORD_COUNT = "recordCount";
-const char *FileShvJournal2::KEY_PATHS_DICT = "pathsDict";
-
 static constexpr size_t MIN_SEP_POS = 13;
 static constexpr size_t SEC_SEP_POS = MIN_SEP_POS + 3;
 static constexpr size_t MSEC_SEP_POS = SEC_SEP_POS + 3;
@@ -627,16 +623,16 @@ chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &p
 			domain_regex = std::regex{params.domainPattern};
 		}
 		catch (const std::regex_error &e) {
-			logWShvJournal() << "Invalid domain pattern regex:" << params.domainPattern << "-" << e.what();
+			logWShvJournal() << "Invalid domain pattern regex:" << params.domainPattern << " - " << e.what();
 		}
 		std::regex path_regex;
 		bool use_path_regex = false;
 		if(!params.pathPattern.empty() && params.pathPatternType == ShvJournalGetLogParams::PatternType::RegEx) try {
-			use_path_regex = true;
 			path_regex = std::regex{params.pathPattern};
+			use_path_regex = true;
 		}
 		catch (const std::regex_error &e) {
-			logWShvJournal() << "Invalid path pattern regex:" << params.pathPattern << "-" << e.what();
+			logWShvJournal() << "Invalid path pattern regex:" << params.pathPattern << " - " << e.what();
 		}
 		for(; file_it != m_journalStatus.files.end(); file_it++) {
 			std::string fn = fileMsecToFilePath(*file_it);
@@ -717,7 +713,7 @@ chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &p
 						}
 						snapshot.clear();
 					}
-					if(until_msec == 0 || dt.msecsSinceEpoch() <= until_msec) {
+					if(until_msec == 0 || dt.msecsSinceEpoch() < until_msec) { // keep interval open to make log merge simpler
 						std::string err;
 						cp::RpcValue::List rec;
 						rec.push_back(dt);
@@ -803,20 +799,6 @@ std::string FileShvJournal2::getLine(std::istream &in, char sep)
 		break;
 	}
 	return line;
-}
-
-const char *FileShvJournal2::Column::name(FileShvJournal2::Column::Enum e)
-{
-	switch (e) {
-	case Column::Enum::Timestamp: return "timestamp";
-	case Column::Enum::UpTime: return "upTime";
-	case Column::Enum::Path: return "path";
-	case Column::Enum::Value: return "value";
-	case Column::Enum::ShortTime: return "shortTime";
-	case Column::Enum::Domain: return "domain";
-	case Column::Enum::Course: return "course";
-	}
-	return "invalid";
 }
 
 } // namespace utils
