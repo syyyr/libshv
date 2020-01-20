@@ -41,7 +41,8 @@ struct SHVCORE_DECL_EXPORT ShvJournalGetLogParams
 		CompleteInfo = BasicInfo | FieldInfo | TypeInfo | PathsDict,
 	};
 	unsigned headerOptions = static_cast<unsigned>(HeaderOptions::BasicInfo);
-	int maxRecordCount = 1000;
+	static constexpr int DEFAULT_RECORD_COUNT_MAX = 1000;
+	int maxRecordCount = DEFAULT_RECORD_COUNT_MAX;
 	bool withSnapshot = false;
 	bool withUptime = false;
 	std::string domainPattern; /// always regexp
