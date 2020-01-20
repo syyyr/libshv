@@ -1,4 +1,5 @@
 #include "aclpassword.h"
+#include "rpcvalue.h"
 
 namespace shv {
 namespace chainpack {
@@ -14,6 +15,25 @@ static bool str_eq(const std::string &s1, const char *s2)
 			return false;
 	}
 	return s2[i] == 0;
+}
+
+RpcValue AclPassword::toRpcValueMap() const
+{
+	return RpcValue::Map {
+		{"password", password},
+		{"format", formatToString(format)},
+	};
+}
+
+AclPassword AclPassword::fromRpcValue(const RpcValue &v)
+{
+	AclPassword ret;
+	if(v.isMap()) {
+		const auto &m = v.toMap();
+		ret.password = m.value("password").toString();
+		ret.format = formatFromString(m.value("format").toString());
+	}
+	return ret;
 }
 
 const char* AclPassword::formatToString(AclPassword::Format f)

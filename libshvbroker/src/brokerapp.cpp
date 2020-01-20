@@ -114,7 +114,7 @@ public:
 	const shv::chainpack::MetaMethod *metaMethod(const StringViewList &shv_path, size_t ix) override
 	{
 		if(methodCount(shv_path) <= ix)
-			SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(methodCount(shv_path)))
+			SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(methodCount(shv_path)));
 		if(shv_path.empty())
 			return &(m_metaMethods[ix]);
 		if(shv_path.size() == 1)
@@ -150,7 +150,7 @@ public:
 				BrokerApp *app = BrokerApp::instance();
 				ClientShvNode *nd = qobject_cast<ClientShvNode*>(app->m_nodesTree->cd(shv_path.at(0).toString()));
 				if(nd == nullptr)
-					SHV_EXCEPTION("Cannot find client node on path: " + shv_path.at(0).toString())
+					SHV_EXCEPTION("Cannot find client node on path: " + shv_path.at(0).toString());
 				cp::RpcValue::List lst;
 				for(rpc::ClientBrokerConnection *conn : nd->connections())
 					lst.push_back(conn->connectionId());
@@ -262,7 +262,7 @@ void BrokerApp::handlePosixSignals()
 rpc::BrokerTcpServer *BrokerApp::tcpServer()
 {
 	if(!m_tcpServer)
-		SHV_EXCEPTION("TCP server is NULL!")
+		SHV_EXCEPTION("TCP server is NULL!");
 	return m_tcpServer;
 }
 
@@ -275,7 +275,7 @@ rpc::ClientBrokerConnection *BrokerApp::clientById(int client_id)
 rpc::WebSocketServer *BrokerApp::webSocketServer()
 {
 	if(!m_webSocketServer)
-		SHV_EXCEPTION("WebSocket server is NULL!")
+		SHV_EXCEPTION("WebSocket server is NULL!");
 	return m_webSocketServer;
 }
 #endif
@@ -300,7 +300,7 @@ void BrokerApp::startTcpServer()
 	SHV_SAFE_DELETE(m_tcpServer)
 	m_tcpServer = new rpc::BrokerTcpServer(this);
 	if(!m_tcpServer->start(cliOptions()->serverPort())) {
-		SHV_EXCEPTION("Cannot start TCP server!")
+		SHV_EXCEPTION("Cannot start TCP server!");
 	}
 }
 
@@ -312,7 +312,7 @@ void BrokerApp::startWebSocketServer()
 	if(port > 0) {
 		m_webSocketServer = new rpc::WebSocketServer(this);
 		if(!m_webSocketServer->start(port)) {
-			SHV_EXCEPTION("Cannot start WebSocket server!")
+			SHV_EXCEPTION("Cannot start WebSocket server!");
 		}
 	}
 	else {
@@ -533,7 +533,7 @@ void BrokerApp::onClientLogin(int connection_id)
 {
 	rpc::ClientBrokerConnection *conn = clientConnectionById(connection_id);
 	if(!conn)
-		SHV_EXCEPTION("Cannot find connection for ID: " + std::to_string(connection_id))
+		SHV_EXCEPTION("Cannot find connection for ID: " + std::to_string(connection_id));
 	//const shv::chainpack::RpcValue::Map &opts = conn->connectionOptions();
 
 	shvInfo() << "Client login connection id:" << connection_id;// << "connection type:" << conn->connectionType();
@@ -549,7 +549,7 @@ void BrokerApp::onClientLogin(int connection_id)
 		}
 		shv::iotqt::node::ShvNode *clients_nd = m_nodesTree->mkdir(std::string(cp::Rpc::DIR_BROKER) + "/clients/");
 		if(!clients_nd)
-			SHV_EXCEPTION("Cannot create parent for ClientDirNode id: " + std::to_string(connection_id))
+			SHV_EXCEPTION("Cannot create parent for ClientDirNode id: " + std::to_string(connection_id));
 		ClientConnectionNode *client_dir_node = new ClientConnectionNode(connection_id, clients_nd);
 		//shvWarning() << "path1:" << client_dir_node->shvPath();
 		ClientShvNode *client_app_node = new ClientShvNode(conn, client_dir_node);
@@ -577,7 +577,7 @@ void BrokerApp::onClientLogin(int connection_id)
 			SubscriptionsNode *nd = new SubscriptionsNode(conn);
 			if(!m_nodesTree->mount(mount_point, nd))
 				SHV_EXCEPTION("Cannot mount connection subscription list to device tree, connection id: " + std::to_string(connection_id)
-							  + " shv path: " + mount_point)
+							  + " shv path: " + mount_point);
 		}
 	}
 
@@ -599,7 +599,7 @@ void BrokerApp::onClientLogin(int connection_id)
 			else {
 				cli_nd = new ClientShvNode(conn);
 				if(!m_nodesTree->mount(mount_point, cli_nd))
-					SHV_EXCEPTION("Cannot mount connection to device tree, connection id: " + std::to_string(connection_id))
+					SHV_EXCEPTION("Cannot mount connection to device tree, connection id: " + std::to_string(connection_id));
 			}
 			mount_point = cli_nd->shvPath();
 			shvInfo() << "client connection id:" << conn->connectionId() << "device id:" << conn->deviceId().toCpon() << " mounted on:" << mount_point;
@@ -685,7 +685,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 					if(shv::core::utils::ShvPath::isRelativePath(shv_path)) {
 						/// still relative path, it should be forwarded to mater broker
 						if(master_broker_conn == nullptr)
-							SHV_EXCEPTION("Cannot resolve relative path " + cp::RpcMessage::shvPath(meta).toString() + ", there is no master broker to forward the request.")
+							SHV_EXCEPTION("Cannot resolve relative path " + cp::RpcMessage::shvPath(meta).toString() + ", there is no master broker to forward the request.");
 						cp::RpcMessage::setShvPath(meta, shv_path);
 						cp::RpcMessage::pushCallerId(meta, connection_id);
 						master_broker_conn->sendRawData(std::move(meta), std::move(data));
@@ -703,7 +703,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 				}
 				cp::AccessGrant acg = accessGrantForRequest(connection_handle, shv_path, cp::RpcMessage::accessGrant(meta).toString());
 				if(!acg.isValid())
-					SHV_EXCEPTION("Acces to shv path '" + shv_path + "' not granted for user '" + connection_handle->loggedUserName() + "'")
+					SHV_EXCEPTION("Acces to shv path '" + shv_path + "' not granted for user '" + connection_handle->loggedUserName() + "'");
 				cp::RpcMessage::setAccessGrant(meta, acg.toRpcValue());
 				cp::RpcMessage::pushCallerId(meta, connection_id);
 				if(m_nodesTree->root()) {
@@ -711,11 +711,11 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 					m_nodesTree->root()->handleRawRpcRequest(std::move(meta), std::move(data));
 				}
 				else {
-					SHV_EXCEPTION("Device tree root node is NULL")
+					SHV_EXCEPTION("Device tree root node is NULL");
 				}
 			}
 			else {
-				SHV_EXCEPTION("Connection ID: " + std::to_string(connection_id) + " doesn't exist.")
+				SHV_EXCEPTION("Connection ID: " + std::to_string(connection_id) + " doesn't exist.");
 			}
 		}
 		catch (std::exception &e) {
@@ -932,7 +932,7 @@ void BrokerApp::addSubscription(int client_id, const std::string &shv_path, cons
 {
 	rpc::CommonRpcClientHandle *conn = commonClientConnectionById(client_id);
 	if(!conn)
-		SHV_EXCEPTION("Connot create subscription, client doesn't exist.")
+		SHV_EXCEPTION("Connot create subscription, client doesn't exist.");
 	//logSubscriptionsD() << "addSubscription connection id:" << client_id << "path:" << path << "method:" << method;
 	auto subs_ix = conn->addSubscription(shv_path, method);
 	const rpc::CommonRpcClientHandle::Subscription &subs = conn->subscriptionAt(subs_ix);
@@ -962,7 +962,7 @@ bool BrokerApp::removeSubscription(int client_id, const std::string &shv_path, c
 {
 	rpc::CommonRpcClientHandle *conn = commonClientConnectionById(client_id);
 	if(!conn)
-		SHV_EXCEPTION("Connot remove subscription, client doesn't exist.")
+		SHV_EXCEPTION("Connot remove subscription, client doesn't exist.");
 	//logSubscriptionsD() << "addSubscription connection id:" << client_id << "path:" << path << "method:" << method;
 	return conn->removeSubscription(shv_path, method);
 }
@@ -1035,7 +1035,7 @@ rpc::CommonRpcClientHandle *BrokerApp::commonClientConnectionById(int connection
 AclManager *BrokerApp::aclManager()
 {
 	if(m_aclManager == nullptr)
-		SHV_EXCEPTION("AclManager is NULL")
+		SHV_EXCEPTION("AclManager is NULL");
 	return m_aclManager;
 }
 

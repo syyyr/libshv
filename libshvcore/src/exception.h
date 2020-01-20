@@ -20,7 +20,7 @@ public:
 
 }}
 
-#define SHV_EXCEPTION(e) throw shv::core::Exception(e, std::string(__FILE__) + ":" + shv::core::Utils::toString(__LINE__));
+#define SHV_EXCEPTION(e) throw shv::core::Exception(e, std::string(__FILE__) + ":" + shv::core::Utils::toString(__LINE__))
 /*
 #define SHV_EXCEPTION(e) { \
 	throw std::runtime_error(std::string(__FILE__) + ":" + shv::core::Utils::toString(__LINE__) + " SHV_EXCEPTION: " + e); \

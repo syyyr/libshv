@@ -112,9 +112,9 @@ std::string ClientBrokerConnection::resolveLocalPath(const std::string rel_path)
 
 	const std::vector<std::string> &mps = mountPoints();
 	if(mps.empty())
-		SHV_EXCEPTION("Cannot resolve relative path on unmounted device: " + rel_path)
+		SHV_EXCEPTION("Cannot resolve relative path on unmounted device: " + rel_path);
 	if(mps.size() > 1)
-		SHV_EXCEPTION("Cannot resolve relative path on device mounted to more than single node: " + rel_path)
+		SHV_EXCEPTION("Cannot resolve relative path on device mounted to more than single node: " + rel_path);
 	std::string mount_point = mps[0];
 	MasterBrokerConnection *mbconn = BrokerApp::instance()->mainMasterBrokerConnection();
 	if(mbconn) {

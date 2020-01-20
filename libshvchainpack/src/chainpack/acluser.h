@@ -9,6 +9,8 @@
 namespace shv {
 namespace chainpack {
 
+class RpcValue;
+
 struct SHVCHAINPACK_DECL_EXPORT AclUser
 {
 	std::string name;
@@ -23,6 +25,8 @@ struct SHVCHAINPACK_DECL_EXPORT AclUser
 	{}
 	//const std::string userName() const {return login.user;}
 	bool isValid() const {return !name.empty();}
+	RpcValue toRpcValueMap() const;
+	static AclUser fromRpcValue(const RpcValue &v);
 };
 
 } // namespace chainpack

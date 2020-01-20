@@ -87,7 +87,7 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 	cp::RpcRequest rq(msg);
 	try {
 		if(!msg.isRequest())
-			SHV_EXCEPTION("Initial message is not RPC request! Dropping client connection. " + connectionName() + " " + msg.toCpon())
+			SHV_EXCEPTION("Initial message is not RPC request! Dropping client connection. " + connectionName() + " " + msg.toCpon());
 			//shvInfo() << "RPC request received:" << rq.toStdString();
 
 		if(!m_helloReceived && !m_loginReceived && rq.method() == shv::chainpack::Rpc::METH_HELLO) {
@@ -118,7 +118,7 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 			*/
 			cp::RpcValue login_resp = login(rq.params());
 			if(!login_resp.isValid())
-				SHV_EXCEPTION("Invalid authentication for user: " + m_userLogin.user + " at: " + connectionName())
+				SHV_EXCEPTION("Invalid authentication for user: " + m_userLogin.user + " at: " + connectionName());
 			shvInfo().nospace() << "Client logged in user: " << m_userLogin.user << " from: " << peerAddress() << ':' << peerPort();
 			sendResponse(rq.requestId(), login_resp);
 			m_loginReceived = true;

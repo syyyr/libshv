@@ -8,6 +8,8 @@
 namespace shv {
 namespace chainpack {
 
+class RpcValue;
+
 struct SHVCHAINPACK_DECL_EXPORT AclPassword
 {
 	enum class Format {Invalid, Plain, Sha1};
@@ -20,6 +22,10 @@ struct SHVCHAINPACK_DECL_EXPORT AclPassword
 		: password(std::move(password))
 		, format(format)
 	{}
+
+	RpcValue toRpcValueMap() const;
+	static AclPassword fromRpcValue(const RpcValue &v);
+
 	static const char *formatToString(Format f);
 	static Format formatFromString(const std::string &s);
 };
