@@ -135,7 +135,7 @@ chainpack::RpcValue MemoryShvJournal::getLog(const ShvJournalGetLogParams &param
 		path_cache[path] = ret;
 		return ret;
 	};
-	int max_rec_cnt = std::min(params.maxRecordCount, m_getLogRecordCountLimit);
+	int max_rec_cnt = std::min(params.maxRecordCount, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 	std::map<std::string, Entry> snapshot;
 
 	PatternMatcher pm(params);
@@ -188,7 +188,7 @@ log_finish:
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::BasicInfo)) {
 		{
 			cp::RpcValue::Map device;
-			device["id"] = m_deviceId;
+			device["id"] =  m_deviceId;
 			device["type"] = m_deviceType;
 			md.setValue("device", device); // required
 		}

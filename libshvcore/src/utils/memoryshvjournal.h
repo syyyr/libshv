@@ -21,6 +21,8 @@ public:
 
 	void setTypeInfo(const shv::chainpack::RpcValue &i);
 	void setTypeInfo(const shv::chainpack::RpcValue &i, const std::string &path_prefix);
+	void setDeviceId(std::string id) { m_deviceId = std::move(id); }
+	void setDeviceType(std::string type) { m_deviceType = std::move(type); }
 
 	void loadLog(const shv::chainpack::RpcValue &log);
 	void append(const ShvJournalEntry &entry) override;
@@ -40,6 +42,8 @@ private:
 	std::map<std::string, int> m_pathDictionary;
 	int m_pathDictionaryIndex = 0;
 
+	std::string m_deviceId;
+	std::string m_deviceType;
 	shv::chainpack::RpcValue::Map m_typeInfos;
 
 	std::vector<Entry> m_entries;

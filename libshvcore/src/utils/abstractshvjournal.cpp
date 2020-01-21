@@ -14,6 +14,8 @@ namespace shv {
 namespace core {
 namespace utils {
 
+const int AbstractShvJournal::DEFAULT_GET_LOG_RECORD_COUNT_LIMIT = 100 * 1000;
+
 AbstractShvJournal::PatternMatcher::PatternMatcher(const ShvJournalGetLogParams &filter)
 {
 	if(!filter.pathPattern.empty()) {
