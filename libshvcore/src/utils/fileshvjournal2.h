@@ -3,7 +3,7 @@
 
 #include "../shvcoreglobal.h"
 #include "../utils.h"
-#include "shvjournalcommon.h"
+#include "abstractshvjournal.h"
 #include "shvjournalentry.h"
 #include "shvjournalgetlogparams.h"
 
@@ -13,7 +13,7 @@ namespace shv {
 namespace core {
 namespace utils {
 
-class SHVCORE_DECL_EXPORT FileShvJournal2 : public ShvJournalCommon
+class SHVCORE_DECL_EXPORT FileShvJournal2 : public AbstractShvJournal
 {
 public:
 	static constexpr long DEFAULT_JOURNAL_SIZE_LIMIT = 100 * 100 * 1024;
@@ -34,13 +34,11 @@ public:
 	void setJournalSizeLimit(const std::string &n);
 	void setJournalSizeLimit(int64_t n) {m_journalSizeLimit = n;}
 	int64_t journalSizeLimit() const { return m_journalSizeLimit;}
-	void setDeviceId(std::string id) { m_deviceId = std::move(id); }
-	void setDeviceType(std::string type) { m_deviceType = std::move(type); }
 	void setTypeInfo(const shv::chainpack::RpcValue &i) { m_typeInfo = i; }
 
-	void append(const ShvJournalEntry &entry, int64_t msec = 0);
+	void append(const ShvJournalEntry &entry) override;
 
-	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params);
+	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params) override;
 
 	void convertLog1JournalDir();
 private:
@@ -55,16 +53,14 @@ private:
 
 	shv::chainpack::RpcValue getLogThrow(const ShvJournalGetLogParams &params);
 
-	void appendThrow(const ShvJournalEntry &entry, int64_t msec);
-	void appendEntry(std::ofstream &out, int64_t msec, const ShvJournalEntry &e);
+	void appendThrow(const ShvJournalEntry &entry);
+	void wrirteEntry(std::ofstream &out, int64_t msec, const ShvJournalEntry &e);
 
 	int64_t fileNameToFileMsec(const std::string &fn) const;
 	std::string fileMsecToFileName(int64_t msec) const;
 	std::string fileMsecToFilePath(int64_t file_msec) const;
 	std::string getLine(std::istream &in, char sep);
 private:
-	std::string m_deviceId;
-	std::string m_deviceType;
 	shv::chainpack::RpcValue m_typeInfo;
 	struct
 	{

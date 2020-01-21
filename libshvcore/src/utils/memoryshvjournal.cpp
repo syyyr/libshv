@@ -18,33 +18,13 @@ MemoryShvJournal::MemoryShvJournal()
 }
 
 MemoryShvJournal::MemoryShvJournal(const ShvJournalGetLogParams &input_filter)
+	: m_patternMatcher(input_filter)
 {
 	if(input_filter.since.isDateTime())
 		m_sinceMsec = input_filter.since.toDateTime().msecsSinceEpoch();
 	if(input_filter.until.isDateTime())
 		m_untilMsec = input_filter.until.toDateTime().msecsSinceEpoch();
 	m_maxRecordCount = input_filter.maxRecordCount;
-	if(!input_filter.pathPattern.empty()) {
-		if(input_filter.pathPatternType == ShvJournalGetLogParams::PatternType::RegEx) {
-			try {
-				m_pathPatternRegEx = std::regex(input_filter.pathPattern);
-				m_usePathPatternregEx = true;
-			}
-			catch (const std::regex_error &e) {
-				logWShvJournal() << "Invalid path pattern regex:" << input_filter.pathPattern << " - " << e.what();
-			}
-		}
-		else {
-			m_pathPatternWildCard = input_filter.pathPattern;
-		}
-	}
-	if(!input_filter.domainPattern.empty()) try {
-		m_domainPatternRegEx = std::regex(input_filter.domainPattern);
-		m_useDomainPatternregEx = true;
-	}
-	catch (const std::regex_error &e) {
-		logWShvJournal() << "Invalid domain pattern regex:" << input_filter.domainPattern << " - " << e.what();
-	}
 }
 
 void MemoryShvJournal::setTypeInfo(const chainpack::RpcValue &i, const std::string &path_prefix)
@@ -71,59 +51,46 @@ void MemoryShvJournal::loadLog(const chainpack::RpcValue &log)
 			continue;
 		}
 		Entry e;
-		e.timeMsec = time;
+		e.epochMsec = time;
 		e.path = path;
 		e.value = row.value(Column::Value);
 		cp::RpcValue st = row.value(Column::ShortTime);
 		e.shortTime = st.isInt() && st.toInt() >= 0? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
 		e.domain = row.value(Column::Domain).toString();
 		e.course = row.value(Column::Course).toInt() == 0? ShvJournalEntry::CourseType::Continuous: ShvJournalEntry::CourseType::Discrete;
-		append(std::move(e));
+		append(e);
 	}
 }
 
-void MemoryShvJournal::append(const ShvJournalEntry &entry, int64_t epoch_msec)
-{
-	Entry e(entry);
-	e.timeMsec = epoch_msec;
-	append(std::move(e));
-}
-
-void MemoryShvJournal::append(MemoryShvJournal::Entry &&entry)
+void MemoryShvJournal::append(const ShvJournalEntry &entry)
 {
 	if((int)m_entries.size() >= m_maxRecordCount)
 		return;
-	if(entry.timeMsec == 0)
-		entry.timeMsec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
-	if(m_sinceMsec > 0 && entry.timeMsec < m_sinceMsec)
+	int64_t epoch_msec = entry.epochMsec;
+	if(epoch_msec == 0)
+		epoch_msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
+	if(m_sinceMsec > 0 && epoch_msec < m_sinceMsec)
 		return;
-	if(m_untilMsec > 0 && entry.timeMsec >= m_untilMsec)
+	if(m_untilMsec > 0 && epoch_msec >= m_untilMsec)
 		return;
-	if(m_usePathPatternregEx)
-		if(!std::regex_match(entry.path, m_pathPatternRegEx))
-			return;
-	if(!m_pathPatternWildCard.empty()) {
-		ShvPath path(entry.path);
-		if(!path.matchWild(m_pathPatternWildCard))
-			return;
-	}
-	if(m_useDomainPatternregEx)
-		if(!std::regex_match(entry.domain, m_domainPatternRegEx))
-			return;
+	if(!m_patternMatcher.match(entry))
+		return;
 	{
 		auto it = m_pathDictionary.find(entry.path);
 		if(it == m_pathDictionary.end())
 			m_pathDictionary[entry.path] = m_pathDictionaryIndex++;
 	}
-	int64_t last_time = m_entries.empty()? 0: m_entries[m_entries.size()-1].timeMsec;
-	if(entry.timeMsec < last_time) {
+	Entry e(entry);
+	e.epochMsec = epoch_msec;
+	int64_t last_time = m_entries.empty()? 0: m_entries[m_entries.size()-1].epochMsec;
+	if(epoch_msec < last_time) {
 		auto it = std::upper_bound(m_entries.begin(), m_entries.end(), entry, [](const Entry &e1, const Entry &e2) {
-			return e1.timeMsec < e2.timeMsec;
+			return e1.epochMsec < e2.epochMsec;
 		});
-		m_entries.insert(it, std::move(entry));
+		m_entries.insert(it, std::move(e));
 	}
 	else {
-		m_entries.push_back(std::move(entry));
+		m_entries.push_back(std::move(e));
 	}
 }
 
@@ -141,17 +108,17 @@ chainpack::RpcValue MemoryShvJournal::getLog(const ShvJournalGetLogParams &param
 	auto it1 = m_entries.begin();
 	if(since_msec > 0) {
 		Entry e;
-		e.timeMsec = since_msec;
+		e.epochMsec = since_msec;
 		it1 = std::lower_bound(m_entries.begin(), m_entries.end(), e, [](const Entry &e1, const Entry &e2) {
-			return e1.timeMsec < e2.timeMsec;
+			return e1.epochMsec < e2.epochMsec;
 		});
 	}
 	auto it2 = m_entries.end();
 	if(until_msec > 0) {
 		Entry e;
-		e.timeMsec = until_msec;
+		e.epochMsec = until_msec;
 		it1 = std::upper_bound(m_entries.begin(), m_entries.end(), e, [](const Entry &e1, const Entry &e2) {
-			return e1.timeMsec < e2.timeMsec;
+			return e1.epochMsec < e2.epochMsec;
 		});
 	}
 
@@ -171,48 +138,11 @@ chainpack::RpcValue MemoryShvJournal::getLog(const ShvJournalGetLogParams &param
 	int max_rec_cnt = std::min(params.maxRecordCount, m_getLogRecordCountLimit);
 	std::map<std::string, Entry> snapshot;
 
-	//const std::string fnames[] = {"foo.txt", "bar.txt", "baz.dat", "zoidberg"};
-	std::regex domain_regex;
-	if(!params.domainPattern.empty()) try {
-		domain_regex = std::regex{params.domainPattern};
-	}
-	catch (const std::regex_error &e) {
-		logWShvJournal() << "Invalid domain pattern regex:" << params.domainPattern << " - " << e.what();
-	}
-	std::regex path_regex;
-	bool use_path_regex = false;
-	if(!params.pathPattern.empty() && params.pathPatternType == ShvJournalGetLogParams::PatternType::RegEx) try {
-		path_regex = std::regex{params.pathPattern};
-		use_path_regex = true;
-	}
-	catch (const std::regex_error &e) {
-		logWShvJournal() << "Invalid path pattern regex:" << params.pathPattern << " - " << e.what();
-	}
-
-	auto match_pattern = [&params, use_path_regex, &path_regex, &domain_regex](const Entry &e) {
-		if(!params.pathPattern.empty()) {
-			logDShvJournal() << "\t MATCHING:" << params.pathPattern << "vs:" << e.path;
-			if(use_path_regex) {
-				if(!std::regex_match(e.path, path_regex))
-					return false;
-			}
-			else {
-				ShvPath path(e.path);
-				if(!path.matchWild(params.pathPattern))
-					return false;
-			}
-			logDShvJournal() << "\t\t MATCH";
-		}
-		if(!params.domainPattern.empty()) {
-			if(!std::regex_match(e.domain, domain_regex))
-				return false;
-		}
-		return true;
-	};
+	PatternMatcher pm(params);
 	if(params.withSnapshot) {
 		for(auto it = m_entries.begin(); it != it1; ++it) {
 			const Entry &e = *it;
-			if(!match_pattern(e))
+			if(!pm.match(e))
 				continue;
 			if(e.course == ShvJournalEntry::CourseType::Continuous) {
 				snapshot[e.path] = e;
@@ -237,9 +167,9 @@ chainpack::RpcValue MemoryShvJournal::getLog(const ShvJournalGetLogParams &param
 			}
 			snapshot.clear();
 		}
-		{ // keep interval open to make log merge simpler
+		if(pm.match(*it)) { // keep interval open to make log merge simpler
 			cp::RpcValue::List rec;
-			rec.push_back(it->timeMsec);
+			rec.push_back(it->epochMsec);
 			rec.push_back(make_path_shared(it->path));
 			rec.push_back(it->value);
 			rec.push_back(it->shortTime);

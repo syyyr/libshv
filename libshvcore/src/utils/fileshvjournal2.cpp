@@ -129,9 +129,9 @@ static constexpr size_t SEC_SEP_POS = MIN_SEP_POS + 3;
 static constexpr size_t MSEC_SEP_POS = SEC_SEP_POS + 3;
 
 FileShvJournal2::FileShvJournal2(std::string device_id, FileShvJournal2::SnapShotFn snf)
-	: m_deviceId(std::move(device_id))
-	, m_snapShotFn(snf)
+	: m_snapShotFn(snf)
 {
+	setDeviceId(device_id);
 	setFileExtension(".log2");
 }
 
@@ -170,10 +170,10 @@ void FileShvJournal2::setJournalSizeLimit(const std::string &n)
 	setJournalSizeLimit(str_to_size(n));
 }
 
-void FileShvJournal2::append(const ShvJournalEntry &entry, int64_t msec)
+void FileShvJournal2::append(const ShvJournalEntry &entry)
 {
 	try {
-		appendThrow(entry, msec);
+		appendThrow(entry);
 		return;
 	}
 	catch (std::exception &e) {
@@ -181,16 +181,17 @@ void FileShvJournal2::append(const ShvJournalEntry &entry, int64_t msec)
 	}
 	try {
 		checkJournalConsistecy(true);
-		appendThrow(entry, msec);
+		appendThrow(entry);
 	}
 	catch (std::exception &e) {
 		logWShvJournal() << "Append to log failed after journal dir check:" << e.what();
 	}
 }
 
-void FileShvJournal2::appendThrow(const ShvJournalEntry &entry, int64_t msec)
+void FileShvJournal2::appendThrow(const ShvJournalEntry &entry)
 {
 	shvLogFuncFrame();// << "last file no:" << lastFileNo();
+	int64_t msec = entry.epochMsec;
 	if(msec == 0)
 		msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
 	/// keep journal monotonic
@@ -232,10 +233,10 @@ void FileShvJournal2::appendThrow(const ShvJournalEntry &entry, int64_t msec)
 			if(snapshot.empty())
 				logWShvJournal() << "Empty snapshot created";
 			for(const ShvJournalEntry &e : snapshot)
-				appendEntry(out, msec, e);
+				wrirteEntry(out, msec, e);
 			m_journalStatus.files.push_back(last_file_msec);
 		}
-		appendEntry(out, msec, entry);
+		wrirteEntry(out, msec, entry);
 		ssize_t file_size = out.tellp();
 		m_journalStatus.lastFileSize = file_size;
 		m_journalStatus.journalSize += file_size - fsz;
@@ -245,7 +246,7 @@ void FileShvJournal2::appendThrow(const ShvJournalEntry &entry, int64_t msec)
 	}
 }
 
-void FileShvJournal2::appendEntry(std::ofstream &out, int64_t msec, const ShvJournalEntry &e)
+void FileShvJournal2::wrirteEntry(std::ofstream &out, int64_t msec, const ShvJournalEntry &e)
 {
 	/*
 	logDShvJournal() << "\t appending entry:"
@@ -617,23 +618,7 @@ chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &p
 		};
 		std::map<std::string, SnapshotEntry> snapshot;
 
-		//const std::string fnames[] = {"foo.txt", "bar.txt", "baz.dat", "zoidberg"};
-		std::regex domain_regex;
-		if(!params.domainPattern.empty()) try {
-			domain_regex = std::regex{params.domainPattern};
-		}
-		catch (const std::regex_error &e) {
-			logWShvJournal() << "Invalid domain pattern regex:" << params.domainPattern << " - " << e.what();
-		}
-		std::regex path_regex;
-		bool use_path_regex = false;
-		if(!params.pathPattern.empty() && params.pathPatternType == ShvJournalGetLogParams::PatternType::RegEx) try {
-			path_regex = std::regex{params.pathPattern};
-			use_path_regex = true;
-		}
-		catch (const std::regex_error &e) {
-			logWShvJournal() << "Invalid path pattern regex:" << params.pathPattern << " - " << e.what();
-		}
+		PatternMatcher pattern_matcher(params);
 		for(; file_it != m_journalStatus.files.end(); file_it++) {
 			std::string fn = fileMsecToFilePath(*file_it);
 			logDShvJournal() << "-------- opening file:" << fn;
@@ -654,23 +639,13 @@ chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &p
 					continue; // skip empty line
 				}
 				std::string dtstr = line_record[Column::Timestamp].toString();
-				ShvPath path = line_record.value(Column::Path).toString();
+				std::string path = line_record.value(Column::Path).toString();
+				std::string domain = line_record.value(Column::Domain).toString();
 				if(!params.pathPattern.empty()) {
 					logDShvJournal() << "\t MATCHING:" << params.pathPattern << "vs:" << path;
-					if(use_path_regex) {
-						if(!std::regex_match(path, path_regex))
-								continue;
-					}
-					else {
-						if(!path.matchWild(params.pathPattern))
-							continue;
-					}
+					if(!pattern_matcher.match(path, domain))
+						continue;
 					logDShvJournal() << "\t\t MATCH";
-				}
-				std::string domain_str = line_record.value(Column::Domain).toString();
-				if(!params.domainPattern.empty()) {
-					if(!std::regex_match(domain_str, domain_regex))
-							continue;
 				}
 				size_t len;
 				cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr, &len);
@@ -688,7 +663,7 @@ chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &p
 								line_record.value(Column::UpTime).toString(),
 								line_record.value(Column::Value).toString(),
 								short_time_sv.toString(),
-								domain_str
+								domain
 							};
 						}
 					}
@@ -722,7 +697,7 @@ chainpack::RpcValue FileShvJournal2::getLogThrow(const ShvJournalGetLogParams &p
 						rec.push_back(make_path_shared(path));
 						rec.push_back(cp::RpcValue::fromCpon(line_record.value(Column::Value).toString(), &err));
 						rec.push_back(cp::RpcValue::fromCpon(short_time_sv.toString(), &err));
-						rec.push_back(domain_str.empty()? cp::RpcValue(nullptr): domain_str);
+						rec.push_back(domain.empty()? cp::RpcValue(nullptr): domain);
 						rec.push_back(cp::RpcValue::fromCpon(line_record.value(Column::Course).toString(), &err));
 						log.push_back(rec);
 						rec_cnt++;
