@@ -42,7 +42,7 @@ public:
 	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params) override;
 
 	void convertLog1JournalDir();
-private:
+public:
 	struct JournalContext
 	{
 		bool journalDirExists = false;
@@ -63,10 +63,10 @@ private:
 		std::string fileMsecToFileName(int64_t msec) const;
 		std::string fileMsecToFilePath(int64_t file_msec) const;
 	};
-private:
+	const JournalContext& checkJournalContext();
 	static shv::chainpack::RpcValue getLog(const JournalContext &journal_context, const ShvJournalGetLogParams &params);
+private:
 
-	void checkJournalContext();
 	void checkJournalContext_helper(bool force = false);
 
 	void rotateJournal();

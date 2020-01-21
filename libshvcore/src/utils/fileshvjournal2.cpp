@@ -549,7 +549,7 @@ int64_t FileShvJournal2::findLastEntryDateTime(const std::string &fn)
 	return -1;
 }
 
-void FileShvJournal2::checkJournalContext()
+const FileShvJournal2::JournalContext &FileShvJournal2::checkJournalContext()
 {
 	try {
 		checkJournalContext_helper();
@@ -558,6 +558,7 @@ void FileShvJournal2::checkJournalContext()
 		logIShvJournal() << "Check journal consistecy failed, journal dir will be read again, SD card might be replaced, error:" << e.what();
 	}
 	checkJournalContext_helper(true);
+	return m_journalContext;
 }
 
 chainpack::RpcValue FileShvJournal2::getLog(const ShvJournalGetLogParams &params)
