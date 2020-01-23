@@ -500,8 +500,9 @@ class CponWriter:
 		if len(mmap) > 10:
 			return False
 		for k, v in mmap.items():
-			if v.type in (RpcValue.Type.Map, RpcValue.Type.IMap, RpcValue.Type.List):
-				return False
+			if isinstance(v, RpcValue):
+				if v.type in (RpcValue.Type.Map, RpcValue.Type.IMap, RpcValue.Type.List):
+					return False
 		return True
 
 	def _write_map_content(self, mmap):
