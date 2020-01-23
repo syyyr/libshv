@@ -38,11 +38,21 @@ void MemoryShvJournal::setTypeInfo(const chainpack::RpcValue &i, const std::stri
 void MemoryShvJournal::loadLog(const chainpack::RpcValue &log)
 {
 	const chainpack::RpcValue::IMap &dict = log.metaValue(KEY_PATHS_DICT).toIMap();
+
+	const ShvJournalGetLogParams params = ShvJournalGetLogParams::fromRpcValue(log.metaValue("params"));
+	const bool with_uptime = params.withUptime;
+	const size_t col_Timestamp = Column::index(Column::Timestamp, with_uptime);
+	const size_t col_Path = Column::index(Column::Path, with_uptime);
+	const size_t col_Value = Column::index(Column::Value, with_uptime);
+	const size_t col_ShortTime = Column::index(Column::ShortTime, with_uptime);
+	const size_t col_Domain = Column::index(Column::Domain, with_uptime);
+	const size_t col_Course = Column::index(Column::Course, with_uptime);
+
 	const chainpack::RpcValue::List &lst = log.toList();
 	for(const cp::RpcValue &v : lst) {
 		const cp::RpcValue::List &row = v.toList();
-		int64_t time = row.value(Column::Timestamp).toDateTime().msecsSinceEpoch();
-		cp::RpcValue p = row.value(Column::Path);
+		int64_t time = row.value(col_Timestamp).toDateTime().msecsSinceEpoch();
+		cp::RpcValue p = row.value(col_Path);
 		if(p.isInt())
 			p = dict.value(p.toInt());
 		const std::string &path = p.toString();
@@ -53,11 +63,11 @@ void MemoryShvJournal::loadLog(const chainpack::RpcValue &log)
 		Entry e;
 		e.epochMsec = time;
 		e.path = path;
-		e.value = row.value(Column::Value);
-		cp::RpcValue st = row.value(Column::ShortTime);
+		e.value = row.value(col_Value);
+		cp::RpcValue st = row.value(col_ShortTime);
 		e.shortTime = st.isInt() && st.toInt() >= 0? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
-		e.domain = row.value(Column::Domain).toString();
-		e.course = row.value(Column::Course).toInt() == 0? ShvJournalEntry::CourseType::Continuous: ShvJournalEntry::CourseType::Discrete;
+		e.domain = row.value(col_Domain).toString();
+		e.course = row.value(col_Course).toInt() == 0? ShvJournalEntry::CourseType::Continuous: ShvJournalEntry::CourseType::Discrete;
 		append(e);
 	}
 }
@@ -169,7 +179,7 @@ chainpack::RpcValue MemoryShvJournal::getLog(const ShvJournalGetLogParams &param
 		}
 		if(pm.match(*it)) { // keep interval open to make log merge simpler
 			cp::RpcValue::List rec;
-			rec.push_back(it->epochMsec);
+			rec.push_back(cp::RpcValue::DateTime::fromMSecsSinceEpoch(it->epochMsec));
 			rec.push_back(make_path_shared(it->path));
 			rec.push_back(it->value);
 			rec.push_back(it->shortTime);

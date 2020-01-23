@@ -36,6 +36,7 @@ public:
 			Course,
 		};
 		static const char* name(Enum e);
+		static size_t index(Enum e, bool with_uptime) { return with_uptime? e: e>UpTime? e-1: e; }
 	};
 public:
 	virtual ~AbstractShvJournal();
