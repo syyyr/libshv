@@ -1,6 +1,8 @@
 #ifndef SHV_CORE_UTILS_SHVJOURNALCOMMON_H
 #define SHV_CORE_UTILS_SHVJOURNALCOMMON_H
 
+#include "../shvcoreglobal.h"
+
 #include <string>
 #include <regex>
 
@@ -12,7 +14,7 @@ namespace utils {
 class ShvJournalEntry;
 class ShvJournalGetLogParams;
 
-class AbstractShvJournal
+class SHVCORE_DECL_EXPORT AbstractShvJournal
 {
 public:
 	static constexpr long DEFAULT_FILE_SIZE_LIMIT = 100 * 1024;
