@@ -34,10 +34,13 @@ private:
 	void append(Entry &&entry);
 
 	PatternMatcher m_patternMatcher;
+	ShvJournalGetLogParams m_inputFilter;
+
+	std::map<std::string, Entry> m_snapshot;
 
 	int64_t m_sinceMsec = 0;
 	int64_t m_untilMsec = 0;
-	int m_maxRecordCount = std::numeric_limits<int>::max();
+	int m_maxRecordCount = DEFAULT_GET_LOG_RECORD_COUNT_LIMIT;
 
 	std::map<std::string, int> m_pathDictionary;
 	int m_pathDictionaryIndex = 0;

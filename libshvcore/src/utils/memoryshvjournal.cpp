@@ -24,7 +24,7 @@ MemoryShvJournal::MemoryShvJournal(const ShvJournalGetLogParams &input_filter)
 		m_sinceMsec = input_filter.since.toDateTime().msecsSinceEpoch();
 	if(input_filter.until.isDateTime())
 		m_untilMsec = input_filter.until.toDateTime().msecsSinceEpoch();
-	m_maxRecordCount = input_filter.maxRecordCount;
+	m_maxRecordCount = std::min(input_filter.maxRecordCount, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 }
 
 void MemoryShvJournal::setTypeInfo(const chainpack::RpcValue &i, const std::string &path_prefix)
@@ -79,10 +79,20 @@ void MemoryShvJournal::append(const ShvJournalEntry &entry)
 	int64_t epoch_msec = entry.epochMsec;
 	if(epoch_msec == 0)
 		epoch_msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
-	if(m_sinceMsec > 0 && epoch_msec < m_sinceMsec)
-		return;
 	if(m_untilMsec > 0 && epoch_msec >= m_untilMsec)
 		return;
+	if(m_sinceMsec > 0 && epoch_msec < m_sinceMsec) {
+		if(m_inputFilter.withSnapshot) {
+			Entry &e = m_snapshot[entry.path];
+			if(e.epochMsec < entry.epochMsec
+					&& entry.course == ShvJournalEntry::CourseType::Continuous
+					&& m_patternMatcher.match(entry))
+			{
+				e = entry;
+			}
+		}
+		return;
+	}
 	if(!m_patternMatcher.match(entry))
 		return;
 	{
@@ -146,9 +156,16 @@ chainpack::RpcValue MemoryShvJournal::getLog(const ShvJournalGetLogParams &param
 		return ret;
 	};
 	int max_rec_cnt = std::min(params.maxRecordCount, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
-	std::map<std::string, Entry> snapshot;
 
 	PatternMatcher pm(params);
+
+	std::map<std::string, Entry> snapshot;
+	if(params.withSnapshot) for(auto kv : m_snapshot) {
+		const auto &e = kv.second;
+		if(pm.match(e))
+			snapshot[e.path] = e;
+	}
+
 	if(params.withSnapshot) {
 		for(auto it = m_entries.begin(); it != it1; ++it) {
 			const Entry &e = *it;
