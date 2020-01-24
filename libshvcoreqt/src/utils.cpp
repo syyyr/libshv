@@ -76,7 +76,7 @@ chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v, bool *ok)
 		for(const QVariant &qv : v.toList()) {
 			lst.push_back(qVariantToRpcValue(qv));
 		}
-		return chainpack::RpcValue{lst};
+		return chainpack::RpcValue{std::move(lst)};
 	}
 	case QMetaType::QVariantMap: {
 		chainpack::RpcValue::Map map;
@@ -85,7 +85,7 @@ chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v, bool *ok)
 			it.next();
 			map[it.key().toStdString()] = qVariantToRpcValue(it.value());
 		}
-		return chainpack::RpcValue{map};
+		return chainpack::RpcValue{std::move(map)};
 	}
 	default:
 		if(ok) {
