@@ -209,7 +209,11 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 					return;
 				}
 				else {
-					SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + '/' + shv_path_str + "' doesn't exist");
+					core::utils::ShvPath path = shvPath();
+					if(!path.empty() && !shv_path_str.empty())
+						path += '/';
+					path += shv_path_str;
+					SHV_EXCEPTION("Method: '" + method + "' on path '" + path + "' doesn't exist");
 				}
 			}
 		}
@@ -420,7 +424,8 @@ const chainpack::MetaMethod *ShvNode::metaMethod(const StringViewList &shv_path,
 
 const chainpack::MetaMethod *ShvNode::metaMethod(const ShvNode::StringViewList &shv_path, const std::string &name)
 {
-	for (size_t i = 0; i < methodCount(shv_path); ++i) {
+	size_t cnt = methodCount(shv_path);
+	for (size_t i = 0; i < cnt; ++i) {
 		const chainpack::MetaMethod *mm = metaMethod(shv_path, i);
 		if(mm && name == mm->name())
 			return mm;
