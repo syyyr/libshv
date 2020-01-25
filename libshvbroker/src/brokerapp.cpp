@@ -1,5 +1,5 @@
 #include "brokerapp.h"
-#include "aclmanager.h"
+#include "aclmanagersqlite.h"
 #include "clientshvnode.h"
 #include "brokernode.h"
 #include "subscriptionsnode.h"
@@ -290,7 +290,6 @@ void BrokerApp::reloadConfig()
 
 void BrokerApp::reloadAcl()
 {
-	//clearAccessGrantCache();
 	if(m_aclManager)
 		m_aclManager->reload();
 }
@@ -347,6 +346,7 @@ std::vector<int> BrokerApp::clientConnectionIds()
 
 void BrokerApp::lazyInit()
 {
+	reloadConfig();
 	startTcpServer();
 	startWebSocketServer();
 	createMasterBrokerConnections();
@@ -355,6 +355,21 @@ void BrokerApp::lazyInit()
 bool BrokerApp::checkTunnelSecret(const std::string &s)
 {
 	return m_tunnelSecretList.checkSecret(s);
+}
+
+void BrokerApp::checkPassword(const chainpack::UserLoginContext &ctx)
+{
+	aclManager()->checkPassword(ctx);
+}
+
+void BrokerApp::setCheckPasswordResult(const chainpack::UserLoginContext &ctx, const chainpack::UserLoginResult &login_result)
+{
+	rpc::ClientBrokerConnection *conn = clientConnectionById(ctx.connectionId);
+	if(!conn) {
+		shvWarning() << "Check password result for invalid connection id:" << ctx.connectionId << "ignored";
+		return;
+	}
+	conn->setLoginResult(login_result);
 }
 
 std::string BrokerApp::dataToCpon(shv::chainpack::Rpc::ProtocolType protocol_type, const shv::chainpack::RpcValue::MetaData &md, const std::string &data, size_t start_pos, size_t data_len)
@@ -370,6 +385,17 @@ std::string BrokerApp::dataToCpon(shv::chainpack::Rpc::ProtocolType protocol_typ
 	}
 	rpc_val.setMetaData(shv::chainpack::RpcValue::MetaData(md));
 	return rpc_val.toPrettyString();
+}
+
+AclManager *BrokerApp::createAclManager()
+{
+	auto *opts = cliOptions();
+	if(opts->isAclSqlEnabled()) {
+		return new AclManagerSqlite(this);
+	}
+	else {
+		return new AclManagerConfigFiles(this);
+	}
 }
 
 void BrokerApp::remountDevices()
@@ -469,7 +495,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	bool is_request_from_master_broker = conn->isMasterBrokerConnection();
 	auto request_grant = cp::AccessGrant::fromRpcValue(rq_grant);
 	if(is_request_from_master_broker) {
-		if(!request_grant.notResolved)
+		if(request_grant.isResolved)
 			return request_grant;
 		if(!request_grant.isRole()) {
 			logAclM() << "Cannot resolve grant:" << request_grant.toRpcValue().toCpon();
@@ -526,6 +552,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 				 << " => " << most_specific_path_grant.toRpcValue().toCpon();
 	if(most_specific_path_grant.forwardGrantFromRequest)
 		return  request_grant;
+	most_specific_path_grant.isResolved = true;
 	return cp::AccessGrant(most_specific_path_grant);
 }
 
@@ -701,7 +728,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 						cp::RpcMessage::setAccessGrant(meta, cp::RpcValue());
 					}
 				}
-				cp::AccessGrant acg = accessGrantForRequest(connection_handle, shv_path, cp::RpcMessage::accessGrant(meta).toString());
+				cp::AccessGrant acg = accessGrantForRequest(connection_handle, shv_path, cp::RpcMessage::accessGrant(meta));
 				if(!acg.isValid())
 					SHV_EXCEPTION("Acces to shv path '" + shv_path + "' not granted for user '" + connection_handle->loggedUserName() + "'");
 				cp::RpcMessage::setAccessGrant(meta, acg.toRpcValue());
@@ -1035,7 +1062,7 @@ rpc::CommonRpcClientHandle *BrokerApp::commonClientConnectionById(int connection
 AclManager *BrokerApp::aclManager()
 {
 	if(m_aclManager == nullptr)
-		SHV_EXCEPTION("AclManager is NULL");
+		setAclManager(createAclManager());
 	return m_aclManager;
 }
 

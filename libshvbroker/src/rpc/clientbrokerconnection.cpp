@@ -168,34 +168,35 @@ void ClientBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 		shvError() << e.what();
 	}
 }
-
+/*
 bool ClientBrokerConnection::checkPassword(const chainpack::UserLogin &login)
 {
 	return BrokerApp::instance()->aclManager()->checkPassword(login, m_userLoginContext);
 }
-
-shv::chainpack::RpcValue ClientBrokerConnection::login(const shv::chainpack::RpcValue &auth_params)
+*/
+void ClientBrokerConnection::processLoginRequest()
 {
-	cp::RpcValue ret;
 	if(tunnelOptions().isMap()) {
 		std::string secret = tunnelOptions().toMap().value(cp::Rpc::KEY_SECRET).toString();
-		if(checkTunnelSecret(secret))
-			ret = cp::RpcValue::Map();
+		cp::UserLoginResult result;
+		result.passwordOk = checkTunnelSecret(secret);
+		setLoginResult(result);
+		return;
 	}
-	else {
-		ret = Super::login(auth_params);
-	}
-	if(!ret.isValid())
-		return cp::RpcValue();
-	cp::RpcValue::Map login_resp = ret.toMap();
+	Super::processLoginRequest();
+	// check password
+	BrokerApp::instance()->checkPassword(m_userLoginContext);
+}
 
+void ClientBrokerConnection::setLoginResult(const chainpack::UserLoginResult &result)
+{
+	auto login_result = result;
+	login_result.clientId = connectionId();
+	Super::setLoginResult(login_result);
 	const shv::chainpack::RpcValue::Map &opts = connectionOptions();
 	auto t = opts.value(cp::Rpc::OPT_IDLE_WD_TIMEOUT).toInt();
 	setIdleWatchDogTimeOut(t);
 	BrokerApp::instance()->onClientLogin(connectionId());
-
-	login_resp[cp::Rpc::KEY_CLIENT_ID] = connectionId();
-	return shv::chainpack::RpcValue{login_resp};
 }
 
 bool ClientBrokerConnection::checkTunnelSecret(const std::string &s)

@@ -7,6 +7,7 @@
 #include <shv/chainpack/aclmountdef.h>
 #include <shv/chainpack/acluser.h>
 #include <shv/chainpack/aclpassword.h>
+#include <shv/core/exception.h>
 
 #include <QObject>
 
@@ -29,6 +30,7 @@ public:
 
 	std::vector<std::string> users();
 	shv::chainpack::AclUser user(const std::string &user_name);
+	void setUser(const std::string &user_name, const shv::chainpack::AclUser &u);
 
 	std::vector<std::string> roles();
 	shv::chainpack::AclRole role(const std::string &role_name);
@@ -36,18 +38,21 @@ public:
 	std::vector<std::string> pathsRoles();
 	shv::chainpack::AclRolePaths pathsRolePaths(const std::string &role_name);
 
-	virtual bool checkPassword(const shv::chainpack::UserLogin &login, const shv::chainpack::UserLoginContext &login_context);
-
 	std::string mountPointForDevice(const shv::chainpack::RpcValue &device_id);
 	std::vector<std::string> userFlattenRolesSortedByWeight(const std::string &user_name);
+
+	virtual void checkPassword(const chainpack::UserLoginContext &login_context);
+	//Q_SIGNAL void loginResult(int client_id, const shv::chainpack::UserLoginResult &result);
 
 	virtual void reload();
 protected:
 	virtual std::vector<std::string> aclMountDeviceIds() = 0;
 	virtual shv::chainpack::AclMountDef aclMountDef(const std::string &device_id) = 0;
+	virtual void aclSetMountDef(const std::string &device_id, const shv::chainpack::AclMountDef &md);
 
 	virtual std::vector<std::string> aclUsers() = 0;
 	virtual shv::chainpack::AclUser aclUser(const std::string &user_name) = 0;
+	virtual void aclSetUser(const std::string &user_name, const shv::chainpack::AclUser &u);
 
 	virtual std::vector<std::string> aclRoles() = 0;
 	virtual shv::chainpack::AclRole aclRole(const std::string &role_name) = 0;
@@ -59,21 +64,20 @@ protected:
 protected:
 	virtual void clearCache()
 	{
-		m_aclMountDefs.clear();
-		m_aclUsers.clear();
-		m_userFlattenRoles.clear();
-		m_aclRoles.clear();
-		m_aclPathsRoles.clear();
+		m_cache = Cache();
 	}
 	std::set<std::string> flattenRole_helper(const std::string &role_name);
 protected:
 	BrokerApp * m_brokerApp;
+	struct Cache
+	{
+		std::map<std::string, shv::chainpack::AclMountDef> aclMountDefs;
+		std::map<std::string, shv::chainpack::AclUser> aclUsers;
+		std::map<std::string, shv::chainpack::AclRole> aclRoles;
+		std::map<std::string, shv::chainpack::AclRolePaths> aclPathsRoles;
 
-	std::map<std::string, shv::chainpack::AclMountDef> m_aclMountDefs;
-	std::map<std::string, shv::chainpack::AclUser> m_aclUsers;
-	std::map<std::string, std::vector<std::string>> m_userFlattenRoles;
-	std::map<std::string, shv::chainpack::AclRole> m_aclRoles;
-	std::map<std::string, shv::chainpack::AclRolePaths> m_aclPathsRoles;
+		std::map<std::string, std::vector<std::string>> userFlattenRoles;
+	} m_cache;
 };
 
 class SHVBROKER_DECL_EXPORT AclManagerConfigFiles : public AclManager
@@ -84,9 +88,17 @@ public:
 
 protected:
 	void clearCache() override;
-	shv::chainpack::RpcValue aclConfig(const std::string &config_name, bool throw_exc);
+	shv::chainpack::RpcValue aclConfig(const std::string &config_name, bool throw_exc = shv::core::Exception::Throw);
 	shv::chainpack::RpcValue loadAclConfig(const std::string &config_name, bool throw_exc);
-	//bool saveAclConfig(const std::string &config_name, const shv::chainpack::RpcValue &config, bool throw_exc);
+
+	std::vector<std::string> aclMountDeviceIds() override;
+	shv::chainpack::AclMountDef aclMountDef(const std::string &device_id) override;
+	std::vector<std::string> aclUsers() override;
+	shv::chainpack::AclUser aclUser(const std::string &user_name) override;
+	std::vector<std::string> aclRoles() override;
+	shv::chainpack::AclRole aclRole(const std::string &role_name) override;
+	std::vector<std::string> aclPathsRoles() override;
+	shv::chainpack::AclRolePaths aclPathsRolePaths(const std::string &role_name) override;
 protected:
 	shv::chainpack::RpcValue::Map m_configFiles;
 };

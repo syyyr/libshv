@@ -31,19 +31,19 @@ shv::broker::AclManager::AclManager(shv::broker::BrokerApp *broker_app)
 
 std::vector<std::string> AclManager::mountDeviceIds()
 {
-	if(m_aclMountDefs.empty()) {
+	if(m_cache.aclMountDefs.empty()) {
 		for(auto id : aclMountDeviceIds())
-			m_aclMountDefs[id];
+			m_cache.aclMountDefs[id];
 	}
-	return cp::Utils::mapKeys(m_aclMountDefs);
+	return cp::Utils::mapKeys(m_cache.aclMountDefs);
 }
 
 chainpack::AclMountDef AclManager::mountDef(const std::string &device_id)
 {
-	if(m_aclMountDefs.empty())
+	if(m_cache.aclMountDefs.empty())
 		mountDeviceIds();
-	auto it = m_aclMountDefs.find(device_id);
-	if(it == m_aclMountDefs.end())
+	auto it = m_cache.aclMountDefs.find(device_id);
+	if(it == m_cache.aclMountDefs.end())
 		return chainpack::AclMountDef();
 	if(!it->second.isValid()) {
 		it->second = aclMountDef(device_id);
@@ -53,19 +53,19 @@ chainpack::AclMountDef AclManager::mountDef(const std::string &device_id)
 
 std::vector<std::string> AclManager::users()
 {
-	if(m_aclUsers.empty()) {
+	if(m_cache.aclUsers.empty()) {
 		for(auto id : aclUsers())
-			m_aclUsers[id];
+			m_cache.aclUsers[id];
 	}
-	return cp::Utils::mapKeys(m_aclUsers);
+	return cp::Utils::mapKeys(m_cache.aclUsers);
 }
 
 chainpack::AclUser AclManager::user(const std::string &user_name)
 {
-	if(m_aclUsers.empty())
+	if(m_cache.aclUsers.empty())
 		users();
-	auto it = m_aclUsers.find(user_name);
-	if(it == m_aclUsers.end())
+	auto it = m_cache.aclUsers.find(user_name);
+	if(it == m_cache.aclUsers.end())
 		return chainpack::AclUser();
 	if(!it->second.isValid()) {
 		it->second = aclUser(user_name);
@@ -73,21 +73,28 @@ chainpack::AclUser AclManager::user(const std::string &user_name)
 	return it->second;
 }
 
+void AclManager::setUser(const std::string &user_name, const chainpack::AclUser &u)
+{
+	aclSetUser(user_name, u);
+	m_cache.aclUsers.clear();
+	m_cache.userFlattenRoles.clear();
+}
+
 std::vector<std::string> AclManager::roles()
 {
-	if(m_aclRoles.empty()) {
+	if(m_cache.aclRoles.empty()) {
 		for(auto id : aclRoles())
-			m_aclRoles[id];
+			m_cache.aclRoles[id];
 	}
-	return cp::Utils::mapKeys(m_aclRoles);
+	return cp::Utils::mapKeys(m_cache.aclRoles);
 }
 
 chainpack::AclRole AclManager::role(const std::string &role_name)
 {
-	if(m_aclRoles.empty())
+	if(m_cache.aclRoles.empty())
 		roles();
-	auto it = m_aclRoles.find(role_name);
-	if(it == m_aclRoles.end())
+	auto it = m_cache.aclRoles.find(role_name);
+	if(it == m_cache.aclRoles.end())
 		return chainpack::AclRole();
 	if(!it->second.isValid()) {
 		it->second = aclRole(role_name);
@@ -97,19 +104,19 @@ chainpack::AclRole AclManager::role(const std::string &role_name)
 
 std::vector<std::string> AclManager::pathsRoles()
 {
-	if(m_aclPathsRoles.empty()) {
+	if(m_cache.aclPathsRoles.empty()) {
 		for(auto id : aclPathsRoles())
-			m_aclPathsRoles[id];
+			m_cache.aclPathsRoles[id];
 	}
-	return cp::Utils::mapKeys(m_aclPathsRoles);
+	return cp::Utils::mapKeys(m_cache.aclPathsRoles);
 }
 
 chainpack::AclRolePaths AclManager::pathsRolePaths(const std::string &role_name)
 {
-	if(m_aclPathsRoles.empty())
+	if(m_cache.aclPathsRoles.empty())
 		pathsRoles();
-	auto it = m_aclPathsRoles.find(role_name);
-	if(it == m_aclPathsRoles.end())
+	auto it = m_cache.aclPathsRoles.find(role_name);
+	if(it == m_cache.aclPathsRoles.end())
 		return chainpack::AclRolePaths();
 	if(!it->second.isValid()) {
 		it->second = aclPathsRolePaths(role_name);
@@ -117,20 +124,21 @@ chainpack::AclRolePaths AclManager::pathsRolePaths(const std::string &role_name)
 	return it->second;
 }
 
-bool AclManager::checkPassword(const chainpack::UserLogin &login, const chainpack::UserLoginContext &login_context)
+void AclManager::checkPassword(const chainpack::UserLoginContext &login_context)
 {
 	using LoginType = cp::UserLogin::LoginType;
+	chainpack::UserLogin login = login_context.userLogin();
 	chainpack::AclUser acl_user = user(login.user);
 	if(!acl_user.isValid()) {
 		shvError() << "Invalid user name:" << login.user;
-		return false;
+		return m_brokerApp->setCheckPasswordResult(login_context, chainpack::UserLoginResult());
 	}
 	auto acl_pwd = acl_user.password;
 	//std::string pwdsrv = std::get<0>(pwdt);
 	//PasswordFormat pwdsrvfmt = std::get<1>(pwdt);
 	if(acl_pwd.password.empty()) {
 		shvError() << "Empty password not allowed:" << acl_user.name;
-		return false;
+		return m_brokerApp->setCheckPasswordResult(login_context, chainpack::UserLoginResult());
 	}
 	auto usr_login_type = login.loginType;
 	if(usr_login_type == LoginType::Invalid)
@@ -139,9 +147,9 @@ bool AclManager::checkPassword(const chainpack::UserLogin &login, const chainpac
 	std::string usr_pwd = login.password;
 	if(usr_login_type == LoginType::Plain) {
 		if(acl_pwd.format == cp::AclPassword::Format::Plain)
-			return (acl_pwd.password == usr_pwd);
+			m_brokerApp->setCheckPasswordResult(login_context, chainpack::UserLoginResult{acl_pwd.password == usr_pwd});
 		if(acl_pwd.format == cp::AclPassword::Format::Sha1)
-			return acl_pwd.password == sha1_hex(usr_pwd);
+			m_brokerApp->setCheckPasswordResult(login_context, chainpack::UserLoginResult(acl_pwd.password == sha1_hex(usr_pwd)));
 	}
 	if(usr_login_type == LoginType::Sha1) {
 		/// login_type == "SHA1" is default
@@ -154,12 +162,10 @@ bool AclManager::checkPassword(const chainpack::UserLogin &login, const chainpac
 		hash.addData(nonce.data(), nonce.length());
 		std::string correct_sha1 = std::string(hash.result().toHex().constData());
 		//shvInfo() << nonce_sha1 << "vs" << sha1;
-		return (usr_pwd == correct_sha1);
+		m_brokerApp->setCheckPasswordResult(login_context, chainpack::UserLoginResult(usr_pwd == correct_sha1));
 	}
-	{
-		shvError() << "Unsupported login type" << cp::UserLogin::loginTypeToString(login.loginType) << "for user:" << login.user;
-		return false;
-	}
+	shvError() << "Unsupported login type" << cp::UserLogin::loginTypeToString(login.loginType) << "for user:" << login.user;
+	return m_brokerApp->setCheckPasswordResult(login_context, chainpack::UserLoginResult());
 }
 
 std::string AclManager::mountPointForDevice(const chainpack::RpcValue &device_id)
@@ -170,6 +176,20 @@ std::string AclManager::mountPointForDevice(const chainpack::RpcValue &device_id
 void AclManager::reload()
 {
 	clearCache();
+}
+
+void AclManager::aclSetMountDef(const std::string &device_id, const chainpack::AclMountDef &md)
+{
+	Q_UNUSED(device_id)
+	Q_UNUSED(md)
+	SHV_EXCEPTION("Mount points definition is read only.");
+}
+
+void AclManager::aclSetUser(const std::string &user_name, const chainpack::AclUser &u)
+{
+	Q_UNUSED(user_name)
+	Q_UNUSED(u)
+	SHV_EXCEPTION("Users definition is read only.");
 }
 
 std::set<std::string> AclManager::flattenRole_helper(const std::string &role_name)
@@ -193,7 +213,7 @@ std::set<std::string> AclManager::flattenRole_helper(const std::string &role_nam
 
 std::vector<std::string> AclManager::userFlattenRolesSortedByWeight(const std::string &user_name)
 {
-	if(m_userFlattenRoles.find(user_name) == m_userFlattenRoles.end()) {
+	if(m_cache.userFlattenRoles.find(user_name) == m_cache.userFlattenRoles.end()) {
 		std::set<std::string> unique_roles;
 		chainpack::AclUser user_def = aclUser(user_name);
 		if(!user_def.isValid())
@@ -209,9 +229,9 @@ std::vector<std::string> AclManager::userFlattenRolesSortedByWeight(const std::s
 		std::sort(roles.begin(), roles.end(), [this](const std::string &a, const std::string &b) {
 			return role(a).weight > role(b).weight;
 		});
-		m_userFlattenRoles[user_name] = roles;
+		m_cache.userFlattenRoles[user_name] = roles;
 	}
-	return m_userFlattenRoles[user_name];
+	return m_cache.userFlattenRoles[user_name];
 }
 
 //================================================================
@@ -248,13 +268,7 @@ chainpack::RpcValue AclManagerConfigFiles::aclConfig(const std::string &config_n
 shv::chainpack::RpcValue AclManagerConfigFiles::loadAclConfig(const std::string &config_name, bool throw_exc)
 {
 	std::string fn = config_name;
-	fn = m_brokerApp->cliOptions()->value("etc.acl." + fn).toString();
-	if(fn.empty()) {
-		if(throw_exc)
-			throw std::runtime_error("config file name is empty.");
-		else
-			return cp::RpcValue();
-	}
+	fn = config_name + ".cpon"; //m_brokerApp->cliOptions()->value("etc.acl." + fn).toString();
 	if(fn[0] != '/')
 		fn = m_brokerApp->cliOptions()->configDir() + '/' + fn;
 	std::ifstream fis(fn);
@@ -270,44 +284,54 @@ shv::chainpack::RpcValue AclManagerConfigFiles::loadAclConfig(const std::string 
 	rv = rd.read(throw_exc? nullptr: &err);
 	return rv;
 }
-/*
-bool BrokerApp::saveAclConfig(const std::string &config_name, const shv::chainpack::RpcValue &config, bool throw_exc)
-{
-	logAclD() << "saveAclConfig" << config_name << "config type:" << config.typeToName(config.type());
-	//logAclD() << "config:" << config.toCpon();
-	std::string fn = config_name;
-	fn = cliOptions()->value("etc.acl." + fn).toString();
-	if(fn.empty()) {
-		if(throw_exc)
-			throw std::runtime_error("config file name is empty.");
-		else
-			return false;
-	}
-	if(fn[0] != '/')
-		fn = cliOptions()->configDir() + '/' + fn;
 
-	if(config.isMap()) {
-		std::ofstream fos(fn, std::ios::binary | std::ios::trunc);
-		if (!fos) {
-			if(throw_exc)
-				throw std::runtime_error("Cannot open config file " + fn + " for writing");
-			else
-				return false;
-		}
-		shv::chainpack::CponWriterOptions opts;
-		opts.setIndent("  ");
-		shv::chainpack::CponWriter wr(fos, opts);
-		wr << config;
-		return true;
-	}
-	else {
-		if(throw_exc)
-			throw std::runtime_error("Config must be RpcValue::Map type, config name: " + config_name);
-		else
-			return false;
-	}
+std::vector<std::string> AclManagerConfigFiles::aclMountDeviceIds()
+{
+	const chainpack::RpcValue::Map &cfg = aclConfig("fstab").toMap();
+	return cp::Utils::mapKeys(cfg);
 }
-*/
+
+chainpack::AclMountDef AclManagerConfigFiles::aclMountDef(const std::string &device_id)
+{
+	chainpack::RpcValue v = aclConfig("fstab").toMap().value(device_id);
+	return chainpack::AclMountDef::fromRpcValue(v);
+}
+
+std::vector<std::string> AclManagerConfigFiles::aclUsers()
+{
+	const chainpack::RpcValue::Map &cfg = aclConfig("users").toMap();
+	return cp::Utils::mapKeys(cfg);
+}
+
+chainpack::AclUser AclManagerConfigFiles::aclUser(const std::string &user_name)
+{
+	chainpack::RpcValue v = aclConfig("users").toMap().value(user_name);
+	return chainpack::AclUser::fromRpcValue(v);
+}
+
+std::vector<std::string> AclManagerConfigFiles::aclRoles()
+{
+	const chainpack::RpcValue::Map &cfg = aclConfig("grants").toMap();
+	return cp::Utils::mapKeys(cfg);
+}
+
+chainpack::AclRole AclManagerConfigFiles::aclRole(const std::string &role_name)
+{
+	chainpack::RpcValue v = aclConfig("grants").toMap().value(role_name);
+	return chainpack::AclRole::fromRpcValue(v);
+}
+
+std::vector<std::string> AclManagerConfigFiles::aclPathsRoles()
+{
+	const chainpack::RpcValue::Map &cfg = aclConfig("paths").toMap();
+	return cp::Utils::mapKeys(cfg);
+}
+
+chainpack::AclRolePaths AclManagerConfigFiles::aclPathsRolePaths(const std::string &role_name)
+{
+	chainpack::RpcValue v = aclConfig("paths").toMap().value(role_name);
+	return chainpack::AclRolePaths::fromRpcValue(v);
+}
 
 } // namespace broker
 } // namespace shv

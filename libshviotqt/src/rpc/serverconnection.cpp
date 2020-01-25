@@ -103,6 +103,9 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 		}
 		if(m_helloReceived && !m_loginReceived && rq.method() == shv::chainpack::Rpc::METH_LOGIN) {
 			shvInfo() << "Client login received";// << profile;// << "device id::" << m.value("deviceId").toStdString();
+			m_loginReceived = true;
+			m_userLoginContext.loginRequest = msg;
+			m_userLoginContext.connectionId = connectionId();
 			cp::RpcValue::Map params = rq.params().toMap();
 			m_connectionOptions = params.value(cp::Rpc::KEY_OPTIONS);
 			/*
@@ -116,12 +119,13 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 					m_connectionType = ConnectionType::Client;
 			}
 			*/
-			cp::RpcValue login_resp = login(rq.params());
+			processLoginRequest();
+			/*
 			if(!login_resp.isValid())
 				SHV_EXCEPTION("Invalid authentication for user: " + m_userLogin.user + " at: " + connectionName());
 			shvInfo().nospace() << "Client logged in user: " << m_userLogin.user << " from: " << peerAddress() << ':' << peerPort();
 			sendResponse(rq.requestId(), login_resp);
-			m_loginReceived = true;
+			*/
 			return;
 		}
 	}
@@ -132,18 +136,32 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 	QTimer::singleShot(100, this, &ServerConnection::abort); // need some time to send error to client
 }
 
-chainpack::RpcValue ServerConnection::login(const chainpack::RpcValue &auth_params)
+void ServerConnection::processLoginRequest()
 {
-	const cp::RpcValue::Map params = auth_params.toMap();
-	m_userLogin = shv::chainpack::UserLogin::fromRpcValue(params.value(cp::Rpc::KEY_LOGIN));
+	m_userLogin = m_userLoginContext.userLogin();
 	shvInfo() << "login - user:" << userName();// << "password:" << password_hash;
-	bool password_ok = checkPassword(m_userLogin);
+	//checkPassword();
+	/*
 	if(password_ok) {
 		cp::RpcValue::Map login_resp;
 		//login_resp[cp::Rpc::KEY_CLIENT_ID] = connectionId();
 		return chainpack::RpcValue{login_resp};
 	}
 	return cp::RpcValue();
+	*/
+}
+
+void ServerConnection::setLoginResult(const chainpack::UserLoginResult &result)
+{
+	shvInfo().nospace() << "Client logged in user: " << m_userLogin.user << " from: " << peerAddress() << ':' << peerPort();
+	auto resp = cp::RpcResponse::forRequest(m_userLoginContext.loginRequest);
+	if(!result.passwordOk) {
+		resp.setError(cp::RpcResponse::Error::createMethodCallExceptionError("Invalid authentication for user: " + m_userLogin.user + " at: " + connectionName()));
+	}
+	else {
+		resp.setResult(result.toRpcValue());
+	}
+	sendMessage(resp);
 }
 
 }}}
