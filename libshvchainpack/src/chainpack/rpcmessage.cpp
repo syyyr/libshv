@@ -543,6 +543,10 @@ RpcException::RpcException(int err_code, const std::string &_msg, const std::str
 	, m_errorCode(err_code)
 {}
 
+RpcException::~RpcException()
+{
+}
+
 //==================================================================
 // RpcResponse
 //==================================================================

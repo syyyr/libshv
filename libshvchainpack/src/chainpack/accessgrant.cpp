@@ -20,6 +20,19 @@ static bool str_eq(const std::string &s1, const char *s2)
 }
 
 //================================================================
+// UserLoginContext
+//================================================================
+const RpcValue::Map& UserLoginContext::loginParams() const
+{
+	return loginRequest.params().toMap();
+}
+
+UserLogin UserLoginContext::userLogin() const
+{
+	return UserLogin::fromRpcValue(loginParams().value(Rpc::KEY_LOGIN));
+}
+
+//================================================================
 // UserLogin
 //================================================================
 const char* UserLogin::loginTypeToString(UserLogin::LoginType t)
@@ -41,6 +54,15 @@ UserLogin::LoginType UserLogin::loginTypeFromString(const std::string &s)
 	if(str_eq(s, loginTypeToString(LoginType::RsaOaep)))
 		return LoginType::RsaOaep;
 	return LoginType::Invalid;
+}
+
+RpcValue UserLogin::toRpcValueMap() const
+{
+	RpcValue::Map ret;
+	ret["user"] = user;
+	ret["password"] = password;
+	ret["loginType"] = loginTypeToString(loginType);
+	return RpcValue(std::move(ret));
 }
 
 UserLogin UserLogin::fromRpcValue(const RpcValue &val)
@@ -67,7 +89,7 @@ AccessGrant::MetaType::MetaType()
 {
 	m_keys = {
 		RPC_META_KEY_DEF(Type),
-		RPC_META_KEY_DEF(NotResolved),
+		RPC_META_KEY_DEF(IsResolved),
 		RPC_META_KEY_DEF(Role),
 		RPC_META_KEY_DEF(AccessLevel),
 		RPC_META_KEY_DEF(User),
@@ -113,7 +135,7 @@ RpcValue AccessGrant::toRpcValue() const
 {
 	if(!isValid())
 		return RpcValue();
-	if(!notResolved) {
+	if(!isResolved) {
 		if(isAccessLevel())
 			return RpcValue(accessLevel);
 		if(isRole())
@@ -123,6 +145,8 @@ RpcValue AccessGrant::toRpcValue() const
 	MetaType::registerMetaType();
 	ret.setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
 	ret.set(MetaType::Key::Type, (int)type);
+	if(isResolved)
+		ret.set(MetaType::Key::IsResolved, isResolved);
 	switch (type) {
 	case Type::AccessLevel:
 		ret.set(MetaType::Key::AccessLevel, accessLevel);
@@ -141,6 +165,36 @@ RpcValue AccessGrant::toRpcValue() const
 	return ret;
 }
 
+static const std::string KEY_TYPE = "type";
+static const std::string KEY_ACCESS_LEVEL = "accessLevel";
+static const std::string KEY_ROLE = "role";
+//static const std::string KEY_USER = "user";
+//static const std::string KEY_PASSWORD = "password";
+static const std::string KEY_LOGIN = "login";
+static const std::string KEY_IS_RESOLVED = "isResolved";
+
+RpcValue AccessGrant::toRpcValueMap() const
+{
+	RpcValue::Map ret;
+	//ret[KEY_TYPE] = typeToString(type);
+	if(isResolved)
+		ret["isResolved"] = isResolved;
+	switch (type) {
+	case Type::AccessLevel:
+		ret[KEY_ACCESS_LEVEL] = accessLevel;
+		break;
+	case Type::Role:
+		ret[KEY_ROLE] = role;
+		break;
+	case Type::UserLogin:
+		ret[KEY_LOGIN] = login.toRpcValueMap();
+		break;
+	case Type::Invalid:
+		break;
+	}
+	return RpcValue(std::move(ret));
+}
+
 AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 {
 	AccessGrant ret;
@@ -156,6 +210,7 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 		break;
 	case RpcValue::Type::IMap: {
 		const RpcValue::IMap &m = rpcval.toIMap();
+		ret.isResolved = m.value(MetaType::Key::IsResolved).toBool();
 		ret.type = static_cast<Type>(m.value(MetaType::Key::Type).toInt());
 		switch (ret.type) {
 		case Type::AccessLevel:
@@ -177,15 +232,10 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 	}
 	case RpcValue::Type::Map: {
 		const RpcValue::Map &m = rpcval.toMap();
-		static const std::string KEY_TYPE = "type";
-		static const std::string KEY_ACCESS_LEVEL = "accessLevel";
-		static const std::string KEY_ROLE = "role";
-		static const std::string KEY_USER = "user";
-		static const std::string KEY_PASSWORD = "password";
-		static const std::string KEY_LOGIN_TYPE = "loginType";
+		ret.isResolved = m.value(KEY_IS_RESOLVED).toBool();
 		do {
 			{
-				auto access_level = m.value(KEY_TYPE).toInt();
+				auto access_level = m.value(KEY_ACCESS_LEVEL).toInt();
 				if(access_level > 0) {
 					ret.type = Type::AccessLevel;
 					ret.accessLevel = access_level;
@@ -201,13 +251,10 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 				}
 			}
 			{
-				auto user = m.value(KEY_USER).toString();
-				if(!user.empty()) {
+				auto login = m.value(KEY_LOGIN);
+				if(login.isValid()) {
 					ret.type = Type::UserLogin;
-					ret.login.user = user;
-					ret.login.password = m.value(KEY_PASSWORD).toString();
-					auto login_type = m.value(KEY_LOGIN_TYPE).toString();
-					ret.login.loginType = UserLogin::loginTypeFromString(login_type);
+					ret.login = UserLogin::fromRpcValue(login);
 					break;
 				}
 			}
@@ -237,6 +284,34 @@ const char *AccessGrant::typeToString(AccessGrant::Type t)
 //================================================================
 // PathAccessGrant
 //================================================================
+
+RpcValue PathAccessGrant::toRpcValueMap() const
+{
+	RpcValue ret = Super::toRpcValueMap();
+	if(ret.isMap()) {
+		ret.set("forward", forwardGrantFromRequest);
+	}
+	return ret;
+}
+
+PathAccessGrant PathAccessGrant::fromRpcValue(const RpcValue &rpcval)
+{
+	PathAccessGrant ret = Super::fromRpcValue(rpcval);
+	if(rpcval.isMap())
+		ret.forwardGrantFromRequest = rpcval.at("forward").toBool();
+	return ret;
+}
+
+RpcValue UserLoginResult::toRpcValue() const
+{
+	RpcValue::Map m;
+	if(passwordOk) {
+		if(clientId > 0)
+			m["clientId"] = clientId;
+	}
+	return RpcValue(std::move(m));
+}
+
 
 } // namespace chainpack
 } // namespace shv

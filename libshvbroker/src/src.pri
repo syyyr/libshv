@@ -1,6 +1,7 @@
 
 HEADERS += \
     $$PWD/aclmanager.h \
+    $$PWD/aclmanagersqlite.h \
     $$PWD/brokeraclnode.h \
     $$PWD/shvbrokerglobal.h \
     $$PWD/appclioptions.h \
@@ -12,6 +13,7 @@ HEADERS += \
     $$PWD/tunnelsecretlist.h
 
 SOURCES += \
+    $$PWD/aclmanagersqlite.cpp \
     $$PWD/appclioptions.cpp \
     $$PWD/brokeraclnode.cpp \
     $$PWD/brokerapp.cpp \

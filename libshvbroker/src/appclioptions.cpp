@@ -18,7 +18,7 @@ AppCliOptions::AppCliOptions()
 	//addOption("sql.host").setType(cp::RpcValue::Type::String).setNames("-s", "--sql-host").setComment("SQL server host");
 	//addOption("sql.port").setType(cp::RpcValue::Type::Int).setNames("--sql-port").setComment("SQL server port").setDefaultValue(5432);
 	//addOption("rpc.metaTypeExplicit").setType(cp::RpcValue::Type::Bool).setNames("--mtid", "--rpc-metatype-explicit").setComment("RpcMessage Type ID is included in RpcMessage when set, for more verbose -v rpcmsg log output").setDefaultValue(false);
-
+	/*
 	addOption("etc.acl.fstab").setType(cp::RpcValue::Type::String).setNames("--fstab")
 			.setComment("File with deviceID->mountPoint mapping, if it is relative path, {config-dir} is prepended.")
 			.setDefaultValue("fstab.cpon");
@@ -31,6 +31,17 @@ AppCliOptions::AppCliOptions()
 	addOption("etc.acl.paths").setType(cp::RpcValue::Type::String).setNames("--paths")
 			.setComment("File with shv node paths access rights definition, if it is relative path, {config-dir} is prepended.")
 			.setDefaultValue("paths.cpon");
+	*/
+	addOption("etc.acl.sql.enabled").setType(cp::RpcValue::Type::Bool).setNames("--acl-sql-enabled")
+			.setComment("ACL SQL enabled")
+			.setDefaultValue(false);
+	addOption("etc.acl.sql.driver").setType(cp::RpcValue::Type::String).setNames("--acl-sql-driver")
+			.setComment("ACL SQL database driver.")
+			.setDefaultValue("QSQLITE");
+	addOption("etc.acl.sql.database").setType(cp::RpcValue::Type::String).setNames("--acl-sql-db")
+			.setComment("ACL SQL database, if it is relative path for SQLite, {config-dir} is prepended.")
+			.setDefaultValue("acl.db");
+
 	addOption("masters.connections").setType(cp::RpcValue::Type::Map).setComment("Can be used from config file only.");
 	addOption("masters.enabled").setType(cp::RpcValue::Type::Bool).setNames("--mce", "--master-connections-enabled").setComment("Enable slave connections to master broker.");
 }

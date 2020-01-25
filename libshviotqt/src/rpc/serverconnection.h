@@ -56,8 +56,9 @@ protected:
 
 	bool isInitPhase() const {return !m_loginReceived;}
 	virtual void processInitPhase(const chainpack::RpcMessage &msg);
-	virtual shv::chainpack::RpcValue login(const shv::chainpack::RpcValue &auth_params);
-	virtual bool checkPassword(const shv::chainpack::UserLogin &login) = 0;
+
+	virtual void processLoginRequest() = 0;
+	virtual void setLoginResult(const shv::chainpack::UserLoginResult &result);
 protected:
 	std::string m_connectionName;
 	shv::chainpack::UserLogin m_userLogin;

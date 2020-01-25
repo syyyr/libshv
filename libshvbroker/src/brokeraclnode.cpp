@@ -211,7 +211,13 @@ chainpack::RpcValue UsersAclNode::callMethod(const iotqt::node::ShvNode::StringV
 {
 	if(shv_path.size() == 0) {
 		if(method == M_SET_VALUE) {
-			SHV_EXCEPTION(method + " not implemnted yet");
+			if(params.isList()) {
+				const auto &lst = params.toList();
+				const std::string &name = lst.value(0).toString();
+				auto user = chainpack::AclUser::fromRpcValue(lst.value(1));
+				AclManager *mng = BrokerApp::instance()->aclManager();
+				mng->setUser(name, user);
+			}
 		}
 	}
 	if(shv_path.size() == 1) {

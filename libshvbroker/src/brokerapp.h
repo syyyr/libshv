@@ -92,8 +92,15 @@ public:
 	*/
 	bool checkTunnelSecret(const std::string &s);
 
-	std::string dataToCpon(shv::chainpack::Rpc::ProtocolType protocol_type, const shv::chainpack::RpcValue::MetaData &md, const std::string &data, size_t start_pos = 0, size_t data_len = 0);
+	// checkPassword() might return bool
+	// but we are using setCheckPasswordResult() instead to support async password check in ACL manager
+	// for example LDAP ACL Manager
+	void checkPassword(const shv::chainpack::UserLoginContext &ctx);
+	void setCheckPasswordResult(const shv::chainpack::UserLoginContext &ctx, const chainpack::UserLoginResult &login_result);
 
+	std::string dataToCpon(shv::chainpack::Rpc::ProtocolType protocol_type, const shv::chainpack::RpcValue::MetaData &md, const std::string &data, size_t start_pos = 0, size_t data_len = 0);
+protected:
+	AclManager* createAclManager();
 private:
 	void remountDevices();
 	void reloadAcl();
