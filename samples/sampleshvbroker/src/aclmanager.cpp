@@ -11,9 +11,9 @@ AclManager::AclManager(shv::broker::BrokerApp *broker_app)
 
 namespace {
 std::map<std::string, shv::chainpack::AclUser> s_aclUsers = {
-	{"guest", {"guest", {"password", cp::AclPassword::Format::Plain}, {"user"}}},
-	{"poweruser", {"poweruser", {"weakpassword", cp::AclPassword::Format::Plain}, {"user", "system"}}},
-	{"admin", {"admin", {"19b9eab2dea2882d328caa6bc26b0b66c002813b", cp::AclPassword::Format::Sha1}, {"superuser"}}},
+	{"guest", {{"password", cp::AclPassword::Format::Plain}, {"user"}}},
+	{"poweruser", {{"weakpassword", cp::AclPassword::Format::Plain}, {"user", "system"}}},
+	{"admin", {{"19b9eab2dea2882d328caa6bc26b0b66c002813b", cp::AclPassword::Format::Sha1}, {"superuser"}}},
 };
 }
 
@@ -30,9 +30,9 @@ shv::chainpack::AclUser AclManager::aclUser(const std::string &user_name)
 
 namespace {
 std::map<std::string, shv::chainpack::AclRole> s_aclRoles = {
-	{"user", {"user"}},
-	{"system", {"system", 5}},
-	{"superuser", {"superuser", 10, {"user", "system"}}},
+	{"user", {0}},
+	{"system", {5}},
+	{"superuser", {10, {"user", "system"}}},
 };
 }
 

@@ -24,10 +24,14 @@ struct SHVCHAINPACK_DECL_EXPORT UserLoginContext
 struct SHVCHAINPACK_DECL_EXPORT UserLoginResult
 {
 	bool passwordOk = false;
+	std::string loginError;
 	int clientId = 0;
 
 	UserLoginResult() {}
-	UserLoginResult(bool password_ok) : passwordOk(password_ok) {}
+	UserLoginResult(bool password_ok) : UserLoginResult(password_ok, std::string()) {}
+	UserLoginResult(bool password_ok, std::string login_error)
+		: passwordOk(password_ok)
+		, loginError(std::move(login_error)) {}
 
 	const RpcValue::Map &loginParams() const;
 	shv::chainpack::UserLogin userLogin() const;

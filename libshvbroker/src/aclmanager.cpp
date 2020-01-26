@@ -16,7 +16,7 @@ namespace {
 static std::string sha1_hex(const std::string &s)
 {
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-	hash.addData(s.data(), s.length());
+	hash.addData(s.data(), (int)s.length());
 	return std::string(hash.result().toHex().constData());
 }
 }
@@ -124,21 +124,21 @@ chainpack::AclRolePaths AclManager::pathsRolePaths(const std::string &role_name)
 	return it->second;
 }
 
-void AclManager::checkPassword(const chainpack::UserLoginContext &login_context)
+chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginContext &login_context)
 {
 	using LoginType = cp::UserLogin::LoginType;
 	chainpack::UserLogin login = login_context.userLogin();
 	chainpack::AclUser acl_user = user(login.user);
 	if(!acl_user.isValid()) {
 		shvError() << "Invalid user name:" << login.user;
-		return m_brokerApp->setCheckPasswordResult(login_context, chainpack::UserLoginResult());
+		return cp::UserLoginResult(false, "Invalid user name.");
 	}
 	auto acl_pwd = acl_user.password;
 	//std::string pwdsrv = std::get<0>(pwdt);
 	//PasswordFormat pwdsrvfmt = std::get<1>(pwdt);
 	if(acl_pwd.password.empty()) {
-		shvError() << "Empty password not allowed:" << acl_user.name;
-		return m_brokerApp->setCheckPasswordResult(login_context, chainpack::UserLoginResult());
+		shvError() << "Empty password not allowed:" << login.user;
+		return cp::UserLoginResult(false, "Empty password not allowed.");
 	}
 	auto usr_login_type = login.loginType;
 	if(usr_login_type == LoginType::Invalid)
@@ -146,10 +146,16 @@ void AclManager::checkPassword(const chainpack::UserLoginContext &login_context)
 
 	std::string usr_pwd = login.password;
 	if(usr_login_type == LoginType::Plain) {
-		if(acl_pwd.format == cp::AclPassword::Format::Plain)
-			m_brokerApp->setCheckPasswordResult(login_context, chainpack::UserLoginResult{acl_pwd.password == usr_pwd});
-		if(acl_pwd.format == cp::AclPassword::Format::Sha1)
-			m_brokerApp->setCheckPasswordResult(login_context, chainpack::UserLoginResult(acl_pwd.password == sha1_hex(usr_pwd)));
+		if(acl_pwd.format == cp::AclPassword::Format::Plain) {
+			if(acl_pwd.password == usr_pwd)
+				return cp::UserLoginResult(true);
+			return cp::UserLoginResult(false, "Invalid password.");
+		}
+		if(acl_pwd.format == cp::AclPassword::Format::Sha1) {
+			if(acl_pwd.password == sha1_hex(usr_pwd))
+				return cp::UserLoginResult(true);
+			return cp::UserLoginResult(false, "Invalid password.");
+		}
 	}
 	if(usr_login_type == LoginType::Sha1) {
 		/// login_type == "SHA1" is default
@@ -162,10 +168,12 @@ void AclManager::checkPassword(const chainpack::UserLoginContext &login_context)
 		hash.addData(nonce.data(), nonce.length());
 		std::string correct_sha1 = std::string(hash.result().toHex().constData());
 		//shvInfo() << nonce_sha1 << "vs" << sha1;
-		m_brokerApp->setCheckPasswordResult(login_context, chainpack::UserLoginResult(usr_pwd == correct_sha1));
+		if(usr_pwd == correct_sha1)
+			return cp::UserLoginResult(true);
+		return cp::UserLoginResult(false, "Invalid password.");
 	}
 	shvError() << "Unsupported login type" << cp::UserLogin::loginTypeToString(login.loginType) << "for user:" << login.user;
-	return m_brokerApp->setCheckPasswordResult(login_context, chainpack::UserLoginResult());
+	return cp::UserLoginResult(false, "Invalid login type.");
 }
 
 std::string AclManager::mountPointForDevice(const chainpack::RpcValue &device_id)
@@ -192,12 +200,26 @@ void AclManager::aclSetUser(const std::string &user_name, const chainpack::AclUs
 	SHV_EXCEPTION("Users definition is read only.");
 }
 
+void AclManager::aclSetRole(const std::string &role_name, const chainpack::AclRole &r)
+{
+	Q_UNUSED(role_name)
+	Q_UNUSED(r)
+	SHV_EXCEPTION("Roles definition is read only.");
+}
+
+void AclManager::aclSetRolePaths(const std::string &role_name, const chainpack::AclRolePaths &rp)
+{
+	Q_UNUSED(role_name)
+	Q_UNUSED(rp)
+	SHV_EXCEPTION("Role paths definition is read only.");
+}
+
 std::set<std::string> AclManager::flattenRole_helper(const std::string &role_name)
 {
 	std::set<std::string> ret;
 	chainpack::AclRole ar = aclRole(role_name);
 	if(ar.isValid()) {
-		ret.insert(ar.name);
+		ret.insert(role_name);
 		for(auto g : ar.roles) {
 			if(ret.count(g)) {
 				shvWarning() << "Cyclic reference in grants detected for grant name:" << g;

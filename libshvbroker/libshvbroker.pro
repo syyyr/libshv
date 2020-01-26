@@ -1,6 +1,6 @@
 message("including $$PWD")
 
-QT += network
+QT += network sql
 QT -= gui
 
 with-shvwebsockets {

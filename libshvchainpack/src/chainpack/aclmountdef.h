@@ -12,8 +12,9 @@ class RpcValue;
 
 struct SHVCHAINPACK_DECL_EXPORT AclMountDef
 {
-	std::string description;
+	//std::string deviceId;
 	std::string mountPoint;
+	std::string description;
 
 	bool isValid() const {return !mountPoint.empty();}
 	RpcValue toRpcValueMap() const;

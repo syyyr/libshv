@@ -59,7 +59,7 @@ private:
 	//bool checkPassword(const shv::chainpack::UserLogin &processLoginRequest) override;
 	bool checkTunnelSecret(const std::string &s);
 
-	void processLoginRequest() override;
+	void processLoginPhase() override;
 private:
 	QTimer *m_idleWatchDogTimer = nullptr;
 	std::vector<std::string> m_mountPoints;

@@ -174,7 +174,7 @@ bool ClientBrokerConnection::checkPassword(const chainpack::UserLogin &login)
 	return BrokerApp::instance()->aclManager()->checkPassword(login, m_userLoginContext);
 }
 */
-void ClientBrokerConnection::processLoginRequest()
+void ClientBrokerConnection::processLoginPhase()
 {
 	if(tunnelOptions().isMap()) {
 		std::string secret = tunnelOptions().toMap().value(cp::Rpc::KEY_SECRET).toString();
@@ -183,9 +183,9 @@ void ClientBrokerConnection::processLoginRequest()
 		setLoginResult(result);
 		return;
 	}
-	Super::processLoginRequest();
-	// check password
-	BrokerApp::instance()->checkPassword(m_userLoginContext);
+	Super::processLoginPhase();
+	cp::UserLoginResult result = BrokerApp::instance()->checkLogin(m_userLoginContext);
+	setLoginResult(result);
 }
 
 void ClientBrokerConnection::setLoginResult(const chainpack::UserLoginResult &result)

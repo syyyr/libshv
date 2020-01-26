@@ -357,19 +357,9 @@ bool BrokerApp::checkTunnelSecret(const std::string &s)
 	return m_tunnelSecretList.checkSecret(s);
 }
 
-void BrokerApp::checkPassword(const chainpack::UserLoginContext &ctx)
+chainpack::UserLoginResult BrokerApp::checkLogin(const chainpack::UserLoginContext &ctx)
 {
-	aclManager()->checkPassword(ctx);
-}
-
-void BrokerApp::setCheckPasswordResult(const chainpack::UserLoginContext &ctx, const chainpack::UserLoginResult &login_result)
-{
-	rpc::ClientBrokerConnection *conn = clientConnectionById(ctx.connectionId);
-	if(!conn) {
-		shvWarning() << "Check password result for invalid connection id:" << ctx.connectionId << "ignored";
-		return;
-	}
-	conn->setLoginResult(login_result);
+	return aclManager()->checkPassword(ctx);
 }
 
 std::string BrokerApp::dataToCpon(shv::chainpack::Rpc::ProtocolType protocol_type, const shv::chainpack::RpcValue::MetaData &md, const std::string &data, size_t start_pos, size_t data_len)
@@ -393,9 +383,7 @@ AclManager *BrokerApp::createAclManager()
 	if(opts->isAclSqlEnabled()) {
 		return new AclManagerSqlite(this);
 	}
-	else {
-		return new AclManagerConfigFiles(this);
-	}
+	return new AclManagerConfigFiles(this);
 }
 
 void BrokerApp::remountDevices()

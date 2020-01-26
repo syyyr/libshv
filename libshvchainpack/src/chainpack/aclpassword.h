@@ -23,6 +23,8 @@ struct SHVCHAINPACK_DECL_EXPORT AclPassword
 		, format(format)
 	{}
 
+	bool isValid() const {return format != Format::Invalid;}
+
 	RpcValue toRpcValueMap() const;
 	static AclPassword fromRpcValue(const RpcValue &v);
 

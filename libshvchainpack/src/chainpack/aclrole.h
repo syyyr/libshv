@@ -12,15 +12,18 @@ class RpcValue;
 
 struct SHVCHAINPACK_DECL_EXPORT AclRole
 {
-	std::string name;
-	int weight = 0;
+	static constexpr int INVALID_WEIGHT = -1;
+	//std::string name;
+	int weight = INVALID_WEIGHT;
 	std::vector<std::string> roles;
 
 	AclRole() {}
-	AclRole(std::string n, int w = 0) : name(std::move(n)), weight(w) {}
-	AclRole(std::string n, int w, std::vector<std::string> roles) : name(std::move(n)), weight(w), roles(std::move(roles)) {}
+	//AclRole(std::string n, int w = 0) : name(std::move(n)), weight(w) {}
+	//AclRole(std::string n, int w, std::vector<std::string> roles) : name(std::move(n)), weight(w), roles(std::move(roles)) {}
+	AclRole(int w) : weight(w) {}
+	AclRole(int w, std::vector<std::string> roles) : weight(w), roles(std::move(roles)) {}
 
-	bool isValid() const {return !name.empty();}
+	bool isValid() const {return weight != INVALID_WEIGHT;}
 	RpcValue toRpcValueMap() const;
 	static AclRole fromRpcValue(const RpcValue &v);
 };

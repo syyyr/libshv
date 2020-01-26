@@ -119,7 +119,7 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 					m_connectionType = ConnectionType::Client;
 			}
 			*/
-			processLoginRequest();
+			processLoginPhase();
 			/*
 			if(!login_resp.isValid())
 				SHV_EXCEPTION("Invalid authentication for user: " + m_userLogin.user + " at: " + connectionName());
@@ -136,7 +136,7 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 	QTimer::singleShot(100, this, &ServerConnection::abort); // need some time to send error to client
 }
 
-void ServerConnection::processLoginRequest()
+void ServerConnection::processLoginPhase()
 {
 	m_userLogin = m_userLoginContext.userLogin();
 	shvInfo() << "login - user:" << userName();// << "password:" << password_hash;

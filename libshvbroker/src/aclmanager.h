@@ -41,8 +41,7 @@ public:
 	std::string mountPointForDevice(const shv::chainpack::RpcValue &device_id);
 	std::vector<std::string> userFlattenRolesSortedByWeight(const std::string &user_name);
 
-	virtual void checkPassword(const chainpack::UserLoginContext &login_context);
-	//Q_SIGNAL void loginResult(int client_id, const shv::chainpack::UserLoginResult &result);
+	virtual chainpack::UserLoginResult checkPassword(const chainpack::UserLoginContext &login_context);
 
 	virtual void reload();
 protected:
@@ -56,9 +55,11 @@ protected:
 
 	virtual std::vector<std::string> aclRoles() = 0;
 	virtual shv::chainpack::AclRole aclRole(const std::string &role_name) = 0;
+	virtual void aclSetRole(const std::string &role_name, const shv::chainpack::AclRole &r);
 
 	virtual std::vector<std::string> aclPathsRoles() = 0;
 	virtual shv::chainpack::AclRolePaths aclPathsRolePaths(const std::string &role_name) = 0;
+	virtual void aclSetRolePaths(const std::string &role_name, const shv::chainpack::AclRolePaths &rp);
 
 	//virtual shv::chainpack::AclPassword aclUserPassword(const std::string &user) = 0;
 protected:
