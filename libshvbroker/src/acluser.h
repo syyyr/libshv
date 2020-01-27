@@ -1,17 +1,16 @@
-#ifndef SHV_CHAINPACK_ACLUSER_H
-#define SHV_CHAINPACK_ACLUSER_H
+#pragma once
 
-#include "../shvchainpackglobal.h"
+#include "shvbrokerglobal.h"
 #include "aclpassword.h"
 
 #include <vector>
 
+namespace shv { namespace chainpack { class RpcValue; } }
+
 namespace shv {
-namespace chainpack {
+namespace broker {
 
-class RpcValue;
-
-struct SHVCHAINPACK_DECL_EXPORT AclUser
+struct SHVBROKER_DECL_EXPORT AclUser
 {
 	//std::string name;
 	AclPassword password;
@@ -24,11 +23,10 @@ struct SHVCHAINPACK_DECL_EXPORT AclUser
 	{}
 	//const std::string userName() const {return login.user;}
 	bool isValid() const {return password.isValid();}
-	RpcValue toRpcValueMap() const;
-	static AclUser fromRpcValue(const RpcValue &v);
+	shv::chainpack::RpcValue toRpcValueMap() const;
+	static AclUser fromRpcValue(const shv::chainpack::RpcValue &v);
 };
 
 } // namespace chainpack
 } // namespace shv
 
-#endif // SHV_CHAINPACK_ACLUSERDEF_H

@@ -19,7 +19,6 @@ inline unsigned qHash(const std::string &s) noexcept //Q_DECL_NOEXCEPT_EXPR(noex
 #include <shv/iotqt/node/shvnode.h>
 
 #include <shv/chainpack/rpcvalue.h>
-#include <shv/iotqt/rpc/password.h>
 
 #include <QCoreApplication>
 #include <QDateTime>

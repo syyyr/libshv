@@ -1,19 +1,20 @@
 #include "acluser.h"
-#include "rpcvalue.h"
+
+#include <shv/chainpack/rpcvalue.h>
 
 namespace shv {
-namespace chainpack {
+namespace broker {
 
-RpcValue AclUser::toRpcValueMap() const
+shv::chainpack::RpcValue AclUser::toRpcValueMap() const
 {
-	return RpcValue::Map {
+	return shv::chainpack::RpcValue::Map {
 		//{"name", name},
 		{"password", password.toRpcValueMap()},
-		{"roles", RpcValue::List::fromStringList(roles)},
+		{"roles", shv::chainpack::RpcValue::List::fromStringList(roles)},
 	};
 }
 
-AclUser AclUser::fromRpcValue(const RpcValue &v)
+AclUser AclUser::fromRpcValue(const shv::chainpack::RpcValue &v)
 {
 	AclUser ret;
 	if(v.isMap()) {

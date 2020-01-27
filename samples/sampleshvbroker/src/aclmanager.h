@@ -12,13 +12,13 @@ public:
 	// AclManager interface
 protected:
 	std::vector<std::string> aclMountDeviceIds() override { return std::vector<std::string>(); }
-	shv::chainpack::AclMountDef aclMountDef(const std::string &device_id) override { Q_UNUSED(device_id) return shv::chainpack::AclMountDef(); }
+	shv::broker::AclMountDef aclMountDef(const std::string &device_id) override { Q_UNUSED(device_id) return shv::broker::AclMountDef(); }
 	std::vector<std::string> aclUsers() override;
-	shv::chainpack::AclUser aclUser(const std::string &user_name) override;
+	shv::broker::AclUser aclUser(const std::string &user_name) override;
 	std::vector<std::string> aclRoles() override;
-	shv::chainpack::AclRole aclRole(const std::string &role_name) override;
+	shv::broker::AclRole aclRole(const std::string &role_name) override;
 	std::vector<std::string> aclPathsRoles() override;
-	shv::chainpack::AclRolePaths aclPathsRolePaths(const std::string &role_name) override;
+	shv::broker::AclRolePaths aclPathsRolePaths(const std::string &role_name) override;
 };
 
 #endif // ACLMANAGER_H

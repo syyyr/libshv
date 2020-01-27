@@ -1,18 +1,19 @@
 #include "aclmountdef.h"
-#include "rpcvalue.h"
+
+#include <shv/chainpack/rpcvalue.h>
 
 namespace shv {
-namespace chainpack {
+namespace broker {
 
-RpcValue AclMountDef::toRpcValueMap() const
+shv::chainpack::RpcValue AclMountDef::toRpcValueMap() const
 {
-	return RpcValue::Map {
+	return shv::chainpack::RpcValue::Map {
 		{"description", description},
 		{"mountPoint", mountPoint},
 	};
 }
 
-AclMountDef AclMountDef::fromRpcValue(const RpcValue &v)
+AclMountDef AclMountDef::fromRpcValue(const shv::chainpack::RpcValue &v)
 {
 	AclMountDef ret;
 	if(v.isMap()) {
@@ -22,7 +23,6 @@ AclMountDef AclMountDef::fromRpcValue(const RpcValue &v)
 	}
 	return ret;
 }
-
 
 } // namespace chainpack
 } // namespace shv

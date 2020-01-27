@@ -2,7 +2,6 @@
 
 #include "../shviotqtglobal.h"
 #include "socketrpcconnection.h"
-#include "password.h"
 
 #include <shv/chainpack/irpcconnection.h>
 #include <shv/chainpack/rpcmessage.h>

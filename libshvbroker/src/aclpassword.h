@@ -1,16 +1,15 @@
-#ifndef SHV_CHAINPACK_ACLPASSWORD_H
-#define SHV_CHAINPACK_ACLPASSWORD_H
+#pragma once
 
-#include "../shvchainpackglobal.h"
+#include "shvbrokerglobal.h"
 
 #include <string>
 
+namespace shv { namespace chainpack { class RpcValue; } }
+
 namespace shv {
-namespace chainpack {
+namespace broker {
 
-class RpcValue;
-
-struct SHVCHAINPACK_DECL_EXPORT AclPassword
+struct SHVBROKER_DECL_EXPORT AclPassword
 {
 	enum class Format {Invalid, Plain, Sha1};
 
@@ -25,8 +24,8 @@ struct SHVCHAINPACK_DECL_EXPORT AclPassword
 
 	bool isValid() const {return format != Format::Invalid;}
 
-	RpcValue toRpcValueMap() const;
-	static AclPassword fromRpcValue(const RpcValue &v);
+	shv::chainpack::RpcValue toRpcValueMap() const;
+	static AclPassword fromRpcValue(const shv::chainpack::RpcValue &v);
 
 	static const char *formatToString(Format f);
 	static Format formatFromString(const std::string &s);
@@ -35,4 +34,3 @@ struct SHVCHAINPACK_DECL_EXPORT AclPassword
 } // namespace chainpack
 } // namespace shv
 
-#endif // SHV_CHAINPACK_ACLPASSWORD_H

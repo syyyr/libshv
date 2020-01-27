@@ -38,13 +38,13 @@ std::vector<std::string> AclManager::mountDeviceIds()
 	return cp::Utils::mapKeys(m_cache.aclMountDefs);
 }
 
-chainpack::AclMountDef AclManager::mountDef(const std::string &device_id)
+AclMountDef AclManager::mountDef(const std::string &device_id)
 {
 	if(m_cache.aclMountDefs.empty())
 		mountDeviceIds();
 	auto it = m_cache.aclMountDefs.find(device_id);
 	if(it == m_cache.aclMountDefs.end())
-		return chainpack::AclMountDef();
+		return AclMountDef();
 	if(!it->second.isValid()) {
 		it->second = aclMountDef(device_id);
 	}
@@ -60,20 +60,20 @@ std::vector<std::string> AclManager::users()
 	return cp::Utils::mapKeys(m_cache.aclUsers);
 }
 
-chainpack::AclUser AclManager::user(const std::string &user_name)
+AclUser AclManager::user(const std::string &user_name)
 {
 	if(m_cache.aclUsers.empty())
 		users();
 	auto it = m_cache.aclUsers.find(user_name);
 	if(it == m_cache.aclUsers.end())
-		return chainpack::AclUser();
+		return AclUser();
 	if(!it->second.isValid()) {
 		it->second = aclUser(user_name);
 	}
 	return it->second;
 }
 
-void AclManager::setUser(const std::string &user_name, const chainpack::AclUser &u)
+void AclManager::setUser(const std::string &user_name, const AclUser &u)
 {
 	aclSetUser(user_name, u);
 	m_cache.aclUsers.clear();
@@ -89,13 +89,13 @@ std::vector<std::string> AclManager::roles()
 	return cp::Utils::mapKeys(m_cache.aclRoles);
 }
 
-chainpack::AclRole AclManager::role(const std::string &role_name)
+AclRole AclManager::role(const std::string &role_name)
 {
 	if(m_cache.aclRoles.empty())
 		roles();
 	auto it = m_cache.aclRoles.find(role_name);
 	if(it == m_cache.aclRoles.end())
-		return chainpack::AclRole();
+		return AclRole();
 	if(!it->second.isValid()) {
 		it->second = aclRole(role_name);
 	}
@@ -111,13 +111,13 @@ std::vector<std::string> AclManager::pathsRoles()
 	return cp::Utils::mapKeys(m_cache.aclPathsRoles);
 }
 
-chainpack::AclRolePaths AclManager::pathsRolePaths(const std::string &role_name)
+AclRolePaths AclManager::pathsRolePaths(const std::string &role_name)
 {
 	if(m_cache.aclPathsRoles.empty())
 		pathsRoles();
 	auto it = m_cache.aclPathsRoles.find(role_name);
 	if(it == m_cache.aclPathsRoles.end())
-		return chainpack::AclRolePaths();
+		return AclRolePaths();
 	if(!it->second.isValid()) {
 		it->second = aclPathsRolePaths(role_name);
 	}
@@ -128,7 +128,7 @@ chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginC
 {
 	using LoginType = cp::UserLogin::LoginType;
 	chainpack::UserLogin login = login_context.userLogin();
-	chainpack::AclUser acl_user = user(login.user);
+	AclUser acl_user = user(login.user);
 	if(!acl_user.isValid()) {
 		shvError() << "Invalid user name:" << login.user;
 		return cp::UserLoginResult(false, "Invalid user name.");
@@ -146,12 +146,12 @@ chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginC
 
 	std::string usr_pwd = login.password;
 	if(usr_login_type == LoginType::Plain) {
-		if(acl_pwd.format == cp::AclPassword::Format::Plain) {
+		if(acl_pwd.format == AclPassword::Format::Plain) {
 			if(acl_pwd.password == usr_pwd)
 				return cp::UserLoginResult(true);
 			return cp::UserLoginResult(false, "Invalid password.");
 		}
-		if(acl_pwd.format == cp::AclPassword::Format::Sha1) {
+		if(acl_pwd.format == AclPassword::Format::Sha1) {
 			if(acl_pwd.password == sha1_hex(usr_pwd))
 				return cp::UserLoginResult(true);
 			return cp::UserLoginResult(false, "Invalid password.");
@@ -159,7 +159,7 @@ chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginC
 	}
 	if(usr_login_type == LoginType::Sha1) {
 		/// login_type == "SHA1" is default
-		if(acl_pwd.format == cp::AclPassword::Format::Plain)
+		if(acl_pwd.format == AclPassword::Format::Plain)
 			acl_pwd.password = sha1_hex(acl_pwd.password);
 
 		std::string nonce = login_context.serverNounce + acl_pwd.password;
@@ -186,28 +186,28 @@ void AclManager::reload()
 	clearCache();
 }
 
-void AclManager::aclSetMountDef(const std::string &device_id, const chainpack::AclMountDef &md)
+void AclManager::aclSetMountDef(const std::string &device_id, const AclMountDef &md)
 {
 	Q_UNUSED(device_id)
 	Q_UNUSED(md)
 	SHV_EXCEPTION("Mount points definition is read only.");
 }
 
-void AclManager::aclSetUser(const std::string &user_name, const chainpack::AclUser &u)
+void AclManager::aclSetUser(const std::string &user_name, const AclUser &u)
 {
 	Q_UNUSED(user_name)
 	Q_UNUSED(u)
 	SHV_EXCEPTION("Users definition is read only.");
 }
 
-void AclManager::aclSetRole(const std::string &role_name, const chainpack::AclRole &r)
+void AclManager::aclSetRole(const std::string &role_name, const AclRole &r)
 {
 	Q_UNUSED(role_name)
 	Q_UNUSED(r)
 	SHV_EXCEPTION("Roles definition is read only.");
 }
 
-void AclManager::aclSetRolePaths(const std::string &role_name, const chainpack::AclRolePaths &rp)
+void AclManager::aclSetRolePaths(const std::string &role_name, const AclRolePaths &rp)
 {
 	Q_UNUSED(role_name)
 	Q_UNUSED(rp)
@@ -217,7 +217,7 @@ void AclManager::aclSetRolePaths(const std::string &role_name, const chainpack::
 std::set<std::string> AclManager::flattenRole_helper(const std::string &role_name)
 {
 	std::set<std::string> ret;
-	chainpack::AclRole ar = aclRole(role_name);
+	AclRole ar = aclRole(role_name);
 	if(ar.isValid()) {
 		ret.insert(role_name);
 		for(auto g : ar.roles) {
@@ -237,7 +237,7 @@ std::vector<std::string> AclManager::userFlattenRolesSortedByWeight(const std::s
 {
 	if(m_cache.userFlattenRoles.find(user_name) == m_cache.userFlattenRoles.end()) {
 		std::set<std::string> unique_roles;
-		chainpack::AclUser user_def = aclUser(user_name);
+		AclUser user_def = aclUser(user_name);
 		if(!user_def.isValid())
 			return std::vector<std::string>();
 
@@ -313,10 +313,10 @@ std::vector<std::string> AclManagerConfigFiles::aclMountDeviceIds()
 	return cp::Utils::mapKeys(cfg);
 }
 
-chainpack::AclMountDef AclManagerConfigFiles::aclMountDef(const std::string &device_id)
+AclMountDef AclManagerConfigFiles::aclMountDef(const std::string &device_id)
 {
 	chainpack::RpcValue v = aclConfig("fstab").toMap().value(device_id);
-	return chainpack::AclMountDef::fromRpcValue(v);
+	return AclMountDef::fromRpcValue(v);
 }
 
 std::vector<std::string> AclManagerConfigFiles::aclUsers()
@@ -325,10 +325,10 @@ std::vector<std::string> AclManagerConfigFiles::aclUsers()
 	return cp::Utils::mapKeys(cfg);
 }
 
-chainpack::AclUser AclManagerConfigFiles::aclUser(const std::string &user_name)
+AclUser AclManagerConfigFiles::aclUser(const std::string &user_name)
 {
 	chainpack::RpcValue v = aclConfig("users").toMap().value(user_name);
-	return chainpack::AclUser::fromRpcValue(v);
+	return AclUser::fromRpcValue(v);
 }
 
 std::vector<std::string> AclManagerConfigFiles::aclRoles()
@@ -337,10 +337,10 @@ std::vector<std::string> AclManagerConfigFiles::aclRoles()
 	return cp::Utils::mapKeys(cfg);
 }
 
-chainpack::AclRole AclManagerConfigFiles::aclRole(const std::string &role_name)
+AclRole AclManagerConfigFiles::aclRole(const std::string &role_name)
 {
 	chainpack::RpcValue v = aclConfig("grants").toMap().value(role_name);
-	return chainpack::AclRole::fromRpcValue(v);
+	return AclRole::fromRpcValue(v);
 }
 
 std::vector<std::string> AclManagerConfigFiles::aclPathsRoles()
@@ -349,10 +349,10 @@ std::vector<std::string> AclManagerConfigFiles::aclPathsRoles()
 	return cp::Utils::mapKeys(cfg);
 }
 
-chainpack::AclRolePaths AclManagerConfigFiles::aclPathsRolePaths(const std::string &role_name)
+AclRolePaths AclManagerConfigFiles::aclPathsRolePaths(const std::string &role_name)
 {
 	chainpack::RpcValue v = aclConfig("paths").toMap().value(role_name);
-	return chainpack::AclRolePaths::fromRpcValue(v);
+	return AclRolePaths::fromRpcValue(v);
 }
 
 } // namespace broker

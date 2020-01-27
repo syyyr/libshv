@@ -3,7 +3,7 @@
 
 #include <shv/iotqt/node/shvnodetree.h>
 #include <shv/coreqt/log.h>
-#include <shv/chainpack/aclrolepaths.h>
+#include <shv/broker/aclrolepaths.h>
 
 namespace cp = shv::chainpack;
 

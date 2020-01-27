@@ -2,7 +2,6 @@
 
 #include "appclioptions.h"
 
-#include <shv/iotqt/rpc/password.h>
 #include <shv/broker/brokerapp.h>
 
 class SampleBrokerApp : public shv::broker::BrokerApp

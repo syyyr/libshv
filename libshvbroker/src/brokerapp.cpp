@@ -17,7 +17,6 @@
 #include <shv/iotqt/node/shvnode.h>
 #include <shv/iotqt/node/shvnodetree.h>
 #include <shv/iotqt/rpc/brokerconnection.h>
-#include <shv/iotqt/rpc/password.h>
 #include <shv/core/utils/shvpath.h>
 
 #include <shv/coreqt/log.h>
@@ -500,7 +499,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	// user_flattent_grants are sorted by weight DESC
 	for(const std::string &role : user_flattent_grants) {
 		logAclD() << "cheking role:" << role << "weight:" << aclManager()->role(role).weight;
-		const chainpack::AclRolePaths &role_paths = aclManager()->pathsRolePaths(role);
+		const AclRolePaths &role_paths = aclManager()->pathsRolePaths(role);
 		for(const auto &kv : role_paths) {
 			const std::string &role_path = kv.first;
 			logAclD().nospace() << "\t checking if path: '" << rq_shv_path << "' match granted path: '" << role_path << "'";

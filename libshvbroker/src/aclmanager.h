@@ -2,11 +2,11 @@
 
 #include "shvbrokerglobal.h"
 
-#include <shv/chainpack/aclrole.h>
-#include <shv/chainpack/aclrolepaths.h>
-#include <shv/chainpack/aclmountdef.h>
-#include <shv/chainpack/acluser.h>
-#include <shv/chainpack/aclpassword.h>
+#include "aclrole.h"
+#include "aclrolepaths.h"
+#include "aclmountdef.h"
+#include "acluser.h"
+#include "aclpassword.h"
 #include <shv/core/exception.h>
 
 #include <QObject>
@@ -26,17 +26,17 @@ public:
 	AclManager(BrokerApp *broker_app);
 
 	std::vector<std::string> mountDeviceIds();
-	shv::chainpack::AclMountDef mountDef(const std::string &device_id);
+	AclMountDef mountDef(const std::string &device_id);
 
 	std::vector<std::string> users();
-	shv::chainpack::AclUser user(const std::string &user_name);
-	void setUser(const std::string &user_name, const shv::chainpack::AclUser &u);
+	AclUser user(const std::string &user_name);
+	void setUser(const std::string &user_name, const AclUser &u);
 
 	std::vector<std::string> roles();
-	shv::chainpack::AclRole role(const std::string &role_name);
+	AclRole role(const std::string &role_name);
 
 	std::vector<std::string> pathsRoles();
-	shv::chainpack::AclRolePaths pathsRolePaths(const std::string &role_name);
+	AclRolePaths pathsRolePaths(const std::string &role_name);
 
 	std::string mountPointForDevice(const shv::chainpack::RpcValue &device_id);
 	std::vector<std::string> userFlattenRolesSortedByWeight(const std::string &user_name);
@@ -46,22 +46,22 @@ public:
 	virtual void reload();
 protected:
 	virtual std::vector<std::string> aclMountDeviceIds() = 0;
-	virtual shv::chainpack::AclMountDef aclMountDef(const std::string &device_id) = 0;
-	virtual void aclSetMountDef(const std::string &device_id, const shv::chainpack::AclMountDef &md);
+	virtual AclMountDef aclMountDef(const std::string &device_id) = 0;
+	virtual void aclSetMountDef(const std::string &device_id, const AclMountDef &md);
 
 	virtual std::vector<std::string> aclUsers() = 0;
-	virtual shv::chainpack::AclUser aclUser(const std::string &user_name) = 0;
-	virtual void aclSetUser(const std::string &user_name, const shv::chainpack::AclUser &u);
+	virtual AclUser aclUser(const std::string &user_name) = 0;
+	virtual void aclSetUser(const std::string &user_name, const AclUser &u);
 
 	virtual std::vector<std::string> aclRoles() = 0;
-	virtual shv::chainpack::AclRole aclRole(const std::string &role_name) = 0;
-	virtual void aclSetRole(const std::string &role_name, const shv::chainpack::AclRole &r);
+	virtual AclRole aclRole(const std::string &role_name) = 0;
+	virtual void aclSetRole(const std::string &role_name, const AclRole &r);
 
 	virtual std::vector<std::string> aclPathsRoles() = 0;
-	virtual shv::chainpack::AclRolePaths aclPathsRolePaths(const std::string &role_name) = 0;
-	virtual void aclSetRolePaths(const std::string &role_name, const shv::chainpack::AclRolePaths &rp);
+	virtual AclRolePaths aclPathsRolePaths(const std::string &role_name) = 0;
+	virtual void aclSetRolePaths(const std::string &role_name, const AclRolePaths &rp);
 
-	//virtual shv::chainpack::AclPassword aclUserPassword(const std::string &user) = 0;
+	//virtual AclPassword aclUserPassword(const std::string &user) = 0;
 protected:
 	virtual void clearCache()
 	{
@@ -72,10 +72,10 @@ protected:
 	BrokerApp * m_brokerApp;
 	struct Cache
 	{
-		std::map<std::string, shv::chainpack::AclMountDef> aclMountDefs;
-		std::map<std::string, shv::chainpack::AclUser> aclUsers;
-		std::map<std::string, shv::chainpack::AclRole> aclRoles;
-		std::map<std::string, shv::chainpack::AclRolePaths> aclPathsRoles;
+		std::map<std::string, AclMountDef> aclMountDefs;
+		std::map<std::string, AclUser> aclUsers;
+		std::map<std::string, AclRole> aclRoles;
+		std::map<std::string, AclRolePaths> aclPathsRoles;
 
 		std::map<std::string, std::vector<std::string>> userFlattenRoles;
 	} m_cache;
@@ -93,13 +93,13 @@ protected:
 	shv::chainpack::RpcValue loadAclConfig(const std::string &config_name, bool throw_exc);
 
 	std::vector<std::string> aclMountDeviceIds() override;
-	shv::chainpack::AclMountDef aclMountDef(const std::string &device_id) override;
+	AclMountDef aclMountDef(const std::string &device_id) override;
 	std::vector<std::string> aclUsers() override;
-	shv::chainpack::AclUser aclUser(const std::string &user_name) override;
+	AclUser aclUser(const std::string &user_name) override;
 	std::vector<std::string> aclRoles() override;
-	shv::chainpack::AclRole aclRole(const std::string &role_name) override;
+	AclRole aclRole(const std::string &role_name) override;
 	std::vector<std::string> aclPathsRoles() override;
-	shv::chainpack::AclRolePaths aclPathsRolePaths(const std::string &role_name) override;
+	AclRolePaths aclPathsRolePaths(const std::string &role_name) override;
 protected:
 	shv::chainpack::RpcValue::Map m_configFiles;
 };

@@ -8,7 +8,6 @@
 #include <shv/core/stringview.h>
 #include <shv/core/utils/shvpath.h>
 #include <shv/iotqt/rpc/socket.h>
-#include <shv/iotqt/rpc/password.h>
 
 #include <QCryptographicHash>
 #include <QTcpSocket>

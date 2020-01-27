@@ -1,8 +1,9 @@
 #include "aclpassword.h"
-#include "rpcvalue.h"
+
+#include <shv/chainpack/rpcvalue.h>
 
 namespace shv {
-namespace chainpack {
+namespace broker {
 
 static bool str_eq(const std::string &s1, const char *s2)
 {
@@ -17,15 +18,15 @@ static bool str_eq(const std::string &s1, const char *s2)
 	return s2[i] == 0;
 }
 
-RpcValue AclPassword::toRpcValueMap() const
+shv::chainpack::RpcValue AclPassword::toRpcValueMap() const
 {
-	return RpcValue::Map {
+	return shv::chainpack::RpcValue::Map {
 		{"password", password},
 		{"format", formatToString(format)},
 	};
 }
 
-AclPassword AclPassword::fromRpcValue(const RpcValue &v)
+AclPassword AclPassword::fromRpcValue(const shv::chainpack::RpcValue &v)
 {
 	AclPassword ret;
 	if(v.isMap()) {

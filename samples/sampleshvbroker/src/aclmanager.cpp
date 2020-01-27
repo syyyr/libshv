@@ -10,10 +10,10 @@ AclManager::AclManager(shv::broker::BrokerApp *broker_app)
 }
 
 namespace {
-std::map<std::string, shv::chainpack::AclUser> s_aclUsers = {
-	{"guest", {{"password", cp::AclPassword::Format::Plain}, {"user"}}},
-	{"poweruser", {{"weakpassword", cp::AclPassword::Format::Plain}, {"user", "system"}}},
-	{"admin", {{"19b9eab2dea2882d328caa6bc26b0b66c002813b", cp::AclPassword::Format::Sha1}, {"superuser"}}},
+std::map<std::string, shv::broker::AclUser> s_aclUsers = {
+	{"guest", {{"password", shv::broker::AclPassword::Format::Plain}, {"user"}}},
+	{"poweruser", {{"weakpassword", shv::broker::AclPassword::Format::Plain}, {"user", "system"}}},
+	{"admin", {{"19b9eab2dea2882d328caa6bc26b0b66c002813b", shv::broker::AclPassword::Format::Sha1}, {"superuser"}}},
 };
 }
 
@@ -22,14 +22,14 @@ std::vector<std::string> AclManager::aclUsers()
 	return cp::Utils::mapKeys(s_aclUsers);
 }
 
-shv::chainpack::AclUser AclManager::aclUser(const std::string &user_name)
+shv::broker::AclUser AclManager::aclUser(const std::string &user_name)
 {
 	auto it = s_aclUsers.find(user_name);
-	return (it == s_aclUsers.end())? cp::AclUser(): it->second;
+	return (it == s_aclUsers.end())? shv::broker::AclUser(): it->second;
 }
 
 namespace {
-std::map<std::string, shv::chainpack::AclRole> s_aclRoles = {
+std::map<std::string, shv::broker::AclRole> s_aclRoles = {
 	{"user", {0}},
 	{"system", {5}},
 	{"superuser", {10, {"user", "system"}}},
@@ -41,10 +41,10 @@ std::vector<std::string> AclManager::aclRoles()
 	return cp::Utils::mapKeys(s_aclRoles);
 }
 
-shv::chainpack::AclRole AclManager::aclRole(const std::string &role_name)
+shv::broker::AclRole AclManager::aclRole(const std::string &role_name)
 {
 	auto it = s_aclRoles.find(role_name);
-	return (it == s_aclRoles.end())? cp::AclRole(): it->second;
+	return (it == s_aclRoles.end())? shv::broker::AclRole(): it->second;
 }
 
 
@@ -53,9 +53,9 @@ std::vector<std::string> AclManager::aclPathsRoles()
 	return cp::Utils::mapKeys(s_aclRoles);
 }
 
-shv::chainpack::AclRolePaths AclManager::aclPathsRolePaths(const std::string &role_name)
+shv::broker::AclRolePaths AclManager::aclPathsRolePaths(const std::string &role_name)
 {
-	cp::AclRolePaths ret;
+	shv::broker::AclRolePaths ret;
 	if(role_name == "user") {
 		{
 			cp::AccessGrant &grant = ret["**"];

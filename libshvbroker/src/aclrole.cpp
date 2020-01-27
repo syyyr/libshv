@@ -1,19 +1,20 @@
 #include "aclrole.h"
-#include "rpcvalue.h"
+
+#include <shv/chainpack/rpcvalue.h>
 
 namespace shv {
-namespace chainpack {
+namespace broker {
 
-RpcValue AclRole::toRpcValueMap() const
+shv::chainpack::RpcValue AclRole::toRpcValueMap() const
 {
-	return RpcValue::Map {
+	return shv::chainpack::RpcValue::Map {
 		//{"name", name},
 		{"weight", weight},
-		{"roles", RpcValue::List::fromStringList(roles)},
+		{"roles", shv::chainpack::RpcValue::List::fromStringList(roles)},
 	};
 }
 
-AclRole AclRole::fromRpcValue(const RpcValue &v)
+AclRole AclRole::fromRpcValue(const shv::chainpack::RpcValue &v)
 {
 	AclRole ret;
 	if(v.isMap()) {
