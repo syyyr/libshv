@@ -98,7 +98,7 @@ class RpcClient:
 			packet_len = size + rd.ctx.index
 		except UnpackContext.BufferUnderflow:
 			return None
-		if size > len(self.readData):
+		if packet_len > len(self.readData):
 			return None
 		proto = rd.ctx.get_byte()
 		if proto == Cpon.ProtocolType:
