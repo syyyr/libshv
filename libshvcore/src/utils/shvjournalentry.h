@@ -20,21 +20,21 @@ public:
 
 	static constexpr int NO_SHORT_TIME = -1;
 
+	int64_t epochMsec = 0;
 	std::string path;
 	shv::chainpack::RpcValue value;
 	int shortTime = NO_SHORT_TIME;
 	std::string domain;
 	CourseType course = Continuous;
-	int64_t epochMsec = 0;
 
 	ShvJournalEntry() {}
 	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, std::string domain, int short_time, CourseType course, int64_t epoch_msec = 0)
-		: path(std::move(path))
+		: epochMsec(epoch_msec)
+		, path(std::move(path))
 		, value{value}
 		, shortTime(short_time)
 		, domain(std::move(domain))
 		, course(course)
-		, epochMsec(epoch_msec)
 	{
 	}
 	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value)

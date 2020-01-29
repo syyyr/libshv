@@ -20,7 +20,7 @@ public:
 	MemoryShvJournal(const ShvJournalGetLogParams &input_filter);
 
 	void setTypeInfo(const shv::chainpack::RpcValue &i);
-	void setTypeInfo(const shv::chainpack::RpcValue &i, const std::string &path_prefix);
+	void setTypeInfo(const std::string &path_prefix, const shv::chainpack::RpcValue &i);
 	void setDeviceId(std::string id) { m_deviceId = std::move(id); }
 	void setDeviceType(std::string type) { m_deviceType = std::move(type); }
 
@@ -33,14 +33,13 @@ private:
 	using Entry = ShvJournalEntry;
 	void append(Entry &&entry);
 
-	PatternMatcher m_patternMatcher;
 	ShvJournalGetLogParams m_inputFilter;
+	PatternMatcher m_patternMatcher;
+	int64_t m_inputFilterSinceMsec = 0;
+	int64_t m_inputFilterUntilMsec = 0;
+	int m_inputFilterRecordCountLimit = DEFAULT_GET_LOG_RECORD_COUNT_LIMIT;
 
 	std::map<std::string, Entry> m_snapshot;
-
-	int64_t m_sinceMsec = 0;
-	int64_t m_untilMsec = 0;
-	int m_maxRecordCount = DEFAULT_GET_LOG_RECORD_COUNT_LIMIT;
 
 	std::map<std::string, int> m_pathDictionary;
 	int m_pathDictionaryIndex = 0;

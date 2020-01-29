@@ -4,6 +4,7 @@ HEADERS += \
     $$PWD/fileshvjournal2.h \
     $$PWD/memoryshvjournal.h \
     $$PWD/shvjournalentry.h \
+    $$PWD/shvlogheader.h \
     $$PWD/versioninfo.h \
     $$PWD/clioptions.h \
     $$PWD/shvpath.h \
@@ -16,6 +17,7 @@ SOURCES += \
     $$PWD/fileshvjournal2.cpp \
     $$PWD/memoryshvjournal.cpp \
     $$PWD/shvjournalentry.cpp \
+    $$PWD/shvlogheader.cpp \
     $$PWD/versioninfo.cpp \
     $$PWD/clioptions.cpp \
     $$PWD/shvpath.cpp \

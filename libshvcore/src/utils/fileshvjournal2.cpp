@@ -1,4 +1,5 @@
 #include "fileshvjournal2.h"
+#include "shvlogheader.h"
 #include "shvpath.h"
 
 #include "../log.h"
@@ -577,6 +578,9 @@ chainpack::RpcValue FileShvJournal2::getLog(const FileShvJournal2::JournalContex
 	int rec_cnt = 0;
 	auto since_msec = params.since.isDateTime()? params.since.toDateTime().msecsSinceEpoch(): 0;
 	auto until_msec = params.until.isDateTime()? params.until.toDateTime().msecsSinceEpoch(): 0;
+	int64_t since_msec2 = since_msec;
+	int64_t until_msec2 = since_msec;
+	int max_rec_cnt = std::min(params.maxRecordCount, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 	if(journal_context.files.size()) {
 		std::vector<int64_t>::const_iterator file_it = journal_context.files.begin();
 		if(since_msec > 0) {
@@ -615,7 +619,6 @@ chainpack::RpcValue FileShvJournal2::getLog(const FileShvJournal2::JournalContex
 			path_cache[path] = ret;
 			return ret;
 		};
-		int max_rec_cnt = std::min(params.maxRecordCount, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 		struct SnapshotEntry
 		{
 			std::string uptime;
@@ -672,6 +675,9 @@ chainpack::RpcValue FileShvJournal2::getLog(const FileShvJournal2::JournalContex
 								short_time_sv.toString(),
 								domain
 							};
+							if(since_msec2 == 0)
+								since_msec2 = dt.msecsSinceEpoch();
+							until_msec2 = dt.msecsSinceEpoch();
 						}
 					}
 				}
@@ -681,7 +687,7 @@ chainpack::RpcValue FileShvJournal2::getLog(const FileShvJournal2::JournalContex
 						std::string err;
 						for(const auto &kv : snapshot) {
 							cp::RpcValue::List rec;
-							rec.push_back(params.since);
+							rec.push_back(since_msec2);
 							if(params.withUptime)
 								rec.push_back(cp::RpcValue::fromCpon(kv.second.uptime, &err));
 							rec.push_back(make_path_shared(kv.first));
@@ -696,6 +702,9 @@ chainpack::RpcValue FileShvJournal2::getLog(const FileShvJournal2::JournalContex
 						snapshot.clear();
 					}
 					if(until_msec == 0 || dt.msecsSinceEpoch() < until_msec) { // keep interval open to make log merge simpler
+						if(since_msec2 == 0)
+							since_msec2 = dt.msecsSinceEpoch();
+						until_msec2 = dt.msecsSinceEpoch();
 						std::string err;
 						cp::RpcValue::List rec;
 						rec.push_back(dt);
@@ -720,37 +729,31 @@ chainpack::RpcValue FileShvJournal2::getLog(const FileShvJournal2::JournalContex
 	}
 log_finish:
 	cp::RpcValue ret = log;
-	cp::RpcValue::MetaData md;
+	ShvLogHeader hdr;
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::BasicInfo)) {
-		{
-			cp::RpcValue::Map device;
-			device["id"] = journal_context.deviceId;
-			device["type"] = journal_context.deviceType;
-			md.setValue("device", device); // required
-		}
-		md.setValue("logVersion", 1); // required
-		md.setValue("dateTime", cp::RpcValue::DateTime::now());
-		ShvJournalGetLogParams params2 = params;
-		params2.since = (since_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec)): cp::RpcValue(nullptr);
-		params2.until = (until_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(until_msec)): cp::RpcValue(nullptr);
-		md.setValue("params", params2.toRpcValue());
-		md.setValue(KEY_RECORD_COUNT, rec_cnt);
+		hdr.setDeviceId(journal_context.deviceId);
+		hdr.setDeviceType(journal_context.deviceType);
+		hdr.setDateTime(cp::RpcValue::DateTime::now());
+		hdr.setLogParams(params);
+		hdr.setSince((since_msec2 > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec2)): cp::RpcValue(nullptr));
+		hdr.setUntil((until_msec2 > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec2)): cp::RpcValue(nullptr));
+		hdr.setRecordCount(rec_cnt);
+		hdr.setRecordCountLimit(max_rec_cnt);
+		hdr.setWithUptime(false);
+		hdr.setWithSnapShot(params.withSnapshot);
 	}
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::FieldInfo)) {
 		cp::RpcValue::List fields;
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Timestamp)}});
-		if(params.withUptime)
-			fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::UpTime)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Path)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Value)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::ShortTime)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Domain)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Course)}});
-		md.setValue("fields", std::move(fields));
+		hdr.setFields(std::move(fields));
 	}
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::TypeInfo)) {
-		if(journal_context.typeInfo.isValid())
-			md.setValue("typeInfo", journal_context.typeInfo);
+		hdr.setTypeInfo(journal_context.typeInfo);
 	}
 	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::PathsDict)) {
 		logIShvJournal() << "Generating paths dict";
@@ -759,10 +762,9 @@ log_finish:
 			logIShvJournal() << "Adding record to paths dict:" << kv.second.toInt() << "-->" << kv.first;
 			path_dict[kv.second.toInt()] = kv.first;
 		}
-		md.setValue(KEY_PATHS_DICT, path_dict);
+		hdr.setPathDict(std::move(path_dict));
 	}
-	if(!md.isEmpty())
-		ret.setMetaData(std::move(md));
+	ret.setMetaData(hdr.toMetaData());
 	return ret;
 }
 

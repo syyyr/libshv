@@ -46,11 +46,12 @@ struct SHVCORE_DECL_EXPORT ShvJournalGetLogParams
 	bool withSnapshot = false;
 	bool withUptime = false;
 	std::string domainPattern; /// always regexp
+
 	ShvJournalGetLogParams() {}
 	ShvJournalGetLogParams(const shv::chainpack::RpcValue &opts);
 
 	shv::chainpack::RpcValue toRpcValue() const;
-	static ShvJournalGetLogParams fromRpcValue(const shv::chainpack::RpcValue &v) ;
+	static ShvJournalGetLogParams fromRpcValue(const shv::chainpack::RpcValue &v);
 };
 
 } // namespace utils
