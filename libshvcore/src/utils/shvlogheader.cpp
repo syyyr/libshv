@@ -3,6 +3,8 @@
 #include "../stringview.h"
 #include "../exception.h"
 
+#include <algorithm>
+
 namespace shv {
 namespace core {
 namespace utils {
@@ -14,14 +16,14 @@ ShvLogHeader ShvLogHeader::fromMetaData(const chainpack::RpcValue::MetaData &md)
 	ret.setDeviceId(device.value("id").toString());
 	ret.setDeviceType(device.value("type").toString());
 	ret.setLogVersion(md.value("logVersion").toInt());
-	ShvJournalGetLogParams params = ShvJournalGetLogParams::fromRpcValue(md.value("logParams"));
+	ShvGetLogParams params = ShvGetLogParams::fromRpcValue(md.value("logParams"));
 	ret.setLogParams(std::move(params));
 	ret.setRecordCount(md.value("recordCount").toInt());
 	ret.setRecordCountLimit(md.value("recordCountLimit").toInt());
 	ret.setWithUptime(md.value("withUptime").toBool());
 	ret.setWithSnapShot(md.value("withSnapShot").toBool());
-	ret.setFields(md.value("fields"));
-	ret.setPathDict(md.value("pathDict"));
+	ret.setFields(md.value("fields").toList());
+	ret.setPathDict(md.value("pathDict").toIMap());
 	ret.m_typeInfos = md.value("typeInfos").toMap();
 	auto ti = md.value("typeInfo");
 	if(ti.isMap())
@@ -48,11 +50,9 @@ chainpack::RpcValue::MetaData ShvLogHeader::toMetaData() const
 	md.setValue("recordCountLimit", recordCountLimit());
 	md.setValue("withUptime", withUptime());
 	md.setValue("withSnapShot", withSnapShot());
-	const chainpack::RpcValue::List &flds = fields().toList();
-	if(!flds.empty())
+	if(!fields().empty())
 		md.setValue("fields", fields());
-	const chainpack::RpcValue::IMap &dict = pathDict().toIMap();
-	if(!dict.empty())
+	if(!pathDict().empty())
 		md.setValue("pathDict", pathDict());
 	if(!m_typeInfos.empty()) {
 		if(m_typeInfos.size() == 1 && m_typeInfos.count(".") == 1)
@@ -72,6 +72,30 @@ void ShvLogHeader::setTypeInfo(const std::string &path_prefix, const chainpack::
 		m_typeInfos["."] = i;
 	else
 		m_typeInfos[path_prefix] = i;
+}
+
+std::map<std::string, ShvLogTypeDescription::SampleType> ShvLogHeader::pathsSampleTypes() const
+{
+	std::map<std::string, ShvLogTypeDescription::SampleType> ret;
+	for(const auto &kv : m_typeInfos) {
+		std::string prefix = kv.first;
+		std::map<std::string, ShvLogTypeDescription::SampleType> type_to_sample_type;
+		for(const auto &kv2 : kv.second.toMap().value("types").toMap()) {
+			ShvLogTypeDescription td = ShvLogTypeDescription::fromRpcValue(kv2.second);
+			type_to_sample_type[kv2.first] = td.sampleType;
+		}
+		for(const auto &kv2 : kv.second.toMap().value("paths").toMap()) {
+			const std::string type = kv2.second.toMap().value("type").toString();
+			auto it = type_to_sample_type.find(type);
+			if(it != type_to_sample_type.end()) {
+				std::string path = kv2.first;
+				if(prefix != ".")
+					path = prefix  + '/' + path;
+				ret[path] = it->second;
+			}
+		}
+	}
+	return ret;
 }
 
 #if 0

@@ -3,12 +3,14 @@ HEADERS += \
     $$PWD/crypt.h \
     $$PWD/fileshvjournal2.h \
     $$PWD/memoryshvjournal.h \
+    $$PWD/shvgetlogparams.h \
     $$PWD/shvjournalentry.h \
+    $$PWD/shvlogfilereader.h \
     $$PWD/shvlogheader.h \
+    $$PWD/shvlogtypedescription.h \
     $$PWD/versioninfo.h \
     $$PWD/clioptions.h \
     $$PWD/shvpath.h \
-    $$PWD/shvjournalgetlogparams.h \
     $$PWD/fileshvjournal.h \
 
 SOURCES += \
@@ -16,11 +18,13 @@ SOURCES += \
     $$PWD/crypt.cpp \
     $$PWD/fileshvjournal2.cpp \
     $$PWD/memoryshvjournal.cpp \
+    $$PWD/shvgetlogparams.cpp \
     $$PWD/shvjournalentry.cpp \
+    $$PWD/shvlogfilereader.cpp \
     $$PWD/shvlogheader.cpp \
+    $$PWD/shvlogtypedescription.cpp \
     $$PWD/versioninfo.cpp \
     $$PWD/clioptions.cpp \
     $$PWD/shvpath.cpp \
-    $$PWD/shvjournalgetlogparams.cpp \
     $$PWD/fileshvjournal.cpp \
 

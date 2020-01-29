@@ -1,6 +1,6 @@
 #include "abstractshvjournal.h"
 #include "shvjournalentry.h"
-#include "shvjournalgetlogparams.h"
+#include "shvgetlogparams.h"
 #include "shvpath.h"
 #include "../stringview.h"
 
@@ -16,12 +16,12 @@ namespace utils {
 
 const int AbstractShvJournal::DEFAULT_GET_LOG_RECORD_COUNT_LIMIT = 100 * 1000;
 
-AbstractShvJournal::PatternMatcher::PatternMatcher(const ShvJournalGetLogParams &filter)
+AbstractShvJournal::PatternMatcher::PatternMatcher(const ShvGetLogParams &filter)
 {
 	shvLogFuncFrame() << "params:" << filter.toRpcValue().toCpon();
 	if(!filter.pathPattern.empty()) {
 		shvDebug() << "path pattern:" << filter.pathPattern;
-		if(filter.pathPatternType == ShvJournalGetLogParams::PatternType::RegEx) {
+		if(filter.pathPatternType == ShvGetLogParams::PatternType::RegEx) {
 			shvDebug() << "\t regex";
 			try {
 				m_pathPatternRegEx = std::regex(filter.pathPattern);
@@ -100,7 +100,6 @@ const char *AbstractShvJournal::Column::name(AbstractShvJournal::Column::Enum e)
 	case Column::Enum::Value: return "value";
 	case Column::Enum::ShortTime: return "shortTime";
 	case Column::Enum::Domain: return "domain";
-	case Column::Enum::Course: return "course";
 	}
 	return "invalid";
 }

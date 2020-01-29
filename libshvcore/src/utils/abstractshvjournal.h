@@ -12,7 +12,7 @@ namespace core {
 namespace utils {
 
 class ShvJournalEntry;
-class ShvJournalGetLogParams;
+class ShvGetLogParams;
 
 class SHVCORE_DECL_EXPORT AbstractShvJournal
 {
@@ -33,7 +33,6 @@ public:
 			Value,
 			ShortTime,
 			Domain,
-			Course,
 		};
 		static const char* name(Enum e);
 		static size_t index(Enum e, bool with_uptime) { return with_uptime? e: e>UpTime? e-1: e; }
@@ -42,13 +41,13 @@ public:
 	virtual ~AbstractShvJournal();
 
 	virtual void append(const ShvJournalEntry &entry) = 0;
-	virtual shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params) = 0;
+	virtual shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) = 0;
 protected:
 	class PatternMatcher
 	{
 	public:
 		PatternMatcher() {}
-		PatternMatcher(const ShvJournalGetLogParams &filter);
+		PatternMatcher(const ShvGetLogParams &filter);
 		bool isEmpty() const {return !isRegexError() && !m_usePathPatternRegEx && m_pathPatternWildCard.empty() && !m_useDomainPatternregEx;}
 		bool isRegexError() const {return  m_regexError;}
 		bool match(const ShvJournalEntry &entry) const;

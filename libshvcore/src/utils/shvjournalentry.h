@@ -3,6 +3,8 @@
 
 #include "../shvcoreglobal.h"
 
+#include "shvlogtypedescription.h"
+
 #include <shv/chainpack/rpcvalue.h>
 
 namespace shv {
@@ -16,7 +18,7 @@ public:
 	static const char *DOMAIN_VAL_FASTCHANGE; /// see shv::chainpack::Rpc::SIG_VAL_FASTCHANGED
 	static const char *DOMAIN_VAL_SERVICECHANGE; /// see shv::chainpack::Rpc::SIG_SERVICE_VAL_CHANGED
 
-	enum CourseType {Continuous = 0, Discrete};
+	using SampleType = ShvLogTypeDescription::SampleType;
 
 	static constexpr int NO_SHORT_TIME = -1;
 
@@ -25,24 +27,24 @@ public:
 	shv::chainpack::RpcValue value;
 	int shortTime = NO_SHORT_TIME;
 	std::string domain;
-	CourseType course = Continuous;
+	SampleType sampleType = SampleType::Continuous;
 
 	ShvJournalEntry() {}
-	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, std::string domain, int short_time, CourseType course, int64_t epoch_msec = 0)
+	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, std::string domain, int short_time, SampleType sample_type, int64_t epoch_msec = 0)
 		: epochMsec(epoch_msec)
 		, path(std::move(path))
 		, value{value}
 		, shortTime(short_time)
 		, domain(std::move(domain))
-		, course(course)
+		, sampleType(sample_type)
 	{
 	}
 	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value)
-		: ShvJournalEntry(path, value, DOMAIN_VAL_CHANGE, NO_SHORT_TIME, Continuous) {}
+		: ShvJournalEntry(path, value, DOMAIN_VAL_CHANGE, NO_SHORT_TIME, SampleType::Continuous) {}
 	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, int short_time)
-		: ShvJournalEntry(path, value, DOMAIN_VAL_FASTCHANGE, short_time, Continuous) {}
+		: ShvJournalEntry(path, value, DOMAIN_VAL_FASTCHANGE, short_time, SampleType::Continuous) {}
 	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, std::string domain)
-		: ShvJournalEntry(path, value, std::move(domain), NO_SHORT_TIME, Continuous) {}
+		: ShvJournalEntry(path, value, std::move(domain), NO_SHORT_TIME, SampleType::Continuous) {}
 
 	bool isValid() const {return !path.empty() && value.isValid();}
 	void setShortTime(int short_time) {shortTime = short_time;}

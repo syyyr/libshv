@@ -5,7 +5,7 @@
 
 #include "abstractshvjournal.h"
 #include "shvjournalentry.h"
-#include "shvjournalgetlogparams.h"
+#include "shvgetlogparams.h"
 
 #include <regex>
 
@@ -17,7 +17,7 @@ class SHVCORE_DECL_EXPORT MemoryShvJournal : public AbstractShvJournal
 {
 public:
 	MemoryShvJournal();
-	MemoryShvJournal(const ShvJournalGetLogParams &input_filter);
+	MemoryShvJournal(const ShvGetLogParams &input_filter);
 
 	void setTypeInfo(const shv::chainpack::RpcValue &i);
 	void setTypeInfo(const std::string &path_prefix, const shv::chainpack::RpcValue &i);
@@ -26,13 +26,13 @@ public:
 
 	void loadLog(const shv::chainpack::RpcValue &log);
 	void append(const ShvJournalEntry &entry) override;
-	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params) override;
+	shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) override;
 
 	const std::vector<ShvJournalEntry>& entries() const {return  m_entries;}
 private:
 	using Entry = ShvJournalEntry;
 
-	ShvJournalGetLogParams m_inputFilter;
+	ShvGetLogParams m_inputFilter;
 	PatternMatcher m_patternMatcher;
 	int64_t m_inputFilterSinceMsec = 0;
 	int64_t m_inputFilterUntilMsec = 0;

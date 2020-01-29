@@ -49,11 +49,12 @@ ChainPackReader &ChainPackReader::operator >>(RpcValue::MetaData &meta_data)
 	return *this;
 }
 
-void ChainPackReader::unpackNext()
+ChainPackReader::ItemType ChainPackReader::unpackNext()
 {
 	cchainpack_unpack_next(&m_inCtx);
 	if(m_inCtx.err_no != CCPCP_RC_OK)
 		PARSE_EXCEPTION("Parse error: " + std::string(m_inCtx.err_msg) + " at: " + std::to_string(m_inCtx.err_no));
+	return m_inCtx.item.type;
 }
 /*
 void ChainPackReader::read(RpcValue &val, std::string &err)

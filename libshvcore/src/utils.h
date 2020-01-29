@@ -18,14 +18,16 @@
 #define SHV_FIELD_IMPL(ptype, lower_letter, upper_letter, name_rest) \
 	protected: ptype m_##lower_letter##name_rest; \
 	public: ptype lower_letter##name_rest() const {return m_##lower_letter##name_rest;} \
-	public: const ptype& lower_letter##name_rest##Ref() const {return m_##lower_letter##name_rest;} \
+	public: const ptype& lower_letter##name_rest##CRef() const {return m_##lower_letter##name_rest;} \
+	public: ptype& lower_letter##name_rest##Ref() {return m_##lower_letter##name_rest;} \
 	public: void set##upper_letter##name_rest(const ptype &val) { m_##lower_letter##name_rest = val; } \
 	public: void set##upper_letter##name_rest(ptype &&val) { m_##lower_letter##name_rest = std::move(val); }
 
 #define SHV_FIELD_IMPL2(ptype, lower_letter, upper_letter, name_rest, default_value) \
 	protected: ptype m_##lower_letter##name_rest = default_value; \
 	public: ptype lower_letter##name_rest() const {return m_##lower_letter##name_rest;} \
-	public: const ptype& lower_letter##name_rest##Ref() const {return m_##lower_letter##name_rest;} \
+	public: const ptype& lower_letter##name_rest##CRef() const {return m_##lower_letter##name_rest;} \
+	public: ptype& lower_letter##name_rest##Ref() {return m_##lower_letter##name_rest;} \
 	public: void set##upper_letter##name_rest(const ptype &val) { m_##lower_letter##name_rest = val; } \
 	public: void set##upper_letter##name_rest(ptype &&val) { m_##lower_letter##name_rest = std::move(val); }
 
@@ -42,7 +44,8 @@
 #define SHV_FIELD_CMP_IMPL(ptype, lower_letter, upper_letter, name_rest) \
 	protected: ptype m_##lower_letter##name_rest; \
 	public: ptype lower_letter##name_rest() const {return m_##lower_letter##name_rest;} \
-	public: const ptype& lower_letter##name_rest##Ref() const {return m_##lower_letter##name_rest;} \
+	public: const ptype& lower_letter##name_rest##CRef() const {return m_##lower_letter##name_rest;} \
+	public: ptype& lower_letter##name_rest##Ref() {return m_##lower_letter##name_rest;} \
 	public: bool set##upper_letter##name_rest(const ptype &val) { \
 		if(!(m_##lower_letter##name_rest == val)) { m_##lower_letter##name_rest = val; return true; } \
 		return false; \
@@ -55,7 +58,8 @@
 #define SHV_FIELD_CMP_IMPL2(ptype, lower_letter, upper_letter, name_rest, default_value) \
 	protected: ptype m_##lower_letter##name_rest = default_value; \
 	public: ptype lower_letter##name_rest() const {return m_##lower_letter##name_rest;} \
-	public: const ptype& lower_letter##name_rest##Ref() const {return m_##lower_letter##name_rest;} \
+	public: const ptype& lower_letter##name_rest##CRef() const {return m_##lower_letter##name_rest;} \
+	public: ptype& lower_letter##name_rest##Ref() {return m_##lower_letter##name_rest;} \
 	public: bool set##upper_letter##name_rest(const ptype &val) { \
 		if(!(m_##lower_letter##name_rest == val)) { m_##lower_letter##name_rest = val; return true; } \
 		return false; \

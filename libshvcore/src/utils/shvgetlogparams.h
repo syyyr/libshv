@@ -11,7 +11,7 @@ namespace shv {
 namespace core {
 namespace utils {
 
-struct SHVCORE_DECL_EXPORT ShvJournalGetLogParams
+struct SHVCORE_DECL_EXPORT ShvGetLogParams
 {
 	static const char *KEY_HEADER_OPTIONS;
 	static const char *KEY_MAX_RECORD_COUNT;
@@ -47,11 +47,11 @@ struct SHVCORE_DECL_EXPORT ShvJournalGetLogParams
 	bool withUptime = false;
 	std::string domainPattern; /// always regexp
 
-	ShvJournalGetLogParams() {}
-	ShvJournalGetLogParams(const shv::chainpack::RpcValue &opts);
+	ShvGetLogParams() {}
+	ShvGetLogParams(const shv::chainpack::RpcValue &opts);
 
 	shv::chainpack::RpcValue toRpcValue() const;
-	static ShvJournalGetLogParams fromRpcValue(const shv::chainpack::RpcValue &v);
+	static ShvGetLogParams fromRpcValue(const shv::chainpack::RpcValue &v);
 };
 
 } // namespace utils

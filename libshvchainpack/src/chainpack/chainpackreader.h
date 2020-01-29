@@ -22,9 +22,11 @@ public:
 
 	uint64_t readUIntData(bool *ok);
 	static uint64_t readUIntData(std::istream &in, bool *ok);
-private:
-	void unpackNext();
 
+	using ItemType = ccpcp_item_types;
+
+	ItemType unpackNext();
+private:
 	void parseList(RpcValue &val);
 	void parseMetaData(RpcValue::MetaData &meta_data);
 	void parseMap(RpcValue &val);

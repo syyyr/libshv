@@ -1,4 +1,4 @@
-#include "shvjournalgetlogparams.h"
+#include "shvgetlogparams.h"
 
 namespace cp = shv::chainpack;
 
@@ -6,20 +6,20 @@ namespace shv {
 namespace core {
 namespace utils {
 
-const char *ShvJournalGetLogParams::KEY_HEADER_OPTIONS = "headerOptions";
-const char *ShvJournalGetLogParams::KEY_MAX_RECORD_COUNT = "maxRecordCount";
-const char *ShvJournalGetLogParams::KEY_WITH_SNAPSHOT = "withSnapshot";
-const char *ShvJournalGetLogParams::KEY_WITH_UPTIME = "withUptime";
-const char *ShvJournalGetLogParams::KEY_WITH_SINCE = "since";
-const char *ShvJournalGetLogParams::KEY_WITH_UNTIL = "until";
-const char *ShvJournalGetLogParams::KEY_PATH_PATTERN_TYPE = "pathPatternType";
-const char *ShvJournalGetLogParams::KEY_PATH_PATTERN = "pathPattern";
-const char *ShvJournalGetLogParams::KEY_DOMAIN_PATTERN = "domainPattern";
+const char *ShvGetLogParams::KEY_HEADER_OPTIONS = "headerOptions";
+const char *ShvGetLogParams::KEY_MAX_RECORD_COUNT = "maxRecordCount";
+const char *ShvGetLogParams::KEY_WITH_SNAPSHOT = "withSnapshot";
+const char *ShvGetLogParams::KEY_WITH_UPTIME = "withUptime";
+const char *ShvGetLogParams::KEY_WITH_SINCE = "since";
+const char *ShvGetLogParams::KEY_WITH_UNTIL = "until";
+const char *ShvGetLogParams::KEY_PATH_PATTERN_TYPE = "pathPatternType";
+const char *ShvGetLogParams::KEY_PATH_PATTERN = "pathPattern";
+const char *ShvGetLogParams::KEY_DOMAIN_PATTERN = "domainPattern";
 
 static const char REG_EX[] = "regex";
 
-ShvJournalGetLogParams::ShvJournalGetLogParams(const chainpack::RpcValue &opts)
-	: ShvJournalGetLogParams()
+ShvGetLogParams::ShvGetLogParams(const chainpack::RpcValue &opts)
+	: ShvGetLogParams()
 {
 	const cp::RpcValue::Map m = opts.toMap();
 	since = m.value(KEY_WITH_SINCE, since);
@@ -37,7 +37,7 @@ ShvJournalGetLogParams::ShvJournalGetLogParams(const chainpack::RpcValue &opts)
 	withUptime = m.value(KEY_WITH_UPTIME, withUptime).toBool();
 }
 
-chainpack::RpcValue ShvJournalGetLogParams::toRpcValue() const
+chainpack::RpcValue ShvGetLogParams::toRpcValue() const
 {
 	cp::RpcValue::Map m;
 	if(since.isValid())
@@ -58,9 +58,9 @@ chainpack::RpcValue ShvJournalGetLogParams::toRpcValue() const
 	return chainpack::RpcValue{m};
 }
 
-ShvJournalGetLogParams ShvJournalGetLogParams::fromRpcValue(const chainpack::RpcValue &v)
+ShvGetLogParams ShvGetLogParams::fromRpcValue(const chainpack::RpcValue &v)
 {
-	ShvJournalGetLogParams ret;
+	ShvGetLogParams ret;
 	const cp::RpcValue::Map &m = v.toMap();
 	ret.since = m.value(KEY_WITH_SINCE);
 	ret.until = m.value(KEY_WITH_UNTIL);

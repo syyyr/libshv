@@ -391,7 +391,7 @@ int64_t FileShvJournal::findLastEntryDateTime(const std::string &fn)
 	return -1;
 }
 
-chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
+chainpack::RpcValue FileShvJournal::getLog(const ShvGetLogParams &params)
 {
 	logDShvJournal() << "========================= getLog ==================" << params.toRpcValue().toCpon();
 	logDShvJournal() << "params:" << params.toRpcValue().toCpon();
@@ -447,7 +447,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 		cp::RpcValue ret = path_cache.value(path);
 		if(ret.isValid())
 			return ret;
-		if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::PathsDict))
+		if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::PathsDict))
 			ret = ++max_path_id;
 		else
 			ret = path;
@@ -551,7 +551,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvJournalGetLogParams &params)
 log_finish:
 	cp::RpcValue ret = log;
 	cp::RpcValue::MetaData md;
-	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::BasicInfo)) {
+	if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::BasicInfo)) {
 		{
 			cp::RpcValue::Map device;
 			device["id"] = m_deviceId;
@@ -563,7 +563,7 @@ log_finish:
 		md.setValue("params", params.toRpcValue());
 		md.setValue(KEY_RECORD_COUNT, rec_cnt);
 	}
-	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::FieldInfo)) {
+	if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::FieldInfo)) {
 		cp::RpcValue::List fields;
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Timestamp)}});
 		if(params.withUptime)
@@ -573,11 +573,11 @@ log_finish:
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::ShortTime)}});
 		md.setValue("fields", std::move(fields));
 	}
-	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::TypeInfo)) {
+	if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::TypeInfo)) {
 		if(m_typeInfo.isValid())
 			md.setValue("typeInfo", m_typeInfo);
 	}
-	if(params.headerOptions & static_cast<unsigned>(ShvJournalGetLogParams::HeaderOptions::PathsDict)) {
+	if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::PathsDict)) {
 		cp::RpcValue::IMap path_dict;
 		for(auto kv : path_cache) {
 			path_dict[kv.second.toInt()] = kv.first;

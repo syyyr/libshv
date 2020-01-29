@@ -3,7 +3,8 @@
 
 #include "../shvcoreglobal.h"
 
-#include "shvjournalgetlogparams.h"
+#include "shvlogtypedescription.h"
+#include "shvgetlogparams.h"
 #include "../utils.h"
 
 #include <shv/chainpack/rpcvalue.h>
@@ -13,7 +14,7 @@ namespace core {
 class StringViewList;
 namespace utils {
 
-class ShvJournalGetLogParams;
+class ShvGetLogParams;
 
 class SHVCORE_DECL_EXPORT ShvLogHeader //: public shv::chainpack::RpcValue::MetaData
 {
@@ -22,13 +23,13 @@ class SHVCORE_DECL_EXPORT ShvLogHeader //: public shv::chainpack::RpcValue::Meta
 	SHV_FIELD_IMPL(std::string, d, D, eviceType)
 	SHV_FIELD_IMPL(std::string, d, D, eviceId)
 	SHV_FIELD_IMPL2(int, l, L, ogVersion, 2)
-	SHV_FIELD_IMPL(ShvJournalGetLogParams, l, L, ogParams)
+	SHV_FIELD_IMPL(ShvGetLogParams, l, L, ogParams)
 	SHV_FIELD_IMPL(int, r, R, ecordCount)
 	SHV_FIELD_IMPL(int, r, R, ecordCountLimit)
 	SHV_FIELD_IMPL(bool, w, W, ithUptime)
 	SHV_FIELD_IMPL(bool, w, W, ithSnapShot)
-	SHV_FIELD_IMPL(shv::chainpack::RpcValue, f, F, ields)
-	SHV_FIELD_IMPL(shv::chainpack::RpcValue, p, P, athDict)
+	SHV_FIELD_IMPL(shv::chainpack::RpcValue::List, f, F, ields)
+	SHV_FIELD_IMPL(shv::chainpack::RpcValue::IMap, p, P, athDict)
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, d, D, ateTime)
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, s, S, ince)
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, u, U, ntil)
@@ -42,6 +43,9 @@ public:
 	void setTypeInfos(shv::chainpack::RpcValue::Map &&ti) {m_typeInfos = std::move(ti);}
 	void setTypeInfo(const shv::chainpack::RpcValue &i) {setTypeInfo(std::string(), i);}
 	void setTypeInfo(const std::string &path_prefix, const shv::chainpack::RpcValue &i);
+	const shv::chainpack::RpcValue::Map& typeInfos() const {return m_typeInfos;}
+
+	std::map<std::string, shv::core::utils::ShvLogTypeDescription::SampleType> pathsSampleTypes() const;
 private:
 	shv::chainpack::RpcValue::Map m_typeInfos;
 

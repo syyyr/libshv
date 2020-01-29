@@ -5,7 +5,7 @@
 #include "../utils.h"
 #include "abstractshvjournal.h"
 #include "shvjournalentry.h"
-#include "shvjournalgetlogparams.h"
+#include "shvgetlogparams.h"
 
 #include <functional>
 
@@ -39,7 +39,7 @@ public:
 
 	void append(const ShvJournalEntry &entry) override;
 
-	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params) override;
+	shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) override;
 
 	void convertLog1JournalDir();
 public:
@@ -64,7 +64,7 @@ public:
 		std::string fileMsecToFilePath(int64_t file_msec) const;
 	};
 	const JournalContext& checkJournalContext();
-	static shv::chainpack::RpcValue getLog(const JournalContext &journal_context, const ShvJournalGetLogParams &params);
+	static shv::chainpack::RpcValue getLog(const JournalContext &journal_context, const ShvGetLogParams &params);
 private:
 
 	void checkJournalContext_helper(bool force = false);

@@ -2,7 +2,7 @@
 #define SHV_CORE_UTILS_FILESHVJOURNAL_H
 
 #include "../shvcoreglobal.h"
-#include "shvjournalgetlogparams.h"
+#include "shvgetlogparams.h"
 #include "shvjournalentry.h"
 #include "../utils.h"
 
@@ -60,7 +60,7 @@ public:
 
 	void append(const ShvJournalEntry &entry, int64_t msec = 0);
 
-	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params);
+	shv::chainpack::RpcValue getLog(const ShvGetLogParams &params);
 private:
 	void checkJournalConsistecy();
 	void rotateJournal();
