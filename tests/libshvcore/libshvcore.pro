@@ -4,4 +4,4 @@ CONFIG += ordered
 SUBDIRS += \
 	crypt \
 	stringview \
-
+	shvlogfilereader \

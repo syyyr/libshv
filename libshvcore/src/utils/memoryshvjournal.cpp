@@ -28,22 +28,14 @@ MemoryShvJournal::MemoryShvJournal(const ShvGetLogParams &input_filter)
 	m_inputFilterRecordCountLimit = std::min(input_filter.maxRecordCount, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 }
 
-void MemoryShvJournal::setTypeInfo(const std::string &path_prefix, const chainpack::RpcValue &i)
-{
-	if(path_prefix.empty())
-		m_typeInfos["."] = i;
-	else
-		m_typeInfos[path_prefix] = i;
-}
-
 void MemoryShvJournal::loadLog(const chainpack::RpcValue &log)
 {
 	ShvLogHeader hdr = ShvLogHeader::fromMetaData(log.metaData());
 
-	std::map<std::string, ShvLogTypeDescription::SampleType> paths_sample_types = hdr.pathsSampleTypes();
-	auto paths_sample_type = [paths_sample_types](const std::string &path) {
-		auto it = paths_sample_types.find(path);
-		return it == paths_sample_types.end()? ShvJournalEntry::SampleType::Continuous: it->second;
+	std::map<std::string, ShvLogTypeDescr> paths_type_descr = hdr.pathsTypeDescr();
+	auto paths_sample_type = [paths_type_descr](const std::string &path) {
+		auto it = paths_type_descr.find(path);
+		return it == paths_type_descr.end()? ShvJournalEntry::SampleType::Continuous: it->second.sampleType;
 	};
 
 	const chainpack::RpcValue::IMap &dict = hdr.pathDictCRef();
@@ -229,8 +221,8 @@ log_finish:
 	cp::RpcValue ret = log;
 	ShvLogHeader hdr;
 	if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::BasicInfo)) {
-		hdr.setDeviceId(m_deviceId);
-		hdr.setDeviceType(m_deviceType);
+		hdr.setDeviceId(m_logHeader.deviceId());
+		hdr.setDeviceType(m_logHeader.deviceType());
 		hdr.setDateTime(cp::RpcValue::DateTime::now());
 		hdr.setLogParams(params);
 		hdr.setSince((since_msec2 > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec2)): cp::RpcValue(nullptr));
@@ -250,7 +242,7 @@ log_finish:
 		hdr.setFields(std::move(fields));
 	}
 	if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::TypeInfo)) {
-		hdr.setTypeInfos(m_typeInfos);
+		hdr.setSources(m_logHeader.sources());
 	}
 	if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::PathsDict)) {
 		logIShvJournal() << "Generating paths dict";

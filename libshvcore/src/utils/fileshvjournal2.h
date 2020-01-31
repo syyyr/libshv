@@ -33,7 +33,7 @@ public:
 	void setJournalSizeLimit(const std::string &n);
 	void setJournalSizeLimit(int64_t n) {m_journalSizeLimit = n;}
 	int64_t journalSizeLimit() const { return m_journalSizeLimit;}
-	void setTypeInfo(const shv::chainpack::RpcValue &i) { m_journalContext.typeInfo = i; }
+	void setTypeInfo(const ShvLogTypeInfo &i) { m_journalContext.typeInfo = i; }
 	void setDeviceId(std::string id) { m_journalContext.deviceId = std::move(id); }
 	void setDeviceType(std::string type) { m_journalContext.deviceType = std::move(type); }
 
@@ -55,7 +55,7 @@ public:
 
 		std::string deviceId;
 		std::string deviceType;
-		shv::chainpack::RpcValue typeInfo;
+		ShvLogTypeInfo typeInfo;
 
 		bool isConsistent() const {return journalDirExists && journalSize >= 0;}
 		//void setNotConsistent() {journalSize = -1;}

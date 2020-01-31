@@ -9,6 +9,8 @@ namespace shv {
 namespace core {
 namespace utils {
 
+const std::string ShvLogHeader::EMPTY_PREFIX_KEY = "";
+
 ShvLogHeader ShvLogHeader::fromMetaData(const chainpack::RpcValue::MetaData &md)
 {
 	ShvLogHeader ret;
@@ -24,10 +26,15 @@ ShvLogHeader ShvLogHeader::fromMetaData(const chainpack::RpcValue::MetaData &md)
 	ret.setWithSnapShot(md.value("withSnapShot").toBool());
 	ret.setFields(md.value("fields").toList());
 	ret.setPathDict(md.value("pathDict").toIMap());
-	ret.m_typeInfos = md.value("typeInfos").toMap();
-	auto ti = md.value("typeInfo");
-	if(ti.isMap())
-		ret.m_typeInfos["."] = ti;
+	{
+		const chainpack::RpcValue::Map &m = md.value("sources").toMap();
+		for(const auto &kv : m) {
+			ret.m_sources[kv.first] = ShvLogTypeInfo::fromRpcValue(kv.second);
+		}
+		chainpack::RpcValue ti = md.value("typeInfo");
+		if(ti.isMap())
+			ret.m_sources[EMPTY_PREFIX_KEY] = ShvLogTypeInfo::fromRpcValue(ti);
+	}
 	ret.setDateTime(md.value("dateTime"));
 	ret.setSince(md.value("since"));
 	ret.setUntil(md.value("until"));
@@ -54,42 +61,44 @@ chainpack::RpcValue::MetaData ShvLogHeader::toMetaData() const
 		md.setValue("fields", fields());
 	if(!pathDict().empty())
 		md.setValue("pathDict", pathDict());
-	if(!m_typeInfos.empty()) {
-		if(m_typeInfos.size() == 1 && m_typeInfos.count(".") == 1)
-			md.setValue("typeInfo", m_typeInfos.value("."));
+	chainpack::RpcValue::Map srcs;
+	for(const auto &kv : m_sources) {
+		const std::string &path_prefix = kv.first;
+		if(path_prefix.empty())
+			md.setValue("typeInfo", kv.second.toRpcValue());
 		else
-			md.setValue("typeInfos", m_typeInfos);
+			srcs[path_prefix] = kv.second.toRpcValue();
 	}
+	if(!srcs.empty())
+		md.setValue("sources", std::move(srcs));
 	md.setValue("dateTime", dateTime());
 	md.setValue("since", since());
 	md.setValue("until", until());
 	return md;
 }
 
-void ShvLogHeader::setTypeInfo(const std::string &path_prefix, const chainpack::RpcValue &i)
+const ShvLogTypeInfo &ShvLogHeader::typeInfo(const std::string &path_prefix) const
 {
-	if(path_prefix.empty())
-		m_typeInfos["."] = i;
-	else
-		m_typeInfos[path_prefix] = i;
+	auto it = m_sources.find(path_prefix);
+	if(it == m_sources.end()) {
+		static const ShvLogTypeInfo ti;
+		return ti;
+	}
+	return m_sources.at(path_prefix);
 }
 
-std::map<std::string, ShvLogTypeDescription::SampleType> ShvLogHeader::pathsSampleTypes() const
+std::map<std::string, ShvLogTypeDescr> ShvLogHeader::pathsTypeDescr() const
 {
-	std::map<std::string, ShvLogTypeDescription::SampleType> ret;
-	for(const auto &kv : m_typeInfos) {
+	std::map<std::string, ShvLogTypeDescr> ret;
+	for(const auto &kv : m_sources) {
 		std::string prefix = kv.first;
-		std::map<std::string, ShvLogTypeDescription::SampleType> type_to_sample_type;
-		for(const auto &kv2 : kv.second.toMap().value("types").toMap()) {
-			ShvLogTypeDescription td = ShvLogTypeDescription::fromRpcValue(kv2.second);
-			type_to_sample_type[kv2.first] = td.sampleType;
-		}
-		for(const auto &kv2 : kv.second.toMap().value("paths").toMap()) {
-			const std::string type = kv2.second.toMap().value("type").toString();
-			auto it = type_to_sample_type.find(type);
-			if(it != type_to_sample_type.end()) {
+		const ShvLogTypeInfo &ti = kv.second;
+		for(const auto &kv2 : ti.paths) {
+			const std::string &type_name = kv2.second.typeName;
+			auto it = ti.types.find(type_name);
+			if(it != ti.types.end()) {
 				std::string path = kv2.first;
-				if(prefix != ".")
+				if(prefix != EMPTY_PREFIX_KEY)
 					path = prefix  + '/' + path;
 				ret[path] = it->second;
 			}

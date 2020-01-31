@@ -575,10 +575,10 @@ chainpack::RpcValue FileShvJournal2::getLog(const FileShvJournal2::JournalContex
 
 	ShvLogHeader hdr_helper;
 	hdr_helper.setTypeInfo(journal_context.typeInfo);
-	std::map<std::string, ShvLogTypeDescription::SampleType> paths_sample_types = hdr_helper.pathsSampleTypes();
-	auto paths_sample_type = [paths_sample_types](const std::string &path) {
-		auto it = paths_sample_types.find(path);
-		return it == paths_sample_types.end()? ShvJournalEntry::SampleType::Continuous: it->second;
+	std::map<std::string, ShvLogTypeDescr> paths_type_descr = hdr_helper.pathsTypeDescr();
+	auto paths_sample_type = [paths_type_descr](const std::string &path) {
+		auto it = paths_type_descr.find(path);
+		return it == paths_type_descr.end()? ShvJournalEntry::SampleType::Continuous: it->second.sampleType;
 	};
 
 	cp::RpcValue::Map path_cache;
@@ -757,7 +757,7 @@ log_finish:
 		hdr.setFields(std::move(fields));
 	}
 	if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::TypeInfo)) {
-		hdr.setTypeInfos(shv::chainpack::RpcValue::Map());
+		hdr.setTypeInfo(journal_context.typeInfo);
 	}
 	if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::PathsDict)) {
 		logIShvJournal() << "Generating paths dict";

@@ -3,7 +3,7 @@
 
 #include "../shvcoreglobal.h"
 
-#include "shvlogtypedescription.h"
+#include "shvlogtypeinfo.h"
 #include "shvgetlogparams.h"
 #include "../utils.h"
 
@@ -19,6 +19,8 @@ class ShvGetLogParams;
 class SHVCORE_DECL_EXPORT ShvLogHeader //: public shv::chainpack::RpcValue::MetaData
 {
 	using Super = shv::chainpack::RpcValue::MetaData;
+
+	static const std::string EMPTY_PREFIX_KEY;
 
 	SHV_FIELD_IMPL(std::string, d, D, eviceType)
 	SHV_FIELD_IMPL(std::string, d, D, eviceId)
@@ -39,15 +41,18 @@ public:
 	static ShvLogHeader fromMetaData(const chainpack::RpcValue::MetaData &md);
 	chainpack::RpcValue::MetaData toMetaData() const;
 
-	void setTypeInfos(const shv::chainpack::RpcValue::Map &ti) {m_typeInfos = ti;}
-	void setTypeInfos(shv::chainpack::RpcValue::Map &&ti) {m_typeInfos = std::move(ti);}
-	void setTypeInfo(const shv::chainpack::RpcValue &i) {setTypeInfo(std::string(), i);}
-	void setTypeInfo(const std::string &path_prefix, const shv::chainpack::RpcValue &i);
-	const shv::chainpack::RpcValue::Map& typeInfos() const {return m_typeInfos;}
+	const std::map<std::string, ShvLogTypeInfo>& sources() const {return m_sources;}
+	void setSources(std::map<std::string, ShvLogTypeInfo> &&ss) {m_sources = std::move(ss);}
+	void setSources(const std::map<std::string, ShvLogTypeInfo> &ss) {m_sources = ss;}
 
-	std::map<std::string, shv::core::utils::ShvLogTypeDescription::SampleType> pathsSampleTypes() const;
+	const ShvLogTypeInfo& typeInfo(const std::string &path_prefix = EMPTY_PREFIX_KEY) const;
+	void setTypeInfo(ShvLogTypeInfo &&ti) { m_sources[EMPTY_PREFIX_KEY] = std::move(ti); }
+	void setTypeInfo(const ShvLogTypeInfo &ti) { m_sources[EMPTY_PREFIX_KEY] = ti; }
+	void setTypeInfo(const std::string &path_prefix, ShvLogTypeInfo &&ti) { m_sources[path_prefix] = std::move(ti); }
+
+	std::map<std::string, shv::core::utils::ShvLogTypeDescr> pathsTypeDescr() const;
 private:
-	shv::chainpack::RpcValue::Map m_typeInfos;
+	std::map<std::string, ShvLogTypeInfo> m_sources;
 
 #if 0
 	ShvLogHeader(const Super &super) : Super(super) {}

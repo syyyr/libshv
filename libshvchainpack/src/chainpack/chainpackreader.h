@@ -25,6 +25,7 @@ public:
 
 	using ItemType = ccpcp_item_types;
 
+	ItemType peekNext();
 	ItemType unpackNext();
 private:
 	void parseList(RpcValue &val);

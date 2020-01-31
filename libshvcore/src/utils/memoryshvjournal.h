@@ -6,6 +6,7 @@
 #include "abstractshvjournal.h"
 #include "shvjournalentry.h"
 #include "shvgetlogparams.h"
+#include "shvlogheader.h"
 
 #include <regex>
 
@@ -19,10 +20,10 @@ public:
 	MemoryShvJournal();
 	MemoryShvJournal(const ShvGetLogParams &input_filter);
 
-	void setTypeInfo(const shv::chainpack::RpcValue &i);
-	void setTypeInfo(const std::string &path_prefix, const shv::chainpack::RpcValue &i);
-	void setDeviceId(std::string id) { m_deviceId = std::move(id); }
-	void setDeviceType(std::string type) { m_deviceType = std::move(type); }
+	void setTypeInfo(ShvLogTypeInfo &&ti) {m_logHeader.setTypeInfo(std::move(ti));}
+	void setTypeInfo(const std::string &path_prefix, ShvLogTypeInfo &&ti) {m_logHeader.setTypeInfo(path_prefix, std::move(ti));}
+	void setDeviceId(std::string id) { m_logHeader.setDeviceId(std::move(id)); }
+	void setDeviceType(std::string type) { m_logHeader.setDeviceType(std::move(type)); }
 
 	void loadLog(const shv::chainpack::RpcValue &log);
 	void append(const ShvJournalEntry &entry) override;
@@ -43,9 +44,7 @@ private:
 	std::map<std::string, int> m_pathDictionary;
 	int m_pathDictionaryIndex = 0;
 
-	std::string m_deviceId;
-	std::string m_deviceType;
-	shv::chainpack::RpcValue::Map m_typeInfos;
+	ShvLogHeader m_logHeader;
 
 	std::vector<Entry> m_entries;
 };

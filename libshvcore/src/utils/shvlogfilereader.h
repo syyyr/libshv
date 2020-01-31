@@ -24,12 +24,12 @@ public:
 
 	ShvJournalEntry next();
 private:
-	ShvLogTypeDescription::SampleType pathsSampleType(const std::string &path) const;
+	ShvLogTypeDescr::SampleType pathsSampleType(const std::string &path) const;
 private:
 	std::ifstream m_ifstream;
 	bool m_isTextLog = false;
 	ShvLogHeader m_logHeader;
-	std::map<std::string, ShvLogTypeDescription::SampleType> m_pathsSampleTypes;
+	std::map<std::string, ShvLogTypeDescr> m_pathsTypeDescr;
 	shv::chainpack::ChainPackReader *m_chainpackReader = nullptr;
 
 	size_t m_colTimestamp = 0;

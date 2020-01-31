@@ -56,18 +56,34 @@ ChainPackReader::ItemType ChainPackReader::unpackNext()
 		PARSE_EXCEPTION("Parse error: " + std::string(m_inCtx.err_msg) + " at: " + std::to_string(m_inCtx.err_no));
 	return m_inCtx.item.type;
 }
-/*
-void ChainPackReader::read(RpcValue &val, std::string &err)
+
+ChainPackReader::ItemType ChainPackReader::peekNext()
 {
-	err.clear();
-	try {
-		read(val);
+	const char *p = ccpcp_unpack_peek_byte(&m_inCtx);
+	if(!p)
+		PARSE_EXCEPTION("Parse error: " + std::string(m_inCtx.err_msg) + " at: " + std::to_string(m_inCtx.err_no));
+	switch((cchainpack_pack_packing_schema)*p) {
+	case CP_Null: return CCPCP_ITEM_NULL;
+	case CP_UInt: return CCPCP_ITEM_UINT;
+	case CP_Int: return CCPCP_ITEM_INT;
+	case CP_Double: return CCPCP_ITEM_DOUBLE;
+	case CP_Bool: return CCPCP_ITEM_BOOLEAN;
+	case CP_String: return CCPCP_ITEM_STRING;
+	case CP_List: return CCPCP_ITEM_LIST;
+	case CP_Map: return CCPCP_ITEM_MAP;
+	case CP_IMap: return CCPCP_ITEM_IMAP;
+	case CP_MetaMap: return CCPCP_ITEM_META;
+	case CP_Decimal: return CCPCP_ITEM_DECIMAL;
+	case CP_DateTime: return CCPCP_ITEM_DATE_TIME;
+	case CP_CString: return CCPCP_ITEM_STRING;
+	case CP_FALSE: return CCPCP_ITEM_BOOLEAN;
+	case CP_TRUE: return CCPCP_ITEM_BOOLEAN;
+	case CP_TERM: return CCPCP_ITEM_CONTAINER_END;
+	default: break;
 	}
-	catch (ParseException &e) {
-		err = e.what();
-	}
+	return CCPCP_ITEM_INVALID;
 }
-*/
+
 uint64_t ChainPackReader::readUIntData(bool *ok)
 {
 	return cchainpack_unpack_uint_data(&m_inCtx, ok);

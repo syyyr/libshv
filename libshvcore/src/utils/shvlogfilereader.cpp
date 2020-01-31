@@ -30,9 +30,10 @@ ShvLogFileReader::ShvLogFileReader(const std::string &file_name, const ShvLogHea
 	m_ifstream.open(file_name, std::ios::binary);
 	if(!m_ifstream)
 		SHV_EXCEPTION("Cannot open file " + file_name + " for reading.");
+	m_pathsTypeDescr = m_logHeader.pathsTypeDescr();
 	m_isTextLog = String::endsWith(file_name, ".log2");
 	if(m_isTextLog) {
-		if(m_logHeader.typeInfos().empty()) {
+		if(m_pathsTypeDescr.empty()) {
 			shvWarning() << "Type info not provided for text log, sample type cannot be discovered.";
 		}
 	}
@@ -40,8 +41,9 @@ ShvLogFileReader::ShvLogFileReader(const std::string &file_name, const ShvLogHea
 		m_chainpackReader = new cp::ChainPackReader(m_ifstream);
 		cp::RpcValue::MetaData md;
 		m_chainpackReader->read(md);
-		if(m_logHeader.typeInfos().empty()) {
+		if(m_pathsTypeDescr.empty()) {
 			m_logHeader = ShvLogHeader::fromMetaData(md);
+			m_pathsTypeDescr = m_logHeader.pathsTypeDescr();
 		}
 		m_colTimestamp = AbstractShvJournal::Column::index(AbstractShvJournal::Column::Timestamp, m_logHeader.withUptime());
 		m_colPath = AbstractShvJournal::Column::index(AbstractShvJournal::Column::Path, m_logHeader.withUptime());
@@ -52,7 +54,6 @@ ShvLogFileReader::ShvLogFileReader(const std::string &file_name, const ShvLogHea
 		if(t != chainpack::ChainPackReader::ItemType::CCPCP_ITEM_LIST)
 			SHV_EXCEPTION("Log is corrupted!");
 	}
-	m_pathsSampleTypes = m_logHeader.pathsSampleTypes();
 }
 
 ShvLogFileReader::~ShvLogFileReader()
@@ -83,6 +84,11 @@ ShvJournalEntry ShvLogFileReader::next()
 	ShvJournalEntry e;
 	if(m_chainpackReader) {
 		while(true) {
+			if(!m_ifstream)
+				return ShvJournalEntry();
+			if(m_chainpackReader->peekNext() == chainpack::ChainPackReader::ItemType::CCPCP_ITEM_CONTAINER_END)
+				return ShvJournalEntry();
+
 			cp::RpcValue val;
 			m_chainpackReader->read(val);
 			const chainpack::RpcValue::List &row = val.toList();
@@ -141,10 +147,10 @@ ShvJournalEntry ShvLogFileReader::next()
 	return e;
 }
 
-ShvLogTypeDescription::SampleType ShvLogFileReader::pathsSampleType(const std::string &path) const
+ShvLogTypeDescr::SampleType ShvLogFileReader::pathsSampleType(const std::string &path) const
 {
-	auto it = m_pathsSampleTypes.find(path);
-	return it == m_pathsSampleTypes.end()? ShvJournalEntry::SampleType::Continuous: it->second;
+	auto it = m_pathsTypeDescr.find(path);
+	return it == m_pathsTypeDescr.end()? ShvJournalEntry::SampleType::Continuous: it->second.sampleType;
 }
 
 

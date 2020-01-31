@@ -3,7 +3,7 @@
 
 #include "../shvcoreglobal.h"
 
-#include "shvlogtypedescription.h"
+#include "shvlogtypeinfo.h"
 
 #include <shv/chainpack/rpcvalue.h>
 
@@ -18,7 +18,7 @@ public:
 	static const char *DOMAIN_VAL_FASTCHANGE; /// see shv::chainpack::Rpc::SIG_VAL_FASTCHANGED
 	static const char *DOMAIN_VAL_SERVICECHANGE; /// see shv::chainpack::Rpc::SIG_SERVICE_VAL_CHANGED
 
-	using SampleType = ShvLogTypeDescription::SampleType;
+	using SampleType = ShvLogTypeDescr::SampleType;
 
 	static constexpr int NO_SHORT_TIME = -1;
 

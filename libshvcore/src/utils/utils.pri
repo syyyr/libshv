@@ -7,7 +7,7 @@ HEADERS += \
     $$PWD/shvjournalentry.h \
     $$PWD/shvlogfilereader.h \
     $$PWD/shvlogheader.h \
-    $$PWD/shvlogtypedescription.h \
+    $$PWD/shvlogtypeinfo.h \
     $$PWD/versioninfo.h \
     $$PWD/clioptions.h \
     $$PWD/shvpath.h \
@@ -22,7 +22,7 @@ SOURCES += \
     $$PWD/shvjournalentry.cpp \
     $$PWD/shvlogfilereader.cpp \
     $$PWD/shvlogheader.cpp \
-    $$PWD/shvlogtypedescription.cpp \
+    $$PWD/shvlogtypeinfo.cpp \
     $$PWD/versioninfo.cpp \
     $$PWD/clioptions.cpp \
     $$PWD/shvpath.cpp \
