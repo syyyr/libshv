@@ -140,7 +140,7 @@ chainpack::RpcValue MemoryShvJournal::getLog(const ShvJournalGetLogParams &param
 	if(until_msec > 0) {
 		Entry e;
 		e.epochMsec = until_msec;
-		it1 = std::upper_bound(m_entries.begin(), m_entries.end(), e, [](const Entry &e1, const Entry &e2) {
+		it2 = std::upper_bound(m_entries.begin(), m_entries.end(), e, [](const Entry &e1, const Entry &e2) {
 			return e1.epochMsec < e2.epochMsec;
 		});
 	}
@@ -228,7 +228,7 @@ log_finish:
 		hdr.setDateTime(cp::RpcValue::DateTime::now());
 		hdr.setLogParams(params);
 		hdr.setSince((since_msec2 > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec2)): cp::RpcValue(nullptr));
-		hdr.setUntil((until_msec2 > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec2)): cp::RpcValue(nullptr));
+		hdr.setUntil((until_msec2 > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(until_msec2)): cp::RpcValue(nullptr));
 		hdr.setRecordCount(rec_cnt);
 		hdr.setRecordCountLimit(max_rec_cnt);
 		hdr.setWithUptime(false);

@@ -31,7 +31,6 @@ public:
 	const std::vector<ShvJournalEntry>& entries() const {return  m_entries;}
 private:
 	using Entry = ShvJournalEntry;
-	void append(Entry &&entry);
 
 	ShvJournalGetLogParams m_inputFilter;
 	PatternMatcher m_patternMatcher;
