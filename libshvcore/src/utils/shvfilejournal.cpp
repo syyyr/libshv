@@ -1,4 +1,4 @@
-#include "fileshvjournal2.h"
+#include "shvfilejournal.h"
 #include "shvlogheader.h"
 #include "shvpath.h"
 
@@ -16,6 +16,7 @@
 
 #define logWShvJournal() shvCWarning("ShvJournal")
 #define logIShvJournal() shvCInfo("ShvJournal")
+#define logMShvJournal() shvCMessage("ShvJournal")
 #define logDShvJournal() shvCDebug("ShvJournal")
 
 namespace cp = shv::chainpack;
@@ -26,10 +27,13 @@ namespace utils {
 
 static int uptimeSec()
 {
+	/*
 	int uptime;
 	if (std::ifstream("/proc/uptime", std::ios::in) >> uptime) {
 		return uptime;
 	}
+	*/
+	/// uptime is not used anymore
 	return 0;
 }
 /*
@@ -129,20 +133,20 @@ static constexpr size_t MIN_SEP_POS = 13;
 static constexpr size_t SEC_SEP_POS = MIN_SEP_POS + 3;
 static constexpr size_t MSEC_SEP_POS = SEC_SEP_POS + 3;
 
-const std::string FileShvJournal2::FILE_EXT = ".log2";
+const std::string ShvFileJournal::FILE_EXT = ".log2";
 
-FileShvJournal2::FileShvJournal2(std::string device_id, FileShvJournal2::SnapShotFn snf)
+ShvFileJournal::ShvFileJournal(std::string device_id, ShvFileJournal::SnapShotFn snf)
 	: m_snapShotFn(snf)
 {
 	setDeviceId(device_id);
 }
 
-void FileShvJournal2::setJournalDir(std::string s)
+void ShvFileJournal::setJournalDir(std::string s)
 {
 	m_journalContext.journalDir = std::move(s);
 }
 
-const std::string &FileShvJournal2::journalDir()
+const std::string &ShvFileJournal::journalDir()
 {
 	if(m_journalContext.journalDir.empty()) {
 		std::string d = "/tmp/shvjournal/";
@@ -162,17 +166,17 @@ const std::string &FileShvJournal2::journalDir()
 	return m_journalContext.journalDir;
 }
 
-void FileShvJournal2::setFileSizeLimit(const std::string &n)
+void ShvFileJournal::setFileSizeLimit(const std::string &n)
 {
 	setFileSizeLimit(str_to_size(n));
 }
 
-void FileShvJournal2::setJournalSizeLimit(const std::string &n)
+void ShvFileJournal::setJournalSizeLimit(const std::string &n)
 {
 	setJournalSizeLimit(str_to_size(n));
 }
 
-void FileShvJournal2::append(const ShvJournalEntry &entry)
+void ShvFileJournal::append(const ShvJournalEntry &entry)
 {
 	try {
 		appendThrow(entry);
@@ -190,7 +194,7 @@ void FileShvJournal2::append(const ShvJournalEntry &entry)
 	}
 }
 
-void FileShvJournal2::appendThrow(const ShvJournalEntry &entry)
+void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 {
 	shvLogFuncFrame();// << "last file no:" << lastFileNo();
 	int64_t msec = entry.epochMsec;
@@ -248,7 +252,7 @@ void FileShvJournal2::appendThrow(const ShvJournalEntry &entry)
 	}
 }
 
-void FileShvJournal2::wrirteEntry(std::ofstream &out, int64_t msec, const ShvJournalEntry &e)
+void ShvFileJournal::wrirteEntry(std::ofstream &out, int64_t msec, const ShvJournalEntry &e)
 {
 	/*
 	logDShvJournal() << "\t appending entry:"
@@ -275,21 +279,21 @@ void FileShvJournal2::wrirteEntry(std::ofstream &out, int64_t msec, const ShvJou
 	m_journalContext.recentTimeStamp = msec;
 }
 
-int64_t FileShvJournal2::JournalContext::fileNameToFileMsec(const std::string &fn) const
+int64_t ShvFileJournal::JournalContext::fileNameToFileMsec(const std::string &fn) const
 {
 	std::string utc_str = fn;
 	if(MSEC_SEP_POS >= utc_str.size())
-		throw std::runtime_error("fn2msec(): File name: '" + fn + "' too short.");
+		throw std::runtime_error("fileNameToFileMsec(): File name: '" + fn + "' too short.");
 	utc_str[MIN_SEP_POS] = ':';
 	utc_str[SEC_SEP_POS] = ':';
 	utc_str[MSEC_SEP_POS] = '.';
 	int64_t msec = cp::RpcValue::DateTime::fromUtcString(utc_str).msecsSinceEpoch();
 	if(msec == 0)
-		throw std::runtime_error("fn2msec(): Invalid file name: '" + fn + "' cannot be converted to date time");
+		throw std::runtime_error("fileNameToFileMsec(): Invalid file name: '" + fn + "' cannot be converted to date time");
 	return msec;
 }
 
-std::string FileShvJournal2::JournalContext::fileMsecToFileName(int64_t msec) const
+std::string ShvFileJournal::JournalContext::fileMsecToFileName(int64_t msec) const
 {
 	std::string fn = cp::RpcValue::DateTime::fromMSecsSinceEpoch(msec).toIsoString(cp::RpcValue::DateTime::MsecPolicy::Always, false);
 	fn[MIN_SEP_POS] = '-';
@@ -298,13 +302,13 @@ std::string FileShvJournal2::JournalContext::fileMsecToFileName(int64_t msec) co
 	return fn + FILE_EXT;
 }
 
-std::string FileShvJournal2::JournalContext::fileMsecToFilePath(int64_t file_msec) const
+std::string ShvFileJournal::JournalContext::fileMsecToFilePath(int64_t file_msec) const
 {
 	std::string fn = fileMsecToFileName(file_msec);
 	return journalDir + '/' + fn;
 }
 
-void FileShvJournal2::checkJournalContext_helper(bool force)
+void ShvFileJournal::checkJournalContext_helper(bool force)
 {
 	if(!m_journalContext.isConsistent() || force) {
 		logDShvJournal() << "journal status not consistent or check forced";
@@ -319,7 +323,7 @@ void FileShvJournal2::checkJournalContext_helper(bool force)
 	}
 }
 
-void FileShvJournal2::ensureJournalDir()
+void ShvFileJournal::ensureJournalDir()
 {
 	if(!mkpath(m_journalContext.journalDir)) {
 		m_journalContext.journalDirExists = false;
@@ -329,14 +333,16 @@ void FileShvJournal2::ensureJournalDir()
 	m_journalContext.journalDirExists = true;
 }
 
-bool FileShvJournal2::journalDirExists()
+bool ShvFileJournal::journalDirExists()
 {
 	return is_dir(journalDir());
 }
 
-void FileShvJournal2::rotateJournal()
+void ShvFileJournal::rotateJournal()
 {
+	logMShvJournal() << "Rotating journal of size:" << m_journalContext.journalSize;
 	updateJournalFiles();
+	size_t file_sz = m_journalContext.files.size();
 	size_t file_cnt = m_journalContext.files.size();
 	for(int64_t file_msec : m_journalContext.files) {
 		if(file_cnt == 1) {
@@ -346,13 +352,16 @@ void FileShvJournal2::rotateJournal()
 		if(m_journalContext.journalSize < m_journalSizeLimit)
 			break;
 		std::string fn = m_journalContext.fileMsecToFilePath(file_msec);
+		logMShvJournal() << "\t deleting file:" << fn;
 		m_journalContext.journalSize -= rm_file(fn);
+		file_sz--;
 		file_cnt--;
 	}
 	updateJournalStatus();
+	logMShvJournal() << "New journal of size:" << m_journalContext.journalSize;
 }
 
-void FileShvJournal2::convertLog1JournalDir()
+void ShvFileJournal::convertLog1JournalDir()
 {
 	const std::string &journal_dir = journalDir();
 	DIR *dir;
@@ -416,14 +425,15 @@ void FileShvJournal2::convertLog1JournalDir()
 #ifdef __unix
 #define DIRENT_HAS_TYPE_FIELD
 #endif
-void FileShvJournal2::updateJournalStatus()
+void ShvFileJournal::updateJournalStatus()
 {
 	updateJournalFiles();
 	updateRecentTimeStamp();
 }
 
-void FileShvJournal2::updateJournalFiles()
+void ShvFileJournal::updateJournalFiles()
 {
+	logDShvJournal() << "FileShvJournal2::updateJournalFiles()";
 	m_journalContext.journalSize = 0;
 	m_journalContext.lastFileSize = 0;
 	m_journalContext.files.clear();
@@ -474,8 +484,9 @@ void FileShvJournal2::updateJournalFiles()
 	}
 }
 
-void FileShvJournal2::updateRecentTimeStamp()
+void ShvFileJournal::updateRecentTimeStamp()
 {
+	logDShvJournal() << "FileShvJournal2::updateRecentTimeStamp()";
 	if(m_journalContext.files.empty()) {
 		m_journalContext.recentTimeStamp = cp::RpcValue::DateTime::now().msecsSinceEpoch();
 	}
@@ -490,7 +501,7 @@ void FileShvJournal2::updateRecentTimeStamp()
 	logDShvJournal() << "update recent time stamp:" << m_journalContext.recentTimeStamp << cp::RpcValue::DateTime::fromMSecsSinceEpoch(m_journalContext.recentTimeStamp).toIsoString();
 }
 
-int64_t FileShvJournal2::findLastEntryDateTime(const std::string &fn)
+int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn)
 {
 	shvLogFuncFrame() << "'" + fn + "'";
 	std::ifstream in(fn, std::ios::in | std::ios::binary);
@@ -548,7 +559,7 @@ int64_t FileShvJournal2::findLastEntryDateTime(const std::string &fn)
 	return -1;
 }
 
-const FileShvJournal2::JournalContext &FileShvJournal2::checkJournalContext()
+const ShvFileJournal::JournalContext &ShvFileJournal::checkJournalContext()
 {
 	try {
 		checkJournalContext_helper();
@@ -560,14 +571,14 @@ const FileShvJournal2::JournalContext &FileShvJournal2::checkJournalContext()
 	return m_journalContext;
 }
 
-chainpack::RpcValue FileShvJournal2::getLog(const ShvGetLogParams &params)
+chainpack::RpcValue ShvFileJournal::getLog(const ShvGetLogParams &params)
 {
 	checkJournalContext();
 	JournalContext ctx = m_journalContext;
 	return getLog(ctx, params);
 }
 
-chainpack::RpcValue FileShvJournal2::getLog(const FileShvJournal2::JournalContext &journal_context, const ShvGetLogParams &params)
+chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext &journal_context, const ShvGetLogParams &params)
 {
 	logIShvJournal() << "========================= getLog ==================";
 	logIShvJournal() << "params:" << params.toRpcValue().toCpon();
@@ -744,7 +755,6 @@ log_finish:
 		hdr.setUntil((until_msec2 > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec2)): cp::RpcValue(nullptr));
 		hdr.setRecordCount(rec_cnt);
 		hdr.setRecordCountLimit(max_rec_cnt);
-		hdr.setWithUptime(false);
 		hdr.setWithSnapShot(params.withSnapshot);
 
 		using Column = ShvLogHeader::Column;
@@ -771,7 +781,7 @@ log_finish:
 	return ret;
 }
 
-std::string FileShvJournal2::getLine(std::istream &in, char sep)
+std::string ShvFileJournal::getLine(std::istream &in, char sep)
 {
 	std::string line;
 	while(in) {
@@ -788,7 +798,7 @@ std::string FileShvJournal2::getLine(std::istream &in, char sep)
 	return line;
 }
 
-const char *FileShvJournal2::TxtColumn::name(FileShvJournal2::TxtColumn::Enum e)
+const char *ShvFileJournal::TxtColumn::name(ShvFileJournal::TxtColumn::Enum e)
 {
 	switch (e) {
 	case TxtColumn::Enum::Timestamp: return "timestamp";

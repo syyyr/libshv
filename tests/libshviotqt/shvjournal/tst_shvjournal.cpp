@@ -1,4 +1,4 @@
-#include <shv/core/utils/fileshvjournal.h>
+#include <shv/core/utils/shvfilejournal.h>
 #include <shv/core/utils/shvpath.h>
 
 #include <QtTest/QtTest>

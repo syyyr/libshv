@@ -17,20 +17,19 @@ public:
 		using Super = chainpack::meta::MetaType;
 	public:
 		enum {ID = chainpack::meta::GlobalNS::MetaTypeId::ValueChange};
-		/*
-		struct Tag { enum Enum {RequestId = chainpack::meta::Tag::USER, // 8
+		struct Tag { enum Enum {DateTime = chainpack::meta::Tag::USER,
+								ShortTime,
 								MAX};};
-		*/
-		struct Key { enum Enum {Value = 1, DateTime, ShortTime, MAX};};
+		//struct Key { enum Enum {Value = 1, DateTime, ShortTime, MAX};};
 
 		MetaType();
 
 		static void registerMetaType();
 	};
 public:
-	SHV_IMAP_FIELD_IMPL(shv::chainpack::RpcValue, MetaType::Key::Value, v, setV, alue)
-	SHV_IMAP_FIELD_IMPL(shv::chainpack::RpcValue::DateTime, MetaType::Key::DateTime, d, setD, ateTime)
-	SHV_IMAP_FIELD_IMPL(unsigned, MetaType::Key::ShortTime, s, setS, hortTime)
+	//SHV_IMAP_FIELD_IMPL(shv::chainpack::RpcValue, MetaType::Key::Value, v, setV, alue)
+	//SHV_IMAP_FIELD_IMPL(shv::chainpack::RpcValue::DateTime, MetaType::Key::DateTime, d, setD, ateTime)
+	//SHV_IMAP_FIELD_IMPL(unsigned, MetaType::Key::ShortTime, s, setS, hortTime)
 public:
 	//using Super::Super;
 	ValueChange() {}

@@ -1,6 +1,6 @@
 #include "logmodel.h"
 
-#include <shv/core/utils/fileshvjournal.h>
+#include <shv/core/utils/shvfilejournal.h>
 
 namespace cp = shv::chainpack;
 
@@ -51,7 +51,7 @@ QVariant LogModel::data(const QModelIndex &index, int role) const
 			shv::chainpack::RpcValue row = lst.value((unsigned)index.row());
 			shv::chainpack::RpcValue val = row.toList().value((unsigned)index.column());
 			if(index.column() == ColPath && (val.type() == cp::RpcValue::Type::UInt || val.type() == cp::RpcValue::Type::Int)) {
-				static std::string KEY_PATHS_DICT = shv::core::utils::FileShvJournal::KEY_PATHS_DICT;
+				static std::string KEY_PATHS_DICT = shv::core::utils::ShvFileJournal::KEY_PATHS_DICT;
 				const chainpack::RpcValue::IMap &dict = m_log.metaValue(KEY_PATHS_DICT).toIMap();
 				auto it = dict.find(val.toInt());
 				if(it != dict.end())

@@ -1,6 +1,6 @@
 #include "shvnodetree.h"
 
-#include <shv/core/utils/fileshvjournal.h>
+#include <shv/core/utils/shvfilejournal.h>
 #include <shv/chainpack/rpcvalue.h>
 #include <shv/core/exception.h>
 #include <shv/core/stringview.h>

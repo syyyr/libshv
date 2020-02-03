@@ -13,7 +13,7 @@ namespace shv {
 namespace core {
 namespace utils {
 
-class SHVCORE_DECL_EXPORT FileShvJournal2 : public AbstractShvJournal
+class SHVCORE_DECL_EXPORT ShvFileJournal : public AbstractShvJournal
 {
 public:
 	static constexpr long DEFAULT_JOURNAL_SIZE_LIMIT = 100 * 100 * 1024;
@@ -23,7 +23,7 @@ public:
 public:
 	using SnapShotFn = std::function<void (std::vector<ShvJournalEntry>&)>;
 
-	FileShvJournal2(std::string device_id, SnapShotFn snf);
+	ShvFileJournal(std::string device_id, SnapShotFn snf);
 
 	void setJournalDir(std::string s);
 	const std::string& journalDir();
@@ -37,6 +37,7 @@ public:
 	void setDeviceId(std::string id) { m_journalContext.deviceId = std::move(id); }
 	void setDeviceType(std::string type) { m_journalContext.deviceType = std::move(type); }
 
+	static int64_t findLastEntryDateTime(const std::string &fn);
 	void append(const ShvJournalEntry &entry) override;
 
 	shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) override;
@@ -87,7 +88,6 @@ private:
 	void updateRecentTimeStamp();
 	void ensureJournalDir();
 	bool journalDirExists();
-	int64_t findLastEntryDateTime(const std::string &fn);
 
 	void appendThrow(const ShvJournalEntry &entry);
 	void wrirteEntry(std::ofstream &out, int64_t msec, const ShvJournalEntry &e);
@@ -100,8 +100,6 @@ private:
 	int64_t m_fileSizeLimit = DEFAULT_FILE_SIZE_LIMIT;
 	int64_t m_journalSizeLimit = DEFAULT_JOURNAL_SIZE_LIMIT;
 };
-
-using ShvFileJournal = FileShvJournal2;
 
 } // namespace utils
 } // namespace core

@@ -1,5 +1,4 @@
-#ifndef SHV_CORE_UTILS_MEMORYSHVJOURNAL_H
-#define SHV_CORE_UTILS_MEMORYSHVJOURNAL_H
+#pragma once
 
 #include "../shvcoreglobal.h"
 
@@ -14,11 +13,11 @@ namespace shv {
 namespace core {
 namespace utils {
 
-class SHVCORE_DECL_EXPORT MemoryShvJournal : public AbstractShvJournal
+class SHVCORE_DECL_EXPORT ShvMemoryJournal : public AbstractShvJournal
 {
 public:
-	MemoryShvJournal();
-	MemoryShvJournal(const ShvGetLogParams &input_filter);
+	ShvMemoryJournal();
+	ShvMemoryJournal(const ShvGetLogParams &input_filter);
 
 	void setTypeInfo(ShvLogTypeInfo &&ti) {m_logHeader.setTypeInfo(std::move(ti));}
 	void setTypeInfo(const std::string &path_prefix, ShvLogTypeInfo &&ti) {m_logHeader.setTypeInfo(path_prefix, std::move(ti));}
@@ -53,4 +52,3 @@ private:
 } // namespace core
 } // namespace shv
 
-#endif // SHV_CORE_UTILS_MEMORYSHVJOURNAL_H

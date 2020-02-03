@@ -11,6 +11,8 @@ chainpack::RpcValue ShvLogTypeDescrField::toRpcValue() const
 {
 	chainpack::RpcValue::Map m;
 	m["name"] = name;
+	if(!typeName.empty())
+		m["typeName"] = typeName;
 	if(!description.empty())
 		m["description"] = description;
 	if(value.isValid())
@@ -25,6 +27,7 @@ ShvLogTypeDescrField ShvLogTypeDescrField::fromRpcValue(const chainpack::RpcValu
 		const chainpack::RpcValue::Map &m = v.toMap();
 		ret.name = m.value("name").toString();
 		ret.description = m.value("description").toString();
+		ret.typeName = m.value("typeName").toString();
 		ret.value = m.value("value");
 	}
 	return ret;

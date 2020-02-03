@@ -1,7 +1,7 @@
 #include "shvnode.h"
 #include "../utils.h"
 
-#include <shv/core/utils/fileshvjournal.h>
+#include <shv/core/utils/shvfilejournal.h>
 #include <shv/coreqt/log.h>
 #include <shv/chainpack/metamethod.h>
 #include <shv/chainpack/rpcmessage.h>

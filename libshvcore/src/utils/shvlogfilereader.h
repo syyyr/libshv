@@ -23,6 +23,7 @@ public:
 	~ShvLogFileReader();
 
 	ShvJournalEntry next();
+	const ShvLogHeader &logHeader() const {return m_logHeader;}
 private:
 	ShvLogTypeDescr::SampleType pathsSampleType(const std::string &path) const;
 private:

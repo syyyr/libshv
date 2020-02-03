@@ -1,4 +1,4 @@
-#include "memoryshvjournal.h"
+#include "shvmemoryjournal.h"
 #include "shvlogheader.h"
 #include "shvpath.h"
 
@@ -14,11 +14,11 @@ namespace shv {
 namespace core {
 namespace utils {
 
-MemoryShvJournal::MemoryShvJournal()
+ShvMemoryJournal::ShvMemoryJournal()
 {
 }
 
-MemoryShvJournal::MemoryShvJournal(const ShvGetLogParams &input_filter)
+ShvMemoryJournal::ShvMemoryJournal(const ShvGetLogParams &input_filter)
 	: m_patternMatcher(input_filter)
 {
 	if(input_filter.since.isDateTime())
@@ -28,7 +28,7 @@ MemoryShvJournal::MemoryShvJournal(const ShvGetLogParams &input_filter)
 	m_inputFilterRecordCountLimit = std::min(input_filter.maxRecordCount, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 }
 
-void MemoryShvJournal::loadLog(const chainpack::RpcValue &log)
+void ShvMemoryJournal::loadLog(const chainpack::RpcValue &log)
 {
 	ShvLogHeader hdr = ShvLogHeader::fromMetaData(log.metaData());
 	using Column = ShvLogHeader::Column;
@@ -67,7 +67,7 @@ void MemoryShvJournal::loadLog(const chainpack::RpcValue &log)
 	}
 }
 
-void MemoryShvJournal::append(const ShvJournalEntry &entry)
+void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 {
 	if((int)m_entries.size() >= m_inputFilterRecordCountLimit)
 		return;
@@ -109,7 +109,7 @@ void MemoryShvJournal::append(const ShvJournalEntry &entry)
 	}
 }
 
-chainpack::RpcValue MemoryShvJournal::getLog(const ShvGetLogParams &params)
+chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 {
 	logIShvJournal() << "========================= getLog ==================";
 	logIShvJournal() << "params:" << params.toRpcValue().toCpon();
@@ -225,7 +225,6 @@ log_finish:
 		hdr.setUntil((until_msec2 > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(until_msec2)): cp::RpcValue(nullptr));
 		hdr.setRecordCount(rec_cnt);
 		hdr.setRecordCountLimit(max_rec_cnt);
-		hdr.setWithUptime(false);
 		hdr.setWithSnapShot(params.withSnapshot);
 
 		cp::RpcValue::List fields;

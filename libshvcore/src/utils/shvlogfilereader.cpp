@@ -1,6 +1,6 @@
 #include "shvlogfilereader.h"
 #include "shvjournalentry.h"
-#include "fileshvjournal2.h"
+#include "shvfilejournal.h"
 
 #include "../exception.h"
 #include "../string.h"
@@ -108,7 +108,7 @@ ShvJournalEntry ShvLogFileReader::next()
 		}
 	}
 	else while(true) {
-		using Column = FileShvJournal2::TxtColumn;
+		using Column = ShvFileJournal::TxtColumn;
 		if(!m_ifstream)
 			return ShvJournalEntry();
 

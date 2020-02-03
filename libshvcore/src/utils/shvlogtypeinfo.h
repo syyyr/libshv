@@ -14,16 +14,21 @@ namespace utils {
 struct SHVCORE_DECL_EXPORT ShvLogTypeDescrField
 {
 	std::string name;
+	std::string typeName;
 	std::string description;
 	chainpack::RpcValue value;
 
 	ShvLogTypeDescrField() {}
-	ShvLogTypeDescrField(const std::string &n) : ShvLogTypeDescrField(n, std::string(), chainpack::RpcValue()) {}
-	ShvLogTypeDescrField(const std::string &n, int bit_pos) : ShvLogTypeDescrField(n, std::string(), bit_pos) {}
-	ShvLogTypeDescrField(const std::string &n, const std::string &d) : ShvLogTypeDescrField(n, d, chainpack::RpcValue()) {}
-	ShvLogTypeDescrField(const std::string &n, const std::string &d, const chainpack::RpcValue &v)
+	//ShvLogTypeDescrField(const std::string &n)
+	//	: ShvLogTypeDescrField(n, std::string(), chainpack::RpcValue(), std::string()) {}
+	ShvLogTypeDescrField(const std::string &n, int bit_pos, const std::string &d = std::string())
+		: ShvLogTypeDescrField(n, std::string(), bit_pos, d) {}
+	//ShvLogTypeDescrField(const std::string &n, const std::string &type_name)
+	//	: ShvLogTypeDescrField(n, type_name, chainpack::RpcValue(), std::string()) {}
+	ShvLogTypeDescrField(const std::string &n, const std::string &type_name = std::string(), const chainpack::RpcValue &v = chainpack::RpcValue(), const std::string &descr = std::string())
 		: name(n)
-		, description(d)
+		, typeName(type_name)
+		, description(descr)
 		, value(v)
 	{}
 

@@ -1,7 +1,10 @@
-#include <shv/core/utils/fileshvjournal.h>
+#include <shv/core/utils/shvfilejournal.h>
 #include <shv/core/utils/shvlogheader.h>
 #include <shv/core/utils/shvlogtypeinfo.h>
 #include <shv/core/utils/shvjournalentry.h>
+#include <shv/core/utils/shvdirtylog.h>
+#include <shv/core/utils/shvlogfilereader.h>
+#include <shv/core/log.h>
 
 #include <QtTest/QtTest>
 #include <QDebug>
@@ -18,6 +21,8 @@ QDebug operator<<(QDebug debug, const std::string &s)
 	debug << s.c_str();
 	return debug;
 }
+
+string JOURNAL_DIR = "/tmp/TestShvFileReader/journal";
 
 struct Channel
 {
@@ -43,6 +48,7 @@ void snapshot_fn(std::vector<ShvJournalEntry> &ev)
 }
 
 ShvFileJournal fileJournal("testdev", snapshot_fn);
+
 ShvLogTypeInfo typeInfo
 {
 	// types
@@ -75,7 +81,7 @@ ShvLogTypeInfo typeInfo
 				ShvLogTypeDescr::Type::BitField,
 				{
 					{"Active", 0},
-					{"LastDir", "N,L,R,S", RpcValue::List{1,2}},
+					{"LastDir", "UInt", RpcValue::List{1,2}, "N,L,R,S"},
 					{"CommError", 3},
 				},
 			}
@@ -85,9 +91,9 @@ ShvLogTypeInfo typeInfo
 			{
 				ShvLogTypeDescr::Type::Map,
 				{
-					{"vehicleId"},
-					{"dir"},
-					{"CommError", 3},
+					{"vehicleId", "UInt"},
+					{"dir", "String", RpcValue::List{"", "L", "R", "S"}},
+					{"CommError", "Bool"},
 				},
 				"",
 				ShvLogTypeDescr::SampleType::Discrete
@@ -98,8 +104,9 @@ ShvLogTypeInfo typeInfo
 			{
 				ShvLogTypeDescr::Type::List,
 				{
-					{"vehicleId"},
-					{"dir", "N,L,R,S"},
+					{"vehicleId", "UInt"},
+					{"dir", "String", RpcValue::List{"", "L", "R", "S"}},
+					{"CommError", "Bool"},
 				},
 				"",
 				ShvLogTypeDescr::SampleType::Discrete
@@ -127,12 +134,12 @@ private:
 		{
 			qDebug() << "------------- Generating log files";
 			auto msec = RpcValue::DateTime::now().msecsSinceEpoch();
-			std::random_device rd;
-			std::mt19937 mt(rd());
+			std::random_device randev;
+			std::mt19937 mt(randev());
 			std::uniform_int_distribution<int> rndmsec(0, 2000);
 			std::uniform_int_distribution<int> rndval(0, 1000);
 
-			for (int i = 0; i < 50000; ++i) {
+			for (int i = 0; i < 100000; ++i) {
 				msec += rndmsec(mt);
 				for(auto &kv : channels) {
 					Channel &c = kv.second;
@@ -156,27 +163,48 @@ private:
 					}
 				}
 			}
-//				std::string str;
-//				shv::core::StringView s1(str);
-//				shv::core::StringView s2(str, 5);
-//				shv::core::StringView s3(str, 6, 1000);
-//				shv::core::StringView s4(str, 7, 0);
-//				shv::core::StringView s5(str, 0, 0);
-//				QVERIFY(s1.valid());
-//				QVERIFY(s1.empty());
-//				QVERIFY(s2.valid());
-//				QVERIFY(s2.empty());
-//				QVERIFY(s3.valid());
-//				QVERIFY(s3.empty());
-//				QVERIFY(s4.valid());
-//				QVERIFY(s4.empty());
-//				QVERIFY(s5.valid());
+			qDebug() << "------------- Generating dirty log";
+			string dirty_fn = JOURNAL_DIR + "/dirty.log2";
+			shv::core::utils::ShvDirtyLog dirty_log(dirty_fn);
+			for (int i = 0; i < 5000; ++i) {
+				msec += rndmsec(mt);
+				for(auto &kv : channels) {
+					Channel &c = kv.second;
+					if(i % c.period == 0) {
+						ShvJournalEntry e;
+						e.epochMsec = msec;
+						e.path = kv.first;
+						RpcValue rv((c.maxVal - c.minVal) * rndval(mt) / 1000 + c.minVal);
+						if(e.path == "temperature") {
+							e.value = RpcValue::Decimal(rv.toInt(), -2);
+						}
+						else if(e.path == "vetra/vehicleDetected") {
+							e.value = RpcValue::List{rv, i %2? "R": "L"};
+						}
+						else {
+							e.value = rv;
+						}
+						e.domain = c.domain;
+						e.shortTime = msec % 0x100;
+						dirty_log.append(e);
+					}
+				}
+			}
+			{
+				shv::core::utils::ShvLogFileReader rd2(dirty_fn);
+				while (true) {
+					shv::core::utils::ShvJournalEntry e = rd2.next();
+					if(!e.isValid())
+						break;
+				}
+			}
 //				QVERIFY(s5.empty());
 		}
 	}
 private slots:
 	void initTestCase()
 	{
+		NecroLog::setTopicsLogTresholds("ShvJournal:D");
 		{
 			Channel &c = channels["temperature"];
 			c.value = RpcValue::Decimal(2200, -2);
@@ -210,7 +238,6 @@ private slots:
 			c.minVal = 0;
 			c.maxVal = 0xFF;
 		}
-		string JOURNAL_DIR = "/tmp/TestShvFileReader/journal";
 		qDebug() << "------------- Journal init:" << JOURNAL_DIR;
 		if(!QDir(QString::fromStdString(JOURNAL_DIR)).removeRecursively())
 			qWarning() << "Cannot delete journal dir:" << JOURNAL_DIR;
@@ -218,7 +245,7 @@ private slots:
 		//	qWarning() << "Cannot create journal dir:" << JOURNAL_DIR;
 		fileJournal.setJournalDir(JOURNAL_DIR);
 		fileJournal.setFileSizeLimit(1024*1024);
-		fileJournal.setJournalSizeLimit(1024*1024*10);
+		fileJournal.setJournalSizeLimit(1024*256*32);
 	}
 	void tests()
 	{
