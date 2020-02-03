@@ -142,53 +142,8 @@
          <property name="spacing">
           <number>5</number>
          </property>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_3">
-           <property name="text">
-            <string>Max record count</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="2">
-          <widget class="QCheckBox" name="chkFieldInfo">
-           <property name="text">
-            <string>field info</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="2">
-          <widget class="QCheckBox" name="chkBasicInfo">
-           <property name="text">
-            <string>basic info</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1" colspan="5">
+         <item row="0" column="1" colspan="4">
           <widget class="QLineEdit" name="edShvPath"/>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_4">
-           <property name="text">
-            <string>Timeout</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="3">
-          <widget class="QCheckBox" name="chkTypeInfo">
-           <property name="text">
-            <string>type info</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="4">
-          <widget class="QCheckBox" name="chkWithSnapshot">
-           <property name="text">
-            <string>with snapshot</string>
-           </property>
-          </widget>
          </item>
          <item row="3" column="1">
           <widget class="QSpinBox" name="edTimeout">
@@ -212,46 +167,6 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="4">
-          <widget class="QCheckBox" name="chkWithUptime">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>with uptime</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="3">
-          <widget class="QCheckBox" name="chkPathsDict">
-           <property name="text">
-            <string>paths dict</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="6">
-          <spacer name="horizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string>SHV Path</string>
-           </property>
-          </widget>
-         </item>
          <item row="2" column="1">
           <widget class="QSpinBox" name="edMaxRecordCount">
            <property name="alignment">
@@ -271,7 +186,14 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="5">
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Max record count</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="4">
           <widget class="QCheckBox" name="chkUseHistoryProvider">
            <property name="text">
             <string>use history provider</string>
@@ -281,6 +203,16 @@
            </property>
           </widget>
          </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Timeout</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1" colspan="4">
+          <widget class="QLineEdit" name="edPathPattern"/>
+         </item>
          <item row="1" column="0">
           <widget class="QLabel" name="label_7">
            <property name="text">
@@ -288,8 +220,42 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="1" colspan="5">
-          <widget class="QLineEdit" name="edPathPattern"/>
+         <item row="2" column="5">
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>SHV Path</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QCheckBox" name="chkPathsDict">
+           <property name="text">
+            <string>paths dict</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <widget class="QCheckBox" name="chkWithSnapshot">
+           <property name="text">
+            <string>with snapshot</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -402,14 +368,8 @@
   <tabstop>edShvPath</tabstop>
   <tabstop>edPathPattern</tabstop>
   <tabstop>edMaxRecordCount</tabstop>
-  <tabstop>chkBasicInfo</tabstop>
-  <tabstop>chkTypeInfo</tabstop>
-  <tabstop>chkWithSnapshot</tabstop>
   <tabstop>chkUseHistoryProvider</tabstop>
   <tabstop>edTimeout</tabstop>
-  <tabstop>chkFieldInfo</tabstop>
-  <tabstop>chkPathsDict</tabstop>
-  <tabstop>chkWithUptime</tabstop>
   <tabstop>tabWidget</tabstop>
   <tabstop>btMoreOptions</tabstop>
   <tabstop>btLoad</tabstop>

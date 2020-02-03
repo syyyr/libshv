@@ -36,6 +36,18 @@ class SHVCORE_DECL_EXPORT ShvLogHeader //: public shv::chainpack::RpcValue::Meta
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, s, S, ince)
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, u, U, ntil)
 public:
+	struct Column
+	{
+		enum Enum {
+			Timestamp = 0,
+			Path,
+			Value,
+			ShortTime,
+			Domain,
+		};
+		static const char* name(Enum e);
+	};
+public:
 	ShvLogHeader() {}
 
 	static ShvLogHeader fromMetaData(const chainpack::RpcValue::MetaData &md);

@@ -31,6 +31,7 @@ MemoryShvJournal::MemoryShvJournal(const ShvGetLogParams &input_filter)
 void MemoryShvJournal::loadLog(const chainpack::RpcValue &log)
 {
 	ShvLogHeader hdr = ShvLogHeader::fromMetaData(log.metaData());
+	using Column = ShvLogHeader::Column;
 
 	std::map<std::string, ShvLogTypeDescr> paths_type_descr = hdr.pathsTypeDescr();
 	auto paths_sample_type = [paths_type_descr](const std::string &path) {
@@ -41,18 +42,12 @@ void MemoryShvJournal::loadLog(const chainpack::RpcValue &log)
 	const chainpack::RpcValue::IMap &dict = hdr.pathDictCRef();
 
 	const ShvGetLogParams params = ShvGetLogParams::fromRpcValue(log.metaValue("params"));
-	const bool with_uptime = params.withUptime;
-	const size_t col_Timestamp = Column::index(Column::Timestamp, with_uptime);
-	const size_t col_Path = Column::index(Column::Path, with_uptime);
-	const size_t col_Value = Column::index(Column::Value, with_uptime);
-	const size_t col_ShortTime = Column::index(Column::ShortTime, with_uptime);
-	const size_t col_Domain = Column::index(Column::Domain, with_uptime);
 
 	const chainpack::RpcValue::List &lst = log.toList();
 	for(const cp::RpcValue &v : lst) {
 		const cp::RpcValue::List &row = v.toList();
-		int64_t time = row.value(col_Timestamp).toDateTime().msecsSinceEpoch();
-		cp::RpcValue p = row.value(col_Path);
+		int64_t time = row.value(Column::Timestamp).toDateTime().msecsSinceEpoch();
+		cp::RpcValue p = row.value(Column::Path);
 		if(p.isInt())
 			p = dict.value(p.toInt());
 		const std::string &path = p.toString();
@@ -63,10 +58,10 @@ void MemoryShvJournal::loadLog(const chainpack::RpcValue &log)
 		Entry e;
 		e.epochMsec = time;
 		e.path = path;
-		e.value = row.value(col_Value);
-		cp::RpcValue st = row.value(col_ShortTime);
+		e.value = row.value(Column::Value);
+		cp::RpcValue st = row.value(Column::ShortTime);
 		e.shortTime = st.isInt() && st.toInt() >= 0? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
-		e.domain = row.value(col_Domain).toString();
+		e.domain = row.value(Column::Domain).toString();
 		e.sampleType = paths_sample_type(e.path);
 		append(e);
 	}
@@ -118,6 +113,7 @@ chainpack::RpcValue MemoryShvJournal::getLog(const ShvGetLogParams &params)
 {
 	logIShvJournal() << "========================= getLog ==================";
 	logIShvJournal() << "params:" << params.toRpcValue().toCpon();
+	using Column = ShvLogHeader::Column;
 	cp::RpcValue::List log;
 	cp::RpcValue::Map path_cache;
 	int max_path_index = 0;
@@ -149,7 +145,7 @@ chainpack::RpcValue MemoryShvJournal::getLog(const ShvGetLogParams &params)
 		cp::RpcValue ret = path_cache.value(path);
 		if(ret.isValid())
 			return ret;
-		if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::PathsDict))
+		if(params.withPathsDict)
 			ret = ++max_path_index;
 		else
 			ret = path;
@@ -220,7 +216,7 @@ chainpack::RpcValue MemoryShvJournal::getLog(const ShvGetLogParams &params)
 log_finish:
 	cp::RpcValue ret = log;
 	ShvLogHeader hdr;
-	if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::BasicInfo)) {
+	{
 		hdr.setDeviceId(m_logHeader.deviceId());
 		hdr.setDeviceType(m_logHeader.deviceType());
 		hdr.setDateTime(cp::RpcValue::DateTime::now());
@@ -231,8 +227,7 @@ log_finish:
 		hdr.setRecordCountLimit(max_rec_cnt);
 		hdr.setWithUptime(false);
 		hdr.setWithSnapShot(params.withSnapshot);
-	}
-	if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::FieldInfo)) {
+
 		cp::RpcValue::List fields;
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Timestamp)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Path)}});
@@ -240,11 +235,10 @@ log_finish:
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::ShortTime)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Domain)}});
 		hdr.setFields(std::move(fields));
-	}
-	if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::TypeInfo)) {
+
 		hdr.setSources(m_logHeader.sources());
 	}
-	if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::PathsDict)) {
+	if(params.withPathsDict) {
 		logIShvJournal() << "Generating paths dict";
 		cp::RpcValue::IMap path_dict;
 		for(auto kv : path_cache) {

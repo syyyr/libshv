@@ -31,12 +31,7 @@ private:
 	ShvLogHeader m_logHeader;
 	std::map<std::string, ShvLogTypeDescr> m_pathsTypeDescr;
 	shv::chainpack::ChainPackReader *m_chainpackReader = nullptr;
-
-	size_t m_colTimestamp = 0;
-	size_t m_colPath = 0;
-	size_t m_colValue = 0;
-	size_t m_colShortTime = 0;
-	size_t m_colDomain = 0;};
+};
 
 } // namespace utils
 } // namespace core

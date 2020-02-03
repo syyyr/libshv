@@ -447,7 +447,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvGetLogParams &params)
 		cp::RpcValue ret = path_cache.value(path);
 		if(ret.isValid())
 			return ret;
-		if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::PathsDict))
+		if(params.withPathsDict)
 			ret = ++max_path_id;
 		else
 			ret = path;
@@ -510,8 +510,8 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvGetLogParams &params)
 						for(const auto &kv : snapshot) {
 							cp::RpcValue::List rec;
 							rec.push_back(params.since);
-							if(params.withUptime)
-								rec.push_back(cp::RpcValue::fromCpon(kv.second.uptime, &err));
+							//if(params.withUptime)
+							//	rec.push_back(cp::RpcValue::fromCpon(kv.second.uptime, &err));
 							rec.push_back(make_path_shared(kv.first));
 							rec.push_back(cp::RpcValue::fromCpon(kv.second.value, &err));
 							std::string short_time_str = kv.second.shorttime;
@@ -528,8 +528,8 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvGetLogParams &params)
 						std::string err;
 						cp::RpcValue::List rec;
 						rec.push_back(dt);
-						if(params.withUptime)
-							rec.push_back(cp::RpcValue::fromCpon(lst.value(Column::UpTime).toString(), &err));
+						//if(params.withUptime)
+						//	rec.push_back(cp::RpcValue::fromCpon(lst.value(Column::UpTime).toString(), &err));
 						rec.push_back(make_path_shared(path));
 						rec.push_back(cp::RpcValue::fromCpon(lst.value(Column::Value).toString(), &err));
 						std::string short_time_str = lst.value(Column::ShortTime).toString();
@@ -551,7 +551,7 @@ chainpack::RpcValue FileShvJournal::getLog(const ShvGetLogParams &params)
 log_finish:
 	cp::RpcValue ret = log;
 	cp::RpcValue::MetaData md;
-	if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::BasicInfo)) {
+	{
 		{
 			cp::RpcValue::Map device;
 			device["id"] = m_deviceId;
@@ -562,22 +562,20 @@ log_finish:
 		md.setValue("dateTime", cp::RpcValue::DateTime::now());
 		md.setValue("params", params.toRpcValue());
 		md.setValue(KEY_RECORD_COUNT, rec_cnt);
-	}
-	if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::FieldInfo)) {
+
 		cp::RpcValue::List fields;
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Timestamp)}});
-		if(params.withUptime)
-			fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::UpTime)}});
+		//if(params.withUptime)
+		//	fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::UpTime)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Path)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Value)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::ShortTime)}});
 		md.setValue("fields", std::move(fields));
-	}
-	if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::TypeInfo)) {
+
 		if(m_typeInfo.isValid())
 			md.setValue("typeInfo", m_typeInfo);
 	}
-	if(params.headerOptions & static_cast<unsigned>(ShvGetLogParams::HeaderOptions::PathsDict)) {
+	if(params.withPathsDict) {
 		cp::RpcValue::IMap path_dict;
 		for(auto kv : path_cache) {
 			path_dict[kv.second.toInt()] = kv.first;

@@ -24,19 +24,6 @@ public:
 	static const char *KEY_RECORD_COUNT;
 	static const char *KEY_PATHS_DICT;
 
-	struct Column
-	{
-		enum Enum {
-			Timestamp = 0,
-			UpTime,
-			Path,
-			Value,
-			ShortTime,
-			Domain,
-		};
-		static const char* name(Enum e);
-		static size_t index(Enum e, bool with_uptime) { return with_uptime? e: e>UpTime? e-1: e; }
-	};
 public:
 	virtual ~AbstractShvJournal();
 

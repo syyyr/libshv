@@ -91,19 +91,6 @@ AbstractShvJournal::~AbstractShvJournal()
 {
 }
 
-const char *AbstractShvJournal::Column::name(AbstractShvJournal::Column::Enum e)
-{
-	switch (e) {
-	case Column::Enum::Timestamp: return "timestamp";
-	case Column::Enum::UpTime: return "upTime";
-	case Column::Enum::Path: return "path";
-	case Column::Enum::Value: return "value";
-	case Column::Enum::ShortTime: return "shortTime";
-	case Column::Enum::Domain: return "domain";
-	}
-	return "invalid";
-}
-
 } // namespace utils
 } // namespace core
 } // namespace shv

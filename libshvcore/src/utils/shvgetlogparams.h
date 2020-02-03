@@ -13,10 +13,12 @@ namespace utils {
 
 struct SHVCORE_DECL_EXPORT ShvGetLogParams
 {
-	static const char *KEY_HEADER_OPTIONS;
+	//static const char *KEY_HEADER_OPTIONS;
 	static const char *KEY_MAX_RECORD_COUNT;
 	static const char *KEY_WITH_SNAPSHOT;
-	static const char *KEY_WITH_UPTIME;
+	//static const char *KEY_WITH_UPTIME;
+	static const char *KEY_WITH_PATHS_DICT;
+	//static const char *KEY_WITH_TYPE_INFO;
 	static const char *KEY_WITH_SINCE;
 	static const char *KEY_WITH_UNTIL;
 	static const char *KEY_PATH_PATTERN;
@@ -32,7 +34,7 @@ struct SHVCORE_DECL_EXPORT ShvGetLogParams
 	std::string pathPattern;
 	enum class PatternType {WildCard, RegEx};
 	PatternType pathPatternType = PatternType::WildCard;
-
+	/*
 	enum class HeaderOptions : unsigned {
 		BasicInfo = 1 << 0,
 		FieldInfo = 1 << 1,
@@ -40,12 +42,15 @@ struct SHVCORE_DECL_EXPORT ShvGetLogParams
 		PathsDict = 1 << 3,
 		CompleteInfo = BasicInfo | FieldInfo | TypeInfo | PathsDict,
 	};
-	unsigned headerOptions = static_cast<unsigned>(HeaderOptions::BasicInfo);
+	*/
+	//unsigned headerOptions = static_cast<unsigned>(HeaderOptions::BasicInfo);
 	static constexpr int DEFAULT_RECORD_COUNT_MAX = 1000;
 	int maxRecordCount = DEFAULT_RECORD_COUNT_MAX;
 	bool withSnapshot = false;
-	bool withUptime = false;
+	//bool withUptime = false;
 	std::string domainPattern; /// always regexp
+	//bool withTypeInfo = true;
+	bool withPathsDict = true;
 
 	ShvGetLogParams() {}
 	ShvGetLogParams(const shv::chainpack::RpcValue &opts);

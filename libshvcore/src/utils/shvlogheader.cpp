@@ -11,6 +11,19 @@ namespace utils {
 
 const std::string ShvLogHeader::EMPTY_PREFIX_KEY = "";
 
+const char *ShvLogHeader::Column::name(ShvLogHeader::Column::Enum e)
+{
+	switch (e) {
+	case Column::Enum::Timestamp: return "timestamp";
+	//case Column::Enum::UpTime: return "upTime";
+	case Column::Enum::Path: return "path";
+	case Column::Enum::Value: return "value";
+	case Column::Enum::ShortTime: return "shortTime";
+	case Column::Enum::Domain: return "domain";
+	}
+	return "invalid";
+}
+
 ShvLogHeader ShvLogHeader::fromMetaData(const chainpack::RpcValue::MetaData &md)
 {
 	ShvLogHeader ret;

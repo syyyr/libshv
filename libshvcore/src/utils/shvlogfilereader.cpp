@@ -1,6 +1,6 @@
 #include "shvlogfilereader.h"
 #include "shvjournalentry.h"
-#include "abstractshvjournal.h"
+#include "fileshvjournal2.h"
 
 #include "../exception.h"
 #include "../string.h"
@@ -45,11 +45,6 @@ ShvLogFileReader::ShvLogFileReader(const std::string &file_name, const ShvLogHea
 			m_logHeader = ShvLogHeader::fromMetaData(md);
 			m_pathsTypeDescr = m_logHeader.pathsTypeDescr();
 		}
-		m_colTimestamp = AbstractShvJournal::Column::index(AbstractShvJournal::Column::Timestamp, m_logHeader.withUptime());
-		m_colPath = AbstractShvJournal::Column::index(AbstractShvJournal::Column::Path, m_logHeader.withUptime());
-		m_colValue = AbstractShvJournal::Column::index(AbstractShvJournal::Column::Value, m_logHeader.withUptime());
-		m_colShortTime = AbstractShvJournal::Column::index(AbstractShvJournal::Column::ShortTime, m_logHeader.withUptime());
-		m_colDomain = AbstractShvJournal::Column::index(AbstractShvJournal::Column::Domain, m_logHeader.withUptime());
 		chainpack::ChainPackReader::ItemType t = m_chainpackReader->unpackNext();
 		if(t != chainpack::ChainPackReader::ItemType::CCPCP_ITEM_LIST)
 			SHV_EXCEPTION("Log is corrupted!");
@@ -83,6 +78,7 @@ ShvJournalEntry ShvLogFileReader::next()
 {
 	ShvJournalEntry e;
 	if(m_chainpackReader) {
+		using Column = ShvLogHeader::Column;
 		while(true) {
 			if(!m_ifstream)
 				return ShvJournalEntry();
@@ -92,8 +88,8 @@ ShvJournalEntry ShvLogFileReader::next()
 			cp::RpcValue val;
 			m_chainpackReader->read(val);
 			const chainpack::RpcValue::List &row = val.toList();
-			int64_t time = row.value(m_colTimestamp).toDateTime().msecsSinceEpoch();
-			cp::RpcValue p = row.value(m_colPath);
+			int64_t time = row.value(Column::Timestamp).toDateTime().msecsSinceEpoch();
+			cp::RpcValue p = row.value(Column::Path);
 			if(p.isInt())
 				p = m_logHeader.pathDictCRef().value(p.toInt());
 			const std::string &path = p.toString();
@@ -103,15 +99,16 @@ ShvJournalEntry ShvLogFileReader::next()
 			}
 			e.epochMsec = time;
 			e.path = path;
-			e.value = row.value(m_colValue);
-			cp::RpcValue st = row.value(m_colShortTime);
+			e.value = row.value(Column::Value);
+			cp::RpcValue st = row.value(Column::ShortTime);
 			e.shortTime = st.isInt() && st.toInt() >= 0? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
-			e.domain = row.value(m_colDomain).toString();
+			e.domain = row.value(Column::Domain).toString();
 			e.sampleType = pathsSampleType(e.path);
 			break;
 		}
 	}
 	else while(true) {
+		using Column = FileShvJournal2::TxtColumn;
 		if(!m_ifstream)
 			return ShvJournalEntry();
 
@@ -122,25 +119,25 @@ ShvJournalEntry ShvLogFileReader::next()
 			logDShvJournal() << "skipping empty line";
 			continue; // skip empty line
 		}
-		std::string dtstr = line_record[AbstractShvJournal::Column::Timestamp].toString();
-		std::string path = line_record.value(AbstractShvJournal::Column::Path).toString();
-		std::string domain = line_record.value(AbstractShvJournal::Column::Domain).toString();
+		std::string dtstr = line_record[Column::Timestamp].toString();
+		std::string path = line_record.value(Column::Path).toString();
+		std::string domain = line_record.value(Column::Domain).toString();
 		size_t len;
 		cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr, &len);
 		if(len == 0) {
 			logWShvJournal() << "invalid date time string:" << dtstr << "line will be ignored";
 			continue;
 		}
-		StringView short_time_sv = line_record.value(AbstractShvJournal::Column::ShortTime);
+		StringView short_time_sv = line_record.value(Column::ShortTime);
 
 		e.path = std::move(path);
 		e.epochMsec = dt.msecsSinceEpoch();
 		e.shortTime = short_time_sv.toInt();
 		e.domain = std::move(domain);
 		std::string err;
-		e.value = cp::RpcValue::fromCpon(line_record.value(AbstractShvJournal::Column::Value).toString(), &err);
+		e.value = cp::RpcValue::fromCpon(line_record.value(Column::Value).toString(), &err);
 		if(!err.empty())
-			logWShvJournal() << "Invalid CPON value:" << line_record.value(AbstractShvJournal::Column::Value).toString();
+			logWShvJournal() << "Invalid CPON value:" << line_record.value(Column::Value).toString();
 		e.sampleType = pathsSampleType(e.path);
 		break;
 	}

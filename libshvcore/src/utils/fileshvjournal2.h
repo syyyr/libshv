@@ -43,6 +43,18 @@ public:
 
 	void convertLog1JournalDir();
 public:
+	struct TxtColumn
+	{
+		enum Enum {
+			Timestamp = 0,
+			UpTime,
+			Path,
+			Value,
+			ShortTime,
+			Domain,
+		};
+		static const char* name(Enum e);
+	};
 	struct JournalContext
 	{
 		bool journalDirExists = false;
@@ -88,6 +100,8 @@ private:
 	int64_t m_fileSizeLimit = DEFAULT_FILE_SIZE_LIMIT;
 	int64_t m_journalSizeLimit = DEFAULT_JOURNAL_SIZE_LIMIT;
 };
+
+using ShvFileJournal = FileShvJournal2;
 
 } // namespace utils
 } // namespace core
