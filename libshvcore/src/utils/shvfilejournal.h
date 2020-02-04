@@ -90,9 +90,6 @@ private:
 	bool journalDirExists();
 
 	void appendThrow(const ShvJournalEntry &entry);
-	void wrirteEntry(std::ofstream &out, int64_t msec, const ShvJournalEntry &e);
-
-	static std::string getLine(std::istream &in, char sep);
 private:
 	JournalContext m_journalContext;
 

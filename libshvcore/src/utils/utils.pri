@@ -1,10 +1,11 @@
 HEADERS += \
     $$PWD/abstractshvjournal.h \
     $$PWD/crypt.h \
-    $$PWD/shvdirtylog.h \
     $$PWD/shvfilejournal.h \
     $$PWD/shvgetlogparams.h \
     $$PWD/shvjournalentry.h \
+    $$PWD/shvjournalfilereader.h \
+    $$PWD/shvjournalfilewriter.h \
     $$PWD/shvlogfilereader.h \
     $$PWD/shvlogheader.h \
     $$PWD/shvlogtypeinfo.h \
@@ -16,10 +17,11 @@ HEADERS += \
 SOURCES += \
     $$PWD/abstractshvjournal.cpp \
     $$PWD/crypt.cpp \
-    $$PWD/shvdirtylog.cpp \
     $$PWD/shvfilejournal.cpp \
     $$PWD/shvgetlogparams.cpp \
     $$PWD/shvjournalentry.cpp \
+    $$PWD/shvjournalfilereader.cpp \
+    $$PWD/shvjournalfilewriter.cpp \
     $$PWD/shvlogfilereader.cpp \
     $$PWD/shvlogheader.cpp \
     $$PWD/shvlogtypeinfo.cpp \

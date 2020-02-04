@@ -2,15 +2,21 @@
 #include <shv/core/utils/shvlogheader.h>
 #include <shv/core/utils/shvlogtypeinfo.h>
 #include <shv/core/utils/shvjournalentry.h>
-#include <shv/core/utils/shvdirtylog.h>
 #include <shv/core/utils/shvlogfilereader.h>
+#include <shv/core/utils/shvjournalfilewriter.h>
+#include <shv/core/utils/shvjournalfilereader.h>
+
 #include <shv/core/log.h>
+
+#include <shv/chainpack/chainpackwriter.h>
 
 #include <QtTest/QtTest>
 #include <QDebug>
 #include <QDir>
 
-using std::string;
+#include <fstream>
+
+using namespace std;
 using namespace shv::core::utils;
 using namespace shv::chainpack;
 
@@ -22,7 +28,8 @@ QDebug operator<<(QDebug debug, const std::string &s)
 	return debug;
 }
 
-string JOURNAL_DIR = "/tmp/TestShvFileReader/journal";
+const string TEST_DIR = "/tmp/TestShvFileReader";
+const string JOURNAL_DIR = TEST_DIR + "/journal";
 
 struct Channel
 {
@@ -46,8 +53,6 @@ void snapshot_fn(std::vector<ShvJournalEntry> &ev)
 		ev.push_back(std::move(e));
 	}
 }
-
-ShvFileJournal fileJournal("testdev", snapshot_fn);
 
 ShvLogTypeInfo typeInfo
 {
@@ -132,14 +137,24 @@ private:
 	{
 		qDebug() << "============= TestShvFileReader ============\n";
 		{
+			qDebug() << "------------- Journal init:" << JOURNAL_DIR;
+			if(!QDir(QString::fromStdString(JOURNAL_DIR)).removeRecursively())
+				qWarning() << "Cannot delete journal dir:" << JOURNAL_DIR;
+			//if(!QDir().mkpath(QString::fromStdString(JOURNAL_DIR)))
+			//	qWarning() << "Cannot create journal dir:" << JOURNAL_DIR;
+			ShvFileJournal file_journal("testdev", snapshot_fn);
+			file_journal.setJournalDir(JOURNAL_DIR);
+			file_journal.setFileSizeLimit(1024*64*20);
+			file_journal.setJournalSizeLimit(file_journal.fileSizeLimit() * 3);
 			qDebug() << "------------- Generating log files";
 			auto msec = RpcValue::DateTime::now().msecsSinceEpoch();
+			int64_t msec1 = msec;
 			std::random_device randev;
 			std::mt19937 mt(randev());
 			std::uniform_int_distribution<int> rndmsec(0, 2000);
 			std::uniform_int_distribution<int> rndval(0, 1000);
 
-			for (int i = 0; i < 100000; ++i) {
+			for (int i = 0; i < 60000; ++i) {
 				msec += rndmsec(mt);
 				for(auto &kv : channels) {
 					Channel &c = kv.second;
@@ -159,14 +174,36 @@ private:
 						}
 						e.domain = c.domain;
 						e.shortTime = msec % 0x100;
-						fileJournal.append(e);
+						file_journal.append(e);
 					}
 				}
 			}
+			int64_t msec2 = msec;
+			{
+				ShvGetLogParams params;
+				params.since = RpcValue::DateTime::fromMSecsSinceEpoch(msec1 + (msec2 - msec1) / 2);
+				params.until = RpcValue::DateTime::fromMSecsSinceEpoch(msec2 - (msec2 - msec1) / 20);
+				RpcValue log1 = file_journal.getLog(params);
+				string fn = TEST_DIR + "/log1.chpk";
+				{
+					ofstream out(fn, std::ios::binary | std::ios::out);
+					ChainPackWriter wr(out);
+					wr << log1;
+				}
+				int cnt = 0;
+				ShvLogFileReader rd(fn);
+				while(rd.next()) {
+					const ShvJournalEntry &e = rd.entry();
+					cnt++;
+				}
+				QVERIFY(cnt == rd.logHeader().recordCount());
+				QVERIFY(cnt == (int)log1.toList().size());
+			}
 			qDebug() << "------------- Generating dirty log";
+			int dirty_cnt = 0;
 			string dirty_fn = JOURNAL_DIR + "/dirty.log2";
-			shv::core::utils::ShvDirtyLog dirty_log(dirty_fn);
-			for (int i = 0; i < 5000; ++i) {
+			shv::core::utils::ShvJournalFileWriter dirty_log(dirty_fn);
+			for (int i = 0; i < 10000; ++i) {
 				msec += rndmsec(mt);
 				for(auto &kv : channels) {
 					Channel &c = kv.second;
@@ -187,18 +224,20 @@ private:
 						e.domain = c.domain;
 						e.shortTime = msec % 0x100;
 						dirty_log.append(e);
+						dirty_cnt++;
 					}
 				}
 			}
 			{
-				shv::core::utils::ShvLogFileReader rd2(dirty_fn);
-				while (true) {
-					shv::core::utils::ShvJournalEntry e = rd2.next();
-					if(!e.isValid())
-						break;
+				ShvLogHeader hdr;
+				hdr.setTypeInfo(typeInfo);
+				ShvJournalFileReader rd2(dirty_fn, &hdr);
+				while (rd2.next()) {
+					const ShvJournalEntry &e = rd2.entry();
+					dirty_cnt--;
 				}
 			}
-//				QVERIFY(s5.empty());
+			QVERIFY(dirty_cnt == 0);
 		}
 	}
 private slots:
@@ -238,14 +277,6 @@ private slots:
 			c.minVal = 0;
 			c.maxVal = 0xFF;
 		}
-		qDebug() << "------------- Journal init:" << JOURNAL_DIR;
-		if(!QDir(QString::fromStdString(JOURNAL_DIR)).removeRecursively())
-			qWarning() << "Cannot delete journal dir:" << JOURNAL_DIR;
-		//if(!QDir().mkpath(QString::fromStdString(JOURNAL_DIR)))
-		//	qWarning() << "Cannot create journal dir:" << JOURNAL_DIR;
-		fileJournal.setJournalDir(JOURNAL_DIR);
-		fileJournal.setFileSizeLimit(1024*1024);
-		fileJournal.setJournalSizeLimit(1024*256*32);
 	}
 	void tests()
 	{

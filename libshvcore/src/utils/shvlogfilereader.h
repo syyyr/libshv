@@ -4,6 +4,9 @@
 #include "../shvcoreglobal.h"
 
 #include "shvlogheader.h"
+#include "shvjournalentry.h"
+
+#include <shv/chainpack/chainpackreader.h>
 
 #include <string>
 #include <fstream>
@@ -18,20 +21,22 @@ class ShvJournalEntry;
 class SHVCORE_DECL_EXPORT ShvLogFileReader
 {
 public:
-	ShvLogFileReader(const std::string &file_name);
-	ShvLogFileReader(const std::string &file_name, const ShvLogHeader &header);
+	ShvLogFileReader(const std::string &file_name, const ShvLogHeader *header = nullptr);
 	~ShvLogFileReader();
 
-	ShvJournalEntry next();
+	bool next();
+	const ShvJournalEntry& entry();
+
 	const ShvLogHeader &logHeader() const {return m_logHeader;}
 private:
 	ShvLogTypeDescr::SampleType pathsSampleType(const std::string &path) const;
 private:
+	ShvLogHeader m_logHeader;
 	std::ifstream m_ifstream;
 	bool m_isTextLog = false;
-	ShvLogHeader m_logHeader;
 	std::map<std::string, ShvLogTypeDescr> m_pathsTypeDescr;
-	shv::chainpack::ChainPackReader *m_chainpackReader = nullptr;
+	shv::chainpack::ChainPackReader m_chainpackReader;
+	ShvJournalEntry m_currentEntry;
 };
 
 } // namespace utils

@@ -1,4 +1,6 @@
 #include "shvfilejournal.h"
+#include "shvjournalfilewriter.h"
+#include "shvjournalfilereader.h"
 #include "shvlogheader.h"
 #include "shvpath.h"
 
@@ -25,17 +27,6 @@ namespace shv {
 namespace core {
 namespace utils {
 
-static int uptimeSec()
-{
-	/*
-	int uptime;
-	if (std::ifstream("/proc/uptime", std::ios::in) >> uptime) {
-		return uptime;
-	}
-	*/
-	/// uptime is not used anymore
-	return 0;
-}
 /*
 static uint16_t shortTime()
 {
@@ -94,13 +85,13 @@ static int64_t file_size(const std::string &file_name)
 	logWShvJournal() << "Cannot stat file:" << file_name;
 	return -1;
 }
-
+/*
 static bool file_exists(const std::string &file_name)
 {
 	SHV_STATBUF st;
 	return (SHV_STAT(file_name.data(), &st) == 0);
 }
-
+*/
 static int64_t rm_file(const std::string &file_name)
 {
 	int64_t sz = file_size(file_name);
@@ -197,86 +188,52 @@ void ShvFileJournal::append(const ShvJournalEntry &entry)
 void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 {
 	shvLogFuncFrame();// << "last file no:" << lastFileNo();
-	int64_t msec = entry.epochMsec;
-	if(msec == 0)
-		msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
-	/// keep journal monotonic
-	if(msec < m_journalContext.recentTimeStamp)
-		msec = m_journalContext.recentTimeStamp;
 
 	ensureJournalDir();
 	checkJournalContext_helper();
 
+	int64_t msec = entry.epochMsec;
+	if(msec == 0)
+		msec = shv::chainpack::RpcValue::DateTime::now().msecsSinceEpoch();
+	if(msec < m_journalContext.recentTimeStamp)
+		msec = m_journalContext.recentTimeStamp;
 	int64_t last_file_msec = 0;
 	if(m_journalContext.files.empty()) {
 		last_file_msec = msec;
 	}
 	else if(m_journalContext.lastFileSize > m_fileSizeLimit) {
-		last_file_msec = m_journalContext.files[m_journalContext.files.size() - 1];
-		if(msec > last_file_msec) {
-			/// create new file when it has different name only
-			last_file_msec = msec;
-		}
+		/// create new file
+		last_file_msec = msec;
 	}
 	else {
 		last_file_msec = m_journalContext.files[m_journalContext.files.size() - 1];
 	}
-	std::string fn = m_journalContext.fileMsecToFilePath(last_file_msec);
-	{
-		//logDShvJournal() << "\t appending records to file:" << fn;
-		std::ofstream out(fn, std::ios::binary | std::ios::out | std::ios::app);
-		if(!out)
-			throw std::runtime_error("Cannot open file " + fn + " for writing");
+	if(!m_journalContext.files.empty() && last_file_msec < m_journalContext.files[m_journalContext.files.size() - 1])
+		throw std::runtime_error("Journal context corrupted!");
 
-		long fsz = out.tellp();
-		if(fsz == 0) {
-			// new file should start with snapshot
-			logDShvJournal() << "\t new file, snapshot will be written to:" << fn;
-			if(!m_snapShotFn)
-				throw std::runtime_error("SnapShot function not defined");
-			std::vector<ShvJournalEntry> snapshot;
-			m_snapShotFn(snapshot);
-			if(snapshot.empty())
-				logWShvJournal() << "Empty snapshot created";
-			for(const ShvJournalEntry &e : snapshot)
-				wrirteEntry(out, msec, e);
-			m_journalContext.files.push_back(last_file_msec);
-		}
-		wrirteEntry(out, msec, entry);
-		ssize_t file_size = out.tellp();
-		m_journalContext.lastFileSize = file_size;
-		m_journalContext.journalSize += file_size - fsz;
+	std::string fn = m_journalContext.fileMsecToFilePath(last_file_msec);
+	ShvJournalFileWriter wr(fn, last_file_msec);
+	ssize_t orig_fsz = wr.fileSize();
+	if(orig_fsz == 0) {
+		// new file should start with snapshot
+		logDShvJournal() << "\t new file, snapshot will be written to:" << fn;
+		if(!m_snapShotFn)
+			throw std::runtime_error("SnapShot function not defined");
+		std::vector<ShvJournalEntry> snapshot;
+		m_snapShotFn(snapshot);
+		if(snapshot.empty())
+			logWShvJournal() << "Empty snapshot created";
+		for(ShvJournalEntry &e : snapshot)
+			wr.appendMonotonic(e);
+		m_journalContext.files.push_back(last_file_msec);
 	}
+	wr.appendMonotonic(entry);
+	ssize_t new_fsz = wr.fileSize();
+	m_journalContext.lastFileSize = new_fsz;
+	m_journalContext.journalSize += new_fsz - orig_fsz;
 	if(m_journalContext.journalSize > m_journalSizeLimit) {
 		rotateJournal();
 	}
-}
-
-void ShvFileJournal::wrirteEntry(std::ofstream &out, int64_t msec, const ShvJournalEntry &e)
-{
-	/*
-	logDShvJournal() << "\t appending entry:"
-					 << cp::RpcValue::DateTime::fromMSecsSinceEpoch(msec).toIsoString()
-					 << uptimeSec()
-					 << e.path
-					 << e.value.toCpon()
-					 << e.shortTime;
-	*/
-	out << cp::RpcValue::DateTime::fromMSecsSinceEpoch(msec).toIsoString();
-	out << FIELD_SEPARATOR;
-	out << uptimeSec();
-	out << FIELD_SEPARATOR;
-	out << e.path;
-	out << FIELD_SEPARATOR;
-	out << e.value.toCpon();
-	out << FIELD_SEPARATOR;
-	if(e.shortTime >= 0)
-		out << e.shortTime;
-	out << FIELD_SEPARATOR;
-	out << e.domain;
-	out << RECORD_SEPARATOR;
-	out.flush();
-	m_journalContext.recentTimeStamp = msec;
 }
 
 int64_t ShvFileJournal::JournalContext::fileNameToFileMsec(const std::string &fn) const
@@ -583,21 +540,21 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 	logIShvJournal() << "========================= getLog ==================";
 	logIShvJournal() << "params:" << params.toRpcValue().toCpon();
 	cp::RpcValue::List log;
-
-	ShvLogHeader hdr_helper;
-	hdr_helper.setTypeInfo(journal_context.typeInfo);
-	std::map<std::string, ShvLogTypeDescr> paths_type_descr = hdr_helper.pathsTypeDescr();
+	ShvLogHeader log_header;
+	log_header.setTypeInfo(journal_context.typeInfo);
+	/*
+	std::map<std::string, ShvLogTypeDescr> paths_type_descr = log_header.pathsTypeDescr();
 	auto paths_sample_type = [paths_type_descr](const std::string &path) {
 		auto it = paths_type_descr.find(path);
 		return it == paths_type_descr.end()? ShvJournalEntry::SampleType::Continuous: it->second.sampleType;
 	};
-
+	*/
 	cp::RpcValue::Map path_cache;
 	int rec_cnt = 0;
 	auto since_msec = params.since.isDateTime()? params.since.toDateTime().msecsSinceEpoch(): 0;
 	auto until_msec = params.until.isDateTime()? params.until.toDateTime().msecsSinceEpoch(): 0;
-	int64_t since_msec2 = since_msec;
-	int64_t until_msec2 = since_msec;
+	int64_t first_record_msec = 0;
+	int64_t last_record_msec = 0;
 	int max_rec_cnt = std::min(params.maxRecordCount, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 	if(journal_context.files.size()) {
 		std::vector<int64_t>::const_iterator file_it = journal_context.files.begin();
@@ -644,57 +601,28 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 			std::string shorttime;
 			std::string domain;
 		};
-		std::map<std::string, SnapshotEntry> snapshot;
+		std::map<std::string, ShvJournalEntry> snapshot;
 
 		PatternMatcher pattern_matcher(params);
 		for(; file_it != journal_context.files.end(); file_it++) {
 			std::string fn = journal_context.fileMsecToFilePath(*file_it);
 			logDShvJournal() << "-------- opening file:" << fn;
-			if(!file_exists(fn))
-				throw std::runtime_error("File: " + fn + " doesn't exist, journal state is corrupted.");
-			std::ifstream in(fn, std::ios::in | std::ios::binary);
-			if(!in) {
-				logWShvJournal() << "Cannot open file:" << fn << "for reading.";
-				continue;
-			}
-			while(in) {
-				std::string line = getLine(in, RECORD_SEPARATOR);
-				//logDShvJournal() << "line:" << line;
-				shv::core::StringView sv(line);
-				shv::core::StringViewList line_record = sv.split(FIELD_SEPARATOR, shv::core::StringView::KeepEmptyParts);
-				if(line_record.empty()) {
-					logDShvJournal() << "\t skipping empty line";
-					continue; // skip empty line
-				}
-				std::string dtstr = line_record[TxtColumn::Timestamp].toString();
-				std::string path = line_record.value(TxtColumn::Path).toString();
-				std::string domain = line_record.value(TxtColumn::Domain).toString();
+			ShvJournalFileReader rd(fn, &log_header);
+			while(rd.next()) {
+				const ShvJournalEntry &e = rd.entry();
 				if(!params.pathPattern.empty()) {
-					logDShvJournal() << "\t MATCHING:" << params.pathPattern << "vs:" << path;
-					if(!pattern_matcher.match(path, domain))
+					logDShvJournal() << "\t MATCHING:" << params.pathPattern << "vs:" << e.path;
+					if(!pattern_matcher.match(e.path, e.domain))
 						continue;
 					logDShvJournal() << "\t\t MATCH";
 				}
-				size_t len;
-				cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr, &len);
-				if(len == 0) {
-					logWShvJournal() << fn << "invalid date time string:" << dtstr;
-					continue;
-				}
-				StringView short_time_sv = line_record.value(TxtColumn::ShortTime);
-				//logDShvJournal() << "\t FIELDS:" << dtstr << '\t' << path << "vals:" << lst.join('|');
-				if(since_msec > 0 && dt.msecsSinceEpoch() < since_msec) {
+				//cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromMSecsSinceEpoch(e.epochMsec);
+				if(since_msec > 0 && e.epochMsec < since_msec) {
 					if(params.withSnapshot) {
-						if(paths_sample_type(path) == ShvJournalEntry::SampleType::Continuous) {
-							snapshot[path] = SnapshotEntry{
-								line_record.value(TxtColumn::UpTime).toString(),
-								line_record.value(TxtColumn::Value).toString(),
-								short_time_sv.toString(),
-								domain
-							};
-							if(since_msec2 == 0)
-								since_msec2 = dt.msecsSinceEpoch();
-							until_msec2 = dt.msecsSinceEpoch();
+						if(e.sampleType == ShvJournalEntry::SampleType::Continuous) {
+							ShvJournalEntry e2 = e;
+							e2.epochMsec = since_msec;
+							snapshot[e2.path] = std::move(e2);
 						}
 					}
 				}
@@ -703,36 +631,36 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 						logDShvJournal() << "\t -------------- Snapshot";
 						std::string err;
 						for(const auto &kv : snapshot) {
+							const ShvJournalEntry &e = kv.second;
 							cp::RpcValue::List rec;
-							rec.push_back(since_msec2);
-							//if(params.withUptime)
-							//	rec.push_back(cp::RpcValue::fromCpon(kv.second.uptime, &err));
-							rec.push_back(make_path_shared(kv.first));
-							rec.push_back(cp::RpcValue::fromCpon(kv.second.value, &err));
-							rec.push_back(cp::RpcValue::fromCpon(kv.second.shorttime, &err));
-							rec.push_back(kv.second.domain.empty()? cp::RpcValue(nullptr): kv.second.domain);
+							rec.push_back(e.epochMsec);
+							rec.push_back(make_path_shared(e.path));
+							rec.push_back(e.value);
+							rec.push_back(e.shortTime == ShvJournalEntry::NO_SHORT_TIME? cp::RpcValue(nullptr): cp::RpcValue(e.shortTime));
+							rec.push_back(e.domain.empty()? cp::RpcValue(nullptr): e.domain);
 							log.push_back(rec);
 							rec_cnt++;
+							if(first_record_msec == 0)
+								first_record_msec = e.epochMsec;
+							last_record_msec = e.epochMsec;
 							if(rec_cnt >= max_rec_cnt)
 								goto log_finish;
 						}
 						snapshot.clear();
 					}
-					if(until_msec == 0 || dt.msecsSinceEpoch() < until_msec) { // keep interval open to make log merge simpler
-						if(since_msec2 == 0)
-							since_msec2 = dt.msecsSinceEpoch();
-						until_msec2 = dt.msecsSinceEpoch();
+					if(until_msec == 0 || e.epochMsec < until_msec) { // keep interval open to make log merge simpler
 						std::string err;
 						cp::RpcValue::List rec;
-						rec.push_back(dt);
-						//if(params.withUptime)
-						//	rec.push_back(cp::RpcValue::fromCpon(line_record.value(Column::UpTime).toString(), &err));
-						rec.push_back(make_path_shared(path));
-						rec.push_back(cp::RpcValue::fromCpon(line_record.value(TxtColumn::Value).toString(), &err));
-						rec.push_back(cp::RpcValue::fromCpon(short_time_sv.toString(), &err));
-						rec.push_back(domain.empty()? cp::RpcValue(nullptr): domain);
+						rec.push_back(e.epochMsec);
+						rec.push_back(make_path_shared(e.path));
+						rec.push_back(e.value);
+						rec.push_back(e.shortTime == ShvJournalEntry::NO_SHORT_TIME? cp::RpcValue(nullptr): cp::RpcValue(e.shortTime));
+						rec.push_back(e.domain.empty()? cp::RpcValue(nullptr): e.domain);
 						log.push_back(rec);
 						rec_cnt++;
+						if(first_record_msec == 0)
+							first_record_msec = e.epochMsec;
+						last_record_msec = e.epochMsec;
 						if(rec_cnt >= max_rec_cnt)
 							goto log_finish;
 					}
@@ -744,18 +672,26 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		}
 	}
 log_finish:
+	if(since_msec == 0)
+		since_msec = first_record_msec;
+	if(rec_cnt < max_rec_cnt) {
+		if(until_msec == 0)
+			until_msec = last_record_msec;
+	}
+	else {
+		until_msec = last_record_msec;
+	}
 	cp::RpcValue ret = log;
-	ShvLogHeader hdr;
 	{
-		hdr.setDeviceId(journal_context.deviceId);
-		hdr.setDeviceType(journal_context.deviceType);
-		hdr.setDateTime(cp::RpcValue::DateTime::now());
-		hdr.setLogParams(params);
-		hdr.setSince((since_msec2 > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec2)): cp::RpcValue(nullptr));
-		hdr.setUntil((until_msec2 > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec2)): cp::RpcValue(nullptr));
-		hdr.setRecordCount(rec_cnt);
-		hdr.setRecordCountLimit(max_rec_cnt);
-		hdr.setWithSnapShot(params.withSnapshot);
+		log_header.setDeviceId(journal_context.deviceId);
+		log_header.setDeviceType(journal_context.deviceType);
+		log_header.setDateTime(cp::RpcValue::DateTime::now());
+		log_header.setLogParams(params);
+		log_header.setSince((since_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec)): cp::RpcValue(nullptr));
+		log_header.setUntil((until_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(until_msec)): cp::RpcValue(nullptr));
+		log_header.setRecordCount(rec_cnt);
+		log_header.setRecordCountLimit(max_rec_cnt);
+		log_header.setWithSnapShot(params.withSnapshot);
 
 		using Column = ShvLogHeader::Column;
 		cp::RpcValue::List fields;
@@ -764,9 +700,7 @@ log_finish:
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Value)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::ShortTime)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Domain)}});
-		hdr.setFields(std::move(fields));
-
-		hdr.setTypeInfo(journal_context.typeInfo);
+		log_header.setFields(std::move(fields));
 	}
 	if(params.withPathsDict) {
 		logIShvJournal() << "Generating paths dict";
@@ -775,27 +709,10 @@ log_finish:
 			logIShvJournal() << "Adding record to paths dict:" << kv.second.toInt() << "-->" << kv.first;
 			path_dict[kv.second.toInt()] = kv.first;
 		}
-		hdr.setPathDict(std::move(path_dict));
+		log_header.setPathDict(std::move(path_dict));
 	}
-	ret.setMetaData(hdr.toMetaData());
+	ret.setMetaData(log_header.toMetaData());
 	return ret;
-}
-
-std::string ShvFileJournal::getLine(std::istream &in, char sep)
-{
-	std::string line;
-	while(in) {
-		char buff[1024];
-		in.getline(buff, sizeof (buff), sep);
-		std::string s(buff);
-		line += s;
-		if(in.gcount() == (long)s.size()) {
-			// separator not found
-			continue;
-		}
-		break;
-	}
-	return line;
 }
 
 const char *ShvFileJournal::TxtColumn::name(ShvFileJournal::TxtColumn::Enum e)
