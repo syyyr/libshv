@@ -458,9 +458,12 @@ void ShvFileJournal::updateRecentTimeStamp()
 	logDShvJournal() << "update recent time stamp:" << m_journalContext.recentTimeStamp << cp::RpcValue::DateTime::fromMSecsSinceEpoch(m_journalContext.recentTimeStamp).toIsoString();
 }
 
-int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn)
+int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, ssize_t *p_date_time_fpos)
 {
 	shvLogFuncFrame() << "'" + fn + "'";
+	ssize_t date_time_fpos = -1;
+	if(p_date_time_fpos)
+		*p_date_time_fpos = date_time_fpos;
 	std::ifstream in(fn, std::ios::in | std::ios::binary);
 	if (!in)
 		throw std::runtime_error("Cannot open file: " + fn + " for reading.");
@@ -496,10 +499,13 @@ int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn)
 						shvDebug() << "\t checking:" << s;
 						size_t len;
 						chainpack::RpcValue::DateTime dt = chainpack::RpcValue::DateTime::fromUtcString(s, &len);
-						if(len > 0)
+						if(len > 0) {
+							date_time_fpos = (ssize_t)lf_pos;
 							dt_msec = dt.msecsSinceEpoch();
-						else
+						}
+						else {
 							logWShvJournal() << fn << "Malformed shv journal date time:" << s << "will be ignored.";
+						}
 					}
 					else if(chunk.size() - lf_pos > 0) {
 						logWShvJournal() << fn << "Truncated shv journal date time:" << chunk.substr(lf_pos) << "will be ignored.";
@@ -509,6 +515,8 @@ int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn)
 		}
 		if(dt_msec > 0) {
 			shvDebug() << "\t return:" << dt_msec << chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(dt_msec).toIsoString();
+			if(p_date_time_fpos)
+				*p_date_time_fpos = date_time_fpos;
 			return dt_msec;
 		}
 	}
@@ -590,7 +598,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 				ret = ++max_path_id;
 			else
 				ret = path;
-			logIShvJournal() << "Adding record to path cache:" << path << "-->" << ret.toCpon();
+			logMShvJournal() << "Adding record to path cache:" << path << "-->" << ret.toCpon();
 			path_cache[path] = ret;
 			return ret;
 		};
@@ -633,7 +641,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 						for(const auto &kv : snapshot) {
 							const ShvJournalEntry &e = kv.second;
 							cp::RpcValue::List rec;
-							rec.push_back(e.epochMsec);
+							rec.push_back(e.dateTime());
 							rec.push_back(make_path_shared(e.path));
 							rec.push_back(e.value);
 							rec.push_back(e.shortTime == ShvJournalEntry::NO_SHORT_TIME? cp::RpcValue(nullptr): cp::RpcValue(e.shortTime));
@@ -651,7 +659,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 					if(until_msec == 0 || e.epochMsec < until_msec) { // keep interval open to make log merge simpler
 						std::string err;
 						cp::RpcValue::List rec;
-						rec.push_back(e.epochMsec);
+						rec.push_back(e.dateTime());
 						rec.push_back(make_path_shared(e.path));
 						rec.push_back(e.value);
 						rec.push_back(e.shortTime == ShvJournalEntry::NO_SHORT_TIME? cp::RpcValue(nullptr): cp::RpcValue(e.shortTime));
@@ -706,7 +714,7 @@ log_finish:
 		logIShvJournal() << "Generating paths dict";
 		cp::RpcValue::IMap path_dict;
 		for(auto kv : path_cache) {
-			logIShvJournal() << "Adding record to paths dict:" << kv.second.toInt() << "-->" << kv.first;
+			//logIShvJournal() << "Adding record to paths dict:" << kv.second.toInt() << "-->" << kv.first;
 			path_dict[kv.second.toInt()] = kv.first;
 		}
 		log_header.setPathDict(std::move(path_dict));

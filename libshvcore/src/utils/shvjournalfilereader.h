@@ -20,10 +20,12 @@ public:
 	ShvJournalFileReader(const std::string &file_name, const ShvLogHeader *header);
 
 	bool next();
+	bool last();
 	const ShvJournalEntry& entry();
 private:
 	ShvLogTypeDescr::SampleType pathsSampleType(const std::string &path) const;
 private:
+	std::string m_fileName;
 	std::ifstream m_ifstream;
 	const ShvLogHeader *m_logHeader = nullptr;
 	std::map<std::string, ShvLogTypeDescr> m_pathsTypeDescr;

@@ -48,6 +48,7 @@ public:
 
 	bool isValid() const {return !path.empty() && value.isValid();}
 	void setShortTime(int short_time) {shortTime = short_time;}
+	shv::chainpack::RpcValue::DateTime dateTime() const { return shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(epochMsec); }
 };
 
 } // namespace utils

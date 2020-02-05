@@ -9,12 +9,10 @@ namespace utils {
 
 static int uptimeSec()
 {
-	/*
 	int uptime;
 	if (std::ifstream("/proc/uptime", std::ios::in) >> uptime) {
 		return uptime;
 	}
-	*/
 	return 0;
 }
 
@@ -49,7 +47,7 @@ void ShvJournalFileWriter::appendMonotonic(const ShvJournalEntry &entry)
 		msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
 	if(msec < m_recentTimeStamp)
 		msec = m_recentTimeStamp;
-	append(msec, entry);
+	append(msec, uptimeSec(), entry);
 }
 
 void ShvJournalFileWriter::append(const ShvJournalEntry &entry)
@@ -57,15 +55,14 @@ void ShvJournalFileWriter::append(const ShvJournalEntry &entry)
 	int64_t msec = entry.epochMsec;
 	if(msec == 0)
 		msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
-	append(msec, entry);
+	append(msec, 0, entry);
 }
 
-void ShvJournalFileWriter::append(int64_t msec, const ShvJournalEntry &entry)
+void ShvJournalFileWriter::append(int64_t msec, int uptime, const ShvJournalEntry &entry)
 {
 	m_out << cp::RpcValue::DateTime::fromMSecsSinceEpoch(msec).toIsoString();
 	m_out << ShvFileJournal::FIELD_SEPARATOR;
-	m_out << uptimeSec();
-	//m_out << msec;
+	m_out << uptime;
 	m_out << ShvFileJournal::FIELD_SEPARATOR;
 	m_out << entry.path;
 	m_out << ShvFileJournal::FIELD_SEPARATOR;

@@ -48,13 +48,20 @@ bool ShvLogFileReader::next()
 		m_currentEntry = ShvJournalEntry();
 		if(!m_ifstream)
 			return false;
-		if(m_chainpackReader.peekNext() == chainpack::ChainPackReader::ItemType::CCPCP_ITEM_CONTAINER_END)
+		chainpack::ChainPackReader::ItemType tt = m_chainpackReader.peekNext();
+		logDShvJournal() << "peek next type:" << chainpack::ChainPackReader::itemTypeToString(tt);
+		if(tt == chainpack::ChainPackReader::ItemType::CCPCP_ITEM_CONTAINER_END)
 			return false;
 
 		cp::RpcValue val;
 		m_chainpackReader.read(val);
 		const chainpack::RpcValue::List &row = val.toList();
-		int64_t time = row.value(Column::Timestamp).toDateTime().msecsSinceEpoch();
+		cp::RpcValue dt = row.value(Column::Timestamp);
+		if(!dt.isDateTime()) {
+			logWShvJournal() << "Skipping invalid date time, row:" << val.toCpon();
+			continue;
+		}
+		int64_t time = dt.toDateTime().msecsSinceEpoch();
 		cp::RpcValue p = row.value(Column::Path);
 		if(p.isInt())
 			p = m_logHeader.pathDictCRef().value(p.toInt());
@@ -63,6 +70,7 @@ bool ShvLogFileReader::next()
 			logWShvJournal() << "Path dictionary corrupted, row:" << val.toCpon();
 			continue;
 		}
+		logDShvJournal() << "row:" << val.toCpon();
 		m_currentEntry.epochMsec = time;
 		m_currentEntry.path = path;
 		m_currentEntry.value = row.value(Column::Value);

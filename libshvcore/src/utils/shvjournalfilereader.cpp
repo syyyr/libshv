@@ -35,7 +35,8 @@ static std::string getLine(std::istream &in, char sep)
 }
 
 ShvJournalFileReader::ShvJournalFileReader(const std::string &file_name, const ShvLogHeader *header)
-	: m_logHeader(header)
+	: m_fileName(file_name)
+	, m_logHeader(header)
 {
 	m_ifstream.open(file_name, std::ios::binary);
 	if(!m_ifstream)
@@ -91,6 +92,20 @@ bool ShvJournalFileReader::next()
 			logWShvJournal() << "Invalid CPON value:" << line_record.value(Column::Value).toString();
 		m_currentEntry.sampleType = pathsSampleType(m_currentEntry.path);
 		return true;
+	}
+}
+
+bool ShvJournalFileReader::last()
+{
+	ssize_t fpos;
+	ShvFileJournal::findLastEntryDateTime(m_fileName, &fpos);
+	if(fpos >= 0) {
+		m_ifstream.seekg(fpos, std::ios::beg);
+		return next();
+	}
+	else {
+		m_currentEntry = ShvJournalEntry();
+		return false;
 	}
 }
 

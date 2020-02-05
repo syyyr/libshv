@@ -27,6 +27,7 @@ public:
 
 	ItemType peekNext();
 	ItemType unpackNext();
+	static const char* itemTypeToString(ItemType it);
 private:
 	void parseList(RpcValue &val);
 	void parseMetaData(RpcValue::MetaData &meta_data);

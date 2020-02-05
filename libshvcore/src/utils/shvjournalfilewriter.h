@@ -21,7 +21,7 @@ public:
 
 	ssize_t fileSize();
 private:
-	void append(int64_t msec, const ShvJournalEntry &entry);
+	void append(int64_t msec, int uptime, const ShvJournalEntry &entry);
 private:
 	std::string m_fileName;
 	std::ofstream m_out;

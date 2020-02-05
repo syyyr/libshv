@@ -57,12 +57,18 @@ ChainPackReader::ItemType ChainPackReader::unpackNext()
 	return m_inCtx.item.type;
 }
 
+const char *ChainPackReader::itemTypeToString(ChainPackReader::ItemType it)
+{
+	return ccpcp_item_type_to_string(it);
+}
+
 ChainPackReader::ItemType ChainPackReader::peekNext()
 {
 	const char *p = ccpcp_unpack_peek_byte(&m_inCtx);
 	if(!p)
 		PARSE_EXCEPTION("Parse error: " + std::string(m_inCtx.err_msg) + " at: " + std::to_string(m_inCtx.err_no));
-	switch((cchainpack_pack_packing_schema)*p) {
+	cchainpack_pack_packing_schema sch = (cchainpack_pack_packing_schema)(uint8_t)(*p);
+	switch(sch) {
 	case CP_Null: return CCPCP_ITEM_NULL;
 	case CP_UInt: return CCPCP_ITEM_UINT;
 	case CP_Int: return CCPCP_ITEM_INT;

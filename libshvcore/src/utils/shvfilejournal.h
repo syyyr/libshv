@@ -37,7 +37,7 @@ public:
 	void setDeviceId(std::string id) { m_journalContext.deviceId = std::move(id); }
 	void setDeviceType(std::string type) { m_journalContext.deviceType = std::move(type); }
 
-	static int64_t findLastEntryDateTime(const std::string &fn);
+	static int64_t findLastEntryDateTime(const std::string &fn, ssize_t *p_date_time_fpos = nullptr);
 	void append(const ShvJournalEntry &entry) override;
 
 	shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) override;
