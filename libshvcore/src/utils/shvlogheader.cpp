@@ -37,7 +37,7 @@ ShvLogHeader ShvLogHeader::fromMetaData(const chainpack::RpcValue::MetaData &md)
 	ret.setRecordCountLimit(md.value("recordCountLimit").toInt());
 	ret.setWithSnapShot(md.value("withSnapShot").toBool());
 	ret.setFields(md.value("fields").toList());
-	ret.setPathDict(md.value("pathDict").toIMap());
+	ret.setPathDict(md.value("pathsDict").toIMap());
 	{
 		const chainpack::RpcValue::Map &m = md.value("sources").toMap();
 		for(const auto &kv : m) {
@@ -71,7 +71,7 @@ chainpack::RpcValue::MetaData ShvLogHeader::toMetaData() const
 	if(!fields().empty())
 		md.setValue("fields", fields());
 	if(!pathDict().empty())
-		md.setValue("pathDict", pathDict());
+		md.setValue("pathsDict", pathDict());
 	chainpack::RpcValue::Map srcs;
 	for(const auto &kv : m_sources) {
 		const std::string &path_prefix = kv.first;
