@@ -19,8 +19,10 @@ public:
 	ShvMemoryJournal();
 	ShvMemoryJournal(const ShvGetLogParams &input_filter);
 
+	void setTypeInfo(const ShvLogTypeInfo &ti) {setTypeInfo(ShvLogTypeInfo(ti));}
 	void setTypeInfo(ShvLogTypeInfo &&ti) {m_logHeader.setTypeInfo(std::move(ti));}
 	void setTypeInfo(const std::string &path_prefix, ShvLogTypeInfo &&ti) {m_logHeader.setTypeInfo(path_prefix, std::move(ti));}
+	void setTypeInfo(const std::string &path_prefix, const ShvLogTypeInfo &ti) {setTypeInfo(path_prefix, ShvLogTypeInfo(ti));}
 	void setDeviceId(std::string id) { m_logHeader.setDeviceId(std::move(id)); }
 	void setDeviceType(std::string type) { m_logHeader.setDeviceType(std::move(type)); }
 
@@ -29,6 +31,8 @@ public:
 	shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) override;
 
 	const std::vector<ShvJournalEntry>& entries() const {return  m_entries;}
+private:
+	void checkSampleType(ShvJournalEntry &entry) const;
 private:
 	using Entry = ShvJournalEntry;
 
@@ -44,6 +48,7 @@ private:
 	int m_pathDictionaryIndex = 0;
 
 	ShvLogHeader m_logHeader;
+	std::map<std::string, ShvLogTypeDescr> m_pathsTypeDescr;
 
 	std::vector<Entry> m_entries;
 };

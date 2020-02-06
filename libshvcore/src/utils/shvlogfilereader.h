@@ -33,8 +33,6 @@ private:
 private:
 	ShvLogHeader m_logHeader;
 	std::ifstream m_ifstream;
-	bool m_isTextLog = false;
-	std::map<std::string, ShvLogTypeDescr> m_pathsTypeDescr;
 	shv::chainpack::ChainPackReader m_chainpackReader;
 	ShvJournalEntry m_currentEntry;
 };

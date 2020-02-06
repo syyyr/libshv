@@ -98,6 +98,24 @@ const ShvLogTypeInfo &ShvLogHeader::typeInfo(const std::string &path_prefix) con
 	return m_sources.at(path_prefix);
 }
 
+void ShvLogHeader::setTypeInfo(ShvLogTypeInfo &&ti)
+{
+	m_sources[EMPTY_PREFIX_KEY] = std::move(ti);
+	m_pathsTypeDescrValid = false;
+}
+
+void ShvLogHeader::setTypeInfo(const ShvLogTypeInfo &ti)
+{
+	m_sources[EMPTY_PREFIX_KEY] = ti;
+	m_pathsTypeDescrValid = false;
+}
+
+void ShvLogHeader::setTypeInfo(const std::string &path_prefix, ShvLogTypeInfo &&ti)
+{
+	m_sources[path_prefix] = std::move(ti);
+	m_pathsTypeDescrValid = false;
+}
+
 std::map<std::string, ShvLogTypeDescr> ShvLogHeader::pathsTypeDescr() const
 {
 	std::map<std::string, ShvLogTypeDescr> ret;
@@ -116,6 +134,16 @@ std::map<std::string, ShvLogTypeDescr> ShvLogHeader::pathsTypeDescr() const
 		}
 	}
 	return ret;
+}
+
+ShvLogTypeDescr::SampleType ShvLogHeader::pathsSampleType(const std::string &path) const
+{
+	if(!m_pathsTypeDescrValid) {
+		m_pathsTypeDescr = pathsTypeDescr();
+		m_pathsTypeDescrValid = true;
+	}
+	auto it = m_pathsTypeDescr.find(path);
+	return it == m_pathsTypeDescr.end()? ShvLogTypeDescr::SampleType::Invalid: it->second.sampleType;
 }
 
 #if 0

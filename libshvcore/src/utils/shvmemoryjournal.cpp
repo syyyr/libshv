@@ -30,6 +30,7 @@ ShvMemoryJournal::ShvMemoryJournal(const ShvGetLogParams &input_filter)
 
 void ShvMemoryJournal::loadLog(const chainpack::RpcValue &log)
 {
+	m_entries.clear();
 	ShvLogHeader hdr = ShvLogHeader::fromMetaData(log.metaData());
 	using Column = ShvLogHeader::Column;
 
@@ -78,12 +79,12 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 		return;
 	if(m_inputFilterSinceMsec > 0 && epoch_msec < m_inputFilterSinceMsec) {
 		if(m_inputFilter.withSnapshot) {
-			Entry &e = m_snapshot[entry.path];
-			if(e.epochMsec < entry.epochMsec
-					&& entry.sampleType == ShvJournalEntry::SampleType::Continuous
-					&& m_patternMatcher.match(entry))
+			if(entry.sampleType == ShvJournalEntry::SampleType::Continuous
+				&& m_patternMatcher.match(entry))
 			{
-				e = entry;
+				Entry &e = m_snapshot[entry.path];
+				if(e.epochMsec < entry.epochMsec)
+					e = entry;
 			}
 		}
 		return;
@@ -96,6 +97,7 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 			m_pathDictionary[entry.path] = m_pathDictionaryIndex++;
 	}
 	Entry e(entry);
+	checkSampleType(e);
 	e.epochMsec = epoch_msec;
 	int64_t last_time = m_entries.empty()? 0: m_entries[m_entries.size()-1].epochMsec;
 	if(epoch_msec < last_time) {
@@ -248,6 +250,13 @@ log_finish:
 	}
 	ret.setMetaData(hdr.toMetaData());
 	return ret;
+}
+
+void ShvMemoryJournal::checkSampleType(ShvJournalEntry &entry) const
+{
+	ShvLogTypeDescr::SampleType st = m_logHeader.pathsSampleType(entry.path);
+	if(st != ShvLogTypeDescr::SampleType::Invalid)
+		entry.sampleType = st;
 }
 
 } // namespace utils

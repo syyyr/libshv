@@ -5,6 +5,7 @@
 #include "shvpath.h"
 
 #include "../log.h"
+#include "../exception.h"
 #include "../string.h"
 #include "../stringview.h"
 
@@ -209,7 +210,7 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 		last_file_msec = m_journalContext.files[m_journalContext.files.size() - 1];
 	}
 	if(!m_journalContext.files.empty() && last_file_msec < m_journalContext.files[m_journalContext.files.size() - 1])
-		throw std::runtime_error("Journal context corrupted!");
+		SHV_EXCEPTION("Journal context corrupted!");
 
 	std::string fn = m_journalContext.fileMsecToFilePath(last_file_msec);
 	ShvJournalFileWriter wr(fn, last_file_msec);
@@ -218,7 +219,7 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 		// new file should start with snapshot
 		logDShvJournal() << "\t new file, snapshot will be written to:" << fn;
 		if(!m_snapShotFn)
-			throw std::runtime_error("SnapShot function not defined");
+			SHV_EXCEPTION("SnapShot function not defined");
 		std::vector<ShvJournalEntry> snapshot;
 		m_snapShotFn(snapshot);
 		if(snapshot.empty())
@@ -240,13 +241,13 @@ int64_t ShvFileJournal::JournalContext::fileNameToFileMsec(const std::string &fn
 {
 	std::string utc_str = fn;
 	if(MSEC_SEP_POS >= utc_str.size())
-		throw std::runtime_error("fileNameToFileMsec(): File name: '" + fn + "' too short.");
+		SHV_EXCEPTION("fileNameToFileMsec(): File name: '" + fn + "' too short.");
 	utc_str[MIN_SEP_POS] = ':';
 	utc_str[SEC_SEP_POS] = ':';
 	utc_str[MSEC_SEP_POS] = '.';
 	int64_t msec = cp::RpcValue::DateTime::fromUtcString(utc_str).msecsSinceEpoch();
 	if(msec == 0)
-		throw std::runtime_error("fileNameToFileMsec(): Invalid file name: '" + fn + "' cannot be converted to date time");
+		SHV_EXCEPTION("fileNameToFileMsec(): Invalid file name: '" + fn + "' cannot be converted to date time");
 	return msec;
 }
 
@@ -276,7 +277,7 @@ void ShvFileJournal::checkJournalContext_helper(bool force)
 			shvWarning() << "Journal dir:" << journalDir() << "does not exist!";
 	}
 	if(!m_journalContext.isConsistent()) {
-		throw std::runtime_error("Journal cannot be brought to consistent state.");
+		SHV_EXCEPTION("Journal cannot be brought to consistent state.");
 	}
 }
 
@@ -284,7 +285,7 @@ void ShvFileJournal::ensureJournalDir()
 {
 	if(!mkpath(m_journalContext.journalDir)) {
 		m_journalContext.journalDirExists = false;
-		throw std::runtime_error("Journal dir: " + m_journalContext.journalDir + " do not exists and cannot be created");
+		SHV_EXCEPTION("Journal dir: " + m_journalContext.journalDir + " do not exists and cannot be created");
 	}
 	//logDShvJournal() << "journal dir:" << m_journalStatus.journalDir << "exists";
 	m_journalContext.journalDirExists = true;
@@ -437,7 +438,7 @@ void ShvFileJournal::updateJournalFiles()
 		}
 	}
 	else {
-		throw std::runtime_error("Cannot read content of dir: " + m_journalContext.journalDir);
+		SHV_EXCEPTION("Cannot read content of dir: " + m_journalContext.journalDir);
 	}
 }
 
@@ -466,7 +467,7 @@ int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, ssize_t *p_
 		*p_date_time_fpos = date_time_fpos;
 	std::ifstream in(fn, std::ios::in | std::ios::binary);
 	if (!in)
-		throw std::runtime_error("Cannot open file: " + fn + " for reading.");
+		SHV_EXCEPTION("Cannot open file: " + fn + " for reading.");
 	int64_t dt_msec = -1;
 	in.seekg(0, std::ios::end);
 	long fpos = in.tellg();
@@ -500,7 +501,7 @@ int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, ssize_t *p_
 						size_t len;
 						chainpack::RpcValue::DateTime dt = chainpack::RpcValue::DateTime::fromUtcString(s, &len);
 						if(len > 0) {
-							date_time_fpos = (ssize_t)lf_pos;
+							date_time_fpos = fpos + (ssize_t)lf_pos;
 							dt_msec = dt.msecsSinceEpoch();
 						}
 						else {

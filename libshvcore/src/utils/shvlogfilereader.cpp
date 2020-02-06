@@ -31,7 +31,6 @@ ShvLogFileReader::ShvLogFileReader(const std::string &file_name, const ShvLogHea
 	else
 		m_logHeader = ShvLogHeader::fromMetaData(md);
 
-	m_pathsTypeDescr = m_logHeader.pathsTypeDescr();
 	chainpack::ChainPackReader::ItemType t = m_chainpackReader.unpackNext();
 	if(t != chainpack::ChainPackReader::ItemType::CCPCP_ITEM_LIST)
 		SHV_EXCEPTION("Log is corrupted!");
@@ -49,7 +48,7 @@ bool ShvLogFileReader::next()
 		if(!m_ifstream)
 			return false;
 		chainpack::ChainPackReader::ItemType tt = m_chainpackReader.peekNext();
-		logDShvJournal() << "peek next type:" << chainpack::ChainPackReader::itemTypeToString(tt);
+		//logDShvJournal() << "peek next type:" << chainpack::ChainPackReader::itemTypeToString(tt);
 		if(tt == chainpack::ChainPackReader::ItemType::CCPCP_ITEM_CONTAINER_END)
 			return false;
 
@@ -70,7 +69,7 @@ bool ShvLogFileReader::next()
 			logWShvJournal() << "Path dictionary corrupted, row:" << val.toCpon();
 			continue;
 		}
-		logDShvJournal() << "row:" << val.toCpon();
+		//logDShvJournal() << "row:" << val.toCpon();
 		m_currentEntry.epochMsec = time;
 		m_currentEntry.path = path;
 		m_currentEntry.value = row.value(Column::Value);
@@ -89,10 +88,11 @@ const ShvJournalEntry &ShvLogFileReader::entry()
 
 ShvLogTypeDescr::SampleType ShvLogFileReader::pathsSampleType(const std::string &path) const
 {
-	auto it = m_pathsTypeDescr.find(path);
-	return it == m_pathsTypeDescr.end()? ShvJournalEntry::SampleType::Continuous: it->second.sampleType;
+	ShvLogTypeDescr::SampleType st = m_logHeader.pathsSampleType(path);
+	if(st == ShvLogTypeDescr::SampleType::Invalid)
+		return ShvLogTypeDescr::SampleType::Continuous;
+	return st;
 }
-
 
 } // namespace utils
 } // namespace core

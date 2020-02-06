@@ -47,8 +47,18 @@ public:
 		: ShvJournalEntry(path, value, std::move(domain), NO_SHORT_TIME, SampleType::Continuous) {}
 
 	bool isValid() const {return !path.empty() && value.isValid();}
+	bool operator==(const ShvJournalEntry &o) const
+	{
+		return epochMsec == o.epochMsec
+				&& path == o.path
+				&& value == o.value
+				&& shortTime == o.shortTime
+				&& domain == o.domain
+				&& sampleType == o.sampleType;
+	}
 	void setShortTime(int short_time) {shortTime = short_time;}
 	shv::chainpack::RpcValue::DateTime dateTime() const { return shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(epochMsec); }
+	shv::chainpack::RpcValue toRpcValueMap() const;
 };
 
 } // namespace utils

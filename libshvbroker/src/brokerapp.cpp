@@ -426,7 +426,7 @@ shv::chainpack::RpcValue BrokerApp::aclConfig(const std::string &config_name, bo
 	}
 	else {
 		if(throw_exc) {
-			throw std::runtime_error("Config " + config_name + " does not exist.");
+			SHV_EXCEPTION("Config " + config_name + " does not exist.");
 		}
 		else {
 			//shvError().nospace() << "Config '" << config_name << "' does not exist.";
@@ -448,9 +448,8 @@ bool BrokerApp::setAclConfig(const std::string &config_name, const shv::chainpac
 	}
 	else {
 		if(throw_exc)
-			throw std::runtime_error("Config " + config_name + " does not exist.");
-		else
-			return false;
+			SHV_EXCEPTION("Config " + config_name + " does not exist.");
+		return false;
 	}
 }
 
@@ -525,9 +524,8 @@ shv::chainpack::RpcValue *BrokerApp::aclConfigVariable(const std::string &config
 	}
 	else {
 		if(throw_exc)
-			throw std::runtime_error("Config " + config_name + " does not exist.");
-		else
-			return nullptr;
+			SHV_EXCEPTION("Config " + config_name + " does not exist.");
+		return nullptr;
 	}
 }
 
@@ -537,9 +535,8 @@ shv::chainpack::RpcValue BrokerApp::loadAclConfig(const std::string &config_name
 	fn = cliOptions()->value("etc.acl." + fn).toString();
 	if(fn.empty()) {
 		if(throw_exc)
-			throw std::runtime_error("config file name is empty.");
-		else
-			return cp::RpcValue();
+			SHV_EXCEPTION("config file name is empty.");
+		return cp::RpcValue();
 	}
 	if(fn[0] != '/')
 		fn = cliOptions()->configDir() + '/' + fn;
@@ -547,9 +544,8 @@ shv::chainpack::RpcValue BrokerApp::loadAclConfig(const std::string &config_name
 	QFile f(QString::fromStdString(fn));
 	if (!fis.good()) {
 		if(throw_exc)
-			throw std::runtime_error("Cannot open config file " + fn + " for reading");
-		else
-			return cp::RpcValue();
+			SHV_EXCEPTION("Cannot open config file " + fn + " for reading");
+		return cp::RpcValue();
 	}
 	shv::chainpack::CponReader rd(fis);
 	shv::chainpack::RpcValue rv;
@@ -566,9 +562,8 @@ bool BrokerApp::saveAclConfig(const std::string &config_name, const shv::chainpa
 	fn = cliOptions()->value("etc.acl." + fn).toString();
 	if(fn.empty()) {
 		if(throw_exc)
-			throw std::runtime_error("config file name is empty.");
-		else
-			return false;
+			SHV_EXCEPTION("config file name is empty.");
+		return false;
 	}
 	if(fn[0] != '/')
 		fn = cliOptions()->configDir() + '/' + fn;
@@ -577,9 +572,8 @@ bool BrokerApp::saveAclConfig(const std::string &config_name, const shv::chainpa
 		std::ofstream fos(fn, std::ios::binary | std::ios::trunc);
 		if (!fos) {
 			if(throw_exc)
-				throw std::runtime_error("Cannot open config file " + fn + " for writing");
-			else
-				return false;
+				SHV_EXCEPTION("Cannot open config file " + fn + " for writing");
+			return false;
 		}
 		shv::chainpack::CponWriterOptions opts;
 		opts.setIndent("  ");
@@ -589,9 +583,8 @@ bool BrokerApp::saveAclConfig(const std::string &config_name, const shv::chainpa
 	}
 	else {
 		if(throw_exc)
-			throw std::runtime_error("Config must be RpcValue::Map type, config name: " + config_name);
-		else
-			return false;
+			SHV_EXCEPTION("Config must be RpcValue::Map type, config name: " + config_name);
+		return false;
 	}
 }
 

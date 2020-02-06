@@ -1,5 +1,6 @@
 #include "shvjournalfilewriter.h"
 #include "shvfilejournal.h"
+#include "../exception.h"
 
 namespace cp = shv::chainpack;
 
@@ -22,7 +23,7 @@ ShvJournalFileWriter::ShvJournalFileWriter(const std::string &file_name, int64_t
 {
 	m_out.open(m_fileName, std::ios::binary | std::ios::out | std::ios::app);
 	if(!m_out)
-		throw std::runtime_error("Cannot open file " + m_fileName + " for writing");
+		SHV_EXCEPTION("Cannot open file " + m_fileName + " for writing");
 }
 
 ssize_t ShvJournalFileWriter::fileSize()
@@ -36,7 +37,7 @@ void ShvJournalFileWriter::appendMonotonic(const ShvJournalEntry &entry)
 	ssize_t fsz = fileSize();
 	if(fsz == 0) {
 		if(m_fileNameTimeStamp == 0)
-			throw std::runtime_error("appendMonotonic() to file " + m_fileName + " must have start timestamp defined!");
+			SHV_EXCEPTION("appendMonotonic() to file " + m_fileName + " must have start timestamp defined!");
 		m_recentTimeStamp = m_fileNameTimeStamp;
 	}
 	else if(fsz > 0 && m_recentTimeStamp == 0) {

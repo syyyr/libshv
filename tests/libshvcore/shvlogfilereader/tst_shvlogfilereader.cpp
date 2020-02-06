@@ -5,6 +5,7 @@
 #include <shv/core/utils/shvlogfilereader.h>
 #include <shv/core/utils/shvjournalfilewriter.h>
 #include <shv/core/utils/shvjournalfilereader.h>
+#include <shv/core/utils/shvmemoryjournal.h>
 
 #include <shv/core/log.h>
 
@@ -153,8 +154,8 @@ private:
 			std::mt19937 mt(randev());
 			std::uniform_int_distribution<int> rndmsec(0, 2000);
 			std::uniform_int_distribution<int> rndval(0, 1000);
-
-			for (int i = 0; i < 60000; ++i) {
+			constexpr int CNT = 6000;//0;
+			for (int i = 0; i < CNT; ++i) {
 				msec += rndmsec(mt);
 				for(auto &kv : channels) {
 					Channel &c = kv.second;
@@ -193,16 +194,18 @@ private:
 				int cnt = 0;
 				ShvLogFileReader rd(fn);
 				while(rd.next()) {
-					const ShvJournalEntry &e = rd.entry();
+					rd.entry();
 					cnt++;
 				}
 				QVERIFY(cnt == rd.logHeader().recordCount());
 				QVERIFY(cnt == (int)log1.toList().size());
 			}
-			qDebug() << "------------- Generating dirty log";
-			int dirty_cnt = 0;
+			qDebug() << "------------- Generating dirty log + memory log";
+			unsigned dirty_cnt = 0;
 			string dirty_fn = JOURNAL_DIR + "/dirty.log2";
-			shv::core::utils::ShvJournalFileWriter dirty_log(dirty_fn);
+			ShvJournalFileWriter dirty_log(dirty_fn);
+			ShvMemoryJournal memory_jurnal;
+			memory_jurnal.setTypeInfo(typeInfo);
 			for (int i = 0; i < 10000; ++i) {
 				msec += rndmsec(mt);
 				for(auto &kv : channels) {
@@ -217,6 +220,7 @@ private:
 						}
 						else if(e.path == "vetra/vehicleDetected") {
 							e.value = RpcValue::List{rv, i %2? "R": "L"};
+							//e.sampleType = ShvLogTypeDescr::SampleType::Discrete;
 						}
 						else {
 							e.value = rv;
@@ -224,7 +228,10 @@ private:
 						e.domain = c.domain;
 						e.shortTime = msec % 0x100;
 						dirty_log.append(e);
+						memory_jurnal.append(e);
 						dirty_cnt++;
+						//if(dirty_cnt < 10)
+						//	qDebug() << dirty_cnt << "INS:" << e.toRpcValueMap().toCpon();
 					}
 				}
 			}
@@ -232,12 +239,45 @@ private:
 				ShvLogHeader hdr;
 				hdr.setTypeInfo(typeInfo);
 				ShvJournalFileReader rd2(dirty_fn, &hdr);
+				unsigned cnt = 0;
 				while (rd2.next()) {
-					const ShvJournalEntry &e = rd2.entry();
-					dirty_cnt--;
+					const ShvJournalEntry &e1 = rd2.entry();
+					QVERIFY(cnt < dirty_cnt);
+					const ShvJournalEntry &e2 = memory_jurnal.entries()[cnt++];
+					//qDebug() << cnt << e1.toRpcValueMap().toCpon() << "vs" << e2.toRpcValueMap().toCpon();
+					QVERIFY(e1 == e2);
+				}
+				QVERIFY(cnt == dirty_cnt);
+				{
+					cnt--;
+					rd2.last();
+					const ShvJournalEntry &e1 = rd2.entry();
+					const ShvJournalEntry &e2 = memory_jurnal.entries()[cnt++];
+					//qDebug() << cnt << e1.toRpcValueMap().toCpon() << "vs" << e2.toRpcValueMap().toCpon();
+					QVERIFY(e1 == e2);
 				}
 			}
-			QVERIFY(dirty_cnt == 0);
+			{
+				qDebug() << "------------- Read chainpack to memory log";
+				string fn1 = TEST_DIR + "/log1.chpk";
+				string fn2 = TEST_DIR + "/log2.chpk";
+				//ShvMemoryJournal memory_jurnal;
+				memory_jurnal.loadLog(fn1);
+				{
+					ofstream out(fn2, std::ios::binary | std::ios::out);
+					ChainPackWriter wr(out);
+					wr << memory_jurnal.getLog(ShvGetLogParams());
+				}
+				unsigned cnt = 0;
+				ShvLogFileReader rd2(fn2);
+				while (rd2.next()) {
+					const ShvJournalEntry &e1 = rd2.entry();
+					QVERIFY(cnt < memory_jurnal.entries().size());
+					const ShvJournalEntry &e2 = memory_jurnal.entries()[cnt++];
+					//qDebug() << cnt << e1.toRpcValueMap().toCpon() << "vs" << e2.toRpcValueMap().toCpon();
+					QVERIFY(e1 == e2);
+				}
+			}
 		}
 	}
 private slots:

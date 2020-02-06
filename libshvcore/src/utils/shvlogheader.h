@@ -57,13 +57,16 @@ public:
 	void setSources(const std::map<std::string, ShvLogTypeInfo> &ss) {m_sources = ss;}
 
 	const ShvLogTypeInfo& typeInfo(const std::string &path_prefix = EMPTY_PREFIX_KEY) const;
-	void setTypeInfo(ShvLogTypeInfo &&ti) { m_sources[EMPTY_PREFIX_KEY] = std::move(ti); }
-	void setTypeInfo(const ShvLogTypeInfo &ti) { m_sources[EMPTY_PREFIX_KEY] = ti; }
-	void setTypeInfo(const std::string &path_prefix, ShvLogTypeInfo &&ti) { m_sources[path_prefix] = std::move(ti); }
+	void setTypeInfo(ShvLogTypeInfo &&ti);
+	void setTypeInfo(const ShvLogTypeInfo &ti);
+	void setTypeInfo(const std::string &path_prefix, ShvLogTypeInfo &&ti);
 
 	std::map<std::string, shv::core::utils::ShvLogTypeDescr> pathsTypeDescr() const;
+	ShvLogTypeDescr::SampleType pathsSampleType(const std::string &path) const;
 private:
 	std::map<std::string, ShvLogTypeInfo> m_sources;
+	mutable std::map<std::string, shv::core::utils::ShvLogTypeDescr> m_pathsTypeDescr;
+	mutable bool m_pathsTypeDescrValid = false;
 
 #if 0
 	ShvLogHeader(const Super &super) : Super(super) {}

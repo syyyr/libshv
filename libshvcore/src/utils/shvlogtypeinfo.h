@@ -56,7 +56,7 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeDescr
 	std::vector<ShvLogTypeDescrField> fields;
 	std::string description;
 	Type type = Type::Invalid;
-	enum class SampleType {Continuous , Discrete};
+	enum class SampleType {Invalid, Continuous , Discrete};
 	SampleType sampleType = SampleType::Continuous;
 	chainpack::RpcValue minVal;
 	chainpack::RpcValue maxVal;
