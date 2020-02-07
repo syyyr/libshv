@@ -19,6 +19,8 @@ public:
 	ShvMemoryJournal();
 	ShvMemoryJournal(const ShvGetLogParams &input_filter);
 
+	void setSince(int64_t since) { m_logHeader.setSince(since); }
+	void setUntil(int64_t until) { m_logHeader.setUntil(until); }
 	void setTypeInfo(const ShvLogTypeInfo &ti) {setTypeInfo(ShvLogTypeInfo(ti));}
 	void setTypeInfo(ShvLogTypeInfo &&ti) {m_logHeader.setTypeInfo(std::move(ti));}
 	void setTypeInfo(const std::string &path_prefix, ShvLogTypeInfo &&ti) {m_logHeader.setTypeInfo(path_prefix, std::move(ti));}
@@ -30,6 +32,7 @@ public:
 	void append(const ShvJournalEntry &entry) override;
 	shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) override;
 
+	const ShvLogHeader &logHeader() const { return m_logHeader; }
 	const std::vector<ShvJournalEntry>& entries() const {return  m_entries;}
 private:
 	void checkSampleType(ShvJournalEntry &entry) const;
