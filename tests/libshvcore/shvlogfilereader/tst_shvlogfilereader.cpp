@@ -10,6 +10,7 @@
 #include <shv/core/log.h>
 
 #include <shv/chainpack/chainpackwriter.h>
+#include <shv/chainpack/cponwriter.h>
 
 #include <QtTest/QtTest>
 #include <QDebug>
@@ -27,6 +28,15 @@ QDebug operator<<(QDebug debug, const std::string &s)
 {
 	debug << s.c_str();
 	return debug;
+}
+
+void write_cpon_file(const string &fn, const RpcValue &log)
+{
+	ofstream out(fn, std::ios::binary | std::ios::out);
+	CponWriterOptions opts;
+	opts.setIndent("\t");
+	CponWriter wr(out, opts);
+	wr << log;
 }
 
 const string TEST_DIR = "/tmp/TestShvFileReader";
@@ -182,8 +192,8 @@ private:
 			int64_t msec2 = msec;
 			{
 				ShvGetLogParams params;
-				params.since = RpcValue::DateTime::fromMSecsSinceEpoch(msec1 + (msec2 - msec1) / 2);
-				params.until = RpcValue::DateTime::fromMSecsSinceEpoch(msec2 - (msec2 - msec1) / 20);
+				params.since = RpcValue::DateTime::fromMSecsSinceEpoch(msec1 - (msec2 - msec1) / 2);
+				params.until = RpcValue::DateTime::fromMSecsSinceEpoch(msec2 - (msec2 - msec1) / 2);
 				RpcValue log1 = file_journal.getLog(params);
 				string fn = TEST_DIR + "/log1.chpk";
 				{
@@ -191,6 +201,7 @@ private:
 					ChainPackWriter wr(out);
 					wr << log1;
 				}
+				write_cpon_file(TEST_DIR + "/log1.cpon", log1);
 				int cnt = 0;
 				ShvLogFileReader rd(fn);
 				while(rd.next()) {
@@ -276,6 +287,54 @@ private:
 					const ShvJournalEntry &e2 = memory_jurnal.entries()[cnt++];
 					//qDebug() << cnt << e1.toRpcValueMap().toCpon() << "vs" << e2.toRpcValueMap().toCpon();
 					QVERIFY(e1 == e2);
+				}
+			}
+			{
+				qDebug() << "------------- Filtering chainpack appends to memory log 1";
+				ShvGetLogParams filter;
+				filter.pathPattern = "**/vetra/**";
+				ShvMemoryJournal mmj(filter);
+				string fn1 = TEST_DIR + "/log1.chpk";
+				ShvLogFileReader rd1(fn1);
+				while (rd1.next()) {
+					const ShvJournalEntry &e1 = rd1.entry();
+					mmj.append(e1);
+				}
+				for(auto e : mmj.entries()) {
+					QVERIFY(e.path.find("vetra") != string::npos);
+				}
+			}
+			{
+				qDebug() << "------------- Filtering chainpack appends to memory log 2";
+				string fn1 = TEST_DIR + "/log1.chpk";
+				ShvLogFileReader rd1(fn1);
+				ShvGetLogParams filter;
+				filter.pathPattern = "((temp.*)|(volt.+))";
+				filter.pathPatternType = ShvGetLogParams::PatternType::RegEx;
+				int64_t dt1 = rd1.logHeader().since().toDateTime().msecsSinceEpoch();
+				QVERIFY(dt1 > 0);
+				int64_t dt2 = rd1.logHeader().until().toDateTime().msecsSinceEpoch();
+				QVERIFY(dt2 > 0);
+				auto dt_since = dt1 + (dt2 - dt1) / 3;
+				auto dt_until = dt2 - (dt2 - dt1) / 3;
+				filter.since = RpcValue::DateTime::fromMSecsSinceEpoch(dt_since);
+				filter.until = RpcValue::DateTime::fromMSecsSinceEpoch(dt_until);
+				ShvMemoryJournal mmj(filter);
+				while (rd1.next()) {
+					const ShvJournalEntry &e1 = rd1.entry();
+					mmj.append(e1);
+				}
+				for(auto e : mmj.entries()) {
+					qDebug() << e.toRpcValueMap().toCpon();
+					QVERIFY(e.path.find("temp") == 0 || e.path.find("volt") == 0);
+					QVERIFY(e.epochMsec >= dt_since);
+					QVERIFY(e.epochMsec < dt_until);
+				}
+				{
+					ShvGetLogParams params;
+					params.withPathsDict = false;
+					params.withSnapshot = true;
+					write_cpon_file(TEST_DIR + "/memlog.cpon", mmj.getLog(params));
 				}
 			}
 		}

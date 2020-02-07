@@ -34,6 +34,7 @@ public:
 
 	const ShvLogHeader &logHeader() const { return m_logHeader; }
 	const std::vector<ShvJournalEntry>& entries() const {return  m_entries;}
+	void clear() { m_entries.clear(); }
 private:
 	void checkSampleType(ShvJournalEntry &entry) const;
 private:

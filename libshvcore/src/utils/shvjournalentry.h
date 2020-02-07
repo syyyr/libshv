@@ -17,6 +17,14 @@ public:
 	static const char *DOMAIN_VAL_CHANGE; /// see shv::chainpack::Rpc::SIG_VAL_CHANGED
 	static const char *DOMAIN_VAL_FASTCHANGE; /// see shv::chainpack::Rpc::SIG_VAL_FASTCHANGED
 	static const char *DOMAIN_VAL_SERVICECHANGE; /// see shv::chainpack::Rpc::SIG_SERVICE_VAL_CHANGED
+	static const char *DOMAIN_SHV_SYSTEM;
+
+	static const char* SNAPSHOT_END;
+	static const char* PATH_DATA_MISSING;
+	static const char* DATA_MISSING_DEVICE_DISCONNECTED;
+	static const char* DATA_MISSING_HP_DISCONNECTED;
+	static const char* DATA_MISSING_LOG_FILE_CORRUPTED;
+	static const char* DATA_MISSING_LOG_FILE_MSSING;
 
 	using SampleType = ShvLogTypeDescr::SampleType;
 

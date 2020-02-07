@@ -35,7 +35,8 @@ ShvLogHeader ShvLogHeader::fromMetaData(const chainpack::RpcValue::MetaData &md)
 	ret.setLogParams(std::move(params));
 	ret.setRecordCount(md.value("recordCount").toInt());
 	ret.setRecordCountLimit(md.value("recordCountLimit").toInt());
-	ret.setWithSnapShot(md.value("withSnapShot").toBool());
+	ret.setWithSnapShot(md.value(ShvGetLogParams::KEY_WITH_SNAPSHOT).toBool());
+	ret.setWithPathsDict(md.value(ShvGetLogParams::KEY_WITH_PATHS_DICT, true).toBool());
 	ret.setFields(md.value("fields").toList());
 	ret.setPathDict(md.value("pathsDict").toIMap());
 	{
@@ -67,7 +68,8 @@ chainpack::RpcValue::MetaData ShvLogHeader::toMetaData() const
 	md.setValue("logParams", logParams().toRpcValue());
 	md.setValue("recordCount", recordCount());
 	md.setValue("recordCountLimit", recordCountLimit());
-	md.setValue("withSnapShot", withSnapShot());
+	md.setValue(ShvGetLogParams::KEY_WITH_SNAPSHOT, withSnapShot());
+	md.setValue(ShvGetLogParams::KEY_WITH_PATHS_DICT, withPathsDict());
 	if(!fields().empty())
 		md.setValue("fields", fields());
 	if(!pathDict().empty())

@@ -1,6 +1,7 @@
 #include "shvmemoryjournal.h"
 #include "shvlogheader.h"
 #include "shvpath.h"
+#include "shvfilejournal.h"
 
 #include "../log.h"
 
@@ -78,14 +79,12 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 	if(m_inputFilterUntilMsec > 0 && epoch_msec >= m_inputFilterUntilMsec)
 		return;
 	if(m_inputFilterSinceMsec > 0 && epoch_msec < m_inputFilterSinceMsec) {
-		if(m_inputFilter.withSnapshot) {
-			if(entry.sampleType == ShvJournalEntry::SampleType::Continuous
-				&& m_patternMatcher.match(entry))
-			{
-				Entry &e = m_snapshot[entry.path];
-				if(e.epochMsec < entry.epochMsec)
-					e = entry;
-			}
+		if(entry.sampleType == ShvJournalEntry::SampleType::Continuous
+			&& m_patternMatcher.match(entry))
+		{
+			Entry &e = m_snapshot[entry.path];
+			if(e.epochMsec < entry.epochMsec)
+				e = entry;
 		}
 		return;
 	}
@@ -122,8 +121,8 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 	int rec_cnt = 0;
 	auto since_msec = params.since.isDateTime()? params.since.toDateTime().msecsSinceEpoch(): 0;
 	auto until_msec = params.until.isDateTime()? params.until.toDateTime().msecsSinceEpoch(): 0;
-	int64_t since_msec2 = since_msec;
-	int64_t until_msec2 = since_msec;
+	int64_t first_record_msec = 0;
+	int64_t last_record_msec = 0;
 
 	auto it1 = m_entries.begin();
 	if(since_msec > 0) {
@@ -160,16 +159,15 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 	PatternMatcher pm(params);
 
 	std::map<std::string, Entry> snapshot;
-	if(params.withSnapshot) for(auto kv : m_snapshot) {
-		const auto &e = kv.second;
-		if(pm.match(e)) {
-			if(since_msec2 == 0)
-				since_msec2 = e.epochMsec;
-			snapshot[e.path] = e;
-		}
-	}
-
 	if(params.withSnapshot) {
+		for(auto kv : m_snapshot) {
+			const auto &e = kv.second;
+			if(pm.match(e)) {
+				if(first_record_msec == 0)
+					first_record_msec = e.epochMsec;
+				snapshot[e.path] = e;
+			}
+		}
 		for(auto it = m_entries.begin(); it != it1; ++it) {
 			const Entry &e = *it;
 			if(!pm.match(e))
@@ -178,37 +176,47 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 				snapshot[e.path] = e;
 			}
 		}
-	}
-	for(auto it = it1; it != it2; ++it) {
-
 		if(!snapshot.empty()) {
 			logDShvJournal() << "\t -------------- Snapshot";
-			until_msec2 = since_msec2;
+			last_record_msec = first_record_msec;
 			for(const auto &kv : snapshot) {
 				cp::RpcValue::List rec;
-				rec.push_back(since_msec2);
-				rec.push_back(make_path_shared(kv.first));
-				rec.push_back(kv.second.value);
-				rec.push_back(kv.second.shortTime);
-				rec.push_back(kv.second.domain.empty()? cp::RpcValue(nullptr): kv.second.domain);
-				log.push_back(rec);
+				const auto &entry = kv.second;
+				rec.push_back(cp::RpcValue::DateTime::fromMSecsSinceEpoch(first_record_msec));
+				rec.push_back(make_path_shared(entry.path));
+				rec.push_back(entry.value);
+				rec.push_back(entry.shortTime);
+				rec.push_back(entry.domain.empty()? cp::RpcValue(nullptr): entry.domain);
+				log.push_back(std::move(rec));
 				rec_cnt++;
 				if(rec_cnt >= max_rec_cnt)
 					goto log_finish;
 			}
-			snapshot.clear();
+			{
+				cp::RpcValue::List rec;
+				rec.push_back(cp::RpcValue::DateTime::fromMSecsSinceEpoch(first_record_msec));
+				rec.push_back(make_path_shared(ShvJournalEntry::SNAPSHOT_END));
+				rec.push_back(nullptr);
+				rec.push_back(nullptr);
+				rec.push_back(Entry::DOMAIN_SHV_SYSTEM);
+				log.push_back(std::move(rec));
+				rec_cnt++;
+			}
 		}
-		if(pm.match(*it)) { // keep interval open to make log merge simpler
-			if(since_msec2 == 0)
-				since_msec2 = it->epochMsec;
-			until_msec2 = it->epochMsec;
+	}
+	// keep <since, until) interval open to make log merge simpler
+	for(auto it = it1; it != it2; ++it) {
+		if(pm.match(*it)) {
+			if(first_record_msec == 0)
+				first_record_msec = it->epochMsec;
+			last_record_msec = it->epochMsec;
 			cp::RpcValue::List rec;
 			rec.push_back(cp::RpcValue::DateTime::fromMSecsSinceEpoch(it->epochMsec));
 			rec.push_back(make_path_shared(it->path));
 			rec.push_back(it->value);
 			rec.push_back(it->shortTime);
 			rec.push_back(it->domain.empty()? cp::RpcValue(nullptr): it->domain);
-			log.push_back(rec);
+			log.push_back(std::move(rec));
 			rec_cnt++;
 			if(rec_cnt >= max_rec_cnt)
 				goto log_finish;
@@ -223,11 +231,12 @@ log_finish:
 		hdr.setDeviceType(m_logHeader.deviceType());
 		hdr.setDateTime(cp::RpcValue::DateTime::now());
 		hdr.setLogParams(params);
-		hdr.setSince((since_msec2 > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec2)): cp::RpcValue(nullptr));
-		hdr.setUntil((until_msec2 > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(until_msec2)): cp::RpcValue(nullptr));
+		hdr.setSince((first_record_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(first_record_msec)): cp::RpcValue(nullptr));
+		hdr.setUntil((last_record_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(last_record_msec)): cp::RpcValue(nullptr));
 		hdr.setRecordCount(rec_cnt);
 		hdr.setRecordCountLimit(max_rec_cnt);
 		hdr.setWithSnapShot(params.withSnapshot);
+		hdr.setWithPathsDict(params.withPathsDict);
 
 		cp::RpcValue::List fields;
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Timestamp)}});

@@ -984,22 +984,22 @@ bool RpcValue::MetaData::hasKey(const RpcValue::String &key) const
 	return (it != m.end());
 }
 
-RpcValue RpcValue::MetaData::value(RpcValue::Int key) const
+RpcValue RpcValue::MetaData::value(RpcValue::Int key, const RpcValue &def_val) const
 {
 	const IMap &m = iValues();
 	auto it = m.find(key);
 	if(it != m.end())
 		return it->second;
-	return RpcValue();
+	return def_val;
 }
 
-RpcValue RpcValue::MetaData::value(const String &key) const
+RpcValue RpcValue::MetaData::value(const String &key, const RpcValue &def_val) const
 {
 	const Map &m = sValues();
 	auto it = m.find(key);
 	if(it != m.end())
 		return it->second;
-	return RpcValue();
+	return def_val;
 }
 
 void RpcValue::MetaData::setValue(RpcValue::Int key, const RpcValue &val)

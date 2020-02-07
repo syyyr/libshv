@@ -225,8 +225,8 @@ public:
 		std::vector<RpcValue::String> sKeys() const;
 		bool hasKey(RpcValue::Int key) const;
 		bool hasKey(const RpcValue::String &key) const;
-		RpcValue value(RpcValue::Int key) const;
-		RpcValue value(const RpcValue::String &key) const;
+		RpcValue value(RpcValue::Int key, const RpcValue &def_val = RpcValue()) const;
+		RpcValue value(const RpcValue::String &key, const RpcValue &def_val = RpcValue()) const;
 		void setValue(RpcValue::Int key, const RpcValue &val);
 		void setValue(const RpcValue::String &key, const RpcValue &val);
 		size_t size() const;

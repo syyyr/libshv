@@ -29,6 +29,7 @@ class SHVCORE_DECL_EXPORT ShvLogHeader //: public shv::chainpack::RpcValue::Meta
 	SHV_FIELD_IMPL2(int, r, R, ecordCount, 0)
 	SHV_FIELD_IMPL2(int, r, R, ecordCountLimit, 0)
 	SHV_FIELD_IMPL2(bool, w, W, ithSnapShot, false)
+	SHV_FIELD_IMPL2(bool, w, W, ithPathsDict, true)
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue::List, f, F, ields)
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue::IMap, p, P, athDict)
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, d, D, ateTime)
