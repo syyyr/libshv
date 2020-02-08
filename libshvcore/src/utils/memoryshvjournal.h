@@ -3,7 +3,7 @@
 
 #include "../shvcoreglobal.h"
 
-#include "shvjournalcommon.h"
+#include "abstractshvjournal.h"
 #include "shvjournalentry.h"
 #include "shvjournalgetlogparams.h"
 
@@ -13,41 +13,34 @@ namespace shv {
 namespace core {
 namespace utils {
 
-class SHVCORE_DECL_EXPORT MemoryShvJournal : public ShvJournalCommon
+class SHVCORE_DECL_EXPORT MemoryShvJournal : public AbstractShvJournal
 {
 public:
 	MemoryShvJournal();
 	MemoryShvJournal(const ShvJournalGetLogParams &input_filter);
 
-	void setDeviceId(std::string id) { m_deviceId = std::move(id); }
-	void setDeviceType(std::string type) { m_deviceType = std::move(type); }
 	void setTypeInfo(const shv::chainpack::RpcValue &i);
 	void setTypeInfo(const shv::chainpack::RpcValue &i, const std::string &path_prefix);
+	void setDeviceId(std::string id) { m_deviceId = std::move(id); }
+	void setDeviceType(std::string type) { m_deviceType = std::move(type); }
 
 	void loadLog(const shv::chainpack::RpcValue &log);
-	void append(const ShvJournalEntry &entry, int64_t epoch_msec = 0);
-	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params);
-private:
-	class Entry : public ShvJournalEntry
-	{
-	public:
-		int64_t timeMsec = 0;
+	void append(const ShvJournalEntry &entry) override;
+	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params) override;
 
-		Entry() {}
-		Entry(const ShvJournalEntry &e) : ShvJournalEntry(e) {}
-	};
+	const std::vector<ShvJournalEntry>& entries() const {return  m_entries;}
+private:
+	using Entry = ShvJournalEntry;
 	void append(Entry &&entry);
 
-	std::regex m_pathPatternRegEx;
-	std::string m_pathPatternWildCard;
-	bool m_usePathPatternregEx = false;
+	PatternMatcher m_patternMatcher;
+	ShvJournalGetLogParams m_inputFilter;
 
-	std::regex m_domainPatternRegEx;
-	bool m_useDomainPatternregEx = false;
+	std::map<std::string, Entry> m_snapshot;
 
 	int64_t m_sinceMsec = 0;
 	int64_t m_untilMsec = 0;
-	int m_maxRecordCount = std::numeric_limits<int>::max();
+	int m_maxRecordCount = DEFAULT_GET_LOG_RECORD_COUNT_LIMIT;
 
 	std::map<std::string, int> m_pathDictionary;
 	int m_pathDictionaryIndex = 0;

@@ -50,6 +50,7 @@ struct SHVCORE_DECL_EXPORT ShvJournalGetLogParams
 	ShvJournalGetLogParams(const shv::chainpack::RpcValue &opts);
 
 	shv::chainpack::RpcValue toRpcValue() const;
+	static ShvJournalGetLogParams fromRpcValue(const shv::chainpack::RpcValue &v) ;
 };
 
 } // namespace utils

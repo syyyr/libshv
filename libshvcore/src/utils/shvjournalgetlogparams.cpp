@@ -58,6 +58,22 @@ chainpack::RpcValue ShvJournalGetLogParams::toRpcValue() const
 	return chainpack::RpcValue{m};
 }
 
+ShvJournalGetLogParams ShvJournalGetLogParams::fromRpcValue(const chainpack::RpcValue &v)
+{
+	ShvJournalGetLogParams ret;
+	const cp::RpcValue::Map &m = v.toMap();
+	ret.since = m.value(KEY_WITH_SINCE);
+	ret.until = m.value(KEY_WITH_UNTIL);
+	ret.pathPattern = m.value(KEY_PATH_PATTERN).toString();
+	ret.pathPatternType = m.value(KEY_PATH_PATTERN_TYPE).toString() == REG_EX? PatternType::RegEx: PatternType::WildCard;
+	ret.domainPattern = m.value(KEY_DOMAIN_PATTERN).toString();
+	ret.headerOptions = m.value(KEY_HEADER_OPTIONS).toUInt();
+	ret.maxRecordCount = m.value(KEY_MAX_RECORD_COUNT).toInt();
+	ret.withSnapshot = m.value(KEY_WITH_SNAPSHOT).toBool();
+	ret.withUptime = m.value(KEY_WITH_UPTIME).toBool();
+	return ret;
+}
+
 } // namespace utils
 } // namespace iotqt
 } // namespace shv

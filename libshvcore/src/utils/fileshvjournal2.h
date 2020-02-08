@@ -3,7 +3,7 @@
 
 #include "../shvcoreglobal.h"
 #include "../utils.h"
-#include "shvjournalcommon.h"
+#include "abstractshvjournal.h"
 #include "shvjournalentry.h"
 #include "shvjournalgetlogparams.h"
 
@@ -13,14 +13,13 @@ namespace shv {
 namespace core {
 namespace utils {
 
-class SHVCORE_DECL_EXPORT FileShvJournal2 : public ShvJournalCommon
+class SHVCORE_DECL_EXPORT FileShvJournal2 : public AbstractShvJournal
 {
 public:
 	static constexpr long DEFAULT_JOURNAL_SIZE_LIMIT = 100 * 100 * 1024;
 	static constexpr char FIELD_SEPARATOR = '\t';
 	static constexpr char RECORD_SEPARATOR = '\n';
-
-	SHV_FIELD_IMPL(std::string, f, F, ileExtension)
+	static const std::string FILE_EXT;
 public:
 	using SnapShotFn = std::function<void (std::vector<ShvJournalEntry>&)>;
 
@@ -34,17 +33,42 @@ public:
 	void setJournalSizeLimit(const std::string &n);
 	void setJournalSizeLimit(int64_t n) {m_journalSizeLimit = n;}
 	int64_t journalSizeLimit() const { return m_journalSizeLimit;}
-	void setDeviceId(std::string id) { m_deviceId = std::move(id); }
-	void setDeviceType(std::string type) { m_deviceType = std::move(type); }
-	void setTypeInfo(const shv::chainpack::RpcValue &i) { m_typeInfo = i; }
+	void setTypeInfo(const shv::chainpack::RpcValue &i) { m_journalContext.typeInfo = i; }
+	void setDeviceId(std::string id) { m_journalContext.deviceId = std::move(id); }
+	void setDeviceType(std::string type) { m_journalContext.deviceType = std::move(type); }
 
-	void append(const ShvJournalEntry &entry, int64_t msec = 0);
+	void append(const ShvJournalEntry &entry) override;
 
-	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params);
+	shv::chainpack::RpcValue getLog(const ShvJournalGetLogParams &params) override;
 
 	void convertLog1JournalDir();
+public:
+	struct JournalContext
+	{
+		bool journalDirExists = false;
+		std::vector<int64_t> files;
+		int64_t journalSize = -1;
+		//bool isConsistent = false;
+		int64_t lastFileSize = -1;
+		int64_t recentTimeStamp = 0;
+		std::string journalDir;
+
+		std::string deviceId;
+		std::string deviceType;
+		shv::chainpack::RpcValue typeInfo;
+
+		bool isConsistent() const {return journalDirExists && journalSize >= 0;}
+		//void setNotConsistent() {journalSize = -1;}
+		int64_t fileNameToFileMsec(const std::string &fn) const;
+		std::string fileMsecToFileName(int64_t msec) const;
+		std::string fileMsecToFilePath(int64_t file_msec) const;
+	};
+	const JournalContext& checkJournalContext();
+	static shv::chainpack::RpcValue getLog(const JournalContext &journal_context, const ShvJournalGetLogParams &params);
 private:
-	void checkJournalConsistecy(bool force = false);
+
+	void checkJournalContext_helper(bool force = false);
+
 	void rotateJournal();
 	void updateJournalStatus();
 	void updateJournalFiles();
@@ -53,33 +77,14 @@ private:
 	bool journalDirExists();
 	int64_t findLastEntryDateTime(const std::string &fn);
 
-	shv::chainpack::RpcValue getLogThrow(const ShvJournalGetLogParams &params);
+	void appendThrow(const ShvJournalEntry &entry);
+	void wrirteEntry(std::ofstream &out, int64_t msec, const ShvJournalEntry &e);
 
-	void appendThrow(const ShvJournalEntry &entry, int64_t msec);
-	void appendEntry(std::ofstream &out, int64_t msec, const ShvJournalEntry &e);
-
-	int64_t fileNameToFileMsec(const std::string &fn) const;
-	std::string fileMsecToFileName(int64_t msec) const;
-	std::string fileMsecToFilePath(int64_t file_msec) const;
-	std::string getLine(std::istream &in, char sep);
+	static std::string getLine(std::istream &in, char sep);
 private:
-	std::string m_deviceId;
-	std::string m_deviceType;
-	shv::chainpack::RpcValue m_typeInfo;
-	struct
-	{
-		bool journalDirExists = false;
-		std::vector<int64_t> files;
-		int64_t journalSize = -1;
-		//bool isConsistent = false;
-		int64_t lastFileSize = -1;
-		int64_t recentTimeStamp = 0;
+	JournalContext m_journalContext;
 
-		bool isConsistent() const {return journalDirExists && journalSize >= 0;}
-		//void setNotConsistent() {journalSize = -1;}
-	} m_journalStatus;
 	SnapShotFn m_snapShotFn;
-	std::string m_journalDir;
 	int64_t m_fileSizeLimit = DEFAULT_FILE_SIZE_LIMIT;
 	int64_t m_journalSizeLimit = DEFAULT_JOURNAL_SIZE_LIMIT;
 };
