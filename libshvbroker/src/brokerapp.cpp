@@ -539,8 +539,8 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 				 << "rq_grant:" << (rq_grant.isValid()? rq_grant.toCpon(): "<none>")
 				 //<< "grants:" << join_string_list(user_flattent_grants, ',')
 				 << " => " << most_specific_path_grant.toRpcValue().toCpon();
-	if(most_specific_path_grant.forwardUserLoginFromRequest)
-		return  request_grant;
+	//if(most_specific_path_grant.forwardUserLoginFromRequest)
+	//	return  request_grant;
 	most_specific_path_grant.isResolved = true;
 	return cp::AccessGrant(most_specific_path_grant);
 }

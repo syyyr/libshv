@@ -144,7 +144,7 @@ void AclManagerSqlite::createSqliteDatabaseTables()
 			CREATE TABLE IF NOT EXISTS %1 (
 			role character varying,
 			path character varying,
-			forwardGrant boolean,
+			-- forwardGrant boolean,
 			grantType character varying,
 			accessLevel integer,
 			accessRole character varying,
@@ -379,7 +379,7 @@ AclRolePaths AclManagerSqlite::aclPathsRolePaths(const std::string &role_name)
 	while(q.next()) {
 		QString path = q.value("path").toString();
 		cp::PathAccessGrant ag;
-		ag.forwardUserLoginFromRequest = q.value(cp::PathAccessGrant::FORWARD_USER_LOGIN).toBool();
+		//ag.forwardUserLoginFromRequest = q.value(cp::PathAccessGrant::FORWARD_USER_LOGIN).toBool();
 		ag.type = static_cast<cp::PathAccessGrant::Type>(q.value("grantType").toInt());
 		switch (ag.type) {
 		case cp::PathAccessGrant::Type::AccessLevel: ag.accessLevel = q.value("accessLevel").toInt(); break;
@@ -410,8 +410,8 @@ void AclManagerSqlite::aclSetRolePaths(const std::string &role_name, const AclRo
 			rec.setValue("role", QString::fromStdString(role_name));
 			rec.setValue("path", QString::fromStdString(kv.first));
 			const cp::PathAccessGrant &g = kv.second;
-			if(g.forwardUserLoginFromRequest)
-				rec.setValue(cp::PathAccessGrant::FORWARD_USER_LOGIN, g.forwardUserLoginFromRequest);
+			//if(g.forwardUserLoginFromRequest)
+			//	rec.setValue(cp::PathAccessGrant::FORWARD_USER_LOGIN, g.forwardUserLoginFromRequest);
 			rec.setValue("grantType", cp::PathAccessGrant::typeToString(g.type));
 			switch (g.type) {
 			case cp::PathAccessGrant::Type::AccessLevel: rec.setValue("accessLevel", g.accessLevel); break;

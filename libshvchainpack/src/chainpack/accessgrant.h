@@ -94,9 +94,14 @@ struct SHVCHAINPACK_DECL_EXPORT PathAccessGrant : public AccessGrant
 private:
 	using Super = AccessGrant;
 public:
-	static const char* FORWARD_USER_LOGIN;
+	//static const char* FORWARD_USER_LOGIN;
 public:
-	bool forwardUserLoginFromRequest = false;
+	/*
+	 * sending login to slave broker or to device is not case till now
+	 * will be implemented on first demand, I do not know how to do it
+	 * well for now.
+	 */
+	//bool forwardUserLoginFromRequest = false;
 
 	PathAccessGrant() {}
 	PathAccessGrant(Super &&o) : Super(std::move(o)) {}

@@ -82,6 +82,19 @@ UserLogin UserLogin::fromRpcValue(const RpcValue &val)
 }
 
 //================================================================
+// UserLoginResult
+//================================================================
+RpcValue UserLoginResult::toRpcValue() const
+{
+	RpcValue::Map m;
+	if(passwordOk) {
+		if(clientId > 0)
+			m["clientId"] = clientId;
+	}
+	return RpcValue(std::move(m));
+}
+
+//================================================================
 // AccessGrant
 //================================================================
 AccessGrant::MetaType::MetaType()
@@ -294,37 +307,26 @@ const char *AccessGrant::typeToString(AccessGrant::Type t)
 //================================================================
 // PathAccessGrant
 //================================================================
-const char* PathAccessGrant::FORWARD_USER_LOGIN = "forwardLogin";
+//const char* PathAccessGrant::FORWARD_USER_LOGIN = "forwardLogin";
 
 RpcValue PathAccessGrant::toRpcValueMap() const
 {
 	RpcValue ret = Super::toRpcValueMap();
-	if(ret.isMap()) {
-		ret.set(FORWARD_USER_LOGIN, forwardUserLoginFromRequest);
-	}
+	//if(ret.isMap()) {
+	//	ret.set(FORWARD_USER_LOGIN, forwardUserLoginFromRequest);
+	//}
 	return ret;
 }
 
 PathAccessGrant PathAccessGrant::fromRpcValue(const RpcValue &rpcval)
 {
 	PathAccessGrant ret = Super::fromRpcValue(rpcval);
-	if(rpcval.isMap()) {
-		const RpcValue::Map &m = rpcval.toMap();
-		ret.forwardUserLoginFromRequest = m.value("forward", m.value(FORWARD_USER_LOGIN)).toBool();
-	}
+	//if(rpcval.isMap()) {
+	//	const RpcValue::Map &m = rpcval.toMap();
+	//	ret.forwardUserLoginFromRequest = m.value("forward", m.value(FORWARD_USER_LOGIN)).toBool();
+	//}
 	return ret;
 }
-
-RpcValue UserLoginResult::toRpcValue() const
-{
-	RpcValue::Map m;
-	if(passwordOk) {
-		if(clientId > 0)
-			m["clientId"] = clientId;
-	}
-	return RpcValue(std::move(m));
-}
-
 
 } // namespace chainpack
 } // namespace shv
