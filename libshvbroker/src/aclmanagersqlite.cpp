@@ -130,7 +130,7 @@ void AclManagerSqlite::createSqliteDatabaseTables()
 			name character varying PRIMARY KEY,
 			password character varying,
 			passwordFormat character varying,
-			TBL_ROLES character varying
+			roles character varying
 			);
 			)kkt").arg(TBL_USERS));
 	execSql(QStringLiteral(R"kkt(
@@ -179,7 +179,10 @@ void AclManagerSqlite::importAclConfigFiles()
 	for(std::string id : facl.mountDeviceIds()) {
 		AclMountDef md = facl.mountDef(id);
 		//logAclManagerD() << id << md.toRpcValueMap().toCpon();
-		aclSetMountDef(id, md);
+		if(!md.isValid())
+			shvWarning() << "Cannot import invalid mount definition for device id:" << id;
+		else
+			aclSetMountDef(id, md);
 	}
 	for(std::string user : facl.users()) {
 		AclUser u = facl.user(user);
@@ -188,78 +191,14 @@ void AclManagerSqlite::importAclConfigFiles()
 	for(std::string role : facl.roles()) {
 		AclRole r = facl.role(role);
 		aclSetRole(role, r);
-		/*
-		QString qs = "INSERT INTO users (name, weight, roles) VALUES('%1', '%2', '%3')";
-		qs = qs.arg(QString::fromStdString(role));
-		qs = qs.arg(r.weight);
-		qs = qs.arg(join_str_vec(r.roles));
-		execSql(qs);
-		*/
 	}
 	for(std::string role : facl.pathsRoles()) {
 		AclRolePaths rpt = facl.pathsRolePaths(role);
-		aclSetRolePaths(role, rpt);
+		if(!rpt.isValid())
+			shvWarning() << "Cannot import invalid role paths definition for role:" << role;
+		else
+			aclSetRolePaths(role, rpt);
 	}
-#if 0
-	{
-		QString qs = "INSERT INTO " + TBL_PATHS + " (role, path, forwardGrant, grantType"
-					 ", accessLevel"
-					 ", accessRole"
-					 ", user, password, loginType)"
-					 " VALUES (:role, :path, :forwardGrant, :grantType"
-					 ", :accessLevel"
-					 ", :accessRole"
-					 ", :user, :password, :loginType)";
-		QSqlDatabase db = QSqlDatabase::database(DB_CONN_NAME, true);
-		QSqlQuery q(db);
-		if(!q.prepare(qs))
-			SHV_EXCEPTION("SQL ERROR: " + q.lastError().text().toStdString() + "\nQuery: " + qs.toStdString());
-		for(std::string role : facl.pathsRoles()) {
-			AclRolePaths rpt = facl.pathsRolePaths(role);
-			for(const auto &kv : rpt) {
-				enum {ColRole = 0, ColPath
-					  , ColForwardGrant
-					  , ColGrantType
-					  , ColAccessLevel
-					  , ColAccessRole
-					  , ColUser, ColPassword, ColPasswordFormat
-					  , ColCNT};
-				QVariantList values;
-				for (int i = 0; i < ColCNT; ++i)
-					values[i] = QVariant();
-				const cp::PathAccessGrant &g = kv.second;
-				values[ColRole] = QString::fromStdString(role);
-				values[ColPath] = QString::fromStdString(kv.first);
-				if(g.forwardGrantFromRequest)
-					values[ColForwardGrant] = true;
-				values[ColGrantType] = cp::PathAccessGrant::typeToString(g.type);
-				switch (g.type) {
-				case cp::PathAccessGrant::Type::AccessLevel: values[ColAccessLevel] = g.accessLevel; break;
-				case cp::PathAccessGrant::Type::Role: values[ColAccessRole] = QString::fromStdString(g.role); break;
-				case cp::PathAccessGrant::Type::UserLogin: {
-					values[ColUser] = QString::fromStdString(g.login.user);
-					values[ColPassword] = QString::fromStdString(g.login.password);
-					values[ColPasswordFormat] = cp::UserLogin::loginTypeToString(g.login.loginType);
-					break;
-				}
-				default:
-					SHV_EXCEPTION("Invalid PathAccessGrant type: " + std::to_string((int)g.type));
-				}
-				q.bindValue(QStringLiteral(":role"), values[ColRole]);
-				q.bindValue(QStringLiteral(":path"), values[ColPath]);
-				q.bindValue(QStringLiteral(":forwardGrant"), values[ColForwardGrant]);
-				q.bindValue(QStringLiteral(":grantType"), values[ColGrantType]);
-				q.bindValue(QStringLiteral(":accessLevel"), values[ColAccessLevel]);
-				q.bindValue(QStringLiteral(":accessRole"), values[ColAccessRole]);
-				q.bindValue(QStringLiteral(":user"), values[ColUser]);
-				q.bindValue(QStringLiteral(":password"), values[ColPassword]);
-				q.bindValue(QStringLiteral(":loginType"), values[ColPasswordFormat]);
-				if(!q.exec())
-					SHV_EXCEPTION("SQL ERROR: " + q.lastError().text().toStdString());
-			}
-		}
-	}
-#endif
 }
 
 std::vector<std::string> AclManagerSqlite::aclMountDeviceIds()
@@ -326,7 +265,9 @@ void AclManagerSqlite::aclSetUser(const std::string &user_name, const AclUser &u
 		execSql(qs);
 	}
 	else {
-		execSql("DELETE FROM " + TBL_USERS + " WHERE name='" + QString::fromStdString(user_name) + "'");
+		QString qs = "DELETE FROM " + TBL_USERS + " WHERE name='" + QString::fromStdString(user_name) + "'";
+		logAclManagerM() << qs;
+		execSql(qs);
 	}
 }
 
@@ -377,10 +318,11 @@ AclRolePaths AclManagerSqlite::aclPathsRolePaths(const std::string &role_name)
 	AclRolePaths ret;
 	QSqlQuery q = execSql("SELECT * FROM " + TBL_PATHS + " WHERE role='" + QString::fromStdString(role_name) + "'");
 	while(q.next()) {
-		QString path = q.value("path").toString();
+		std::string path = q.value("path").toString().toStdString();
 		cp::PathAccessGrant ag;
 		//ag.forwardUserLoginFromRequest = q.value(cp::PathAccessGrant::FORWARD_USER_LOGIN).toBool();
-		ag.type = static_cast<cp::PathAccessGrant::Type>(q.value("grantType").toInt());
+		std::string grant_type = q.value("grantType").toString().toStdString();
+		ag.type = cp::PathAccessGrant::typeFromString(grant_type);
 		switch (ag.type) {
 		case cp::PathAccessGrant::Type::AccessLevel: ag.accessLevel = q.value("accessLevel").toInt(); break;
 		case cp::PathAccessGrant::Type::Role: ag.role = q.value("accessRole").toString().toStdString(); break;
@@ -391,8 +333,9 @@ AclRolePaths AclManagerSqlite::aclPathsRolePaths(const std::string &role_name)
 			break;
 		}
 		default:
-			SHV_EXCEPTION("Invalid PathAccessGrant type: " + std::to_string((int)ag.type));
+			SHV_EXCEPTION("Invalid PathAccessGrant type: " + grant_type);
 		}
+		ret[path] = std::move(ag);
 	}
 	return ret;
 }

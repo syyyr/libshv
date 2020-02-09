@@ -2,6 +2,7 @@
 
 #include "../shvchainpackglobal.h"
 
+#include "metamethod.h"
 #include "rpcmessage.h"
 #include "rpcvalue.h"
 
@@ -63,7 +64,7 @@ struct SHVCHAINPACK_DECL_EXPORT AccessGrant
 	// acces grant sent by client or forwarded by master broker is not resolved through 'paths' table
 	// resolved grant is not translated in slave broker's 'paths' table when rpc message is sent to client
 	bool isResolved = false;
-	int accessLevel;
+	int accessLevel = shv::chainpack::MetaMethod::AccessLevel::None;
 	std::string role;
 	UserLogin login;
 public:
@@ -87,6 +88,7 @@ public:
 	chainpack::RpcValue toRpcValueMap() const;
 	static AccessGrant fromRpcValue(const chainpack::RpcValue &rpcval);
 	static const char* typeToString(Type t);
+	static Type typeFromString(const std::string &s);
 };
 
 struct SHVCHAINPACK_DECL_EXPORT PathAccessGrant : public AccessGrant

@@ -24,6 +24,9 @@ AclRole AclRole::fromRpcValue(const shv::chainpack::RpcValue &v)
 		std::vector<std::string> roles;
 		for(auto v : m.value("roles").toList())
 			roles.push_back(v.toString());
+		// legacy key for 'roles' was 'grants'
+		for(auto v : m.value("grants").toList())
+			roles.push_back(v.toString());
 		ret.roles = roles;
 	}
 	return ret;

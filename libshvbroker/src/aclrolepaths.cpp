@@ -20,7 +20,9 @@ AclRolePaths AclRolePaths::fromRpcValue(const shv::chainpack::RpcValue &v)
 	if(v.isMap()) {
 		const auto &m = v.toMap();
 		for(auto kv : m) {
-			ret[kv.first] = shv::chainpack::PathAccessGrant::fromRpcValue(kv.second);
+			auto g = shv::chainpack::PathAccessGrant::fromRpcValue(kv.second);
+			if(g.isValid())
+				ret[kv.first] = std::move(g);
 		}
 	}
 	return ret;

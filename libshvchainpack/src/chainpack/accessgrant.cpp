@@ -213,6 +213,9 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 	nLogFuncFrame() << rpcval.toCpon();
 	AccessGrant ret;
 	switch (rpcval.type()) {
+	case RpcValue::Type::Invalid:
+	case RpcValue::Type::Null:
+		return AccessGrant();
 	case RpcValue::Type::UInt:
 	case RpcValue::Type::Int:
 		ret.type = Type::AccessLevel;
@@ -302,6 +305,17 @@ const char *AccessGrant::typeToString(AccessGrant::Type t)
 	case Type::UserLogin: return "UserLogin";
 	}
 	return "???";
+}
+
+AccessGrant::Type AccessGrant::typeFromString(const std::string &s)
+{
+	if(s == "AccessLevel")
+		return Type::AccessLevel;
+	if(s == "Role")
+		return Type::Role;
+	if(s == "UserLogin")
+		return Type::UserLogin;
+	return Type::Invalid;
 }
 
 //================================================================

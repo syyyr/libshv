@@ -333,6 +333,7 @@ AclMountDef AclManagerConfigFiles::aclMountDef(const std::string &device_id)
 std::vector<std::string> AclManagerConfigFiles::aclUsers()
 {
 	const chainpack::RpcValue cfg = aclConfig("users");
+	shvDebug() << cfg.toCpon("\t");
 	return cp::Utils::mapKeys(cfg.toMap());
 }
 

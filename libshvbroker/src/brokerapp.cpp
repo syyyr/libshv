@@ -305,17 +305,18 @@ void BrokerApp::startTcpServer()
 void BrokerApp::startWebSocketServer()
 {
 #ifdef WITH_SHV_WEBSOCKETS
-	SHV_SAFE_DELETE(m_webSocketServer)
-	int port = cliOptions()->serverWebsocketPort();
-	if(port > 0) {
-		m_webSocketServer = new rpc::WebSocketServer(this);
-		if(!m_webSocketServer->start(port)) {
-			SHV_EXCEPTION("Cannot start WebSocket server!");
+	if(cliOptions()->serverWebsocketPort_isset()) {
+		SHV_SAFE_DELETE(m_webSocketServer)
+		int port = cliOptions()->serverWebsocketPort();
+		if(port > 0) {
+			m_webSocketServer = new rpc::WebSocketServer(this);
+			if(!m_webSocketServer->start(port)) {
+				SHV_EXCEPTION("Cannot start WebSocket server!");
+			}
+			return;
 		}
 	}
-	else {
-		shvInfo() << "Websocket server port is not set, it will not be started.";
-	}
+	shvInfo() << "Websocket server port is not set, it will not be started.";
 #else
 	shvWarning() << "Websocket server is not included in this build";
 #endif
