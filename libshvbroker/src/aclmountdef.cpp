@@ -16,7 +16,10 @@ shv::chainpack::RpcValue AclMountDef::toRpcValueMap() const
 AclMountDef AclMountDef::fromRpcValue(const shv::chainpack::RpcValue &v)
 {
 	AclMountDef ret;
-	if(v.isMap()) {
+	if(v.isString()) {
+		ret.mountPoint = v.toString();
+	}
+	else if(v.isMap()) {
 		const auto &m = v.toMap();
 		ret.description = m.value("description").toString();
 		ret.mountPoint = m.value("mountPoint").toString();

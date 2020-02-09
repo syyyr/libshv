@@ -46,7 +46,8 @@ public:
 	static std::vector<std::string> mapKeys(const M &m, bool sorted = true)
 	{
 		std::vector<std::string> ret;
-		for(auto kv : m)
+		ret.reserve(m.size());
+		for(const auto &kv : m)
 			ret.push_back(kv.first);
 		if(sorted)
 			std::sort(ret.begin(), ret.end());

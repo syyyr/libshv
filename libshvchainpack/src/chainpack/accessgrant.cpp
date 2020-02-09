@@ -197,6 +197,7 @@ RpcValue AccessGrant::toRpcValueMap() const
 
 AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 {
+	nLogFuncFrame() << rpcval.toCpon();
 	AccessGrant ret;
 	switch (rpcval.type()) {
 	case RpcValue::Type::UInt:
@@ -251,6 +252,15 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 				}
 			}
 			{
+				// legacy configs used 'grant' intead of 'role'
+				auto role = m.value("grant").toString();
+				if(!role.empty()) {
+					ret.type = Type::Role;
+					ret.role = role;
+					break;
+				}
+			}
+			{
 				auto login = m.value(KEY_LOGIN);
 				if(login.isValid()) {
 					ret.type = Type::UserLogin;
@@ -284,12 +294,13 @@ const char *AccessGrant::typeToString(AccessGrant::Type t)
 //================================================================
 // PathAccessGrant
 //================================================================
+const char* PathAccessGrant::FORWARD_USER_LOGIN = "forwardLogin";
 
 RpcValue PathAccessGrant::toRpcValueMap() const
 {
 	RpcValue ret = Super::toRpcValueMap();
 	if(ret.isMap()) {
-		ret.set("forward", forwardGrantFromRequest);
+		ret.set(FORWARD_USER_LOGIN, forwardUserLoginFromRequest);
 	}
 	return ret;
 }
@@ -297,8 +308,10 @@ RpcValue PathAccessGrant::toRpcValueMap() const
 PathAccessGrant PathAccessGrant::fromRpcValue(const RpcValue &rpcval)
 {
 	PathAccessGrant ret = Super::fromRpcValue(rpcval);
-	if(rpcval.isMap())
-		ret.forwardGrantFromRequest = rpcval.at("forward").toBool();
+	if(rpcval.isMap()) {
+		const RpcValue::Map &m = rpcval.toMap();
+		ret.forwardUserLoginFromRequest = m.value("forward", m.value(FORWARD_USER_LOGIN)).toBool();
+	}
 	return ret;
 }
 

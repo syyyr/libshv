@@ -87,6 +87,7 @@ class SHVBROKER_DECL_EXPORT AclManagerConfigFiles : public AclManager
 public:
 	AclManagerConfigFiles(BrokerApp *broker_app);
 
+	std::string configDir() const;
 protected:
 	void clearCache() override;
 	shv::chainpack::RpcValue aclConfig(const std::string &config_name, bool throw_exc = shv::core::Exception::Throw);

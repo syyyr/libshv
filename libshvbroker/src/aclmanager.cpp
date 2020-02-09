@@ -8,6 +8,10 @@
 
 #include <fstream>
 
+#define logAclManagerD() nCDebug("AclManager")
+#define logAclManagerM() nCMessage("AclManager")
+#define logAclManagerI() nCInfo("AclManager")
+
 namespace cp = shv::chainpack;
 
 namespace shv {
@@ -263,7 +267,12 @@ std::vector<std::string> AclManager::userFlattenRolesSortedByWeight(const std::s
 AclManagerConfigFiles::AclManagerConfigFiles(BrokerApp *broker_app)
 	: Super(broker_app)
 {
+	shvInfo() << "Creating AclManagerConfigFiles";
+}
 
+std::string AclManagerConfigFiles::configDir() const
+{
+	return m_brokerApp->cliOptions()->configDir();
 }
 
 void AclManagerConfigFiles::clearCache()
@@ -277,6 +286,7 @@ chainpack::RpcValue AclManagerConfigFiles::aclConfig(const std::string &config_n
 	shv::chainpack::RpcValue config = m_configFiles.value(config_name);
 	if(!config.isValid()) {
 		config = loadAclConfig(config_name, throw_exc);
+		m_configFiles[config_name] = config;
 		if(!config.isValid()) {
 			if(throw_exc)
 				throw std::runtime_error("Config " + config_name + " does not exist.");
@@ -289,10 +299,11 @@ chainpack::RpcValue AclManagerConfigFiles::aclConfig(const std::string &config_n
 
 shv::chainpack::RpcValue AclManagerConfigFiles::loadAclConfig(const std::string &config_name, bool throw_exc)
 {
+	logAclManagerD() << "loadAclConfig:" << config_name;
 	std::string fn = config_name;
 	fn = config_name + ".cpon"; //m_brokerApp->cliOptions()->value("etc.acl." + fn).toString();
 	if(fn[0] != '/')
-		fn = m_brokerApp->cliOptions()->configDir() + '/' + fn;
+		fn = configDir() + '/' + fn;
 	std::ifstream fis(fn);
 	if (!fis.good()) {
 		if(throw_exc)
@@ -309,8 +320,8 @@ shv::chainpack::RpcValue AclManagerConfigFiles::loadAclConfig(const std::string 
 
 std::vector<std::string> AclManagerConfigFiles::aclMountDeviceIds()
 {
-	const chainpack::RpcValue::Map &cfg = aclConfig("fstab").toMap();
-	return cp::Utils::mapKeys(cfg);
+	const chainpack::RpcValue cfg = aclConfig("fstab");
+	return cp::Utils::mapKeys(cfg.toMap());
 }
 
 AclMountDef AclManagerConfigFiles::aclMountDef(const std::string &device_id)
@@ -321,8 +332,8 @@ AclMountDef AclManagerConfigFiles::aclMountDef(const std::string &device_id)
 
 std::vector<std::string> AclManagerConfigFiles::aclUsers()
 {
-	const chainpack::RpcValue::Map &cfg = aclConfig("users").toMap();
-	return cp::Utils::mapKeys(cfg);
+	const chainpack::RpcValue cfg = aclConfig("users");
+	return cp::Utils::mapKeys(cfg.toMap());
 }
 
 AclUser AclManagerConfigFiles::aclUser(const std::string &user_name)
@@ -333,8 +344,8 @@ AclUser AclManagerConfigFiles::aclUser(const std::string &user_name)
 
 std::vector<std::string> AclManagerConfigFiles::aclRoles()
 {
-	const chainpack::RpcValue::Map &cfg = aclConfig("grants").toMap();
-	return cp::Utils::mapKeys(cfg);
+	const chainpack::RpcValue cfg = aclConfig("grants");
+	return cp::Utils::mapKeys(cfg.toMap());
 }
 
 AclRole AclManagerConfigFiles::aclRole(const std::string &role_name)
@@ -345,8 +356,8 @@ AclRole AclManagerConfigFiles::aclRole(const std::string &role_name)
 
 std::vector<std::string> AclManagerConfigFiles::aclPathsRoles()
 {
-	const chainpack::RpcValue::Map &cfg = aclConfig("paths").toMap();
-	return cp::Utils::mapKeys(cfg);
+	const chainpack::RpcValue cfg = aclConfig("paths");
+	return cp::Utils::mapKeys(cfg.toMap());
 }
 
 AclRolePaths AclManagerConfigFiles::aclPathsRolePaths(const std::string &role_name)

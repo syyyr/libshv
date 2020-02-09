@@ -94,7 +94,9 @@ struct SHVCHAINPACK_DECL_EXPORT PathAccessGrant : public AccessGrant
 private:
 	using Super = AccessGrant;
 public:
-	bool forwardGrantFromRequest = false;
+	static const char* FORWARD_USER_LOGIN;
+public:
+	bool forwardUserLoginFromRequest = false;
 
 	PathAccessGrant() {}
 	PathAccessGrant(Super &&o) : Super(std::move(o)) {}

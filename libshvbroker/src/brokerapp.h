@@ -78,7 +78,7 @@ public:
 	AclManager *aclManager();
 	void setAclManager(AclManager *mng);
 	void reloadConfig();
-	Q_SIGNAL void configReloaded();
+	//Q_SIGNAL void configReloaded();
 	//void clearAccessGrantCache();
 	/*
 	shv::chainpack::RpcValue fstabConfig() { return aclConfig("fstab", !shv::core::Exception::Throw); }

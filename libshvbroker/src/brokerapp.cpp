@@ -48,9 +48,10 @@
 #endif
 
 #define logTunnelD() nCDebug("Tunnel")
-#define logAclD() nCDebug("Acl")
-#define logAclM() nCMessage("Acl")
-//#define logAccessD() nCDebug("Access").color(NecroLog::Color::Green)
+
+#define logAclResolveD() nCDebug("AclResolve")
+#define logAclResolveM() nCMessage("AclResolve")
+
 #define logSubscriptionsD() nCDebug("Subscr").color(NecroLog::Color::Yellow)
 #define logSigResolveD() nCDebug("SigRes").color(NecroLog::Color::LightGreen)
 
@@ -202,8 +203,8 @@ BrokerApp::~BrokerApp()
 void BrokerApp::registerLogTopics()
 {
 	NecroLog::registerTopic("Tunnel", "tunneling");
-	NecroLog::registerTopic("Acl", "users and grants resolving");
-	//NecroLog::registerTopic("Access", "user access");
+	NecroLog::registerTopic("AclResolve", "users and grants resolving");
+	NecroLog::registerTopic("AclManager", "ACL manager");
 	NecroLog::registerTopic("Subscr", "subscriptions creation and propagation");
 	NecroLog::registerTopic("SigRes", "signal resolution in client subscriptions");
 	NecroLog::registerTopic("RpcMsg", "dump RPC messages");
@@ -284,13 +285,12 @@ void BrokerApp::reloadConfig()
 	shvInfo() << "Reloading config";
 	reloadAcl();
 	remountDevices();
-	emit configReloaded();
+	//emit configReloaded();
 }
 
 void BrokerApp::reloadAcl()
 {
-	if(m_aclManager)
-		m_aclManager->reload();
+	aclManager()->reload();
 }
 
 void BrokerApp::startTcpServer()
@@ -333,7 +333,10 @@ rpc::ClientBrokerConnection *BrokerApp::clientConnectionById(int connection_id)
 
 std::vector<int> BrokerApp::clientConnectionIds()
 {
-	std::vector<int> ids = tcpServer()->connectionIds();
+	std::vector<int> ids;
+	if(m_tcpServer) {
+		ids = m_tcpServer->connectionIds();
+	}
 #ifdef WITH_SHV_WEBSOCKETS
 	if(m_webSocketServer) {
 		std::vector<int> ids2 = m_webSocketServer->connectionIds();
@@ -345,10 +348,10 @@ std::vector<int> BrokerApp::clientConnectionIds()
 
 void BrokerApp::lazyInit()
 {
-	reloadConfig();
 	startTcpServer();
 	startWebSocketServer();
 	createMasterBrokerConnections();
+	reloadConfig();
 }
 
 bool BrokerApp::checkTunnelSecret(const std::string &s)
@@ -388,7 +391,6 @@ AclManager *BrokerApp::createAclManager()
 void BrokerApp::remountDevices()
 {
 	shvInfo() << "Remounting devices by dropping their connection";
-	reloadAcl();
 	for(int conn_id : clientConnectionIds()) {
 		rpc::ClientBrokerConnection *conn = clientConnectionById(conn_id);
 		if(conn && !conn->mountPoints().empty()) {
@@ -466,7 +468,7 @@ static std::string join_string_list(const std::vector<std::string> &ss, char sep
 */
 chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHandle *conn, const std::string &rq_shv_path, const shv::chainpack::RpcValue &rq_grant)
 {
-	logAclD() << "accessGrantForShvPath user:" << conn->loggedUserName() << "shv path:" << rq_shv_path << "request grant:" << rq_grant.toCpon();
+	logAclResolveD() << "accessGrantForShvPath user:" << conn->loggedUserName() << "shv path:" << rq_shv_path << "request grant:" << rq_grant.toCpon();
 #ifdef USE_SHV_PATHS_GRANTS_CACHE
 	PathGrantCache *user_path_grants = m_userPathGrantCache.object(user_name);
 	if(user_path_grants) {
@@ -485,7 +487,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 		if(request_grant.isResolved)
 			return request_grant;
 		if(!request_grant.isRole()) {
-			logAclM() << "Cannot resolve grant:" << request_grant.toRpcValue().toCpon();
+			logAclResolveM() << "Cannot resolve grant:" << request_grant.toRpcValue().toCpon();
 			return cp::AccessGrant();
 		}
 	}
@@ -498,11 +500,11 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	// find most specific path grant for role with highest weight
 	// user_flattent_grants are sorted by weight DESC
 	for(const std::string &role : user_flattent_grants) {
-		logAclD() << "cheking role:" << role << "weight:" << aclManager()->role(role).weight;
+		logAclResolveD() << "cheking role:" << role << "weight:" << aclManager()->role(role).weight;
 		const AclRolePaths &role_paths = aclManager()->pathsRolePaths(role);
 		for(const auto &kv : role_paths) {
 			const std::string &role_path = kv.first;
-			logAclD().nospace() << "\t checking if path: '" << rq_shv_path << "' match granted path: '" << role_path << "'";
+			logAclResolveD().nospace() << "\t checking if path: '" << rq_shv_path << "' match granted path: '" << role_path << "'";
 			//logAclD().nospace() << "\t cheking if path: '" << shv_path << "' starts with granted path: '" << p << "' ,result:" << shv::core::String::startsWith(shv_path, p);
 			shv::iotqt::node::ShvNode::StringViewList role_path_pattern = shv::core::utils::ShvPath::split(role_path);
 			do {
@@ -513,7 +515,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 				most_specific_path_len = role_path.length();
 				most_specific_path_grant = kv.second;
 				//shvInfo() << "role:" << most_specific_path_grant.role << "level:" << most_specific_path_grant.accessLevel;
-				logAclD() << "\t\t HIT:" << most_specific_path_grant.toRpcValue().toCpon();
+				logAclResolveD() << "\t\t HIT:" << most_specific_path_grant.toRpcValue().toCpon();
 				most_specific_role = role;
 			} while(false);
 		}
@@ -532,12 +534,12 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 		user_path_grants->insert(shv_path, new cp::Rpc::AccessGrant(ret));
 #endif
 	//logAclD() << "\t resolved:" << most_specific_role << "weight:" << m_aclCache.aclRole(most_specific_role).weight;
-	logAclD() << "access user:" << conn->loggedUserName()
+	logAclResolveD() << "access user:" << conn->loggedUserName()
 				 << "shv_path:" << rq_shv_path
 				 << "rq_grant:" << (rq_grant.isValid()? rq_grant.toCpon(): "<none>")
 				 //<< "grants:" << join_string_list(user_flattent_grants, ',')
 				 << " => " << most_specific_path_grant.toRpcValue().toCpon();
-	if(most_specific_path_grant.forwardGrantFromRequest)
+	if(most_specific_path_grant.forwardUserLoginFromRequest)
 		return  request_grant;
 	most_specific_path_grant.isResolved = true;
 	return cp::AccessGrant(most_specific_path_grant);

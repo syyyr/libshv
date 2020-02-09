@@ -254,7 +254,7 @@ chainpack::RpcValue UsersAclNode::callMethod(const iotqt::node::ShvNode::StringV
 
 static const std::string ACL_PATHS_GRANT = "grant";
 static const std::string ACL_PATHS_GRANT_TYPE = "type";
-static const std::string ACL_PATHS_GRANT_FWD = "forward";
+static const std::string ACL_PATHS_GRANT_FWD = cp::PathAccessGrant::FORWARD_USER_LOGIN;
 
 PathsAclNode::PathsAclNode(shv::iotqt::node::ShvNode *parent)
 	: Super("paths", parent)
@@ -314,7 +314,7 @@ chainpack::RpcValue PathsAclNode::callMethod(const iotqt::node::ShvNode::StringV
 			if(pn == ACL_PATHS_GRANT_TYPE)
 				return cp::PathAccessGrant::typeToString(g.type);
 			if(pn == ACL_PATHS_GRANT_FWD)
-				return g.forwardGrantFromRequest;
+				return g.forwardUserLoginFromRequest;
 		}
 	}
 	return Super::callMethod(shv_path, method, params);

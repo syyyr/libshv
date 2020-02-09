@@ -11,6 +11,10 @@
 #include <QSqlDriver>
 #include <QSqlRecord>
 
+#define logAclManagerD() nCDebug("AclManager")
+#define logAclManagerM() nCMessage("AclManager")
+#define logAclManagerI() nCInfo("AclManager")
+
 namespace cp = shv::chainpack;
 
 namespace shv {
@@ -26,6 +30,8 @@ const auto TBL_PATHS = QStringLiteral("paths");
 AclManagerSqlite::AclManagerSqlite(BrokerApp *broker_app)
 	: Super(broker_app)
 {
+	shvInfo() << "Creating AclManagerSqlite";
+	initDbConnection();
 }
 
 AclManagerSqlite::~AclManagerSqlite()
@@ -65,40 +71,55 @@ void AclManagerSqlite::initDbConnection()
 			SHV_EXCEPTION("SQL ACL Manager database not set.");
 		if(fn[0] != '/')
 			fn = opts->configDir() + '/' + fn;
-		shvInfo() << "Opening SQLite ACL database:" << fn;
 		QString qfn = QString::fromStdString(fn);
-		if(!QFile::exists(qfn)) {
-			shvInfo() << "Creating SQLite ACL database:" << fn;
-			createSqliteDatabase(qfn);
-		}
+		shvInfo() << "Openning SQLite ACL database:" << fn;
+		openSqliteDatabase(qfn);
+		bool db_exist = true;
 		try {
-			QSqlQuery q = execSql("SELECT COUNT(*) FROM users");
-			if(q.next()) {
-				if(q.value(0).toInt() > 0)
-					return;
-				importFileAclConfig();
-			}
-			SHV_EXCEPTION("SELECT COUNT(*) returned no record, this should never happen");
+			execSql("SELECT COUNT(*) FROM users");
 		}
-		catch (const shv::core::Exception &e) {
-			//shvError() << "SQLite ACL DB currupted!";
-			SHV_EXCEPTION("SQLite ACL DB currupted: " + e.message());
+		catch (const shv::core::Exception &) {
+			shvInfo() << "Table 'users' does not exist.";
+			db_exist = false;
 		}
+		if(!db_exist) {
+			execSql("BEGIN TRANSACTION");
+			createSqliteDatabaseTables();
+			importAclConfigFiles();
+			execSql("COMMIT");
+		}
+//		try {
+//			QSqlQuery q = execSql("SELECT COUNT(*) FROM users");
+//			if(q.next()) {
+//				if(q.value(0).toInt() > 0)
+//					return;
+//				shvInfo() << "Table 'users' is empty.";
+//			}
+//			SHV_EXCEPTION("SELECT COUNT(*) returned no record, this should never happen");
+//		}
+//		catch (const shv::core::Exception &e) {
+//			//shvError() << "SQLite ACL DB currupted!";
+//			SHV_EXCEPTION("SQLite ACL DB currupted: " + e.message());
+//		}
 	}
 	else {
 		SHV_EXCEPTION("ACL Manager for SQL driver " + opts->aclSqlDriver() + " is not supported.");
 	}
 }
 
-void AclManagerSqlite::createSqliteDatabase(const QString &file_name)
+void AclManagerSqlite::openSqliteDatabase(const QString &file_name)
 {
-	QSqlDatabase db = QSqlDatabase::database(DB_CONN_NAME, false);
+	QSqlDatabase db = QSqlDatabase::addDatabase(QString::fromStdString(m_brokerApp->cliOptions()->aclSqlDriver()), DB_CONN_NAME);
 	db.setDatabaseName(file_name);
 	if(!db.open())
 		SHV_EXCEPTION("Cannot open SQLite ACL database " + file_name.toStdString());
-	execSql("BEGIN TRANSACTION");
+}
+
+void AclManagerSqlite::createSqliteDatabaseTables()
+{
+	shvInfo() << "Creating SQLite ACL tables";
 	execSql(QStringLiteral(R"kkt(
-			CREATE TABLEIF NOT EXISTS %1 (
+			CREATE TABLE IF NOT EXISTS %1 (
 			deviceId character varying PRIMARY KEY,
 			mountPoint character varying,
 			description character varying
@@ -133,7 +154,6 @@ void AclManagerSqlite::createSqliteDatabase(const QString &file_name)
 			CONSTRAINT %1_unique0 UNIQUE (role, path)
 			);
 			)kkt").arg(TBL_PATHS));
-	execSql("COMMIT");
 }
 
 static QString join_str_vec(const std::vector<std::string> &lst)
@@ -152,12 +172,13 @@ static std::vector<std::string> split_str_vec(const QString &ss)
 	return ret;
 }
 
-void AclManagerSqlite::importFileAclConfig()
+void AclManagerSqlite::importAclConfigFiles()
 {
-	execSql("BEGIN TRANSACTION");
 	AclManagerConfigFiles facl(m_brokerApp);
+	shvInfo() << "Importing ACL config files from:" << facl.configDir();
 	for(std::string id : facl.mountDeviceIds()) {
 		AclMountDef md = facl.mountDef(id);
+		//logAclManagerD() << id << md.toRpcValueMap().toCpon();
 		aclSetMountDef(id, md);
 	}
 	for(std::string user : facl.users()) {
@@ -239,7 +260,6 @@ void AclManagerSqlite::importFileAclConfig()
 		}
 	}
 #endif
-	execSql("COMMIT");
 }
 
 std::vector<std::string> AclManagerSqlite::aclMountDeviceIds()
@@ -262,14 +282,17 @@ AclMountDef AclManagerSqlite::aclMountDef(const std::string &device_id)
 void AclManagerSqlite::aclSetMountDef(const std::string &device_id, const AclMountDef &md)
 {
 	if(md.isValid()) {
-		QString qs = "INSERT INTO " + TBL_FSTAB + " (deviceId, mountPoint, description) VALUES('%1', '%2', '%3')";
+		QString qs = "INSERT OR REPLACE INTO " + TBL_FSTAB + " (deviceId, mountPoint, description) VALUES('%1', '%2', '%3')";
 		qs = qs.arg(QString::fromStdString(device_id));
 		qs = qs.arg(QString::fromStdString(md.mountPoint));
 		qs = qs.arg(QString::fromStdString(md.description));
+		logAclManagerM() << qs;
 		execSql(qs);
 	}
 	else {
-		execSql("DELETE FROM " + TBL_FSTAB + " WHERE deviceId='" + QString::fromStdString(device_id) + "'");
+		QString qs = "DELETE FROM " + TBL_FSTAB + " WHERE deviceId='" + QString::fromStdString(device_id) + "'";
+		logAclManagerM() << qs;
+		execSql(qs);
 	}
 }
 
@@ -299,6 +322,7 @@ void AclManagerSqlite::aclSetUser(const std::string &user_name, const AclUser &u
 		qs = qs.arg(QString::fromStdString(u.password.password));
 		qs = qs.arg(QString::fromStdString(AclPassword::formatToString(u.password.format)));
 		qs = qs.arg(join_str_vec(u.roles));
+		logAclManagerM() << qs;
 		execSql(qs);
 	}
 	else {
@@ -330,6 +354,7 @@ void AclManagerSqlite::aclSetRole(const std::string &role_name, const AclRole &r
 		qs = qs.arg(QString::fromStdString(role_name));
 		qs = qs.arg(r.weight);
 		qs = qs.arg(join_str_vec(r.roles));
+		logAclManagerM() << qs;
 		execSql(qs);
 	}
 	else {
@@ -354,7 +379,7 @@ AclRolePaths AclManagerSqlite::aclPathsRolePaths(const std::string &role_name)
 	while(q.next()) {
 		QString path = q.value("path").toString();
 		cp::PathAccessGrant ag;
-		ag.forwardGrantFromRequest = q.value("forwardGrant").toBool();
+		ag.forwardUserLoginFromRequest = q.value(cp::PathAccessGrant::FORWARD_USER_LOGIN).toBool();
 		ag.type = static_cast<cp::PathAccessGrant::Type>(q.value("grantType").toInt());
 		switch (ag.type) {
 		case cp::PathAccessGrant::Type::AccessLevel: ag.accessLevel = q.value("accessLevel").toInt(); break;
@@ -374,7 +399,9 @@ AclRolePaths AclManagerSqlite::aclPathsRolePaths(const std::string &role_name)
 
 void AclManagerSqlite::aclSetRolePaths(const std::string &role_name, const AclRolePaths &rpt)
 {
-	execSql("DELETE FROM " + TBL_PATHS + " WHERE role='" + QString::fromStdString(role_name) + "'");
+	QString qs = "DELETE FROM " + TBL_PATHS + " WHERE role='" + QString::fromStdString(role_name) + "'";
+	logAclManagerM() << qs;
+	execSql(qs);
 	if(rpt.isValid()) {
 		QSqlDatabase db = QSqlDatabase::database(DB_CONN_NAME, true);
 		QSqlDriver *drv = db.driver();
@@ -383,8 +410,8 @@ void AclManagerSqlite::aclSetRolePaths(const std::string &role_name, const AclRo
 			rec.setValue("role", QString::fromStdString(role_name));
 			rec.setValue("path", QString::fromStdString(kv.first));
 			const cp::PathAccessGrant &g = kv.second;
-			if(g.forwardGrantFromRequest)
-				rec.setValue("forwardGrant", g.forwardGrantFromRequest);
+			if(g.forwardUserLoginFromRequest)
+				rec.setValue(cp::PathAccessGrant::FORWARD_USER_LOGIN, g.forwardUserLoginFromRequest);
 			rec.setValue("grantType", cp::PathAccessGrant::typeToString(g.type));
 			switch (g.type) {
 			case cp::PathAccessGrant::Type::AccessLevel: rec.setValue("accessLevel", g.accessLevel); break;
@@ -398,7 +425,8 @@ void AclManagerSqlite::aclSetRolePaths(const std::string &role_name, const AclRo
 			default:
 				SHV_EXCEPTION("Invalid PathAccessGrant type: " + std::to_string((int)g.type));
 			}
-			QString qs = drv->sqlStatement(QSqlDriver::InsertStatement, TBL_PATHS, rec, false);
+			qs = drv->sqlStatement(QSqlDriver::InsertStatement, TBL_PATHS, rec, false);
+			logAclManagerM() << qs;
 			execSql(qs);
 		}
 	}
