@@ -370,12 +370,19 @@ void BrokerApp::startWebSocketServer()
 	SHV_SAFE_DELETE(m_webSocketServer)
 	int port = cliOptions()->serverWebsocketPort();
 	if(port > 0) {
-		m_webSocketServer = new rpc::WebSocketServer(this);
+		m_webSocketServer = new rpc::WebSocketServer(QWebSocketServer::NonSecureMode, this);
 		if(!m_webSocketServer->start(port)) {
 			SHV_EXCEPTION("Cannot start WebSocket server!")
 		}
 	}
-	else {
+	int sslport = cliOptions()->serverWebsocketSslPort();
+	if(sslport > 0) {
+		m_webSocketSslServer = new rpc::WebSocketServer(QWebSocketServer::SecureMode, this);
+		if(!m_webSocketSslServer->start(sslport)) {
+			SHV_EXCEPTION("Cannot start WebSocketSsl server!")
+		}
+	}
+	if (port == 0 && sslport == 0) {
 		shvInfo() << "Websocket server port is not set, it will not be started.";
 	}
 #else

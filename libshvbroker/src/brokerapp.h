@@ -148,6 +148,7 @@ protected:
 	rpc::BrokerTcpServer *m_tcpServer = nullptr;
 #ifdef WITH_SHV_WEBSOCKETS
 	rpc::WebSocketServer *m_webSocketServer = nullptr;
+	rpc::WebSocketServer *m_webSocketSslServer = nullptr;
 #endif
 	shv::iotqt::node::ShvNodeTree *m_nodesTree = nullptr;
 	shv::chainpack::RpcValue m_fstabConfig;

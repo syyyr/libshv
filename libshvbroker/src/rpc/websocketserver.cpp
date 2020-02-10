@@ -2,37 +2,37 @@
 
 #include "clientbrokerconnection.h"
 #include "websocket.h"
+#include "../brokerapp.h"
 
 #include <shv/coreqt/log.h>
 
+#include <QFile>
+#include <QSslKey>
 #include <QWebSocket>
 
 namespace shv {
 namespace broker {
 namespace rpc {
 
-WebSocketServer::WebSocketServer(QObject *parent)
-	: Super("shvbroker", QWebSocketServer::NonSecureMode, parent)
+WebSocketServer::WebSocketServer(SslMode secureMode, QObject *parent)
+	: Super("shvbroker", secureMode, parent)
 {
-	/*
-	 * certificate must be provided for secure mode
-	QSslConfiguration sslConfiguration;
-	QFile certFile(QStringLiteral(":/localhost.cert"));
-	QFile keyFile(QStringLiteral(":/localhost.key"));
-	//QFile certFile(QStringLiteral(":/key.pem"));
-	//QFile keyFile(QStringLiteral(":/key.key"));
-	certFile.open(QIODevice::ReadOnly);
-	keyFile.open(QIODevice::ReadOnly);
-	QSslCertificate certificate(&certFile, QSsl::Pem);
-	QSslKey sslKey(&keyFile, QSsl::Rsa, QSsl::Pem);
-	certFile.close();
-	keyFile.close();
-	sslConfiguration.setPeerVerifyMode(QSslSocket::VerifyNone);
-	sslConfiguration.setLocalCertificate(certificate);
-	sslConfiguration.setPrivateKey(sslKey);
-	sslConfiguration.setProtocol(QSsl::TlsV1SslV3);
-	m_pWebSocketServer->setSslConfiguration(sslConfiguration);
-	*/
+	if (secureMode == SecureMode) {
+		QSslConfiguration sslConfiguration;
+		QFile certFile(QString::fromStdString(BrokerApp::instance()->cliOptions()->configDir() + "/wss.crt"));
+		QFile keyFile(QString::fromStdString(BrokerApp::instance()->cliOptions()->configDir() + "/wss.key"));
+		certFile.open(QIODevice::ReadOnly);
+		keyFile.open(QIODevice::ReadOnly);
+		QSslCertificate certificate(&certFile, QSsl::Pem);
+		QSslKey sslKey(&keyFile, QSsl::Rsa, QSsl::Pem);
+		certFile.close();
+		keyFile.close();
+		sslConfiguration.setPeerVerifyMode(QSslSocket::VerifyNone);
+		sslConfiguration.setLocalCertificate(certificate);
+		sslConfiguration.setPrivateKey(sslKey);
+		sslConfiguration.setProtocol(QSsl::TlsV1SslV3);
+		setSslConfiguration(sslConfiguration);
+	}
 	connect(this, &WebSocketServer::newConnection, this, &WebSocketServer::onNewConnection);
 }
 
