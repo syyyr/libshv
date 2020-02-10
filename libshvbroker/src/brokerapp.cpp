@@ -305,9 +305,10 @@ void BrokerApp::startTcpServer()
 void BrokerApp::startWebSocketServer()
 {
 #ifdef WITH_SHV_WEBSOCKETS
-	if(cliOptions()->serverWebsocketPort_isset()) {
+	auto *opts = cliOptions();
+	if(opts->serverWebsocketPort_isset()) {
 		SHV_SAFE_DELETE(m_webSocketServer)
-		int port = cliOptions()->serverWebsocketPort();
+		int port = opts->serverWebsocketPort();
 		if(port > 0) {
 			m_webSocketServer = new rpc::WebSocketServer(this);
 			if(!m_webSocketServer->start(port)) {
@@ -383,7 +384,7 @@ std::string BrokerApp::dataToCpon(shv::chainpack::Rpc::ProtocolType protocol_typ
 AclManager *BrokerApp::createAclManager()
 {
 	auto *opts = cliOptions();
-	if(opts->isAclSqlEnabled()) {
+	if(opts->isSqlConfigEnabled()) {
 		return new AclManagerSqlite(this);
 	}
 	return new AclManagerConfigFiles(this);
@@ -485,10 +486,12 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	bool is_request_from_master_broker = conn->isMasterBrokerConnection();
 	auto request_grant = cp::AccessGrant::fromRpcValue(rq_grant);
 	if(is_request_from_master_broker) {
-		if(request_grant.isResolved)
+		if(!request_grant.notResolved)
 			return request_grant;
 		if(!request_grant.isRole()) {
 			logAclResolveM() << "Cannot resolve grant:" << request_grant.toRpcValue().toCpon();
+			if(request_grant.isUserLogin())
+				logAclResolveM() << "Resolving of UserLogin is not implemented yet.";
 			return cp::AccessGrant();
 		}
 	}
@@ -542,7 +545,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 				 << " => " << most_specific_path_grant.toRpcValue().toCpon();
 	//if(most_specific_path_grant.forwardUserLoginFromRequest)
 	//	return  request_grant;
-	most_specific_path_grant.isResolved = true;
+	//most_specific_path_grant.notResolved = true;
 	return cp::AccessGrant(most_specific_path_grant);
 }
 

@@ -102,7 +102,7 @@ AccessGrant::MetaType::MetaType()
 {
 	m_keys = {
 		RPC_META_KEY_DEF(Type),
-		RPC_META_KEY_DEF(IsResolved),
+		RPC_META_KEY_DEF(NotResolved),
 		RPC_META_KEY_DEF(Role),
 		RPC_META_KEY_DEF(AccessLevel),
 		RPC_META_KEY_DEF(User),
@@ -148,7 +148,7 @@ RpcValue AccessGrant::toRpcValue() const
 {
 	if(!isValid())
 		return RpcValue();
-	if(!isResolved) {
+	if(!notResolved) {
 		if(isAccessLevel())
 			return RpcValue(accessLevel);
 		if(isRole())
@@ -158,8 +158,8 @@ RpcValue AccessGrant::toRpcValue() const
 	MetaType::registerMetaType();
 	ret.setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
 	ret.set(MetaType::Key::Type, (int)type);
-	if(isResolved)
-		ret.set(MetaType::Key::IsResolved, isResolved);
+	if(notResolved)
+		ret.set(MetaType::Key::NotResolved, notResolved);
 	switch (type) {
 	case Type::AccessLevel:
 		ret.set(MetaType::Key::AccessLevel, accessLevel);
@@ -184,14 +184,14 @@ static const std::string KEY_ROLE = "role";
 //static const std::string KEY_USER = "user";
 //static const std::string KEY_PASSWORD = "password";
 static const std::string KEY_LOGIN = "login";
-static const std::string KEY_IS_RESOLVED = "isResolved";
+static const std::string KEY_NOT_RESOLVED = "notResolved";
 
 RpcValue AccessGrant::toRpcValueMap() const
 {
 	RpcValue::Map ret;
 	//ret[KEY_TYPE] = typeToString(type);
-	if(isResolved)
-		ret["isResolved"] = isResolved;
+	if(notResolved)
+		ret[KEY_NOT_RESOLVED] = notResolved;
 	switch (type) {
 	case Type::AccessLevel:
 		ret[KEY_ACCESS_LEVEL] = accessLevel;
@@ -227,7 +227,7 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 		break;
 	case RpcValue::Type::IMap: {
 		const RpcValue::IMap &m = rpcval.toIMap();
-		ret.isResolved = m.value(MetaType::Key::IsResolved).toBool();
+		ret.notResolved = m.value(MetaType::Key::NotResolved).toBool();
 		ret.type = static_cast<Type>(m.value(MetaType::Key::Type).toInt());
 		switch (ret.type) {
 		case Type::AccessLevel:
@@ -249,7 +249,7 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 	}
 	case RpcValue::Type::Map: {
 		const RpcValue::Map &m = rpcval.toMap();
-		ret.isResolved = m.value(KEY_IS_RESOLVED).toBool();
+		ret.notResolved = m.value(KEY_NOT_RESOLVED).toBool();
 		do {
 			{
 				auto access_level = m.value(KEY_ACCESS_LEVEL).toInt();
