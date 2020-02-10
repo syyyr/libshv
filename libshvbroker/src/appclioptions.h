@@ -22,6 +22,7 @@ public:
 	CLIOPTION_GETTER_SETTER2(int, "server.port", s, setS, erverPort)
 #ifdef WITH_SHV_WEBSOCKETS
 	CLIOPTION_GETTER_SETTER2(int, "server.websocket.port", s, setS, erverWebsocketPort)
+	CLIOPTION_GETTER_SETTER2(int, "server.websocket.sslport", s, setS, erverWebsocketSslPort)
 #endif
 	CLIOPTION_GETTER_SETTER2(std::string, "server.publicIP", p, setP, ublicIP)
 	//CLIOPTION_GETTER_SETTER2(std::string, "sql.host", s, setS, qlHost)

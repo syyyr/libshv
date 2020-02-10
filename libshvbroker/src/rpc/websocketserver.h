@@ -16,7 +16,7 @@ class WebSocketServer : public QWebSocketServer
 	Q_OBJECT
 	using Super = QWebSocketServer;
 public:
-	WebSocketServer(QObject *parent = nullptr);
+	WebSocketServer(SslMode secureMode, QObject *parent = nullptr);
 	~WebSocketServer() override;
 
 	bool start(int port = 0);
