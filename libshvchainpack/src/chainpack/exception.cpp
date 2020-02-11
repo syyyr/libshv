@@ -10,10 +10,20 @@ namespace chainpack {
 bool Exception::s_abortOnException = false;
 
 Exception::Exception(const std::string &_msg, const std::string &_where)
+	: Exception(_msg, _where, nullptr)
+{
+}
+
+Exception::Exception(const std::string &_msg, const std::string &_where, const char *_log_topic)
 	: m_msg(_msg)
 	, m_where(_where)
 {
-	nError() << "SHV_CHAINPACK_EXCEPTION:" << where() << message();
+	if(!_where.empty() || (_log_topic && *_log_topic)) {
+		if(_log_topic && *_log_topic)
+			nCError(_log_topic) << "SHV_EXCEPTION:" << where() << message();
+		else
+			nError() << "SHV_EXCEPTION:" << where() << message();
+	}
 	if(isAbortOnException())
 		std::abort();
 }

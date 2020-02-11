@@ -12,9 +12,9 @@ AppCliOptions::AppCliOptions()
 	//addOption("server.websocket.enabled").setType(cp::RpcValue::Type::Bool).setNames("--ws", "--server-ws-enabled").setComment("Server web socket enabled").setDefaultValue(3777);
 #ifdef WITH_SHV_WEBSOCKETS
 	addOption("server.websocket.port").setType(cp::RpcValue::Type::Int).setNames("--server-ws-port")
-			.setComment("Server web socket port, set this option to enable websocket server").setDefaultValue(3777);
+			.setComment("Web socket server port, set this option to enable websocket server").setDefaultValue(3777);
 	addOption("server.websocket.sslport").setType(cp::RpcValue::Type::Int).setNames("--server-wss-port")
-			.setComment("Server web socket ssl port, websocket server is disabled by default, default port is 3778");
+			.setComment("Secure web socket server port, set this option to enable secure websocket server").setDefaultValue(3778);
 #endif
 	addOption("server.publicIP").setType(cp::RpcValue::Type::String).setNames("--pip", "--server-public-ip").setComment("Server public IP address");
 	addOption("sqlconfig.enabled").setType(cp::RpcValue::Type::Bool).setNames("--sql-config-enabled")

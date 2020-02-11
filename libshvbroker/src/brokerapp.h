@@ -102,7 +102,7 @@ private:
 
 	void startTcpServer();
 
-	void startWebSocketServer();
+	void startWebSocketServers();
 
 	rpc::ClientBrokerConnection* clientConnectionById(int connection_id);
 	std::vector<int> clientConnectionIds();

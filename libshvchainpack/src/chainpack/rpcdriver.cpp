@@ -74,13 +74,13 @@ void RpcDriver::sendRawData(const RpcValue::MetaData &meta_data, std::string &&d
 		break;
 	}
 	default:
-		SHVCHP_EXCEPTION("Cannot serialize data without protocol version specified.")
+		SHVCHP_EXCEPTION("Cannot serialize data without protocol version specified.");
 	}
 	Rpc::ProtocolType packed_data_ver = RpcMessage::protocolType(meta_data);
 	if(protocolType() == Rpc::ProtocolType::JsonRpc) {
 		// JSON RPC must be handled separately
 		if(packed_data_ver == Rpc::ProtocolType::Invalid)
-			SHVCHP_EXCEPTION("Cannot serialize to JSON-RPC data without protocol version specified.")
+			SHVCHP_EXCEPTION("Cannot serialize to JSON-RPC data without protocol version specified.");
 		// recode data;
 		RpcValue val = decodeData(packed_data_ver, data, 0);
 		val.setMetaData(RpcValue::MetaData(meta_data));
@@ -427,7 +427,7 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolType protocol_type, const RpcVa
 		break;
 	}
 	default:
-		SHVCHP_EXCEPTION("Cannot serialize data without protocol version specified.")
+		SHVCHP_EXCEPTION("Cannot serialize data without protocol version specified.");
 	}
 	return os_packed_data.str();
 }
