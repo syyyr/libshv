@@ -256,7 +256,7 @@ chainpack::RpcValue ShvNode::callMethodRq(const chainpack::RpcRequest &rq)
 	chainpack::RpcValue ret_val = callMethod(shv_path, method, rq.params());
 	return ret_val;
 }
-
+/*
 static std::string join_str(const ShvNode::StringList &sl, char sep)
 {
 	std::string ret;
@@ -268,7 +268,7 @@ static std::string join_str(const ShvNode::StringList &sl, char sep)
 	}
 	return ret;
 }
-
+*/
 QList<ShvNode *> ShvNode::ownChildren() const
 {
 	QList<ShvNode*> lst = findChildren<ShvNode*>(QString(), Qt::FindDirectChildrenOnly);
@@ -291,7 +291,7 @@ ShvNode::StringList ShvNode::childNames(const StringViewList &shv_path)
 		if(nd)
 			ret = nd->childNames(StringViewList());
 	}
-	shvDebug() << "\tret:" << join_str(ret, '+');
+	shvDebug() << "\tret:" << shv::core::String::join(ret, '+');
 	return ret;
 }
 

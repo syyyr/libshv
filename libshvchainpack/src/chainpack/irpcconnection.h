@@ -11,7 +11,7 @@ class SHVCHAINPACK_DECL_EXPORT IRpcConnection
 public:
 	static constexpr int DEFAULT_RPC_BROKER_PORT = 3755;
 
-	using LoginType = AccessGrant::LoginType;
+	using LoginType = UserLogin::LoginType;
 public:
 	IRpcConnection();
 	virtual ~IRpcConnection();
@@ -49,8 +49,6 @@ public:
 	int callMethodSubscribe(const std::string &shv_path, std::string method, const RpcValue &grant = shv::chainpack::RpcValue());
 	int callMethodUnsubscribe(const std::string &shv_path, std::string method, const RpcValue &grant = shv::chainpack::RpcValue());
 
-	static std::string loginTypeToString(LoginType t);
-	static LoginType loginTypeFromString(const std::string &s);
 protected:
 	int callShvMethod(const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params, const RpcValue &grant);
 	int callShvMethod(int rq_id, const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params, const RpcValue &grant);

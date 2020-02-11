@@ -1,8 +1,9 @@
 #include "samplebrokerapp.h"
+#include "aclmanager.h"
 
 #include <shv/iotqt/node/shvnodetree.h>
 #include <shv/coreqt/log.h>
-#include <shv/chainpack/aclrolepaths.h>
+#include <shv/broker/aclrolepaths.h>
 
 namespace cp = shv::chainpack;
 
@@ -42,6 +43,8 @@ private:
 SampleBrokerApp::SampleBrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 	: Super(argc, argv, cli_opts)
 {
+	auto *m = new AclManager(this);
+	setAclManager(m);
 	m_nodesTree->mount("test", new TestNode());
 }
 
@@ -58,67 +61,6 @@ QString SampleBrokerApp::versionString() const
 AppCliOptions *SampleBrokerApp::cliOptions()
 {
 	return dynamic_cast<AppCliOptions*>(Super::cliOptions());
-}
-
-shv::iotqt::rpc::Password SampleBrokerApp::password(const std::string &user)
-{
-	if(user == "foo") {
-		shv::iotqt::rpc::Password ret;
-		ret.password = "bar";
-		ret.format = shv::iotqt::rpc::Password::Format::Plain;
-		return ret;
-	}
-	if(user == "admin") {
-		shv::iotqt::rpc::Password ret;
-		ret.password = "19b9eab2dea2882d328caa6bc26b0b66c002813b";
-		ret.format = shv::iotqt::rpc::Password::Format::Sha1;
-		return ret;
-	}
-	return shv::iotqt::rpc::Password();
-}
-
-std::set<std::string> SampleBrokerApp::aclUserFlattenRoles(const std::string &user_name)
-{
-	std::set<std::string> ret;
-	if(user_name == "foo")
-		ret.insert("user");
-	else if(user_name == "admin")
-		ret.insert("poweruser");
-	return ret;
-}
-
-cp::AclRole SampleBrokerApp::aclRole(const std::string &role_name)
-{
-	cp::AclRole ret;
-	ret.name = role_name;
-	return ret;
-}
-
-cp::AclRolePaths SampleBrokerApp::aclRolePaths(const std::string &role_name)
-{
-	cp::AclRolePaths ret;
-	if(role_name == "user") {
-		{
-			cp::AccessGrant &grant = ret["**"];
-			grant.type = cp::AccessGrant::Type::AccessLevel;
-			//grant.role = cp::Rpc::ROLE_BROWSE;
-			grant.accessLevel = cp::MetaMethod::AccessLevel::Browse;
-		}
-		{
-			cp::AccessGrant &grant = ret["eyassrv/**"];
-			grant.type = cp::AccessGrant::Type::Role;
-			grant.role = cp::Rpc::ROLE_COMMAND;
-		}
-	}
-	else if(role_name == "poweruser") {
-		{
-			cp::AccessGrant &grant = ret["**"];
-			grant.type = cp::AccessGrant::Type::AccessLevel;
-			//grant.role = cp::Rpc::ROLE_ADMIN;
-			grant.accessLevel = cp::MetaMethod::AccessLevel::Admin;
-		}
-	}
-	return ret;
 }
 
 

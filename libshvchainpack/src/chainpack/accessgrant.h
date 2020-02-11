@@ -2,27 +2,71 @@
 
 #include "../shvchainpackglobal.h"
 
+#include "metamethod.h"
+#include "rpcmessage.h"
 #include "rpcvalue.h"
 
 namespace shv {
 namespace chainpack {
 
-struct SHVCHAINPACK_DECL_EXPORT AccessGrant
+struct UserLogin;
+
+struct SHVCHAINPACK_DECL_EXPORT UserLoginContext
 {
+	std::string serverNounce;
+	std::string clientType;
+	shv::chainpack::RpcRequest loginRequest;
+	int connectionId = 0;
+
+	const RpcValue::Map &loginParams() const;
+	shv::chainpack::UserLogin userLogin() const;
+};
+
+struct SHVCHAINPACK_DECL_EXPORT UserLoginResult
+{
+	bool passwordOk = false;
+	std::string loginError;
+	int clientId = 0;
+
+	UserLoginResult() {}
+	UserLoginResult(bool password_ok) : UserLoginResult(password_ok, std::string()) {}
+	UserLoginResult(bool password_ok, std::string login_error)
+		: passwordOk(password_ok)
+		, loginError(std::move(login_error)) {}
+
+	const RpcValue::Map &loginParams() const;
+	shv::chainpack::UserLogin userLogin() const;
+	shv::chainpack::RpcValue toRpcValue() const;
+};
+
+struct SHVCHAINPACK_DECL_EXPORT UserLogin
+{
+public:
 	enum class LoginType {Invalid = 0, Plain, Sha1, RsaOaep};
-
-	enum class Type { Invalid = 0, AccessLevel, Role, UserLogin, };
-	Type type = Type::Invalid;
-
-	bool notResolved = false;
-
-	int accessLevel;
-
-	std::string role;
 
 	std::string user;
 	std::string password;
 	LoginType loginType;
+
+	bool isValid() const {return !user.empty();}
+
+	static const char *loginTypeToString(LoginType t);
+	static LoginType loginTypeFromString(const std::string &s);
+	chainpack::RpcValue toRpcValueMap() const;
+	static UserLogin fromRpcValue(const RpcValue &val);
+};
+
+struct SHVCHAINPACK_DECL_EXPORT AccessGrant
+{
+
+	enum class Type { Invalid = 0, AccessLevel, Role, UserLogin, };
+	Type type = Type::Invalid;
+	// acces grant sent by client or forwarded by master broker is not resolved through 'paths' table
+	// resolved grant is not translated in slave broker's 'paths' table when rpc message is sent to client
+	bool notResolved = false;
+	int accessLevel = shv::chainpack::MetaMethod::AccessLevel::None;
+	std::string role;
+	UserLogin login;
 public:
 	class MetaType : public chainpack::meta::MetaType
 	{
@@ -41,12 +85,31 @@ public:
 	bool isAccessLevel() const;
 
 	chainpack::RpcValue toRpcValue() const;
+	chainpack::RpcValue toRpcValueMap() const;
 	static AccessGrant fromRpcValue(const chainpack::RpcValue &rpcval);
+	static const char* typeToString(Type t);
+	static Type typeFromString(const std::string &s);
 };
 
 struct SHVCHAINPACK_DECL_EXPORT PathAccessGrant : public AccessGrant
 {
-	bool forwardGrantFromRequest = false;
+private:
+	using Super = AccessGrant;
+public:
+	//static const char* FORWARD_USER_LOGIN;
+public:
+	/*
+	 * sending login to slave broker or to device is not case till now
+	 * will be implemented on first demand, I do not know how to do it
+	 * well for now.
+	 */
+	//bool forwardUserLoginFromRequest = false;
+
+	PathAccessGrant() {}
+	PathAccessGrant(Super &&o) : Super(std::move(o)) {}
+
+	chainpack::RpcValue toRpcValueMap() const;
+	static PathAccessGrant fromRpcValue(const chainpack::RpcValue &rpcval);
 };
 } // namespace chainpack
 } // namespace shv

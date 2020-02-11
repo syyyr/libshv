@@ -1,5 +1,4 @@
 SOURCES += \
-    $$PWD/password.cpp \
     $$PWD/rpc.cpp \
     #$$PWD/socketrpcdriver.cpp \
     $$PWD/clientconnection.cpp \
@@ -17,7 +16,6 @@ SOURCES += \
     $$PWD/deviceappclioptions.cpp
 
 HEADERS += \
-    $$PWD/password.h \
     $$PWD/rpc.h \
     #$$PWD/socketrpcdriver.h \
     $$PWD/clientconnection.h \

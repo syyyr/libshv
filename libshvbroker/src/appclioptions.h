@@ -25,13 +25,16 @@ public:
 	CLIOPTION_GETTER_SETTER2(int, "server.websocket.sslport", s, setS, erverWebsocketSslPort)
 #endif
 	CLIOPTION_GETTER_SETTER2(std::string, "server.publicIP", p, setP, ublicIP)
-	//CLIOPTION_GETTER_SETTER2(std::string, "sql.host", s, setS, qlHost)
-	//CLIOPTION_GETTER_SETTER2(int, "sql.port", s, setS, qlPort)
-	//CLIOPTION_GETTER_SETTER2(bool, "rpc.metaTypeExplicit", is, set, MetaTypeExplicit)
-	CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.fstab", f, setF, stabFile)
-	CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.users", u, setU, sersFile)
-	CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.grants", g, setG, rantsFile)
-	CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.paths", p, setP, athsFile)
+
+	//CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.fstab", f, setF, stabFile)
+	//CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.users", u, setU, sersFile)
+	//CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.grants", g, setG, rantsFile)
+	//CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.paths", p, setP, athsFile)
+
+	CLIOPTION_GETTER_SETTER2(bool, "sqlconfig.enabled", is, set, SqlConfigEnabled)
+	CLIOPTION_GETTER_SETTER2(std::string, "sqlconfig.driver", s, setS, qlConfigDriver)
+	CLIOPTION_GETTER_SETTER2(std::string, "sqlconfig.database", s, setS, qlConfigDatabase)
+
 	CLIOPTION_GETTER_SETTER2(shv::chainpack::RpcValue, "masters.connections", m, setM, asterBrokersConnections)
 	CLIOPTION_GETTER_SETTER2(bool, "masters.enabled", is, set, MasterBrokersEnabled)
 };

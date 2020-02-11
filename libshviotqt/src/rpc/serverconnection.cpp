@@ -94,15 +94,18 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 			shvInfo().nospace() << "Client hello received from: " << socket()->peerAddress().toString().toStdString() << ':' << socket()->peerPort();
 			m_helloReceived = true;
 			shvInfo() << "sending hello response:" << connectionName();
-			m_pendingAuthNonce = shv::chainpack::Utils::toString(std::rand());
+			m_userLoginContext.serverNounce = shv::chainpack::Utils::toString(std::rand());
 			cp::RpcValue::Map params {
-				{"nonce", m_pendingAuthNonce}
+				{"nonce", m_userLoginContext.serverNounce}
 			};
 			sendResponse(rq.requestId(), params);
 			return;
 		}
 		if(m_helloReceived && !m_loginReceived && rq.method() == shv::chainpack::Rpc::METH_LOGIN) {
 			shvInfo() << "Client login received";// << profile;// << "device id::" << m.value("deviceId").toStdString();
+			m_loginReceived = true;
+			m_userLoginContext.loginRequest = msg;
+			m_userLoginContext.connectionId = connectionId();
 			cp::RpcValue::Map params = rq.params().toMap();
 			m_connectionOptions = params.value(cp::Rpc::KEY_OPTIONS);
 			/*
@@ -116,12 +119,13 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 					m_connectionType = ConnectionType::Client;
 			}
 			*/
-			cp::RpcValue login_resp = login(rq.params());
+			processLoginPhase();
+			/*
 			if(!login_resp.isValid())
-				SHV_EXCEPTION("Invalid authentication for user: " + m_userName + " at: " + connectionName());
-			shvInfo().nospace() << "Client logged in user: " << m_userName << " from: " << peerAddress() << ':' << peerPort();
+				SHV_EXCEPTION("Invalid authentication for user: " + m_userLogin.user + " at: " + connectionName());
+			shvInfo().nospace() << "Client logged in user: " << m_userLogin.user << " from: " << peerAddress() << ':' << peerPort();
 			sendResponse(rq.requestId(), login_resp);
-			m_loginReceived = true;
+			*/
 			return;
 		}
 	}
@@ -132,66 +136,32 @@ void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
 	QTimer::singleShot(100, this, &ServerConnection::abort); // need some time to send error to client
 }
 
-chainpack::RpcValue ServerConnection::login(const chainpack::RpcValue &auth_params)
+void ServerConnection::processLoginPhase()
 {
-	const cp::RpcValue::Map params = auth_params.toMap();
-	const cp::RpcValue::Map login = params.value(cp::Rpc::KEY_LOGIN).toMap();
-
-	m_userName = login.value("user").toString();
+	m_userLogin = m_userLoginContext.userLogin();
 	shvInfo() << "login - user:" << userName();// << "password:" << password_hash;
-	bool password_ok = checkPassword(login);
+	//checkPassword();
+	/*
 	if(password_ok) {
 		cp::RpcValue::Map login_resp;
 		//login_resp[cp::Rpc::KEY_CLIENT_ID] = connectionId();
-		return login_resp;
+		return chainpack::RpcValue{login_resp};
 	}
 	return cp::RpcValue();
+	*/
 }
 
-static std::string sha1_hex(const std::string &s)
+void ServerConnection::setLoginResult(const chainpack::UserLoginResult &result)
 {
-	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-	hash.addData(s.data(), s.length());
-	return std::string(hash.result().toHex().constData());
-}
-
-bool ServerConnection::checkPassword(const chainpack::RpcValue::Map &login)
-{
-	Password pwd = password(userName());
-	//std::string pwdsrv = std::get<0>(pwdt);
-	//PasswordFormat pwdsrvfmt = std::get<1>(pwdt);
-	if(pwd.password.empty()) {
-		shvError() << "Invalid user name:" << userName();
-		return false;
+	shvInfo().nospace() << "Client logged in user: " << m_userLogin.user << " from: " << peerAddress() << ':' << peerPort();
+	auto resp = cp::RpcResponse::forRequest(m_userLoginContext.loginRequest);
+	if(!result.passwordOk) {
+		resp.setError(cp::RpcResponse::Error::createMethodCallExceptionError("Invalid authentication for user: " + m_userLogin.user + " at: " + connectionName()));
 	}
-	LoginType login_type = loginTypeFromString(login.value("type").toString());
-	if(login_type == LoginType::Invalid)
-		login_type = LoginType::Sha1;
-
-	std::string pwdusr = login.value("password").toString();
-	if(login_type == LoginType::Plain) {
-		if(pwd.format == Password::Format::Plain)
-			return (pwd.password == pwdusr);
-		if(pwd.format == Password::Format::Sha1)
-			return pwd.password == sha1_hex(pwdusr);
+	else {
+		resp.setResult(result.toRpcValue());
 	}
-	if(login_type == LoginType::Sha1) {
-		/// login_type == "SHA1" is default
-		if(pwd.format == Password::Format::Plain)
-			pwd.password = sha1_hex(pwd.password);
-
-		std::string nonce = m_pendingAuthNonce + pwd.password;
-		//shvWarning() << m_pendingAuthNonce << "prd" << nonce;
-		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-		hash.addData(nonce.data(), nonce.length());
-		std::string correct_sha1 = std::string(hash.result().toHex().constData());
-		//shvInfo() << nonce_sha1 << "vs" << sha1;
-		return (pwdusr == correct_sha1);
-	}
-	{
-		shvError() << "Unsupported login type" << loginTypeToString(login_type) << "for user:" << userName();
-		return false;
-	}
+	sendMessage(resp);
 }
 
 }}}

@@ -9,14 +9,6 @@
 namespace shv {
 namespace chainpack {
 
-static std::string to_upper(const std::string &s)
-{
-	std::string ret(s);
-	for (size_t i = 0; i < ret.size(); ++i)
-		ret[i] = std::toupper(ret[i]);
-	return ret;
-}
-
 IRpcConnection::IRpcConnection()
 	: m_connectionId(nextConnectionId())
 {
@@ -139,28 +131,6 @@ int IRpcConnection::callMethodUnsubscribe(const std::string &shv_path, std::stri
 						  {Rpc::PAR_METHOD, std::move(method)},
 						 }
 						 , grant);
-}
-
-std::string IRpcConnection::loginTypeToString(IRpcConnection::LoginType t)
-{
-	switch(t) {
-	case LoginType::Plain: return "PLAIN";
-	case LoginType::Sha1: return "SHA1";
-	case LoginType::RsaOaep: return "RSAOAEP";
-	default: return "INVALID";
-	}
-}
-
-IRpcConnection::LoginType IRpcConnection::loginTypeFromString(const std::string &s)
-{
-	std::string typestr = to_upper(s);
-	if(typestr == loginTypeToString(LoginType::Plain))
-		return LoginType::Plain;
-	if(typestr == loginTypeToString(LoginType::Sha1))
-		return LoginType::Sha1;
-	if(typestr == loginTypeToString(LoginType::RsaOaep))
-		return LoginType::RsaOaep;
-	return LoginType::Invalid;
 }
 
 } // namespace chainpack

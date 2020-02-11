@@ -1,6 +1,4 @@
 SOURCES += \
-    $$PWD/aclrole.cpp \
-    $$PWD/aclrolepaths.cpp \
     $$PWD/rpc.cpp \
     $$PWD/rpcmessage.cpp \
     $$PWD/rpcvalue.cpp \
@@ -24,8 +22,6 @@ SOURCES += \
     $$PWD/valuechange.cpp
 
 HEADERS += \
-    $$PWD/aclrole.h \
-    $$PWD/aclrolepaths.h \
     $$PWD/rpc.h \
     $$PWD/rpcmessage.h \
     $$PWD/rpcvalue.h \

@@ -4,6 +4,8 @@
 
 #include <limits>
 #include <string>
+#include <vector>
+#include <algorithm>
 
 #if defined LIBC_NEWLIB || defined ANDROID_BUILD
 #include <sstream>
@@ -37,6 +39,18 @@ public:
 #endif
 		while(ret.size() < prepend_0s_to_len)
 			ret = '0' + ret;
+		return ret;
+	}
+
+	template<typename M>
+	static std::vector<std::string> mapKeys(const M &m, bool sorted = true)
+	{
+		std::vector<std::string> ret;
+		ret.reserve(m.size());
+		for(const auto &kv : m)
+			ret.push_back(kv.first);
+		if(sorted)
+			std::sort(ret.begin(), ret.end());
 		return ret;
 	}
 };

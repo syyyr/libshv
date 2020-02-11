@@ -88,7 +88,7 @@ void SocketRpcConnection::setSocket(Socket *socket)
 Socket *SocketRpcConnection::socket()
 {
 	if(!m_socket)
-		SHV_EXCEPTION("Socket is NULL!")
+		SHV_EXCEPTION("Socket is NULL!");
 	return m_socket;
 }
 

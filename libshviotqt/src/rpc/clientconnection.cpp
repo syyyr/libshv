@@ -82,8 +82,8 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 			shvError() << "Cannot open password file";
 		}
 	}
-	shvDebug() << cli_opts->loginType() << "-->" << (int)shv::chainpack::IRpcConnection::loginTypeFromString(cli_opts->loginType());
-	setLoginType(shv::chainpack::IRpcConnection::loginTypeFromString(cli_opts->loginType()));
+	shvDebug() << cli_opts->loginType() << "-->" << (int)shv::chainpack::UserLogin::loginTypeFromString(cli_opts->loginType());
+	setLoginType(shv::chainpack::UserLogin::loginTypeFromString(cli_opts->loginType()));
 
 	m_heartbeatInterval = cli_opts->heartbeatInterval();
 	{
@@ -281,7 +281,7 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 		shvDebug() << "plain password:" << pass;
 	}
 	else {
-		shvError() << "Login type:" << chainpack::IRpcConnection::loginTypeToString(loginType()) << "not supported";
+		shvError() << "Login type:" << chainpack::UserLogin::loginTypeToString(loginType()) << "not supported";
 	}
 	//shvWarning() << password << sha1;
 	return cp::RpcValue::Map {
@@ -289,7 +289,7 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 			{"user", user()},
 			{"password", pass},
 			//{"passwordFormat", chainpack::AbstractRpcConnection::passwordFormatToString(password_format)},
-			{"type", chainpack::IRpcConnection::loginTypeToString(loginType())},
+			{"type", chainpack::UserLogin::loginTypeToString(loginType())},
 		 },
 		},
 		{"options", connectionOptions()},

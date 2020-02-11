@@ -29,9 +29,9 @@ public:
 								ProtocolType, //needed when dest client is using different version than source one to translate raw message data to correct format
 								RevCallerIds,
 								AccessGrant,
-				                TunnelCtl,
-				                UserId,
-				                MAX};};
+								TunnelCtl,
+								UserId,
+								MAX};};
 		struct Key { enum Enum {Params = 1, Result, Error, ErrorCode, ErrorMessage, MAX};};
 
 		MetaType();
@@ -173,7 +173,7 @@ class SHVCHAINPACK_DECL_EXPORT RpcException : public Exception
 	using Super = Exception;
 public:
 	RpcException(int err_code, const std::string& _msg, const std::string& _where = std::string());
-	~RpcException() override {}
+	~RpcException() override;
 
 	int errorCode() const { return m_errorCode; }
 protected:

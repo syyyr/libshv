@@ -8,7 +8,6 @@
 #include <shv/core/stringview.h>
 #include <shv/core/utils/shvpath.h>
 #include <shv/iotqt/rpc/socket.h>
-#include <shv/iotqt/rpc/password.h>
 
 #include <QCryptographicHash>
 #include <QTcpSocket>
@@ -87,22 +86,6 @@ void ClientBrokerConnection::setIdleWatchDogTimeOut(int sec)
 	}
 }
 
-iotqt::rpc::Password ClientBrokerConnection::password(const std::string &user)
-{
-	/*
-	const std::map<std::string, std::string> passwds {
-		{"iot", "lub42DUB"},
-		{"elviz", "brch3900PRD"},
-		{"revitest", "lautrhovno271828"},
-	};
-	*/
-	shv::iotqt::rpc::Password invalid;
-	if(user.empty())
-		return invalid;
-	BrokerApp *app = BrokerApp::instance();
-	return app->password(user);
-}
-
 void ClientBrokerConnection::sendMessage(const shv::chainpack::RpcMessage &rpc_msg)
 {
 	logRpcMsg() << SND_LOG_ARROW
@@ -128,9 +111,9 @@ std::string ClientBrokerConnection::resolveLocalPath(const std::string rel_path)
 
 	const std::vector<std::string> &mps = mountPoints();
 	if(mps.empty())
-		SHV_EXCEPTION("Cannot resolve relative path on unmounted device: " + rel_path)
+		SHV_EXCEPTION("Cannot resolve relative path on unmounted device: " + rel_path);
 	if(mps.size() > 1)
-		SHV_EXCEPTION("Cannot resolve relative path on device mounted to more than single node: " + rel_path)
+		SHV_EXCEPTION("Cannot resolve relative path on device mounted to more than single node: " + rel_path);
 	std::string mount_point = mps[0];
 	MasterBrokerConnection *mbconn = BrokerApp::instance()->mainMasterBrokerConnection();
 	if(mbconn) {
@@ -184,29 +167,35 @@ void ClientBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 		shvError() << e.what();
 	}
 }
-
-shv::chainpack::RpcValue ClientBrokerConnection::login(const shv::chainpack::RpcValue &auth_params)
+/*
+bool ClientBrokerConnection::checkPassword(const chainpack::UserLogin &login)
 {
-	cp::RpcValue ret;
+	return BrokerApp::instance()->aclManager()->checkPassword(login, m_userLoginContext);
+}
+*/
+void ClientBrokerConnection::processLoginPhase()
+{
 	if(tunnelOptions().isMap()) {
 		std::string secret = tunnelOptions().toMap().value(cp::Rpc::KEY_SECRET).toString();
-		if(checkTunnelSecret(secret))
-			ret = cp::RpcValue::Map();
+		cp::UserLoginResult result;
+		result.passwordOk = checkTunnelSecret(secret);
+		setLoginResult(result);
+		return;
 	}
-	else {
-		ret = Super::login(auth_params);
-	}
-	if(!ret.isValid())
-		return cp::RpcValue();
-	cp::RpcValue::Map login_resp = ret.toMap();
+	Super::processLoginPhase();
+	cp::UserLoginResult result = BrokerApp::instance()->checkLogin(m_userLoginContext);
+	setLoginResult(result);
+}
 
+void ClientBrokerConnection::setLoginResult(const chainpack::UserLoginResult &result)
+{
+	auto login_result = result;
+	login_result.clientId = connectionId();
+	Super::setLoginResult(login_result);
 	const shv::chainpack::RpcValue::Map &opts = connectionOptions();
 	auto t = opts.value(cp::Rpc::OPT_IDLE_WD_TIMEOUT).toInt();
 	setIdleWatchDogTimeOut(t);
 	BrokerApp::instance()->onClientLogin(connectionId());
-
-	login_resp[cp::Rpc::KEY_CLIENT_ID] = connectionId();
-	return shv::chainpack::RpcValue{login_resp};
 }
 
 bool ClientBrokerConnection::checkTunnelSecret(const std::string &s)
