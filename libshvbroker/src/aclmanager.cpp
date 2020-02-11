@@ -267,7 +267,7 @@ std::vector<std::string> AclManager::userFlattenRolesSortedByWeight(const std::s
 AclManagerConfigFiles::AclManagerConfigFiles(BrokerApp *broker_app)
 	: Super(broker_app)
 {
-	shvInfo() << "Creating AclManagerConfigFiles";
+	shvInfo() << "Creating ConfigFiles ACL manager";
 }
 
 std::string AclManagerConfigFiles::configDir() const

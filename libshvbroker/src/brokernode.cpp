@@ -146,7 +146,7 @@ shv::chainpack::RpcValue BrokerNode::callMethod(const StringViewList &shv_path, 
 			return shv::chainpack::RpcValue(lst);
 		}
 		if(method == M_RELOAD_CONFIG) {
-			BrokerApp::instance()->reloadConfigRemountDevices();
+			QTimer::singleShot(500, BrokerApp::instance(), &BrokerApp::reloadConfigRemountDevices);
 			return true;
 		}
 		if(method == M_RESTART) {

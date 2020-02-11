@@ -30,9 +30,9 @@ public:
 	//CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.grants", g, setG, rantsFile)
 	//CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.paths", p, setP, athsFile)
 
-	CLIOPTION_GETTER_SETTER2(bool, "etc.acl.sql.enabled", is, set, AclSqlEnabled)
-	CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.sql.driver", a, setA, clSqlDriver)
-	CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.sql.database", a, setA, clSqlDatabase)
+	CLIOPTION_GETTER_SETTER2(bool, "sqlconfig.enabled", is, set, SqlConfigEnabled)
+	CLIOPTION_GETTER_SETTER2(std::string, "sqlconfig.driver", s, setS, qlConfigDriver)
+	CLIOPTION_GETTER_SETTER2(std::string, "sqlconfig.database", s, setS, qlConfigDatabase)
 
 	CLIOPTION_GETTER_SETTER2(shv::chainpack::RpcValue, "masters.connections", m, setM, asterBrokersConnections)
 	CLIOPTION_GETTER_SETTER2(bool, "masters.enabled", is, set, MasterBrokersEnabled)

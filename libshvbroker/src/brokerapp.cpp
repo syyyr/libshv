@@ -35,6 +35,7 @@
 
 #include <QFile>
 #include <QSocketNotifier>
+#include <QSqlDatabase>
 #include <QTimer>
 
 #include <ctime>
@@ -75,6 +76,21 @@ public:
 				  {cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_CONFIG},
 		}
 	{ }
+
+	StringList childNames(const StringViewList &shv_path) override
+	{
+		auto sl = Super::childNames(shv_path);
+		if(shv_path.empty()) {
+			std::vector<int> ids;
+			ids.reserve(sl.size());
+			for(const auto &s : sl)
+				ids.push_back(std::stoi(s));
+			std::sort(ids.begin(), ids.end());
+			for (size_t i = 0; i < ids.size(); ++i)
+				sl[i] = std::to_string(ids[i]);
+		}
+		return sl;
+	}
 private:
 	std::vector<cp::MetaMethod> m_metaMethods;
 };
@@ -148,9 +164,13 @@ public:
 		if(shv_path.size() == 1) {
 			if(method == METH_CLIENT_IDS) {
 				BrokerApp *app = BrokerApp::instance();
-				ClientShvNode *nd = qobject_cast<ClientShvNode*>(app->m_nodesTree->cd(shv_path.at(0).toString()));
+				std::string path = shv_path.at(0).slice(1, -1).toString();
+				auto *nd1 = app->m_nodesTree->cd(path);
+				if(nd1 == nullptr)
+					SHV_EXCEPTION("Cannot find node on path: " + path);
+				auto *nd = qobject_cast<ClientShvNode*>(nd1);
 				if(nd == nullptr)
-					SHV_EXCEPTION("Cannot find client node on path: " + shv_path.at(0).toString());
+					SHV_EXCEPTION("Wrong node type on path: " + path + ", looking for ClientShvNode, found: " + nd1->metaObject()->className());
 				cp::RpcValue::List lst;
 				for(rpc::ClientBrokerConnection *conn : nd->connections())
 					lst.push_back(conn->connectionId());
@@ -172,6 +192,7 @@ std::vector<cp::MetaMethod> MountsNode::m_metaMethods = {
 	{METH_CLIENT_IDS, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_CONFIG},
 };
 
+static const auto SQL_CONFIG_CONN_NAME = QStringLiteral("ShvBrokerDbConfigSqlConnection");
 //static constexpr int SQL_RECONNECT_INTERVAL = 3000;
 BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 	: Super(argc, argv)
@@ -252,7 +273,7 @@ void BrokerApp::handlePosixSignals()
 	}
 	else if(sig_num == SIGHUP) {
 		//QMetaObject::invokeMethod(this, &BrokerApp::reloadConfig, Qt::QueuedConnection); since Qt 5.10
-		QTimer::singleShot(0, this, &BrokerApp::reloadConfig);
+		QTimer::singleShot(0, this, &BrokerApp::reloadConfigRemountDevices);
 	}
 
 	m_snTerm->setEnabled(true);
@@ -284,6 +305,11 @@ void BrokerApp::reloadConfig()
 {
 	shvInfo() << "Reloading config";
 	reloadAcl();
+}
+
+void BrokerApp::reloadConfigRemountDevices()
+{
+	reloadConfig();
 	remountDevices();
 	//emit configReloaded();
 }
@@ -350,10 +376,11 @@ std::vector<int> BrokerApp::clientConnectionIds()
 
 void BrokerApp::lazyInit()
 {
+	initDbConfigSqlConnection();
+	reloadConfig();
 	startTcpServer();
 	startWebSocketServer();
 	createMasterBrokerConnections();
-	reloadConfig();
 }
 
 bool BrokerApp::checkTunnelSecret(const std::string &s)
@@ -379,6 +406,29 @@ std::string BrokerApp::dataToCpon(shv::chainpack::Rpc::ProtocolType protocol_typ
 	}
 	rpc_val.setMetaData(shv::chainpack::RpcValue::MetaData(md));
 	return rpc_val.toPrettyString();
+}
+
+void BrokerApp::initDbConfigSqlConnection()
+{
+	AppCliOptions *opts = cliOptions();
+	if(!opts->isSqlConfigEnabled())
+		return;
+	if(opts->sqlConfigDriver() == "QSQLITE") {
+		std::string fn = opts->sqlConfigDatabase();
+		if(fn.empty())
+			SHV_EXCEPTION("SQL config database not set.");
+		if(fn[0] != '/')
+			fn = opts->configDir() + '/' + fn;
+		QString qfn = QString::fromStdString(fn);
+		shvInfo() << "Openning SQL config database:" << fn;
+		QSqlDatabase db = QSqlDatabase::addDatabase(QString::fromStdString(cliOptions()->sqlConfigDriver()), SQL_CONFIG_CONN_NAME);
+		db.setDatabaseName(qfn);
+		if(!db.open())
+			SHV_EXCEPTION("Cannot open SQLite SQL config database " + fn);
+	}
+	else {
+		SHV_EXCEPTION("SQL config SQL driver " + opts->sqlConfigDriver() + " is not supported.");
+	}
 }
 
 AclManager *BrokerApp::createAclManager()
@@ -570,9 +620,9 @@ void BrokerApp::onClientLogin(int connection_id)
 		shv::iotqt::node::ShvNode *clients_nd = m_nodesTree->mkdir(std::string(cp::Rpc::DIR_BROKER) + "/clients/");
 		if(!clients_nd)
 			SHV_EXCEPTION("Cannot create parent for ClientDirNode id: " + std::to_string(connection_id));
-		ClientConnectionNode *client_dir_node = new ClientConnectionNode(connection_id, clients_nd);
+		ClientConnectionNode *client_id_node = new ClientConnectionNode(connection_id, clients_nd);
 		//shvWarning() << "path1:" << client_dir_node->shvPath();
-		ClientShvNode *client_app_node = new ClientShvNode(conn, client_dir_node);
+		ClientShvNode *client_app_node = new ClientShvNode(conn, client_id_node);
 		client_app_node->setNodeId("app");
 		//shvWarning() << "path2:" << client_app_node->shvPath();
 		/*
@@ -589,11 +639,11 @@ void BrokerApp::onClientLogin(int connection_id)
 						  + " shv path: " + app_mount_point);
 		*/
 		// delete whole client tree, when client is destroyed
-		connect(conn, &rpc::ClientBrokerConnection::destroyed, client_app_node->parentNode(), &ClientShvNode::deleteLater);
+		connect(conn, &rpc::ClientBrokerConnection::destroyed, client_id_node, &ClientShvNode::deleteLater);
 
 		conn->setParent(client_app_node);
 		{
-			std::string mount_point = client_dir_node->shvPath() + "/subscriptions";
+			std::string mount_point = client_id_node->shvPath() + "/subscriptions";
 			SubscriptionsNode *nd = new SubscriptionsNode(conn);
 			if(!m_nodesTree->mount(mount_point, nd))
 				SHV_EXCEPTION("Cannot mount connection subscription list to device tree, connection id: " + std::to_string(connection_id)
@@ -1052,6 +1102,14 @@ rpc::CommonRpcClientHandle *BrokerApp::commonClientConnectionById(int connection
 	return ret;
 }
 
+QSqlDatabase BrokerApp::sqlConfigConnection()
+{
+	if(!cliOptions()->isSqlConfigEnabled())
+		return QSqlDatabase();
+	QSqlDatabase db = QSqlDatabase::database(SQL_CONFIG_CONN_NAME, false);
+	return db;
+}
+
 AclManager *BrokerApp::aclManager()
 {
 	if(m_aclManager == nullptr)
@@ -1063,5 +1121,6 @@ void BrokerApp::setAclManager(AclManager *mng)
 {
 	m_aclManager = mng;
 }
+
 
 }}

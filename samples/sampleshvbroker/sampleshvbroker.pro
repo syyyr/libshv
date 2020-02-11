@@ -12,7 +12,7 @@ message ( SHV_PROJECT_TOP_BUILDDIR == '$$SHV_PROJECT_TOP_BUILDDIR' )
 LIBSHV_SRC_DIR = $$PWD/../..
 
 QT -= gui
-QT += core network
+QT += core network sql
 
 with-shvwebsockets {
 	QT += websockets

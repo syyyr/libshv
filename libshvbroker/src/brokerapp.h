@@ -26,6 +26,7 @@ inline unsigned qHash(const std::string &s) noexcept //Q_DECL_NOEXCEPT_EXPR(noex
 #include <set>
 
 class QSocketNotifier;
+class QSqlDatabase;
 
 namespace shv { namespace iotqt { namespace node { class ShvNodeTree; }}}
 //namespace shv { namespace iotqt { namespace rpc { struct Password; }}}
@@ -42,7 +43,6 @@ class SHVBROKER_DECL_EXPORT BrokerApp : public QCoreApplication
 {
 	Q_OBJECT
 private:
-
 	using Super = QCoreApplication;
 	friend class AclManager;
 	friend class MountsNode;
@@ -75,20 +75,12 @@ public:
 
 	rpc::CommonRpcClientHandle* commonClientConnectionById(int connection_id);
 
+	QSqlDatabase sqlConfigConnection();
+
 	AclManager *aclManager();
 	void setAclManager(AclManager *mng);
 	void reloadConfig();
-	//Q_SIGNAL void configReloaded();
-	//void clearAccessGrantCache();
-	/*
-	shv::chainpack::RpcValue fstabConfig() { return aclConfig("fstab", !shv::core::Exception::Throw); }
-	shv::chainpack::RpcValue usersConfig() { return aclConfig("users", !shv::core::Exception::Throw); }
-	shv::chainpack::RpcValue grantsConfig() { return aclConfig("grants", !shv::core::Exception::Throw); }
-	shv::chainpack::RpcValue pathsConfig() { return aclConfig("paths", !shv::core::Exception::Throw); }
-
-	shv::chainpack::RpcValue aclConfig(const std::string &config_name, bool throw_exc);
-	bool setAclConfig(const std::string &config_name, const shv::chainpack::RpcValue &config, bool throw_exc);
-	*/
+	void reloadConfigRemountDevices();
 	bool checkTunnelSecret(const std::string &s);
 
 	// checkPassword() might return bool
@@ -98,7 +90,8 @@ public:
 
 	std::string dataToCpon(shv::chainpack::Rpc::ProtocolType protocol_type, const shv::chainpack::RpcValue::MetaData &md, const std::string &data, size_t start_pos = 0, size_t data_len = 0);
 protected:
-	AclManager* createAclManager();
+	virtual void initDbConfigSqlConnection();
+	virtual AclManager* createAclManager();
 private:
 	void remountDevices();
 	void reloadAcl();

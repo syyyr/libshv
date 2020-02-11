@@ -34,9 +34,8 @@ protected:
 	AclRolePaths aclPathsRolePaths(const std::string &role_name) override;
 	void aclSetRolePaths(const std::string &role_name, const AclRolePaths &rpt) override;
 private:
-	void initDbConnection();
-	void createSqliteDatabaseTables();
-	void openSqliteDatabase(const QString &file_name);
+	void checkAclTables();
+	void createAclSqlTables();
 	void importAclConfigFiles();
 
 	QSqlQuery execSql(const QString &query_str);
