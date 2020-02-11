@@ -161,6 +161,23 @@ StringView StringView::mid(size_t start, size_t len) const
 	return StringView(str(), this->start() + start, len);
 }
 
+StringView StringView::slice(int start, int end) const
+{
+	int s = static_cast<int>(this->start()) + start;
+	if(s < 0)
+		s = 0;
+	if(s > (int)m_str->length())
+		s = (int)m_str->length();
+	int e = static_cast<int>(this->start() + length()) + end;
+	if(e < 0)
+		e = 0;
+	if(e > (int)m_str->length())
+		e = (int)m_str->length();
+	if(e < s)
+		e = s;
+	return StringView(str(), (size_t)s, (size_t)(e - s));
+}
+
 StringView StringView::getToken(char delim, char quote)
 {
 	if(empty())

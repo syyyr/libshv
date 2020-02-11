@@ -45,8 +45,9 @@ public:
 	bool endsWith(char c) const;
 	ssize_t indexOf(char c) const;
 
-	StringView mid(size_t start)const {return mid(start, (length() > start)? length() - start: 0);}
+	StringView mid(size_t start) const {return mid(start, (length() > start)? length() - start: 0);}
 	StringView mid(size_t start, size_t len) const;
+	StringView slice(int start, int end) const;
 
 	StringView getToken(char delim = ' ', char quote = '\0');
 	std::vector<StringView> split(char delim, char quote, SplitBehavior split_behavior = SkipEmptyParts) const;
