@@ -50,6 +50,8 @@
 
 #define logTunnelD() nCDebug("Tunnel")
 
+//#define logAccessM() nCMessage("Access")
+
 #define logAclResolveD() nCDebug("AclResolve")
 #define logAclResolveM() nCMessage("AclResolve")
 
@@ -224,6 +226,7 @@ BrokerApp::~BrokerApp()
 void BrokerApp::registerLogTopics()
 {
 	NecroLog::registerTopic("Tunnel", "tunneling");
+	NecroLog::registerTopic("Access", "users access log");
 	NecroLog::registerTopic("AclResolve", "users and grants resolving");
 	NecroLog::registerTopic("AclManager", "ACL manager");
 	NecroLog::registerTopic("Subscr", "subscriptions creation and propagation");
@@ -328,7 +331,7 @@ void BrokerApp::startTcpServer()
 	}
 }
 
-void BrokerApp::startWebSocketServer()
+void BrokerApp::startWebSocketServers()
 {
 #ifdef WITH_SHV_WEBSOCKETS
 	auto *opts = cliOptions();
@@ -340,18 +343,24 @@ void BrokerApp::startWebSocketServer()
 			if(!m_webSocketServer->start(port)) {
 				SHV_EXCEPTION("Cannot start WebSocket server!");
 			}
-			return;
 		}
-	int sslport = cliOptions()->serverWebsocketSslPort();
-	if(sslport > 0) {
+	}
+	else {
+		shvInfo() << "Websocket server port is not set, it will not be started.";
+	}
+	if(opts->serverWebsocketSslPort_isset()) {
+		SHV_SAFE_DELETE(m_webSocketSslServer)
+		int port = opts->serverWebsocketSslPort();
+		if(port > 0) {
 		m_webSocketSslServer = new rpc::WebSocketServer(QWebSocketServer::SecureMode, this);
-		if(!m_webSocketSslServer->start(sslport)) {
-			SHV_EXCEPTION("Cannot start WebSocketSsl server!")
+			if(!m_webSocketSslServer->start(port)) {
+				SHV_EXCEPTION("Cannot start WebSocket SSL server!");
+			}
 		}
 	}
-	if (port == 0 && sslport == 0) {
+	else {
+		shvInfo() << "Websocket SSL server port is not set, it will not be started.";
 	}
-	shvInfo() << "Websocket server port is not set, it will not be started.";
 #else
 	shvWarning() << "Websocket server is not included in this build";
 #endif
@@ -387,7 +396,7 @@ void BrokerApp::lazyInit()
 	initDbConfigSqlConnection();
 	reloadConfig();
 	startTcpServer();
-	startWebSocketServer();
+	startWebSocketServers();
 	createMasterBrokerConnections();
 }
 
@@ -763,7 +772,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 					if(shv::core::utils::ShvPath::isRelativePath(shv_path)) {
 						/// still relative path, it should be forwarded to mater broker
 						if(master_broker_conn == nullptr)
-							SHV_EXCEPTION("Cannot resolve relative path " + cp::RpcMessage::shvPath(meta).toString() + ", there is no master broker to forward the request.");
+							ACCESS_EXCEPTION("Cannot resolve relative path " + cp::RpcMessage::shvPath(meta).toString() + ", there is no master broker to forward the request.");
 						cp::RpcMessage::setShvPath(meta, shv_path);
 						cp::RpcMessage::pushCallerId(meta, connection_id);
 						master_broker_conn->sendRawData(std::move(meta), std::move(data));
@@ -781,7 +790,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 				}
 				cp::AccessGrant acg = accessGrantForRequest(connection_handle, shv_path, cp::RpcMessage::accessGrant(meta));
 				if(!acg.isValid())
-					SHV_EXCEPTION("Acces to shv path '" + shv_path + "' not granted for user '" + connection_handle->loggedUserName() + "'");
+					ACCESS_EXCEPTION("Acces to shv path '" + shv_path + "' not granted for user '" + connection_handle->loggedUserName() + "'");
 				cp::RpcMessage::setAccessGrant(meta, acg.toRpcValue());
 				cp::RpcMessage::pushCallerId(meta, connection_id);
 				if(m_nodesTree->root()) {
