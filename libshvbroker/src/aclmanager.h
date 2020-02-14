@@ -39,9 +39,9 @@ public:
 	AclRole role(const std::string &role_name);
 	void setRole(const std::string &role_name, const AclRole &v);
 
-	std::vector<std::string> pathsRoles();
-	AclRolePaths pathsRolePaths(const std::string &role_name);
-	void setPathsRolePaths(const std::string &role_name, const AclRolePaths &v);
+	std::vector<std::string> accessRoles();
+	AclRolePaths accessRolePaths(const std::string &role_name);
+	void setAccessRolePaths(const std::string &role_name, const AclRolePaths &v);
 
 	std::string mountPointForDevice(const shv::chainpack::RpcValue &device_id);
 	std::vector<std::string> userFlattenRolesSortedByWeight(const std::string &user_name);
@@ -62,9 +62,9 @@ protected:
 	virtual AclRole aclRole(const std::string &role_name) = 0;
 	virtual void aclSetRole(const std::string &role_name, const AclRole &r);
 
-	virtual std::vector<std::string> aclPathsRoles() = 0;
-	virtual AclRolePaths aclPathsRolePaths(const std::string &role_name) = 0;
-	virtual void aclSetRolePaths(const std::string &role_name, const AclRolePaths &rp);
+	virtual std::vector<std::string> aclAccessRoles() = 0;
+	virtual AclRolePaths aclAccessRolePaths(const std::string &role_name) = 0;
+	virtual void aclSetAccessRolePaths(const std::string &role_name, const AclRolePaths &rp);
 
 	//virtual AclPassword aclUserPassword(const std::string &user) = 0;
 protected:
@@ -104,8 +104,8 @@ protected:
 	AclUser aclUser(const std::string &user_name) override;
 	std::vector<std::string> aclRoles() override;
 	AclRole aclRole(const std::string &role_name) override;
-	std::vector<std::string> aclPathsRoles() override;
-	AclRolePaths aclPathsRolePaths(const std::string &role_name) override;
+	std::vector<std::string> aclAccessRoles() override;
+	AclRolePaths aclAccessRolePaths(const std::string &role_name) override;
 protected:
 	shv::chainpack::RpcValue::Map m_configFiles;
 };

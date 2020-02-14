@@ -119,31 +119,31 @@ void AclManager::setRole(const std::string &role_name, const AclRole &v)
 	m_cache.userFlattenRoles.clear();
 }
 
-std::vector<std::string> AclManager::pathsRoles()
+std::vector<std::string> AclManager::accessRoles()
 {
 	if(m_cache.aclPathsRoles.empty()) {
-		for(auto id : aclPathsRoles())
+		for(auto id : aclAccessRoles())
 			m_cache.aclPathsRoles[id];
 	}
 	return cp::Utils::mapKeys(m_cache.aclPathsRoles);
 }
 
-AclRolePaths AclManager::pathsRolePaths(const std::string &role_name)
+AclRolePaths AclManager::accessRolePaths(const std::string &role_name)
 {
 	if(m_cache.aclPathsRoles.empty())
-		pathsRoles();
+		accessRoles();
 	auto it = m_cache.aclPathsRoles.find(role_name);
 	if(it == m_cache.aclPathsRoles.end())
 		return AclRolePaths();
 	if(!it->second.isValid()) {
-		it->second = aclPathsRolePaths(role_name);
+		it->second = aclAccessRolePaths(role_name);
 	}
 	return it->second;
 }
 
-void AclManager::setPathsRolePaths(const std::string &role_name, const AclRolePaths &v)
+void AclManager::setAccessRolePaths(const std::string &role_name, const AclRolePaths &v)
 {
-	aclSetRolePaths(role_name, v);
+	aclSetAccessRolePaths(role_name, v);
 	m_cache.aclPathsRoles.clear();
 }
 
@@ -230,7 +230,7 @@ void AclManager::aclSetRole(const std::string &role_name, const AclRole &r)
 	SHV_EXCEPTION("Roles definition is read only.");
 }
 
-void AclManager::aclSetRolePaths(const std::string &role_name, const AclRolePaths &rp)
+void AclManager::aclSetAccessRolePaths(const std::string &role_name, const AclRolePaths &rp)
 {
 	Q_UNUSED(role_name)
 	Q_UNUSED(rp)
@@ -282,6 +282,16 @@ std::vector<std::string> AclManager::userFlattenRolesSortedByWeight(const std::s
 //================================================================
 // AclManagerConfigFiles
 //================================================================
+const auto FILE_ACL_MOUNTS = std::string("mounts.cpon");
+const auto FILE_ACL_MOUNTS_DEPR = std::string("fstab.cpon");
+
+const auto FILE_ACL_USERS = std::string("users.cpon");
+
+const auto FILE_ACL_ROLES = std::string("roles.cpon");
+const auto FILE_ACL_ROLES_DEPR = std::string("grants.cpon");
+
+const auto FILE_ACL_ACCESS = std::string("access.cpon");
+const auto FILE_ACL_ACCESS_DEPR = std::string("paths.cpon");
 
 AclManagerConfigFiles::AclManagerConfigFiles(BrokerApp *broker_app)
 	: Super(broker_app)
@@ -319,14 +329,26 @@ chainpack::RpcValue AclManagerConfigFiles::aclConfig(const std::string &config_n
 shv::chainpack::RpcValue AclManagerConfigFiles::loadAclConfig(const std::string &config_name, bool throw_exc)
 {
 	logAclManagerD() << "loadAclConfig:" << config_name;
-	std::string fn = config_name;
-	fn = config_name + ".cpon"; //m_brokerApp->cliOptions()->value("etc.acl." + fn).toString();
-	if(fn[0] != '/')
-		fn = configDir() + '/' + fn;
-	std::ifstream fis(fn);
+	std::vector<std::string> files;
+	if(config_name == FILE_ACL_MOUNTS)
+		files = std::vector<std::string>{FILE_ACL_MOUNTS, FILE_ACL_MOUNTS_DEPR};
+	else if(config_name == FILE_ACL_USERS)
+		files = std::vector<std::string>{FILE_ACL_USERS};
+	else if(config_name == FILE_ACL_ROLES)
+		files = std::vector<std::string>{FILE_ACL_ROLES, FILE_ACL_ROLES_DEPR};
+	else if(config_name == FILE_ACL_ACCESS)
+		files = std::vector<std::string>{FILE_ACL_ACCESS, FILE_ACL_ACCESS_DEPR};
+	std::ifstream fis;
+	for(auto fn : files) {
+		if(fn[0] != '/')
+			fn = configDir() + '/' + fn;
+		fis.open(fn);
+		if (fis.good())
+			break;
+	}
 	if (!fis.good()) {
 		if(throw_exc)
-			throw std::runtime_error("Cannot open config file " + fn + " for reading");
+			throw std::runtime_error("Cannot open config file " + config_name + " for reading");
 		else
 			return cp::RpcValue();
 	}
@@ -339,50 +361,50 @@ shv::chainpack::RpcValue AclManagerConfigFiles::loadAclConfig(const std::string 
 
 std::vector<std::string> AclManagerConfigFiles::aclMountDeviceIds()
 {
-	const chainpack::RpcValue cfg = aclConfig("fstab");
+	const chainpack::RpcValue cfg = aclConfig(FILE_ACL_MOUNTS);
 	return cp::Utils::mapKeys(cfg.toMap());
 }
 
 AclMountDef AclManagerConfigFiles::aclMountDef(const std::string &device_id)
 {
-	chainpack::RpcValue v = aclConfig("fstab").toMap().value(device_id);
+	chainpack::RpcValue v = aclConfig(FILE_ACL_MOUNTS).toMap().value(device_id);
 	return AclMountDef::fromRpcValue(v);
 }
 
 std::vector<std::string> AclManagerConfigFiles::aclUsers()
 {
-	const chainpack::RpcValue cfg = aclConfig("users");
+	const chainpack::RpcValue cfg = aclConfig(FILE_ACL_USERS);
 	shvDebug() << cfg.toCpon("\t");
 	return cp::Utils::mapKeys(cfg.toMap());
 }
 
 AclUser AclManagerConfigFiles::aclUser(const std::string &user_name)
 {
-	chainpack::RpcValue v = aclConfig("users").toMap().value(user_name);
+	chainpack::RpcValue v = aclConfig(FILE_ACL_USERS).toMap().value(user_name);
 	return AclUser::fromRpcValue(v);
 }
 
 std::vector<std::string> AclManagerConfigFiles::aclRoles()
 {
-	const chainpack::RpcValue cfg = aclConfig("grants");
+	const chainpack::RpcValue cfg = aclConfig(FILE_ACL_ROLES);
 	return cp::Utils::mapKeys(cfg.toMap());
 }
 
 AclRole AclManagerConfigFiles::aclRole(const std::string &role_name)
 {
-	chainpack::RpcValue v = aclConfig("grants").toMap().value(role_name);
+	chainpack::RpcValue v = aclConfig(FILE_ACL_ROLES).toMap().value(role_name);
 	return AclRole::fromRpcValue(v);
 }
 
-std::vector<std::string> AclManagerConfigFiles::aclPathsRoles()
+std::vector<std::string> AclManagerConfigFiles::aclAccessRoles()
 {
-	const chainpack::RpcValue cfg = aclConfig("paths");
+	const chainpack::RpcValue cfg = aclConfig(FILE_ACL_ACCESS);
 	return cp::Utils::mapKeys(cfg.toMap());
 }
 
-AclRolePaths AclManagerConfigFiles::aclPathsRolePaths(const std::string &role_name)
+AclRolePaths AclManagerConfigFiles::aclAccessRolePaths(const std::string &role_name)
 {
-	chainpack::RpcValue v = aclConfig("paths").toMap().value(role_name);
+	chainpack::RpcValue v = aclConfig(FILE_ACL_ACCESS).toMap().value(role_name);
 	return AclRolePaths::fromRpcValue(v);
 }
 

@@ -48,12 +48,12 @@ shv::broker::AclRole AclManager::aclRole(const std::string &role_name)
 }
 
 
-std::vector<std::string> AclManager::aclPathsRoles()
+std::vector<std::string> AclManager::aclAccessRoles()
 {
 	return cp::Utils::mapKeys(s_aclRoles);
 }
 
-shv::broker::AclRolePaths AclManager::aclPathsRolePaths(const std::string &role_name)
+shv::broker::AclRolePaths AclManager::aclAccessRolePaths(const std::string &role_name)
 {
 	shv::broker::AclRolePaths ret;
 	if(role_name == "user") {

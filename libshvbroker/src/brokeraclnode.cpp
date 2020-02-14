@@ -49,8 +49,9 @@ static std::vector<cp::MetaMethod> meta_methods_acl_subnode {
 EtcAclNode::EtcAclNode(shv::iotqt::node::ShvNode *parent)
 	: Super("acl", &meta_methods_dir_ls, parent)
 {
+	setSortedChildren(false);
 	{
-		new FstabAclNode(this);
+		new MountsAclNode(this);
 		//connect(BrokerApp::instance(), &BrokerApp::configReloaded, nd, &BrokerAclNode::reload);
 	}
 	{
@@ -62,7 +63,7 @@ EtcAclNode::EtcAclNode(shv::iotqt::node::ShvNode *parent)
 		//connect(BrokerApp::instance(), &BrokerApp::configReloaded, nd, &BrokerAclNode::reload);
 	}
 	{
-		new PathsAclNode(this);
+		new AccessAclNode(this);
 		//connect(BrokerApp::instance(), &BrokerApp::configReloaded, nd, &BrokerAclNode::reload);
 	}
 }
@@ -99,18 +100,18 @@ const chainpack::MetaMethod *BrokerAclNode::metaMethod(const iotqt::node::ShvNod
 }
 
 //========================================================
-// FstabAclNode
+// MountsAclNode
 //========================================================
 static const std::string ACL_FSTAB_DESCR = "description";
 static const std::string ACL_FSTAB_MPOINT = "mountPoint";
 
-FstabAclNode::FstabAclNode(iotqt::node::ShvNode *parent)
-	: Super("fstab", parent)
+MountsAclNode::MountsAclNode(iotqt::node::ShvNode *parent)
+	: Super("mounts", parent)
 {
 
 }
 
-iotqt::node::ShvNode::StringList FstabAclNode::childNames(const iotqt::node::ShvNode::StringViewList &shv_path)
+iotqt::node::ShvNode::StringList MountsAclNode::childNames(const iotqt::node::ShvNode::StringViewList &shv_path)
 {
 	if(shv_path.empty()) {
 		BrokerApp *app = BrokerApp::instance();
@@ -123,7 +124,7 @@ iotqt::node::ShvNode::StringList FstabAclNode::childNames(const iotqt::node::Shv
 	return Super::childNames(shv_path);
 }
 
-chainpack::RpcValue FstabAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
+chainpack::RpcValue MountsAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
 {
 	if(shv_path.size() == 0) {
 		if(method == M_SET_VALUE) {
@@ -133,7 +134,9 @@ chainpack::RpcValue FstabAclNode::callMethod(const iotqt::node::ShvNode::StringV
 				auto v = AclMountDef::fromRpcValue(lst.value(1));
 				AclManager *mng = BrokerApp::instance()->aclManager();
 				mng->setMountDef(dev_id, v);
+				return true;
 			}
+			SHV_EXCEPTION("Invalid parameters, method: " + method);
 		}
 	}
 	else if(shv_path.size() == 1) {
@@ -192,7 +195,9 @@ chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringV
 				auto v = AclRole::fromRpcValue(lst.value(1));
 				AclManager *mng = BrokerApp::instance()->aclManager();
 				mng->setRole(role_name, v);
+				return true;
 			}
+			SHV_EXCEPTION("Invalid parameters, method: " + method);
 		}
 	}
 	else if(shv_path.size() == 1) {
@@ -254,7 +259,9 @@ chainpack::RpcValue UsersAclNode::callMethod(const iotqt::node::ShvNode::StringV
 				auto user = AclUser::fromRpcValue(lst.value(1));
 				AclManager *mng = BrokerApp::instance()->aclManager();
 				mng->setUser(name, user);
+				return true;
 			}
+			SHV_EXCEPTION("Invalid parameters, method: " + method);
 		}
 	}
 	else if(shv_path.size() == 1) {
@@ -292,13 +299,13 @@ static const std::string ACL_PATHS_GRANT = "grant";
 static const std::string ACL_PATHS_GRANT_TYPE = "type";
 //static const std::string ACL_PATHS_GRANT_FWD = cp::PathAccessGrant::FORWARD_USER_LOGIN;
 
-PathsAclNode::PathsAclNode(shv::iotqt::node::ShvNode *parent)
-	: Super("paths", parent)
+AccessAclNode::AccessAclNode(shv::iotqt::node::ShvNode *parent)
+	: Super("access", parent)
 {
 
 }
 
-std::vector<chainpack::MetaMethod> *PathsAclNode::metaMethodsForPath(const iotqt::node::ShvNode::StringViewList &shv_path)
+std::vector<chainpack::MetaMethod> *AccessAclNode::metaMethodsForPath(const iotqt::node::ShvNode::StringViewList &shv_path)
 {
 	if(shv_path.size() == 0)
 		return &meta_methods_acl_node;
@@ -311,15 +318,15 @@ std::vector<chainpack::MetaMethod> *PathsAclNode::metaMethodsForPath(const iotqt
 	return &meta_methods_dir_ls;
 }
 
-iotqt::node::ShvNode::StringList PathsAclNode::childNames(const iotqt::node::ShvNode::StringViewList &shv_path)
+iotqt::node::ShvNode::StringList AccessAclNode::childNames(const iotqt::node::ShvNode::StringViewList &shv_path)
 {
 	if(shv_path.empty()) {
 		AclManager *mng = BrokerApp::instance()->aclManager();
-		return mng->pathsRoles();
+		return mng->accessRoles();
 	}
 	else if(shv_path.size() == 1) {
 		AclManager *mng = BrokerApp::instance()->aclManager();
-		AclRolePaths role_paths = mng->pathsRolePaths(shv_path.value(0).toString());
+		AclRolePaths role_paths = mng->accessRolePaths(shv_path.value(0).toString());
 		iotqt::node::ShvNode::StringList ret;
 		for(auto s : shv::chainpack::Utils::mapKeys(role_paths))
 			ret.push_back('\'' + s + '\'');
@@ -331,7 +338,7 @@ iotqt::node::ShvNode::StringList PathsAclNode::childNames(const iotqt::node::Shv
 	return Super::childNames(shv_path);
 }
 
-chainpack::RpcValue PathsAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
+chainpack::RpcValue AccessAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
 {
 	if(shv_path.size() == 0) {
 		if(method == M_SET_VALUE) {
@@ -340,21 +347,23 @@ chainpack::RpcValue PathsAclNode::callMethod(const iotqt::node::ShvNode::StringV
 				const std::string &role_name = lst.value(0).toString();
 				auto v = AclRolePaths::fromRpcValue(lst.value(1));
 				AclManager *mng = BrokerApp::instance()->aclManager();
-				mng->setPathsRolePaths(role_name, v);
+				mng->setAccessRolePaths(role_name, v);
+				return true;
 			}
+			SHV_EXCEPTION("Invalid parameters, method: " + method);
 		}
 	}
 	else if(shv_path.size() == 1) {
 		if(method == M_VALUE) {
 			AclManager *mng = BrokerApp::instance()->aclManager();
-			auto v = mng->pathsRolePaths(shv_path.value(0).toString());
+			auto v = mng->accessRolePaths(shv_path.value(0).toString());
 			return v.toRpcValueMap();
 		}
 	}
 	else if(shv_path.size() == 3) {
 		if(method == cp::Rpc::METH_GET) {
 			AclManager *mng = BrokerApp::instance()->aclManager();
-			AclRolePaths role_paths = mng->pathsRolePaths(shv_path.value(0).toString());
+			AclRolePaths role_paths = mng->accessRolePaths(shv_path.value(0).toString());
 			std::string path = shv_path.value(1).toString();
 			if(path.size() > 1 && path[0] == '\'' && path[path.size() - 1] == '\'')
 				path = path.substr(1, path.size() - 2);

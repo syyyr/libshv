@@ -572,7 +572,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	// user_flattent_grants are sorted by weight DESC
 	for(const std::string &role : user_flattent_grants) {
 		logAclResolveD() << "cheking role:" << role << "weight:" << aclManager()->role(role).weight;
-		const AclRolePaths &role_paths = aclManager()->pathsRolePaths(role);
+		const AclRolePaths &role_paths = aclManager()->accessRolePaths(role);
 		for(const auto &kv : role_paths) {
 			const std::string &role_path = kv.first;
 			logAclResolveD().nospace() << "\t checking if path: '" << rq_shv_path << "' match granted path: '" << role_path << "'";

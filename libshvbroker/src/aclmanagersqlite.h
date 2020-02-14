@@ -30,9 +30,9 @@ protected:
 	AclRole aclRole(const std::string &role_name) override;
 	void aclSetRole(const std::string &role_name, const AclRole &r) override;
 
-	std::vector<std::string> aclPathsRoles() override;
-	AclRolePaths aclPathsRolePaths(const std::string &role_name) override;
-	void aclSetRolePaths(const std::string &role_name, const AclRolePaths &rpt) override;
+	std::vector<std::string> aclAccessRoles() override;
+	AclRolePaths aclAccessRolePaths(const std::string &role_name) override;
+	void aclSetAccessRolePaths(const std::string &role_name, const AclRolePaths &rpt) override;
 private:
 	void checkAclTables();
 	void createAclSqlTables();

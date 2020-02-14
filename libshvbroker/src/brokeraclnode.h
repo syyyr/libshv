@@ -23,11 +23,11 @@ protected:
 	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
 };
 
-class FstabAclNode : public BrokerAclNode
+class MountsAclNode : public BrokerAclNode
 {
 	using Super = BrokerAclNode;
 public:
-	FstabAclNode(shv::iotqt::node::ShvNode *parent = nullptr);
+	MountsAclNode(shv::iotqt::node::ShvNode *parent = nullptr);
 
 protected:
 	StringList childNames(const ShvNode::StringViewList &shv_path) override;
@@ -55,11 +55,11 @@ protected:
 	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
 };
 
-class PathsAclNode : public BrokerAclNode
+class AccessAclNode : public BrokerAclNode
 {
 	using Super = BrokerAclNode;
 public:
-	PathsAclNode(shv::iotqt::node::ShvNode *parent = nullptr);
+	AccessAclNode(shv::iotqt::node::ShvNode *parent = nullptr);
 
 protected:
 	StringList childNames(const ShvNode::StringViewList &shv_path) override;
