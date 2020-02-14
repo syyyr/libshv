@@ -125,7 +125,18 @@ iotqt::node::ShvNode::StringList FstabAclNode::childNames(const iotqt::node::Shv
 
 chainpack::RpcValue FstabAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
 {
-	if(shv_path.size() == 1) {
+	if(shv_path.size() == 0) {
+		if(method == M_SET_VALUE) {
+			if(params.isList()) {
+				const auto &lst = params.toList();
+				const std::string &dev_id = lst.value(0).toString();
+				auto v = AclMountDef::fromRpcValue(lst.value(1));
+				AclManager *mng = BrokerApp::instance()->aclManager();
+				mng->setMountDef(dev_id, v);
+			}
+		}
+	}
+	else if(shv_path.size() == 1) {
 		if(method == M_VALUE) {
 			AclManager *mng = BrokerApp::instance()->aclManager();
 			auto v = mng->mountDef(shv_path.value(0).toString());
@@ -173,7 +184,18 @@ iotqt::node::ShvNode::StringList RolesAclNode::childNames(const iotqt::node::Shv
 
 chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
 {
-	if(shv_path.size() == 1) {
+	if(shv_path.size() == 0) {
+		if(method == M_SET_VALUE) {
+			if(params.isList()) {
+				const auto &lst = params.toList();
+				const std::string &role_name = lst.value(0).toString();
+				auto v = AclRole::fromRpcValue(lst.value(1));
+				AclManager *mng = BrokerApp::instance()->aclManager();
+				mng->setRole(role_name, v);
+			}
+		}
+	}
+	else if(shv_path.size() == 1) {
 		if(method == M_VALUE) {
 			AclManager *mng = BrokerApp::instance()->aclManager();
 			auto v = mng->role(shv_path.value(0).toString());
@@ -235,14 +257,14 @@ chainpack::RpcValue UsersAclNode::callMethod(const iotqt::node::ShvNode::StringV
 			}
 		}
 	}
-	if(shv_path.size() == 1) {
+	else if(shv_path.size() == 1) {
 		if(method == M_VALUE) {
 			AclManager *mng = BrokerApp::instance()->aclManager();
 			AclUser u = mng->user(shv_path.value(0).toString());
 			return u.toRpcValueMap();
 		}
 	}
-	if(shv_path.size() == 2) {
+	else if(shv_path.size() == 2) {
 		if(method == cp::Rpc::METH_GET) {
 			std::string user = shv_path.value(0).toString();
 			auto pn = shv_path.value(1);
@@ -311,7 +333,18 @@ iotqt::node::ShvNode::StringList PathsAclNode::childNames(const iotqt::node::Shv
 
 chainpack::RpcValue PathsAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
 {
-	if(shv_path.size() == 1) {
+	if(shv_path.size() == 0) {
+		if(method == M_SET_VALUE) {
+			if(params.isList()) {
+				const auto &lst = params.toList();
+				const std::string &role_name = lst.value(0).toString();
+				auto v = AclRolePaths::fromRpcValue(lst.value(1));
+				AclManager *mng = BrokerApp::instance()->aclManager();
+				mng->setPathsRolePaths(role_name, v);
+			}
+		}
+	}
+	else if(shv_path.size() == 1) {
 		if(method == M_VALUE) {
 			AclManager *mng = BrokerApp::instance()->aclManager();
 			auto v = mng->pathsRolePaths(shv_path.value(0).toString());

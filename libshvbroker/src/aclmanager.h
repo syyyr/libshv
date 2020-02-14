@@ -29,6 +29,7 @@ public:
 
 	std::vector<std::string> mountDeviceIds();
 	AclMountDef mountDef(const std::string &device_id);
+	void setMountDef(const std::string &device_id, const AclMountDef &v);
 
 	std::vector<std::string> users();
 	AclUser user(const std::string &user_name);
@@ -36,9 +37,11 @@ public:
 
 	std::vector<std::string> roles();
 	AclRole role(const std::string &role_name);
+	void setRole(const std::string &role_name, const AclRole &v);
 
 	std::vector<std::string> pathsRoles();
 	AclRolePaths pathsRolePaths(const std::string &role_name);
+	void setPathsRolePaths(const std::string &role_name, const AclRolePaths &v);
 
 	std::string mountPointForDevice(const shv::chainpack::RpcValue &device_id);
 	std::vector<std::string> userFlattenRolesSortedByWeight(const std::string &user_name);

@@ -55,6 +55,12 @@ AclMountDef AclManager::mountDef(const std::string &device_id)
 	return it->second;
 }
 
+void AclManager::setMountDef(const std::string &device_id, const AclMountDef &v)
+{
+	aclSetMountDef(device_id, v);
+	m_cache.aclMountDefs.clear();
+}
+
 std::vector<std::string> AclManager::users()
 {
 	if(m_cache.aclUsers.empty()) {
@@ -106,6 +112,13 @@ AclRole AclManager::role(const std::string &role_name)
 	return it->second;
 }
 
+void AclManager::setRole(const std::string &role_name, const AclRole &v)
+{
+	aclSetRole(role_name, v);
+	m_cache.aclRoles.clear();
+	m_cache.userFlattenRoles.clear();
+}
+
 std::vector<std::string> AclManager::pathsRoles()
 {
 	if(m_cache.aclPathsRoles.empty()) {
@@ -126,6 +139,12 @@ AclRolePaths AclManager::pathsRolePaths(const std::string &role_name)
 		it->second = aclPathsRolePaths(role_name);
 	}
 	return it->second;
+}
+
+void AclManager::setPathsRolePaths(const std::string &role_name, const AclRolePaths &v)
+{
+	aclSetRolePaths(role_name, v);
+	m_cache.aclPathsRoles.clear();
 }
 
 chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginContext &login_context)
