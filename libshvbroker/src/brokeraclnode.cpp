@@ -125,7 +125,14 @@ iotqt::node::ShvNode::StringList FstabAclNode::childNames(const iotqt::node::Shv
 
 chainpack::RpcValue FstabAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
 {
-	if(shv_path.size() == 2) {
+	if(shv_path.size() == 1) {
+		if(method == M_VALUE) {
+			AclManager *mng = BrokerApp::instance()->aclManager();
+			auto v = mng->mountDef(shv_path.value(0).toString());
+			return v.toRpcValueMap();
+		}
+	}
+	else if(shv_path.size() == 2) {
 		if(method == cp::Rpc::METH_GET) {
 			AclManager *mng = BrokerApp::instance()->aclManager();
 			AclMountDef u = mng->mountDef(shv_path.value(0).toString());
@@ -166,7 +173,14 @@ iotqt::node::ShvNode::StringList RolesAclNode::childNames(const iotqt::node::Shv
 
 chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
 {
-	if(shv_path.size() == 2) {
+	if(shv_path.size() == 1) {
+		if(method == M_VALUE) {
+			AclManager *mng = BrokerApp::instance()->aclManager();
+			auto v = mng->role(shv_path.value(0).toString());
+			return v.toRpcValueMap();
+		}
+	}
+	else if(shv_path.size() == 2) {
 		if(method == cp::Rpc::METH_GET) {
 			std::string role = shv_path.value(0).toString();
 			auto pn = shv_path.value(1);
@@ -297,7 +311,14 @@ iotqt::node::ShvNode::StringList PathsAclNode::childNames(const iotqt::node::Shv
 
 chainpack::RpcValue PathsAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
 {
-	if(shv_path.size() == 3) {
+	if(shv_path.size() == 1) {
+		if(method == M_VALUE) {
+			AclManager *mng = BrokerApp::instance()->aclManager();
+			auto v = mng->pathsRolePaths(shv_path.value(0).toString());
+			return v.toRpcValueMap();
+		}
+	}
+	else if(shv_path.size() == 3) {
 		if(method == cp::Rpc::METH_GET) {
 			AclManager *mng = BrokerApp::instance()->aclManager();
 			AclRolePaths role_paths = mng->pathsRolePaths(shv_path.value(0).toString());
