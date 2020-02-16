@@ -3,6 +3,7 @@
 #include "../../c/ccpon.h"
 
 #include <iostream>
+#include <fstream>
 #include <cmath>
 
 namespace shv {
@@ -166,6 +167,13 @@ void CponReader::read(RpcValue &val)
 	}
 	if(!md.isEmpty())
 		val.setMetaData(std::move(md));
+}
+
+RpcValue CponReader::readFile(const std::string &file_name, std::string *error)
+{
+	std::ifstream ifs(file_name);
+	CponReader rd(ifs);
+	return rd.read(error);
 }
 
 /*

@@ -25,7 +25,7 @@ public:
 	//void read(RpcValue &val, std::string &err);
 	//void read(RpcValue &val, std::string *err);
 
-	//RpcValue::DateTime readDateTime();
+	static RpcValue readFile(const std::string &file_name, std::string *error = nullptr);
 private:
 	void unpackNext();
 

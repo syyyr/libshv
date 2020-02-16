@@ -230,6 +230,7 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 	if(resp.hasRetVal()) {
 		ShvNode *root = rootNode();
 		if(root) {
+			shvDebug() << "emit resp:"  << resp.toCpon();
 			root->emitSendRpcMessage(resp);
 		}
 	}
