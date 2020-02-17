@@ -24,7 +24,8 @@ public:
 	static const char* DATA_MISSING_DEVICE_DISCONNECTED;
 	static const char* DATA_MISSING_HP_DISCONNECTED;
 	static const char* DATA_MISSING_LOG_FILE_CORRUPTED;
-	static const char* DATA_MISSING_LOG_FILE_MSSING;
+	static const char* DATA_MISSING_LOG_FILE_MISSING;
+	static const char* DATA_MISSING_APP_SHUTDOWN;
 
 	using SampleType = ShvLogTypeDescr::SampleType;
 
