@@ -237,7 +237,7 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 	}
 }
 
-int64_t ShvFileJournal::JournalContext::fileNameToFileMsec(const std::string &fn) const
+int64_t ShvFileJournal::JournalContext::fileNameToFileMsec(const std::string &fn)
 {
 	std::string utc_str = fn;
 	if(MSEC_SEP_POS >= utc_str.size())
@@ -251,13 +251,18 @@ int64_t ShvFileJournal::JournalContext::fileNameToFileMsec(const std::string &fn
 	return msec;
 }
 
-std::string ShvFileJournal::JournalContext::fileMsecToFileName(int64_t msec) const
+std::string ShvFileJournal::JournalContext::msecToBaseFileName(int64_t msec)
 {
 	std::string fn = cp::RpcValue::DateTime::fromMSecsSinceEpoch(msec).toIsoString(cp::RpcValue::DateTime::MsecPolicy::Always, false);
 	fn[MIN_SEP_POS] = '-';
 	fn[SEC_SEP_POS] = '-';
 	fn[MSEC_SEP_POS] = '-';
-	return fn + FILE_EXT;
+	return fn;
+}
+
+std::string ShvFileJournal::JournalContext::fileMsecToFileName(int64_t msec) const
+{
+	return msecToBaseFileName(msec) + FILE_EXT;
 }
 
 std::string ShvFileJournal::JournalContext::fileMsecToFilePath(int64_t file_msec) const

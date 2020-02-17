@@ -28,8 +28,10 @@ public:
 	void setDeviceId(std::string id) { m_logHeader.setDeviceId(std::move(id)); }
 	void setDeviceType(std::string type) { m_logHeader.setDeviceType(std::move(type)); }
 
-	void loadLog(const shv::chainpack::RpcValue &log);
 	void append(const ShvJournalEntry &entry) override;
+	int inputFilterRecordCountLimit() const { return  m_inputFilterRecordCountLimit; }
+
+	void loadLog(const shv::chainpack::RpcValue &log);
 	shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) override;
 
 	const ShvLogHeader &logHeader() const { return m_logHeader; }

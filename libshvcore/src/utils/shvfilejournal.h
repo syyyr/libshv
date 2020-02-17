@@ -72,7 +72,8 @@ public:
 
 		bool isConsistent() const {return journalDirExists && journalSize >= 0;}
 		//void setNotConsistent() {journalSize = -1;}
-		int64_t fileNameToFileMsec(const std::string &fn) const;
+		static int64_t fileNameToFileMsec(const std::string &fn);
+		static std::string msecToBaseFileName(int64_t msec);
 		std::string fileMsecToFileName(int64_t msec) const;
 		std::string fileMsecToFilePath(int64_t file_msec) const;
 	};
