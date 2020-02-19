@@ -298,6 +298,13 @@ ShvNode::StringList ShvNode::childNames(const StringViewList &shv_path)
 
 chainpack::RpcValue ShvNode::hasChildren(const StringViewList &shv_path)
 {
+	shvLogFuncFrame() << "node:" << nodeId() << "shv_path:" << shv_path.join('/');
+	if(shv_path.size() == 1) {
+		ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
+		if(nd) {
+			return nd->hasChildren(StringViewList());
+		}
+	}
 	return !childNames(shv_path).empty();
 }
 
@@ -305,18 +312,9 @@ chainpack::RpcValue ShvNode::lsAttributes(const StringViewList &shv_path, unsign
 {
 	shvLogFuncFrame() << "node:" << nodeId() << "attributes:" << attributes << "shv path:" << shv_path.join('/');
 	cp::RpcValue::List ret;
-	if(shv_path.empty()) {
-		if(attributes & cp::MetaMethod::LsAttribute::HasChildren)
-			ret.push_back(hasChildren(shv_path));
-	}
-	else if(shv_path.size() == 1) {
-		ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
-		if(nd) {
-			if(attributes & cp::MetaMethod::LsAttribute::HasChildren)
-				ret.push_back(nd->hasChildren(StringViewList()));
-		}
-	}
-	return cp::RpcValue{ret};
+	if(attributes & cp::MetaMethod::LsAttribute::HasChildren)
+		ret.push_back(hasChildren(shv_path));
+	return std::move(ret);
 }
 
 int ShvNode::grantToAccessLevel(const chainpack::RpcValue &acces_grant) const
