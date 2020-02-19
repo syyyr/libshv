@@ -23,7 +23,7 @@ struct SHVBROKER_DECL_EXPORT AclRole
 	AclRole(int w) : weight(w) {}
 	AclRole(int w, std::vector<std::string> roles) : weight(w), roles(std::move(roles)) {}
 
-	bool isValid() const {return weight != INVALID_WEIGHT;}
+	bool isValid() const {return weight >= 0;}
 	shv::chainpack::RpcValue toRpcValueMap() const;
 	static AclRole fromRpcValue(const shv::chainpack::RpcValue &v);
 };
