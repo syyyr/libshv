@@ -18,7 +18,7 @@ const char* ShvJournalEntry::PATH_DATA_MISSING = "DATA_MISSING";
 const char* ShvJournalEntry::DATA_MISSING_DEVICE_DISCONNECTED = "DeviceDisconnected";
 const char* ShvJournalEntry::DATA_MISSING_HP_DISCONNECTED = "HistoryProviderDisconnected";
 const char* ShvJournalEntry::DATA_MISSING_LOG_FILE_CORRUPTED = "LogFileCorrupted";
-const char* ShvJournalEntry::DATA_MISSING_LOG_FILE_MSSING = "LogFileMissing";
+const char* ShvJournalEntry::DATA_MISSING_LOG_FILE_MISSING = "LogFileMissing";
 
 chainpack::RpcValue ShvJournalEntry::toRpcValueMap() const
 {

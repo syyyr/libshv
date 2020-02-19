@@ -616,7 +616,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 			ShvJournalEntry e;
 			e.epochMsec = msec;
 			e.path = ShvJournalEntry::PATH_DATA_MISSING;
-			e.value = b? ShvJournalEntry::DATA_MISSING_LOG_FILE_MSSING: "";
+			e.value = b? ShvJournalEntry::DATA_MISSING_LOG_FILE_MISSING: "";
 			e.domain = ShvJournalEntry::DOMAIN_SHV_SYSTEM;
 			append_entry(e);
 		};

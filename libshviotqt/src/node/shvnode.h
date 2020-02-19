@@ -99,7 +99,7 @@ class SHVIOTQT_DECL_EXPORT ShvRootNode : public ShvNode
 {
 	using Super = ShvNode;
 public:
-	explicit ShvRootNode(QObject *parent) : Super(nullptr) {setParent(parent); m_isRootNode = true;}
+	explicit ShvRootNode(QObject *parent);
 	~ShvRootNode() override;
 };
 

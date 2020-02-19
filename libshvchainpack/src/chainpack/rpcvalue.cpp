@@ -290,6 +290,7 @@ class ChainPackList final : public ValueData<RpcValue::Type::List, RpcValue::Lis
 	size_t count() const override {return m_value.size();}
 	RpcValue at(RpcValue::Int i) const override;
 	void set(RpcValue::Int i, const RpcValue &val) override;
+	void append(const RpcValue &v) override;
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toList(); }
 public:
 	explicit ChainPackList(const RpcValue::List &value) : ValueData(value) {}
@@ -297,6 +298,32 @@ public:
 
 	const RpcValue::List &toList() const override { return m_value; }
 };
+
+RpcValue ChainPackList::at(RpcValue::Int ix) const
+{
+	if(ix < 0)
+		ix = static_cast<RpcValue::Int>(m_value.size()) + ix;
+	if (ix < 0 || ix >= (int)m_value.size())
+		return RpcValue();
+	else
+		return m_value[static_cast<size_t>(ix)];
+}
+
+void ChainPackList::set(RpcValue::Int ix, const RpcValue &val)
+{
+	if(ix < 0)
+		ix = static_cast<RpcValue::Int>(m_value.size()) + ix;
+	if(ix > 0) {
+		if (ix == (int)m_value.size())
+			m_value.resize(static_cast<size_t>(ix) + 1);
+		m_value[static_cast<size_t>(ix)] = val;
+	}
+}
+
+void ChainPackList::append(const RpcValue &v)
+{
+	m_value.push_back(v);
+}
 
 class ChainPackMap final : public ValueData<RpcValue::Type::Map, RpcValue::Map>
 {
@@ -593,28 +620,6 @@ void RpcValue::AbstractValueData::set(const RpcValue::String &key, const RpcValu
 void RpcValue::AbstractValueData::append(const RpcValue &)
 {
 	nError() << "RpcValue::AbstractValueData::append: trivial implementation called!";
-}
-
-
-RpcValue ChainPackList::at(RpcValue::Int ix) const
-{
-	if(ix < 0)
-		ix = static_cast<RpcValue::Int>(m_value.size()) + ix;
-	if (ix < 0 || ix >= (int)m_value.size())
-		return RpcValue();
-	else
-		return m_value[static_cast<size_t>(ix)];
-}
-
-void ChainPackList::set(RpcValue::Int ix, const RpcValue &val)
-{
-	if(ix < 0)
-		ix = static_cast<RpcValue::Int>(m_value.size()) + ix;
-	if(ix > 0) {
-		if (ix == (int)m_value.size())
-			m_value.resize(static_cast<size_t>(ix) + 1);
-		m_value[static_cast<size_t>(ix)] = val;
-	}
 }
 
 /* * * * * * * * * * * * * * * * * * * *

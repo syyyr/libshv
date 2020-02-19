@@ -495,6 +495,14 @@ void ShvNode::emitSendRpcMessage(const chainpack::RpcMessage &msg)
 //===========================================================
 // ShvRootNode
 //===========================================================
+ShvRootNode::ShvRootNode(QObject *parent)
+ : Super(nullptr)
+{
+	setNodeId("<ROOT>");
+	setParent(parent);
+	m_isRootNode = true;
+}
+
 ShvRootNode::~ShvRootNode()
 {
 }
