@@ -12,7 +12,7 @@ namespace broker {
 
 struct SHVBROKER_DECL_EXPORT AclRole
 {
-	static constexpr int INVALID_WEIGHT = -1;
+	static constexpr int INVALID_WEIGHT = std::numeric_limits<int>::min();
 	//std::string name;
 	int weight = INVALID_WEIGHT;
 	std::vector<std::string> roles;
@@ -23,7 +23,7 @@ struct SHVBROKER_DECL_EXPORT AclRole
 	AclRole(int w) : weight(w) {}
 	AclRole(int w, std::vector<std::string> roles) : weight(w), roles(std::move(roles)) {}
 
-	bool isValid() const {return weight >= 0;}
+	bool isValid() const {return weight != INVALID_WEIGHT;}
 	shv::chainpack::RpcValue toRpcValueMap() const;
 	static AclRole fromRpcValue(const shv::chainpack::RpcValue &v);
 };
