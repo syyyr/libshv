@@ -231,8 +231,18 @@ log_finish:
 		hdr.setDeviceType(m_logHeader.deviceType());
 		hdr.setDateTime(cp::RpcValue::DateTime::now());
 		hdr.setLogParams(params);
-		hdr.setSince((first_record_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(first_record_msec)): cp::RpcValue(nullptr));
-		hdr.setUntil((last_record_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(last_record_msec)): cp::RpcValue(nullptr));
+		if (!params.since.isNull()) {
+			hdr.setSince(params.since);
+		}
+		else {
+			hdr.setSince((first_record_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(first_record_msec)): cp::RpcValue(nullptr));
+		}
+		if (rec_cnt < max_rec_cnt && !params.until.isNull()) {
+			hdr.setUntil(params.until);
+		}
+		else {
+			hdr.setUntil((last_record_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(last_record_msec)): cp::RpcValue(nullptr));
+		}
 		hdr.setRecordCount(rec_cnt);
 		hdr.setRecordCountLimit(max_rec_cnt);
 		hdr.setWithSnapShot(params.withSnapshot);
