@@ -32,16 +32,16 @@ ShvMemoryJournal::ShvMemoryJournal(const ShvGetLogParams &input_filter)
 void ShvMemoryJournal::loadLog(const chainpack::RpcValue &log)
 {
 	m_entries.clear();
-	ShvLogHeader hdr = ShvLogHeader::fromMetaData(log.metaData());
+	m_logHeader = ShvLogHeader::fromMetaData(log.metaData());
 	using Column = ShvLogHeader::Column;
 
-	std::map<std::string, ShvLogTypeDescr> paths_type_descr = hdr.pathsTypeDescr();
+	std::map<std::string, ShvLogTypeDescr> paths_type_descr = m_logHeader.pathsTypeDescr();
 	auto paths_sample_type = [paths_type_descr](const std::string &path) {
 		auto it = paths_type_descr.find(path);
 		return it == paths_type_descr.end()? ShvJournalEntry::SampleType::Continuous: it->second.sampleType;
 	};
 
-	const chainpack::RpcValue::IMap &dict = hdr.pathDictCRef();
+	const chainpack::RpcValue::IMap &dict = m_logHeader.pathDictCRef();
 
 	const ShvGetLogParams params = ShvGetLogParams::fromRpcValue(log.metaValue("params"));
 
