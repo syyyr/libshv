@@ -31,11 +31,12 @@ public:
 	void append(const ShvJournalEntry &entry) override;
 	int inputFilterRecordCountLimit() const { return  m_inputFilterRecordCountLimit; }
 
-	void loadLog(const shv::chainpack::RpcValue &log);
+	void loadLog(const shv::chainpack::RpcValue &log, bool append_records = false);
 	shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) override;
 
-	const ShvLogHeader &logHeader() const { return m_logHeader; }
+	//const ShvLogHeader &logHeader() const { return m_logHeader; }
 	const std::vector<ShvJournalEntry>& entries() const {return  m_entries;}
+	size_t size() const { return  m_entries.size(); }
 	void clear() { m_entries.clear(); }
 private:
 	void checkSampleType(ShvJournalEntry &entry) const;

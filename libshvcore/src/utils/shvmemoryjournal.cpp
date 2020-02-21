@@ -26,24 +26,26 @@ ShvMemoryJournal::ShvMemoryJournal(const ShvGetLogParams &input_filter)
 		m_inputFilterSinceMsec = input_filter.since.toDateTime().msecsSinceEpoch();
 	if(input_filter.until.isDateTime())
 		m_inputFilterUntilMsec = input_filter.until.toDateTime().msecsSinceEpoch();
-	m_inputFilterRecordCountLimit = std::min(input_filter.maxRecordCount, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
+	m_inputFilterRecordCountLimit = std::min(input_filter.recordCountLimit, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 }
 
-void ShvMemoryJournal::loadLog(const chainpack::RpcValue &log)
+void ShvMemoryJournal::loadLog(const chainpack::RpcValue &log, bool append_records)
 {
-	m_entries.clear();
-	m_logHeader = ShvLogHeader::fromMetaData(log.metaData());
+	ShvLogHeader hdr = ShvLogHeader::fromMetaData(log.metaData());
 	using Column = ShvLogHeader::Column;
 
-	std::map<std::string, ShvLogTypeDescr> paths_type_descr = m_logHeader.pathsTypeDescr();
+	std::map<std::string, ShvLogTypeDescr> paths_type_descr = hdr.pathsTypeDescr();
 	auto paths_sample_type = [paths_type_descr](const std::string &path) {
 		auto it = paths_type_descr.find(path);
 		return it == paths_type_descr.end()? ShvJournalEntry::SampleType::Continuous: it->second.sampleType;
 	};
 
-	const chainpack::RpcValue::IMap &dict = m_logHeader.pathDictCRef();
+	const chainpack::RpcValue::IMap &dict = hdr.pathDictCRef();
 
-	const ShvGetLogParams params = ShvGetLogParams::fromRpcValue(log.metaValue("params"));
+	if(!append_records) {
+		m_entries.clear();
+		m_logHeader = hdr;
+	}
 
 	const chainpack::RpcValue::List &lst = log.toList();
 	for(const cp::RpcValue &v : lst) {
@@ -119,23 +121,25 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 	cp::RpcValue::Map path_cache;
 	int max_path_index = 0;
 	int rec_cnt = 0;
-	auto since_msec = params.since.isDateTime()? params.since.toDateTime().msecsSinceEpoch(): 0;
-	auto until_msec = params.until.isDateTime()? params.until.toDateTime().msecsSinceEpoch(): 0;
+	auto params_since_msec = params.since.isDateTime()? params.since.toDateTime().msecsSinceEpoch(): 0;
+	auto params_until_msec = params.until.isDateTime()? params.until.toDateTime().msecsSinceEpoch(): 0;
+	int64_t log_since_msec = m_logHeader.sinceMsec();
+	int64_t log_until_msec = m_logHeader.untilMsec();
 	int64_t first_record_msec = 0;
 	int64_t last_record_msec = 0;
 
 	auto it1 = m_entries.begin();
-	if(since_msec > 0) {
+	if(params_since_msec > 0) {
 		Entry e;
-		e.epochMsec = since_msec;
+		e.epochMsec = params_since_msec;
 		it1 = std::lower_bound(m_entries.begin(), m_entries.end(), e, [](const Entry &e1, const Entry &e2) {
 			return e1.epochMsec < e2.epochMsec;
 		});
 	}
 	auto it2 = m_entries.end();
-	if(until_msec > 0) {
+	if(params_until_msec > 0) {
 		Entry e;
-		e.epochMsec = until_msec;
+		e.epochMsec = params_until_msec;
 		it2 = std::upper_bound(m_entries.begin(), m_entries.end(), e, [](const Entry &e1, const Entry &e2) {
 			return e1.epochMsec < e2.epochMsec;
 		});
@@ -154,7 +158,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 		path_cache[path] = ret;
 		return ret;
 	};
-	int max_rec_cnt = std::min(params.maxRecordCount, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
+	int rec_cnt_limit = std::min(params.recordCountLimit, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 
 	PatternMatcher pm(params);
 
@@ -189,7 +193,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 				rec.push_back(entry.domain.empty()? cp::RpcValue(nullptr): entry.domain);
 				log.push_back(std::move(rec));
 				rec_cnt++;
-				if(rec_cnt >= max_rec_cnt)
+				if(rec_cnt >= rec_cnt_limit)
 					goto log_finish;
 			}
 			{
@@ -218,7 +222,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 			rec.push_back(it->domain.empty()? cp::RpcValue(nullptr): it->domain);
 			log.push_back(std::move(rec));
 			rec_cnt++;
-			if(rec_cnt >= max_rec_cnt)
+			if(rec_cnt >= rec_cnt_limit)
 				goto log_finish;
 		}
 	}
@@ -231,10 +235,28 @@ log_finish:
 		hdr.setDeviceType(m_logHeader.deviceType());
 		hdr.setDateTime(cp::RpcValue::DateTime::now());
 		hdr.setLogParams(params);
-		hdr.setSince((first_record_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(first_record_msec)): cp::RpcValue(nullptr));
-		hdr.setUntil((last_record_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(last_record_msec)): cp::RpcValue(nullptr));
+		// if params since is specified and it is lower than log start, then set since to log start
+		int64_t since_msec = first_record_msec;
+		if(params_since_msec > 0 && log_since_msec > 0) {
+			since_msec = params_since_msec;
+			if(since_msec < log_since_msec) {
+				since_msec = log_since_msec;
+			}
+		}
+		hdr.setSince((since_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec)): cp::RpcValue(nullptr));
+		// if record count < limit and params until is specified and it is > log end, then set until to log end
+		int64_t until_msec = last_record_msec;
+		if(rec_cnt < rec_cnt_limit) {
+			if(log_until_msec > 0) {
+				until_msec = log_until_msec;
+				if(params_until_msec > 0 && params_until_msec < until_msec) {
+					until_msec = params_until_msec;
+				}
+			}
+		}
+		hdr.setUntil((until_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(until_msec)): cp::RpcValue(nullptr));
 		hdr.setRecordCount(rec_cnt);
-		hdr.setRecordCountLimit(max_rec_cnt);
+		hdr.setRecordCountLimit(rec_cnt_limit);
 		hdr.setWithSnapShot(params.withSnapshot);
 		hdr.setWithPathsDict(params.withPathsDict);
 

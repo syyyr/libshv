@@ -50,6 +50,9 @@ public:
 public:
 	ShvLogHeader() {}
 
+	int64_t sinceMsec() const { return since().toDateTime().msecsSinceEpoch(); }
+	int64_t untilMsec() const { return until().toDateTime().msecsSinceEpoch(); }
+
 	static ShvLogHeader fromMetaData(const chainpack::RpcValue::MetaData &md);
 	chainpack::RpcValue::MetaData toMetaData() const;
 

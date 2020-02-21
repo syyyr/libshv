@@ -14,7 +14,8 @@ namespace utils {
 struct SHVCORE_DECL_EXPORT ShvGetLogParams
 {
 	//static const char *KEY_HEADER_OPTIONS;
-	static const char *KEY_MAX_RECORD_COUNT;
+	static const char *KEY_MAX_RECORD_COUNT_DEPRICATED;
+	static const char *KEY_RECORD_COUNT_LIMIT;
 	static const char *KEY_WITH_SNAPSHOT;
 	//static const char *KEY_WITH_UPTIME;
 	static const char *KEY_WITH_PATHS_DICT;
@@ -44,8 +45,8 @@ struct SHVCORE_DECL_EXPORT ShvGetLogParams
 	};
 	*/
 	//unsigned headerOptions = static_cast<unsigned>(HeaderOptions::BasicInfo);
-	static constexpr int DEFAULT_RECORD_COUNT_MAX = 1000;
-	int maxRecordCount = DEFAULT_RECORD_COUNT_MAX;
+	static constexpr int DEFAULT_RECORD_COUNT_LIMIT = 1000;
+	int recordCountLimit = DEFAULT_RECORD_COUNT_LIMIT;
 	bool withSnapshot = false;
 	//bool withUptime = false;
 	std::string domainPattern; /// always regexp

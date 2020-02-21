@@ -563,7 +563,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 	int64_t journal_start_msec = 0;
 	int64_t first_record_msec = 0;
 	int64_t last_record_msec = 0;
-	int max_rec_cnt = std::min(params.maxRecordCount, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
+	int max_rec_cnt = std::min(params.recordCountLimit, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 	if(journal_context.files.size()) {
 		std::vector<int64_t>::const_iterator file_it = journal_context.files.begin();
 		journal_start_msec = *file_it;

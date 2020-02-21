@@ -101,6 +101,7 @@ public:
 		int utcOffsetMin() const { return m_dtm.tz * 15; }
 		/// @deprecated
 		int minutesFromUtc() const { return utcOffsetMin(); }
+		bool isZero() const {return msecsSinceEpoch() == 0;}
 
 		static DateTime now();
 		static DateTime fromLocalString(const std::string &local_date_time_str);
