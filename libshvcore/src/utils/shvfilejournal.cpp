@@ -558,8 +558,8 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 	log_header.setTypeInfo(journal_context.typeInfo);
 
 	cp::RpcValue::Map path_cache;
-	auto since_msec = params.since.isDateTime()? params.since.toDateTime().msecsSinceEpoch(): 0;
-	auto until_msec = params.until.isDateTime()? params.until.toDateTime().msecsSinceEpoch(): 0;
+	auto params_since_msec = params.since.isDateTime()? params.since.toDateTime().msecsSinceEpoch(): 0;
+	auto params_until_msec = params.until.isDateTime()? params.until.toDateTime().msecsSinceEpoch(): 0;
 	int64_t journal_start_msec = 0;
 	int64_t first_record_msec = 0;
 	int64_t last_record_msec = 0;
@@ -567,15 +567,15 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 	if(journal_context.files.size()) {
 		std::vector<int64_t>::const_iterator file_it = journal_context.files.begin();
 		journal_start_msec = *file_it;
-		if(since_msec > 0) {
-			logDShvJournal() << "since:" << params.since.toCpon() << "msec:" << since_msec;
-			file_it = std::lower_bound(journal_context.files.begin(), journal_context.files.end(), since_msec);
+		if(params_since_msec > 0) {
+			logDShvJournal() << "since:" << params.since.toCpon() << "msec:" << params_since_msec;
+			file_it = std::lower_bound(journal_context.files.begin(), journal_context.files.end(), params_since_msec);
 			if(file_it == journal_context.files.end()) {
 				/// take last file
 				--file_it;
 				logDShvJournal() << "\t" << "not found, taking last file:" << *file_it << journal_context.fileMsecToFileName(*file_it);
 			}
-			else if(*file_it == since_msec) {
+			else if(*file_it == params_since_msec) {
 				/// take exactly this file
 				logDShvJournal() << "\t" << "found exactly:" << *file_it << journal_context.fileMsecToFileName(*file_it);
 			}
@@ -622,8 +622,8 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		};
 		std::map<std::string, ShvJournalEntry> snapshot;
 
-		if(since_msec > 0 && since_msec < journal_start_msec) {
-			append_data_missing(since_msec, true);
+		if(params_since_msec > 0 && params_since_msec < journal_start_msec) {
+			append_data_missing(params_since_msec, true);
 			append_data_missing(journal_start_msec, false);
 		}
 
@@ -641,11 +641,11 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 					logDShvJournal() << "\t\t MATCH";
 				}
 				//cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromMSecsSinceEpoch(e.epochMsec);
-				if(since_msec > 0 && e.epochMsec < since_msec) {
+				if(params_since_msec > 0 && e.epochMsec < params_since_msec) {
 					if(params.withSnapshot) {
 						if(e.sampleType == ShvJournalEntry::SampleType::Continuous) {
 							ShvJournalEntry e2 = e;
-							e2.epochMsec = since_msec;
+							e2.epochMsec = params_since_msec;
 							snapshot[e2.path] = std::move(e2);
 						}
 					}
@@ -672,7 +672,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 						}
 						snapshot.clear();
 					}
-					if(until_msec == 0 || e.epochMsec < until_msec) { // keep interval open to make log merge simpler
+					if(params_until_msec == 0 || e.epochMsec < params_until_msec) { // keep interval open to make log merge simpler
 						append_entry(e);
 						if(first_record_msec == 0)
 							first_record_msec = e.epochMsec;
@@ -688,14 +688,14 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		}
 	}
 log_finish:
-	if(since_msec == 0)
-		since_msec = first_record_msec;
+	if(params_since_msec == 0)
+		params_since_msec = first_record_msec;
 	if((int)log.size() < max_rec_cnt) {
-		if(until_msec == 0)
-			until_msec = last_record_msec;
+		if(params_until_msec == 0)
+			params_until_msec = last_record_msec;
 	}
 	else {
-		until_msec = last_record_msec;
+		params_until_msec = last_record_msec;
 	}
 	cp::RpcValue ret = log;
 	{
@@ -703,8 +703,8 @@ log_finish:
 		log_header.setDeviceType(journal_context.deviceType);
 		log_header.setDateTime(cp::RpcValue::DateTime::now());
 		log_header.setLogParams(params);
-		log_header.setSince((since_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec)): cp::RpcValue(nullptr));
-		log_header.setUntil((until_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(until_msec)): cp::RpcValue(nullptr));
+		log_header.setSince((params_since_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(params_since_msec)): cp::RpcValue(nullptr));
+		log_header.setUntil((params_until_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(params_until_msec)): cp::RpcValue(nullptr));
 		log_header.setRecordCount((int)log.size());
 		log_header.setRecordCountLimit(max_rec_cnt);
 		log_header.setWithSnapShot(params.withSnapshot);
