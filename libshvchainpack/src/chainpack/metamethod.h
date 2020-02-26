@@ -74,6 +74,8 @@ public:
 		lst.insert(lst.begin(), name());
 		return RpcValue{lst};
 	}
+
+	static Signature signatureFromString(const std::string &sigstr);
 private:
 	std::string m_name;
 	Signature m_signature;

@@ -51,6 +51,7 @@ public:
 
 	static const char* PAR_PATH;
 	static const char* PAR_METHOD;
+	static const char* PAR_PARAMS;
 
 	static const char* SIG_VAL_CHANGED;
 	static const char* SIG_VAL_FASTCHANGED;

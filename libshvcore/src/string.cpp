@@ -99,11 +99,13 @@ std::string String::join(const std::vector<StringView> &lst, char delim)
 int String::replace(std::string &str, const std::string &from, const std::string &to)
 {
 	int i = 0;
+	size_t pos = 0;
 	for (i = 0; ; ++i) {
-		size_t start_pos = str.find(from);
-		if(start_pos == std::string::npos)
+		pos = str.find(from, pos);
+		if(pos == std::string::npos)
 			break;
-		str.replace(start_pos, from.length(), to);
+		str.replace(pos, from.length(), to);
+		pos += to.length();
 	}
 	return i;
 }

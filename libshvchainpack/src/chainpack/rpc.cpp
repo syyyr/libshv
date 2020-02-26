@@ -42,6 +42,7 @@ const char* Rpc::METH_GET_LOG = "getLog";
 
 const char* Rpc::PAR_PATH = "path";
 const char* Rpc::PAR_METHOD = "method";
+const char* Rpc::PAR_PARAMS = "params";
 
 const char* Rpc::SIG_VAL_CHANGED = "chng";
 const char* Rpc::SIG_VAL_FASTCHANGED = "fastchng";
@@ -65,13 +66,13 @@ const char* Rpc::DIR_CLIENTS = "clients";
 const char* Rpc::DIR_MASTERS = "masters";
 
 const char* Rpc::JSONRPC_REQUEST_ID = "id";
-const char* Rpc::JSONRPC_METHOD = "method";
-const char* Rpc::JSONRPC_PARAMS = "params";
+const char* Rpc::JSONRPC_METHOD = PAR_METHOD;
+const char* Rpc::JSONRPC_PARAMS = PAR_PARAMS;
 const char* Rpc::JSONRPC_RESULT = "result";
 const char* Rpc::JSONRPC_ERROR = "error";
 const char* Rpc::JSONRPC_ERROR_CODE = "code";
 const char* Rpc::JSONRPC_ERROR_MESSAGE = "message";
-const char* Rpc::JSONRPC_SHV_PATH = "path";
+const char* Rpc::JSONRPC_SHV_PATH = PAR_PATH;
 const char* Rpc::JSONRPC_CALLER_ID = "cid";
 const char* Rpc::JSONRPC_REV_CALLER_ID = "rcid";
 
