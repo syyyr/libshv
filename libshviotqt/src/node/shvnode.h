@@ -94,7 +94,7 @@ private:
 };
 
 /// helper class to save lines when creating root node
-/// root node must be ShvNode to enable derived types to be root nodes
+/// any ShvNode descendant with m_isRootNode = true may be RootNode
 class SHVIOTQT_DECL_EXPORT ShvRootNode : public ShvNode
 {
 	using Super = ShvNode;

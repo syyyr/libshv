@@ -17,11 +17,12 @@ ShvNodeTree::ShvNodeTree(QObject *parent)
 {
 }
 
-ShvNodeTree::ShvNodeTree(ShvRootNode *root, QObject *parent)
+ShvNodeTree::ShvNodeTree(ShvNode *root, QObject *parent)
 	: QObject(parent)
 	, m_root(root)
 {
-	//m_root->setNodeId("<ROOT>");
+	if(!root->isRootNode())
+		SHV_EXCEPTION("Node tree must begin with root node!");
 }
 
 ShvNodeTree::~ShvNodeTree()

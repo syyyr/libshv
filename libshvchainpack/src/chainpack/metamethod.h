@@ -47,6 +47,7 @@ public:
 		};
 	};
 public:
+	MetaMethod() {}
 	MetaMethod(std::string name, Signature ms, unsigned flags = 0, const shv::chainpack::RpcValue &access_grant = shv::chainpack::Rpc::ROLE_BROWSE)
 	    : m_name(std::move(name))
 	    , m_signature(ms)
@@ -58,6 +59,8 @@ public:
 	//static constexpr bool IsSignal = true;
 
 	const std::string& name() const {return m_name;}
+	Signature signature() const {return m_signature;}
+	unsigned flags() const {return m_flags;}
 	const shv::chainpack::RpcValue& accessGrant() const {return m_accessGrant;}
 	RpcValue attributes(unsigned mask) const
 	{
@@ -79,9 +82,8 @@ public:
 	static Signature signatureFromString(const std::string &sigstr);
 private:
 	std::string m_name;
-	Signature m_signature;
-	unsigned m_flags;
-	//int m_accessLevel;
+	Signature m_signature = Signature::VoidVoid;
+	unsigned m_flags = 0;
 	shv::chainpack::RpcValue m_accessGrant;
 };
 

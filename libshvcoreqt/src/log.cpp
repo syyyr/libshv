@@ -32,7 +32,7 @@ NecroLog &operator<<(NecroLog log, const QByteArray &input)
 	int length = input.length();
 	char quote(QLatin1Char('"').toLatin1());
 	
-	log << quote;
+	log << "ByteArayDump(" << quote;
 
 	bool lastWasHexEscape = false;
 	const char *end = begin + length;
@@ -93,6 +93,6 @@ NecroLog &operator<<(NecroLog log, const QByteArray &input)
 			log << buf[i];
 	}
 
-	return log << quote;
+	return log << quote << ")";
 }
 
