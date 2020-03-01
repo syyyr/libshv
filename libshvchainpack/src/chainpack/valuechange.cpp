@@ -32,10 +32,18 @@ void ValueChange::MetaType::registerMetaType()
 	}
 }
 
+ValueChange::ValueChange(const RpcValue &val)
+	: Super(val)
+{
+	// see RpcMessage::registerMetaTypes
+	//MetaType::registerMetaType();
+	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
+}
+
 ValueChange::ValueChange(const RpcValue &val, unsigned short_time)
 	: Super(val)
 {
-	MetaType::registerMetaType();
+	//MetaType::registerMetaType();
 	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
 	setMetaValue(MetaType::Tag::ShortTime, short_time);
 }
@@ -43,7 +51,7 @@ ValueChange::ValueChange(const RpcValue &val, unsigned short_time)
 ValueChange::ValueChange(const RpcValue &val, const RpcValue::DateTime &date_time)
 	: Super(val)
 {
-	MetaType::registerMetaType();
+	//MetaType::registerMetaType();
 	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
 	setMetaValue(MetaType::Tag::DateTime, std::move(date_time));
 }
@@ -51,16 +59,19 @@ ValueChange::ValueChange(const RpcValue &val, const RpcValue::DateTime &date_tim
 ValueChange::ValueChange(const RpcValue &val, const RpcValue::DateTime &date_time, unsigned short_time)
 	: Super(val)
 {
-	MetaType::registerMetaType();
+	//MetaType::registerMetaType();
 	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
 	setMetaValue(MetaType::Tag::ShortTime, short_time);
 	setMetaValue(MetaType::Tag::DateTime, std::move(date_time));
 }
-
-ValueChange::ValueChange(const RpcValue &o)
-	: Super(o)
+/*
+ValueChange ValueChange::fromRpcValue(const RpcValue &o)
 {
+	if(isValueChange(o)) {
+		ValueChange ret(o, o.metaValue(MetaType::Tag::DateTime).toDateTime());
+	}
 }
+*/
 
 } // namespace chainpack
 } // namespace shv

@@ -28,10 +28,16 @@ public:
 	};
 public:
 	ValueChange() {}
+	ValueChange(const RpcValue &val);
 	ValueChange(const RpcValue &val, unsigned short_time);
 	ValueChange(const RpcValue &val, const shv::chainpack::RpcValue::DateTime &date_time);
 	ValueChange(const RpcValue &val, const shv::chainpack::RpcValue::DateTime &date_time, unsigned short_time);
-	ValueChange(const RpcValue &o);
+
+	static bool isValueChange(const RpcValue &rv)
+	{
+		return rv.metaTypeId() == shv::chainpack::ValueChange::MetaType::ID
+		        && rv.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID;
+	}
 
 	bool hasDateTime() const { return metaData().hasKey(MetaType::Tag::DateTime); }
 	shv::chainpack::RpcValue::DateTime dateTime() const { return metaValue(MetaType::Tag::DateTime).toDateTime(); }

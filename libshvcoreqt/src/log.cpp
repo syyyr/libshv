@@ -1,9 +1,10 @@
 #include "log.h"
+
 #include <QByteArray>
 #include <QString>
 #include <QtGlobal>
 
-
+#include <sstream>
 
 Q_DECL_CONSTEXPR inline char toHexUpper(uint value) Q_DECL_NOTHROW
 {
@@ -32,7 +33,9 @@ NecroLog &operator<<(NecroLog log, const QByteArray &input)
 	int length = input.length();
 	char quote(QLatin1Char('"').toLatin1());
 	
-	log << "ByteArayDump(" << quote;
+	std::stringstream slog;
+
+	slog << quote;
 
 	bool lastWasHexEscape = false;
 	const char *end = begin + length;
@@ -42,14 +45,14 @@ NecroLog &operator<<(NecroLog log, const QByteArray &input)
 			if (fromHex(*p) != -1) {
 				// yes, insert it
 				char quotes[] = "\"\"";
-				log << quotes;
+				slog << quotes;
 			}
 			lastWasHexEscape = false;
 		}
 
 		if (isPrintable(*p) && *p != '\\' && *p != '"') {
 			char c = *p;
-			log << c;
+			slog << c;
 			continue;
 		}
 
@@ -90,9 +93,10 @@ NecroLog &operator<<(NecroLog log, const QByteArray &input)
 			}
 		}
 		for (int i = 0; i < buflen; i++)
-			log << buf[i];
+			slog << buf[i];
 	}
 
-	return log << quote << ")";
+	slog << quote;
+	return log << slog.str();
 }
 
