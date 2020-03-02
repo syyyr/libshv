@@ -61,7 +61,6 @@ public:
 		bool journalDirExists = false;
 		std::vector<int64_t> files;
 		int64_t journalSize = -1;
-		//bool isConsistent = false;
 		int64_t lastFileSize = -1;
 		int64_t recentTimeStamp = 0;
 		std::string journalDir;

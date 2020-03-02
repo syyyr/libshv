@@ -288,7 +288,7 @@ void ShvFileJournal::checkJournalContext_helper(bool force)
 
 void ShvFileJournal::ensureJournalDir()
 {
-	if(!mkpath(m_journalContext.journalDir)) {
+	if(!mkpath(journalDir())) {
 		m_journalContext.journalDirExists = false;
 		SHV_EXCEPTION("Journal dir: " + m_journalContext.journalDir + " do not exists and cannot be created");
 	}
@@ -666,7 +666,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 						{
 							ShvJournalEntry e;
 							e.epochMsec = first_record_msec;
-							e.path = ShvJournalEntry::SNAPSHOT_END;
+							e.path = ShvJournalEntry::PATH_SNAPSHOT_END;
 							e.domain = ShvJournalEntry::DOMAIN_SHV_SYSTEM;
 							append_entry(e);
 						}

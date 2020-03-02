@@ -199,7 +199,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 			{
 				cp::RpcValue::List rec;
 				rec.push_back(cp::RpcValue::DateTime::fromMSecsSinceEpoch(first_record_msec));
-				rec.push_back(make_path_shared(ShvJournalEntry::SNAPSHOT_END));
+				rec.push_back(make_path_shared(ShvJournalEntry::PATH_SNAPSHOT_END));
 				rec.push_back(nullptr);
 				rec.push_back(nullptr);
 				rec.push_back(Entry::DOMAIN_SHV_SYSTEM);

@@ -21,15 +21,14 @@ static std::string getLine(std::istream &in, char sep)
 {
 	std::string line;
 	while(in) {
-		char buff[1024];
-		in.getline(buff, sizeof (buff), sep);
-		std::string s(buff);
-		line += s;
-		if(in.gcount() == (long)s.size()) {
-			// separator not found
-			continue;
-		}
-		break;
+		auto c = in.get();
+		if(c == std::char_traits<char>::eof())
+			return line;
+		if(c == sep)
+			return line;
+		if(c == 0)
+			continue; // sometimes log file contains zeros, skip them, istream::getline cannot handle this
+		line += std::char_traits<char>::to_char_type(c);
 	}
 	return line;
 }
