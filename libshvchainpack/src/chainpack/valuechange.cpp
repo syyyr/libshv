@@ -9,17 +9,14 @@ namespace chainpack {
 ValueChange::MetaType::MetaType()
 	: Super("ValueChange")
 {
-	/*
 	m_keys = {
 		RPC_META_KEY_DEF(Value),
 		RPC_META_KEY_DEF(DateTime),
 		RPC_META_KEY_DEF(ShortTime),
 	};
-	*/
-	m_tags = {
-		RPC_META_TAG_DEF(DateTime),
-		RPC_META_TAG_DEF(ShortTime)
-	};
+	//m_tags = {
+	//	RPC_META_TAG_DEF(shvPath)
+	//};
 }
 
 void ValueChange::MetaType::registerMetaType()
@@ -32,46 +29,39 @@ void ValueChange::MetaType::registerMetaType()
 	}
 }
 
-ValueChange::ValueChange(const RpcValue &val)
-	: Super(val)
-{
-	// see RpcMessage::registerMetaTypes
-	//MetaType::registerMetaType();
-	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
-}
-
 ValueChange::ValueChange(const RpcValue &val, unsigned short_time)
-	: Super(val)
+	: Super(RpcValue::IMap())
 {
 	//MetaType::registerMetaType();
 	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
-	setMetaValue(MetaType::Tag::ShortTime, short_time);
+	setValue(val);
+	setShortTime(short_time);
 }
 
 ValueChange::ValueChange(const RpcValue &val, const RpcValue::DateTime &date_time)
-	: Super(val)
+	: Super(RpcValue::IMap())
 {
 	//MetaType::registerMetaType();
 	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
-	setMetaValue(MetaType::Tag::DateTime, std::move(date_time));
+	setValue(val);
+	setDateTime(date_time);
 }
 
 ValueChange::ValueChange(const RpcValue &val, const RpcValue::DateTime &date_time, unsigned short_time)
-	: Super(val)
+	: Super(RpcValue::IMap())
 {
 	//MetaType::registerMetaType();
 	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
-	setMetaValue(MetaType::Tag::ShortTime, short_time);
-	setMetaValue(MetaType::Tag::DateTime, std::move(date_time));
+	setValue(val);
+	setDateTime(date_time);
+	setShortTime(short_time);
 }
-/*
-ValueChange ValueChange::fromRpcValue(const RpcValue &o)
+
+ValueChange::ValueChange(const RpcValue &o)
+	: Super(o)
 {
-	if(isValueChange(o)) {
-		ValueChange ret(o, o.metaValue(MetaType::Tag::DateTime).toDateTime());
-	}
+	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
 }
-*/
 
 } // namespace chainpack
 } // namespace shv
