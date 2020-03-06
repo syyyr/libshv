@@ -718,16 +718,30 @@ const char *RpcValue::typeToName(RpcValue::Type t)
 	case Type::Int: return "Int";
 	case Type::Double: return "Double";
 	case Type::Bool: return "Bool";
-	//case Type::Blob: return "Blob";
 	case Type::String: return "String";
 	case Type::List: return "List";
 	case Type::Map: return "Map";
 	case Type::IMap: return "IMap";
 	case Type::DateTime: return "DateTime";
-	//case Type::MetaIMap: return "MetaIMap";
 	case Type::Decimal: return "Decimal";
 	}
 	return "UNKNOWN"; // just to remove mingw warning
+}
+
+RpcValue::Type RpcValue::typeForName(const std::string &type_name)
+{
+	if(type_name == "Null") return Type::Null;
+	if(type_name == "UInt") return Type::UInt;
+	if(type_name == "Int") return Type::Int;
+	if(type_name == "Double") return Type::Double;
+	if(type_name == "Bool") return Type::Bool;
+	if(type_name == "String") return Type::String;
+	if(type_name == "List") return Type::List;
+	if(type_name == "Map") return Type::Map;
+	if(type_name == "IMap") return Type::IMap;
+	if(type_name == "DateTime") return Type::DateTime;
+	if(type_name == "Decimal") return Type::Decimal;
+	return Type::Invalid;
 }
 
 bool ChainPackMap::has(const RpcValue::String &key) const

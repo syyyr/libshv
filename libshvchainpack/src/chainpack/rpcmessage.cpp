@@ -15,16 +15,16 @@ RpcMessage::MetaType::MetaType()
 	: Super("RpcMessage")
 {
 	m_keys = {
-		{(int)Key::Params, {(int)Key::Params, "params"}},
-		{(int)Key::Result, {(int)Key::Result, "result"}},
-		{(int)Key::Error, {(int)Key::Error, "error"}},
-		{(int)Key::ErrorCode, {(int)Key::ErrorCode, "errorCode"}},
-		{(int)Key::ErrorMessage, {(int)Key::ErrorMessage, "errorMessage"}},
+		{(int)Key::Params, {(int)Key::Params, Rpc::PAR_PARAMS}},
+		{(int)Key::Result, {(int)Key::Result, Rpc::JSONRPC_RESULT}},
+		{(int)Key::Error, {(int)Key::Error, Rpc::JSONRPC_ERROR}},
+		{(int)Key::ErrorCode, {(int)Key::ErrorCode, Rpc::JSONRPC_ERROR_CODE}},
+		{(int)Key::ErrorMessage, {(int)Key::ErrorMessage, Rpc::JSONRPC_ERROR_MESSAGE}},
 	};
 	m_tags = {
-		{(int)Tag::RequestId, {(int)Tag::RequestId, "id"}},
-		{(int)Tag::ShvPath, {(int)Tag::ShvPath, "shvPath"}},
-		{(int)Tag::Method, {(int)Tag::Method, "method"}},
+		{(int)Tag::RequestId, {(int)Tag::RequestId, Rpc::JSONRPC_REQUEST_ID}},
+		{(int)Tag::ShvPath, {(int)Tag::ShvPath, Rpc::PAR_PATH}},
+		{(int)Tag::Method, {(int)Tag::Method, Rpc::PAR_METHOD}},
 		{(int)Tag::CallerIds, {(int)Tag::CallerIds, "cid"}},
 		{(int)Tag::ProtocolType, {(int)Tag::ProtocolType, "protocol"}},
 		{(int)Tag::RevCallerIds, {(int)Tag::RevCallerIds, "rcid"}},

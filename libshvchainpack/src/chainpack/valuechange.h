@@ -28,7 +28,7 @@ public:
 	};
 public:
 	ValueChange() {}
-	//ValueChange(const RpcValue &val);
+	ValueChange(const RpcValue &val);
 	ValueChange(const RpcValue &val, unsigned short_time);
 	ValueChange(const RpcValue &val, const shv::chainpack::RpcValue::DateTime &date_time);
 	ValueChange(const RpcValue &val, const shv::chainpack::RpcValue::DateTime &date_time, unsigned short_time);
@@ -39,6 +39,7 @@ public:
 				&& rv.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID;
 	}
 
+	shv::chainpack::RpcValue value() const { return this->toList().value(0); }
 	bool hasDateTime() const { return metaData().hasKey(MetaType::Tag::DateTime); }
 	shv::chainpack::RpcValue::DateTime dateTime() const { return metaValue(MetaType::Tag::DateTime).toDateTime(); }
 	void setDateTime(const shv::chainpack::RpcValue::DateTime &dt) { setMetaValue(MetaType::Tag::DateTime, dt); }

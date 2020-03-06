@@ -31,15 +31,15 @@ void ValueChange::MetaType::registerMetaType()
 		shv::chainpack::meta::registerType(shv::chainpack::meta::GlobalNS::ID, MetaType::ID, &s);
 	}
 }
-/*
+
 ValueChange::ValueChange(const RpcValue &val)
-	: Super(RpcValue::List{val})
+	: Super(isValueChange(val)? val: RpcValue::List{val})
 {
 	// see RpcMessage::registerMetaTypes
 	//MetaType::registerMetaType();
 	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
 }
-*/
+
 ValueChange::ValueChange(const RpcValue &val, unsigned short_time)
 	: Super(RpcValue::List{val})
 {
