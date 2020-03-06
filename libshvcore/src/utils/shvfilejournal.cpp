@@ -663,6 +663,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 							if((int)log.size() >= max_rec_cnt)
 								goto log_finish;
 						}
+						/*
 						{
 							ShvJournalEntry e;
 							e.epochMsec = first_record_msec;
@@ -670,6 +671,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 							e.domain = ShvJournalEntry::DOMAIN_SHV_SYSTEM;
 							append_entry(e);
 						}
+						*/
 						snapshot.clear();
 					}
 					if(params_until_msec == 0 || e.epochMsec < params_until_msec) { // keep interval open to make log merge simpler

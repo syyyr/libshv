@@ -20,7 +20,7 @@ public:
 	static const char *DOMAIN_SHV_SYSTEM;
 
 	static const char* PATH_APP_START;
-	static const char* PATH_SNAPSHOT_END;
+	//static const char* PATH_SNAPSHOT_END;
 	static const char* PATH_DATA_MISSING;
 	static const char* DATA_MISSING_DEVICE_DISCONNECTED;
 	static const char* DATA_MISSING_HP_DISCONNECTED;

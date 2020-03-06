@@ -197,6 +197,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 				if(rec_cnt >= rec_cnt_limit)
 					goto log_finish;
 			}
+			/*
 			{
 				cp::RpcValue::List rec;
 				rec.push_back(cp::RpcValue::DateTime::fromMSecsSinceEpoch(first_record_msec));
@@ -207,6 +208,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 				log.push_back(std::move(rec));
 				rec_cnt++;
 			}
+			*/
 		}
 	}
 	// keep <since, until) interval open to make log merge simpler
