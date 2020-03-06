@@ -18,7 +18,11 @@ namespace chainpack {
 		abort(); \
 	} \
 	else { \
-		throw CponReader::ParseException(std::string("Cpon ") + msg + std::string(" at pos: ") + std::to_string(m_in.tellg()) + " near to: " + buff, m_in.tellg()); \
+		throw CponReader::ParseException(std::string("Cpon ") \
+			+ msg \
+			+ std::string(" at pos: ") + std::to_string(m_in.tellg()) \
+			+ std::string(" line: ") + std::to_string(m_inCtx.parser_line_no) \
+			+ " near to: " + buff, m_in.tellg()); \
 	} \
 }
 
