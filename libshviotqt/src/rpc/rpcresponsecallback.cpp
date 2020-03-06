@@ -30,10 +30,12 @@ void RpcResponseCallBack::start()
 		m_timeoutTimer = new QTimer(this);
 		m_timeoutTimer->setSingleShot(true);
 		connect(m_timeoutTimer, &QTimer::timeout, this, [this]() {
+			shv::chainpack::RpcResponse resp;
+			resp.setError(shv::chainpack::RpcResponse::Error::create(shv::chainpack::RpcResponse::Error::MethodCallTimeout, "Shv call timeout"));
 			if(m_callBackFunction)
-				m_callBackFunction(shv::chainpack::RpcResponse());
+				m_callBackFunction(resp);
 			else
-				emit finished(shv::chainpack::RpcResponse());
+				emit finished(resp);
 			deleteLater();
 		});
 	}
@@ -76,25 +78,28 @@ void RpcResponseCallBack::start(int time_out_msec, QObject *context, RpcResponse
 
 void RpcResponseCallBack::abort()
 {
+	shv::chainpack::RpcResponse resp;
+	resp.setError(shv::chainpack::RpcResponse::Error::create(shv::chainpack::RpcResponse::Error::MethodCallCancelled, "Shv call aborted"));
+
 	if(m_callBackFunction)
-		m_callBackFunction(shv::chainpack::RpcResponse());
+		m_callBackFunction(resp);
 	else
-		emit finished(shv::chainpack::RpcResponse());
+		emit finished(resp);
 	deleteLater();
 }
 
 void RpcResponseCallBack::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 {
 	shvLogFuncFrame() << this << msg.toPrettyString();
-	if(m_timeoutTimer)
-		m_timeoutTimer->stop();
-	else
-		shvWarning() << "Callback was not started, time-out functionality cannot be provided!";
 	if(!msg.isResponse())
 		return;
 	cp::RpcResponse rsp(msg);
 	if(rsp.peekCallerId() != 0 || !(rsp.requestId() == requestId()))
 		return;
+	if(m_timeoutTimer)
+		m_timeoutTimer->stop();
+	else
+		shvWarning() << "Callback was not started, time-out functionality cannot be provided!";
 	if(m_callBackFunction)
 		m_callBackFunction(rsp);
 	else
