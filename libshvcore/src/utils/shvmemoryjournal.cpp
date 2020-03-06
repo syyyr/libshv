@@ -159,6 +159,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 		return ret;
 	};
 	int rec_cnt_limit = std::min(params.recordCountLimit, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
+	bool all_entries_visited = false;
 
 	PatternMatcher pm(params);
 
@@ -209,24 +210,29 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 		}
 	}
 	// keep <since, until) interval open to make log merge simpler
-	for(auto it = it1; it != it2; ++it) {
-		if(pm.match(*it)) {
-			if(first_record_msec == 0)
-				first_record_msec = it->epochMsec;
-			last_record_msec = it->epochMsec;
-			cp::RpcValue::List rec;
-			rec.push_back(cp::RpcValue::DateTime::fromMSecsSinceEpoch(it->epochMsec));
-			rec.push_back(make_path_shared(it->path));
-			rec.push_back(it->value);
-			rec.push_back(it->shortTime);
-			rec.push_back(it->domain.empty()? cp::RpcValue(nullptr): it->domain);
-			log.push_back(std::move(rec));
-			rec_cnt++;
-			if(rec_cnt >= rec_cnt_limit)
-				goto log_finish;
+	{
+		auto it = it1;
+		for(; it != it2; ++it) {
+			if(pm.match(*it)) {
+				if(first_record_msec == 0)
+					first_record_msec = it->epochMsec;
+				last_record_msec = it->epochMsec;
+				cp::RpcValue::List rec;
+				rec.push_back(cp::RpcValue::DateTime::fromMSecsSinceEpoch(it->epochMsec));
+				rec.push_back(make_path_shared(it->path));
+				rec.push_back(it->value);
+				rec.push_back(it->shortTime);
+				rec.push_back(it->domain.empty()? cp::RpcValue(nullptr): it->domain);
+				log.push_back(std::move(rec));
+				rec_cnt++;
+				if(rec_cnt >= rec_cnt_limit) {
+					++it;
+					break;
+				}
+			}
 		}
+		all_entries_visited = (it != it2);
 	}
-
 log_finish:
 	cp::RpcValue ret = log;
 	ShvLogHeader hdr;
@@ -246,7 +252,7 @@ log_finish:
 		hdr.setSince((since_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec)): cp::RpcValue(nullptr));
 		// if record count < limit and params until is specified and it is > log end, then set until to log end
 		int64_t until_msec = last_record_msec;
-		if(rec_cnt < rec_cnt_limit) {
+		if(rec_cnt < rec_cnt_limit || all_entries_visited) {
 			if(log_until_msec > 0) {
 				until_msec = log_until_msec;
 				if(params_until_msec > 0 && params_until_msec < until_msec) {
