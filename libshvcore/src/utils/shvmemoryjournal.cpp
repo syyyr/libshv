@@ -233,7 +233,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 				}
 			}
 		}
-		all_entries_visited = (it != it2);
+		all_entries_visited = (it == it2);
 	}
 log_finish:
 	cp::RpcValue ret = log;
