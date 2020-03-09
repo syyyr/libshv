@@ -18,4 +18,4 @@ public:
 }
 }
 
-#define SHV_QT_EXCEPTION(e) throw shv::coreqt::Exception(e, QString(__FILE__) + ":" + QString::number(__LINE__));
+#define SHV_QT_EXCEPTION(e) throw shv::coreqt::Exception(e, QString(__FILE__) + ":" + QString::number(__LINE__))
