@@ -6,7 +6,7 @@ export function BInt(n)
 	if(Number.isInteger(n)) {
 		this.val = BInt.parseInt(n);
 	}
-	else if(n.constructor.name === "Uint8Array") {
+	else if(n instanceof Uint8Array) {
 		this.val = n;
 	}
 	else {
@@ -45,7 +45,7 @@ BInt.prototype.byteCount = function()
 
 BInt.prototype.resize = function(byte_cnt)
 {
-	if(this.val.constructor.name !== "Uint8Array")
+	if(!(this.val instanceof Uint8Array))
 		throw TypeError(n + " cannot be resized");
 	if(byte_cnt < this.val.length) {
 		this.val = this.val.subarray(this.val.length - byte_cnt)

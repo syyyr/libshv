@@ -521,9 +521,9 @@ function CponWriter()
 
 CponWriter.prototype.write = function(rpc_val)
 {
-	if(!(rpc_val && rpc_val.constructor.name === "RpcValue"))
+	if(!(rpc_val && rpc_val instanceof RpcValue))
 		rpc_val = new RpcValue(rpc_val)
-	if(rpc_val && rpc_val.constructor.name === "RpcValue") {
+	if(rpc_val && rpc_val instanceof RpcValue) {
 		if(rpc_val.meta) {
 			this.writeMeta(rpc_val.meta);
 		}
