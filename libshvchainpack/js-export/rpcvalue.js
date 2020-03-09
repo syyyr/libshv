@@ -26,7 +26,7 @@ export function RpcValue(value, meta, type)
 		else if(Array.isArray(value))
 			this.type = RpcValue.Type.List;
 		else if(typeof value == "Object") {
-			if(value.constructor.name === "Date") {
+			if(value instanceof Date) {
 				this.value = {epochMsec: value.valueOf(), utcOffsetMin: -value.getTimezoneOffset()}
 				this.type = RpcValue.Type.DateTime;
 			}
