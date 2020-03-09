@@ -121,119 +121,124 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 	cp::RpcValue::Map path_cache;
 	int max_path_index = 0;
 	int rec_cnt = 0;
-	auto params_since_msec = params.since.isDateTime()? params.since.toDateTime().msecsSinceEpoch(): 0;
-	auto params_until_msec = params.until.isDateTime()? params.until.toDateTime().msecsSinceEpoch(): 0;
+
+	auto filter_since_msec = m_inputFilter.since.toDateTime().msecsSinceEpoch();
+	auto filter_until_msec = m_inputFilter.until.toDateTime().msecsSinceEpoch();
+
+	auto params_since_msec = params.since.toDateTime().msecsSinceEpoch();
+	auto params_until_msec = params.until.toDateTime().msecsSinceEpoch();
+
 	int64_t log_since_msec = m_logHeader.sinceMsec();
 	int64_t log_until_msec = m_logHeader.untilMsec();
-	int64_t first_record_msec = 0;
+
+	int64_t datavalid_since_msec = std::max(log_since_msec, filter_since_msec);
+	int64_t datavalid_until_msec = filter_until_msec;
+	if(log_until_msec > 0  && log_until_msec < datavalid_until_msec)
+		datavalid_until_msec = log_until_msec;
+
+	int64_t since_msec = std::max(datavalid_since_msec, params_since_msec);
+	int64_t until_msec = std::min(datavalid_until_msec, params_until_msec);
+
 	int64_t last_record_msec = 0;
-
-	auto it1 = m_entries.begin();
-	if(params_since_msec > 0) {
-		Entry e;
-		e.epochMsec = params_since_msec;
-		it1 = std::lower_bound(m_entries.begin(), m_entries.end(), e, [](const Entry &e1, const Entry &e2) {
-			return e1.epochMsec < e2.epochMsec;
-		});
-	}
-	auto it2 = m_entries.end();
-	if(params_until_msec > 0) {
-		Entry e;
-		e.epochMsec = params_until_msec;
-		it2 = std::upper_bound(m_entries.begin(), m_entries.end(), e, [](const Entry &e1, const Entry &e2) {
-			return e1.epochMsec < e2.epochMsec;
-		});
-	}
-
-	/// this ensure that there be only one copy of each path in memory
-	auto make_path_shared = [&path_cache, &max_path_index, &params](const std::string &path) -> cp::RpcValue {
-		cp::RpcValue ret = path_cache.value(path);
-		if(ret.isValid())
-			return ret;
-		if(params.withPathsDict)
-			ret = ++max_path_index;
-		else
-			ret = path;
-		logIShvJournal() << "Adding record to path cache:" << path << "-->" << ret.toCpon();
-		path_cache[path] = ret;
-		return ret;
-	};
 	int rec_cnt_limit = std::min(params.recordCountLimit, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 	bool all_entries_visited = false;
 
-	PatternMatcher pm(params);
+	if(params_since_msec > 0 && datavalid_until_msec > 0 && params_since_msec >= datavalid_until_msec)
+		goto log_finish;
+	if(params_until_msec > 0 && datavalid_since_msec > 0 && params_until_msec < datavalid_since_msec)
+		goto log_finish;
 
-	std::map<std::string, Entry> snapshot;
-	if(params.withSnapshot) {
-		for(auto kv : m_snapshot) {
-			const auto &e = kv.second;
-			if(pm.match(e)) {
-				if(first_record_msec == 0)
-					first_record_msec = e.epochMsec;
-				snapshot[e.path] = e;
-			}
-		}
-		for(auto it = m_entries.begin(); it != it1; ++it) {
-			const Entry &e = *it;
-			if(!pm.match(e))
-				continue;
-			if(e.sampleType == ShvJournalEntry::SampleType::Continuous) {
-				snapshot[e.path] = e;
-			}
-		}
-		if(!snapshot.empty()) {
-			logDShvJournal() << "\t -------------- Snapshot";
-			last_record_msec = first_record_msec;
-			for(const auto &kv : snapshot) {
-				cp::RpcValue::List rec;
-				const auto &entry = kv.second;
-				rec.push_back(cp::RpcValue::DateTime::fromMSecsSinceEpoch(first_record_msec));
-				rec.push_back(make_path_shared(entry.path));
-				rec.push_back(entry.value);
-				rec.push_back(entry.shortTime);
-				rec.push_back(entry.domain.empty()? cp::RpcValue(nullptr): entry.domain);
-				log.push_back(std::move(rec));
-				rec_cnt++;
-				if(rec_cnt >= rec_cnt_limit)
-					goto log_finish;
-			}
-			/*
-			{
-				cp::RpcValue::List rec;
-				rec.push_back(cp::RpcValue::DateTime::fromMSecsSinceEpoch(first_record_msec));
-				rec.push_back(make_path_shared(ShvJournalEntry::PATH_SNAPSHOT_END));
-				rec.push_back(nullptr);
-				rec.push_back(nullptr);
-				rec.push_back(Entry::DOMAIN_SHV_SYSTEM);
-				log.push_back(std::move(rec));
-				rec_cnt++;
-			}
-			*/
-		}
-	}
-	// keep <since, until) interval open to make log merge simpler
 	{
-		auto it = it1;
-		for(; it != it2; ++it) {
-			if(pm.match(*it)) {
-				if(first_record_msec == 0)
-					first_record_msec = it->epochMsec;
-				last_record_msec = it->epochMsec;
-				cp::RpcValue::List rec;
-				rec.push_back(cp::RpcValue::DateTime::fromMSecsSinceEpoch(it->epochMsec));
-				rec.push_back(make_path_shared(it->path));
-				rec.push_back(it->value);
-				rec.push_back(it->shortTime);
-				rec.push_back(it->domain.empty()? cp::RpcValue(nullptr): it->domain);
-				log.push_back(std::move(rec));
-				rec_cnt++;
-				if(rec_cnt >= rec_cnt_limit) {
-					++it;
-					break;
+
+		auto it1 = m_entries.begin();
+		if(params_since_msec > 0) {
+			Entry e;
+			e.epochMsec = params_since_msec;
+			it1 = std::lower_bound(m_entries.begin(), m_entries.end(), e, [](const Entry &e1, const Entry &e2) {
+				return e1.epochMsec < e2.epochMsec;
+			});
+		}
+		auto it2 = m_entries.end();
+		if(params_until_msec > 0) {
+			Entry e;
+			e.epochMsec = params_until_msec;
+			it2 = std::upper_bound(m_entries.begin(), m_entries.end(), e, [](const Entry &e1, const Entry &e2) {
+				return e1.epochMsec < e2.epochMsec;
+			});
+		}
+
+		/// this ensure that there be only one copy of each path in memory
+		auto make_path_shared = [&path_cache, &max_path_index, &params](const std::string &path) -> cp::RpcValue {
+			cp::RpcValue ret = path_cache.value(path);
+			if(ret.isValid())
+				return ret;
+			if(params.withPathsDict)
+				ret = ++max_path_index;
+			else
+				ret = path;
+			logIShvJournal() << "Adding record to path cache:" << path << "-->" << ret.toCpon();
+			path_cache[path] = ret;
+			return ret;
+		};
+
+		PatternMatcher pm(params);
+
+		std::map<std::string, Entry> snapshot;
+		if(params.withSnapshot) {
+			for(auto kv : m_snapshot) {
+				const auto &e = kv.second;
+				if(e.epochMsec < params_until_msec && pm.match(e)) {
+					snapshot[e.path] = e;
+				}
+			}
+			for(auto it = m_entries.begin(); it != it1; ++it) {
+				const Entry &e = *it;
+				if(!pm.match(e))
+					continue;
+				if(e.sampleType == ShvJournalEntry::SampleType::Continuous) {
+					snapshot[e.path] = e;
+				}
+			}
+			if(!snapshot.empty()) {
+				logDShvJournal() << "\t -------------- Snapshot";
+				last_record_msec = since_msec;
+				for(const auto &kv : snapshot) {
+					cp::RpcValue::List rec;
+					const auto &entry = kv.second;
+					rec.push_back(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec));
+					rec.push_back(make_path_shared(entry.path));
+					rec.push_back(entry.value);
+					rec.push_back(entry.shortTime);
+					rec.push_back(entry.domain.empty()? cp::RpcValue(nullptr): entry.domain);
+					log.push_back(std::move(rec));
+					rec_cnt++;
+					if(rec_cnt >= rec_cnt_limit)
+						goto log_finish;
 				}
 			}
 		}
+		// keep <since, until) interval open to make log merge simpler
+		{
+			auto it = it1;
+			for(; it != it2; ++it) {
+				if(pm.match(*it)) {
+					last_record_msec = it->epochMsec;
+					cp::RpcValue::List rec;
+					rec.push_back(cp::RpcValue::DateTime::fromMSecsSinceEpoch(it->epochMsec));
+					rec.push_back(make_path_shared(it->path));
+					rec.push_back(it->value);
+					rec.push_back(it->shortTime);
+					rec.push_back(it->domain.empty()? cp::RpcValue(nullptr): it->domain);
+					log.push_back(std::move(rec));
+					rec_cnt++;
+					if(rec_cnt >= rec_cnt_limit) {
+						++it;
+						break;
+					}
+				}
+			}
 		all_entries_visited = (it == it2);
+		}
 	}
 log_finish:
 	cp::RpcValue ret = log;
@@ -243,24 +248,11 @@ log_finish:
 		hdr.setDeviceType(m_logHeader.deviceType());
 		hdr.setDateTime(cp::RpcValue::DateTime::now());
 		hdr.setLogParams(params);
-		// if params since is specified and it is lower than log start, then set since to log start
-		int64_t since_msec = first_record_msec;
-		if(params_since_msec > 0 && log_since_msec > 0) {
-			since_msec = params_since_msec;
-			if(since_msec < log_since_msec) {
-				since_msec = log_since_msec;
-			}
-		}
+
 		hdr.setSince((since_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec)): cp::RpcValue(nullptr));
 		// if record count < limit and params until is specified and it is > log end, then set until to log end
-		int64_t until_msec = last_record_msec;
-		if(rec_cnt < rec_cnt_limit || all_entries_visited) {
-			if(log_until_msec > 0) {
-				until_msec = log_until_msec;
-				if(params_until_msec > 0 && params_until_msec < until_msec) {
-					until_msec = params_until_msec;
-				}
-			}
+		if(!(rec_cnt < rec_cnt_limit || all_entries_visited)) {
+			until_msec = last_record_msec;
 		}
 		hdr.setUntil((until_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(until_msec)): cp::RpcValue(nullptr));
 		hdr.setRecordCount(rec_cnt);
