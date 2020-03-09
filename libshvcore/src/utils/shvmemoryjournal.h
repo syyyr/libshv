@@ -19,8 +19,8 @@ public:
 	ShvMemoryJournal();
 	ShvMemoryJournal(const ShvGetLogParams &input_filter);
 
-	void setSince(int64_t since) { m_logHeader.setSince(since); }
-	void setUntil(int64_t until) { m_logHeader.setUntil(until); }
+	void setSince(const shv::chainpack::RpcValue &since) { m_logHeader.setSince(since); }
+	void setUntil(const shv::chainpack::RpcValue &until) { m_logHeader.setUntil(until); }
 	void setTypeInfo(const ShvLogTypeInfo &ti) {setTypeInfo(ShvLogTypeInfo(ti));}
 	void setTypeInfo(ShvLogTypeInfo &&ti) {m_logHeader.setTypeInfo(std::move(ti));}
 	void setTypeInfo(const std::string &path_prefix, ShvLogTypeInfo &&ti) {m_logHeader.setTypeInfo(path_prefix, std::move(ti));}
