@@ -112,6 +112,15 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 	}
 }
 
+static int64_t min_valid(int64_t a, int64_t b)
+{
+	if(a == 0)
+		return b;
+	if(b == 0)
+		return a;
+	return std::min(a, b);
+}
+
 chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 {
 	logIShvJournal() << "========================= getLog ==================";
@@ -132,16 +141,16 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 	int64_t log_until_msec = m_logHeader.untilMsec();
 
 	int64_t datavalid_since_msec = std::max(log_since_msec, filter_since_msec);
-	int64_t datavalid_until_msec = filter_until_msec;
-	if(log_until_msec > 0  && log_until_msec < datavalid_until_msec)
-		datavalid_until_msec = log_until_msec;
+	int64_t datavalid_until_msec = min_valid(log_until_msec, filter_until_msec);
 
 	int64_t since_msec = std::max(datavalid_since_msec, params_since_msec);
-	int64_t until_msec = std::min(datavalid_until_msec, params_until_msec);
+	int64_t until_msec = min_valid(datavalid_until_msec, params_until_msec);
 
-	int64_t last_record_msec = 0;
 	int rec_cnt_limit = std::min(params.recordCountLimit, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 	bool all_entries_visited = false;
+
+	//int64_t first_record_msec = 0;
+	int64_t last_record_msec = 0;
 
 	if(params_since_msec > 0 && datavalid_until_msec > 0 && params_since_msec >= datavalid_until_msec)
 		goto log_finish;
@@ -201,10 +210,12 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 			}
 			if(!snapshot.empty()) {
 				logDShvJournal() << "\t -------------- Snapshot";
-				last_record_msec = since_msec;
 				for(const auto &kv : snapshot) {
 					cp::RpcValue::List rec;
 					const auto &entry = kv.second;
+					if(since_msec == 0)
+						since_msec = entry.epochMsec;
+					last_record_msec = since_msec;
 					rec.push_back(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec));
 					rec.push_back(make_path_shared(entry.path));
 					rec.push_back(entry.value);
@@ -222,6 +233,8 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 			auto it = it1;
 			for(; it != it2; ++it) {
 				if(pm.match(*it)) {
+					if(since_msec == 0)
+						since_msec = it->epochMsec;
 					last_record_msec = it->epochMsec;
 					cp::RpcValue::List rec;
 					rec.push_back(cp::RpcValue::DateTime::fromMSecsSinceEpoch(it->epochMsec));
