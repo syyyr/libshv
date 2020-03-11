@@ -565,13 +565,17 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	const std::vector<std::string> &user_flattent_grants = is_request_from_master_broker
 			? std::vector<std::string>{request_grant.role} // master broker has allways grant masterBroker
 			: aclManager()->userFlattenRolesSortedByWeight(conn->loggedUserName());
-	std::string most_specific_role;
+	logAclResolveD() << "userFlattenRolesSortedByWeight";
+	for(const auto &v : user_flattent_grants)
+		logAclResolveD() << '\t' << v << "weight:" << aclManager()->role(v).weight;
+
+	//std::string most_specific_role;
 	cp::PathAccessGrant most_specific_path_grant;
 	size_t most_specific_path_len = 0;
 	// find most specific path grant for role with highest weight
 	// user_flattent_grants are sorted by weight DESC
 	for(const std::string &role : user_flattent_grants) {
-		logAclResolveD() << "cheking role:" << role << "weight:" << aclManager()->role(role).weight;
+		logAclResolveD() << "checking role:" << role << "weight:" << aclManager()->role(role).weight;
 		const AclRolePaths &role_paths = aclManager()->accessRolePaths(role);
 		for(const auto &kv : role_paths) {
 			const std::string &role_path = kv.first;
@@ -587,7 +591,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 				most_specific_path_grant = kv.second;
 				//shvInfo() << "role:" << most_specific_path_grant.role << "level:" << most_specific_path_grant.accessLevel;
 				logAclResolveD() << "\t\t HIT:" << most_specific_path_grant.toRpcValue().toCpon();
-				most_specific_role = role;
+				//most_specific_role = role;
 			} while(false);
 		}
 		if(most_specific_path_grant.isValid()) {

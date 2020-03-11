@@ -246,7 +246,7 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 	const chainpack::RpcValue &rq_grant = rq.accessGrant();
 	const cp::RpcValue &mm_grant = mm->accessGrant();
 	if(grantToAccessLevel(mm_grant) > grantToAccessLevel(rq_grant))
-		SHV_EXCEPTION(std::string("Call method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' permission denied.");
+		SHV_EXCEPTION(std::string("Call method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' permission denied, grant: " + rq_grant.toCpon() + " required: " + mm_grant.toCpon());
 	return callMethodRq(rq);
 }
 
