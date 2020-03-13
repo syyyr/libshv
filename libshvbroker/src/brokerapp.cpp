@@ -562,56 +562,44 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 			return cp::AccessGrant();
 		}
 	}
-	const std::vector<std::string> &user_roles = is_request_from_master_broker
-			? std::vector<std::string>{request_grant.role} // master broker has allways grant masterBroker
-			: aclManager()->userFlattenRolesSortedByWeight(conn->loggedUserName());
+	const std::set<AclManager::FlattenRole> &user_roles = is_request_from_master_broker
+			? std::set<AclManager::FlattenRole>{AclManager::FlattenRole{request_grant.role}} // master broker has allways grant masterBroker
+			: aclManager()->userFlattenRoles(conn->loggedUserName());
 
 	// find most specific path grant for role with highest weight
 	// user_flattent_grants are sorted by weight DESC
 	cp::PathAccessGrant most_specific_path_grant;
 	std::string most_specific_path;
+	int most_specific_path_weight = std::numeric_limits<int>::min();
 
-	for (size_t ix = 0; ix < user_roles.size(); ) {
-		AclRole acl_role = aclManager()->role(user_roles[ix]);
-		int current_weight = acl_role.weight;
-		logAclResolveD() << "----- checking roles with weight:" << current_weight << "-----";
-
-		do {
-			logAclResolveD() << "role:" << user_roles[ix];
-			const AclRolePaths &role_paths = aclManager()->accessRolePaths(user_roles[ix]);
-			if(role_paths.empty()) {
-				logAclResolveD() << "\t no paths defined.";
-			}
-			else for(const auto &kv : role_paths) {
-				const std::string &role_path = kv.first;
-				logAclResolveD().nospace() << "\t path: '" << role_path << "' len: " << role_path.size();
-				if(role_path.size() <= most_specific_path.size()) {
-					logAclResolveD().nospace() << "\t\t more specific path with len: " << most_specific_path.size() << " found already";
-				}
-				else {
-					shv::iotqt::node::ShvNode::StringViewList role_path_pattern = shv::core::utils::ShvPath::split(role_path);
-					if(shv::core::utils::ShvPath::matchWild(shv_path_lst, role_path_pattern)) {
-						most_specific_path = role_path;
-						most_specific_path_grant = kv.second;
-						logAclResolveD().nospace() << "\t\t MATCH, path: '" << role_path << "' matches requested path: '" << rq_shv_path << "'";;
-					}
-					else {
-						logAclResolveD().nospace() << "\t\t path: '" << role_path << "' does not match requested path: '" << rq_shv_path << "'";
-					}
-				}
-			}
-			if(ix < user_roles.size() - 1) {
-				acl_role = aclManager()->role(user_roles[++ix]);
-				if(acl_role.weight != current_weight)
-					break;
+	for(const AclManager::FlattenRole &flatten_role : user_roles) {
+		if(most_specific_path_weight != std::numeric_limits<int>::min() && flatten_role.weight < most_specific_path_weight) {
+			// roles with lower weight are lower priority, skip them
+			break;
+		}
+		logAclResolveD() << "----- checking role:" << flatten_role.name << "with weight:" << flatten_role.weight << "nest level:" << flatten_role.nestLevel;
+		const AclRolePaths &role_paths = aclManager()->accessRolePaths(flatten_role.name);
+		if(role_paths.empty()) {
+			logAclResolveD() << "\t no paths defined.";
+		}
+		else for(const auto &kv : role_paths) {
+			const std::string &role_path = kv.first;
+			logAclResolveD().nospace() << "\t path: '" << role_path << "' len: " << role_path.size();
+			if(role_path.size() <= most_specific_path.size()) {
+				logAclResolveD().nospace() << "\t\t more or same specific path with len: " << most_specific_path.size() << " found already";
 			}
 			else {
-				break;
+				shv::iotqt::node::ShvNode::StringViewList role_path_pattern = shv::core::utils::ShvPath::split(role_path);
+				if(shv::core::utils::ShvPath::matchWild(shv_path_lst, role_path_pattern)) {
+					most_specific_path = role_path;
+					most_specific_path_grant = kv.second;
+					most_specific_path_weight = flatten_role.weight;
+					logAclResolveD().nospace() << "\t\t MATCH, path: '" << role_path << "' matches requested path: '" << rq_shv_path << "'";
+				}
+				else {
+					logAclResolveD().nospace() << "\t\t path: '" << role_path << "' does not match requested path: '" << rq_shv_path << "'";
+				}
 			}
-		} while(acl_role.weight == current_weight);
-		if(most_specific_path_grant.isValid()) {
-			// rest of roles have lower weight
-			break;
 		}
 	}
 #ifdef USE_SHV_PATHS_GRANTS_CACHE

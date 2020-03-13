@@ -71,33 +71,23 @@ BrokerNode::BrokerNode(shv::iotqt::node::ShvNode *parent)
 		{cp::Rpc::METH_ECHO, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_BROWSE},
 		{M_APP_VERSION, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_BROWSE},
 		{M_GIT_COMMIT, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
-		{M_MOUNT_POINTS_FOR_CLIENT_ID, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_READ},
-		{cp::Rpc::METH_SUBSCRIBE, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_READ},
-		{cp::Rpc::METH_UNSUBSCRIBE, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_READ},
+		{M_MOUNT_POINTS_FOR_CLIENT_ID, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
+		{cp::Rpc::METH_SUBSCRIBE, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
+		{cp::Rpc::METH_UNSUBSCRIBE, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 		{cp::Rpc::METH_REJECT_NOT_SUBSCRIBED, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_READ},
-		{M_RELOAD_CONFIG, cp::MetaMethod::Signature::VoidVoid, 0, cp::Rpc::ROLE_SERVICE},
-		{M_RESTART, cp::MetaMethod::Signature::VoidVoid, 0, cp::Rpc::ROLE_SERVICE},
+		{M_RELOAD_CONFIG, cp::MetaMethod::Signature::VoidVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_SERVICE},
+		{M_RESTART, cp::MetaMethod::Signature::VoidVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_SERVICE},
 	}
 {
 	new BrokerLogNode(this);
 }
 
-shv::chainpack::RpcValue BrokerNode::processRpcRequest(const shv::chainpack::RpcRequest &rq)
+chainpack::RpcValue BrokerNode::callMethodRq(const chainpack::RpcRequest &rq)
 {
 	const cp::RpcValue::String &shv_path = rq.shvPath().toString();
 	//StringViewList shv_path = StringView(path).split('/');
 	if(shv_path.empty()) {
 		const cp::RpcValue::String method = rq.method().toString();
-		if(method == M_APP_VERSION) {
-			return BrokerApp::applicationVersion().toStdString();
-		}
-		if(method == M_GIT_COMMIT) {
-#ifdef GIT_COMMIT
-			return SHV_EXPAND_AND_QUOTE(GIT_COMMIT);
-#else
-			return "N/A";
-#endif
-		}
 		if(method == cp::Rpc::METH_SUBSCRIBE) {
 			const shv::chainpack::RpcValue parms = rq.params();
 			const shv::chainpack::RpcValue::Map &pm = parms.toMap();
@@ -124,7 +114,7 @@ shv::chainpack::RpcValue BrokerNode::processRpcRequest(const shv::chainpack::Rpc
 			return BrokerApp::instance()->rejectNotSubscribedSignal(client_id, path, method);
 		}
 	}
-	return Super::processRpcRequest(rq);
+	return Super::callMethodRq(rq);
 }
 
 shv::chainpack::RpcValue BrokerNode::callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
@@ -135,6 +125,16 @@ shv::chainpack::RpcValue BrokerNode::callMethod(const StringViewList &shv_path, 
 		}
 		if(method == cp::Rpc::METH_ECHO) {
 			return params.isValid()? params: nullptr;
+		}
+		if(method == M_APP_VERSION) {
+			return BrokerApp::applicationVersion().toStdString();
+		}
+		if(method == M_GIT_COMMIT) {
+#ifdef GIT_COMMIT
+			return SHV_EXPAND_AND_QUOTE(GIT_COMMIT);
+#else
+			return "N/A";
+#endif
 		}
 		if(method == M_MOUNT_POINTS_FOR_CLIENT_ID) {
 			rpc::ClientBrokerConnection *client = BrokerApp::instance()->clientById(params.toInt());

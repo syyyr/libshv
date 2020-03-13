@@ -237,44 +237,39 @@ void AclManager::aclSetAccessRolePaths(const std::string &role_name, const AclRo
 	SHV_EXCEPTION("Role paths definition is read only.");
 }
 
-std::set<std::string> AclManager::flattenRole_helper(const std::string &role_name)
+std::set<AclManager::FlattenRole> AclManager::flattenRole_helper(const std::string &role_name, int nest_level)
 {
-	std::set<std::string> ret;
+	std::set<FlattenRole> ret;
 	AclRole ar = aclRole(role_name);
 	if(ar.isValid()) {
-		ret.insert(role_name);
+		FlattenRole fr{role_name, ar.weight, nest_level};
+		ret.insert(std::move(fr));
 		for(auto g : ar.roles) {
-			if(ret.count(g)) {
-				shvWarning() << "Cyclic reference in grants detected for grant name:" << g;
+			for(const auto &r : ret)
+			if(r.name == g) {
+				shvWarning() << "Cyclic reference in roles detected for name:" << g;
+				continue;
 			}
-			else {
-				std::set<std::string> gg = flattenRole_helper(g);
-				ret.insert(gg.begin(), gg.end());
-			}
+			auto gg = flattenRole_helper(g, ++nest_level);
+			ret.insert(gg.begin(), gg.end());
 		}
 	}
 	return ret;
 }
 
-std::vector<std::string> AclManager::userFlattenRolesSortedByWeight(const std::string &user_name)
+std::set<AclManager::FlattenRole> AclManager::userFlattenRoles(const std::string &user_name)
 {
 	if(m_cache.userFlattenRoles.find(user_name) == m_cache.userFlattenRoles.end()) {
-		std::set<std::string> unique_roles;
 		AclUser user_def = aclUser(user_name);
 		if(!user_def.isValid())
-			return std::vector<std::string>();
+			return std::set<FlattenRole>();
 
+		std::set<AclManager::FlattenRole> unique_roles;
 		for(auto role : user_def.roles) {
-			std::set<std::string> gg = flattenRole_helper(role);
+			auto gg = flattenRole_helper(role, 1);
 			unique_roles.insert(gg.begin(), gg.end());
 		}
-		std::vector<std::string> roles;
-		for(auto s : unique_roles)
-			roles.push_back(s);
-		std::sort(roles.begin(), roles.end(), [this](const std::string &a, const std::string &b) {
-			return role(a).weight > role(b).weight;
-		});
-		m_cache.userFlattenRoles[user_name] = roles;
+		m_cache.userFlattenRoles[user_name] = unique_roles;
 	}
 	return m_cache.userFlattenRoles[user_name];
 }
