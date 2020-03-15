@@ -22,6 +22,8 @@ public:
 	static const char* PATH_APP_START;
 	//static const char* PATH_SNAPSHOT_END;
 	static const char* PATH_DATA_MISSING;
+	static const char* PATH_DATA_DIRTY;
+
 	static const char* DATA_MISSING_DEVICE_DISCONNECTED;
 	static const char* DATA_MISSING_HP_DISCONNECTED;
 	static const char* DATA_MISSING_LOG_FILE_CORRUPTED;
