@@ -64,8 +64,10 @@ chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v, bool *ok)
 	if(v.isNull())
 		return chainpack::RpcValue(nullptr);
 	switch (v.userType()) {
+	case QMetaType::UChar:
 	case QMetaType::UShort:
 	case QMetaType::UInt: return chainpack::RpcValue(v.toUInt());
+	case QMetaType::Char:
 	case QMetaType::Short:
 	case QMetaType::Int: return chainpack::RpcValue(v.toInt());
 	case QMetaType::Float:
