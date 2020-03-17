@@ -9,7 +9,8 @@
 #include <sstream>
 #endif
 
-#define SHV_SAFE_DELETE(x) if(x != nullptr) {delete x; x = nullptr;}
+// do while is to suppress of semicolon warning SHV_SAFE_DELETE(ptr);
+#define SHV_SAFE_DELETE(x) do if(x != nullptr) {delete x; x = nullptr;} while(false)
 
 #define SHV_QUOTE(x) #x
 #define SHV_EXPAND_AND_QUOTE(x) SHV_QUOTE(x)
