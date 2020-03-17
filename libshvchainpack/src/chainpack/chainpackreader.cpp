@@ -179,8 +179,11 @@ void ChainPackReader::read(RpcValue &val)
 	default:
 		PARSE_EXCEPTION("Invalid type.");
 	}
-	if(!md.isEmpty())
+	if(!md.isEmpty()) {
+		if(!val.isValid())
+			PARSE_EXCEPTION("Attempt to set metadata to invalid RPC value.");
 		val.setMetaData(std::move(md));
+	}
 }
 
 void ChainPackReader::parseList(RpcValue &val)
