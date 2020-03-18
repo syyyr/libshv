@@ -39,7 +39,7 @@ public:
 		//MetaMap,
 	};
 	static const char* typeToName(Type t);
-	static Type typeForName(const std::string &type_name);
+	static Type typeForName(const std::string &type_name, int len = -1);
 
 	using Int = int; //int64_t;
 	using UInt = unsigned; //uint64_t;
