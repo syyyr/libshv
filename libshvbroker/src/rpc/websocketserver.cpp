@@ -7,6 +7,7 @@
 #include <shv/coreqt/log.h>
 
 #include <QFile>
+#include <QDir>
 #include <QSslKey>
 #include <QWebSocket>
 
@@ -18,9 +19,16 @@ WebSocketServer::WebSocketServer(SslMode secureMode, QObject *parent)
 	: Super("shvbroker", secureMode, parent)
 {
 	if (secureMode == SecureMode) {
+		AppCliOptions *opts = BrokerApp::instance()->cliOptions();
+		QString cert_fn = QString::fromStdString(opts->serverSslCertFile());
+		if(QDir::isRelativePath(cert_fn))
+			cert_fn = QString::fromStdString(opts->configDir()) + '/' + cert_fn;
+		QString key_fn = QString::fromStdString(opts->serverSslKeyFile());
+		if(QDir::isRelativePath(key_fn))
+			key_fn = QString::fromStdString(opts->configDir()) + '/' + key_fn;
 		QSslConfiguration sslConfiguration;
-		QFile certFile(QString::fromStdString(BrokerApp::instance()->cliOptions()->configDir() + "/wss.crt"));
-		QFile keyFile(QString::fromStdString(BrokerApp::instance()->cliOptions()->configDir() + "/wss.key"));
+		QFile certFile(cert_fn);
+		QFile keyFile(key_fn);
 		certFile.open(QIODevice::ReadOnly);
 		keyFile.open(QIODevice::ReadOnly);
 		QSslCertificate certificate(&certFile, QSsl::Pem);
@@ -82,8 +90,9 @@ void WebSocketServer::onNewConnection()
 	shvInfo() << "New WebSocket connection";
 	QWebSocket *sock = nextPendingConnection();
 	if(sock) {
-		shvInfo().nospace() << "web socket client connected: " << sock->peerAddress().toString() << ':' << sock->peerPort();// << "socket:" << sock << sock->socketDescriptor() << "state:" << sock->state();
 		ClientBrokerConnection *c = createServerConnection(sock, this);
+		shvInfo().nospace() << "web socket client connected: " << sock->peerAddress().toString() << ':' << sock->peerPort()
+							<< " connection ID: " << c->connectionId();
 		c->setConnectionName(sock->peerAddress().toString().toStdString() + ':' + std::to_string(sock->peerPort()));
 		m_connections[c->connectionId()] = c;
 		int cid = c->connectionId();

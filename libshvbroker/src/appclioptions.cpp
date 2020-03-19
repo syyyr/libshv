@@ -15,6 +15,10 @@ AppCliOptions::AppCliOptions()
 			.setComment("Web socket server port, set this option to enable websocket server").setDefaultValue(3777);
 	addOption("server.websocket.sslport").setType(cp::RpcValue::Type::Int).setNames("--server-wss-port")
 			.setComment("Secure web socket server port, set this option to enable secure websocket server").setDefaultValue(3778);
+	addOption("server.ssl.key").setType(cp::RpcValue::Type::String).setNames("--server-ssl-key")
+			.setComment("SSL key file").setDefaultValue("wss.key");
+	addOption("server.ssl.cert").setType(cp::RpcValue::Type::String).setNames("--server-ssl-cert")
+			.setComment("SSL certificate file").setDefaultValue("wss.crt");
 #endif
 	addOption("server.publicIP").setType(cp::RpcValue::Type::String).setNames("--pip", "--server-public-ip").setComment("Server public IP address");
 	addOption("sqlconfig.enabled").setType(cp::RpcValue::Type::Bool).setNames("--sql-config-enabled")

@@ -52,7 +52,7 @@
 
 //#define logAccessM() nCMessage("Access")
 
-#define logAclResolveD() nCDebug("AclResolve")
+//#define logAclResolveD() nCDebug("AclResolve")
 #define logAclResolveM() nCMessage("AclResolve")
 
 #define logSubscriptionsD() nCDebug("Subscr").color(NecroLog::Color::Yellow)
@@ -368,10 +368,18 @@ void BrokerApp::startWebSocketServers()
 
 rpc::ClientBrokerConnection *BrokerApp::clientConnectionById(int connection_id)
 {
+	shvLogFuncFrame() << "conn id:" << connection_id;
 	rpc::ClientBrokerConnection *conn = tcpServer()->connectionById(connection_id);
+	shvDebug() << "tcp connection:" << conn;
 #ifdef WITH_SHV_WEBSOCKETS
-	if(!conn && m_webSocketServer)
+	if(!conn && m_webSocketServer) {
 		conn = m_webSocketServer->connectionById(connection_id);
+		shvDebug() << "ws connection:" << conn;
+	}
+	if(!conn && m_webSocketSslServer) {
+		conn = m_webSocketSslServer->connectionById(connection_id);
+		shvDebug() << "wss connection:" << conn;
+	}
 #endif
 	return conn;
 }
@@ -385,6 +393,10 @@ std::vector<int> BrokerApp::clientConnectionIds()
 #ifdef WITH_SHV_WEBSOCKETS
 	if(m_webSocketServer) {
 		std::vector<int> ids2 = m_webSocketServer->connectionIds();
+		ids.insert( ids.end(), ids2.begin(), ids2.end() );
+	}
+	if(m_webSocketSslServer) {
+		std::vector<int> ids2 = m_webSocketSslServer->connectionIds();
 		ids.insert( ids.end(), ids2.begin(), ids2.end() );
 	}
 #endif
@@ -537,7 +549,7 @@ static std::string join_string_list(const std::vector<std::string> &ss, char sep
 */
 chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHandle *conn, const std::string &rq_shv_path, const shv::chainpack::RpcValue &rq_grant)
 {
-	logAclResolveD() << "=== accessGrantForShvPath user:" << conn->loggedUserName() << "requested path:" << rq_shv_path << "request grant:" << rq_grant.toCpon();
+	logAclResolveM() << "=== accessGrantForShvPath user:" << conn->loggedUserName() << "requested path:" << rq_shv_path << "request grant:" << rq_grant.toCpon();
 #ifdef USE_SHV_PATHS_GRANTS_CACHE
 	PathGrantCache *user_path_grants = m_userPathGrantCache.object(user_name);
 	if(user_path_grants) {
@@ -580,16 +592,16 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 			// roles with lower weight are lower priority, skip them
 			break;
 		}
-		logAclResolveD() << "----- checking role:" << flatten_role.name << "with weight:" << flatten_role.weight << "nest level:" << flatten_role.nestLevel;
+		logAclResolveM() << "----- checking role:" << flatten_role.name << "with weight:" << flatten_role.weight << "nest level:" << flatten_role.nestLevel;
 		const AclRolePaths &role_paths = aclManager()->accessRolePaths(flatten_role.name);
 		if(role_paths.empty()) {
-			logAclResolveD() << "\t no paths defined.";
+			logAclResolveM() << "\t no paths defined.";
 		}
 		else for(const auto &kv : role_paths) {
 			const std::string &role_path = kv.first;
-			logAclResolveD().nospace() << "\t path: '" << role_path << "' len: " << role_path.size();
+			logAclResolveM().nospace() << "\t path: '" << role_path << "' len: " << role_path.size();
 			if(role_path.size() <= most_specific_path.size()) {
-				logAclResolveD().nospace() << "\t\t more or same specific path with len: " << most_specific_path.size() << " found already";
+				logAclResolveM().nospace() << "\t\t more or same specific path with len: " << most_specific_path.size() << " found already";
 			}
 			else {
 				shv::iotqt::node::ShvNode::StringViewList role_path_pattern = shv::core::utils::ShvPath::split(role_path);
@@ -598,10 +610,10 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 					most_specific_path_grant = kv.second;
 					most_specific_path_weight = flatten_role.weight;
 					most_specific_path_nest_level = flatten_role.nestLevel;
-					logAclResolveD().nospace() << "\t\t MATCH, path: '" << role_path << "' matches requested path: '" << rq_shv_path << "'";
+					logAclResolveM().nospace() << "\t\t MATCH, path: '" << role_path << "' matches requested path: '" << rq_shv_path << "'";
 				}
 				else {
-					logAclResolveD().nospace() << "\t\t path: '" << role_path << "' does not match requested path: '" << rq_shv_path << "'";
+					logAclResolveM().nospace() << "\t\t path: '" << role_path << "' does not match requested path: '" << rq_shv_path << "'";
 				}
 			}
 		}
@@ -615,7 +627,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	if(user_path_grants)
 		user_path_grants->insert(shv_path, new cp::Rpc::AccessGrant(ret));
 #endif
-	logAclResolveD() << "access user:" << conn->loggedUserName()
+	logAclResolveM() << "access user:" << conn->loggedUserName()
 				 << "shv_path:" << rq_shv_path
 				 << "rq_grant:" << (rq_grant.isValid()? rq_grant.toCpon(): "<none>")
 				 //<< "grants:" << join_string_list(user_flattent_grants, ',')
