@@ -48,12 +48,12 @@ public:
 	};
 public:
 	MetaMethod() {}
-	MetaMethod(std::string name, Signature ms, unsigned flags = 0, const shv::chainpack::RpcValue &access_grant = shv::chainpack::Rpc::ROLE_BROWSE)
+	MetaMethod(std::string name, Signature ms, unsigned flags = 0, const shv::chainpack::RpcValue &access_grant = shv::chainpack::Rpc::ROLE_BROWSE, const std::string &description = std::string())
 	    : m_name(std::move(name))
 	    , m_signature(ms)
 	    , m_flags(flags)
-	    //, m_accessLevel(access_level)
-	    , m_accessGrant(access_grant)
+		, m_accessGrant(access_grant)
+		, m_description(description)
 	{}
 
 	//static constexpr bool IsSignal = true;
@@ -85,6 +85,7 @@ private:
 	Signature m_signature = Signature::VoidVoid;
 	unsigned m_flags = 0;
 	shv::chainpack::RpcValue m_accessGrant;
+	std::string m_description;
 };
 
 } // namespace chainpack
