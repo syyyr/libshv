@@ -324,7 +324,7 @@ void BrokerApp::reloadAcl()
 
 void BrokerApp::startTcpServer()
 {
-	SHV_SAFE_DELETE(m_tcpServer)
+	SHV_SAFE_DELETE(m_tcpServer);
 	m_tcpServer = new rpc::BrokerTcpServer(this);
 	if(!m_tcpServer->start(cliOptions()->serverPort())) {
 		SHV_EXCEPTION("Cannot start TCP server!");
@@ -336,7 +336,7 @@ void BrokerApp::startWebSocketServers()
 #ifdef WITH_SHV_WEBSOCKETS
 	auto *opts = cliOptions();
 	if(opts->serverWebsocketPort_isset()) {
-		SHV_SAFE_DELETE(m_webSocketServer)
+		SHV_SAFE_DELETE(m_webSocketServer);
 		int port = opts->serverWebsocketPort();
 		if(port > 0) {
 		m_webSocketServer = new rpc::WebSocketServer(QWebSocketServer::NonSecureMode, this);
@@ -349,7 +349,7 @@ void BrokerApp::startWebSocketServers()
 		shvInfo() << "Websocket server port is not set, it will not be started.";
 	}
 	if(opts->serverWebsocketSslPort_isset()) {
-		SHV_SAFE_DELETE(m_webSocketSslServer)
+		SHV_SAFE_DELETE(m_webSocketSslServer);
 		int port = opts->serverWebsocketSslPort();
 		if(port > 0) {
 		m_webSocketSslServer = new rpc::WebSocketServer(QWebSocketServer::SecureMode, this);
@@ -571,9 +571,12 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	cp::PathAccessGrant most_specific_path_grant;
 	std::string most_specific_path;
 	int most_specific_path_weight = std::numeric_limits<int>::min();
+	int most_specific_path_nest_level = std::numeric_limits<int>::max();
 
+	// roles are sorted in weight DESC nest_level ASC
 	for(const AclManager::FlattenRole &flatten_role : user_roles) {
-		if(most_specific_path_weight != std::numeric_limits<int>::min() && flatten_role.weight < most_specific_path_weight) {
+		if(most_specific_path_weight != std::numeric_limits<int>::min()
+				&& (flatten_role.weight < most_specific_path_weight || flatten_role.nestLevel > most_specific_path_nest_level)) {
 			// roles with lower weight are lower priority, skip them
 			break;
 		}
@@ -594,6 +597,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 					most_specific_path = role_path;
 					most_specific_path_grant = kv.second;
 					most_specific_path_weight = flatten_role.weight;
+					most_specific_path_nest_level = flatten_role.nestLevel;
 					logAclResolveD().nospace() << "\t\t MATCH, path: '" << role_path << "' matches requested path: '" << rq_shv_path << "'";
 				}
 				else {

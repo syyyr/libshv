@@ -55,7 +55,7 @@ public:
 		bool operator<(const FlattenRole &o) const {
 			if(weight == o.weight)
 				return nestLevel < o.nestLevel;
-			return weight < o.weight;
+			return weight > o.weight;
 		}
 	};
 	std::set<FlattenRole> userFlattenRoles(const std::string &user_name);
