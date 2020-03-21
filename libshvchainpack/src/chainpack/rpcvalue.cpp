@@ -60,16 +60,12 @@ time_t timegm(struct tm *tm)
 namespace shv {
 namespace chainpack {
 
-/*
-using std::string;
-*/
 class RpcValue::AbstractValueData
 {
 public:
 	virtual ~AbstractValueData() {}
 
 	virtual RpcValue::Type type() const {return RpcValue::Type::Invalid;}
-	//virtual RpcValue::Type arrayType() const {return RpcValue::Type::Invalid;}
 
 	virtual const RpcValue::MetaData &metaData() const = 0;
 	virtual void setMetaData(RpcValue::MetaData &&meta_data) = 0;
@@ -89,7 +85,6 @@ public:
 	virtual bool toBool() const {return false;}
 	virtual RpcValue::DateTime toDateTime() const { return RpcValue::DateTime{}; }
 	virtual const std::string &toString() const;
-	//virtual const RpcValue::Blob &toBlob() const;
 	virtual const RpcValue::List &toList() const;
 	virtual const RpcValue::Map &toMap() const;
 	virtual const RpcValue::IMap &toIMap() const;
@@ -106,9 +101,9 @@ public:
 	virtual std::string toStdString() const = 0;
 };
 
-/* * * * * * * * * * * * * * * * * * * *
- * Value wrappers
- */
+//==============================================
+// value wrappers
+//==============================================
 
 template <RpcValue::Type tag, typename T>
 class ValueData : public RpcValue::AbstractValueData
@@ -166,7 +161,7 @@ class ChainPackDouble final : public ValueData<RpcValue::Type::Double, double>
 {
 	std::string toStdString() const override { return shv::chainpack::Utils::toString(m_value); }
 	double toDouble() const override { return m_value; }
-	bool toBool() const override { return !(m_value == 0); }
+	bool toBool() const override { return !(m_value == 0.); }
 	RpcValue::Int toInt() const override { return static_cast<RpcValue::Int>(m_value); }
 	RpcValue::UInt toUInt() const override { return static_cast<RpcValue::UInt>(m_value); }
 	int64_t toInt64() const override { return static_cast<int64_t>(m_value); }
@@ -369,7 +364,6 @@ public:
 
 /* * * * * * * * * * * * * * * * * * * *
  * Static globals - static-init-safe
- */
 struct Statics
 {
 	const std::shared_ptr<RpcValue::AbstractValueData> null = std::make_shared<ChainPackNull>();
@@ -385,12 +379,9 @@ static const Statics & statics()
 	static const Statics s {};
 	return s;
 }
+ */
 
-static const RpcValue::String & static_empty_string() { return statics().empty_string; }
-//static const RpcValue::Blob & static_empty_blob() { return statics().empty_blob; }
-
-//static const RpcValue & static_chain_pack_invalid() { static const RpcValue s{}; return s; }
-//static const ChainPack & static_chain_pack_null() { static const ChainPack s{statics().null}; return s; }
+static const RpcValue::String & static_empty_string() { static const RpcValue::String s{}; return s; }
 static const RpcValue::List & static_empty_list() { static const RpcValue::List s{}; return s; }
 static const RpcValue::Map & static_empty_map() { static const RpcValue::Map s{}; return s; }
 static const RpcValue::IMap & static_empty_imap() { static const RpcValue::IMap s{}; return s; }
@@ -419,14 +410,14 @@ RpcValue RpcValue::fromType(RpcValue::Type t) noexcept
 	}
 	return RpcValue();
 }
-RpcValue::RpcValue(std::nullptr_t) noexcept : m_ptr(statics().null) {}
+RpcValue::RpcValue(std::nullptr_t) noexcept : m_ptr(std::make_shared<ChainPackNull>()) {}
 RpcValue::RpcValue(double value) : m_ptr(std::make_shared<ChainPackDouble>(value)) {}
 RpcValue::RpcValue(RpcValue::Decimal value) : m_ptr(std::make_shared<ChainPackDecimal>(std::move(value))) {}
 RpcValue::RpcValue(int32_t value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
 RpcValue::RpcValue(uint32_t value) : m_ptr(std::make_shared<ChainPackUInt>(value)) {}
 RpcValue::RpcValue(int64_t value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
 RpcValue::RpcValue(uint64_t value) : m_ptr(std::make_shared<ChainPackUInt>(value)) {}
-RpcValue::RpcValue(bool value) : m_ptr(value ? statics().t : statics().f) {}
+RpcValue::RpcValue(bool value) : m_ptr(std::make_shared<ChainPackBoolean>(value)) {}
 RpcValue::RpcValue(const DateTime &value) : m_ptr(std::make_shared<ChainPackDateTime>(value)) {}
 
 //RpcValue::RpcValue(const RpcValue::Blob &value) : m_ptr(std::make_shared<ChainPackBlob>(value)) {}
@@ -706,6 +697,21 @@ RpcValue RpcValue::fromChainPack(const std::string &str, std::string *err)
 	else {
 		rd >> ret;
 	}
+	return ret;
+}
+
+RpcValue RpcValue::clone(bool clone_meta_data) const
+{
+	if(!isValid())
+		return RpcValue();
+	std::string cp = toChainPack();
+	std::istringstream in(cp);
+	ChainPackReader rd(in);
+	if(!clone_meta_data) {
+		RpcValue::MetaData md;
+		rd.read(md);
+	}
+	RpcValue ret = rd.read();
 	return ret;
 }
 

@@ -418,7 +418,7 @@ private:
 			int x;
 			int y;
 			Point (int x, int y) : x(x), y(y) {}
-			RpcValue to_json() const { return RpcValue::List { x, y }; }
+			RpcValue toRpcValue() const { return RpcValue::List { x, y }; }
 		};
 
 		std::vector<Point> points = { { 1, 2 }, { 10, 20 }, { 100, 200 } };
@@ -434,6 +434,13 @@ private:
 			QVERIFY(rpcval.metaValue(1) == 2);
 			QVERIFY(rpcval.metaValue(8) == "foo");
 			QVERIFY(rpcval.at(3) == 19);
+		}
+		{
+			auto rpcval = RpcValue::fromCpon(R"(<1:2,2:12,8:"foo",9:[1,2,3],"bar":"baz",>["META",17,18,19])");
+			auto rv1 = rpcval.clone();
+			QVERIFY(rpcval == rv1);
+			auto rv2 = rpcval.clone(false);
+			QVERIFY(RpcValue(rpcval.toList()) == rv2);
 		}
 	}
 

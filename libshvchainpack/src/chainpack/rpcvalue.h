@@ -246,7 +246,7 @@ public:
 		std::string toPrettyString() const;
 		std::string toString(const std::string &indent = std::string()) const;
 	private:
-		MetaData& operator =(const MetaData &o);
+		MetaData& operator=(const MetaData &o);
 		void swap(MetaData &o);
 	private:
 		RpcValue::IMap *m_imap = nullptr;
@@ -269,24 +269,20 @@ public:
 	RpcValue(double value);             // Double
 	RpcValue(Decimal value);             // Decimal
 	RpcValue(const DateTime &value);
-	//RpcValue(const Blob &value); // Blob
-	//RpcValue(Blob &&value);
 	RpcValue(const uint8_t *value, size_t size);
 	RpcValue(const std::string &value); // String
 	RpcValue(std::string &&value);      // String
 	RpcValue(const char *value);       // String
 	RpcValue(const List &values);      // List
 	RpcValue(List &&values);           // List
-	//RpcValue(const Array &values);
-	//RpcValue(Array &&values);
 	RpcValue(const Map &values);     // Map
 	RpcValue(Map &&values);          // Map
 	RpcValue(const IMap &values);     // IMap
 	RpcValue(IMap &&values);          // IMap
 
-	// Implicit constructor: anything with a to_json() function.
-	template <class T, class = decltype(&T::to_json)>
-	RpcValue(const T & t) : RpcValue(t.to_json()) {}
+	// Implicit constructor: anything with a toRpcValue() function.
+	template <class T, class = decltype(&T::toRpcValue)>
+	RpcValue(const T & t) : RpcValue(t.toRpcValue()) {}
 
 	// Implicit constructor: map-like objects (std::map, std::unordered_map, etc)
 	template <class M, typename std::enable_if<
@@ -301,12 +297,11 @@ public:
 				  int>::type = 0>
 	RpcValue(const V & v) : RpcValue(List(v.begin(), v.end())) {}
 
-	// This prevents ChainPack(some_pointer) from accidentally producing a bool. Use
-	// ChainPack(bool(some_pointer)) if that behavior is desired.
+	// This prevents RpcValue(some_pointer) from accidentally producing a bool. Use
+	// RpcValue(bool(some_pointer)) if that behavior is desired.
 	RpcValue(void *) = delete;
 
 	Type type() const;
-	//Type arrayType() const;
 	static RpcValue fromType(RpcValue::Type t) noexcept;
 
 	const MetaData &metaData() const;
@@ -330,7 +325,6 @@ public:
 	bool isDecimal() const { return type() == Type::Decimal; }
 	bool isDateTime() const { return type() == Type::DateTime; }
 	bool isList() const { return type() == Type::List; }
-	//bool isArray() const { return type() == Type::Array; }
 	bool isMap() const { return type() == Type::Map; }
 	bool isIMap() const { return type() == Type::IMap; }
 
@@ -343,9 +337,7 @@ public:
 	bool toBool() const;
 	DateTime toDateTime() const;
 	const RpcValue::String &toString() const;
-	//const Blob &toBlob() const;
 	const List &toList() const;
-	//const Array &toArray() const;
 	const Map &toMap() const;
 	const IMap &toIMap() const;
 
@@ -356,8 +348,6 @@ public:
 	RpcValue at(Int i, const RpcValue &def_val) const  { return has(i)? at(i): def_val; }
 	RpcValue at(const RpcValue::String &key) const;
 	RpcValue at(const RpcValue::String &key, const RpcValue &def_val) const  { return has(key)? at(key): def_val; }
-	//RpcValue operator[](Int i) const {return at(i);}
-	//RpcValue operator[](const RpcValue::String &key) const {return at(key);}
 	void set(Int ix, const RpcValue &val);
 	void set(const RpcValue::String &key, const RpcValue &val);
 	void append(const RpcValue &val);
@@ -369,6 +359,8 @@ public:
 
 	std::string toChainPack() const;
 	static RpcValue fromChainPack(const std::string & str, std::string *err = nullptr);
+	static constexpr bool CloneMetaData = true;
+	RpcValue clone(bool clone_meta_data = CloneMetaData) const;
 
 	bool operator== (const RpcValue &rhs) const;
 	bool operator!= (const RpcValue &rhs) const {return !operator==(rhs);}
