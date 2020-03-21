@@ -1,5 +1,7 @@
 #include "valuechange.h"
 
+#include <necrolog.h>
+
 namespace shv {
 namespace chainpack {
 
@@ -32,37 +34,68 @@ void ValueChange::MetaType::registerMetaType()
 	}
 }
 
-ValueChange::ValueChange(const RpcValue &val)
-	: Super(isValueChange(val)? val: RpcValue::List{val})
+ValueChange::ValueChange(const RpcValue &val, const RpcValue &date_time)
+	: ValueChange(val, date_time, RpcValue())
 {
-	// see RpcMessage::registerMetaTypes
-	//MetaType::registerMetaType();
-	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
 }
 
-ValueChange::ValueChange(const RpcValue &val, unsigned short_time)
-	: Super(RpcValue::List{val})
+ValueChange::ValueChange(const RpcValue &val, const RpcValue &date_time, const RpcValue &short_time)
+	: m_value(val)
+	, m_dateTime(date_time)
+	, m_shortTime(short_time)
 {
-	//MetaType::registerMetaType();
-	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
-	setMetaValue(MetaType::Tag::ShortTime, short_time);
+	if(isValueChange(val))
+		nWarning() << "Storing ValueChange to value (ValueChange inside ValueChange):" << val.toCpon();
 }
 
-ValueChange::ValueChange(const RpcValue &val, const RpcValue::DateTime &date_time)
-	: Super(RpcValue::List{val})
+void ValueChange::setValue(const RpcValue &val)
 {
-	//MetaType::registerMetaType();
-	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
-	setMetaValue(MetaType::Tag::DateTime, std::move(date_time));
+	m_value = val;
+	if(isValueChange(val))
+		nWarning() << "Storing ValueChange to value (ValueChange inside ValueChange):" << val.toCpon();
 }
 
-ValueChange::ValueChange(const RpcValue &val, const RpcValue::DateTime &date_time, unsigned short_time)
-	: Super(RpcValue::List{val})
+ValueChange ValueChange::fromRpcValue(const RpcValue &val)
 {
-	//MetaType::registerMetaType();
-	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
-	setMetaValue(MetaType::Tag::ShortTime, short_time);
-	setMetaValue(MetaType::Tag::DateTime, std::move(date_time));
+	if(isValueChange(val)) {
+		ValueChange ret;
+		if(val.isList()) {
+			const RpcValue::List &lst = val.toList();
+			if(lst.size() == 1) {
+				RpcValue wrapped_val = val.toList().value(0);
+				if(!wrapped_val.metaData().isEmpty()) {
+					ret.setValue(wrapped_val.clone(RpcValue::CloneMetaData));
+					goto set_meta_data;
+				}
+			}
+		}
+		ret.setValue(val.clone(!RpcValue::CloneMetaData));
+set_meta_data:
+		ret.setDateTime(val.metaValue(MetaType::Tag::DateTime));
+		ret.setShortTime(val.metaValue(MetaType::Tag::ShortTime));
+		return ret;
+	}
+	return ValueChange(val.clone(RpcValue::CloneMetaData), RpcValue());
+}
+
+RpcValue ValueChange::toRpcValue() const
+{
+	RpcValue ret;
+	if(m_value.isValid()) {
+		if(m_value.metaData().isEmpty())
+			ret = m_value.clone();
+		else
+			ret = RpcValue::List{m_value};
+	}
+	else {
+		ret = RpcValue{nullptr};
+	}
+	ret.setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
+	if(m_dateTime.isDateTime())
+		ret.setMetaValue(MetaType::Tag::DateTime, m_dateTime.toDateTime());
+	if(m_shortTime.isUInt())
+		ret.setMetaValue(MetaType::Tag::ShortTime, m_shortTime);
+	return ret;
 }
 
 } // namespace chainpack

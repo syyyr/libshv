@@ -8,9 +8,8 @@
 namespace shv {
 namespace chainpack {
 
-class SHVCHAINPACK_DECL_EXPORT ValueChange : public shv::chainpack::RpcValue
+class SHVCHAINPACK_DECL_EXPORT ValueChange
 {
-	using Super = shv::chainpack::RpcValue;
 public:
 	class MetaType : public chainpack::meta::MetaType
 	{
@@ -28,10 +27,8 @@ public:
 	};
 public:
 	ValueChange() {}
-	ValueChange(const RpcValue &val);
-	ValueChange(const RpcValue &val, unsigned short_time);
-	ValueChange(const RpcValue &val, const shv::chainpack::RpcValue::DateTime &date_time);
-	ValueChange(const RpcValue &val, const shv::chainpack::RpcValue::DateTime &date_time, unsigned short_time);
+	ValueChange(const RpcValue &val, const RpcValue &date_time);
+	ValueChange(const RpcValue &val, const RpcValue &date_time, const RpcValue &short_time);
 
 	static bool isValueChange(const RpcValue &rv)
 	{
@@ -39,14 +36,23 @@ public:
 				&& rv.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID;
 	}
 
-	shv::chainpack::RpcValue value() const { return this->toList().value(0); }
-	bool hasDateTime() const { return metaData().hasKey(MetaType::Tag::DateTime); }
-	shv::chainpack::RpcValue::DateTime dateTime() const { return metaValue(MetaType::Tag::DateTime).toDateTime(); }
-	void setDateTime(const shv::chainpack::RpcValue::DateTime &dt) { setMetaValue(MetaType::Tag::DateTime, dt); }
+	RpcValue value() const { return m_value; }
+	void setValue(const RpcValue &val);
 
-	bool hasShortTime() const { return metaData().hasKey(MetaType::Tag::ShortTime); }
-	unsigned shortTime() const { return metaValue(MetaType::Tag::ShortTime).toUInt(); }
-	void setShortTime(unsigned t) { setMetaValue(MetaType::Tag::ShortTime, t); }
+	bool hasDateTime() const { return m_dateTime.isDateTime(); }
+	RpcValue dateTime() const { return m_dateTime.isDateTime()? m_dateTime: RpcValue(); }
+	void setDateTime(const RpcValue &dt) { m_dateTime = dt.isDateTime()? dt: RpcValue(); }
+
+	bool hasShortTime() const { return m_shortTime.isUInt(); }
+	RpcValue shortTime() const { return m_shortTime.isUInt()? m_shortTime: RpcValue(); }
+	void setShortTime(const RpcValue &st) { m_shortTime = st.isUInt()? st: RpcValue(); }
+
+	static ValueChange fromRpcValue(const RpcValue &val);
+	RpcValue toRpcValue() const;
+private:
+	RpcValue m_value;
+	RpcValue m_dateTime;
+	RpcValue m_shortTime;
 };
 
 } // namespace chainpack
