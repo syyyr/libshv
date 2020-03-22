@@ -38,7 +38,7 @@ static uint16_t shortTime()
 */
 #define SHV_STATBUF              struct stat64
 #define SHV_STAT                 ::stat64
-#ifdef __unix
+#if defined(__unix) || defined(__APPLE__)
 #define SHV_MKDIR(dir_name)      ::mkdir(dir_name, 0777)
 #else
 #define SHV_MKDIR(dir_name)      ::mkdir(dir_name)
