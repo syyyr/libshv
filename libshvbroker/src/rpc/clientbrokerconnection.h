@@ -40,6 +40,9 @@ public:
 	void addMountPoint(const std::string &mp);
 	const std::vector<std::string>& mountPoints() const {return m_mountPoints;}
 
+	int idleTime() const;
+	int idleTimeMax() const;
+
 	std::string resolveLocalPath(const std::string rel_path);
 
 	void setIdleWatchDogTimeOut(int sec);

@@ -62,28 +62,41 @@ void ClientBrokerConnection::addMountPoint(const std::string &mp)
 	m_mountPoints.push_back(mp);
 }
 
+int ClientBrokerConnection::idleTime() const
+{
+	if(!m_idleWatchDogTimer || !m_idleWatchDogTimer->isActive())
+		return -1;
+	int t = m_idleWatchDogTimer->interval() - m_idleWatchDogTimer->remainingTime();
+	if(t < 0)
+		t = 0;
+	return t;
+}
+
+int ClientBrokerConnection::idleTimeMax() const
+{
+	if(!m_idleWatchDogTimer || !m_idleWatchDogTimer->isActive())
+		return -1;
+	return  m_idleWatchDogTimer->interval();
+}
+
 void ClientBrokerConnection::setIdleWatchDogTimeOut(int sec)
 {
 	if(sec == 0) {
-		shvInfo() << "connection ID:" << connectionId() << "switching idle watch dog timeout OFF";
-		if(m_idleWatchDogTimer) {
-			delete m_idleWatchDogTimer;
-			m_idleWatchDogTimer = nullptr;
-		}
+		static constexpr int MAX_IDLE_TIME_SEC = 12 * 60 * 60;
+		shvInfo() << "connection ID:" << connectionId() << "Cannot switch idle watch dog timeout OFF entirely, the inactive connections can last forever then, setting to max time:" << MAX_IDLE_TIME_SEC;
+		sec = MAX_IDLE_TIME_SEC;
 	}
-	else {
-		if(!m_idleWatchDogTimer) {
-			m_idleWatchDogTimer = new QTimer(this);
-			connect(m_idleWatchDogTimer, &QTimer::timeout, [this]() {
-				std::string mount_points = shv::core::String::join(mountPoints(), ", ");
-				shvError() << "Connection id:" << connectionId() << "device id:" << deviceId().toCpon() << "mount points:" << mount_points
-						   << "was idle for more than" << m_idleWatchDogTimer->interval()/1000 << "sec. It will be aborted.";
-				this->abort();
-			});
-		}
-		shvInfo() << "connection ID:" << connectionId() << "setting idle watch dog timeout to" << sec << "seconds";
-		m_idleWatchDogTimer->start(sec * 1000);
+	if(!m_idleWatchDogTimer) {
+		m_idleWatchDogTimer = new QTimer(this);
+		connect(m_idleWatchDogTimer, &QTimer::timeout, [this]() {
+			std::string mount_points = shv::core::String::join(mountPoints(), ", ");
+			shvError() << "Connection id:" << connectionId() << "device id:" << deviceId().toCpon() << "mount points:" << mount_points
+					   << "was idle for more than" << m_idleWatchDogTimer->interval()/1000 << "sec. It will be aborted.";
+			this->abort();
+		});
 	}
+	shvInfo() << "connection ID:" << connectionId() << "setting idle watch dog timeout to" << sec << "seconds";
+	m_idleWatchDogTimer->start(sec * 1000);
 }
 
 void ClientBrokerConnection::sendMessage(const shv::chainpack::RpcMessage &rpc_msg)
@@ -175,6 +188,10 @@ bool ClientBrokerConnection::checkPassword(const chainpack::UserLogin &login)
 */
 void ClientBrokerConnection::processLoginPhase()
 {
+	const shv::chainpack::RpcValue::Map &opts = connectionOptions();
+	shvWarning() << connectionId() << cp::RpcValue(opts).toCpon();
+	auto t = opts.value(cp::Rpc::OPT_IDLE_WD_TIMEOUT, 3 * 60).toInt();
+	setIdleWatchDogTimeOut(t);
 	if(tunnelOptions().isMap()) {
 		std::string secret = tunnelOptions().toMap().value(cp::Rpc::KEY_SECRET).toString();
 		cp::UserLoginResult result;
@@ -192,9 +209,6 @@ void ClientBrokerConnection::setLoginResult(const chainpack::UserLoginResult &re
 	auto login_result = result;
 	login_result.clientId = connectionId();
 	Super::setLoginResult(login_result);
-	const shv::chainpack::RpcValue::Map &opts = connectionOptions();
-	auto t = opts.value(cp::Rpc::OPT_IDLE_WD_TIMEOUT).toInt();
-	setIdleWatchDogTimeOut(t);
 	BrokerApp::instance()->onClientLogin(connectionId());
 }
 

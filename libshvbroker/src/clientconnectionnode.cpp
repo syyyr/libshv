@@ -13,6 +13,8 @@ namespace broker {
 static const char M_MOUNT_POINTS[] = "mountPoints";
 static const char M_DROP_CLIENT[] = "dropClient";
 static const char M_USER_NAME[] = "userName";
+static const char M_IDLE_TIME[] = "idleTime";
+static const char M_IDLE_TIME_MAX[] = "idleTimeMax";
 
 //=================================================================================
 // MasterBrokerConnectionNode
@@ -23,6 +25,8 @@ static std::vector<cp::MetaMethod> meta_methods {
 	{M_USER_NAME, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_SERVICE},
 	{M_MOUNT_POINTS, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_SERVICE},
 	{M_DROP_CLIENT, cp::MetaMethod::Signature::VoidVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_SERVICE},
+	{M_IDLE_TIME, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_SERVICE, "Connection inactivity time in msec."},
+	{M_IDLE_TIME_MAX, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_SERVICE, "Maximum connection inactivity time in msec, before it is closed by server."},
 };
 
 ClientConnectionNode::ClientConnectionNode(int client_id, shv::iotqt::node::ShvNode *parent)
@@ -48,7 +52,19 @@ shv::chainpack::RpcValue ClientConnectionNode::callMethod(const shv::iotqt::node
 				for(auto s : cli->mountPoints())
 					ret.push_back(s);
 			}
-			return cp::RpcValue(ret);
+			return std::move(ret);
+		}
+		if(method == M_IDLE_TIME) {
+			rpc::ClientBrokerConnection *cli = BrokerApp::instance()->clientById(m_clientId);
+			if(cli)
+				return cli->idleTime();
+			SHV_EXCEPTION("Invalid client id: " + std::to_string(m_clientId));
+		}
+		if(method == M_IDLE_TIME_MAX) {
+			rpc::ClientBrokerConnection *cli = BrokerApp::instance()->clientById(m_clientId);
+			if(cli)
+				return cli->idleTimeMax();
+			SHV_EXCEPTION("Invalid client id: " + std::to_string(m_clientId));
 		}
 		if(method == M_DROP_CLIENT) {
 			rpc::ClientBrokerConnection *cli = BrokerApp::instance()->clientById(m_clientId);

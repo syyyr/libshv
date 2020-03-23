@@ -44,7 +44,7 @@ void BrokerConnection::setOptions(const chainpack::RpcValue &slave_broker_option
 		}
 		const cp::RpcValue::Map &rpc = m.value("rpc").toMap();
 		if(rpc.count("heartbeatInterval") == 1)
-			device_opts.setHeartbeatInterval(rpc.value("heartbeatInterval").toInt());
+			device_opts.setHeartbeatInterval(rpc.value("heartbeatInterval", 60).toInt());
 		if(rpc.count("reconnectInterval") == 1)
 			device_opts.setReconnectInterval(rpc.value("reconnectInterval").toInt());
 
