@@ -200,12 +200,14 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 					snapshot[e.path] = e;
 				}
 			}
-			for(auto it = m_entries.begin(); it != it1; ++it) {
+			for(auto it = m_entries.begin(); it != m_entries.end() && it <= it1; ++it) {
 				const Entry &e = *it;
-				if(!pm.match(e))
-					continue;
-				if(e.sampleType == ShvJournalEntry::SampleType::Continuous) {
-					snapshot[e.path] = e;
+				if (it < it1 || e.epochMsec == since_msec) {
+					if(!pm.match(e))
+						continue;
+					if(e.sampleType == ShvJournalEntry::SampleType::Continuous) {
+						snapshot[e.path] = e;
+					}
 				}
 			}
 			if(!snapshot.empty()) {
