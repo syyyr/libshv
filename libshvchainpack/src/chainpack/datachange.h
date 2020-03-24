@@ -8,14 +8,14 @@
 namespace shv {
 namespace chainpack {
 
-class SHVCHAINPACK_DECL_EXPORT ValueChange
+class SHVCHAINPACK_DECL_EXPORT DataChange
 {
 public:
 	class MetaType : public chainpack::meta::MetaType
 	{
 		using Super = chainpack::meta::MetaType;
 	public:
-		enum {ID = chainpack::meta::GlobalNS::MetaTypeId::ValueChange};
+		enum {ID = chainpack::meta::GlobalNS::MetaTypeId::DataChange};
 		struct Tag { enum Enum {DateTime = chainpack::meta::Tag::USER,
 								ShortTime,
 								MAX};};
@@ -26,13 +26,13 @@ public:
 		static void registerMetaType();
 	};
 public:
-	ValueChange() {}
-	ValueChange(const RpcValue &val, const RpcValue &date_time);
-	ValueChange(const RpcValue &val, const RpcValue &date_time, const RpcValue &short_time);
+	DataChange() {}
+	DataChange(const RpcValue &val, const RpcValue &date_time);
+	DataChange(const RpcValue &val, const RpcValue &date_time, const RpcValue &short_time);
 
 	static bool isValueChange(const RpcValue &rv)
 	{
-		return rv.metaTypeId() == shv::chainpack::ValueChange::MetaType::ID
+		return rv.metaTypeId() == shv::chainpack::DataChange::MetaType::ID
 				&& rv.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID;
 	}
 
@@ -47,7 +47,7 @@ public:
 	RpcValue shortTime() const { return m_shortTime.isUInt()? m_shortTime: RpcValue(); }
 	void setShortTime(const RpcValue &st) { m_shortTime = st.isUInt()? st: RpcValue(); }
 
-	static ValueChange fromRpcValue(const RpcValue &val);
+	static DataChange fromRpcValue(const RpcValue &val);
 	RpcValue toRpcValue() const;
 private:
 	RpcValue m_value;

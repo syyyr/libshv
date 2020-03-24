@@ -91,7 +91,7 @@ public:
 			RpcConnectionParams,
 			TunnelCtl,
 			AccessGrant,
-			ValueChange,
+			DataChange,
 		};
 	};
 };

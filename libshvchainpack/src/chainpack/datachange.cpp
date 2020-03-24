@@ -1,4 +1,4 @@
-#include "valuechange.h"
+#include "datachange.h"
 
 #include <necrolog.h>
 
@@ -8,7 +8,7 @@ namespace chainpack {
 //================================================================
 // ValueChange
 //================================================================
-ValueChange::MetaType::MetaType()
+DataChange::MetaType::MetaType()
 	: Super("ValueChange")
 {
 	/*
@@ -24,7 +24,7 @@ ValueChange::MetaType::MetaType()
 	};
 }
 
-void ValueChange::MetaType::registerMetaType()
+void DataChange::MetaType::registerMetaType()
 {
 	static bool is_init = false;
 	if(!is_init) {
@@ -34,12 +34,12 @@ void ValueChange::MetaType::registerMetaType()
 	}
 }
 
-ValueChange::ValueChange(const RpcValue &val, const RpcValue &date_time)
-	: ValueChange(val, date_time, RpcValue())
+DataChange::DataChange(const RpcValue &val, const RpcValue &date_time)
+	: DataChange(val, date_time, RpcValue())
 {
 }
 
-ValueChange::ValueChange(const RpcValue &val, const RpcValue &date_time, const RpcValue &short_time)
+DataChange::DataChange(const RpcValue &val, const RpcValue &date_time, const RpcValue &short_time)
 	: m_value(val)
 	, m_dateTime(date_time)
 	, m_shortTime(short_time)
@@ -48,17 +48,17 @@ ValueChange::ValueChange(const RpcValue &val, const RpcValue &date_time, const R
 		nWarning() << "Storing ValueChange to value (ValueChange inside ValueChange):" << val.toCpon();
 }
 
-void ValueChange::setValue(const RpcValue &val)
+void DataChange::setValue(const RpcValue &val)
 {
 	m_value = val;
 	if(isValueChange(val))
 		nWarning() << "Storing ValueChange to value (ValueChange inside ValueChange):" << val.toCpon();
 }
 
-ValueChange ValueChange::fromRpcValue(const RpcValue &val)
+DataChange DataChange::fromRpcValue(const RpcValue &val)
 {
 	if(isValueChange(val)) {
-		ValueChange ret;
+		DataChange ret;
 		if(val.isList()) {
 			const RpcValue::List &lst = val.toList();
 			if(lst.size() == 1) {
@@ -75,10 +75,10 @@ set_meta_data:
 		ret.setShortTime(val.metaValue(MetaType::Tag::ShortTime));
 		return ret;
 	}
-	return ValueChange(val.clone(RpcValue::CloneMetaData), RpcValue());
+	return DataChange(val.clone(RpcValue::CloneMetaData), RpcValue());
 }
 
-RpcValue ValueChange::toRpcValue() const
+RpcValue DataChange::toRpcValue() const
 {
 	RpcValue ret;
 	if(m_value.isValid()) {

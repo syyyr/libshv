@@ -1,4 +1,5 @@
 SOURCES += \
+    $$PWD/datachange.cpp \
     $$PWD/rpc.cpp \
     $$PWD/rpcmessage.cpp \
     $$PWD/rpcvalue.cpp \
@@ -18,10 +19,10 @@ SOURCES += \
     $$PWD/metamethod.cpp \
     $$PWD/tunnelctl.cpp \
     $$PWD/irpcconnection.cpp \
-    $$PWD/accessgrant.cpp \
-    $$PWD/valuechange.cpp
+    $$PWD/accessgrant.cpp
 
 HEADERS += \
+    $$PWD/datachange.h \
     $$PWD/rpc.h \
     $$PWD/rpcmessage.h \
     $$PWD/rpcvalue.h \
@@ -41,8 +42,7 @@ HEADERS += \
     $$PWD/metamethod.h \
     $$PWD/tunnelctl.h \
     $$PWD/irpcconnection.h \
-    $$PWD/accessgrant.h \
-    $$PWD/valuechange.h
+    $$PWD/accessgrant.h
 
 unix {
 SOURCES += \
