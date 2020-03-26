@@ -5,6 +5,7 @@
 #include "../stringview.h"
 
 #include "../log.h"
+#include "../exception.h"
 
 #define logWShvJournal() shvCWarning("ShvJournal")
 #define logIShvJournal() shvCInfo("ShvJournal")
@@ -89,6 +90,11 @@ const char *AbstractShvJournal::KEY_PATHS_DICT = "pathsDict";
 
 AbstractShvJournal::~AbstractShvJournal()
 {
+}
+
+chainpack::RpcValue AbstractShvJournal::getSnapShotMap()
+{
+	SHV_EXCEPTION("getSnapShot() not implemented");
 }
 
 } // namespace utils

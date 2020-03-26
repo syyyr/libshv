@@ -41,6 +41,7 @@ public:
 	void append(const ShvJournalEntry &entry) override;
 
 	shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) override;
+	shv::chainpack::RpcValue getSnapShotMap() override;
 
 	void convertLog1JournalDir();
 public:

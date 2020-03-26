@@ -549,6 +549,20 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvGetLogParams &params)
 	return getLog(ctx, params);
 }
 
+chainpack::RpcValue ShvFileJournal::getSnapShotMap()
+{
+	if(!m_snapShotFn)
+		SHV_EXCEPTION("SnapShot function not defined");
+	std::vector<ShvJournalEntry> snapshot;
+	m_snapShotFn(snapshot);
+	cp::RpcValue::Map m;
+	for(const ShvJournalEntry &e : snapshot) {
+		if(e.value.isValid())
+			m[e.path] = e.value;
+	}
+	return  std::move(m);
+}
+
 chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext &journal_context, const ShvGetLogParams &params)
 {
 	logIShvJournal() << "========================= getLog ==================";
