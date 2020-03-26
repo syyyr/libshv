@@ -34,8 +34,8 @@ std::vector<cp::MetaMethod> meta_methods2 {
 };
 }
 
-SubscriptionsNode::SubscriptionsNode(rpc::ClientBrokerConnection *conn)
-	: Super(nullptr)
+SubscriptionsNode::SubscriptionsNode(rpc::CommonRpcClientHandle *conn, Super *parent)
+	: Super("subscriptions", parent)
 	, m_client(conn)
 {
 }

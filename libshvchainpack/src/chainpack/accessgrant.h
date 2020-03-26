@@ -78,7 +78,13 @@ public:
 		MetaType();
 		static void registerMetaType();
 	};
+
+	static constexpr bool IS_RESOLVED = true;
 public:
+	AccessGrant() {}
+	AccessGrant(const std::string &role, bool is_resolved = !IS_RESOLVED)
+		: type(Type::Role), notResolved(!is_resolved), role(role) {}
+
 	bool isValid() const;
 	bool isUserLogin() const;
 	bool isRole() const;

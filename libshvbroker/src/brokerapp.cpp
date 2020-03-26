@@ -52,7 +52,7 @@
 
 //#define logAccessM() nCMessage("Access")
 
-//#define logAclResolveD() nCDebug("AclResolve")
+#define logAclResolveW() nCWarning("AclResolve")
 #define logAclResolveM() nCMessage("AclResolve")
 
 #define logSubscriptionsD() nCDebug("Subscr").color(NecroLog::Color::Yellow)
@@ -565,18 +565,35 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	bool is_request_from_master_broker = conn->isMasterBrokerConnection();
 	auto request_grant = cp::AccessGrant::fromRpcValue(rq_grant);
 	if(is_request_from_master_broker) {
-		if(!request_grant.notResolved)
-			return request_grant;
-		if(!request_grant.isRole()) {
-			logAclResolveM() << "Cannot resolve grant:" << request_grant.toRpcValue().toCpon();
-			if(request_grant.isUserLogin())
-				logAclResolveM() << "Resolving of UserLogin is not implemented yet.";
-			return cp::AccessGrant();
+		if(request_grant.isValid()) {
+			if(!request_grant.notResolved)
+				return request_grant;
+			if(!request_grant.isRole()) {
+				logAclResolveW() << "Cannot resolve grant:" << request_grant.toRpcValue().toCpon();
+				if(request_grant.isUserLogin())
+					logAclResolveW() << "Resolving of UserLogin is not implemented yet.";
+				return cp::AccessGrant();
+			}
+		}
+		else {
+			logAclResolveW() << "Cannot handle master broker request with invalid grant.";
 		}
 	}
-	const std::set<AclManager::FlattenRole> &user_roles = is_request_from_master_broker
-			? std::set<AclManager::FlattenRole>{AclManager::FlattenRole{request_grant.role}} // master broker has allways grant masterBroker
-			: aclManager()->userFlattenRoles(conn->loggedUserName());
+	else {
+		if(request_grant.isValid()) {
+			logAclResolveM() << "Client defined grantd in RPC request are not implemented yet and will be ignored.";
+			if(!request_grant.notResolved)
+				logAclResolveW() << "Client cannot send resolved grant in request.";
+		}
+	}
+	std::set<AclManager::FlattenRole> user_roles;
+	if(is_request_from_master_broker) {
+		if(!request_grant.role.empty())
+			user_roles = std::set<AclManager::FlattenRole>{AclManager::FlattenRole{request_grant.role}};
+	}
+	else {
+		user_roles = aclManager()->userFlattenRoles(conn->loggedUserName());
+	}
 
 	// find most specific path grant for role with highest weight
 	// user_flattent_grants are sorted by weight DESC
@@ -751,6 +768,7 @@ void BrokerApp::onConnectedToMasterBrokerChanged(int connection_id, bool is_conn
 			mbnd->setNodeId(conn->objectName().toStdString());
 			/*shv::iotqt::node::RpcValueMapNode *config_nd = */
 			new shv::iotqt::node::RpcValueMapNode("config", conn->options(), mbnd);
+			new SubscriptionsNode(conn, mbnd);
 		}
 		if(conn == mainMasterBrokerConnection()) {
 			/// propagate relative subscriptions

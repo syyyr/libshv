@@ -4,6 +4,7 @@
 #include "../brokerapp.h"
 
 #include <shv/chainpack/cponwriter.h>
+#include <shv/chainpack/accessgrant.h>
 #include <shv/coreqt/log.h>
 #include <shv/core/stringview.h>
 #include <shv/core/utils/shvpath.h>
@@ -189,7 +190,7 @@ bool ClientBrokerConnection::checkPassword(const chainpack::UserLogin &login)
 void ClientBrokerConnection::processLoginPhase()
 {
 	const shv::chainpack::RpcValue::Map &opts = connectionOptions();
-	shvWarning() << connectionId() << cp::RpcValue(opts).toCpon();
+	//shvWarning() << connectionId() << cp::RpcValue(opts).toCpon();
 	auto t = opts.value(cp::Rpc::OPT_IDLE_WD_TIMEOUT, 3 * 60).toInt();
 	setIdleWatchDogTimeOut(t);
 	if(tunnelOptions().isMap()) {
@@ -226,11 +227,11 @@ void ClientBrokerConnection::propagateSubscriptionToSlaveBroker(const CommonRpcC
 			std::string slave_path = subs.absolutePath.substr(mount_point.size());
 			if(!slave_path.empty() && slave_path[0] == '/')
 				slave_path = slave_path.substr(1);
-			callMethodSubscribe(slave_path, subs.method, cp::Rpc::ROLE_MASTER_BROKER);
+			callMethodSubscribe(slave_path, subs.method, cp::AccessGrant(cp::Rpc::ROLE_MASTER_BROKER, !cp::AccessGrant::IS_RESOLVED).toRpcValue());
 			return;
 		}
 		if(shv::core::utils::ShvPath(mount_point).startsWithPath(subs.absolutePath)) {
-			callMethodSubscribe(std::string(), subs.method, cp::Rpc::ROLE_MASTER_BROKER);
+			callMethodSubscribe(std::string(), subs.method, cp::AccessGrant(cp::Rpc::ROLE_MASTER_BROKER, !cp::AccessGrant::IS_RESOLVED).toRpcValue());
 			return;
 		}
 	}
