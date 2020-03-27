@@ -37,8 +37,8 @@ public:
 		enum {
 			Signature = 1 << 0,
 			Flags = 1 << 1,
-			//AccessLevel = 1 << 2,
 			AccessGrant = 1 << 2,
+			Description = 1 << 3,
 		};
 	};
 	struct LsAttribute {
@@ -69,10 +69,10 @@ public:
 			lst.push_back((unsigned)m_signature);
 		if(mask & DirAttribute::Flags)
 			lst.push_back(m_flags);
-		//if(mask & DirAttribute::AccessLevel)
-		//	lst.push_back(m_accessLevel);
 		if(mask & DirAttribute::AccessGrant)
 			lst.push_back(m_accessGrant);
+		if(mask & DirAttribute::Description)
+			lst.push_back(m_description);
 		if(lst.empty())
 			return name();
 		lst.insert(lst.begin(), name());
