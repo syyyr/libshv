@@ -94,13 +94,8 @@
         },
         {
             "name": "Cpon meta key",
-            "scope": "meta.mapping.skey.cpon",
+            "scope": "meta.mapping.key.metamap.cpon",
             "foreground": "var(red2)"
-        },
-        {
-            "name": "Cpon meta key",
-            "scope": "meta.mapping.ikey.cpon",
-            "foreground": "var(purple)"
         },
         // {
         //     "name": "Cpon value",

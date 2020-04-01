@@ -5,7 +5,7 @@ file_extensions: [cpon]
 scope: source.cpon
 
 variables:
-  string_key: '"\S*"'
+  string_key: '"\S*?"'
   int_key: '\d+'
 
 contexts:
@@ -120,120 +120,145 @@ contexts:
     - match: \\.
       scope: invalid.illegal.unrecognized-string-escape.cpon
 
-  # metamap:
-  #   - match: '\<'
-  #     scope: punctuation.definition.generic.begin.cpon
-  #     push:
-  #       - meta_scope: meta.annotation.cpon
-  #       - match: '\>'
-  #         scope: punctuation.definition.generic.end.cpon
-  #         pop: true
-  #       - match: '{{int_key}}|{{string_key}}'
-  #         scope: meta.mapping.key.cpon
-  #         push:
-  #           - match: '\:'
-  #             scope: punctuation.separator.mapping.key.cpon
-  #             set:
-  #               - meta_content_scope: meta.mapping.value.cpon
-  #               - include: rpcvalue
-  #               - match: ',|($\n)'
-  #                 scope: punctuation.separator.mapping.value.cpon
-  #                 pop: true
-  #               - match: '(?=\>)'
-  #                 pop: true
-  #               - match: '\S'
-  #                 scope: invalid.illegal.unclosed.mapping.value.cpon
-  #           - match: '\S'
-  #             scope: invalid.illegal.unclosed.mapping.key.cpon
-
   metamap:
-    # a JSON object
     - match: '\<'
       scope: punctuation.section.mapping.begin.cpon
       push:
-        - meta_scope: meta.mapping.cpon
+        # - meta_scope: meta.annotation.cpon
         - match: '\>'
           scope: punctuation.section.mapping.end.cpon
           pop: true
-        - match: '"'
-          scope: punctuation.definition.string.begin.cpon
+        - match: '{{int_key}}|{{string_key}}'
+          scope: meta.mapping.key.metamap.cpon
           push:
-            - clear_scopes: 1
-            - meta_scope: meta.mapping.skey.cpon #string.quoted.double.cpon
-            - meta_include_prototype: false
-            - include: inside-string
-        - match: '(?=\d)'
-          # scope: punctuation.definition.string.begin.cpon
-          push:
-            - clear_scopes: 1
-            - meta_scope: meta.mapping.ikey.cpon
-            - meta_include_prototype: false
-            - include: inside-int-key
-        - match: ":"
-          scope: punctuation.separator.mapping.key-value.cpon
-          push:
-            - match: '(,)|(?=\>)'
-              captures:
-                1: invalid.illegal.expected-mapping-value.cpon
-              pop: true
-            - match: (?=\S)
+            - match: '\:'
+              scope: punctuation.separator.mapping.key-value.cpon
               set:
-                - clear_scopes: 1
-                - meta_scope: meta.mapping.value.cpon
+                - meta_content_scope: meta.mapping.value.cpon
                 - include: rpcvalue
-                - match: ''
-                  set:
-                    - match: '(,)|($\n)|(?=\s*\>)'
-                      captures:
-                        1: punctuation.separator.mapping.pair.cpon
-                        2: punctuation.separator.mapping.pair.cpon
-                      pop: true
-                    - match: '\s(?=[^\s,])|[^\s,]'
-                      scope: invalid.illegal.expected-mapping-separator.cpon
-                      pop: true
-        - match: '[^\s\>]'
-          scope: invalid.illegal.expected-mapping-key.cpon
-
+                - match: ',|($\n)'
+                  scope: punctuation.separator.mapping.pair.cpon
+                  pop: true
+                - match: '(?=\>)'
+                  pop: true
+                - match: '\S'
+                  scope: invalid.illegal.unclosed.mapping.pair.cpon
+            - match: '\S'
+              scope: invalid.illegal.unclosed.mapping.key.cpon
   object:
-    # a JSON object
     - match: '\{'
       scope: punctuation.section.mapping.begin.cpon
       push:
-        - meta_scope: meta.mapping.cpon
+        # - meta_scope: meta.annotation.cpon
         - match: '\}'
           scope: punctuation.section.mapping.end.cpon
           pop: true
-        - match: '"'
-          scope: punctuation.definition.string.begin.cpon
+        - match: '{{string_key}}'
+          scope: meta.mapping.key.cpon
           push:
-            - clear_scopes: 1
-            - meta_scope: meta.mapping.key.cpon #string.quoted.double.cpon
-            - meta_include_prototype: false
-            - include: inside-string
-        - match: ":"
-          scope: punctuation.separator.mapping.key-value.cpon
-          push:
-            - match: '(,)|(?=\})'
-              captures:
-                1: invalid.illegal.expected-mapping-value.cpon
-              pop: true
-            - match: (?=\S)
+            - match: '\:'
+              scope: punctuation.separator.mapping.key-value.cpon
               set:
-                - clear_scopes: 1
-                - meta_scope: meta.mapping.value.cpon
+                - meta_content_scope: meta.mapping.value.cpon
                 - include: rpcvalue
-                - match: ''
-                  set:
-                    - match: '(,)|($\n)|(?=\s*\})'
-                      captures:
-                        1: punctuation.separator.mapping.pair.cpon
-                        2: punctuation.separator.mapping.pair.cpon
-                      pop: true
-                    - match: '\s(?=[^\s,])|[^\s,]'
-                      scope: invalid.illegal.expected-mapping-separator.cpon
-                      pop: true
-        - match: '[^\s\}]'
-          scope: invalid.illegal.expected-mapping-key.cpon
+                - match: ',|($\n)'
+                  scope: punctuation.separator.mapping.pair.cpon
+                  pop: true
+                - match: '(?=\})'
+                  pop: true
+                - match: '\S'
+                  scope: invalid.illegal.unclosed.mapping.pair.cpon
+            - match: '\S'
+              scope: invalid.illegal.unclosed.mapping.key.cpon
+
+  # metamap:
+  #   # a JSON object
+  #   - match: '\<'
+  #     scope: punctuation.section.mapping.begin.cpon
+  #     push:
+  #       - meta_scope: meta.mapping.cpon
+  #       - match: '\>'
+  #         scope: punctuation.section.mapping.end.cpon
+  #         pop: true
+  #       - match: '"'
+  #         scope: punctuation.definition.string.begin.cpon
+  #         push:
+  #           - clear_scopes: 1
+  #           - meta_scope: meta.mapping.key.metamap.cpon #string.quoted.double.cpon
+  #           - meta_include_prototype: false
+  #           - include: inside-string
+  #       - match: '(?=\d)'
+  #         # scope: punctuation.definition.string.begin.cpon
+  #         push:
+  #           - clear_scopes: 1
+  #           - meta_scope: meta.mapping.key.metamap.cpon
+  #           - meta_include_prototype: false
+  #           - include: inside-int-key
+  #       - match: ":"
+  #         scope: punctuation.separator.mapping.key-value.cpon
+  #         push:
+  #           - match: '(,)|(?=\>)'
+  #             captures:
+  #               1: invalid.illegal.expected-mapping-value.cpon
+  #             pop: true
+  #           - match: (?=\S)
+  #             set:
+  #               - clear_scopes: 1
+  #               - meta_scope: meta.mapping.value.cpon
+  #               - include: rpcvalue
+  #               - match: ''
+  #                 set:
+  #                   - match: '(,)|($\n)|(?=\s*\>)'
+  #                     captures:
+  #                       1: punctuation.separator.mapping.pair.cpon
+  #                       2: punctuation.separator.mapping.pair.cpon
+  #                     pop: true
+  #                   - match: '\s(?=[^\s,])|[^\s,]'
+  #                     scope: invalid.illegal.expected-mapping-separator.cpon
+  #                     pop: true
+  #       - match: '[^\s\>]'
+  #         scope: invalid.illegal.expected-mapping-key.cpon
+
+  # object:
+  #   # a JSON object
+  #   - match: '\{'
+  #     scope: punctuation.section.mapping.begin.cpon
+  #     push:
+  #       - meta_scope: meta.mapping.cpon
+  #       - match: '\}'
+  #         scope: punctuation.section.mapping.end.cpon
+  #         pop: true
+  #       - match: '"'
+  #         scope: punctuation.definition.string.begin.cpon
+  #         push:
+  #           - clear_scopes: 1
+  #           - meta_scope: meta.mapping.key.cpon #string.quoted.double.cpon
+  #           - meta_include_prototype: false
+  #           - include: inside-string
+  #       - match: ":"
+  #         scope: punctuation.separator.mapping.key-value.cpon
+  #         push:
+  #           - match: '(,)|(?=\})'
+  #             captures:
+  #               1: invalid.illegal.expected-mapping-value.cpon
+  #             pop: true
+  #           - match: (?=\S)
+  #             set:
+  #               - clear_scopes: 1
+  #               - meta_scope: meta.mapping.value.cpon
+  #               - include: rpcvalue
+  #               - match: ''
+  #                 set:
+  #                   - match: '(,)|($\n)|(?=\s*\})'
+  #                     captures:
+  #                       1: punctuation.separator.mapping.pair.cpon
+  #                       2: punctuation.separator.mapping.pair.cpon
+  #                     pop: true
+  #                   - match: '\s(?=[^\s,])|[^\s,]'
+  #                     scope: invalid.illegal.expected-mapping-separator.cpon
+  #                     pop: true
+  #       - match: '[^\s\}]'
+  #         scope: invalid.illegal.expected-mapping-key.cpon
   array:
     - match: '\['
       scope: punctuation.section.sequence.begin.cpon

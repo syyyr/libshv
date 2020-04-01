@@ -1,4 +1,4 @@
-// SYNTAX TEST "Packages/Cpon/Cpon2.sublime-syntax"
+// SYNTAX TEST "Packages/Cpon/Cpon.sublime-syntax"
 
 
 // foo
@@ -57,14 +57,16 @@ true false null
 //         ^ punctuation.separator.mapping.key-value
 //               ^ punctuation.separator.mapping.pair
 
-{    "ahoj": 888 , "123" : 1}
+{    "ahoj": 888 , "123" : 1, "a":"b"}
 // <- punctuation.section.mapping.begin
-//                          ^ punctuation.section.mapping.end
+//                                   ^ punctuation.section.mapping.end
 //    ^^^^ meta.mapping.key
 //           ^^^ meta.mapping.value
 //                  ^^^ meta.mapping.key
 //         ^ punctuation.separator.mapping.key-value
 //                         ^ meta.mapping.value
 //               ^ punctuation.separator.mapping.pair
+//                                 ^^^ meta.mapping.value
+
 
 
