@@ -217,6 +217,8 @@ shv::chainpack::RpcValue DlgLogInspector::getLogParams()
 	params.since = get_dt(ui->edSince);
 	params.until = get_dt(ui->edUntil);
 	params.pathPattern = ui->edPathPattern->text().trimmed().toStdString();
+	if(ui->chkIsPathPatternRexex)
+		params.pathPatternType = shv::core::utils::ShvGetLogParams::PatternType::RegEx;
 	if(ui->edMaxRecordCount->value() > ui->edMaxRecordCount->minimum())
 		params.recordCountLimit = ui->edMaxRecordCount->value();
 	//params.withUptime = ui->chkWithUptime->isChecked();

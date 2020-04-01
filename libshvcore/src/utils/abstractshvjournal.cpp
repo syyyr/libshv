@@ -67,7 +67,8 @@ bool AbstractShvJournal::PatternMatcher::match(const std::string &path, const st
 	}
 	if(m_usePathPatternRegEx) {
 		shvDebug() << "using path pattern regex";
-		if(!std::regex_match(path, m_pathPatternRegEx))
+		std::smatch cmatch;
+		if(!std::regex_search(path, cmatch, m_pathPatternRegEx))
 			return false;
 	}
 	else if(!m_pathPatternWildCard.empty()) {
