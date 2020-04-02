@@ -1,5 +1,5 @@
-#ifndef SHV_CORE_UTILS_SHVJOURNALGETLOGPARAMS_H
-#define SHV_CORE_UTILS_SHVJOURNALGETLOGPARAMS_H
+#ifndef SHV_CORE_UTILS_SHVGETLOGPARAMS_H
+#define SHV_CORE_UTILS_SHVGETLOGPARAMS_H
 
 #include "../shvcoreglobal.h"
 
@@ -13,8 +13,8 @@ namespace utils {
 
 struct SHVCORE_DECL_EXPORT ShvGetLogParams
 {
-	//static const char *KEY_HEADER_OPTIONS;
-	static const char *KEY_MAX_RECORD_COUNT_DEPRICATED;
+	static const char *KEY_HEADER_OPTIONS_DEPRECATED;
+	static const char *KEY_MAX_RECORD_COUNT_DEPRECATED;
 	static const char *KEY_RECORD_COUNT_LIMIT;
 	static const char *KEY_WITH_SNAPSHOT;
 	//static const char *KEY_WITH_UPTIME;
@@ -64,4 +64,4 @@ struct SHVCORE_DECL_EXPORT ShvGetLogParams
 } // namespace iotqt
 } // namespace shv
 
-#endif // SHV_IOTQT_UTILS_SHVJOURNALGETLOGPARAMS_H
+#endif // SHV_IOTQT_UTILS_SHVGETLOGPARAMS_H
