@@ -567,17 +567,61 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 {
 	logIShvJournal() << "========================= getLog ==================";
 	logIShvJournal() << "params:" << params.toRpcValue().toCpon();
+	std::map<std::string, ShvJournalEntry> snapshot;
 	cp::RpcValue::List log;
 	ShvLogHeader log_header;
 	log_header.setTypeInfo(journal_context.typeInfo);
 
 	cp::RpcValue::Map path_cache;
-	auto params_since_msec = params.since.isDateTime()? params.since.toDateTime().msecsSinceEpoch(): 0;
-	auto params_until_msec = params.until.isDateTime()? params.until.toDateTime().msecsSinceEpoch(): 0;
+	const auto params_since_msec = params.since.isDateTime()? params.since.toDateTime().msecsSinceEpoch(): 0;
+	const auto params_until_msec = params.until.isDateTime()? params.until.toDateTime().msecsSinceEpoch(): 0;
 	int64_t journal_start_msec = 0;
 	int64_t first_record_msec = 0;
 	int64_t last_record_msec = 0;
-	int max_rec_cnt = std::min(params.recordCountLimit, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
+	int rec_cnt_limit = std::min(params.recordCountLimit, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
+	bool rec_cnt_limit_hit = false;
+
+	/// this ensure that there be only one copy of each path in memory
+	int max_path_id = 0;
+	auto make_path_shared = [&path_cache, &max_path_id, &params](const std::string &path) -> cp::RpcValue {
+		cp::RpcValue ret = path_cache.value(path);
+		if(ret.isValid())
+			return ret;
+		if(params.withPathsDict)
+			ret = ++max_path_id;
+		else
+			ret = path;
+		logMShvJournal() << "Adding record to path cache:" << path << "-->" << ret.toCpon();
+		path_cache[path] = ret;
+		return ret;
+	};
+	auto append_log_entry = [make_path_shared, rec_cnt_limit, &rec_cnt_limit_hit, &first_record_msec, &last_record_msec, &log](const ShvJournalEntry &e) {
+		if((int)log.size() >= rec_cnt_limit) {
+			rec_cnt_limit_hit = true;
+			return false;
+		}
+		if(first_record_msec == 0)
+			first_record_msec = e.epochMsec;
+		last_record_msec = e.epochMsec;
+		cp::RpcValue::List rec;
+		rec.push_back(e.dateTime());
+		rec.push_back(make_path_shared(e.path));
+		rec.push_back(e.value);
+		rec.push_back(e.shortTime == ShvJournalEntry::NO_SHORT_TIME? cp::RpcValue(nullptr): cp::RpcValue(e.shortTime));
+		rec.push_back(e.domain.empty()? cp::RpcValue(nullptr): e.domain);
+		log.push_back(std::move(rec));
+		return true;
+	};
+	/*
+	auto append_data_missing = [&append_log_entry](int64_t msec, bool b) {
+		ShvJournalEntry e;
+		e.epochMsec = msec;
+		e.path = ShvJournalEntry::PATH_DATA_MISSING;
+		e.value = b? ShvJournalEntry::DATA_MISSING_LOG_FILE_MISSING: "";
+		e.domain = ShvJournalEntry::DOMAIN_SHV_SYSTEM;
+		return append_log_entry(e);
+	};
+	*/
 	if(journal_context.files.size()) {
 		std::vector<int64_t>::const_iterator file_it = journal_context.files.begin();
 		journal_start_msec = *file_it;
@@ -603,43 +647,11 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 				--file_it;
 			}
 		}
-		/// this ensure that there be only one copy of each path in memory
-		int max_path_id = 0;
-		auto make_path_shared = [&path_cache, &max_path_id, &params](const std::string &path) -> cp::RpcValue {
-			cp::RpcValue ret = path_cache.value(path);
-			if(ret.isValid())
-				return ret;
-			if(params.withPathsDict)
-				ret = ++max_path_id;
-			else
-				ret = path;
-			logMShvJournal() << "Adding record to path cache:" << path << "-->" << ret.toCpon();
-			path_cache[path] = ret;
-			return ret;
-		};
-		auto append_entry = [&make_path_shared, &log](const ShvJournalEntry &e) {
-			cp::RpcValue::List rec;
-			rec.push_back(e.dateTime());
-			rec.push_back(make_path_shared(e.path));
-			rec.push_back(e.value);
-			rec.push_back(e.shortTime == ShvJournalEntry::NO_SHORT_TIME? cp::RpcValue(nullptr): cp::RpcValue(e.shortTime));
-			rec.push_back(e.domain.empty()? cp::RpcValue(nullptr): e.domain);
-			log.push_back(std::move(rec));
-		};
-		auto append_data_missing = [&append_entry](int64_t msec, bool b) {
-			ShvJournalEntry e;
-			e.epochMsec = msec;
-			e.path = ShvJournalEntry::PATH_DATA_MISSING;
-			e.value = b? ShvJournalEntry::DATA_MISSING_LOG_FILE_MISSING: "";
-			e.domain = ShvJournalEntry::DOMAIN_SHV_SYSTEM;
-			append_entry(e);
-		};
-		std::map<std::string, ShvJournalEntry> snapshot;
 
-		if(params_since_msec > 0 && params_since_msec < journal_start_msec) {
-			append_data_missing(params_since_msec, true);
-			append_data_missing(journal_start_msec, false);
-		}
+		//if(log_since_msec > 0 && log_since_msec < journal_start_msec) {
+		//	append_data_missing(log_since_msec, true);
+		//	append_data_missing(journal_start_msec, false);
+		//}
 
 		PatternMatcher pattern_matcher(params);
 		for(; file_it != journal_context.files.end(); file_it++) {
@@ -665,35 +677,8 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 					}
 				}
 				else {
-					if(params.withSnapshot && !snapshot.empty()) {
-						logDShvJournal() << "\t -------------- Snapshot";
-						std::string err;
-						for(const auto &kv : snapshot) {
-							const ShvJournalEntry &e = kv.second;
-							append_entry(e);
-							if(first_record_msec == 0)
-								first_record_msec = e.epochMsec;
-							last_record_msec = e.epochMsec;
-							if((int)log.size() >= max_rec_cnt)
-								goto log_finish;
-						}
-						/*
-						{
-							ShvJournalEntry e;
-							e.epochMsec = first_record_msec;
-							e.path = ShvJournalEntry::PATH_SNAPSHOT_END;
-							e.domain = ShvJournalEntry::DOMAIN_SHV_SYSTEM;
-							append_entry(e);
-						}
-						*/
-						snapshot.clear();
-					}
 					if(params_until_msec == 0 || e.epochMsec < params_until_msec) { // keep interval open to make log merge simpler
-						append_entry(e);
-						if(first_record_msec == 0)
-							first_record_msec = e.epochMsec;
-						last_record_msec = e.epochMsec;
-						if((int)log.size() >= max_rec_cnt)
+						if(!append_log_entry(e))
 							goto log_finish;
 					}
 					else {
@@ -704,14 +689,22 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		}
 	}
 log_finish:
-	if(params_since_msec == 0)
-		params_since_msec = first_record_msec;
-	if((int)log.size() < max_rec_cnt) {
-		if(params_until_msec == 0)
-			params_until_msec = last_record_msec;
+	if(params.withSnapshot && !snapshot.empty()) {
+		logDShvJournal() << "\t -------------- Snapshot";
+		std::string err;
+		for(const auto &kv : snapshot) {
+			const ShvJournalEntry &e = kv.second;
+			if(!append_log_entry(e))
+				break;
+		}
 	}
-	else {
-		params_until_msec = last_record_msec;
+	int64_t log_since_msec = 0;
+	int64_t log_until_msec = 0;
+	if(params_since_msec == 0) {
+		log_since_msec = journal_start_msec;
+	}
+	if(params_until_msec == 0 || rec_cnt_limit_hit) {
+		log_until_msec = last_record_msec;
 	}
 	cp::RpcValue ret = log;
 	{
@@ -719,10 +712,11 @@ log_finish:
 		log_header.setDeviceType(journal_context.deviceType);
 		log_header.setDateTime(cp::RpcValue::DateTime::now());
 		log_header.setLogParams(params);
-		log_header.setSince((params_since_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(params_since_msec)): cp::RpcValue(nullptr));
-		log_header.setUntil((params_until_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(params_until_msec)): cp::RpcValue(nullptr));
+		log_header.setSince((log_since_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(params_since_msec)): cp::RpcValue(nullptr));
+		log_header.setUntil((log_until_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(params_until_msec)): cp::RpcValue(nullptr));
 		log_header.setRecordCount((int)log.size());
-		log_header.setRecordCountLimit(max_rec_cnt);
+		log_header.setRecordCountLimit(rec_cnt_limit);
+		log_header.setRecordCountLimitHit(rec_cnt_limit_hit);
 		log_header.setWithSnapShot(params.withSnapshot);
 		log_header.setWithPathsDict(params.withPathsDict);
 

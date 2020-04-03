@@ -28,6 +28,7 @@ class SHVCORE_DECL_EXPORT ShvLogHeader //: public shv::chainpack::RpcValue::Meta
 	SHV_FIELD_IMPL(ShvGetLogParams, l, L, ogParams)
 	SHV_FIELD_IMPL2(int, r, R, ecordCount, 0)
 	SHV_FIELD_IMPL2(int, r, R, ecordCountLimit, 0)
+	SHV_FIELD_IMPL2(bool, r, R, ecordCountLimitHit, false)
 	SHV_FIELD_IMPL2(bool, w, W, ithSnapShot, false)
 	SHV_FIELD_IMPL2(bool, w, W, ithPathsDict, true)
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue::List, f, F, ields)
@@ -71,37 +72,6 @@ private:
 	std::map<std::string, ShvLogTypeInfo> m_sources;
 	mutable std::map<std::string, shv::core::utils::ShvLogTypeDescr> m_pathsTypeDescr;
 	mutable bool m_pathsTypeDescrValid = false;
-
-#if 0
-	ShvLogHeader(const Super &super) : Super(super) {}
-	ShvLogHeader(Super &&super) : Super(std::move(super)) {}
-
-	std::string deviceId() const;
-	void setDeviceId(const std::string &device_id);
-
-	std::string deviceType() const;
-	void setDeviceType(const std::string &device_type);
-
-	int logVersion() const;
-	void setLogVersion(int log_version);
-
-	shv::chainpack::RpcValue::DateTime dateTime() const;
-	void setDateTime(const shv::chainpack::RpcValue::DateTime &dt);
-
-	int recordCount() const;
-	void setRecordCount(int rec_cnt);
-
-	int recordCountLimit() const;
-	void setRecordCountLimit(int rec_cnt);
-private:
-	shv::chainpack::RpcValue valueOnPath(const std::string &path) const;
-	shv::chainpack::RpcValue valueOnPath(const shv::core::StringViewList &path) const;
-	shv::chainpack::RpcValue valueOnPath_helper(const shv::chainpack::RpcValue &parent, const shv::core::StringViewList &path) const;
-
-	void setValueOnPath(const std::string &path, const shv::chainpack::RpcValue &val);
-	void setValueOnPath(const shv::core::StringViewList &path, const shv::chainpack::RpcValue &val);
-	void setValueOnPath_helper(const shv::chainpack::RpcValue &parent, const shv::core::StringViewList &path, const shv::chainpack::RpcValue &val);
-#endif
 };
 
 } // namespace utils
