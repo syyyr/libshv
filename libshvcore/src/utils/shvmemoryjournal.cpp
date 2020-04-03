@@ -147,7 +147,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 	int64_t until_msec = min_valid(datavalid_until_msec, params_until_msec);
 
 	int rec_cnt_limit = std::min(params.recordCountLimit, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
-	bool all_entries_visited = false;
+	bool rec_cnt_limit_hit = false;
 
 	//int64_t first_record_msec = 0;
 	int64_t last_record_msec = 0;
@@ -213,6 +213,10 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 			if(!snapshot.empty()) {
 				logDShvJournal() << "\t -------------- Snapshot";
 				for(const auto &kv : snapshot) {
+					if(rec_cnt >= rec_cnt_limit) {
+						rec_cnt_limit_hit = true;
+						goto log_finish;
+					}
 					cp::RpcValue::List rec;
 					const auto &entry = kv.second;
 					if(since_msec == 0)
@@ -225,8 +229,6 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 					rec.push_back(entry.domain.empty()? cp::RpcValue(nullptr): entry.domain);
 					log.push_back(std::move(rec));
 					rec_cnt++;
-					if(rec_cnt >= rec_cnt_limit)
-						goto log_finish;
 				}
 			}
 		}
@@ -235,6 +237,10 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 			auto it = it1;
 			for(; it != it2; ++it) {
 				if(pm.match(*it)) {
+					if(rec_cnt >= rec_cnt_limit) {
+						rec_cnt_limit_hit = true;
+						goto log_finish;
+					}
 					if(since_msec == 0)
 						since_msec = it->epochMsec;
 					last_record_msec = it->epochMsec;
@@ -246,13 +252,8 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 					rec.push_back(it->domain.empty()? cp::RpcValue(nullptr): it->domain);
 					log.push_back(std::move(rec));
 					rec_cnt++;
-					if(rec_cnt >= rec_cnt_limit) {
-						++it;
-						break;
-					}
 				}
 			}
-		all_entries_visited = (it == it2);
 		}
 	}
 log_finish:
@@ -266,12 +267,13 @@ log_finish:
 
 		hdr.setSince((since_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec)): cp::RpcValue(nullptr));
 		// if record count < limit and params until is specified and it is > log end, then set until to log end
-		if(!(rec_cnt < rec_cnt_limit || all_entries_visited)) {
+		if(rec_cnt_limit_hit) {
 			until_msec = last_record_msec;
 		}
 		hdr.setUntil((until_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(until_msec)): cp::RpcValue(nullptr));
 		hdr.setRecordCount(rec_cnt);
 		hdr.setRecordCountLimit(rec_cnt_limit);
+		hdr.setRecordCountLimitHit(rec_cnt_limit_hit);
 		hdr.setWithSnapShot(params.withSnapshot);
 		hdr.setWithPathsDict(params.withPathsDict);
 
