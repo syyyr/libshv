@@ -46,6 +46,8 @@ protected:
 	virtual QGraphicsItem *createGroupItem(const SvgElement &el);
 	virtual void installVisuController(QGraphicsItem *it, const SvgElement &el);
 	virtual void setXmlAttributes(QGraphicsItem *git, const SvgElement &el);
+
+	QGraphicsScene *m_scene;
 private:
 	void parse();
 	XmlAttributes parseXmlAttributes(const QXmlStreamAttributes &attributes);
@@ -62,7 +64,6 @@ private:
 private:
 	QStack<SvgElement> m_elementStack;
 
-	QGraphicsScene *m_scene;
 	//QGraphicsItemGroup *m_topLevelGroup = nullptr;
 	QGraphicsItem *m_topLevelItem = nullptr;
 	QXmlStreamReader *m_xml = nullptr;
