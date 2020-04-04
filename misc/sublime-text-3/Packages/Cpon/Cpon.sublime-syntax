@@ -124,7 +124,7 @@ contexts:
     - match: '\<'
       scope: punctuation.section.mapping.begin.cpon
       push:
-        # - meta_scope: meta.annotation.cpon
+        - meta_scope: meta.mapping.cpon
         - match: '\>'
           scope: punctuation.section.mapping.end.cpon
           pop: true
@@ -149,7 +149,7 @@ contexts:
     - match: '\{'
       scope: punctuation.section.mapping.begin.cpon
       push:
-        # - meta_scope: meta.annotation.cpon
+        - meta_scope: meta.mapping.cpon
         - match: '\}'
           scope: punctuation.section.mapping.end.cpon
           pop: true
