@@ -8,6 +8,7 @@ HEADERS += \
     $$PWD/shvjournalfilewriter.h \
     $$PWD/shvlogfilereader.h \
     $$PWD/shvlogheader.h \
+    $$PWD/shvlogrpcvaluereader.h \
     $$PWD/shvlogtypeinfo.h \
     $$PWD/shvmemoryjournal.h \
     $$PWD/versioninfo.h \
@@ -24,6 +25,7 @@ SOURCES += \
     $$PWD/shvjournalfilewriter.cpp \
     $$PWD/shvlogfilereader.cpp \
     $$PWD/shvlogheader.cpp \
+    $$PWD/shvlogrpcvaluereader.cpp \
     $$PWD/shvlogtypeinfo.cpp \
     $$PWD/shvmemoryjournal.cpp \
     $$PWD/versioninfo.cpp \

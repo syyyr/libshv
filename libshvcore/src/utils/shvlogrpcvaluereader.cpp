@@ -1,11 +1,7 @@
-#include "shvlogfilereader.h"
-#include "shvjournalentry.h"
-#include "shvfilejournal.h"
+#include "shvlogrpcvaluereader.h"
 
 #include "../exception.h"
-#include "../string.h"
 #include "../log.h"
-#include "../stringview.h"
 
 #define logWShvJournal() shvCWarning("ShvJournal")
 #define logIShvJournal() shvCInfo("ShvJournal")
@@ -17,62 +13,28 @@ namespace shv {
 namespace core {
 namespace utils {
 
-ShvLogFileReader::ShvLogFileReader(chainpack::ChainPackReader *reader, const ShvLogHeader *header)
-	: m_reader(reader)
+ShvLogRpcValueReader::ShvLogRpcValueReader(const shv::chainpack::RpcValue &log, const ShvLogHeader *header)
+	: m_log(log)
 {
-	init(header);
-
-}
-
-ShvLogFileReader::ShvLogFileReader(const std::string &file_name, const ShvLogHeader *header)
-{
-	m_readerCreated = true;
-	m_ifstream = new std::ifstream;
-	m_ifstream->open(file_name, std::ios::binary);
-	if(!m_ifstream)
-		SHV_EXCEPTION("Cannot open file " + file_name + " for reading.");
-	m_reader = new shv::chainpack::ChainPackReader(*m_ifstream);
-	init(header);
-}
-
-void ShvLogFileReader::init(const ShvLogHeader *header)
-{
-	cp::RpcValue::MetaData md;
-	m_reader->read(md);
 	if(header)
 		m_logHeader = *header;
 	else
-		m_logHeader = ShvLogHeader::fromMetaData(md);
+		m_logHeader = ShvLogHeader::fromMetaData(m_log.metaData());
 
-	chainpack::ChainPackReader::ItemType t = m_reader->unpackNext();
-	if(t != chainpack::ChainPackReader::ItemType::CCPCP_ITEM_LIST)
+	if(m_log.isList())
 		SHV_EXCEPTION("Log is corrupted!");
 }
 
-ShvLogFileReader::~ShvLogFileReader()
-{
-	if(m_readerCreated) {
-		if(m_reader)
-			delete m_reader;
-		if(m_ifstream)
-			delete m_ifstream;
-	}
-}
-
-bool ShvLogFileReader::next()
+bool ShvLogRpcValueReader::next()
 {
 	using Column = ShvLogHeader::Column;
 	while(true) {
 		m_currentEntry = ShvJournalEntry();
-		if(!m_ifstream)
-			return false;
-		chainpack::ChainPackReader::ItemType tt = m_reader->peekNext();
-		//logDShvJournal() << "peek next type:" << chainpack::ChainPackReader::itemTypeToString(tt);
-		if(tt == chainpack::ChainPackReader::ItemType::CCPCP_ITEM_CONTAINER_END)
+		const chainpack::RpcValue::List &list = m_log.toList();
+		if(m_currentIndex >= list.size())
 			return false;
 
-		cp::RpcValue val;
-		m_reader->read(val);
+		const cp::RpcValue &val = list[m_currentIndex++];
 		const chainpack::RpcValue::List &row = val.toList();
 		cp::RpcValue dt = row.value(Column::Timestamp);
 		if(!dt.isDateTime()) {
@@ -100,12 +62,7 @@ bool ShvLogFileReader::next()
 	}
 }
 
-const ShvJournalEntry &ShvLogFileReader::entry()
-{
-	return m_currentEntry;
-}
-
-ShvLogTypeDescr::SampleType ShvLogFileReader::pathsSampleType(const std::string &path) const
+ShvLogTypeDescr::SampleType ShvLogRpcValueReader::pathsSampleType(const std::string &path) const
 {
 	ShvLogTypeDescr::SampleType st = m_logHeader.pathsSampleType(path);
 	if(st == ShvLogTypeDescr::SampleType::Invalid)
