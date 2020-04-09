@@ -305,8 +305,8 @@ public:
 	static RpcValue fromType(RpcValue::Type t) noexcept;
 
 	const MetaData &metaData() const;
-	RpcValue metaValue(RpcValue::Int key) const;
-	RpcValue metaValue(const RpcValue::String &key) const;
+	RpcValue metaValue(RpcValue::Int key, const RpcValue &default_value = RpcValue()) const;
+	RpcValue metaValue(const RpcValue::String &key, const RpcValue &default_value = RpcValue()) const;
 	void setMetaData(MetaData &&meta_data);
 	void setMetaValue(Int key, const RpcValue &val);
 	void setMetaValue(const String &key, const RpcValue &val);

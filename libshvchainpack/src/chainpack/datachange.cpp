@@ -20,7 +20,9 @@ DataChange::MetaType::MetaType()
 	*/
 	m_tags = {
 		RPC_META_TAG_DEF(DateTime),
-		RPC_META_TAG_DEF(ShortTime)
+		RPC_META_TAG_DEF(ShortTime),
+		RPC_META_TAG_DEF(Domain),
+		RPC_META_TAG_DEF(SampleType),
 	};
 }
 
@@ -34,30 +36,23 @@ void DataChange::MetaType::registerMetaType()
 	}
 }
 
-DataChange::DataChange(const RpcValue &val, const RpcValue &date_time)
-	: DataChange(val, date_time, RpcValue())
-{
-}
-
-DataChange::DataChange(const RpcValue &val, const RpcValue &date_time, const RpcValue &short_time)
-	: m_value(val)
-	, m_dateTime(date_time)
+DataChange::DataChange(const RpcValue &val, const RpcValue::DateTime &date_time, int short_time)
+	: m_dateTime(date_time)
 	, m_shortTime(short_time)
 {
-	if(isValueChange(val))
-		nWarning() << "Storing ValueChange to value (ValueChange inside ValueChange):" << val.toCpon();
+	setValue(val);
 }
 
 void DataChange::setValue(const RpcValue &val)
 {
 	m_value = val;
-	if(isValueChange(val))
+	if(isDataChange(val))
 		nWarning() << "Storing ValueChange to value (ValueChange inside ValueChange):" << val.toCpon();
 }
 
 DataChange DataChange::fromRpcValue(const RpcValue &val)
 {
-	if(isValueChange(val)) {
+	if(isDataChange(val)) {
 		DataChange ret;
 		if(val.isList()) {
 			const RpcValue::List &lst = val.toList();
@@ -73,9 +68,11 @@ DataChange DataChange::fromRpcValue(const RpcValue &val)
 set_meta_data:
 		ret.setDateTime(val.metaValue(MetaType::Tag::DateTime));
 		ret.setShortTime(val.metaValue(MetaType::Tag::ShortTime));
+		ret.setDomain(val.metaValue(MetaType::Tag::Domain).toString());
+		ret.setSampleType(val.metaValue(MetaType::Tag::SampleType, (int)SampleType::Continuous).toInt());
 		return ret;
 	}
-	return DataChange(val.clone(RpcValue::CloneMetaData), RpcValue());
+	return DataChange(val.clone(RpcValue::CloneMetaData), RpcValue::DateTime());
 }
 
 RpcValue DataChange::toRpcValue() const
@@ -91,10 +88,10 @@ RpcValue DataChange::toRpcValue() const
 		ret = RpcValue{nullptr};
 	}
 	ret.setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
-	if(m_dateTime.isDateTime())
-		ret.setMetaValue(MetaType::Tag::DateTime, m_dateTime.toDateTime());
-	if(m_shortTime.isUInt())
-		ret.setMetaValue(MetaType::Tag::ShortTime, m_shortTime);
+	if(hasDateTime())
+		ret.setMetaValue(MetaType::Tag::DateTime, m_dateTime);
+	if(hasShortTime())
+		ret.setMetaValue(MetaType::Tag::ShortTime, (unsigned)m_shortTime);
 	return ret;
 }
 

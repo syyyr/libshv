@@ -5,7 +5,7 @@
 
 #include "shvlogtypeinfo.h"
 
-#include <shv/chainpack/rpcvalue.h>
+#include <shv/chainpack/datachange.h>
 
 namespace shv {
 namespace core {
@@ -31,7 +31,7 @@ public:
 	static const char* DATA_MISSING_LOG_CACHE_FILE_MISSING;
 	static const char* DATA_MISSING_APP_SHUTDOWN;
 
-	using SampleType = ShvLogTypeDescr::SampleType;
+	using SampleType = shv::chainpack::DataChange::SampleType;
 
 	static constexpr int NO_SHORT_TIME = -1;
 
@@ -72,6 +72,7 @@ public:
 	void setShortTime(int short_time) {shortTime = short_time;}
 	shv::chainpack::RpcValue::DateTime dateTime() const { return shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(epochMsec); }
 	shv::chainpack::RpcValue toRpcValueMap() const;
+	shv::chainpack::DataChange toDataChange() const;
 };
 
 } // namespace utils

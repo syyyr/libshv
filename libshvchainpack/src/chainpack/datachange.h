@@ -18,6 +18,8 @@ public:
 		enum {ID = chainpack::meta::GlobalNS::MetaTypeId::DataChange};
 		struct Tag { enum Enum {DateTime = chainpack::meta::Tag::USER,
 								ShortTime,
+								Domain,
+								SampleType,
 								MAX};};
 		//struct Key { enum Enum {Value = 1, DateTime, ShortTime, MAX};};
 
@@ -26,11 +28,12 @@ public:
 		static void registerMetaType();
 	};
 public:
+	static constexpr int NO_SHORT_TIME = -1;
+	enum class SampleType : uint8_t {Invalid = 0, Continuous , Discrete};
 	DataChange() {}
-	DataChange(const RpcValue &val, const RpcValue &date_time);
-	DataChange(const RpcValue &val, const RpcValue &date_time, const RpcValue &short_time);
+	DataChange(const RpcValue &val, const RpcValue::DateTime &date_time, int short_time = NO_SHORT_TIME);
 
-	static bool isValueChange(const RpcValue &rv)
+	static bool isDataChange(const RpcValue &rv)
 	{
 		return rv.metaTypeId() == shv::chainpack::DataChange::MetaType::ID
 				&& rv.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID;
@@ -39,20 +42,29 @@ public:
 	RpcValue value() const { return m_value; }
 	void setValue(const RpcValue &val);
 
-	bool hasDateTime() const { return m_dateTime.isDateTime(); }
-	RpcValue dateTime() const { return m_dateTime.isDateTime()? m_dateTime: RpcValue(); }
-	void setDateTime(const RpcValue &dt) { m_dateTime = dt.isDateTime()? dt: RpcValue(); }
+	bool hasDateTime() const { return m_dateTime.msecsSinceEpoch() > 0; }
+	RpcValue dateTime() const { return hasDateTime()? RpcValue(m_dateTime): RpcValue(); }
+	void setDateTime(const RpcValue &dt) { m_dateTime = dt.isDateTime()? dt.toDateTime(): RpcValue::DateTime(); }
 
-	bool hasShortTime() const { return m_shortTime.isUInt(); }
-	RpcValue shortTime() const { return m_shortTime.isUInt()? m_shortTime: RpcValue(); }
-	void setShortTime(const RpcValue &st) { m_shortTime = st.isUInt()? st: RpcValue(); }
+	bool hasShortTime() const { return m_shortTime > NO_SHORT_TIME; }
+	RpcValue shortTime() const { return hasShortTime()? RpcValue((unsigned)m_shortTime): RpcValue(); }
+	void setShortTime(const RpcValue &st) { m_shortTime = (st.isUInt() || (st.isInt() && st.toInt() >= 0))? st.toInt(): NO_SHORT_TIME; }
+
+	void setDomain(const std::string &d) { m_domain = d; }
+	const std::string& domain() const { return m_domain; }
+
+	void setSampleType(SampleType st) { m_sampleType = st; }
+	void setSampleType(int st) { m_sampleType = (st >= (int)SampleType::Invalid && st <= (int)SampleType::Discrete)? static_cast<SampleType>(st): SampleType::Invalid; }
+	SampleType sampleType() const { return m_sampleType; }
 
 	static DataChange fromRpcValue(const RpcValue &val);
 	RpcValue toRpcValue() const;
 private:
 	RpcValue m_value;
-	RpcValue m_dateTime;
-	RpcValue m_shortTime;
+	std::string m_domain;
+	RpcValue::DateTime m_dateTime;
+	int m_shortTime;
+	SampleType m_sampleType = SampleType::Continuous;
 };
 
 } // namespace chainpack

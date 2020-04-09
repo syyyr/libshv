@@ -475,17 +475,17 @@ const RpcValue::MetaData &RpcValue::metaData() const
 	return md;
 }
 
-RpcValue RpcValue::metaValue(RpcValue::Int key) const
+RpcValue RpcValue::metaValue(RpcValue::Int key, const RpcValue &default_value) const
 {
 	const MetaData &md = metaData();
-	RpcValue ret = md.value(key);
+	RpcValue ret = md.value(key, default_value);
 	return ret;
 }
 
-RpcValue RpcValue::metaValue(const RpcValue::String &key) const
+RpcValue RpcValue::metaValue(const RpcValue::String &key, const RpcValue &default_value) const
 {
 	const MetaData &md = metaData();
-	RpcValue ret = md.value(key);
+	RpcValue ret = md.value(key, default_value);
 	return ret;
 }
 

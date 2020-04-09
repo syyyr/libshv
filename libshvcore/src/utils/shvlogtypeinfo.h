@@ -3,7 +3,8 @@
 
 #include "../shvcoreglobal.h"
 
-#include <shv/chainpack/rpcvalue.h>
+#include <shv/chainpack/datachange.h>
+//#include <shv/chainpack/rpcvalue.h>
 
 #include <string>
 
@@ -56,7 +57,7 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeDescr
 	std::vector<ShvLogTypeDescrField> fields;
 	std::string description;
 	Type type = Type::Invalid;
-	enum class SampleType {Invalid, Continuous , Discrete};
+	using SampleType = shv::chainpack::DataChange::SampleType;
 	SampleType sampleType = SampleType::Continuous;
 	chainpack::RpcValue minVal;
 	chainpack::RpcValue maxVal;

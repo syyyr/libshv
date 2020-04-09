@@ -44,6 +44,14 @@ chainpack::RpcValue ShvJournalEntry::toRpcValueMap() const
 	return std::move(m);
 }
 
+chainpack::DataChange ShvJournalEntry::toDataChange() const
+{
+	shv::chainpack::DataChange ret(value, chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(epochMsec), shortTime);
+	ret.setDomain(domain);
+	ret.setSampleType(sampleType);
+	return ret;
+}
+
 } // namespace utils
 } // namespace core
 } // namespace shv
