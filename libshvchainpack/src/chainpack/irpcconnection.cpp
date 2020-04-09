@@ -109,28 +109,40 @@ int IRpcConnection::callShvMethod(int rq_id, const std::string &shv_path, std::s
 	return rq_id;
 }
 
-int IRpcConnection::callMethodSubscribe(const std::string &shv_path, std::string method, const RpcValue &grant)
+int IRpcConnection::callMethodSubscribe(const std::string &shv_path, std::string method)
 {
-	logSubscriptionsD() << "call subscribe for connection id:" << connectionId() << "path:" << shv_path << "method:" << method << "grant:" << grant.toCpon();
-	return callShvMethod(Rpc::DIR_BROKER_APP
-					  , Rpc::METH_SUBSCRIBE
-					  , RpcValue::Map{
-						  {Rpc::PAR_PATH, shv_path},
-						  {Rpc::PAR_METHOD, std::move(method)},
-						 }
-					  , grant);
+	int rq_id = nextRequestId();
+	return callMethodSubscribe(rq_id, shv_path, method);
 }
 
-int IRpcConnection::callMethodUnsubscribe(const std::string &shv_path, std::string method, const RpcValue &grant)
+int IRpcConnection::callMethodSubscribe(int rq_id, const std::string &shv_path, std::string method)
 {
-	logSubscriptionsD() << "call unsubscribe for connection id:" << connectionId() << "path:" << shv_path << "method:" << method << "grant:" << grant.toCpon();
-	return callShvMethod(Rpc::DIR_BROKER_APP
-					  , Rpc::METH_UNSUBSCRIBE
-					  , RpcValue::Map{
-						  {Rpc::PAR_PATH, shv_path},
-						  {Rpc::PAR_METHOD, std::move(method)},
-						 }
-						 , grant);
+	logSubscriptionsD() << "call subscribe for connection id:" << connectionId() << "path:" << shv_path << "method:" << method;
+	return callShvMethod(rq_id
+						 , Rpc::DIR_BROKER_APP
+						 , Rpc::METH_SUBSCRIBE
+						 , RpcValue::Map{
+							 {Rpc::PAR_PATH, shv_path},
+							 {Rpc::PAR_METHOD, std::move(method)},
+						 });
+}
+
+int IRpcConnection::callMethodUnsubscribe(const std::string &shv_path, std::string method)
+{
+	int rq_id = nextRequestId();
+	return callMethodUnsubscribe(rq_id, shv_path, method);
+}
+
+int IRpcConnection::callMethodUnsubscribe(int rq_id, const std::string &shv_path, std::string method)
+{
+	logSubscriptionsD() << "call unsubscribe for connection id:" << connectionId() << "path:" << shv_path << "method:" << method;
+	return callShvMethod(rq_id
+						 , Rpc::DIR_BROKER_APP
+						 , Rpc::METH_UNSUBSCRIBE
+						 , RpcValue::Map{
+							 {Rpc::PAR_PATH, shv_path},
+							 {Rpc::PAR_METHOD, std::move(method)},
+						 });
 }
 
 } // namespace chainpack

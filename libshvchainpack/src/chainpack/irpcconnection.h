@@ -46,8 +46,10 @@ public:
 	int callShvMethod(int rq_id, const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
 	//RpcResponse callMethodSync(const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = DEFAULT_RPC_TIMEOUT);
 	//RpcResponse callShvMethodSync(const std::string &shv_path, const std::string &method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue(), int rpc_timeout = DEFAULT_RPC_TIMEOUT);
-	int callMethodSubscribe(const std::string &shv_path, std::string method, const RpcValue &grant = shv::chainpack::RpcValue());
-	int callMethodUnsubscribe(const std::string &shv_path, std::string method, const RpcValue &grant = shv::chainpack::RpcValue());
+	int callMethodSubscribe(const std::string &shv_path, std::string method);
+	int callMethodSubscribe(int rq_id, const std::string &shv_path, std::string method);
+	int callMethodUnsubscribe(const std::string &shv_path, std::string method);
+	int callMethodUnsubscribe(int rq_id, const std::string &shv_path, std::string method);
 
 protected:
 	int callShvMethod(const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params, const RpcValue &grant);

@@ -588,8 +588,9 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	}
 	std::set<AclManager::FlattenRole> user_roles;
 	if(is_request_from_master_broker) {
-		if(!request_grant.role.empty())
-			user_roles = std::set<AclManager::FlattenRole>{AclManager::FlattenRole{request_grant.role}};
+		user_roles = std::set<AclManager::FlattenRole>{AclManager::FlattenRole{cp::Rpc::ROLE_MASTER_BROKER}};
+		//if(!request_grant.role.empty())
+		//	user_roles = std::set<AclManager::FlattenRole>{AclManager::FlattenRole{request_grant.role}};
 	}
 	else {
 		user_roles = aclManager()->userFlattenRoles(conn->loggedUserName());

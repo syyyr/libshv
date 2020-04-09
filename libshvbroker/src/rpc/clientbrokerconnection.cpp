@@ -227,11 +227,11 @@ void ClientBrokerConnection::propagateSubscriptionToSlaveBroker(const CommonRpcC
 			std::string slave_path = subs.absolutePath.substr(mount_point.size());
 			if(!slave_path.empty() && slave_path[0] == '/')
 				slave_path = slave_path.substr(1);
-			callMethodSubscribe(slave_path, subs.method, cp::AccessGrant(cp::Rpc::ROLE_MASTER_BROKER, !cp::AccessGrant::IS_RESOLVED).toRpcValue());
+			callMethodSubscribe(slave_path, subs.method);
 			return;
 		}
 		if(shv::core::utils::ShvPath(mount_point).startsWithPath(subs.absolutePath)) {
-			callMethodSubscribe(std::string(), subs.method, cp::AccessGrant(cp::Rpc::ROLE_MASTER_BROKER, !cp::AccessGrant::IS_RESOLVED).toRpcValue());
+			callMethodSubscribe(std::string(), subs.method);
 			return;
 		}
 	}
