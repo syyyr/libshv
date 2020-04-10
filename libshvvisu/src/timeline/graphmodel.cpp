@@ -64,14 +64,7 @@ XRange GraphModel::xRange() const
 {
 	XRange ret;
 	for (int i = 0; i < channelCount(); ++i) {
-		if(i == 0) {
-			ret = xRange(i);
-		}
-		else {
-			XRange r = xRange(i);
-			ret.min = qMin(ret.min, r.min);
-			ret.max = qMax(ret.max, r.max);
-		}
+		ret = ret.united(xRange(i));
 	}
 	return ret;
 }

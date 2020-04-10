@@ -40,6 +40,20 @@ struct Range
 	bool isValid() const { return min <= max; }
 	bool isEmpty() const { return min >= max; }
 	T interval() const {return max - min;}
+	Range<T> united(const Range<T> &o) const {
+		if(isValid() && o.isValid()) {
+			Range<T> ret = *this;
+			ret.min = std::min(ret.min, o.min);
+			ret.max = std::max(ret.max, o.max);
+			return ret;
+		}
+		else if(isValid()) {
+			return *this;
+		}
+		else {
+			return o;
+		}
+	}
 };
 
 using XRange = Range<timemsec_t>;

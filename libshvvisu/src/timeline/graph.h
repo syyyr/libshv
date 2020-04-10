@@ -155,11 +155,11 @@ public:
 	void setModel(GraphModel *model);
 	GraphModel *model() const;
 
-	void createChannelsFromModel();
+	void createChannelsFromModel(const std::string &path_pattern = std::string());
 
 	int channelCount() const { return  m_channels.count(); }
 	void clearChannels();
-	Channel& appendChannel();
+	Channel& appendChannel(int model_index = -1);
 	Channel& channelAt(int ix);
 	const Channel& channelAt(int ix) const;
 	DataRect dataRect(int channel_ix) const;

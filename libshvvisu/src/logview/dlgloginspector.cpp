@@ -32,6 +32,8 @@ namespace shv {
 namespace visu {
 namespace logview {
 
+enum { TabGraph = 0, TabData, TabInfo };
+
 DlgLogInspector::DlgLogInspector(QWidget *parent) :
 	QDialog(parent),
 	ui(new Ui::DlgLogInspector)
@@ -87,19 +89,36 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 	ui->edSince->setDateTime(dt1);
 	ui->edUntil->setDateTime(dt2);
 
+	connect(ui->btTabGraph, &QAbstractButton::toggled, [this](bool is_checked) {
+		if(is_checked)
+			ui->stackedWidget->setCurrentIndex(TabGraph);
+	});
+	connect(ui->btTabData, &QAbstractButton::toggled, [this](bool is_checked) {
+		if(is_checked)
+			ui->stackedWidget->setCurrentIndex(TabData);
+	});
+	connect(ui->btTabInfo, &QAbstractButton::toggled, [this](bool is_checked) {
+		if(is_checked)
+			ui->stackedWidget->setCurrentIndex(TabInfo);
+	});
+
 	m_logModel = new LogModel(this);
 	m_sortFilterProxy = new QSortFilterProxyModel(this);
 	m_sortFilterProxy->setFilterKeyColumn(-1);
 	m_sortFilterProxy->setSourceModel(m_logModel);
 	ui->tblData->setModel(m_sortFilterProxy);
 	ui->tblData->setSortingEnabled(true);
-	connect(ui->edFilter, &QLineEdit::textChanged, [this]() {
-		QString str = ui->edFilter->text().trimmed();
+
+	connect(ui->edDataFilter, &QLineEdit::textChanged, [this]() {
+		QString str = ui->edDataFilter->text().trimmed();
 		m_sortFilterProxy->setFilterFixedString(str);
-		//if(str.isEmpty()) {
-		//}
-		//m_sortFilterProxy->setFilterWildcard("*" + str + "*");
 	});
+	connect(ui->edDataFilter, &QLineEdit::textChanged, [this]() {
+		QString str = ui->edDataFilter->text().trimmed();
+		m_graph->createChannelsFromModel(str.toStdString());
+		ui->graphView->makeLayout();
+	});
+
 	ui->tblData->setContextMenuPolicy(Qt::ActionsContextMenu);
 	{
 		QAction *copy = new QAction(tr("&Copy"));

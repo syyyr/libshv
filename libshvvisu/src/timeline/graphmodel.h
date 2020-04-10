@@ -54,6 +54,7 @@ public: // API
 	void appendValueShvPath(const std::string &shv_path, Sample &&sample);
 
 	int pathToChannel(const std::string &path) const;
+	std::string channelPath(int channel) const { return channelData(channel, ChannelDataRole::ShvPath).toString().toStdString(); }
 
 	Q_SIGNAL void xRangeChanged(XRange range);
 	Q_SIGNAL void channelCountChanged(int cnt);

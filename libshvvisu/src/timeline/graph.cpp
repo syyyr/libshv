@@ -12,6 +12,7 @@
 #include <QMouseEvent>
 
 #include <cmath>
+#include <regex>
 
 namespace cp = shv::chainpack;
 
@@ -67,7 +68,7 @@ GraphModel *Graph::model() const
 	return m_model;
 }
 
-void Graph::createChannelsFromModel()
+void Graph::createChannelsFromModel(const std::string &path_pattern)
 {
 	static QVector<QColor> colors {
 		Qt::magenta,
@@ -79,18 +80,36 @@ void Graph::createChannelsFromModel()
 	m_channels.clear();
 	if(!m_model)
 		return;
-	setXRange(m_model->xRange());
+	std::regex rx_path_pattern;
+	if(!path_pattern.empty())
+		rx_path_pattern = std::regex(path_pattern);
+	// sort channels alphabetically
+	QMap<std::string, int> path_to_model_index;
 	for (int i = 0; i < m_model->channelCount(); ++i) {
-		Channel &ch = appendChannel();
+		std::string shv_path = m_model->channelPath(i);
+		if(!path_pattern.empty()) {
+			std::smatch cmatch;
+			if(!std::regex_search(shv_path, cmatch, rx_path_pattern))
+				continue;
+		}
+		path_to_model_index[shv_path] = i;
+	}
+	XRange x_range;
+	for(const std::string &shv_path : path_to_model_index.keys()) {
+		int model_ix = path_to_model_index[shv_path];
+		x_range = x_range.united(m_model->xRange(model_ix));
+		Channel &ch = appendChannel(model_ix);
+		int graph_ix = channelCount() - 1;
 		ChannelStyle style = ch.style();
-		style.setColor(colors.value(i % colors.count()));
+		style.setColor(colors.value(graph_ix % colors.count()));
 		ch.setStyle(style);
-		ch.setMetaTypeId(m_model->guessMetaType(i));
-		YRange yrange = m_model->yRange(i);
+		ch.setMetaTypeId(m_model->guessMetaType(model_ix));
+		YRange yrange = m_model->yRange(model_ix);
 		if(yrange.isEmpty())
 			yrange = YRange{0, 1};
-		setYRange(i, yrange);
+		setYRange(graph_ix, yrange);
 	}
+	setXRange(x_range);
 }
 
 void Graph::clearChannels()
@@ -98,11 +117,15 @@ void Graph::clearChannels()
 	m_channels.clear();
 }
 
-timeline::Graph::Channel &Graph::appendChannel()
+timeline::Graph::Channel &Graph::appendChannel(int model_index)
 {
+	if(model_index >= 0) {
+		if(model_index >= m_model->channelCount())
+			SHV_EXCEPTION("Invalid model index: " + std::to_string(model_index));
+	}
 	m_channels.append(Channel());
 	Channel &ch = m_channels.last();
-	ch.setModelIndex(m_channels.count() - 1);
+	ch.setModelIndex(model_index < 0? m_channels.count() - 1: model_index);
 	return ch;
 }
 
