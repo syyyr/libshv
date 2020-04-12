@@ -43,7 +43,7 @@ DataChange::DataChange(const RpcValue &val, const RpcValue::DateTime &date_time,
 	setValue(val);
 }
 
-DataChange::DataChange(const RpcValue &val, uint short_time)
+DataChange::DataChange(const RpcValue &val, unsigned short_time)
 	: m_shortTime((int)short_time)
 {
 	setValue(val);

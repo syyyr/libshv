@@ -237,39 +237,47 @@ void AclManager::aclSetAccessRolePaths(const std::string &role_name, const AclRo
 	SHV_EXCEPTION("Role paths definition is read only.");
 }
 
-std::set<AclManager::FlattenRole> AclManager::flattenRole_helper(const std::string &role_name, int nest_level)
+std::map<std::string, AclManager::FlattenRole> AclManager::flattenRole_helper(const std::string &role_name, int nest_level)
 {
-	std::set<FlattenRole> ret;
+	std::map<std::string, FlattenRole> ret;
 	AclRole ar = aclRole(role_name);
 	if(ar.isValid()) {
 		FlattenRole fr{role_name, ar.weight, nest_level};
-		ret.insert(std::move(fr));
-		for(auto g : ar.roles) {
-			for(const auto &r : ret)
-			if(r.name == g) {
-				shvWarning() << "Cyclic reference in roles detected for name:" << g;
+		ret[role_name] = std::move(fr);
+		for(auto rl : ar.roles) {
+			auto it = ret.find(rl);
+			if(it != ret.end()) {
+				shvWarning() << "Cyclic reference in roles detected for name:" << rl;
 				continue;
 			}
-			auto gg = flattenRole_helper(g, ++nest_level);
-			ret.insert(gg.begin(), gg.end());
+			auto ret2 = flattenRole_helper(rl, ++nest_level);
+			ret.insert(ret2.begin(), ret2.end());
 		}
 	}
 	return ret;
 }
 
-std::set<AclManager::FlattenRole> AclManager::userFlattenRoles(const std::string &user_name)
+std::vector<AclManager::FlattenRole> AclManager::userFlattenRoles(const std::string &user_name)
 {
 	if(m_cache.userFlattenRoles.find(user_name) == m_cache.userFlattenRoles.end()) {
 		AclUser user_def = aclUser(user_name);
 		if(!user_def.isValid())
-			return std::set<FlattenRole>();
+			return std::vector<FlattenRole>();
 
-		std::set<AclManager::FlattenRole> unique_roles;
+		std::map<std::string, AclManager::FlattenRole> unique_roles;
 		for(auto role : user_def.roles) {
 			auto gg = flattenRole_helper(role, 1);
 			unique_roles.insert(gg.begin(), gg.end());
 		}
-		m_cache.userFlattenRoles[user_name] = unique_roles;
+		std::vector<AclManager::FlattenRole> lst;
+		for(const auto &kv : unique_roles)
+			lst.push_back(kv.second);
+		std::sort(lst.begin(), lst.end(), [](const FlattenRole &r1, const FlattenRole &r2) {
+			if(r1.weight == r2.weight)
+				return r1.nestLevel < r2.nestLevel;
+			return r1.weight > r2.weight;
+		});
+		m_cache.userFlattenRoles[user_name] = lst;
 	}
 	return m_cache.userFlattenRoles[user_name];
 }

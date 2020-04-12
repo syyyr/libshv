@@ -32,7 +32,7 @@ public:
 	enum class SampleType : uint8_t {Invalid = 0, Continuous , Discrete};
 	DataChange() {}
 	DataChange(const RpcValue &val, const RpcValue::DateTime &date_time, int short_time = NO_SHORT_TIME);
-	DataChange(const RpcValue &val, uint short_time);
+	DataChange(const RpcValue &val, unsigned short_time);
 
 	static bool isDataChange(const RpcValue &rv)
 	{

@@ -63,6 +63,7 @@ private:
 	bool checkTunnelSecret(const std::string &s);
 
 	void processLoginPhase() override;
+	//int callMethodSubscribeMB(const std::string &shv_path, std::string method);
 private:
 	QTimer *m_idleWatchDogTimer = nullptr;
 	std::vector<std::string> m_mountPoints;

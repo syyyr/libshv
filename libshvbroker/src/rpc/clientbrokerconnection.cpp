@@ -5,6 +5,7 @@
 
 #include <shv/chainpack/cponwriter.h>
 #include <shv/chainpack/accessgrant.h>
+#include <shv/chainpack/rpc.h>
 #include <shv/coreqt/log.h>
 #include <shv/core/stringview.h>
 #include <shv/core/utils/shvpath.h>
@@ -236,5 +237,17 @@ void ClientBrokerConnection::propagateSubscriptionToSlaveBroker(const CommonRpcC
 		}
 	}
 }
-
+/*
+int ClientBrokerConnection::callMethodSubscribeMB(const std::string &shv_path, std::string method)
+{
+	logSubscriptionsD() << "call subscribe for connection id:" << connectionId() << "path:" << shv_path << "method:" << method;
+	return callShvMethod( cp::Rpc::DIR_BROKER_APP
+						 , cp::Rpc::METH_SUBSCRIBE
+						 , cp::RpcValue::Map{
+							 {cp::Rpc::PAR_PATH, shv_path},
+							 {cp::Rpc::PAR_METHOD, std::move(method)},
+						 }
+						 , cp::AccessGrant(cp::Rpc::ROLE_MASTER_BROKER, !cp::AccessGrant::IS_RESOLVED).toRpcValue());
+}
+*/
 }}}

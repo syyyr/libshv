@@ -586,11 +586,12 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 				logAclResolveW() << "Client cannot send resolved grant in request.";
 		}
 	}
-	std::set<AclManager::FlattenRole> user_roles;
+	std::vector<AclManager::FlattenRole> user_roles;
 	if(is_request_from_master_broker) {
-		user_roles = std::set<AclManager::FlattenRole>{AclManager::FlattenRole{cp::Rpc::ROLE_MASTER_BROKER}};
-		//if(!request_grant.role.empty())
-		//	user_roles = std::set<AclManager::FlattenRole>{AclManager::FlattenRole{request_grant.role}};
+		// resolve not resolved grant sent from master broker
+		user_roles = std::vector<AclManager::FlattenRole>{AclManager::FlattenRole{cp::Rpc::ROLE_MASTER_BROKER}};
+		if(!request_grant.role.empty() && request_grant.role != cp::Rpc::ROLE_MASTER_BROKER)
+			user_roles.push_back(AclManager::FlattenRole{request_grant.role});
 	}
 	else {
 		user_roles = aclManager()->userFlattenRoles(conn->loggedUserName());

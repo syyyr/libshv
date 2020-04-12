@@ -51,14 +51,10 @@ public:
 		int weight = 0;
 		int nestLevel = 0;
 
+		FlattenRole() {}
 		FlattenRole(const std::string &n, int w = 0, int nl = 0) : name(n), weight(w), nestLevel(nl) {}
-		bool operator<(const FlattenRole &o) const {
-			if(weight == o.weight)
-				return nestLevel < o.nestLevel;
-			return weight > o.weight;
-		}
 	};
-	std::set<FlattenRole> userFlattenRoles(const std::string &user_name);
+	std::vector<FlattenRole> userFlattenRoles(const std::string &user_name);
 
 	virtual chainpack::UserLoginResult checkPassword(const chainpack::UserLoginContext &login_context);
 
@@ -86,7 +82,7 @@ protected:
 	{
 		m_cache = Cache();
 	}
-	std::set<FlattenRole> flattenRole_helper(const std::string &role_name, int nest_level);
+	std::map<std::string, FlattenRole> flattenRole_helper(const std::string &role_name, int nest_level);
 protected:
 	BrokerApp * m_brokerApp;
 	struct Cache
@@ -96,7 +92,7 @@ protected:
 		std::map<std::string, AclRole> aclRoles;
 		std::map<std::string, AclRolePaths> aclPathsRoles;
 
-		std::map<std::string, std::set<FlattenRole>> userFlattenRoles;
+		std::map<std::string, std::vector<FlattenRole>> userFlattenRoles;
 	} m_cache;
 };
 
