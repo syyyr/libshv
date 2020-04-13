@@ -75,7 +75,7 @@ set_meta_data:
 		ret.setDateTime(val.metaValue(MetaType::Tag::DateTime));
 		ret.setShortTime(val.metaValue(MetaType::Tag::ShortTime));
 		ret.setDomain(val.metaValue(MetaType::Tag::Domain).toString());
-		ret.setSampleType(val.metaValue(MetaType::Tag::SampleType, (int)SampleType::Continuous).toInt());
+		ret.setSampleType(val.metaValue(MetaType::Tag::SampleType).toInt());
 		return ret;
 	}
 	return DataChange(val.clone(RpcValue::CloneMetaData), RpcValue::DateTime());

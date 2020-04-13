@@ -28,6 +28,7 @@ public:
 		static void registerMetaType();
 	};
 public:
+	enum GetValueAgeOption {DONT_CARE_TS = -2, USE_CACHE = -1, RELOAD_FORCE, RELOAD_OLDER};
 	static constexpr int NO_SHORT_TIME = -1;
 	enum class SampleType : uint8_t {Invalid = 0, Continuous , Discrete};
 	DataChange() {}
@@ -65,7 +66,7 @@ private:
 	std::string m_domain;
 	RpcValue::DateTime m_dateTime;
 	int m_shortTime;
-	SampleType m_sampleType = SampleType::Continuous;
+	SampleType m_sampleType = SampleType::Invalid;
 };
 
 } // namespace chainpack
