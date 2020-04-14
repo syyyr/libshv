@@ -156,7 +156,9 @@ void ServerConnection::setLoginResult(const chainpack::UserLoginResult &result)
 	shvInfo().nospace() << "Client logged in user: " << m_userLogin.user << " from: " << peerAddress() << ':' << peerPort();
 	auto resp = cp::RpcResponse::forRequest(m_userLoginContext.loginRequest);
 	if(!result.passwordOk) {
-		resp.setError(cp::RpcResponse::Error::createMethodCallExceptionError("Invalid authentication for user: " + m_userLogin.user + " at: " + connectionName()));
+		resp.setError(cp::RpcResponse::Error::createMethodCallExceptionError("Invalid authentication for user: " + m_userLogin.user
+																			 + " reason: " + result.loginError
+																			 + " at: " + connectionName()));
 	}
 	else {
 		resp.setResult(result.toRpcValue());
