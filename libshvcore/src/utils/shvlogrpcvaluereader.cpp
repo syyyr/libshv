@@ -21,7 +21,7 @@ ShvLogRpcValueReader::ShvLogRpcValueReader(const shv::chainpack::RpcValue &log, 
 	else
 		m_logHeader = ShvLogHeader::fromMetaData(m_log.metaData());
 
-	if(m_log.isList())
+	if(!m_log.isList())
 		SHV_EXCEPTION("Log is corrupted!");
 }
 
