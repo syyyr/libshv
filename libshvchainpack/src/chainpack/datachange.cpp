@@ -35,12 +35,12 @@ void DataChange::MetaType::registerMetaType()
 		shv::chainpack::meta::registerType(shv::chainpack::meta::GlobalNS::ID, MetaType::ID, &s);
 	}
 }
-
+/*
 DataChange::DataChange(const RpcValue &val)
 {
 	setValue(val);
 }
-
+*/
 DataChange::DataChange(const RpcValue &val, const RpcValue::DateTime &date_time, int short_time)
 	: m_dateTime(date_time)
 	, m_shortTime(short_time)

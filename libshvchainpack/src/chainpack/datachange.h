@@ -32,7 +32,9 @@ public:
 	static constexpr int NO_SHORT_TIME = -1;
 	enum class SampleType : uint8_t {Invalid = 0, Continuous , Discrete};
 	DataChange() {}
-	DataChange(const RpcValue &val);
+	// ambiguous constructor for DataChange(const DataChange &) DataChange(const RpcValue &)
+	// better to assign value explicitelly
+	//DataChange(const RpcValue &val);
 	DataChange(const RpcValue &val, const RpcValue::DateTime &date_time, int short_time = NO_SHORT_TIME);
 	DataChange(const RpcValue &val, unsigned short_time);
 
