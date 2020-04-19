@@ -136,4 +136,102 @@ std::string &String::lower(std::string &s)
 	return s;
 }
 
+static size_t find_str(const std::string &haystack, size_t begin_pos, size_t end_pos, const std::string &needle)
+{
+	using namespace std;
+	if(needle.empty())
+		return string::npos;
+	if(begin_pos > haystack.size())
+		return string::npos;
+	if(end_pos > haystack.size())
+		return string::npos;
+	if(end_pos < begin_pos)
+		return string::npos;
+	if(needle.size() > (end_pos - begin_pos))
+		return string::npos;
+	auto pos1 = begin_pos;
+	auto pos2 = end_pos - needle.size() + 1;
+	while(pos1 < pos2) {
+		//std::cout << "it1: " << *it1 << '\n';
+		unsigned i = 0;
+		for(; i<needle.size(); ++i) {
+			//std::cout << i << " it: " << *(it1 + i) << " str: " << str[i] << '\n';
+			if(haystack[pos1 + i] != needle[i])
+				break;
+		}
+		if(i == needle.size())
+			return pos1;
+		++pos1;
+	}
+	return string::npos;
+}
+
+std::pair<size_t, size_t> String::indexOfBrackets(const std::string &haystack, size_t begin_pos, size_t end_pos, const std::string &open_bracket, const std::string &close_bracket)
+{
+	if(begin_pos + open_bracket.size() > haystack.size())
+		return std::pair<size_t, size_t>(std::string::npos, std::string::npos);
+	if(end_pos > haystack.size())
+		end_pos = haystack.size();
+	if(end_pos < begin_pos)
+		return std::pair<size_t, size_t>(std::string::npos, std::string::npos);
+	//std::cout << "=====: " << string(str1, str2) << '\n';
+	auto open0 = find_str(haystack, begin_pos, end_pos, open_bracket);
+	auto open1 = open0;
+	auto close1 = find_str(haystack, open1, end_pos, close_bracket);
+	int nest_cnt = 0;
+	while(true) {
+		//std::cout << "open1 : " << string(open1, str2) << '\n';
+		//std::cout << "close1: " << string(close1, str2) << '\n';
+		if(open1 == std::string::npos || close1 == std::string::npos)
+			return std::pair<size_t, size_t>(open0, close1);
+		open1 = find_str(haystack, open1 + open_bracket.size(), close1, open_bracket);
+		//std::cout << "\topen2 : " << string(open1, str2) << '\n';
+		if(open1 == std::string::npos) {
+			// no opening bracket before closing, we have found balaced pair if nest_cnt == 0
+			if(nest_cnt == 0)
+				return std::pair<size_t, size_t>(open0, close1);
+			nest_cnt--;
+			open1 = close1;
+			close1 = find_str(haystack, close1 + close_bracket.size(), end_pos, close_bracket);
+			//std::cout << "\tclose2 : " << string(open1, str2) << '\n';
+		}
+		else {
+			nest_cnt++;
+		}
+	}
+}
+#ifdef TEST_BRACKETS
+int main()
+{
+	for(const string &s : {
+		"{{ahoj0}}",
+		"{{ah{o}j0}}",
+		"fdwre {{ahoj}} babi {{ahoj?=htu{{babi}}jede,neco1,neco2,{{neco3}}ocasek}} fr",
+		"ahoj}}",
+		"{{ahoj1",
+		"{{{ahoj2}",
+		"{{{ahoj3}}",
+		"{{{{ahoj4}}}}",
+	}) {
+		std::cout << "---------------------------------------------" << '\n';
+		std::cout << s << '\n';
+		std::cout << "---------------------------------------------" << '\n';
+		tuple<size_t, size_t> range(0, 0);
+		while(true) {
+			range = indexOfBrackets(s, get<0>(range), s.size(), "{{", "}}");
+			//std::cout << "r0: " << string(get<0>(range), s.end()) <<'\n';
+			//std::cout << "r1: " << string(get<1>(range), s.end()) <<'\n';
+			if(std::get<0>(range) == string::npos)
+				break;
+			if(std::get<1>(range) == string::npos)
+				break;
+			auto b = get<0>(range);
+			auto e = get<1>(range) + 2;
+			std::string s2(s, b, e - b);
+			std::cout << "hit: " << s2 <<'\n';
+			get<0>(range) = e;
+		}
+	}
+}
+#endif
 }}

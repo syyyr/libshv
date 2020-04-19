@@ -5,6 +5,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <tuple>
+#include <limits>
 
 namespace shv {
 namespace core {
@@ -50,6 +52,11 @@ public:
 	{
 		return ltrim(rtrim(s, t), t);
 	}
+
+	// use substr() instead
+	//static std::string mid(const std::string& s, unsigned pos, unsigned cnt = std::numeric_limits<unsigned>::max());
+
+	static std::pair<size_t, size_t> indexOfBrackets(const std::string &haystack, size_t begin_pos, size_t end_pos, const std::string &open_bracket, const std::string &close_bracket);
 	static std::vector<std::string> split(const std::string &str, char delim, SplitBehavior split_behavior = SkipEmptyParts);
 	static std::string join(const std::vector<std::string> &lst, const std::string &delim);
 	static std::string join(const std::vector<std::string> &lst, char delim);
@@ -110,6 +117,7 @@ public:
 			*ok = is_ok;
 		return ret;
 	}
+
 };
 
 }}
