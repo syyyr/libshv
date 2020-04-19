@@ -135,6 +135,7 @@ ShvFileJournal::ShvFileJournal(std::string device_id, ShvFileJournal::SnapShotFn
 
 void ShvFileJournal::setJournalDir(std::string s)
 {
+	shvInfo() << "Journal dir set to:" << s;
 	m_journalContext.journalDir = std::move(s);
 }
 
@@ -153,7 +154,7 @@ const std::string &ShvFileJournal::journalDir()
 			d += id;
 		}
 		m_journalContext.journalDir = d;
-		shvWarning() << "Journal dir not set, falling back to default value:" << journalDir();
+		shvInfo() << "Journal dir not set, falling back to default value:" << journalDir();
 	}
 	return m_journalContext.journalDir;
 }
