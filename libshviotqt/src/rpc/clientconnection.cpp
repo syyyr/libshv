@@ -206,7 +206,7 @@ void ClientConnection::checkBrokerConnected()
 void ClientConnection::whenBrokerConnectedChanged(bool b)
 {
 	if(b) {
-		shvInfo() << "Connected to broker";// << "client id:" << brokerClientId();// << "mount point:" << brokerMountPoint();
+		shvInfo() << "Connected to broker" << "client id:" << brokerClientId();// << "mount point:" << brokerMountPoint();
 		if(m_heartbeatInterval > 0) {
 			if(!m_pingTimer) {
 				shvInfo() << "Creating heart-beat timer, interval:" << m_heartbeatInterval << "sec.";
@@ -294,6 +294,11 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 		},
 		{"options", connectionOptions()},
 	};
+}
+
+int ClientConnection::brokerClientId() const
+{
+	return m_connectionState.loginResult.toMap().value(cp::Rpc::KEY_CLIENT_ID).toInt();
 }
 
 void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)

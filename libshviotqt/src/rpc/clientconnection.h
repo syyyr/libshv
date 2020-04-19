@@ -84,6 +84,8 @@ protected:
 	void processInitPhase(const chainpack::RpcMessage &msg);
 	shv::chainpack::RpcValue createLoginParams(const shv::chainpack::RpcValue &server_hello);
 
+	int brokerClientId() const;
+
 	struct ConnectionState
 	{
 		State state = State::NotConnected;
