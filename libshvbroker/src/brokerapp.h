@@ -115,7 +115,7 @@ private:
 
 	std::string resolveMountPoint(const shv::chainpack::RpcValue::Map &device_opts);
 
-	chainpack::AccessGrant accessGrantForRequest(rpc::CommonRpcClientHandle *conn, const std::string &rq_shv_path, const chainpack::RpcValue &rq_grant);
+	chainpack::AccessGrant accessGrantForRequest(rpc::CommonRpcClientHandle *conn, const std::string &rq_shv_path, const std::string &method, const chainpack::RpcValue &rq_grant);
 
 	void onRootNodeSendRpcMesage(const shv::chainpack::RpcMessage &msg);
 

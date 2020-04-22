@@ -239,12 +239,14 @@ void AclManager::aclSetAccessRolePaths(const std::string &role_name, const AclRo
 
 std::map<std::string, AclManager::FlattenRole> AclManager::flattenRole_helper(const std::string &role_name, int nest_level)
 {
+	//shvInfo() << __FUNCTION__ << "role:" << role_name << "nest level:" << nest_level;
 	std::map<std::string, FlattenRole> ret;
 	AclRole ar = aclRole(role_name);
 	if(ar.isValid()) {
 		FlattenRole fr{role_name, ar.weight, nest_level};
 		ret[role_name] = std::move(fr);
 		for(auto rl : ar.roles) {
+			//shvInfo() << "\t child role:" << rl;
 			auto it = ret.find(rl);
 			if(it != ret.end()) {
 				shvWarning() << "Cyclic reference in roles detected for name:" << rl;
@@ -254,6 +256,12 @@ std::map<std::string, AclManager::FlattenRole> AclManager::flattenRole_helper(co
 			ret.insert(ret2.begin(), ret2.end());
 		}
 	}
+	else {
+		shvWarning() << "role:" << role_name << "is not defined";
+	}
+	//shvInfo() << "\t ret:";
+	//for(auto kv : ret)
+	//	shvInfo() << "\t\t" << kv.first << kv.second.name;
 	return ret;
 }
 
