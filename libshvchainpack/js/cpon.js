@@ -318,13 +318,13 @@ CponReader.prototype.readCString = function(rpc_val)
 		if(b == '\\'.charCodeAt(0)) {
 			b = this.ctx.getByte();
 			switch (b) {
-			case '\\'.charCodeAt(0): pctx.putByte("\\"); break;
-			case '"'.charCodeAt(0): pctx.putByte('"'); break;
-			case 'b'.charCodeAt(0): pctx.putByte("\b"); break;
-			case 'f'.charCodeAt(0): pctx.putByte("\f"); break;
-			case 'n'.charCodeAt(0): pctx.putByte("\n"); break;
-			case 'r'.charCodeAt(0): pctx.putByte("\r"); break;
-			case 't'.charCodeAt(0): pctx.putByte("\t"); break;
+			case '\\'.charCodeAt(0): pctx.putByte('\\'.charCodeAt(0)); break;
+			case '"'.charCodeAt(0): pctx.putByte('"'.charCodeAt(0)); break;
+			case 'b'.charCodeAt(0): pctx.putByte('\b'.charCodeAt(0)); break;
+			case 'f'.charCodeAt(0): pctx.putByte('\f'.charCodeAt(0)); break;
+			case 'n'.charCodeAt(0): pctx.putByte('\n'.charCodeAt(0)); break;
+			case 'r'.charCodeAt(0): pctx.putByte('\r'.charCodeAt(0)); break;
+			case 't'.charCodeAt(0): pctx.putByte('\t'.charCodeAt(0)); break;
 			case '0'.charCodeAt(0): pctx.putByte(0); break;
 			default: pctx.putByte(b); break;
 			}
