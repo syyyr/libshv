@@ -151,6 +151,7 @@ public:
 					lst.push_back(shv::core::utils::ShvPath::SHV_PATH_QUOTE + mp + shv::core::utils::ShvPath::SHV_PATH_QUOTE);
 				}
 			}
+			std::sort(lst.begin(), lst.end());
 			return lst;
 		}
 		else {
