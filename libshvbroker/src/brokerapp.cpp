@@ -606,7 +606,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	int most_specific_path_weight = std::numeric_limits<int>::min();
 	//int most_specific_path_nest_level = std::numeric_limits<int>::max();
 	shv::iotqt::node::ShvNode::StringViewList shv_path_lst = shv::core::utils::ShvPath::split(rq_shv_path);
-	std::string request_path_with_method = rq_shv_path + '/' + method + "()";
+	std::string request_path_with_method = rq_shv_path + ':' + method;
 
 	// roles are sorted in weight DESC nest_level ASC
 	for(const AclManager::FlattenRole &flatten_role : user_roles) {

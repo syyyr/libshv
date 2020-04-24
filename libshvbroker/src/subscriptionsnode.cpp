@@ -10,6 +10,7 @@
 #include <shv/core/log.h>
 #include <shv/core/stringview.h>
 #include <shv/core/stringview.h>
+#include <shv/core/utils/shvpath.h>
 
 namespace cp = shv::chainpack;
 
@@ -24,13 +25,13 @@ const char METH_PATH[] = "path";
 const char METH_METHOD[] = "method";
 
 std::vector<cp::MetaMethod> meta_methods1 {
-	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, false},
-	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, false},
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None},
+	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None},
 };
 std::vector<cp::MetaMethod> meta_methods2 {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, false},
-	{METH_PATH, cp::MetaMethod::Signature::RetVoid, false},
-	{METH_METHOD, cp::MetaMethod::Signature::RetVoid, false},
+	{METH_PATH, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter},
+	{METH_METHOD, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter},
 };
 }
 
@@ -55,23 +56,26 @@ const shv::chainpack::MetaMethod *SubscriptionsNode::metaMethod(const StringView
 
 shv::iotqt::node::ShvNode::StringList SubscriptionsNode::childNames(const StringViewList &shv_path)
 {
-	//shvLogFuncFrame() << shv_path;
+	shvLogFuncFrame() << shv_path.join('/');
 	if(shv_path.empty())
 		return shv::iotqt::node::ShvNode::StringList{ND_BY_ID, ND_BY_PATH};
-	if(shv_path[0] == ND_BY_ID) {
-		shv::iotqt::node::ShvNode::StringList ret;
-		for (size_t i = 0; i < m_client->subscriptionCount(); ++i) {
-			ret.push_back(std::to_string(i));
+	if(shv_path.size() == 1) {
+		if(shv_path[0] == ND_BY_ID) {
+			shv::iotqt::node::ShvNode::StringList ret;
+			for (size_t i = 0; i < m_client->subscriptionCount(); ++i) {
+				ret.push_back(std::to_string(i));
+			}
+			return ret;
 		}
-		return ret;
-	}
-	if(shv_path[0] == ND_BY_PATH) {
-		shv::iotqt::node::ShvNode::StringList ret;
-		for (size_t i = 0; i < m_client->subscriptionCount(); ++i) {
-			const rpc::ServerConnectionBroker::Subscription &subs = m_client->subscriptionAt(i);
-			ret.push_back('"' + subs.absolutePath + ':' + subs.method + '"');
+		if(shv_path[0] == ND_BY_PATH) {
+			shv::iotqt::node::ShvNode::StringList ret;
+			for (size_t i = 0; i < m_client->subscriptionCount(); ++i) {
+				const rpc::ServerConnectionBroker::Subscription &subs = m_client->subscriptionAt(i);
+				ret.push_back(shv::core::utils::ShvPath::SHV_PATH_QUOTE + subs.absolutePath + ':' + subs.method + shv::core::utils::ShvPath::SHV_PATH_QUOTE);
+			}
+			std::sort(ret.begin(), ret.end());
+			return ret;
 		}
-		return ret;
 	}
 	//if(shv::core::StringView(shv_path).startsWith(ND_BY_ID))
 	//	return
@@ -90,7 +94,7 @@ shv::chainpack::RpcValue SubscriptionsNode::callMethod(const StringViewList &shv
 				shv::core::StringView path = shv_path.at(1);
 				for (size_t i = 0; i < m_client->subscriptionCount(); ++i) {
 					const rpc::ServerConnectionBroker::Subscription &subs1 = m_client->subscriptionAt(i);
-					std::string p = '"' + subs1.absolutePath + ':' + subs1.method + '"';
+					std::string p = shv::core::utils::ShvPath::SHV_PATH_QUOTE + subs1.absolutePath + ':' + subs1.method + shv::core::utils::ShvPath::SHV_PATH_QUOTE;
 					if(path == p) {
 						subs = &subs1;
 						break;
