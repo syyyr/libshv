@@ -57,13 +57,14 @@ void TcpServer::onNewConnection()
 		c->setConnectionName(sock->peerAddress().toString().toStdString() + ':' + std::to_string(sock->peerPort()));
 		m_connections[c->connectionId()] = c;
 		int cid = c->connectionId();
-		connect(c, &ServerConnection::destroyed, [this, cid]() {
-			onConnectionDeleted(cid);
+		connect(c, &ServerConnection::socketConnectedChanged, [this, cid](bool is_connected) {
+			if(!is_connected)
+				onConnectionClosed(cid);
 		});
 	}
 }
 
-void TcpServer::onConnectionDeleted(int connection_id)
+void TcpServer::onConnectionClosed(int connection_id)
 {
 	m_connections.erase(connection_id);
 }

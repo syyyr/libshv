@@ -1,7 +1,7 @@
 #include "subscriptionsnode.h"
 
 #include "brokerapp.h"
-#include "rpc/clientbrokerconnection.h"
+#include "rpc/serverconnectionbroker.h"
 
 #include <shv/chainpack/rpcmessage.h>
 #include <shv/chainpack/rpc.h>
@@ -68,7 +68,7 @@ shv::iotqt::node::ShvNode::StringList SubscriptionsNode::childNames(const String
 	if(shv_path[0] == ND_BY_PATH) {
 		shv::iotqt::node::ShvNode::StringList ret;
 		for (size_t i = 0; i < m_client->subscriptionCount(); ++i) {
-			const rpc::ClientBrokerConnection::Subscription &subs = m_client->subscriptionAt(i);
+			const rpc::ServerConnectionBroker::Subscription &subs = m_client->subscriptionAt(i);
 			ret.push_back('"' + subs.absolutePath + ':' + subs.method + '"');
 		}
 		return ret;
@@ -82,14 +82,14 @@ shv::chainpack::RpcValue SubscriptionsNode::callMethod(const StringViewList &shv
 {
 	if(shv_path.size() == 2) {
 		if(method == METH_PATH || method == METH_METHOD) {
-			const rpc::ClientBrokerConnection::Subscription *subs = nullptr;
+			const rpc::ServerConnectionBroker::Subscription *subs = nullptr;
 			if(shv_path.at(0) == ND_BY_ID) {
 				subs = &m_client->subscriptionAt(std::stoul(shv_path.at(1).toString()));
 			}
 			else if(shv_path.at(0) == ND_BY_PATH) {
 				shv::core::StringView path = shv_path.at(1);
 				for (size_t i = 0; i < m_client->subscriptionCount(); ++i) {
-					const rpc::ClientBrokerConnection::Subscription &subs1 = m_client->subscriptionAt(i);
+					const rpc::ServerConnectionBroker::Subscription &subs1 = m_client->subscriptionAt(i);
 					std::string p = '"' + subs1.absolutePath + ':' + subs1.method + '"';
 					if(path == p) {
 						subs = &subs1;

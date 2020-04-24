@@ -1,7 +1,7 @@
 #include "brokernode.h"
 
 #include "brokerapp.h"
-#include "rpc/clientbrokerconnection.h"
+#include "rpc/serverconnectionbroker.h"
 #include "rpc/masterbrokerconnection.h"
 
 #include <shv/chainpack/metamethod.h>
@@ -30,8 +30,9 @@ public:
 	BrokerLogNode(shv::iotqt::node::ShvNode *parent = nullptr)
 		: Super("log", &m_metaMethods, parent)
 		, m_metaMethods {
-			{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
-			{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
+			{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_BROWSE},
+			{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_BROWSE},
+			{cp::Rpc::SIG_VAL_CHANGED, cp::MetaMethod::Signature::VoidParam, cp::MetaMethod::Flag::IsSignal, cp::Rpc::ROLE_READ},
 			{M_GET_VERBOSITY, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
 			{M_SET_VERBOSITY, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::IsSetter, cp::Rpc::ROLE_COMMAND},
 		}
@@ -137,7 +138,7 @@ shv::chainpack::RpcValue BrokerNode::callMethod(const StringViewList &shv_path, 
 #endif
 		}
 		if(method == M_MOUNT_POINTS_FOR_CLIENT_ID) {
-			rpc::ClientBrokerConnection *client = BrokerApp::instance()->clientById(params.toInt());
+			rpc::ServerConnectionBroker *client = BrokerApp::instance()->clientById(params.toInt());
 			if(!client)
 				SHV_EXCEPTION("Invalid client id: " + params.toCpon());
 			const std::vector<std::string> &mps = client->mountPoints();

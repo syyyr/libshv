@@ -1,6 +1,6 @@
 #include "websocketserver.h"
 
-#include "clientbrokerconnection.h"
+#include "serverconnectionbroker.h"
 #include "websocket.h"
 #include "../brokerapp.h"
 
@@ -72,7 +72,7 @@ std::vector<int> WebSocketServer::connectionIds() const
 	return ret;
 }
 
-ClientBrokerConnection *WebSocketServer::connectionById(int connection_id)
+ServerConnectionBroker *WebSocketServer::connectionById(int connection_id)
 {
 	auto it = m_connections.find(connection_id);
 	if(it == m_connections.end())
@@ -80,9 +80,9 @@ ClientBrokerConnection *WebSocketServer::connectionById(int connection_id)
 	return it->second;
 }
 
-ClientBrokerConnection *WebSocketServer::createServerConnection(QWebSocket *socket, QObject *parent)
+ServerConnectionBroker *WebSocketServer::createServerConnection(QWebSocket *socket, QObject *parent)
 {
-	return new ClientBrokerConnection(new WebSocket(socket), parent);
+	return new ServerConnectionBroker(new WebSocket(socket), parent);
 }
 
 void WebSocketServer::onNewConnection()
@@ -90,19 +90,20 @@ void WebSocketServer::onNewConnection()
 	shvInfo() << "New WebSocket connection";
 	QWebSocket *sock = nextPendingConnection();
 	if(sock) {
-		ClientBrokerConnection *c = createServerConnection(sock, this);
+		ServerConnectionBroker *c = createServerConnection(sock, this);
 		shvInfo().nospace() << "web socket client connected: " << sock->peerAddress().toString() << ':' << sock->peerPort()
 							<< " connection ID: " << c->connectionId();
 		c->setConnectionName(sock->peerAddress().toString().toStdString() + ':' + std::to_string(sock->peerPort()));
 		m_connections[c->connectionId()] = c;
 		int cid = c->connectionId();
-		connect(c, &ClientBrokerConnection::destroyed, [this, cid]() {
-			onConnectionDeleted(cid);
+		connect(c, &ServerConnectionBroker::socketConnectedChanged, [this, cid](bool is_connected) {
+			if(!is_connected)
+				onConnectionClosed(cid);
 		});
 	}
 }
 
-void WebSocketServer::onConnectionDeleted(int connection_id)
+void WebSocketServer::onConnectionClosed(int connection_id)
 {
 	m_connections.erase(connection_id);
 }

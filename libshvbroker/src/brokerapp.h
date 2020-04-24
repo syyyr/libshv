@@ -35,7 +35,7 @@ namespace shv { namespace chainpack { class RpcSignal; }}
 namespace shv {
 namespace broker {
 
-namespace rpc { class WebSocketServer; class BrokerTcpServer; class ClientBrokerConnection;  class MasterBrokerConnection; class CommonRpcClientHandle; }
+namespace rpc { class WebSocketServer; class BrokerTcpServer; class ServerConnectionBroker;  class MasterBrokerConnection; class CommonRpcClientHandle; }
 
 class AclManager;
 
@@ -67,7 +67,7 @@ public:
 	bool rejectNotSubscribedSignal(int client_id, const std::string &path, const std::string &method);
 
 	rpc::BrokerTcpServer* tcpServer();
-	rpc::ClientBrokerConnection* clientById(int client_id);
+	rpc::ServerConnectionBroker* clientById(int client_id);
 
 #ifdef WITH_SHV_WEBSOCKETS
 	rpc::WebSocketServer* webSocketServer();
@@ -89,6 +89,8 @@ public:
 	chainpack::UserLoginResult checkLogin(const shv::chainpack::UserLoginContext &ctx);
 
 	std::string dataToCpon(shv::chainpack::Rpc::ProtocolType protocol_type, const shv::chainpack::RpcValue::MetaData &md, const std::string &data, size_t start_pos = 0, size_t data_len = 0);
+
+	void sendNewLogEntryNotify(const std::string &msg);
 protected:
 	virtual void initDbConfigSqlConnection();
 	virtual AclManager* createAclManager();
@@ -104,7 +106,7 @@ private:
 
 	void startWebSocketServers();
 
-	rpc::ClientBrokerConnection* clientConnectionById(int connection_id);
+	rpc::ServerConnectionBroker* clientConnectionById(int connection_id);
 	std::vector<int> clientConnectionIds();
 
 	void createMasterBrokerConnections();

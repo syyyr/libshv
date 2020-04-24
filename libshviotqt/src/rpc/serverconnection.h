@@ -40,7 +40,7 @@ public:
 
 	const std::string& userName() const { return m_userLogin.user; }
 
-	virtual bool isConnectedAndLoggedIn() const {return isSocketConnected() && !isInitPhase();}
+	virtual bool isConnectedAndLoggedIn() const {return isSocketConnected() && !isInitPhase() /*&& !isDestroyPhase()*/;}
 
 	virtual bool isSlaveBrokerConnection() const;
 
@@ -58,12 +58,15 @@ protected:
 
 	virtual void processLoginPhase() = 0;
 	virtual void setLoginResult(const shv::chainpack::UserLoginResult &result);
+
+	//bool isDestroyPhase() const {return m_isDestroyPhase;}
 protected:
 	std::string m_connectionName;
 	shv::chainpack::UserLogin m_userLogin;
 	shv::chainpack::UserLoginContext m_userLoginContext;
 	bool m_helloReceived = false;
 	bool m_loginReceived = false;
+	//bool m_isDestroyPhase = false;
 
 	shv::chainpack::RpcValue m_connectionOptions;
 };

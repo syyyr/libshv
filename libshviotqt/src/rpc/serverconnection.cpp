@@ -44,6 +44,7 @@ ServerConnection::ServerConnection(Socket *socket, QObject *parent)
 
 ServerConnection::~ServerConnection()
 {
+	//m_isDestroyPhase = true;
 	shvInfo() << "Destroying Connection ID:" << connectionId() << "name:" << connectionName();
 	abort();
 }
