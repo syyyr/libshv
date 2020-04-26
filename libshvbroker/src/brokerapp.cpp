@@ -58,6 +58,8 @@
 #define logSubscriptionsD() nCDebug("Subscr").color(NecroLog::Color::Yellow)
 #define logSigResolveD() nCDebug("SigRes").color(NecroLog::Color::LightGreen)
 
+#define ACCESS_EXCEPTION(msg) SHV_EXCEPTION_V(msg, "Access")
+
 namespace cp = shv::chainpack;
 
 namespace shv {
@@ -573,9 +575,6 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 					logAclResolveW() << "Resolving of UserLogin is not implemented yet.";
 				return cp::AccessGrant();
 			}
-		}
-		else {
-			logAclResolveW() << "Cannot handle master broker request with invalid grant.";
 		}
 	}
 	else {

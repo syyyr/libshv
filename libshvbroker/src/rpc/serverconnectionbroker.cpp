@@ -211,7 +211,13 @@ void ServerConnectionBroker::setLoginResult(const chainpack::UserLoginResult &re
 	auto login_result = result;
 	login_result.clientId = connectionId();
 	Super::setLoginResult(login_result);
-	BrokerApp::instance()->onClientLogin(connectionId());
+	if(login_result.passwordOk) {
+		BrokerApp::instance()->onClientLogin(connectionId());
+	}
+	else {
+		// take some time to send error message and close connection
+		QTimer::singleShot(1000, this, &ServerConnectionBroker::close);
+	}
 }
 
 bool ServerConnectionBroker::checkTunnelSecret(const std::string &s)

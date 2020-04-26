@@ -154,15 +154,18 @@ void ServerConnection::processLoginPhase()
 
 void ServerConnection::setLoginResult(const chainpack::UserLoginResult &result)
 {
-	shvInfo().nospace() << "Client logged in user: " << m_userLogin.user << " from: " << peerAddress() << ':' << peerPort();
 	auto resp = cp::RpcResponse::forRequest(m_userLoginContext.loginRequest);
-	if(!result.passwordOk) {
+	if(result.passwordOk) {
+		shvInfo().nospace() << "Client logged in user: " << m_userLogin.user << " from: " << peerAddress() << ':' << peerPort();
+		resp.setResult(result.toRpcValue());
+	}
+	else {
+		shvInfo().nospace() << "Invalid authentication for user: " << m_userLogin.user
+							<< " reason: " + result.loginError
+							<< " at: " + connectionName();
 		resp.setError(cp::RpcResponse::Error::createMethodCallExceptionError("Invalid authentication for user: " + m_userLogin.user
 																			 + " reason: " + result.loginError
 																			 + " at: " + connectionName()));
-	}
-	else {
-		resp.setResult(result.toRpcValue());
 	}
 	sendMessage(resp);
 }

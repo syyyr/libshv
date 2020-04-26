@@ -23,7 +23,8 @@
 
 namespace cp = shv::chainpack;
 
-#define logConfig() shvCDebug("Config").color(NecroLog::Color::Yellow)
+//#define logConfig() shvCDebug("Config").color(NecroLog::Color::Yellow)
+#define logConfig() shvCMessage("Config")
 
 namespace shv {
 namespace iotqt {
@@ -772,6 +773,10 @@ shv::chainpack::RpcValue RpcValueConfigNode::callMethod(const shv::iotqt::node::
 		setValueOnPath(shv_path, orig_val);
 		return true;
 	}
+	if(method == cp::Rpc::METH_SET) {
+		if(!params.isValid())
+			SHV_EXCEPTION("Invalid value to set on key: " + shv_path.join('/'));
+	}
 	return Super::callMethod(shv_path, method, params);
 }
 
@@ -896,10 +901,9 @@ void RpcValueConfigNode::loadValues()
 			cp::CponReader rd(is);
 			new_values = rd.read();
 		}
-		else {
+		if(!new_values.isMap()) {
 			/// file may not exist
 			new_values = cp::RpcValue::Map();
-			//SHV_EXCEPTION("Cannot open file '" + cfg_file + "' for reading!");
 		}
 	}
 	std::string clone = mergeMaps(m_templateValues, new_values).toChainPack();

@@ -31,7 +31,7 @@ void RpcResponseCallBack::start()
 		m_timeoutTimer->setSingleShot(true);
 		connect(m_timeoutTimer, &QTimer::timeout, this, [this]() {
 			shv::chainpack::RpcResponse resp;
-			resp.setError(shv::chainpack::RpcResponse::Error::create(shv::chainpack::RpcResponse::Error::MethodCallTimeout, "Shv call timeout"));
+			resp.setError(shv::chainpack::RpcResponse::Error::create(shv::chainpack::RpcResponse::Error::MethodCallTimeout, "Shv call timeout after: " + std::to_string(m_timeoutTimer->interval()) + " msec."));
 			if(m_callBackFunction)
 				m_callBackFunction(resp);
 			else

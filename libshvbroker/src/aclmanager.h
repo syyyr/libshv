@@ -14,8 +14,6 @@
 #include <string>
 #include <set>
 
-#define ACCESS_EXCEPTION(msg) SHV_EXCEPTION_V(msg, "Access")
-
 namespace shv {
 namespace broker {
 
