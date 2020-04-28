@@ -73,6 +73,7 @@ public:
 	//chainpack::RpcValue hasChildren() {return hasChildren(StringViewList());}
 	virtual shv::chainpack::RpcValue lsAttributes(const StringViewList &shv_path, unsigned attributes);
 
+	static int basicGrantToAccessLevel(const shv::chainpack::RpcValue &acces_grant);
 	virtual int grantToAccessLevel(const shv::chainpack::RpcValue &acces_grant) const;
 public:
 	virtual size_t methodCount(const StringViewList &shv_path);

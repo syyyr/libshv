@@ -318,7 +318,7 @@ chainpack::RpcValue ShvNode::lsAttributes(const StringViewList &shv_path, unsign
 	return std::move(ret);
 }
 
-int ShvNode::grantToAccessLevel(const chainpack::RpcValue &acces_grant) const
+int ShvNode::basicGrantToAccessLevel(const chainpack::RpcValue &acces_grant)
 {
 	cp::AccessGrant grant = cp::AccessGrant::fromRpcValue(acces_grant);
 	if(grant.isRole()) {
@@ -337,6 +337,11 @@ int ShvNode::grantToAccessLevel(const chainpack::RpcValue &acces_grant) const
 		return grant.accessLevel;
 	}
 	return shv::chainpack::MetaMethod::AccessLevel::None;
+}
+
+int ShvNode::grantToAccessLevel(const chainpack::RpcValue &acces_grant) const
+{
+	return basicGrantToAccessLevel(acces_grant);
 }
 /*
 chainpack::RpcValue ShvNode::call(const std::string &method, const chainpack::RpcValue &params)

@@ -543,9 +543,16 @@ void BrokerApp::propagateSubscriptionsToMasterBroker()
 	}
 }
 
-static bool is_first_path_more_specific(const std::string &path1, const std::string &path2)
+static bool is_first_path_more_specific(const std::string &path1, const std::string &meth1, const std::string &path2, const std::string &meth2)
 {
-	// naive implemntation consider longer path to be more specific
+	if(!meth1.empty() && meth2.empty()) {
+		// path with method is always more specific
+		return true;
+	}
+	if(meth1.empty() && !meth2.empty()) {
+		return false;
+	}
+	// naive implementation consider longer path to be more specific
 	return path1.size() > path2.size();
 }
 
@@ -602,10 +609,11 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	// user_flattent_grants are sorted by weight DESC
 	cp::PathAccessGrant most_specific_path_grant;
 	std::string most_specific_path;
+	std::string most_specific_path_method;
 	int most_specific_path_weight = std::numeric_limits<int>::min();
 	//int most_specific_path_nest_level = std::numeric_limits<int>::max();
 	shv::iotqt::node::ShvNode::StringViewList shv_path_lst = shv::core::utils::ShvPath::split(rq_shv_path);
-	std::string request_path_with_method = rq_shv_path + ':' + method;
+	//std::string request_path_with_method = rq_shv_path + ':' + method;
 
 	// roles are sorted in weight DESC nest_level ASC
 	for(const AclManager::FlattenRole &flatten_role : user_roles) {
@@ -620,28 +628,37 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 		}
 		else for(const auto &kv : role_paths) {
 			const std::string &role_path = kv.first;
+
 			const shv::chainpack::PathAccessGrant &acces_grant = kv.second;
 			logAclResolveM().nospace() << "\t path: '" << role_path << "' len: " << role_path.size();
-			if(role_path == request_path_with_method) {
-				logAclResolveM().nospace() << "\t\t FULL MATCH, path: '" << role_path << "' matches request path: '" << rq_shv_path << "' and method: '" << method << "'";
-				most_specific_path = role_path;
-				most_specific_path_grant = acces_grant;
-				most_specific_path_weight = flatten_role.weight;
-				break;
-			}
+
 			shv::iotqt::node::ShvNode::StringViewList role_path_pattern = shv::core::utils::ShvPath::split(role_path);
-			if(shv::core::utils::ShvPath::matchWild(shv_path_lst, role_path_pattern)) {
-				logAclResolveM().nospace() << "\t\t MATCH, path: '" << role_path << "' matches request path: '" << rq_shv_path << "'";
-				if(is_first_path_more_specific(role_path, most_specific_path)) {
-					logAclResolveM().nospace() << "\t\t more specific path found: " << role_path;
-					most_specific_path = role_path;
+			shv::core::StringView role_path_method;
+			if(role_path_pattern.size()) {
+				shv::core::StringView& last_rp = role_path_pattern[role_path_pattern.size() - 1];
+				auto pos = last_rp.lastIndexOf(':');
+				if(pos >= 0) {
+					role_path_method = last_rp.mid(static_cast<size_t>(pos) + 1);
+					last_rp = last_rp.mid(0, static_cast<size_t>(pos));
+				}
+			}
+			if((role_path_method.empty() || role_path_method == method)
+					&& shv::core::utils::ShvPath::matchWild(shv_path_lst, role_path_pattern)) {
+				std::string rpp =  role_path_pattern.join('/');
+				std::string rpm =  role_path_method.toString();
+				logAclResolveM().nospace() << "\t\t MATCH, path: '" << rpp << ":" << rpm << "'"
+										   << " matches request path: '" << rq_shv_path << ':' << method << "'";
+				if(is_first_path_more_specific(rpp, rpm, most_specific_path, most_specific_path_method)) {
+					logAclResolveM().nospace() << "\t\t HIT, more specific path found ': " << role_path << "' grant: " << acces_grant.toRpcValue().toCpon();
+					most_specific_path = rpp;
+					most_specific_path_method = rpm;
 					most_specific_path_grant = acces_grant;
 					most_specific_path_weight = flatten_role.weight;
 					//most_specific_path_nest_level = flatten_role.nestLevel;
 				}
 			}
 			else {
-				logAclResolveM().nospace() << "\t\t path: '" << role_path << "' does not match request path: '" << rq_shv_path << "'";
+				logAclResolveM().nospace() << "\t\t path: '" << role_path << "' does not match request path: '" << rq_shv_path << ':' << method << "'";
 			}
 		}
 	}
@@ -658,7 +675,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 				 << "shv_path:" << rq_shv_path
 				 << "rq_grant:" << (rq_grant.isValid()? rq_grant.toCpon(): "<none>")
 				 //<< "grants:" << join_string_list(user_flattent_grants, ',')
-				 << "===> path:" << most_specific_path.size() << "grant:" << most_specific_path_grant.toRpcValue().toCpon();
+				 << "===> path:" << most_specific_path << "grant:" << most_specific_path_grant.toRpcValue().toCpon();
 	return cp::AccessGrant(most_specific_path_grant);
 }
 
@@ -1065,12 +1082,25 @@ void BrokerApp::sendNotifyToSubscribers(const std::string &shv_path, const std::
 
 void BrokerApp::addSubscription(int client_id, const std::string &shv_path, const std::string &method)
 {
-	rpc::CommonRpcClientHandle *conn = commonClientConnectionById(client_id);
-	if(!conn)
+	rpc::CommonRpcClientHandle *connection_handle = commonClientConnectionById(client_id);
+	if(!connection_handle)
 		SHV_EXCEPTION("Connot create subscription, client doesn't exist.");
 	//logSubscriptionsD() << "addSubscription connection id:" << client_id << "path:" << path << "method:" << method;
-	auto subs_ix = conn->addSubscription(shv_path, method);
-	const rpc::CommonRpcClientHandle::Subscription &subs = conn->subscriptionAt(subs_ix);
+	rpc::ServerConnectionBroker *cli = clientById(client_id);
+	if(!cli->isMasterBrokerConnection()) {
+		// check that client has access rights to subscribed signal
+		if(shv::core::utils::ShvPath::isRelativePath(shv_path)) {
+			shvWarning() << "relative subscriptions cannot be checked for access rights and will be disabled in future versions:" << shv_path << method;
+		}
+		else {
+			cp::AccessGrant acg = accessGrantForRequest(connection_handle, shv_path, method, cp::RpcValue());
+			int acc_level = shv::iotqt::node::ShvNode::basicGrantToAccessLevel(acg.toRpcValue());
+			if(acc_level < cp::MetaMethod::AccessLevel::Read)
+				ACCESS_EXCEPTION("Acces to shv signal '" + shv_path + '/' + method + "()' not granted for user '" + connection_handle->loggedUserName() + "'");
+		}
+	}
+	auto subs_ix = connection_handle->addSubscription(shv_path, method);
+	const rpc::CommonRpcClientHandle::Subscription &subs = connection_handle->subscriptionAt(subs_ix);
 	if(shv::core::utils::ShvPath::isRelativePath(subs.absolutePath)) {
 		/// still relative path, should be propagated to the master broker
 		rpc::MasterBrokerConnection *mbrconn = mainMasterBrokerConnection();

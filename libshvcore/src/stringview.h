@@ -44,6 +44,7 @@ public:
 	bool startsWith(char c) const;
 	bool endsWith(char c) const;
 	ssize_t indexOf(char c) const;
+	ssize_t lastIndexOf(char c) const;
 
 	StringView mid(size_t start) const {return mid(start, (length() > start)? length() - start: 0);}
 	StringView mid(size_t start, size_t len) const;

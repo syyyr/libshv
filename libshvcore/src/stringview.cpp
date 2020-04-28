@@ -156,6 +156,14 @@ ssize_t StringView::indexOf(char c) const
 	return -1;
 }
 
+ssize_t StringView::lastIndexOf(char c) const
+{
+	for (ssize_t i = static_cast<ssize_t>(length()) - 1; i >= 0; i--)
+		if(at(static_cast<size_t>(i)) == c)
+			return i;
+	return -1;
+}
+
 StringView StringView::mid(size_t start, size_t len) const
 {
 	return StringView(str(), this->start() + start, len);
