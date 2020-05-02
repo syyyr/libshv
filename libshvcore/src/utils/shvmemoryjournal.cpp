@@ -84,7 +84,7 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 		if(entry.sampleType == ShvJournalEntry::SampleType::Continuous
 			&& m_patternMatcher.match(entry))
 		{
-			Entry &e = m_snapshot[entry.path];
+			Entry &e = m_inputSnapshot[entry.path];
 			if(e.epochMsec < entry.epochMsec)
 				e = entry;
 		}
@@ -194,9 +194,9 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 
 		std::map<std::string, Entry> snapshot;
 		if(params.withSnapshot) {
-			for(auto kv : m_snapshot) {
+			for(auto kv : m_inputSnapshot) {
 				const auto &e = kv.second;
-				if(e.epochMsec < params_until_msec && pm.match(e)) {
+				if((params_until_msec == 0 || e.epochMsec < params_until_msec) && pm.match(e)) {
 					snapshot[e.path] = e;
 				}
 			}

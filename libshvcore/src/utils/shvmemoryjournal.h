@@ -49,7 +49,7 @@ private:
 	int64_t m_inputFilterUntilMsec = 0;
 	int m_inputFilterRecordCountLimit = DEFAULT_GET_LOG_RECORD_COUNT_LIMIT;
 
-	std::map<std::string, Entry> m_snapshot;
+	std::map<std::string, Entry> m_inputSnapshot;
 
 	std::map<std::string, int> m_pathDictionary;
 	int m_pathDictionaryIndex = 0;
