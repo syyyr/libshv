@@ -17,7 +17,7 @@ class SHVIOTQT_DECL_EXPORT Rpc
 {
 public:
 	static void registerMetaTypes();
-	static shv::chainpack::RpcValue::DateTime toRpcDateTime(const QDateTime &d);
+	static shv::chainpack::RpcValue toRpcDateTime(const QDateTime &d);
 };
 
 } // namespace chainack

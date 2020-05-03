@@ -17,7 +17,7 @@ void Rpc::registerMetaTypes()
 	}
 }
 
-shv::chainpack::RpcValue::DateTime Rpc::toRpcDateTime(const QDateTime &d)
+chainpack::RpcValue Rpc::toRpcDateTime(const QDateTime &d)
 {
 	if (d.isValid()) {
 		shv::chainpack::RpcValue::DateTime dt = shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(d.toUTC().toMSecsSinceEpoch());
@@ -26,7 +26,7 @@ shv::chainpack::RpcValue::DateTime Rpc::toRpcDateTime(const QDateTime &d)
 		return dt;
 	}
 	else {
-		return shv::chainpack::RpcValue::DateTime();
+		return shv::chainpack::RpcValue();
 	}
 }
 
