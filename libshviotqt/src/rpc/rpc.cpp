@@ -17,20 +17,7 @@ void Rpc::registerMetaTypes()
 	}
 }
 
-chainpack::RpcValue Rpc::toRpcDateTime(const QDateTime &d)
-{
-	if (d.isValid()) {
-		shv::chainpack::RpcValue::DateTime dt = shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(d.toUTC().toMSecsSinceEpoch());
-		int offset = d.offsetFromUtc();
-		dt.setTimeZone(offset / 60);
-		return dt;
-	}
-	else {
-		return shv::chainpack::RpcValue();
-	}
-}
-
-} // namespace chainack
+} // namespace chainpack
 } // namespace iotqt
 } // namespace shv
 
