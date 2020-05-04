@@ -5,6 +5,7 @@
 #include "../exception.h"
 #include "../log.h"
 #include "../stringview.h"
+#include "../string.h"
 
 #define logWShvJournal() shvCWarning("ShvJournal")
 #define logIShvJournal() shvCInfo("ShvJournal")
@@ -33,24 +34,12 @@ static std::string getLine(std::istream &in, char sep)
 	return line;
 }
 
-ShvJournalFileReader::ShvJournalFileReader(const std::string &file_name, const ShvLogHeader *header)
+ShvJournalFileReader::ShvJournalFileReader(const std::string &file_name)
 	: m_fileName(file_name)
-	, m_logHeader(header)
 {
 	m_ifstream.open(file_name, std::ios::binary);
 	if(!m_ifstream)
 		SHV_EXCEPTION("Cannot open file " + file_name + " for reading.");
-
-	if(header)
-		m_pathsTypeDescr = m_logHeader->pathsTypeDescr();
-	else
-		shvWarning() << "Type info not provided for text journal, sample type cannot be discovered.";
-}
-
-ShvLogTypeDescr::SampleType ShvJournalFileReader::pathsSampleType(const std::string &path) const
-{
-	auto it = m_pathsTypeDescr.find(path);
-	return it == m_pathsTypeDescr.end()? ShvJournalEntry::SampleType::Continuous: it->second.sampleType;
 }
 
 bool ShvJournalFileReader::next()
@@ -71,6 +60,7 @@ bool ShvJournalFileReader::next()
 		std::string dtstr = line_record[Column::Timestamp].toString();
 		std::string path = line_record.value(Column::Path).toString();
 		std::string domain = line_record.value(Column::Domain).toString();
+		auto sample_type = static_cast<ShvJournalEntry::SampleType>(shv::core::String::toInt(line_record.value(Column::SampleType).toString()));
 		size_t len;
 		cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr, &len);
 		if(len == 0) {
@@ -85,11 +75,11 @@ bool ShvJournalFileReader::next()
 		int short_time = short_time_sv.toInt(&ok);
 		m_currentEntry.shortTime = ok && short_time >= 0? short_time: ShvJournalEntry::NO_SHORT_TIME;
 		m_currentEntry.domain = std::move(domain);
+		m_currentEntry.sampleType = sample_type;
 		std::string err;
 		m_currentEntry.value = cp::RpcValue::fromCpon(line_record.value(Column::Value).toString(), &err);
 		if(!err.empty())
 			logWShvJournal() << "Invalid CPON value:" << line_record.value(Column::Value).toString();
-		m_currentEntry.sampleType = pathsSampleType(m_currentEntry.path);
 		return true;
 	}
 }

@@ -20,6 +20,7 @@ const char *ShvLogHeader::Column::name(ShvLogHeader::Column::Enum e)
 	case Column::Enum::Value: return "value";
 	case Column::Enum::ShortTime: return "shortTime";
 	case Column::Enum::Domain: return "domain";
+	case Column::Enum::SampleType: return "sampleType";
 	}
 	return "invalid";
 }
@@ -119,36 +120,13 @@ void ShvLogHeader::setTypeInfo(const std::string &path_prefix, ShvLogTypeInfo &&
 	m_sources[path_prefix] = std::move(ti);
 	m_pathsTypeDescrValid = false;
 }
-
-std::map<std::string, ShvLogTypeDescr> ShvLogHeader::pathsTypeDescr() const
+/*
+void ShvLogHeader::clearTypeInfo()
 {
-	std::map<std::string, ShvLogTypeDescr> ret;
-	for(const auto &kv : m_sources) {
-		std::string prefix = kv.first;
-		const ShvLogTypeInfo &ti = kv.second;
-		for(const auto &kv2 : ti.paths) {
-			const std::string &type_name = kv2.second.typeName;
-			auto it = ti.types.find(type_name);
-			if(it != ti.types.end()) {
-				std::string path = kv2.first;
-				if(prefix != EMPTY_PREFIX_KEY)
-					path = prefix  + '/' + path;
-				ret[path] = it->second;
-			}
-		}
-	}
-	return ret;
+	m_sources.clear();
+	m_pathsTypeDescrValid = false;
 }
-
-ShvLogTypeDescr::SampleType ShvLogHeader::pathsSampleType(const std::string &path) const
-{
-	if(!m_pathsTypeDescrValid) {
-		m_pathsTypeDescr = pathsTypeDescr();
-		m_pathsTypeDescrValid = true;
-	}
-	auto it = m_pathsTypeDescr.find(path);
-	return it == m_pathsTypeDescr.end()? ShvLogTypeDescr::SampleType::Invalid: it->second.sampleType;
-}
+*/
 
 #if 0
 chainpack::RpcValue ShvLogHeader::valueOnPath(const std::string &path) const

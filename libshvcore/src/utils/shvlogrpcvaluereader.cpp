@@ -13,13 +13,10 @@ namespace shv {
 namespace core {
 namespace utils {
 
-ShvLogRpcValueReader::ShvLogRpcValueReader(const shv::chainpack::RpcValue &log, const ShvLogHeader *header)
+ShvLogRpcValueReader::ShvLogRpcValueReader(const shv::chainpack::RpcValue &log)
 	: m_log(log)
 {
-	if(header)
-		m_logHeader = *header;
-	else
-		m_logHeader = ShvLogHeader::fromMetaData(m_log.metaData());
+	m_logHeader = ShvLogHeader::fromMetaData(m_log.metaData());
 
 	if(!m_log.isList())
 		SHV_EXCEPTION("Log is corrupted!");
@@ -57,17 +54,9 @@ bool ShvLogRpcValueReader::next()
 		cp::RpcValue st = row.value(Column::ShortTime);
 		m_currentEntry.shortTime = st.isInt() && st.toInt() >= 0? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
 		m_currentEntry.domain = row.value(Column::Domain).toString();
-		m_currentEntry.sampleType = pathsSampleType(m_currentEntry.path);
+		m_currentEntry.sampleType = static_cast<ShvJournalEntry::SampleType>(row.value(Column::SampleType).toUInt());
 		return true;
 	}
-}
-
-ShvLogTypeDescr::SampleType ShvLogRpcValueReader::pathsSampleType(const std::string &path) const
-{
-	ShvLogTypeDescr::SampleType st = m_logHeader.pathsSampleType(path);
-	if(st == ShvLogTypeDescr::SampleType::Invalid)
-		return ShvLogTypeDescr::SampleType::Continuous;
-	return st;
 }
 
 } // namespace utils

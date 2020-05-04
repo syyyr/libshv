@@ -73,6 +73,9 @@ void ShvJournalFileWriter::append(int64_t msec, int uptime, const ShvJournalEntr
 		m_out << entry.shortTime;
 	m_out << ShvFileJournal::FIELD_SEPARATOR;
 	m_out << entry.domain;
+	m_out << ShvFileJournal::FIELD_SEPARATOR;
+	if(entry.sampleType != ShvJournalEntry::SampleType::Invalid)
+		m_out << (int)entry.sampleType;
 	m_out << ShvFileJournal::RECORD_SEPARATOR;
 	m_out.flush();
 	m_recentTimeStamp = msec;

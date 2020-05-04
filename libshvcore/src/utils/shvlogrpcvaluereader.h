@@ -13,14 +13,12 @@ class ShvJournalEntry;
 class SHVCORE_DECL_EXPORT ShvLogRpcValueReader
 {
 public:
-	ShvLogRpcValueReader(const shv::chainpack::RpcValue &log, const ShvLogHeader *header = nullptr);
+	ShvLogRpcValueReader(const shv::chainpack::RpcValue &log);
 
 	bool next();
 	const ShvJournalEntry& entry() { return m_currentEntry; }
 
 	const ShvLogHeader &logHeader() const {return m_logHeader;}
-private:
-	ShvLogTypeDescr::SampleType pathsSampleType(const std::string &path) const;
 private:
 	ShvLogHeader m_logHeader;
 	ShvJournalEntry m_currentEntry;

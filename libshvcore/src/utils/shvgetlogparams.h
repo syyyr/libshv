@@ -35,22 +35,13 @@ struct SHVCORE_DECL_EXPORT ShvGetLogParams
 	std::string pathPattern;
 	enum class PatternType {WildCard, RegEx};
 	PatternType pathPatternType = PatternType::WildCard;
-	/*
-	enum class HeaderOptions : unsigned {
-		BasicInfo = 1 << 0,
-		FieldInfo = 1 << 1,
-		TypeInfo = 1 << 2,
-		PathsDict = 1 << 3,
-		CompleteInfo = BasicInfo | FieldInfo | TypeInfo | PathsDict,
-	};
-	*/
 	//unsigned headerOptions = static_cast<unsigned>(HeaderOptions::BasicInfo);
 	static constexpr int DEFAULT_RECORD_COUNT_LIMIT = 1000;
 	int recordCountLimit = DEFAULT_RECORD_COUNT_LIMIT;
 	bool withSnapshot = false;
 	//bool withUptime = false;
 	std::string domainPattern; /// always regexp
-	//bool withTypeInfo = true;
+	bool withTypeInfo = false;
 	bool withPathsDict = true;
 
 	ShvGetLogParams() {}

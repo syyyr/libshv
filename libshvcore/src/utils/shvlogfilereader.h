@@ -21,8 +21,8 @@ class ShvJournalEntry;
 class SHVCORE_DECL_EXPORT ShvLogFileReader
 {
 public:
-	ShvLogFileReader(shv::chainpack::ChainPackReader *reader, const ShvLogHeader *header = nullptr);
-	ShvLogFileReader(const std::string &file_name, const ShvLogHeader *header = nullptr);
+	ShvLogFileReader(shv::chainpack::ChainPackReader *reader);
+	ShvLogFileReader(const std::string &file_name);
 	~ShvLogFileReader();
 
 	bool next();
@@ -30,8 +30,7 @@ public:
 
 	const ShvLogHeader &logHeader() const {return m_logHeader;}
 private:
-	void init(const ShvLogHeader *header);
-	ShvLogTypeDescr::SampleType pathsSampleType(const std::string &path) const;
+	void init();
 private:
 	ShvLogHeader m_logHeader;
 

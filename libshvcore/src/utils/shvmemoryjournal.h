@@ -39,8 +39,6 @@ public:
 	size_t size() const { return  m_entries.size(); }
 	void clear() { m_entries.clear(); }
 private:
-	void checkSampleType(ShvJournalEntry &entry) const;
-private:
 	using Entry = ShvJournalEntry;
 
 	ShvGetLogParams m_inputFilter;

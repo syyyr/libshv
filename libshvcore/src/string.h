@@ -79,7 +79,7 @@ public:
 			ret = fill_char + ret;
 		return ret;
 	}
-	inline static int toInt(const std::string &str, bool *ok)
+	inline static int toInt(const std::string &str, bool *ok = nullptr)
 	{
 		int ret = 0;
 		bool is_ok = false;

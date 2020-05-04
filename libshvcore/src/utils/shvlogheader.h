@@ -45,6 +45,7 @@ public:
 			Value,
 			ShortTime,
 			Domain,
+			SampleType,
 		};
 		static const char* name(Enum e);
 	};
@@ -65,9 +66,7 @@ public:
 	void setTypeInfo(ShvLogTypeInfo &&ti);
 	void setTypeInfo(const ShvLogTypeInfo &ti);
 	void setTypeInfo(const std::string &path_prefix, ShvLogTypeInfo &&ti);
-
-	std::map<std::string, shv::core::utils::ShvLogTypeDescr> pathsTypeDescr() const;
-	ShvLogTypeDescr::SampleType pathsSampleType(const std::string &path) const;
+	//void clearTypeInfo();
 private:
 	std::map<std::string, ShvLogTypeInfo> m_sources;
 	mutable std::map<std::string, shv::core::utils::ShvLogTypeDescr> m_pathsTypeDescr;

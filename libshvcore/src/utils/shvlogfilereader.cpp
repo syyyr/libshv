@@ -17,14 +17,13 @@ namespace shv {
 namespace core {
 namespace utils {
 
-ShvLogFileReader::ShvLogFileReader(chainpack::ChainPackReader *reader, const ShvLogHeader *header)
+ShvLogFileReader::ShvLogFileReader(chainpack::ChainPackReader *reader)
 	: m_reader(reader)
 {
-	init(header);
-
+	init();
 }
 
-ShvLogFileReader::ShvLogFileReader(const std::string &file_name, const ShvLogHeader *header)
+ShvLogFileReader::ShvLogFileReader(const std::string &file_name)
 {
 	m_readerCreated = true;
 	m_ifstream = new std::ifstream;
@@ -32,17 +31,14 @@ ShvLogFileReader::ShvLogFileReader(const std::string &file_name, const ShvLogHea
 	if(!m_ifstream)
 		SHV_EXCEPTION("Cannot open file " + file_name + " for reading.");
 	m_reader = new shv::chainpack::ChainPackReader(*m_ifstream);
-	init(header);
+	init();
 }
 
-void ShvLogFileReader::init(const ShvLogHeader *header)
+void ShvLogFileReader::init()
 {
 	cp::RpcValue::MetaData md;
 	m_reader->read(md);
-	if(header)
-		m_logHeader = *header;
-	else
-		m_logHeader = ShvLogHeader::fromMetaData(md);
+	m_logHeader = ShvLogHeader::fromMetaData(md);
 
 	chainpack::ChainPackReader::ItemType t = m_reader->unpackNext();
 	if(t != chainpack::ChainPackReader::ItemType::CCPCP_ITEM_LIST)
@@ -95,7 +91,7 @@ bool ShvLogFileReader::next()
 		cp::RpcValue st = row.value(Column::ShortTime);
 		m_currentEntry.shortTime = st.isInt() && st.toInt() >= 0? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
 		m_currentEntry.domain = row.value(Column::Domain).toString();
-		m_currentEntry.sampleType = pathsSampleType(m_currentEntry.path);
+		m_currentEntry.sampleType = static_cast<ShvJournalEntry::SampleType>(row.value(Column::SampleType).toUInt());
 		return true;
 	}
 }
@@ -103,14 +99,6 @@ bool ShvLogFileReader::next()
 const ShvJournalEntry &ShvLogFileReader::entry()
 {
 	return m_currentEntry;
-}
-
-ShvLogTypeDescr::SampleType ShvLogFileReader::pathsSampleType(const std::string &path) const
-{
-	ShvLogTypeDescr::SampleType st = m_logHeader.pathsSampleType(path);
-	if(st == ShvLogTypeDescr::SampleType::Invalid)
-		return ShvLogTypeDescr::SampleType::Continuous;
-	return st;
 }
 
 } // namespace utils
