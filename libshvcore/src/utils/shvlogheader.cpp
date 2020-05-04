@@ -106,19 +106,16 @@ const ShvLogTypeInfo &ShvLogHeader::typeInfo(const std::string &path_prefix) con
 void ShvLogHeader::setTypeInfo(ShvLogTypeInfo &&ti)
 {
 	m_sources[EMPTY_PREFIX_KEY] = std::move(ti);
-	m_pathsTypeDescrValid = false;
 }
 
 void ShvLogHeader::setTypeInfo(const ShvLogTypeInfo &ti)
 {
 	m_sources[EMPTY_PREFIX_KEY] = ti;
-	m_pathsTypeDescrValid = false;
 }
 
 void ShvLogHeader::setTypeInfo(const std::string &path_prefix, ShvLogTypeInfo &&ti)
 {
 	m_sources[path_prefix] = std::move(ti);
-	m_pathsTypeDescrValid = false;
 }
 /*
 void ShvLogHeader::clearTypeInfo()
@@ -127,7 +124,27 @@ void ShvLogHeader::clearTypeInfo()
 	m_pathsTypeDescrValid = false;
 }
 */
-
+/*
+std::map<std::string, ShvLogTypeDescr> ShvLogHeader::pathsTypeDescr() const
+{
+	std::map<std::string, ShvLogTypeDescr> ret;
+	for(const auto &kv : m_sources) {
+		std::string prefix = kv.first;
+		const ShvLogTypeInfo &ti = kv.second;
+		for(const auto &kv2 : ti.paths) {
+			const std::string &type_name = kv2.second.typeName;
+			auto it = ti.types.find(type_name);
+			if(it != ti.types.end()) {
+				std::string path = kv2.first;
+				if(prefix != EMPTY_PREFIX_KEY)
+					path = prefix  + '/' + path;
+				ret[path] = it->second;
+			}
+		}
+	}
+	return ret;
+}
+ */
 #if 0
 chainpack::RpcValue ShvLogHeader::valueOnPath(const std::string &path) const
 {

@@ -69,8 +69,6 @@ public:
 	//void clearTypeInfo();
 private:
 	std::map<std::string, ShvLogTypeInfo> m_sources;
-	mutable std::map<std::string, shv::core::utils::ShvLogTypeDescr> m_pathsTypeDescr;
-	mutable bool m_pathsTypeDescrValid = false;
 };
 
 } // namespace utils
