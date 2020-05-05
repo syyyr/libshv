@@ -278,7 +278,8 @@ log_finish:
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Domain)}});
 		hdr.setFields(std::move(fields));
 
-		hdr.setSources(m_logHeader.sources());
+		if(params.withTypeInfo)
+			hdr.copyTypeInfo(m_logHeader);
 	}
 	if(params.withPathsDict) {
 		logIShvJournal() << "Generating paths dict";

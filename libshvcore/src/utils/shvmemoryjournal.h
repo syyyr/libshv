@@ -21,10 +21,8 @@ public:
 
 	void setSince(const shv::chainpack::RpcValue &since) { m_logHeader.setSince(since); }
 	void setUntil(const shv::chainpack::RpcValue &until) { m_logHeader.setUntil(until); }
-	void setTypeInfo(const ShvLogTypeInfo &ti) {setTypeInfo(ShvLogTypeInfo(ti));}
-	void setTypeInfo(ShvLogTypeInfo &&ti) {m_logHeader.setTypeInfo(std::move(ti));}
-	void setTypeInfo(const std::string &path_prefix, ShvLogTypeInfo &&ti) {m_logHeader.setTypeInfo(path_prefix, std::move(ti));}
-	void setTypeInfo(const std::string &path_prefix, const ShvLogTypeInfo &ti) {setTypeInfo(path_prefix, ShvLogTypeInfo(ti));}
+	void setTypeInfo(const ShvLogTypeInfo &ti, const std::string &path_prefix = ShvLogHeader::EMPTY_PREFIX_KEY) {setTypeInfo(ShvLogTypeInfo(ti), path_prefix);}
+	void setTypeInfo(ShvLogTypeInfo &&ti, const std::string &path_prefix = ShvLogHeader::EMPTY_PREFIX_KEY) {m_logHeader.setTypeInfo(std::move(ti), path_prefix);}
 	void setDeviceId(std::string id) { m_logHeader.setDeviceId(std::move(id)); }
 	void setDeviceType(std::string type) { m_logHeader.setDeviceType(std::move(type)); }
 

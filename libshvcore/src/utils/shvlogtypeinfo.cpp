@@ -36,6 +36,10 @@ ShvLogTypeDescrField ShvLogTypeDescrField::fromRpcValue(const chainpack::RpcValu
 //=====================================================================
 // ShvLogTypeDescr
 //=====================================================================
+const char* ShvLogTypeDescr::OPT_MIN_VAL = "minVal";
+const char* ShvLogTypeDescr::OPT_MAX_VAL = "maxVal";
+const char* ShvLogTypeDescr::OPT_DEC_PLACES = "decPlaces";
+
 const std::string ShvLogTypeDescr::typeToString(ShvLogTypeDescr::Type t)
 {
 	switch (t) {
@@ -105,10 +109,9 @@ chainpack::RpcValue ShvLogTypeDescr::toRpcValue() const
 			lst.push_back(fld.toRpcValue());
 		m["fields"] = std::move(lst);
 	}
-	if(minVal.isValid())
-		m["minVal"] = minVal;
-	if(maxVal.isValid())
-		m["maxVal"] = maxVal;
+	if(!options.empty()) {
+		m["options"] = options;
+	}
 	return std::move(m);
 }
 
@@ -122,8 +125,7 @@ ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const chainpack::RpcValue &v)
 		ret.description = m.value("description").toString();
 		for(const auto &rv : m.value("fields").toList())
 			ret.fields.push_back(ShvLogTypeDescrField::fromRpcValue(rv));
-		ret.minVal = m.value("minVal");
-		ret.maxVal = m.value("maxVal");
+		ret.options = m.value("options").toMap();
 	}
 	return ret;
 }

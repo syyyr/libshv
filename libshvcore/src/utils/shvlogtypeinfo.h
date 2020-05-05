@@ -59,8 +59,11 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeDescr
 	Type type = Type::Invalid;
 	using SampleType = shv::chainpack::DataChange::SampleType;
 	SampleType sampleType = SampleType::Continuous;
-	chainpack::RpcValue minVal;
-	chainpack::RpcValue maxVal;
+
+	static const char* OPT_MIN_VAL;
+	static const char* OPT_MAX_VAL;
+	static const char* OPT_DEC_PLACES;
+	chainpack::RpcValue::Map options;
 
 	ShvLogTypeDescr() {}
 	ShvLogTypeDescr(Type t, std::vector<ShvLogTypeDescrField> &&flds, const std::string &descr = std::string(), SampleType st = SampleType::Continuous)
@@ -70,9 +73,12 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeDescr
 		, description(descr)
 		, type(t)
 		, sampleType(st)
-		, minVal(min_val)
-		, maxVal(max_val)
-	{}
+	{
+		options.setValue(OPT_MIN_VAL, min_val);
+		options.setValue(OPT_MAX_VAL, max_val);
+	}
+
+	bool isValid() const { return type != Type::Invalid; }
 
 	static const std::string typeToString(Type t);
 	static Type typeFromString(const std::string &s);
@@ -94,7 +100,6 @@ struct SHVCORE_DECL_EXPORT ShvLogPathDescr
 		: typeName(t)
 		, description(d)
 	{}
-
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogPathDescr fromRpcValue(const chainpack::RpcValue &v);
 };

@@ -547,8 +547,7 @@ const ShvFileJournal::JournalContext &ShvFileJournal::checkJournalContext()
 
 chainpack::RpcValue ShvFileJournal::getLog(const ShvGetLogParams &params)
 {
-	checkJournalContext();
-	JournalContext ctx = m_journalContext;
+	JournalContext ctx = checkJournalContext();
 	return getLog(ctx, params);
 }
 
