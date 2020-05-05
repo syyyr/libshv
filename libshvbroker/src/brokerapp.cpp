@@ -1087,8 +1087,10 @@ void BrokerApp::addSubscription(int client_id, const std::string &shv_path, cons
 		SHV_EXCEPTION("Connot create subscription, client doesn't exist.");
 	//logSubscriptionsD() << "addSubscription connection id:" << client_id << "path:" << path << "method:" << method;
 	rpc::ServerConnectionBroker *cli = clientById(client_id);
-	if(!cli->isMasterBrokerConnection()) {
+	if(cli && !cli->isMasterBrokerConnection()) {
 		// check that client has access rights to subscribed signal
+		// do not check master broker connections - cli->isMasterBrokerConnection() == true
+		// and requests from super-broker - cli == nullptr
 		if(shv::core::utils::ShvPath::isRelativePath(shv_path)) {
 			shvWarning() << "relative subscriptions cannot be checked for access rights and will be disabled in future versions:" << shv_path << method;
 		}
