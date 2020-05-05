@@ -66,6 +66,7 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeDescr
 	chainpack::RpcValue::Map options;
 
 	ShvLogTypeDescr() {}
+	ShvLogTypeDescr(const std::string &type_name) : type(typeFromString(type_name)) { }
 	ShvLogTypeDescr(Type t, std::vector<ShvLogTypeDescrField> &&flds, const std::string &descr = std::string(), SampleType st = SampleType::Continuous)
 		: ShvLogTypeDescr(t, std::move(flds), descr, st, chainpack::RpcValue(), chainpack::RpcValue()) {}
 	ShvLogTypeDescr(Type t, std::vector<ShvLogTypeDescrField> &&flds, const std::string &descr, SampleType st, const chainpack::RpcValue &min_val, const chainpack::RpcValue &max_val)
