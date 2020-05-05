@@ -20,8 +20,6 @@ class SHVCORE_DECL_EXPORT ShvLogHeader //: public shv::chainpack::RpcValue::Meta
 {
 	using Super = shv::chainpack::RpcValue::MetaData;
 
-	static const std::string EMPTY_PREFIX_KEY;
-
 	SHV_FIELD_IMPL(std::string, d, D, eviceType)
 	SHV_FIELD_IMPL(std::string, d, D, eviceId)
 	SHV_FIELD_IMPL2(int, l, L, ogVersion, 2)
@@ -37,6 +35,7 @@ class SHVCORE_DECL_EXPORT ShvLogHeader //: public shv::chainpack::RpcValue::Meta
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, s, S, ince)
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, u, U, ntil)
 public:
+	static const std::string EMPTY_PREFIX_KEY;
 	struct Column
 	{
 		enum Enum {
@@ -45,6 +44,7 @@ public:
 			Value,
 			ShortTime,
 			Domain,
+			SampleType,
 		};
 		static const char* name(Enum e);
 	};
@@ -57,21 +57,18 @@ public:
 	static ShvLogHeader fromMetaData(const chainpack::RpcValue::MetaData &md);
 	chainpack::RpcValue::MetaData toMetaData() const;
 
-	const std::map<std::string, ShvLogTypeInfo>& sources() const {return m_sources;}
-	void setSources(std::map<std::string, ShvLogTypeInfo> &&ss) {m_sources = std::move(ss);}
-	void setSources(const std::map<std::string, ShvLogTypeInfo> &ss) {m_sources = ss;}
+	void copyTypeInfo(const ShvLogHeader &source) { m_typeInfos = source.m_typeInfos; }
+	//const std::map<std::string, ShvLogTypeInfo>& sources() const {return m_typeInfos;}
+	//void setSources(std::map<std::string, ShvLogTypeInfo> &&ss) {m_typeInfos = std::move(ss);}
+	//void setSources(const std::map<std::string, ShvLogTypeInfo> &ss) {m_typeInfos = ss;}
 
 	const ShvLogTypeInfo& typeInfo(const std::string &path_prefix = EMPTY_PREFIX_KEY) const;
-	void setTypeInfo(ShvLogTypeInfo &&ti);
-	void setTypeInfo(const ShvLogTypeInfo &ti);
-	void setTypeInfo(const std::string &path_prefix, ShvLogTypeInfo &&ti);
 
-	std::map<std::string, shv::core::utils::ShvLogTypeDescr> pathsTypeDescr() const;
-	ShvLogTypeDescr::SampleType pathsSampleType(const std::string &path) const;
+	void setTypeInfo(ShvLogTypeInfo &&ti, const std::string &path_prefix = EMPTY_PREFIX_KEY);
+	void setTypeInfo(const ShvLogTypeInfo &ti, const std::string &path_prefix = EMPTY_PREFIX_KEY);
+	//void clearTypeInfo();
 private:
-	std::map<std::string, ShvLogTypeInfo> m_sources;
-	mutable std::map<std::string, shv::core::utils::ShvLogTypeDescr> m_pathsTypeDescr;
-	mutable bool m_pathsTypeDescrValid = false;
+	std::map<std::string, ShvLogTypeInfo> m_typeInfos;
 };
 
 } // namespace utils

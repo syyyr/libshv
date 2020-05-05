@@ -34,12 +34,6 @@ void ShvMemoryJournal::loadLog(const chainpack::RpcValue &log, bool append_recor
 	ShvLogHeader hdr = ShvLogHeader::fromMetaData(log.metaData());
 	using Column = ShvLogHeader::Column;
 
-	std::map<std::string, ShvLogTypeDescr> paths_type_descr = hdr.pathsTypeDescr();
-	auto paths_sample_type = [paths_type_descr](const std::string &path) {
-		auto it = paths_type_descr.find(path);
-		return it == paths_type_descr.end()? ShvJournalEntry::SampleType::Continuous: it->second.sampleType;
-	};
-
 	const chainpack::RpcValue::IMap &dict = hdr.pathDictCRef();
 
 	if(!append_records) {
@@ -66,7 +60,7 @@ void ShvMemoryJournal::loadLog(const chainpack::RpcValue &log, bool append_recor
 		cp::RpcValue st = row.value(Column::ShortTime);
 		e.shortTime = st.isInt() && st.toInt() >= 0? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
 		e.domain = row.value(Column::Domain).toString();
-		e.sampleType = paths_sample_type(e.path);
+		e.sampleType = static_cast<ShvJournalEntry::SampleType>(row.value(Column::SampleType).toUInt());
 		append(e);
 	}
 }
@@ -98,7 +92,6 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 			m_pathDictionary[entry.path] = m_pathDictionaryIndex++;
 	}
 	Entry e(entry);
-	checkSampleType(e);
 	e.epochMsec = epoch_msec;
 	int64_t last_time = m_entries.empty()? 0: m_entries[m_entries.size()-1].epochMsec;
 	if(epoch_msec < last_time) {
@@ -285,7 +278,8 @@ log_finish:
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Domain)}});
 		hdr.setFields(std::move(fields));
 
-		hdr.setSources(m_logHeader.sources());
+		if(params.withTypeInfo)
+			hdr.copyTypeInfo(m_logHeader);
 	}
 	if(params.withPathsDict) {
 		logIShvJournal() << "Generating paths dict";
@@ -298,13 +292,6 @@ log_finish:
 	}
 	ret.setMetaData(hdr.toMetaData());
 	return ret;
-}
-
-void ShvMemoryJournal::checkSampleType(ShvJournalEntry &entry) const
-{
-	ShvLogTypeDescr::SampleType st = m_logHeader.pathsSampleType(entry.path);
-	if(st != ShvLogTypeDescr::SampleType::Invalid)
-		entry.sampleType = st;
 }
 
 } // namespace utils

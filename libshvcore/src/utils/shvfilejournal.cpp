@@ -547,8 +547,7 @@ const ShvFileJournal::JournalContext &ShvFileJournal::checkJournalContext()
 
 chainpack::RpcValue ShvFileJournal::getLog(const ShvGetLogParams &params)
 {
-	checkJournalContext();
-	JournalContext ctx = m_journalContext;
+	JournalContext ctx = checkJournalContext();
 	return getLog(ctx, params);
 }
 
@@ -572,8 +571,6 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 	logIShvJournal() << "params:" << params.toRpcValue().toCpon();
 	std::map<std::string, ShvJournalEntry> snapshot;
 	cp::RpcValue::List log;
-	ShvLogHeader log_header;
-	log_header.setTypeInfo(journal_context.typeInfo);
 
 	cp::RpcValue::Map path_cache;
 	const auto params_since_msec = params.since.isDateTime()? params.since.toDateTime().msecsSinceEpoch(): 0;
@@ -660,7 +657,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		for(; file_it != journal_context.files.end(); file_it++) {
 			std::string fn = journal_context.fileMsecToFilePath(*file_it);
 			logDShvJournal() << "-------- opening file:" << fn;
-			ShvJournalFileReader rd(fn, &log_header);
+			ShvJournalFileReader rd(fn);
 			while(rd.next()) {
 				const ShvJournalEntry &e = rd.entry();
 				if(!params.pathPattern.empty()) {
@@ -710,6 +707,7 @@ log_finish:
 		log_until_msec = last_record_msec;
 	}
 	cp::RpcValue ret = log;
+	ShvLogHeader log_header;
 	{
 		log_header.setDeviceId(journal_context.deviceId);
 		log_header.setDeviceType(journal_context.deviceType);
@@ -730,6 +728,7 @@ log_finish:
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Value)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::ShortTime)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Domain)}});
+		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::SampleType)}});
 		log_header.setFields(std::move(fields));
 	}
 	if(params.withPathsDict) {
@@ -740,6 +739,9 @@ log_finish:
 			path_dict[kv.second.toInt()] = kv.first;
 		}
 		log_header.setPathDict(std::move(path_dict));
+	}
+	if(!params.withTypeInfo) {
+		log_header.setTypeInfo(journal_context.typeInfo);
 	}
 	ret.setMetaData(log_header.toMetaData());
 	return ret;
@@ -754,6 +756,7 @@ const char *ShvFileJournal::TxtColumn::name(ShvFileJournal::TxtColumn::Enum e)
 	case TxtColumn::Enum::Value: return "value";
 	case TxtColumn::Enum::ShortTime: return "shortTime";
 	case TxtColumn::Enum::Domain: return "domain";
+	case TxtColumn::Enum::SampleType: return "sampleType";
 	}
 	return "invalid";
 }

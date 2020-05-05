@@ -174,6 +174,13 @@ public:
 				return default_val;
 			return it->second;
 		}
+		void setValue(const String &key, const RpcValue &val)
+		{
+			if(val.isValid())
+				(*this)[key] = val;
+			else
+				this->erase(key);
+		}
 		bool hasKey(const String &key) const
 		{
 			auto it = find(key);
@@ -198,6 +205,13 @@ public:
 			if(it == end())
 				return default_val;
 			return it->second;
+		}
+		void setValue(Int key, const RpcValue &val)
+		{
+			if(val.isValid())
+				(*this)[key] = val;
+			else
+				this->erase(key);
 		}
 		bool hasKey(Int key) const
 		{
