@@ -24,12 +24,8 @@ public:
 	static const char* PATH_DATA_MISSING;
 	static const char* PATH_DATA_DIRTY;
 
-	static const char* DATA_MISSING_DEVICE_DISCONNECTED;
-	static const char* DATA_MISSING_HP_DISCONNECTED;
-	static const char* DATA_MISSING_LOG_FILE_CORRUPTED;
-	static const char* DATA_MISSING_LOG_FILE_MISSING;
-	static const char* DATA_MISSING_LOG_CACHE_FILE_MISSING;
-	static const char* DATA_MISSING_APP_SHUTDOWN;
+	static const char* DATA_MISSING_UNAVAILABLE;
+	static const char* DATA_MISSING_NOT_EXISTS;
 
 	using SampleType = shv::chainpack::DataChange::SampleType;
 
