@@ -18,12 +18,8 @@ const char* ShvJournalEntry::PATH_APP_START = "APP_START";
 const char* ShvJournalEntry::PATH_DATA_MISSING = "DATA_MISSING";
 const char* ShvJournalEntry::PATH_DATA_DIRTY = "DATA_DIRTY";
 
-const char* ShvJournalEntry::DATA_MISSING_DEVICE_DISCONNECTED = "DeviceDisconnected_recoverable";
-const char* ShvJournalEntry::DATA_MISSING_HP_DISCONNECTED = "HistoryProviderDisconnected_recoverable";
-const char* ShvJournalEntry::DATA_MISSING_LOG_FILE_CORRUPTED = "LogFileCorrupted";
-const char* ShvJournalEntry::DATA_MISSING_LOG_CACHE_FILE_MISSING = "LogCacheFileMissing_recoverable";
-const char* ShvJournalEntry::DATA_MISSING_LOG_FILE_MISSING = "LogFileMissing";
-const char* ShvJournalEntry::DATA_MISSING_APP_SHUTDOWN = "AppShutDown";
+const char* ShvJournalEntry::DATA_MISSING_UNAVAILABLE = "Unavailable";
+const char* ShvJournalEntry::DATA_MISSING_NOT_EXISTS = "NotExists";
 
 chainpack::RpcValue ShvJournalEntry::toRpcValueMap() const
 {
