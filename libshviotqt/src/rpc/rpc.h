@@ -17,7 +17,6 @@ class SHVIOTQT_DECL_EXPORT Rpc
 {
 public:
 	static void registerMetaTypes();
-	static shv::chainpack::RpcValue::DateTime toRpcDateTime(const QDateTime &d);
 };
 
 } // namespace chainack
@@ -36,8 +35,19 @@ template<> inline QDateTime rpcvalue_cast<QDateTime>(const shv::chainpack::RpcVa
 namespace shv {
 namespace chainpack {
 
-template<> inline shv::chainpack::RpcValue RpcValue::fromValue<QDateTime>(const QDateTime &d) { return shv::iotqt::rpc::Rpc::toRpcDateTime(d); }
 template<> inline shv::chainpack::RpcValue RpcValue::fromValue<QString>(const QString &s) { return s.toStdString(); }
+template<> inline shv::chainpack::RpcValue RpcValue::fromValue<QDateTime>(const QDateTime &d)
+{
+	if (d.isValid()) {
+		shv::chainpack::RpcValue::DateTime dt = shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(d.toUTC().toMSecsSinceEpoch());
+		int offset = d.offsetFromUtc();
+		dt.setTimeZone(offset / 60);
+		return dt;
+	}
+	else {
+		return shv::chainpack::RpcValue();
+	}
+}
 
 } // namespace chainack
 } // namespace shv
