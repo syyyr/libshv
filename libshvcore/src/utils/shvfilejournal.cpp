@@ -698,11 +698,11 @@ log_finish:
 				break;
 		}
 	}
-	int64_t log_since_msec = 0;
-	int64_t log_until_msec = 0;
-	if(params_since_msec == 0) {
+	int64_t log_since_msec = params_since_msec;
+	if(log_since_msec < journal_start_msec) {
 		log_since_msec = journal_start_msec;
 	}
+	int64_t log_until_msec = params_until_msec;
 	if(params_until_msec == 0 || rec_cnt_limit_hit) {
 		log_until_msec = last_record_msec;
 	}
@@ -713,8 +713,8 @@ log_finish:
 		log_header.setDeviceType(journal_context.deviceType);
 		log_header.setDateTime(cp::RpcValue::DateTime::now());
 		log_header.setLogParams(params);
-		log_header.setSince((log_since_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(params_since_msec)): cp::RpcValue(nullptr));
-		log_header.setUntil((log_until_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(params_until_msec)): cp::RpcValue(nullptr));
+		log_header.setSince((log_since_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(log_since_msec)): cp::RpcValue(nullptr));
+		log_header.setUntil((log_until_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(log_until_msec)): cp::RpcValue(nullptr));
 		log_header.setRecordCount((int)log.size());
 		log_header.setRecordCountLimit(rec_cnt_limit);
 		log_header.setRecordCountLimitHit(rec_cnt_limit_hit);

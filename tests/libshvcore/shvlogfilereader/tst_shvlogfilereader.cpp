@@ -192,7 +192,7 @@ private:
 			int64_t msec2 = msec;
 			{
 				ShvGetLogParams params;
-				params.since = RpcValue::DateTime::fromMSecsSinceEpoch(msec1 - (msec2 - msec1) / 2);
+				params.since = RpcValue::DateTime::fromMSecsSinceEpoch(msec1 + (msec2 - msec1) / 4);
 				params.until = RpcValue::DateTime::fromMSecsSinceEpoch(msec2 - (msec2 - msec1) / 2);
 				RpcValue log1 = file_journal.getLog(params);
 				string fn = TEST_DIR + "/log1.chpk";
