@@ -4,8 +4,6 @@
 
 #include <shv/iotqt/rpc/serverconnection.h>
 
-#include <set>
-
 class QTimer;
 
 namespace shv { namespace core { class StringView; }}
@@ -15,7 +13,7 @@ namespace shv {
 namespace broker {
 namespace rpc {
 
-class ServerConnectionBroker : public shv::iotqt::rpc::ServerConnection, public CommonRpcClientHandle
+class BrokerClientServerConnection : public shv::iotqt::rpc::ServerConnection, public CommonRpcClientHandle
 {
 	Q_OBJECT
 
@@ -23,8 +21,8 @@ class ServerConnectionBroker : public shv::iotqt::rpc::ServerConnection, public 
 
 	//SHV_FIELD_IMPL(std::string, m, M, ountPoint)
 public:
-	ServerConnectionBroker(shv::iotqt::rpc::Socket* socket, QObject *parent = nullptr);
-	~ServerConnectionBroker() override;
+	BrokerClientServerConnection(shv::iotqt::rpc::Socket* socket, QObject *parent = nullptr);
+	~BrokerClientServerConnection() override;
 
 	int connectionId() const override {return Super::connectionId();}
 	bool isConnectedAndLoggedIn() const override {return Super::isConnectedAndLoggedIn();}

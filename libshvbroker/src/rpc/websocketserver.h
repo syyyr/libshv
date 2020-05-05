@@ -9,7 +9,7 @@ namespace shv {
 namespace broker {
 namespace rpc {
 
-class ServerConnectionBroker;
+class BrokerClientServerConnection;
 
 class WebSocketServer : public QWebSocketServer
 {
@@ -22,13 +22,13 @@ public:
 	bool start(int port = 0);
 
 	std::vector<int> connectionIds() const;
-	ServerConnectionBroker* connectionById(int connection_id);
+	BrokerClientServerConnection* connectionById(int connection_id);
 private:
-	ServerConnectionBroker* createServerConnection(QWebSocket *socket, QObject *parent);
+	BrokerClientServerConnection* createServerConnection(QWebSocket *socket, QObject *parent);
 	void onNewConnection();
 	void onConnectionClosed(int connection_id);
 private:
-	std::map<int, ServerConnectionBroker*> m_connections;
+	std::map<int, BrokerClientServerConnection*> m_connections;
 };
 
 }}}

@@ -2,11 +2,11 @@ SOURCES += \
     $$PWD/rpc.cpp \
     #$$PWD/socketrpcdriver.cpp \
     $$PWD/clientconnection.cpp \
+    $$PWD/slavebrokerconnection.cpp \
     $$PWD/tcpserver.cpp \
     $$PWD/socketrpcconnection.cpp \
     $$PWD/serverconnection.cpp \
     $$PWD/deviceconnection.cpp \
-    $$PWD/brokerconnection.cpp \
     $$PWD/clientappclioptions.cpp \
     #$$PWD/tunnelhandle.cpp \
     #$$PWD/syncclientconnection.cpp \
@@ -19,11 +19,11 @@ HEADERS += \
     $$PWD/rpc.h \
     #$$PWD/socketrpcdriver.h \
     $$PWD/clientconnection.h \
+    $$PWD/slavebrokerconnection.h \
     $$PWD/tcpserver.h \
     $$PWD/socketrpcconnection.h \
     $$PWD/serverconnection.h \
     $$PWD/deviceconnection.h \
-    $$PWD/brokerconnection.h \
     $$PWD/clientappclioptions.h \
     #$$PWD/tunnelhandle.h \
     #$$PWD/syncclientconnection.h \

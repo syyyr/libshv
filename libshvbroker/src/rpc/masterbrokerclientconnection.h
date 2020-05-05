@@ -2,19 +2,19 @@
 
 #include "commonrpcclienthandle.h"
 
-#include <shv/iotqt/rpc/brokerconnection.h>
+#include <shv/iotqt/rpc/slavebrokerconnection.h>
 
 namespace shv {
 namespace broker {
 namespace rpc {
 
-class MasterBrokerConnection : public shv::iotqt::rpc::BrokerConnection, public CommonRpcClientHandle
+class MasterBrokerClientConnection : public shv::iotqt::rpc::SlaveBrokerConnection, public CommonRpcClientHandle
 {
 	Q_OBJECT
 
-	using Super = shv::iotqt::rpc::BrokerConnection;
+	using Super = shv::iotqt::rpc::SlaveBrokerConnection;
 public:
-	MasterBrokerConnection(QObject *parent = nullptr);
+	MasterBrokerClientConnection(QObject *parent = nullptr);
 
 	int connectionId() const override {return Super::connectionId();}
 

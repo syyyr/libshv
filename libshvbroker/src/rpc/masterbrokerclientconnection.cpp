@@ -1,4 +1,4 @@
-#include "masterbrokerconnection.h"
+#include "masterbrokerclientconnection.h"
 #include "../brokerapp.h"
 
 #include <shv/chainpack/rpcmessage.h>
@@ -12,20 +12,20 @@ namespace shv {
 namespace broker {
 namespace rpc {
 
-MasterBrokerConnection::MasterBrokerConnection(QObject *parent)
+MasterBrokerClientConnection::MasterBrokerClientConnection(QObject *parent)
 	: Super(parent)
 {
 
 }
 
-void MasterBrokerConnection::setOptions(const shv::chainpack::RpcValue &slave_broker_options)
+void MasterBrokerClientConnection::setOptions(const shv::chainpack::RpcValue &slave_broker_options)
 {
 	m_options = slave_broker_options;
 	Super::setOptions(slave_broker_options);
 	m_exportedShvPath = slave_broker_options.toMap().value("exportedShvPath").toString();
 }
 
-void MasterBrokerConnection::sendRawData(const shv::chainpack::RpcValue::MetaData &meta_data, std::string &&data)
+void MasterBrokerClientConnection::sendRawData(const shv::chainpack::RpcValue::MetaData &meta_data, std::string &&data)
 {
 	logRpcMsg() << SND_LOG_ARROW
 				<< "client id:" << connectionId()
@@ -34,7 +34,7 @@ void MasterBrokerConnection::sendRawData(const shv::chainpack::RpcValue::MetaDat
 	Super::sendRawData(meta_data, std::move(data));
 }
 
-void MasterBrokerConnection::sendMessage(const shv::chainpack::RpcMessage &rpc_msg)
+void MasterBrokerClientConnection::sendMessage(const shv::chainpack::RpcMessage &rpc_msg)
 {
 	logRpcMsg() << SND_LOG_ARROW
 				<< "client id:" << connectionId()
@@ -43,7 +43,7 @@ void MasterBrokerConnection::sendMessage(const shv::chainpack::RpcMessage &rpc_m
 	Super::sendMessage(rpc_msg);
 }
 
-unsigned MasterBrokerConnection::addSubscription(const std::string &rel_path, const std::string &method)
+unsigned MasterBrokerClientConnection::addSubscription(const std::string &rel_path, const std::string &method)
 {
 	if(shv::core::utils::ShvPath::isRelativePath(rel_path))
 		SHV_EXCEPTION("This could never happen by SHV design logic, master broker tries to subscribe relative path: "  + rel_path);
@@ -51,7 +51,7 @@ unsigned MasterBrokerConnection::addSubscription(const std::string &rel_path, co
 	return CommonRpcClientHandle::addSubscription(subs);
 }
 
-bool MasterBrokerConnection::removeSubscription(const std::string &rel_path, const std::string &method)
+bool MasterBrokerClientConnection::removeSubscription(const std::string &rel_path, const std::string &method)
 {
 	if(shv::core::utils::ShvPath::isRelativePath(rel_path))
 		SHV_EXCEPTION("This could never happen by SHV design logic, master broker tries to subscribe relative path: "  + rel_path);
@@ -59,13 +59,13 @@ bool MasterBrokerConnection::removeSubscription(const std::string &rel_path, con
 	return CommonRpcClientHandle::removeSubscription(subs);
 }
 
-std::string MasterBrokerConnection::toSubscribedPath(const CommonRpcClientHandle::Subscription &subs, const std::string &abs_path) const
+std::string MasterBrokerClientConnection::toSubscribedPath(const CommonRpcClientHandle::Subscription &subs, const std::string &abs_path) const
 {
 	Q_UNUSED((subs))
 	return localPathToMasterExported(abs_path);
 }
 
-std::string MasterBrokerConnection::masterExportedToLocalPath(const std::string &master_path) const
+std::string MasterBrokerClientConnection::masterExportedToLocalPath(const std::string &master_path) const
 {
 	if(m_exportedShvPath.empty())
 		return master_path;
@@ -74,7 +74,7 @@ std::string MasterBrokerConnection::masterExportedToLocalPath(const std::string 
 	return m_exportedShvPath + '/' + master_path;
 }
 
-std::string MasterBrokerConnection::localPathToMasterExported(const std::string &local_path) const
+std::string MasterBrokerClientConnection::localPathToMasterExported(const std::string &local_path) const
 {
 	if(m_exportedShvPath.empty())
 		return local_path;
@@ -84,12 +84,12 @@ std::string MasterBrokerConnection::localPathToMasterExported(const std::string 
 	return local_path;
 }
 
-void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
+void MasterBrokerClientConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
 {
 	logRpcMsg() << RpcDriver::RCV_LOG_ARROW
 				<< "client id:" << connectionId()
 				<< "protocol_type:" << (int)protocol_type << shv::chainpack::Rpc::protocolTypeToString(protocol_type)
-				<< BrokerApp::instance()->dataToCpon(protocol_type, md, data, start_pos);
+				<< BrokerApp::instance()->dataToCpon(protocol_type, md, data, start_pos, data_len);
 	try {
 		if(isInitPhase()) {
 			Super::onRpcDataReceived(protocol_type, std::move(md), data, start_pos, data_len);

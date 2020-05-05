@@ -1,8 +1,8 @@
 #include "clientshvnode.h"
 #include "brokerapp.h"
 
-#include "rpc/serverconnectionbroker.h"
-#include "rpc/masterbrokerconnection.h"
+#include "rpc/brokerclientserverconnection.h"
+#include "rpc/masterbrokerclientconnection.h"
 
 #include <shv/coreqt/log.h>
 
@@ -14,7 +14,7 @@ namespace broker {
 //======================================================================
 // ClientShvNode
 //======================================================================
-ClientShvNode::ClientShvNode(rpc::ServerConnectionBroker *conn, ShvNode *parent)
+ClientShvNode::ClientShvNode(rpc::BrokerClientServerConnection *conn, ShvNode *parent)
 	: Super(parent)
 {
 	shvInfo() << "Creating client node:" << this << nodeId() << "connection:" << conn->connectionId();
@@ -26,14 +26,14 @@ ClientShvNode::~ClientShvNode()
 	shvInfo() << "Destroying client node:" << this << nodeId();// << "connections:" << [this]() { std::string s; for(auto c : m_connections) s += std::to_string(c->connectionId()) + " "; return s;}();
 }
 
-void ClientShvNode::addConnection(rpc::ServerConnectionBroker *conn)
+void ClientShvNode::addConnection(rpc::BrokerClientServerConnection *conn)
 {
 	// prefere new connections, old one might not work
 	m_connections.insert(0, conn);
-	connect(conn, &rpc::ServerConnectionBroker::destroyed, [this, conn]() {removeConnection(conn);});
+	connect(conn, &rpc::BrokerClientServerConnection::destroyed, [this, conn]() {removeConnection(conn);});
 }
 
-void ClientShvNode::removeConnection(rpc::ServerConnectionBroker *conn)
+void ClientShvNode::removeConnection(rpc::BrokerClientServerConnection *conn)
 {
 	//shvWarning() << this << "removing connection:" << conn;
 	m_connections.removeOne(conn);
@@ -43,7 +43,7 @@ void ClientShvNode::removeConnection(rpc::ServerConnectionBroker *conn)
 
 void ClientShvNode::handleRawRpcRequest(shv::chainpack::RpcValue::MetaData &&meta, std::string &&data)
 {
-	rpc::ServerConnectionBroker *conn = connection();
+	rpc::BrokerClientServerConnection *conn = connection();
 	if(conn)
 		conn->sendRawData(std::move(meta), std::move(data));
 }

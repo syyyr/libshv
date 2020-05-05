@@ -17,12 +17,12 @@ public:
 	CLIOPTION_GETTER_SETTER2(std::string, "exports.shvPath", b, setB, rokerExportedShvPath)
 };
 */
-class SHVIOTQT_DECL_EXPORT BrokerConnection : public DeviceConnection
+class SHVIOTQT_DECL_EXPORT SlaveBrokerConnection : public DeviceConnection
 {
 	Q_OBJECT
 	using Super = DeviceConnection;
 public:
-	BrokerConnection(QObject *parent = nullptr);
+	SlaveBrokerConnection(QObject *parent = nullptr);
 
 	virtual void setOptions(const chainpack::RpcValue &slave_broker_options);
 protected:

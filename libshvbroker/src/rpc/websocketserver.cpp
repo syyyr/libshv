@@ -1,6 +1,6 @@
 #include "websocketserver.h"
 
-#include "serverconnectionbroker.h"
+#include "brokerclientserverconnection.h"
 #include "websocket.h"
 #include "../brokerapp.h"
 
@@ -72,7 +72,7 @@ std::vector<int> WebSocketServer::connectionIds() const
 	return ret;
 }
 
-ServerConnectionBroker *WebSocketServer::connectionById(int connection_id)
+BrokerClientServerConnection *WebSocketServer::connectionById(int connection_id)
 {
 	auto it = m_connections.find(connection_id);
 	if(it == m_connections.end())
@@ -80,9 +80,9 @@ ServerConnectionBroker *WebSocketServer::connectionById(int connection_id)
 	return it->second;
 }
 
-ServerConnectionBroker *WebSocketServer::createServerConnection(QWebSocket *socket, QObject *parent)
+BrokerClientServerConnection *WebSocketServer::createServerConnection(QWebSocket *socket, QObject *parent)
 {
-	return new ServerConnectionBroker(new WebSocket(socket), parent);
+	return new BrokerClientServerConnection(new WebSocket(socket), parent);
 }
 
 void WebSocketServer::onNewConnection()
@@ -90,13 +90,13 @@ void WebSocketServer::onNewConnection()
 	shvInfo() << "New WebSocket connection";
 	QWebSocket *sock = nextPendingConnection();
 	if(sock) {
-		ServerConnectionBroker *c = createServerConnection(sock, this);
+		BrokerClientServerConnection *c = createServerConnection(sock, this);
 		shvInfo().nospace() << "web socket client connected: " << sock->peerAddress().toString() << ':' << sock->peerPort()
 							<< " connection ID: " << c->connectionId();
 		c->setConnectionName(sock->peerAddress().toString().toStdString() + ':' + std::to_string(sock->peerPort()));
 		m_connections[c->connectionId()] = c;
 		int cid = c->connectionId();
-		connect(c, &ServerConnectionBroker::socketConnectedChanged, [this, cid](bool is_connected) {
+		connect(c, &BrokerClientServerConnection::socketConnectedChanged, [this, cid](bool is_connected) {
 			if(!is_connected)
 				onConnectionClosed(cid);
 		});

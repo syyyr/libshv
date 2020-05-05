@@ -1,4 +1,4 @@
-#include "brokerconnection.h"
+#include "slavebrokerconnection.h"
 #include "deviceappclioptions.h"
 
 #include <shv/core/utils/shvfilejournal.h>
@@ -21,12 +21,12 @@ BrokerConnectionAppCliOptions::BrokerConnectionAppCliOptions()
 	addOption("exports.shvPath").setType(cp::RpcValue::Type::String).setNames("--export-path").setComment("Exported SHV path");
 }
 */
-BrokerConnection::BrokerConnection(QObject *parent)
+SlaveBrokerConnection::SlaveBrokerConnection(QObject *parent)
 	: Super(parent)
 {
 }
 
-void BrokerConnection::setOptions(const chainpack::RpcValue &slave_broker_options)
+void SlaveBrokerConnection::setOptions(const chainpack::RpcValue &slave_broker_options)
 {
 	if(slave_broker_options.isMap()) {
 		const cp::RpcValue::Map &m = slave_broker_options.toMap();
