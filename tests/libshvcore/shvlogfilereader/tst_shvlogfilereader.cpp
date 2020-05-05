@@ -247,9 +247,7 @@ private:
 				}
 			}
 			{
-				ShvLogHeader hdr;
-				hdr.setTypeInfo(typeInfo);
-				ShvJournalFileReader rd2(dirty_fn, &hdr);
+				ShvJournalFileReader rd2(dirty_fn);
 				unsigned cnt = 0;
 				while (rd2.next()) {
 					const ShvJournalEntry &e1 = rd2.entry();
