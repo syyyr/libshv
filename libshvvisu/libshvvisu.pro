@@ -39,4 +39,8 @@ LIBS += \
     -lshviotqt \
     -lshvchainpack
 
+RESOURCES += \
+    libshvvisu.qrc \
+
 include($$PWD/src/src.pri)
+

@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+	<file>images/delete.svg</file>
+	<file>images/fit-width.svg</file>
+	<file>images/settings.svg</file>
+    </qresource>
+</RCC>

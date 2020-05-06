@@ -5,6 +5,5 @@ SOURCES += \
 
 include ($$PWD/timeline/timeline.pri)
 include ($$PWD/logview/logview.pri)
+include ($$PWD/logwidget/logwidget.pri)
 include ($$PWD/svgscene/svgscene.pri)
-
-
