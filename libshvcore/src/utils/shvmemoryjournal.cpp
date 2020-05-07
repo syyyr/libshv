@@ -61,6 +61,9 @@ void ShvMemoryJournal::loadLog(const chainpack::RpcValue &log, bool append_recor
 		e.shortTime = st.isInt() && st.toInt() >= 0? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
 		e.domain = row.value(Column::Domain).toString();
 		e.sampleType = static_cast<ShvJournalEntry::SampleType>(row.value(Column::SampleType).toUInt());
+		if (e.sampleType == ShvJournalEntry::SampleType::Invalid) {
+			e.sampleType = ShvJournalEntry::SampleType::Continuous;
+		}
 		append(e);
 	}
 }
@@ -220,6 +223,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 					rec.push_back(entry.value);
 					rec.push_back(entry.shortTime);
 					rec.push_back(entry.domain.empty()? cp::RpcValue(nullptr): entry.domain);
+					rec.push_back((int)entry.sampleType);
 					log.push_back(std::move(rec));
 					rec_cnt++;
 				}
@@ -243,6 +247,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 					rec.push_back(it->value);
 					rec.push_back(it->shortTime);
 					rec.push_back(it->domain.empty()? cp::RpcValue(nullptr): it->domain);
+					rec.push_back((int)it->sampleType);
 					log.push_back(std::move(rec));
 					rec_cnt++;
 				}
@@ -276,6 +281,7 @@ log_finish:
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Value)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::ShortTime)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Domain)}});
+		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::SampleType)}});
 		hdr.setFields(std::move(fields));
 
 		if(params.withTypeInfo)

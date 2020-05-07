@@ -55,6 +55,9 @@ bool ShvLogRpcValueReader::next()
 		m_currentEntry.shortTime = st.isInt() && st.toInt() >= 0? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
 		m_currentEntry.domain = row.value(Column::Domain).toString();
 		m_currentEntry.sampleType = static_cast<ShvJournalEntry::SampleType>(row.value(Column::SampleType).toUInt());
+		if (m_currentEntry.sampleType == ShvJournalEntry::SampleType::Invalid) {
+			m_currentEntry.sampleType = ShvJournalEntry::SampleType::Continuous;
+		}
 		return true;
 	}
 }

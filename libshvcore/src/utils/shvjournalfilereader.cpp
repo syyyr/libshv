@@ -76,6 +76,9 @@ bool ShvJournalFileReader::next()
 		m_currentEntry.shortTime = ok && short_time >= 0? short_time: ShvJournalEntry::NO_SHORT_TIME;
 		m_currentEntry.domain = std::move(domain);
 		m_currentEntry.sampleType = sample_type;
+		if (m_currentEntry.sampleType == ShvJournalEntry::SampleType::Invalid) {
+			m_currentEntry.sampleType = ShvJournalEntry::SampleType::Continuous;
+		}
 		std::string err;
 		m_currentEntry.value = cp::RpcValue::fromCpon(line_record.value(Column::Value).toString(), &err);
 		if(!err.empty())
