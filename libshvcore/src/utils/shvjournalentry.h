@@ -36,7 +36,7 @@ public:
 	shv::chainpack::RpcValue value;
 	int shortTime = NO_SHORT_TIME;
 	std::string domain;
-	SampleType sampleType = SampleType::Continuous;
+	SampleType sampleType = SampleType::Invalid;
 
 	ShvJournalEntry() {}
 	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, std::string domain, int short_time, SampleType sample_type, int64_t epoch_msec = 0)

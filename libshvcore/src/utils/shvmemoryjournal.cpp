@@ -60,8 +60,9 @@ void ShvMemoryJournal::loadLog(const chainpack::RpcValue &log, bool append_recor
 		cp::RpcValue st = row.value(Column::ShortTime);
 		e.shortTime = st.isInt() && st.toInt() >= 0? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
 		e.domain = row.value(Column::Domain).toString();
-		if (row.size() - 1 >= Column::SampleType) {
-			e.sampleType = static_cast<ShvJournalEntry::SampleType>(row.value(Column::SampleType).toUInt());
+		e.sampleType = static_cast<ShvJournalEntry::SampleType>(row.value(Column::SampleType).toUInt());
+		if (e.sampleType == ShvJournalEntry::SampleType::Invalid) {
+			e.sampleType = ShvJournalEntry::SampleType::Continuous;
 		}
 		append(e);
 	}
