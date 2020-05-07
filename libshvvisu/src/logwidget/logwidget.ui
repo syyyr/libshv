@@ -65,7 +65,7 @@
        </property>
        <property name="icon">
         <iconset resource="../../libshvvisu.qrc">
-         <normaloff>:/images/delete.svg</normaloff>:/images/delete.svg</iconset>
+         <normaloff>:/shv/visu/images/delete.svg</normaloff>:/shv/visu/images/delete.svg</iconset>
        </property>
        <property name="autoRaise">
         <bool>true</bool>
@@ -79,7 +79,7 @@
        </property>
        <property name="icon">
         <iconset resource="../../libshvvisu.qrc">
-         <normaloff>:/images/fit-width.svg</normaloff>:/images/fit-width.svg</iconset>
+         <normaloff>:/shv/visu/images/fit-width.svg</normaloff>:/shv/visu/images/fit-width.svg</iconset>
        </property>
        <property name="autoRaise">
         <bool>true</bool>
@@ -96,7 +96,7 @@
        </property>
        <property name="icon">
         <iconset resource="../../libshvvisu.qrc">
-         <normaloff>:/images/settings.svg</normaloff>:/images/settings.svg</iconset>
+         <normaloff>:/shv/visu/images/settings.svg</normaloff>:/shv/visu/images/settings.svg</iconset>
        </property>
        <property name="popupMode">
         <enum>QToolButton::InstantPopup</enum>
