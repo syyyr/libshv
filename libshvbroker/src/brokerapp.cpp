@@ -569,7 +569,6 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 		}
 	}
 #endif
-	//shv::chainpack::RpcValue user = usersConfig().toMap().value(user_name);
 	bool is_request_from_master_broker = conn->isMasterBrokerConnection();
 	auto request_grant = cp::AccessGrant::fromRpcValue(rq_grant);
 	if(is_request_from_master_broker) {
@@ -607,58 +606,48 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	}
 	// find most specific path grant for role with highest weight
 	// user_flattent_grants are sorted by weight DESC
-	cp::PathAccessGrant most_specific_path_grant;
-	std::string most_specific_path;
-	std::string most_specific_path_method;
-	int most_specific_path_weight = std::numeric_limits<int>::min();
-	//int most_specific_path_nest_level = std::numeric_limits<int>::max();
+	AclAccessRule most_specific_rule;
+	//cp::AccessGrant most_specific_path_grant;
+	//std::string most_specific_path;
+	//std::string most_specific_path_method;
+	int most_specific_role_weight = std::numeric_limits<int>::min();
 	shv::iotqt::node::ShvNode::StringViewList shv_path_lst = shv::core::utils::ShvPath::split(rq_shv_path);
-	//std::string request_path_with_method = rq_shv_path + ':' + method;
 
 	// roles are sorted in weight DESC nest_level ASC
 	for(const AclManager::FlattenRole &flatten_role : user_roles) {
-		if(most_specific_path_weight != std::numeric_limits<int>::min() && flatten_role.weight < most_specific_path_weight) {
+		if(most_specific_role_weight != std::numeric_limits<int>::min() && flatten_role.weight < most_specific_role_weight) {
 			// roles with lower weight have lower priority, skip them
 			break;
 		}
 		logAclResolveM() << "----- checking role:" << flatten_role.name << "with weight:" << flatten_role.weight << "nest level:" << flatten_role.nestLevel;
-		const AclRolePaths &role_paths = aclManager()->accessRolePaths(flatten_role.name);
-		if(role_paths.empty()) {
+		const AclRoleAccessRules &role_rules = aclManager()->accessRoleRules(flatten_role.name);
+		if(role_rules.empty()) {
 			logAclResolveM() << "\t no paths defined.";
 		}
-		else for(const auto &kv : role_paths) {
-			const std::string &role_path = kv.first;
+		else for(const AclAccessRule &access_rule : role_rules) {
+			//const std::string &role_path = kv.first;
 
-			const shv::chainpack::PathAccessGrant &acces_grant = kv.second;
-			logAclResolveM().nospace() << "\t path: '" << role_path << "' len: " << role_path.size();
+			//const AclAccessRule &acces_grant = kv.second;
+			logAclResolveM().nospace() << "\t path: '" << access_rule.pathPattern << "' len: " << access_rule.pathPattern.size();
 
-			shv::iotqt::node::ShvNode::StringViewList role_path_pattern = shv::core::utils::ShvPath::split(role_path);
-			shv::core::StringView role_path_method;
-			if(role_path_pattern.size()) {
-				shv::core::StringView& last_rp = role_path_pattern[role_path_pattern.size() - 1];
-				auto pos = last_rp.lastIndexOf(':');
-				if(pos >= 0) {
-					role_path_method = last_rp.mid(static_cast<size_t>(pos) + 1);
-					last_rp = last_rp.mid(0, static_cast<size_t>(pos));
-				}
-			}
-			if((role_path_method.empty() || role_path_method == method)
-					&& shv::core::utils::ShvPath::matchWild(shv_path_lst, role_path_pattern)) {
-				std::string rpp =  role_path_pattern.join('/');
-				std::string rpm =  role_path_method.toString();
-				logAclResolveM().nospace() << "\t\t MATCH, path: '" << rpp << ":" << rpm << "'"
-										   << " matches request path: '" << rq_shv_path << ':' << method << "'";
-				if(is_first_path_more_specific(rpp, rpm, most_specific_path, most_specific_path_method)) {
-					logAclResolveM().nospace() << "\t\t HIT, more specific path found ': " << role_path << "' grant: " << acces_grant.toRpcValue().toCpon();
-					most_specific_path = rpp;
-					most_specific_path_method = rpm;
-					most_specific_path_grant = acces_grant;
-					most_specific_path_weight = flatten_role.weight;
-					//most_specific_path_nest_level = flatten_role.nestLevel;
+			shv::iotqt::node::ShvNode::StringViewList rule_path_pattern_list = shv::core::utils::ShvPath::split(access_rule.pathPattern);
+			//std::string role_path_method = acces_grant.method;
+			if((access_rule.method.empty() || access_rule.method == method)
+					&& shv::core::utils::ShvPath::matchWild(shv_path_lst, rule_path_pattern_list)) {
+				logAclResolveM().nospace() << "\t\t MATCH, path: '" << access_rule.pathPattern << shv::core::utils::ShvPath::SHV_PATH_METHOD_DELIM << access_rule.method << "'"
+										   << " matches request path: '" << rq_shv_path << shv::core::utils::ShvPath::SHV_PATH_METHOD_DELIM << method << "'";
+				if(is_first_path_more_specific(access_rule.pathPattern, access_rule.method
+											   , most_specific_rule.pathPattern, most_specific_rule.method)) {
+					logAclResolveM().nospace() << "\t\t HIT, more specific path found ': " << access_rule.pathPattern << "' grant: " << access_rule.grant.toRpcValue().toCpon();
+					most_specific_rule = access_rule;
+					//most_specific_path = role_path;
+					//most_specific_path_method = role_path_method;
+					//most_specific_path_grant = acces_grant.accessGrant;
+					most_specific_role_weight = flatten_role.weight;
 				}
 			}
 			else {
-				logAclResolveM().nospace() << "\t\t path: '" << role_path << "' does not match request path: '" << rq_shv_path << ':' << method << "'";
+				logAclResolveM().nospace() << "\t\t path: '" << access_rule.pathPattern << "' does not match request path: '" << rq_shv_path << ':' << method << "'";
 			}
 		}
 	}
@@ -674,9 +663,8 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	logAclResolveM() << "access user:" << conn->loggedUserName()
 				 << "shv_path:" << rq_shv_path
 				 << "rq_grant:" << (rq_grant.isValid()? rq_grant.toCpon(): "<none>")
-				 //<< "grants:" << join_string_list(user_flattent_grants, ',')
-				 << "===> path:" << most_specific_path << "grant:" << most_specific_path_grant.toRpcValue().toCpon();
-	return cp::AccessGrant(most_specific_path_grant);
+				 << "===> path:" << most_specific_rule.pathPattern << "method:" << most_specific_rule.method << "grant:" << most_specific_rule.grant.toRpcValue().toCpon();
+	return most_specific_rule.grant;
 }
 
 void BrokerApp::onClientLogin(int connection_id)

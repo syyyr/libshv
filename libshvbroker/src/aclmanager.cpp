@@ -128,22 +128,22 @@ std::vector<std::string> AclManager::accessRoles()
 	return cp::Utils::mapKeys(m_cache.aclPathsRoles);
 }
 
-AclRolePaths AclManager::accessRolePaths(const std::string &role_name)
+AclRoleAccessRules AclManager::accessRoleRules(const std::string &role_name)
 {
 	if(m_cache.aclPathsRoles.empty())
 		accessRoles();
 	auto it = m_cache.aclPathsRoles.find(role_name);
 	if(it == m_cache.aclPathsRoles.end())
-		return AclRolePaths();
+		return AclRoleAccessRules();
 	if(!it->second.isValid()) {
-		it->second = aclAccessRolePaths(role_name);
+		it->second = aclAccessRoleRules(role_name);
 	}
 	return it->second;
 }
 
-void AclManager::setAccessRolePaths(const std::string &role_name, const AclRolePaths &v)
+void AclManager::setAccessRoleRules(const std::string &role_name, const AclRoleAccessRules &v)
 {
-	aclSetAccessRolePaths(role_name, v);
+	aclSetAccessRoleRules(role_name, v);
 	m_cache.aclPathsRoles.clear();
 }
 
@@ -230,7 +230,7 @@ void AclManager::aclSetRole(const std::string &role_name, const AclRole &r)
 	SHV_EXCEPTION("Roles definition is read only.");
 }
 
-void AclManager::aclSetAccessRolePaths(const std::string &role_name, const AclRolePaths &rp)
+void AclManager::aclSetAccessRoleRules(const std::string &role_name, const AclRoleAccessRules &rp)
 {
 	Q_UNUSED(role_name)
 	Q_UNUSED(rp)
@@ -413,10 +413,10 @@ std::vector<std::string> AclManagerConfigFiles::aclAccessRoles()
 	return cp::Utils::mapKeys(cfg.toMap());
 }
 
-AclRolePaths AclManagerConfigFiles::aclAccessRolePaths(const std::string &role_name)
+AclRoleAccessRules AclManagerConfigFiles::aclAccessRoleRules(const std::string &role_name)
 {
 	chainpack::RpcValue v = aclConfig(FILE_ACL_ACCESS).toMap().value(role_name);
-	return AclRolePaths::fromRpcValue(v);
+	return AclRoleAccessRules::fromRpcValue(v);
 }
 
 } // namespace broker

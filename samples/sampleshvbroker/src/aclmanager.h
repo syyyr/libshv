@@ -18,7 +18,7 @@ protected:
 	std::vector<std::string> aclRoles() override;
 	shv::broker::AclRole aclRole(const std::string &role_name) override;
 	std::vector<std::string> aclAccessRoles() override;
-	shv::broker::AclRolePaths aclAccessRolePaths(const std::string &role_name) override;
+	shv::broker::AclRoleAccessRules aclAccessRoleRules(const std::string &role_name) override;
 };
 
 #endif // ACLMANAGER_H

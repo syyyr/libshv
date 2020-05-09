@@ -71,7 +71,7 @@ shv::iotqt::node::ShvNode::StringList SubscriptionsNode::childNames(const String
 			shv::iotqt::node::ShvNode::StringList ret;
 			for (size_t i = 0; i < m_client->subscriptionCount(); ++i) {
 				const rpc::BrokerClientServerConnection::Subscription &subs = m_client->subscriptionAt(i);
-				ret.push_back(shv::core::utils::ShvPath::SHV_PATH_QUOTE + subs.absolutePath + ':' + subs.method + shv::core::utils::ShvPath::SHV_PATH_QUOTE);
+				ret.push_back(shv::core::utils::ShvPath::SHV_PATH_QUOTE + subs.absolutePath + shv::core::utils::ShvPath::SHV_PATH_METHOD_DELIM + subs.method + shv::core::utils::ShvPath::SHV_PATH_QUOTE);
 			}
 			std::sort(ret.begin(), ret.end());
 			return ret;
@@ -94,7 +94,7 @@ shv::chainpack::RpcValue SubscriptionsNode::callMethod(const StringViewList &shv
 				shv::core::StringView path = shv_path.at(1);
 				for (size_t i = 0; i < m_client->subscriptionCount(); ++i) {
 					const rpc::BrokerClientServerConnection::Subscription &subs1 = m_client->subscriptionAt(i);
-					std::string p = shv::core::utils::ShvPath::SHV_PATH_QUOTE + subs1.absolutePath + ':' + subs1.method + shv::core::utils::ShvPath::SHV_PATH_QUOTE;
+					std::string p = shv::core::utils::ShvPath::SHV_PATH_QUOTE + subs1.absolutePath + shv::core::utils::ShvPath::SHV_PATH_METHOD_DELIM + subs1.method + shv::core::utils::ShvPath::SHV_PATH_QUOTE;
 					if(path == p) {
 						subs = &subs1;
 						break;

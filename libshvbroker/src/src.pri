@@ -3,7 +3,7 @@ HEADERS += \
     $$PWD/aclmountdef.h \
     $$PWD/aclpassword.h \
     $$PWD/aclrole.h \
-    $$PWD/aclrolepaths.h \
+    $$PWD/aclroleaccessrules.h \
     $$PWD/acluser.h \
     $$PWD/aclmanager.h \
     $$PWD/aclmanagersqlite.h \
@@ -21,7 +21,7 @@ SOURCES += \
     $$PWD/aclmountdef.cpp \
     $$PWD/aclpassword.cpp \
     $$PWD/aclrole.cpp \
-    $$PWD/aclrolepaths.cpp \
+    $$PWD/aclroleaccessrules.cpp \
     $$PWD/acluser.cpp \
     $$PWD/aclmanagersqlite.cpp \
     $$PWD/appclioptions.cpp \

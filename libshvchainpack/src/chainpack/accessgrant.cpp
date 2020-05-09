@@ -318,29 +318,5 @@ AccessGrant::Type AccessGrant::typeFromString(const std::string &s)
 	return Type::Invalid;
 }
 
-//================================================================
-// PathAccessGrant
-//================================================================
-//const char* PathAccessGrant::FORWARD_USER_LOGIN = "forwardLogin";
-
-RpcValue PathAccessGrant::toRpcValueMap() const
-{
-	RpcValue ret = Super::toRpcValueMap();
-	//if(ret.isMap()) {
-	//	ret.set(FORWARD_USER_LOGIN, forwardUserLoginFromRequest);
-	//}
-	return ret;
-}
-
-PathAccessGrant PathAccessGrant::fromRpcValue(const RpcValue &rpcval)
-{
-	PathAccessGrant ret = Super::fromRpcValue(rpcval);
-	//if(rpcval.isMap()) {
-	//	const RpcValue::Map &m = rpcval.toMap();
-	//	ret.forwardUserLoginFromRequest = m.value("forward", m.value(FORWARD_USER_LOGIN)).toBool();
-	//}
-	return ret;
-}
-
 } // namespace chainpack
 } // namespace shv

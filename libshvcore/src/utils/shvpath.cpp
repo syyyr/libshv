@@ -10,6 +10,8 @@ namespace utils {
 static const std::string DDOT_SLASH("../");
 static const std::string DDOT("..");
 
+const char ShvPath::SHV_PATH_METHOD_DELIM = ':';
+
 bool ShvPath::startsWithPath(const std::string &path, size_t *pos) const
 {
 	return startsWithPath(*this, path, pos);

@@ -53,41 +53,46 @@ std::vector<std::string> AclManager::aclAccessRoles()
 	return cp::Utils::mapKeys(s_aclRoles);
 }
 
-shv::broker::AclRolePaths AclManager::aclAccessRolePaths(const std::string &role_name)
+shv::broker::AclRoleAccessRules AclManager::aclAccessRoleRules(const std::string &role_name)
 {
-	shv::broker::AclRolePaths ret;
+	shv::broker::AclRoleAccessRules ret;
 	if(role_name == "user") {
 		{
-			cp::AccessGrant &grant = ret["**"];
-			grant.type = cp::AccessGrant::Type::AccessLevel;
+			shv::broker::AclAccessRule rule("**");
+			rule.grant.type = cp::AccessGrant::Type::AccessLevel;
 			//grant.role = cp::Rpc::ROLE_BROWSE;
-			grant.accessLevel = cp::MetaMethod::AccessLevel::Browse;
+			rule.grant.accessLevel = cp::MetaMethod::AccessLevel::Browse;
+			ret.push_back(std::move(rule));
 		}
 		{
-			cp::AccessGrant &grant = ret["test/**"];
-			grant.type = cp::AccessGrant::Type::Role;
-			grant.role = cp::Rpc::ROLE_READ;
+			shv::broker::AclAccessRule rule("test/**");
+			rule.grant.type = cp::AccessGrant::Type::Role;
+			rule.grant.role = cp::Rpc::ROLE_READ;
+			ret.push_back(std::move(rule));
 		}
 	}
 	if(role_name == "system") {
 		{
-			cp::AccessGrant &grant = ret[".broker/**"];
-			grant.type = cp::AccessGrant::Type::AccessLevel;
+			shv::broker::AclAccessRule rule(".broker/**");
+			rule.grant.type = cp::AccessGrant::Type::AccessLevel;
 			//grant.role = cp::Rpc::ROLE_BROWSE;
-			grant.accessLevel = cp::MetaMethod::AccessLevel::Service;
+			rule.grant.accessLevel = cp::MetaMethod::AccessLevel::Service;
+			ret.push_back(std::move(rule));
 		}
 		{
-			cp::AccessGrant &grant = ret["test/**"];
-			grant.type = cp::AccessGrant::Type::Role;
-			grant.role = cp::Rpc::ROLE_SERVICE;
+			shv::broker::AclAccessRule rule("test/**");
+			rule.grant.type = cp::AccessGrant::Type::Role;
+			rule.grant.role = cp::Rpc::ROLE_SERVICE;
+			ret.push_back(std::move(rule));
 		}
 	}
 	if(role_name == "superuser") {
 		{
-			cp::AccessGrant &grant = ret["**"];
-			grant.type = cp::AccessGrant::Type::AccessLevel;
+			shv::broker::AclAccessRule rule("**");
+			rule.grant.type = cp::AccessGrant::Type::AccessLevel;
 			//grant.role = cp::Rpc::ROLE_BROWSE;
-			grant.accessLevel = cp::MetaMethod::AccessLevel::Admin;
+			rule.grant.accessLevel = cp::MetaMethod::AccessLevel::Admin;
+			ret.push_back(std::move(rule));
 		}
 	}
 	return ret;

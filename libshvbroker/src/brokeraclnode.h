@@ -5,6 +5,8 @@
 namespace shv {
 namespace broker {
 
+class AclAccessRule;
+
 class EtcAclNode : public shv::iotqt::node::MethodsTableNode
 {
 	using Super = shv::iotqt::node::MethodsTableNode;
@@ -65,6 +67,10 @@ protected:
 	StringList childNames(const ShvNode::StringViewList &shv_path) override;
 	std::vector<shv::chainpack::MetaMethod> *metaMethodsForPath(const StringViewList &shv_path) override;
 	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+private:
+	std::string ruleKey(unsigned rule_ix, unsigned rules_cnt, const shv::broker::AclAccessRule &rule) const;
+	static constexpr auto InvalidIndex = std::numeric_limits<unsigned>::max();
+	static unsigned keyToRuleIndex(const std::string &key);
 };
 
 }}

@@ -3,7 +3,7 @@
 #include "shvbrokerglobal.h"
 
 #include "aclrole.h"
-#include "aclrolepaths.h"
+#include "aclroleaccessrules.h"
 #include "aclmountdef.h"
 #include "acluser.h"
 #include "aclpassword.h"
@@ -38,8 +38,8 @@ public:
 	void setRole(const std::string &role_name, const AclRole &v);
 
 	std::vector<std::string> accessRoles();
-	AclRolePaths accessRolePaths(const std::string &role_name);
-	void setAccessRolePaths(const std::string &role_name, const AclRolePaths &v);
+	AclRoleAccessRules accessRoleRules(const std::string &role_name);
+	void setAccessRoleRules(const std::string &role_name, const AclRoleAccessRules &v);
 
 	std::string mountPointForDevice(const shv::chainpack::RpcValue &device_id);
 
@@ -71,8 +71,8 @@ protected:
 	virtual void aclSetRole(const std::string &role_name, const AclRole &r);
 
 	virtual std::vector<std::string> aclAccessRoles() = 0;
-	virtual AclRolePaths aclAccessRolePaths(const std::string &role_name) = 0;
-	virtual void aclSetAccessRolePaths(const std::string &role_name, const AclRolePaths &rp);
+	virtual AclRoleAccessRules aclAccessRoleRules(const std::string &role_name) = 0;
+	virtual void aclSetAccessRoleRules(const std::string &role_name, const AclRoleAccessRules &rp);
 
 	//virtual AclPassword aclUserPassword(const std::string &user) = 0;
 protected:
@@ -88,7 +88,7 @@ protected:
 		std::map<std::string, AclMountDef> aclMountDefs;
 		std::map<std::string, AclUser> aclUsers;
 		std::map<std::string, AclRole> aclRoles;
-		std::map<std::string, AclRolePaths> aclPathsRoles;
+		std::map<std::string, AclRoleAccessRules> aclPathsRoles;
 
 		std::map<std::string, std::vector<FlattenRole>> userFlattenRoles;
 	} m_cache;
@@ -113,7 +113,7 @@ protected:
 	std::vector<std::string> aclRoles() override;
 	AclRole aclRole(const std::string &role_name) override;
 	std::vector<std::string> aclAccessRoles() override;
-	AclRolePaths aclAccessRolePaths(const std::string &role_name) override;
+	AclRoleAccessRules aclAccessRoleRules(const std::string &role_name) override;
 protected:
 	shv::chainpack::RpcValue::Map m_configFiles;
 };

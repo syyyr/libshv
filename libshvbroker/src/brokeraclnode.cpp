@@ -1,5 +1,6 @@
 #include "brokeraclnode.h"
 #include "brokerapp.h"
+#include "aclroleaccessrules.h"
 
 #include <shv/core/utils/shvpath.h>
 #include <shv/chainpack/metamethod.h>
@@ -7,6 +8,8 @@
 #include <shv/core/string.h>
 #include <shv/core/log.h>
 #include <shv/core/exception.h>
+
+#include <regex>
 
 namespace cp = shv::chainpack;
 
@@ -24,11 +27,19 @@ static std::vector<cp::MetaMethod> meta_methods_dir_ls {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 };
+
 static std::vector<cp::MetaMethod> meta_methods_property {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 	{cp::Rpc::METH_GET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
 	//{cp::Rpc::METH_SET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsSetter, cp::Rpc::ROLE_CONFIG},
+};
+
+static std::vector<cp::MetaMethod> meta_methods_property_rw {
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
+	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
+	{cp::Rpc::METH_GET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
+	{cp::Rpc::METH_SET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsSetter, cp::Rpc::ROLE_WRITE},
 };
 
 static const std::string M_VALUE = "value";
@@ -292,12 +303,13 @@ chainpack::RpcValue UsersAclNode::callMethod(const iotqt::node::ShvNode::StringV
 }
 
 //========================================================
-// PathsAclNode
+// AccessAclNode
 //========================================================
 
-static const std::string ACL_PATHS_GRANT = "grant";
-static const std::string ACL_PATHS_GRANT_TYPE = "type";
-//static const std::string ACL_PATHS_GRANT_FWD = cp::PathAccessGrant::FORWARD_USER_LOGIN;
+static const std::string ACL_RULE_GRANT = "grant";
+static const std::string ACL_RULE_GRANT_TYPE = "type";
+static const std::string ACL_RULE_PATH_PATTERN = "pathPattern";
+static const std::string ACL_RULE_METHOD = "method";
 
 AccessAclNode::AccessAclNode(shv::iotqt::node::ShvNode *parent)
 	: Super("access", parent)
@@ -314,7 +326,7 @@ std::vector<chainpack::MetaMethod> *AccessAclNode::metaMethodsForPath(const iotq
 	if(shv_path.size() == 2)
 		return &meta_methods_dir_ls;
 	if(shv_path.size() == 3)
-		return &meta_methods_property;
+		return &meta_methods_property_rw;
 	return &meta_methods_dir_ls;
 }
 
@@ -326,14 +338,16 @@ iotqt::node::ShvNode::StringList AccessAclNode::childNames(const iotqt::node::Sh
 	}
 	else if(shv_path.size() == 1) {
 		AclManager *mng = BrokerApp::instance()->aclManager();
-		AclRolePaths role_paths = mng->accessRolePaths(shv_path.value(0).toString());
+		const AclRoleAccessRules role_rules = mng->accessRoleRules(shv_path.value(0).toString());
 		iotqt::node::ShvNode::StringList ret;
-		for(auto s : shv::chainpack::Utils::mapKeys(role_paths))
-			ret.push_back('\'' + s + '\'');
+		unsigned ix = 0;
+		for(auto rule : role_rules) {
+			ret.push_back('\'' + ruleKey(ix++, role_rules.size(), rule) + '\'');
+		}
 		return ret;
 	}
 	else if(shv_path.size() == 2) {
-		return iotqt::node::ShvNode::StringList{ACL_PATHS_GRANT, ACL_PATHS_GRANT_TYPE,/* ACL_PATHS_GRANT_FWD*/};
+		return iotqt::node::ShvNode::StringList{ ACL_RULE_PATH_PATTERN, ACL_RULE_METHOD, ACL_RULE_GRANT_TYPE, ACL_RULE_GRANT, };
 	}
 	return Super::childNames(shv_path);
 }
@@ -345,9 +359,9 @@ chainpack::RpcValue AccessAclNode::callMethod(const iotqt::node::ShvNode::String
 			if(params.isList()) {
 				const auto &lst = params.toList();
 				const std::string &role_name = lst.value(0).toString();
-				auto v = AclRolePaths::fromRpcValue(lst.value(1));
+				auto v = AclRoleAccessRules::fromRpcValue(lst.value(1));
 				AclManager *mng = BrokerApp::instance()->aclManager();
-				mng->setAccessRolePaths(role_name, v);
+				mng->setAccessRoleRules(role_name, v);
 				return true;
 			}
 			SHV_EXCEPTION("Invalid parameters, method: " + method);
@@ -356,31 +370,79 @@ chainpack::RpcValue AccessAclNode::callMethod(const iotqt::node::ShvNode::String
 	else if(shv_path.size() == 1) {
 		if(method == M_VALUE) {
 			AclManager *mng = BrokerApp::instance()->aclManager();
-			auto v = mng->accessRolePaths(shv_path.value(0).toString());
-			return v.toRpcValueMap();
+			auto v = mng->accessRoleRules(shv_path.value(0).toString());
+			return v.toRpcValue();
 		}
 	}
 	else if(shv_path.size() == 3) {
+		AclManager *mng = BrokerApp::instance()->aclManager();
+		const AclRoleAccessRules role_rules = mng->accessRoleRules(shv_path.value(0).toString());
+		std::string key = shv_path.value(1).toString();
+		if(key.size() > 1 && key[0] == '\'' && key[key.size() - 1] == '\'')
+			key = key.substr(1, key.size() - 2);
+		unsigned i = keyToRuleIndex(key);
+		if(i >= role_rules.size())
+			SHV_EXCEPTION("Invalid access rule key: " + key);
+		const auto &g = role_rules.at(i);
+
 		if(method == cp::Rpc::METH_GET) {
-			AclManager *mng = BrokerApp::instance()->aclManager();
-			AclRolePaths role_paths = mng->accessRolePaths(shv_path.value(0).toString());
-			std::string path = shv_path.value(1).toString();
-			if(path.size() > 1 && path[0] == '\'' && path[path.size() - 1] == '\'')
-				path = path.substr(1, path.size() - 2);
-			auto it = role_paths.find(path);
-			if(it == role_paths.end())
-				SHV_EXCEPTION("Invalid path: " + path);
-			auto g = it->second;
 			std::string pn = shv_path.value(2).toString();
-			if(pn == ACL_PATHS_GRANT)
-				return g.toRpcValue();
-			if(pn == ACL_PATHS_GRANT_TYPE)
-				return cp::PathAccessGrant::typeToString(g.type);
-			//if(pn == ACL_PATHS_GRANT_FWD)
-			//	return g.forwardUserLoginFromRequest;
+			if(pn == ACL_RULE_GRANT)
+				return g.grant.toRpcValue();
+			if(pn == ACL_RULE_GRANT_TYPE)
+				return cp::AccessGrant::typeToString(g.grant.type);
+			if(pn == ACL_RULE_PATH_PATTERN)
+				return g.pathPattern;
+			if(pn == ACL_RULE_METHOD)
+				return g.method;
+		}
+		if(method == cp::Rpc::METH_SET) {
+			std::string pn = shv_path.value(2).toString();
+			if(pn == ACL_RULE_GRANT)
+				return g.grant.toRpcValue();
+			if(pn == ACL_RULE_GRANT_TYPE)
+				return cp::AccessGrant::typeToString(g.grant.type);
+			if(pn == ACL_RULE_PATH_PATTERN)
+				return g.pathPattern;
+			if(pn == ACL_RULE_METHOD)
+				return g.method;
 		}
 	}
 	return Super::callMethod(shv_path, method, params);
+}
+
+std::string AccessAclNode::ruleKey(unsigned rule_ix, unsigned rules_cnt, const AclAccessRule &rule) const
+{
+	int width = 1;
+	while (rules_cnt > 9) {
+		width++;
+		rules_cnt /= 10;
+	}
+	std::string ret = QStringLiteral("[%1] ").arg(rule_ix, width, 10, QChar(0)).toStdString();
+	ret += rule.pathPattern;
+	if(!rule.method.empty())
+		ret += core::utils::ShvPath::SHV_PATH_METHOD_DELIM + rule.method;
+	return ret;
+}
+
+unsigned AccessAclNode::keyToRuleIndex(const std::string &key)
+{
+	static const std::regex color_regex(R"RX(^\[([0-9]+)\])RX");
+	// show contents of marked subexpressions within each match
+	std::smatch color_match;
+	if(std::regex_search(key, color_match, color_regex)) {
+		//std::cout << "matches for '" << line << "'\n";
+		//std::cout << "Prefix: '" << color_match.prefix() << "'\n";
+		if (color_match.size() > 1) {
+			bool ok;
+			unsigned ix = shv::core::String::toInt(color_match[1], &ok);
+			if(ok)
+				return ix;
+			//std::cout << i << ": " << color_match[i] << '\n';
+		}
+		//std::cout << "Suffix: '" << color_match.suffix() << "\'\n\n";
+	}
+	return  InvalidIndex;
 }
 
 }}
