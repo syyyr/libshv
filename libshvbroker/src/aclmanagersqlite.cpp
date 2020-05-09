@@ -132,7 +132,7 @@ void AclManagerSqlite::createAclSqlTables()
 				user character varying,
 				password character varying,
 				loginType character varying,
-				PRIMARY KEY (role, path)
+				PRIMARY KEY (role, path, method)
 			);
 			)kkt").arg(TBL_ACL_ACCESS));
 }
@@ -299,8 +299,8 @@ AclRoleAccessRules AclManagerSqlite::aclAccessRoleRules(const std::string &role_
 	AclRoleAccessRules ret;
 	QSqlQuery q = execSql("SELECT * FROM " + TBL_ACL_ACCESS + " WHERE role='" + QString::fromStdString(role_name) + "'");
 	while(q.next()) {
-		std::string path = q.value("path").toString().toStdString();
 		AclAccessRule ag;
+		ag.pathPattern = q.value("path").toString().toStdString();
 		ag.method = q.value("method").toString().toStdString();
 		//ag.forwardUserLoginFromRequest = q.value(PathAccessGrant::FORWARD_USER_LOGIN).toBool();
 		std::string grant_type = q.value("grantType").toString().toStdString();

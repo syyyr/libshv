@@ -16,10 +16,6 @@ namespace cp = shv::chainpack;
 namespace shv {
 namespace broker {
 
-static const std::string GRANTS = "grants";
-static const std::string WEIGHT = "weight";
-static const std::string GRANT_NAME = "grantName";
-
 //========================================================
 // EtcAclNode
 //========================================================
@@ -33,13 +29,6 @@ static std::vector<cp::MetaMethod> meta_methods_property {
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 	{cp::Rpc::METH_GET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
 	//{cp::Rpc::METH_SET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsSetter, cp::Rpc::ROLE_CONFIG},
-};
-
-static std::vector<cp::MetaMethod> meta_methods_property_rw {
-	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
-	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
-	{cp::Rpc::METH_GET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
-	{cp::Rpc::METH_SET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsSetter, cp::Rpc::ROLE_WRITE},
 };
 
 static const std::string M_VALUE = "value";
@@ -306,10 +295,27 @@ chainpack::RpcValue UsersAclNode::callMethod(const iotqt::node::ShvNode::StringV
 // AccessAclNode
 //========================================================
 
-static const std::string ACL_RULE_GRANT = "grant";
-static const std::string ACL_RULE_GRANT_TYPE = "type";
-static const std::string ACL_RULE_PATH_PATTERN = "pathPattern";
-static const std::string ACL_RULE_METHOD = "method";
+static const std::string M_GET_GRANT = "grant";
+static const std::string M_GET_GRANT_TYPE = "grantType";
+static const std::string M_GET_PATH_PATTERN = "pathPattern";
+static const std::string M_GET_METHOD = "method";
+
+static const std::string M_SET_GRANT = "setGrant";
+static const std::string M_SET_PATH_PATTERN = "setPathPattern";
+static const std::string M_SET_METHOD = "setMethod";
+
+static std::vector<cp::MetaMethod> meta_methods_role_access {
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
+	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
+
+	{M_GET_PATH_PATTERN, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
+	{M_SET_PATH_PATTERN, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::IsSetter, cp::Rpc::ROLE_WRITE},
+	{M_GET_METHOD, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
+	{M_SET_METHOD, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::IsSetter, cp::Rpc::ROLE_WRITE},
+	{M_GET_GRANT, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
+	{M_SET_GRANT, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::IsSetter, cp::Rpc::ROLE_WRITE},
+	{M_GET_GRANT_TYPE, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
+};
 
 AccessAclNode::AccessAclNode(shv::iotqt::node::ShvNode *parent)
 	: Super("access", parent)
@@ -324,9 +330,9 @@ std::vector<chainpack::MetaMethod> *AccessAclNode::metaMethodsForPath(const iotq
 	if(shv_path.size() == 1)
 		return &meta_methods_acl_subnode;
 	if(shv_path.size() == 2)
-		return &meta_methods_dir_ls;
-	if(shv_path.size() == 3)
-		return &meta_methods_property_rw;
+		return &meta_methods_role_access;
+	//if(shv_path.size() == 3)
+	//	return &meta_methods_property_rw;
 	return &meta_methods_dir_ls;
 }
 
@@ -346,9 +352,9 @@ iotqt::node::ShvNode::StringList AccessAclNode::childNames(const iotqt::node::Sh
 		}
 		return ret;
 	}
-	else if(shv_path.size() == 2) {
-		return iotqt::node::ShvNode::StringList{ ACL_RULE_PATH_PATTERN, ACL_RULE_METHOD, ACL_RULE_GRANT_TYPE, ACL_RULE_GRANT, };
-	}
+	//else if(shv_path.size() == 2) {
+	//	return iotqt::node::ShvNode::StringList{ ACL_RULE_PATH_PATTERN, ACL_RULE_METHOD, ACL_RULE_GRANT_TYPE, ACL_RULE_GRANT, };
+	//}
 	return Super::childNames(shv_path);
 }
 
@@ -374,38 +380,40 @@ chainpack::RpcValue AccessAclNode::callMethod(const iotqt::node::ShvNode::String
 			return v.toRpcValue();
 		}
 	}
-	else if(shv_path.size() == 3) {
+	else if(shv_path.size() == 2) {
 		AclManager *mng = BrokerApp::instance()->aclManager();
-		const AclRoleAccessRules role_rules = mng->accessRoleRules(shv_path.value(0).toString());
+		std::string rule_name = shv_path.value(0).toString();
+		AclRoleAccessRules role_rules = mng->accessRoleRules(rule_name);
 		std::string key = shv_path.value(1).toString();
 		if(key.size() > 1 && key[0] == '\'' && key[key.size() - 1] == '\'')
 			key = key.substr(1, key.size() - 2);
 		unsigned i = keyToRuleIndex(key);
 		if(i >= role_rules.size())
 			SHV_EXCEPTION("Invalid access rule key: " + key);
-		const auto &g = role_rules.at(i);
+		auto &rule = role_rules[i];
+		//std::string pn = shv_path.value(2).toString();
 
-		if(method == cp::Rpc::METH_GET) {
-			std::string pn = shv_path.value(2).toString();
-			if(pn == ACL_RULE_GRANT)
-				return g.grant.toRpcValue();
-			if(pn == ACL_RULE_GRANT_TYPE)
-				return cp::AccessGrant::typeToString(g.grant.type);
-			if(pn == ACL_RULE_PATH_PATTERN)
-				return g.pathPattern;
-			if(pn == ACL_RULE_METHOD)
-				return g.method;
+		if(method == M_GET_PATH_PATTERN)
+			return rule.pathPattern;
+		if(method == M_GET_METHOD)
+			return rule.method;
+		if(method == M_GET_GRANT)
+			return rule.grant.toRpcValue();
+		if(method == M_GET_GRANT_TYPE)
+			return cp::AccessGrant::typeToString(rule.grant.type);
+
+		using namespace shv::core;
+		if(method == M_SET_PATH_PATTERN) {
+			rule.pathPattern = params.toString();
+			return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{rule_name, rule.toRpcValue()});
 		}
-		if(method == cp::Rpc::METH_SET) {
-			std::string pn = shv_path.value(2).toString();
-			if(pn == ACL_RULE_GRANT)
-				return g.grant.toRpcValue();
-			if(pn == ACL_RULE_GRANT_TYPE)
-				return cp::AccessGrant::typeToString(g.grant.type);
-			if(pn == ACL_RULE_PATH_PATTERN)
-				return g.pathPattern;
-			if(pn == ACL_RULE_METHOD)
-				return g.method;
+		if(method == M_SET_METHOD) {
+			rule.method = params.toString();
+			return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{rule_name, rule.toRpcValue()});
+		}
+		if(method == M_SET_GRANT) {
+			rule.grant = cp::AccessGrant::fromRpcValue(params);
+			return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{rule_name, role_rules.toRpcValue()});
 		}
 	}
 	return Super::callMethod(shv_path, method, params);
