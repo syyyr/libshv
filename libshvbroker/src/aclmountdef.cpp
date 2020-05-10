@@ -7,10 +7,12 @@ namespace broker {
 
 shv::chainpack::RpcValue AclMountDef::toRpcValueMap() const
 {
-	return shv::chainpack::RpcValue::Map {
-		{"description", description},
+	shv::chainpack::RpcValue::Map m {
 		{"mountPoint", mountPoint},
 	};
+	if(!description.empty())
+		m["description"] = description;
+	return std::move(m);
 }
 
 AclMountDef AclMountDef::fromRpcValue(const shv::chainpack::RpcValue &v)
