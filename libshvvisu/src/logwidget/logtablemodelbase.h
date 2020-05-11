@@ -15,7 +15,7 @@ public:
 	explicit LogTableModelRow(int size = 0);
 };
 
-class LogTableModelBase : public QAbstractTableModel
+class SHVVISU_DECL_EXPORT LogTableModelBase : public QAbstractTableModel
 {
 	Q_OBJECT
 private:
