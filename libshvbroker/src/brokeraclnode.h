@@ -7,11 +7,13 @@ namespace broker {
 
 class AclAccessRule;
 
-class EtcAclNode : public shv::iotqt::node::MethodsTableNode
+class EtcAclRootNode : public shv::iotqt::node::MethodsTableNode
 {
 	using Super = shv::iotqt::node::MethodsTableNode;
 public:
-	EtcAclNode(shv::iotqt::node::ShvNode *parent = nullptr);
+	EtcAclRootNode(shv::iotqt::node::ShvNode *parent = nullptr);
+
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
 };
 
 class BrokerAclNode : public shv::iotqt::node::MethodsTableNode
@@ -19,6 +21,8 @@ class BrokerAclNode : public shv::iotqt::node::MethodsTableNode
 	using Super = shv::iotqt::node::MethodsTableNode;
 public:
 	BrokerAclNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent = nullptr);
+
+	virtual std::string saveConfigFile() = 0;
 protected:
 	virtual std::vector<shv::chainpack::MetaMethod> *metaMethodsForPath(const StringViewList &shv_path);
 	size_t methodCount(const StringViewList &shv_path) override;
@@ -36,6 +40,8 @@ public:
 protected:
 	StringList childNames(const ShvNode::StringViewList &shv_path) override;
 	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+
+	std::string saveConfigFile() override;
 };
 
 class RolesAclNode : public BrokerAclNode
@@ -47,6 +53,8 @@ public:
 protected:
 	StringList childNames(const ShvNode::StringViewList &shv_path) override;
 	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+
+	std::string saveConfigFile() override;
 };
 
 class UsersAclNode : public BrokerAclNode
@@ -57,6 +65,8 @@ public:
 protected:
 	StringList childNames(const ShvNode::StringViewList &shv_path) override;
 	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+
+	std::string saveConfigFile() override;
 };
 
 class AccessAclNode : public BrokerAclNode
@@ -69,6 +79,8 @@ protected:
 	StringList childNames(const ShvNode::StringViewList &shv_path) override;
 	std::vector<shv::chainpack::MetaMethod> *metaMethodsForPath(const StringViewList &shv_path) override;
 	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+
+	std::string saveConfigFile() override;
 private:
 	std::string ruleKey(unsigned rule_ix, unsigned rules_cnt, const shv::broker::AclAccessRule &rule) const;
 	static constexpr auto InvalidIndex = std::numeric_limits<unsigned>::max();

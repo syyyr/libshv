@@ -216,7 +216,7 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/clients", new ClientsNode());
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/masters", new MasterBrokersNode());
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/mounts", new MountsNode());
-	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/etc/acl", new EtcAclNode());
+	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/etc/acl", new EtcAclRootNode());
 
 	QTimer::singleShot(0, this, &BrokerApp::lazyInit);
 }

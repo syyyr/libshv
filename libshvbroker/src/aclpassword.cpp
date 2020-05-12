@@ -30,17 +30,19 @@ shv::chainpack::RpcValue AclPassword::toRpcValueMap() const
 
 AclPassword AclPassword::fromRpcValue(const shv::chainpack::RpcValue &v)
 {
+	const std::regex sha1_regex("[0-9a-f]{40}");
 	AclPassword ret;
 	if(v.isString()) {
 		ret.password = v.toString();
 		// ffee1086753ca76fe84b7fadd738d76caf2072d0
-		const std::regex sha1_regex("[0-9a-f]{40}");
 		ret.format = std::regex_match(ret.password, sha1_regex)? Format::Sha1: Format::Plain;
 	}
 	else if(v.isMap()) {
 		const auto &m = v.toMap();
 		ret.password = m.value("password").toString();
 		ret.format = formatFromString(m.value("format").toString());
+		if(ret.format == Format::Invalid && !ret.password.empty())
+			ret.format = std::regex_match(ret.password, sha1_regex)? Format::Sha1: Format::Plain;
 	}
 	return ret;
 }

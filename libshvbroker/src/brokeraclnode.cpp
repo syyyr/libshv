@@ -57,8 +57,18 @@ static std::vector<cp::MetaMethod> meta_methods_acl_subnode {
 	{M_VALUE, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 };
 
-EtcAclNode::EtcAclNode(shv::iotqt::node::ShvNode *parent)
-	: Super("acl", &meta_methods_dir_ls, parent)
+static const std::string M_SAVE_TO_CONFIG_FILES = "saveToConfigFiles";
+static std::vector<cp::MetaMethod> meta_methods_acl_root {
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
+	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
+	{M_SAVE_TO_CONFIG_FILES, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_CONFIG},
+};
+
+//========================================================
+// EtcAclRootNode
+//========================================================
+EtcAclRootNode::EtcAclRootNode(shv::iotqt::node::ShvNode *parent)
+	: Super("acl", &meta_methods_acl_root, parent)
 {
 	setSortedChildren(false);
 	{
@@ -79,8 +89,22 @@ EtcAclNode::EtcAclNode(shv::iotqt::node::ShvNode *parent)
 	}
 }
 
-//enum AclAccessLevel {AclUserView = cp::MetaMethod::AccessLevel::Service, AclUserAdmin = cp::MetaMethod::AccessLevel::Admin};
+chainpack::RpcValue EtcAclRootNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
+{
+	if(shv_path.empty()) {
+		if(method == M_SAVE_TO_CONFIG_FILES) {
+			cp::RpcValue::List ret;
+			for(auto *nd : findChildren<BrokerAclNode*>(QString(), Qt::FindDirectChildrenOnly))
+				ret.push_back(nd->saveConfigFile());
+			return std::move(ret);
+		}
+	}
+	return Super::callMethod(shv_path, method, params);
+}
 
+//========================================================
+// BrokerAclNode
+//========================================================
 BrokerAclNode::BrokerAclNode(const std::string &config_name, shv::iotqt::node::ShvNode *parent)
 	: Super(config_name, &meta_methods_dir_ls, parent)
 {
@@ -156,7 +180,10 @@ chainpack::RpcValue MountsAclNode::callMethod(const iotqt::node::ShvNode::String
 			if(params.isList()) {
 				const auto &lst = params.toList();
 				const std::string &dev_id = lst.value(0).toString();
-				auto v = AclMountDef::fromRpcValue(lst.value(1));
+				chainpack::RpcValue rv = lst.value(1);
+				auto v = AclMountDef::fromRpcValue(rv);
+				if(rv.isValid() && !rv.isNull() && !v.isValid())
+					throw shv::core::Exception("Invalid device ID: " + dev_id + " definition: " + rv.toCpon());
 				AclManager *mng = BrokerApp::instance()->aclManager();
 				mng->setMountDef(dev_id, v);
 				return true;
@@ -164,16 +191,7 @@ chainpack::RpcValue MountsAclNode::callMethod(const iotqt::node::ShvNode::String
 			SHV_EXCEPTION("Invalid parameters, method: " + method);
 		}
 		if(method == M_SAVE_TO_CONFIG_FILE) {
-			//bool is_sql_config = BrokerApp::instance()->cliOptions()->isSqlConfigEnabled();
-			//if(!is_sql_config)
-			//	SHV_EXCEPTION("Config files an be updated when SQL config is enbled only.");
-			cp::RpcValue::Map m;
-			AclManager *mng = BrokerApp::instance()->aclManager();
-			for(const std::string n : childNames(shv_path)) {
-				auto md = mng->mountDef(n);
-				m[n] = md.toRpcValueMap();
-			}
-			return saveConfigFile("mounts.cpon", m);
+			return saveConfigFile();
 		}
 	}
 	else if(shv_path.size() == 1) {
@@ -211,6 +229,17 @@ chainpack::RpcValue MountsAclNode::callMethod(const iotqt::node::ShvNode::String
 	return Super::callMethod(shv_path, method, params);
 }
 
+std::string MountsAclNode::saveConfigFile()
+{
+	cp::RpcValue::Map m;
+	AclManager *mng = BrokerApp::instance()->aclManager();
+	for(const std::string n : childNames(StringViewList{})) {
+		auto md = mng->mountDef(n);
+		m[n] = md.toRpcValueMap();
+	}
+	return Super::saveConfigFile("mounts.cpon", m);
+}
+
 //========================================================
 // RolesAclNode
 //========================================================
@@ -243,7 +272,11 @@ chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringV
 			if(params.isList()) {
 				const auto &lst = params.toList();
 				const std::string &role_name = lst.value(0).toString();
-				auto v = AclRole::fromRpcValue(lst.value(1));
+
+				chainpack::RpcValue rv = lst.value(1);
+				auto v = AclRole::fromRpcValue(rv);
+				if(rv.isValid() && !rv.isNull() && !v.isValid())
+					throw shv::core::Exception("Invalid role: " + role_name + " definition: " + rv.toCpon());
 				AclManager *mng = BrokerApp::instance()->aclManager();
 				mng->setRole(role_name, v);
 				return true;
@@ -251,13 +284,7 @@ chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringV
 			SHV_EXCEPTION("Invalid parameters, method: " + method);
 		}
 		if(method == M_SAVE_TO_CONFIG_FILE) {
-			cp::RpcValue::Map m;
-			AclManager *mng = BrokerApp::instance()->aclManager();
-			for(const std::string n : childNames(shv_path)) {
-				auto role = mng->role(n);
-				m[n] = role.toRpcValueMap();
-			}
-			return saveConfigFile("roles.cpon", m);
+			return saveConfigFile();
 		}
 	}
 	else if(shv_path.size() == 1) {
@@ -293,6 +320,17 @@ chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringV
 	}
 	return Super::callMethod(shv_path, method, params);
 }
+
+std::string RolesAclNode::saveConfigFile()
+{
+	cp::RpcValue::Map m;
+	AclManager *mng = BrokerApp::instance()->aclManager();
+	for(const std::string n : childNames(StringViewList{})) {
+		auto role = mng->role(n);
+		m[n] = role.toRpcValueMap();
+	}
+	return Super::saveConfigFile("roles.cpon", m);
+}
 //========================================================
 // UsersAclNode
 //========================================================
@@ -326,7 +364,10 @@ chainpack::RpcValue UsersAclNode::callMethod(const iotqt::node::ShvNode::StringV
 			if(params.isList()) {
 				const auto &lst = params.toList();
 				const std::string &name = lst.value(0).toString();
-				auto user = AclUser::fromRpcValue(lst.value(1));
+				chainpack::RpcValue rv = lst.value(1);
+				auto user = AclUser::fromRpcValue(rv);
+				if(rv.isValid() && !rv.isNull() && !user.isValid())
+					throw shv::core::Exception("Invalid user: " + name + " definition: " + rv.toCpon());
 				AclManager *mng = BrokerApp::instance()->aclManager();
 				mng->setUser(name, user);
 				return true;
@@ -334,13 +375,7 @@ chainpack::RpcValue UsersAclNode::callMethod(const iotqt::node::ShvNode::StringV
 			SHV_EXCEPTION("Invalid parameters, method: " + method);
 		}
 		if(method == M_SAVE_TO_CONFIG_FILE) {
-			cp::RpcValue::Map m;
-			AclManager *mng = BrokerApp::instance()->aclManager();
-			for(const std::string n : childNames(shv_path)) {
-				auto user = mng->user(n);
-				m[n] = user.toRpcValueMap();
-			}
-			return saveConfigFile("users.cpon", m);
+			return saveConfigFile();
 		}
 	}
 	else if(shv_path.size() == 1) {
@@ -383,6 +418,17 @@ chainpack::RpcValue UsersAclNode::callMethod(const iotqt::node::ShvNode::StringV
 		}
 	}
 	return Super::callMethod(shv_path, method, params);
+}
+
+std::string UsersAclNode::saveConfigFile()
+{
+	cp::RpcValue::Map m;
+	AclManager *mng = BrokerApp::instance()->aclManager();
+	for(const std::string n : childNames(StringViewList{})) {
+		auto user = mng->user(n);
+		m[n] = user.toRpcValueMap();
+	}
+	return Super::saveConfigFile("users.cpon", m);
 }
 
 //========================================================
@@ -459,7 +505,10 @@ chainpack::RpcValue AccessAclNode::callMethod(const iotqt::node::ShvNode::String
 			if(params.isList()) {
 				const auto &lst = params.toList();
 				const std::string &role_name = lst.value(0).toString();
-				auto v = AclRoleAccessRules::fromRpcValue(lst.value(1));
+				chainpack::RpcValue rv = lst.value(1);
+				auto v = AclRoleAccessRules::fromRpcValue(rv);
+				if(rv.isValid() && !rv.isNull() && !v.isValid())
+					throw shv::core::Exception("Invalid acces for role: " + role_name + " definition: " + rv.toCpon());
 				AclManager *mng = BrokerApp::instance()->aclManager();
 				mng->setAccessRoleRules(role_name, v);
 				return true;
@@ -467,13 +516,7 @@ chainpack::RpcValue AccessAclNode::callMethod(const iotqt::node::ShvNode::String
 			SHV_EXCEPTION("Invalid parameters, method: " + method);
 		}
 		if(method == M_SAVE_TO_CONFIG_FILE) {
-			cp::RpcValue::Map m;
-			AclManager *mng = BrokerApp::instance()->aclManager();
-			for(const std::string n : childNames(shv_path)) {
-				auto rules = mng->accessRoleRules(n);
-				m[n] = rules.toRpcValue();
-			}
-			return saveConfigFile("access.cpon", m);
+			return saveConfigFile();
 		}
 	}
 	else if(shv_path.size() == 1) {
@@ -520,6 +563,17 @@ chainpack::RpcValue AccessAclNode::callMethod(const iotqt::node::ShvNode::String
 		}
 	}
 	return Super::callMethod(shv_path, method, params);
+}
+
+std::string AccessAclNode::saveConfigFile()
+{
+	cp::RpcValue::Map m;
+	AclManager *mng = BrokerApp::instance()->aclManager();
+	for(const std::string n : childNames(StringViewList{})) {
+		auto rules = mng->accessRoleRules(n);
+		m[n] = rules.toRpcValue();
+	}
+	return Super::saveConfigFile("access.cpon", m);
 }
 
 std::string AccessAclNode::ruleKey(unsigned rule_ix, unsigned rules_cnt, const AclAccessRule &rule) const
