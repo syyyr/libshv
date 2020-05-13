@@ -44,6 +44,18 @@ shv::chainpack::RpcValue AclRoleAccessRules::toRpcValue() const
 	return shv::chainpack::RpcValue(std::move(ret));
 }
 
+RpcValue AclRoleAccessRules::toRpcValue_legacy() const
+{
+	shv::chainpack::RpcValue::Map ret;
+	for(auto kv : *this) {
+		std::string key = kv.pathPattern;
+		if(!kv.method.empty())
+			key += shv::core::utils::ShvPath::SHV_PATH_METHOD_DELIM + kv.method;
+		ret[key] = kv.toRpcValue();
+	}
+	return shv::chainpack::RpcValue(std::move(ret));
+}
+
 AclRoleAccessRules AclRoleAccessRules::fromRpcValue(const shv::chainpack::RpcValue &v)
 {
 	AclRoleAccessRules ret;

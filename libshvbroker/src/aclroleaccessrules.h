@@ -34,6 +34,7 @@ struct SHVBROKER_DECL_EXPORT AclRoleAccessRules : public std::vector<AclAccessRu
 {
 	bool isValid() const {return !empty();}
 	shv::chainpack::RpcValue toRpcValue() const;
+	shv::chainpack::RpcValue toRpcValue_legacy() const;
 	static AclRoleAccessRules fromRpcValue(const shv::chainpack::RpcValue &v);
 };
 
