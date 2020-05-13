@@ -35,7 +35,7 @@ ServerConnection::ServerConnection(Socket *socket, QObject *parent)
 		}
 	});
 	QTimer::singleShot(s_initPhaseTimeout, this, [this]() {
-		if(isInitPhase()) {
+		if(isLoginPhase()) {
 			shvWarning() << "Client should login in" << (s_initPhaseTimeout/1000) << "seconds, dropping out connection.";
 			abort();
 		}
@@ -62,11 +62,11 @@ void ServerConnection::sendMessage(const chainpack::RpcMessage &rpc_msg)
 void ServerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
 {
 	//shvInfo() << __FILE__ << RCV_LOG_ARROW << md.toStdString() << shv::chainpack::Utils::toHexElided(data, start_pos, 100);
-	if(isInitPhase()) {
+	if(isLoginPhase()) {
 		shv::chainpack::RpcValue rpc_val = decodeData(protocol_type, data, start_pos);
 		rpc_val.setMetaData(std::move(md));
 		cp::RpcMessage msg(rpc_val);
-		processInitPhase(msg);
+		processLoginPhase(msg);
 		return;
 	}
 	Super::onRpcDataReceived(protocol_type, std::move(md), data, start_pos, data_len);
@@ -83,7 +83,7 @@ void ServerConnection::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 	emit rpcMessageReceived(msg);
 }
 
-void ServerConnection::processInitPhase(const chainpack::RpcMessage &msg)
+void ServerConnection::processLoginPhase(const chainpack::RpcMessage &msg)
 {
 	cp::RpcRequest rq(msg);
 	try {
@@ -154,6 +154,7 @@ void ServerConnection::processLoginPhase()
 
 void ServerConnection::setLoginResult(const chainpack::UserLoginResult &result)
 {
+	m_loginOk = result.passwordOk;
 	auto resp = cp::RpcResponse::forRequest(m_userLoginContext.loginRequest);
 	if(result.passwordOk) {
 		shvInfo().nospace() << "Client logged in user: " << m_userLogin.user << " from: " << peerAddress() << ':' << peerPort();

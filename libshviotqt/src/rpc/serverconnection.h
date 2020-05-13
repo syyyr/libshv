@@ -40,7 +40,7 @@ public:
 
 	const std::string& userName() const { return m_userLogin.user; }
 
-	virtual bool isConnectedAndLoggedIn() const {return isSocketConnected() && !isInitPhase() /*&& !isDestroyPhase()*/;}
+	virtual bool isConnectedAndLoggedIn() const {return isSocketConnected() && m_loginOk;}
 
 	virtual bool isSlaveBrokerConnection() const;
 
@@ -53,8 +53,8 @@ protected:
 	void onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len) override;
 	void onRpcValueReceived(const shv::chainpack::RpcValue &msg) override;
 
-	bool isInitPhase() const {return !m_loginReceived;}
-	virtual void processInitPhase(const chainpack::RpcMessage &msg);
+	bool isLoginPhase() const {return !m_loginOk;}
+	virtual void processLoginPhase(const chainpack::RpcMessage &msg);
 
 	virtual void processLoginPhase() = 0;
 	virtual void setLoginResult(const shv::chainpack::UserLoginResult &result);
@@ -66,6 +66,7 @@ protected:
 	shv::chainpack::UserLoginContext m_userLoginContext;
 	bool m_helloReceived = false;
 	bool m_loginReceived = false;
+	bool m_loginOk = false;
 	//bool m_isDestroyPhase = false;
 
 	shv::chainpack::RpcValue m_connectionOptions;

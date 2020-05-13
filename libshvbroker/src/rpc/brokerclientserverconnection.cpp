@@ -169,7 +169,7 @@ void BrokerClientServerConnection::onRpcDataReceived(shv::chainpack::Rpc::Protoc
 				<< "protocol_type:" << (int)protocol_type << shv::chainpack::Rpc::protocolTypeToString(protocol_type)
 				<< BrokerApp::instance()->dataToCpon(protocol_type, md, data, start_pos, data_len);
 	try {
-		if(isInitPhase()) {
+		if(isLoginPhase()) {
 			Super::onRpcDataReceived(protocol_type, std::move(md), data, start_pos, data_len);
 			return;
 		}
