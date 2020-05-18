@@ -290,6 +290,26 @@ std::vector<AclManager::FlattenRole> AclManager::userFlattenRoles(const std::str
 	return m_cache.userFlattenRoles[user_name];
 }
 
+std::vector<AclManager::FlattenRole> AclManager::flattenRole(const std::string &role)
+{
+	std::string key = "_Role#Key:" + role;
+	if(m_cache.userFlattenRoles.find(key) == m_cache.userFlattenRoles.end()) {
+		std::map<std::string, AclManager::FlattenRole> unique_roles;
+		auto gg = flattenRole_helper(role, 1);
+		unique_roles.insert(gg.begin(), gg.end());
+		std::vector<AclManager::FlattenRole> lst;
+		for(const auto &kv : unique_roles)
+			lst.push_back(kv.second);
+		std::sort(lst.begin(), lst.end(), [](const FlattenRole &r1, const FlattenRole &r2) {
+			if(r1.weight == r2.weight)
+				return r1.nestLevel < r2.nestLevel;
+			return r1.weight > r2.weight;
+		});
+		m_cache.userFlattenRoles[key] = lst;
+	}
+	return m_cache.userFlattenRoles[key];
+}
+
 //================================================================
 // AclManagerConfigFiles
 //================================================================
