@@ -47,7 +47,7 @@ struct SHVCORE_DECL_EXPORT ShvGetLogParams
 	ShvGetLogParams() {}
 	ShvGetLogParams(const shv::chainpack::RpcValue &opts);
 
-	shv::chainpack::RpcValue toRpcValue() const;
+	shv::chainpack::RpcValue toRpcValue(bool fill_legacy_fields = true) const;
 	static ShvGetLogParams fromRpcValue(const shv::chainpack::RpcValue &v);
 };
 

@@ -37,7 +37,7 @@ enum HeaderOptions : unsigned {
 	CompleteInfo = BasicInfo | FieldInfo | TypeInfo | PathsDict,
 };
 
-chainpack::RpcValue ShvGetLogParams::toRpcValue() const
+chainpack::RpcValue ShvGetLogParams::toRpcValue( bool fill_legacy_fields ) const
 {
 	cp::RpcValue::Map m;
 	if(since.isValid())
@@ -55,12 +55,14 @@ chainpack::RpcValue ShvGetLogParams::toRpcValue() const
 	m[KEY_WITH_SNAPSHOT] = withSnapshot;
 	m[KEY_WITH_PATHS_DICT] = withPathsDict;
 	m[KEY_WITH_TYPE_INFO] = withTypeInfo;
-	//for compatibility with legacy devices (don't remove ! :-))
-	unsigned flags = HeaderOptions::BasicInfo | HeaderOptions::FieldInfo
-			| (withTypeInfo? (unsigned)HeaderOptions::TypeInfo: 0)
-			| (withPathsDict? (unsigned)HeaderOptions::PathsDict: 0) ;
-	m[KEY_HEADER_OPTIONS_DEPRECATED] = flags;
-	m[KEY_MAX_RECORD_COUNT_DEPRECATED] = recordCountLimit;
+	if(fill_legacy_fields) {
+		//for compatibility with legacy devices (don't remove ! :-))
+		unsigned flags = HeaderOptions::BasicInfo | HeaderOptions::FieldInfo
+				| (withTypeInfo? (unsigned)HeaderOptions::TypeInfo: 0)
+				| (withPathsDict? (unsigned)HeaderOptions::PathsDict: 0) ;
+		m[KEY_HEADER_OPTIONS_DEPRECATED] = flags;
+		m[KEY_MAX_RECORD_COUNT_DEPRECATED] = recordCountLimit;
+	}
 	return chainpack::RpcValue{m};
 }
 
@@ -78,8 +80,8 @@ ShvGetLogParams ShvGetLogParams::fromRpcValue(const chainpack::RpcValue &v)
 	ret.recordCountLimit = m.value(KEY_RECORD_COUNT_LIMIT, m.value(KEY_MAX_RECORD_COUNT_DEPRECATED, DEFAULT_RECORD_COUNT_LIMIT)).toInt();
 	if(m.hasKey(KEY_HEADER_OPTIONS_DEPRECATED)) {
 		unsigned flags = m.value(KEY_HEADER_OPTIONS_DEPRECATED).toUInt();
-		ret.withTypeInfo = flags | HeaderOptions::TypeInfo;
-		ret.withPathsDict = flags | HeaderOptions::PathsDict;
+		ret.withTypeInfo = flags & HeaderOptions::TypeInfo;
+		ret.withPathsDict = flags & HeaderOptions::PathsDict;
 	}
 	// new settings keys will override the legacy ones, if set
 	ret.withSnapshot = m.value(KEY_WITH_SNAPSHOT,ret.withSnapshot ).toBool();

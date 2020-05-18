@@ -67,7 +67,7 @@ chainpack::RpcValue::MetaData ShvLogHeader::toMetaData() const
 	if(!device.empty())
 		md.setValue("device", device);
 	md.setValue("logVersion", logVersion());
-	md.setValue("logParams", logParams().toRpcValue());
+	md.setValue("logParams", logParams().toRpcValue(false));
 	md.setValue("recordCount", recordCount());
 	md.setValue("recordCountLimit", recordCountLimit());
 	md.setValue("recordCountLimitHit", recordCountLimitHit());
