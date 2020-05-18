@@ -111,7 +111,7 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 
 	connect(ui->edDataFilter, &QLineEdit::textChanged, [this]() {
 		QString str = ui->edDataFilter->text().trimmed();
-		m_sortFilterProxy->setFilterFixedString(str);
+		m_sortFilterProxy->setFilterRegularExpression(str);
 	});
 	connect(ui->edDataFilter, &QLineEdit::textChanged, [this]() {
 		QString str = ui->edDataFilter->text().trimmed();
