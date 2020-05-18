@@ -17,9 +17,20 @@ static int uptimeSec()
 	return 0;
 }
 
-ShvJournalFileWriter::ShvJournalFileWriter(const std::string &file_name, int64_t start_msec)
+ShvJournalFileWriter::ShvJournalFileWriter(const std::string &file_name)
 	: m_fileName(file_name)
-	, m_fileNameTimeStamp(start_msec)
+{
+	open();
+}
+
+ShvJournalFileWriter::ShvJournalFileWriter(const std::string &journal_dir, int64_t journal_start_time, int64_t last_entry_ts)
+	: m_fileName(journal_dir + '/' + ShvFileJournal::JournalContext::fileMsecToFileName(journal_start_time))
+	, m_recentTimeStamp(last_entry_ts)
+{
+	open();
+}
+
+void ShvJournalFileWriter::open()
 {
 	m_out.open(m_fileName, std::ios::binary | std::ios::out | std::ios::app);
 	if(!m_out)
@@ -35,13 +46,11 @@ void ShvJournalFileWriter::appendMonotonic(const ShvJournalEntry &entry)
 {
 
 	ssize_t fsz = fileSize();
-	if(fsz == 0) {
-		if(m_fileNameTimeStamp == 0)
-			SHV_EXCEPTION("appendMonotonic() to file " + m_fileName + " must have start timestamp defined!");
-		m_recentTimeStamp = m_fileNameTimeStamp;
-	}
-	else if(fsz > 0 && m_recentTimeStamp == 0) {
-		m_recentTimeStamp = ShvFileJournal::findLastEntryDateTime(m_fileName);
+	if(m_recentTimeStamp == 0) {
+		if(fsz == 0)
+			m_recentTimeStamp = ShvFileJournal::JournalContext::fileNameToFileMsec(m_fileName);
+		else
+			m_recentTimeStamp = ShvFileJournal::findLastEntryDateTime(m_fileName);
 	}
 	int64_t msec = entry.epochMsec;
 	if(msec == 0)

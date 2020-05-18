@@ -22,6 +22,7 @@ public:
 	static const std::string FILE_EXT;
 public:
 	using SnapShotFn = std::function<void (std::vector<ShvJournalEntry>&)>;
+	using TSNowFn = std::function<int64_t ()>;
 
 	ShvFileJournal(std::string device_id, SnapShotFn snf);
 
@@ -39,6 +40,10 @@ public:
 
 	static int64_t findLastEntryDateTime(const std::string &fn, ssize_t *p_date_time_fpos = nullptr);
 	void append(const ShvJournalEntry &entry) override;
+
+	// testing purposes
+	//void setAppendLogTSNowFn(TSNowFn fn) { m_appendLogTSNowFn = fn; }
+	//void setDefaultAppendLogTSNowFn();
 
 	shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) override;
 	shv::chainpack::RpcValue getSnapShotMap() override;
@@ -75,7 +80,7 @@ public:
 		//void setNotConsistent() {journalSize = -1;}
 		static int64_t fileNameToFileMsec(const std::string &fn);
 		static std::string msecToBaseFileName(int64_t msec);
-		std::string fileMsecToFileName(int64_t msec) const;
+		static std::string fileMsecToFileName(int64_t msec);
 		std::string fileMsecToFilePath(int64_t file_msec) const;
 	};
 	const JournalContext& checkJournalContext();
@@ -87,7 +92,8 @@ private:
 	void rotateJournal();
 	void updateJournalStatus();
 	void updateJournalFiles();
-	void updateRecentTimeStamp();
+	//int64_t lastEntryTimeStamp();
+	void checkRecentTimeStamp();
 	void ensureJournalDir();
 	bool journalDirExists();
 
@@ -98,6 +104,9 @@ private:
 	SnapShotFn m_snapShotFn;
 	int64_t m_fileSizeLimit = DEFAULT_FILE_SIZE_LIMIT;
 	int64_t m_journalSizeLimit = DEFAULT_JOURNAL_SIZE_LIMIT;
+
+	// we need custom DateTime::now() fn for testing purposes
+	//TSNowFn m_appendLogTSNowFn;
 };
 
 } // namespace utils

@@ -29,6 +29,14 @@ std::string::size_type String::indexOf(const std::string &haystack, char needle)
 	return std::string::npos;
 }
 
+bool String::endsWith(const std::string &str, const std::string &with)
+{
+	if(str.size() < with.size())
+		return false;
+	auto ix = str.find(with, str.size() - with.size());
+	return ix == (str.size() - with.size());
+}
+
 bool String::equal(std::string const& a, std::string const& b, String::CaseSensitivity case_sensitivity)
 {
 	if (a.length() == b.length()) {

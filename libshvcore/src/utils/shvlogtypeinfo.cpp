@@ -80,17 +80,18 @@ ShvLogTypeDescr::Type ShvLogTypeDescr::typeFromString(const std::string &s)
 const std::string ShvLogTypeDescr::sampleTypeToString(ShvLogTypeDescr::SampleType t)
 {
 	switch (t) {
-	case SampleType::Discrete: break;
+	case SampleType::Discrete: return "Discrete";
 	case SampleType::Continuous: return "Continuous";
 	case SampleType::Invalid: return "Invalid";
 	}
-	return "Discrete";
+	return std::string();
 }
 
 ShvLogTypeDescr::SampleType ShvLogTypeDescr::sampleTypeFromString(const std::string &s)
 {
 	if(s == "Invalid") return SampleType::Invalid;
-	if(s == "Discrete") return SampleType::Discrete;
+	if(s == "2" || s == "D" || s == "Discrete") return SampleType::Discrete;
+	// default sample type is Continuous
 	return SampleType::Continuous;
 }
 

@@ -31,10 +31,13 @@ public:
 	std::string::size_type indexOf(char needle) const { return indexOf(*this, needle); }
 
 	bool startsWith(const std::string &with) const {return startsWith(*this, with);}
+	bool startsWith(const char c) const {return startsWith(*this, c);}
 	static bool startsWith(const std::string & str, const std::string &with) {return str.rfind(with, 0) == 0;}
 	static bool startsWith(const std::string & str, const char c) { return str.size() > 0 && str[0] == c; }
 
-	static bool endsWith(const std::string & str, const std::string &with) {return str.find(with, str.size() - with.size()) == (str.size() - with.size());}
+	bool endsWith(const std::string &with) const {return endsWith(*this, with);}
+	bool endsWith(const char c) const {return endsWith(*this, c);}
+	static bool endsWith(const std::string & str, const std::string &with);
 	static bool endsWith(const std::string & str, const char c) { return str.size() > 0 && str[str.size() - 1] == c; }
 
 	static const char * WhiteSpaceChars;
