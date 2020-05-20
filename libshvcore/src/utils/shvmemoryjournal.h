@@ -32,7 +32,10 @@ public:
 	void loadLog(const shv::chainpack::RpcValue &log, bool append_records = false);
 	shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) override;
 
+	// we do not expose whole header, since append() does not update field until
 	//const ShvLogHeader &logHeader() const { return m_logHeader; }
+	bool hasSnapshot() const { return m_logHeader.withSnapShot(); }
+
 	const std::vector<ShvJournalEntry>& entries() const {return  m_entries;}
 	size_t size() const { return  m_entries.size(); }
 	void clear() { m_entries.clear(); }
