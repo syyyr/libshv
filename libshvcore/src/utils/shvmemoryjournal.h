@@ -34,11 +34,11 @@ public:
 
 	// we do not expose whole header, since append() does not update field until
 	//const ShvLogHeader &logHeader() const { return m_logHeader; }
+	bool hasSnapshot() const { return m_logHeader.withSnapShot(); }
+
 	const std::vector<ShvJournalEntry>& entries() const {return  m_entries;}
 	size_t size() const { return  m_entries.size(); }
 	void clear() { m_entries.clear(); }
-	bool hasSnapshot() const { return m_logHeader.withSnapShot(); }
-
 private:
 	using Entry = ShvJournalEntry;
 
