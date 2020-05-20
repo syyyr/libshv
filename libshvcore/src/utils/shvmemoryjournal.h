@@ -36,6 +36,8 @@ public:
 	const std::vector<ShvJournalEntry>& entries() const {return  m_entries;}
 	size_t size() const { return  m_entries.size(); }
 	void clear() { m_entries.clear(); }
+	bool hasSnapshot() const { return m_logHeader.withSnapShot(); }
+
 private:
 	using Entry = ShvJournalEntry;
 
