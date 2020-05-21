@@ -334,8 +334,7 @@ void AclManagerSqlite::aclSetAccessRoleRules(const std::string &role_name, const
 		for(const auto &rule : rules) {
 			rec.setValue("role", QString::fromStdString(role_name));
 			rec.setValue("path", QString::fromStdString(rule.pathPattern));
-			if(!rule.method.empty())
-				rec.setValue("method", QString::fromStdString(rule.method));
+			rec.setValue("method", rule.method.empty()? QVariant(): QString::fromStdString(rule.method));
 			rec.setValue("grantType", cp::AccessGrant::typeToString(rule.grant.type));
 			switch (rule.grant.type) {
 			case cp::AccessGrant::Type::AccessLevel: rec.setValue("accessLevel", rule.grant.accessLevel); break;

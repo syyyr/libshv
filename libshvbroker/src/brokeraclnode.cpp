@@ -583,7 +583,7 @@ std::string AccessAclNode::ruleKey(unsigned rule_ix, unsigned rules_cnt, const A
 		width++;
 		rules_cnt /= 10;
 	}
-	std::string ret = QStringLiteral("[%1] ").arg(rule_ix, width, 10, QChar(0)).toStdString();
+	std::string ret = QStringLiteral("[%1] ").arg(rule_ix, width, 10, QChar('0')).toStdString();
 	ret += rule.pathPattern;
 	if(!rule.method.empty())
 		ret += core::utils::ShvPath::SHV_PATH_METHOD_DELIM + rule.method;
