@@ -798,7 +798,7 @@ log_finish:
 		}
 		log_header.setPathDict(std::move(path_dict));
 	}
-	if(!params.withTypeInfo) {
+	if(params.withTypeInfo) {
 		log_header.setTypeInfo(journal_context.typeInfo);
 	}
 	ret.setMetaData(log_header.toMetaData());
