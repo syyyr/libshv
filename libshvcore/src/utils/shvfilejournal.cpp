@@ -9,6 +9,8 @@
 #include "../string.h"
 #include "../stringview.h"
 
+#include <shv/chainpack/rpc.h>
+
 #include <fstream>
 #include <sstream>
 #include <algorithm>
@@ -666,8 +668,21 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		rec.push_back(make_path_shared(e.path));
 		rec.push_back(e.value);
 		rec.push_back(e.shortTime == ShvJournalEntry::NO_SHORT_TIME? cp::RpcValue(nullptr): cp::RpcValue(e.shortTime));
-		rec.push_back(e.domain.empty()? cp::RpcValue(nullptr): e.domain);
+		rec.push_back((e.domain.empty() || e.domain == cp::Rpc::SIG_VAL_CHANGED)? cp::RpcValue(nullptr): e.domain);
+		rec.push_back((int)e.sampleType);
 		log.push_back(std::move(rec));
+		return true;
+	};
+	auto append_snapshot = [append_log_entry, &snapshot]() {
+		if(!snapshot.empty()) {
+			logDShvJournal() << "\t -------------- Snapshot";
+			for(const auto &kv : snapshot) {
+				const ShvJournalEntry &e = kv.second;
+				if(!append_log_entry(e))
+					return false;
+			}
+			snapshot.clear();
+		}
 		return true;
 	};
 	/*
@@ -724,7 +739,6 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 						continue;
 					logDShvJournal() << "\t\t MATCH";
 				}
-				//cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromMSecsSinceEpoch(e.epochMsec);
 				if(params_since_msec > 0 && e.epochMsec < params_since_msec) {
 					if(params.withSnapshot) {
 						if(e.sampleType == ShvJournalEntry::SampleType::Continuous) {
@@ -735,6 +749,9 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 					}
 				}
 				else {
+					if(params.withSnapshot)
+						if(!append_snapshot())
+							goto log_finish;
 					if(params_until_msec == 0 || e.epochMsec < params_until_msec) { // keep interval open to make log merge simpler
 						if(!append_log_entry(e))
 							goto log_finish;
@@ -747,15 +764,13 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		}
 	}
 log_finish:
-	if(params.withSnapshot && !snapshot.empty()) {
-		logDShvJournal() << "\t -------------- Snapshot";
-		std::string err;
-		for(const auto &kv : snapshot) {
-			const ShvJournalEntry &e = kv.second;
-			if(!append_log_entry(e))
-				break;
-		}
+	if(params.withSnapshot) {
+		// snapshot should be written already
+		// this is only case, when log is empty and
+		// only snapshot shall be returned
+		append_snapshot();
 	}
+
 	int64_t log_since_msec = params_since_msec;
 	if(log_since_msec < journal_start_msec) {
 		log_since_msec = journal_start_msec;

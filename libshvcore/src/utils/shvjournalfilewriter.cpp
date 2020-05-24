@@ -2,6 +2,8 @@
 #include "shvfilejournal.h"
 #include "../exception.h"
 
+#include <shv/chainpack/rpc.h>
+
 namespace cp = shv::chainpack;
 
 namespace shv {
@@ -81,7 +83,8 @@ void ShvJournalFileWriter::append(int64_t msec, int uptime, const ShvJournalEntr
 	if(entry.shortTime >= 0)
 		m_out << entry.shortTime;
 	m_out << ShvFileJournal::FIELD_SEPARATOR;
-	m_out << entry.domain;
+	if(!entry.domain.empty() && entry.domain != cp::Rpc::SIG_VAL_CHANGED)
+		m_out << entry.domain;
 	m_out << ShvFileJournal::FIELD_SEPARATOR;
 	if(entry.sampleType != ShvJournalEntry::SampleType::Invalid)
 		m_out << (int)entry.sampleType;
