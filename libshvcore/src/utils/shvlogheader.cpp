@@ -42,7 +42,7 @@ ShvLogHeader ShvLogHeader::fromMetaData(const chainpack::RpcValue::MetaData &md)
 	ret.setFields(md.value("fields").toList());
 	ret.setPathDict(md.value("pathsDict").toIMap());
 	{
-		const chainpack::RpcValue::Map &m = md.value("typeInfo").toMap();
+		const chainpack::RpcValue::Map &m = md.value("typeInfos").toMap();
 		for(const auto &kv : m) {
 			ret.m_typeInfos[kv.first] = ShvLogTypeInfo::fromRpcValue(kv.second);
 		}

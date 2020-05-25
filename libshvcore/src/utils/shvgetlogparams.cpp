@@ -84,7 +84,8 @@ ShvGetLogParams ShvGetLogParams::fromRpcValue(const chainpack::RpcValue &v)
 		ret.withPathsDict = flags & HeaderOptions::PathsDict;
 	}
 	// new settings keys will override the legacy ones, if set
-	ret.withSnapshot = m.value(KEY_WITH_SNAPSHOT,ret.withSnapshot ).toBool();
+	ret.withTypeInfo = m.value(KEY_WITH_TYPE_INFO,ret.withTypeInfo).toBool();
+	ret.withSnapshot = m.value(KEY_WITH_SNAPSHOT,ret.withSnapshot).toBool();
 	ret.withPathsDict = m.value(KEY_WITH_PATHS_DICT, ret.withPathsDict).toBool();
 	return ret;
 }
