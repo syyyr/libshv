@@ -17,7 +17,7 @@ public:
 			IsGetter = 1 << 1,
 			IsSetter = 1 << 2,
 			LargeResultHint = 1 << 3,
-			IsDiscrete = 1 << 4,
+			//IsDiscrete = 1 << 4,
 		};
 	};
 	struct AccessLevel {

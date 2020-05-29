@@ -89,10 +89,11 @@ const std::string ShvLogTypeDescr::sampleTypeToString(ShvLogTypeDescr::SampleTyp
 
 ShvLogTypeDescr::SampleType ShvLogTypeDescr::sampleTypeFromString(const std::string &s)
 {
-	if(s == "Invalid") return SampleType::Invalid;
-	if(s == "2" || s == "D" || s == "Discrete") return SampleType::Discrete;
-	// default sample type is Continuous
-	return SampleType::Continuous;
+	if(s == "2" || s == "D" || s == "Discrete" || s == "discrete")
+		return SampleType::Discrete;
+	if(s.empty() || s == "C" || s == "Continuous" || s == "continuous")
+		return SampleType::Continuous;
+	return SampleType::Invalid;
 }
 
 chainpack::RpcValue ShvLogTypeDescr::toRpcValue() const
