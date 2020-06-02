@@ -5,3 +5,4 @@ SUBDIRS += \
 	crypt \
 	stringview \
 	shvlogfilereader \
+	shvmemoryjournal \
