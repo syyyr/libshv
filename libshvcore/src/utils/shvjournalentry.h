@@ -36,7 +36,7 @@ public:
 	shv::chainpack::RpcValue value;
 	int shortTime = NO_SHORT_TIME;
 	std::string domain;
-	SampleType sampleType = SampleType::Invalid;
+	SampleType sampleType = SampleType::Continuous;
 
 	ShvJournalEntry() {}
 	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, std::string domain, int short_time, SampleType sample_type, int64_t epoch_msec = 0)
@@ -55,7 +55,7 @@ public:
 	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, std::string domain)
 		: ShvJournalEntry(path, value, std::move(domain), NO_SHORT_TIME, SampleType::Continuous) {}
 
-	bool isValid() const {return !path.empty() && value.isValid();}
+	bool isValid() const {return !path.empty() && epochMsec > 0;}
 	bool operator==(const ShvJournalEntry &o) const
 	{
 		return epochMsec == o.epochMsec
