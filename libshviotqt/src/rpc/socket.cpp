@@ -31,7 +31,11 @@ TcpSocket::TcpSocket(QTcpSocket *socket, QObject *parent)
 	connect(m_socket, &QTcpSocket::readyRead, this, &Socket::readyRead);
 	connect(m_socket, &QTcpSocket::bytesWritten, this, &Socket::bytesWritten);
 	connect(m_socket, &QTcpSocket::stateChanged, this, &Socket::stateChanged);
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
 	connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &Socket::error);
+#else
+	connect(m_socket, &QAbstractSocket::errorOccurred, this, &Socket::error);
+#endif
 }
 
 void TcpSocket::connectToHost(const QString &host_name, quint16 port)

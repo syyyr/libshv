@@ -1177,7 +1177,11 @@ XmlAttributes SaxHandler::parseXmlAttributes(const QXmlStreamAttributes &attribu
 
 void SaxHandler::mergeCSSAttributes(CssAttributes &css_attributes, const QString &attr_name, const XmlAttributes &xml_attributes)
 {
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
 	QStringList css = xml_attributes.value(attr_name).split(';', QString::SkipEmptyParts);
+#else
+	QStringList css = xml_attributes.value(attr_name).split(';', Qt::SkipEmptyParts);
+#endif
 	for(QString ss : css) {
 		int ix = ss.indexOf(':');
 		if(ix > 0) {

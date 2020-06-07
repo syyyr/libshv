@@ -148,8 +148,13 @@ static QString join_str_vec(const std::vector<std::string> &lst)
 static std::vector<std::string> split_str_vec(const QString &ss)
 {
 	std::vector<std::string> ret;
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
 	for(const QString &s : ss.split(',', QString::SkipEmptyParts))
 		ret.push_back(s.trimmed().toStdString());
+#else
+	for(const QString &s : ss.split(',', Qt::SkipEmptyParts))
+		ret.push_back(s.trimmed().toStdString());
+#endif
 	return ret;
 }
 

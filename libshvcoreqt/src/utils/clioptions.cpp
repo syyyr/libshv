@@ -346,8 +346,8 @@ QString CLIOptions::applicationName() const
 void CLIOptions::printHelp(QTextStream& os) const
 {
 	using namespace std;
-	os << applicationName() << " [OPTIONS]" << endl << endl;
-	os << "OPTIONS:" << endl << endl;
+	os << applicationName() << " [OPTIONS]" << Qt::endl << Qt::endl;
+	os << "OPTIONS:" << Qt::endl << Qt::endl;
 	QMapIterator<QString, Option> it(m_options);
 	while(it.hasNext()) {
 		it.next();
@@ -361,12 +361,12 @@ void CLIOptions::printHelp(QTextStream& os) const
 		QVariant def_val = opt.defaultValue();
 		if(def_val.isValid()) os << " [default(" << def_val.toString() << ")]";
 		if(opt.isMandatory()) os << " [MANDATORY]";
-		os << endl;
+		os << Qt::endl;
 		QString oc = opt.comment();
-		if(!oc.isEmpty()) os << "\t" << opt.comment() << endl;
+		if(!oc.isEmpty()) os << "\t" << opt.comment() << Qt::endl;
 	}
 	//os << shv::core::ShvLog::logCLIHelp() << endl;
-	os << NecroLog::cliHelp() << endl;
+	os << NecroLog::cliHelp() << Qt::endl;
 }
 
 void CLIOptions::printHelp() const
@@ -381,16 +381,16 @@ void CLIOptions::dump(QTextStream &os) const
 	while(it.hasNext()) {
 		it.next();
 		Option opt = it.value();
-		os << it.key() << '(' << opt.names().join(", ") << ')' << ": " << opt.value().toString() << endl;
+		os << it.key() << '(' << opt.names().join(", ") << ')' << ": " << opt.value().toString() << Qt::endl;
 	}
 }
 
 void CLIOptions::dump() const
 {
 	QTextStream ts(stdout);
-	ts << "=============== options values dump ==============" << endl;
+	ts << "=============== options values dump ==============" << Qt::endl;
 	dump(ts);
-	ts << "-------------------------------------------------" << endl;
+	ts << "-------------------------------------------------" << Qt::endl;
 }
 
 void CLIOptions::addParseError(const QString& err)

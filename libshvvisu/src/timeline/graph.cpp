@@ -10,6 +10,7 @@
 #include <QFontMetrics>
 #include <QLabel>
 #include <QMouseEvent>
+#include <QPainterPath>
 
 #include <cmath>
 #include <regex>

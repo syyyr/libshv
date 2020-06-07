@@ -320,8 +320,13 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 
 void GraphWidget::wheelEvent(QWheelEvent *event)
 {
-	bool is_zoom_on_slider = isMouseAboveMiniMapSlider(event->pos());
-	bool is_zoom_on_graph = (event->modifiers() == Qt::ControlModifier) && isMouseAboveGraphArea(event->pos());
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
+	QPoint pos = event->pos();
+#else
+	QPoint pos = event->position().toPoint();
+#endif
+	bool is_zoom_on_slider = isMouseAboveMiniMapSlider(pos);
+	bool is_zoom_on_graph = (event->modifiers() == Qt::ControlModifier) && isMouseAboveGraphArea(pos);
 	static constexpr int ZOOM_STEP = 10;
 	if(is_zoom_on_slider) {
 		Graph *gr = graph();
@@ -348,7 +353,7 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
 		XRange r = gr->xRangeZoom();
 		double ratio = 0.5;
 		// shift new zoom to center it horizontally on the mouse position
-		timemsec_t t_mouse = gr->posToTime(event->pos().x());
+		timemsec_t t_mouse = gr->posToTime(pos.x());
 		ratio = static_cast<double>(t_mouse - r.min) / r.interval();
 		r.min += ratio * dt;
 		r.max -= (1 - ratio) * dt;
@@ -364,7 +369,7 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
 		/// resize vertical header cell on Ctrl + mouse_wheel
 		for (int i = 0; i < m_graph->channelCount(); ++i) {
 			Graph::Channel &ch = m_graph->channelAt(i);
-			if(ch.verticalHeaderRect().contains(event->pos())) {
+			if(ch.verticalHeaderRect().contains(pos)) {
 				static constexpr int STEP = 2;
 				timeline::Graph::ChannelStyle ch_style = ch.style();
 				double deg = event->angleDelta().y();
