@@ -18,6 +18,7 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeDescrField
 	std::string typeName;
 	std::string description;
 	chainpack::RpcValue value;
+	chainpack::RpcValue::Map options;
 
 	ShvLogTypeDescrField() {}
 	//ShvLogTypeDescrField(const std::string &n)

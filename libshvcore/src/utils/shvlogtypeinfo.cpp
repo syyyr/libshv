@@ -17,6 +17,8 @@ chainpack::RpcValue ShvLogTypeDescrField::toRpcValue() const
 		m["description"] = description;
 	if(value.isValid())
 		m["value"] = value;
+	if(!options.empty())
+		m["options"] = options;
 	return std::move(m);
 }
 
@@ -29,6 +31,7 @@ ShvLogTypeDescrField ShvLogTypeDescrField::fromRpcValue(const chainpack::RpcValu
 		ret.description = m.value("description").toString();
 		ret.typeName = m.value("typeName").toString();
 		ret.value = m.value("value");
+		ret.options = m.value("options").toMap();
 	}
 	return ret;
 }
