@@ -3,6 +3,7 @@
 #include "types.h"
 #include "log.h"
 #include "simpletextitem.h"
+#include "groupitem.h"
 
 #include <QGraphicsItem>
 #include <QGraphicsTextItem>
@@ -1131,7 +1132,7 @@ bool SaxHandler::startElement()
 QGraphicsItem *SaxHandler::createGroupItem(const SaxHandler::SvgElement &el)
 {
 	Q_UNUSED(el)
-	QGraphicsItem *item = new QGraphicsRectItem();
+	QGraphicsItem *item = new GroupItem();
 	return item;
 }
 
@@ -1144,11 +1145,31 @@ void SaxHandler::installVisuController(QGraphicsItem *it, const SaxHandler::SvgE
 void SaxHandler::setXmlAttributes(QGraphicsItem *git, const SaxHandler::SvgElement &el)
 {
 	XmlAttributes attrs;
-	static QSet<QString> known_attrs {"shvPath", "shvType", "id", "chid"};
 	QMapIterator<QString, QString> it(el.xmlAttributes);
 	while (it.hasNext()) {
 		it.next();
-		if(known_attrs.contains(it.key()))
+		const QString k = it.key();
+		if(k == Types::ATTR_SHV_PATH) {
+			git->setData(Types::DataKey::ShvPath, it.value());
+			attrs[k] = it.value();
+		}
+		else if(k == Types::ATTR_SHV_TYPE) {
+			git->setData(Types::DataKey::ShvType, it.value());
+			attrs[k] = it.value();
+		}
+		else if(k == Types::ATTR_SHV_VISU_TYPE) {
+			git->setData(Types::DataKey::ShvVisuType, it.value());
+			attrs[k] = it.value();
+		}
+		else if(k == Types::ATTR_ID) {
+			git->setData(Types::DataKey::Id, it.value());
+			attrs[k] = it.value();
+		}
+		else if(k == Types::ATTR_CHILD_ID) {
+			git->setData(Types::DataKey::ChildId, it.value());
+			attrs[k] = it.value();
+		}
+		if(it.key().startsWith(QStringLiteral("shv_")))
 			attrs[it.key()] = it.value();
 	}
 	git->setData(Types::DataKey::XmlAttributes, QVariant::fromValue(attrs));

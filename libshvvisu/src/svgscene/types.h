@@ -13,7 +13,14 @@ struct SHVVISU_DECL_EXPORT Types
 {
 	struct SHVVISU_DECL_EXPORT DataKey
 	{
-		enum {XmlAttributes = 1};
+		enum {
+			XmlAttributes = 1,
+			Id,
+			ChildId,
+			ShvPath,
+			ShvType,
+			ShvVisuType,
+		};
 	};
 
 	using XmlAttributes = QMap<QString, QString>;
@@ -23,6 +30,7 @@ struct SHVVISU_DECL_EXPORT Types
 	static const QString ATTR_CHILD_ID;
 	static const QString ATTR_SHV_PATH;
 	static const QString ATTR_SHV_TYPE;
+	static const QString ATTR_SHV_VISU_TYPE;
 };
 
 }}}

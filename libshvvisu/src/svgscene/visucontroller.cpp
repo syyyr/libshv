@@ -34,13 +34,13 @@ VisuController::VisuController(QGraphicsItem *graphics_item, QObject *parent)
 	: Super(parent)
 	, m_graphicsItem(graphics_item)
 {
-	XmlAttributes attrs = qvariant_cast<Types::XmlAttributes>(graphics_item->data(Types::DataKey::XmlAttributes));
-	setId(attrs.value(Types::ATTR_ID));
+	//XmlAttributes attrs = qvariant_cast<Types::XmlAttributes>(graphics_item->data(Types::DataKey::XmlAttributes));
+	setId(graphics_item->data(Types::DataKey::Id).toString());
 	setObjectName(id());
-	setShvType(attrs.value(Types::ATTR_SHV_TYPE));
-	setShvPath(attrs.value(Types::ATTR_SHV_PATH));
-	for(auto key : attrs.keys())
-		shvDebug() << key << "->" << attrs.value(key);
+	setShvType(graphics_item->data(Types::DataKey::ShvType).toString());
+	setShvPath(graphics_item->data(Types::DataKey::ShvPath).toString());
+	//for(auto key : attrs.keys())
+	//	shvDebug() << key << "->" << attrs.value(key);
 }
 
 }}}
