@@ -123,6 +123,8 @@ public:
 
 	virtual void write(AbstractStreamWriter &wr) const;
 
+	RpcMessage clone() const;
+
 	static void registerMetaTypes();
 protected:
 	void checkMetaValues();
