@@ -717,6 +717,61 @@ bool RpcValueMapNode::isDir(const shv::iotqt::node::ShvNode::StringViewList &shv
 //===========================================================
 // RpcValueConfigNode
 //===========================================================
+static cp::RpcValue mergeMaps(const cp::RpcValue &template_val, const cp::RpcValue &user_val)
+{
+	if(template_val.isMap() && user_val.isMap()) {
+		const shv::chainpack::RpcValue::Map &template_map = template_val.toMap();
+		const shv::chainpack::RpcValue::Map &user_map = user_val.toMap();
+		cp::RpcValue::Map map = template_map;
+		//for(const auto &kv : template_map)
+		//	map[kv.first] = kv.second;
+		for(const auto &kv : user_map) {
+			if(map.hasKey(kv.first)) {
+				map[kv.first] = mergeMaps(map.value(kv.first), kv.second);
+			}
+			else {
+				shvWarning() << "user key:" << kv.first << "not found in template map";
+			}
+		}
+		return cp::RpcValue(map);
+	}
+	return user_val;
+}
+
+static cp::RpcValue mergeTemplateMaps(const cp::RpcValue &template_base, const cp::RpcValue &template_over)
+{
+	if(template_over.isMap() && template_base.isMap()) {
+		const shv::chainpack::RpcValue::Map &map_base = template_base.toMap();
+		const shv::chainpack::RpcValue::Map &map_over = template_over.toMap();
+		cp::RpcValue::Map map = map_base;
+		//for(const auto &kv : template_map)
+		//	map[kv.first] = kv.second;
+		for(const auto &kv : map_over) {
+			map[kv.first] = mergeTemplateMaps(map.value(kv.first), kv.second);
+		}
+		return cp::RpcValue(map);
+	}
+	return template_over;
+}
+
+static cp::RpcValue diffMaps(const cp::RpcValue &template_vals, const cp::RpcValue &vals)
+{
+	if(template_vals.isMap() && vals.isMap()) {
+		const shv::chainpack::RpcValue::Map &templ_map = template_vals.toMap();
+		const shv::chainpack::RpcValue::Map &vals_map = vals.toMap();
+		cp::RpcValue::Map map;
+		for(const auto &kv : templ_map) {
+			cp::RpcValue v = diffMaps(kv.second, vals_map.value(kv.first));
+			if(v.isValid())
+				map[kv.first] = v;
+		}
+		return map.empty()? cp::RpcValue(): cp::RpcValue(map);
+	}
+	if(template_vals == vals)
+		return cp::RpcValue();
+	return vals;
+}
+
 static const char METH_ORIG_VALUE[] = "origValue";
 static const char METH_RESET_TO_ORIG_VALUE[] = "resetValue";
 
@@ -802,10 +857,9 @@ shv::chainpack::RpcValue RpcValueConfigNode::loadConfigTemplate(const std::strin
 				shvDebug() << "based on:" << based_on;
 				std::string base_fn = templateDir() + '/' + based_on;
 				shv::chainpack::RpcValue rv2 = loadConfigTemplate(base_fn);
-				for (const auto &kv : map) {
-					rv2.set(kv.first, kv.second);
-				}
-				rv = rv2;
+				shv::chainpack::RpcValue::Map m = map;
+				m.erase(BASED_ON);
+				rv = mergeTemplateMaps(rv2, cp::RpcValue(m));
 			}
 			shvDebug() << "return:" << rv.toCpon("\t");
 			return rv;
@@ -832,46 +886,6 @@ std::string RpcValueConfigNode::resolvedUserConfigDir()
 	if(userConfigDir().empty())
 		return configDir();
 	return userConfigDir();
-}
-
-
-static cp::RpcValue mergeMaps(const cp::RpcValue &template_val, const cp::RpcValue &user_val)
-{
-	if(template_val.isMap() && user_val.isMap()) {
-		const shv::chainpack::RpcValue::Map &template_map = template_val.toMap();
-		const shv::chainpack::RpcValue::Map &user_map = user_val.toMap();
-		cp::RpcValue::Map map;
-		for(const auto &kv : template_map)
-			map[kv.first] = kv.second;
-		for(const auto &kv : user_map) {
-			if(map.hasKey(kv.first)) {
-				map[kv.first] = mergeMaps(map.value(kv.first), kv.second);
-			}
-			else {
-				shvWarning() << "user key:" << kv.first << "not found in template map";
-			}
-		}
-		return cp::RpcValue(map);
-	}
-	return user_val;
-}
-
-static cp::RpcValue diffMaps(const cp::RpcValue &template_vals, const cp::RpcValue &vals)
-{
-	if(template_vals.isMap() && vals.isMap()) {
-		const shv::chainpack::RpcValue::Map &templ_map = template_vals.toMap();
-		const shv::chainpack::RpcValue::Map &vals_map = vals.toMap();
-		cp::RpcValue::Map map;
-		for(const auto &kv : templ_map) {
-			cp::RpcValue v = diffMaps(kv.second, vals_map.value(kv.first));
-			if(v.isValid())
-				map[kv.first] = v;
-		}
-		return map.empty()? cp::RpcValue(): cp::RpcValue(map);
-	}
-	if(template_vals == vals)
-		return cp::RpcValue();
-	return vals;
 }
 
 void RpcValueConfigNode::loadValues()
@@ -911,11 +925,7 @@ void RpcValueConfigNode::loadValues()
 			new_values = cp::RpcValue::Map();
 		}
 	}
-	std::string clone = mergeMaps(m_templateValues, new_values).toChainPack();
-	std::string err;
-	m_values = cp::RpcValue::fromChainPack(clone, &err);
-	if(!err.empty())
-		shvWarning() << "clone error:" << err;
+	m_values = mergeMaps(m_templateValues, new_values).clone();
 }
 
 void RpcValueConfigNode::saveValues()
