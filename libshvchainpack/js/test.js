@@ -102,6 +102,24 @@ class Test
 		this.checkEq(v4.value.epochMsec, v1.value.epochMsec);
 	}
 
+	testMapKeys()
+	{
+		{
+			let c1 = '{"1":"a"}';
+			let v1 = RpcValue.fromCpon(c1);
+			let c2 = v1.toString();
+			log(c1, " vs. ", c2)
+			this.checkEq(c1, c2);
+		}
+		{
+			let c1 = 'i{1:"a"}';
+			let v1 = RpcValue.fromCpon(c1);
+			let c2 = v1.toString();
+			log(c1, " vs. ", c2)
+			this.checkEq(c1, c2);
+		}
+	}
+
 	static run()
 	{
 		//try {
@@ -120,6 +138,7 @@ class Test
 
 			t.testConversions();
 			t.testDateTime();
+			t.testMapKeys();
 
 			log("PASSED")
 		//}
