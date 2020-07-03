@@ -3,6 +3,7 @@
 #include <shv/chainpack/rpcvalue.h>
 
 #include <QAbstractTableModel>
+#include <QTimeZone>
 
 namespace shv {
 namespace visu {
@@ -18,6 +19,8 @@ public:
 public:
 	LogModel(QObject *parent = nullptr);
 
+	void setTimeZone(const QTimeZone &tz);
+
 	void setLog(const shv::chainpack::RpcValue &log);
 	shv::chainpack::RpcValue log() const { return m_log; }
 
@@ -27,6 +30,7 @@ public:
 	QVariant data(const QModelIndex &index, int role) const override;
 protected:
 	shv::chainpack::RpcValue m_log;
+	QTimeZone m_timeZone;
 };
 
 }}}

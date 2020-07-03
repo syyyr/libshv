@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>988</width>
+    <width>1168</width>
     <height>621</height>
    </rect>
   </property>
@@ -49,60 +49,103 @@
       </widget>
      </item>
      <item>
-      <widget class="QDateTimeEdit" name="edSince">
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <property name="spacing">
+        <number>0</number>
        </property>
-       <property name="specialValueText">
-        <string>Not defined</string>
-       </property>
-       <property name="minimumDate">
-        <date>
-         <year>2000</year>
-         <month>1</month>
-         <day>1</day>
-        </date>
-       </property>
-       <property name="displayFormat">
-        <string>yyyy-MM-dd hh:mm:ss</string>
-       </property>
-       <property name="calendarPopup">
-        <bool>true</bool>
-       </property>
-      </widget>
+       <item>
+        <widget class="QDateTimeEdit" name="edSince">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="specialValueText">
+          <string>Not defined</string>
+         </property>
+         <property name="date">
+          <date>
+           <year>1999</year>
+           <month>12</month>
+           <day>30</day>
+          </date>
+         </property>
+         <property name="displayFormat">
+          <string>yyyy-MM-dd hh:mm:ss</string>
+         </property>
+         <property name="calendarPopup">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpec">
+          <enum>Qt::UTC</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btClearSince">
+         <property name="icon">
+          <iconset resource="../../libshvvisu.qrc">
+           <normaloff>:/shv/visu/images/delete.svg</normaloff>:/shv/visu/images/delete.svg</iconset>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
       <widget class="QLabel" name="label_2">
        <property name="text">
         <string>&amp;Until</string>
        </property>
-       <property name="buddy">
-        <cstring>edUntil</cstring>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QDateTimeEdit" name="edUntil">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="specialValueText">
+          <string>Not defined</string>
+         </property>
+         <property name="date">
+          <date>
+           <year>1999</year>
+           <month>12</month>
+           <day>29</day>
+          </date>
+         </property>
+         <property name="displayFormat">
+          <string>yyyy-MM-dd hh:mm:ss</string>
+         </property>
+         <property name="calendarPopup">
+          <bool>true</bool>
+         </property>
+         <property name="timeSpec">
+          <enum>Qt::UTC</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btClearUntil">
+         <property name="icon">
+          <iconset resource="../../libshvvisu.qrc">
+           <normaloff>:/shv/visu/images/delete.svg</normaloff>:/shv/visu/images/delete.svg</iconset>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>Time zone</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QDateTimeEdit" name="edUntil">
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-       <property name="specialValueText">
-        <string>Not defined</string>
-       </property>
-       <property name="minimumDate">
-        <date>
-         <year>2000</year>
-         <month>1</month>
-         <day>1</day>
-        </date>
-       </property>
-       <property name="displayFormat">
-        <string>yyyy-MM-dd hh:mm:ss</string>
-       </property>
-       <property name="calendarPopup">
-        <bool>true</bool>
-       </property>
-      </widget>
+      <widget class="shv::visu::logview::TimeZoneComboBox" name="cbxTimeZone"/>
      </item>
      <item>
       <widget class="QPushButton" name="btMoreOptions">
@@ -200,7 +243,7 @@
          <number>1000</number>
         </property>
         <property name="value">
-         <number>1000</number>
+         <number>10000</number>
         </property>
        </widget>
       </item>
@@ -432,8 +475,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>966</width>
-            <height>279</height>
+            <width>1146</width>
+            <height>277</height>
            </rect>
           </property>
          </widget>
@@ -514,11 +557,16 @@
    <header>src/timeline/graphview.h</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>shv::visu::logview::TimeZoneComboBox</class>
+   <extends>QComboBox</extends>
+   <header>src/logview/timezonecombobox.h</header>
+  </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>edSince</tabstop>
-  <tabstop>edUntil</tabstop>
+  <tabstop>cbxTimeZone</tabstop>
   <tabstop>btMoreOptions</tabstop>
+  <tabstop>btLoad</tabstop>
   <tabstop>edShvPath</tabstop>
   <tabstop>edPathPattern</tabstop>
   <tabstop>chkIsPathPatternRexex</tabstop>
@@ -527,14 +575,18 @@
   <tabstop>chkUseHistoryProvider</tabstop>
   <tabstop>edTimeout</tabstop>
   <tabstop>chkWithSnapshot</tabstop>
-  <tabstop>btLoad</tabstop>
-  <tabstop>stackedWidget</tabstop>
-  <tabstop>graphView</tabstop>
+  <tabstop>btTabGraph</tabstop>
+  <tabstop>btTabData</tabstop>
+  <tabstop>btTabInfo</tabstop>
+  <tabstop>edDataFilter</tabstop>
   <tabstop>tblData</tabstop>
   <tabstop>edInfo</tabstop>
   <tabstop>btSaveData</tabstop>
+  <tabstop>graphView</tabstop>
  </tabstops>
- <resources/>
+ <resources>
+  <include location="../../libshvvisu.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>btMoreOptions</sender>

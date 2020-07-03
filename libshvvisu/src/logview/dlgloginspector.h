@@ -5,6 +5,7 @@
 #include <shv/core/utils.h>
 
 #include <QDialog>
+#include <QTimeZone>
 
 namespace shv { namespace chainpack { class RpcValue; }}
 namespace shv { namespace iotqt { namespace rpc { class ClientConnection; }}}
@@ -45,8 +46,12 @@ private:
 
 	void showInfo(const QString &msg = QString(), bool is_error = false);
 	void saveData(const std::string &data, QString ext);
+
+	void setTimeZone(const QTimeZone &tz);
 private:
 	Ui::DlgLogInspector *ui;
+
+	QTimeZone m_timeZone;
 
 	shv::iotqt::rpc::ClientConnection* m_rpcConnection = nullptr;
 

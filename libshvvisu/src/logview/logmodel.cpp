@@ -14,6 +14,14 @@ LogModel::LogModel(QObject *parent)
 
 }
 
+void LogModel::setTimeZone(const QTimeZone &tz)
+{
+	m_timeZone = tz;
+	auto ix1 = index(0, ColDateTime);
+	auto ix2 = index(rowCount() - 1, ColDateTime);
+	emit dataChanged(ix1, ix2);
+}
+
 void LogModel::setLog(const shv::chainpack::RpcValue &log)
 {
 	beginResetModel();
@@ -50,7 +58,15 @@ QVariant LogModel::data(const QModelIndex &index, int role) const
 			const shv::chainpack::RpcValue::List &lst = m_log.toList();
 			shv::chainpack::RpcValue row = lst.value((unsigned)index.row());
 			shv::chainpack::RpcValue val = row.toList().value((unsigned)index.column());
-			if(index.column() == ColPath && (val.type() == cp::RpcValue::Type::UInt || val.type() == cp::RpcValue::Type::Int)) {
+			if(index.column() == ColDateTime) {
+				int64_t msec = val.toDateTime().msecsSinceEpoch();
+				if(msec == 0)
+					return QVariant();
+				QDateTime dt = QDateTime::fromMSecsSinceEpoch(msec);
+				dt = dt.toTimeZone(m_timeZone);
+				return dt.toString(Qt::ISODateWithMs);
+			}
+			else if(index.column() == ColPath && (val.type() == cp::RpcValue::Type::UInt || val.type() == cp::RpcValue::Type::Int)) {
 				static std::string KEY_PATHS_DICT = shv::core::utils::ShvFileJournal::KEY_PATHS_DICT;
 				const chainpack::RpcValue::IMap &dict = m_log.metaValue(KEY_PATHS_DICT).toIMap();
 				auto it = dict.find(val.toInt());

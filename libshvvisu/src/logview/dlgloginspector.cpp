@@ -24,6 +24,7 @@
 #include <QSettings>
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
+#include <QTimeZone>
 
 namespace cp = shv::chainpack;
 namespace tl = shv::visu::timeline;
@@ -81,13 +82,21 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 		}
 		ui->btSaveData->setMenu(m);
 	}
+
 	ui->lblInfo->hide();
 	ui->btMoreOptions->setChecked(false);
+
 	QDateTime dt2 = QDateTime::currentDateTime();
 	QDateTime dt1 = dt2.addDays(-1);
 	dt2 = dt2.addSecs(60 * 60);
 	ui->edSince->setDateTime(dt1);
 	ui->edUntil->setDateTime(dt2);
+	connect(ui->btClearSince, &QPushButton::clicked, [this]() {
+		ui->edSince->setDateTime(ui->edSince->minimumDateTime());
+	});
+	connect(ui->btClearUntil, &QPushButton::clicked, [this]() {
+		ui->edUntil->setDateTime(ui->edUntil->minimumDateTime());
+	});
 
 	connect(ui->btTabGraph, &QAbstractButton::toggled, [this](bool is_checked) {
 		if(is_checked)
@@ -107,7 +116,8 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 	m_sortFilterProxy->setFilterKeyColumn(-1);
 	m_sortFilterProxy->setSourceModel(m_logModel);
 	ui->tblData->setModel(m_sortFilterProxy);
-	ui->tblData->setSortingEnabled(true);
+	ui->tblData->setSortingEnabled(false);
+	ui->tblData->verticalHeader()->setDefaultSectionSize((int)(fontMetrics().lineSpacing() * 1.3));
 
 	connect(ui->edDataFilter, &QLineEdit::textChanged, [this]() {
 		QString str = ui->edDataFilter->text().trimmed();
@@ -179,6 +189,12 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 	m_graph->setModel(m_graphModel);
 	m_graphWidget->setGraph(m_graph);
 
+	connect(ui->cbxTimeZone, &QComboBox::currentTextChanged, [this](const QString &) {
+		auto tz = ui->cbxTimeZone->currentTimeZone();
+		setTimeZone(tz);
+	});
+	setTimeZone(ui->cbxTimeZone->currentTimeZone());
+
 	connect(ui->btLoad, &QPushButton::clicked, this, &DlgLogInspector::downloadLog);
 
 	loadSettings();
@@ -229,9 +245,12 @@ void DlgLogInspector::setShvPath(const QString &s)
 shv::chainpack::RpcValue DlgLogInspector::getLogParams()
 {
 	shv::core::utils::ShvGetLogParams params;
-	auto get_dt = [](QDateTimeEdit *ed) {
+	auto get_dt = [this](QDateTimeEdit *ed) {
 		QDateTime dt = ed->dateTime();
-		return dt == ed->minimumDateTime()?  cp::RpcValue():  cp::RpcValue::DateTime::fromMSecsSinceEpoch(ed->dateTime().toMSecsSinceEpoch());
+		if(dt == ed->minimumDateTime())
+			return  cp::RpcValue();
+		dt = QDateTime(dt.date(), dt.time(), m_timeZone);
+		return cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(dt.toMSecsSinceEpoch()));
 	};
 	params.since = get_dt(ui->edSince);
 	params.until = get_dt(ui->edUntil);
@@ -390,6 +409,13 @@ void DlgLogInspector::saveData(const std::string &data, QString ext)
 	else {
 		QMessageBox::warning(this, tr("Warning"), tr("Cannot open file '%1' for write.").arg(fn));
 	}
+}
+
+void DlgLogInspector::setTimeZone(const QTimeZone &tz)
+{
+	shvDebug() << "Setting timezone to:" << tz.id();
+	m_timeZone = tz;
+	m_logModel->setTimeZone(tz);
 }
 
 }}}
