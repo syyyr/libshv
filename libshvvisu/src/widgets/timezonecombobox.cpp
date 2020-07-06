@@ -7,7 +7,6 @@
 
 namespace shv {
 namespace visu {
-namespace logview {
 
 //const char *LOCAL_TZ_ID = "Local";
 
@@ -65,4 +64,4 @@ void TimeZoneComboBox::keyPressEvent(QKeyEvent *event)
 	}
 }
 
-}}}
+}}

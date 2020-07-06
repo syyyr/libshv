@@ -1,14 +1,15 @@
 #pragma once
 
+#include "../shvvisuglobal.h"
+
 #include <QComboBox>
 
 class QTimeZone;
 
 namespace shv {
 namespace visu {
-namespace logview {
 
-class TimeZoneComboBox : public QComboBox
+class SHVVISU_DECL_EXPORT TimeZoneComboBox : public QComboBox
 {
 	using Super = QComboBox;
 public:
@@ -22,5 +23,5 @@ private:
 	QString m_searchText;
 };
 
-}}}
+}}
 
