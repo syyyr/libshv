@@ -209,7 +209,7 @@ DlgLogInspector::~DlgLogInspector()
 void DlgLogInspector::loadSettings()
 {
 	QSettings settings;
-	QByteArray ba = settings.value("ui/DlgLogView/geometry").toByteArray();
+	QByteArray ba = settings.value("ui/DlgLogInspector/geometry").toByteArray();
 	restoreGeometry(ba);
 }
 
@@ -217,7 +217,7 @@ void DlgLogInspector::saveSettings()
 {
 	QSettings settings;
 	QByteArray ba = saveGeometry();
-	settings.setValue("ui/DlgLogView/geometry", ba);
+	settings.setValue("ui/DlgLogInspector/geometry", ba);
 }
 
 shv::iotqt::rpc::ClientConnection *DlgLogInspector::rpcConnection()
@@ -357,8 +357,9 @@ void DlgLogInspector::parseLog(shv::chainpack::RpcValue log)
 					st.msec_sum = msec;
 				msec = st.addShortTime(short_msec);
 			}
-			QVariant v = shv::iotqt::Utils::rpcValueToQVariant(rv);
-			if(v.isValid()) {
+			bool ok;
+			QVariant v = shv::coreqt::Utils::rpcValueToQVariant(rv, &ok);
+			if(ok && v.isValid()) {
 				shvDebug() << path << v.typeName();
 				if(path == "data" && v.type() == QVariant::List) {
 					// Anca hook

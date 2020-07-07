@@ -69,7 +69,7 @@ GraphModel *Graph::model() const
 	return m_model;
 }
 
-void Graph::createChannelsFromModel(const std::string &path_pattern)
+void Graph::createChannelsFromModel(const std::string &path_pattern, bool is_regex)
 {
 	static QVector<QColor> colors {
 		Qt::magenta,
@@ -82,16 +82,22 @@ void Graph::createChannelsFromModel(const std::string &path_pattern)
 	if(!m_model)
 		return;
 	std::regex rx_path_pattern;
-	if(!path_pattern.empty())
+	if(!path_pattern.empty() && is_regex)
 		rx_path_pattern = std::regex(path_pattern);
 	// sort channels alphabetically
 	QMap<std::string, int> path_to_model_index;
 	for (int i = 0; i < m_model->channelCount(); ++i) {
 		std::string shv_path = m_model->channelPath(i);
 		if(!path_pattern.empty()) {
-			std::smatch cmatch;
-			if(!std::regex_search(shv_path, cmatch, rx_path_pattern))
-				continue;
+			if(is_regex) {
+				std::smatch cmatch;
+				if(!std::regex_search(shv_path, cmatch, rx_path_pattern))
+					continue;
+			}
+			else {
+				if(shv_path.find(path_pattern) == std::string::npos)
+					continue;
+			}
 		}
 		path_to_model_index[shv_path] = i;
 	}
@@ -1007,8 +1013,13 @@ std::function<QPoint (const Sample &)> Graph::dataToPointFn(const DataRect &src,
 	double ky = (to - bo) / (d2 - d1);
 
 	return  [le, bo, kx, t1, d1, ky](const Sample &s) -> QPoint {
+		if(!s.isValid())
+			return QPoint();
 		const timemsec_t t = s.time;
-		double d = GraphModel::valueToDouble(s.value);
+		bool ok;
+		double d = GraphModel::valueToDouble(s.value, &ok);
+		if(!ok)
+			return QPoint();
 		double x = le + (t - t1) * kx;
 		double y = bo + (d - d1) * ky;
 		return QPoint{static_cast<int>(x), static_cast<int>(y)};

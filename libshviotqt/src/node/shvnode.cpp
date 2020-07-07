@@ -3,6 +3,7 @@
 
 #include <shv/core/utils/shvfilejournal.h>
 #include <shv/coreqt/log.h>
+#include <shv/coreqt/utils.h>
 #include <shv/chainpack/metamethod.h>
 #include <shv/chainpack/rpcmessage.h>
 #include <shv/chainpack/rpcvalue.h>
@@ -1009,11 +1010,13 @@ shv::chainpack::RpcValue ObjectPropertyProxyShvNode::callMethod(const shv::iotqt
 	if(shv_path.empty()) {
 		if(method == cp::Rpc::METH_GET) {
 			QVariant qv = m_propertyObj->property(m_metaProperty.name());
-			return shv::iotqt::Utils::qVariantToRpcValue(qv);
+			return shv::coreqt::Utils::qVariantToRpcValue(qv);
 		}
 		if(method == cp::Rpc::METH_SET) {
-			QVariant qv = shv::iotqt::Utils::rpcValueToQVariant(params);
-			bool ok = m_propertyObj->setProperty(m_metaProperty.name(), qv);
+			bool ok;
+			QVariant qv = shv::coreqt::Utils::rpcValueToQVariant(params, &ok);
+			if(ok)
+				ok = m_propertyObj->setProperty(m_metaProperty.name(), qv);
 			return ok;
 		}
 	}

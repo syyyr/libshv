@@ -84,15 +84,20 @@ YRange GraphModel::yRange(int channel_ix) const
 	YRange ret;
 	for (int i = 0; i < count(channel_ix); ++i) {
 		QVariant v = sampleAt(channel_ix, i).value;
-		double d = valueToDouble(v);
-		ret.min = qMin(ret.min, d);
-		ret.max = qMax(ret.max, d);
+		bool ok;
+		double d = valueToDouble(v, &ok);
+		if(ok) {
+			ret.min = qMin(ret.min, d);
+			ret.max = qMax(ret.max, d);
+		}
 	}
 	return ret;
 }
 
-double GraphModel::valueToDouble(const QVariant v)
+double GraphModel::valueToDouble(const QVariant v, bool *ok)
 {
+	if(ok)
+		*ok = true;
 	switch (v.type()) {
 	case QVariant::Invalid:
 		return 0;
@@ -108,7 +113,10 @@ double GraphModel::valueToDouble(const QVariant v)
 	case QVariant::String:
 		return v.toString().isEmpty()? 0: 1;
 	default:
-		shvWarning() << "cannot convert variant:" << v.typeName() << "to double";
+		if(ok)
+			*ok = false;
+		else
+			shvWarning() << "cannot convert variant:" << v.typeName() << "to double";
 		return 0;
 	}
 }

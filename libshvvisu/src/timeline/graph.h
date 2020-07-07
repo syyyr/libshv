@@ -155,7 +155,7 @@ public:
 	void setModel(GraphModel *model);
 	GraphModel *model() const;
 
-	void createChannelsFromModel(const std::string &path_pattern = std::string());
+	void createChannelsFromModel(const std::string &path_pattern = std::string(), bool is_regex = false);
 
 	int channelCount() const { return  m_channels.count(); }
 	void clearChannels();

@@ -59,7 +59,7 @@ public: // API
 	Q_SIGNAL void xRangeChanged(XRange range);
 	Q_SIGNAL void channelCountChanged(int cnt);
 public:
-	static double valueToDouble(const QVariant v);
+	static double valueToDouble(const QVariant v, bool *ok = nullptr);
 protected:
 	using ChannelSamples = QVector<Sample>;
 	QVector<ChannelSamples> m_samples;

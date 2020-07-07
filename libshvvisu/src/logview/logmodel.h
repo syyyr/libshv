@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../shvvisuglobal.h"
+
 #include <shv/chainpack/rpcvalue.h>
 
 #include <QAbstractTableModel>
@@ -9,7 +11,7 @@ namespace shv {
 namespace visu {
 namespace logview {
 
-class LogModel : public QAbstractTableModel
+class SHVVISU_DECL_EXPORT LogModel : public QAbstractTableModel
 {
 	Q_OBJECT
 
