@@ -224,6 +224,8 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 					rec.push_back(entry.shortTime);
 					rec.push_back(entry.domain.empty()? cp::RpcValue(nullptr): entry.domain);
 					rec.push_back((int)entry.sampleType);
+					// clientId & userId shoud not be in snapshot, since they ere used with ShvJournalEntry::SampleType::Discrete only
+					//rec.push_back(entry.userId.empty()? cp::RpcValue(nullptr): cp::RpcValue(entry.userId));
 					log.push_back(std::move(rec));
 					rec_cnt++;
 				}
@@ -248,6 +250,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 					rec.push_back(it->shortTime);
 					rec.push_back(it->domain.empty()? cp::RpcValue(nullptr): it->domain);
 					rec.push_back((int)it->sampleType);
+					rec.push_back(it->userId.empty()? cp::RpcValue(nullptr): cp::RpcValue(it->userId));
 					log.push_back(std::move(rec));
 					rec_cnt++;
 				}

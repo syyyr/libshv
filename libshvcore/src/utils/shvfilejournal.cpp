@@ -670,6 +670,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		rec.push_back(e.shortTime == ShvJournalEntry::NO_SHORT_TIME? cp::RpcValue(nullptr): cp::RpcValue(e.shortTime));
 		rec.push_back((e.domain.empty() || e.domain == cp::Rpc::SIG_VAL_CHANGED)? cp::RpcValue(nullptr): e.domain);
 		rec.push_back((int)e.sampleType);
+		rec.push_back(e.userId.empty()? cp::RpcValue(nullptr): cp::RpcValue(e.userId));
 		log.push_back(std::move(rec));
 		return true;
 	};
@@ -823,13 +824,14 @@ log_finish:
 const char *ShvFileJournal::TxtColumn::name(ShvFileJournal::TxtColumn::Enum e)
 {
 	switch (e) {
-	case TxtColumn::Enum::Timestamp: return "timestamp";
+	case TxtColumn::Enum::Timestamp: return ShvLogHeader::Column::name(ShvLogHeader::Column::Timestamp);
 	case TxtColumn::Enum::UpTime: return "upTime";
-	case TxtColumn::Enum::Path: return "path";
-	case TxtColumn::Enum::Value: return "value";
-	case TxtColumn::Enum::ShortTime: return "shortTime";
-	case TxtColumn::Enum::Domain: return "domain";
-	case TxtColumn::Enum::SampleType: return "sampleType";
+	case TxtColumn::Enum::Path: return ShvLogHeader::Column::name(ShvLogHeader::Column::Path);
+	case TxtColumn::Enum::Value: return ShvLogHeader::Column::name(ShvLogHeader::Column::Value);
+	case TxtColumn::Enum::ShortTime: return ShvLogHeader::Column::name(ShvLogHeader::Column::ShortTime);
+	case TxtColumn::Enum::Domain: return ShvLogHeader::Column::name(ShvLogHeader::Column::Domain);
+	case TxtColumn::Enum::SampleType: return ShvLogHeader::Column::name(ShvLogHeader::Column::SampleType);
+	case TxtColumn::Enum::UserId: return ShvLogHeader::Column::name(ShvLogHeader::Column::UserId);
 	}
 	return "invalid";
 }

@@ -58,8 +58,6 @@ bool ShvJournalFileReader::next()
 			continue; // skip empty line
 		}
 		std::string dtstr = line_record[Column::Timestamp].toString();
-		std::string path = line_record.value(Column::Path).toString();
-		std::string domain = line_record.value(Column::Domain).toString();
 		auto sample_type = static_cast<ShvJournalEntry::SampleType>(shv::core::String::toInt(line_record.value(Column::SampleType).toString()));
 		size_t len;
 		cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr, &len);
@@ -67,6 +65,8 @@ bool ShvJournalFileReader::next()
 			logWShvJournal() << "invalid date time string:" << dtstr << "line will be ignored";
 			continue;
 		}
+		std::string path = line_record.value(Column::Path).toString();
+		std::string domain = line_record.value(Column::Domain).toString();
 		StringView short_time_sv = line_record.value(Column::ShortTime);
 
 		m_currentEntry.path = std::move(path);
@@ -79,6 +79,7 @@ bool ShvJournalFileReader::next()
 		if (m_currentEntry.sampleType == ShvJournalEntry::SampleType::Invalid) {
 			m_currentEntry.sampleType = ShvJournalEntry::SampleType::Continuous;
 		}
+		m_currentEntry.userId = line_record.value(Column::UserId).toString();
 		std::string err;
 		m_currentEntry.value = cp::RpcValue::fromCpon(line_record.value(Column::Value).toString(), &err);
 		if(!err.empty())

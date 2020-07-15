@@ -21,6 +21,7 @@ const char *ShvLogHeader::Column::name(ShvLogHeader::Column::Enum e)
 	case Column::Enum::ShortTime: return "shortTime";
 	case Column::Enum::Domain: return "domain";
 	case Column::Enum::SampleType: return "sampleType";
+	case Column::Enum::UserId: return "userId";
 	}
 	return "invalid";
 }

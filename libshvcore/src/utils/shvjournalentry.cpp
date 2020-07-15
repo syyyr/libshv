@@ -1,4 +1,5 @@
 #include "shvjournalentry.h"
+#include "shvlogheader.h"
 #include "shvlogtypeinfo.h"
 
 namespace shv {
@@ -26,17 +27,19 @@ chainpack::RpcValue ShvJournalEntry::toRpcValueMap() const
 	chainpack::RpcValue::Map m;
 	m["epochMsec"] = epochMsec;
 	if(epochMsec > 0)
-		m["dateTime"] = chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(epochMsec);
+		m[ShvLogHeader::Column::name(ShvLogHeader::Column::Timestamp)] = chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(epochMsec);
 	if(!path.empty())
-		m["path"] = path;
+		m[ShvLogHeader::Column::name(ShvLogHeader::Column::Path)] = path;
 	if(value.isValid())
-		m["value"] = value;
+		m[ShvLogHeader::Column::name(ShvLogHeader::Column::Value)] = value;
 	if(shortTime != NO_SHORT_TIME)
-		m["shortTime"] = shortTime;
+		m[ShvLogHeader::Column::name(ShvLogHeader::Column::ShortTime)] = shortTime;
 	if(!domain.empty())
-		m["domain"] = domain;
+		m[ShvLogHeader::Column::name(ShvLogHeader::Column::Domain)] = domain;
 	if(sampleType != ShvLogTypeDescr::SampleType::Continuous)
-		m["sampleType"] = ShvLogTypeDescr::sampleTypeToString(sampleType);
+		m[ShvLogHeader::Column::name(ShvLogHeader::Column::SampleType)] = ShvLogTypeDescr::sampleTypeToString(sampleType);
+	if(!userId.empty())
+		m[ShvLogHeader::Column::name(ShvLogHeader::Column::UserId)] = userId;
 	return std::move(m);
 }
 

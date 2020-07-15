@@ -45,6 +45,7 @@ public:
 			ShortTime,
 			Domain,
 			SampleType,
+			UserId,
 		};
 		static const char* name(Enum e);
 	};

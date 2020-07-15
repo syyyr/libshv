@@ -37,6 +37,7 @@ public:
 	int shortTime = NO_SHORT_TIME;
 	std::string domain;
 	SampleType sampleType = SampleType::Continuous;
+	std::string userId;
 
 	ShvJournalEntry() {}
 	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, std::string domain, int short_time, SampleType sample_type, int64_t epoch_msec = 0)
@@ -63,7 +64,9 @@ public:
 				&& value == o.value
 				&& shortTime == o.shortTime
 				&& domain == o.domain
-				&& sampleType == o.sampleType;
+				&& sampleType == o.sampleType
+				&& userId == o.userId
+				;
 	}
 	void setShortTime(int short_time) {shortTime = short_time;}
 	shv::chainpack::RpcValue::DateTime dateTime() const { return shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(epochMsec); }
