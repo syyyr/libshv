@@ -39,11 +39,11 @@ ChainPack.isLittleEndian = (function() {
 
 function ChainPackReader(unpack_context)
 {
-	if(unpack_context.constructor.name === "ArrayBuffer")
+	if(unpack_context instanceof ArrayBuffer)
 		unpack_context = new UnpackContext(unpack_context)
-	else if(unpack_context.constructor.name === "Uint8Array")
+	else if(unpack_context instanceof Uint8Array)
 		unpack_context = new UnpackContext(unpack_context)
-	if(unpack_context.constructor.name !== "UnpackContext")
+	if(!(unpack_context instanceof UnpackContext))
 		throw new TypeError("ChainpackReader must be constructed with UnpackContext")
 	this.ctx = unpack_context;
 }
@@ -293,9 +293,9 @@ function ChainPackWriter()
 
 ChainPackWriter.prototype.write = function(rpc_val)
 {
-	if(!(rpc_val && rpc_val.constructor.name === "RpcValue"))
+	if(!(rpc_val && rpc_val instanceof RpcValue))
 		rpc_val = new RpcValue(rpc_val)
-	if(rpc_val && rpc_val.constructor.name === "RpcValue") {
+	if(rpc_val && rpc_val instanceof RpcValue) {
 		if(rpc_val.meta) {
 			this.writeMeta(rpc_val.meta);
 		}

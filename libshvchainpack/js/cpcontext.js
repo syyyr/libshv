@@ -2,9 +2,9 @@
 
 function UnpackContext(uint8_array)
 {
-	if(uint8_array.constructor.name === "ArrayBuffer")
+	if(uint8_array instanceof ArrayBuffer)
 		uint8_array = new Uint8Array(uint8_array)
-	else if(uint8_array.constructor.name !== "Uint8Array")
+	else if(!(uint8_array instanceof Uint8Array))
 		throw new TypeError("UnpackContext must be constructed with Uint8Array")
 	this.data = uint8_array
 	this.index = 0;

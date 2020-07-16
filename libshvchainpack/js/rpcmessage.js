@@ -6,7 +6,7 @@ function RpcMessage(rpc_val)
 		this.rpcValue = new RpcValue();
 	else if(typeof rpc_val === 'null')
 		this.rpcValue = null;
-	else if(rpc_val && rpc_val.constructor.name === "RpcValue")
+	else if(rpc_val && rpc_val instanceof RpcValue)
 		this.rpcValue = rpc_val;
 	else
 		throw new TypeError("RpcMessage cannot be constructed with " + typeof rpc_val)
