@@ -250,9 +250,14 @@ void CLIOptions::parse(const StringList& cmd_line_args)
 				if(std::find(names.begin(), names.end(), arg) != names.end()) {
 					found = true;
 					arg = peekArg(ok);
-					if((arg.size() && arg[0] == '-') || !ok) {
+					if(!ok) {
 						// switch has no value entered
 						arg = std::string();
+					}
+					else if((arg.size() && arg[0] == '-')) {
+						// might be negative number or next switch
+						if(opt.type() != cp::RpcValue::Type::Int)
+							arg = std::string();
 					}
 					else {
 						arg = takeArg(ok);
