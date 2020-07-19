@@ -168,7 +168,7 @@ void ServerConnection::setLoginResult(const chainpack::UserLoginResult &result)
 		resp.setResult(result.toRpcValue());
 	}
 	else {
-		shvInfo().nospace() << "Invalid authentication for user: " << m_userLogin.user
+		shvWarning().nospace() << "Invalid authentication for user: " << m_userLogin.user
 							<< " reason: " + result.loginError
 							<< " at: " + connectionName();
 		resp.setError(cp::RpcResponse::Error::createMethodCallExceptionError("Invalid authentication for user: " + m_userLogin.user
