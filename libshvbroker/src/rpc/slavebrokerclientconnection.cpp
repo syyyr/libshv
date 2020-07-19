@@ -1,10 +1,11 @@
-#include "masterbrokerclientconnection.h"
+#include "slavebrokerclientconnection.h"
 #include "../brokerapp.h"
 
 #include <shv/chainpack/rpcmessage.h>
 #include <shv/core/string.h>
 #include <shv/coreqt/log.h>
 #include <shv/core/utils/shvpath.h>
+#include <shv/iotqt/rpc/deviceappclioptions.h>
 
 namespace cp = shv::chainpack;
 
@@ -12,20 +13,55 @@ namespace shv {
 namespace broker {
 namespace rpc {
 
-MasterBrokerClientConnection::MasterBrokerClientConnection(QObject *parent)
+SlaveBrokerClientConnection::SlaveBrokerClientConnection(QObject *parent)
 	: Super(parent)
 {
 
 }
 
-void MasterBrokerClientConnection::setOptions(const shv::chainpack::RpcValue &slave_broker_options)
+void SlaveBrokerClientConnection::setOptions(const shv::chainpack::RpcValue &slave_broker_options)
 {
 	m_options = slave_broker_options;
-	Super::setOptions(slave_broker_options);
+	if(slave_broker_options.isMap()) {
+		const cp::RpcValue::Map &m = slave_broker_options.toMap();
+
+		shv::iotqt::rpc::DeviceAppCliOptions device_opts;
+
+		const cp::RpcValue::Map &server = m.value("server").toMap();
+		device_opts.setServerHost(server.value("host", "localhost").toString());
+		device_opts.setServerPort(server.value("port", 3755).toInt());
+
+		const cp::RpcValue::Map &login = m.value(cp::Rpc::KEY_LOGIN).toMap();
+		for(const std::string &key : {"user", "password", "passwordFile", "type"}) {
+			if(login.hasKey(key))
+				device_opts.setValue("login." + key, login.value(key).toString());
+		}
+		const cp::RpcValue::Map &rpc = m.value("rpc").toMap();
+		if(rpc.count("heartbeatInterval") == 1)
+			device_opts.setHeartbeatInterval(rpc.value("heartbeatInterval", 60).toInt());
+		if(rpc.count("reconnectInterval") == 1)
+			device_opts.setReconnectInterval(rpc.value("reconnectInterval").toInt());
+
+		const cp::RpcValue::Map &device = m.value(cp::Rpc::KEY_DEVICE).toMap();
+		if(device.count("id") == 1)
+			device_opts.setDeviceId(device.value("id").toString());
+		if(device.count("idFile") == 1)
+			device_opts.setDeviceIdFile(device.value("idFile").toString());
+		if(device.count("mountPoint") == 1)
+			device_opts.setMountPoint(device.value("mountPoint").toString());
+
+		setCliOptions(&device_opts);
+		{
+			chainpack::RpcValue::Map opts = connectionOptions().toMap();
+			cp::RpcValue::Map broker;
+			opts[cp::Rpc::KEY_BROKER] = broker;
+			setConnectionOptions(opts);
+		}
+	}
 	m_exportedShvPath = slave_broker_options.toMap().value("exportedShvPath").toString();
 }
 
-void MasterBrokerClientConnection::sendRawData(const shv::chainpack::RpcValue::MetaData &meta_data, std::string &&data)
+void SlaveBrokerClientConnection::sendRawData(const shv::chainpack::RpcValue::MetaData &meta_data, std::string &&data)
 {
 	logRpcMsg() << SND_LOG_ARROW
 				<< "client id:" << connectionId()
@@ -34,7 +70,7 @@ void MasterBrokerClientConnection::sendRawData(const shv::chainpack::RpcValue::M
 	Super::sendRawData(meta_data, std::move(data));
 }
 
-void MasterBrokerClientConnection::sendMessage(const shv::chainpack::RpcMessage &rpc_msg)
+void SlaveBrokerClientConnection::sendMessage(const shv::chainpack::RpcMessage &rpc_msg)
 {
 	logRpcMsg() << SND_LOG_ARROW
 				<< "client id:" << connectionId()
@@ -43,7 +79,7 @@ void MasterBrokerClientConnection::sendMessage(const shv::chainpack::RpcMessage 
 	Super::sendMessage(rpc_msg);
 }
 
-unsigned MasterBrokerClientConnection::addSubscription(const std::string &rel_path, const std::string &method)
+unsigned SlaveBrokerClientConnection::addSubscription(const std::string &rel_path, const std::string &method)
 {
 	if(shv::core::utils::ShvPath::isRelativePath(rel_path))
 		SHV_EXCEPTION("This could never happen by SHV design logic, master broker tries to subscribe relative path: "  + rel_path);
@@ -51,7 +87,7 @@ unsigned MasterBrokerClientConnection::addSubscription(const std::string &rel_pa
 	return CommonRpcClientHandle::addSubscription(subs);
 }
 
-bool MasterBrokerClientConnection::removeSubscription(const std::string &rel_path, const std::string &method)
+bool SlaveBrokerClientConnection::removeSubscription(const std::string &rel_path, const std::string &method)
 {
 	if(shv::core::utils::ShvPath::isRelativePath(rel_path))
 		SHV_EXCEPTION("This could never happen by SHV design logic, master broker tries to subscribe relative path: "  + rel_path);
@@ -59,13 +95,13 @@ bool MasterBrokerClientConnection::removeSubscription(const std::string &rel_pat
 	return CommonRpcClientHandle::removeSubscription(subs);
 }
 
-std::string MasterBrokerClientConnection::toSubscribedPath(const CommonRpcClientHandle::Subscription &subs, const std::string &abs_path) const
+std::string SlaveBrokerClientConnection::toSubscribedPath(const CommonRpcClientHandle::Subscription &subs, const std::string &abs_path) const
 {
 	Q_UNUSED((subs))
 	return localPathToMasterExported(abs_path);
 }
 
-std::string MasterBrokerClientConnection::masterExportedToLocalPath(const std::string &master_path) const
+std::string SlaveBrokerClientConnection::masterExportedToLocalPath(const std::string &master_path) const
 {
 	if(m_exportedShvPath.empty())
 		return master_path;
@@ -74,7 +110,7 @@ std::string MasterBrokerClientConnection::masterExportedToLocalPath(const std::s
 	return m_exportedShvPath + '/' + master_path;
 }
 
-std::string MasterBrokerClientConnection::localPathToMasterExported(const std::string &local_path) const
+std::string SlaveBrokerClientConnection::localPathToMasterExported(const std::string &local_path) const
 {
 	if(m_exportedShvPath.empty())
 		return local_path;
@@ -84,7 +120,7 @@ std::string MasterBrokerClientConnection::localPathToMasterExported(const std::s
 	return local_path;
 }
 
-void MasterBrokerClientConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
+void SlaveBrokerClientConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
 {
 	logRpcMsg() << RpcDriver::RCV_LOG_ARROW
 				<< "client id:" << connectionId()

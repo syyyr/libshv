@@ -2,7 +2,7 @@
 
 #include "brokerapp.h"
 #include "rpc/brokerclientserverconnection.h"
-#include "rpc/masterbrokerclientconnection.h"
+#include "rpc/slavebrokerclientconnection.h"
 
 #include <shv/chainpack/metamethod.h>
 #include <shv/chainpack/rpcmessage.h>

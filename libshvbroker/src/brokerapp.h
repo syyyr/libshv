@@ -35,7 +35,7 @@ namespace shv { namespace chainpack { class RpcSignal; }}
 namespace shv {
 namespace broker {
 
-namespace rpc { class WebSocketServer; class BrokerTcpServer; class BrokerClientServerConnection;  class MasterBrokerClientConnection; class CommonRpcClientHandle; }
+namespace rpc { class WebSocketServer; class BrokerTcpServer; class BrokerClientServerConnection;  class SlaveBrokerClientConnection; class CommonRpcClientHandle; }
 
 class AclManager;
 
@@ -58,7 +58,7 @@ public:
 	void onClientLogin(int connection_id);
 	void onConnectedToMasterBrokerChanged(int connection_id, bool is_connected);
 
-	rpc::MasterBrokerClientConnection* mainMasterBrokerConnection() { return masterBrokerConnections().value(0); }
+	rpc::SlaveBrokerClientConnection* mainMasterBrokerConnection() { return masterBrokerConnections().value(0); }
 
 	void onRpcDataReceived(int connection_id, shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&meta, std::string &&data);
 
@@ -110,8 +110,8 @@ private:
 	std::vector<int> clientConnectionIds();
 
 	void createMasterBrokerConnections();
-	QList<rpc::MasterBrokerClientConnection*> masterBrokerConnections() const;
-	rpc::MasterBrokerClientConnection* masterBrokerConnectionById(int connection_id);
+	QList<rpc::SlaveBrokerClientConnection*> masterBrokerConnections() const;
+	rpc::SlaveBrokerClientConnection* masterBrokerConnectionById(int connection_id);
 
 	std::vector<rpc::CommonRpcClientHandle *> allClientConnections();
 

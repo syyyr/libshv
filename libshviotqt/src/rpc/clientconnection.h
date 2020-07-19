@@ -38,11 +38,10 @@ public:
 	explicit ClientConnection(QObject *parent = nullptr);
 	~ClientConnection() Q_DECL_OVERRIDE;
 
-	void open();
-	void close() Q_DECL_OVERRIDE;
-	void abort() Q_DECL_OVERRIDE;
-
-	void resetConnection();
+	virtual void open();
+	void close() override;
+	void abort() override;
+	void restartIfActive();
 
 	void setCliOptions(const ClientAppCliOptions *cli_opts);
 
@@ -96,9 +95,9 @@ protected:
 	};
 	ConnectionState m_connectionState;
 private:
-	int m_checkBrokerConnectedInterval = 0;
 	QTimer *m_checkConnectedTimer;
-	QTimer *m_pingTimer = nullptr;
+	int m_checkBrokerConnectedInterval = 0;
+	QTimer *m_heartBeatTimer = nullptr;
 	int m_heartbeatInterval = 0;
 };
 

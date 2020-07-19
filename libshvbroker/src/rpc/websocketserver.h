@@ -26,7 +26,7 @@ public:
 private:
 	BrokerClientServerConnection* createServerConnection(QWebSocket *socket, QObject *parent);
 	void onNewConnection();
-	void onConnectionClosed(int connection_id);
+	void unregisterConnection(int connection_id);
 private:
 	std::map<int, BrokerClientServerConnection*> m_connections;
 };

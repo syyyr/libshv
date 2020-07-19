@@ -2,7 +2,7 @@
 #include "brokerapp.h"
 
 #include "rpc/brokerclientserverconnection.h"
-#include "rpc/masterbrokerclientconnection.h"
+#include "rpc/slavebrokerclientconnection.h"
 
 #include <shv/coreqt/log.h>
 
@@ -14,8 +14,8 @@ namespace broker {
 //======================================================================
 // ClientShvNode
 //======================================================================
-ClientShvNode::ClientShvNode(rpc::BrokerClientServerConnection *conn, ShvNode *parent)
-	: Super(parent)
+ClientShvNode::ClientShvNode(const std::string &node_id, rpc::BrokerClientServerConnection *conn, ShvNode *parent)
+	: Super(node_id, parent)
 {
 	shvInfo() << "Creating client node:" << this << nodeId() << "connection:" << conn->connectionId();
 	addConnection(conn);

@@ -95,15 +95,11 @@ void WebSocketServer::onNewConnection()
 							<< " connection ID: " << c->connectionId();
 		c->setConnectionName(sock->peerAddress().toString().toStdString() + ':' + std::to_string(sock->peerPort()));
 		m_connections[c->connectionId()] = c;
-		int cid = c->connectionId();
-		connect(c, &BrokerClientServerConnection::socketConnectedChanged, [this, cid](bool is_connected) {
-			if(!is_connected)
-				onConnectionClosed(cid);
-		});
+		connect(c, &BrokerClientServerConnection::aboutToBeDeleted, this, &WebSocketServer::unregisterConnection);
 	}
 }
 
-void WebSocketServer::onConnectionClosed(int connection_id)
+void WebSocketServer::unregisterConnection(int connection_id)
 {
 	m_connections.erase(connection_id);
 }

@@ -33,8 +33,11 @@ public:
 	const std::string& connectionName() {return m_connectionName;}
 	void setConnectionName(const std::string &n) {m_connectionName = n; setObjectName(QString::fromStdString(n));}
 
-	void close() Q_DECL_OVERRIDE {closeConnection();}
-	void abort() Q_DECL_OVERRIDE {abortConnection();}
+	void close() Q_DECL_OVERRIDE {closeSocket();}
+	void abort() Q_DECL_OVERRIDE {abortSocket();}
+
+	void unregisterAndDeleteLater();
+	Q_SIGNAL void aboutToBeDeleted(int connection_id);
 
 	const shv::chainpack::RpcValue::Map& connectionOptions() const {return m_connectionOptions.toMap();}
 

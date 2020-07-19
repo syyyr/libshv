@@ -2,7 +2,6 @@ SOURCES += \
     $$PWD/rpc.cpp \
     #$$PWD/socketrpcdriver.cpp \
     $$PWD/clientconnection.cpp \
-    $$PWD/slavebrokerconnection.cpp \
     $$PWD/tcpserver.cpp \
     $$PWD/socketrpcconnection.cpp \
     $$PWD/serverconnection.cpp \
@@ -19,7 +18,6 @@ HEADERS += \
     $$PWD/rpc.h \
     #$$PWD/socketrpcdriver.h \
     $$PWD/clientconnection.h \
-    $$PWD/slavebrokerconnection.h \
     $$PWD/tcpserver.h \
     $$PWD/socketrpcconnection.h \
     $$PWD/serverconnection.h \

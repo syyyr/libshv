@@ -2,19 +2,19 @@
 
 #include "commonrpcclienthandle.h"
 
-#include <shv/iotqt/rpc/slavebrokerconnection.h>
+#include <shv/iotqt/rpc/deviceconnection.h>
 
 namespace shv {
 namespace broker {
 namespace rpc {
 
-class MasterBrokerClientConnection : public shv::iotqt::rpc::SlaveBrokerConnection, public CommonRpcClientHandle
+class SlaveBrokerClientConnection : public shv::iotqt::rpc::DeviceConnection, public CommonRpcClientHandle
 {
 	Q_OBJECT
 
-	using Super = shv::iotqt::rpc::SlaveBrokerConnection;
+	using Super = shv::iotqt::rpc::DeviceConnection;
 public:
-	MasterBrokerClientConnection(QObject *parent = nullptr);
+	SlaveBrokerClientConnection(QObject *parent = nullptr);
 
 	int connectionId() const override {return Super::connectionId();}
 
@@ -37,7 +37,7 @@ public:
 	std::string localPathToMasterExported(const std::string &local_path) const;
 	const std::string& exportedShvPath() const {return m_exportedShvPath;}
 
-	void setOptions(const shv::chainpack::RpcValue &slave_broker_options) override;
+	void setOptions(const shv::chainpack::RpcValue &slave_broker_options);
 	shv::chainpack::RpcValue options() {return m_options;}
 protected:
 	void onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len) override;

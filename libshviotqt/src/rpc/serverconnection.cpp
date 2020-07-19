@@ -49,6 +49,13 @@ ServerConnection::~ServerConnection()
 	abort();
 }
 
+void ServerConnection::unregisterAndDeleteLater()
+{
+	emit aboutToBeDeleted(connectionId());
+	abort();
+	deleteLater();
+}
+
 bool ServerConnection::isSlaveBrokerConnection() const
 {
 	return m_connectionOptions.toMap().hasKey(cp::Rpc::KEY_BROKER);

@@ -35,8 +35,8 @@ public:
 	Q_SIGNAL void rpcValueReceived(shv::chainpack::RpcValue rpc_val);
 	Q_SLOT void sendRpcValue(const shv::chainpack::RpcValue &rpc_val) {shv::chainpack::RpcDriver::sendRpcValue(rpc_val);}
 
-	void closeConnection();
-	void abortConnection();
+	void closeSocket();
+	void abortSocket();
 
 	bool isSocketConnected() const;
 	Q_SIGNAL void socketConnectedChanged(bool is_connected);
@@ -58,7 +58,7 @@ protected:
 	void onBytesWritten();
 
 	void onRpcValueReceived(const shv::chainpack::RpcValue &rpc_val) override;
-	void onProcessReadDataException(std::exception &e) override {Q_UNUSED(e) abortConnection();}
+	void onProcessReadDataException(std::exception &e) override {Q_UNUSED(e) abortSocket();}
 protected:
 	Socket *m_socket = nullptr;
 };

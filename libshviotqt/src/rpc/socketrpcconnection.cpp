@@ -54,8 +54,8 @@ SocketRpcConnection::SocketRpcConnection(QObject *parent)
 SocketRpcConnection::~SocketRpcConnection()
 {
 	shvDebug() << __FUNCTION__;
-	abortConnection();
-	SHV_SAFE_DELETE(m_socket);
+	abortSocket();
+	//SHV_SAFE_DELETE(m_socket);
 }
 
 void SocketRpcConnection::setSocket(Socket *socket)
@@ -77,11 +77,11 @@ void SocketRpcConnection::setSocket(Socket *socket)
 	connect(socket, &Socket::connected, [this]() {
 		shvDebug() << this << "Socket connected!!!";
 		//shvWarning() << (peerAddress().toStdString() + ':' + std::to_string(peerPort()));
-		emit socketConnectedChanged(isSocketConnected());
+		emit socketConnectedChanged(true);
 	});
 	connect(socket, &Socket::disconnected, [this]() {
 		shvDebug() << this << "Socket disconnected!!!";
-		emit socketConnectedChanged(isSocketConnected());
+		emit socketConnectedChanged(false);
 	});
 }
 
@@ -229,13 +229,15 @@ void SocketRpcConnection:: sendRpcRequestSync_helper(const shv::chainpack::RpcRe
 		*presponse = resp_msg;
 }
 #endif
-void SocketRpcConnection::closeConnection()
+
+void SocketRpcConnection::closeSocket()
 {
-	if(m_socket)
+	if(m_socket) {
 		m_socket->close();
+	}
 }
 
-void SocketRpcConnection::abortConnection()
+void SocketRpcConnection::abortSocket()
 {
 	if(m_socket) {
 		m_socket->abort();

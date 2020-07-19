@@ -13,7 +13,7 @@ class ClientShvNode : public shv::iotqt::node::ShvNode
 private:
 	using Super = shv::iotqt::node::ShvNode;
 public:
-	ClientShvNode(rpc::BrokerClientServerConnection *conn, shv::iotqt::node::ShvNode *parent = nullptr);
+	ClientShvNode(const std::string &node_id, rpc::BrokerClientServerConnection *conn, shv::iotqt::node::ShvNode *parent = nullptr);
 	~ClientShvNode() override;
 
 	rpc::BrokerClientServerConnection * connection() const {return m_connections.value(0);}

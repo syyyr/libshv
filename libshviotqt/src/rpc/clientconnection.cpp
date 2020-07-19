@@ -35,7 +35,7 @@ ClientConnection::ClientConnection(QObject *parent)
 	connect(this, &SocketRpcConnection::socketConnectedChanged, this, &ClientConnection::onSocketConnectedChanged);
 
 	m_checkConnectedTimer = new QTimer(this);
-	m_checkConnectedTimer->setInterval(10*1000);
+	//m_checkConnectedTimer->setInterval(10*1000);
 	connect(m_checkConnectedTimer, &QTimer::timeout, this, &ClientConnection::checkBrokerConnected);
 }
 
@@ -107,22 +107,35 @@ void ClientConnection::open()
 		setSocket(socket);
 	}
 	checkBrokerConnected();
-	if(m_checkBrokerConnectedInterval > 0)
+	if(m_checkBrokerConnectedInterval > 0) {
+		shvInfo() << "Starting check-connected timer, interval:" << m_checkBrokerConnectedInterval/1000 << "sec.";
 		m_checkConnectedTimer->start(m_checkBrokerConnectedInterval);
+	}
 }
 
 void ClientConnection::close()
 {
 	m_checkConnectedTimer->stop();
-	closeConnection();
+	closeSocket();
+	m_socket->deleteLater();
+	m_socket = nullptr;
 	setState(State::NotConnected);
 }
 
 void ClientConnection::abort()
 {
 	m_checkConnectedTimer->stop();
-	abortConnection();
+	abortSocket();
+	m_socket->deleteLater();
+	m_socket = nullptr;
 	setState(State::NotConnected);
+}
+
+void ClientConnection::restartIfActive()
+{
+	close();
+	if(m_checkBrokerConnectedInterval > 0)
+		QTimer::singleShot(m_checkBrokerConnectedInterval, this, &ClientConnection::open);
 }
 
 void ClientConnection::setCheckBrokerConnectedInterval(int ms)
@@ -132,11 +145,6 @@ void ClientConnection::setCheckBrokerConnectedInterval(int ms)
 		m_checkConnectedTimer->stop();
 	else
 		m_checkConnectedTimer->setInterval(ms);
-}
-
-void ClientConnection::resetConnection()
-{
-	abortConnection();
 }
 
 void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
@@ -195,7 +203,7 @@ void ClientConnection::checkBrokerConnected()
 {
 	//shvWarning() << "check: " << isSocketConnected();
 	if(!isBrokerConnected()) {
-		abortConnection();
+		abortSocket();
 		shvInfo().nospace() << "connecting to: " << user() << "@" << host() << ":" << port();
 		m_connectionState = ConnectionState();
 		setState(State::Connecting);
@@ -208,26 +216,29 @@ void ClientConnection::whenBrokerConnectedChanged(bool b)
 	if(b) {
 		shvInfo() << "Connected to broker" << "client id:" << brokerClientId();// << "mount point:" << brokerMountPoint();
 		if(m_heartbeatInterval > 0) {
-			if(!m_pingTimer) {
+			if(!m_heartBeatTimer) {
 				shvInfo() << "Creating heart-beat timer, interval:" << m_heartbeatInterval << "sec.";
-				m_pingTimer = new QTimer(this);
-				m_pingTimer->setInterval(m_heartbeatInterval * 1000);
-				connect(m_pingTimer, &QTimer::timeout, this, [this]() {
+				m_heartBeatTimer = new QTimer(this);
+				m_heartBeatTimer->setInterval(m_heartbeatInterval * 1000);
+				connect(m_heartBeatTimer, &QTimer::timeout, this, [this]() {
 					if(m_connectionState.pingRqId > 0) {
-						shvError() << "PING response not received within" << (m_pingTimer->interval() / 1000) << "seconds, restarting conection to broker.";
-						resetConnection();
+						shvError() << "PING response not received within" << (m_heartBeatTimer->interval() / 1000) << "seconds, restarting conection to broker.";
+						restartIfActive();
 					}
 					else {
 						m_connectionState.pingRqId = callShvMethod(".broker/app", cp::Rpc::METH_PING);
 					}
 				});
 			}
-			m_pingTimer->start();
+			m_heartBeatTimer->start();
+		}
+		else {
+			shvWarning() << "Heart-beat timer interval is set to 0, heart beats will not be sent.";
 		}
 	}
 	else {
-		if(m_pingTimer)
-			m_pingTimer->stop();
+		if(m_heartBeatTimer)
+			m_heartBeatTimer->stop();
 	}
 	emit brokerConnectedChanged(b);
 }
@@ -327,7 +338,7 @@ void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
 		}
 	} while(false);
 	shvError() << "Invalid handshake message! Dropping connection." << msg.toCpon();
-	resetConnection();
+	restartIfActive();
 }
 
 const char *ClientConnection::stateToString(ClientConnection::State state)

@@ -33,7 +33,7 @@ public:
 protected:
 	virtual ServerConnection* createServerConnection(QTcpSocket *socket, QObject *parent) = 0;
 	void onNewConnection();
-	void onConnectionClosed(int connection_id);
+	void unregisterConnection(int connection_id);
 protected:
 	std::map<int, ServerConnection*> m_connections;
 };

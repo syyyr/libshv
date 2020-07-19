@@ -7,7 +7,7 @@
 #include "clientconnectionnode.h"
 #include "rpc/brokertcpserver.h"
 #include "rpc/brokerclientserverconnection.h"
-#include "rpc/masterbrokerclientconnection.h"
+#include "rpc/slavebrokerclientconnection.h"
 
 #ifdef WITH_SHV_WEBSOCKETS
 #include "rpc/websocketserver.h"
@@ -16,7 +16,6 @@
 #include <shv/iotqt/utils/network.h>
 #include <shv/iotqt/node/shvnode.h>
 #include <shv/iotqt/node/shvnodetree.h>
-#include <shv/iotqt/rpc/slavebrokerconnection.h>
 #include <shv/core/utils/shvpath.h>
 
 #include <shv/coreqt/log.h>
@@ -528,7 +527,7 @@ std::string BrokerApp::primaryIPAddress(bool &is_public)
 void BrokerApp::propagateSubscriptionsToMasterBroker()
 {
 	logSubscriptionsD() << "Connected to main master broker, propagating client subscriptions.";
-	rpc::MasterBrokerClientConnection *mbrconn = mainMasterBrokerConnection();
+	rpc::SlaveBrokerClientConnection *mbrconn = mainMasterBrokerConnection();
 	if(!mbrconn)
 		return;
 	for(int id : clientConnectionIds()) {
@@ -687,8 +686,7 @@ void BrokerApp::onClientLogin(int connection_id)
 			SHV_EXCEPTION("Cannot create parent for ClientDirNode id: " + std::to_string(connection_id));
 		ClientConnectionNode *client_id_node = new ClientConnectionNode(connection_id, clients_nd);
 		//shvWarning() << "path1:" << client_dir_node->shvPath();
-		ClientShvNode *client_app_node = new ClientShvNode(conn, client_id_node);
-		client_app_node->setNodeId("app");
+		ClientShvNode *client_app_node = new ClientShvNode("app", conn, client_id_node);
 		//shvWarning() << "path2:" << client_app_node->shvPath();
 		/*
 		std::string app_mount_point = brokerClientAppPath(connection_id);
@@ -732,7 +730,7 @@ void BrokerApp::onClientLogin(int connection_id)
 				cli_nd->addConnection(conn);
 			}
 			else {
-				cli_nd = new ClientShvNode(conn);
+				cli_nd = new ClientShvNode(std::string(), conn);
 				if(!m_nodesTree->mount(mount_point, cli_nd))
 					SHV_EXCEPTION("Cannot mount connection to device tree, connection id: " + std::to_string(connection_id));
 			}
@@ -755,7 +753,7 @@ void BrokerApp::onClientLogin(int connection_id)
 
 void BrokerApp::onConnectedToMasterBrokerChanged(int connection_id, bool is_connected)
 {
-	rpc::MasterBrokerClientConnection *conn = masterBrokerConnectionById(connection_id);
+	rpc::SlaveBrokerClientConnection *conn = masterBrokerConnectionById(connection_id);
 	if(!conn) {
 		shvError() << "Cannot find master broker connection for ID:" << connection_id;
 		return;
@@ -807,14 +805,14 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 		shv::chainpack::RpcResponse rsp = cp::RpcResponse::forRequest(meta);
 		try {
 			rpc::BrokerClientServerConnection *client_connection = clientConnectionById(connection_id);
-			rpc::MasterBrokerClientConnection *broker_connection = masterBrokerConnectionById(connection_id);
+			rpc::SlaveBrokerClientConnection *broker_connection = masterBrokerConnectionById(connection_id);
 			rpc::CommonRpcClientHandle *connection_handle = client_connection;
 			if(connection_handle == nullptr)
 				connection_handle = broker_connection;
 			std::string shv_path = cp::RpcMessage::shvPath(meta).toString();
 			if(connection_handle) {
 				if(shv::core::utils::ShvPath::isRelativePath(shv_path)) {
-					rpc::MasterBrokerClientConnection *master_broker_conn = mainMasterBrokerConnection();
+					rpc::SlaveBrokerClientConnection *master_broker_conn = mainMasterBrokerConnection();
 					if(client_connection) {
 						shv_path = client_connection->resolveLocalPath(shv_path);
 					}
@@ -1090,7 +1088,7 @@ void BrokerApp::addSubscription(int client_id, const std::string &shv_path, cons
 	const rpc::CommonRpcClientHandle::Subscription &subs = connection_handle->subscriptionAt(subs_ix);
 	if(shv::core::utils::ShvPath::isRelativePath(subs.absolutePath)) {
 		/// still relative path, should be propagated to the master broker
-		rpc::MasterBrokerClientConnection *mbrconn = mainMasterBrokerConnection();
+		rpc::SlaveBrokerClientConnection *mbrconn = mainMasterBrokerConnection();
 		if(mbrconn) {
 			mbrconn->callMethodSubscribe(subs.absolutePath, subs.method);
 		}
@@ -1122,7 +1120,7 @@ bool BrokerApp::removeSubscription(int client_id, const std::string &shv_path, c
 bool BrokerApp::rejectNotSubscribedSignal(int client_id, const std::string &path, const std::string &method)
 {
 	logSubscriptionsD() << "signal rejected, shv_path:" << path << "method:" << method;
-	rpc::MasterBrokerClientConnection *conn = masterBrokerConnectionById(client_id);
+	rpc::SlaveBrokerClientConnection *conn = masterBrokerConnectionById(client_id);
 	if(conn) {
 		return conn->rejectNotSubscribedSignal(conn->masterExportedToLocalPath(path), method);
 	}
@@ -1140,10 +1138,10 @@ void BrokerApp::createMasterBrokerConnections()
 		if(opts.value("enabled").toBool() == false)
 			continue;
 		shvInfo() << "creating master broker connection:" << kv.first;
-		rpc::MasterBrokerClientConnection *bc = new rpc::MasterBrokerClientConnection(this);
+		rpc::SlaveBrokerClientConnection *bc = new rpc::SlaveBrokerClientConnection(this);
 		bc->setObjectName(QString::fromStdString(kv.first));
 		int id = bc->connectionId();
-		connect(bc, &rpc::MasterBrokerClientConnection::brokerConnectedChanged, this, [id, this](bool is_connected) {
+		connect(bc, &rpc::SlaveBrokerClientConnection::brokerConnectedChanged, this, [id, this](bool is_connected) {
 			this->onConnectedToMasterBrokerChanged(id, is_connected);
 		});
 		bc->setOptions(opts);
@@ -1151,14 +1149,14 @@ void BrokerApp::createMasterBrokerConnections()
 	}
 }
 
-QList<rpc::MasterBrokerClientConnection *> BrokerApp::masterBrokerConnections() const
+QList<rpc::SlaveBrokerClientConnection *> BrokerApp::masterBrokerConnections() const
 {
-	return findChildren<rpc::MasterBrokerClientConnection*>(QString(), Qt::FindDirectChildrenOnly);
+	return findChildren<rpc::SlaveBrokerClientConnection*>(QString(), Qt::FindDirectChildrenOnly);
 }
 
-rpc::MasterBrokerClientConnection *BrokerApp::masterBrokerConnectionById(int connection_id)
+rpc::SlaveBrokerClientConnection *BrokerApp::masterBrokerConnectionById(int connection_id)
 {
-	for(rpc::MasterBrokerClientConnection *bc : masterBrokerConnections()) {
+	for(rpc::SlaveBrokerClientConnection *bc : masterBrokerConnections()) {
 		if(bc->connectionId() == connection_id)
 			return bc;
 	}
@@ -1170,7 +1168,7 @@ std::vector<rpc::CommonRpcClientHandle *> BrokerApp::allClientConnections()
 	std::vector<rpc::CommonRpcClientHandle *> ret;
 	for (int i : clientConnectionIds())
 		ret.push_back(clientConnectionById(i));
-	QList<rpc::MasterBrokerClientConnection *> mbc = masterBrokerConnections();
+	QList<rpc::SlaveBrokerClientConnection *> mbc = masterBrokerConnections();
 	std::copy(mbc.begin(), mbc.end(), std::back_inserter(ret));
 	return ret;
 }

@@ -56,15 +56,11 @@ void TcpServer::onNewConnection()
 		ServerConnection *c = createServerConnection(sock, this);
 		c->setConnectionName(sock->peerAddress().toString().toStdString() + ':' + std::to_string(sock->peerPort()));
 		m_connections[c->connectionId()] = c;
-		int cid = c->connectionId();
-		connect(c, &ServerConnection::socketConnectedChanged, [this, cid](bool is_connected) {
-			if(!is_connected)
-				onConnectionClosed(cid);
-		});
+		connect(c, &ServerConnection::aboutToBeDeleted, this, &TcpServer::unregisterConnection);
 	}
 }
 
-void TcpServer::onConnectionClosed(int connection_id)
+void TcpServer::unregisterConnection(int connection_id)
 {
 	m_connections.erase(connection_id);
 }

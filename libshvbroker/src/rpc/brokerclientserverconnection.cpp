@@ -1,5 +1,5 @@
 #include "brokerclientserverconnection.h"
-#include "masterbrokerclientconnection.h"
+#include "slavebrokerclientconnection.h"
 
 #include "../brokerapp.h"
 
@@ -40,7 +40,7 @@ void BrokerClientServerConnection::onSocketConnectedChanged(bool is_connected)
 {
 	if(!is_connected) {
 		shvInfo() << "Socket disconnected, deleting connection:" << connectionId();
-		deleteLater();
+		unregisterAndDeleteLater();
 	}
 }
 
@@ -84,8 +84,8 @@ int BrokerClientServerConnection::idleTimeMax() const
 void BrokerClientServerConnection::setIdleWatchDogTimeOut(int sec)
 {
 	if(sec == 0) {
-		static constexpr int MAX_IDLE_TIME_SEC = 12 * 60 * 60;
-		shvInfo() << "connection ID:" << connectionId() << "Cannot switch idle watch dog timeout OFF entirely, the inactive connections can last forever then, setting to max time:" << MAX_IDLE_TIME_SEC;
+		static constexpr int MAX_IDLE_TIME_SEC = 10 * 60 * 60;
+		shvInfo() << "connection ID:" << connectionId() << "Cannot switch idle watch dog timeout OFF entirely, the inactive connections can last forever then, setting to max time:" << MAX_IDLE_TIME_SEC/60 << "min";
 		sec = MAX_IDLE_TIME_SEC;
 	}
 	if(!m_idleWatchDogTimer) {
@@ -94,7 +94,7 @@ void BrokerClientServerConnection::setIdleWatchDogTimeOut(int sec)
 			std::string mount_points = shv::core::String::join(mountPoints(), ", ");
 			shvError() << "Connection id:" << connectionId() << "device id:" << deviceId().toCpon() << "mount points:" << mount_points
 					   << "was idle for more than" << m_idleWatchDogTimer->interval()/1000 << "sec. It will be aborted.";
-			this->abort();
+			unregisterAndDeleteLater();
 		});
 	}
 	shvInfo() << "connection ID:" << connectionId() << "setting idle watch dog timeout to" << sec << "seconds";
@@ -130,7 +130,7 @@ std::string BrokerClientServerConnection::resolveLocalPath(const std::string rel
 	if(mps.size() > 1)
 		SHV_EXCEPTION("Cannot resolve relative path on device mounted to more than single node: " + rel_path);
 	std::string mount_point = mps[0];
-	MasterBrokerClientConnection *mbconn = BrokerApp::instance()->mainMasterBrokerConnection();
+	SlaveBrokerClientConnection *mbconn = BrokerApp::instance()->mainMasterBrokerConnection();
 	if(mbconn) {
 		/// if the client is mounted on exported path,
 		/// then relative path must be resolved with respect to it
