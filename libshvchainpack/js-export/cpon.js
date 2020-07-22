@@ -654,40 +654,50 @@ CponWriter.prototype.writeBool = function(b)
 CponWriter.prototype.writeMeta = function(map)
 {
 	this.ctx.writeStringUtf8("<");
-	this.writeMapContent(map);
+	this.writeMapContent(map, RpcValue.Type.Meta);
 	this.ctx.writeStringUtf8(">")
 }
 
 CponWriter.prototype.writeIMap = function(map)
 {
 	this.ctx.writeStringUtf8("i{");
-	this.writeMapContent(map);
+	this.writeMapContent(map, RpcValue.Type.IMap);
 	this.ctx.writeStringUtf8("}")
 }
 
 CponWriter.prototype.writeMap = function(map)
 {
 	this.ctx.writeStringUtf8("{")
-	this.writeMapContent(map);
+	this.writeMapContent(map, RpcValue.Type.Map);
 	this.ctx.writeStringUtf8("}")
 }
 
-CponWriter.prototype.writeMapContent = function(map)
+CponWriter.prototype.writeMapContent = function(map, map_type)
 {
 	let i = 0;
 	for (let p in map) {
 		if (map.hasOwnProperty(p)) {
 			if(i++ > 0)
 				this.ctx.putByte(",".charCodeAt(0))
-			let c = p.charCodeAt(0);
-			if(c >= 48 && c <= 57) {
-				this.writeInt(parseInt(p))
-			}
-			else {
+			do {
+				if(map_type == RpcValue.Type.IMap || map_type == RpcValue.Type.Meta) {
+					let c = p.charCodeAt(0);
+					if(c >= 48 && c <= 57) {
+						let i = parseInt(p);
+						if(isNaN(i)) {
+							if(map_type == RpcValue.Type.IMap)
+								throw TypeError("Invalid IMap key: " + p);
+						}
+						else {
+							this.writeInt(i);
+							break;
+						}
+					}
+				}
 				this.ctx.putByte('"'.charCodeAt(0))
 				this.ctx.writeStringUtf8(p);
 				this.ctx.putByte('"'.charCodeAt(0))
-			}
+			} while(false);
 			this.ctx.writeStringUtf8(":")
 			this.write(map[p]);
 		}
