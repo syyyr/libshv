@@ -44,32 +44,8 @@ static std::vector<cp::MetaMethod> meta_methods {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_BROWSE},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_BROWSE},
 	{cp::Rpc::METH_APP_NAME, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_BROWSE},
-	//{cp::Rpc::METH_CONNECTION_TYPE, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::GRANT_BROWSE},
 	{cp::Rpc::METH_DEVICE_ID, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_BROWSE},
 	{cp::Rpc::METH_DEVICE_TYPE, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_BROWSE},
-	//{cp::Rpc::METH_HELP, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_BROWSE},
-	{cp::Rpc::METH_RUN_CMD, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_COMMAND,
-		"Parameter can be string or list\n"
-		"When list is provided: [\"command\", [\"arg1\", ... ], 1, 2, {\"ENV_VAR1\": \"value\", ...}]\n"
-		"\t list of values is returned\n"
-		"\t order and number of parameters list items is arbitrary, only the command part part is mandatory\n"
-		"\t - string interpretted as CMD, process return value is appended to the retval list\n"
-		"\t - list is interpretted as launched process argument list\n"
-		"\t - int is interpretted as 1 == stdout, 2 == stderr, process stdin/stderr content  is appended to the retval list\n"
-		"\t - map is interpretted as launched process environment\n"
-	},
-	{cp::Rpc::METH_RUN_SCRIPT, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_COMMAND,
-		"Parameter can be string or list\n"
-		"When list is provided: [\"script-content\", [\"arg1\", ... ], 1, 2, {\"ENV_VAR1\": \"value\", ...}]\n"
-		"\t list of same size is returned\n"
-		"\t script-content is written to temporrary file before run, script-content SHA1 can be used instead of script-content if one wants to run same script again.\n"
-		"\t order and number of parameters list items is arbitrary, only the script-content part part is mandatory\n"
-		"\t - string is interpretted as script-content, process return value is appended to the retval list\n"
-		"\t - list is interpretted as launched process argument list\n"
-		"\t - int is interpretted as 1 == stdout, 2 == stderr, process stdin/stderr content  is appended to the retval list\n"
-		"\t - map is interpretted as launched process environment\n"
-	},
-	{cp::Rpc::METH_LAUNCH_REXEC, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_COMMAND},
 };
 
 size_t AppRootNode::methodCount(const StringViewList &shv_path)
@@ -95,26 +71,6 @@ shv::chainpack::RpcValue AppRootNode::callMethod(const StringViewList &shv_path,
 		if(method == cp::Rpc::METH_APP_NAME) {
 			return QCoreApplication::instance()->applicationName().toStdString();
 		}
-		/*
-		if(method == cp::Rpc::METH_HELP) {
-			std::string meth = params.toString();
-			if(meth == cp::Rpc::METH_RUN_CMD) {
-				return 	"method: " + meth + "\n"
-						"params: cmd_string OR [cmd_string, 1] OR [cmd_string, 2] OR [cmd_string, 1, 2]\n"
-						"\tcmd_string: command with arguments to run\n"
-						"\t1: remote process std_out will be set at this possition in returned list\n"
-						"\t2: remote process std_err will be set at this possition in returned list\n"
-						"Any param can be omited in params sa list, also param order is irrelevant, ie [1,\"ls\"] is valid param list."
-						"return:\n"
-						"\t* process stdout if param is just cmd_string\n"
-						"\t* list of process exit code and std_out and std_err on same possitions as they are in params list.\n"
-						;
-			}
-			else {
-				return "No help for method: " + meth;
-			}
-		}
-		*/
 	}
 	return Super::callMethod(shv_path, method, params);
 }
@@ -231,6 +187,7 @@ SampleShvClientApp *SampleShvClientApp::instance()
 void SampleShvClientApp::onBrokerConnectedChanged(bool is_connected)
 {
 	m_isBrokerConnected = is_connected;
+	QTimer::singleShot(0, this, &SampleShvClientApp::testRpcCall);
 }
 
 void SampleShvClientApp::onRpcMessageReceived(const shv::chainpack::RpcMessage &msg)
@@ -238,19 +195,44 @@ void SampleShvClientApp::onRpcMessageReceived(const shv::chainpack::RpcMessage &
 	shvLogFuncFrame() << msg.toCpon();
 	if(msg.isRequest()) {
 		cp::RpcRequest rq(msg);
-		shvInfo() << "RPC request received:" << rq.toPrettyString();
+		shvMessage() << "RPC request received:" << rq.toPrettyString();
 		if(m_shvTree->root()) {
 			m_shvTree->root()->handleRpcRequest(rq);
 		}
 	}
 	else if(msg.isResponse()) {
 		cp::RpcResponse rp(msg);
-		shvInfo() << "RPC response received:" << rp.toPrettyString();
+		shvMessage() << "RPC response received:" << rp.toPrettyString();
 	}
 	else if(msg.isSignal()) {
 		cp::RpcSignal nt(msg);
-		shvInfo() << "RPC notify received:" << nt.toPrettyString();
+		shvMessage() << "RPC notify received:" << nt.toPrettyString();
 	}
 }
 
+void SampleShvClientApp::testRpcCall()
+{
+	int rq_id = rpcConnection()->nextRequestId();
+	shv::iotqt::rpc::RpcResponseCallBack *cb = new shv::iotqt::rpc::RpcResponseCallBack(rpcConnection(), rq_id, this);
+	cb->start(2000, this, [](const cp::RpcResponse &resp) {
+		if(resp.isValid()) {
+			if(resp.isError()) {
+				cp::RpcResponse::Error err = resp.error();
+				shvError() << "RPC call error:" << err.toString();
+			}
+			else {
+				shvInfo() << "Got RPC response, result:" << resp.result().toCpon();
+			}
+		}
+		else {
+			shvError() << "Invalid RPC response";
+		}
+	});
+	cp::RpcRequest rq;
+	rq.setRequestId(rq_id);
+	rq.setShvPath("shv/cze/prg/aux/eline/vystavka/visu");
+	rq.setMethod("ls");
+	shvInfo() << "Sending RPC request:" << rq.toCpon();
+	rpcConnection()->sendMessage(rq);
+}
 
