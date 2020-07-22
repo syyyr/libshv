@@ -1,11 +1,15 @@
-#include "samplebrokerapp.h"
-#include "version.h"
+#include "sampleshvclientapp.h"
 #include "appclioptions.h"
 
-#include <shv/coreqt/log.h>
-#include <shv/iotqt/utils/network.h>
+#include <shv/chainpack/rpcmessage.h>
 
-#include <QHostAddress>
+#include <shv/core/utils.h>
+
+#include <shv/coreqt/log.h>
+
+#include <QTextStream>
+#include <QTranslator>
+#include <QDateTime>
 
 #include <iostream>
 
@@ -13,12 +17,12 @@ int main(int argc, char *argv[])
 {
 	QCoreApplication::setOrganizationName("Elektroline");
 	QCoreApplication::setOrganizationDomain("elektroline.cz");
-	QCoreApplication::setApplicationName("sampleshvbroker");
-	QCoreApplication::setApplicationVersion(APP_VERSION);
-
-	SampleBrokerApp::registerLogTopics();
+	QCoreApplication::setApplicationName("sampleshvclient");
+	QCoreApplication::setApplicationVersion("0.0.1");
 
 	std::vector<std::string> shv_args = NecroLog::setCLIOptions(argc, argv);
+
+	//NecroLog::registerTopic("Tester", "Tester");
 
 	int ret = 0;
 
@@ -36,7 +40,7 @@ int main(int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 	for(const std::string &s : cli_opts.unusedArguments()) {
-		shvError() << "Undefined argument:" << s;
+		shvWarning() << "Undefined argument:" << s;
 	}
 
 	if(!cli_opts.loadConfigFile()) {
@@ -46,26 +50,21 @@ int main(int argc, char *argv[])
 	shv::chainpack::RpcMessage::registerMetaTypes();
 
 	shvInfo() << "======================================================================================";
-	shvInfo() << "Starting eyassrvctl ver:" << APP_VERSION
-				 << "PID:" << QCoreApplication::applicationPid()
-				 << "build:" << __DATE__ << __TIME__;
+	shvInfo() << "Starting sample SHV client, PID:" << QCoreApplication::applicationPid() << "build:" << __DATE__ << __TIME__;
 #ifdef GIT_COMMIT
 	shvInfo() << "GIT commit:" << SHV_EXPAND_AND_QUOTE(GIT_COMMIT);
 #endif
 	shvInfo() << QDateTime::currentDateTime().toString(Qt::ISODate).toStdString() << "UTC:" << QDateTime::currentDateTimeUtc().toString(Qt::ISODate).toStdString();
 	shvInfo() << "======================================================================================";
 	shvInfo() << "Log tresholds:" << NecroLog::tresholdsLogInfo();
-	//shvInfo() << NecroLog::instantiationInfo();
-	shvInfo() << "Primary IPv4 address:" << shv::iotqt::utils::Network::primaryIPv4Address().toString();
-	shvInfo() << "Primary public IPv4 address:" << shv::iotqt::utils::Network::primaryPublicIPv4Address().toString();
 	shvInfo() << "--------------------------------------------------------------------------------------";
 
-	SampleBrokerApp a(argc, argv, &cli_opts);
+	SampleShvClientApp a(argc, argv, &cli_opts);
 
 	shvInfo() << "starting main thread event loop";
 	ret = a.exec();
 	shvInfo() << "main event loop exit code:" << ret;
-	shvInfo() << "eyassrvctl bye ...";
+	shvInfo() << "bye ...";
 
 	return ret;
 }
