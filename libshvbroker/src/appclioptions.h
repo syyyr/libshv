@@ -43,4 +43,4 @@ public:
 	CLIOPTION_GETTER_SETTER2(std::string, "master.broker.device.id", m, setM, asterBrokerDeviceId)
 };
 
-			}}
+}}
