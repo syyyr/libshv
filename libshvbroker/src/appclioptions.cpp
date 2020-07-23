@@ -34,7 +34,7 @@ AppCliOptions::AppCliOptions()
 	addOption("masters.connections").setType(cp::RpcValue::Type::Map).setComment("Can be used from config file only.");
 	addOption("masters.enabled").setType(cp::RpcValue::Type::Bool).setNames("--mce", "--master-connections-enabled").setComment("Enable slave connections to master broker.");
 
-	addOption("master.broker.device.id").setType(shv::chainpack::RpcValue::Type::String).setNames("--id", "--master-broker-device-id").setComment("Master broker device ID");
+	addOption("master.broker.device.id").setType(shv::chainpack::RpcValue::Type::String).setNames("--master-broker-device-id").setComment("Master broker device ID");
 }
 
 }}
