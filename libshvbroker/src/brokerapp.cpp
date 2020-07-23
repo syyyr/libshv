@@ -1133,10 +1133,20 @@ void BrokerApp::createMasterBrokerConnections()
 		return;
 	shvInfo() << "Creating master broker connections";
 	shv::chainpack::RpcValue masters = cliOptions()->masterBrokersConnections();
+
 	for(const auto &kv : masters.toMap()) {
-		const cp::RpcValue::Map &opts = kv.second.toMap();
+		cp::RpcValue::Map opts = kv.second.toMap();
+
+		if (cliOptions()->masterBrokerDeviceId_isset()) {
+			cp::RpcValue::Map dev = opts.value("device").toMap();
+			dev.setValue("id", cliOptions()->masterBrokerDeviceId());
+			opts.setValue("device", dev);
+		}
+		shvInfo() << "master broker device ID:" << opts.value("device").toPrettyString() << "for connection:" << kv.first;
+
 		if(opts.value("enabled").toBool() == false)
 			continue;
+
 		shvInfo() << "creating master broker connection:" << kv.first;
 		rpc::SlaveBrokerClientConnection *bc = new rpc::SlaveBrokerClientConnection(this);
 		bc->setObjectName(QString::fromStdString(kv.first));

@@ -39,6 +39,8 @@ public:
 
 	CLIOPTION_GETTER_SETTER2(shv::chainpack::RpcValue, "masters.connections", m, setM, asterBrokersConnections)
 	CLIOPTION_GETTER_SETTER2(bool, "masters.enabled", is, set, MasterBrokersEnabled)
+
+	CLIOPTION_GETTER_SETTER2(std::string, "master.broker.device.id", m, setM, asterBrokerDeviceId)
 };
 
 }}
