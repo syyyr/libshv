@@ -571,6 +571,17 @@ RpcResponse RpcResponse::forRequest(const RpcValue::MetaData &meta)
 	return ret;
 }
 
+std::string RpcResponse::errorString() const
+{
+	if(isError())
+		return error().toString();
+	if(isSuccess())
+		return std::string();
+	if(isValid())
+		return "Empty RPC message";
+	return "Invalid RPC message";
+}
+
 RpcResponse::Error RpcResponse::error() const
 {
 	return Error{value(RpcMessage::MetaType::Key::Error).toIMap()};

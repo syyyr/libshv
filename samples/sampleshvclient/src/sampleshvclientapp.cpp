@@ -187,7 +187,12 @@ SampleShvClientApp *SampleShvClientApp::instance()
 void SampleShvClientApp::onBrokerConnectedChanged(bool is_connected)
 {
 	m_isBrokerConnected = is_connected;
-	QTimer::singleShot(0, this, &SampleShvClientApp::testRpcCall);
+	if(is_connected) {
+		QTimer::singleShot(0, [this]() {
+			subscribeChanges();
+			testRpcCall();
+		});
+	}
 }
 
 void SampleShvClientApp::onRpcMessageReceived(const shv::chainpack::RpcMessage &msg)
@@ -195,44 +200,67 @@ void SampleShvClientApp::onRpcMessageReceived(const shv::chainpack::RpcMessage &
 	shvLogFuncFrame() << msg.toCpon();
 	if(msg.isRequest()) {
 		cp::RpcRequest rq(msg);
-		shvMessage() << "RPC request received:" << rq.toPrettyString();
+		shvInfo() << "RPC request received:" << rq.toPrettyString();
 		if(m_shvTree->root()) {
 			m_shvTree->root()->handleRpcRequest(rq);
 		}
 	}
 	else if(msg.isResponse()) {
 		cp::RpcResponse rp(msg);
-		shvMessage() << "RPC response received:" << rp.toPrettyString();
+		shvInfo() << "RPC response received:" << rp.toPrettyString();
 	}
 	else if(msg.isSignal()) {
 		cp::RpcSignal nt(msg);
-		shvMessage() << "RPC notify received:" << nt.toPrettyString();
+		shvInfo() << "RPC signal received:" << nt.toPrettyString();
 	}
 }
+
+static constexpr int RPC_CALLBACK_TIMEOUT = 2000;
 
 void SampleShvClientApp::testRpcCall()
 {
 	int rq_id = rpcConnection()->nextRequestId();
 	shv::iotqt::rpc::RpcResponseCallBack *cb = new shv::iotqt::rpc::RpcResponseCallBack(rpcConnection(), rq_id, this);
-	cb->start(2000, this, [](const cp::RpcResponse &resp) {
-		if(resp.isValid()) {
-			if(resp.isError()) {
-				cp::RpcResponse::Error err = resp.error();
-				shvError() << "RPC call error:" << err.toString();
-			}
-			else {
-				shvInfo() << "Got RPC response, result:" << resp.result().toCpon();
-			}
-		}
-		else {
-			shvError() << "Invalid RPC response";
-		}
+	cb->start(RPC_CALLBACK_TIMEOUT, this, [rq_id](const cp::RpcResponse &resp) {
+		if(resp.isSuccess())
+			shvInfo() << "rqid:" << rq_id << "Got RPC response, result:" << resp.result().toCpon();
+		else
+			shvError() << "rqid:" << rq_id << "RPC call error:" << resp.errorString();
 	});
 	cp::RpcRequest rq;
 	rq.setRequestId(rq_id);
 	rq.setShvPath("shv/cze/prg/aux/eline/vystavka/visu");
 	rq.setMethod("ls");
-	shvInfo() << "Sending RPC request:" << rq.toCpon();
+	shvInfo() << "rqid:" << rq_id << "Sending RPC request:" << rq.toCpon();
 	rpcConnection()->sendMessage(rq);
+}
+
+void SampleShvClientApp::subscribeChanges()
+{
+	string shv_path = "shv/cze/prg/aux/eline/vystavka/visu/tc/TC01";
+	string method = shv::chainpack::Rpc::METH_SUBSCRIBE;
+	string signal_name = shv::chainpack::Rpc::SIG_VAL_CHANGED;
+	cp::RpcValue::Map params = {
+		{"method", signal_name},
+		{"path", shv_path},
+	};
+
+	int rq_id = rpcConnection()->nextRequestId();
+	shv::iotqt::rpc::RpcResponseCallBack *cb = new shv::iotqt::rpc::RpcResponseCallBack(rpcConnection(), rq_id, this);
+	cb->start(RPC_CALLBACK_TIMEOUT, this, [this, rq_id, shv_path, signal_name](const cp::RpcResponse &resp) {
+		if(resp.isSuccess()) {
+			shvInfo() << "rqid:" << rq_id << "Signal:" << signal_name << "on SHV path:" << shv_path << "subscribed successfully";
+			// generate data change without ret value check
+			rpcConnection()->callShvMethod(shv_path + "/status", "sim_set", 1);
+			QTimer::singleShot(500, [this, shv_path]() {
+				rpcConnection()->callShvMethod(shv_path + "/status", "sim_set", 0);
+			});
+		}
+		else {
+			shvError() << "rqid:" << rq_id << "Signal:" << signal_name << "on SHV path:" << shv_path << "subscribe error:" << resp.errorString();
+		}
+	});
+	shvInfo() << "rqid:" << rq_id << "Subscribing data change on path:" << shv_path;
+	rpcConnection()->callMethodSubscribe(rq_id, shv_path, cp::Rpc::SIG_VAL_CHANGED);
 }
 

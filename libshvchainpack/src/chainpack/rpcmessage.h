@@ -281,8 +281,10 @@ public:
 	static RpcResponse forRequest(const RpcValue::MetaData &meta);
 	static RpcResponse forRequest(const RpcRequest &rq) {return forRequest(rq.metaData());}
 public:
-	bool hasRetVal() const {return isError() || result().isValid();}
+	bool hasRetVal() const {return !error().empty() || result().isValid();}
+	bool isSuccess() const {return result().isValid() && !isError();}
 	bool isError() const {return !error().empty();}
+	std::string errorString() const;
 	RpcResponse& setError(Error err);
 	Error error() const;
 	RpcResponse& setResult(const RpcValue &res);
