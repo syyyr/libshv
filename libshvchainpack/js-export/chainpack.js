@@ -106,7 +106,7 @@ ChainPackReader.prototype.read = function()
 			let data = new Uint8Array(8);
 			for (var i = 0; i < 8; i++)
 				data[i] = this.ctx.getByte();
-			rpc_val.value = new DataView(dat.buffer).getFloat64(0, true); //little endian
+			rpc_val.value = new DataView(data.buffer).getFloat64(0, true); //little endian
 			rpc_val.type = RpcValue.Type.Double;
 			break;
 		}
