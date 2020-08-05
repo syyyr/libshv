@@ -976,7 +976,13 @@ void BrokerApp::onRootNodeSendRpcMesage(const shv::chainpack::RpcMessage &msg)
 			shvError() << "Cannot find connection for ID:" << connection_id;
 		return;
 	}
-	shvError() << "Send message not implemented.";// << msg.toCpon();
+	else if(msg.isSignal()) {
+		cp::RpcSignal sig(msg);
+		sendNotifyToSubscribers(sig.shvPath().toString(), sig.method().toString(), sig.params());
+	}
+	else {
+		shvError() << "Send message not implemented.";// << msg.toCpon();
+	}
 }
 
 void BrokerApp::onClientMountedChanged(int client_id, const std::string &mount_point, bool is_mounted)
@@ -1043,10 +1049,10 @@ bool BrokerApp::sendNotifyToSubscribers(const shv::chainpack::RpcValue::MetaData
 void BrokerApp::sendNotifyToSubscribers(const std::string &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
 {
 	//shvWarning() << shv_path << method << params.toPrettyString();
-	cp::RpcSignal ntf;
-	ntf.setShvPath(shv_path);
-	ntf.setMethod(method);
-	ntf.setParams(params);
+	cp::RpcSignal sig;
+	sig.setShvPath(shv_path);
+	sig.setMethod(method);
+	sig.setParams(params);
 	// send it to all clients for now
 	for(rpc::CommonRpcClientHandle *conn : allClientConnections()) {
 		if(conn->isConnectedAndLoggedIn()) {
@@ -1056,8 +1062,8 @@ void BrokerApp::sendNotifyToSubscribers(const std::string &shv_path, const std::
 				const rpc::BrokerClientServerConnection::Subscription &subs = conn->subscriptionAt((size_t)subs_ix);
 				std::string new_path = conn->toSubscribedPath(subs, shv_path);
 				if(new_path != shv_path)
-					ntf.setShvPath(new_path);
-				conn->sendMessage(ntf);
+					sig.setShvPath(new_path);
+				conn->sendMessage(sig);
 			}
 		}
 	}

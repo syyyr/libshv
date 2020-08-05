@@ -157,10 +157,8 @@ SampleShvClientApp::SampleShvClientApp(int &argc, char **argv, AppCliOptions* cl
 //	if(0 != ::setpgid(0, 0))
 //		shvError() << "Cannot make shvagent process the group leader, error set process group ID:" << errno << ::strerror(errno);
 //#endif
-	//cp::RpcMessage::setMetaTypeExplicit(cli_opts->isMetaTypeExplicit());
 
 	m_rpcConnection = new si::rpc::ClientConnection(this);
-
 	m_rpcConnection->setCliOptions(cli_opts);
 
 	connect(m_rpcConnection, &si::rpc::ClientConnection::brokerConnectedChanged, this, &SampleShvClientApp::onBrokerConnectedChanged);
@@ -229,7 +227,7 @@ void SampleShvClientApp::testRpcCall()
 	});
 	cp::RpcRequest rq;
 	rq.setRequestId(rq_id);
-	rq.setShvPath("shv/cze/prg/aux/eline/vystavka/visu");
+	rq.setShvPath("test");
 	rq.setMethod("ls");
 	shvInfo() << "rqid:" << rq_id << "Sending RPC request:" << rq.toCpon();
 	rpcConnection()->sendMessage(rq);
@@ -237,7 +235,7 @@ void SampleShvClientApp::testRpcCall()
 
 void SampleShvClientApp::subscribeChanges()
 {
-	string shv_path = "shv/cze/prg/aux/eline/vystavka/visu/tc/TC01";
+	string shv_path = "test";
 	string method = shv::chainpack::Rpc::METH_SUBSCRIBE;
 	string signal_name = shv::chainpack::Rpc::SIG_VAL_CHANGED;
 	cp::RpcValue::Map params = {
@@ -251,9 +249,9 @@ void SampleShvClientApp::subscribeChanges()
 		if(resp.isSuccess()) {
 			shvInfo() << "rqid:" << rq_id << "Signal:" << signal_name << "on SHV path:" << shv_path << "subscribed successfully";
 			// generate data change without ret value check
-			rpcConnection()->callShvMethod(shv_path + "/status", "sim_set", 1);
+			rpcConnection()->callShvMethod(shv_path + "/someInt", "set", 123);
 			QTimer::singleShot(500, [this, shv_path]() {
-				rpcConnection()->callShvMethod(shv_path + "/status", "sim_set", 0);
+				rpcConnection()->callShvMethod(shv_path + "/someInt", "set", 321);
 			});
 		}
 		else {
