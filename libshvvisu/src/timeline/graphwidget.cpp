@@ -1,6 +1,6 @@
 #include "graphwidget.h"
 #include "graphmodel.h"
-#include "graphwidget.h"
+#include "graphview.h"
 
 #include <shv/core/exception.h>
 #include <shv/coreqt/log.h>
@@ -13,6 +13,7 @@
 #include <QToolTip>
 #include <QDateTime>
 #include <QMenu>
+#include <QScrollBar>
 
 #include <cmath>
 
@@ -72,8 +73,25 @@ void GraphWidget::makeLayout()
 void GraphWidget::paintEvent(QPaintEvent *event)
 {
 	Super::paintEvent(event);
+	auto *view_port = parentWidget();
+	auto *scroll_area = qobject_cast<GraphView*>(view_port->parentWidget());
+	if(!scroll_area) {
+		shvError() << "Cannot find GraphView";
+		return;
+	}
+	auto rect_to_string = [](const QRect &r) {
+		QString s = "%1,%2 %3x%4";
+		return s.arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
+	};
 	QPainter painter(this);
-	graph()->draw(&painter, event->rect());
+	const QRect dirty_rect = event->rect();
+	QRect view_rect = view_port->geometry();
+	view_rect.moveTop(-geometry().y());
+	shvInfo() << "-----------------------------------";
+	shvInfo() << "dirty rect:"  << rect_to_string(dirty_rect);
+	shvInfo() << "view port :"  << rect_to_string(view_port->geometry());
+	shvInfo() << "widget    :"  << rect_to_string(geometry());
+	graph()->draw(&painter, dirty_rect,  view_rect);
 }
 /*
 void GraphWidget::keyPressEvent(QKeyEvent *event)
@@ -178,6 +196,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 			QPoint pos = event->pos();
 			if(event->modifiers() == Qt::NoModifier) {
 				Graph *gr = graph();
+				logMouseSelection() << "Set cross bar 1 pos to:" << pos.x() << pos.y();
 				gr->setCrossBarPos1(pos);
 				event->accept();
 				update();
@@ -204,7 +223,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 
 void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 {
-	logMouseSelection() << event->pos().x() << event->pos().y() << (int)m_mouseOperation;
+	//logMouseSelection() << event->pos().x() << event->pos().y() << (int)m_mouseOperation;
 	Super::mouseMoveEvent(event);
 	QPoint pos = event->pos();
 	Graph *gr = graph();

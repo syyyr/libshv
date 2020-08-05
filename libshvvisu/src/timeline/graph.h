@@ -155,7 +155,19 @@ public:
 	void setModel(GraphModel *model);
 	GraphModel *model() const;
 
-	void createChannelsFromModel(const std::string &path_pattern = std::string(), bool is_regex = false);
+	struct SHVVISU_DECL_EXPORT CreateChannelsOptions
+	{
+		std::string pathPattern;
+		enum class PathPatternFormat {Substring, Regex};
+		PathPatternFormat pathPatternFormat = PathPatternFormat::Substring;
+		bool hideConstant = true;
+
+		CreateChannelsOptions(const std::string &pattern = std::string(), PathPatternFormat fmt = PathPatternFormat::Substring)
+			: pathPattern(pattern)
+			, pathPatternFormat(fmt)
+		{}
+	};
+	void createChannelsFromModel(const CreateChannelsOptions &opts = CreateChannelsOptions());
 
 	int channelCount() const { return  m_channels.count(); }
 	void clearChannels();
@@ -200,7 +212,7 @@ public:
 	void setDefaultChannelStyle(const ChannelStyle &st);
 
 	void makeLayout(const QRect &rect);
-	void draw(QPainter *painter, const QRect &dirty_rect);
+	void draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_rect);
 
 	int u2px(double u) const;
 	double px2u(int px) const;
@@ -220,7 +232,7 @@ protected:
 	void drawRectText(QPainter *painter, const QRect &rect, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
 
 	virtual void drawBackground(QPainter *painter);
-	virtual void drawMiniMap(QPainter *painter);
+	virtual void drawMiniMap(QPainter *painter, int offset);
 	virtual void drawXAxis(QPainter *painter);
 
 	//virtual void drawGraph(int channel);
@@ -241,7 +253,7 @@ protected:
 protected:
 	GraphModel *m_model = nullptr;
 
-	GraphStyle effectiveStyle;
+	GraphStyle m_effectiveStyle;
 
 	GraphStyle m_style;
 	ChannelStyle m_channelStyle;

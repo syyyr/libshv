@@ -37,8 +37,9 @@ struct Range
 	//XRange(const QPair<timemsec_t, timemsec_t> r) : min(r.first), max(r.second) {}
 
 	//bool operator==(const T &o) const { return min == o.min && max == o.max; }
-	bool isValid() const { return min <= max; }
-	bool isEmpty() const { return min >= max; }
+
+	bool isValid() const { return interval() >= 0; }
+	bool isEmpty() const { return interval() > 0; }
 	T interval() const {return max - min;}
 	Range<T> united(const Range<T> &o) const {
 		if(isValid() && o.isValid()) {
@@ -55,6 +56,8 @@ struct Range
 		}
 	}
 };
+
+template<> inline bool Range<double>::isEmpty() const { return interval() < 1e-42; }
 
 using XRange = Range<timemsec_t>;
 using YRange = Range<double>;
