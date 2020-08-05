@@ -231,8 +231,8 @@ protected:
 
 	void drawRectText(QPainter *painter, const QRect &rect, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
 
-	virtual void drawBackground(QPainter *painter);
-	virtual void drawMiniMap(QPainter *painter, int offset);
+	void drawBackground(QPainter *painter, const QRect &dirty_rect);
+	virtual void drawMiniMap(QPainter *painter);
 	virtual void drawXAxis(QPainter *painter);
 
 	//virtual void drawGraph(int channel);
@@ -250,6 +250,8 @@ protected:
 	QVariantMap mergeMaps(const QVariantMap &base, const QVariantMap &overlay) const;
 	void makeXAxis();
 	void makeYAxis(int channel);
+
+	void moveMiniMapRectBottom(int bottom);
 protected:
 	GraphModel *m_model = nullptr;
 

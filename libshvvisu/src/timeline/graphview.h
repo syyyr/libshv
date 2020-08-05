@@ -19,6 +19,7 @@ public:
 	void makeLayout();
 protected:
 	void resizeEvent(QResizeEvent *event) override;
+	void scrollContentsBy(int dx, int dy) override;
 };
 
 }}}

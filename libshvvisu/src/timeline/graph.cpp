@@ -526,6 +526,12 @@ void Graph::makeYAxis(int channel)
 	shvDebug() << channel << "axis.tickInterval:" << axis.tickInterval << "subtickEvery:" << axis.subtickEvery;
 }
 
+void Graph::moveMiniMapRectBottom(int bottom)
+{
+	m_layout.miniMapRect.moveBottom(bottom);
+	m_layout.xAxisRect.moveBottom(m_layout.miniMapRect.top());
+}
+
 //void Graph::onModelXRangeChanged(const XRange &range)
 //{
 //	setXRange(range, true);
@@ -660,7 +666,7 @@ void Graph::drawRectText(QPainter *painter, const QRect &rect, const QString &te
 void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_rect)
 {
 	//shvLogFuncFrame();
-	drawBackground(painter);
+	drawBackground(painter, dirty_rect);
 	for (int i = 0; i < m_channels.count(); ++i) {
 		const Channel &ch = m_channels[i];
 		if(dirty_rect.intersects(ch.graphRect())) {
@@ -677,9 +683,10 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 	}
 	//QRect mm_rect = m_layout.miniMapRect;
 	//mm_rect.setTop(mm_rect.top() + minimap_offset);
-	//if(dirty_rect.intersects(mm_rect))
-	int minimap_offset = m_layout.miniMapRect.top() - view_rect.height() - view_rect.y();
-	drawMiniMap(painter, minimap_offset);
+	int minimap_bottom = view_rect.height() + view_rect.y();
+	moveMiniMapRectBottom(minimap_bottom);
+	if(dirty_rect.intersects(miniMapRect()))
+		drawMiniMap(painter);
 	//drawMiniMap(painter, minimap_offset);
 	if(dirty_rect.intersects(m_layout.xAxisRect))
 		drawXAxis(painter);
@@ -692,13 +699,13 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 	//painter->drawRect(dirty_rect);
 }
 
-void Graph::drawBackground(QPainter *painter)
+void Graph::drawBackground(QPainter *painter, const QRect &dirty_rect)
 {
-	painter->fillRect(m_layout.rect, m_effectiveStyle.colorBackground());
+	painter->fillRect(dirty_rect, m_effectiveStyle.colorBackground());
 	//painter->fillRect(QRect{QPoint(), widget()->geometry().size()}, Qt::blue);
 }
 
-void Graph::drawMiniMap(QPainter *painter, int offset)
+void Graph::drawMiniMap(QPainter *painter)
 {
 	if(m_miniMapCache.isNull()) {
 		shvDebug() << "creating minimap cache";
@@ -716,33 +723,34 @@ void Graph::drawMiniMap(QPainter *painter, int offset)
 		}
 
 	}
-	auto rect_to_string = [](const QRect &r) {
-		QString s = "%1,%2 %3x%4";
-		return s.arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
-	};
-	QRect mm_rect = m_layout.miniMapRect;
-	mm_rect.moveTop(mm_rect.top() - offset - mm_rect.height());
-	shvWarning() << "-----------------------------------";
-	shvWarning() << "layout rect:"  << rect_to_string(m_layout.rect);
-	shvWarning() << "miniMapRect:"  << rect_to_string(m_layout.miniMapRect);
-	shvWarning() << "mm_rect    :"  << rect_to_string(mm_rect);
-	painter->drawPixmap(mm_rect.topLeft(), m_miniMapCache);
+	//auto rect_to_string = [](const QRect &r) {
+	//	QString s = "%1,%2 %3x%4";
+	//	return s.arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
+	//};
+	auto r = m_layout.miniMapRect;
+	r.setLeft(0);
+	drawBackground(painter, r);
+	//shvWarning() << "-----------------------------------";
+	//shvWarning() << "layout rect:"  << rect_to_string(m_layout.rect);
+	//shvWarning() << "miniMapRect:"  << rect_to_string(m_layout.miniMapRect);
+	//shvWarning() << "mm_rect    :"  << rect_to_string(mm_rect);
+	painter->drawPixmap(m_layout.miniMapRect.topLeft(), m_miniMapCache);
 	int x1 = miniMapTimeToPos(xRangeZoom().min);
 	int x2 = miniMapTimeToPos(xRangeZoom().max);
 	painter->save();
 	QPen pen;
 	pen.setWidth(u2px(0.2));
-	QPoint p1{x1, mm_rect.top()};
-	QPoint p2{x1, mm_rect.bottom()};
-	QPoint p3{x2, mm_rect.bottom()};
-	QPoint p4{x2, mm_rect.top()};
+	QPoint p1{x1, m_layout.miniMapRect.top()};
+	QPoint p2{x1, m_layout.miniMapRect.bottom()};
+	QPoint p3{x2, m_layout.miniMapRect.bottom()};
+	QPoint p4{x2, m_layout.miniMapRect.top()};
 	QColor bc(Qt::black);
 	bc.setAlphaF(0.6);
-	painter->fillRect(QRect{mm_rect.topLeft(), p2}, bc);
-	painter->fillRect(QRect{p4, mm_rect.bottomRight()}, bc);
+	painter->fillRect(QRect{m_layout.miniMapRect.topLeft(), p2}, bc);
+	painter->fillRect(QRect{p4, m_layout.miniMapRect.bottomRight()}, bc);
 	pen.setColor(Qt::gray);
 	painter->setPen(pen);
-	painter->drawLine(mm_rect.topLeft(), p1);
+	painter->drawLine(m_layout.miniMapRect.topLeft(), p1);
 	pen.setColor(Qt::white);
 	painter->setPen(pen);
 	painter->drawLine(p1, p2);
@@ -750,7 +758,7 @@ void Graph::drawMiniMap(QPainter *painter, int offset)
 	painter->drawLine(p3, p4);
 	pen.setColor(Qt::gray);
 	painter->setPen(pen);
-	painter->drawLine(p4, mm_rect.topRight());
+	painter->drawLine(p4, m_layout.miniMapRect.topRight());
 	painter->restore();
 }
 
@@ -860,6 +868,10 @@ void Graph::drawGrid(QPainter *painter, int channel)
 
 void Graph::drawXAxis(QPainter *painter)
 {
+	auto r = m_layout.xAxisRect;
+	r.setLeft(0);
+	drawBackground(painter, r);
+
 	const XAxis &axis = m_state.axis;
 	if(axis.tickInterval == 0) {
 		drawRectText(painter, m_layout.xAxisRect, "x-axis", m_effectiveStyle.font(), Qt::green);

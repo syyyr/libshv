@@ -79,18 +79,19 @@ void GraphWidget::paintEvent(QPaintEvent *event)
 		shvError() << "Cannot find GraphView";
 		return;
 	}
-	auto rect_to_string = [](const QRect &r) {
-		QString s = "%1,%2 %3x%4";
-		return s.arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
-	};
+	//auto rect_to_string = [](const QRect &r) {
+	//	QString s = "%1,%2 %3x%4";
+	//	return s.arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
+	//};
 	QPainter painter(this);
 	const QRect dirty_rect = event->rect();
 	QRect view_rect = view_port->geometry();
 	view_rect.moveTop(-geometry().y());
-	shvInfo() << "-----------------------------------";
-	shvInfo() << "dirty rect:"  << rect_to_string(dirty_rect);
-	shvInfo() << "view port :"  << rect_to_string(view_port->geometry());
-	shvInfo() << "widget    :"  << rect_to_string(geometry());
+	//shvInfo() << "-----------------------------------" << view_port->objectName();
+	//shvInfo() << "dirty rect:"  << rect_to_string(dirty_rect);
+	//shvInfo() << "view port :"  << rect_to_string(view_port->geometry());
+	//shvInfo() << "widget    :"  << rect_to_string(geometry());
+	//shvInfo() << "view_rect :"  << rect_to_string(view_rect);
 	graph()->draw(&painter, dirty_rect,  view_rect);
 }
 /*
