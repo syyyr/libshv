@@ -75,8 +75,9 @@ void Graph::createChannelsFromModel(const shv::visu::timeline::Graph::CreateChan
 		Qt::magenta,
 		Qt::cyan,
 		Qt::blue,
-		Qt::red,
+		QColor("#e63c33"), //red
 		QColor("orange"),
+		QColor("#6da13a"), // green
 	};
 	m_channels.clear();
 	if(!m_model)
@@ -228,14 +229,14 @@ Sample Graph::posToData(const QPoint &pos) const
 	if(ch_ix < 0)
 		return Sample();
 	const Channel &ch = channelAt(ch_ix);
-	auto point2data = pointToDataFn(ch.graphRect(), DataRect{xRangeZoom(), ch.yRangeZoom()});
+	auto point2data = pointToDataFn(ch.dataAreaRect(), DataRect{xRangeZoom(), ch.yRangeZoom()});
 	return point2data? point2data(pos): Sample();
 }
 
 QPoint Graph::dataToPos(int ch_ix, const Sample &s) const
 {
 	const Channel &ch = channelAt(ch_ix);
-	auto data2point = dataToPointFn(DataRect{xRangeZoom(), ch.yRangeZoom()}, ch.graphRect());
+	auto data2point = dataToPointFn(DataRect{xRangeZoom(), ch.yRangeZoom()}, ch.dataAreaRect());
 	return data2point? data2point(s): QPoint();
 }
 
@@ -378,7 +379,7 @@ void Graph::setStyle(const Graph::GraphStyle &st)
 
 void Graph::setDefaultChannelStyle(const Graph::ChannelStyle &st)
 {
-	m_channelStyle = st;
+	m_defaultChannelStyle = st;
 }
 
 QVariantMap Graph::mergeMaps(const QVariantMap &base, const QVariantMap &overlay) const
@@ -526,10 +527,17 @@ void Graph::makeYAxis(int channel)
 	shvDebug() << channel << "axis.tickInterval:" << axis.tickInterval << "subtickEvery:" << axis.subtickEvery;
 }
 
-void Graph::moveMiniMapRectBottom(int bottom)
+void Graph::moveSouthFloatingBarBottom(int bottom)
 {
 	m_layout.miniMapRect.moveBottom(bottom);
 	m_layout.xAxisRect.moveBottom(m_layout.miniMapRect.top());
+}
+
+QRect Graph::southFloatingBarRect() const
+{
+	QRect ret = m_layout.miniMapRect.united(m_layout.xAxisRect);
+	ret.setX(0);
+	return ret;
 }
 
 //void Graph::onModelXRangeChanged(const XRange &range)
@@ -574,7 +582,7 @@ void Graph::makeLayout(const QRect &rect)
 	QVector<Rest> rests;
 	for (int i = 0; i < m_channels.count(); ++i) {
 		Channel &ch = m_channels[i];
-		ch.effectiveStyle = mergeMaps(m_channelStyle, ch.style());
+		ch.effectiveStyle = mergeMaps(m_defaultChannelStyle, ch.style());
 		int ch_h = u2px(ch.effectiveStyle.heightMin());
 		rests << Rest{i, u2px(ch.effectiveStyle.heightRange())};
 		ch.m_layout.graphRect.setLeft(x_axis_pos);
@@ -626,6 +634,12 @@ void Graph::makeLayout(const QRect &rect)
 		widget_height += ch.m_layout.graphRect.height();
 		if(i > 0)
 			widget_height += u2px(m_effectiveStyle.channelSpacing());
+	}
+	// make data area rect a bit slimmer to not clip wide graph line
+	for (int i = m_channels.count() - 1; i >= 0; --i) {
+		Channel &ch = m_channels[i];
+		int line_width = u2px(ch.effectiveStyle.lineWidth());
+		ch.m_layout.dataAreaRect = ch.m_layout.graphRect.adjusted(0, line_width, 0, -line_width);
 	}
 	m_layout.xAxisRect.moveTop(widget_height);
 	widget_height += u2px(m_effectiveStyle.xAxisHeight());
@@ -684,7 +698,7 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 	//QRect mm_rect = m_layout.miniMapRect;
 	//mm_rect.setTop(mm_rect.top() + minimap_offset);
 	int minimap_bottom = view_rect.height() + view_rect.y();
-	moveMiniMapRectBottom(minimap_bottom);
+	moveSouthFloatingBarBottom(minimap_bottom);
 	if(dirty_rect.intersects(miniMapRect()))
 		drawMiniMap(painter);
 	//drawMiniMap(painter, minimap_offset);
@@ -713,11 +727,11 @@ void Graph::drawMiniMap(QPainter *painter)
 		QRect mm_rect(QPoint(), m_layout.miniMapRect.size());
 		QPainter p(&m_miniMapCache);
 		QPainter *painter2 = &p;
-		painter2->fillRect(mm_rect, m_channelStyle.colorBackground());
+		painter2->fillRect(mm_rect, m_defaultChannelStyle.colorBackground());
 		for (int i = 0; i < m_channels.count(); ++i) {
 			const Channel &ch = m_channels[i];
 			ChannelStyle ch_st = ch.effectiveStyle;
-			ch_st.setLineAreaStyle(ChannelStyle::LineAreaStyle::Filled);
+			//ch_st.setLineAreaStyle(ChannelStyle::LineAreaStyle::Filled);
 			DataRect drect{xRange(), ch.yRange()};
 			drawSamples(painter2, i, drect, mm_rect, ch_st);
 		}
@@ -729,7 +743,7 @@ void Graph::drawMiniMap(QPainter *painter)
 	//};
 	auto r = m_layout.miniMapRect;
 	r.setLeft(0);
-	drawBackground(painter, r);
+	painter->fillRect(r, m_effectiveStyle.colorPanel());
 	//shvWarning() << "-----------------------------------";
 	//shvWarning() << "layout rect:"  << rect_to_string(m_layout.rect);
 	//shvWarning() << "miniMapRect:"  << rect_to_string(m_layout.miniMapRect);
@@ -744,8 +758,8 @@ void Graph::drawMiniMap(QPainter *painter)
 	QPoint p2{x1, m_layout.miniMapRect.bottom()};
 	QPoint p3{x2, m_layout.miniMapRect.bottom()};
 	QPoint p4{x2, m_layout.miniMapRect.top()};
-	QColor bc(Qt::black);
-	bc.setAlphaF(0.6);
+	QColor bc(Qt::darkGray);
+	bc.setAlphaF(0.8);
 	painter->fillRect(QRect{m_layout.miniMapRect.topLeft(), p2}, bc);
 	painter->fillRect(QRect{p4, m_layout.miniMapRect.bottomRight()}, bc);
 	pen.setColor(Qt::gray);
@@ -764,38 +778,45 @@ void Graph::drawMiniMap(QPainter *painter)
 
 void Graph::drawVerticalHeader(QPainter *painter, int channel)
 {
+	static constexpr int BOX_INSET = 4;
 	const Channel &ch = m_channels[channel];
 	QColor c = m_effectiveStyle.color();
-	QColor bc = c;
-	bc.setAlphaF(0.05);
+	QColor bc = m_effectiveStyle.colorPanel();
+	//bc.setAlphaF(0.05);
+	QPen pen;
+	pen.setColor(c);
+	painter->setPen(pen);
+
 	QString name = model()->channelData(ch.modelIndex(), GraphModel::ChannelDataRole::Name).toString();
-	if(name.isEmpty())
-		name = "<no name>";
 	QString shv_path = model()->channelData(ch.modelIndex(), GraphModel::ChannelDataRole::ShvPath).toString();
-	if(shv_path.isEmpty())
-		shv_path = "<no path>";
+	if(name.isEmpty())
+		name = shv_path;
+	if(name.isEmpty())
+		name = tr("<no name>");
 	//shvInfo() << channel << shv_path << name;
 	QFont font = m_effectiveStyle.font();
 	//drawRectText(painter, ch.m_layout.verticalHeaderRect, name, font, c, bc);
 	painter->save();
 	painter->fillRect(ch.m_layout.verticalHeaderRect, bc);
-	QPen pen;
-	pen.setColor(c);
-	painter->setPen(pen);
-	painter->drawRect(ch.m_layout.verticalHeaderRect);
+	//painter->drawRect(ch.m_layout.verticalHeaderRect);
 
 	painter->setClipRect(ch.m_layout.verticalHeaderRect);
+	{
+		QRect r = ch.m_layout.verticalHeaderRect;
+		r.setWidth(BOX_INSET);
+		painter->fillRect(r, ch.effectiveStyle.color());
+	}
 
 	font.setBold(true);
 	QFontMetrics fm(font);
 	painter->setFont(font);
-	QRect text_rect = ch.m_layout.verticalHeaderRect;
+	QRect text_rect = ch.m_layout.verticalHeaderRect.adjusted(2*BOX_INSET, BOX_INSET, -BOX_INSET, -BOX_INSET);
 	painter->drawText(text_rect, name);
 
-	font.setBold(false);
-	painter->setFont(font);
-	text_rect.moveTop(text_rect.top() + fm.lineSpacing());
-	painter->drawText(text_rect, shv_path);
+	//font.setBold(false);
+	//painter->setFont(font);
+	//text_rect.moveTop(text_rect.top() + fm.lineSpacing());
+	//painter->drawText(text_rect, shv_path);
 
 	painter->restore();
 }
@@ -836,8 +857,8 @@ void Graph::drawGrid(QPainter *painter, int channel)
 			t1 += x_axis.tickInterval;
 		for (timemsec_t t = t1; t <= range.max; t += x_axis.tickInterval) {
 			int x = timeToPos(t);
-			QPoint p1{x, ch.graphRect().top()};
-			QPoint p2{x, ch.graphRect().bottom()};
+			QPoint p1{x, ch.dataAreaRect().top()};
+			QPoint p2{x, ch.dataAreaRect().bottom()};
 			painter->drawLine(p1, p2);
 		}
 	}
@@ -851,8 +872,8 @@ void Graph::drawGrid(QPainter *painter, int channel)
 			d1 += y_axis.tickInterval;
 		for (double d = d1; d <= range.max; d += y_axis.tickInterval) {
 			int y = ch.valueToPos(d);
-			QPoint p1{ch.graphRect().left(), y};
-			QPoint p2{ch.graphRect().right(), y};
+			QPoint p1{ch.dataAreaRect().left(), y};
+			QPoint p2{ch.dataAreaRect().right(), y};
 			if(qFuzzyIsNull(d)) {
 				painter->setPen(pen_solid);
 				painter->drawLine(p1, p2);
@@ -870,7 +891,7 @@ void Graph::drawXAxis(QPainter *painter)
 {
 	auto r = m_layout.xAxisRect;
 	r.setLeft(0);
-	drawBackground(painter, r);
+	painter->fillRect(r, m_effectiveStyle.colorPanel());
 
 	const XAxis &axis = m_state.axis;
 	if(axis.tickInterval == 0) {
@@ -980,6 +1001,8 @@ void Graph::drawXAxis(QPainter *painter)
 
 void Graph::drawYAxis(QPainter *painter, int channel)
 {
+	if(m_effectiveStyle.yAxisWidth() == 0)
+		return;
 	const Channel &ch = m_channels[channel];
 	const Channel::YAxis &axis = ch.m_state.axis;
 	if(qFuzzyCompare(axis.tickInterval, 0)) {
@@ -987,6 +1010,7 @@ void Graph::drawYAxis(QPainter *painter, int channel)
 		return;
 	}
 	painter->save();
+	painter->fillRect(ch.m_layout.yAxisRect, m_effectiveStyle.colorPanel());
 	QFont font = m_effectiveStyle.font();
 	QFontMetrics fm(font);
 	QPen pen;
@@ -1148,7 +1172,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	//shvLogFuncFrame() << "channel:" << channel_ix;
 	const Channel &ch = channelAt(channel_ix);
 	int model_ix = ch.modelIndex();
-	QRect rect = dest_rect.isEmpty()? ch.m_layout.graphRect: dest_rect;
+	QRect rect = dest_rect.isEmpty()? ch.m_layout.dataAreaRect: dest_rect;
 	ChannelStyle ch_style = channel_style.isEmpty()? ch.effectiveStyle: channel_style;
 
 	XRange xrange;
@@ -1170,8 +1194,6 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 
 	int sample_point_size = u2px(0.2);
 
-	painter->save();
-	painter->setClipRect(rect);
 	QPen pen;
 	QColor line_color = ch_style.color();
 	pen.setColor(line_color);
@@ -1182,10 +1204,16 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		else
 			pen.setWidth(2);
 	}
+	pen.setCapStyle(Qt::FlatCap);
+	QPen steps_join_pen = pen;
+	steps_join_pen.setWidth(1);
+	painter->save();
+	//rect.adjust(0, -pen.width(), 0, pen.width());
+	painter->setClipRect(rect);
 	painter->setPen(pen);
 	QColor line_area_color;
 	if(ch_style.lineAreaStyle() == ChannelStyle::LineAreaStyle::Filled) {
-		line_area_color = painter->pen().color();
+		line_area_color = line_color;
 		line_area_color.setAlphaF(0.4);
 		//line_area_color.setHsv(line_area_color.hslHue(), line_area_color.hsvSaturation() / 2, line_area_color.lightness());
 	}
@@ -1246,8 +1274,12 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 							painter->fillRect(QRect{pa + QPoint{1, 0}, p0}, line_area_color);
 						}
 						QPoint pb{drawn_point.x(), recent_px.lastY};
-						painter->drawLine(pa, pb);
+						// draw vertical line lighter
+						painter->setPen(steps_join_pen);
 						painter->drawLine(pb, drawn_point);
+						// draw horizontal line
+						painter->setPen(pen);
+						painter->drawLine(pa, pb);
 					}
 				}
 				else {
@@ -1282,7 +1314,7 @@ void Graph::drawCrossBar(QPainter *painter, int channel_ix, const QPoint &crossb
 	if(crossbar_pos.isNull())
 		return;
 	const Channel &ch = channelAt(channel_ix);
-	if(ch.graphRect().left() > crossbar_pos.x() || ch.graphRect().right() < crossbar_pos.y())
+	if(ch.dataAreaRect().left() > crossbar_pos.x() || ch.dataAreaRect().right() < crossbar_pos.y())
 		return;
 
 	painter->save();
@@ -1304,7 +1336,7 @@ void Graph::drawCrossBar(QPainter *painter, int channel_ix, const QPoint &crossb
 	}
 	int d = u2px(0.4);
 	QRect focus_rect;
-	if(ch.graphRect().top() < crossbar_pos.y() && ch.graphRect().bottom() > crossbar_pos.y()) {
+	if(ch.dataAreaRect().top() < crossbar_pos.y() && ch.dataAreaRect().bottom() > crossbar_pos.y()) {
 		focus_rect = QRect(0, 0, d, d);
 		focus_rect.moveCenter(crossbar_pos);
 	}
@@ -1319,26 +1351,26 @@ void Graph::drawCrossBar(QPainter *painter, int channel_ix, const QPoint &crossb
 	{
 		/// draw vertical line
 		if(focus_rect.isNull()) {
-			QPoint p1{crossbar_pos.x(), ch.graphRect().top()};
-			QPoint p2{crossbar_pos.x(), ch.graphRect().bottom()};
+			QPoint p1{crossbar_pos.x(), ch.dataAreaRect().top()};
+			QPoint p2{crossbar_pos.x(), ch.dataAreaRect().bottom()};
 			painter->drawLine(p1, p2);
 		}
 		else {
-			QPoint p1{crossbar_pos.x(), ch.graphRect().top()};
+			QPoint p1{crossbar_pos.x(), ch.dataAreaRect().top()};
 			QPoint p2{crossbar_pos.x(), focus_rect.top()};
 			QPoint p4{crossbar_pos.x(), focus_rect.bottom()};
-			QPoint p3{crossbar_pos.x(), ch.graphRect().bottom()};
+			QPoint p3{crossbar_pos.x(), ch.dataAreaRect().bottom()};
 			painter->drawLine(p1, p2);
 			painter->drawLine(p3, p4);
 		}
 	}
 	if(!focus_rect.isNull()) {
-		painter->setClipRect(ch.graphRect());
+		painter->setClipRect(ch.dataAreaRect());
 		/// draw horizontal line
-		QPoint p1{ch.graphRect().left(), crossbar_pos.y()};
+		QPoint p1{ch.dataAreaRect().left(), crossbar_pos.y()};
 		QPoint p2{focus_rect.left(), crossbar_pos.y()};
 		QPoint p3{focus_rect.right(), crossbar_pos.y()};
-		QPoint p4{ch.graphRect().right(), crossbar_pos.y()};
+		QPoint p4{ch.dataAreaRect().right(), crossbar_pos.y()};
 		painter->drawLine(p1, p2);
 		painter->drawLine(p3, p4);
 

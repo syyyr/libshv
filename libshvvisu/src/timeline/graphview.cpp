@@ -3,6 +3,8 @@
 
 #include <shv/coreqt/log.h>
 
+#include <QTimer>
+
 namespace shv {
 namespace visu {
 namespace timeline {
@@ -19,6 +21,13 @@ void GraphView::makeLayout()
 	}
 }
 
+QRect GraphView::widgetViewRect() const
+{
+	QRect view_rect = viewport()->geometry();
+	view_rect.moveTop(-widget()->geometry().y());
+	return view_rect;
+}
+
 void GraphView::resizeEvent(QResizeEvent *event)
 {
 	Super::resizeEvent(event);
@@ -27,12 +36,19 @@ void GraphView::resizeEvent(QResizeEvent *event)
 
 void GraphView::scrollContentsBy(int dx, int dy)
 {
-	Super::scrollContentsBy(dx, dy);
-	if(dy != 0) {
-		// update whole widget to update floating minimap
-		// scroll area updates scrolled-in region only
-		// previous minimap is scrolled up and remains on screen
-		widget()->update();
+	if(GraphWidget *gw = qobject_cast<GraphWidget*>(widget())) {
+		const Graph *g = gw->graph();
+		QRect r1 = g->southFloatingBarRect();
+		Super::scrollContentsBy(dx, dy);
+		if(dy < 0) {
+			// scroll up, invalidate current floating bar pos
+			widget()->update(r1);
+		}
+		else if(dy > 0) {
+			// scroll down, invalidate new floating bar pos
+			r1.setTop(r1.top() - dy);
+			widget()->update(r1);
+		}
 	}
 }
 

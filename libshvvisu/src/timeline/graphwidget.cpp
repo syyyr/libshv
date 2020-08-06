@@ -85,14 +85,14 @@ void GraphWidget::paintEvent(QPaintEvent *event)
 	//};
 	QPainter painter(this);
 	const QRect dirty_rect = event->rect();
-	QRect view_rect = view_port->geometry();
-	view_rect.moveTop(-geometry().y());
+	//QRect view_rect = view_port->geometry();
+	//view_rect.moveTop(-geometry().y());
 	//shvInfo() << "-----------------------------------" << view_port->objectName();
 	//shvInfo() << "dirty rect:"  << rect_to_string(dirty_rect);
 	//shvInfo() << "view port :"  << rect_to_string(view_port->geometry());
 	//shvInfo() << "widget    :"  << rect_to_string(geometry());
 	//shvInfo() << "view_rect :"  << rect_to_string(view_rect);
-	graph()->draw(&painter, dirty_rect,  view_rect);
+	graph()->draw(&painter, dirty_rect,  scroll_area->widgetViewRect());
 }
 /*
 void GraphWidget::keyPressEvent(QKeyEvent *event)
@@ -142,7 +142,7 @@ bool GraphWidget::isMouseAboveMiniMapSlider(const QPoint &pos) const
 	return (x1 < pos.x()) && (pos.x() < x2);
 }
 
-int GraphWidget::isMouseAboveGraphArea(const QPoint &pos) const
+int GraphWidget::isMouseAboveGraphDataArea(const QPoint &pos) const
 {
 	const Graph *gr = graph();
 	int ch_ix = gr->posToChannel(pos);
@@ -170,15 +170,15 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 			event->accept();
 			return;
 		}
-		else if(isMouseAboveGraphArea(pos) && event->modifiers() == Qt::ControlModifier) {
+		else if(isMouseAboveGraphDataArea(pos) && event->modifiers() == Qt::ControlModifier) {
 			m_mouseOperation = MouseOperation::GraphAreaMove;
 			m_recentMousePos = pos;
 			event->accept();
 			return;
 		}
-		else if(isMouseAboveGraphArea(pos)) {
+		else if(isMouseAboveGraphDataArea(pos)) {
 			logMouseSelection() << "GraphAreaPress";
-			m_mouseOperation = MouseOperation::GraphAreaPress;
+			m_mouseOperation = MouseOperation::GraphDataAreaPress;
 			m_recentMousePos = pos;
 			event->accept();
 			return;
@@ -193,7 +193,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 	auto old_mouse_op = m_mouseOperation;
 	m_mouseOperation = MouseOperation::None;
 	if(event->button() == Qt::LeftButton) {
-		if(old_mouse_op == MouseOperation::GraphAreaPress) {
+		if(old_mouse_op == MouseOperation::GraphDataAreaPress) {
 			QPoint pos = event->pos();
 			if(event->modifiers() == Qt::NoModifier) {
 				Graph *gr = graph();
@@ -278,7 +278,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		}
 		return;
 	}
-	case MouseOperation::GraphAreaPress: {
+	case MouseOperation::GraphDataAreaPress: {
 		QPoint point = pos - m_recentMousePos;
 		if (point.manhattanLength() > 3) {
 			m_mouseOperation = MouseOperation::GraphAreaSelection;
@@ -346,7 +346,7 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
 	QPoint pos = event->position().toPoint();
 #endif
 	bool is_zoom_on_slider = isMouseAboveMiniMapSlider(pos);
-	bool is_zoom_on_graph = (event->modifiers() == Qt::ControlModifier) && isMouseAboveGraphArea(pos);
+	bool is_zoom_on_graph = (event->modifiers() == Qt::ControlModifier) && isMouseAboveGraphDataArea(pos);
 	static constexpr int ZOOM_STEP = 10;
 	if(is_zoom_on_slider) {
 		Graph *gr = graph();

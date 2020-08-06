@@ -43,11 +43,11 @@ protected:
 	bool isMouseAboveLeftMiniMapHandle(const QPoint &pos) const;
 	bool isMouseAboveRightMiniMapHandle(const QPoint &pos) const;
 	bool isMouseAboveMiniMapSlider(const QPoint &pos) const;
-	int isMouseAboveGraphArea(const QPoint &pos) const;
+	int isMouseAboveGraphDataArea(const QPoint &pos) const;
 protected:
 	Graph *m_graph = nullptr;
 
-	enum class MouseOperation { None = 0, MiniMapLeftResize, MiniMapRightResize, MiniMapScrollZoom, GraphAreaPress, GraphAreaMove, GraphAreaSelection };
+	enum class MouseOperation { None = 0, MiniMapLeftResize, MiniMapRightResize, MiniMapScrollZoom, GraphDataAreaPress, GraphAreaMove, GraphAreaSelection };
 	MouseOperation m_mouseOperation = MouseOperation::None;
 	QPoint m_recentMousePos;
 };

@@ -44,17 +44,18 @@ public:
 		SHV_VARIANTMAP_FIELD2(double, r, setR, ightMargin, 0.3) // units
 		SHV_VARIANTMAP_FIELD2(double, t, setT, opMargin, 0.3) // units
 		SHV_VARIANTMAP_FIELD2(double, b, setb, ottomMargin, 0.3) // units
-		SHV_VARIANTMAP_FIELD2(double, c, setC, hannelSpacing, 0.3) // units
+		SHV_VARIANTMAP_FIELD2(double, c, setC, hannelSpacing, 0.1) // units
 		SHV_VARIANTMAP_FIELD2(double, x, setX, AxisHeight, 1.5) // units
 		SHV_VARIANTMAP_FIELD2(double, y, setY, AxisWidth, 2.5) // units
 		SHV_VARIANTMAP_FIELD2(double, m, setM, iniMapHeight, 2) // units
 		SHV_VARIANTMAP_FIELD2(double, v, setV, erticalHeaderWidth, 10) // units
 		SHV_VARIANTMAP_FIELD2(bool, s, setS, eparateChannels, true)
 
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olor, QColor(Qt::yellow))
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorBackground, QColor(Qt::darkGray).darker(400))
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorGrid, QColor(Qt::darkGreen))
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorAxis, QColor(Qt::green))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olor, QColor("#c8c8c8"))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorPanel, QColor("#414343"))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorBackground, QColor(Qt::black))
+		//SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorGrid, QColor(Qt::darkGreen))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorAxis, QColor(Qt::gray))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCrossBar1, QColor(QStringLiteral("white")))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCrossBar2, QColor(QStringLiteral("salmon")))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorSelection, QColor(QStringLiteral("deepskyblue")))
@@ -67,20 +68,20 @@ public:
 	{
 	public:
 		struct Interpolation { enum Enum {None = 0, Line, Stepped};};
-		struct LineAreaStyle { enum Enum {Unfilled = 0, Filled};};
+		struct LineAreaStyle { enum Enum {Blank = 0, Filled};};
 		static constexpr double CosmeticLineWidth = 0;
 
 		SHV_VARIANTMAP_FIELD2(double, h, setH, eightMin, 2) // units
 		SHV_VARIANTMAP_FIELD2(double, h, setH, eightMax, 2) // units
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olor, QColor(Qt::magenta))
-		SHV_VARIANTMAP_FIELD(QColor, c, setC, olorLineArea)
+		//SHV_VARIANTMAP_FIELD(QColor, c, setC, olorLineArea)
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorGrid, QColor(Qt::darkGreen))
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorAxis, QColor(Qt::green))
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorBackground, QColor(Qt::black))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorAxis, QColor(Qt::gray))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorBackground, QColor("#232323"))
 
 		SHV_VARIANTMAP_FIELD2(int, i, setI, nterpolation, Interpolation::Stepped)
-		SHV_VARIANTMAP_FIELD2(int, l, setL, ineAreaStyle, LineAreaStyle::Unfilled)
-		SHV_VARIANTMAP_FIELD2(double, l, setL, ineWidth, CosmeticLineWidth)
+		SHV_VARIANTMAP_FIELD2(int, l, setL, ineAreaStyle, LineAreaStyle::Blank)
+		SHV_VARIANTMAP_FIELD2(double, l, setL, ineWidth, 0.3)
 
 		//SHV_VARIANTMAP_FIELD(QFont, f, setF, ont)
 
@@ -116,6 +117,7 @@ public:
 		ChannelStyle effectiveStyle;
 
 		const QRect& graphRect() const { return  m_layout.graphRect; }
+		const QRect& dataAreaRect() const { return  m_layout.dataAreaRect; }
 		const QRect& verticalHeaderRect() const { return  m_layout.verticalHeaderRect; }
 		const QRect& yAxisRect() const { return  m_layout.yAxisRect; }
 
@@ -138,6 +140,7 @@ public:
 		{
 			//QRect rect;
 			QRect graphRect;
+			QRect dataAreaRect;
 			QRect verticalHeaderRect;
 			QRect yAxisRect;
 		} m_layout;
@@ -189,6 +192,7 @@ public:
 
 	const QRect& rect() const { return  m_layout.rect; }
 	const QRect& miniMapRect() const { return  m_layout.miniMapRect; }
+	QRect southFloatingBarRect() const;
 	QPoint crossBarPos1() const {return m_state.crossBarPos1;}
 	QPoint crossBarPos2() const {return m_state.crossBarPos2;}
 	void setCrossBarPos1(const QPoint &pos);
@@ -210,6 +214,7 @@ public:
 	const GraphStyle& style() const { return m_style; }
 	void setStyle(const GraphStyle &st);
 	void setDefaultChannelStyle(const ChannelStyle &st);
+	ChannelStyle defaultChannelStyle() const { return m_defaultChannelStyle; }
 
 	void makeLayout(const QRect &rect);
 	void draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_rect);
@@ -251,14 +256,14 @@ protected:
 	void makeXAxis();
 	void makeYAxis(int channel);
 
-	void moveMiniMapRectBottom(int bottom);
+	void moveSouthFloatingBarBottom(int bottom);
 protected:
 	GraphModel *m_model = nullptr;
 
 	GraphStyle m_effectiveStyle;
 
 	GraphStyle m_style;
-	ChannelStyle m_channelStyle;
+	ChannelStyle m_defaultChannelStyle;
 
 	QVector<Channel> m_channels;
 
