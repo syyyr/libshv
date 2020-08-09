@@ -531,6 +531,7 @@ void Graph::moveSouthFloatingBarBottom(int bottom)
 {
 	m_layout.miniMapRect.moveBottom(bottom);
 	m_layout.xAxisRect.moveBottom(m_layout.miniMapRect.top());
+	m_layout.cornerCellRect.moveBottom(m_layout.miniMapRect.bottom());
 }
 
 QRect Graph::southFloatingBarRect() const
@@ -576,6 +577,11 @@ void Graph::makeLayout(const QRect &rect)
 
 	m_layout.xAxisRect = m_layout.miniMapRect;
 	m_layout.xAxisRect.setHeight(u2px(m_effectiveStyle.xAxisHeight()));
+
+	m_layout.cornerCellRect = m_layout.xAxisRect;
+	m_layout.cornerCellRect.setHeight(m_layout.cornerCellRect.height() + m_layout.miniMapRect.height());
+	m_layout.cornerCellRect.setLeft(u2px(m_effectiveStyle.leftMargin()));
+	m_layout.cornerCellRect.setWidth(m_layout.xAxisRect.left() - m_layout.cornerCellRect.left());
 
 	int sum_h_min = 0;
 	struct Rest { int index; int rest; };
@@ -699,9 +705,10 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 	//mm_rect.setTop(mm_rect.top() + minimap_offset);
 	int minimap_bottom = view_rect.height() + view_rect.y();
 	moveSouthFloatingBarBottom(minimap_bottom);
+	if(dirty_rect.intersects(m_layout.cornerCellRect))
+		drawCornerCell(painter);
 	if(dirty_rect.intersects(miniMapRect()))
 		drawMiniMap(painter);
-	//drawMiniMap(painter, minimap_offset);
 	if(dirty_rect.intersects(m_layout.xAxisRect))
 		drawXAxis(painter);
 	if(dirty_rect.intersects(m_state.selectionRect))
@@ -717,6 +724,17 @@ void Graph::drawBackground(QPainter *painter, const QRect &dirty_rect)
 {
 	painter->fillRect(dirty_rect, m_effectiveStyle.colorBackground());
 	//painter->fillRect(QRect{QPoint(), widget()->geometry().size()}, Qt::blue);
+}
+
+void Graph::drawCornerCell(QPainter *painter)
+{
+	painter->fillRect(m_layout.cornerCellRect, m_effectiveStyle.colorPanel());
+
+	QPen pen;
+	pen.setWidth(u2px(0.1));
+	pen.setColor(m_effectiveStyle.colorBackground());
+	painter->setPen(pen);
+	painter->drawRect(m_layout.cornerCellRect);
 }
 
 void Graph::drawMiniMap(QPainter *painter)
@@ -741,9 +759,6 @@ void Graph::drawMiniMap(QPainter *painter)
 	//	QString s = "%1,%2 %3x%4";
 	//	return s.arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
 	//};
-	auto r = m_layout.miniMapRect;
-	r.setLeft(0);
-	painter->fillRect(r, m_effectiveStyle.colorPanel());
 	//shvWarning() << "-----------------------------------";
 	//shvWarning() << "layout rect:"  << rect_to_string(m_layout.rect);
 	//shvWarning() << "miniMapRect:"  << rect_to_string(m_layout.miniMapRect);
@@ -889,10 +904,7 @@ void Graph::drawGrid(QPainter *painter, int channel)
 
 void Graph::drawXAxis(QPainter *painter)
 {
-	auto r = m_layout.xAxisRect;
-	r.setLeft(0);
-	painter->fillRect(r, m_effectiveStyle.colorPanel());
-
+	painter->fillRect(m_layout.xAxisRect, m_effectiveStyle.colorPanel());
 	const XAxis &axis = m_state.axis;
 	if(axis.tickInterval == 0) {
 		drawRectText(painter, m_layout.xAxisRect, "x-axis", m_effectiveStyle.font(), Qt::green);
@@ -903,8 +915,9 @@ void Graph::drawXAxis(QPainter *painter)
 	QFontMetrics fm(font);
 	QPen pen;
 	pen.setWidth(u2px(0.1));
-	pen.setColor(m_effectiveStyle.colorAxis());
 	int tick_len = u2px(0.15);
+
+	pen.setColor(m_effectiveStyle.colorAxis());
 	painter->setPen(pen);
 	painter->drawLine(m_layout.xAxisRect.topLeft(), m_layout.xAxisRect.topRight());
 
@@ -962,8 +975,11 @@ void Graph::drawXAxis(QPainter *painter)
 		}
 		}
 		QRect r = fm.boundingRect(text);
+		int inset = u2px(0.2);
+		r.adjust(-inset, -inset, inset, inset);
 		r.moveTopLeft(p2 + QPoint{-r.width() / 2, 0});
 		painter->drawText(r, text);
+		//shvInfo() << text;
 	}
 	{
 		QString text;
@@ -992,8 +1008,10 @@ void Graph::drawXAxis(QPainter *painter)
 		}
 		text = '[' + text + ']';
 		QRect r = fm.boundingRect(text);
+		int inset = u2px(0.2);
+		r.adjust(-inset, 0, inset, 0);
 		r.moveTopLeft(m_layout.xAxisRect.topRight() + QPoint{-r.width() - u2px(0.2), 2*tick_len});
-		painter->fillRect(r, m_effectiveStyle.colorBackground());
+		painter->fillRect(r, m_effectiveStyle.colorPanel());
 		painter->drawText(r, text);
 	}
 	painter->restore();
@@ -1365,7 +1383,7 @@ void Graph::drawCrossBar(QPainter *painter, int channel_ix, const QPoint &crossb
 		}
 	}
 	if(!focus_rect.isNull()) {
-		painter->setClipRect(ch.dataAreaRect());
+		//painter->setClipRect(ch.dataAreaRect());
 		/// draw horizontal line
 		QPoint p1{ch.dataAreaRect().left(), crossbar_pos.y()};
 		QPoint p2{focus_rect.left(), crossbar_pos.y()};
@@ -1383,6 +1401,7 @@ void Graph::drawCrossBar(QPainter *painter, int channel_ix, const QPoint &crossb
 		//shvDebug() << "time:" << s.time << "value:" << s.value.toDouble();
 		cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromMSecsSinceEpoch(s.time);
 		QString str = QStringLiteral("%1, %2").arg(QString::fromStdString(dt.toIsoString())).arg(s.value.toDouble());
+		//painter->setClipRect(m_layout.rect);
 		painter->drawText(crossbar_pos + QPoint{focus_rect.width(), -focus_rect.height()}, str);
 
 	}

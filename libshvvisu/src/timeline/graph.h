@@ -71,8 +71,8 @@ public:
 		struct LineAreaStyle { enum Enum {Blank = 0, Filled};};
 		static constexpr double CosmeticLineWidth = 0;
 
-		SHV_VARIANTMAP_FIELD2(double, h, setH, eightMin, 2) // units
-		SHV_VARIANTMAP_FIELD2(double, h, setH, eightMax, 2) // units
+		SHV_VARIANTMAP_FIELD2(double, h, setH, eightMin, 2.5) // units
+		SHV_VARIANTMAP_FIELD2(double, h, setH, eightMax, 1000) // units
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olor, QColor(Qt::magenta))
 		//SHV_VARIANTMAP_FIELD(QColor, c, setC, olorLineArea)
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorGrid, QColor(Qt::darkGreen))
@@ -163,7 +163,7 @@ public:
 		std::string pathPattern;
 		enum class PathPatternFormat {Substring, Regex};
 		PathPatternFormat pathPatternFormat = PathPatternFormat::Substring;
-		bool hideConstant = true;
+		bool hideConstant = false;
 
 		CreateChannelsOptions(const std::string &pattern = std::string(), PathPatternFormat fmt = PathPatternFormat::Substring)
 			: pathPattern(pattern)
@@ -237,10 +237,10 @@ protected:
 	void drawRectText(QPainter *painter, const QRect &rect, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
 
 	void drawBackground(QPainter *painter, const QRect &dirty_rect);
+	virtual void drawCornerCell(QPainter *painter);
 	virtual void drawMiniMap(QPainter *painter);
 	virtual void drawXAxis(QPainter *painter);
 
-	//virtual void drawGraph(int channel);
 	virtual void drawVerticalHeader(QPainter *painter, int channel);
 	virtual void drawBackground(QPainter *painter, int channel);
 	virtual void drawGrid(QPainter *painter, int channel);
@@ -295,6 +295,7 @@ protected:
 		QRect rect;
 		QRect miniMapRect;
 		QRect xAxisRect;
+		QRect cornerCellRect;
 	} m_layout;
 
 	QPixmap m_miniMapCache;
