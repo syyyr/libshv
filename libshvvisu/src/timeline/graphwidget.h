@@ -30,6 +30,7 @@ public:
 
 	// QWidget interface
 protected:
+	bool event(QEvent *event) override;
 	void paintEvent(QPaintEvent *event) override;
 	//void keyPressEvent(QKeyEvent *event) override;
 	//void keyReleaseEvent(QKeyEvent *event) override;
@@ -43,6 +44,7 @@ protected:
 	bool isMouseAboveLeftMiniMapHandle(const QPoint &pos) const;
 	bool isMouseAboveRightMiniMapHandle(const QPoint &pos) const;
 	bool isMouseAboveMiniMapSlider(const QPoint &pos) const;
+	int isMouseAboveGraphVerticalHeader(const QPoint &pos) const;
 	int isMouseAboveGraphDataArea(const QPoint &pos) const;
 protected:
 	Graph *m_graph = nullptr;

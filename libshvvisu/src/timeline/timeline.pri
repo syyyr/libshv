@@ -1,4 +1,5 @@
 HEADERS += \
+    $$PWD/graphbuttonbox.h \
     $$PWD/graphmodel.h \
     $$PWD/graph.h \
     $$PWD/graphview.h \
@@ -6,6 +7,7 @@ HEADERS += \
     $$PWD/sample.h
 
 SOURCES += \
+    $$PWD/graphbuttonbox.cpp \
     $$PWD/graphmodel.cpp \
     $$PWD/graph.cpp \
     $$PWD/graphview.cpp \

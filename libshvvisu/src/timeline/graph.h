@@ -1,5 +1,6 @@
 #pragma once
 
+#include "graphbuttonbox.h"
 #include "sample.h"
 #include "../shvvisuglobal.h"
 
@@ -40,6 +41,8 @@ public:
 	class SHVVISU_DECL_EXPORT GraphStyle : public QVariantMap
 	{
 		SHV_VARIANTMAP_FIELD2(int, u, setU, nitSize, 20) // px
+		SHV_VARIANTMAP_FIELD2(double, h, setH, eaderInset, 0.2) // units
+		SHV_VARIANTMAP_FIELD2(double, b, setB, uttonSize, 1.5) // units
 		SHV_VARIANTMAP_FIELD2(double, l, setL, eftMargin, 0.3) // units
 		SHV_VARIANTMAP_FIELD2(double, r, setR, ightMargin, 0.3) // units
 		SHV_VARIANTMAP_FIELD2(double, t, setT, opMargin, 0.3) // units
@@ -63,6 +66,8 @@ public:
 		SHV_VARIANTMAP_FIELD(QFont, f, setF, ont)
 	public:
 		void init(QWidget *widget);
+
+		//double buttonSpacing() const { return buttonSize() / 5; }
 	};
 	class SHVVISU_DECL_EXPORT ChannelStyle : public QVariantMap
 	{
@@ -102,7 +107,14 @@ public:
 
 	class SHVVISU_DECL_EXPORT Channel
 	{
+		friend class Graph;
 	public:
+		Channel(Graph *graph)
+			: m_graph(graph)
+			, m_buttonBox(new GraphButtonBox({GraphButtonBox::ButtonId::Hide, GraphButtonBox::ButtonId::Properties}, graph))
+		{}
+		~Channel() {if(m_buttonBox) delete m_buttonBox;}
+
 		void setMetaTypeId(int id) { m_metaTypeId = id; }
 		int metaTypeId() const { return m_metaTypeId; }
 
@@ -129,6 +141,11 @@ public:
 			int subtickEvery = 1;
 		};
 
+		const GraphButtonBox *buttonBox() const { return m_buttonBox; }
+		GraphButtonBox *buttonBox() { return m_buttonBox; }
+	protected:
+		Graph *m_graph;
+		GraphButtonBox *m_buttonBox = nullptr;
 		struct
 		{
 			YRange yRange;
@@ -144,16 +161,19 @@ public:
 			QRect verticalHeaderRect;
 			QRect yAxisRect;
 		} m_layout;
-	protected:
+
 		ChannelStyle m_style;
 		int m_modelIndex = 0;
 		int m_metaTypeId = 0;
+		int m_buttonCount = 2;
 	};
 
 	//SHV_FIELD_BOOL_IMPL2(a, A, utoCreateChannels, true)
 public:
 	Graph(QObject *parent = nullptr);
-	virtual ~Graph() {}
+	virtual ~Graph();
+
+	const GraphStyle& effectiveStyle() const { return  m_effectiveStyle; }
 
 	void setModel(GraphModel *model);
 	GraphModel *model() const;
@@ -230,6 +250,7 @@ public:
 	static std::function<double (int)> posToValueFn(const WidgetRange &src, const YRange &dest);
 
 	Q_SIGNAL void presentationDirty(const QRect &rect);
+	void emitPresentationDirty(const QRect &rect) { emit presentationDirty(rect); }
 protected:
 	void sanityXRangeZoom();
 	//void onModelXRangeChanged(const timeline::XRange &range);
@@ -265,7 +286,7 @@ protected:
 	GraphStyle m_style;
 	ChannelStyle m_defaultChannelStyle;
 
-	QVector<Channel> m_channels;
+	QVector<Channel*> m_channels;
 
 	struct SHVVISU_DECL_EXPORT XAxis {
 		enum class LabelFormat {MSec, Sec, Min, Hour, Day, Month, Year};

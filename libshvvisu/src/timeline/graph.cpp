@@ -56,6 +56,11 @@ Graph::Graph(QObject *parent)
 {
 }
 
+Graph::~Graph()
+{
+	clearChannels();
+}
+
 void Graph::setModel(GraphModel *model)
 {
 	if(m_model)
@@ -79,7 +84,7 @@ void Graph::createChannelsFromModel(const shv::visu::timeline::Graph::CreateChan
 		QColor("orange"),
 		QColor("#6da13a"), // green
 	};
-	m_channels.clear();
+	clearChannels();
 	if(!m_model)
 		return;
 	std::regex rx_path_pattern;
@@ -114,6 +119,7 @@ void Graph::createChannelsFromModel(const shv::visu::timeline::Graph::CreateChan
 			yrange = YRange{0, 1};
 		}
 		x_range = x_range.united(m_model->xRange(model_ix));
+		//shvInfo() << "new channel:" << model_ix;
 		Channel &ch = appendChannel(model_ix);
 		int graph_ix = channelCount() - 1;
 		ChannelStyle style = ch.style();
@@ -127,35 +133,34 @@ void Graph::createChannelsFromModel(const shv::visu::timeline::Graph::CreateChan
 
 void Graph::clearChannels()
 {
+	qDeleteAll(m_channels);
 	m_channels.clear();
 }
 
-timeline::Graph::Channel &Graph::appendChannel(int model_index)
+shv::visu::timeline::Graph::Channel &Graph::appendChannel(int model_index)
 {
 	if(model_index >= 0) {
 		if(model_index >= m_model->channelCount())
 			SHV_EXCEPTION("Invalid model index: " + std::to_string(model_index));
 	}
-	m_channels.append(Channel());
-	Channel &ch = m_channels.last();
-	ch.setModelIndex(model_index < 0? m_channels.count() - 1: model_index);
-	return ch;
+	m_channels.append(new Channel(this));
+	Channel *ch = m_channels.last();
+	ch->setModelIndex(model_index < 0? m_channels.count() - 1: model_index);
+	return *ch;
 }
 
-Graph::Channel &Graph::channelAt(int ix)
+Graph::Channel& Graph::channelAt(int ix)
 {
-	/// seg fault is better than exception in this case
-	//if(ix < 0 || ix >= m_channels.count())
-	//	SHV_EXCEPTION("Index out of range.");
-	return m_channels[ix];
+	if(ix < 0 || ix >= m_channels.count())
+		SHV_EXCEPTION("Index out of range.");
+	return *m_channels[ix];
 }
 
 const Graph::Channel &Graph::channelAt(int ix) const
 {
-	/// seg fault is better than exception in this case
-	//if(ix < 0 || ix >= m_channels.count())
-	//	SHV_EXCEPTION("Index out of range.");
-	return m_channels[ix];
+	if(ix < 0 || ix >= m_channels.count())
+		SHV_EXCEPTION("Index out of range.");
+	return *m_channels[ix];
 }
 
 Graph::DataRect Graph::dataRect(int channel_ix) const
@@ -323,14 +328,14 @@ void Graph::setXRangeZoom(const XRange &r)
 
 void Graph::setYRange(int channel_ix, const YRange &r)
 {
-	Channel &ch = m_channels[channel_ix];
+	Channel &ch = channelAt(channel_ix);
 	ch.m_state.yRange = r;
 	resetZoom(channel_ix);
 }
 
 void Graph::enlargeYRange(int channel_ix, double step)
 {
-	Channel &ch = m_channels[channel_ix];
+	Channel &ch = channelAt(channel_ix);
 	YRange r = ch.m_state.yRange;
 	r.min -= step;
 	r.max += step;
@@ -339,7 +344,7 @@ void Graph::enlargeYRange(int channel_ix, double step)
 
 void Graph::setYRangeZoom(int channel_ix, const YRange &r)
 {
-	Channel &ch = m_channels[channel_ix];
+	Channel &ch = channelAt(channel_ix);
 	ch.m_state.yRangeZoom = r;
 	if(ch.m_state.yRangeZoom.min < ch.m_state.yRange.min)
 		ch.m_state.yRangeZoom.min = ch.m_state.yRange.min;
@@ -350,7 +355,7 @@ void Graph::setYRangeZoom(int channel_ix, const YRange &r)
 
 void Graph::resetZoom(int channel_ix)
 {
-	Channel &ch = m_channels[channel_ix];
+	Channel &ch = channelAt(channel_ix);
 	setYRangeZoom(channel_ix, ch.yRange());
 }
 
@@ -473,7 +478,7 @@ void Graph::makeXAxis()
 void Graph::makeYAxis(int channel)
 {
 	shvLogFuncFrame();
-	Channel &ch = m_channels[channel];
+	Channel &ch = channelAt(channel);
 	if(ch.yAxisRect().height() == 0)
 		return;
 	YRange range = ch.yRangeZoom();
@@ -561,6 +566,7 @@ double Graph::px2u(int px) const
 void Graph::makeLayout(const QRect &rect)
 {
 	m_miniMapCache = QPixmap();
+	int header_inset = u2px(m_effectiveStyle.headerInset());
 
 	QSize viewport_size;
 	viewport_size.setWidth(rect.width());
@@ -587,7 +593,7 @@ void Graph::makeLayout(const QRect &rect)
 	struct Rest { int index; int rest; };
 	QVector<Rest> rests;
 	for (int i = 0; i < m_channels.count(); ++i) {
-		Channel &ch = m_channels[i];
+		Channel &ch = channelAt(i);
 		ch.effectiveStyle = mergeMaps(m_defaultChannelStyle, ch.style());
 		int ch_h = u2px(ch.effectiveStyle.heightMin());
 		rests << Rest{i, u2px(ch.effectiveStyle.heightRange())};
@@ -612,7 +618,7 @@ void Graph::makeLayout(const QRect &rect)
 		for (int i = 0; i < rests.count(); ++i) {
 			int fair_rest = h_rest / (rests.count() - i);
 			const Rest &r = rests[i];
-			Channel &ch = m_channels[r.index];
+			Channel &ch = channelAt(r.index);
 			int h = u2px(ch.effectiveStyle.heightRange());
 			if(h > fair_rest)
 				h = fair_rest;
@@ -624,7 +630,7 @@ void Graph::makeLayout(const QRect &rect)
 	int widget_height = 0;
 	widget_height += u2px(m_effectiveStyle.topMargin());
 	for (int i = m_channels.count() - 1; i >= 0; --i) {
-		Channel &ch = m_channels[i];
+		Channel &ch = channelAt(i);
 
 		ch.m_layout.graphRect.moveTop(widget_height);
 		//ch.layout.graphRect.setWidth(layout.navigationBarRect.width());
@@ -643,9 +649,14 @@ void Graph::makeLayout(const QRect &rect)
 	}
 	// make data area rect a bit slimmer to not clip wide graph line
 	for (int i = m_channels.count() - 1; i >= 0; --i) {
-		Channel &ch = m_channels[i];
+		Channel &ch = channelAt(i);
 		int line_width = u2px(ch.effectiveStyle.lineWidth());
 		ch.m_layout.dataAreaRect = ch.m_layout.graphRect.adjusted(0, line_width, 0, -line_width);
+
+		GraphButtonBox *bbx = ch.buttonBox();
+		if(bbx) {
+			bbx->moveTopRight(ch.m_layout.verticalHeaderRect.topRight() + QPoint(-header_inset, header_inset));
+		}
 	}
 	m_layout.xAxisRect.moveTop(widget_height);
 	widget_height += u2px(m_effectiveStyle.xAxisHeight());
@@ -685,10 +696,14 @@ void Graph::drawRectText(QPainter *painter, const QRect &rect, const QString &te
 
 void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_rect)
 {
-	//shvLogFuncFrame();
+	//auto rect_to_string = [](const QRect &r) {
+	//	QString s = "%1,%2 %3x%4";
+	//	return s.arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
+	//};
+	//shvWarning() << __FUNCTION__ << "channel cnt:" << channelCount() << "dirty rect:" << rect_to_string(dirty_rect);
 	drawBackground(painter, dirty_rect);
 	for (int i = 0; i < m_channels.count(); ++i) {
-		const Channel &ch = m_channels[i];
+		const Channel &ch = channelAt(i);
 		if(dirty_rect.intersects(ch.graphRect())) {
 			drawBackground(painter, i);
 			drawGrid(painter, i);
@@ -747,7 +762,7 @@ void Graph::drawMiniMap(QPainter *painter)
 		QPainter *painter2 = &p;
 		painter2->fillRect(mm_rect, m_defaultChannelStyle.colorBackground());
 		for (int i = 0; i < m_channels.count(); ++i) {
-			const Channel &ch = m_channels[i];
+			const Channel &ch = channelAt(i);
 			ChannelStyle ch_st = ch.effectiveStyle;
 			//ch_st.setLineAreaStyle(ChannelStyle::LineAreaStyle::Filled);
 			DataRect drect{xRange(), ch.yRange()};
@@ -755,10 +770,6 @@ void Graph::drawMiniMap(QPainter *painter)
 		}
 
 	}
-	//auto rect_to_string = [](const QRect &r) {
-	//	QString s = "%1,%2 %3x%4";
-	//	return s.arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
-	//};
 	//shvWarning() << "-----------------------------------";
 	//shvWarning() << "layout rect:"  << rect_to_string(m_layout.rect);
 	//shvWarning() << "miniMapRect:"  << rect_to_string(m_layout.miniMapRect);
@@ -793,8 +804,8 @@ void Graph::drawMiniMap(QPainter *painter)
 
 void Graph::drawVerticalHeader(QPainter *painter, int channel)
 {
-	static constexpr int BOX_INSET = 4;
-	const Channel &ch = m_channels[channel];
+	int header_inset = u2px(m_effectiveStyle.headerInset());
+	Channel &ch = channelAt(channel);
 	QColor c = m_effectiveStyle.color();
 	QColor bc = m_effectiveStyle.colorPanel();
 	//bc.setAlphaF(0.05);
@@ -818,14 +829,14 @@ void Graph::drawVerticalHeader(QPainter *painter, int channel)
 	painter->setClipRect(ch.m_layout.verticalHeaderRect);
 	{
 		QRect r = ch.m_layout.verticalHeaderRect;
-		r.setWidth(BOX_INSET);
+		r.setWidth(header_inset);
 		painter->fillRect(r, ch.effectiveStyle.color());
 	}
 
 	font.setBold(true);
 	QFontMetrics fm(font);
 	painter->setFont(font);
-	QRect text_rect = ch.m_layout.verticalHeaderRect.adjusted(2*BOX_INSET, BOX_INSET, -BOX_INSET, -BOX_INSET);
+	QRect text_rect = ch.m_layout.verticalHeaderRect.adjusted(2*header_inset, header_inset, -header_inset, -header_inset);
 	painter->drawText(text_rect, name);
 
 	//font.setBold(false);
@@ -834,17 +845,20 @@ void Graph::drawVerticalHeader(QPainter *painter, int channel)
 	//painter->drawText(text_rect, shv_path);
 
 	painter->restore();
+	GraphButtonBox *bbx = ch.buttonBox();
+	if(bbx)
+		bbx->draw(painter);
 }
 
 void Graph::drawBackground(QPainter *painter, int channel)
 {
-	const Channel &ch = m_channels[channel];
+	const Channel &ch = channelAt(channel);
 	painter->fillRect(ch.m_layout.graphRect, ch.effectiveStyle.colorBackground());
 }
 
 void Graph::drawGrid(QPainter *painter, int channel)
 {
-	const Channel &ch = m_channels[channel];
+	const Channel &ch = channelAt(channel);
 	const XAxis &x_axis = m_state.axis;
 	if(x_axis.tickInterval == 0) {
 		drawRectText(painter, ch.m_layout.graphRect, "grid", m_effectiveStyle.font(), ch.effectiveStyle.colorGrid());
@@ -1021,7 +1035,7 @@ void Graph::drawYAxis(QPainter *painter, int channel)
 {
 	if(m_effectiveStyle.yAxisWidth() == 0)
 		return;
-	const Channel &ch = m_channels[channel];
+	const Channel &ch = channelAt(channel);
 	const Channel::YAxis &axis = ch.m_state.axis;
 	if(qFuzzyCompare(axis.tickInterval, 0)) {
 		drawRectText(painter, ch.m_layout.yAxisRect, "y-axis", m_effectiveStyle.font(), ch.effectiveStyle.colorAxis());
