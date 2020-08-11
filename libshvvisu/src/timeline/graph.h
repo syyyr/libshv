@@ -42,7 +42,7 @@ public:
 	{
 		SHV_VARIANTMAP_FIELD2(int, u, setU, nitSize, 20) // px
 		SHV_VARIANTMAP_FIELD2(double, h, setH, eaderInset, 0.2) // units
-		SHV_VARIANTMAP_FIELD2(double, b, setB, uttonSize, 1.5) // units
+		SHV_VARIANTMAP_FIELD2(double, b, setB, uttonSize, 1.2) // units
 		SHV_VARIANTMAP_FIELD2(double, l, setL, eftMargin, 0.3) // units
 		SHV_VARIANTMAP_FIELD2(double, r, setR, ightMargin, 0.3) // units
 		SHV_VARIANTMAP_FIELD2(double, t, setT, opMargin, 0.3) // units

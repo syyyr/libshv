@@ -566,7 +566,6 @@ double Graph::px2u(int px) const
 void Graph::makeLayout(const QRect &rect)
 {
 	m_miniMapCache = QPixmap();
-	int header_inset = u2px(m_effectiveStyle.headerInset());
 
 	QSize viewport_size;
 	viewport_size.setWidth(rect.width());
@@ -655,7 +654,8 @@ void Graph::makeLayout(const QRect &rect)
 
 		GraphButtonBox *bbx = ch.buttonBox();
 		if(bbx) {
-			bbx->moveTopRight(ch.m_layout.verticalHeaderRect.topRight() + QPoint(-header_inset, header_inset));
+			int inset = bbx->buttonSpace();
+			bbx->moveTopRight(ch.m_layout.verticalHeaderRect.topRight() + QPoint(-inset, inset));
 		}
 	}
 	m_layout.xAxisRect.moveTop(widget_height);

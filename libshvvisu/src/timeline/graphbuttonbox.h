@@ -37,9 +37,11 @@ public:
 
 	//QRect rect() const { return m_rect; }
 	//void setRect(const QRect &r) { m_rect = r; }
-protected:
+	QSize size() const;
 	int buttonSize() const;
 	int buttonSpace() const;
+protected:
+	int buttonCount() const { return m_buttonIds.count(); }
 	QRect buttonRect(int ix) const;
 
 	void drawButton(QPainter *painter, const QRect &rect, ButtonId btid);

@@ -4,6 +4,8 @@
 #include <QMouseEvent>
 #include <QPainter>
 
+#include <cmath>
+
 namespace shv {
 namespace visu {
 namespace timeline {
@@ -29,10 +31,8 @@ GraphButtonBox::GraphButtonBox(const QVector<ButtonId> &button_ids, Graph *graph
 
 void GraphButtonBox::moveTopRight(const QPoint &p)
 {
-	int button_size = buttonSize();
+	m_rect.setSize(size());
 	m_rect.moveTopRight(p);
-	m_rect.setHeight(button_size);
-	m_rect.setRight(buttonRect(m_buttonIds.count()).left() - buttonSpace());
 }
 
 void GraphButtonBox::event(QEvent *ev)
@@ -73,6 +73,14 @@ void GraphButtonBox::draw(QPainter *painter)
 	}
 }
 
+QSize GraphButtonBox::size() const
+{
+	int w = buttonCount() * buttonSize();
+	if(buttonCount() > 0)
+		w += (buttonCount() - 1) * buttonSpace();
+	return QSize{w, buttonSize()};
+}
+
 int GraphButtonBox::buttonSize() const
 {
 	return m_graph->u2px(m_graph->effectiveStyle().buttonSize());
@@ -80,13 +88,13 @@ int GraphButtonBox::buttonSize() const
 
 int GraphButtonBox::buttonSpace() const
 {
-	return buttonSize() / 5;
+	return buttonSize() / 6;
 }
 
 QRect GraphButtonBox::buttonRect(int ix) const
 {
 	if(ix >= 0) {
-		int offset = ix * buttonSize() + ((ix > 0)? (ix-1) * buttonSpace(): 0);
+		int offset = ix * (buttonSize() + buttonSpace());
 		QRect ret = m_rect;
 		ret.setX(ret.x() + offset);
 		ret.setWidth(buttonSize());
@@ -105,27 +113,47 @@ void GraphButtonBox::drawButton(QPainter *painter, const QRect &rect, GraphButto
 		QPen p = p1;
 		p.setWidth(buttonSize() / 6);
 		painter->setPen(p);
-		int x1 = rect.width() / 8;
-		int x2 = rect.width() - rect.width() / 8;
-		int h = rect.height() / 3;
+		int x1 = rect.width() / 4;
+		int x2 = rect.width() - x1;
+		int h = rect.height() / 4;
 		for (int i = 0; i < 3; ++i) {
-			int y = h * i + h/2;
+			int y = h + h/4 + h * i;
 			painter->drawLine(rect.x() + x1, rect.top() + y, rect.x() + x2, rect.top() + y);
 		}
 		break;
 	}
 	case ButtonId::Hide: {
+		int inset = rect.height() / 8;
 		QPen p = p1;
-		p.setWidth(buttonSize() / 6);
 		painter->setPen(p);
-		int offset = rect.height() / 4;
-		QRect r = rect.adjusted(offset, offset, -offset, -offset);
-		painter->drawRect(r);
+		QRect r1 = rect.adjusted(inset, inset, -inset, -inset);
+
+		QRect r = r1;
+		int start_angle = 25;
+		const double pi = std::acos(-1);
+		int offset = std::sin(start_angle * pi / 180) * r.height() / 2;
+		int span_angle = 180 - 2*start_angle;
+		r.moveTop(r.top() + offset);
+		painter->drawArc(r, start_angle * 16, span_angle * 16);
+		r.moveTop(r.top() - 2*offset);
+		painter->drawArc(r, (180 + start_angle) * 16, span_angle * 16);
+
+		int w = r1.width() / 3;
+		QRect r2{0, 0, w, w};
+		r2.moveCenter(rect.center());
+		//painter->save();
+		//painter->setBrush(p.color());
+		painter->drawEllipse(r2);
+		//painter->restore();
+		r = r1.adjusted(inset, inset, -inset, -inset);
+		painter->drawLine(r.bottomLeft(), r.topRight());
 		break;
 	}
 	}
-	painter->setPen(p1);
-	painter->drawRoundedRect(rect, rect.width() / 8, rect.height() / 8);
+	//if(hover) {
+	//	painter->setPen(p1);
+	//	painter->drawRoundedRect(rect, rect.width() / 8, rect.height() / 8);
+	//}
 }
 
 } // namespace timeline
