@@ -22,8 +22,8 @@ GraphButton::GraphButton(QObject *parent)
 //===================================================
 // GraphButtonBox
 //===================================================
-GraphButtonBox::GraphButtonBox(const QVector<ButtonId> &button_ids, Graph *graph)
-	: m_graph(graph)
+GraphButtonBox::GraphButtonBox(const QVector<ButtonId> &button_ids, QObject *parent)
+	: QObject(parent)
 	, m_buttonIds(button_ids)
 {
 
@@ -35,27 +35,51 @@ void GraphButtonBox::moveTopRight(const QPoint &p)
 	m_rect.moveTopRight(p);
 }
 
-void GraphButtonBox::event(QEvent *ev)
+void GraphButtonBox::processEvent(QEvent *ev)
 {
+	auto invalidate_bb = [this]() {
+		graph()->emitPresentationDirty(m_rect.adjusted(-10, -10, 10, 10));
+	};
 	switch (ev->type()) {
 	case QEvent::MouseMove: {
 		QMouseEvent *event = static_cast<QMouseEvent*>(ev);
 		QPoint pos = event->pos();
 		if(m_rect.contains(pos)) {
-			if(!m_mouseOver) {
-				m_mouseOver = true;
-				m_graph->emitPresentationDirty(m_rect);
-				ev->accept();
-				return;
+			m_mouseOver = true;
+			for (int i = 0; i < m_buttonIds.count(); ++i) {
+				if(buttonRect(i).contains(pos)) {
+					m_mouseOverButtonIndex = i;
+					break;
+				}
 			}
+			invalidate_bb();
 		}
 		else {
 			if(m_mouseOver) {
 				m_mouseOver = false;
-				m_graph->emitPresentationDirty(m_rect);
+				m_mouseOverButtonIndex = -1;
+				m_mousePressButtonIndex = -1;
+				invalidate_bb();
 			}
 		}
 		break;
+	}
+	case QEvent::MouseButtonPress: {
+		QMouseEvent *event = static_cast<QMouseEvent*>(ev);
+		QPoint pos = event->pos();
+		for (int i = 0; i < m_buttonIds.count(); ++i) {
+			if(buttonRect(i).contains(pos)) {
+				m_mousePressButtonIndex = i;
+				break;
+			}
+		}
+		invalidate_bb();
+		break;
+	}
+	case QEvent::MouseButtonRelease: {
+		emit buttonClicked((int)m_buttonIds.value(m_mousePressButtonIndex));
+		m_mousePressButtonIndex = -1;
+		invalidate_bb();
 	}
 	default:
 		break;
@@ -64,12 +88,11 @@ void GraphButtonBox::event(QEvent *ev)
 
 void GraphButtonBox::draw(QPainter *painter)
 {
-	if(!m_mouseOver)
+	if(m_mouseOverButtonIndex < 0)
 		return;
-	painter->fillRect(m_rect, m_graph->effectiveStyle().colorPanel());
+	painter->fillRect(m_rect, graph()->effectiveStyle().colorPanel());
 	for (int i = 0; i < m_buttonIds.count(); ++i) {
-		auto btid = m_buttonIds[i];
-		drawButton(painter, buttonRect(i), btid);
+		drawButton(painter, buttonRect(i), i);
 	}
 }
 
@@ -83,7 +106,7 @@ QSize GraphButtonBox::size() const
 
 int GraphButtonBox::buttonSize() const
 {
-	return m_graph->u2px(m_graph->effectiveStyle().buttonSize());
+	return graph()->u2px(graph()->effectiveStyle().buttonSize());
 }
 
 int GraphButtonBox::buttonSpace() const
@@ -103,15 +126,26 @@ QRect GraphButtonBox::buttonRect(int ix) const
 	return QRect();
 }
 
-void GraphButtonBox::drawButton(QPainter *painter, const QRect &rect, GraphButtonBox::ButtonId btid)
+void GraphButtonBox::drawButton(QPainter *painter, const QRect &rect, int button_index)
 {
-	QPen p1(m_graph->effectiveStyle().color());
-	p1.setWidth(m_graph->u2px(0.1));
-	p1.setCapStyle(Qt::RoundCap);
+	int corner_radius = rect.height() / 8;
+	painter->save();
+	QPen p1(graph()->effectiveStyle().color());
+	p1.setWidth(graph()->u2px(0.1));
+	if(m_mouseOverButtonIndex == button_index) {
+		painter->setPen(p1);
+		if(m_mousePressButtonIndex == button_index)
+			painter->setBrush(Qt::darkGray);
+		else
+			painter->setBrush(graph()->effectiveStyle().colorBackground());
+		painter->drawRoundedRect(rect, corner_radius, corner_radius);
+	}
+	auto btid = m_buttonIds[button_index];
 	switch (btid) {
 	case ButtonId::Properties: {
 		QPen p = p1;
 		p.setWidth(buttonSize() / 6);
+		p.setCapStyle(Qt::RoundCap);
 		painter->setPen(p);
 		int x1 = rect.width() / 4;
 		int x2 = rect.width() - x1;
@@ -149,11 +183,22 @@ void GraphButtonBox::drawButton(QPainter *painter, const QRect &rect, GraphButto
 		painter->drawLine(r.bottomLeft(), r.topRight());
 		break;
 	}
+	default:
+		break;
 	}
-	//if(hover) {
-	//	painter->setPen(p1);
-	//	painter->drawRoundedRect(rect, rect.width() / 8, rect.height() / 8);
-	//}
+	painter->restore();
+}
+
+Graph *GraphButtonBox::graph() const
+{
+	auto *o = parent();
+	while(o) {
+		auto *g = qobject_cast<Graph*>(o);
+		if(g)
+			return g;
+		o = o->parent();
+	}
+	return nullptr;
 }
 
 } // namespace timeline

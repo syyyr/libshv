@@ -37,12 +37,15 @@ void GraphWidget::setGraph(Graph *g)
 	if(m_graph)
 		m_graph->disconnect(this);
 	m_graph = g;
-	Graph::GraphStyle style = graph()->style();
+	Graph::Style style = graph()->style();
 	style.init(this);
 	graph()->setStyle(style);
 	update();
-	connect(m_graph, &Graph::presentationDirty, this, [this]() {
-		update();
+	connect(m_graph, &Graph::presentationDirty, this, [this](const QRect &rect) {
+		update(rect);
+	});
+	connect(m_graph, &Graph::layoutChanged, this, [this]() {
+		makeLayout();
 	});
 }
 
@@ -73,20 +76,22 @@ void GraphWidget::makeLayout()
 
 bool GraphWidget::event(QEvent *ev)
 {
-	//if(ev->type() == QEvent::MouseMove) {
+	if(ev->type() == QEvent::MouseMove
+			|| ev->type() == QEvent::MouseButtonPress
+			|| ev->type() == QEvent::MouseButtonRelease) {
 		Graph *gr = graph();
 		if(gr) {
 			for (int i = 0; i < gr->channelCount(); ++i) {
-				Graph::Channel &ch = gr->channelAt(i);
-				GraphButtonBox *bbx = ch.buttonBox();
+				GraphChannel *ch = gr->channelAt(i);
+				GraphButtonBox *bbx = ch->buttonBox();
 				if(bbx) {
-					bbx->event(ev);
-					//if(ev->isAccepted())
+					bbx->processEvent(ev);
+					//if(ev->isAccepted()) cannot accept mouse-move, since it invalidates painting regions
 					//	return true;
 				}
 			}
 		}
-	//}
+	}
 	return Super::event(ev);
 }
 
@@ -166,8 +171,8 @@ int GraphWidget::isMouseAboveGraphVerticalHeader(const QPoint &pos) const
 {
 	const Graph *gr = graph();
 	for (int i = 0; i < gr->channelCount(); ++i) {
-		const Graph::Channel &ch = gr->channelAt(i);
-		if(ch.verticalHeaderRect().contains(pos)) {
+		const GraphChannel *ch = gr->channelAt(i);
+		if(ch->verticalHeaderRect().contains(pos)) {
 			return i;
 		}
 	}
@@ -422,18 +427,18 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
 	if(event->modifiers() == Qt::ControlModifier) {
 		/// resize vertical header cell on Ctrl + mouse_wheel
 		for (int i = 0; i < m_graph->channelCount(); ++i) {
-			Graph::Channel &ch = m_graph->channelAt(i);
-			if(ch.verticalHeaderRect().contains(pos)) {
+			GraphChannel *ch = m_graph->channelAt(i);
+			if(ch->verticalHeaderRect().contains(pos)) {
 				static constexpr int STEP = 2;
-				timeline::Graph::ChannelStyle ch_style = ch.style();
+				timeline::GraphChannel::Style ch_style = ch->style();
 				double deg = event->angleDelta().y();
-				int new_h = static_cast<int>(deg * ch.verticalHeaderRect().height() / 120 / STEP);
-				new_h = ch.verticalHeaderRect().height() + new_h;
+				int new_h = static_cast<int>(deg * ch->verticalHeaderRect().height() / 120 / STEP);
+				new_h = ch->verticalHeaderRect().height() + new_h;
 				double new_u = m_graph->px2u(new_h);
 				//shvInfo() << i << ch.verticalHeaderRect().height() << new_h << new_u;
 				ch_style.setHeightMax(new_u);
 				ch_style.setHeightMin(new_u);
-				ch.setStyle(ch_style);
+				ch->setStyle(ch_style);
 				makeLayout();
 				return;
 			}
@@ -449,14 +454,15 @@ void GraphWidget::contextMenuEvent(QContextMenuEvent *event)
 	QMenu menu(this);
 	const QPoint pos = event->pos();
 	for (int i = 0; i < m_graph->channelCount(); ++i) {
-		const Graph::Channel &ch = m_graph->channelAt(i);
-		if(ch.verticalHeaderRect().contains(pos)) {
-			menu.addAction(tr("Reset Y-range"), [this, ch, i]() {
+		const GraphChannel *ch = m_graph->channelAt(i);
+		int chix = ch->modelIndex();
+		if(ch->verticalHeaderRect().contains(pos)) {
+			menu.addAction(tr("Reset Y-range"), [this, chix, i]() {
 				//shvInfo() << "settings";
 				timeline::GraphModel *m = m_graph->model();
 				if(!m)
 					return;
-				timeline::YRange rng = m->yRange(ch.modelIndex());
+				timeline::YRange rng = m->yRange(chix);
 				m_graph->setYRange(i, rng);
 				this->update();
 			});

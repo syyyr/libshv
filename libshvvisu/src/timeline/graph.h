@@ -1,10 +1,12 @@
 #pragma once
 
+#include "graphchannel.h"
 #include "graphbuttonbox.h"
 #include "sample.h"
 #include "../shvvisuglobal.h"
 
 #include <shv/coreqt/utils.h>
+#include <shv/core/exception.h>
 
 #include <QObject>
 #include <QVector>
@@ -38,7 +40,7 @@ public:
 
 	using WidgetRange = Range<int>;
 
-	class SHVVISU_DECL_EXPORT GraphStyle : public QVariantMap
+	class SHVVISU_DECL_EXPORT Style : public QVariantMap
 	{
 		SHV_VARIANTMAP_FIELD2(int, u, setU, nitSize, 20) // px
 		SHV_VARIANTMAP_FIELD2(double, h, setH, eaderInset, 0.2) // units
@@ -69,111 +71,11 @@ public:
 
 		//double buttonSpacing() const { return buttonSize() / 5; }
 	};
-	class SHVVISU_DECL_EXPORT ChannelStyle : public QVariantMap
-	{
-	public:
-		struct Interpolation { enum Enum {None = 0, Line, Stepped};};
-		struct LineAreaStyle { enum Enum {Blank = 0, Filled};};
-		static constexpr double CosmeticLineWidth = 0;
-
-		SHV_VARIANTMAP_FIELD2(double, h, setH, eightMin, 2.5) // units
-		SHV_VARIANTMAP_FIELD2(double, h, setH, eightMax, 1000) // units
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olor, QColor(Qt::magenta))
-		//SHV_VARIANTMAP_FIELD(QColor, c, setC, olorLineArea)
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorGrid, QColor(Qt::darkGreen))
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorAxis, QColor(Qt::gray))
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorBackground, QColor("#232323"))
-
-		SHV_VARIANTMAP_FIELD2(int, i, setI, nterpolation, Interpolation::Stepped)
-		SHV_VARIANTMAP_FIELD2(int, l, setL, ineAreaStyle, LineAreaStyle::Blank)
-		SHV_VARIANTMAP_FIELD2(double, l, setL, ineWidth, 0.3)
-
-		//SHV_VARIANTMAP_FIELD(QFont, f, setF, ont)
-
-	public:
-		ChannelStyle() : QVariantMap() {}
-		ChannelStyle(const QVariantMap &o) : QVariantMap(o) {}
-
-		static constexpr double HEIGHT_HUGE = 10e3;
-
-		double heightRange() const
-		{
-			if(!heightMax_isset())
-				return HEIGHT_HUGE;
-			double ret = heightMax() - heightMin();
-			return ret < 0? 0: ret;
-		}
-	};
-
-	class SHVVISU_DECL_EXPORT Channel
-	{
-		friend class Graph;
-	public:
-		Channel(Graph *graph)
-			: m_graph(graph)
-			, m_buttonBox(new GraphButtonBox({GraphButtonBox::ButtonId::Hide, GraphButtonBox::ButtonId::Properties}, graph))
-		{}
-		~Channel() {if(m_buttonBox) delete m_buttonBox;}
-
-		void setMetaTypeId(int id) { m_metaTypeId = id; }
-		int metaTypeId() const { return m_metaTypeId; }
-
-		inline int modelIndex() const {return m_modelIndex;}
-		void setModelIndex(int ix) {m_modelIndex = ix;}
-
-		YRange yRange() const { return m_state.yRange; }
-		YRange yRangeZoom() const { return m_state.yRangeZoom; }
-
-		const ChannelStyle& style() const {return m_style;}
-		void setStyle(const ChannelStyle& st) { m_style = st; }
-		ChannelStyle effectiveStyle;
-
-		const QRect& graphRect() const { return  m_layout.graphRect; }
-		const QRect& dataAreaRect() const { return  m_layout.dataAreaRect; }
-		const QRect& verticalHeaderRect() const { return  m_layout.verticalHeaderRect; }
-		const QRect& yAxisRect() const { return  m_layout.yAxisRect; }
-
-		int valueToPos(double val) const;
-		double posToValue(int y) const;
-
-		struct YAxis {
-			double tickInterval = 0;
-			int subtickEvery = 1;
-		};
-
-		const GraphButtonBox *buttonBox() const { return m_buttonBox; }
-		GraphButtonBox *buttonBox() { return m_buttonBox; }
-	protected:
-		Graph *m_graph;
-		GraphButtonBox *m_buttonBox = nullptr;
-		struct
-		{
-			YRange yRange;
-			YRange yRangeZoom;
-			YAxis axis;
-		} m_state;
-
-		struct
-		{
-			//QRect rect;
-			QRect graphRect;
-			QRect dataAreaRect;
-			QRect verticalHeaderRect;
-			QRect yAxisRect;
-		} m_layout;
-
-		ChannelStyle m_style;
-		int m_modelIndex = 0;
-		int m_metaTypeId = 0;
-		int m_buttonCount = 2;
-	};
-
-	//SHV_FIELD_BOOL_IMPL2(a, A, utoCreateChannels, true)
 public:
 	Graph(QObject *parent = nullptr);
 	virtual ~Graph();
 
-	const GraphStyle& effectiveStyle() const { return  m_effectiveStyle; }
+	const Style& effectiveStyle() const { return  m_effectiveStyle; }
 
 	void setModel(GraphModel *model);
 	GraphModel *model() const;
@@ -194,9 +96,10 @@ public:
 
 	int channelCount() const { return  m_channels.count(); }
 	void clearChannels();
-	Channel& appendChannel(int model_index = -1);
-	Channel& channelAt(int ix);
-	const Channel& channelAt(int ix) const;
+	GraphChannel* appendChannel(int model_index = -1);
+	GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw);
+	const GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw) const;
+	void setChannelVisible(int channel_ix, bool b);
 	DataRect dataRect(int channel_ix) const;
 
 	timemsec_t miniMapPosToTime(int pos) const;
@@ -231,10 +134,10 @@ public:
 	void resetZoom(int channel_ix);
 	void zoomToSelection();
 
-	const GraphStyle& style() const { return m_style; }
-	void setStyle(const GraphStyle &st);
-	void setDefaultChannelStyle(const ChannelStyle &st);
-	ChannelStyle defaultChannelStyle() const { return m_defaultChannelStyle; }
+	const Style& style() const { return m_style; }
+	void setStyle(const Style &st);
+	void setDefaultChannelStyle(const GraphChannel::Style &st);
+	GraphChannel::Style defaultChannelStyle() const { return m_defaultChannelStyle; }
 
 	void makeLayout(const QRect &rect);
 	void draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_rect);
@@ -251,6 +154,7 @@ public:
 
 	Q_SIGNAL void presentationDirty(const QRect &rect);
 	void emitPresentationDirty(const QRect &rect) { emit presentationDirty(rect); }
+	Q_SIGNAL void layoutChanged();
 protected:
 	void sanityXRangeZoom();
 	//void onModelXRangeChanged(const timeline::XRange &range);
@@ -269,7 +173,7 @@ protected:
 	virtual void drawSamples(QPainter *painter, int channel_ix
 			, const DataRect &src_rect = DataRect()
 			, const QRect &dest_rect = QRect()
-			, const ChannelStyle &channel_style = ChannelStyle());
+			, const GraphChannel::Style &channel_style = GraphChannel::Style());
 	virtual void drawCrossBar(QPainter *painter, int channel_ix, const QPoint &crossbar_pos, const QColor &color);
 	virtual void drawSelection(QPainter *painter);
 
@@ -281,12 +185,12 @@ protected:
 protected:
 	GraphModel *m_model = nullptr;
 
-	GraphStyle m_effectiveStyle;
+	Style m_effectiveStyle;
 
-	GraphStyle m_style;
-	ChannelStyle m_defaultChannelStyle;
+	Style m_style;
+	GraphChannel::Style m_defaultChannelStyle;
 
-	QVector<Channel*> m_channels;
+	QVector<GraphChannel*> m_channels;
 
 	struct SHVVISU_DECL_EXPORT XAxis {
 		enum class LabelFormat {MSec, Sec, Min, Hour, Day, Month, Year};

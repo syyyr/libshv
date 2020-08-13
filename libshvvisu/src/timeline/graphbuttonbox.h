@@ -20,18 +20,20 @@ public:
 	GraphButton(QObject *parent = nullptr);
 };
 */
-class GraphButtonBox //: public QObject
+class GraphButtonBox : public QObject
 {
-	//Q_OBJECT
+	Q_OBJECT
 public:
-	enum class ButtonId { Properties, Hide };
+	enum class ButtonId { Invalid = 0, Properties, Hide, User };
 public:
-	GraphButtonBox(const QVector<ButtonId> &button_ids, Graph *graph);
+	GraphButtonBox(const QVector<ButtonId> &button_ids, QObject *parent);
 	virtual ~GraphButtonBox() {}
+
+	Q_SIGNAL void buttonClicked(int button_id);
 
 	void moveTopRight(const QPoint &p);
 
-	virtual void event(QEvent *ev);
+	void processEvent(QEvent *ev);
 
 	virtual void draw(QPainter *painter);
 
@@ -44,14 +46,17 @@ protected:
 	int buttonCount() const { return m_buttonIds.count(); }
 	QRect buttonRect(int ix) const;
 
-	void drawButton(QPainter *painter, const QRect &rect, ButtonId btid);
+	void drawButton(QPainter *painter, const QRect &rect, int button_index);
 
+	Graph *graph() const;
 private:
 	//QVector<GraphButton*> m_buttons;
-	Graph *m_graph;
+	//Graph *m_graph;
 	QVector<ButtonId> m_buttonIds;
 	QRect m_rect;
 	bool m_mouseOver = false;
+	int m_mouseOverButtonIndex = -1;
+	int m_mousePressButtonIndex = -1;
 };
 
 } // namespace timeline

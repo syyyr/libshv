@@ -1,5 +1,6 @@
 HEADERS += \
     $$PWD/graphbuttonbox.h \
+    $$PWD/graphchannel.h \
     $$PWD/graphmodel.h \
     $$PWD/graph.h \
     $$PWD/graphview.h \
@@ -8,6 +9,7 @@ HEADERS += \
 
 SOURCES += \
     $$PWD/graphbuttonbox.cpp \
+    $$PWD/graphchannel.cpp \
     $$PWD/graphmodel.cpp \
     $$PWD/graph.cpp \
     $$PWD/graphview.cpp \
