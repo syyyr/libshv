@@ -135,10 +135,10 @@ AclRoleAccessRules AclManager::accessRoleRules(const std::string &role_name)
 	auto it = m_cache.aclPathsRoles.find(role_name);
 	if(it == m_cache.aclPathsRoles.end())
 		return AclRoleAccessRules();
-	if(!it->second.isValid()) {
-		it->second = aclAccessRoleRules(role_name);
+	if(std::get<1>(it->second) == false) {
+		it->second = std::pair<AclRoleAccessRules, bool>(aclAccessRoleRules(role_name), true);
 	}
-	return it->second;
+	return std::get<0>(it->second);
 }
 
 void AclManager::setAccessRoleRules(const std::string &role_name, const AclRoleAccessRules &v)

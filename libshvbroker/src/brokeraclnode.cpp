@@ -507,8 +507,8 @@ chainpack::RpcValue AccessAclNode::callMethod(const iotqt::node::ShvNode::String
 				const std::string &role_name = lst.value(0).toString();
 				chainpack::RpcValue rv = lst.value(1);
 				auto v = AclRoleAccessRules::fromRpcValue(rv);
-				if(rv.isValid() && !rv.isNull() && !v.isValid())
-					throw shv::core::Exception("Invalid acces for role: " + role_name + " definition: " + rv.toCpon());
+				//if(rv.isValid() && !rv.isNull() && !v.isValid())
+				//	throw shv::core::Exception("Invalid acces for role: " + role_name + " definition: " + rv.toCpon());
 				AclManager *mng = BrokerApp::instance()->aclManager();
 				mng->setAccessRoleRules(role_name, v);
 				return true;
@@ -559,7 +559,7 @@ chainpack::RpcValue AccessAclNode::callMethod(const iotqt::node::ShvNode::String
 		}
 		if(method == M_SET_GRANT) {
 			rule.grant = cp::AccessGrant::fromRpcValue(params);
-			return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{rule_name, role_rules.toRpcValue()});
+			return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{rule_name, rule.toRpcValue()});
 		}
 	}
 	return Super::callMethod(shv_path, method, params);

@@ -30,9 +30,9 @@ public:
 	bool isValid() const { return !pathPattern.empty() && grant.isValid(); }
 };
 
-struct SHVBROKER_DECL_EXPORT AclRoleAccessRules : public std::vector<AclAccessRule>
+class SHVBROKER_DECL_EXPORT AclRoleAccessRules : public std::vector<AclAccessRule>
 {
-	bool isValid() const {return !empty();}
+public:
 	shv::chainpack::RpcValue toRpcValue() const;
 	shv::chainpack::RpcValue toRpcValue_legacy() const;
 	static AclRoleAccessRules fromRpcValue(const shv::chainpack::RpcValue &v);

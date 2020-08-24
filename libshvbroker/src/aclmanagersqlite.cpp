@@ -180,10 +180,7 @@ void AclManagerSqlite::importAclConfigFiles()
 	}
 	for(std::string role : facl.accessRoles()) {
 		AclRoleAccessRules rpt = facl.accessRoleRules(role);
-		if(!rpt.isValid())
-			shvWarning() << "Cannot import invalid role paths definition for role:" << role;
-		else
-			aclSetAccessRoleRules(role, rpt);
+		aclSetAccessRoleRules(role, rpt);
 	}
 }
 
@@ -332,7 +329,7 @@ void AclManagerSqlite::aclSetAccessRoleRules(const std::string &role_name, const
 	QString qs = "DELETE FROM " + TBL_ACL_ACCESS + " WHERE role='" + QString::fromStdString(role_name) + "'";
 	logAclManagerM() << qs;
 	execSql(qs);
-	if(rules.isValid()) {
+	if(!rules.empty()) {
 		QSqlDatabase db = m_brokerApp->sqlConfigConnection();
 		QSqlDriver *drv = db.driver();
 		QSqlRecord rec = drv->record(TBL_ACL_ACCESS);

@@ -89,7 +89,7 @@ protected:
 		std::map<std::string, AclMountDef> aclMountDefs;
 		std::map<std::string, AclUser> aclUsers;
 		std::map<std::string, AclRole> aclRoles;
-		std::map<std::string, AclRoleAccessRules> aclPathsRoles;
+		std::map<std::string, std::pair<AclRoleAccessRules, bool>> aclPathsRoles;
 
 		std::map<std::string, std::vector<FlattenRole>> userFlattenRoles;
 	} m_cache;
