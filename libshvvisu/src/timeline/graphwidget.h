@@ -25,7 +25,7 @@ public:
 	Graph *graph();
 	const Graph *graph() const;
 
-	void makeLayout(const QSize &pref_size);
+	void makeLayout(const QSize &preferred_size);
 	void makeLayout();
 
 	// QWidget interface
@@ -39,6 +39,8 @@ protected:
 	void mouseMoveEvent(QMouseEvent *event) override;
 	void wheelEvent(QWheelEvent *event) override;
 	void contextMenuEvent(QContextMenuEvent *event) override;
+
+	virtual void showChannelContextMenu(int channel_ix, const QPoint &mouse_pos);
 protected:
 	bool isMouseAboveMiniMapHandle(const QPoint &mouse_pos, bool left) const;
 	bool isMouseAboveLeftMiniMapHandle(const QPoint &pos) const;
@@ -48,6 +50,7 @@ protected:
 	int isMouseAboveGraphDataArea(const QPoint &pos) const;
 protected:
 	Graph *m_graph = nullptr;
+	QSize m_graphPreferredSize;
 
 	enum class MouseOperation { None = 0, MiniMapLeftResize, MiniMapRightResize, MiniMapScrollZoom, GraphDataAreaPress, GraphAreaMove, GraphAreaSelection };
 	MouseOperation m_mouseOperation = MouseOperation::None;

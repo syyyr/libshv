@@ -95,10 +95,15 @@ public:
 	GraphButtonBox *buttonBox() { return m_buttonBox; }
 
 	void setVisible(bool b);
+	bool isVisible() const;
+
+	bool isMaximized() const { return m_state.isMaximized; }
+	void setMaximized(bool b) { m_state.isMaximized = b; }
 
 	Graph *graph() const;
 protected:
 	void onButtonBoxClicked(int button_id);
+	int graphChannelIndex() const;
 protected:
 	//Graph *m_graph;
 	GraphButtonBox *m_buttonBox = nullptr;
@@ -107,6 +112,7 @@ protected:
 		YRange yRange;
 		YRange yRangeZoom;
 		YAxis axis;
+		bool isMaximized = false;
 	} m_state;
 
 	struct

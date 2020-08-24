@@ -47,6 +47,7 @@ void GraphWidget::setGraph(Graph *g)
 	connect(m_graph, &Graph::layoutChanged, this, [this]() {
 		makeLayout();
 	});
+	connect(m_graph, &Graph::channelContextMenuRequest, this, &GraphWidget::showChannelContextMenu);
 }
 
 Graph *GraphWidget::graph()
@@ -59,10 +60,11 @@ const Graph *GraphWidget::graph() const
 	return m_graph;
 }
 
-void GraphWidget::makeLayout(const QSize &pref_size)
+void GraphWidget::makeLayout(const QSize &preferred_size)
 {
 	shvLogFuncFrame();
-	graph()->makeLayout(QRect(QPoint(), pref_size));
+	m_graphPreferredSize = preferred_size;
+	graph()->makeLayout(QRect(QPoint(), preferred_size));
 	QSize sz = graph()->rect().size();
 	shvDebug() << "new size:" << sz.width() << 'x' << sz.height();
 	setMinimumSize(sz);
@@ -71,7 +73,7 @@ void GraphWidget::makeLayout(const QSize &pref_size)
 
 void GraphWidget::makeLayout()
 {
-	makeLayout(graph()->rect().size());
+	makeLayout(m_graphPreferredSize);
 }
 
 bool GraphWidget::event(QEvent *ev)
@@ -451,25 +453,47 @@ void GraphWidget::contextMenuEvent(QContextMenuEvent *event)
 {
 	if(!m_graph)
 		return;
-	QMenu menu(this);
 	const QPoint pos = event->pos();
 	for (int i = 0; i < m_graph->channelCount(); ++i) {
 		const GraphChannel *ch = m_graph->channelAt(i);
-		int chix = ch->modelIndex();
 		if(ch->verticalHeaderRect().contains(pos)) {
-			menu.addAction(tr("Reset Y-range"), [this, chix, i]() {
-				//shvInfo() << "settings";
-				timeline::GraphModel *m = m_graph->model();
-				if(!m)
-					return;
-				timeline::YRange rng = m->yRange(chix);
-				m_graph->setYRange(i, rng);
-				this->update();
-			});
+			showChannelContextMenu(i, pos);
 		}
 	}
+}
+
+void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos)
+{
+	shvLogFuncFrame();
+	const GraphChannel *ch = m_graph->channelAt(channel_ix, !shv::core::Exception::Throw);
+	if(!ch)
+		return;
+	QMenu menu(this);
+	if(ch->isMaximized()) {
+		menu.addAction(tr("NormalSize"), [this, channel_ix]() {
+			m_graph->setChannelMaximized(channel_ix, false);
+		});
+	}
+	else {
+		menu.addAction(tr("Maximize"), [this, channel_ix]() {
+			m_graph->setChannelMaximized(channel_ix, true);
+		});
+	}
+	menu.addAction(tr("Hide"), [this, channel_ix]() {
+		m_graph->setChannelVisible(channel_ix, false);
+	});
+	menu.addAction(tr("Reset Y-range"), [this, channel_ix, ch]() {
+		//shvInfo() << "settings";
+		timeline::GraphModel *m = m_graph->model();
+		if(!m)
+			return;
+		int chix = ch->modelIndex();
+		timeline::YRange rng = m->yRange(chix);
+		m_graph->setYRange(channel_ix, rng);
+		this->update();
+	});
 	if(menu.actions().count())
-		menu.exec(mapToGlobal(pos));
+		menu.exec(mapToGlobal(mouse_pos));
 }
 
 }}}

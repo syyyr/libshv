@@ -1,6 +1,8 @@
 #include "graphbuttonbox.h"
 #include "graph.h"
 
+#include <shv/coreqt/log.h>
+
 #include <QMouseEvent>
 #include <QPainter>
 
@@ -33,6 +35,13 @@ void GraphButtonBox::moveTopRight(const QPoint &p)
 {
 	m_rect.setSize(size());
 	m_rect.moveTopRight(p);
+	m_mouseOverButtonIndex = -1;
+	m_mousePressButtonIndex = -1;
+}
+
+void GraphButtonBox::hide()
+{
+	m_rect = QRect();
 }
 
 void GraphButtonBox::processEvent(QEvent *ev)
@@ -53,6 +62,7 @@ void GraphButtonBox::processEvent(QEvent *ev)
 				}
 			}
 			invalidate_bb();
+			ev->accept();
 		}
 		else {
 			if(m_mouseOver) {
@@ -60,6 +70,7 @@ void GraphButtonBox::processEvent(QEvent *ev)
 				m_mouseOverButtonIndex = -1;
 				m_mousePressButtonIndex = -1;
 				invalidate_bb();
+				ev->accept();
 			}
 		}
 		break;
@@ -69,17 +80,25 @@ void GraphButtonBox::processEvent(QEvent *ev)
 		QPoint pos = event->pos();
 		for (int i = 0; i < m_buttonIds.count(); ++i) {
 			if(buttonRect(i).contains(pos)) {
+				shvDebug() << this << m_mousePressButtonIndex << i << "MouseButtonPress" << ev << objectName();
 				m_mousePressButtonIndex = i;
 				break;
 			}
 		}
 		invalidate_bb();
+		ev->accept();
 		break;
 	}
 	case QEvent::MouseButtonRelease: {
-		emit buttonClicked((int)m_buttonIds.value(m_mousePressButtonIndex));
+		if(m_mousePressButtonIndex < 0)
+			break;
+		shvDebug() << this << m_mousePressButtonIndex << "MouseButtonRelease" << ev;
+		int ix = m_mousePressButtonIndex;
 		m_mousePressButtonIndex = -1;
 		invalidate_bb();
+		shvDebug() << "emit button clicked";
+		emit buttonClicked((int)m_buttonIds.value(ix));
+		ev->accept();
 	}
 	default:
 		break;
@@ -98,9 +117,7 @@ void GraphButtonBox::draw(QPainter *painter)
 
 QSize GraphButtonBox::size() const
 {
-	int w = buttonCount() * buttonSize();
-	if(buttonCount() > 0)
-		w += (buttonCount() - 1) * buttonSpace();
+	int w = buttonCount() * (buttonSpace() + buttonSize());
 	return QSize{w, buttonSize()};
 }
 
@@ -114,12 +131,21 @@ int GraphButtonBox::buttonSpace() const
 	return buttonSize() / 6;
 }
 
+QRect GraphButtonBox::buttonRect(GraphButtonBox::ButtonId id) const
+{
+	for (int i = 0; i < m_buttonIds.count(); ++i) {
+		if(m_buttonIds[i] == id)
+			return buttonRect(i);
+	}
+	return QRect();
+}
+
 QRect GraphButtonBox::buttonRect(int ix) const
 {
 	if(ix >= 0) {
 		int offset = ix * (buttonSize() + buttonSpace());
 		QRect ret = m_rect;
-		ret.setX(ret.x() + offset);
+		ret.setX(ret.x() + offset + buttonSpace());
 		ret.setWidth(buttonSize());
 		return ret;
 	}
@@ -128,8 +154,8 @@ QRect GraphButtonBox::buttonRect(int ix) const
 
 void GraphButtonBox::drawButton(QPainter *painter, const QRect &rect, int button_index)
 {
-	int corner_radius = rect.height() / 8;
 	painter->save();
+	int corner_radius = rect.height() / 8;
 	QPen p1(graph()->effectiveStyle().color());
 	p1.setWidth(graph()->u2px(0.1));
 	if(m_mouseOverButtonIndex == button_index) {
@@ -146,6 +172,7 @@ void GraphButtonBox::drawButton(QPainter *painter, const QRect &rect, int button
 		QPen p = p1;
 		p.setWidth(buttonSize() / 6);
 		p.setCapStyle(Qt::RoundCap);
+		p.setColor(QColor("orange"));
 		painter->setPen(p);
 		int x1 = rect.width() / 4;
 		int x2 = rect.width() - x1;
@@ -159,6 +186,7 @@ void GraphButtonBox::drawButton(QPainter *painter, const QRect &rect, int button
 	case ButtonId::Hide: {
 		int inset = rect.height() / 8;
 		QPen p = p1;
+		p.setColor(QColor("skyblue"));
 		painter->setPen(p);
 		QRect r1 = rect.adjusted(inset, inset, -inset, -inset);
 

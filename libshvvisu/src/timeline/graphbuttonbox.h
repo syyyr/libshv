@@ -32,6 +32,7 @@ public:
 	Q_SIGNAL void buttonClicked(int button_id);
 
 	void moveTopRight(const QPoint &p);
+	void hide();
 
 	void processEvent(QEvent *ev);
 
@@ -42,6 +43,7 @@ public:
 	QSize size() const;
 	int buttonSize() const;
 	int buttonSpace() const;
+	QRect buttonRect(ButtonId id) const;
 protected:
 	int buttonCount() const { return m_buttonIds.count(); }
 	QRect buttonRect(int ix) const;

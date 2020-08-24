@@ -1,6 +1,8 @@
 #include "graphchannel.h"
 #include "graph.h"
 
+#include <shv/coreqt/log.h>
+
 namespace shv {
 namespace visu {
 namespace timeline {
@@ -33,6 +35,11 @@ void GraphChannel::setVisible(bool b)
 	m_effectiveStyle.setHidden(!b);
 }
 
+bool GraphChannel::isVisible() const
+{
+	return !m_effectiveStyle.isHidden();
+}
+
 Graph *GraphChannel::graph() const
 {
 	return qobject_cast<Graph*>(parent());
@@ -40,18 +47,25 @@ Graph *GraphChannel::graph() const
 
 void GraphChannel::onButtonBoxClicked(int button_id)
 {
+	shvLogFuncFrame();
 	if(button_id == (int)GraphButtonBox::ButtonId::Properties) {
-
+		QPoint pos = buttonBox()->buttonRect((GraphButtonBox::ButtonId)button_id).center();
+		graph()->emitChannelContextMenuRequest(graphChannelIndex(), pos);
 	}
 	else if(button_id == (int)GraphButtonBox::ButtonId::Hide) {
-		auto *g = graph();
-		for (int i = 0; i < g->channelCount(); ++i) {
-			if(g->channelAt(i) == this) {
-				g->setChannelVisible(i, false);
-				return;
-			}
+		graph()->setChannelVisible(graphChannelIndex(), false);
+	}
+}
+
+int GraphChannel::graphChannelIndex() const
+{
+	auto *g = graph();
+	for (int i = 0; i < g->channelCount(); ++i) {
+		if(g->channelAt(i) == this) {
+			return i;
 		}
 	}
+	return -1;
 }
 
 } // namespace timeline

@@ -105,6 +105,7 @@ void Graph::createChannelsFromModel(const shv::visu::timeline::Graph::CreateChan
 		x_range = x_range.united(m_model->xRange(model_ix));
 		//shvInfo() << "new channel:" << model_ix;
 		GraphChannel *ch = appendChannel(model_ix);
+		//ch->buttonBox()->setObjectName(QString::fromStdString(shv_path));
 		int graph_ix = channelCount() - 1;
 		GraphChannel::Style style = ch->style();
 		style.setColor(colors.value(graph_ix % colors.count()));
@@ -160,12 +161,19 @@ void Graph::setChannelVisible(int channel_ix, bool b)
 	emit layoutChanged();
 }
 
+void Graph::setChannelMaximized(int channel_ix, bool b)
+{
+	GraphChannel *ch = channelAt(channel_ix);
+	ch->setMaximized(b);
+	emit layoutChanged();
+}
+/*
 Graph::DataRect Graph::dataRect(int channel_ix) const
 {
 	const GraphChannel *ch = channelAt(channel_ix);
 	return DataRect{xRangeZoom(), ch->yRangeZoom()};
 }
-
+*/
 timemsec_t Graph::miniMapPosToTime(int pos) const
 {
 	auto pos2time = posToTimeFn(QPoint{m_layout.miniMapRect.left(), m_layout.miniMapRect.right()}, xRange());
@@ -560,13 +568,14 @@ double Graph::px2u(int px) const
 	return (px / sz);
 }
 
-void Graph::makeLayout(const QRect &rect)
+void Graph::makeLayout(const QRect &pref_rect)
 {
+	shvDebug() << __PRETTY_FUNCTION__;
 	m_miniMapCache = QPixmap();
 
-	QSize viewport_size;
-	viewport_size.setWidth(rect.width());
-	int grid_w = viewport_size.width();
+	QSize graph_size;
+	graph_size.setWidth(pref_rect.width());
+	int grid_w = graph_size.width();
 	int x_axis_pos = 0;
 	x_axis_pos += u2px(m_effectiveStyle.leftMargin());
 	x_axis_pos += u2px(m_effectiveStyle.verticalHeaderWidth());
@@ -585,14 +594,20 @@ void Graph::makeLayout(const QRect &rect)
 	m_layout.cornerCellRect.setLeft(u2px(m_effectiveStyle.leftMargin()));
 	m_layout.cornerCellRect.setWidth(m_layout.xAxisRect.left() - m_layout.cornerCellRect.left());
 
+	QVector<int> visible_channels = visibleChannels();
+	//for (int i : visibleChannels()) {
+	//	visible_channels << channelAt(i);
 	int sum_h_min = 0;
 	struct Rest { int index; int rest; };
 	QVector<Rest> rests;
-	for (int i = 0; i < m_channels.count(); ++i) {
+	for (int i : visible_channels) {
 		GraphChannel *ch = channelAt(i);
 		ch->m_effectiveStyle = mergeMaps(m_defaultChannelStyle, ch->style());
 		int ch_h = u2px(ch->m_effectiveStyle.heightMin());
-		rests << Rest{i, u2px(ch->m_effectiveStyle.heightRange())};
+		if(ch->isMaximized())
+			rests << Rest{i, pref_rect.height()};
+		else
+			rests << Rest{i, u2px(ch->m_effectiveStyle.heightRange())};
 		ch->m_layout.graphRect.setLeft(x_axis_pos);
 		ch->m_layout.graphRect.setWidth(grid_w);
 		ch->m_layout.graphRect.setHeight(ch_h);
@@ -602,7 +617,7 @@ void Graph::makeLayout(const QRect &rect)
 	}
 	sum_h_min += u2px(m_effectiveStyle.xAxisHeight());
 	sum_h_min += u2px(m_effectiveStyle.miniMapHeight());
-	int h_rest = rect.height();
+	int h_rest = pref_rect.height();
 	h_rest -= sum_h_min;
 	h_rest -= u2px(m_effectiveStyle.topMargin());
 	h_rest -= u2px(m_effectiveStyle.bottomMargin());
@@ -625,8 +640,8 @@ void Graph::makeLayout(const QRect &rect)
 	// shift channel rects
 	int widget_height = 0;
 	widget_height += u2px(m_effectiveStyle.topMargin());
-	for (int i = m_channels.count() - 1; i >= 0; --i) {
-		GraphChannel *ch = channelAt(i);
+	for (int i = visible_channels.count() - 1; i >= 0; --i) {
+		GraphChannel *ch = channelAt(visible_channels[i]);
 
 		ch->m_layout.graphRect.moveTop(widget_height);
 		//ch->layout.graphRect.setWidth(layout.navigationBarRect.width());
@@ -643,28 +658,36 @@ void Graph::makeLayout(const QRect &rect)
 		if(i > 0)
 			widget_height += u2px(m_effectiveStyle.channelSpacing());
 	}
+
+	// hide buttons, visible channels will show them again using fn GraphButtonBox::moveTopRight
+	for (GraphChannel *ch : m_channels)
+		if(auto *bbx = ch->buttonBox())
+			bbx->hide();
+
 	// make data area rect a bit slimmer to not clip wide graph line
-	for (int i = m_channels.count() - 1; i >= 0; --i) {
+	for (int i : visible_channels) {
 		GraphChannel *ch = channelAt(i);
 		int line_width = u2px(ch->m_effectiveStyle.lineWidth());
 		ch->m_layout.dataAreaRect = ch->m_layout.graphRect.adjusted(0, line_width, 0, -line_width);
 
+		// place buttons
 		GraphButtonBox *bbx = ch->buttonBox();
 		if(bbx) {
 			int inset = bbx->buttonSpace();
 			bbx->moveTopRight(ch->m_layout.verticalHeaderRect.topRight() + QPoint(-inset, inset));
 		}
 	}
+
 	m_layout.xAxisRect.moveTop(widget_height);
 	widget_height += u2px(m_effectiveStyle.xAxisHeight());
 	m_layout.miniMapRect.moveTop(widget_height);
 	widget_height += u2px(m_effectiveStyle.miniMapHeight());
 	widget_height += u2px(m_effectiveStyle.bottomMargin());
 
-	viewport_size.setHeight(widget_height);
-	shvDebug() << "\tw:" << viewport_size.width() << "h:" << viewport_size.height();
-	m_layout.rect = rect;
-	m_layout.rect.setSize(viewport_size);
+	graph_size.setHeight(widget_height);
+	shvDebug() << "\tw:" << graph_size.width() << "h:" << graph_size.height();
+	m_layout.rect = pref_rect;
+	m_layout.rect.setSize(graph_size);
 
 	makeXAxis();
 	for (int i = m_channels.count() - 1; i >= 0; --i) {
@@ -691,6 +714,22 @@ void Graph::drawRectText(QPainter *painter, const QRect &rect, const QString &te
 	painter->restore();
 }
 
+QVector<int> Graph::visibleChannels()
+{
+	QVector<int> visible_channels;
+	for (int i = 0; i < m_channels.count(); ++i) {
+		GraphChannel *ch = m_channels[i];
+		if(ch->isMaximized()) {
+			visible_channels.clear();
+			visible_channels << i;
+			break;
+		}
+		if(ch->isVisible())
+			visible_channels << i;
+	}
+	return visible_channels;
+}
+
 void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_rect)
 {
 	//auto rect_to_string = [](const QRect &r) {
@@ -699,7 +738,7 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 	//};
 	//shvWarning() << __FUNCTION__ << "channel cnt:" << channelCount() << "dirty rect:" << rect_to_string(dirty_rect);
 	drawBackground(painter, dirty_rect);
-	for (int i = 0; i < m_channels.count(); ++i) {
+	for (int i : visibleChannels()) {
 		const GraphChannel *ch = channelAt(i);
 		if(dirty_rect.intersects(ch->graphRect())) {
 			drawBackground(painter, i);
@@ -760,6 +799,8 @@ void Graph::drawMiniMap(QPainter *painter)
 		painter2->fillRect(mm_rect, m_defaultChannelStyle.colorBackground());
 		for (int i = 0; i < m_channels.count(); ++i) {
 			const GraphChannel *ch = channelAt(i);
+			if(!ch->isVisible())
+				continue;
 			GraphChannel::Style ch_st = ch->m_effectiveStyle;
 			//ch_st.setLineAreaStyle(ChannelStyle::LineAreaStyle::Filled);
 			DataRect drect{xRange(), ch->yRange()};

@@ -99,8 +99,10 @@ public:
 	GraphChannel* appendChannel(int model_index = -1);
 	GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw);
 	const GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw) const;
+
 	void setChannelVisible(int channel_ix, bool b);
-	DataRect dataRect(int channel_ix) const;
+	void setChannelMaximized(int channel_ix, bool b);
+	//DataRect dataRect(int channel_ix) const;
 
 	timemsec_t miniMapPosToTime(int pos) const;
 	int miniMapTimeToPos(timemsec_t time) const;
@@ -139,7 +141,7 @@ public:
 	void setDefaultChannelStyle(const GraphChannel::Style &st);
 	GraphChannel::Style defaultChannelStyle() const { return m_defaultChannelStyle; }
 
-	void makeLayout(const QRect &rect);
+	void makeLayout(const QRect &pref_rect);
 	void draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_rect);
 
 	int u2px(double u) const;
@@ -155,11 +157,15 @@ public:
 	Q_SIGNAL void presentationDirty(const QRect &rect);
 	void emitPresentationDirty(const QRect &rect) { emit presentationDirty(rect); }
 	Q_SIGNAL void layoutChanged();
+	Q_SIGNAL void channelContextMenuRequest(int channel_index, const QPoint &mouse_pos);
+	void emitChannelContextMenuRequest(int channel_index, const QPoint &mouse_pos) { emit channelContextMenuRequest(channel_index, mouse_pos); }
 protected:
 	void sanityXRangeZoom();
 	//void onModelXRangeChanged(const timeline::XRange &range);
 
 	void drawRectText(QPainter *painter, const QRect &rect, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
+
+	QVector<int> visibleChannels();
 
 	void drawBackground(QPainter *painter, const QRect &dirty_rect);
 	virtual void drawCornerCell(QPainter *painter);

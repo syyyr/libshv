@@ -42,12 +42,13 @@ void GraphView::scrollContentsBy(int dx, int dy)
 		Super::scrollContentsBy(dx, dy);
 		if(dy < 0) {
 			// scroll up, invalidate current floating bar pos
-			widget()->update(r1);
+			// make it slightly higher to avoid artifacts
+			widget()->update(r1.adjusted(0, -3, 0, 0));
 		}
 		else if(dy > 0) {
 			// scroll down, invalidate new floating bar pos
 			r1.setTop(r1.top() - dy);
-			widget()->update(r1);
+			widget()->update(r1.adjusted(0, -3, 0, 0));
 		}
 	}
 }
