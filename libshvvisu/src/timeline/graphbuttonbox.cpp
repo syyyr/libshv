@@ -11,16 +11,8 @@
 namespace shv {
 namespace visu {
 namespace timeline {
-/*
-//===================================================
-// GraphButton
-//===================================================
-GraphButton::GraphButton(QObject *parent)
-	: QObject(parent)
-{
 
-}
-*/
+
 //===================================================
 // GraphButtonBox
 //===================================================
@@ -35,8 +27,6 @@ void GraphButtonBox::moveTopRight(const QPoint &p)
 {
 	m_rect.setSize(size());
 	m_rect.moveTopRight(p);
-	m_mouseOverButtonIndex = -1;
-	m_mousePressButtonIndex = -1;
 }
 
 void GraphButtonBox::hide()
@@ -44,8 +34,12 @@ void GraphButtonBox::hide()
 	m_rect = QRect();
 }
 
-void GraphButtonBox::processEvent(QEvent *ev)
+bool GraphButtonBox::processEvent(QEvent *ev)
 {
+	//auto rect_to_string = [](const QRect &r) {
+	//	QString s = "%1,%2 %3x%4";
+	//	return s.arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
+	//};
 	auto invalidate_bb = [this]() {
 		graph()->emitPresentationDirty(m_rect.adjusted(-10, -10, 10, 10));
 	};
@@ -53,16 +47,21 @@ void GraphButtonBox::processEvent(QEvent *ev)
 	case QEvent::MouseMove: {
 		QMouseEvent *event = static_cast<QMouseEvent*>(ev);
 		QPoint pos = event->pos();
+		//shvDebug() << "------------------------";
+		//shvDebug() << pos.x() << pos.y();
+		//shvDebug() << rect_to_string(m_rect);
 		if(m_rect.contains(pos)) {
 			m_mouseOver = true;
 			for (int i = 0; i < m_buttonIds.count(); ++i) {
 				if(buttonRect(i).contains(pos)) {
+					shvDebug() << objectName() << "mouseOver:" << i;
 					m_mouseOverButtonIndex = i;
 					break;
 				}
 			}
 			invalidate_bb();
 			ev->accept();
+			return true;
 		}
 		else {
 			if(m_mouseOver) {
@@ -71,22 +70,24 @@ void GraphButtonBox::processEvent(QEvent *ev)
 				m_mousePressButtonIndex = -1;
 				invalidate_bb();
 				ev->accept();
+				return true;
 			}
 		}
 		break;
 	}
 	case QEvent::MouseButtonPress: {
+		//shvDebug() << objectName() << "press";
 		QMouseEvent *event = static_cast<QMouseEvent*>(ev);
 		QPoint pos = event->pos();
 		for (int i = 0; i < m_buttonIds.count(); ++i) {
 			if(buttonRect(i).contains(pos)) {
 				shvDebug() << this << m_mousePressButtonIndex << i << "MouseButtonPress" << ev << objectName();
 				m_mousePressButtonIndex = i;
-				break;
+				invalidate_bb();
+				ev->accept();
+				return true;
 			}
 		}
-		invalidate_bb();
-		ev->accept();
 		break;
 	}
 	case QEvent::MouseButtonRelease: {
@@ -99,10 +100,12 @@ void GraphButtonBox::processEvent(QEvent *ev)
 		shvDebug() << "emit button clicked";
 		emit buttonClicked((int)m_buttonIds.value(ix));
 		ev->accept();
+		return true;
 	}
 	default:
 		break;
 	}
+	return false;
 }
 
 void GraphButtonBox::draw(QPainter *painter)
@@ -111,6 +114,7 @@ void GraphButtonBox::draw(QPainter *painter)
 		return;
 	painter->fillRect(m_rect, graph()->effectiveStyle().colorPanel());
 	for (int i = 0; i < m_buttonIds.count(); ++i) {
+		//shvDebug() << "name:" << this->objectName() << "DRAW2" << i << (int)m_buttonIds[i];
 		drawButton(painter, buttonRect(i), i);
 	}
 }
@@ -154,6 +158,7 @@ QRect GraphButtonBox::buttonRect(int ix) const
 
 void GraphButtonBox::drawButton(QPainter *painter, const QRect &rect, int button_index)
 {
+	//shvDebug() << __FILE__ << __LINE__ << button_index << "over:" << m_mouseOverButtonIndex;
 	painter->save();
 	int corner_radius = rect.height() / 8;
 	QPen p1(graph()->effectiveStyle().color());
@@ -168,7 +173,7 @@ void GraphButtonBox::drawButton(QPainter *painter, const QRect &rect, int button
 	}
 	auto btid = m_buttonIds[button_index];
 	switch (btid) {
-	case ButtonId::Properties: {
+	case ButtonId::Menu: {
 		QPen p = p1;
 		p.setWidth(buttonSize() / 6);
 		p.setCapStyle(Qt::RoundCap);

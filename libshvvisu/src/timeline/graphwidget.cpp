@@ -47,6 +47,7 @@ void GraphWidget::setGraph(Graph *g)
 	connect(m_graph, &Graph::layoutChanged, this, [this]() {
 		makeLayout();
 	});
+	connect(m_graph, &Graph::graphContextMenuRequest, this, &GraphWidget::showGraphContextMenu);
 	connect(m_graph, &Graph::channelContextMenuRequest, this, &GraphWidget::showChannelContextMenu);
 }
 
@@ -78,22 +79,8 @@ void GraphWidget::makeLayout()
 
 bool GraphWidget::event(QEvent *ev)
 {
-	if(ev->type() == QEvent::MouseMove
-			|| ev->type() == QEvent::MouseButtonPress
-			|| ev->type() == QEvent::MouseButtonRelease) {
-		Graph *gr = graph();
-		if(gr) {
-			for (int i = 0; i < gr->channelCount(); ++i) {
-				GraphChannel *ch = gr->channelAt(i);
-				GraphButtonBox *bbx = ch->buttonBox();
-				if(bbx) {
-					bbx->processEvent(ev);
-					//if(ev->isAccepted()) cannot accept mouse-move, since it invalidates painting regions
-					//	return true;
-				}
-			}
-		}
-	}
+	if(Graph *gr = graph())
+		gr->processEvent(ev);
 	return Super::event(ev);
 }
 
@@ -451,15 +438,33 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
 
 void GraphWidget::contextMenuEvent(QContextMenuEvent *event)
 {
+	shvLogFuncFrame();
 	if(!m_graph)
 		return;
 	const QPoint pos = event->pos();
+	if(m_graph->cornerCellRect().contains(pos)) {
+		showGraphContextMenu(pos);
+		return;
+	}
 	for (int i = 0; i < m_graph->channelCount(); ++i) {
 		const GraphChannel *ch = m_graph->channelAt(i);
 		if(ch->verticalHeaderRect().contains(pos)) {
 			showChannelContextMenu(i, pos);
 		}
 	}
+}
+
+void GraphWidget::showGraphContextMenu(const QPoint &mouse_pos)
+{
+	QMenu menu(this);
+	menu.addAction(tr("Show all channels"), [this]() {
+		m_graph->showAllChannels();
+	});
+	menu.addAction(tr("Hide flat channels"), [this]() {
+		m_graph->hideFlatChannels();
+	});
+	if(menu.actions().count())
+		menu.exec(mapToGlobal(mouse_pos));
 }
 
 void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos)
@@ -470,7 +475,7 @@ void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos
 		return;
 	QMenu menu(this);
 	if(ch->isMaximized()) {
-		menu.addAction(tr("NormalSize"), [this, channel_ix]() {
+		menu.addAction(tr("Normal size"), [this, channel_ix]() {
 			m_graph->setChannelMaximized(channel_ix, false);
 		});
 	}

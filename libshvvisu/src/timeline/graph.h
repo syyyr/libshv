@@ -16,6 +16,8 @@
 #include <QPixmap>
 #include <QRect>
 
+#include <regex>
+
 namespace shv {
 namespace visu {
 namespace timeline {
@@ -80,19 +82,26 @@ public:
 	void setModel(GraphModel *model);
 	GraphModel *model() const;
 
-	struct SHVVISU_DECL_EXPORT CreateChannelsOptions
+	class SHVVISU_DECL_EXPORT ChannelFilter
 	{
-		std::string pathPattern;
+	public:
 		enum class PathPatternFormat {Substring, Regex};
-		PathPatternFormat pathPatternFormat = PathPatternFormat::Substring;
-		bool hideConstant = false;
 
-		CreateChannelsOptions(const std::string &pattern = std::string(), PathPatternFormat fmt = PathPatternFormat::Substring)
-			: pathPattern(pattern)
-			, pathPatternFormat(fmt)
-		{}
+		ChannelFilter(const std::string &pattern = std::string(), PathPatternFormat fmt = PathPatternFormat::Substring);
+
+		bool isHideFlat() const { return m_hideFlat; }
+		void setHideFlat(bool b) { m_hideFlat = b; }
+
+		void setPathPattern(const std::string &pattern, PathPatternFormat fmt = PathPatternFormat::Substring);
+		bool isPathMatch(const std::string &path) const;
+	private:
+		std::string m_pathPattern;
+		PathPatternFormat m_pathPatternFormat = PathPatternFormat::Substring;
+		bool m_hideFlat = false;
+
+		std::regex m_pathPatternRx;
 	};
-	void createChannelsFromModel(const CreateChannelsOptions &opts = CreateChannelsOptions());
+	void createChannelsFromModel();
 
 	int channelCount() const { return  m_channels.count(); }
 	void clearChannels();
@@ -100,6 +109,10 @@ public:
 	GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw);
 	const GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw) const;
 
+	void showAllChannels();
+	void hideFlatChannels();
+	const ChannelFilter& channelFilter() const { return m_channelFilter; }
+	void setChannelFilter(const ChannelFilter &filter);
 	void setChannelVisible(int channel_ix, bool b);
 	void setChannelMaximized(int channel_ix, bool b);
 	//DataRect dataRect(int channel_ix) const;
@@ -117,6 +130,7 @@ public:
 
 	const QRect& rect() const { return  m_layout.rect; }
 	const QRect& miniMapRect() const { return  m_layout.miniMapRect; }
+	const QRect& cornerCellRect() const { return  m_layout.cornerCellRect; }
 	QRect southFloatingBarRect() const;
 	QPoint crossBarPos1() const {return m_state.crossBarPos1;}
 	QPoint crossBarPos2() const {return m_state.crossBarPos2;}
@@ -145,6 +159,7 @@ public:
 	void draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_rect);
 
 	int u2px(double u) const;
+	double u2pxf(double u) const;
 	double px2u(int px) const;
 
 	static std::function<QPoint (const Sample&)> dataToPointFn(const DataRect &src, const QRect &dest);
@@ -154,14 +169,19 @@ public:
 	static std::function<int (double)> valueToPosFn(const YRange &src, const WidgetRange &dest);
 	static std::function<double (int)> posToValueFn(const WidgetRange &src, const YRange &dest);
 
+	void processEvent(QEvent *ev);
+
 	Q_SIGNAL void presentationDirty(const QRect &rect);
 	void emitPresentationDirty(const QRect &rect) { emit presentationDirty(rect); }
 	Q_SIGNAL void layoutChanged();
 	Q_SIGNAL void channelContextMenuRequest(int channel_index, const QPoint &mouse_pos);
 	void emitChannelContextMenuRequest(int channel_index, const QPoint &mouse_pos) { emit channelContextMenuRequest(channel_index, mouse_pos); }
+	Q_SIGNAL void graphContextMenuRequest(const QPoint &mouse_pos);
 protected:
 	void sanityXRangeZoom();
 	//void onModelXRangeChanged(const timeline::XRange &range);
+
+	void clearMiniMapCache();
 
 	void drawRectText(QPainter *painter, const QRect &rect, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
 
@@ -189,6 +209,8 @@ protected:
 
 	void moveSouthFloatingBarBottom(int bottom);
 protected:
+	void onButtonBoxClicked(int button_id);
+protected:
 	GraphModel *m_model = nullptr;
 
 	Style m_effectiveStyle;
@@ -197,8 +219,10 @@ protected:
 	GraphChannel::Style m_defaultChannelStyle;
 
 	QVector<GraphChannel*> m_channels;
+	Graph::ChannelFilter m_channelFilter;
 
-	struct SHVVISU_DECL_EXPORT XAxis {
+	struct SHVVISU_DECL_EXPORT XAxis
+	{
 		enum class LabelFormat {MSec, Sec, Min, Hour, Day, Month, Year};
 		timemsec_t tickInterval = 0;
 		int subtickEvery = 1;
@@ -230,6 +254,7 @@ protected:
 	} m_layout;
 
 	QPixmap m_miniMapCache;
+	GraphButtonBox *m_cornerCellButtonBox = nullptr;
 };
 
 }}}

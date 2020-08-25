@@ -105,7 +105,6 @@ protected:
 	void onButtonBoxClicked(int button_id);
 	int graphChannelIndex() const;
 protected:
-	//Graph *m_graph;
 	GraphButtonBox *m_buttonBox = nullptr;
 	struct
 	{
@@ -117,7 +116,6 @@ protected:
 
 	struct
 	{
-		//QRect rect;
 		QRect graphRect;
 		QRect dataAreaRect;
 		QRect verticalHeaderRect;
@@ -128,7 +126,6 @@ protected:
 	Style m_effectiveStyle;
 	int m_modelIndex = 0;
 	int m_metaTypeId = 0;
-	int m_buttonCount = 2;
 };
 
 } // namespace timeline

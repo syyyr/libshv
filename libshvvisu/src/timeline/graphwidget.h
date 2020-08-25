@@ -40,6 +40,7 @@ protected:
 	void wheelEvent(QWheelEvent *event) override;
 	void contextMenuEvent(QContextMenuEvent *event) override;
 
+	virtual void showGraphContextMenu(const QPoint &mouse_pos);
 	virtual void showChannelContextMenu(int channel_ix, const QPoint &mouse_pos);
 protected:
 	bool isMouseAboveMiniMapHandle(const QPoint &mouse_pos, bool left) const;

@@ -24,7 +24,7 @@ class GraphButtonBox : public QObject
 {
 	Q_OBJECT
 public:
-	enum class ButtonId { Invalid = 0, Properties, Hide, User };
+	enum class ButtonId { Invalid = 0, Menu, Hide, User };
 public:
 	GraphButtonBox(const QVector<ButtonId> &button_ids, QObject *parent);
 	virtual ~GraphButtonBox() {}
@@ -34,7 +34,7 @@ public:
 	void moveTopRight(const QPoint &p);
 	void hide();
 
-	void processEvent(QEvent *ev);
+	bool processEvent(QEvent *ev);
 
 	virtual void draw(QPainter *painter);
 

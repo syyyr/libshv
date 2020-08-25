@@ -125,8 +125,9 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 	});
 	connect(ui->edDataFilter, &QLineEdit::textChanged, [this]() {
 		QString str = ui->edDataFilter->text().trimmed();
-		m_graph->createChannelsFromModel(str.toStdString());
-		ui->graphView->makeLayout();
+		auto filter = m_graph->channelFilter();
+		filter.setPathPattern(str.toStdString());
+		m_graph->setChannelFilter(filter);
 	});
 
 	ui->tblData->setContextMenuPolicy(Qt::ActionsContextMenu);

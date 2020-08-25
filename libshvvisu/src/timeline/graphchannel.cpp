@@ -13,8 +13,10 @@ namespace timeline {
 
 GraphChannel::GraphChannel(Graph *graph)
 	: QObject(graph)
-	, m_buttonBox(new GraphButtonBox({GraphButtonBox::ButtonId::Hide, GraphButtonBox::ButtonId::Properties}, this))
+	, m_buttonBox(new GraphButtonBox({GraphButtonBox::ButtonId::Hide, GraphButtonBox::ButtonId::Menu}, this))
 {
+	static int n = 0;
+	m_buttonBox->setObjectName(QString("channelButtonBox_%1").arg(++n));
 	connect(m_buttonBox, &GraphButtonBox::buttonClicked, this, &GraphChannel::onButtonBoxClicked);
 }
 
@@ -48,7 +50,7 @@ Graph *GraphChannel::graph() const
 void GraphChannel::onButtonBoxClicked(int button_id)
 {
 	shvLogFuncFrame();
-	if(button_id == (int)GraphButtonBox::ButtonId::Properties) {
+	if(button_id == (int)GraphButtonBox::ButtonId::Menu) {
 		QPoint pos = buttonBox()->buttonRect((GraphButtonBox::ButtonId)button_id).center();
 		graph()->emitChannelContextMenuRequest(graphChannelIndex(), pos);
 	}

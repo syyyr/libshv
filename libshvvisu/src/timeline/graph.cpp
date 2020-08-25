@@ -13,7 +13,6 @@
 #include <QPainterPath>
 
 #include <cmath>
-#include <regex>
 
 namespace cp = shv::chainpack;
 
@@ -33,11 +32,41 @@ void Graph::Style::init(QWidget *widget)
 }
 
 //==========================================
+// Graph::FilterChannelsOptions
+//==========================================
+Graph::ChannelFilter::ChannelFilter(const std::string &pattern, Graph::ChannelFilter::PathPatternFormat fmt)
+{
+	setPathPattern(pattern, fmt);
+}
+
+void Graph::ChannelFilter::setPathPattern(const std::string &pattern, Graph::ChannelFilter::PathPatternFormat fmt)
+{
+	m_pathPattern = pattern;
+	m_pathPatternFormat = fmt;
+	if(m_pathPatternFormat == PathPatternFormat::Regex)
+		m_pathPatternRx = std::regex(m_pathPattern);
+}
+
+bool Graph::ChannelFilter::isPathMatch(const std::string &path) const
+{
+	if(m_pathPattern.empty())
+		return true;
+	if(m_pathPatternFormat == ChannelFilter::PathPatternFormat::Regex) {
+		std::smatch cmatch;
+		return std::regex_search(path, cmatch, m_pathPatternRx);
+	}
+	return path.find(m_pathPattern) != std::string::npos;
+}
+
+//==========================================
 // Graph
 //==========================================
 Graph::Graph(QObject *parent)
 	: QObject(parent)
+	, m_cornerCellButtonBox(new GraphButtonBox({GraphButtonBox::ButtonId::Menu}, this))
 {
+	m_cornerCellButtonBox->setObjectName("cornerCellButtonBox");
+	connect(m_cornerCellButtonBox, &GraphButtonBox::buttonClicked, this, &Graph::onButtonBoxClicked);
 }
 
 Graph::~Graph()
@@ -58,7 +87,7 @@ GraphModel *Graph::model() const
 	return m_model;
 }
 
-void Graph::createChannelsFromModel(const shv::visu::timeline::Graph::CreateChannelsOptions &opts)
+void Graph::createChannelsFromModel()
 {
 	static QVector<QColor> colors {
 		Qt::magenta,
@@ -71,24 +100,10 @@ void Graph::createChannelsFromModel(const shv::visu::timeline::Graph::CreateChan
 	clearChannels();
 	if(!m_model)
 		return;
-	std::regex rx_path_pattern;
-	if(!opts.pathPattern.empty() && opts.pathPatternFormat == CreateChannelsOptions::PathPatternFormat::Regex)
-		rx_path_pattern = std::regex(opts.pathPattern);
 	// sort channels alphabetically
 	QMap<std::string, int> path_to_model_index;
 	for (int i = 0; i < m_model->channelCount(); ++i) {
 		std::string shv_path = m_model->channelPath(i);
-		if(!opts.pathPattern.empty()) {
-			if(opts.pathPatternFormat == CreateChannelsOptions::PathPatternFormat::Regex) {
-				std::smatch cmatch;
-				if(!std::regex_search(shv_path, cmatch, rx_path_pattern))
-					continue;
-			}
-			else {
-				if(shv_path.find(opts.pathPattern) == std::string::npos)
-					continue;
-			}
-		}
 		path_to_model_index[shv_path] = i;
 	}
 	XRange x_range;
@@ -98,8 +113,6 @@ void Graph::createChannelsFromModel(const shv::visu::timeline::Graph::CreateChan
 		shvDebug() << "adding channel:" << shv_path << "y-range interval:" << yrange.interval();
 		if(yrange.isEmpty()) {
 			shvDebug() << "\t constant channel:" << shv_path;
-			if(opts.hideConstant)
-				continue;
 			yrange = YRange{0, 1};
 		}
 		x_range = x_range.united(m_model->xRange(model_ix));
@@ -152,6 +165,24 @@ const GraphChannel *Graph::channelAt(int ix, bool throw_exc) const
 		return nullptr;
 	}
 	return m_channels[ix];
+}
+
+void Graph::showAllChannels()
+{
+	m_channelFilter = ChannelFilter();
+	emit layoutChanged();
+}
+
+void Graph::hideFlatChannels()
+{
+	m_channelFilter.setHideFlat(true);
+	emit layoutChanged();
+}
+
+void Graph::setChannelFilter(const Graph::ChannelFilter &filter)
+{
+	m_channelFilter = filter;
+	emit layoutChanged();
 }
 
 void Graph::setChannelVisible(int channel_ix, bool b)
@@ -306,7 +337,7 @@ void Graph::setXRange(const XRange &r, bool keep_zoom)
 	}
 	sanityXRangeZoom();
 	makeXAxis();
-	m_miniMapCache = QPixmap();
+	clearMiniMapCache();
 	emit presentationDirty(rect());
 }
 
@@ -379,6 +410,11 @@ void Graph::sanityXRangeZoom()
 		m_state.xRangeZoom.min = m_state.xRange.min;
 	if(m_state.xRangeZoom.max > m_state.xRange.max)
 		m_state.xRangeZoom.max = m_state.xRange.max;
+}
+
+void Graph::clearMiniMapCache()
+{
+	m_miniMapCache = QPixmap();
 }
 
 void Graph::setStyle(const Graph::Style &st)
@@ -539,9 +575,14 @@ void Graph::makeYAxis(int channel)
 
 void Graph::moveSouthFloatingBarBottom(int bottom)
 {
+	// unfortunatelly called from draw() method
 	m_layout.miniMapRect.moveBottom(bottom);
 	m_layout.xAxisRect.moveBottom(m_layout.miniMapRect.top());
 	m_layout.cornerCellRect.moveBottom(m_layout.miniMapRect.bottom());
+	{
+		int inset = m_cornerCellButtonBox->buttonSpace();
+		m_cornerCellButtonBox->moveTopRight(m_layout.cornerCellRect.topRight() + QPoint(-inset, inset));
+	}
 }
 
 QRect Graph::southFloatingBarRect() const
@@ -551,15 +592,15 @@ QRect Graph::southFloatingBarRect() const
 	return ret;
 }
 
-//void Graph::onModelXRangeChanged(const XRange &range)
-//{
-//	setXRange(range, true);
-//}
-
 int Graph::u2px(double u) const
 {
+	return static_cast<int>(u2pxf(u));
+}
+
+double Graph::u2pxf(double u) const
+{
 	int sz = m_effectiveStyle.unitSize();
-	return static_cast<int>(sz * u);
+	return sz * u;
 }
 
 double Graph::px2u(int px) const
@@ -571,7 +612,7 @@ double Graph::px2u(int px) const
 void Graph::makeLayout(const QRect &pref_rect)
 {
 	shvDebug() << __PRETTY_FUNCTION__;
-	m_miniMapCache = QPixmap();
+	clearMiniMapCache();
 
 	QSize graph_size;
 	graph_size.setWidth(pref_rect.width());
@@ -594,9 +635,14 @@ void Graph::makeLayout(const QRect &pref_rect)
 	m_layout.cornerCellRect.setLeft(u2px(m_effectiveStyle.leftMargin()));
 	m_layout.cornerCellRect.setWidth(m_layout.xAxisRect.left() - m_layout.cornerCellRect.left());
 
+	// hide clickable areas, visible channels will show them again
+	for (GraphChannel *ch : m_channels) {
+		ch->m_layout.verticalHeaderRect = QRect();
+		if(auto *bbx = ch->buttonBox())
+			bbx->hide();
+	}
+
 	QVector<int> visible_channels = visibleChannels();
-	//for (int i : visibleChannels()) {
-	//	visible_channels << channelAt(i);
 	int sum_h_min = 0;
 	struct Rest { int index; int rest; };
 	QVector<Rest> rests;
@@ -659,11 +705,6 @@ void Graph::makeLayout(const QRect &pref_rect)
 			widget_height += u2px(m_effectiveStyle.channelSpacing());
 	}
 
-	// hide buttons, visible channels will show them again using fn GraphButtonBox::moveTopRight
-	for (GraphChannel *ch : m_channels)
-		if(auto *bbx = ch->buttonBox())
-			bbx->hide();
-
 	// make data area rect a bit slimmer to not clip wide graph line
 	for (int i : visible_channels) {
 		GraphChannel *ch = channelAt(i);
@@ -690,9 +731,8 @@ void Graph::makeLayout(const QRect &pref_rect)
 	m_layout.rect.setSize(graph_size);
 
 	makeXAxis();
-	for (int i = m_channels.count() - 1; i >= 0; --i) {
+	for (int i = visible_channels.count() - 1; i >= 0; --i)
 		makeYAxis(i);
-	}
 }
 
 void Graph::drawRectText(QPainter *painter, const QRect &rect, const QString &text, const QFont &font, const QColor &color, const QColor &background)
@@ -724,8 +764,21 @@ QVector<int> Graph::visibleChannels()
 			visible_channels << i;
 			break;
 		}
-		if(ch->isVisible())
-			visible_channels << i;
+		if(!ch->isVisible())
+			continue;
+
+		QString shv_path = model()->channelData(ch->modelIndex(), GraphModel::ChannelDataRole::ShvPath).toString();
+		if(!m_channelFilter.isPathMatch(shv_path.toStdString())) {
+			ch->setVisible(false);
+			continue;
+		}
+		if(m_channelFilter.isHideFlat()) {
+			YRange yrange = m_model->yRange(ch->modelIndex());
+			bool is_flat = yrange.isEmpty();
+			if(is_flat)
+				continue;
+		}
+		visible_channels << i;
 	}
 	return visible_channels;
 }
@@ -774,7 +827,6 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 void Graph::drawBackground(QPainter *painter, const QRect &dirty_rect)
 {
 	painter->fillRect(dirty_rect, m_effectiveStyle.colorBackground());
-	//painter->fillRect(QRect{QPoint(), widget()->geometry().size()}, Qt::blue);
 }
 
 void Graph::drawCornerCell(QPainter *painter)
@@ -786,6 +838,7 @@ void Graph::drawCornerCell(QPainter *painter)
 	pen.setColor(m_effectiveStyle.colorBackground());
 	painter->setPen(pen);
 	painter->drawRect(m_layout.cornerCellRect);
+	m_cornerCellButtonBox->draw(painter);
 }
 
 void Graph::drawMiniMap(QPainter *painter)
@@ -797,10 +850,9 @@ void Graph::drawMiniMap(QPainter *painter)
 		QPainter p(&m_miniMapCache);
 		QPainter *painter2 = &p;
 		painter2->fillRect(mm_rect, m_defaultChannelStyle.colorBackground());
-		for (int i = 0; i < m_channels.count(); ++i) {
-			const GraphChannel *ch = channelAt(i);
-			if(!ch->isVisible())
-				continue;
+		QVector<int> visible_channels = visibleChannels();
+		for (int i : visible_channels) {
+			GraphChannel *ch = channelAt(i);
 			GraphChannel::Style ch_st = ch->m_effectiveStyle;
 			//ch_st.setLineAreaStyle(ChannelStyle::LineAreaStyle::Filled);
 			DataRect drect{xRange(), ch->yRange()};
@@ -1237,6 +1289,26 @@ std::function<double (int)> Graph::posToValueFn(const Graph::WidgetRange &src, c
 	};
 }
 
+void Graph::processEvent(QEvent *ev)
+{
+	if(ev->type() == QEvent::MouseMove
+			|| ev->type() == QEvent::MouseButtonPress
+			|| ev->type() == QEvent::MouseButtonRelease) {
+		if(m_cornerCellButtonBox->processEvent(ev))
+			return;
+		for (int i = 0; i < channelCount(); ++i) {
+			GraphChannel *ch = channelAt(i);
+			GraphButtonBox *bbx = ch->buttonBox();
+			if(bbx) {
+				if(bbx->processEvent(ev))
+					break;
+				//if(ev->isAccepted()) cannot accept mouse-move, since it invalidates painting regions
+				//	return true;
+			}
+		}
+	}
+}
+
 void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_rect, const QRect &dest_rect, const GraphChannel::Style &channel_style)
 {
 	//shvLogFuncFrame() << "channel:" << channel_ix;
@@ -1269,14 +1341,16 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	pen.setColor(line_color);
 	{
 		double d = ch_style.lineWidth();
-		if(d > 0)
-			pen.setWidth(u2px(d));
-		else
-			pen.setWidth(2);
+		pen.setWidthF(u2pxf(d));
 	}
 	pen.setCapStyle(Qt::FlatCap);
 	QPen steps_join_pen = pen;
-	steps_join_pen.setWidth(1);
+	steps_join_pen.setWidthF(pen.widthF() / 4);
+	{
+		auto c = pen.color();
+		c.setAlphaF(0.3);
+		steps_join_pen.setColor(c);
+	}
 	painter->save();
 	//rect.adjust(0, -pen.width(), 0, pen.width());
 	painter->setClipRect(rect);
@@ -1467,6 +1541,15 @@ void Graph::drawSelection(QPainter *painter)
 	QColor c = m_effectiveStyle.colorSelection();
 	c.setAlphaF(0.3);
 	painter->fillRect(m_state.selectionRect, c);
+}
+
+void Graph::onButtonBoxClicked(int button_id)
+{
+	shvLogFuncFrame();
+	if(button_id == (int)GraphButtonBox::ButtonId::Menu) {
+		QPoint pos = m_cornerCellButtonBox->buttonRect((GraphButtonBox::ButtonId)button_id).center();
+		emit graphContextMenuRequest(pos);
+	}
 }
 
 }}}
