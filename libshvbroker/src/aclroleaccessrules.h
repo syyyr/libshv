@@ -22,7 +22,6 @@ public:
 		: pathPattern(path_pattern), method(method) {}
 	AclAccessRule(const std::string &path_pattern, const std::string &method, const shv::chainpack::AccessGrant &grant)
 		: pathPattern(path_pattern), method(method), grant(grant) {}
-	//PathAccessGrant(Super &&o) : Super(std::move(o)) {}
 
 	chainpack::RpcValue toRpcValue() const;
 	static AclAccessRule fromRpcValue(const chainpack::RpcValue &rpcval);

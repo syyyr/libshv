@@ -275,8 +275,8 @@ chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringV
 
 				chainpack::RpcValue rv = lst.value(1);
 				auto v = AclRole::fromRpcValue(rv);
-				if(rv.isValid() && !rv.isNull() && !v.isValid())
-					throw shv::core::Exception("Invalid role: " + role_name + " definition: " + rv.toCpon());
+				//if(rv.isValid() && !rv.isNull() && !v.isValid())
+				//	throw shv::core::Exception("Invalid role: " + role_name + " definition: " + rv.toCpon());
 				AclManager *mng = BrokerApp::instance()->aclManager();
 				mng->setRole(role_name, v);
 				return true;
