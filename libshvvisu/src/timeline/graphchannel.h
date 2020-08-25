@@ -43,7 +43,7 @@ public:
 
 		SHV_VARIANTMAP_FIELD2(int, i, setI, nterpolation, Interpolation::Stepped)
 		SHV_VARIANTMAP_FIELD2(int, l, setL, ineAreaStyle, LineAreaStyle::Blank)
-		SHV_VARIANTMAP_FIELD2(double, l, setL, ineWidth, 0.3)
+		SHV_VARIANTMAP_FIELD2(double, l, setL, ineWidth, 0.2)
 
 		SHV_VARIANTMAP_FIELD(bool, is, set, Hidden)
 
@@ -78,8 +78,8 @@ public:
 	void setStyle(const Style& st) { m_style = st; }
 	Style effectiveStyle() const { return m_effectiveStyle; }
 
-	const QRect& graphRect() const { return  m_layout.graphRect; }
-	const QRect& dataAreaRect() const { return  m_layout.dataAreaRect; }
+	const QRect& graphAreaRect() const { return  m_layout.graphAreaRect; }
+	const QRect& graphDataGridRect() const { return  m_layout.graphDataGridRect; }
 	const QRect& verticalHeaderRect() const { return  m_layout.verticalHeaderRect; }
 	const QRect& yAxisRect() const { return  m_layout.yAxisRect; }
 
@@ -116,8 +116,8 @@ protected:
 
 	struct
 	{
-		QRect graphRect;
-		QRect dataAreaRect;
+		QRect graphAreaRect;
+		QRect graphDataGridRect;
 		QRect verticalHeaderRect;
 		QRect yAxisRect;
 	} m_layout;
