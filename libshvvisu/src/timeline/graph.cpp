@@ -66,6 +66,7 @@ Graph::Graph(QObject *parent)
 	, m_cornerCellButtonBox(new GraphButtonBox({GraphButtonBox::ButtonId::Menu}, this))
 {
 	m_cornerCellButtonBox->setObjectName("cornerCellButtonBox");
+	m_cornerCellButtonBox->setAutoRaise(false);
 	connect(m_cornerCellButtonBox, &GraphButtonBox::buttonClicked, this, &Graph::onButtonBoxClicked);
 }
 

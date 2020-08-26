@@ -110,7 +110,7 @@ bool GraphButtonBox::processEvent(QEvent *ev)
 
 void GraphButtonBox::draw(QPainter *painter)
 {
-	if(m_mouseOverButtonIndex < 0)
+	if(isAutoRaise() && m_mouseOverButtonIndex < 0)
 		return;
 	painter->fillRect(m_rect, graph()->effectiveStyle().colorPanel());
 	for (int i = 0; i < m_buttonIds.count(); ++i) {

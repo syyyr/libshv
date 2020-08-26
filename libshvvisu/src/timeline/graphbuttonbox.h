@@ -1,6 +1,8 @@
 #ifndef SHV_VISU_TIMELINE_GRAPHBUTTONBOX_H
 #define SHV_VISU_TIMELINE_GRAPHBUTTONBOX_H
 
+#include <shv/core/utils.h>
+
 #include <QObject>
 #include <QRect>
 
@@ -23,6 +25,8 @@ public:
 class GraphButtonBox : public QObject
 {
 	Q_OBJECT
+
+	SHV_FIELD_BOOL_IMPL2(a, A, utoRaise, true)
 public:
 	enum class ButtonId { Invalid = 0, Menu, Hide, User };
 public:
