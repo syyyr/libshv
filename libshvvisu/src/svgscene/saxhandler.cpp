@@ -14,8 +14,9 @@
 #include <QFontMetrics>
 #include <QSet>
 
-#define logSvgM() nCMessage("svg")
-#define logSvgD() nCDebug("svg")
+#define logSvgW() shvCWarning("svg")
+#define logSvgM() shvCMessage("svg")
+#define logSvgD() shvCDebug("svg")
 
 namespace shv {
 namespace visu {
@@ -1123,7 +1124,7 @@ bool SaxHandler::startElement()
 			return true;
 		}
 		else {
-			nWarning() << "unsupported element:" << el.name;
+			logSvgW() << "unsupported element:" << el.name;
 		}
 		return false;
 	}
