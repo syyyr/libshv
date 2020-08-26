@@ -42,8 +42,14 @@ protected:
 				}
 				else {
 					svgscene::XmlAttributes attrs = qvariant_cast<svgscene::XmlAttributes>(tit->data(Types::DataKey::XmlAttributes));
-					if(attrs.value(attr_name) == attr_value)
-						return tit;
+					if(attr_value.isEmpty()) {
+						if(attrs.contains(attr_name))
+							return tit;
+					}
+					else {
+						if(attrs.value(attr_name) == attr_value)
+							return tit;
+					}
 				}
 			}
 			T tit = findChildGraphicsItem<T>(it, attr_name, attr_value);

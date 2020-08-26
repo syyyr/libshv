@@ -1169,7 +1169,7 @@ void SaxHandler::setXmlAttributes(QGraphicsItem *git, const SaxHandler::SvgEleme
 			git->setData(Types::DataKey::ChildId, it.value());
 			attrs[k] = it.value();
 		}
-		if(it.key().startsWith(QStringLiteral("shv_")))
+		if(it.key().startsWith(QStringLiteral("shv")))
 			attrs[it.key()] = it.value();
 	}
 	git->setData(Types::DataKey::XmlAttributes, QVariant::fromValue(attrs));
