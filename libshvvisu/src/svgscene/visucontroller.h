@@ -24,6 +24,8 @@ class SHVVISU_DECL_EXPORT VisuController : public QObject
 public:
 	VisuController(QGraphicsItem *graphics_item, QObject *parent = nullptr);
 protected:
+	static QString graphicsItemAttributeValue(const QGraphicsItem *it, const QString &attr_name, const QString &default_value = QString());
+
 	template<typename T>
 	T findChildGraphicsItem(const QString &attr_name = QString(), const QString &attr_value = QString()) const
 	{
