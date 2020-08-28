@@ -8,6 +8,9 @@ namespace shv {
 namespace visu {
 namespace logview {
 
+//============================================================
+// MemoryJournalLogModel
+//============================================================
 LogModel::LogModel(QObject *parent)
 	: Super(parent)
 {
