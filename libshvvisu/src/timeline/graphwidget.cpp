@@ -42,7 +42,10 @@ void GraphWidget::setGraph(Graph *g)
 	graph()->setStyle(style);
 	update();
 	connect(m_graph, &Graph::presentationDirty, this, [this](const QRect &rect) {
-		update(rect);
+		if(rect.isEmpty())
+			update();
+		else
+			update(rect);
 	});
 	connect(m_graph, &Graph::layoutChanged, this, [this]() {
 		makeLayout();

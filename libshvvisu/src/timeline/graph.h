@@ -63,6 +63,7 @@ public:
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorBackground, QColor(Qt::black))
 		//SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorGrid, QColor(Qt::darkGreen))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorAxis, QColor(Qt::gray))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCurrentTime, QColor(QStringLiteral("#cced5515")))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCrossBar1, QColor(QStringLiteral("white")))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCrossBar2, QColor(QStringLiteral("salmon")))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorSelection, QColor(QStringLiteral("deepskyblue")))
@@ -137,6 +138,9 @@ public:
 	void setCrossBarPos1(const QPoint &pos);
 	void setCrossBarPos2(const QPoint &pos);
 
+	void setCurrentTime(timemsec_t time);
+	timemsec_t currentTime() const { return m_state.currentTime; }
+
 	void setSelectionRect(const QRect &rect);
 
 	XRange xRange() const { return m_state.xRange; }
@@ -202,6 +206,7 @@ protected:
 			, const GraphChannel::Style &channel_style = GraphChannel::Style());
 	virtual void drawCrossBar(QPainter *painter, int channel_ix, const QPoint &crossbar_pos, const QColor &color);
 	virtual void drawSelection(QPainter *painter);
+	virtual void drawCurrentTime(QPainter *painter, int channel_ix, time_t time, const QColor &color);
 
 	QVariantMap mergeMaps(const QVariantMap &base, const QVariantMap &overlay) const;
 	void makeXAxis();
@@ -240,6 +245,7 @@ protected:
 		XRange xRange;
 		XRange xRangeZoom;
 		QPoint crossBarPos1;
+		timemsec_t currentTime = 0;
 		QPoint crossBarPos2;
 		QRect selectionRect;
 		XAxis axis;

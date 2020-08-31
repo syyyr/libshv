@@ -299,6 +299,18 @@ void Graph::setCrossBarPos2(const QPoint &pos)
 	m_state.crossBarPos2 = pos;
 }
 
+void Graph::setCurrentTime(timemsec_t time)
+{
+	m_state.currentTime = time;
+	QRect r;
+	if(time > 0) {
+		r = m_layout.rect;
+		r.setX(timeToPos(time));
+		r.adjust(-10, 0, 10, 0);
+	}
+	emitPresentationDirty(r);
+}
+
 void Graph::setSelectionRect(const QRect &rect)
 {
 	m_state.selectionRect = rect;
@@ -807,6 +819,7 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 			drawSamples(painter, i);
 			drawCrossBar(painter, i, m_state.crossBarPos1, m_effectiveStyle.colorCrossBar1());
 			drawCrossBar(painter, i, m_state.crossBarPos2, m_effectiveStyle.colorCrossBar2());
+			drawCurrentTime(painter, i, m_state.currentTime, m_effectiveStyle.colorCurrentTime());
 		}
 		if(dirty_rect.intersects(ch->verticalHeaderRect()))
 			drawVerticalHeader(painter, i);
@@ -1551,6 +1564,27 @@ void Graph::drawSelection(QPainter *painter)
 	QColor c = m_effectiveStyle.colorSelection();
 	c.setAlphaF(0.3);
 	painter->fillRect(m_state.selectionRect, c);
+}
+
+void Graph::drawCurrentTime(QPainter *painter, int channel_ix, time_t time, const QColor &color)
+{
+	if(time <= 0)
+		return;
+	int x = timeToPos(time);
+	const GraphChannel *ch = channelAt(channel_ix);
+	if(ch->graphAreaRect().left() > x || ch->graphAreaRect().right() < x)
+		return;
+
+	painter->save();
+	QPen pen;
+	auto d = u2pxf(0.2);
+	pen.setWidthF(d);
+	pen.setColor(color);
+	painter->setPen(pen);
+	QPoint p1{x, ch->graphAreaRect().top()};
+	QPoint p2{x, ch->graphAreaRect().bottom()};
+	painter->drawLine(p1, p2);
+	painter->restore();
 }
 
 void Graph::onButtonBoxClicked(int button_id)
