@@ -23,7 +23,7 @@
 
 #define smcDebug QNoDebug
 
-#define logRpcData() shvCDebug("RpcData")
+#define logRpcData() nCMessage("RpcData")
 
 namespace cp = shv::chainpack;
 
