@@ -20,10 +20,7 @@
 #include <QFile>
 #endif
 
-
-#define smcDebug QNoDebug
-
-#define logRpcData() shvCDebug("RpcData")
+#define logRpcData() shvCMessage("RpcData")
 
 namespace cp = shv::chainpack;
 

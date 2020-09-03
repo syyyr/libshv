@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="shv/visu">
+	<file>images/pencil.svg</file>
 	<file>images/clock.svg</file>
 	<file>images/delete.svg</file>
 	<file>images/media-pause.svg</file>

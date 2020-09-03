@@ -301,14 +301,18 @@ void Graph::setCrossBarPos2(const QPoint &pos)
 
 void Graph::setCurrentTime(timemsec_t time)
 {
+	auto dirty_rect = [this](timemsec_t time) {
+		QRect r;
+		if(time > 0) {
+			r = m_layout.rect;
+			r.setX(timeToPos(time));
+			r.adjust(-10, 0, 10, 0);
+		}
+		return r;
+	};
+	emitPresentationDirty(dirty_rect(m_state.currentTime));
 	m_state.currentTime = time;
-	QRect r;
-	if(time > 0) {
-		r = m_layout.rect;
-		r.setX(timeToPos(time));
-		r.adjust(-10, 0, 10, 0);
-	}
-	emitPresentationDirty(r);
+	emitPresentationDirty(dirty_rect(m_state.currentTime));
 }
 
 void Graph::setSelectionRect(const QRect &rect)

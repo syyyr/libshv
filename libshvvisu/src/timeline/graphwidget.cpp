@@ -111,6 +111,7 @@ void GraphWidget::paintEvent(QPaintEvent *event)
 	//shvInfo() << "view_rect :"  << rect_to_string(view_rect);
 	graph()->draw(&painter, dirty_rect,  scroll_area->widgetViewRect());
 }
+
 /*
 void GraphWidget::keyPressEvent(QKeyEvent *event)
 {
@@ -176,6 +177,19 @@ int GraphWidget::isMouseAboveGraphDataArea(const QPoint &pos) const
 	const Graph *gr = graph();
 	int ch_ix = gr->posToChannel(pos);
 	return ch_ix >= 0;
+}
+
+void GraphWidget::mouseDoubleClickEvent(QMouseEvent *event)
+{
+	QPoint pos = event->pos();
+	if(isMouseAboveGraphDataArea(pos)) {
+		if(event->modifiers() == Qt::NoModifier) {
+			emit graphChannelDoubleClicked(pos);
+			event->accept();
+			return;
+		}
+	}
+	Super::mouseDoubleClickEvent(event);
 }
 
 void GraphWidget::mousePressEvent(QMouseEvent *event)

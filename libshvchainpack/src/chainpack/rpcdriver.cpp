@@ -12,8 +12,8 @@
 #include <sstream>
 #include <iostream>
 
-#define logRpcRawMsg() nCDebug("RpcRawMsg")
-#define logRpcData() nCDebug("RpcData")
+#define logRpcRawMsg() nCMessage("RpcRawMsg")
+#define logRpcData() nCMessage("RpcData")
 //#define logRpcData() nInfo()
 
 //#define logRpcSyncCalls() nCDebug("RpcSyncCalls")
