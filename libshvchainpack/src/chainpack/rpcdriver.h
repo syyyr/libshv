@@ -38,6 +38,8 @@ public:
 	static size_t decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolType protocol_type, const std::string &data, size_t start_pos);
 	static RpcValue decodeData(Rpc::ProtocolType protocol_type, const std::string &data, size_t start_pos);
 	static std::string codeRpcValue(Rpc::ProtocolType protocol_type, const RpcValue &val);
+
+	static std::string dataToPrettyCpon(shv::chainpack::Rpc::ProtocolType protocol_type, const shv::chainpack::RpcValue::MetaData &md, const std::string &data, size_t start_pos = 0, size_t data_len = 0);
 protected:
 	struct MessageData
 	{

@@ -455,5 +455,20 @@ void RpcDriver::onRpcValueReceived(const RpcValue &msg)
 		m_messageReceivedCallback(msg);
 }
 
+std::string RpcDriver::dataToPrettyCpon(Rpc::ProtocolType protocol_type, const RpcValue::MetaData &md, const std::string &data, size_t start_pos, size_t data_len)
+{
+	shv::chainpack::RpcValue rpc_val;
+	if(data_len == 0)
+		data_len = data.size() - start_pos;
+	if(data_len < 256) {
+		rpc_val = shv::chainpack::RpcDriver::decodeData(protocol_type, data, start_pos);
+	}
+	else {
+		rpc_val = " ... " + std::to_string(data_len) + " bytes of data ... ";
+	}
+	rpc_val.setMetaData(shv::chainpack::RpcValue::MetaData(md));
+	return rpc_val.toPrettyString();
+}
+
 } // namespace chainpack
 } // namespace shv
