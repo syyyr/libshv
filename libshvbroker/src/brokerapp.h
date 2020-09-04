@@ -88,8 +88,6 @@ public:
 	// for example LDAP ACL Manager
 	chainpack::UserLoginResult checkLogin(const shv::chainpack::UserLoginContext &ctx);
 
-	std::string dataToCpon(shv::chainpack::Rpc::ProtocolType protocol_type, const shv::chainpack::RpcValue::MetaData &md, const std::string &data, size_t start_pos = 0, size_t data_len = 0);
-
 	void sendNewLogEntryNotify(const std::string &msg);
 protected:
 	virtual void initDbConfigSqlConnection();

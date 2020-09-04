@@ -424,21 +424,6 @@ chainpack::UserLoginResult BrokerApp::checkLogin(const chainpack::UserLoginConte
 	return aclManager()->checkPassword(ctx);
 }
 
-std::string BrokerApp::dataToCpon(shv::chainpack::Rpc::ProtocolType protocol_type, const shv::chainpack::RpcValue::MetaData &md, const std::string &data, size_t start_pos, size_t data_len)
-{
-	shv::chainpack::RpcValue rpc_val;
-	if(data_len == 0)
-		data_len = data.size() - start_pos;
-	if(data_len < 256) {
-		rpc_val = shv::chainpack::RpcDriver::decodeData(protocol_type, data, start_pos);
-	}
-	else {
-		rpc_val = " ... " + std::to_string(data_len) + " bytes of data ... ";
-	}
-	rpc_val.setMetaData(shv::chainpack::RpcValue::MetaData(md));
-	return rpc_val.toPrettyString();
-}
-
 void BrokerApp::sendNewLogEntryNotify(const std::string &msg)
 {
 	sendNotifyToSubscribers(".broker/app/log", cp::Rpc::SIG_VAL_CHANGED, msg);

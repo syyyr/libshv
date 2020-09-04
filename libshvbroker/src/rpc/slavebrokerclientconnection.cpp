@@ -66,7 +66,7 @@ void SlaveBrokerClientConnection::sendRawData(const shv::chainpack::RpcValue::Me
 	logRpcMsg() << SND_LOG_ARROW
 				<< "client id:" << connectionId()
 				<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
-				<< BrokerApp::instance()->dataToCpon(shv::chainpack::RpcMessage::protocolType(meta_data), meta_data, data, 0);
+				<< RpcDriver::dataToPrettyCpon(shv::chainpack::RpcMessage::protocolType(meta_data), meta_data, data, 0);
 	Super::sendRawData(meta_data, std::move(data));
 }
 
@@ -125,7 +125,7 @@ void SlaveBrokerClientConnection::onRpcDataReceived(shv::chainpack::Rpc::Protoco
 	logRpcMsg() << RpcDriver::RCV_LOG_ARROW
 				<< "client id:" << connectionId()
 				<< "protocol_type:" << (int)protocol_type << shv::chainpack::Rpc::protocolTypeToString(protocol_type)
-				<< BrokerApp::instance()->dataToCpon(protocol_type, md, data, start_pos, data_len);
+				<< RpcDriver::dataToPrettyCpon(protocol_type, md, data, start_pos, data_len);
 	try {
 		if(isInitPhase()) {
 			Super::onRpcDataReceived(protocol_type, std::move(md), data, start_pos, data_len);
