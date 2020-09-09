@@ -49,6 +49,7 @@ void Graph::ChannelFilter::setPathPattern(const std::string &pattern, Graph::Cha
 
 bool Graph::ChannelFilter::isPathMatch(const std::string &path) const
 {
+	shvLogFuncFrame() << "path:" << path << "pattern:" << m_pathPattern;
 	if(m_pathPattern.empty())
 		return true;
 	if(m_pathPatternFormat == ChannelFilter::PathPatternFormat::Regex) {
@@ -793,7 +794,6 @@ QVector<int> Graph::visibleChannels()
 
 		QString shv_path = model()->channelData(ch->modelIndex(), GraphModel::ChannelDataRole::ShvPath).toString();
 		if(!m_channelFilter.isPathMatch(shv_path.toStdString())) {
-			ch->setVisible(false);
 			continue;
 		}
 		if(m_channelFilter.isHideFlat()) {
