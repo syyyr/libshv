@@ -312,7 +312,17 @@ log_finish:
 	ret.setMetaData(hdr.toMetaData());
 	return ret;
 }
-
+/*
+size_t ShvMemoryJournal::timeToUpperBoundIndex(int64_t time) const
+{
+	Entry entry;
+	entry.epochMsec = time;
+	auto it = std::upper_bound(m_entries.begin(), m_entries.end(), entry, [](const Entry &e1, const Entry &e2) {
+		return e1.epochMsec < e2.epochMsec;
+	});
+	return it - m_entries.begin();
+}
+*/
 } // namespace utils
 } // namespace core
 } // namespace shv
