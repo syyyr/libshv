@@ -17,8 +17,8 @@ chainpack::RpcValue ShvLogTypeDescrField::toRpcValue() const
 		m["description"] = description;
 	if(value.isValid())
 		m["value"] = value;
-	if(!options.empty())
-		m["options"] = options;
+	if(!tags.empty())
+		m["tags"] = tags;
 	return std::move(m);
 }
 
@@ -31,7 +31,9 @@ ShvLogTypeDescrField ShvLogTypeDescrField::fromRpcValue(const chainpack::RpcValu
 		ret.description = m.value("description").toString();
 		ret.typeName = m.value("typeName").toString();
 		ret.value = m.value("value");
-		ret.options = m.value("options").toMap();
+		ret.tags = m.value("tags").toMap();
+		if(ret.tags.empty())
+			ret.tags = m.value("options").toMap();
 	}
 	return ret;
 }
@@ -114,8 +116,8 @@ chainpack::RpcValue ShvLogTypeDescr::toRpcValue() const
 			lst.push_back(fld.toRpcValue());
 		m["fields"] = std::move(lst);
 	}
-	if(!options.empty()) {
-		m["options"] = options;
+	if(!tags.empty()) {
+		m["tags"] = tags;
 	}
 	return std::move(m);
 }
@@ -130,7 +132,9 @@ ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const chainpack::RpcValue &v)
 		ret.description = m.value("description").toString();
 		for(const auto &rv : m.value("fields").toList())
 			ret.fields.push_back(ShvLogTypeDescrField::fromRpcValue(rv));
-		ret.options = m.value("options").toMap();
+		ret.tags = m.value("tags").toMap();
+		if(ret.tags.empty())
+			ret.tags = m.value("options").toMap();
 	}
 	return ret;
 }
