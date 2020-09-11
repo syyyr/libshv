@@ -69,8 +69,10 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeDescr
 	ShvLogTypeDescr() {}
 	ShvLogTypeDescr(const std::string &type_name) : type(typeFromString(type_name)) { }
 	ShvLogTypeDescr(Type t, std::vector<ShvLogTypeDescrField> &&flds, const std::string &descr = std::string(), SampleType st = SampleType::Continuous)
-		: ShvLogTypeDescr(t, std::move(flds), descr, st, chainpack::RpcValue::Map()) {}
-	ShvLogTypeDescr(Type t, std::vector<ShvLogTypeDescrField> &&flds, const std::string &descr, SampleType st, chainpack::RpcValue::Map &&tags)
+		: ShvLogTypeDescr(t, std::move(flds), chainpack::RpcValue::Map(), descr, st) {}
+	ShvLogTypeDescr(Type t, chainpack::RpcValue::Map &&tags, const std::string &descr = std::string(), SampleType st = SampleType::Continuous)
+		: ShvLogTypeDescr(t, std::vector<ShvLogTypeDescrField>(), std::move(tags), descr, st) {}
+	ShvLogTypeDescr(Type t, std::vector<ShvLogTypeDescrField> &&flds, chainpack::RpcValue::Map &&tags, const std::string &descr = std::string(), SampleType st = SampleType::Continuous)
 		: fields(std::move(flds))
 		, description(descr)
 		, type(t)
