@@ -26,8 +26,8 @@ public:
 	void setDeviceId(std::string id) { m_logHeader.setDeviceId(std::move(id)); }
 	void setDeviceType(std::string type) { m_logHeader.setDeviceType(std::move(type)); }
 
-	bool isShorTimeCorrection() const { return m_isShorTimeCorrection; }
-	void setShorTimeCorrection(bool b) { m_isShorTimeCorrection = b; }
+	bool isShortTimeCorrection() const { return m_isShortTimeCorrection; }
+	void setShortTimeCorrection(bool b) { m_isShortTimeCorrection = b; }
 
 	void append(const ShvJournalEntry &entry) override;
 	int inputFilterRecordCountLimit() const { return  m_inputFilterRecordCountLimit; }
@@ -75,7 +75,7 @@ private:
 		}
 	};
 
-	bool m_isShorTimeCorrection;
+	bool m_isShortTimeCorrection = false;
 	std::map<std::string, ShortTime> m_recentShortTimes;};
 
 } // namespace utils
