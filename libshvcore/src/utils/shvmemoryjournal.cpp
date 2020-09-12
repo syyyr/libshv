@@ -76,7 +76,7 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 	if(epoch_msec == 0) {
 		epoch_msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
 	}
-	else if(isShorTimeCorrection()) {
+	else if(isShortTimeCorrection()) {
 		if(entry.shortTime != shv::core::utils::ShvJournalEntry::NO_SHORT_TIME) {
 			uint16_t short_msec = static_cast<uint16_t>(entry.shortTime);
 			ShortTime &st = m_recentShortTimes[entry.path];
