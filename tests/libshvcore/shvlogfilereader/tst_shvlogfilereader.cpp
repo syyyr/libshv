@@ -73,22 +73,20 @@ ShvLogTypeInfo typeInfo
 			"Temperature",
 			{
 				ShvLogTypeDescr::Type::Decimal,
-				{},
-				"",
-				ShvLogTypeDescr::SampleType::Continuous,
-				RpcValue::Decimal(0, -2),
-				RpcValue::Decimal(10000, -2)
+				{
+					{ShvLogTypeDescr::OPT_MIN_VAL, RpcValue::Decimal(0, -2)},
+					{ShvLogTypeDescr::OPT_MIN_VAL, RpcValue::Decimal(10000, -2)},
+				},
 			}
 		},
 		{
 			"Voltage",
 			{
 				ShvLogTypeDescr::Type::Int,
-				{},
-				"",
-				ShvLogTypeDescr::SampleType::Continuous,
-				RpcValue::Decimal(-1500),
-				RpcValue::Decimal(1500)
+				{
+					{ShvLogTypeDescr::OPT_MIN_VAL, RpcValue{0}},
+					{ShvLogTypeDescr::OPT_MIN_VAL, RpcValue{100}},
+				},
 			}
 		},
 		{
