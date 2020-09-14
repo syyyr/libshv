@@ -275,7 +275,8 @@ ssize_t StringViewList::indexOf(const std::string &str) const
 
 StringViewList StringViewList::mid(size_t start, size_t len) const
 {
-	return StringViewList(begin() + start, begin() + start + len);
+	auto end = (start + len) > size()? size(): start + len;
+	return StringViewList(begin() + start, begin() + end);
 }
 
 bool StringViewList::startsWith(const StringViewList &lst) const
