@@ -103,13 +103,13 @@ void Graph::createChannelsFromModel()
 	if(!m_model)
 		return;
 	// sort channels alphabetically
-	QMap<std::string, int> path_to_model_index;
+	QMap<QString, int> path_to_model_index;
 	for (int i = 0; i < m_model->channelCount(); ++i) {
-		std::string shv_path = m_model->channelPath(i);
+		QString shv_path = m_model->channelPath(i);
 		path_to_model_index[shv_path] = i;
 	}
 	XRange x_range;
-	for(const std::string &shv_path : path_to_model_index.keys()) {
+	for(const auto &shv_path : path_to_model_index.keys()) {
 		int model_ix = path_to_model_index[shv_path];
 		YRange yrange = m_model->yRange(model_ix);
 		shvDebug() << "adding channel:" << shv_path << "y-range interval:" << yrange.interval();
@@ -132,7 +132,7 @@ void Graph::createChannelsFromModel()
 		GraphChannel::Style style = ch->style();
 		style.setColor(colors.value(graph_ix % colors.count()));
 		ch->setStyle(style);
-		ch->setMetaTypeId(m_model->guessMetaType(model_ix));
+		//ch->setMetaTypeId(m_model->guessMetaType(model_ix));
 		setYRange(graph_ix, yrange);
 	}
 	setXRange(x_range);
@@ -287,7 +287,7 @@ QPoint Graph::dataToPos(int ch_ix, const Sample &s) const
 {
 	const GraphChannel *ch = channelAt(ch_ix);
 	auto data2point = dataToPointFn(DataRect{xRangeZoom(), ch->yRangeZoom()}, ch->graphDataGridRect());
-	return data2point? data2point(s): QPoint();
+	return data2point? data2point(ch->modelIndex(), s): QPoint();
 }
 
 void Graph::setCrossBarPos1(const QPoint &pos)
@@ -792,7 +792,7 @@ QVector<int> Graph::visibleChannels()
 		if(!ch->isVisible())
 			continue;
 
-		QString shv_path = model()->channelData(ch->modelIndex(), GraphModel::ChannelDataRole::ShvPath).toString();
+		QString shv_path = model()->channelInfo(ch->modelIndex()).shvPath;
 		if(!m_channelFilter.isPathMatch(shv_path.toStdString())) {
 			continue;
 		}
@@ -930,8 +930,9 @@ void Graph::drawVerticalHeader(QPainter *painter, int channel)
 	pen.setColor(c);
 	painter->setPen(pen);
 
-	QString name = model()->channelData(ch->modelIndex(), GraphModel::ChannelDataRole::Name).toString();
-	QString shv_path = model()->channelData(ch->modelIndex(), GraphModel::ChannelDataRole::ShvPath).toString();
+	const GraphModel::ChannelInfo& chi = model()->channelInfo(ch->modelIndex());
+	QString name = chi.name;
+	QString shv_path = chi.shvPath;
 	if(name.isEmpty())
 		name = shv_path;
 	if(name.isEmpty())
@@ -1199,7 +1200,7 @@ void Graph::drawYAxis(QPainter *painter, int channel)
 	painter->restore();
 }
 
-std::function<QPoint (const Sample &)> Graph::dataToPointFn(const DataRect &src, const QRect &dest)
+std::function<QPoint (int channel_ix, const Sample &)> Graph::dataToPointFn(const DataRect &src, const QRect &dest) const
 {
 	int le = dest.left();
 	int ri = dest.right();
@@ -1219,12 +1220,12 @@ std::function<QPoint (const Sample &)> Graph::dataToPointFn(const DataRect &src,
 		return nullptr;
 	double ky = (to - bo) / (d2 - d1);
 
-	return  [le, bo, kx, t1, d1, ky](const Sample &s) -> QPoint {
+	return  [this, le, bo, kx, t1, d1, ky](int graph_model_ix, const Sample &s) -> QPoint {
 		if(!s.isValid())
 			return QPoint();
 		const timemsec_t t = s.time;
 		bool ok;
-		double d = GraphModel::valueToDouble(s.value, &ok);
+		double d = m_model->valueToDouble(s.value, graph_model_ix, &ok);
 		if(!ok)
 			return QPoint();
 		double x = le + (t - t1) * kx;
@@ -1411,7 +1412,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	for (int i = ix1; i <= ix2 && i <= cnt; ++i) {
 		// sample is drawn one step behind, so one more loop is needed
 		const Sample s = (i < cnt)? m->sampleAt(model_ix, i): Sample();
-		const QPoint sample_point = sample2point(s);
+		const QPoint sample_point = sample2point(model_ix, s);
 		//shvDebug() << i << "t:" << s.time << "x:" << sample_point.x() << "y:" << sample_point.y();
 		//shvDebug() << "\t recent x:" << recent_px.x << " current x:" << current_px.x;
 		if(sample_point.x() == current_px.x) {
@@ -1428,7 +1429,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 				}
 				if(interpolation == GraphChannel::Style::Interpolation::None) {
 					if(line_area_color.isValid()) {
-						QPoint p0 = sample2point(Sample{s.time, 0}); // <- this can be computed ahead
+						QPoint p0 = sample2point(model_ix, Sample{s.time, 0}); // <- this can be computed ahead
 						p0.setX(drawn_point.x());
 						painter->fillRect(QRect{drawn_point, p0}, line_area_color);
 					}
@@ -1440,7 +1441,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 					if(recent_px.x != NO_X) {
 						QPoint pa{recent_px.x, recent_px.lastY};
 						if(line_area_color.isValid()) {
-							QPoint p0 = sample2point(Sample{s.time, 0}); // <- this can be computed ahead
+							QPoint p0 = sample2point(model_ix, Sample{s.time, 0}); // <- this can be computed ahead
 							p0.setX(drawn_point.x());
 							painter->fillRect(QRect{pa + QPoint{1, 0}, p0}, line_area_color);
 						}
@@ -1457,7 +1458,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 					if(recent_px.x != NO_X) {
 						QPoint pa{recent_px.x, recent_px.lastY};
 						if(line_area_color.isValid()) {
-							QPoint p0 = sample2point(Sample{s.time, 0});
+							QPoint p0 = sample2point(model_ix, Sample{s.time, 0});
 							p0.setX(drawn_point.x());
 							QPainterPath pp;
 							pp.moveTo(pa);

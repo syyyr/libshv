@@ -65,9 +65,6 @@ public:
 	GraphChannel(Graph *graph);
 	~GraphChannel() {}
 
-	void setMetaTypeId(int id) { m_metaTypeId = id; }
-	int metaTypeId() const { return m_metaTypeId; }
-
 	inline int modelIndex() const {return m_modelIndex;}
 	void setModelIndex(int ix) {m_modelIndex = ix;}
 
@@ -125,7 +122,6 @@ protected:
 	Style m_style;
 	Style m_effectiveStyle;
 	int m_modelIndex = 0;
-	int m_metaTypeId = 0;
 };
 
 } // namespace timeline

@@ -17,26 +17,7 @@ void GraphModel::clear()
 {
 	m_pathToChannelCache.clear();
 	m_samples.clear();
-	m_channelsData.clear();
-}
-
-QVariant GraphModel::channelData(int channel, GraphModel::ChannelDataRole::Enum role) const
-{
-	if(channel < 0 || channel > channelCount()) {
-		return QVariant();
-	}
-	const ChannelData &chp = m_channelsData[channel];
-	return chp.value(role);
-}
-
-void GraphModel::setChannelData(int channel, const QVariant &v, GraphModel::ChannelDataRole::Enum role)
-{
-	if(channel < 0 || channel > channelCount()) {
-		shvError() << "Invalid channel index:" << channel;
-		return;
-	}
-	ChannelData &chp = m_channelsData[channel];
-	chp[role] = v;
+	m_channelsInfo.clear();
 }
 
 int GraphModel::count(int channel) const
@@ -85,7 +66,7 @@ YRange GraphModel::yRange(int channel_ix) const
 	for (int i = 0; i < count(channel_ix); ++i) {
 		QVariant v = sampleAt(channel_ix, i).value;
 		bool ok;
-		double d = valueToDouble(v, &ok);
+		double d = valueToDouble2(v, channelInfo(i).metaTypeId, &ok);
 		if(ok) {
 			ret.min = qMin(ret.min, d);
 			ret.max = qMax(ret.max, d);
@@ -94,11 +75,13 @@ YRange GraphModel::yRange(int channel_ix) const
 	return ret;
 }
 
-double GraphModel::valueToDouble(const QVariant v, bool *ok)
+double GraphModel::valueToDouble2(const QVariant v, int meta_type_id, bool *ok) const
 {
 	if(ok)
 		*ok = true;
-	switch (v.type()) {
+	if(meta_type_id == QMetaType::UnknownType)
+		meta_type_id = v.userType();
+	switch (meta_type_id) {
 	case QVariant::Invalid:
 		return 0;
 	case QVariant::Double:
@@ -161,6 +144,12 @@ void GraphModel::endAppendValues()
 	if(xr.max > m_begginAppendXRange.max)
 		emit xRangeChanged(xr);
 	m_begginAppendXRange = XRange();
+	for (int i = 0; i < channelCount(); ++i) {
+		ChannelInfo &chi = channelInfo(i);
+		if(chi.metaTypeId == QMetaType::UnknownType) {
+			chi.metaTypeId = guessMetaType(i);
+		}
+	}
 }
 
 void GraphModel::appendValue(int channel, Sample &&sample)
@@ -175,7 +164,7 @@ void GraphModel::appendValue(int channel, Sample &&sample)
 	}
 	ChannelSamples &dat = m_samples[channel];
 	if(!dat.isEmpty() && dat.last().time > sample.time) {
-		shvWarning() << channelData(channel, ChannelDataRole::ShvPath).toString() << "channel:" << channel
+		shvWarning() << channelInfo(channel).shvPath << "channel:" << channel
 					 << "ignoring value with lower timestamp than last value:"
 					 << dat.last().time << shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(dat.last().time).toIsoString()
 					 << "val:"
@@ -189,7 +178,7 @@ void GraphModel::appendValue(int channel, Sample &&sample)
 
 void GraphModel::appendValueShvPath(const std::string &shv_path, Sample &&sample)
 {
-	int ch_ix = pathToChannel(shv_path);
+	int ch_ix = pathToChannelIndex(shv_path);
 	if(ch_ix < 0) {
 		if(isAutoCreateChannels()) {
 			appendChannel(shv_path, std::string());
@@ -203,14 +192,13 @@ void GraphModel::appendValueShvPath(const std::string &shv_path, Sample &&sample
 	appendValue(ch_ix, std::move(sample));
 }
 
-int GraphModel::pathToChannel(const std::string &path) const
+int GraphModel::pathToChannelIndex(const std::string &path) const
 {
 	auto it = m_pathToChannelCache.find(path);
 	if(it == m_pathToChannelCache.end()) {
-		for (int i = 0; i < m_channelsData.count(); ++i) {
-			const ChannelData &chd = m_channelsData.at(i);
-			QString p = chd.value(ChannelDataRole::ShvPath).toString();
-			if(p == QLatin1String(path.data(), (int)path.size())) {
+		for (int i = 0; i < channelCount(); ++i) {
+			const ChannelInfo &chi = channelInfo(i);
+			if(chi.shvPath == QLatin1String(path.data(), (int)path.size())) {
 				m_pathToChannelCache[path] = i;
 				return i;
 			}
@@ -223,13 +211,13 @@ int GraphModel::pathToChannel(const std::string &path) const
 void GraphModel::appendChannel(const std::string &shv_path, const std::string &name)
 {
 	m_pathToChannelCache.clear();
-	m_channelsData.append(ChannelData());
+	m_channelsInfo.append(ChannelInfo());
 	m_samples.append(ChannelSamples());
-	int ix = channelCount() - 1;
+	auto &chi = m_channelsInfo.last();
 	if(!shv_path.empty())
-		setChannelData(ix, QString::fromStdString(shv_path), ChannelDataRole::ShvPath);
+		chi.shvPath = QString::fromStdString(shv_path);
 	if(!name.empty())
-		setChannelData(ix, QString::fromStdString(name), ChannelDataRole::Name);
+		chi.name = QString::fromStdString(name);
 	emit channelCountChanged(channelCount());
 }
 
