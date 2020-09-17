@@ -109,6 +109,7 @@ public:
 	GraphChannel* appendChannel(int model_index = -1);
 	GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw);
 	const GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw) const;
+	int channelMetaTypeId(int ix) const;
 
 	void showAllChannels();
 	void hideFlatChannels();
@@ -166,7 +167,7 @@ public:
 	double u2pxf(double u) const;
 	double px2u(int px) const;
 
-	std::function<QPoint (int channel_ix, const Sample&)> dataToPointFn(const DataRect &src, const QRect &dest) const;
+	static std::function<QPoint (const Sample &s, int meta_type_id)> dataToPointFn(const DataRect &src, const QRect &dest);
 	static std::function<Sample (const QPoint &)> pointToDataFn(const QRect &src, const DataRect &dest);
 	static std::function<timemsec_t (int)> posToTimeFn(const QPoint &src, const XRange &dest);
 	static std::function<int (timemsec_t)> timeToPosFn(const XRange &src, const WidgetRange &dest);

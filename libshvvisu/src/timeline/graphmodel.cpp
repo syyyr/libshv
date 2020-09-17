@@ -66,7 +66,7 @@ YRange GraphModel::yRange(int channel_ix) const
 	for (int i = 0; i < count(channel_ix); ++i) {
 		QVariant v = sampleAt(channel_ix, i).value;
 		bool ok;
-		double d = valueToDouble2(v, channelInfo(i).metaTypeId, &ok);
+		double d = valueToDouble(v, channelInfo(i).metaTypeId, &ok);
 		if(ok) {
 			ret.min = qMin(ret.min, d);
 			ret.max = qMax(ret.max, d);
@@ -75,7 +75,7 @@ YRange GraphModel::yRange(int channel_ix) const
 	return ret;
 }
 
-double GraphModel::valueToDouble2(const QVariant v, int meta_type_id, bool *ok) const
+double GraphModel::valueToDouble(const QVariant v, int meta_type_id, bool *ok)
 {
 	if(ok)
 		*ok = true;

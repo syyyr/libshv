@@ -63,7 +63,7 @@ public:
 	Q_SIGNAL void xRangeChanged(XRange range);
 	Q_SIGNAL void channelCountChanged(int cnt);
 public:
-	virtual double valueToDouble2(const QVariant v, int meta_type_id, bool *ok = nullptr) const;
+	static double valueToDouble(const QVariant v, int meta_type_id = QVariant::Invalid, bool *ok = nullptr);
 protected:
 	virtual int guessMetaType(int channel_ix);
 protected:

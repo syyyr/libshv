@@ -176,6 +176,14 @@ const GraphChannel *Graph::channelAt(int ix, bool throw_exc) const
 	return m_channels[ix];
 }
 
+int Graph::channelMetaTypeId(int ix) const
+{
+	if(!m_model)
+		SHV_EXCEPTION("Graph model is NULL");
+	const GraphChannel *ch = channelAt(ix);
+	return m_model->channelInfo(ch->modelIndex()).metaTypeId;
+}
+
 void Graph::showAllChannels()
 {
 	m_channelFilter = ChannelFilter();
@@ -287,7 +295,7 @@ QPoint Graph::dataToPos(int ch_ix, const Sample &s) const
 {
 	const GraphChannel *ch = channelAt(ch_ix);
 	auto data2point = dataToPointFn(DataRect{xRangeZoom(), ch->yRangeZoom()}, ch->graphDataGridRect());
-	return data2point? data2point(ch->modelIndex(), s): QPoint();
+	return data2point? data2point(s, channelMetaTypeId(ch_ix)): QPoint();
 }
 
 void Graph::setCrossBarPos1(const QPoint &pos)
@@ -1200,7 +1208,7 @@ void Graph::drawYAxis(QPainter *painter, int channel)
 	painter->restore();
 }
 
-std::function<QPoint (int channel_ix, const Sample &)> Graph::dataToPointFn(const DataRect &src, const QRect &dest) const
+std::function<QPoint (const Sample &s, int meta_type_id)> Graph::dataToPointFn(const DataRect &src, const QRect &dest)
 {
 	int le = dest.left();
 	int ri = dest.right();
@@ -1220,12 +1228,12 @@ std::function<QPoint (int channel_ix, const Sample &)> Graph::dataToPointFn(cons
 		return nullptr;
 	double ky = (to - bo) / (d2 - d1);
 
-	return  [this, le, bo, kx, t1, d1, ky](int graph_model_ix, const Sample &s) -> QPoint {
+	return  [le, bo, kx, t1, d1, ky](const Sample &s, int meta_type_id) -> QPoint {
 		if(!s.isValid())
 			return QPoint();
 		const timemsec_t t = s.time;
 		bool ok;
-		double d = m_model->valueToDouble(s.value, graph_model_ix, &ok);
+		double d = GraphModel::valueToDouble(s.value, meta_type_id, &ok);
 		if(!ok)
 			return QPoint();
 		double x = le + (t - t1) * kx;
@@ -1390,6 +1398,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		//line_area_color.setHsv(line_area_color.hslHue(), line_area_color.hsvSaturation() / 2, line_area_color.lightness());
 	}
 
+	int channel_meta_type_id = channelMetaTypeId(channel_ix);
 	GraphModel *m = model();
 	int ix1 = m->lessOrEqualIndex(model_ix, xrange.min);
 	//ix1--; // draw one more sample to correctly display connection line to the first one in the zoom window
@@ -1412,7 +1421,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	for (int i = ix1; i <= ix2 && i <= cnt; ++i) {
 		// sample is drawn one step behind, so one more loop is needed
 		const Sample s = (i < cnt)? m->sampleAt(model_ix, i): Sample();
-		const QPoint sample_point = sample2point(model_ix, s);
+		const QPoint sample_point = sample2point(s, channel_meta_type_id);
 		//shvDebug() << i << "t:" << s.time << "x:" << sample_point.x() << "y:" << sample_point.y();
 		//shvDebug() << "\t recent x:" << recent_px.x << " current x:" << current_px.x;
 		if(sample_point.x() == current_px.x) {
@@ -1429,7 +1438,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 				}
 				if(interpolation == GraphChannel::Style::Interpolation::None) {
 					if(line_area_color.isValid()) {
-						QPoint p0 = sample2point(model_ix, Sample{s.time, 0}); // <- this can be computed ahead
+						QPoint p0 = sample2point(Sample{s.time, 0}, channel_meta_type_id); // <- this can be computed ahead
 						p0.setX(drawn_point.x());
 						painter->fillRect(QRect{drawn_point, p0}, line_area_color);
 					}
@@ -1441,7 +1450,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 					if(recent_px.x != NO_X) {
 						QPoint pa{recent_px.x, recent_px.lastY};
 						if(line_area_color.isValid()) {
-							QPoint p0 = sample2point(model_ix, Sample{s.time, 0}); // <- this can be computed ahead
+							QPoint p0 = sample2point(Sample{s.time, 0}, channel_meta_type_id); // <- this can be computed ahead
 							p0.setX(drawn_point.x());
 							painter->fillRect(QRect{pa + QPoint{1, 0}, p0}, line_area_color);
 						}
@@ -1458,7 +1467,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 					if(recent_px.x != NO_X) {
 						QPoint pa{recent_px.x, recent_px.lastY};
 						if(line_area_color.isValid()) {
-							QPoint p0 = sample2point(model_ix, Sample{s.time, 0});
+							QPoint p0 = sample2point(Sample{s.time, 0}, channel_meta_type_id);
 							p0.setX(drawn_point.x());
 							QPainterPath pp;
 							pp.moveTo(pa);
