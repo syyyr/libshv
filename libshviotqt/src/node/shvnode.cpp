@@ -148,6 +148,7 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 				SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + "' doesn't exist");
 			}
 			else {
+				//int client_id = cp::RpcMessage::peekCallerId(meta);
 				ShvNode *nd = childNode(shv_path.at(0).toString());
 				if(nd) {
 					std::string new_path = core::StringView::join(++shv_path.begin(), shv_path.end(), '/');

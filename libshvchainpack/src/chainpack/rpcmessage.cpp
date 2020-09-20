@@ -322,9 +322,9 @@ RpcValue::Int RpcMessage::popCallerId()
 	return ret;
 }
 
-RpcValue::Int RpcMessage::peekCallerId() const
+RpcValue::Int RpcMessage::peekCallerId(const RpcValue::MetaData &meta)
 {
-	RpcValue caller_ids = callerIds();
+	RpcValue caller_ids = callerIds(meta);
 	if(caller_ids.isList()) {
 		const shv::chainpack::RpcValue::List &array = caller_ids.toList();
 		if(array.empty()) {
@@ -337,6 +337,11 @@ RpcValue::Int RpcMessage::peekCallerId() const
 	else {
 		return  caller_ids.toInt();
 	}
+}
+
+RpcValue::Int RpcMessage::peekCallerId() const
+{
+	return peekCallerId(m_value.metaData());
 }
 
 RpcValue RpcMessage::callerIds() const

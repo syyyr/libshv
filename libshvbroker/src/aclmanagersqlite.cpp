@@ -113,7 +113,8 @@ void AclManagerSqlite::createAclSqlTables()
 			CREATE TABLE IF NOT EXISTS %1 (
 				name character varying PRIMARY KEY,
 				weight integer,
-				roles character varying
+				roles character varying,
+				profile character varying
 			);
 			)kkt").arg(TBL_ACL_ROLES));
 	execSql(QStringLiteral(R"kkt(
@@ -262,6 +263,13 @@ AclRole AclManagerSqlite::aclRole(const std::string &role_name)
 		//ret.name = user_name;
 		ret.weight = q.value("weight").toInt();
 		ret.roles = split_str_vec(q.value("roles").toString());
+		std::string profile_str = q.value("profile").toString().toStdString();
+		if(!profile_str.empty()) {
+			std::string err;
+			ret.profile = shv::chainpack::RpcValue::fromCpon(profile_str, &err);
+			if(!err.empty())
+				shvError() << role_name << "invalid profile definition:" << profile_str;
+		}
 	}
 	return ret;
 }
@@ -269,10 +277,11 @@ AclRole AclManagerSqlite::aclRole(const std::string &role_name)
 void AclManagerSqlite::aclSetRole(const std::string &role_name, const AclRole &r)
 {
 	if(r.isValid()) {
-		QString qs = "INSERT OR REPLACE INTO " + TBL_ACL_ROLES + " (name, weight, roles) VALUES('%1', %2, '%3')";
+		QString qs = "INSERT OR REPLACE INTO " + TBL_ACL_ROLES + " (name, weight, roles, profile) VALUES('%1', %2, '%3', '%4')";
 		qs = qs.arg(QString::fromStdString(role_name));
 		qs = qs.arg(r.weight);
 		qs = qs.arg(join_str_vec(r.roles));
+		qs = qs.arg(QString::fromStdString(r.profile.toCpon()));
 		logAclManagerM() << qs;
 		execSql(qs);
 	}

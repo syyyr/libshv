@@ -7,12 +7,14 @@ namespace broker {
 
 shv::chainpack::RpcValue AclRole::toRpcValueMap() const
 {
-	if(isValid())
-		return shv::chainpack::RpcValue::Map {
-			//{"name", name},
-			{"weight", weight},
-			{"roles", shv::chainpack::RpcValue::List::fromStringList(roles)},
-		};
+	if(isValid()) {
+		shv::chainpack::RpcValue::Map m { {"weight", weight}, };
+		if(!roles.empty())
+			m["roles"] = shv::chainpack::RpcValue::List::fromStringList(roles);
+		if(profile.isMap())
+			m["profile"] = profile;
+		return std::move(m);
+	}
 	return shv::chainpack::RpcValue();
 }
 
@@ -30,6 +32,7 @@ AclRole AclRole::fromRpcValue(const shv::chainpack::RpcValue &v)
 		for(auto v : m.value("grants").toList())
 			roles.push_back(v.toString());
 		ret.roles = roles;
+		ret.profile = m.value("profile");
 	}
 	return ret;
 }

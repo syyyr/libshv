@@ -91,6 +91,7 @@ public:
 			std::sort(ids.begin(), ids.end());
 			for (size_t i = 0; i < ids.size(); ++i)
 				sl[i] = std::to_string(ids[i]);
+			//sl.insert(sl.begin(), ".current");
 		}
 		return sl;
 	}

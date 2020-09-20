@@ -94,6 +94,7 @@ public:
 	static RpcValue popCallerId(const RpcValue &caller_ids, RpcValue::Int &id);
 	static RpcValue::Int popCallerId(RpcValue::MetaData &meta);
 	RpcValue::Int popCallerId();
+	static RpcValue::Int peekCallerId(const RpcValue::MetaData &meta);
 	RpcValue::Int peekCallerId() const;
 	RpcValue callerIds() const;
 	void setCallerIds(const RpcValue &callerIds);

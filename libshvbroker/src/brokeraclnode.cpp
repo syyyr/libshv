@@ -246,6 +246,7 @@ std::string MountsAclNode::saveConfigFile()
 //static const std::string ACL_ROLE_NAME = "name";
 static const std::string ACL_ROLE_WEIGHT = "weight";
 static const std::string ACL_ROLE_ROLES = "roles";
+static const std::string ACL_ROLE_PROFILE = "profile";
 
 RolesAclNode::RolesAclNode(shv::iotqt::node::ShvNode *parent)
 	: Super("roles", parent)
@@ -260,7 +261,7 @@ iotqt::node::ShvNode::StringList RolesAclNode::childNames(const iotqt::node::Shv
 		return mng->roles();
 	}
 	else if(shv_path.size() == 1) {
-		return iotqt::node::ShvNode::StringList{ACL_ROLE_WEIGHT, ACL_ROLE_ROLES};
+		return iotqt::node::ShvNode::StringList{ACL_ROLE_WEIGHT, ACL_ROLE_ROLES, ACL_ROLE_PROFILE};
 	}
 	return Super::childNames(shv_path);
 }
@@ -304,6 +305,8 @@ chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringV
 				return role_def.weight;
 			if(pn == ACL_ROLE_ROLES)
 				return shv::chainpack::RpcValue::List::fromStringList(role_def.roles);
+			if(pn == ACL_ROLE_PROFILE)
+				return role_def.profile;
 		}
 		if(method == cp::Rpc::METH_SET) {
 			if(pn == ACL_ROLE_WEIGHT) {
@@ -314,6 +317,10 @@ chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringV
 				role_def.roles.clear();
 				for(const auto &rv : params.toList())
 					role_def.roles.push_back(rv.toString());
+				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{role_name, role_def.toRpcValueMap()});
+			}
+			if(pn == ACL_ROLE_PROFILE) {
+				role_def.profile = params;
 				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{role_name, role_def.toRpcValueMap()});
 			}
 		}
