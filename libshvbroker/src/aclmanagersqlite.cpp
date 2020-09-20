@@ -36,11 +36,11 @@ AclManagerSqlite::~AclManagerSqlite()
 {
 }
 
-QSqlQuery AclManagerSqlite::execSql(const QString &query_str)
+QSqlQuery AclManagerSqlite::execSql(const QString &query_str, bool throw_exc)
 {
 	QSqlDatabase db = m_brokerApp->sqlConfigConnection();
 	QSqlQuery q(db);
-	if(!q.exec(query_str))
+	if(!q.exec(query_str) && throw_exc)
 		SHV_EXCEPTION("SQL ERROR: " + q.lastError().text().toStdString() + "\nQuery: " + query_str.toStdString());
 	return q;
 }
@@ -63,15 +63,10 @@ QSqlQuery AclManagerSqlite::sqlLoadRow(const QString &table, const QString &key_
 void AclManagerSqlite::checkAclTables()
 {
 	{
-		bool db_exist = true;
-		try {
-			execSql("SELECT COUNT(*) FROM " + TBL_ACL_USERS);
-		}
-		catch (const shv::core::Exception &) {
-			shvInfo() << "Table" << TBL_ACL_USERS << "does not exist.";
-			db_exist = false;
-		}
+		QSqlQuery q = execSql("SELECT COUNT(*) FROM " + TBL_ACL_USERS, !shv::core::Exception::Throw);
+		bool db_exist = q.isActive();
 		if(!db_exist) {
+			shvInfo() << "Table" << TBL_ACL_USERS << "does not exist.";
 			execSql("BEGIN TRANSACTION");
 			createAclSqlTables();
 			importAclConfigFiles();
