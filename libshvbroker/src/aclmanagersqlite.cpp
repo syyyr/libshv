@@ -268,9 +268,9 @@ AclRole AclManagerSqlite::aclRole(const std::string &role_name)
 			ret.profile = shv::chainpack::RpcValue::fromCpon(profile_str, &err);
 			if(!err.empty())
 				shvError() << role_name << "invalid profile definition:" << profile_str;
-			if(!ret.profile.isMap())
-				ret.profile = cp::RpcValue();
 		}
+		if(!ret.profile.isMap())
+			ret.profile = cp::RpcValue();
 	}
 	return ret;
 }
