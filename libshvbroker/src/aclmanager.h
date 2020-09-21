@@ -52,8 +52,11 @@ public:
 		FlattenRole() {}
 		FlattenRole(const std::string &n, int w = 0, int nl = 0) : name(n), weight(w), nestLevel(nl) {}
 	};
+	// all roles sorted by weight DESC, nest_level ASC
 	std::vector<FlattenRole> userFlattenRoles(const std::string &user_name);
 	std::vector<FlattenRole> flattenRole(const std::string &role);
+
+	chainpack::RpcValue userProfile(const std::string &user_name);
 
 	virtual chainpack::UserLoginResult checkPassword(const chainpack::UserLoginContext &login_context);
 

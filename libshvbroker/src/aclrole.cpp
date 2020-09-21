@@ -33,6 +33,8 @@ AclRole AclRole::fromRpcValue(const shv::chainpack::RpcValue &v)
 			roles.push_back(v.toString());
 		ret.roles = roles;
 		ret.profile = m.value("profile");
+		if(!ret.profile.isMap())
+			ret.profile = shv::chainpack::RpcValue();
 	}
 	return ret;
 }

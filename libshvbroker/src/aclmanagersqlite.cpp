@@ -260,7 +260,6 @@ AclRole AclManagerSqlite::aclRole(const std::string &role_name)
 	AclRole ret;
 	QSqlQuery q = sqlLoadRow(TBL_ACL_ROLES, "name", QString::fromStdString(role_name));
 	if(q.next()) {
-		//ret.name = user_name;
 		ret.weight = q.value("weight").toInt();
 		ret.roles = split_str_vec(q.value("roles").toString());
 		std::string profile_str = q.value("profile").toString().toStdString();
@@ -269,6 +268,8 @@ AclRole AclManagerSqlite::aclRole(const std::string &role_name)
 			ret.profile = shv::chainpack::RpcValue::fromCpon(profile_str, &err);
 			if(!err.empty())
 				shvError() << role_name << "invalid profile definition:" << profile_str;
+			if(!ret.profile.isMap())
+				ret.profile = cp::RpcValue();
 		}
 	}
 	return ret;
@@ -281,7 +282,7 @@ void AclManagerSqlite::aclSetRole(const std::string &role_name, const AclRole &r
 		qs = qs.arg(QString::fromStdString(role_name));
 		qs = qs.arg(r.weight);
 		qs = qs.arg(join_str_vec(r.roles));
-		qs = qs.arg(QString::fromStdString(r.profile.toCpon()));
+		qs = qs.arg(QString::fromStdString(r.profile.isValid()? r.profile.toCpon(): ""));
 		logAclManagerM() << qs;
 		execSql(qs);
 	}

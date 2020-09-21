@@ -8,6 +8,7 @@ HEADERS += \
     $$PWD/aclmanager.h \
     $$PWD/aclmanagersqlite.h \
     $$PWD/brokeraclnode.h \
+    $$PWD/currentclientshvnode.h \
     $$PWD/shvbrokerglobal.h \
     $$PWD/appclioptions.h \
     $$PWD/brokerapp.h \
@@ -29,6 +30,7 @@ SOURCES += \
     $$PWD/brokerapp.cpp \
     $$PWD/brokernode.cpp \
     $$PWD/aclmanager.cpp \
+    $$PWD/currentclientshvnode.cpp \
     $$PWD/subscriptionsnode.cpp \
     $$PWD/clientconnectionnode.cpp \
     $$PWD/clientshvnode.cpp \

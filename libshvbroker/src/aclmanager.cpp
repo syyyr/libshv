@@ -309,6 +309,34 @@ std::vector<AclManager::FlattenRole> AclManager::flattenRole(const std::string &
 	}
 	return m_cache.userFlattenRoles[key];
 }
+/*
+static cp::RpcValue merge_maps(const cp::RpcValue &m_base, const cp::RpcValue &m_over)
+{
+	shvDebug() << "merging:" << m_base << "and:" << m_over;
+	if(m_over.isMap() && m_base.isMap()) {
+		const shv::chainpack::RpcValue::Map &map_base = m_base.toMap();
+		const shv::chainpack::RpcValue::Map &map_over = m_over.toMap();
+		cp::RpcValue::Map map = map_base;
+		for(const auto &kv : map_over) {
+			map[kv.first] = merge_maps(map.value(kv.first), kv.second);
+		}
+		return cp::RpcValue(map);
+	}
+	else if(m_over.isValid())
+		return m_over;
+	return m_base;
+}
+*/
+chainpack::RpcValue AclManager::userProfile(const std::string &user_name)
+{
+	chainpack::RpcValue ret;
+	for(const auto &rn : userFlattenRoles(user_name)) {
+		AclRole r = role(rn.name);
+		//shvDebug() << "--------------------------merging:" << rn.name << r.toRpcValueMap();
+		ret = chainpack::Utils::mergeMaps(ret, r.profile);
+	}
+	return ret;
+}
 
 //================================================================
 // AclManagerConfigFiles

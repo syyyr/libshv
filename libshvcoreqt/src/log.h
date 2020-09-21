@@ -18,4 +18,4 @@ inline NecroLog &operator<<(NecroLog &log, const QDate &d) { return log.operator
 inline NecroLog &operator<<(NecroLog log, const QDateTime &d) { return log.operator<<(d.toString(Qt::ISODate).toStdString()); }
 inline NecroLog &operator<<(NecroLog log, const QTime &d) {  return log.operator<<(d.toString(Qt::ISODate).toStdString()); }
 
-inline NecroLog &operator<<(NecroLog log, const shv::chainpack::RpcValue &v) { return log.operator <<(v.toCpon()); }
+inline NecroLog &operator<<(NecroLog log, const shv::chainpack::RpcValue &v) { return log.operator <<(v.isValid()? v.toCpon(): "Invalid"); }

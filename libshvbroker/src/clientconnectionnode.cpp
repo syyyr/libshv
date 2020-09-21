@@ -13,6 +13,8 @@ namespace broker {
 static const char M_MOUNT_POINTS[] = "mountPoints";
 static const char M_DROP_CLIENT[] = "dropClient";
 static const char M_USER_NAME[] = "userName";
+static const char M_USER_ROLES[] = "userRoles";
+static const char M_USER_PROFILE[] = "userProfile";
 static const char M_IDLE_TIME[] = "idleTime";
 static const char M_IDLE_TIME_MAX[] = "idleTimeMax";
 
@@ -23,6 +25,8 @@ static std::vector<cp::MetaMethod> meta_methods {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_SERVICE},
 	{M_USER_NAME, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_SERVICE},
+	{M_USER_ROLES, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_SERVICE},
+	{M_USER_PROFILE, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_SERVICE},
 	{M_MOUNT_POINTS, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_SERVICE},
 	{M_DROP_CLIENT, cp::MetaMethod::Signature::VoidVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_SERVICE},
 	{M_IDLE_TIME, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_SERVICE, "Connection inactivity time in msec."},
@@ -42,6 +46,27 @@ shv::chainpack::RpcValue ClientConnectionNode::callMethod(const shv::iotqt::node
 			rpc::BrokerClientServerConnection *cli = BrokerApp::instance()->clientById(m_clientId);
 			if(cli) {
 				return cli->loggedUserName();
+			}
+			return nullptr;
+		}
+		if(method == M_USER_ROLES) {
+			rpc::BrokerClientServerConnection *cli = BrokerApp::instance()->clientById(m_clientId);
+			if(cli) {
+				const std::string user_name = cli->loggedUserName();
+				std::vector<shv::broker::AclManager::FlattenRole> roles = BrokerApp::instance()->aclManager()->userFlattenRoles(user_name);
+				cp::RpcValue::List ret;
+				std::transform(roles.begin(), roles.end(), std::back_inserter(ret), [](const shv::broker::AclManager::FlattenRole &r) -> cp::RpcValue {
+					return r.name;
+				});
+				return std::move(ret);
+			}
+			return nullptr;
+		}
+		if(method == M_USER_PROFILE) {
+			rpc::BrokerClientServerConnection *cli = BrokerApp::instance()->clientById(m_clientId);
+			if(cli) {
+				auto ret = BrokerApp::instance()->aclManager()->userProfile(cli->loggedUserName());
+				return ret.isValid()? ret: nullptr;
 			}
 			return nullptr;
 		}

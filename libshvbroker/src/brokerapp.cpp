@@ -1,5 +1,6 @@
 #include "brokerapp.h"
 #include "aclmanagersqlite.h"
+#include "currentclientshvnode.h"
 #include "clientshvnode.h"
 #include "brokernode.h"
 #include "subscriptionsnode.h"
@@ -75,8 +76,8 @@ public:
 	ClientsNode(shv::iotqt::node::ShvNode *parent = nullptr)
 		: Super(std::string(), &m_metaMethods, parent)
 		, m_metaMethods {
-				  {cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam},
-				  {cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_CONFIG},
+			{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Browse},
+			{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Browse},
 		}
 	{ }
 
@@ -91,7 +92,6 @@ public:
 			std::sort(ids.begin(), ids.end());
 			for (size_t i = 0; i < ids.size(); ++i)
 				sl[i] = std::to_string(ids[i]);
-			//sl.insert(sl.begin(), ".current");
 		}
 		return sl;
 	}
@@ -213,6 +213,7 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 	connect(m_nodesTree->root(), &shv::iotqt::node::ShvRootNode::sendRpcMessage, this, &BrokerApp::onRootNodeSendRpcMesage);
 	BrokerNode *bn = new BrokerNode();
 	m_nodesTree->mount(cp::Rpc::DIR_BROKER_APP, bn);
+	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/currentClient", new CurrentClientShvNode());
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/clients", new ClientsNode());
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/masters", new MasterBrokersNode());
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/mounts", new MountsNode());
@@ -671,22 +672,7 @@ void BrokerApp::onClientLogin(int connection_id)
 		if(!clients_nd)
 			SHV_EXCEPTION("Cannot create parent for ClientDirNode id: " + std::to_string(connection_id));
 		ClientConnectionNode *client_id_node = new ClientConnectionNode(connection_id, clients_nd);
-		//shvWarning() << "path1:" << client_dir_node->shvPath();
 		ClientShvNode *client_app_node = new ClientShvNode("app", conn, client_id_node);
-		//shvWarning() << "path2:" << client_app_node->shvPath();
-		/*
-		std::string app_mount_point = brokerClientAppPath(connection_id);
-		shv::iotqt::node::ShvNode *curr_nd = m_deviceTree->cd(app_mount_point);
-		ShvClientNode *curr_cli_nd = qobject_cast<ShvClientNode*>(curr_nd);
-		if(curr_cli_nd) {
-			shvWarning() << "The SHV client on" << app_mount_point << "exists already, this should never happen!";
-			curr_cli_nd->connection()->abort();
-			delete curr_cli_nd;
-		}
-		if(!m_deviceTree->mount(app_mount_point, cli_nd))
-			SHV_EXCEPTION("Cannot mount connection to device tree, connection id: " + std::to_string(connection_id)
-						  + " shv path: " + app_mount_point);
-		*/
 		// delete whole client tree, when client is destroyed
 		connect(conn, &rpc::BrokerClientServerConnection::destroyed, client_id_node, &ClientShvNode::deleteLater);
 
