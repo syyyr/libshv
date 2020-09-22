@@ -563,25 +563,19 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	auto request_grant = cp::AccessGrant::fromRpcValue(rq_grant);
 	if(is_request_from_master_broker) {
 		if(request_grant.isValid()) {
-			if(!request_grant.notResolved)
-				return request_grant;
-			if(!request_grant.isRole()) {
-				logAclResolveW() << "Cannot resolve grant:" << request_grant.toRpcValue().toCpon();
-				if(request_grant.isUserLogin())
-					logAclResolveW() << "Resolving of UserLogin is not implemented yet.";
-				return cp::AccessGrant();
-			}
+			// access resolved by master broker already, forward use this
+			return request_grant;
 		}
 	}
 	else {
 		if(request_grant.isValid()) {
 			logAclResolveM() << "Client defined grants in RPC request are not implemented yet and will be ignored.";
-			if(!request_grant.notResolved)
-				logAclResolveM() << "Client cannot send resolved grant in request.";
 		}
 	}
 	std::vector<AclManager::FlattenRole> user_roles;
 	if(is_request_from_master_broker) {
+		// set masterBroker role to requests from master broker without access grant specified
+		// This is used mainly for service calls as (un)subscribe propagation to slave brokers etc.
 		user_roles = aclManager()->flattenRole(cp::Rpc::ROLE_MASTER_BROKER);
 	}
 	else {
@@ -596,7 +590,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	AclAccessRule most_specific_rule;
 	if(rq_shv_path == CURRENT_CLIENT_SHV_PATH) {
 		// client has WR grant on currentClient node
-		most_specific_rule.grant = cp::AccessGrant{cp::Rpc::ROLE_WRITE, cp::AccessGrant::IS_RESOLVED};
+		most_specific_rule.grant = cp::AccessGrant{cp::Rpc::ROLE_WRITE};
 	}
 	else {
 		int most_specific_role_weight = std::numeric_limits<int>::min();
