@@ -1,4 +1,4 @@
-#include "brokernode.h"
+#include "brokerappnode.h"
 
 #include "brokerapp.h"
 #include "rpc/brokerclientserverconnection.h"
@@ -31,7 +31,7 @@ public:
 		: Super("log", &m_metaMethods, parent)
 		, m_metaMethods {
 			{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_BROWSE},
-			{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_BROWSE},
+			{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 			{cp::Rpc::SIG_VAL_CHANGED, cp::MetaMethod::Signature::VoidParam, cp::MetaMethod::Flag::IsSignal, cp::Rpc::ROLE_READ},
 			{M_GET_VERBOSITY, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
 			{M_SET_VERBOSITY, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::IsSetter, cp::Rpc::ROLE_COMMAND},
@@ -63,7 +63,7 @@ static const char M_MOUNT_POINTS_FOR_CLIENT_ID[] = "mountPointsForClientId";
 static const char M_APP_VERSION[] = "appVersion";
 static const char M_GIT_COMMIT[] = "gitCommit";
 
-BrokerNode::BrokerNode(shv::iotqt::node::ShvNode *parent)
+BrokerAppNode::BrokerAppNode(shv::iotqt::node::ShvNode *parent)
 	: Super("", &m_metaMethods, parent)
 	, m_metaMethods {
 		{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_BROWSE},
@@ -83,7 +83,7 @@ BrokerNode::BrokerNode(shv::iotqt::node::ShvNode *parent)
 	new BrokerLogNode(this);
 }
 
-chainpack::RpcValue BrokerNode::callMethodRq(const chainpack::RpcRequest &rq)
+chainpack::RpcValue BrokerAppNode::callMethodRq(const chainpack::RpcRequest &rq)
 {
 	const cp::RpcValue::String &shv_path = rq.shvPath().toString();
 	//StringViewList shv_path = StringView(path).split('/');
@@ -118,7 +118,7 @@ chainpack::RpcValue BrokerNode::callMethodRq(const chainpack::RpcRequest &rq)
 	return Super::callMethodRq(rq);
 }
 
-shv::chainpack::RpcValue BrokerNode::callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
+shv::chainpack::RpcValue BrokerAppNode::callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
 {
 	if(shv_path.empty()) {
 		if(method == cp::Rpc::METH_PING) {

@@ -61,8 +61,10 @@ struct SHVCHAINPACK_DECL_EXPORT AccessGrant
 
 	enum class Type { Invalid = 0, AccessLevel, Role, UserLogin, };
 	Type type = Type::Invalid;
-	// acces grant sent by client or forwarded by master broker is not resolved through 'paths' table
-	// resolved grant is not translated in slave broker's 'paths' table when rpc message is sent to client
+	/**
+	when notResolved flag is set to false is used to tell slave broker, that access grant is resolved by master broker
+	and that there is no need to inspect slave broker access table for this request
+	*/
 	bool notResolved = false;
 	int accessLevel = shv::chainpack::MetaMethod::AccessLevel::None;
 	std::string role;

@@ -11,8 +11,10 @@ static string M_MOUNT_POINTS = "mountPoints";
 static string M_USER_ROLES = "userRoles";
 static string M_USER_PROFILE = "userProfile";
 
+const char *CurrentClientShvNode::NodeId = "currentClient";
+
 CurrentClientShvNode::CurrentClientShvNode(shv::iotqt::node::ShvNode *parent)
-	: Super(std::string(), &m_metaMethods, parent)
+	: Super(NodeId, &m_metaMethods, parent)
 	, m_metaMethods {
 		{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Browse},
 		{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Browse},

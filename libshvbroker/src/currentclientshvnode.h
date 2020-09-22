@@ -8,6 +8,8 @@ class CurrentClientShvNode : public shv::iotqt::node::MethodsTableNode
 	Q_OBJECT
 	using Super = shv::iotqt::node::MethodsTableNode;
 public:
+	static const char *NodeId;
+
 	CurrentClientShvNode(shv::iotqt::node::ShvNode *parent = nullptr);
 
 	shv::chainpack::RpcValue callMethodRq(const shv::chainpack::RpcRequest &rq) override;
