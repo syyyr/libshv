@@ -807,6 +807,32 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 						shvWarning() << "Client request with access grant specified not allowed, erasing:" << ag.toPrettyString();
 						cp::RpcMessage::setAccessGrant(meta, cp::RpcValue());
 					}
+					/// check service provider call
+					auto sp_ix = shv::core::utils::ShvPath::serviceProviderMarkIndex(shv_path);
+					if(sp_ix > 0) {
+						string service = shv_path.substr(0, sp_ix);
+						iotqt::node::ShvNode *service_node = m_nodesTree->cd(service);
+						if(service_node) {
+							/// service found on this broker, make path absolute
+							shv_path = service + shv_path.substr(sp_ix);
+						}
+						else {
+							/// service path not found, preppend mount path and forward it to master broker
+							rpc::MasterBrokerConnection *mb = mainMasterBrokerConnection();
+							if(mb == nullptr)
+								ACCESS_EXCEPTION("Cannot call service provider path " + cp::RpcMessage::shvPath(meta).toString() + ", there is no master broker to forward the request.");
+							std::string mp = client_connection->mountPoint();
+							if(mp.empty())
+								ACCESS_EXCEPTION("Cannot call service provider path " + cp::RpcMessage::shvPath(meta).toString() + ", client is not mounted.");
+
+							mp = mb->localPathToMasterExported(mp);
+							shv_path = service + shv::core::utils::ShvPath::SERVICE_PROVIDER_MARK + '/' + mp;
+							cp::RpcMessage::setShvPath(meta, shv_path);
+							cp::RpcMessage::pushCallerId(meta, connection_id);
+							mb->sendRawData(std::move(meta), std::move(data));
+							return;
+						}
+					}
 				}
 				const std::string &method = cp::RpcMessage::method(meta).toString();
 				cp::AccessGrant acg = accessGrantForRequest(connection_handle, shv_path, method, cp::RpcMessage::accessGrant(meta));
