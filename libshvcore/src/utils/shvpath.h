@@ -25,10 +25,9 @@ public:
 	bool startsWithPath(const std::string &path, size_t *pos = nullptr) const;
 	static bool startsWithPath(const std::string &str, const std::string &path, size_t *pos = nullptr);
 
-	static bool isRelativePath(const std::string &path);
-	static shv::core::StringViewList cleanPath(const shv::core::StringViewList &path_list);
-	static std::string cleanPath(const std::string &path);
-	static ShvPath joinAndClean(const std::string &path1, const std::string &path2);
+	//static shv::core::StringViewList cleanPath(const shv::core::StringViewList &path_list);
+	//static std::string cleanPath(const std::string &path);
+	//static ShvPath joinAndClean(const std::string &path1, const std::string &path2);
 	static ShvPath join(const shv::core::StringViewList &shv_path);
 	static ShvPath join(const std::string &path1, const std::string &path2);
 

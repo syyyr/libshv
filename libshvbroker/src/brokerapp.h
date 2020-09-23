@@ -129,7 +129,7 @@ private:
 
 	std::string primaryIPAddress(bool &is_public);
 
-	void propagateSubscriptionsToMasterBroker();
+	//void propagateSubscriptionsToMasterBroker();
 protected:
 	AppCliOptions *m_cliOptions;
 	rpc::BrokerTcpServer *m_tcpServer = nullptr;

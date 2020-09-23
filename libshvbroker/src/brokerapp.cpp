@@ -514,7 +514,7 @@ std::string BrokerApp::primaryIPAddress(bool &is_public)
 		return ha.toString().toStdString();
 	return std::string();
 }
-
+/*
 void BrokerApp::propagateSubscriptionsToMasterBroker()
 {
 	logSubscriptionsD() << "Connected to main master broker, propagating client subscriptions.";
@@ -532,7 +532,7 @@ void BrokerApp::propagateSubscriptionsToMasterBroker()
 		}
 	}
 }
-
+*/
 static bool is_first_path_more_specific(const std::string &path1, const std::string &meth1, const std::string &path2, const std::string &meth2)
 {
 	if(!meth1.empty() && meth2.empty()) {
@@ -753,10 +753,10 @@ void BrokerApp::onConnectedToMasterBrokerChanged(int connection_id, bool is_conn
 			new shv::iotqt::node::RpcValueMapNode("config", conn->options(), mbnd);
 			new SubscriptionsNode(conn, mbnd);
 		}
-		if(conn == mainMasterBrokerConnection()) {
-			/// propagate relative subscriptions
-			propagateSubscriptionsToMasterBroker();
-		}
+		//if(conn == mainMasterBrokerConnection()) {
+		//	/// propagate relative subscriptions
+		//	propagateSubscriptionsToMasterBroker();
+		//}
 	}
 	else {
 		shvInfo() << "Connection to master broker lost, connection id:" << connection_id;
@@ -784,6 +784,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 				connection_handle = broker_connection;
 			std::string shv_path = cp::RpcMessage::shvPath(meta).toString();
 			if(connection_handle) {
+				/*
 				if(shv::core::utils::ShvPath::isRelativePath(shv_path)) {
 					rpc::SlaveBrokerClientConnection *master_broker_conn = mainMasterBrokerConnection();
 					if(client_connection) {
@@ -800,6 +801,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 					}
 					cp::RpcMessage::setShvPath(meta, shv_path);
 				}
+				*/
 				if(client_connection) {
 					// erase grant from client connections
 					cp::RpcValue ag = cp::RpcMessage::accessGrant(meta);
@@ -1002,8 +1004,8 @@ bool BrokerApp::sendNotifyToSubscribers(const shv::chainpack::RpcValue::MetaData
 			int subs_ix = conn->isSubscribed(shv_path.toString(), method.toString());
 			if(subs_ix >= 0) {
 				//shvDebug() << "\t broadcasting to connection id:" << id;
-				const rpc::BrokerClientServerConnection::Subscription &subs = conn->subscriptionAt((size_t)subs_ix);
-				std::string new_path = conn->toSubscribedPath(subs, shv_path.toString());
+				//const rpc::BrokerClientServerConnection::Subscription &subs = conn->subscriptionAt((size_t)subs_ix);
+				std::string new_path = conn->toSubscribedPath(shv_path.toString());
 				if(new_path == shv_path.toString()) {
 					conn->sendRawData(meta_data, std::string(data));
 				}
@@ -1032,8 +1034,8 @@ void BrokerApp::sendNotifyToSubscribers(const std::string &shv_path, const std::
 			int subs_ix = conn->isSubscribed(shv_path, method);
 			if(subs_ix >= 0) {
 				//shvDebug() << "\t broadcasting to connection id:" << id;
-				const rpc::BrokerClientServerConnection::Subscription &subs = conn->subscriptionAt((size_t)subs_ix);
-				std::string new_path = conn->toSubscribedPath(subs, shv_path);
+				//const rpc::BrokerClientServerConnection::Subscription &subs = conn->subscriptionAt((size_t)subs_ix);
+				std::string new_path = conn->toSubscribedPath(shv_path);
 				if(new_path != shv_path)
 					sig.setShvPath(new_path);
 				conn->sendMessage(sig);
@@ -1053,18 +1055,14 @@ void BrokerApp::addSubscription(int client_id, const std::string &shv_path, cons
 		// check that client has access rights to subscribed signal
 		// do not check slave broker connections - cli->isSlaveBrokerConnection()
 		// and requests from super-broker - cli == nullptr
-		if(shv::core::utils::ShvPath::isRelativePath(shv_path)) {
-			shvWarning() << "relative subscriptions cannot be checked for access rights and will be disabled in future versions:" << shv_path << method;
-		}
-		else {
-			cp::AccessGrant acg = accessGrantForRequest(connection_handle, shv_path, method, cp::RpcValue());
-			int acc_level = shv::iotqt::node::ShvNode::basicGrantToAccessLevel(acg.toRpcValue());
-			if(acc_level < cp::MetaMethod::AccessLevel::Read)
-				ACCESS_EXCEPTION("Acces to shv signal '" + shv_path + '/' + method + "()' not granted for user '" + connection_handle->loggedUserName() + "'");
-		}
+		cp::AccessGrant acg = accessGrantForRequest(connection_handle, shv_path, method, cp::RpcValue());
+		int acc_level = shv::iotqt::node::ShvNode::basicGrantToAccessLevel(acg.toRpcValue());
+		if(acc_level < cp::MetaMethod::AccessLevel::Read)
+			ACCESS_EXCEPTION("Acces to shv signal '" + shv_path + '/' + method + "()' not granted for user '" + connection_handle->loggedUserName() + "'");
 	}
 	auto subs_ix = connection_handle->addSubscription(shv_path, method);
 	const rpc::CommonRpcClientHandle::Subscription &subs = connection_handle->subscriptionAt(subs_ix);
+	/*
 	if(shv::core::utils::ShvPath::isRelativePath(subs.absolutePath)) {
 		/// still relative path, should be propagated to the master broker
 		rpc::SlaveBrokerClientConnection *mbrconn = mainMasterBrokerConnection();
@@ -1075,7 +1073,9 @@ void BrokerApp::addSubscription(int client_id, const std::string &shv_path, cons
 			shvError() << "Cannot propagate relative path subscription, without master broker connected:" << subs.absolutePath;
 		}
 	}
-	else {
+	else
+	*/
+	{
 		/// check slave broker connections
 		/// whether this subsciption should be propagated to them
 		for (int connection_id : clientConnectionIds()) {

@@ -31,7 +31,7 @@ public:
 
 	unsigned addSubscription(const std::string &rel_path, const std::string &method) override;
 	bool removeSubscription(const std::string &rel_path, const std::string &method) override;
-	std::string toSubscribedPath(const Subscription &subs, const std::string &abs_path) const override;
+	std::string toSubscribedPath(const std::string &abs_path) const override;
 
 	std::string masterExportedToLocalPath(const std::string &master_path) const;
 	std::string localPathToMasterExported(const std::string &local_path) const;

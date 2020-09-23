@@ -18,6 +18,28 @@ namespace rpc {
 //=====================================================================
 // CommonRpcClientHandle::Subscription
 //=====================================================================
+CommonRpcClientHandle::Subscription::Subscription(const std::string &path, const std::string &m)
+	: method(m)
+{
+	// remove leading and trailing slash from path
+	size_t ix1 = 0;
+	while(ix1 < path.size()) {
+		if(path[ix1] == '/')
+			ix1++;
+		else
+			break;
+	}
+	size_t len = path.size();
+	while(len > 0) {
+		if(path[len - 1] == '/')
+			len--;
+		else
+			break;
+	}
+	absolutePath = path.substr(ix1, len);
+}
+
+/*
 std::string CommonRpcClientHandle::Subscription::toRelativePath(const std::string &abs_path) const
 {
 	if(relativePath.empty()) {
@@ -27,28 +49,6 @@ std::string CommonRpcClientHandle::Subscription::toRelativePath(const std::strin
 	return ret;
 }
 
-CommonRpcClientHandle::Subscription::Subscription(const std::string &ap, const std::string &rp, const std::string &m)
-	: relativePath(rp)
-	, method(m)
-{
-	size_t ix1 = 0;
-	while(ix1 < ap.size()) {
-		if(ap[ix1] == '/')
-			ix1++;
-		else
-			break;
-	}
-	size_t len = ap.size();
-	while(len > 0) {
-		if(ap[len - 1] == '/')
-			len--;
-		else
-			break;
-	}
-	absolutePath = ap.substr(ix1, len);
-}
-
-/*
 bool CommonRpcClientHandle::Subscription::operator<(const CommonRpcClientHandle::Subscription &o) const
 {
 	int i = absolutePath.compare(o.absolutePath);
@@ -178,9 +178,9 @@ int CommonRpcClientHandle::isSubscribed(const std::string &shv_path, const std::
 	return -1;
 }
 
-std::string CommonRpcClientHandle::toSubscribedPath(const Subscription &subs, const std::string &abs_path) const
+std::string CommonRpcClientHandle::toSubscribedPath(const std::string &abs_path) const
 {
-	return subs.toRelativePath(abs_path);
+	return abs_path;
 }
 
 bool CommonRpcClientHandle::rejectNotSubscribedSignal(const std::string &path, const std::string &method)

@@ -81,23 +81,22 @@ void SlaveBrokerClientConnection::sendMessage(const shv::chainpack::RpcMessage &
 
 unsigned SlaveBrokerClientConnection::addSubscription(const std::string &rel_path, const std::string &method)
 {
-	if(shv::core::utils::ShvPath::isRelativePath(rel_path))
-		SHV_EXCEPTION("This could never happen by SHV design logic, master broker tries to subscribe relative path: "  + rel_path);
-	Subscription subs(masterExportedToLocalPath(rel_path), std::string(), method);
+	//if(shv::core::utils::ShvPath::isRelativePath(rel_path))
+	//	SHV_EXCEPTION("This could never happen by SHV design logic, master broker tries to subscribe relative path: "  + rel_path);
+	Subscription subs(masterExportedToLocalPath(rel_path), method);
 	return CommonRpcClientHandle::addSubscription(subs);
 }
 
 bool SlaveBrokerClientConnection::removeSubscription(const std::string &rel_path, const std::string &method)
 {
-	if(shv::core::utils::ShvPath::isRelativePath(rel_path))
-		SHV_EXCEPTION("This could never happen by SHV design logic, master broker tries to subscribe relative path: "  + rel_path);
-	Subscription subs(masterExportedToLocalPath(rel_path), std::string(), method);
+	//if(shv::core::utils::ShvPath::isRelativePath(rel_path))
+	//	SHV_EXCEPTION("This could never happen by SHV design logic, master broker tries to subscribe relative path: "  + rel_path);
+	Subscription subs(masterExportedToLocalPath(rel_path), method);
 	return CommonRpcClientHandle::removeSubscription(subs);
 }
 
-std::string SlaveBrokerClientConnection::toSubscribedPath(const CommonRpcClientHandle::Subscription &subs, const std::string &abs_path) const
+std::string SlaveBrokerClientConnection::toSubscribedPath(const std::string &abs_path) const
 {
-	Q_UNUSED((subs))
 	return localPathToMasterExported(abs_path);
 }
 

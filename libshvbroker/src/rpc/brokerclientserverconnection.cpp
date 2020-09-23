@@ -121,6 +121,8 @@ void BrokerClientServerConnection::sendRawData(const shv::chainpack::RpcValue::M
 
 std::string BrokerClientServerConnection::resolveLocalPath(const std::string rel_path)
 {
+	return rel_path;
+	/*
 	if(!shv::core::utils::ShvPath::isRelativePath(rel_path))
 		return rel_path;
 
@@ -144,21 +146,18 @@ std::string BrokerClientServerConnection::resolveLocalPath(const std::string rel
 		local_path = shv::core::utils::ShvPath::join(mbconn->exportedShvPath(), local_path);
 	}
 	return local_path;
+	*/
 }
 
 unsigned BrokerClientServerConnection::addSubscription(const std::string &rel_path, const std::string &method)
 {
-	Subscription subs = shv::core::utils::ShvPath::isRelativePath(rel_path)?
-				Subscription{resolveLocalPath(rel_path), rel_path, method}:
-				Subscription{rel_path, std::string(), method};
+	Subscription subs = Subscription{rel_path, method};
 	return CommonRpcClientHandle::addSubscription(subs);
 }
 
 bool BrokerClientServerConnection::removeSubscription(const std::string &rel_path, const std::string &method)
 {
-	Subscription subs = shv::core::utils::ShvPath::isRelativePath(rel_path)?
-				Subscription{resolveLocalPath(rel_path), rel_path, method}:
-				Subscription{rel_path, std::string(), method};
+	Subscription subs = Subscription{rel_path, method};
 	return CommonRpcClientHandle::removeSubscription(subs);
 }
 

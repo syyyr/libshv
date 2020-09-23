@@ -7,8 +7,8 @@ namespace shv {
 namespace core {
 namespace utils {
 
-static const std::string DDOT_SLASH("../");
-static const std::string DDOT("..");
+//static const std::string DDOT_SLASH("../");
+//static const std::string DDOT("..");
 
 const char ShvPath::SHV_PATH_METHOD_DELIM = ':';
 
@@ -36,13 +36,7 @@ bool ShvPath::startsWithPath(const std::string &str, const std::string &path, si
 	}
 	return set_pos(std::string::npos, false);
 }
-
-bool ShvPath::isRelativePath(const std::string &path)
-{
-	shv::core::StringView p(path);
-	return p == DDOT || p.startsWith(DDOT_SLASH);
-}
-
+/*
 core::StringViewList ShvPath::cleanPath(const core::StringViewList &path_list)
 {
 	core::StringViewList ret;
@@ -76,7 +70,7 @@ ShvPath ShvPath::joinAndClean(const std::string &path1, const std::string &path2
 {
 	return cleanPath(path1 + '/' + path2);
 }
-
+*/
 core::StringViewList ShvPath::split() const
 {
 	return split(*this);
