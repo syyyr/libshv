@@ -35,7 +35,7 @@ namespace shv { namespace chainpack { class RpcSignal; }}
 namespace shv {
 namespace broker {
 
-namespace rpc { class WebSocketServer; class BrokerTcpServer; class BrokerClientServerConnection;  class SlaveBrokerClientConnection; class CommonRpcClientHandle; }
+namespace rpc { class WebSocketServer; class BrokerTcpServer; class ClientConnection;  class MasterBrokerConnection; class CommonRpcClientHandle; }
 
 class AclManager;
 
@@ -58,7 +58,7 @@ public:
 	void onClientLogin(int connection_id);
 	void onConnectedToMasterBrokerChanged(int connection_id, bool is_connected);
 
-	rpc::SlaveBrokerClientConnection* mainMasterBrokerConnection() { return masterBrokerConnections().value(0); }
+	rpc::MasterBrokerConnection* mainMasterBrokerConnection() { return masterBrokerConnections().value(0); }
 
 	void onRpcDataReceived(int connection_id, shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&meta, std::string &&data);
 
@@ -67,7 +67,7 @@ public:
 	bool rejectNotSubscribedSignal(int client_id, const std::string &path, const std::string &method);
 
 	rpc::BrokerTcpServer* tcpServer();
-	rpc::BrokerClientServerConnection* clientById(int client_id);
+	rpc::ClientConnection* clientById(int client_id);
 
 #ifdef WITH_SHV_WEBSOCKETS
 	rpc::WebSocketServer* webSocketServer();
@@ -104,12 +104,12 @@ private:
 
 	void startWebSocketServers();
 
-	rpc::BrokerClientServerConnection* clientConnectionById(int connection_id);
+	rpc::ClientConnection* clientConnectionById(int connection_id);
 	std::vector<int> clientConnectionIds();
 
 	void createMasterBrokerConnections();
-	QList<rpc::SlaveBrokerClientConnection*> masterBrokerConnections() const;
-	rpc::SlaveBrokerClientConnection* masterBrokerConnectionById(int connection_id);
+	QList<rpc::MasterBrokerConnection*> masterBrokerConnections() const;
+	rpc::MasterBrokerConnection* masterBrokerConnectionById(int connection_id);
 
 	std::vector<rpc::CommonRpcClientHandle *> allClientConnections();
 

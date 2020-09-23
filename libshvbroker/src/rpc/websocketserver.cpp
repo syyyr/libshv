@@ -1,6 +1,6 @@
 #include "websocketserver.h"
 
-#include "brokerclientserverconnection.h"
+#include "clientconnection.h"
 #include "websocket.h"
 #include "../brokerapp.h"
 
@@ -72,7 +72,7 @@ std::vector<int> WebSocketServer::connectionIds() const
 	return ret;
 }
 
-BrokerClientServerConnection *WebSocketServer::connectionById(int connection_id)
+ClientConnection *WebSocketServer::connectionById(int connection_id)
 {
 	auto it = m_connections.find(connection_id);
 	if(it == m_connections.end())
@@ -80,9 +80,9 @@ BrokerClientServerConnection *WebSocketServer::connectionById(int connection_id)
 	return it->second;
 }
 
-BrokerClientServerConnection *WebSocketServer::createServerConnection(QWebSocket *socket, QObject *parent)
+ClientConnection *WebSocketServer::createServerConnection(QWebSocket *socket, QObject *parent)
 {
-	return new BrokerClientServerConnection(new WebSocket(socket), parent);
+	return new ClientConnection(new WebSocket(socket), parent);
 }
 
 void WebSocketServer::onNewConnection()
@@ -90,12 +90,12 @@ void WebSocketServer::onNewConnection()
 	shvInfo() << "New WebSocket connection";
 	QWebSocket *sock = nextPendingConnection();
 	if(sock) {
-		BrokerClientServerConnection *c = createServerConnection(sock, this);
+		ClientConnection *c = createServerConnection(sock, this);
 		shvInfo().nospace() << "web socket client connected: " << sock->peerAddress().toString() << ':' << sock->peerPort()
 							<< " connection ID: " << c->connectionId();
 		c->setConnectionName(sock->peerAddress().toString().toStdString() + ':' + std::to_string(sock->peerPort()));
 		m_connections[c->connectionId()] = c;
-		connect(c, &BrokerClientServerConnection::aboutToBeDeleted, this, &WebSocketServer::unregisterConnection);
+		connect(c, &ClientConnection::aboutToBeDeleted, this, &WebSocketServer::unregisterConnection);
 	}
 }
 

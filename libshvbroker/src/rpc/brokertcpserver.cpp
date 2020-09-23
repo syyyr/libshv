@@ -1,5 +1,5 @@
 #include "brokertcpserver.h"
-#include "brokerclientserverconnection.h"
+#include "clientconnection.h"
 
 #include <shv/iotqt/rpc/socket.h>
 
@@ -13,14 +13,14 @@ BrokerTcpServer::BrokerTcpServer(QObject *parent)
 
 }
 
-BrokerClientServerConnection *BrokerTcpServer::connectionById(int connection_id)
+ClientConnection *BrokerTcpServer::connectionById(int connection_id)
 {
-	return qobject_cast<rpc::BrokerClientServerConnection *>(Super::connectionById(connection_id));
+	return qobject_cast<rpc::ClientConnection *>(Super::connectionById(connection_id));
 }
 
 shv::iotqt::rpc::ServerConnection *BrokerTcpServer::createServerConnection(QTcpSocket *socket, QObject *parent)
 {
-	return new BrokerClientServerConnection(new shv::iotqt::rpc::TcpSocket(socket), parent);
+	return new ClientConnection(new shv::iotqt::rpc::TcpSocket(socket), parent);
 }
 
 }}}

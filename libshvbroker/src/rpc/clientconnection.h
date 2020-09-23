@@ -13,7 +13,7 @@ namespace shv {
 namespace broker {
 namespace rpc {
 
-class BrokerClientServerConnection : public shv::iotqt::rpc::ServerConnection, public CommonRpcClientHandle
+class ClientConnection : public shv::iotqt::rpc::ServerConnection, public CommonRpcClientHandle
 {
 	Q_OBJECT
 
@@ -21,8 +21,8 @@ class BrokerClientServerConnection : public shv::iotqt::rpc::ServerConnection, p
 
 	//SHV_FIELD_IMPL(std::string, m, M, ountPoint)
 public:
-	BrokerClientServerConnection(shv::iotqt::rpc::Socket* socket, QObject *parent = nullptr);
-	~BrokerClientServerConnection() override;
+	ClientConnection(shv::iotqt::rpc::Socket* socket, QObject *parent = nullptr);
+	~ClientConnection() override;
 
 	int connectionId() const override {return Super::connectionId();}
 	bool isConnectedAndLoggedIn() const override {return Super::isConnectedAndLoggedIn();}
@@ -35,13 +35,11 @@ public:
 	shv::chainpack::RpcValue deviceOptions() const;
 	shv::chainpack::RpcValue deviceId() const;
 
-	void addMountPoint(const std::string &mp);
-	const std::vector<std::string>& mountPoints() const {return m_mountPoints;}
+	void setMountPoint(const std::string &mp);
+	const std::string& mountPoint() const {return m_mountPoint;}
 
 	int idleTime() const;
 	int idleTimeMax() const;
-
-	std::string resolveLocalPath(const std::string rel_path);
 
 	void setIdleWatchDogTimeOut(int sec);
 
@@ -64,7 +62,7 @@ private:
 	//int callMethodSubscribeMB(const std::string &shv_path, std::string method);
 private:
 	QTimer *m_idleWatchDogTimer = nullptr;
-	std::vector<std::string> m_mountPoints;
+	std::string m_mountPoint;
 };
 
 }}}

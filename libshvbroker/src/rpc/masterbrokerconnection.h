@@ -8,13 +8,13 @@ namespace shv {
 namespace broker {
 namespace rpc {
 
-class SlaveBrokerClientConnection : public shv::iotqt::rpc::DeviceConnection, public CommonRpcClientHandle
+class MasterBrokerConnection : public shv::iotqt::rpc::DeviceConnection, public CommonRpcClientHandle
 {
 	Q_OBJECT
 
 	using Super = shv::iotqt::rpc::DeviceConnection;
 public:
-	SlaveBrokerClientConnection(QObject *parent = nullptr);
+	MasterBrokerConnection(QObject *parent = nullptr);
 
 	int connectionId() const override {return Super::connectionId();}
 

@@ -1,13 +1,13 @@
 #include "currentclientshvnode.h"
 #include "brokerapp.h"
-#include "rpc/brokerclientserverconnection.h"
+#include "rpc/clientconnection.h"
 
 namespace cp = shv::chainpack;
 
 using namespace std;
 
 static string M_CLIENT_ID = "clientId";
-static string M_MOUNT_POINTS = "mountPoints";
+static string M_MOUNT_POINT = "mountPoint";
 static string M_USER_ROLES = "userRoles";
 static string M_USER_PROFILE = "userProfile";
 
@@ -34,15 +34,13 @@ shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack
 			int client_id = rq.peekCallerId();
 			return client_id;
 		}
-		if(method == M_MOUNT_POINTS) {
+		if(method == M_MOUNT_POINT) {
 			int client_id = rq.peekCallerId();
 			auto *cli = shv::broker::BrokerApp::instance()->clientById(client_id);
-			cp::RpcValue::List ret;
 			if(cli) {
-				for(auto s : cli->mountPoints())
-					ret.push_back(s);
+				return cli->mountPoint();
 			}
-			return std::move(ret);
+			return nullptr;
 		}
 		if(method == M_USER_ROLES) {
 			int client_id = rq.peekCallerId();

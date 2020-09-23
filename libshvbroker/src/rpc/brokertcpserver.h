@@ -6,7 +6,7 @@ namespace shv {
 namespace broker {
 namespace rpc {
 
-class BrokerClientServerConnection;
+class ClientConnection;
 
 class BrokerTcpServer : public shv::iotqt::rpc::TcpServer
 {
@@ -15,7 +15,7 @@ class BrokerTcpServer : public shv::iotqt::rpc::TcpServer
 public:
 	BrokerTcpServer(QObject *parent = nullptr);
 
-	BrokerClientServerConnection* connectionById(int connection_id);
+	ClientConnection* connectionById(int connection_id);
 protected:
 	shv::iotqt::rpc::ServerConnection* createServerConnection(QTcpSocket *socket, QObject *parent) override;
 };

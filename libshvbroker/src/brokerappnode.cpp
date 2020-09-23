@@ -1,8 +1,8 @@
 #include "brokerappnode.h"
 
 #include "brokerapp.h"
-#include "rpc/brokerclientserverconnection.h"
-#include "rpc/slavebrokerclientconnection.h"
+#include "rpc/clientconnection.h"
+#include "rpc/masterbrokerconnection.h"
 
 #include <shv/chainpack/metamethod.h>
 #include <shv/chainpack/rpcmessage.h>
@@ -59,7 +59,7 @@ private:
 
 static const char M_RELOAD_CONFIG[] = "reloadConfig";
 static const char M_RESTART[] = "restart";
-static const char M_MOUNT_POINTS_FOR_CLIENT_ID[] = "mountPointsForClientId";
+//static const char M_MOUNT_POINT_FOR_CLIENT_ID[] = "mountPointForClientId";
 static const char M_APP_VERSION[] = "appVersion";
 static const char M_GIT_COMMIT[] = "gitCommit";
 
@@ -72,7 +72,7 @@ BrokerAppNode::BrokerAppNode(shv::iotqt::node::ShvNode *parent)
 		{cp::Rpc::METH_ECHO, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_BROWSE},
 		{M_APP_VERSION, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_BROWSE},
 		{M_GIT_COMMIT, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
-		{M_MOUNT_POINTS_FOR_CLIENT_ID, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
+		//{M_MOUNT_POINT_FOR_CLIENT_ID, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 		{cp::Rpc::METH_SUBSCRIBE, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 		{cp::Rpc::METH_UNSUBSCRIBE, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 		{cp::Rpc::METH_REJECT_NOT_SUBSCRIBED, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_READ},
@@ -137,8 +137,9 @@ shv::chainpack::RpcValue BrokerAppNode::callMethod(const StringViewList &shv_pat
 			return "N/A";
 #endif
 		}
-		if(method == M_MOUNT_POINTS_FOR_CLIENT_ID) {
-			rpc::BrokerClientServerConnection *client = BrokerApp::instance()->clientById(params.toInt());
+		/*
+		if(method == M_MOUNT_POINT_FOR_CLIENT_ID) {
+			rpc::ClientConnection *client = BrokerApp::instance()->clientById(params.toInt());
 			if(!client)
 				SHV_EXCEPTION("Invalid client id: " + params.toCpon());
 			const std::vector<std::string> &mps = client->mountPoints();
@@ -146,6 +147,7 @@ shv::chainpack::RpcValue BrokerAppNode::callMethod(const StringViewList &shv_pat
 			std::copy(mps.begin(), mps.end(), std::back_inserter(lst));
 			return shv::chainpack::RpcValue(lst);
 		}
+		*/
 		if(method == M_RELOAD_CONFIG) {
 			QTimer::singleShot(500, BrokerApp::instance(), &BrokerApp::reloadConfigRemountDevices);
 			return true;
