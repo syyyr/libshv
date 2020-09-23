@@ -260,7 +260,7 @@ shv::chainpack::RpcValue DlgLogInspector::getLogParams()
 		params.pathPatternType = shv::core::utils::ShvGetLogParams::PatternType::RegEx;
 	if(ui->edMaxRecordCount->value() > ui->edMaxRecordCount->minimum())
 		params.recordCountLimit = ui->edMaxRecordCount->value();
-	//params.withUptime = ui->chkWithUptime->isChecked();
+	params.withPathsDict = ui->chkPathsDict->isChecked();
 	params.withSnapshot = ui->chkWithSnapshot->isChecked();
 	/*
 	unsigned header_opts = 0;
