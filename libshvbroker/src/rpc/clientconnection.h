@@ -41,6 +41,8 @@ public:
 	int idleTime() const;
 	int idleTimeMax() const;
 
+	std::string resolveLocalPath(const std::string rel_path);
+
 	void setIdleWatchDogTimeOut(int sec);
 
 	void sendMessage(const shv::chainpack::RpcMessage &rpc_msg) override;

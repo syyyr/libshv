@@ -14,10 +14,11 @@ public:
 	struct Subscription
 	{
 		std::string absolutePath;
+		std::string serviceProvider;
 		std::string method;
 
 		Subscription() {}
-		Subscription(const std::string &path, const std::string &m);
+		Subscription(const std::string &path, const std::string &service_provider, const std::string &m);
 
 		//bool operator<(const Subscription &o) const;
 		bool operator==(const Subscription &o) const;
@@ -36,7 +37,7 @@ public:
 	virtual bool removeSubscription(const std::string &rel_path, const std::string &method) = 0;
 	bool removeSubscription(const Subscription &subs);
 	int isSubscribed(const std::string &shv_path, const std::string &method) const;
-	virtual std::string toSubscribedPath(const std::string &abs_path) const;
+	virtual std::string toSubscribedPath(const Subscription &subs, const std::string &abs_path) const;
 	size_t subscriptionCount() const {return m_subscriptions.size();}
 	const Subscription& subscriptionAt(size_t ix) const {return m_subscriptions.at(ix);}
 	bool rejectNotSubscribedSignal(const std::string &path, const std::string &method);

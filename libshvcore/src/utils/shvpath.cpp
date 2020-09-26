@@ -39,17 +39,15 @@ bool ShvPath::startsWithPath(const std::string &str, const std::string &path, si
 
 size_t ShvPath::serviceProviderMarkIndex(const std::string &path)
 {
-	size_t ix = 0;
-	while(ix < path.size()) {
-		if(path[ix] == '/')
-			ix++;
-		else
-			break;
+	for (size_t ix = 1; ix + 1 < path.size(); ++ix) {
+		if(path[ix + 1] == SHV_PATH_DELIM) {
+			if(path[ix] == SERVICE_PROVIDER_RELATIVE_MARK || path[ix] == SERVICE_PROVIDER_ABSOLUTE_MARK)
+				return ix;
+		}
 	}
-	if(ix > 1 && ix < path.size() && (path[ix - 1] == SERVICE_PROVIDER_MARK))
-		return ix - 1;
 	return 0;
 }
+
 /*
 core::StringViewList ShvPath::cleanPath(const core::StringViewList &path_list)
 {
@@ -94,7 +92,26 @@ core::StringViewList ShvPath::split(const std::string &shv_path)
 {
 	return core::StringView{shv_path}.split(SHV_PATH_DELIM, SHV_PATH_QUOTE, core::StringView::SkipEmptyParts);
 }
-
+/*
+ShvPath ShvPath::join(const std::vector<std::string> &shv_path)
+{
+	ShvPath ret;
+	for(const std::string &s : shv_path) {
+		bool need_quotes = false;
+		if(s.find(SHV_PATH_DELIM) >= 0)
+			need_quotes = true;
+		//shvWarning() << sv.toString() << "~~~" << need_quotes;
+		if(!ret.empty())
+			ret += SHV_PATH_DELIM;
+		if(need_quotes)
+			ret += SHV_PATH_QUOTE;
+		ret += s;
+		if(need_quotes)
+			ret += SHV_PATH_QUOTE;
+	}
+	return ret;
+}
+*/
 ShvPath ShvPath::join(const core::StringViewList &shv_path)
 {
 	ShvPath ret;

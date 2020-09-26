@@ -16,7 +16,8 @@ public:
 	static constexpr char SHV_PATH_QUOTE = '\'';
 	static constexpr char SHV_PATH_DELIM = '/';
 	static const char SHV_PATH_METHOD_DELIM;
-	static constexpr char SERVICE_PROVIDER_MARK = ':';
+	static constexpr char SERVICE_PROVIDER_RELATIVE_MARK = ':';
+	static constexpr char SERVICE_PROVIDER_ABSOLUTE_MARK = '|';
 public:
 	ShvPath() : Super() {}
 	ShvPath(shv::core::String &&o) : Super(std::move(o)) {}
@@ -31,6 +32,7 @@ public:
 	//static shv::core::StringViewList cleanPath(const shv::core::StringViewList &path_list);
 	//static std::string cleanPath(const std::string &path);
 	//static ShvPath joinAndClean(const std::string &path1, const std::string &path2);
+	//static ShvPath join(const std::vector<std::string> &shv_path);
 	static ShvPath join(const shv::core::StringViewList &shv_path);
 	static ShvPath join(const std::string &path1, const std::string &path2);
 

@@ -81,6 +81,32 @@ int ClientConnection::idleTimeMax() const
 	return  m_idleWatchDogTimer->interval();
 }
 
+std::string ClientConnection::resolveLocalPath(const std::string rel_path)
+{
+	if(shv::core::utils::ShvPath::serviceProviderMarkIndex(rel_path) == 0)
+		return rel_path;
+
+	const std::string &mp = mountPoint();
+	if(mp.empty())
+		SHV_EXCEPTION("Cannot resolve relative path on unmounted device: " + rel_path);
+	std::string mount_point = mp;
+	MasterBrokerConnection *mbconn = BrokerApp::instance()->mainMasterBrokerConnection();
+	if(mbconn) {
+		/// if the client is mounted on exported path,
+		/// then relative path must be resolved with respect to it
+		mount_point = mbconn->localPathToMasterExported(mount_point);
+	}
+#warning WILL not work with service providers
+	std::string local_path = shv::core::utils::ShvPath::join(mount_point, rel_path);
+	if(shv::core::utils::ShvPath::serviceProviderMarkIndex(local_path) == 0 && mbconn) {
+		/// not relative path after join
+		/// no need to send it to the master broker, still local path,
+		/// prepend exported path
+		local_path = shv::core::utils::ShvPath::join(mbconn->exportedShvPath(), local_path);
+	}
+	return local_path;
+}
+
 void ClientConnection::setIdleWatchDogTimeOut(int sec)
 {
 	if(sec == 0) {
@@ -121,13 +147,19 @@ void ClientConnection::sendRawData(const shv::chainpack::RpcValue::MetaData &met
 
 unsigned ClientConnection::addSubscription(const std::string &rel_path, const std::string &method)
 {
-	Subscription subs = Subscription{rel_path, method};
+#warning WILL not work with service providers
+	Subscription subs = shv::core::utils::ShvPath::serviceProviderMarkIndex(rel_path) > 0?
+				Subscription{resolveLocalPath(rel_path), rel_path, method}:
+				Subscription{rel_path, std::string(), method};
 	return CommonRpcClientHandle::addSubscription(subs);
 }
 
 bool ClientConnection::removeSubscription(const std::string &rel_path, const std::string &method)
 {
-	Subscription subs = Subscription{rel_path, method};
+#warning WILL not work with service providers
+	Subscription subs = shv::core::utils::ShvPath::serviceProviderMarkIndex(rel_path) > 0?
+				Subscription{resolveLocalPath(rel_path), rel_path, method}:
+				Subscription{rel_path, std::string(), method};
 	return CommonRpcClientHandle::removeSubscription(subs);
 }
 
@@ -211,6 +243,7 @@ void ClientConnection::propagateSubscriptionToSlaveBroker(const CommonRpcClientH
 		return;
 	}
 }
+
 /*
 int ClientBrokerConnection::callMethodSubscribeMB(const std::string &shv_path, std::string method)
 {
