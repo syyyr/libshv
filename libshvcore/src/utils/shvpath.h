@@ -16,8 +16,6 @@ public:
 	static constexpr char SHV_PATH_QUOTE = '\'';
 	static constexpr char SHV_PATH_DELIM = '/';
 	static const char SHV_PATH_METHOD_DELIM;
-	static constexpr char SERVICE_PROVIDER_RELATIVE_MARK = ':';
-	static constexpr char SERVICE_PROVIDER_ABSOLUTE_MARK = '|';
 public:
 	ShvPath() : Super() {}
 	ShvPath(shv::core::String &&o) : Super(std::move(o)) {}
@@ -26,8 +24,6 @@ public:
 
 	bool startsWithPath(const std::string &path, size_t *pos = nullptr) const;
 	static bool startsWithPath(const std::string &str, const std::string &path, size_t *pos = nullptr);
-
-	static size_t serviceProviderMarkIndex(const std::string &path);
 
 	//static shv::core::StringViewList cleanPath(const shv::core::StringViewList &path_list);
 	//static std::string cleanPath(const std::string &path);

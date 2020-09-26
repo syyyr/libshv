@@ -8,6 +8,7 @@
 #include <shv/chainpack/rpc.h>
 #include <shv/coreqt/log.h>
 #include <shv/core/stringview.h>
+#include <shv/core/utils/serviceproviderpath.h>
 #include <shv/core/utils/shvpath.h>
 #include <shv/iotqt/rpc/socket.h>
 
@@ -83,7 +84,8 @@ int ClientConnection::idleTimeMax() const
 
 std::string ClientConnection::resolveLocalPath(const std::string rel_path)
 {
-	if(shv::core::utils::ShvPath::serviceProviderMarkIndex(rel_path) == 0)
+	shv::core::utils::ServiceProviderPath spp(rel_path);
+	if(!spp.isValid())
 		return rel_path;
 
 	const std::string &mp = mountPoint();
@@ -98,7 +100,8 @@ std::string ClientConnection::resolveLocalPath(const std::string rel_path)
 	}
 #warning WILL not work with service providers
 	std::string local_path = shv::core::utils::ShvPath::join(mount_point, rel_path);
-	if(shv::core::utils::ShvPath::serviceProviderMarkIndex(local_path) == 0 && mbconn) {
+	shv::core::utils::ServiceProviderPath spp2(local_path);
+	if(!spp2.isValid() == 0 && mbconn) {
 		/// not relative path after join
 		/// no need to send it to the master broker, still local path,
 		/// prepend exported path
@@ -148,7 +151,8 @@ void ClientConnection::sendRawData(const shv::chainpack::RpcValue::MetaData &met
 unsigned ClientConnection::addSubscription(const std::string &rel_path, const std::string &method)
 {
 #warning WILL not work with service providers
-	Subscription subs = shv::core::utils::ShvPath::serviceProviderMarkIndex(rel_path) > 0?
+	shv::core::utils::ServiceProviderPath spp(rel_path);
+	Subscription subs = spp.isValid()?
 				Subscription{resolveLocalPath(rel_path), rel_path, method}:
 				Subscription{rel_path, std::string(), method};
 	return CommonRpcClientHandle::addSubscription(subs);
@@ -157,7 +161,8 @@ unsigned ClientConnection::addSubscription(const std::string &rel_path, const st
 bool ClientConnection::removeSubscription(const std::string &rel_path, const std::string &method)
 {
 #warning WILL not work with service providers
-	Subscription subs = shv::core::utils::ShvPath::serviceProviderMarkIndex(rel_path) > 0?
+	shv::core::utils::ServiceProviderPath spp(rel_path);
+	Subscription subs = spp.isValid()?
 				Subscription{resolveLocalPath(rel_path), rel_path, method}:
 				Subscription{rel_path, std::string(), method};
 	return CommonRpcClientHandle::removeSubscription(subs);

@@ -18,6 +18,7 @@
 #include <shv/iotqt/node/shvnode.h>
 #include <shv/iotqt/node/shvnodetree.h>
 #include <shv/core/utils/shvpath.h>
+#include <shv/core/utils/serviceproviderpath.h>
 
 #include <shv/coreqt/log.h>
 
@@ -526,7 +527,8 @@ void BrokerApp::propagateSubscriptionsToMasterBroker()
 		rpc::ClientConnection *conn = clientConnectionById(id);
 		for (size_t i = 0; i < conn->subscriptionCount(); ++i) {
 			const rpc::CommonRpcClientHandle::Subscription &subs = conn->subscriptionAt(i);
-			if(shv::core::utils::ShvPath::serviceProviderMarkIndex(subs.absolutePath) > 0) {
+			shv::core::utils::ServiceProviderPath spp(subs.absolutePath);
+			if(spp.isValid()) {
 				logSubscriptionsD() << "client id:" << id << "propagating subscription for path:" << subs.absolutePath << "method:" << subs.method;
 				mbrconn->callMethodSubscribe(subs.absolutePath, subs.method);
 			}
@@ -793,23 +795,24 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 						cp::RpcMessage::setAccessGrant(meta, cp::RpcValue());
 					}
 					/// check service provider call
-					auto sp_ix = shv::core::utils::ShvPath::serviceProviderMarkIndex(shv_path);
-					if(sp_ix > 0) {
+					using ServiceProviderPath = shv::core::utils::ServiceProviderPath;
+					ServiceProviderPath spp(shv_path);
+					if(spp.isValid()) {
 						using ShvPath = shv::core::utils::ShvPath;
-						string service = shv_path.substr(0, sp_ix);
-						char service_mark = shv_path[sp_ix];
-						string client_path = shv_path.substr(sp_ix + 2);
-						iotqt::node::ShvNode *service_node = m_nodesTree->cd(service);
+						//string service = shv_path.substr(0, sp_ix);
+						//char service_mark = shv_path[sp_ix];
+						//string client_path = shv_path.substr(sp_ix + 2);
+						iotqt::node::ShvNode *service_node = m_nodesTree->cd(spp.service().toString());
 						logServiceProvidersM() << "Service path found:" << shv_path
-											   << "service:" << service
-											   << "mark:" << service_mark
-											   << "client path:" << client_path
+											   << "service:" << spp.service().toString()
+											   << "type:" << spp.typeString()
+											   << "path rest:" << spp.pathRest().toString()
 											   << "node:" << service_node;
-						if(service_mark == ShvPath::SERVICE_PROVIDER_ABSOLUTE_MARK) {
+						if(spp.type() == ServiceProviderPath::Type::Absolute) {
 							if(service_node) {
-								shv_path = service + ShvPath::SHV_PATH_DELIM + client_path;
+								string new_shv_path = spp.service().toString() + ShvPath::SHV_PATH_DELIM + spp.pathRest().toString();
 								logServiceProvidersM() << "absolute service path found on this broker, making path absolute:" << shv_path;
-								cp::RpcRequest::setShvPath(meta, shv_path);
+								cp::RpcRequest::setShvPath(meta, new_shv_path);
 							}
 							else {
 								rpc::MasterBrokerConnection *master_broker = mainMasterBrokerConnection();
@@ -822,18 +825,21 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 								return;
 							}
 						}
-						else if(service_mark == ShvPath::SERVICE_PROVIDER_RELATIVE_MARK) {
+						else if(spp.type() == ServiceProviderPath::Type::Relative) {
 							std::string mount_point = client_connection->mountPoint();
 							if(mount_point.empty())
 								ACCESS_EXCEPTION("Cannot call service provider path " + cp::RpcMessage::shvPath(meta).toString() + ", client is not mounted.");
 							if(service_node) {
+								string new_shv_path = spp.service().toString();
 								size_t slash_ix = mount_point.find(ShvPath::SHV_PATH_DELIM);
-								std::string mount_point2;
-								if(slash_ix < mount_point.size())
-									mount_point2 = mount_point.substr(slash_ix + 1);
-								shv_path = service + ShvPath::SHV_PATH_DELIM + mount_point2 + ShvPath::SHV_PATH_DELIM + client_path;
-								logServiceProvidersM() << "relative service path found on this broker, making path absolute:" << shv_path;
-								cp::RpcRequest::setShvPath(meta, shv_path);
+								if(slash_ix < mount_point.size()) {
+									std::string mount_point_rest = mount_point.substr(slash_ix + 1);
+									logServiceProvidersM() << "\tmount_point_rest:" << mount_point_rest;
+									new_shv_path += ShvPath::SHV_PATH_DELIM + mount_point_rest;
+								}
+								new_shv_path += ShvPath::SHV_PATH_DELIM + spp.pathRest().toString();
+								logServiceProvidersM() << "relative service path found on this broker, making path absolute:" << new_shv_path;
+								cp::RpcRequest::setShvPath(meta, new_shv_path);
 							}
 							else {
 								rpc::MasterBrokerConnection *master_broker = mainMasterBrokerConnection();
@@ -843,12 +849,14 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 									ACCESS_EXCEPTION("Cannot call service provider path " + cp::RpcMessage::shvPath(meta).toString() + ", there is no master broker to forward the request.");
 
 								logServiceProvidersM() << "mount point:" << mount_point;
-								logServiceProvidersM() << "client path:" << client_path;
+								//logServiceProvidersM() << "client path:" << client_path;
 								mount_point = master_broker->localPathToMasterExported(mount_point);
 								logServiceProvidersM() << "exported mount point path:" << mount_point;
-								shv_path = service + service_mark + ShvPath::SHV_PATH_DELIM + mount_point + ShvPath::SHV_PATH_DELIM + client_path;
-								logServiceProvidersM() << "forwarded shv path:" << shv_path;
-								cp::RpcMessage::setShvPath(meta, shv_path);
+								string new_shv_path = spp.service().toString() + spp.typeMark()
+										+ ShvPath::SHV_PATH_DELIM + mount_point
+										+ ShvPath::SHV_PATH_DELIM + spp.pathRest().toString();
+								logServiceProvidersM() << "forwarded shv path:" << new_shv_path;
+								cp::RpcMessage::setShvPath(meta, new_shv_path);
 								cp::RpcMessage::pushCallerId(meta, connection_id);
 								master_broker->sendRawData(std::move(meta), std::move(data));
 								return;
@@ -1089,7 +1097,8 @@ void BrokerApp::addSubscription(int client_id, const std::string &shv_path, cons
 		// check that client has access rights to subscribed signal
 		// do not check slave broker connections - cli->isSlaveBrokerConnection()
 		// and requests from super-broker - cli == nullptr
-		if(shv::core::utils::ShvPath::serviceProviderMarkIndex(shv_path) > 0) {
+		shv::core::utils::ServiceProviderPath spp(shv_path);
+		if(spp.isValid()) {
 			shvWarning() << "relative subscriptions cannot be checked for access rights and will be disabled in future versions:" << shv_path << method;
 			shvWarning() << "might not be an issue with service providers";
 		}
@@ -1102,7 +1111,8 @@ void BrokerApp::addSubscription(int client_id, const std::string &shv_path, cons
 	}
 	auto subs_ix = connection_handle->addSubscription(shv_path, method);
 	const rpc::CommonRpcClientHandle::Subscription &subs = connection_handle->subscriptionAt(subs_ix);
-	if(shv::core::utils::ShvPath::serviceProviderMarkIndex(subs.absolutePath) > 0) {
+	shv::core::utils::ServiceProviderPath spp2(subs.absolutePath);
+	if(spp2.isValid()) {
 		/// still relative path, should be propagated to the master broker
 		rpc::MasterBrokerConnection *mbrconn = mainMasterBrokerConnection();
 		if(mbrconn) {

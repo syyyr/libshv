@@ -37,17 +37,6 @@ bool ShvPath::startsWithPath(const std::string &str, const std::string &path, si
 	return set_pos(std::string::npos, false);
 }
 
-size_t ShvPath::serviceProviderMarkIndex(const std::string &path)
-{
-	for (size_t ix = 1; ix + 1 < path.size(); ++ix) {
-		if(path[ix + 1] == SHV_PATH_DELIM) {
-			if(path[ix] == SERVICE_PROVIDER_RELATIVE_MARK || path[ix] == SERVICE_PROVIDER_ABSOLUTE_MARK)
-				return ix;
-		}
-	}
-	return 0;
-}
-
 /*
 core::StringViewList ShvPath::cleanPath(const core::StringViewList &path_list)
 {

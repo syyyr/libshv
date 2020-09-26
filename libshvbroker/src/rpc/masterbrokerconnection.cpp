@@ -4,6 +4,7 @@
 #include <shv/chainpack/rpcmessage.h>
 #include <shv/core/string.h>
 #include <shv/coreqt/log.h>
+#include <shv/core/utils/serviceproviderpath.h>
 #include <shv/core/utils/shvpath.h>
 #include <shv/iotqt/rpc/deviceappclioptions.h>
 
@@ -81,7 +82,8 @@ void MasterBrokerConnection::sendMessage(const shv::chainpack::RpcMessage &rpc_m
 
 unsigned MasterBrokerConnection::addSubscription(const std::string &rel_path, const std::string &method)
 {
-	if(shv::core::utils::ShvPath::serviceProviderMarkIndex(rel_path) > 0)
+	shv::core::utils::ServiceProviderPath spp(rel_path);
+	if(spp.isValid())
 		SHV_EXCEPTION("This could never happen by SHV design logic, master broker tries to subscribe service provided path: "  + rel_path);
 	Subscription subs(masterExportedToLocalPath(rel_path), std::string(), method);
 	return CommonRpcClientHandle::addSubscription(subs);
@@ -89,7 +91,8 @@ unsigned MasterBrokerConnection::addSubscription(const std::string &rel_path, co
 
 bool MasterBrokerConnection::removeSubscription(const std::string &rel_path, const std::string &method)
 {
-	if(shv::core::utils::ShvPath::serviceProviderMarkIndex(rel_path) > 0)
+	shv::core::utils::ServiceProviderPath spp(rel_path);
+	if(spp.isValid())
 		SHV_EXCEPTION("This could never happen by SHV design logic, master broker tries to subscribe service provided path: "  + rel_path);
 	Subscription subs(masterExportedToLocalPath(rel_path), std::string(), method);
 	return CommonRpcClientHandle::removeSubscription(subs);

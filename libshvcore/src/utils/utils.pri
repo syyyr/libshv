@@ -1,6 +1,7 @@
 HEADERS += \
     $$PWD/abstractshvjournal.h \
     $$PWD/crypt.h \
+    $$PWD/serviceproviderpath.h \
     $$PWD/shvfilejournal.h \
     $$PWD/shvgetlogparams.h \
     $$PWD/shvjournalentry.h \
@@ -18,6 +19,7 @@ HEADERS += \
 SOURCES += \
     $$PWD/abstractshvjournal.cpp \
     $$PWD/crypt.cpp \
+    $$PWD/serviceproviderpath.cpp \
     $$PWD/shvfilejournal.cpp \
     $$PWD/shvgetlogparams.cpp \
     $$PWD/shvjournalentry.cpp \
