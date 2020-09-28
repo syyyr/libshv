@@ -142,32 +142,34 @@ ShvPath ShvPath::join(const std::string &path1, const std::string &path2)
 	//shvWarning() << path1 << "+" << path2 << "--->" << ret;
 	return ret;
 }
-/*
-ShvPath ShvPath::join(const std::string &path1, const std::string &path2)
+
+StringView ShvPath::mid(const std::string &path, size_t start, size_t len)
 {
-	return join({path1, path2});
+	bool in_quote = false;
+	size_t slash_cnt = 0;
+	size_t start_ix = 0;
+	size_t subpath_len = std::numeric_limits<size_t>::max();
+	for(size_t ix = 0; ix < path.size(); ix++) {
+		auto c = path[ix];
+		if (c == SHV_PATH_DELIM) {
+			if(!in_quote) {
+				slash_cnt++;
+				if(slash_cnt == start) {
+					start_ix = ix + 1;
+				}
+				if(slash_cnt == start + len) {
+					subpath_len = ix - start_ix;
+					break;
+				}
+			}
+		}
+		else if(c == SHV_PATH_QUOTE) {
+			in_quote = !in_quote;
+		}
+	}
+	return StringView(path, start_ix, subpath_len);
 }
 
-ShvPath ShvPath::join(const std::vector<const std::string &> &paths)
-{
-	ShvPath ret;
-	for(const std::string &sv : paths) {
-		bool need_quotes = false;
-		if(indexOf(sv, SHV_PATH_DELIM) != std::string::npos) {
-			need_quotes = true;
-			break;
-		}
-		if(!ret.empty())
-			ret += SHV_PATH_DELIM;
-		if(need_quotes)
-			ret += SHV_PATH_QUOTE;
-		ret += sv;
-		if(need_quotes)
-			ret += SHV_PATH_QUOTE;
-	}
-	return ret;
-}
-*/
 bool ShvPath::matchWild(const std::string &pattern) const
 {
 	const shv::core::StringViewList ptlst = shv::core::StringView(pattern).split('/');

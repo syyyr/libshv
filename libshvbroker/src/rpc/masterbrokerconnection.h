@@ -18,8 +18,8 @@ public:
 
 	int connectionId() const override {return Super::connectionId();}
 
-	// master broker connection cannot have userName
-	// because it is connected in oposite direction than client connections
+	/// master broker connection cannot have userName
+	/// because it is connected in oposite direction than client connections
 	std::string loggedUserName() override {return std::string();}
 
 	bool isConnectedAndLoggedIn() const override {return isSocketConnected() && !isInitPhase();}
@@ -29,9 +29,8 @@ public:
 	void sendRawData(const shv::chainpack::RpcValue::MetaData &meta_data, std::string &&data) override;
 	void sendMessage(const shv::chainpack::RpcMessage &rpc_msg) override;
 
-	unsigned addSubscription(const std::string &rel_path, const std::string &method) override;
-	bool removeSubscription(const std::string &rel_path, const std::string &method) override;
-	std::string toSubscribedPath(const Subscription &subs, const std::string &abs_path) const override;
+	Subscription createSubscription(const std::string &shv_path, const std::string &method) override;
+	std::string toSubscribedPath(const Subscription &subs, const std::string &signal_path) const override;
 
 	std::string masterExportedToLocalPath(const std::string &master_path) const;
 	std::string localPathToMasterExported(const std::string &local_path) const;

@@ -7,6 +7,7 @@
 namespace shv {
 namespace core {
 class StringViewList;
+class StringView;
 namespace utils {
 
 class SHVCORE_DECL_EXPORT ShvPath : public shv::core::String
@@ -31,6 +32,8 @@ public:
 	//static ShvPath join(const std::vector<std::string> &shv_path);
 	static ShvPath join(const shv::core::StringViewList &shv_path);
 	static ShvPath join(const std::string &path1, const std::string &path2);
+
+	static StringView mid(const std::string &path, size_t start, size_t len = std::numeric_limits<size_t>::max());
 
 	shv::core::StringViewList split() const;
 	static shv::core::StringViewList split(const std::string &shv_path);

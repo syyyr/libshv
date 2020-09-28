@@ -10,26 +10,33 @@ namespace utils {
 class SHVCORE_DECL_EXPORT ServiceProviderPath
 {
 public:
-	enum class Type { Invalid, Absolute, Relative };
+	enum class Type { Plain, Absolute, Relative };
 public:
 	ServiceProviderPath(const std::string &shv_path);
 
-	bool isValid() const { return type() != Type::Invalid; }
+	bool isServicePath() const { return type() != Type::Plain; }
+	bool isRelative() const { return type() == Type::Relative; }
 	Type type() const { return m_type; }
 	const char* typeString() const;
-	char typeMark() const { return m_typeMark; }
 	StringView service() const { return m_service; }
 	StringView pathRest() const { return m_pathRest; }
+	std::string makePlainPath(const StringView &prefix) const;
+	std::string makeServicePath(const StringView &prefix) const;
+	const std::string& shvPath() const { return m_shvPath;}
+
+	static std::string makePath(Type type, const StringView &service, const StringView &path_rest);
 private:
 	static constexpr char RELATIVE_MARK = ':';
 	static constexpr char ABSOLUTE_MARK = '|';
 
 	static size_t serviceProviderMarkIndex(const std::string &path);
+	std::string typeMark() const { return typeMark(type()); }
+	static std::string typeMark(Type t);
 private:
-	Type m_type = Type::Invalid;
+	const std::string &m_shvPath;
+	Type m_type = Type::Plain;
 	StringView m_service;
 	StringView m_pathRest;
-	char m_typeMark = 0;
 };
 
 } // namespace utils

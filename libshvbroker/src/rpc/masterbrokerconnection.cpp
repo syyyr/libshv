@@ -80,28 +80,26 @@ void MasterBrokerConnection::sendMessage(const shv::chainpack::RpcMessage &rpc_m
 	Super::sendMessage(rpc_msg);
 }
 
-unsigned MasterBrokerConnection::addSubscription(const std::string &rel_path, const std::string &method)
+CommonRpcClientHandle::Subscription MasterBrokerConnection::createSubscription(const std::string &shv_path, const std::string &method)
 {
-	shv::core::utils::ServiceProviderPath spp(rel_path);
-	if(spp.isValid())
-		SHV_EXCEPTION("This could never happen by SHV design logic, master broker tries to subscribe service provided path: "  + rel_path);
-	Subscription subs(masterExportedToLocalPath(rel_path), std::string(), method);
-	return CommonRpcClientHandle::addSubscription(subs);
+	using ServiceProviderPath = shv::core::utils::ServiceProviderPath;
+	ServiceProviderPath spp(shv_path);
+	if(spp.isServicePath())
+		SHV_EXCEPTION("This could never happen by SHV design logic, master broker tries to subscribe service provided path: "  + shv_path);
+	return Subscription(masterExportedToLocalPath(shv_path), std::string(), method);
 }
 
-bool MasterBrokerConnection::removeSubscription(const std::string &rel_path, const std::string &method)
+std::string MasterBrokerConnection::toSubscribedPath(const Subscription &subs, const std::string &signal_path) const
 {
-	shv::core::utils::ServiceProviderPath spp(rel_path);
-	if(spp.isValid())
-		SHV_EXCEPTION("This could never happen by SHV design logic, master broker tries to subscribe service provided path: "  + rel_path);
-	Subscription subs(masterExportedToLocalPath(rel_path), std::string(), method);
-	return CommonRpcClientHandle::removeSubscription(subs);
-}
-
-std::string MasterBrokerConnection::toSubscribedPath(const Subscription &subs, const std::string &abs_path) const
-{
-	Q_UNUSED(subs)
-	return localPathToMasterExported(abs_path);
+	//Q_UNUSED(subs)
+	bool debug = true;
+	if(debug) {
+		using ServiceProviderPath = shv::core::utils::ServiceProviderPath;
+		ServiceProviderPath spp(signal_path);
+		if(spp.isServicePath())
+			shvWarning() << "Master broker subscription should not have to handle service provider signal:" << signal_path << "subscription:" << subs.subscribedPath;
+	}
+	return localPathToMasterExported(signal_path);
 }
 
 std::string MasterBrokerConnection::masterExportedToLocalPath(const std::string &master_path) const
@@ -110,7 +108,7 @@ std::string MasterBrokerConnection::masterExportedToLocalPath(const std::string 
 		return master_path;
 	if(shv::core::utils::ShvPath::startsWithPath(master_path, cp::Rpc::DIR_BROKER))
 		return master_path;
-	return m_exportedShvPath + '/' + master_path;
+	return shv::core::utils::ShvPath::join(m_exportedShvPath, master_path);
 }
 
 std::string MasterBrokerConnection::localPathToMasterExported(const std::string &local_path) const

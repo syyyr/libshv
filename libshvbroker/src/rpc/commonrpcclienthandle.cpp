@@ -1,6 +1,7 @@
 #include "commonrpcclienthandle.h"
 
 #include <shv/iotqt/node/shvnode.h>
+#include <shv/core/utils/serviceproviderpath.h>
 #include <shv/core/utils/shvpath.h>
 
 #include <shv/coreqt/log.h>
@@ -18,26 +19,28 @@ namespace rpc {
 //=====================================================================
 // CommonRpcClientHandle::Subscription
 //=====================================================================
-CommonRpcClientHandle::Subscription::Subscription(const std::string &path, const std::string &service_provider, const std::string &m)
-	: serviceProvider(service_provider)
+CommonRpcClientHandle::Subscription::Subscription(const std::string &local_path, const std::string &subscribed_path, const std::string &m)
+	: subscribedPath(subscribed_path)
 	, method(m)
 {
 	// remove leading and trailing slash from path
 	size_t ix1 = 0;
-	while(ix1 < path.size()) {
-		if(path[ix1] == '/')
+	while(ix1 < local_path.size()) {
+		if(local_path[ix1] == '/')
 			ix1++;
 		else
 			break;
 	}
-	size_t len = path.size();
+	size_t len = local_path.size();
 	while(len > 0) {
-		if(path[len - 1] == '/')
+		if(local_path[len - 1] == '/')
 			len--;
 		else
 			break;
 	}
-	absolutePath = path.substr(ix1, len);
+	localPath = local_path.substr(ix1, len);
+	//shv::core::utils::ServiceProviderPath spp(subscribedPath);
+	//isRelative = spp.isRelative();
 }
 
 /*
@@ -59,9 +62,9 @@ bool CommonRpcClientHandle::Subscription::operator<(const CommonRpcClientHandle:
 }
 */
 
-bool CommonRpcClientHandle::Subscription::operator==(const CommonRpcClientHandle::Subscription &o) const
+bool CommonRpcClientHandle::Subscription::equalBySubscribedPath(const CommonRpcClientHandle::Subscription &o) const
 {
-	int i = absolutePath.compare(o.absolutePath);
+	int i = subscribedPath.compare(o.subscribedPath);
 	if(i == 0)
 		return method == o.method;
 	return false;
@@ -71,13 +74,13 @@ bool CommonRpcClientHandle::Subscription::match(const shv::core::StringView &shv
 {
 	//shvInfo() << pathPattern << ':' << method << "match" << shv_path.toString() << ':' << shv_method.toString();// << "==" << true;
 	bool path_match = false;
-	if(absolutePath.empty()) {
+	if(localPath.empty()) {
 		path_match = true;
 	}
-	else if(shv_path.startsWith(absolutePath)) {
-		path_match = (shv_path.length() == absolutePath.length())
-				|| (absolutePath[absolutePath.length() - 1] == '/')
-				|| (shv_path[absolutePath.length()] == '/');
+	else if(shv_path.startsWith(localPath)) {
+		path_match = (shv_path.length() == localPath.length())
+				|| (localPath[localPath.length() - 1] == '/')
+				|| (shv_path[localPath.length()] == '/');
 	}
 	if(path_match)
 		return (method.empty() || shv_method == method);
@@ -111,7 +114,9 @@ unsigned CommonRpcClientHandle::addSubscription(const std::string &rel_path, con
 */
 unsigned CommonRpcClientHandle::addSubscription(const CommonRpcClientHandle::Subscription &subs)
 {
-	logSubscriptionsD() << "adding subscription for connection id:" << connectionId() << "path:" << subs.absolutePath << "method:" << subs.method;
+	logSubscriptionsD() << "adding subscription for connection id:" << connectionId()
+						<< "local path:" << subs.localPath
+						<< "subscribed path:" << subs.subscribedPath << "method:" << subs.method;
 	auto it = std::find(m_subscriptions.begin(), m_subscriptions.end(), subs);
 	if(it == m_subscriptions.end()) {
 		m_subscriptions.push_back(subs);
@@ -126,7 +131,10 @@ unsigned CommonRpcClientHandle::addSubscription(const CommonRpcClientHandle::Sub
 
 bool CommonRpcClientHandle::removeSubscription(const CommonRpcClientHandle::Subscription &subs)
 {
-	auto it = std::find(m_subscriptions.begin(), m_subscriptions.end(), subs);
+	auto it = std::find(m_subscriptions.begin(), m_subscriptions.end(), subs
+						/*[subs](const CommonRpcClientHandle::Subscription &subs2) {
+		return subs.equalBySubscribedPath(subs2);
+	}*/);
 	if(it == m_subscriptions.end()) {
 		return false;
 	}
@@ -171,19 +179,13 @@ int CommonRpcClientHandle::isSubscribed(const std::string &shv_path, const std::
 	logSigResolveD() << "connection id:" << connectionId() << "checking if subcribed path:" << shv_path << "method:" << method;
 	for (size_t i = 0; i < subscriptionCount(); ++i) {
 		const Subscription &subs = subscriptionAt(i);
-		logSigResolveD() << "\tvs. path:" << subs.absolutePath << "method:" << subs.method;
+		logSigResolveD() << "\tvs. path:" << subs.localPath << "method:" << subs.method;
 		if(subs.match(shv_path, method)) {
 			logSigResolveD() << "\tHIT";
 			return (int)i;
 		}
 	}
 	return -1;
-}
-
-std::string CommonRpcClientHandle::toSubscribedPath(const Subscription &subs, const std::string &abs_path) const
-{
-	Q_UNUSED(subs)
-	return abs_path;
 }
 
 bool CommonRpcClientHandle::rejectNotSubscribedSignal(const std::string &path, const std::string &method)
@@ -199,8 +201,8 @@ bool CommonRpcClientHandle::rejectNotSubscribedSignal(const std::string &path, c
 				most_explicit_subs_ix = i;
 				break;
 			}
-			if(subs.absolutePath.size() > max_path_len) {
-				max_path_len = subs.absolutePath.size();
+			if(subs.localPath.size() > max_path_len) {
+				max_path_len = subs.localPath.size();
 				most_explicit_subs_ix = i;
 			}
 		}

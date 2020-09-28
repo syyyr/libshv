@@ -29,6 +29,7 @@ class QSocketNotifier;
 class QSqlDatabase;
 
 namespace shv { namespace iotqt { namespace node { class ShvNodeTree; }}}
+namespace shv { namespace core { namespace utils { class ServiceProviderPath; }}}
 //namespace shv { namespace iotqt { namespace rpc { struct Password; }}}
 namespace shv { namespace chainpack { class RpcSignal; }}
 
@@ -83,13 +84,18 @@ public:
 	void reloadConfigRemountDevices();
 	bool checkTunnelSecret(const std::string &s);
 
+	chainpack::AccessGrant accessGrantForRequest(rpc::CommonRpcClientHandle *conn, const std::string &rq_shv_path, const std::string &method, const chainpack::RpcValue &rq_grant);
+
 	// checkPassword() might return bool
 	// but we are using setCheckPasswordResult() instead to support async password check in ACL manager
 	// for example LDAP ACL Manager
 	chainpack::UserLoginResult checkLogin(const shv::chainpack::UserLoginContext &ctx);
 
 	void sendNewLogEntryNotify(const std::string &msg);
+
+	iotqt::node::ShvNode * nodeForService(const shv::core::utils::ServiceProviderPath &spp);
 protected:
+
 	virtual void initDbConfigSqlConnection();
 	virtual AclManager* createAclManager();
 private:
@@ -114,8 +120,6 @@ private:
 	std::vector<rpc::CommonRpcClientHandle *> allClientConnections();
 
 	std::string resolveMountPoint(const shv::chainpack::RpcValue::Map &device_opts);
-
-	chainpack::AccessGrant accessGrantForRequest(rpc::CommonRpcClientHandle *conn, const std::string &rq_shv_path, const std::string &method, const chainpack::RpcValue &rq_grant);
 
 	void onRootNodeSendRpcMesage(const shv::chainpack::RpcMessage &msg);
 
