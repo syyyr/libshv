@@ -1,6 +1,8 @@
 #include "stringview.h"
 #include "string.h"
 
+//#include "log.h"
+
 namespace shv {
 namespace core {
 
@@ -19,7 +21,7 @@ StringView::StringView(const StringView &strv)
 }
 
 StringView::StringView(const std::string &str, size_t start)
-	: StringView(str, start, str.length() - start)
+	: StringView(str, start, str.size())
 {
 }
 
@@ -166,6 +168,7 @@ ssize_t StringView::lastIndexOf(char c) const
 
 StringView StringView::mid(size_t start, size_t len) const
 {
+	//shvWarning() << toString() << start << len;
 	return StringView(str(), this->start() + start, len);
 }
 

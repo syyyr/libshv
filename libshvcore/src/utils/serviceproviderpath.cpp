@@ -11,7 +11,7 @@ ServiceProviderPath::ServiceProviderPath(const std::string &shv_path)
 	auto ix = serviceProviderMarkIndex(shv_path);
 	if(ix > 0) {
 		m_service = StringView(shv_path, 0, ix);
-		m_pathRest = StringView(shv_path, ix + 2);
+		m_pathRest = StringView(shv_path, ix + 3);
 		auto type_mark = shv_path[ix];
 		if(type_mark == ABSOLUTE_MARK)
 			m_type = Type::Absolute;
@@ -34,8 +34,8 @@ std::string ServiceProviderPath::typeMark(Type t)
 {
 	switch (t) {
 	case Type::Plain: return std::string();
-	case Type::Relative: return std::string(1, RELATIVE_MARK);
-	case Type::Absolute: return std::string(1, ABSOLUTE_MARK);
+	case Type::Relative: return std::string(1, RELATIVE_MARK) + END_MARK;
+	case Type::Absolute: return std::string(1, ABSOLUTE_MARK) + END_MARK;
 	}
 	return std::string();
 }
@@ -62,25 +62,25 @@ std::string ServiceProviderPath::makePath(ServiceProviderPath::Type type, const 
 {
 	switch(type) {
 	case Type::Plain:
-		return ShvPath::join({service, path_rest});
+		return StringViewList{service, path_rest}.join(ShvPath::SHV_PATH_DELIM);
 	default:
-		return ShvPath::join({service, typeMark(type), path_rest});
+		return StringViewList{service.toString() + typeMark(type), path_rest}.join(ShvPath::SHV_PATH_DELIM);
 	}
 }
 /*
-std::string ServiceProviderPath::makeShvPath() const
+std::string ServiceProviderPath::joinPath(const StringView &a, const StringView &b)
 {
-	std::string ret = service().toString();
-	if(isServicePath())
-		ret += typeMark();
-	ret += ShvPath::SHV_PATH_DELIM + pathRest().toString();
-	return ret;
+	if(a.empty())
+		return b.toString();
+	if(b.empty())
+		return b.toString();
+	return a.toString() + ShvPath::SHV_PATH_DELIM + b.toString();
 }
 */
 size_t ServiceProviderPath::serviceProviderMarkIndex(const std::string &path)
 {
-	for (size_t ix = 1; ix + 1 < path.size(); ++ix) {
-		if(path[ix + 1] == ShvPath::SHV_PATH_DELIM) {
+	for (size_t ix = 1; ix + 2 < path.size(); ++ix) {
+		if(path[ix + 1] == END_MARK && path[ix + 2] == ShvPath::SHV_PATH_DELIM) {
 			if(path[ix] == RELATIVE_MARK || path[ix] == ABSOLUTE_MARK)
 				return ix;
 		}

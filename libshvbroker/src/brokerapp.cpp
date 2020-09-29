@@ -434,7 +434,8 @@ chainpack::UserLoginResult BrokerApp::checkLogin(const chainpack::UserLoginConte
 
 void BrokerApp::sendNewLogEntryNotify(const std::string &msg)
 {
-	sendNotifyToSubscribers(".broker/app/log", cp::Rpc::SIG_VAL_CHANGED, msg);
+	if(isLogEntryNotyfyEnabled())
+		sendNotifyToSubscribers(".broker/app/log", cp::Rpc::SIG_VAL_CHANGED, msg);
 }
 
 void BrokerApp::initDbConfigSqlConnection()
@@ -973,14 +974,15 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 	else if(cp::RpcMessage::isSignal(meta)) {
 		logSigResolveD() << "SIGNAL:" << meta.toPrettyString() << "from:" << connection_id;
 
+		const std::string sig_shv_path = cp::RpcMessage::shvPath(meta).toString();
+		std::string full_shv_path = sig_shv_path;
 		std::string mount_point;
 		rpc::ClientConnection *client_connection = clientConnectionById(connection_id);
 		if(client_connection) {
 			/// if signal arrives from client, its path must be prepended by client mount points
 			mount_point = client_connection->mountPoint();
+			full_shv_path = mount_point + '/' + sig_shv_path;
 		}
-		const std::string sig_shv_path = cp::RpcMessage::shvPath(meta).toString();
-		std::string full_shv_path = shv::core::utils::ShvPath::join(mount_point, sig_shv_path);
 		if(full_shv_path.empty()) {
 			shvError() << "SIGNAL with empty shv path received from master broker connection.";
 		}
@@ -988,7 +990,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 			//logSigResolveD() << client_connection->connectionId() << "forwarding signal to client on mount point:" << mp << "as:" << full_shv_path;
 			cp::RpcMessage::setShvPath(meta, full_shv_path);
 			bool sig_sent = sendNotifyToSubscribers(meta, data);
-			if(!sig_sent && client_connection->isSlaveBrokerConnection()) {
+			if(!sig_sent && client_connection && client_connection->isSlaveBrokerConnection()) {
 				logSubscriptionsD() << "Rejecting unsubscribed signal, shv_path:" << full_shv_path << "method:" << cp::RpcMessage::method(meta).toString();
 				cp::RpcRequest rq;
 				rq.setRequestId(0);

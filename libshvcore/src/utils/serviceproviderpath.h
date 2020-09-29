@@ -25,8 +25,10 @@ public:
 	const std::string& shvPath() const { return m_shvPath;}
 
 	static std::string makePath(Type type, const StringView &service, const StringView &path_rest);
+	//static std::string joinPath(const StringView &a, const StringView &b);
 private:
-	static constexpr char RELATIVE_MARK = ':';
+	static constexpr char END_MARK = ':';
+	static constexpr char RELATIVE_MARK = '~';
 	static constexpr char ABSOLUTE_MARK = '|';
 
 	static size_t serviceProviderMarkIndex(const std::string &path);

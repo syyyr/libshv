@@ -31,7 +31,7 @@ public:
 	//static ShvPath joinAndClean(const std::string &path1, const std::string &path2);
 	//static ShvPath join(const std::vector<std::string> &shv_path);
 	static ShvPath join(const shv::core::StringViewList &shv_path);
-	static ShvPath join(const std::string &path1, const std::string &path2);
+	static ShvPath join(StringView path1, StringView path2);
 
 	static StringView mid(const std::string &path, size_t start, size_t len = std::numeric_limits<size_t>::max());
 

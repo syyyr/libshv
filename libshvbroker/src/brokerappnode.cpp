@@ -23,6 +23,8 @@ namespace broker {
 namespace {
 static const char M_GET_VERBOSITY[] = "verbosity";
 static const char M_SET_VERBOSITY[] = "setVerbosity";
+static const char M_GET_ENABLED[] = "enabled";
+static const char M_SET_ENABLED[] = "setEnabled";
 class BrokerLogNode : public shv::iotqt::node::MethodsTableNode
 {
 	using Super = shv::iotqt::node::MethodsTableNode;
@@ -33,6 +35,8 @@ public:
 			{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_BROWSE},
 			{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 			{cp::Rpc::SIG_VAL_CHANGED, cp::MetaMethod::Signature::VoidParam, cp::MetaMethod::Flag::IsSignal, cp::Rpc::ROLE_READ},
+			{M_GET_ENABLED, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
+			{M_SET_ENABLED, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::IsSetter, cp::Rpc::ROLE_WRITE},
 			{M_GET_VERBOSITY, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
 			{M_SET_VERBOSITY, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::IsSetter, cp::Rpc::ROLE_COMMAND},
 		}
@@ -41,6 +45,13 @@ public:
 	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override
 	{
 		if(shv_path.empty()) {
+			if(method == M_GET_ENABLED) {
+				return BrokerApp::instance()->isLogEntryNotyfyEnabled();
+			}
+			if(method == M_SET_ENABLED) {
+				BrokerApp::instance()->setLogEntryNotyfyEnabled(params.toBool());
+				return true;
+			}
 			if(method == M_GET_VERBOSITY) {
 				return NecroLog::topicsLogTresholds();
 			}

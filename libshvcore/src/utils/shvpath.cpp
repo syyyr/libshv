@@ -127,20 +127,18 @@ ShvPath ShvPath::join(const core::StringViewList &shv_path)
 	return ret;
 }
 
-ShvPath ShvPath::join(const std::string &path1, const std::string &path2)
+ShvPath ShvPath::join(StringView path1, StringView path2)
 {
-	ShvPath ret = path1;
-	while(core::String::endsWith(ret, '/'))
-		ret = ret.substr(0, ret.size() - 1);
-	size_t ix = 0;
-	for(; ix < path2.size(); ix++)
-		if(path2[ix] != '/')
-			break;
-	if(!ret.empty() && ix < path2.size())
-		ret += '/';
-	ret += path2.substr(ix);
+	while(path1.endsWith(SHV_PATH_DELIM))
+		path1 = path1.mid(0, path1.length() - 1);
+	while(path2.startsWith(SHV_PATH_DELIM))
+		path2 = path2.mid(1);
+	if(path1.empty())
+		return path2.toString();
+	if(path2.empty())
+		return path1.toString();
 	//shvWarning() << path1 << "+" << path2 << "--->" << ret;
-	return ret;
+	return path1.toString() + SHV_PATH_DELIM + path2.toString();
 }
 
 StringView ShvPath::mid(const std::string &path, size_t start, size_t len)
@@ -148,7 +146,7 @@ StringView ShvPath::mid(const std::string &path, size_t start, size_t len)
 	bool in_quote = false;
 	size_t slash_cnt = 0;
 	size_t start_ix = 0;
-	size_t subpath_len = std::numeric_limits<size_t>::max();
+	size_t subpath_len = path.size();
 	for(size_t ix = 0; ix < path.size(); ix++) {
 		auto c = path[ix];
 		if (c == SHV_PATH_DELIM) {

@@ -43,6 +43,8 @@ class AclManager;
 class SHVBROKER_DECL_EXPORT BrokerApp : public QCoreApplication
 {
 	Q_OBJECT
+
+	SHV_FIELD_BOOL_IMPL2(l, L, ogEntryNotyfyEnabled, false)
 private:
 	using Super = QCoreApplication;
 	friend class AclManager;

@@ -225,20 +225,20 @@ string ClientConnection::toSubscribedPath(const CommonRpcClientHandle::Subscript
 	using StringView = shv::core::StringView;
 	using ServiceProviderPath = shv::core::utils::ServiceProviderPath;
 	bool debug = true;
-	ServiceProviderPath spp1(signal_path);
-	ServiceProviderPath spp2(subs.subscribedPath);
+	ServiceProviderPath spp_signal(signal_path);
+	ServiceProviderPath spp_subs(subs.subscribedPath);
 	/// path must be retraslated if:
 	/// * local path is not service one and subcribed part is service one
 	/// * local path is service relative
-	if(spp2.isServicePath()) {
-		if(spp2.isRelative()) {
-			if(spp1.isServicePath()) {
-				if(spp1.isRelative()) {
+	if(spp_subs.isServicePath()) {
+		if(spp_subs.isRelative()) {
+			if(spp_signal.isServicePath()) {
+				if(spp_signal.isRelative()) {
 					/// a:/mount_point/b/c/d --> a:/b/c/d
 					/// a@xy:/mount_point/b/c/d --> a@xy:/b/c/d
 					auto a = StringView(subs.subscribedPath);
 					auto b = StringView(signal_path).mid(subs.localPath.size());
-					return ShvPath::join({a, b});
+					return ShvPath::join(a, b);
 				}
 				else {
 					/// a|/b/c/d --> a|/b/c/d
@@ -248,20 +248,22 @@ string ClientConnection::toSubscribedPath(const CommonRpcClientHandle::Subscript
 				}
 			}
 			else {
-				if(spp2.isRelative()) {
+				if(spp_subs.isRelative()) {
 					/// a/b/c/d --> a:/b/c/d
 					// cut service and slash
-					auto sv = StringView(signal_path).mid(spp2.service().length() + 1);
+					auto sv = StringView(signal_path).mid(spp_subs.service().length() + 1);
 					// cut mount point rest and slash
-					StringView mount_point_rest = ShvPath::mid(mountPoint(), 1);
+					const string mount_point = mountPoint();
+					StringView mount_point_rest = ShvPath::mid(mount_point, 1);
 					sv = sv.mid(mount_point_rest.length() + 1);
-					return ServiceProviderPath::makePath(spp2.type(), spp2.service(), sv);
+					auto ret = ServiceProviderPath::makePath(spp_subs.type(), spp_subs.service(), sv);
+					return ret;
 				}
 				else {
 					/// a/b/c/d --> a|/b/c/d
 					// cut service and slash
-					auto sv = StringView(signal_path).mid(spp2.service().length() + 1);
-					return ServiceProviderPath::makePath(spp2.type(), spp2.service(), sv);
+					auto sv = StringView(signal_path).mid(spp_subs.service().length() + 1);
+					return ServiceProviderPath::makePath(spp_subs.type(), spp_subs.service(), sv);
 				}
 			}
 		}

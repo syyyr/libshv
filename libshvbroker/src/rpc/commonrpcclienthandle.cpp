@@ -72,7 +72,7 @@ bool CommonRpcClientHandle::Subscription::equalBySubscribedPath(const CommonRpcC
 
 bool CommonRpcClientHandle::Subscription::match(const shv::core::StringView &shv_path, const shv::core::StringView &shv_method) const
 {
-	//shvInfo() << pathPattern << ':' << method << "match" << shv_path.toString() << ':' << shv_method.toString();// << "==" << true;
+	//shvInfo() << shv_path << "starts with:" << localPath << "==" << shv_path.startsWith(localPath);// << "==" << true;
 	bool path_match = false;
 	if(localPath.empty()) {
 		path_match = true;
@@ -176,10 +176,10 @@ int CommonRpcClientHandle::isSubscribed(const std::string &shv_path, const std::
 	while(shv_path.value(-1) == '/')
 		shv_path = shv_path.mid(0, shv_path.length()-1);
 	*/
-	logSigResolveD() << "connection id:" << connectionId() << "checking if subcribed path:" << shv_path << "method:" << method;
+	logSigResolveD() << "connection id:" << connectionId() << "checking if signal:" << shv_path << "method:" << method;
 	for (size_t i = 0; i < subscriptionCount(); ++i) {
 		const Subscription &subs = subscriptionAt(i);
-		logSigResolveD() << "\tvs. path:" << subs.localPath << "method:" << subs.method;
+		logSigResolveD() << "\t matches subscribed path:" << subs.localPath << "method:" << subs.method;
 		if(subs.match(shv_path, method)) {
 			logSigResolveD() << "\tHIT";
 			return (int)i;

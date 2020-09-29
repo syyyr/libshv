@@ -407,7 +407,10 @@ shv::chainpack::RpcValue AclManagerConfigFiles::loadAclConfig(const std::string 
 	}
 	if (!fis.good()) {
 		if(throw_exc)
-			throw std::runtime_error("Cannot open config file " + config_name + " for reading");
+			throw std::runtime_error("Cannot open config file for reading, attempts: "
+									 + std::accumulate(files.begin(), files.end(), std::string(), [this](std::string a, std::string b) {
+											return std::move(a) + (a.empty()? std::string(): std::string(", ")) + configDir() + '/' + std::move(b);
+									}));
 		else
 			return cp::RpcValue();
 	}
