@@ -124,6 +124,8 @@ class SHVIOTQT_DECL_EXPORT RpcValueMapNode : public shv::iotqt::node::ShvNode
 {
 	Q_OBJECT
 	using Super = shv::iotqt::node::ShvNode;
+
+	SHV_FIELD_BOOL_IMPL(r, R, eadOnly)
 public:
 	static const char *M_LOAD;
 	static const char *M_SAVE;
