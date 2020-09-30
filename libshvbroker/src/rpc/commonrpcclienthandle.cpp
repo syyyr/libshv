@@ -10,7 +10,7 @@
 #include <shv/core/exception.h>
 
 #define logSubscriptionsD() nCDebug("Subscr").color(NecroLog::Color::Yellow)
-#define logSigResolveD() nCDebug("SigRes").color(NecroLog::Color::LightGreen)
+#define logSigResolveD() nCDebug("SigRes").color(NecroLog::Color::Yellow)
 
 namespace shv {
 namespace broker {
@@ -169,19 +169,12 @@ bool CommonRpcClientHandle::removeSubscription(const std::string &rel_path, cons
 */
 int CommonRpcClientHandle::isSubscribed(const std::string &shv_path, const std::string &method) const
 {
-	/*
-	shv::core::StringView shv_path(path);
-	while(shv_path.length() && shv_path[0] == '/')
-		shv_path = shv_path.mid(1);
-	while(shv_path.value(-1) == '/')
-		shv_path = shv_path.mid(0, shv_path.length()-1);
-	*/
 	logSigResolveD() << "connection id:" << connectionId() << "checking if signal:" << shv_path << "method:" << method;
 	for (size_t i = 0; i < subscriptionCount(); ++i) {
 		const Subscription &subs = subscriptionAt(i);
-		logSigResolveD() << "\t matches subscribed path:" << subs.localPath << "method:" << subs.method;
+		logSigResolveD() << "\tchecking local path:" << subs.localPath << "subscribed as:" << subs.subscribedPath << "method:" << subs.method;
 		if(subs.match(shv_path, method)) {
-			logSigResolveD() << "\tHIT";
+			logSigResolveD() << "\t\tHIT";
 			return (int)i;
 		}
 	}

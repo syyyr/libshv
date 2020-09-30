@@ -221,15 +221,47 @@ ClientConnection::Subscription ClientConnection::createSubscription(const std::s
 string ClientConnection::toSubscribedPath(const CommonRpcClientHandle::Subscription &subs, const string &signal_path) const
 {
 	using ShvPath = shv::core::utils::ShvPath;
-	using String = shv::core::String;
+	//using String = shv::core::String;
 	using StringView = shv::core::StringView;
 	using ServiceProviderPath = shv::core::utils::ServiceProviderPath;
 	bool debug = true;
 	ServiceProviderPath spp_signal(signal_path);
 	ServiceProviderPath spp_subs(subs.subscribedPath);
 	/// path must be retraslated if:
-	/// * local path is not service one and subcribed part is service one
 	/// * local path is service relative
+	/// * local path is not service one and subcribed part is service one
+	if(spp_signal.isRelative()) {
+		/// a:/mount_point/b/c/d --> a:/b/c/d
+		/// a@xy:/mount_point/b/c/d --> a@xy:/b/c/d
+		if(debug && !spp_subs.isRelative())
+			shvWarning() << "Relative signal must have relative subscription, signal:" << signal_path << "subscription:" << subs.subscribedPath;
+		auto a = StringView(subs.subscribedPath);
+		auto b = StringView(signal_path).mid(subs.localPath.size());
+		return ShvPath::join(a, b);
+	}
+	else if(spp_signal.isPlain()) {
+		if(spp_subs.isRelative()) {
+			/// a/b/c/d --> a:/b/c/d
+			// cut service and slash
+			auto sv = StringView(signal_path).mid(spp_subs.service().length() + 1);
+			// cut mount point rest and slash
+			const string mount_point = mountPoint();
+			StringView mount_point_rest = ShvPath::mid(mount_point, 1);
+			sv = sv.mid(mount_point_rest.length() + 1);
+			auto ret = ServiceProviderPath::makePath(spp_subs.type(), spp_subs.service(), sv);
+			return ret;
+		}
+		else if(spp_subs.isAbsolute()) {
+			/// a/b/c/d --> a|/b/c/d
+			// cut service and slash
+			auto sv = StringView(signal_path).mid(spp_subs.service().length() + 1);
+			shvWarning() << spp_subs.shvPath();
+			shvWarning() << sv;
+			return ServiceProviderPath::makePath(spp_subs.type(), spp_subs.service(), sv);
+		}
+	}
+	return signal_path;
+#if 0
 	if(spp_subs.isServicePath()) {
 		if(spp_subs.isRelative()) {
 			if(spp_signal.isServicePath()) {
@@ -263,6 +295,8 @@ string ClientConnection::toSubscribedPath(const CommonRpcClientHandle::Subscript
 					/// a/b/c/d --> a|/b/c/d
 					// cut service and slash
 					auto sv = StringView(signal_path).mid(spp_subs.service().length() + 1);
+					shvWarning() << spp_subs.shvPath();
+					shvWarning() << sv;
 					return ServiceProviderPath::makePath(spp_subs.type(), spp_subs.service(), sv);
 				}
 			}
@@ -278,6 +312,7 @@ string ClientConnection::toSubscribedPath(const CommonRpcClientHandle::Subscript
 	else {
 		return signal_path;
 	}
+#endif
 }
 
 void ClientConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)

@@ -16,6 +16,8 @@ public:
 
 	bool isServicePath() const { return type() != Type::Plain; }
 	bool isRelative() const { return type() == Type::Relative; }
+	bool isAbsolute() const { return type() == Type::Absolute; }
+	bool isPlain() const { return type() == Type::Plain; }
 	Type type() const { return m_type; }
 	const char* typeString() const;
 	StringView service() const { return m_service; }
