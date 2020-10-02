@@ -172,17 +172,17 @@ int GraphWidget::isMouseAboveGraphVerticalHeader(const QPoint &pos) const
 	return -1;
 }
 
-int GraphWidget::isMouseAboveGraphDataArea(const QPoint &pos) const
+int GraphWidget::mouseAboveGraphDataAreaIndex(const QPoint &pos) const
 {
 	const Graph *gr = graph();
 	int ch_ix = gr->posToChannel(pos);
-	return ch_ix >= 0;
+	return ch_ix;
 }
 
 void GraphWidget::mouseDoubleClickEvent(QMouseEvent *event)
 {
 	QPoint pos = event->pos();
-	if(isMouseAboveGraphDataArea(pos)) {
+	if(mouseAboveGraphDataAreaIndex(pos) >= 0) {
 		if(event->modifiers() == Qt::NoModifier) {
 			emit graphChannelDoubleClicked(pos);
 			event->accept();
@@ -213,7 +213,7 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 			event->accept();
 			return;
 		}
-		else if(isMouseAboveGraphDataArea(pos)) {
+		else if(mouseAboveGraphDataAreaIndex(pos) >= 0) {
 			if(event->modifiers() == Qt::ControlModifier) {
 				m_mouseOperation = MouseOperation::GraphAreaMove;
 				m_recentMousePos = pos;
@@ -239,6 +239,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 	m_mouseOperation = MouseOperation::None;
 	if(event->button() == Qt::LeftButton) {
 		if(old_mouse_op == MouseOperation::GraphDataAreaPress) {
+			/*
 			QPoint pos = event->pos();
 			if(event->modifiers() == Qt::NoModifier) {
 				Graph *gr = graph();
@@ -255,6 +256,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 				update();
 				return;
 			}
+			*/
 		}
 		else if(old_mouse_op == MouseOperation::GraphAreaSelection) {
 			graph()->zoomToSelection();
@@ -350,20 +352,19 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		return;
 	}
 	}
-	/*
-	int ch_ix = gr->posToChannel(pos);
+	int ch_ix = mouseAboveGraphDataAreaIndex(pos);
 	if(ch_ix >= 0) {
 		setCursor(Qt::BlankCursor);
-		gr->setCrossBarPos(pos);
+		gr->setCrossBarPos(ch_ix, pos);
 		timemsec_t t = gr->posToTime(pos.x());
 		Sample s = gr->timeToSample(ch_ix, t);
 		if(s.isValid()) {
-			const Graph::Channel &ch = gr->channelAt(ch_ix);
+			const GraphChannel *ch = gr->channelAt(ch_ix);
 			shvDebug() << "time:" << s.time << "value:" << s.value.toDouble();
 			QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
 			QString text = QStringLiteral("%1\n%2: %3")
 					.arg(dt.toString(Qt::ISODateWithMs))
-					.arg(gr->model()->channelData(ch.modelIndex(), timeline::GraphModel::ChannelDataRole::Name).toString())
+					.arg(gr->model()->channelInfo(ch->modelIndex()).shvPath)
 					.arg(s.value.toString());
 			QToolTip::showText(mapToGlobal(pos + QPoint{gr->u2px(0.8), 0}), text, this);
 		}
@@ -373,14 +374,13 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		update();
 	}
 	else {
-		if(!gr->crossBarPos().isNull()) {
-			gr->setCrossBarPos(QPoint());
+		if(gr->isCrossBarVisible()) {
+			gr->setCrossBarPos(-1, QPoint());
 			setCursor(Qt::ArrowCursor);
 			QToolTip::showText(QPoint(), QString());
 			update();
 		}
 	}
-	*/
 }
 
 void GraphWidget::wheelEvent(QWheelEvent *event)
@@ -391,7 +391,7 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
 	QPoint pos = event->position().toPoint();
 #endif
 	bool is_zoom_on_slider = isMouseAboveMiniMapSlider(pos);
-	bool is_zoom_on_graph = (event->modifiers() == Qt::ControlModifier) && isMouseAboveGraphDataArea(pos);
+	bool is_zoom_on_graph = (event->modifiers() == Qt::ControlModifier) && mouseAboveGraphDataAreaIndex(pos) >= 0;
 	static constexpr int ZOOM_STEP = 10;
 	if(is_zoom_on_slider) {
 		Graph *gr = graph();

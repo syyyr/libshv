@@ -298,16 +298,17 @@ QPoint Graph::dataToPos(int ch_ix, const Sample &s) const
 	return data2point? data2point(s, channelMetaTypeId(ch_ix)): QPoint();
 }
 
-void Graph::setCrossBarPos1(const QPoint &pos)
+void Graph::setCrossBarPos(int channel_ix, const QPoint &pos)
 {
-	m_state.crossBarPos1 = pos;
+	m_state.crossBarChannel = channel_ix;
+	m_state.crossBarPos = pos;
 }
-
+/*
 void Graph::setCrossBarPos2(const QPoint &pos)
 {
 	m_state.crossBarPos2 = pos;
 }
-
+*/
 void Graph::setCurrentTime(timemsec_t time)
 {
 	auto dirty_rect = [this](timemsec_t time) {
@@ -829,8 +830,8 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 			drawBackground(painter, i);
 			drawGrid(painter, i);
 			drawSamples(painter, i);
-			drawCrossBar(painter, i, m_state.crossBarPos1, m_effectiveStyle.colorCrossBar1());
-			drawCrossBar(painter, i, m_state.crossBarPos2, m_effectiveStyle.colorCrossBar2());
+			drawCrossBar(painter, i, m_effectiveStyle.colorCrossBar());
+			//drawCrossBar(painter, i, m_state.crossBarPos2, m_effectiveStyle.colorCrossBar2());
 			drawCurrentTime(painter, i, m_state.currentTime, m_effectiveStyle.colorCurrentTime());
 		}
 		if(dirty_rect.intersects(ch->verticalHeaderRect()))
@@ -1490,10 +1491,13 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	painter->restore();
 }
 
-void Graph::drawCrossBar(QPainter *painter, int channel_ix, const QPoint &crossbar_pos, const QColor &color)
+void Graph::drawCrossBar(QPainter *painter, int channel_ix, const QColor &color)
 {
-	if(crossbar_pos.isNull())
+	if(channel_ix != m_state.crossBarChannel)
 		return;
+	if(m_state.crossBarPos.isNull())
+		return;
+	auto crossbar_pos = m_state.crossBarPos;
 	const GraphChannel *ch = channelAt(channel_ix);
 	if(ch->graphDataGridRect().left() > crossbar_pos.x() || ch->graphDataGridRect().right() < crossbar_pos.y())
 		return;
@@ -1558,7 +1562,7 @@ void Graph::drawCrossBar(QPainter *painter, int channel_ix, const QPoint &crossb
 		/// draw point
 		painter->setPen(pen_solid);
 		painter->drawRect(focus_rect);
-
+		/*
 		//timemsec_t t = posToTime(crossbar_pos.x());
 		Sample s = posToData(crossbar_pos);
 		//shvDebug() << "time:" << s.time << "value:" << s.value.toDouble();
@@ -1566,6 +1570,7 @@ void Graph::drawCrossBar(QPainter *painter, int channel_ix, const QPoint &crossb
 		QString str = QStringLiteral("%1, %2").arg(QString::fromStdString(dt.toIsoString())).arg(s.value.toDouble());
 		//painter->setClipRect(m_layout.rect);
 		painter->drawText(crossbar_pos + QPoint{focus_rect.width(), -focus_rect.height()}, str);
+		*/
 
 	}
 	painter->restore();

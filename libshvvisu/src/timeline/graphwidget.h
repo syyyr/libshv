@@ -50,7 +50,7 @@ protected:
 	bool isMouseAboveRightMiniMapHandle(const QPoint &pos) const;
 	bool isMouseAboveMiniMapSlider(const QPoint &pos) const;
 	int isMouseAboveGraphVerticalHeader(const QPoint &pos) const;
-	int isMouseAboveGraphDataArea(const QPoint &pos) const;
+	int mouseAboveGraphDataAreaIndex(const QPoint &pos) const;
 protected:
 	Graph *m_graph = nullptr;
 	QSize m_graphPreferredSize;

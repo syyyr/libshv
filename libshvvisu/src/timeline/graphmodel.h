@@ -23,6 +23,8 @@ public:
 		QString shvPath;
 		QString name;
 		int metaTypeId = QMetaType::UnknownType;
+
+		//QString caption() const { return name.isEmpty()? shvPath: name; }
 	};
 
 	SHV_FIELD_BOOL_IMPL2(a, A, utoCreateChannels, true)

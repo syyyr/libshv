@@ -63,10 +63,11 @@ XRange GraphModel::xRange(int channel_ix) const
 YRange GraphModel::yRange(int channel_ix) const
 {
 	YRange ret;
+	auto mtid = channelInfo(channel_ix).metaTypeId;
 	for (int i = 0; i < count(channel_ix); ++i) {
 		QVariant v = sampleAt(channel_ix, i).value;
 		bool ok;
-		double d = valueToDouble(v, channelInfo(channel_ix).metaTypeId, &ok);
+		double d = valueToDouble(v, mtid, &ok);
 		if(ok) {
 			ret.min = qMin(ret.min, d);
 			ret.max = qMax(ret.max, d);
