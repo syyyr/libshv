@@ -127,6 +127,13 @@ void GraphWidget::keyReleaseEvent(QKeyEvent *event)
 	Super::keyReleaseEvent(event);
 }
 */
+
+bool GraphWidget::isMouseAboveMiniMap(const QPoint &mouse_pos) const
+{
+	const Graph *gr = graph();
+	return gr->miniMapRect().contains(mouse_pos);
+}
+
 bool GraphWidget::isMouseAboveMiniMapHandle(const QPoint &mouse_pos, bool left) const
 {
 	const Graph *gr = graph();
@@ -354,9 +361,9 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 	}
 	}
 	int ch_ix = mouseAboveGraphDataAreaIndex(pos);
-	if(ch_ix >= 0) {
+	if(ch_ix >= 0 && !isMouseAboveMiniMap(pos)) {
 		setCursor(Qt::BlankCursor);
-		gr->setCrossBarPos({ch_ix, pos});
+		gr->setCrossHairPos({ch_ix, pos});
 		timemsec_t t = gr->posToTime(pos.x());
 		Sample s = gr->timeToSample(ch_ix, t);
 		const GraphChannel *ch = gr->channelAt(ch_ix);
@@ -375,8 +382,8 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		}
 	}
 	else {
-		if(gr->crossBarPos().isValid()) {
-			gr->setCrossBarPos({});
+		if(gr->crossHairPos().isValid()) {
+			gr->setCrossHairPos({});
 			setCursor(Qt::ArrowCursor);
 			QToolTip::showText(QPoint(), QString());
 			update();

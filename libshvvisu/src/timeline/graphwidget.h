@@ -45,6 +45,7 @@ protected:
 	virtual void showGraphContextMenu(const QPoint &mouse_pos);
 	virtual void showChannelContextMenu(int channel_ix, const QPoint &mouse_pos);
 protected:
+	bool isMouseAboveMiniMap(const QPoint &mouse_pos) const;
 	bool isMouseAboveMiniMapHandle(const QPoint &mouse_pos, bool left) const;
 	bool isMouseAboveLeftMiniMapHandle(const QPoint &pos) const;
 	bool isMouseAboveRightMiniMapHandle(const QPoint &pos) const;

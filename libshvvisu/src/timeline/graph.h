@@ -138,18 +138,18 @@ public:
 	const QRect& cornerCellRect() const { return  m_layout.cornerCellRect; }
 	QRect southFloatingBarRect() const;
 	//bool isCrossBarVisible() const {return !m_state.crossBarPos.isNull() && m_state.crossBarChannel >= 0;}
-	struct SHVVISU_DECL_EXPORT CrossBarPos
+	struct SHVVISU_DECL_EXPORT CrossHairPos
 	{
 		int channelIndex = -1;
 		QPoint possition;
 
-		CrossBarPos() {}
-		CrossBarPos(int ch_ix, const QPoint &pos) : channelIndex(ch_ix), possition(pos) {}
+		CrossHairPos() {}
+		CrossHairPos(int ch_ix, const QPoint &pos) : channelIndex(ch_ix), possition(pos) {}
 
 		bool isValid() const { return channelIndex >= 0 && !possition.isNull(); }
 	};
-	CrossBarPos crossBarPos() const {return m_state.crossBarPos;}
-	void setCrossBarPos(const CrossBarPos &pos);
+	CrossHairPos crossHairPos() const {return m_state.crossHairPos;}
+	void setCrossHairPos(const CrossHairPos &pos);
 	//void setCrossBarPos2(const QPoint &pos);
 
 	void setCurrentTime(timemsec_t time);
@@ -221,7 +221,7 @@ protected:
 			, const DataRect &src_rect = DataRect()
 			, const QRect &dest_rect = QRect()
 			, const GraphChannel::Style &channel_style = GraphChannel::Style());
-	virtual void drawCrossBar(QPainter *painter, int channel_ix);
+	virtual void drawCrossHair(QPainter *painter, int channel_ix);
 	virtual void drawSelection(QPainter *painter);
 	virtual void drawCurrentTime(QPainter *painter, int channel_ix);
 	void drawXAxisTimeMark(QPainter *painter, time_t time, const QColor &color);
@@ -265,8 +265,7 @@ protected:
 	{
 		XRange xRange;
 		XRange xRangeZoom;
-		CrossBarPos crossBarPos;
-		//QPoint crossBarPos2;
+		CrossHairPos crossHairPos;
 		timemsec_t currentTime = 0;
 		QRect selectionRect;
 		XAxis xAxis;
