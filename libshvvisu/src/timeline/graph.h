@@ -15,6 +15,7 @@
 #include <QFont>
 #include <QPixmap>
 #include <QRect>
+#include <QTimeZone>
 
 #include <regex>
 
@@ -83,6 +84,8 @@ public:
 	void setModel(GraphModel *model);
 	GraphModel *model() const;
 
+	void setTimeZone(const QTimeZone &tz);
+
 	class SHVVISU_DECL_EXPORT ChannelFilter
 	{
 	public:
@@ -134,9 +137,19 @@ public:
 	const QRect& miniMapRect() const { return  m_layout.miniMapRect; }
 	const QRect& cornerCellRect() const { return  m_layout.cornerCellRect; }
 	QRect southFloatingBarRect() const;
-	bool isCrossBarVisible() const {return !m_state.crossBarPos.isNull() && m_state.crossBarChannel >= 0;}
-	//QPoint crossBarPos2() const {return m_state.crossBarPos2;}
-	void setCrossBarPos(int channel_ix, const QPoint &pos);
+	//bool isCrossBarVisible() const {return !m_state.crossBarPos.isNull() && m_state.crossBarChannel >= 0;}
+	struct SHVVISU_DECL_EXPORT CrossBarPos
+	{
+		int channelIndex = -1;
+		QPoint possition;
+
+		CrossBarPos() {}
+		CrossBarPos(int ch_ix, const QPoint &pos) : channelIndex(ch_ix), possition(pos) {}
+
+		bool isValid() const { return channelIndex >= 0 && !possition.isNull(); }
+	};
+	CrossBarPos crossBarPos() const {return m_state.crossBarPos;}
+	void setCrossBarPos(const CrossBarPos &pos);
 	//void setCrossBarPos2(const QPoint &pos);
 
 	void setCurrentTime(timemsec_t time);
@@ -182,6 +195,8 @@ public:
 	Q_SIGNAL void channelContextMenuRequest(int channel_index, const QPoint &mouse_pos);
 	void emitChannelContextMenuRequest(int channel_index, const QPoint &mouse_pos) { emit channelContextMenuRequest(channel_index, mouse_pos); }
 	Q_SIGNAL void graphContextMenuRequest(const QPoint &mouse_pos);
+
+	static QString rectToString(const QRect &r);
 protected:
 	void sanityXRangeZoom();
 	//void onModelXRangeChanged(const timeline::XRange &range);
@@ -189,6 +204,7 @@ protected:
 	void clearMiniMapCache();
 
 	void drawRectText(QPainter *painter, const QRect &rect, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
+	void drawCenteredRectText(QPainter *painter, const QPoint &top_center, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
 
 	QVector<int> visibleChannels();
 
@@ -205,9 +221,10 @@ protected:
 			, const DataRect &src_rect = DataRect()
 			, const QRect &dest_rect = QRect()
 			, const GraphChannel::Style &channel_style = GraphChannel::Style());
-	virtual void drawCrossBar(QPainter *painter, int channel_ix, const QColor &color);
+	virtual void drawCrossBar(QPainter *painter, int channel_ix);
 	virtual void drawSelection(QPainter *painter);
-	virtual void drawCurrentTime(QPainter *painter, int channel_ix, time_t time, const QColor &color);
+	virtual void drawCurrentTime(QPainter *painter, int channel_ix);
+	void drawXAxisTimeMark(QPainter *painter, time_t time, const QColor &color);
 
 	QVariantMap mergeMaps(const QVariantMap &base, const QVariantMap &overlay) const;
 	void makeXAxis();
@@ -218,6 +235,8 @@ protected:
 	void onButtonBoxClicked(int button_id);
 protected:
 	GraphModel *m_model = nullptr;
+
+	QTimeZone m_timeZone;
 
 	Style m_effectiveStyle;
 
@@ -232,6 +251,7 @@ protected:
 		enum class LabelFormat {MSec, Sec, Min, Hour, Day, Month, Year};
 		timemsec_t tickInterval = 0;
 		int subtickEvery = 1;
+		double tickLen = 0.15;
 		LabelFormat labelFormat = LabelFormat::MSec;
 
 		XAxis() {}
@@ -245,12 +265,11 @@ protected:
 	{
 		XRange xRange;
 		XRange xRangeZoom;
-		int crossBarChannel = -1;
-		QPoint crossBarPos;
+		CrossBarPos crossBarPos;
 		//QPoint crossBarPos2;
 		timemsec_t currentTime = 0;
 		QRect selectionRect;
-		XAxis axis;
+		XAxis xAxis;
 	} m_state;
 
 	struct

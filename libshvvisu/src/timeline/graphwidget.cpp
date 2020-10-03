@@ -42,6 +42,7 @@ void GraphWidget::setGraph(Graph *g)
 	graph()->setStyle(style);
 	update();
 	connect(m_graph, &Graph::presentationDirty, this, [this](const QRect &rect) {
+		//shvInfo() << "presentsation dirty:" << Graph::rectToString(rect);
 		if(rect.isEmpty())
 			update();
 		else
@@ -355,11 +356,12 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 	int ch_ix = mouseAboveGraphDataAreaIndex(pos);
 	if(ch_ix >= 0) {
 		setCursor(Qt::BlankCursor);
-		gr->setCrossBarPos(ch_ix, pos);
+		gr->setCrossBarPos({ch_ix, pos});
 		timemsec_t t = gr->posToTime(pos.x());
 		Sample s = gr->timeToSample(ch_ix, t);
+		const GraphChannel *ch = gr->channelAt(ch_ix);
+		//update(ch->graphAreaRect());
 		if(s.isValid()) {
-			const GraphChannel *ch = gr->channelAt(ch_ix);
 			shvDebug() << "time:" << s.time << "value:" << s.value.toDouble();
 			QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
 			QString text = QStringLiteral("%1\n%2: %3")
@@ -371,11 +373,10 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		else {
 			QToolTip::showText(QPoint(), QString());
 		}
-		update();
 	}
 	else {
-		if(gr->isCrossBarVisible()) {
-			gr->setCrossBarPos(-1, QPoint());
+		if(gr->crossBarPos().isValid()) {
+			gr->setCrossBarPos({});
 			setCursor(Qt::ArrowCursor);
 			QToolTip::showText(QPoint(), QString());
 			update();
