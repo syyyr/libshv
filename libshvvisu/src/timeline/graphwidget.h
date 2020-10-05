@@ -39,8 +39,11 @@ protected:
 	void mousePressEvent(QMouseEvent *event) override;
 	void mouseReleaseEvent(QMouseEvent *event) override;
 	void mouseMoveEvent(QMouseEvent *event) override;
+	void leaveEvent(QEvent *event) override;
 	void wheelEvent(QWheelEvent *event) override;
 	void contextMenuEvent(QContextMenuEvent *event) override;
+
+	void hideCrossHair();
 
 	virtual void showGraphContextMenu(const QPoint &mouse_pos);
 	virtual void showChannelContextMenu(int channel_ix, const QPoint &mouse_pos);

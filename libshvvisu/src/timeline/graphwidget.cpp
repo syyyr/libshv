@@ -382,12 +382,23 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		}
 	}
 	else {
-		if(gr->crossHairPos().isValid()) {
-			gr->setCrossHairPos({});
-			setCursor(Qt::ArrowCursor);
-			QToolTip::showText(QPoint(), QString());
-			update();
-		}
+		hideCrossHair();
+	}
+}
+
+void GraphWidget::leaveEvent(QEvent *)
+{
+	hideCrossHair();
+}
+
+void GraphWidget::hideCrossHair()
+{
+	Graph *gr = graph();
+	if(gr->crossHairPos().isValid()) {
+		gr->setCrossHairPos({});
+		setCursor(Qt::ArrowCursor);
+		QToolTip::showText(QPoint(), QString());
+		update();
 	}
 }
 
