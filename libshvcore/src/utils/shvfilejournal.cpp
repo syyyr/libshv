@@ -622,7 +622,7 @@ chainpack::RpcValue ShvFileJournal::getSnapShotMap()
 		if(e.value.isValid())
 			m[e.path] = e.value;
 	}
-	return  std::move(m);
+	return m;
 }
 
 chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext &journal_context, const ShvGetLogParams &params)

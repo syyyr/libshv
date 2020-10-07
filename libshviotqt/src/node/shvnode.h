@@ -11,6 +11,8 @@
 #include <QObject>
 #include <QMetaProperty>
 
+#include <cstddef>
+
 //namespace shv { namespace chainpack { class MetaMethod; }}
 //namespace shv { namespace chainpack { class MetaMethod; class RpcValue; class RpcMessage; class RpcRequest; }}
 namespace shv { namespace core { namespace utils { class ShvPath; }}}

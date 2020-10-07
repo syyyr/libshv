@@ -19,7 +19,7 @@ chainpack::RpcValue ShvLogTypeDescrField::toRpcValue() const
 		m["value"] = value;
 	if(!tags.empty())
 		m["tags"] = tags;
-	return std::move(m);
+	return m;
 }
 
 ShvLogTypeDescrField ShvLogTypeDescrField::fromRpcValue(const chainpack::RpcValue &v)
@@ -119,7 +119,7 @@ chainpack::RpcValue ShvLogTypeDescr::toRpcValue() const
 	if(!tags.empty()) {
 		m["tags"] = tags;
 	}
-	return std::move(m);
+	return m;
 }
 
 ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const chainpack::RpcValue &v)
@@ -148,7 +148,7 @@ chainpack::RpcValue ShvLogPathDescr::toRpcValue() const
 	m["type"] = typeName;
 	if(!description.empty())
 		m["description"] = description;
-	return std::move(m);
+	return m;
 }
 
 ShvLogPathDescr ShvLogPathDescr::fromRpcValue(const chainpack::RpcValue &v)
@@ -178,7 +178,7 @@ chainpack::RpcValue ShvLogTypeInfo::toRpcValue() const
 		mp[kv.first] = kv.second.toRpcValue();
 	}
 	m["paths"] = std::move(mp);
-	return std::move(m);
+	return m;
 }
 
 ShvLogTypeInfo ShvLogTypeInfo::fromRpcValue(const chainpack::RpcValue &v)

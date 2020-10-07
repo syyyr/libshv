@@ -40,7 +40,7 @@ chainpack::RpcValue ShvJournalEntry::toRpcValueMap() const
 		m[ShvLogHeader::Column::name(ShvLogHeader::Column::SampleType)] = ShvLogTypeDescr::sampleTypeToString(sampleType);
 	if(!userId.empty())
 		m[ShvLogHeader::Column::name(ShvLogHeader::Column::UserId)] = userId;
-	return std::move(m);
+	return m;
 }
 
 chainpack::DataChange ShvJournalEntry::toDataChange() const

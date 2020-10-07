@@ -317,7 +317,7 @@ chainpack::RpcValue ShvNode::lsAttributes(const StringViewList &shv_path, unsign
 	cp::RpcValue::List ret;
 	if(attributes & cp::MetaMethod::LsAttribute::HasChildren)
 		ret.push_back(hasChildren(shv_path));
-	return std::move(ret);
+	return ret;
 }
 
 int ShvNode::basicGrantToAccessLevel(const chainpack::RpcValue &acces_grant)
