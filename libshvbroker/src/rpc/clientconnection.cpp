@@ -255,64 +255,10 @@ string ClientConnection::toSubscribedPath(const CommonRpcClientHandle::Subscript
 			/// a/b/c/d --> a|/b/c/d
 			// cut service and slash
 			auto sv = StringView(signal_path).mid(spp_subs.service().length() + 1);
-			shvWarning() << spp_subs.shvPath();
-			shvWarning() << sv;
 			return ServiceProviderPath::makePath(spp_subs.type(), spp_subs.service(), sv);
 		}
 	}
 	return signal_path;
-#if 0
-	if(spp_subs.isServicePath()) {
-		if(spp_subs.isRelative()) {
-			if(spp_signal.isServicePath()) {
-				if(spp_signal.isRelative()) {
-					/// a:/mount_point/b/c/d --> a:/b/c/d
-					/// a@xy:/mount_point/b/c/d --> a@xy:/b/c/d
-					auto a = StringView(subs.subscribedPath);
-					auto b = StringView(signal_path).mid(subs.localPath.size());
-					return ShvPath::join(a, b);
-				}
-				else {
-					/// a|/b/c/d --> a|/b/c/d
-					if(debug && !String::startsWith(signal_path, subs.subscribedPath))
-						shvWarning() << "Signal and subscription do not match, signal:" << signal_path << "subscription:" << subs.subscribedPath;
-					return signal_path;
-				}
-			}
-			else {
-				if(spp_subs.isRelative()) {
-					/// a/b/c/d --> a:/b/c/d
-					// cut service and slash
-					auto sv = StringView(signal_path).mid(spp_subs.service().length() + 1);
-					// cut mount point rest and slash
-					const string mount_point = mountPoint();
-					StringView mount_point_rest = ShvPath::mid(mount_point, 1);
-					sv = sv.mid(mount_point_rest.length() + 1);
-					auto ret = ServiceProviderPath::makePath(spp_subs.type(), spp_subs.service(), sv);
-					return ret;
-				}
-				else {
-					/// a/b/c/d --> a|/b/c/d
-					// cut service and slash
-					auto sv = StringView(signal_path).mid(spp_subs.service().length() + 1);
-					shvWarning() << spp_subs.shvPath();
-					shvWarning() << sv;
-					return ServiceProviderPath::makePath(spp_subs.type(), spp_subs.service(), sv);
-				}
-			}
-		}
-		else { // spp2.isAbsolute()
-			/// only possibility is forward from master broker
-			/// a|/b/c/d --> a|/b/c/d
-			if(debug && !String::startsWith(signal_path, subs.subscribedPath))
-				shvWarning() << "Signal and subscription do not match, signal:" << signal_path << "subscription:" << subs.subscribedPath;
-			return signal_path;
-		}
-	}
-	else {
-		return signal_path;
-	}
-#endif
 }
 
 void ClientConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
@@ -335,12 +281,7 @@ void ClientConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType proto
 		shvError() << e.what();
 	}
 }
-/*
-bool ClientBrokerConnection::checkPassword(const chainpack::UserLogin &login)
-{
-	return BrokerApp::instance()->aclManager()->checkPassword(login, m_userLoginContext);
-}
-*/
+
 void ClientConnection::processLoginPhase()
 {
 	const shv::chainpack::RpcValue::Map &opts = connectionOptions();
@@ -382,15 +323,23 @@ void ClientConnection::propagateSubscriptionToSlaveBroker(const CommonRpcClientH
 {
 	if(!isSlaveBrokerConnection())
 		return;
+	//logSubscriptionsD() << "Try propagating client subscription for local path:" << subs.localPath << "method:" << subs.method;
 	const std::string &mount_point = mountPoint();
 	if(shv::core::utils::ShvPath(subs.localPath).startsWithPath(mount_point)) {
 		std::string slave_path = subs.localPath.substr(mount_point.size());
-		if(!slave_path.empty() && slave_path[0] == '/')
+		if(!slave_path.empty()) {
+			if(slave_path[0] != '/')
+				return;
 			slave_path = slave_path.substr(1);
+		}
+		logSubscriptionsD() << "Propagating client subscription for local path:" << subs.localPath << "method:" << subs.method << "to slave broker as:" << slave_path;
 		callMethodSubscribe(slave_path, subs.method);
 		return;
 	}
-	if(shv::core::utils::ShvPath(mount_point).startsWithPath(subs.localPath)) {
+	if(shv::core::utils::ShvPath(mount_point).startsWithPath(subs.localPath)
+			&& (mount_point.size() == subs.localPath.size() || mount_point[subs.localPath.size()] == '/')
+	) {
+		logSubscriptionsD() << "Propagating client subscription for local path:" << subs.localPath << "method:" << subs.method << "to slave broker as: ''";
 		callMethodSubscribe(std::string(), subs.method);
 		return;
 	}

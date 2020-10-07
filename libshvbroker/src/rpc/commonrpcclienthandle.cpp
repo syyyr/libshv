@@ -131,14 +131,17 @@ unsigned CommonRpcClientHandle::addSubscription(const CommonRpcClientHandle::Sub
 
 bool CommonRpcClientHandle::removeSubscription(const CommonRpcClientHandle::Subscription &subs)
 {
-	auto it = std::find(m_subscriptions.begin(), m_subscriptions.end(), subs
-						/*[subs](const CommonRpcClientHandle::Subscription &subs2) {
-		return subs.equalBySubscribedPath(subs2);
-	}*/);
+	logSubscriptionsD() << "request to remove subscription for connection id:" << connectionId()
+						<< "local path:" << subs.localPath
+						<< "subscribed path:" << subs.subscribedPath << "method:" << subs.method;
+	auto it = std::find(m_subscriptions.begin(), m_subscriptions.end(), subs);
 	if(it == m_subscriptions.end()) {
+		logSubscriptionsD() << "subscription not found";
 		return false;
 	}
 	else {
+		logSubscriptionsD() << "removed subscription local path:" << it->localPath
+							<< "subscribed path:" << it->subscribedPath << "method:" << it->method;
 		m_subscriptions.erase(it);
 		return true;
 	}

@@ -125,7 +125,7 @@ private:
 
 	void onRootNodeSendRpcMesage(const shv::chainpack::RpcMessage &msg);
 
-	void onClientMountedChanged(int client_id, const std::string &mount_point, bool is_mounted);
+	void onClientConnected(int client_id);
 
 	void sendNotifyToSubscribers(const std::string &shv_path, const std::string &method, const shv::chainpack::RpcValue &params);
 	bool sendNotifyToSubscribers(const shv::chainpack::RpcValue::MetaData &meta_data, const std::string &data);

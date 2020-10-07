@@ -97,7 +97,6 @@ BrokerAppNode::BrokerAppNode(shv::iotqt::node::ShvNode *parent)
 chainpack::RpcValue BrokerAppNode::callMethodRq(const chainpack::RpcRequest &rq)
 {
 	const cp::RpcValue::String &shv_path = rq.shvPath().toString();
-	//StringViewList shv_path = StringView(path).split('/');
 	if(shv_path.empty()) {
 		const cp::RpcValue::String method = rq.method().toString();
 		if(method == cp::Rpc::METH_SUBSCRIBE) {
