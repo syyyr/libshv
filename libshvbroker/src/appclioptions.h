@@ -19,6 +19,7 @@ public:
 	//~AppCliOptions() Q_DECL_OVERRIDE {}
 
 	CLIOPTION_GETTER_SETTER(std::string, l, setL, ocale)
+	CLIOPTION_GETTER_SETTER2(std::string, "app.brokerId", b, setB, rokerId)
 	CLIOPTION_GETTER_SETTER2(int, "server.port", s, setS, erverPort)
 #ifdef WITH_SHV_WEBSOCKETS
 	CLIOPTION_GETTER_SETTER2(int, "server.websocket.port", s, setS, erverWebsocketPort)
@@ -40,7 +41,7 @@ public:
 	CLIOPTION_GETTER_SETTER2(shv::chainpack::RpcValue, "masters.connections", m, setM, asterBrokersConnections)
 	CLIOPTION_GETTER_SETTER2(bool, "masters.enabled", is, set, MasterBrokersEnabled)
 
-	CLIOPTION_GETTER_SETTER2(std::string, "master.broker.device.id", m, setM, asterBrokerDeviceId)
+	//CLIOPTION_GETTER_SETTER2(std::string, "master.broker.device.id", m, setM, asterBrokerDeviceId)
 };
 
 }}

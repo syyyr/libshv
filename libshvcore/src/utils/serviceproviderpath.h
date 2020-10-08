@@ -21,12 +21,13 @@ public:
 	Type type() const { return m_type; }
 	const char* typeString() const;
 	StringView service() const { return m_service; }
+	StringView brokerId() const { return m_brokerId; }
 	StringView pathRest() const { return m_pathRest; }
 	std::string makePlainPath(const StringView &prefix) const;
 	std::string makeServicePath(const StringView &prefix) const;
 	const std::string& shvPath() const { return m_shvPath;}
 
-	static std::string makePath(Type type, const StringView &service, const StringView &path_rest);
+	static std::string makePath(Type type, const StringView &service, const StringView &server_id, const StringView &path_rest);
 	//static std::string joinPath(const StringView &a, const StringView &b);
 private:
 	static constexpr char END_MARK = ':';
@@ -40,6 +41,7 @@ private:
 	const std::string &m_shvPath;
 	Type m_type = Type::Plain;
 	StringView m_service;
+	StringView m_brokerId;
 	StringView m_pathRest;
 };
 

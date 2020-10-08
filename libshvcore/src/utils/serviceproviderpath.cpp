@@ -1,6 +1,8 @@
 #include "serviceproviderpath.h"
 #include "shvpath.h"
 
+using namespace std;
+
 namespace shv {
 namespace core {
 namespace utils {
@@ -10,13 +12,18 @@ ServiceProviderPath::ServiceProviderPath(const std::string &shv_path)
 {
 	auto ix = serviceProviderMarkIndex(shv_path);
 	if(ix > 0) {
-		m_service = StringView(shv_path, 0, ix);
-		m_pathRest = StringView(shv_path, ix + 3);
 		auto type_mark = shv_path[ix];
 		if(type_mark == ABSOLUTE_MARK)
 			m_type = Type::Absolute;
 		else if(type_mark == RELATIVE_MARK)
 			m_type = Type::Relative;
+		m_service = StringView(shv_path, 0, ix);
+		ssize_t bid_ix = m_service.lastIndexOf('@');
+		if(bid_ix > 0) {
+			m_brokerId = m_service.mid(bid_ix);
+			m_service = m_service.mid(0, bid_ix);
+		}
+		m_pathRest = StringView(shv_path, ix + typeMark(m_type).size() + 1);
 	}
 }
 
@@ -51,32 +58,21 @@ std::string ServiceProviderPath::makePlainPath(const StringView &prefix) const
 
 std::string ServiceProviderPath::makeServicePath(const StringView &prefix) const
 {
-	std::string ret = service().toString() + typeMark();
-	if(!prefix.empty())
-		ret += ShvPath::SHV_PATH_DELIM + prefix.toString();
-	ret += ShvPath::SHV_PATH_DELIM + pathRest().toString();
-	return ret;
+	string rest = prefix.empty()? pathRest().toString(): prefix.toString() + ShvPath::SHV_PATH_DELIM + pathRest().toString();
+	return makePath(type(), service(), brokerId(), rest);
 }
 
-std::string ServiceProviderPath::makePath(ServiceProviderPath::Type type, const StringView &service, const StringView &path_rest)
+std::string ServiceProviderPath::makePath(ServiceProviderPath::Type type, const StringView &service, const StringView &server_id, const StringView &path_rest)
 {
-	switch(type) {
-	case Type::Plain:
+	if(type == Type::Plain)
 		return StringViewList{service, path_rest}.join(ShvPath::SHV_PATH_DELIM);
-	default:
-		return StringViewList{service.toString() + typeMark(type), path_rest}.join(ShvPath::SHV_PATH_DELIM);
-	}
+	string srv = service.toString();
+	if(!server_id.empty())
+		srv += server_id.toString();
+	srv += typeMark(type);
+	return StringViewList{srv, path_rest}.join(ShvPath::SHV_PATH_DELIM);
 }
-/*
-std::string ServiceProviderPath::joinPath(const StringView &a, const StringView &b)
-{
-	if(a.empty())
-		return b.toString();
-	if(b.empty())
-		return b.toString();
-	return a.toString() + ShvPath::SHV_PATH_DELIM + b.toString();
-}
-*/
+
 size_t ServiceProviderPath::serviceProviderMarkIndex(const std::string &path)
 {
 	for (size_t ix = 1; ix + 2 < path.size(); ++ix) {

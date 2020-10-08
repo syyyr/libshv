@@ -248,14 +248,14 @@ string ClientConnection::toSubscribedPath(const CommonRpcClientHandle::Subscript
 			const string mount_point = mountPoint();
 			StringView mount_point_rest = ShvPath::mid(mount_point, 1);
 			sv = sv.mid(mount_point_rest.length() + 1);
-			auto ret = ServiceProviderPath::makePath(spp_subs.type(), spp_subs.service(), sv);
+			auto ret = ServiceProviderPath::makePath(spp_subs.type(), spp_subs.service(), spp_subs.brokerId(), sv);
 			return ret;
 		}
 		else if(spp_subs.isAbsolute()) {
 			/// a/b/c/d --> a|/b/c/d
 			// cut service and slash
 			auto sv = StringView(signal_path).mid(spp_subs.service().length() + 1);
-			return ServiceProviderPath::makePath(spp_subs.type(), spp_subs.service(), sv);
+			return ServiceProviderPath::makePath(spp_subs.type(), spp_subs.service(), spp_subs.brokerId(), sv);
 		}
 	}
 	return signal_path;

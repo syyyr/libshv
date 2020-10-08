@@ -7,6 +7,7 @@ namespace broker {
 
 AppCliOptions::AppCliOptions()
 {
+	addOption("app.brokerId").setType(cp::RpcValue::Type::String).setNames("--bid", "--broker-id").setComment("Broker ID string for service provider calls");
 	addOption("locale").setType(cp::RpcValue::Type::String).setNames("--locale").setComment("Application locale").setDefaultValue("system");
 	addOption("server.port").setType(cp::RpcValue::Type::Int).setNames("-p", "--server-port").setComment("Server port").setDefaultValue(3755);
 	//addOption("server.websocket.enabled").setType(cp::RpcValue::Type::Bool).setNames("--ws", "--server-ws-enabled").setComment("Server web socket enabled").setDefaultValue(3777);
@@ -34,7 +35,7 @@ AppCliOptions::AppCliOptions()
 	addOption("masters.connections").setType(cp::RpcValue::Type::Map).setComment("Can be used from config file only.");
 	addOption("masters.enabled").setType(cp::RpcValue::Type::Bool).setNames("--mce", "--master-connections-enabled").setComment("Enable slave connections to master broker.");
 
-	addOption("master.broker.device.id").setType(shv::chainpack::RpcValue::Type::String).setNames("--master-broker-device-id").setComment("Master broker device ID");
+	//addOption("master.broker.device.id").setType(shv::chainpack::RpcValue::Type::String).setNames("--master-broker-device-id").setComment("Master broker device ID");
 }
 
 }}

@@ -209,6 +209,7 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 	, m_cliOptions(cli_opts)
 {
 	//shvInfo() << "creating SHV BROKER application object ver." << versionString();
+	m_brokerId = m_cliOptions->brokerId();
 	std::srand(std::time(nullptr));
 #ifdef Q_OS_UNIX
 	//syslog (LOG_INFO, "Server started");
@@ -472,8 +473,23 @@ AclManager *BrokerApp::createAclManager()
 
 iotqt::node::ShvNode *BrokerApp::nodeForService(const core::utils::ServiceProviderPath &spp)
 {
-	if(spp.isServicePath())
-		return m_nodesTree->cd(spp.service().toString());
+	if(spp.isServicePath()) {
+		iotqt::node::ShvNode *ret = m_nodesTree->cd(spp.service().toString());
+		if(ret) {
+			core::StringView sid = spp.brokerId();
+			if(!sid.empty()) {
+				if(sid == "@") {
+					/// root broker
+					if(mainMasterBrokerConnection() != nullptr)
+						return nullptr;
+				}
+				else if(!(sid.mid(1) == brokerId())) {
+					return nullptr;
+				}
+			}
+			return ret;
+		}
+	}
 	return nullptr;
 }
 
@@ -800,7 +816,6 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 		rpc::CommonRpcClientHandle *connection_handle = client_connection;
 		if(connection_handle == nullptr)
 			connection_handle = master_broker_connection;
-		std::string shv_path = cp::RpcMessage::shvPath(meta).toString();
 		try {
 			if(connection_handle) {
 				if(client_connection) {
@@ -811,6 +826,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 						cp::RpcMessage::setAccessGrant(meta, cp::RpcValue());
 					}
 					/// check service provider call
+					std::string shv_path = cp::RpcMessage::shvPath(meta).toString();
 					using ServiceProviderPath = shv::core::utils::ServiceProviderPath;
 					ServiceProviderPath spp(shv_path);
 					if(spp.isServicePath()) {
@@ -848,6 +864,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 					}
 				}
 				const std::string &method = cp::RpcMessage::method(meta).toString();
+				const std::string &shv_path = cp::RpcMessage::shvPath(meta).toString();
 				cp::AccessGrant acg = accessGrantForRequest(connection_handle, shv_path, method, cp::RpcMessage::accessGrant(meta));
 				if(!acg.isValid()) {
 					if(master_broker_connection)
@@ -1129,11 +1146,11 @@ void BrokerApp::createMasterBrokerConnections()
 	for(const auto &kv : masters.toMap()) {
 		cp::RpcValue::Map opts = kv.second.toMap();
 
-		if (cliOptions()->masterBrokerDeviceId_isset()) {
-			cp::RpcValue::Map dev = opts.value("device").toMap();
-			dev.setValue("id", cliOptions()->masterBrokerDeviceId());
-			opts.setValue("device", dev);
-		}
+		//if (cliOptions()->masterBrokerDeviceId_isset()) {
+		//	cp::RpcValue::Map dev = opts.value("device").toMap();
+		//	dev.setValue("id", cliOptions()->masterBrokerDeviceId());
+		//	opts.setValue("device", dev);
+		//}
 		shvInfo() << "master broker device ID:" << opts.value("device").toPrettyString() << "for connection:" << kv.first;
 
 		if(opts.value("enabled").toBool() == false)

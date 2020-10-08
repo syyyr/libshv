@@ -95,9 +95,9 @@ public:
 
 	void sendNewLogEntryNotify(const std::string &msg);
 
+	const std::string& brokerId() const { return m_brokerId; }
 	iotqt::node::ShvNode * nodeForService(const shv::core::utils::ServiceProviderPath &spp);
 protected:
-
 	virtual void initDbConfigSqlConnection();
 	virtual AclManager* createAclManager();
 private:
@@ -105,8 +105,6 @@ private:
 	void reloadAcl();
 
 	void lazyInit();
-
-	QString serverProfile(); // unified access via Globals::serverProfile()
 
 	void startTcpServer();
 
@@ -138,6 +136,7 @@ private:
 	void propagateSubscriptionsToMasterBroker();
 protected:
 	AppCliOptions *m_cliOptions;
+	std::string m_brokerId;
 	rpc::BrokerTcpServer *m_tcpServer = nullptr;
 #ifdef WITH_SHV_WEBSOCKETS
 	rpc::WebSocketServer *m_webSocketServer = nullptr;
