@@ -350,7 +350,7 @@ void BrokerApp::startWebSocketServers()
 		SHV_SAFE_DELETE(m_webSocketServer);
 		int port = opts->serverWebsocketPort();
 		if(port > 0) {
-		m_webSocketServer = new rpc::WebSocketServer(QWebSocketServer::NonSecureMode, this);
+			m_webSocketServer = new rpc::WebSocketServer(QWebSocketServer::NonSecureMode, this);
 			if(!m_webSocketServer->start(port)) {
 				SHV_EXCEPTION("Cannot start WebSocket server!");
 			}
@@ -363,7 +363,7 @@ void BrokerApp::startWebSocketServers()
 		SHV_SAFE_DELETE(m_webSocketSslServer);
 		int port = opts->serverWebsocketSslPort();
 		if(port > 0) {
-		m_webSocketSslServer = new rpc::WebSocketServer(QWebSocketServer::SecureMode, this);
+			m_webSocketSslServer = new rpc::WebSocketServer(QWebSocketServer::SecureMode, this);
 			if(!m_webSocketSslServer->start(port)) {
 				SHV_EXCEPTION("Cannot start WebSocket SSL server!");
 			}
