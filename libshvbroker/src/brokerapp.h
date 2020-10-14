@@ -70,6 +70,7 @@ public:
 	bool rejectNotSubscribedSignal(int client_id, const std::string &path, const std::string &method);
 
 	rpc::BrokerTcpServer* tcpServer();
+	rpc::BrokerTcpServer* sslServer();
 	rpc::ClientConnection* clientById(int client_id);
 
 #ifdef WITH_SHV_WEBSOCKETS
@@ -106,7 +107,7 @@ private:
 
 	void lazyInit();
 
-	void startTcpServer();
+	void startTcpServers();
 
 	void startWebSocketServers();
 
@@ -138,6 +139,7 @@ protected:
 	AppCliOptions *m_cliOptions;
 	std::string m_brokerId;
 	rpc::BrokerTcpServer *m_tcpServer = nullptr;
+	rpc::BrokerTcpServer *m_sslServer = nullptr;
 #ifdef WITH_SHV_WEBSOCKETS
 	rpc::WebSocketServer *m_webSocketServer = nullptr;
 	rpc::WebSocketServer *m_webSocketSslServer = nullptr;
