@@ -40,9 +40,10 @@ static QSslConfiguration load_ssl_configuration()
 }
 
 BrokerTcpServer::BrokerTcpServer(SslMode ssl_mode, QObject *parent)
-	: Super(parent), m_sslMode(ssl_mode), m_sslConfiguration(load_ssl_configuration())
+	: Super(parent), m_sslMode(ssl_mode)
 {
-
+	if (m_sslMode == SslMode::SecureMode)
+		m_sslConfiguration = load_ssl_configuration();
 }
 
 ClientConnection *BrokerTcpServer::connectionById(int connection_id)

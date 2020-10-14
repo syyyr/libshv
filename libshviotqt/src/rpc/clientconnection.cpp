@@ -53,8 +53,13 @@ ClientConnection::SecurityType ClientConnection::securityTypeFromString(const st
 
 std::string ClientConnection::stringFromSecurityType(const SecurityType &security_type)
 {
-	return security_type == SecurityType::None ? "none" :
-			security_type == SecurityType::Ssl ? "ssl" : "";
+	switch (security_type) {
+	case SecurityType::None:
+		return "none";
+	case SecurityType::Ssl:
+		return "ssl";
+	}
+	return std::string();
 }
 
 ClientConnection::SecurityType ClientConnection::securityType() const
@@ -65,11 +70,6 @@ ClientConnection::SecurityType ClientConnection::securityType() const
 void ClientConnection::setSecurityType(const std::string &val)
 {
 	m_securityType = securityTypeFromString(val);
-}
-
-void ClientConnection::setSecurityType(std::string &&val)
-{
-	m_securityType = securityTypeFromString(std::move(val));
 }
 
 void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)

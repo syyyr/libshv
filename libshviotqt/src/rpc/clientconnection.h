@@ -41,7 +41,6 @@ public:
 
 	SecurityType securityType() const;
 	void setSecurityType(const std::string &val);
-	void setSecurityType(std::string &&val);
 
 public:
 	enum class State {NotConnected = 0, Connecting, SocketConnected, BrokerConnected, ConnectionError};
