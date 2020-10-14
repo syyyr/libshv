@@ -9,7 +9,8 @@ namespace chainpack {
 class SHVCHAINPACK_DECL_EXPORT IRpcConnection
 {
 public:
-	static constexpr int DEFAULT_RPC_BROKER_PORT = 3755;
+	static constexpr int DEFAULT_RPC_BROKER_PORT_SECURED = 37555;
+	static constexpr int DEFAULT_RPC_BROKER_PORT_NONSECURED = 3755;
 
 	using LoginType = UserLogin::LoginType;
 public:

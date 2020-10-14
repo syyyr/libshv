@@ -88,6 +88,23 @@ void TcpSocket::writeMessageEnd()
 	m_socket->flush();
 }
 
+//======================================================
+// SslSocket
+//======================================================
+SslSocket::SslSocket(QSslSocket *socket, QSslSocket::PeerVerifyMode peer_verify_mode, QObject *parent)
+	: Super(socket, parent), m_peerVerifyMode(peer_verify_mode)
+{
+	disconnect(m_socket, &QTcpSocket::connected, this, &Socket::connected);
+	connect(qobject_cast<QSslSocket *>(m_socket), &QSslSocket::encrypted, this, &Socket::connected);
+}
+
+void SslSocket::connectToHost(const QString &host_name, quint16 port)
+{
+	QSslSocket *ssl_socket = qobject_cast<QSslSocket *>(m_socket);
+	ssl_socket->setPeerVerifyMode(m_peerVerifyMode);
+	ssl_socket->connectToHostEncrypted(host_name, port);
+}
+
 } // namespace rpc
 } // namespace iotqt
 } // namespace shv

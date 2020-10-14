@@ -301,6 +301,13 @@ rpc::BrokerTcpServer *BrokerApp::tcpServer()
 	return m_tcpServer;
 }
 
+rpc::BrokerTcpServer *BrokerApp::sslServer()
+{
+	if(!m_sslServer)
+		SHV_EXCEPTION("SSL server is NULL!");
+	return m_sslServer;
+}
+
 rpc::ClientConnection *BrokerApp::clientById(int client_id)
 {
 	return clientConnectionById(client_id);
@@ -333,12 +340,36 @@ void BrokerApp::reloadAcl()
 	aclManager()->reload();
 }
 
-void BrokerApp::startTcpServer()
+void BrokerApp::startTcpServers()
 {
-	SHV_SAFE_DELETE(m_tcpServer);
-	m_tcpServer = new rpc::BrokerTcpServer(this);
-	if(!m_tcpServer->start(cliOptions()->serverPort())) {
-		SHV_EXCEPTION("Cannot start TCP server!");
+	const auto *opts = cliOptions();
+
+	if(opts->serverPort_isset()) {
+		SHV_SAFE_DELETE(m_tcpServer);
+		int port = opts->serverPort();
+		if(port > 0) {
+		m_tcpServer = new rpc::BrokerTcpServer(rpc::BrokerTcpServer::NonSecureMode, this);
+			if(!m_tcpServer->start(port)) {
+				SHV_EXCEPTION("Cannot start TCP server!");
+			}
+		}
+	}
+	else {
+		shvInfo() << "TCP server port is not set, it will not be started.";
+	}
+
+	if(opts->serverSslPort_isset()) {
+		SHV_SAFE_DELETE(m_sslServer);
+		int port = opts->serverSslPort();
+		if(port > 0) {
+		m_sslServer = new rpc::BrokerTcpServer(rpc::BrokerTcpServer::SecureMode, this);
+			if(!m_sslServer->start(port)) {
+				SHV_EXCEPTION("Cannot start SSL server!");
+			}
+		}
+	}
+	else {
+		shvInfo() << "SSL server port is not set, it will not be started.";
 	}
 }
 
@@ -380,8 +411,16 @@ void BrokerApp::startWebSocketServers()
 rpc::ClientConnection *BrokerApp::clientConnectionById(int connection_id)
 {
 	shvLogFuncFrame() << "conn id:" << connection_id;
-	rpc::ClientConnection *conn = tcpServer()->connectionById(connection_id);
-	shvDebug() << "tcp connection:" << conn;
+
+	rpc::ClientConnection *conn = nullptr;
+	if (m_sslServer) {
+		conn = sslServer()->connectionById(connection_id);
+		shvDebug() << "SSL connection:" << conn;
+	}
+	if (!conn && m_tcpServer) {
+		conn = tcpServer()->connectionById(connection_id);
+		shvDebug() << "TCP connection:" << conn;
+	}
 #ifdef WITH_SHV_WEBSOCKETS
 	if(!conn && m_webSocketServer) {
 		conn = m_webSocketServer->connectionById(connection_id);
@@ -401,6 +440,10 @@ std::vector<int> BrokerApp::clientConnectionIds()
 	if(m_tcpServer) {
 		ids = m_tcpServer->connectionIds();
 	}
+	if(m_sslServer) {
+		std::vector<int> ids2 = m_sslServer->connectionIds();
+		ids.insert( ids.end(), ids2.begin(), ids2.end() );
+	}
 #ifdef WITH_SHV_WEBSOCKETS
 	if(m_webSocketServer) {
 		std::vector<int> ids2 = m_webSocketServer->connectionIds();
@@ -418,7 +461,7 @@ void BrokerApp::lazyInit()
 {
 	initDbConfigSqlConnection();
 	reloadConfig();
-	startTcpServer();
+	startTcpServers();
 	startWebSocketServers();
 	createMasterBrokerConnections();
 }

@@ -4,6 +4,7 @@
 
 #include <QObject>
 #include <QAbstractSocket>
+#include <QSslSocket>
 
 class QTcpSocket;
 
@@ -66,8 +67,21 @@ public:
 	//bool flush() override;
 	void writeMessageBegin() override {}
 	void writeMessageEnd() override;
-private:
+protected:
 	QTcpSocket *m_socket = nullptr;
+};
+
+class SHVIOTQT_DECL_EXPORT SslSocket : public TcpSocket
+{
+	Q_OBJECT
+
+	using Super = TcpSocket;
+public:
+	SslSocket(QSslSocket *socket, QSslSocket::PeerVerifyMode peer_verify_mode = QSslSocket::AutoVerifyPeer, QObject *parent = nullptr);
+
+	void connectToHost(const QString &host_name, quint16 port) override;
+protected:
+	QSslSocket::PeerVerifyMode m_peerVerifyMode;
 };
 
 } // namespace rpc
