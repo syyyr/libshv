@@ -55,7 +55,7 @@ public:
 	void setLoginResult(const chainpack::UserLoginResult &result) override;
 private:
 	void onSocketConnectedChanged(bool is_connected);
-	void onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len) override;
+	void onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, std::string &&msg_data) override;
 	bool checkTunnelSecret(const std::string &s);
 
 	void processLoginPhase() override;

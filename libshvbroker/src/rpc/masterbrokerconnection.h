@@ -39,7 +39,7 @@ public:
 	void setOptions(const shv::chainpack::RpcValue &slave_broker_options);
 	shv::chainpack::RpcValue options() {return m_options;}
 protected:
-	void onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len) override;
+	void onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, std::string &&msg_data) override;
 protected:
 	std::string m_exportedShvPath;
 	shv::chainpack::RpcValue m_options;

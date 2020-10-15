@@ -123,15 +123,15 @@ std::string MasterBrokerConnection::localPathToMasterExported(const std::string 
 	return local_path;
 }
 
-void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
+void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, std::string &&msg_data)
 {
 	logRpcMsg() << RpcDriver::RCV_LOG_ARROW
 				<< "client id:" << connectionId()
 				<< "protocol_type:" << (int)protocol_type << shv::chainpack::Rpc::protocolTypeToString(protocol_type)
-				<< RpcDriver::dataToPrettyCpon(protocol_type, md, data, start_pos, data_len);
+				<< RpcDriver::dataToPrettyCpon(protocol_type, md, msg_data, 0, msg_data.size());
 	try {
 		if(isInitPhase()) {
-			Super::onRpcDataReceived(protocol_type, std::move(md), data, start_pos, data_len);
+			Super::onRpcDataReceived(protocol_type, std::move(md), std::move(msg_data));
 			return;
 		}
 		if(cp::RpcMessage::isRequest(md)) {
@@ -144,7 +144,6 @@ void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 				return;
 			}
 		}
-		std::string msg_data(data, start_pos, data_len);
 		BrokerApp::instance()->onRpcDataReceived(connectionId(), protocol_type, std::move(md), std::move(msg_data));
 	}
 	catch (std::exception &e) {

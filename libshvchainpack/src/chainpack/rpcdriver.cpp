@@ -210,16 +210,10 @@ void RpcDriver::onBytesRead(std::string &&bytes)
 	logRpcData().nospace() << __FUNCTION__ << " " << bytes.length() << " bytes of data read:\n" << shv::chainpack::Utils::hexDump(bytes);
 	m_readData += std::string(std::move(bytes));
 	while(true) {
-		int len = processReadData(m_readData);
-		logRpcData() << len << "bytes of" << m_readData.size() << "processed";
-		if(len > 0) {
-			//nWarning().nospace() << "1:" << m_readData.size() << " '" << m_readData << "'";
-			m_readData = m_readData.substr(len);
-			//nWarning().nospace() << "2:" << m_readData.size() << " '" << m_readData << "'";
-		}
-		else {
+		auto old_len = m_readData.size();
+		processReadData();
+		if(old_len == m_readData.size())
 			break;
-		}
 	}
 }
 
@@ -231,8 +225,9 @@ void RpcDriver::clearBuffers()
 	m_readData.clear();
 }
 
-int RpcDriver::processReadData(const std::string &read_data)
+void RpcDriver::processReadData()
 {
+	const std::string &read_data = m_readData;
 	logRpcData() << __FUNCTION__ << "data len:" << read_data.length();
 
 	using namespace shv::chainpack;
@@ -242,20 +237,20 @@ int RpcDriver::processReadData(const std::string &read_data)
 	bool ok;
 	uint64_t chunk_len = ChainPackReader::readUIntData(in, &ok);
 	if(!ok)
-		return 0;
+		return;
 
 	size_t read_len = (size_t)in.tellg() + chunk_len;
 
 	Rpc::ProtocolType protocol_type = (Rpc::ProtocolType)ChainPackReader::readUIntData(in, &ok);
 	if(!ok)
-		return 0;
+		return;
 
 	logRpcData() << "\t expected message data length:" << read_len << "length available:" << read_data.size();
 	if(read_len > read_data.length())
-		return 0;
+		return;
 
 	if(in.tellg() < 0)
-		return 0;
+		return;
 
 	if(m_protocolType == Rpc::ProtocolType::Invalid && protocol_type != Rpc::ProtocolType::Invalid) {
 		// if protocol version is not explicitly specified,
@@ -268,14 +263,15 @@ int RpcDriver::processReadData(const std::string &read_data)
 		size_t meta_data_end_pos = decodeMetaData(meta_data, protocol_type, read_data, in.tellg());
 		if(meta_data_end_pos > read_len)
 			throw std::runtime_error("Data header corrupted");
-		onRpcDataReceived(protocol_type, std::move(meta_data), read_data, meta_data_end_pos, read_len - meta_data_end_pos);
+		std::string msg_data = read_data.substr(meta_data_end_pos, read_len - meta_data_end_pos);
+		logRpcData() << read_len << "bytes of" << m_readData.size() << "processed";
+		m_readData = m_readData.substr(read_len);
+		onRpcDataReceived(protocol_type, std::move(meta_data), std::move(msg_data));
 	}
 	catch (std::exception &e) {
 		nError() << "processReadData error:" << e.what();
 		onProcessReadDataException(e);
 	}
-
-	return read_len;
 }
 
 size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolType protocol_type, const std::string &data, size_t start_pos)
@@ -441,11 +437,10 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolType protocol_type, const RpcVa
 	return os_packed_data.str();
 }
 
-void RpcDriver::onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
+void RpcDriver::onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::MetaData &&md, std::string &&data)
 {
 	//nInfo() << __FILE__ << RCV_LOG_ARROW << md.toStdString() << shv::chainpack::Utils::toHexElided(data, start_pos, 100);
-	(void)data_len;
-	RpcValue msg = decodeData(protocol_type, data, start_pos);
+	RpcValue msg = decodeData(protocol_type, data, 0);
 	if(msg.isValid()) {
 		msg.setMetaData(std::move(md));
 		logRpcRawMsg() << RCV_LOG_ARROW << msg.toPrettyString();

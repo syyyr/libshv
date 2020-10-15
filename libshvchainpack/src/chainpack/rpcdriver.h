@@ -76,14 +76,14 @@ protected:
 	/// add data to the output queue, send data from top of the queue
 	virtual void enqueueDataToSend(MessageData &&chunk_to_enqueue);
 
-	virtual void onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len);
+	virtual void onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::MetaData &&md, std::string &&data);
 	virtual void onRpcValueReceived(const RpcValue &msg);
 	virtual void onProcessReadDataException(std::exception &e) = 0;
 
 	void lockSendQueueGuard();
 	void unlockSendQueueGuard();
 private:
-	int processReadData(const std::string &read_data);
+	void processReadData();
 	void writeQueue();
 	int64_t writeBytes_helper(const std::string &str, size_t from, size_t length);
 private:
