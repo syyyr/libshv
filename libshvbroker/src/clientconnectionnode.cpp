@@ -58,7 +58,7 @@ shv::chainpack::RpcValue ClientConnectionNode::callMethod(const shv::iotqt::node
 				std::transform(roles.begin(), roles.end(), std::back_inserter(ret), [](const shv::broker::AclManager::FlattenRole &r) -> cp::RpcValue {
 					return r.name;
 				});
-				return std::move(ret);
+				return ret;
 			}
 			return nullptr;
 		}

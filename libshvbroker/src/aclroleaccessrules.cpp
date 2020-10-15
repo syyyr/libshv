@@ -20,7 +20,7 @@ RpcValue AclAccessRule::toRpcValue() const
 	RpcValue::Map m = grant.toRpcValueMap().toMap();
 	m["method"] = method;
 	m["pathPattern"] = pathPattern;
-	return std::move(m);
+	return m;
 }
 
 AclAccessRule AclAccessRule::fromRpcValue(const RpcValue &rpcval)
