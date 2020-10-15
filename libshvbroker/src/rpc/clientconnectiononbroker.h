@@ -15,14 +15,14 @@ namespace shv {
 namespace broker {
 namespace rpc {
 
-class ClientConnection : public shv::iotqt::rpc::ServerConnection, public CommonRpcClientHandle
+class ClientConnectionOnBroker : public shv::iotqt::rpc::ServerConnection, public CommonRpcClientHandle
 {
 	Q_OBJECT
 
 	using Super = shv::iotqt::rpc::ServerConnection;
 public:
-	ClientConnection(shv::iotqt::rpc::Socket* socket, QObject *parent = nullptr);
-	~ClientConnection() override;
+	ClientConnectionOnBroker(shv::iotqt::rpc::Socket* socket, QObject *parent = nullptr);
+	~ClientConnectionOnBroker() override;
 
 	int connectionId() const override {return Super::connectionId();}
 	bool isConnectedAndLoggedIn() const override {return Super::isConnectedAndLoggedIn();}

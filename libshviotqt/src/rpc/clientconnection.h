@@ -31,13 +31,11 @@ class SHVIOTQT_DECL_EXPORT ClientConnection : public SocketRpcConnection
 	SHV_FIELD_IMPL(std::string, p, P, assword)
 	SHV_FIELD_IMPL(shv::chainpack::IRpcConnection::LoginType, l, L, oginType)
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, c, C, onnectionOptions)
-
-	// securityType field
 public:
 	enum SecurityType { None = 0, Ssl = 1 };
 
 	static SecurityType securityTypeFromString(const std::string &val);
-	static std::string stringFromSecurityType(const SecurityType &security_type);
+	static std::string securityTypeToString(const SecurityType &security_type);
 
 	SecurityType securityType() const;
 	void setSecurityType(const std::string &val);

@@ -1,7 +1,7 @@
 #include "clientshvnode.h"
 #include "brokerapp.h"
 
-#include "rpc/clientconnection.h"
+#include "rpc/clientconnectiononbroker.h"
 #include "rpc/masterbrokerconnection.h"
 
 #include <shv/coreqt/log.h>
@@ -14,7 +14,7 @@ namespace broker {
 //======================================================================
 // ClientShvNode
 //======================================================================
-ClientShvNode::ClientShvNode(const std::string &node_id, rpc::ClientConnection *conn, ShvNode *parent)
+ClientShvNode::ClientShvNode(const std::string &node_id, rpc::ClientConnectionOnBroker *conn, ShvNode *parent)
 	: Super(node_id, parent)
 {
 	shvInfo() << "Creating client node:" << this << nodeId() << "connection:" << conn->connectionId();
@@ -26,14 +26,14 @@ ClientShvNode::~ClientShvNode()
 	shvInfo() << "Destroying client node:" << this << nodeId();// << "connections:" << [this]() { std::string s; for(auto c : m_connections) s += std::to_string(c->connectionId()) + " "; return s;}();
 }
 
-void ClientShvNode::addConnection(rpc::ClientConnection *conn)
+void ClientShvNode::addConnection(rpc::ClientConnectionOnBroker *conn)
 {
 	// prefere new connections, old one might not work
 	m_connections.insert(0, conn);
-	connect(conn, &rpc::ClientConnection::destroyed, [this, conn]() {removeConnection(conn);});
+	connect(conn, &rpc::ClientConnectionOnBroker::destroyed, [this, conn]() {removeConnection(conn);});
 }
 
-void ClientShvNode::removeConnection(rpc::ClientConnection *conn)
+void ClientShvNode::removeConnection(rpc::ClientConnectionOnBroker *conn)
 {
 	//shvWarning() << this << "removing connection:" << conn;
 	m_connections.removeOne(conn);
@@ -43,7 +43,7 @@ void ClientShvNode::removeConnection(rpc::ClientConnection *conn)
 
 void ClientShvNode::handleRawRpcRequest(shv::chainpack::RpcValue::MetaData &&meta, std::string &&data)
 {
-	rpc::ClientConnection *conn = connection();
+	rpc::ClientConnectionOnBroker *conn = connection();
 	if(conn)
 		conn->sendRawData(std::move(meta), std::move(data));
 }

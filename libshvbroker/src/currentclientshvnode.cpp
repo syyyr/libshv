@@ -1,6 +1,6 @@
 #include "currentclientshvnode.h"
 #include "brokerapp.h"
-#include "rpc/clientconnection.h"
+#include "rpc/clientconnectiononbroker.h"
 
 namespace cp = shv::chainpack;
 

@@ -8,7 +8,7 @@ namespace shv {
 namespace broker {
 namespace rpc {
 
-class ClientConnection;
+class ClientConnectionOnBroker;
 
 class BrokerTcpServer : public shv::iotqt::rpc::TcpServer
 {
@@ -20,7 +20,7 @@ public:
 public:
 	BrokerTcpServer(SslMode ssl_mode = SecureMode, QObject *parent = nullptr);
 
-	ClientConnection* connectionById(int connection_id);
+	ClientConnectionOnBroker* connectionById(int connection_id);
 protected:
 	void incomingConnection(qintptr socket_descriptor) override;
 	shv::iotqt::rpc::ServerConnection* createServerConnection(QTcpSocket *socket, QObject *parent) override;

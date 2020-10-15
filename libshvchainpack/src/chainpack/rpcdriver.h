@@ -80,8 +80,8 @@ protected:
 	virtual void onRpcValueReceived(const RpcValue &msg);
 	virtual void onProcessReadDataException(std::exception &e) = 0;
 
-	virtual void lockSendQueue() {}
-	virtual void unlockSendQueue() {}
+	void lockSendQueueGuard();
+	void unlockSendQueueGuard();
 private:
 	int processReadData(const std::string &read_data);
 	void writeQueue();

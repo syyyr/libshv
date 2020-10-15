@@ -48,10 +48,10 @@ ClientConnection::~ClientConnection()
 
 ClientConnection::SecurityType ClientConnection::securityTypeFromString(const std::string &val)
 {
-	return val == "ssl" ? SecurityType::Ssl : SecurityType::None;
+	return val == "none" ? SecurityType::None : SecurityType::Ssl;
 }
 
-std::string ClientConnection::stringFromSecurityType(const SecurityType &security_type)
+std::string ClientConnection::securityTypeToString(const SecurityType &security_type)
 {
 	switch (security_type) {
 	case SecurityType::None:
@@ -234,7 +234,7 @@ void ClientConnection::checkBrokerConnected()
 	//shvWarning() << "check: " << isSocketConnected();
 	if(!isBrokerConnected()) {
 		abortSocket();
-		shvInfo().nospace() << "connecting to: " << user() << "@" << host() << ":" << port();
+		shvInfo().nospace() << "connecting to: " << user() << "@" << host() << ":" << port() << "security:" << securityTypeToString(securityType());
 		m_connectionState = ConnectionState();
 		setState(State::Connecting);
 		connectToHost(QString::fromStdString(host()), port());

@@ -1,12 +1,12 @@
 HEADERS += \
     $$PWD/brokertcpserver.h \
-    $$PWD/clientconnection.h \
+    $$PWD/clientconnectiononbroker.h \
     $$PWD/commonrpcclienthandle.h \
     $$PWD/masterbrokerconnection.h
 
 SOURCES += \
     $$PWD/brokertcpserver.cpp \
-    $$PWD/clientconnection.cpp \
+    $$PWD/clientconnectiononbroker.cpp \
     $$PWD/commonrpcclienthandle.cpp \
     $$PWD/masterbrokerconnection.cpp
 

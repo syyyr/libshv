@@ -76,6 +76,9 @@ void SocketRpcConnection::setSocket(Socket *socket)
 		//shvWarning() << (peerAddress().toStdString() + ':' + std::to_string(peerPort()));
 		emit socketConnectedChanged(true);
 	});
+	connect(socket, &Socket::stateChanged, [this](QAbstractSocket::SocketState state) {
+		shvDebug() << this << "Socket state changed" << (int)state;
+	});
 	connect(socket, &Socket::disconnected, [this]() {
 		shvDebug() << this << "Socket disconnected!!!";
 		emit socketConnectedChanged(false);

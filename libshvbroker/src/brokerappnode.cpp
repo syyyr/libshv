@@ -1,7 +1,7 @@
 #include "brokerappnode.h"
 
 #include "brokerapp.h"
-#include "rpc/clientconnection.h"
+#include "rpc/clientconnectiononbroker.h"
 #include "rpc/masterbrokerconnection.h"
 
 #include <shv/chainpack/metamethod.h>

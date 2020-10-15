@@ -14,9 +14,7 @@
 
 #define logRpcRawMsg() nCMessage("RpcRawMsg")
 #define logRpcData() nCMessage("RpcData")
-//#define logRpcData() nInfo()
-
-//#define logRpcSyncCalls() nCDebug("RpcSyncCalls")
+#define logWriteQueue() nCMessage("WriteQueue")
 
 namespace shv {
 namespace chainpack {
@@ -119,9 +117,10 @@ RpcMessage RpcDriver::composeRpcMessage(RpcValue::MetaData &&meta_data, const st
 void RpcDriver::enqueueDataToSend(RpcDriver::MessageData &&chunk_to_enqueue)
 {
 	/// LOCK_FOR_SEND lock mutex here in the multithreaded environment
-	lockSendQueue();
+	lockSendQueueGuard();
 	if(!chunk_to_enqueue.empty()) {
 		m_sendQueue.push_back(std::move(chunk_to_enqueue));
+		logWriteQueue() << "===========> write chunk added, new queue len:" << m_sendQueue.size();
 	}
 	if(!isOpen()) {
 		nError() << "write data error, socket is not open!";
@@ -130,14 +129,14 @@ void RpcDriver::enqueueDataToSend(RpcDriver::MessageData &&chunk_to_enqueue)
 	//flush();
 	writeQueue();
 	/// UNLOCK_FOR_SEND unlock mutex here in the multithreaded environment
-	unlockSendQueue();
+	unlockSendQueueGuard();
 }
 
 void RpcDriver::writeQueue()
 {
 	if(m_sendQueue.empty())
 		return;
-	logRpcData() << "writePendingData(), queue len:" << m_sendQueue.size();
+	logWriteQueue() << "writeQueue(), queue len:" << m_sendQueue.size();
 	//static int hi_cnt = 0;
 	const MessageData &chunk = m_sendQueue[0];
 	//nInfo() << "M:" << chunk.metaData;
@@ -162,6 +161,7 @@ void RpcDriver::writeQueue()
 		}
 		{
 			auto len = writeBytes(protocol_type_data.data(), protocol_type_data.length());
+			logWriteQueue() << "\twrite header len:" << len;
 			if(len < 0)
 				SHVCHP_EXCEPTION("Write socket error!");
 			if(len != 1)
@@ -170,24 +170,33 @@ void RpcDriver::writeQueue()
 		m_topMessageDataHeaderWritten = true;
 	}
 	if(m_topMessageDataBytesWrittenSoFar < chunk.metaData.size()) {
-		m_topMessageDataBytesWrittenSoFar += writeBytes_helper(chunk.metaData, m_topMessageDataBytesWrittenSoFar, chunk.metaData.size() - m_topMessageDataBytesWrittenSoFar);
+		auto len = writeBytes_helper(chunk.metaData, m_topMessageDataBytesWrittenSoFar, chunk.metaData.size() - m_topMessageDataBytesWrittenSoFar);
+		logWriteQueue() << "\twrite metadata len:" << len;
+		m_topMessageDataBytesWrittenSoFar += len;
 	}
 	if(m_topMessageDataBytesWrittenSoFar >= chunk.metaData.size()) {
-		m_topMessageDataBytesWrittenSoFar += writeBytes_helper(chunk.data
-														 , m_topMessageDataBytesWrittenSoFar - chunk.metaData.size()
-														 , chunk.data.size() - (m_topMessageDataBytesWrittenSoFar - chunk.metaData.size()));
-		//logRpc() << "writeQueue - data len:" << chunk.length() << "start index:" << m_topChunkBytesWrittenSoFar << "bytes written:" << len << "remaining:" << (chunk.length() - m_topChunkBytesWrittenSoFar - len);
+		auto len = writeBytes_helper(chunk.data
+									 , m_topMessageDataBytesWrittenSoFar - chunk.metaData.size()
+									 , chunk.data.size() - (m_topMessageDataBytesWrittenSoFar - chunk.metaData.size()));
+		logWriteQueue() << "\twrite data len:" << len;
+		m_topMessageDataBytesWrittenSoFar += len;
 	}
+	logWriteQueue() << "----- bytes written so far:" << m_topMessageDataBytesWrittenSoFar
+					<< "remaining:" << (chunk.size() - m_topMessageDataBytesWrittenSoFar)
+					<< "queue len:" << m_sendQueue.size();
 	if(m_topMessageDataBytesWrittenSoFar == chunk.size()) {
-		writeMessageEnd();
 		m_topMessageDataHeaderWritten = false;
 		m_topMessageDataBytesWrittenSoFar = 0;
 		m_sendQueue.pop_front();
+		writeMessageEnd();
+		logWriteQueue() << "<=========== write chunk finished, new queue len:" << m_sendQueue.size();
 	}
 }
 
 int64_t RpcDriver::writeBytes_helper(const std::string &str, size_t from, size_t length)
 {
+	if(length == 0)
+		SHVCHP_EXCEPTION("Design error! Atempt to write empty buffer to the socket");
 	auto len = writeBytes(str.data() + from, length);
 	if(len < 0)
 		SHVCHP_EXCEPTION("Write socket error!");
@@ -453,6 +462,23 @@ void RpcDriver::onRpcValueReceived(const RpcValue &msg)
 	//logLongFiles() << "\t emitting message received:" << msg.dumpText();
 	if(m_messageReceivedCallback)
 		m_messageReceivedCallback(msg);
+}
+
+static int lock_cnt = 0;
+void RpcDriver::lockSendQueueGuard()
+{
+	lock_cnt++;
+	if(lock_cnt != 1) {
+		nWarning() << "Invalid write queue lock count:" << lock_cnt;
+	}
+}
+
+void RpcDriver::unlockSendQueueGuard()
+{
+	lock_cnt--;
+	if(lock_cnt != 0) {
+		nWarning() << "Invalid write queue unlock count:" << lock_cnt;
+	}
 }
 
 std::string RpcDriver::dataToPrettyCpon(Rpc::ProtocolType protocol_type, const RpcValue::MetaData &md, const std::string &data, size_t start_pos, size_t data_len)

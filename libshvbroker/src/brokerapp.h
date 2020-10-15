@@ -36,7 +36,7 @@ namespace shv { namespace chainpack { class RpcSignal; }}
 namespace shv {
 namespace broker {
 
-namespace rpc { class WebSocketServer; class BrokerTcpServer; class ClientConnection;  class MasterBrokerConnection; class CommonRpcClientHandle; }
+namespace rpc { class WebSocketServer; class BrokerTcpServer; class ClientConnectionOnBroker;  class MasterBrokerConnection; class CommonRpcClientHandle; }
 
 class AclManager;
 
@@ -71,7 +71,7 @@ public:
 
 	rpc::BrokerTcpServer* tcpServer();
 	rpc::BrokerTcpServer* sslServer();
-	rpc::ClientConnection* clientById(int client_id);
+	rpc::ClientConnectionOnBroker* clientById(int client_id);
 
 #ifdef WITH_SHV_WEBSOCKETS
 	rpc::WebSocketServer* webSocketServer();
@@ -111,7 +111,7 @@ private:
 
 	void startWebSocketServers();
 
-	rpc::ClientConnection* clientConnectionById(int connection_id);
+	rpc::ClientConnectionOnBroker* clientConnectionById(int connection_id);
 	std::vector<int> clientConnectionIds();
 
 	void createMasterBrokerConnections();

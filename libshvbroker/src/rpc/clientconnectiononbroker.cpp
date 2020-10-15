@@ -1,4 +1,4 @@
-#include "clientconnection.h"
+#include "clientconnectiononbroker.h"
 #include "masterbrokerconnection.h"
 
 #include "../brokerapp.h"
@@ -29,19 +29,19 @@ namespace shv {
 namespace broker {
 namespace rpc {
 
-ClientConnection::ClientConnection(shv::iotqt::rpc::Socket *socket, QObject *parent)
+ClientConnectionOnBroker::ClientConnectionOnBroker(shv::iotqt::rpc::Socket *socket, QObject *parent)
 	: Super(socket, parent)
 {
-	connect(this, &ClientConnection::socketConnectedChanged, this, &ClientConnection::onSocketConnectedChanged);
+	connect(this, &ClientConnectionOnBroker::socketConnectedChanged, this, &ClientConnectionOnBroker::onSocketConnectedChanged);
 }
 
-ClientConnection::~ClientConnection()
+ClientConnectionOnBroker::~ClientConnectionOnBroker()
 {
 	//rpc::ServerConnectionshvWarning() << "destroying" << this;
 	//shvWarning() << __FUNCTION__;
 }
 
-void ClientConnection::onSocketConnectedChanged(bool is_connected)
+void ClientConnectionOnBroker::onSocketConnectedChanged(bool is_connected)
 {
 	if(!is_connected) {
 		shvInfo() << "Socket disconnected, deleting connection:" << connectionId();
@@ -49,27 +49,27 @@ void ClientConnection::onSocketConnectedChanged(bool is_connected)
 	}
 }
 
-shv::chainpack::RpcValue ClientConnection::tunnelOptions() const
+shv::chainpack::RpcValue ClientConnectionOnBroker::tunnelOptions() const
 {
 	return connectionOptions().value(cp::Rpc::KEY_TUNNEL);
 }
 
-shv::chainpack::RpcValue ClientConnection::deviceOptions() const
+shv::chainpack::RpcValue ClientConnectionOnBroker::deviceOptions() const
 {
 	return connectionOptions().value(cp::Rpc::KEY_DEVICE);
 }
 
-shv::chainpack::RpcValue ClientConnection::deviceId() const
+shv::chainpack::RpcValue ClientConnectionOnBroker::deviceId() const
 {
 	return deviceOptions().toMap().value(cp::Rpc::KEY_DEVICE_ID);
 }
 
-void ClientConnection::setMountPoint(const std::string &mp)
+void ClientConnectionOnBroker::setMountPoint(const std::string &mp)
 {
 	m_mountPoint = mp;
 }
 
-int ClientConnection::idleTime() const
+int ClientConnectionOnBroker::idleTime() const
 {
 	if(!m_idleWatchDogTimer || !m_idleWatchDogTimer->isActive())
 		return -1;
@@ -79,14 +79,14 @@ int ClientConnection::idleTime() const
 	return t;
 }
 
-int ClientConnection::idleTimeMax() const
+int ClientConnectionOnBroker::idleTimeMax() const
 {
 	if(!m_idleWatchDogTimer || !m_idleWatchDogTimer->isActive())
 		return -1;
 	return  m_idleWatchDogTimer->interval();
 }
 
-std::string ClientConnection::resolveLocalPath(const shv::core::utils::ServiceProviderPath &spp, iotqt::node::ShvNode **pnd)
+std::string ClientConnectionOnBroker::resolveLocalPath(const shv::core::utils::ServiceProviderPath &spp, iotqt::node::ShvNode **pnd)
 {
 	BrokerApp *app = BrokerApp::instance();
 	string local_path;
@@ -136,7 +136,7 @@ std::string ClientConnection::resolveLocalPath(const shv::core::utils::ServicePr
 	return local_path;
 }
 
-void ClientConnection::setIdleWatchDogTimeOut(int sec)
+void ClientConnectionOnBroker::setIdleWatchDogTimeOut(int sec)
 {
 	if(sec == 0) {
 		static constexpr int MAX_IDLE_TIME_SEC = 10 * 60 * 60;
@@ -156,7 +156,7 @@ void ClientConnection::setIdleWatchDogTimeOut(int sec)
 	m_idleWatchDogTimer->start(sec * 1000);
 }
 
-void ClientConnection::sendMessage(const shv::chainpack::RpcMessage &rpc_msg)
+void ClientConnectionOnBroker::sendMessage(const shv::chainpack::RpcMessage &rpc_msg)
 {
 	logRpcMsg() << SND_LOG_ARROW
 				<< "client id:" << connectionId()
@@ -165,7 +165,7 @@ void ClientConnection::sendMessage(const shv::chainpack::RpcMessage &rpc_msg)
 	Super::sendMessage(rpc_msg);
 }
 
-void ClientConnection::sendRawData(const shv::chainpack::RpcValue::MetaData &meta_data, std::string &&data)
+void ClientConnectionOnBroker::sendRawData(const shv::chainpack::RpcValue::MetaData &meta_data, std::string &&data)
 {
 	logRpcMsg() << SND_LOG_ARROW
 				<< "client id:" << connectionId()
@@ -174,7 +174,7 @@ void ClientConnection::sendRawData(const shv::chainpack::RpcValue::MetaData &met
 	Super::sendRawData(meta_data, std::move(data));
 }
 
-ClientConnection::Subscription ClientConnection::createSubscription(const std::string &shv_path, const std::string &method)
+ClientConnectionOnBroker::Subscription ClientConnectionOnBroker::createSubscription(const std::string &shv_path, const std::string &method)
 {
 	logSubscriptionsD() << "Create client subscription for path:" << shv_path << "method:" << method;
 	using ServiceProviderPath = shv::core::utils::ServiceProviderPath;
@@ -218,7 +218,7 @@ ClientConnection::Subscription ClientConnection::createSubscription(const std::s
 	return Subscription(local_path, shv_path, method);
 }
 
-string ClientConnection::toSubscribedPath(const CommonRpcClientHandle::Subscription &subs, const string &signal_path) const
+string ClientConnectionOnBroker::toSubscribedPath(const CommonRpcClientHandle::Subscription &subs, const string &signal_path) const
 {
 	using ShvPath = shv::core::utils::ShvPath;
 	//using String = shv::core::String;
@@ -261,7 +261,7 @@ string ClientConnection::toSubscribedPath(const CommonRpcClientHandle::Subscript
 	return signal_path;
 }
 
-void ClientConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
+void ClientConnectionOnBroker::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
 {
 	logRpcMsg() << RCV_LOG_ARROW
 				<< "client id:" << connectionId()
@@ -282,7 +282,7 @@ void ClientConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType proto
 	}
 }
 
-void ClientConnection::processLoginPhase()
+void ClientConnectionOnBroker::processLoginPhase()
 {
 	const shv::chainpack::RpcValue::Map &opts = connectionOptions();
 	//shvWarning() << connectionId() << cp::RpcValue(opts).toCpon();
@@ -300,7 +300,7 @@ void ClientConnection::processLoginPhase()
 	setLoginResult(result);
 }
 
-void ClientConnection::setLoginResult(const chainpack::UserLoginResult &result)
+void ClientConnectionOnBroker::setLoginResult(const chainpack::UserLoginResult &result)
 {
 	auto login_result = result;
 	login_result.clientId = connectionId();
@@ -310,16 +310,16 @@ void ClientConnection::setLoginResult(const chainpack::UserLoginResult &result)
 	}
 	else {
 		// take some time to send error message and close connection
-		QTimer::singleShot(1000, this, &ClientConnection::close);
+		QTimer::singleShot(1000, this, &ClientConnectionOnBroker::close);
 	}
 }
 
-bool ClientConnection::checkTunnelSecret(const std::string &s)
+bool ClientConnectionOnBroker::checkTunnelSecret(const std::string &s)
 {
 	return BrokerApp::instance()->checkTunnelSecret(s);
 }
 
-void ClientConnection::propagateSubscriptionToSlaveBroker(const CommonRpcClientHandle::Subscription &subs)
+void ClientConnectionOnBroker::propagateSubscriptionToSlaveBroker(const CommonRpcClientHandle::Subscription &subs)
 {
 	if(!isSlaveBrokerConnection())
 		return;
