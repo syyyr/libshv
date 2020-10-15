@@ -96,7 +96,7 @@ chainpack::RpcValue EtcAclRootNode::callMethod(const iotqt::node::ShvNode::Strin
 			cp::RpcValue::List ret;
 			for(auto *nd : findChildren<BrokerAclNode*>(QString(), Qt::FindDirectChildrenOnly))
 				ret.push_back(nd->saveConfigFile());
-			return std::move(ret);
+			return ret;
 		}
 	}
 	return Super::callMethod(shv_path, method, params);
