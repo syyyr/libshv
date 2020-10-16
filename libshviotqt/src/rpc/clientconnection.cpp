@@ -48,7 +48,7 @@ ClientConnection::~ClientConnection()
 
 ClientConnection::SecurityType ClientConnection::securityTypeFromString(const std::string &val)
 {
-	return val == "none" ? SecurityType::None : SecurityType::Ssl;
+	return val == "ssl" ? SecurityType::Ssl : SecurityType::None;
 }
 
 std::string ClientConnection::securityTypeToString(const SecurityType &security_type)

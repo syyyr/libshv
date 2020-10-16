@@ -18,7 +18,7 @@ class BrokerTcpServer : public shv::iotqt::rpc::TcpServer
 public:
 	enum SslMode { SecureMode = 0, NonSecureMode };
 public:
-	BrokerTcpServer(SslMode ssl_mode = SecureMode, QObject *parent = nullptr);
+	BrokerTcpServer(SslMode ssl_mode, QObject *parent = nullptr);
 
 	ClientConnectionOnBroker* connectionById(int connection_id);
 protected:
