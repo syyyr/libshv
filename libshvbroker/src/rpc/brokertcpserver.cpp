@@ -69,7 +69,11 @@ void BrokerTcpServer::incomingConnection(qintptr socket_descriptor)
 			connect(socket, &QSslSocket::stateChanged, [this](QAbstractSocket::SocketState state) {
 				shvDebug() << this << "Socket state changed:" << state;
 			});
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+			connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, [socket](QAbstractSocket::SocketError socket_error) {
+#else
 			connect(socket, &QAbstractSocket::errorOccurred, this, [socket](QAbstractSocket::SocketError socket_error) {
+#endif
 				shvWarning() << "Socket error:" << socket_error << socket->errorString();
 			});
 			connect(socket, QOverload<const QList<QSslError> &>::of(&QSslSocket::sslErrors), [](const QList<QSslError> &errors){
