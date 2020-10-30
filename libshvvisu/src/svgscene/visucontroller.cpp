@@ -49,5 +49,12 @@ QString VisuController::graphicsItemAttributeValue(const QGraphicsItem *it, cons
 	return attrs.value(attr_name, default_value);
 }
 
+QString VisuController::graphicsItemCssAttributeValue(const QGraphicsItem *it, const QString &attr_name, const QString &default_value)
+{
+	svgscene::CssAttributes attrs = qvariant_cast<svgscene::CssAttributes>(it->data(Types::DataKey::CssAttributes));
+	return attrs.value(attr_name, default_value);
+}
+
+
 }}}
 
