@@ -913,8 +913,9 @@ SaxHandler::~SaxHandler()
 {
 }
 
-void SaxHandler::load(QXmlStreamReader *data)
+void SaxHandler::load(QXmlStreamReader *data, bool skip_definitions)
 {
+	m_skipDefinitions = skip_definitions;
 	m_xml = data;
 	m_defaultPen = QPen(Qt::black, 1, Qt::SolidLine, Qt::FlatCap, Qt::SvgMiterJoin);
 	m_defaultPen.setMiterLimit(4);
@@ -931,6 +932,7 @@ void SaxHandler::parse()
 {
 	m_xml->setNamespaceProcessing(false);
 	bool done = false;
+
 	while (!m_xml->atEnd() && !done) {
 		switch (m_xml->readNext()) {
 		case QXmlStreamReader::StartElement:
@@ -1123,6 +1125,11 @@ bool SaxHandler::startElement()
 			addItem(item);
 			return true;
 		}
+		else if (el.name == QLatin1String("defs")) {
+			if (m_skipDefinitions)
+				m_xml->skipCurrentElement();
+		}
+
 		else {
 			logSvgW() << "unsupported element:" << el.name;
 		}
@@ -1174,6 +1181,7 @@ void SaxHandler::setXmlAttributes(QGraphicsItem *git, const SaxHandler::SvgEleme
 			attrs[it.key()] = it.value();
 	}
 	git->setData(Types::DataKey::XmlAttributes, QVariant::fromValue(attrs));
+	git->setData(Types::DataKey::CssAttributes, QVariant::fromValue(el.styleAttributes));
 }
 
 void SaxHandler::setTransform(QGraphicsItem *it, const QString &str_val)
