@@ -52,7 +52,8 @@ std::string ServiceProviderPath::makePlainPath(const StringView &prefix) const
 	std::string ret = service().toString();
 	if(!prefix.empty())
 		ret += ShvPath::SHV_PATH_DELIM + prefix.toString();
-	ret += ShvPath::SHV_PATH_DELIM + pathRest().toString();
+	if(!pathRest().empty())
+		ret += ShvPath::SHV_PATH_DELIM + pathRest().toString();
 	return ret;
 }
 
@@ -75,8 +76,8 @@ std::string ServiceProviderPath::makePath(ServiceProviderPath::Type type, const 
 
 size_t ServiceProviderPath::serviceProviderMarkIndex(const std::string &path)
 {
-	for (size_t ix = 1; ix + 2 < path.size(); ++ix) {
-		if(path[ix + 1] == END_MARK && path[ix + 2] == ShvPath::SHV_PATH_DELIM) {
+	for (size_t ix = 1; ix + 1 < path.size(); ++ix) {
+		if(path[ix + 1] == END_MARK && (path.size() == ix + 2 || path[ix + 2] == ShvPath::SHV_PATH_DELIM)) {
 			if(path[ix] == RELATIVE_MARK || path[ix] == ABSOLUTE_MARK)
 				return ix;
 		}
