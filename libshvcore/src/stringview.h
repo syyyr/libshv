@@ -32,6 +32,7 @@ public:
 	size_t end() const {return m_start + m_length;}
 	void setStart(size_t ix) {m_start = ix;}
 	size_t length() const {return m_length;}
+	size_t size() const {return m_length;}
 	//ssize_t length() const {return static_cast<ssize_t>(m_length);}
 	//size_t space() const;
 	bool empty() const {return length() == 0;}

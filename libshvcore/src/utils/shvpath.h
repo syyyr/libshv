@@ -23,8 +23,8 @@ public:
 	ShvPath(const shv::core::String &o) : Super(o) {}
 	using Super::Super;
 
-	bool startsWithPath(const std::string &path, size_t *pos = nullptr) const;
-	static bool startsWithPath(const std::string &str, const std::string &path, size_t *pos = nullptr);
+	bool startsWithPath(const StringView &path, size_t *pos = nullptr) const;
+	static bool startsWithPath(const StringView &str, const StringView &path, size_t *pos = nullptr);
 
 	//static shv::core::StringViewList cleanPath(const shv::core::StringViewList &path_list);
 	//static std::string cleanPath(const std::string &path);

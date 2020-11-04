@@ -21,9 +21,7 @@ public:
 		Subscription() {}
 		Subscription(const std::string &local_path, const std::string &subscribed_path, const std::string &m);
 
-		//bool operator<(const Subscription &o) const;
-		bool operator==(const Subscription &o) const { return equalBySubscribedPath(o); }
-		bool equalBySubscribedPath(const CommonRpcClientHandle::Subscription &o) const;
+		bool cmpSubscribed(const CommonRpcClientHandle::Subscription &o) const;
 		bool match(const shv::core::StringView &shv_path, const shv::core::StringView &shv_method) const;
 		std::string toString() const {return localPath + ':' + method;}
 	};

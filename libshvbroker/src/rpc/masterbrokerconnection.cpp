@@ -52,7 +52,7 @@ void MasterBrokerConnection::setOptions(const shv::chainpack::RpcValue &slave_br
 			device_opts.setDeviceIdFile(device.value("idFile").toString());
 		if(device.count("mountPoint") == 1)
 			device_opts.setMountPoint(device.value("mountPoint").toString());
-
+		//device_opts.dump();
 		setCliOptions(&device_opts);
 		{
 			chainpack::RpcValue::Map opts = connectionOptions().toMap();
@@ -88,7 +88,7 @@ CommonRpcClientHandle::Subscription MasterBrokerConnection::createSubscription(c
 	ServiceProviderPath spp(shv_path);
 	if(spp.isServicePath())
 		SHV_EXCEPTION("This could never happen by SHV design logic, master broker tries to subscribe service provided path: "  + shv_path);
-	return Subscription(masterExportedToLocalPath(shv_path), std::string(), method);
+	return Subscription(masterExportedToLocalPath(shv_path), shv_path, method);
 }
 
 std::string MasterBrokerConnection::toSubscribedPath(const Subscription &subs, const std::string &signal_path) const
@@ -108,7 +108,8 @@ std::string MasterBrokerConnection::masterExportedToLocalPath(const std::string 
 {
 	if(m_exportedShvPath.empty())
 		return master_path;
-	if(shv::core::utils::ShvPath::startsWithPath(master_path, cp::Rpc::DIR_BROKER))
+	static const std::string DIR_BROKER = cp::Rpc::DIR_BROKER;
+	if(shv::core::utils::ShvPath::startsWithPath(master_path, DIR_BROKER))
 		return master_path;
 	return shv::core::utils::ShvPath::join(m_exportedShvPath,  master_path);
 }

@@ -62,8 +62,9 @@ bool CommonRpcClientHandle::Subscription::operator<(const CommonRpcClientHandle:
 }
 */
 
-bool CommonRpcClientHandle::Subscription::equalBySubscribedPath(const CommonRpcClientHandle::Subscription &o) const
+bool CommonRpcClientHandle::Subscription::cmpSubscribed(const CommonRpcClientHandle::Subscription &o) const
 {
+	// 2 subscribed paths can have same localPath with service providers
 	int i = subscribedPath.compare(o.subscribedPath);
 	if(i == 0)
 		return method == o.method;
@@ -73,15 +74,17 @@ bool CommonRpcClientHandle::Subscription::equalBySubscribedPath(const CommonRpcC
 bool CommonRpcClientHandle::Subscription::match(const shv::core::StringView &shv_path, const shv::core::StringView &shv_method) const
 {
 	//shvInfo() << shv_path << "starts with:" << localPath << "==" << shv_path.startsWith(localPath);// << "==" << true;
-	bool path_match = false;
+	bool path_match = shv::core::utils::ShvPath::startsWithPath(shv_path, localPath);
+	/*
 	if(localPath.empty()) {
 		path_match = true;
 	}
 	else if(shv_path.startsWith(localPath)) {
 		path_match = (shv_path.length() == localPath.length())
-				|| (localPath[localPath.length() - 1] == '/')
-				|| (shv_path[localPath.length()] == '/');
+				|| (shv_path[localPath.length()] == '/') // aa/bb matches aa/bb/cc but does not match aa/bbcc
+				|| (localPath[localPath.length() - 1] == '/'); // aa/bb/ matches aa/bb/cc, localPath should not end with '/' but for case
 	}
+	*/
 	if(path_match)
 		return (method.empty() || shv_method == method);
 	return false;
@@ -117,13 +120,18 @@ unsigned CommonRpcClientHandle::addSubscription(const CommonRpcClientHandle::Sub
 	logSubscriptionsD() << "adding subscription for connection id:" << connectionId()
 						<< "local path:" << subs.localPath
 						<< "subscribed path:" << subs.subscribedPath << "method:" << subs.method;
-	auto it = std::find(m_subscriptions.begin(), m_subscriptions.end(), subs);
+	//auto it = std::find(m_subscriptions.begin(), m_subscriptions.end(), subs);
+	auto it = std::find_if(m_subscriptions.begin(), m_subscriptions.end(),
+					 [&subs](const auto& s) { return subs.cmpSubscribed(s); });
+
 	if(it == m_subscriptions.end()) {
+		logSubscriptionsD() << "new subscription";
 		m_subscriptions.push_back(subs);
 		//std::sort(m_subscriptions.begin(), m_subscriptions.end());
 		return m_subscriptions.size() - 1;
 	}
 	else {
+		logSubscriptionsD() << "subscription exists:" << "subscribed path:" << it->subscribedPath << "method:" << it->method;
 		*it = subs;
 		return (it - m_subscriptions.begin());
 	}
@@ -134,7 +142,9 @@ bool CommonRpcClientHandle::removeSubscription(const CommonRpcClientHandle::Subs
 	logSubscriptionsD() << "request to remove subscription for connection id:" << connectionId()
 						<< "local path:" << subs.localPath
 						<< "subscribed path:" << subs.subscribedPath << "method:" << subs.method;
-	auto it = std::find(m_subscriptions.begin(), m_subscriptions.end(), subs);
+	//auto it = std::find(m_subscriptions.begin(), m_subscriptions.end(), subs);
+	auto it = std::find_if(m_subscriptions.begin(), m_subscriptions.end(),
+					 [&subs](const auto& s) { return subs.cmpSubscribed(s); });
 	if(it == m_subscriptions.end()) {
 		logSubscriptionsD() << "subscription not found";
 		return false;

@@ -12,12 +12,12 @@ namespace utils {
 
 const char ShvPath::SHV_PATH_METHOD_DELIM = ':';
 
-bool ShvPath::startsWithPath(const std::string &path, size_t *pos) const
+bool ShvPath::startsWithPath(const StringView &path, size_t *pos) const
 {
 	return startsWithPath(*this, path, pos);
 }
 
-bool ShvPath::startsWithPath(const std::string &str, const std::string &path, size_t *pos)
+bool ShvPath::startsWithPath(const StringView &str, const StringView &path, size_t *pos)
 {
 	auto set_pos = [pos](size_t val, bool ret_val) -> bool {
 		if(pos)
@@ -26,7 +26,7 @@ bool ShvPath::startsWithPath(const std::string &str, const std::string &path, si
 	};
 	if(path.empty())
 		return set_pos(0, true);
-	if(startsWith(str, path)) {
+	if(StringView(str).startsWith(path)) {
 		if(str.size() == path.size())
 			return set_pos(str.size(), true);
 		if(str[path.size()] == '/')
