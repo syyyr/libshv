@@ -938,15 +938,20 @@ void SaxHandler::parse()
 		case QXmlStreamReader::StartElement:
 		{
 			SvgElement el(m_xml->name().toString());
+			if(el.name == QLatin1String("defs")) {
+				if (m_skipDefinitions) {
+					m_xml->skipCurrentElement();
+					continue;
+				}
+			}
 			el.xmlAttributes = parseXmlAttributes(m_xml->attributes());
 			logSvgD() << QString(m_elementStack.count(), '-') << ">" << "+ start element:" << el.name << "id:" << el.xmlAttributes.value("id");
 			if(!m_elementStack.isEmpty())
 				el.styleAttributes = m_elementStack.last().styleAttributes;
 			mergeCSSAttributes(el.styleAttributes, QStringLiteral("style"), el.xmlAttributes);
 			m_elementStack.push(el);
-			if (startElement()) {
-				m_elementStack.last().itemCreated = true;
-			}
+			bool is_item_created = startElement();
+			m_elementStack.last().itemCreated = is_item_created;
 			break;
 		}
 		case QXmlStreamReader::EndElement:
@@ -1031,6 +1036,7 @@ bool SaxHandler::startElement()
 				t.translate(x, y);
 				text_item->setTransform(t, true);
 				text_item->setTextWidth(w);
+				return false;
 			}
 			else {
 				QGraphicsRectItem *item = new QGraphicsRectItem();
@@ -1041,7 +1047,6 @@ bool SaxHandler::startElement()
 				addItem(item);
 				return true;
 			}
-			return false;
 		}
 		else if (el.name == QLatin1String("circle")) {
 			QGraphicsEllipseItem *item = new QGraphicsEllipseItem();
@@ -1125,11 +1130,6 @@ bool SaxHandler::startElement()
 			addItem(item);
 			return true;
 		}
-		else if (el.name == QLatin1String("defs")) {
-			if (m_skipDefinitions)
-				m_xml->skipCurrentElement();
-		}
-
 		else {
 			logSvgW() << "unsupported element:" << el.name;
 		}
