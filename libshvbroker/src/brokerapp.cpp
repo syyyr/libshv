@@ -649,7 +649,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 		// This is used mainly for service calls as (un)subscribe propagation to slave brokers etc.
 		if(rq_shv_path == cp::Rpc::DIR_BROKER_APP) {
 			// master broker has always rd grant to .broker/app path
-			return cp::AccessGrant("rd");
+			return cp::AccessGrant(cp::Rpc::ROLE_WRITE);
 		}
 		user_roles = aclManager()->flattenRole(cp::Rpc::ROLE_MASTER_BROKER);
 	}
@@ -861,6 +861,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 		if(connection_handle == nullptr)
 			connection_handle = master_broker_connection;
 		try {
+			bool is_service_provider_call = false;
 			if(connection_handle) {
 				if(client_connection) {
 					// erase grant from client connections
@@ -893,6 +894,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 							//string new_shv_path = spp.makePlainPath(string());
 							logServiceProvidersM() << "absolute service path found on this broker, making path absolute:" << resolved_local_path;
 							cp::RpcRequest::setShvPath(meta, resolved_local_path);
+							is_service_provider_call = true;
 						}
 						else {
 							rpc::MasterBrokerConnection *master_broker = mainMasterBrokerConnection();
@@ -909,7 +911,13 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 				}
 				const std::string &method = cp::RpcMessage::method(meta).toString();
 				const std::string &shv_path = cp::RpcMessage::shvPath(meta).toString();
-				cp::AccessGrant acg = accessGrantForRequest(connection_handle, shv_path, method, cp::RpcMessage::accessGrant(meta));
+				cp::AccessGrant acg;
+				if(is_service_provider_call) {
+					acg = cp::AccessGrant(cp::Rpc::ROLE_WRITE);
+				}
+				else {
+					acg = accessGrantForRequest(connection_handle, shv_path, method, cp::RpcMessage::accessGrant(meta));
+				}
 				if(!acg.isValid()) {
 					if(master_broker_connection)
 						shvWarning() << "Acces to shv path '" + shv_path + "' not granted for master broker";
