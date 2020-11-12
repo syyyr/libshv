@@ -619,7 +619,7 @@ static bool is_first_path_more_specific(const std::string &path1, const std::str
 
 chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHandle *conn, const std::string &rq_shv_path, const std::string &method, const shv::chainpack::RpcValue &rq_grant)
 {
-	logAclResolveM() << "===== accessGrantForShvPath user:" << conn->loggedUserName() << "requested path:" << rq_shv_path << "method:" << method << "request grant:" << rq_grant.toCpon();
+	logAclResolveM() << "<==== accessGrantForShvPath user:" << conn->loggedUserName() << "requested path:" << rq_shv_path << "method:" << method << "request grant:" << rq_grant.toCpon();
 #ifdef USE_SHV_PATHS_GRANTS_CACHE
 	PathGrantCache *user_path_grants = m_userPathGrantCache.object(user_name);
 	if(user_path_grants) {
@@ -861,7 +861,8 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 		if(connection_handle == nullptr)
 			connection_handle = master_broker_connection;
 		try {
-			bool is_service_provider_call = false;
+			std::string shv_path = cp::RpcMessage::shvPath(meta).toString();
+			bool is_service_provider_mount_point_relative_call = false;
 			if(connection_handle) {
 				if(client_connection) {
 					// erase grant from client connections
@@ -871,7 +872,6 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 						cp::RpcMessage::setAccessGrant(meta, cp::RpcValue());
 					}
 					/// check service provider call
-					std::string shv_path = cp::RpcMessage::shvPath(meta).toString();
 					using ServiceProviderPath = shv::core::utils::ServiceProviderPath;
 					ServiceProviderPath spp(shv_path);
 					if(spp.isServicePath()) {
@@ -892,9 +892,9 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 						//	shvError() << service_node << "vs" << service_node2 << "MISSMATCH";
 						if(service_node) {
 							//string new_shv_path = spp.makePlainPath(string());
-							logServiceProvidersM() << "absolute service path found on this broker, making path absolute:" << resolved_local_path;
+							logServiceProvidersM() << shv_path << "service path resolved on this broker, making path absolute:" << resolved_local_path;
 							cp::RpcRequest::setShvPath(meta, resolved_local_path);
-							is_service_provider_call = true;
+							is_service_provider_mount_point_relative_call = spp.isMountPointRelative();
 						}
 						else {
 							rpc::MasterBrokerConnection *master_broker = mainMasterBrokerConnection();
@@ -910,18 +910,20 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 					}
 				}
 				const std::string &method = cp::RpcMessage::method(meta).toString();
-				const std::string &shv_path = cp::RpcMessage::shvPath(meta).toString();
+				const std::string &resolved_shv_path = cp::RpcMessage::shvPath(meta).toString();
 				cp::AccessGrant acg;
-				if(is_service_provider_call) {
+				if(is_service_provider_mount_point_relative_call) {
+					logAclResolveM() << "<==== access grant for user:" << connection_handle->loggedUserName() << "requested path:" << shv_path << "method:" << method;
 					acg = cp::AccessGrant(cp::Rpc::ROLE_WRITE);
+					logAclResolveM() << "===> resolved path:" << resolved_shv_path << "grant:" << acg.toRpcValue().toCpon();
 				}
 				else {
-					acg = accessGrantForRequest(connection_handle, shv_path, method, cp::RpcMessage::accessGrant(meta));
+					acg = accessGrantForRequest(connection_handle, resolved_shv_path, method, cp::RpcMessage::accessGrant(meta));
 				}
 				if(!acg.isValid()) {
 					if(master_broker_connection)
-						shvWarning() << "Acces to shv path '" + shv_path + "' not granted for master broker";
-					ACCESS_EXCEPTION("Acces to shv path '" + shv_path + "' not granted for user '" + connection_handle->loggedUserName() + "'");
+						shvWarning() << "Acces to shv path '" + resolved_shv_path + "' not granted for master broker";
+					ACCESS_EXCEPTION("Acces to shv path '" + resolved_shv_path + "' not granted for user '" + connection_handle->loggedUserName() + "'");
 				}
 				cp::RpcMessage::setAccessGrant(meta, acg.toRpcValue());
 				cp::RpcMessage::pushCallerId(meta, connection_id);

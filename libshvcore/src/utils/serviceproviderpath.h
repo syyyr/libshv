@@ -10,12 +10,12 @@ namespace utils {
 class SHVCORE_DECL_EXPORT ServiceProviderPath
 {
 public:
-	enum class Type { Plain, Absolute, Relative };
+	enum class Type { Plain, Absolute, MountPointRelative };
 public:
 	ServiceProviderPath(const std::string &shv_path);
 
 	bool isServicePath() const { return type() != Type::Plain; }
-	bool isRelative() const { return type() == Type::Relative; }
+	bool isMountPointRelative() const { return type() == Type::MountPointRelative; }
 	bool isAbsolute() const { return type() == Type::Absolute; }
 	bool isPlain() const { return type() == Type::Plain; }
 	Type type() const { return m_type; }

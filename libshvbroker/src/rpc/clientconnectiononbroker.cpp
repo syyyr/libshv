@@ -92,7 +92,7 @@ std::string ClientConnectionOnBroker::resolveLocalPath(const shv::core::utils::S
 	string local_path;
 	iotqt::node::ShvNode *nd = nullptr;
 	if(spp.isServicePath()) {
-		if(spp.type() == shv::core::utils::ServiceProviderPath::Type::Relative) {
+		if(spp.type() == shv::core::utils::ServiceProviderPath::Type::MountPointRelative) {
 			std::string mount_point = mountPoint();
 			if(mount_point.empty())
 				SHV_EXCEPTION("Cannot resolve relative path on unmounted device: " + spp.shvPath());
@@ -230,17 +230,17 @@ string ClientConnectionOnBroker::toSubscribedPath(const CommonRpcClientHandle::S
 	/// path must be retraslated if:
 	/// * local path is service relative
 	/// * local path is not service one and subcribed part is service one
-	if(spp_signal.isRelative()) {
+	if(spp_signal.isMountPointRelative()) {
 		/// a:/mount_point/b/c/d --> a:/b/c/d
 		/// a@xy:/mount_point/b/c/d --> a@xy:/b/c/d
-		if(debug && !spp_subs.isRelative())
+		if(debug && !spp_subs.isMountPointRelative())
 			shvWarning() << "Relative signal must have relative subscription, signal:" << signal_path << "subscription:" << subs.subscribedPath;
 		auto a = StringView(subs.subscribedPath);
 		auto b = StringView(signal_path).mid(subs.localPath.size());
 		return ShvPath::join(a, b);
 	}
 	else if(spp_signal.isPlain()) {
-		if(spp_subs.isRelative()) {
+		if(spp_subs.isMountPointRelative()) {
 			/// a/b/c/d --> a:/b/c/d
 			// cut service and slash
 			auto sv = StringView(signal_path).mid(spp_subs.service().length() + 1);
