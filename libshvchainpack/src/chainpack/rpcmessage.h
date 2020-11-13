@@ -109,6 +109,7 @@ public:
 
 	RpcValue userId() const;
 	void setUserId(const RpcValue &user_id);
+	static void setUserId(RpcValue::MetaData &meta, const RpcValue &user_id);
 
 	static Rpc::ProtocolType protocolType(const RpcValue::MetaData &meta);
 	static void setProtocolType(RpcValue::MetaData &meta, shv::chainpack::Rpc::ProtocolType ver);

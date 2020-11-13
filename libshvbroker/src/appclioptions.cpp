@@ -9,7 +9,9 @@ namespace broker {
 
 AppCliOptions::AppCliOptions()
 {
-	addOption("app.brokerId").setType(cp::RpcValue::Type::String).setNames("--bid", "--broker-id").setComment("Broker ID string for service provider calls");
+	addOption("app.brokerId").setType(cp::RpcValue::Type::String).setNames("--bid", "--broker-id")
+			.setDefaultValue("broker.local")
+			.setComment("Broker ID string for service provider calls");
 	addOption("locale").setType(cp::RpcValue::Type::String).setNames("--locale").setComment("Application locale").setDefaultValue("system");
 	addOption("server.port").setType(cp::RpcValue::Type::Int).setNames("-p", "--server-port").setComment("Server port").setDefaultValue(cp::IRpcConnection::DEFAULT_RPC_BROKER_PORT_NONSECURED);
 	addOption("server.sslPort").setType(cp::RpcValue::Type::Int).setNames("--sslp", "--server-ssl-port").setComment("Server SSL port").setDefaultValue(cp::IRpcConnection::DEFAULT_RPC_BROKER_PORT_SECURED);

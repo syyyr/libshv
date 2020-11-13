@@ -870,11 +870,21 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 			bool is_service_provider_mount_point_relative_call = false;
 			if(connection_handle) {
 				if(client_connection) {
-					// erase grant from client connections
-					cp::RpcValue ag = cp::RpcMessage::accessGrant(meta);
-					if(ag.isValid() /*&& !ag.isUserLogin()*/) {
-						shvWarning() << "Client request with access grant specified not allowed, erasing:" << ag.toPrettyString();
-						cp::RpcMessage::setAccessGrant(meta, cp::RpcValue());
+					if(!client_connection->isSlaveBrokerConnection()) {
+						{
+							// erase grant from client connections
+							cp::RpcValue ag = cp::RpcMessage::accessGrant(meta);
+							if(ag.isValid() /*&& !ag.isUserLogin()*/) {
+								shvWarning() << "Client request with access grant specified not allowed, erasing:" << ag.toPrettyString();
+								cp::RpcMessage::setAccessGrant(meta, cp::RpcValue());
+							}
+						}
+						{
+							// fill in user_id, for current client issueng rpc request
+							cp::RpcRequest::setUserId(meta, client_connection->userName()
+													  + '@'
+													  + cliOptions()->brokerId());
+						}
 					}
 					/// check service provider call
 					using ServiceProviderPath = shv::core::utils::ServiceProviderPath;

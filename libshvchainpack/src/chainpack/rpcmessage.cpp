@@ -430,6 +430,11 @@ void RpcMessage::setUserId(const RpcValue &user_id)
 	setMetaValue(RpcMessage::MetaType::Tag::UserId, user_id);
 }
 
+void RpcMessage::setUserId(RpcValue::MetaData &meta, const RpcValue &user_id)
+{
+	meta.setValue(RpcMessage::MetaType::Tag::UserId, user_id);
+}
+
 Rpc::ProtocolType RpcMessage::protocolType(const RpcValue::MetaData &meta)
 {
 	return (Rpc::ProtocolType)meta.value(RpcMessage::MetaType::Tag::ProtocolType).toUInt();
