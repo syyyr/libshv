@@ -18,6 +18,7 @@ public:
 	static const char *DOMAIN_VAL_FASTCHANGE; /// see shv::chainpack::Rpc::SIG_VAL_FASTCHANGED
 	static const char *DOMAIN_VAL_SERVICECHANGE; /// see shv::chainpack::Rpc::SIG_SERVICE_VAL_CHANGED
 	static const char *DOMAIN_SHV_SYSTEM;
+	static const char *DOMAIN_SHV_COMMAND;
 
 	static const char* PATH_APP_START;
 	//static const char* PATH_SNAPSHOT_END;

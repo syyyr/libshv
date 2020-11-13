@@ -17,7 +17,6 @@ class ShvGetLogParams;
 class SHVCORE_DECL_EXPORT AbstractShvJournal
 {
 public:
-	static constexpr long DEFAULT_FILE_SIZE_LIMIT = 100 * 1024;
 	static const int DEFAULT_GET_LOG_RECORD_COUNT_LIMIT;
 
 	static const char *KEY_NAME;

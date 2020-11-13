@@ -16,7 +16,8 @@ namespace utils {
 class SHVCORE_DECL_EXPORT ShvFileJournal : public AbstractShvJournal
 {
 public:
-	static constexpr long DEFAULT_JOURNAL_SIZE_LIMIT = 100 * 100 * 1024;
+	static constexpr long DEFAULT_FILE_SIZE_LIMIT = 1024 * 1024;
+	static constexpr long DEFAULT_JOURNAL_SIZE_LIMIT = 100 * DEFAULT_FILE_SIZE_LIMIT;
 	static constexpr char FIELD_SEPARATOR = '\t';
 	static constexpr char RECORD_SEPARATOR = '\n';
 	static const std::string FILE_EXT;
