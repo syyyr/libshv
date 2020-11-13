@@ -345,32 +345,37 @@ void BrokerApp::startTcpServers()
 {
 	const auto *opts = cliOptions();
 
-	if(opts->serverPort_isset()) {
+	{
 		SHV_SAFE_DELETE(m_tcpServer);
 		int port = opts->serverPort();
 		if(port > 0) {
-		m_tcpServer = new rpc::BrokerTcpServer(rpc::BrokerTcpServer::NonSecureMode, this);
+			shvInfo() << "Starting plain socket server on port" << port;
+			m_tcpServer = new rpc::BrokerTcpServer(rpc::BrokerTcpServer::NonSecureMode, this);
 			if(!m_tcpServer->start(port)) {
 				SHV_EXCEPTION("Cannot start TCP server!");
 			}
 		}
-	}
-	else {
-		shvInfo() << "TCP server port is not set, it will not be started.";
+		else {
+			shvInfo() << "TCP server port is not set, it will not be started.";
+		}
 	}
 
-	if(opts->serverSslPort_isset()) {
+	{
 		SHV_SAFE_DELETE(m_sslServer);
 		int port = opts->serverSslPort();
 		if(port > 0) {
-		m_sslServer = new rpc::BrokerTcpServer(rpc::BrokerTcpServer::SecureMode, this);
+			shvInfo() << "Starting SSL server on port" << port;
+			m_sslServer = new rpc::BrokerTcpServer(rpc::BrokerTcpServer::SecureMode, this);
+			if(!m_sslServer->loadSslConfig()) {
+				SHV_EXCEPTION("Cannot start SSL server, invalid SSL config!");
+			}
 			if(!m_sslServer->start(port)) {
 				SHV_EXCEPTION("Cannot start SSL server!");
 			}
 		}
-	}
-	else {
-		shvInfo() << "SSL server port is not set, it will not be started.";
+		else {
+			shvInfo() << "SSL server port is not set, it will not be started.";
+		}
 	}
 }
 

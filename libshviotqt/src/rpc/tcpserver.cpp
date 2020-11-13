@@ -22,7 +22,7 @@ TcpServer::~TcpServer()
 
 bool TcpServer::start(int port)
 {
-	shvInfo() << "Starting RPC server on port:" << port;
+	shvInfo() << "start listenning on port:" << port;
 	if (!listen(QHostAddress::AnyIPv4, port)) {
 		shvError() << tr("Unable to start the server: %1.").arg(errorString());
 		close();

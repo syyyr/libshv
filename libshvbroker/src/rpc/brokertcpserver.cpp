@@ -21,7 +21,10 @@ static QSslConfiguration load_ssl_configuration()
 	if(QDir::isRelativePath(cert_fn))
 		cert_fn = QString::fromStdString(opts->configDir()) + '/' + cert_fn;
 	QFile cert_file(cert_fn);
-	cert_file.open(QIODevice::ReadOnly);
+	if(!cert_file.open(QIODevice::ReadOnly)) {
+		shvError() << "Cannot open SSL certificate file:" << cert_file.fileName() << "for reading";
+		return QSslConfiguration();
+	}
 	QSslCertificate ssl_cert(&cert_file, QSsl::Pem);
 	cert_file.close();
 	shvDebug() << "CERT:" << ssl_cert.toText();
@@ -30,7 +33,10 @@ static QSslConfiguration load_ssl_configuration()
 	if(QDir::isRelativePath(key_fn))
 		key_fn = QString::fromStdString(opts->configDir()) + '/' + key_fn;
 	QFile key_file(key_fn);
-	key_file.open(QIODevice::ReadOnly);
+	if(!key_file.open(QIODevice::ReadOnly)) {
+		shvError() << "Cannot open SSL key file:" << key_file.fileName() << "for reading";
+		return QSslConfiguration();
+	}
 	QSslKey ssl_key(&key_file, QSsl::Rsa, QSsl::Pem);
 	key_file.close();
 
@@ -43,15 +49,22 @@ static QSslConfiguration load_ssl_configuration()
 }
 
 BrokerTcpServer::BrokerTcpServer(SslMode ssl_mode, QObject *parent)
-	: Super(parent), m_sslMode(ssl_mode)
+	: Super(parent)
+	, m_sslMode(ssl_mode)
 {
-	if (m_sslMode == SslMode::SecureMode)
-		m_sslConfiguration = load_ssl_configuration();
 }
 
 ClientConnectionOnBroker *BrokerTcpServer::connectionById(int connection_id)
 {
 	return qobject_cast<rpc::ClientConnectionOnBroker *>(Super::connectionById(connection_id));
+}
+
+bool BrokerTcpServer::loadSslConfig()
+{
+	if (m_sslMode == SslMode::SecureMode) {
+		m_sslConfiguration = load_ssl_configuration();
+	}
+	return !m_sslConfiguration.isNull();
 }
 
 void BrokerTcpServer::incomingConnection(qintptr socket_descriptor)

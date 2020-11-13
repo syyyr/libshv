@@ -21,6 +21,7 @@ public:
 	BrokerTcpServer(SslMode ssl_mode, QObject *parent = nullptr);
 
 	ClientConnectionOnBroker* connectionById(int connection_id);
+	bool loadSslConfig();
 protected:
 	void incomingConnection(qintptr socket_descriptor) override;
 	shv::iotqt::rpc::ServerConnection* createServerConnection(QTcpSocket *socket, QObject *parent) override;
