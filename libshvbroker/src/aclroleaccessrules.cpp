@@ -1,11 +1,12 @@
 #include "aclroleaccessrules.h"
 
 #include <shv/chainpack/rpcvalue.h>
+#include <shv/core/log.h>
 
 #include <QString>
 
 using namespace shv::chainpack;
-//namespace cp = shv::chainpack;
+using namespace std;
 
 namespace shv {
 namespace broker {
@@ -32,6 +33,63 @@ AclAccessRule AclAccessRule::fromRpcValue(const RpcValue &rpcval)
 	return ret;
 }
 
+static bool is_wild_card_pattern(const string path)
+{
+	static const string ASTERISKS = "**";
+	static const string SLASH_ASTERISKS = "/**";
+	if(path == ASTERISKS)
+		return true;
+	return shv::core::String::endsWith(path, SLASH_ASTERISKS);
+}
+bool AclAccessRule::isMoreSpecificThan(const AclAccessRule &other) const
+{
+	//shvWarning() << this->toRpcValue().toCpon();
+	if(!isValid())
+		return false;
+	if(!other.isValid())
+		return true;
+	bool is_exact_path = !is_wild_card_pattern(pathPattern);
+	bool other_is_exact_path = !is_wild_card_pattern(other.pathPattern);
+	bool has_method = !method.empty();
+	bool other_has_method = !other.method.empty();
+	if(is_exact_path && other_is_exact_path) {
+		return has_method && !other_has_method;
+	}
+	else if(is_exact_path && !other_is_exact_path) {
+		return true;
+	}
+	else if(!is_exact_path && other_is_exact_path) {
+		return false;
+	}
+	// both path patterns with wild-card
+	auto patt_len = pathPattern.length();
+	auto other_patt_len = other.pathPattern.length();
+	if(patt_len == other_patt_len) {
+		return has_method && !other_has_method;
+	}
+	return patt_len > other_patt_len;
+}
+
+bool AclAccessRule::isPathMethodMatch(const string &shv_path, const string &method) const
+{
+	bool is_exact_pattern_path = !is_wild_card_pattern(pathPattern);
+	if(is_exact_pattern_path) {
+		if(shv_path == pathPattern) {
+			if(this->method.empty())
+				return true;
+			return this->method == method;
+		}
+		return false;
+	}
+	auto path = shv::core::utils::ShvPath(shv_path);
+	if(path.matchWild(pathPattern)) {
+		if(this->method.empty())
+			return true;
+		return this->method == method;
+	}
+	return false;
+}
+
 //================================================================
 // AclRolePaths
 //================================================================
@@ -55,7 +113,15 @@ RpcValue AclRoleAccessRules::toRpcValue_legacy() const
 	}
 	return shv::chainpack::RpcValue(std::move(ret));
 }
-
+/*
+void AclRoleAccessRules::sortMostSpecificFirst()
+{
+	for(auto a : *this) {
+		shvInfo() << a.toRpcValue().toCpon();
+	}
+	std::sort(begin(), end(), [](const AclAccessRule& a, const AclAccessRule& b) { return a.isMoreSpecificThan(b); });
+}
+*/
 AclRoleAccessRules AclRoleAccessRules::fromRpcValue(const shv::chainpack::RpcValue &v)
 {
 	AclRoleAccessRules ret;

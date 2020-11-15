@@ -27,6 +27,8 @@ public:
 	static AclAccessRule fromRpcValue(const chainpack::RpcValue &rpcval);
 
 	bool isValid() const { return !pathPattern.empty() && grant.isValid(); }
+	bool isMoreSpecificThan(const AclAccessRule &other) const;
+	bool isPathMethodMatch(const std::string &shv_path, const std::string &method) const;
 };
 
 class SHVBROKER_DECL_EXPORT AclRoleAccessRules : public std::vector<AclAccessRule>
@@ -34,6 +36,9 @@ class SHVBROKER_DECL_EXPORT AclRoleAccessRules : public std::vector<AclAccessRul
 public:
 	shv::chainpack::RpcValue toRpcValue() const;
 	shv::chainpack::RpcValue toRpcValue_legacy() const;
+
+	//void sortMostSpecificFirst();
+
 	static AclRoleAccessRules fromRpcValue(const shv::chainpack::RpcValue &v);
 };
 

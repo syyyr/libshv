@@ -136,7 +136,9 @@ AclRoleAccessRules AclManager::accessRoleRules(const std::string &role_name)
 	if(it == m_cache.aclPathsRoles.end())
 		return AclRoleAccessRules();
 	if(std::get<1>(it->second) == false) {
-		it->second = std::pair<AclRoleAccessRules, bool>(aclAccessRoleRules(role_name), true);
+		AclRoleAccessRules acl = aclAccessRoleRules(role_name);
+		//acl.sortMostSpecificFirst();
+		it->second = std::pair<AclRoleAccessRules, bool>(acl, true);
 	}
 	return std::get<0>(it->second);
 }
