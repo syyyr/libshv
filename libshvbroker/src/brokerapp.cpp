@@ -156,7 +156,9 @@ public:
 			StringList lst;
 			for(int id : app->clientConnectionIds()) {
 				rpc::ClientConnectionOnBroker *conn = app->clientConnectionById(id);
-				lst.push_back(shv::core::utils::ShvPath::SHV_PATH_QUOTE + conn->mountPoint() + shv::core::utils::ShvPath::SHV_PATH_QUOTE);
+				const string mp = conn->mountPoint();
+				if(!mp.empty())
+					lst.push_back(shv::core::utils::ShvPath::SHV_PATH_QUOTE + mp + shv::core::utils::ShvPath::SHV_PATH_QUOTE);
 			}
 			std::sort(lst.begin(), lst.end());
 			return lst;
