@@ -659,7 +659,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 		logAclResolveM() << "no match found, searched rules:" << [this, &flatten_user_roles]() -> string
 		{
 			string tbl = "\n--------------------------------------------------------";
-			tbl += "\nrole\tweight\tpattern\tmethod";
+			tbl += "\nrole\tweight\tpattern\tmethod\tgrant";
 			tbl += "\n--------------------------------------------------------";
 			for(const AclManager::FlattenRole &role : flatten_user_roles) {
 				const AclRoleAccessRules &role_rules = aclManager()->accessRoleRules(role.name);
@@ -669,6 +669,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 					tbl += "\t" + to_string(role.weight);
 					tbl += "\t'" + access_rule.pathPattern + "'";
 					tbl += "\t'" + access_rule.method + "'";
+					tbl += "\t" + access_rule.grant.toRpcValue().toCpon();
 				}
 			}
 			return tbl;
@@ -703,11 +704,17 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 				logAclResolveM() << "rule:" << access_rule.toRpcValue().toCpon();
 				if(access_rule.isPathMethodMatch(rq_shv_path, method)) {
 					if(access_rule.isMoreSpecificThan(most_specific_rule)) {
-						logAclResolveM() << "\tHIT!!! more specific rule found" << most_specific_rule.toRpcValue().toCpon();
+						logAclResolveM() << "\t+++HIT more specific rule found" << most_specific_rule.toRpcValue().toCpon();
 						most_specific_rule = access_rule;
 					}
+					else if(!most_specific_rule.isMoreSpecificThan(access_rule)) {
+						// the same specific rules, this is problem
+						logAclResolveW() << "the same specific rules found!";
+						logAclResolveW() << "\t" << access_rule.toRpcValue().toCpon();
+						logAclResolveW() << "\t" << most_specific_rule.toRpcValue().toCpon();
+					}
 					else {
-						logAclResolveM() << "\tHIT but rule is not more specific than:" << most_specific_rule.toRpcValue().toCpon();
+						logAclResolveM() << "\t---HIT but rule is not more specific than:" << most_specific_rule.toRpcValue().toCpon();
 					}
 				}
 			}
