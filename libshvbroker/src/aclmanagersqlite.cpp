@@ -74,6 +74,20 @@ void AclManagerSqlite::checkAclTables()
 		}
 	}
 	{
+		auto col_name = QStringLiteral("profile");
+		QSqlQuery q = execSql("SELECT " + col_name + " FROM " + TBL_ACL_ROLES + " WHERE name='xxx'", !shv::core::Exception::Throw);
+		bool column_exist = q.isActive();
+		if(!column_exist) {
+			shvWarning() << "Table:" << TBL_ACL_ROLES << "column:" << col_name << "does not exist.";
+			shvInfo() << "Adding column:" << TBL_ACL_ROLES << "::" << col_name;
+			execSql("BEGIN TRANSACTION");
+			execSql(QStringLiteral(R"kkt(
+					ALTER TABLE %1 ADD profile varchar;
+					)kkt").arg(TBL_ACL_ROLES));
+			execSql("COMMIT");
+		}
+	}
+	{
 		bool column_method_exists = true;
 		try {
 			execSql("SELECT method FROM " + TBL_ACL_ACCESS);
