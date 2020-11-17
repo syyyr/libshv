@@ -82,7 +82,12 @@ bool AclAccessRule::isPathMethodMatch(const string &shv_path, const string &meth
 		return false;
 	}
 	auto path = shv::core::utils::ShvPath(shv_path);
-	if(path.matchWild(pathPattern)) {
+	shv::core::StringView patt(pathPattern);
+	// trim "**"
+	patt = patt.mid(0, patt.length() - 2);
+	if(patt.length() > 0)
+		patt = patt.mid(0, patt.length() - 1); // trim '/'
+	if(path.startsWithPath(patt)) {
 		if(this->method.empty())
 			return true;
 		return this->method == method;
