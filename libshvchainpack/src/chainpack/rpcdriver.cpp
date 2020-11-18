@@ -15,6 +15,7 @@
 #define logRpcRawMsg() nCMessage("RpcRawMsg")
 #define logRpcData() nCMessage("RpcData")
 #define logWriteQueue() nCMessage("WriteQueue")
+#define logWriteQueueW() nCWarning("WriteQueue")
 
 namespace shv {
 namespace chainpack {
@@ -464,7 +465,7 @@ void RpcDriver::lockSendQueueGuard()
 {
 	lock_cnt++;
 	if(lock_cnt != 1) {
-		nWarning() << "Invalid write queue lock count:" << lock_cnt;
+		logWriteQueueW() << "Invalid write queue lock count:" << lock_cnt;
 	}
 }
 
@@ -472,7 +473,7 @@ void RpcDriver::unlockSendQueueGuard()
 {
 	lock_cnt--;
 	if(lock_cnt != 0) {
-		nWarning() << "Invalid write queue unlock count:" << lock_cnt;
+		logWriteQueueW() << "Invalid write queue unlock count:" << lock_cnt;
 	}
 }
 
