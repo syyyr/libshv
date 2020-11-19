@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "rpcvalue.h"
 
 #include <regex>
 #include <iomanip>
@@ -137,6 +138,22 @@ std::string Utils::hexDump(const std::string &bytes)
 		ret += num_l + ' ' + hex_l + rest_l + str_l;
 	}
 	return ret;
+}
+
+RpcValue Utils::mergeMaps(const RpcValue &m_base, const RpcValue &m_over)
+{
+	if(m_over.isMap() && m_base.isMap()) {
+		const shv::chainpack::RpcValue::Map &map_base = m_base.toMap();
+		const shv::chainpack::RpcValue::Map &map_over = m_over.toMap();
+		RpcValue::Map map = map_base;
+		for(const auto &kv : map_over) {
+			map[kv.first] = mergeMaps(map.value(kv.first), kv.second);
+		}
+		return RpcValue(map);
+	}
+	else if(m_over.isValid())
+		return m_over;
+	return m_base;
 }
 
 } // namespace chainpack

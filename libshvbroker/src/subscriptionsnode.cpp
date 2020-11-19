@@ -1,7 +1,7 @@
 #include "subscriptionsnode.h"
 
 #include "brokerapp.h"
-#include "rpc/brokerclientserverconnection.h"
+#include "rpc/clientconnectiononbroker.h"
 
 #include <shv/chainpack/rpcmessage.h>
 #include <shv/chainpack/rpc.h>
@@ -70,8 +70,8 @@ shv::iotqt::node::ShvNode::StringList SubscriptionsNode::childNames(const String
 		if(shv_path[0] == ND_BY_PATH) {
 			shv::iotqt::node::ShvNode::StringList ret;
 			for (size_t i = 0; i < m_client->subscriptionCount(); ++i) {
-				const rpc::BrokerClientServerConnection::Subscription &subs = m_client->subscriptionAt(i);
-				ret.push_back(shv::core::utils::ShvPath::SHV_PATH_QUOTE + subs.absolutePath + shv::core::utils::ShvPath::SHV_PATH_METHOD_DELIM + subs.method + shv::core::utils::ShvPath::SHV_PATH_QUOTE);
+				const rpc::ClientConnectionOnBroker::Subscription &subs = m_client->subscriptionAt(i);
+				ret.push_back(shv::core::utils::ShvPath::SHV_PATH_QUOTE + subs.localPath + shv::core::utils::ShvPath::SHV_PATH_METHOD_DELIM + subs.method + shv::core::utils::ShvPath::SHV_PATH_QUOTE);
 			}
 			std::sort(ret.begin(), ret.end());
 			return ret;
@@ -86,15 +86,15 @@ shv::chainpack::RpcValue SubscriptionsNode::callMethod(const StringViewList &shv
 {
 	if(shv_path.size() == 2) {
 		if(method == METH_PATH || method == METH_METHOD) {
-			const rpc::BrokerClientServerConnection::Subscription *subs = nullptr;
+			const rpc::ClientConnectionOnBroker::Subscription *subs = nullptr;
 			if(shv_path.at(0) == ND_BY_ID) {
 				subs = &m_client->subscriptionAt(std::stoul(shv_path.at(1).toString()));
 			}
 			else if(shv_path.at(0) == ND_BY_PATH) {
 				shv::core::StringView path = shv_path.at(1);
 				for (size_t i = 0; i < m_client->subscriptionCount(); ++i) {
-					const rpc::BrokerClientServerConnection::Subscription &subs1 = m_client->subscriptionAt(i);
-					std::string p = shv::core::utils::ShvPath::SHV_PATH_QUOTE + subs1.absolutePath + shv::core::utils::ShvPath::SHV_PATH_METHOD_DELIM + subs1.method + shv::core::utils::ShvPath::SHV_PATH_QUOTE;
+					const rpc::ClientConnectionOnBroker::Subscription &subs1 = m_client->subscriptionAt(i);
+					std::string p = shv::core::utils::ShvPath::SHV_PATH_QUOTE + subs1.localPath + shv::core::utils::ShvPath::SHV_PATH_METHOD_DELIM + subs1.method + shv::core::utils::ShvPath::SHV_PATH_QUOTE;
 					if(path == p) {
 						subs = &subs1;
 						break;
@@ -104,7 +104,7 @@ shv::chainpack::RpcValue SubscriptionsNode::callMethod(const StringViewList &shv
 			if(subs == nullptr)
 				SHV_EXCEPTION("Method " + method + " called on invalid path " + shv_path.join('/'));
 			if(method == METH_PATH)
-				return subs->absolutePath;
+				return subs->localPath;
 			if(method == METH_METHOD)
 				return subs->method;
 		}

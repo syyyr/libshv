@@ -1,6 +1,10 @@
 #include "graphview.h"
 #include "graphwidget.h"
 
+#include <shv/coreqt/log.h>
+
+#include <QTimer>
+
 namespace shv {
 namespace visu {
 namespace timeline {
@@ -8,20 +12,45 @@ namespace timeline {
 GraphView::GraphView(QWidget *parent)
 	: Super(parent)
 {
-
 }
 
 void GraphView::makeLayout()
 {
 	if(GraphWidget *w = qobject_cast<GraphWidget*>(widget())) {
-		w->makeLayout(geometry().size() - QSize(2, 2));
+		w->makeLayout(geometry().size() - QSize(30, 0)); // space for scroll bar
 	}
+}
+
+QRect GraphView::widgetViewRect() const
+{
+	QRect view_rect = viewport()->geometry();
+	view_rect.moveTop(-widget()->geometry().y());
+	return view_rect;
 }
 
 void GraphView::resizeEvent(QResizeEvent *event)
 {
 	Super::resizeEvent(event);
 	makeLayout();
+}
+
+void GraphView::scrollContentsBy(int dx, int dy)
+{
+	if(GraphWidget *gw = qobject_cast<GraphWidget*>(widget())) {
+		const Graph *g = gw->graph();
+		QRect r1 = g->southFloatingBarRect();
+		Super::scrollContentsBy(dx, dy);
+		if(dy < 0) {
+			// scroll up, invalidate current floating bar pos
+			// make it slightly higher to avoid artifacts
+			widget()->update(r1.adjusted(0, -3, 0, 0));
+		}
+		else if(dy > 0) {
+			// scroll down, invalidate new floating bar pos
+			r1.setTop(r1.top() - dy);
+			widget()->update(r1.adjusted(0, -3, 0, 0));
+		}
+	}
 }
 
 }}}

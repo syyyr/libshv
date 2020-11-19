@@ -148,18 +148,14 @@ RpcValue AccessGrant::toRpcValue() const
 {
 	if(!isValid())
 		return RpcValue();
-	if(!notResolved) {
-		if(isAccessLevel())
-			return RpcValue(accessLevel);
-		if(isRole())
-			return RpcValue(role);
-	}
+	if(isAccessLevel())
+		return RpcValue(accessLevel);
+	if(isRole())
+		return RpcValue(role);
 	RpcValue ret(RpcValue::IMap{});
 	MetaType::registerMetaType();
 	ret.setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
 	ret.set(MetaType::Key::Type, (int)type);
-	if(notResolved)
-		ret.set(MetaType::Key::NotResolved, notResolved);
 	switch (type) {
 	case Type::AccessLevel:
 		ret.set(MetaType::Key::AccessLevel, accessLevel);
@@ -189,9 +185,6 @@ static const std::string KEY_NOT_RESOLVED = "notResolved";
 RpcValue AccessGrant::toRpcValueMap() const
 {
 	RpcValue::Map ret;
-	//ret[KEY_TYPE] = typeToString(type);
-	if(notResolved)
-		ret[KEY_NOT_RESOLVED] = notResolved;
 	switch (type) {
 	case Type::AccessLevel:
 		ret[KEY_ACCESS_LEVEL] = accessLevel;
@@ -227,7 +220,6 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 		break;
 	case RpcValue::Type::IMap: {
 		const RpcValue::IMap &m = rpcval.toIMap();
-		ret.notResolved = m.value(MetaType::Key::NotResolved).toBool();
 		ret.type = static_cast<Type>(m.value(MetaType::Key::Type).toInt());
 		switch (ret.type) {
 		case Type::AccessLevel:
@@ -249,7 +241,6 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 	}
 	case RpcValue::Type::Map: {
 		const RpcValue::Map &m = rpcval.toMap();
-		ret.notResolved = m.value(KEY_NOT_RESOLVED).toBool();
 		do {
 			{
 				auto access_level = m.value(KEY_ACCESS_LEVEL).toInt();

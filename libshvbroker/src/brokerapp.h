@@ -29,19 +29,22 @@ class QSocketNotifier;
 class QSqlDatabase;
 
 namespace shv { namespace iotqt { namespace node { class ShvNodeTree; }}}
+namespace shv { namespace core { namespace utils { class ServiceProviderPath; }}}
 //namespace shv { namespace iotqt { namespace rpc { struct Password; }}}
 namespace shv { namespace chainpack { class RpcSignal; }}
 
 namespace shv {
 namespace broker {
 
-namespace rpc { class WebSocketServer; class BrokerTcpServer; class BrokerClientServerConnection;  class SlaveBrokerClientConnection; class CommonRpcClientHandle; }
+namespace rpc { class WebSocketServer; class BrokerTcpServer; class ClientConnectionOnBroker;  class MasterBrokerConnection; class CommonRpcClientHandle; }
 
 class AclManager;
 
 class SHVBROKER_DECL_EXPORT BrokerApp : public QCoreApplication
 {
 	Q_OBJECT
+
+	SHV_FIELD_BOOL_IMPL2(l, L, ogEntryNotyfyEnabled, false)
 private:
 	using Super = QCoreApplication;
 	friend class AclManager;
@@ -58,16 +61,17 @@ public:
 	void onClientLogin(int connection_id);
 	void onConnectedToMasterBrokerChanged(int connection_id, bool is_connected);
 
-	rpc::SlaveBrokerClientConnection* mainMasterBrokerConnection() { return masterBrokerConnections().value(0); }
-
 	void onRpcDataReceived(int connection_id, shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&meta, std::string &&data);
+
+	rpc::MasterBrokerConnection* mainMasterBrokerConnection() { return masterBrokerConnections().value(0); }
 
 	void addSubscription(int client_id, const std::string &path, const std::string &method);
 	bool removeSubscription(int client_id, const std::string &shv_path, const std::string &method);
 	bool rejectNotSubscribedSignal(int client_id, const std::string &path, const std::string &method);
 
 	rpc::BrokerTcpServer* tcpServer();
-	rpc::BrokerClientServerConnection* clientById(int client_id);
+	rpc::BrokerTcpServer* sslServer();
+	rpc::ClientConnectionOnBroker* clientById(int client_id);
 
 #ifdef WITH_SHV_WEBSOCKETS
 	rpc::WebSocketServer* webSocketServer();
@@ -83,14 +87,17 @@ public:
 	void reloadConfigRemountDevices();
 	bool checkTunnelSecret(const std::string &s);
 
+	chainpack::AccessGrant accessGrantForRequest(rpc::CommonRpcClientHandle *conn, const std::string &rq_shv_path, const std::string &method, const chainpack::RpcValue &rq_grant);
+
 	// checkPassword() might return bool
 	// but we are using setCheckPasswordResult() instead to support async password check in ACL manager
 	// for example LDAP ACL Manager
 	chainpack::UserLoginResult checkLogin(const shv::chainpack::UserLoginContext &ctx);
 
-	std::string dataToCpon(shv::chainpack::Rpc::ProtocolType protocol_type, const shv::chainpack::RpcValue::MetaData &md, const std::string &data, size_t start_pos = 0, size_t data_len = 0);
-
 	void sendNewLogEntryNotify(const std::string &msg);
+
+	const std::string& brokerId() const { return m_brokerId; }
+	iotqt::node::ShvNode * nodeForService(const shv::core::utils::ServiceProviderPath &spp);
 protected:
 	virtual void initDbConfigSqlConnection();
 	virtual AclManager* createAclManager();
@@ -100,28 +107,24 @@ private:
 
 	void lazyInit();
 
-	QString serverProfile(); // unified access via Globals::serverProfile()
-
-	void startTcpServer();
+	void startTcpServers();
 
 	void startWebSocketServers();
 
-	rpc::BrokerClientServerConnection* clientConnectionById(int connection_id);
+	rpc::ClientConnectionOnBroker* clientConnectionById(int connection_id);
 	std::vector<int> clientConnectionIds();
 
 	void createMasterBrokerConnections();
-	QList<rpc::SlaveBrokerClientConnection*> masterBrokerConnections() const;
-	rpc::SlaveBrokerClientConnection* masterBrokerConnectionById(int connection_id);
+	QList<rpc::MasterBrokerConnection*> masterBrokerConnections() const;
+	rpc::MasterBrokerConnection* masterBrokerConnectionById(int connection_id);
 
 	std::vector<rpc::CommonRpcClientHandle *> allClientConnections();
 
 	std::string resolveMountPoint(const shv::chainpack::RpcValue::Map &device_opts);
 
-	chainpack::AccessGrant accessGrantForRequest(rpc::CommonRpcClientHandle *conn, const std::string &rq_shv_path, const std::string &method, const chainpack::RpcValue &rq_grant);
-
 	void onRootNodeSendRpcMesage(const shv::chainpack::RpcMessage &msg);
 
-	void onClientMountedChanged(int client_id, const std::string &mount_point, bool is_mounted);
+	void onClientConnected(int client_id);
 
 	void sendNotifyToSubscribers(const std::string &shv_path, const std::string &method, const shv::chainpack::RpcValue &params);
 	bool sendNotifyToSubscribers(const shv::chainpack::RpcValue::MetaData &meta_data, const std::string &data);
@@ -134,7 +137,9 @@ private:
 	void propagateSubscriptionsToMasterBroker();
 protected:
 	AppCliOptions *m_cliOptions;
+	std::string m_brokerId;
 	rpc::BrokerTcpServer *m_tcpServer = nullptr;
+	rpc::BrokerTcpServer *m_sslServer = nullptr;
 #ifdef WITH_SHV_WEBSOCKETS
 	rpc::WebSocketServer *m_webSocketServer = nullptr;
 	rpc::WebSocketServer *m_webSocketSslServer = nullptr;

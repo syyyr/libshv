@@ -83,7 +83,9 @@ void ShvJournalFileWriter::append(int64_t msec, int uptime, const ShvJournalEntr
 	if(entry.shortTime >= 0)
 		m_out << entry.shortTime;
 	m_out << ShvFileJournal::FIELD_SEPARATOR;
-	if(!entry.domain.empty() && entry.domain != cp::Rpc::SIG_VAL_CHANGED)
+	if(entry.domain == cp::Rpc::SIG_VAL_CHANGED)
+		m_out << ShvJournalEntry::DOMAIN_VAL_CHANGE;
+	else
 		m_out << entry.domain;
 	m_out << ShvFileJournal::FIELD_SEPARATOR;
 	m_out << (int)entry.sampleType;

@@ -94,6 +94,7 @@ public:
 	static RpcValue popCallerId(const RpcValue &caller_ids, RpcValue::Int &id);
 	static RpcValue::Int popCallerId(RpcValue::MetaData &meta);
 	RpcValue::Int popCallerId();
+	static RpcValue::Int peekCallerId(const RpcValue::MetaData &meta);
 	RpcValue::Int peekCallerId() const;
 	RpcValue callerIds() const;
 	void setCallerIds(const RpcValue &callerIds);
@@ -108,6 +109,7 @@ public:
 
 	RpcValue userId() const;
 	void setUserId(const RpcValue &user_id);
+	static void setUserId(RpcValue::MetaData &meta, const RpcValue &user_id);
 
 	static Rpc::ProtocolType protocolType(const RpcValue::MetaData &meta);
 	static void setProtocolType(RpcValue::MetaData &meta, shv::chainpack::Rpc::ProtocolType ver);
@@ -281,8 +283,10 @@ public:
 	static RpcResponse forRequest(const RpcValue::MetaData &meta);
 	static RpcResponse forRequest(const RpcRequest &rq) {return forRequest(rq.metaData());}
 public:
-	bool hasRetVal() const {return isError() || result().isValid();}
+	bool hasRetVal() const {return !error().empty() || result().isValid();}
+	bool isSuccess() const {return result().isValid() && !isError();}
 	bool isError() const {return !error().empty();}
+	std::string errorString() const;
 	RpcResponse& setError(Error err);
 	Error error() const;
 	RpcResponse& setResult(const RpcValue &res);

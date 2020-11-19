@@ -14,8 +14,9 @@
 #include <QFontMetrics>
 #include <QSet>
 
-#define logSvgM() nCMessage("svg")
-#define logSvgD() nCDebug("svg")
+#define logSvgW() shvCWarning("svg")
+#define logSvgM() shvCMessage("svg")
+#define logSvgD() shvCDebug("svg")
 
 namespace shv {
 namespace visu {
@@ -912,8 +913,9 @@ SaxHandler::~SaxHandler()
 {
 }
 
-void SaxHandler::load(QXmlStreamReader *data)
+void SaxHandler::load(QXmlStreamReader *data, bool skip_definitions)
 {
+	m_skipDefinitions = skip_definitions;
 	m_xml = data;
 	m_defaultPen = QPen(Qt::black, 1, Qt::SolidLine, Qt::FlatCap, Qt::SvgMiterJoin);
 	m_defaultPen.setMiterLimit(4);
@@ -930,20 +932,26 @@ void SaxHandler::parse()
 {
 	m_xml->setNamespaceProcessing(false);
 	bool done = false;
+
 	while (!m_xml->atEnd() && !done) {
 		switch (m_xml->readNext()) {
 		case QXmlStreamReader::StartElement:
 		{
 			SvgElement el(m_xml->name().toString());
+			if(el.name == QLatin1String("defs")) {
+				if (m_skipDefinitions) {
+					m_xml->skipCurrentElement();
+					continue;
+				}
+			}
 			el.xmlAttributes = parseXmlAttributes(m_xml->attributes());
 			logSvgD() << QString(m_elementStack.count(), '-') << ">" << "+ start element:" << el.name << "id:" << el.xmlAttributes.value("id");
 			if(!m_elementStack.isEmpty())
 				el.styleAttributes = m_elementStack.last().styleAttributes;
 			mergeCSSAttributes(el.styleAttributes, QStringLiteral("style"), el.xmlAttributes);
 			m_elementStack.push(el);
-			if (startElement()) {
-				m_elementStack.last().itemCreated = true;
-			}
+			bool is_item_created = startElement();
+			m_elementStack.last().itemCreated = is_item_created;
 			break;
 		}
 		case QXmlStreamReader::EndElement:
@@ -1028,6 +1036,7 @@ bool SaxHandler::startElement()
 				t.translate(x, y);
 				text_item->setTransform(t, true);
 				text_item->setTextWidth(w);
+				return false;
 			}
 			else {
 				QGraphicsRectItem *item = new QGraphicsRectItem();
@@ -1038,7 +1047,6 @@ bool SaxHandler::startElement()
 				addItem(item);
 				return true;
 			}
-			return false;
 		}
 		else if (el.name == QLatin1String("circle")) {
 			QGraphicsEllipseItem *item = new QGraphicsEllipseItem();
@@ -1123,7 +1131,7 @@ bool SaxHandler::startElement()
 			return true;
 		}
 		else {
-			nWarning() << "unsupported element:" << el.name;
+			logSvgW() << "unsupported element:" << el.name;
 		}
 		return false;
 	}
@@ -1169,10 +1177,11 @@ void SaxHandler::setXmlAttributes(QGraphicsItem *git, const SaxHandler::SvgEleme
 			git->setData(Types::DataKey::ChildId, it.value());
 			attrs[k] = it.value();
 		}
-		if(it.key().startsWith(QStringLiteral("shv_")))
+		if(it.key().startsWith(QStringLiteral("shv")))
 			attrs[it.key()] = it.value();
 	}
 	git->setData(Types::DataKey::XmlAttributes, QVariant::fromValue(attrs));
+	git->setData(Types::DataKey::CssAttributes, QVariant::fromValue(el.styleAttributes));
 }
 
 void SaxHandler::setTransform(QGraphicsItem *it, const QString &str_val)

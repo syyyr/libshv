@@ -22,7 +22,7 @@ TcpServer::~TcpServer()
 
 bool TcpServer::start(int port)
 {
-	shvInfo() << "Starting RPC server on port:" << port;
+	shvInfo() << "start listenning on port:" << port;
 	if (!listen(QHostAddress::AnyIPv4, port)) {
 		shvError() << tr("Unable to start the server: %1.").arg(errorString());
 		close();
@@ -52,7 +52,7 @@ void TcpServer::onNewConnection()
 {
 	QTcpSocket *sock = nextPendingConnection();
 	if(sock) {
-		shvInfo().nospace() << "client connected: " << sock->peerAddress().toString() << ':' << sock->peerPort();// << "socket:" << sock << sock->socketDescriptor() << "state:" << sock->state();
+		shvInfo().nospace() << "client connected: " << sock->peerAddress().toString() << ':' << sock->peerPort() << " @ " << serverPort();// << "socket:" << sock << sock->socketDescriptor() << "state:" << sock->state();
 		ServerConnection *c = createServerConnection(sock, this);
 		c->setConnectionName(sock->peerAddress().toString().toStdString() + ':' + std::to_string(sock->peerPort()));
 		m_connections[c->connectionId()] = c;

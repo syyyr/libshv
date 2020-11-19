@@ -1,13 +1,14 @@
 #include "brokerapp.h"
 #include "aclmanagersqlite.h"
+#include "currentclientshvnode.h"
 #include "clientshvnode.h"
-#include "brokernode.h"
+#include "brokerappnode.h"
 #include "subscriptionsnode.h"
 #include "brokeraclnode.h"
 #include "clientconnectionnode.h"
 #include "rpc/brokertcpserver.h"
-#include "rpc/brokerclientserverconnection.h"
-#include "rpc/slavebrokerclientconnection.h"
+#include "rpc/clientconnectiononbroker.h"
+#include "rpc/masterbrokerconnection.h"
 
 #ifdef WITH_SHV_WEBSOCKETS
 #include "rpc/websocketserver.h"
@@ -17,6 +18,7 @@
 #include <shv/iotqt/node/shvnode.h>
 #include <shv/iotqt/node/shvnodetree.h>
 #include <shv/core/utils/shvpath.h>
+#include <shv/core/utils/serviceproviderpath.h>
 
 #include <shv/coreqt/log.h>
 
@@ -54,12 +56,16 @@
 #define logAclResolveW() nCWarning("AclResolve")
 #define logAclResolveM() nCMessage("AclResolve")
 
+#define logServiceProvidersM() nCMessage("ServiceProviders")
+
 #define logSubscriptionsD() nCDebug("Subscr").color(NecroLog::Color::Yellow)
 #define logSigResolveD() nCDebug("SigRes").color(NecroLog::Color::LightGreen)
 
 #define ACCESS_EXCEPTION(msg) SHV_EXCEPTION_V(msg, "Access")
 
 namespace cp = shv::chainpack;
+
+using namespace std;
 
 namespace shv {
 namespace broker {
@@ -68,6 +74,8 @@ namespace broker {
 int BrokerApp::m_sigTermFd[2];
 #endif
 
+static string CURRENT_CLIENT_SHV_PATH = string(cp::Rpc::DIR_BROKER) + '/' + CurrentClientShvNode::NodeId;
+
 class ClientsNode : public shv::iotqt::node::MethodsTableNode
 {
 	using Super = shv::iotqt::node::MethodsTableNode;
@@ -75,8 +83,8 @@ public:
 	ClientsNode(shv::iotqt::node::ShvNode *parent = nullptr)
 		: Super(std::string(), &m_metaMethods, parent)
 		, m_metaMethods {
-				  {cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam},
-				  {cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_CONFIG},
+			{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Browse},
+			{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Browse},
 		}
 	{ }
 
@@ -147,10 +155,10 @@ public:
 			BrokerApp *app = BrokerApp::instance();
 			StringList lst;
 			for(int id : app->clientConnectionIds()) {
-				rpc::BrokerClientServerConnection *conn = app->clientConnectionById(id);
-				for(const std::string &mp : conn->mountPoints()) {
+				rpc::ClientConnectionOnBroker *conn = app->clientConnectionById(id);
+				const string mp = conn->mountPoint();
+				if(!mp.empty())
 					lst.push_back(shv::core::utils::ShvPath::SHV_PATH_QUOTE + mp + shv::core::utils::ShvPath::SHV_PATH_QUOTE);
-				}
 			}
 			std::sort(lst.begin(), lst.end());
 			return lst;
@@ -176,7 +184,7 @@ public:
 				if(nd == nullptr)
 					SHV_EXCEPTION("Wrong node type on path: " + path + ", looking for ClientShvNode, found: " + nd1->metaObject()->className());
 				cp::RpcValue::List lst;
-				for(rpc::BrokerClientServerConnection *conn : nd->connections())
+				for(rpc::ClientConnectionOnBroker *conn : nd->connections())
 					lst.push_back(conn->connectionId());
 				return cp::RpcValue{lst};
 			}
@@ -203,6 +211,7 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 	, m_cliOptions(cli_opts)
 {
 	//shvInfo() << "creating SHV BROKER application object ver." << versionString();
+	m_brokerId = m_cliOptions->brokerId();
 	std::srand(std::time(nullptr));
 #ifdef Q_OS_UNIX
 	//syslog (LOG_INFO, "Server started");
@@ -210,8 +219,9 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 #endif
 	m_nodesTree = new shv::iotqt::node::ShvNodeTree(this);
 	connect(m_nodesTree->root(), &shv::iotqt::node::ShvRootNode::sendRpcMessage, this, &BrokerApp::onRootNodeSendRpcMesage);
-	BrokerNode *bn = new BrokerNode();
+	BrokerAppNode *bn = new BrokerAppNode();
 	m_nodesTree->mount(cp::Rpc::DIR_BROKER_APP, bn);
+	m_nodesTree->mount(CURRENT_CLIENT_SHV_PATH, new CurrentClientShvNode());
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/clients", new ClientsNode());
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/masters", new MasterBrokersNode());
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/mounts", new MountsNode());
@@ -227,15 +237,17 @@ BrokerApp::~BrokerApp()
 
 void BrokerApp::registerLogTopics()
 {
-	NecroLog::registerTopic("Tunnel", "tunneling");
 	NecroLog::registerTopic("Access", "users access log");
 	NecroLog::registerTopic("AclResolve", "users and grants resolving");
 	NecroLog::registerTopic("AclManager", "ACL manager");
-	NecroLog::registerTopic("Subscr", "subscriptions creation and propagation");
-	NecroLog::registerTopic("SigRes", "signal resolution in client subscriptions");
+	NecroLog::registerTopic("RpcData", "dump RPC mesages as HEX data");
 	NecroLog::registerTopic("RpcMsg", "dump RPC messages");
 	NecroLog::registerTopic("RpcRawMsg", "dump raw RPC messages");
-	NecroLog::registerTopic("RpcData", "dump RPC mesages as HEX data");
+	NecroLog::registerTopic("ServiceProviders", "service providers");
+	NecroLog::registerTopic("SigRes", "signal resolution in client subscriptions");
+	NecroLog::registerTopic("Subscr", "subscriptions creation and propagation");
+	NecroLog::registerTopic("Tunnel", "tunneling");
+	NecroLog::registerTopic("WriteQueue", "RpcDriver write queue");
 }
 
 #ifdef Q_OS_UNIX
@@ -292,7 +304,14 @@ rpc::BrokerTcpServer *BrokerApp::tcpServer()
 	return m_tcpServer;
 }
 
-rpc::BrokerClientServerConnection *BrokerApp::clientById(int client_id)
+rpc::BrokerTcpServer *BrokerApp::sslServer()
+{
+	if(!m_sslServer)
+		SHV_EXCEPTION("SSL server is NULL!");
+	return m_sslServer;
+}
+
+rpc::ClientConnectionOnBroker *BrokerApp::clientById(int client_id)
 {
 	return clientConnectionById(client_id);
 }
@@ -324,12 +343,42 @@ void BrokerApp::reloadAcl()
 	aclManager()->reload();
 }
 
-void BrokerApp::startTcpServer()
+void BrokerApp::startTcpServers()
 {
-	SHV_SAFE_DELETE(m_tcpServer);
-	m_tcpServer = new rpc::BrokerTcpServer(this);
-	if(!m_tcpServer->start(cliOptions()->serverPort())) {
-		SHV_EXCEPTION("Cannot start TCP server!");
+	const auto *opts = cliOptions();
+
+	if(opts->serverPort_isset()) {
+		// port must be set explicitly to enable server
+		SHV_SAFE_DELETE(m_tcpServer);
+		int port = opts->serverPort();
+		if(port > 0) {
+			shvInfo() << "Starting plain socket server on port" << port;
+			m_tcpServer = new rpc::BrokerTcpServer(rpc::BrokerTcpServer::NonSecureMode, this);
+			if(!m_tcpServer->start(port)) {
+				SHV_EXCEPTION("Cannot start TCP server!");
+			}
+		}
+		else {
+			shvInfo() << "TCP server port is not set, it will not be started.";
+		}
+	}
+
+	if(opts->serverSslPort_isset()) {
+		SHV_SAFE_DELETE(m_sslServer);
+		int port = opts->serverSslPort();
+		if(port > 0) {
+			shvInfo() << "Starting SSL server on port" << port;
+			m_sslServer = new rpc::BrokerTcpServer(rpc::BrokerTcpServer::SecureMode, this);
+			if(!m_sslServer->loadSslConfig()) {
+				SHV_EXCEPTION("Cannot start SSL server, invalid SSL config!");
+			}
+			if(!m_sslServer->start(port)) {
+				SHV_EXCEPTION("Cannot start SSL server!");
+			}
+		}
+		else {
+			shvInfo() << "SSL server port is not set, it will not be started.";
+		}
 	}
 }
 
@@ -341,7 +390,7 @@ void BrokerApp::startWebSocketServers()
 		SHV_SAFE_DELETE(m_webSocketServer);
 		int port = opts->serverWebsocketPort();
 		if(port > 0) {
-		m_webSocketServer = new rpc::WebSocketServer(QWebSocketServer::NonSecureMode, this);
+			m_webSocketServer = new rpc::WebSocketServer(QWebSocketServer::NonSecureMode, this);
 			if(!m_webSocketServer->start(port)) {
 				SHV_EXCEPTION("Cannot start WebSocket server!");
 			}
@@ -354,7 +403,7 @@ void BrokerApp::startWebSocketServers()
 		SHV_SAFE_DELETE(m_webSocketSslServer);
 		int port = opts->serverWebsocketSslPort();
 		if(port > 0) {
-		m_webSocketSslServer = new rpc::WebSocketServer(QWebSocketServer::SecureMode, this);
+			m_webSocketSslServer = new rpc::WebSocketServer(QWebSocketServer::SecureMode, this);
 			if(!m_webSocketSslServer->start(port)) {
 				SHV_EXCEPTION("Cannot start WebSocket SSL server!");
 			}
@@ -368,11 +417,19 @@ void BrokerApp::startWebSocketServers()
 #endif
 }
 
-rpc::BrokerClientServerConnection *BrokerApp::clientConnectionById(int connection_id)
+rpc::ClientConnectionOnBroker *BrokerApp::clientConnectionById(int connection_id)
 {
 	shvLogFuncFrame() << "conn id:" << connection_id;
-	rpc::BrokerClientServerConnection *conn = tcpServer()->connectionById(connection_id);
-	shvDebug() << "tcp connection:" << conn;
+
+	rpc::ClientConnectionOnBroker *conn = nullptr;
+	if (m_sslServer) {
+		conn = sslServer()->connectionById(connection_id);
+		shvDebug() << "SSL connection:" << conn;
+	}
+	if (!conn && m_tcpServer) {
+		conn = tcpServer()->connectionById(connection_id);
+		shvDebug() << "TCP connection:" << conn;
+	}
 #ifdef WITH_SHV_WEBSOCKETS
 	if(!conn && m_webSocketServer) {
 		conn = m_webSocketServer->connectionById(connection_id);
@@ -392,6 +449,10 @@ std::vector<int> BrokerApp::clientConnectionIds()
 	if(m_tcpServer) {
 		ids = m_tcpServer->connectionIds();
 	}
+	if(m_sslServer) {
+		std::vector<int> ids2 = m_sslServer->connectionIds();
+		ids.insert( ids.end(), ids2.begin(), ids2.end() );
+	}
 #ifdef WITH_SHV_WEBSOCKETS
 	if(m_webSocketServer) {
 		std::vector<int> ids2 = m_webSocketServer->connectionIds();
@@ -409,7 +470,7 @@ void BrokerApp::lazyInit()
 {
 	initDbConfigSqlConnection();
 	reloadConfig();
-	startTcpServer();
+	startTcpServers();
 	startWebSocketServers();
 	createMasterBrokerConnections();
 }
@@ -424,24 +485,10 @@ chainpack::UserLoginResult BrokerApp::checkLogin(const chainpack::UserLoginConte
 	return aclManager()->checkPassword(ctx);
 }
 
-std::string BrokerApp::dataToCpon(shv::chainpack::Rpc::ProtocolType protocol_type, const shv::chainpack::RpcValue::MetaData &md, const std::string &data, size_t start_pos, size_t data_len)
-{
-	shv::chainpack::RpcValue rpc_val;
-	if(data_len == 0)
-		data_len = data.size() - start_pos;
-	if(data_len < 256) {
-		rpc_val = shv::chainpack::RpcDriver::decodeData(protocol_type, data, start_pos);
-	}
-	else {
-		rpc_val = " ... " + std::to_string(data_len) + " bytes of data ... ";
-	}
-	rpc_val.setMetaData(shv::chainpack::RpcValue::MetaData(md));
-	return rpc_val.toPrettyString();
-}
-
 void BrokerApp::sendNewLogEntryNotify(const std::string &msg)
 {
-	sendNotifyToSubscribers(".broker/app/log", cp::Rpc::SIG_VAL_CHANGED, msg);
+	if(isLogEntryNotyfyEnabled())
+		sendNotifyToSubscribers(".broker/app/log", cp::Rpc::SIG_VAL_CHANGED, msg);
 }
 
 void BrokerApp::initDbConfigSqlConnection()
@@ -476,13 +523,35 @@ AclManager *BrokerApp::createAclManager()
 	return new AclManagerConfigFiles(this);
 }
 
+iotqt::node::ShvNode *BrokerApp::nodeForService(const core::utils::ServiceProviderPath &spp)
+{
+	if(spp.isServicePath()) {
+		iotqt::node::ShvNode *ret = m_nodesTree->cd(spp.service().toString());
+		if(ret) {
+			core::StringView sid = spp.brokerId();
+			if(!sid.empty()) {
+				if(sid == "@") {
+					/// root broker
+					if(mainMasterBrokerConnection() != nullptr)
+						return nullptr;
+				}
+				else if(!(sid.mid(1) == brokerId())) {
+					return nullptr;
+				}
+			}
+			return ret;
+		}
+	}
+	return nullptr;
+}
+
 void BrokerApp::remountDevices()
 {
 	shvInfo() << "Remounting devices by dropping their connection";
 	for(int conn_id : clientConnectionIds()) {
-		rpc::BrokerClientServerConnection *conn = clientConnectionById(conn_id);
-		if(conn && !conn->mountPoints().empty()) {
-			shvInfo() << "Dropping connection ID:" << conn_id << "mounts:" << shv::core::String::join(conn->mountPoints(), ' ');
+		rpc::ClientConnectionOnBroker *conn = clientConnectionById(conn_id);
+		if(conn && !conn->mountPoint().empty()) {
+			shvInfo() << "Dropping connection ID:" << conn_id << "mounted on:" << conn->mountPoint();
 			conn->close();
 		}
 	}
@@ -526,38 +595,26 @@ std::string BrokerApp::primaryIPAddress(bool &is_public)
 
 void BrokerApp::propagateSubscriptionsToMasterBroker()
 {
-	logSubscriptionsD() << "Connected to main master broker, propagating client subscriptions.";
-	rpc::SlaveBrokerClientConnection *mbrconn = mainMasterBrokerConnection();
+	rpc::MasterBrokerConnection *mbrconn = mainMasterBrokerConnection();
 	if(!mbrconn)
 		return;
+	logSubscriptionsD() << "Connected to main master broker, propagating client subscriptions.";
 	for(int id : clientConnectionIds()) {
-		rpc::BrokerClientServerConnection *conn = clientConnectionById(id);
+		rpc::ClientConnectionOnBroker *conn = clientConnectionById(id);
 		for (size_t i = 0; i < conn->subscriptionCount(); ++i) {
 			const rpc::CommonRpcClientHandle::Subscription &subs = conn->subscriptionAt(i);
-			if(shv::core::utils::ShvPath::isRelativePath(subs.absolutePath)) {
-				logSubscriptionsD() << "client id:" << id << "propagating subscription for path:" << subs.absolutePath << "method:" << subs.method;
-				mbrconn->callMethodSubscribe(subs.absolutePath, subs.method);
+			shv::core::utils::ServiceProviderPath spp(subs.localPath);
+			if(spp.isServicePath()) {
+				logSubscriptionsD() << "client id:" << id << "propagating subscription for path:" << subs.localPath << "method:" << subs.method;
+				mbrconn->callMethodSubscribe(subs.localPath, subs.method);
 			}
 		}
 	}
 }
 
-static bool is_first_path_more_specific(const std::string &path1, const std::string &meth1, const std::string &path2, const std::string &meth2)
-{
-	if(!meth1.empty() && meth2.empty()) {
-		// path with method is always more specific
-		return true;
-	}
-	if(meth1.empty() && !meth2.empty()) {
-		return false;
-	}
-	// naive implementation consider longer path to be more specific
-	return path1.size() > path2.size();
-}
-
 chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHandle *conn, const std::string &rq_shv_path, const std::string &method, const shv::chainpack::RpcValue &rq_grant)
 {
-	logAclResolveM() << "===== accessGrantForShvPath user:" << conn->loggedUserName() << "requested path:" << rq_shv_path << "method:" << method << "request grant:" << rq_grant.toCpon();
+	logAclResolveM() << "<==== accessGrantForShvPath user:" << conn->loggedUserName() << "requested path:" << rq_shv_path << "method:" << method << "request grant:" << rq_grant.toCpon();
 #ifdef USE_SHV_PATHS_GRANTS_CACHE
 	PathGrantCache *user_path_grants = m_userPathGrantCache.object(user_name);
 	if(user_path_grants) {
@@ -572,90 +629,100 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	auto request_grant = cp::AccessGrant::fromRpcValue(rq_grant);
 	if(is_request_from_master_broker) {
 		if(request_grant.isValid()) {
-			if(!request_grant.notResolved)
-				return request_grant;
-			if(!request_grant.isRole()) {
-				logAclResolveW() << "Cannot resolve grant:" << request_grant.toRpcValue().toCpon();
-				if(request_grant.isUserLogin())
-					logAclResolveW() << "Resolving of UserLogin is not implemented yet.";
-				return cp::AccessGrant();
-			}
+			// access resolved by master broker already, forward use this
+			return request_grant;
 		}
 	}
 	else {
 		if(request_grant.isValid()) {
-			logAclResolveM() << "Client defined grantd in RPC request are not implemented yet and will be ignored.";
-			if(!request_grant.notResolved)
-				logAclResolveW() << "Client cannot send resolved grant in request.";
+			logAclResolveM() << "Client defined grants in RPC request are not implemented yet and will be ignored.";
 		}
 	}
-	std::vector<AclManager::FlattenRole> user_roles;
+	std::vector<AclManager::FlattenRole> flatten_user_roles;
 	if(is_request_from_master_broker) {
-		user_roles = aclManager()->flattenRole(cp::Rpc::ROLE_MASTER_BROKER);
+		// set masterBroker role to requests from master broker without access grant specified
+		// This is used mainly for service calls as (un)subscribe propagation to slave brokers etc.
+		if(rq_shv_path == cp::Rpc::DIR_BROKER_APP) {
+			// master broker has always rd grant to .broker/app path
+			return cp::AccessGrant(cp::Rpc::ROLE_WRITE);
+		}
+		flatten_user_roles = aclManager()->flattenRole(cp::Rpc::ROLE_MASTER_BROKER);
 	}
 	else {
-		user_roles = aclManager()->userFlattenRoles(conn->loggedUserName());
+		flatten_user_roles = aclManager()->userFlattenRoles(conn->loggedUserName());
 	}
-	logAclResolveM() << "roles:";
-	for(const AclManager::FlattenRole &flatten_role : user_roles) {
-		logAclResolveM() << "\t" << flatten_role.name << " : with weight:" << flatten_role.weight << "nest level:" << flatten_role.nestLevel;
+	//logAclResolveM() << "user:" << conn->loggedUserName() << "flatten roles:";
+	//for(const AclManager::FlattenRole &flatten_role : flatten_user_roles) {
+	//	logAclResolveM() << "\t" << flatten_role.name << "\tweight:" << flatten_role.weight << "\tnest level:" << flatten_role.nestLevel;
+	//}
+	if(true) {
+		logAclResolveM() << "no match found, searched rules:" << [this, &flatten_user_roles]() -> string
+		{
+			string tbl = "\n--------------------------------------------------------";
+			tbl += "\nrole\tweight\tpattern\tmethod\tgrant";
+			tbl += "\n--------------------------------------------------------";
+			for(const AclManager::FlattenRole &role : flatten_user_roles) {
+				const AclRoleAccessRules &role_rules = aclManager()->accessRoleRules(role.name);
+				for(const AclAccessRule &access_rule : role_rules) {
+					tbl += '\n';
+					tbl += role.name + "'";
+					tbl += "\t" + to_string(role.weight);
+					tbl += "\t'" + access_rule.pathPattern + "'";
+					tbl += "\t'" + access_rule.method + "'";
+					tbl += "\t" + access_rule.grant.toRpcValue().toCpon();
+				}
+			}
+			return tbl;
+		}();
+
 	}
 	// find most specific path grant for role with highest weight
 	// user_flattent_grants are sorted by weight DESC
 	AclAccessRule most_specific_rule;
-	//cp::AccessGrant most_specific_path_grant;
-	//std::string most_specific_path;
-	//std::string most_specific_path_method;
-	int most_specific_role_weight = std::numeric_limits<int>::min();
-	shv::iotqt::node::ShvNode::StringViewList shv_path_lst = shv::core::utils::ShvPath::split(rq_shv_path);
-
-	// roles are sorted in weight DESC nest_level ASC
-	for(const AclManager::FlattenRole &flatten_role : user_roles) {
-		if(most_specific_role_weight != std::numeric_limits<int>::min() && flatten_role.weight < most_specific_role_weight) {
-			// roles with lower weight have lower priority, skip them
-			break;
-		}
-		logAclResolveM() << "----- checking role:" << flatten_role.name << "with weight:" << flatten_role.weight << "nest level:" << flatten_role.nestLevel;
-		const AclRoleAccessRules &role_rules = aclManager()->accessRoleRules(flatten_role.name);
-		if(role_rules.empty()) {
-			logAclResolveM() << "\t no paths defined.";
-		}
-		else for(const AclAccessRule &access_rule : role_rules) {
-			//const std::string &role_path = kv.first;
-
-			//const AclAccessRule &acces_grant = kv.second;
-			logAclResolveM().nospace() << "\t path: '" << access_rule.pathPattern << "' len: " << access_rule.pathPattern.size();
-
-			shv::iotqt::node::ShvNode::StringViewList rule_path_pattern_list = shv::core::utils::ShvPath::split(access_rule.pathPattern);
-			//std::string role_path_method = acces_grant.method;
-			if((access_rule.method.empty() || access_rule.method == method)
-					&& shv::core::utils::ShvPath::matchWild(shv_path_lst, rule_path_pattern_list)) {
-				logAclResolveM().nospace() << "\t\t MATCH, path: '" << access_rule.pathPattern << shv::core::utils::ShvPath::SHV_PATH_METHOD_DELIM << access_rule.method << "'"
-										   << " matches request path: '" << rq_shv_path << shv::core::utils::ShvPath::SHV_PATH_METHOD_DELIM << method << "'";
-				if(is_first_path_more_specific(access_rule.pathPattern, access_rule.method
-											   , most_specific_rule.pathPattern, most_specific_rule.method)) {
-					logAclResolveM().nospace() << "\t\t HIT, more specific path found ': " << access_rule.pathPattern << "' grant: " << access_rule.grant.toRpcValue().toCpon();
-					most_specific_rule = access_rule;
-					//most_specific_path = role_path;
-					//most_specific_path_method = role_path_method;
-					//most_specific_path_grant = acces_grant.accessGrant;
-					most_specific_role_weight = flatten_role.weight;
+	if(rq_shv_path == CURRENT_CLIENT_SHV_PATH) {
+		// client has WR grant on currentClient node
+		most_specific_rule.grant = cp::AccessGrant{cp::Rpc::ROLE_WRITE};
+	}
+	else {
+		// roles are sorted in weight DESC
+		int old_weight = std::numeric_limits<int>::max();
+		for(const AclManager::FlattenRole &flatten_role : flatten_user_roles) {
+			if(flatten_role.weight != old_weight) {
+				if(most_specific_rule.isValid()) {
+					// roles with lower weight have lower priority, skip them
+					break;
+				}
+				old_weight = flatten_role.weight;
+			}
+			logAclResolveM() << "----- checking role:" << flatten_role.name << "with weight:" << flatten_role.weight << "nest level:" << flatten_role.nestLevel;
+			const AclRoleAccessRules &role_rules = aclManager()->accessRoleRules(flatten_role.name);
+			if(role_rules.empty()) {
+				logAclResolveM() << "\t no paths defined.";
+			}
+			else for(const AclAccessRule &access_rule : role_rules) {
+				// rules are sorted as most specific first
+				logAclResolveM() << "rule:" << access_rule.toRpcValue().toCpon();
+				if(access_rule.isPathMethodMatch(rq_shv_path, method)) {
+					if(access_rule.isMoreSpecificThan(most_specific_rule)) {
+						logAclResolveM() << "\t+++HIT more specific rule found" << most_specific_rule.toRpcValue().toCpon();
+						most_specific_rule = access_rule;
+					}
+					else if(!most_specific_rule.isMoreSpecificThan(access_rule)) {
+						// the same specific rules, this is problem
+						logAclResolveW() << "the same specific rules found!";
+						logAclResolveW() << "\t" << access_rule.toRpcValue().toCpon();
+						logAclResolveW() << "\t" << most_specific_rule.toRpcValue().toCpon();
+					}
+					else {
+						logAclResolveM() << "\t---HIT but rule is not more specific than:" << most_specific_rule.toRpcValue().toCpon();
+					}
 				}
 			}
-			else {
-				logAclResolveM().nospace() << "\t\t path: '" << access_rule.pathPattern << "' does not match request path: '" << rq_shv_path << ':' << method << "'";
-			}
 		}
 	}
-#ifdef USE_SHV_PATHS_GRANTS_CACHE
-	if(!user_path_grants) {
-		user_path_grants = new PathGrantCache();
-		if(!m_userPathGrantCache.insert(user_name, user_path_grants))
-			shvError() << "m_userPathGrantCache::insert() error";
+	if(!most_specific_rule.isValid()) {
+		logAclResolveM() << "no match found, permission denied!";
 	}
-	if(user_path_grants)
-		user_path_grants->insert(shv_path, new cp::Rpc::AccessGrant(ret));
-#endif
 	logAclResolveM() << "access user:" << conn->loggedUserName()
 				 << "shv_path:" << rq_shv_path
 				 << "rq_grant:" << (rq_grant.isValid()? rq_grant.toCpon(): "<none>")
@@ -665,7 +732,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 
 void BrokerApp::onClientLogin(int connection_id)
 {
-	rpc::BrokerClientServerConnection *conn = clientConnectionById(connection_id);
+	rpc::ClientConnectionOnBroker *conn = clientConnectionById(connection_id);
 	if(!conn)
 		SHV_EXCEPTION("Cannot find connection for ID: " + std::to_string(connection_id));
 	//const shv::chainpack::RpcValue::Map &opts = conn->connectionOptions();
@@ -685,24 +752,9 @@ void BrokerApp::onClientLogin(int connection_id)
 		if(!clients_nd)
 			SHV_EXCEPTION("Cannot create parent for ClientDirNode id: " + std::to_string(connection_id));
 		ClientConnectionNode *client_id_node = new ClientConnectionNode(connection_id, clients_nd);
-		//shvWarning() << "path1:" << client_dir_node->shvPath();
 		ClientShvNode *client_app_node = new ClientShvNode("app", conn, client_id_node);
-		//shvWarning() << "path2:" << client_app_node->shvPath();
-		/*
-		std::string app_mount_point = brokerClientAppPath(connection_id);
-		shv::iotqt::node::ShvNode *curr_nd = m_deviceTree->cd(app_mount_point);
-		ShvClientNode *curr_cli_nd = qobject_cast<ShvClientNode*>(curr_nd);
-		if(curr_cli_nd) {
-			shvWarning() << "The SHV client on" << app_mount_point << "exists already, this should never happen!";
-			curr_cli_nd->connection()->abort();
-			delete curr_cli_nd;
-		}
-		if(!m_deviceTree->mount(app_mount_point, cli_nd))
-			SHV_EXCEPTION("Cannot mount connection to device tree, connection id: " + std::to_string(connection_id)
-						  + " shv path: " + app_mount_point);
-		*/
 		// delete whole client tree, when client is destroyed
-		connect(conn, &rpc::BrokerClientServerConnection::destroyed, client_id_node, &ClientShvNode::deleteLater);
+		connect(conn, &rpc::ClientConnectionOnBroker::destroyed, client_id_node, &ClientShvNode::deleteLater);
 
 		conn->setParent(client_app_node);
 		{
@@ -733,18 +785,22 @@ void BrokerApp::onClientLogin(int connection_id)
 				cli_nd = new ClientShvNode(std::string(), conn);
 				if(!m_nodesTree->mount(mount_point, cli_nd))
 					SHV_EXCEPTION("Cannot mount connection to device tree, connection id: " + std::to_string(connection_id));
+				connect(cli_nd, &ClientShvNode::destroyed, cli_nd->parentNode(), &shv::iotqt::node::ShvNode::deleteIfEmptyWithParents, Qt::QueuedConnection);
+				QTimer::singleShot(0, this, [this, mount_point]() {
+					//shvInfo() << "mounted node created:" << mount_point;
+					sendNotifyToSubscribers(mount_point, cp::Rpc::SIG_MOUNTED_CHANGED, true);
+				});
 			}
 			mount_point = cli_nd->shvPath();
 			shvInfo() << "client connection id:" << conn->connectionId() << "device id:" << conn->deviceId().toCpon() << " mounted on:" << mount_point;
 			/// overwrite client default mount point
-			conn->addMountPoint(mount_point);
-			connect(conn, &rpc::BrokerClientServerConnection::destroyed, this, [this, connection_id, mount_point]() {
-				shvInfo() << "server connection destroyed";
-				this->onClientMountedChanged(connection_id, mount_point, false);
+			conn->setMountPoint(mount_point);
+			connect(cli_nd, &ClientShvNode::destroyed, this, [this, mount_point]() {
+				shvInfo() << "mounted node destroyed:" << mount_point;
+				sendNotifyToSubscribers(mount_point, cp::Rpc::SIG_MOUNTED_CHANGED, false);
 			});
-			connect(cli_nd, &ClientShvNode::destroyed, cli_nd->parentNode(), &shv::iotqt::node::ShvNode::deleteIfEmptyWithParents, static_cast<Qt::ConnectionType>(Qt::UniqueConnection | Qt::QueuedConnection));
-			QTimer::singleShot(0, [this, connection_id, mount_point]() {
-				onClientMountedChanged(connection_id, mount_point, true);
+			QTimer::singleShot(0, this, [this, connection_id]() {
+				onClientConnected(connection_id);
 			});
 		}
 	}
@@ -753,7 +809,7 @@ void BrokerApp::onClientLogin(int connection_id)
 
 void BrokerApp::onConnectedToMasterBrokerChanged(int connection_id, bool is_connected)
 {
-	rpc::SlaveBrokerClientConnection *conn = masterBrokerConnectionById(connection_id);
+	rpc::MasterBrokerConnection *conn = masterBrokerConnectionById(connection_id);
 	if(!conn) {
 		shvError() << "Cannot find master broker connection for ID:" << connection_id;
 		return;
@@ -803,46 +859,90 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 		// prepare response for catch block
 		// it cannot be constructed from meta, since meta is moved in the try block
 		shv::chainpack::RpcResponse rsp = cp::RpcResponse::forRequest(meta);
+		rpc::ClientConnectionOnBroker *client_connection = clientConnectionById(connection_id);
+		rpc::MasterBrokerConnection *master_broker_connection = masterBrokerConnectionById(connection_id);
+		rpc::CommonRpcClientHandle *connection_handle = client_connection;
+		if(connection_handle == nullptr)
+			connection_handle = master_broker_connection;
 		try {
-			rpc::BrokerClientServerConnection *client_connection = clientConnectionById(connection_id);
-			rpc::SlaveBrokerClientConnection *broker_connection = masterBrokerConnectionById(connection_id);
-			rpc::CommonRpcClientHandle *connection_handle = client_connection;
-			if(connection_handle == nullptr)
-				connection_handle = broker_connection;
 			std::string shv_path = cp::RpcMessage::shvPath(meta).toString();
+			bool is_service_provider_mount_point_relative_call = false;
 			if(connection_handle) {
-				if(shv::core::utils::ShvPath::isRelativePath(shv_path)) {
-					rpc::SlaveBrokerClientConnection *master_broker_conn = mainMasterBrokerConnection();
-					if(client_connection) {
-						shv_path = client_connection->resolveLocalPath(shv_path);
-					}
-					if(shv::core::utils::ShvPath::isRelativePath(shv_path)) {
-						/// still relative path, it should be forwarded to mater broker
-						if(master_broker_conn == nullptr)
-							ACCESS_EXCEPTION("Cannot resolve relative path " + cp::RpcMessage::shvPath(meta).toString() + ", there is no master broker to forward the request.");
-						cp::RpcMessage::setShvPath(meta, shv_path);
-						cp::RpcMessage::pushCallerId(meta, connection_id);
-						master_broker_conn->sendRawData(std::move(meta), std::move(data));
-						return;
-					}
-					cp::RpcMessage::setShvPath(meta, shv_path);
-				}
 				if(client_connection) {
-					// erase grant from client connections
-					cp::RpcValue ag = cp::RpcMessage::accessGrant(meta);
-					if(ag.isValid() /*&& !ag.isUserLogin()*/) {
-						shvWarning() << "Client request with access grant specified not allowed, erasing:" << ag.toPrettyString();
-						cp::RpcMessage::setAccessGrant(meta, cp::RpcValue());
+					if(!client_connection->isSlaveBrokerConnection()) {
+						{
+							// erase grant from client connections
+							cp::RpcValue ag = cp::RpcMessage::accessGrant(meta);
+							if(ag.isValid() /*&& !ag.isUserLogin()*/) {
+								shvWarning() << "Client request with access grant specified not allowed, erasing:" << ag.toPrettyString();
+								cp::RpcMessage::setAccessGrant(meta, cp::RpcValue());
+							}
+						}
+						{
+							// fill in user_id, for current client issueng rpc request
+							cp::RpcRequest::setUserId(meta, client_connection->userName()
+													  + '@'
+													  + cliOptions()->brokerId());
+						}
+					}
+					/// check service provider call
+					using ServiceProviderPath = shv::core::utils::ServiceProviderPath;
+					ServiceProviderPath spp(shv_path);
+					if(spp.isServicePath()) {
+						//using ShvPath = shv::core::utils::ShvPath;
+						//string service = shv_path.substr(0, sp_ix);
+						//char service_mark = shv_path[sp_ix];
+						//string client_path = shv_path.substr(sp_ix + 2);
+						iotqt::node::ShvNode *service_node = nodeForService(spp);
+						logServiceProvidersM() << "Service path found:" << shv_path
+											   << "service:" << spp.service().toString()
+											   << "type:" << spp.typeString()
+											   << "path rest:" << spp.pathRest().toString()
+											   << "node:" << service_node;
+						//iotqt::node::ShvNode *service_node2;
+						string resolved_local_path = client_connection->resolveLocalPath(spp, &service_node);
+						logServiceProvidersM() << "Resolved local path:" << resolved_local_path << "service node:" << service_node;
+						//if(service_node != service_node2)
+						//	shvError() << service_node << "vs" << service_node2 << "MISSMATCH";
+						if(service_node) {
+							//string new_shv_path = spp.makePlainPath(string());
+							logServiceProvidersM() << shv_path << "service path resolved on this broker, making path absolute:" << resolved_local_path;
+							cp::RpcRequest::setShvPath(meta, resolved_local_path);
+							is_service_provider_mount_point_relative_call = spp.isMountPointRelative();
+						}
+						else {
+							rpc::MasterBrokerConnection *master_broker = mainMasterBrokerConnection();
+							logServiceProvidersM() << "service path not found, forwarding it to master broker:" << master_broker;
+							if(master_broker == nullptr)
+								ACCESS_EXCEPTION("Cannot call service provider path " + cp::RpcMessage::shvPath(meta).toString() + ", there is no master broker to forward the request.");
+							logServiceProvidersM() << "forwarded shv path:" << resolved_local_path;
+							cp::RpcRequest::setShvPath(meta, resolved_local_path);
+							cp::RpcMessage::pushCallerId(meta, connection_id);
+							master_broker->sendRawData(std::move(meta), std::move(data));
+							return;
+						}
 					}
 				}
 				const std::string &method = cp::RpcMessage::method(meta).toString();
-				cp::AccessGrant acg = accessGrantForRequest(connection_handle, shv_path, method, cp::RpcMessage::accessGrant(meta));
-				if(!acg.isValid())
-					ACCESS_EXCEPTION("Acces to shv path '" + shv_path + "' not granted for user '" + connection_handle->loggedUserName() + "'");
+				const std::string &resolved_shv_path = cp::RpcMessage::shvPath(meta).toString();
+				cp::AccessGrant acg;
+				if(is_service_provider_mount_point_relative_call) {
+					logAclResolveM() << "<==== access grant for user:" << connection_handle->loggedUserName() << "requested path:" << shv_path << "method:" << method;
+					acg = cp::AccessGrant(cp::Rpc::ROLE_WRITE);
+					logAclResolveM() << "===> resolved path:" << resolved_shv_path << "grant:" << acg.toRpcValue().toCpon();
+				}
+				else {
+					acg = accessGrantForRequest(connection_handle, resolved_shv_path, method, cp::RpcMessage::accessGrant(meta));
+				}
+				if(!acg.isValid()) {
+					if(master_broker_connection)
+						shvWarning() << "Acces to shv path '" + resolved_shv_path + "' not granted for master broker";
+					ACCESS_EXCEPTION("Acces to shv path '" + resolved_shv_path + "' not granted for user '" + connection_handle->loggedUserName() + "'");
+				}
 				cp::RpcMessage::setAccessGrant(meta, acg.toRpcValue());
 				cp::RpcMessage::pushCallerId(meta, connection_id);
 				if(m_nodesTree->root()) {
-					shvDebug() << "REQUEST conn id:" << connection_id << meta.toPrettyString();
+					//shvInfo() << "REQUEST conn id:" << connection_id << meta.toPrettyString();
 					m_nodesTree->root()->handleRawRpcRequest(std::move(meta), std::move(data));
 				}
 				else {
@@ -854,12 +954,11 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 			}
 		}
 		catch (std::exception &e) {
-			rpc::BrokerClientServerConnection *conn = clientConnectionById(connection_id);
-			if(conn) {
+			if(connection_handle) {
 				rsp.setError(cp::RpcResponse::Error::create(
 								 cp::RpcResponse::Error::MethodCallException
 								 , e.what()));
-				conn->sendMessage(rsp);
+				connection_handle->sendMessage(rsp);
 			}
 		}
 	}
@@ -922,43 +1021,32 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 	else if(cp::RpcMessage::isSignal(meta)) {
 		logSigResolveD() << "SIGNAL:" << meta.toPrettyString() << "from:" << connection_id;
 
-		/// if signal arrives from client, its path must be prepended by client mount points
-		/// if signal arrives from master broker, it can happen in case of relative subscription only,
-		///   then its path must be left untouched
-		std::vector<std::string> mount_points;
-
-		rpc::BrokerClientServerConnection *client_connection = clientConnectionById(connection_id);
-		//rpc::MasterBrokerConnection *broker_connection = masterBrokerConnectionById(connection_id);
-		//rpc::CommonRpcClientHandle *connection_handle = nullptr;
+		const std::string sig_shv_path = cp::RpcMessage::shvPath(meta).toString();
+		std::string full_shv_path = sig_shv_path;
+		std::string mount_point;
+		rpc::ClientConnectionOnBroker *client_connection = clientConnectionById(connection_id);
 		if(client_connection) {
-			//connection_handle = client_connection;
-			mount_points = client_connection->mountPoints();
+			/// if signal arrives from client, its path must be prepended by client mount points
+			mount_point = client_connection->mountPoint();
+			full_shv_path = mount_point + '/' + sig_shv_path;
+		}
+		if(full_shv_path.empty()) {
+			shvError() << "SIGNAL with empty shv path received from master broker connection.";
 		}
 		else {
-			//connection_handle = broker_connection;
-			mount_points = {std::string()};
-		}
-		const std::string sig_shv_path = cp::RpcMessage::shvPath(meta).toString();
-		for(const std::string &mp : mount_points) {
-			std::string full_shv_path = shv::core::utils::ShvPath::join(mp, sig_shv_path);
-			if(full_shv_path.empty()) {
-				shvError() << "SIGNAL with empty shv path received from master broker connection.";
-			}
-			else {
-				//logSigResolveD() << client_connection->connectionId() << "forwarding signal to client on mount point:" << mp << "as:" << full_shv_path;
-				cp::RpcMessage::setShvPath(meta, full_shv_path);
-				bool sig_sent = sendNotifyToSubscribers(meta, data);
-				if(!sig_sent && client_connection->isSlaveBrokerConnection()) {
-					logSubscriptionsD() << "Rejecting unsubscribed signal, shv_path:" << full_shv_path << "method:" << cp::RpcMessage::method(meta).toString();
-					cp::RpcRequest rq;
-					rq.setRequestId(0);
-					rq.setMethod(cp::Rpc::METH_REJECT_NOT_SUBSCRIBED)
-							.setParams(cp::RpcValue::Map{
-										   { cp::Rpc::PAR_PATH, sig_shv_path},
-										   { cp::Rpc::PAR_METHOD, cp::RpcMessage::method(meta).toString()}})
-							.setShvPath(cp::Rpc::DIR_BROKER_APP);
-					client_connection->sendMessage(rq);
-				}
+			//logSigResolveD() << client_connection->connectionId() << "forwarding signal to client on mount point:" << mp << "as:" << full_shv_path;
+			cp::RpcMessage::setShvPath(meta, full_shv_path);
+			bool sig_sent = sendNotifyToSubscribers(meta, data);
+			if(!sig_sent && client_connection && client_connection->isSlaveBrokerConnection()) {
+				logSubscriptionsD() << "Rejecting unsubscribed signal, shv_path:" << full_shv_path << "method:" << cp::RpcMessage::method(meta).toString();
+				cp::RpcRequest rq;
+				rq.setRequestId(client_connection->nextRequestId());
+				rq.setMethod(cp::Rpc::METH_REJECT_NOT_SUBSCRIBED)
+						.setParams(cp::RpcValue::Map{
+									   { cp::Rpc::PAR_PATH, sig_shv_path},
+									   { cp::Rpc::PAR_METHOD, cp::RpcMessage::method(meta).toString()}})
+						.setShvPath(cp::Rpc::DIR_BROKER_APP);
+				client_connection->sendMessage(rq);
 			}
 		}
 	}
@@ -976,29 +1064,28 @@ void BrokerApp::onRootNodeSendRpcMesage(const shv::chainpack::RpcMessage &msg)
 			shvError() << "Cannot find connection for ID:" << connection_id;
 		return;
 	}
-	shvError() << "Send message not implemented.";// << msg.toCpon();
-}
-
-void BrokerApp::onClientMountedChanged(int client_id, const std::string &mount_point, bool is_mounted)
-{
-	sendNotifyToSubscribers(mount_point, cp::Rpc::SIG_MOUNTED_CHANGED, is_mounted);
-	if(is_mounted) {
-		//sendNotifyToSubscribers(connection_id, mount_point, cp::Rpc::NTF_CONNECTED, cp::RpcValue());
-		rpc::BrokerClientServerConnection *cc = clientConnectionById(client_id);
-		if(cc && cc->isSlaveBrokerConnection()) {
-			/// if slave broker is connected, forward subscriptions of connected clients
-			for(rpc::CommonRpcClientHandle *ch : allClientConnections()) {
-				if(ch->connectionId() == client_id)
-					continue;
-				for(size_t i=0; i<ch->subscriptionCount(); i++) {
-					const rpc::CommonRpcClientHandle::Subscription &subs = ch->subscriptionAt(i);
-					cc->propagateSubscriptionToSlaveBroker(subs);
-				}
-			}
-		}
+	else if(msg.isSignal()) {
+		cp::RpcSignal sig(msg);
+		sendNotifyToSubscribers(sig.shvPath().toString(), sig.method().toString(), sig.params());
 	}
 	else {
-		//this->sendNotifyToSubscribers(connection_id, mount_point, cp::Rpc::NTF_DISCONNECTED, cp::RpcValue());
+		shvError() << "Send message not implemented.";// << msg.toCpon();
+	}
+}
+
+void BrokerApp::onClientConnected(int client_id)
+{
+	rpc::ClientConnectionOnBroker *cc = clientConnectionById(client_id);
+	if(cc && cc->isSlaveBrokerConnection()) {
+		/// if slave broker is connected, forward subscriptions of connected clients
+		for(rpc::CommonRpcClientHandle *ch : allClientConnections()) {
+			if(ch->connectionId() == client_id)
+				continue;
+			for(size_t i=0; i<ch->subscriptionCount(); i++) {
+				const rpc::CommonRpcClientHandle::Subscription &subs = ch->subscriptionAt(i);
+				cc->propagateSubscriptionToSlaveBroker(subs);
+			}
+		}
 	}
 }
 
@@ -1023,7 +1110,7 @@ bool BrokerApp::sendNotifyToSubscribers(const shv::chainpack::RpcValue::MetaData
 			int subs_ix = conn->isSubscribed(shv_path.toString(), method.toString());
 			if(subs_ix >= 0) {
 				//shvDebug() << "\t broadcasting to connection id:" << id;
-				const rpc::BrokerClientServerConnection::Subscription &subs = conn->subscriptionAt((size_t)subs_ix);
+				const rpc::ClientConnectionOnBroker::Subscription &subs = conn->subscriptionAt((size_t)subs_ix);
 				std::string new_path = conn->toSubscribedPath(subs, shv_path.toString());
 				if(new_path == shv_path.toString()) {
 					conn->sendRawData(meta_data, std::string(data));
@@ -1043,21 +1130,21 @@ bool BrokerApp::sendNotifyToSubscribers(const shv::chainpack::RpcValue::MetaData
 void BrokerApp::sendNotifyToSubscribers(const std::string &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
 {
 	//shvWarning() << shv_path << method << params.toPrettyString();
-	cp::RpcSignal ntf;
-	ntf.setShvPath(shv_path);
-	ntf.setMethod(method);
-	ntf.setParams(params);
+	cp::RpcSignal sig;
+	sig.setShvPath(shv_path);
+	sig.setMethod(method);
+	sig.setParams(params);
 	// send it to all clients for now
 	for(rpc::CommonRpcClientHandle *conn : allClientConnections()) {
 		if(conn->isConnectedAndLoggedIn()) {
 			int subs_ix = conn->isSubscribed(shv_path, method);
 			if(subs_ix >= 0) {
 				//shvDebug() << "\t broadcasting to connection id:" << id;
-				const rpc::BrokerClientServerConnection::Subscription &subs = conn->subscriptionAt((size_t)subs_ix);
+				const rpc::ClientConnectionOnBroker::Subscription &subs = conn->subscriptionAt((size_t)subs_ix);
 				std::string new_path = conn->toSubscribedPath(subs, shv_path);
 				if(new_path != shv_path)
-					ntf.setShvPath(new_path);
-				conn->sendMessage(ntf);
+					sig.setShvPath(new_path);
+				conn->sendMessage(sig);
 			}
 		}
 	}
@@ -1065,42 +1152,31 @@ void BrokerApp::sendNotifyToSubscribers(const std::string &shv_path, const std::
 
 void BrokerApp::addSubscription(int client_id, const std::string &shv_path, const std::string &method)
 {
+	//using ServiceProviderPath = shv::core::utils::ServiceProviderPath;
 	rpc::CommonRpcClientHandle *connection_handle = commonClientConnectionById(client_id);
 	if(!connection_handle)
-		SHV_EXCEPTION("Connot create subscription, client doesn't exist.");
-	//logSubscriptionsD() << "addSubscription connection id:" << client_id << "path:" << path << "method:" << method;
-	rpc::BrokerClientServerConnection *cli = clientById(client_id);
-	if(cli && !cli->isSlaveBrokerConnection()) {
-		// check that client has access rights to subscribed signal
-		// do not check slave broker connections - cli->isSlaveBrokerConnection()
-		// and requests from super-broker - cli == nullptr
-		if(shv::core::utils::ShvPath::isRelativePath(shv_path)) {
-			shvWarning() << "relative subscriptions cannot be checked for access rights and will be disabled in future versions:" << shv_path << method;
-		}
-		else {
-			cp::AccessGrant acg = accessGrantForRequest(connection_handle, shv_path, method, cp::RpcValue());
-			int acc_level = shv::iotqt::node::ShvNode::basicGrantToAccessLevel(acg.toRpcValue());
-			if(acc_level < cp::MetaMethod::AccessLevel::Read)
-				ACCESS_EXCEPTION("Acces to shv signal '" + shv_path + '/' + method + "()' not granted for user '" + connection_handle->loggedUserName() + "'");
-		}
-	}
-	auto subs_ix = connection_handle->addSubscription(shv_path, method);
-	const rpc::CommonRpcClientHandle::Subscription &subs = connection_handle->subscriptionAt(subs_ix);
-	if(shv::core::utils::ShvPath::isRelativePath(subs.absolutePath)) {
-		/// still relative path, should be propagated to the master broker
-		rpc::SlaveBrokerClientConnection *mbrconn = mainMasterBrokerConnection();
+		SHV_EXCEPTION("Cannot create subscription, invalid connection ID.");
+	rpc::CommonRpcClientHandle::Subscription subs = connection_handle->createSubscription(shv_path, method);
+	connection_handle->addSubscription(subs);
+	//rpc::ClientConnection *cli = dynamic_cast<rpc::ClientConnection*>(connection_handle);
+	shv::core::utils::ServiceProviderPath spp(subs.localPath);
+	//logSubscriptionsD() << "addSubscription path:" << subs.localPath << "method:" << subs.method << "for client:" << cli;
+	if(spp.isServicePath()) {
+		/// not served here, should be propagated to the master broker
+		rpc::MasterBrokerConnection *mbrconn = mainMasterBrokerConnection();
 		if(mbrconn) {
-			mbrconn->callMethodSubscribe(subs.absolutePath, subs.method);
+			mbrconn->callMethodSubscribe(subs.localPath, method);
 		}
 		else {
-			shvError() << "Cannot propagate relative path subscription, without master broker connected:" << subs.absolutePath;
+			shvError() << "Cannot propagate relative path subscription, without master broker connected:" << subs.localPath;
 		}
 	}
 	else {
 		/// check slave broker connections
 		/// whether this subsciption should be propagated to them
+		/// skip service providers subscriptions, since it does not make ense to send them downstream
 		for (int connection_id : clientConnectionIds()) {
-			rpc::BrokerClientServerConnection *conn = clientConnectionById(connection_id);
+			rpc::ClientConnectionOnBroker *conn = clientConnectionById(connection_id);
 			if(conn->isSlaveBrokerConnection()) {
 				conn->propagateSubscriptionToSlaveBroker(subs);
 			}
@@ -1114,13 +1190,14 @@ bool BrokerApp::removeSubscription(int client_id, const std::string &shv_path, c
 	if(!conn)
 		SHV_EXCEPTION("Connot remove subscription, client doesn't exist.");
 	//logSubscriptionsD() << "addSubscription connection id:" << client_id << "path:" << path << "method:" << method;
-	return conn->removeSubscription(shv_path, method);
+	rpc::CommonRpcClientHandle::Subscription subs(string(), shv_path, method);
+	return conn->removeSubscription(subs);
 }
 
 bool BrokerApp::rejectNotSubscribedSignal(int client_id, const std::string &path, const std::string &method)
 {
 	logSubscriptionsD() << "signal rejected, shv_path:" << path << "method:" << method;
-	rpc::SlaveBrokerClientConnection *conn = masterBrokerConnectionById(client_id);
+	rpc::MasterBrokerConnection *conn = masterBrokerConnectionById(client_id);
 	if(conn) {
 		return conn->rejectNotSubscribedSignal(conn->masterExportedToLocalPath(path), method);
 	}
@@ -1137,21 +1214,21 @@ void BrokerApp::createMasterBrokerConnections()
 	for(const auto &kv : masters.toMap()) {
 		cp::RpcValue::Map opts = kv.second.toMap();
 
-		if (cliOptions()->masterBrokerDeviceId_isset()) {
-			cp::RpcValue::Map dev = opts.value("device").toMap();
-			dev.setValue("id", cliOptions()->masterBrokerDeviceId());
-			opts.setValue("device", dev);
-		}
+		//if (cliOptions()->masterBrokerDeviceId_isset()) {
+		//	cp::RpcValue::Map dev = opts.value("device").toMap();
+		//	dev.setValue("id", cliOptions()->masterBrokerDeviceId());
+		//	opts.setValue("device", dev);
+		//}
 		shvInfo() << "master broker device ID:" << opts.value("device").toPrettyString() << "for connection:" << kv.first;
 
 		if(opts.value("enabled").toBool() == false)
 			continue;
 
 		shvInfo() << "creating master broker connection:" << kv.first;
-		rpc::SlaveBrokerClientConnection *bc = new rpc::SlaveBrokerClientConnection(this);
+		rpc::MasterBrokerConnection *bc = new rpc::MasterBrokerConnection(this);
 		bc->setObjectName(QString::fromStdString(kv.first));
 		int id = bc->connectionId();
-		connect(bc, &rpc::SlaveBrokerClientConnection::brokerConnectedChanged, this, [id, this](bool is_connected) {
+		connect(bc, &rpc::MasterBrokerConnection::brokerConnectedChanged, this, [id, this](bool is_connected) {
 			this->onConnectedToMasterBrokerChanged(id, is_connected);
 		});
 		bc->setOptions(opts);
@@ -1159,14 +1236,14 @@ void BrokerApp::createMasterBrokerConnections()
 	}
 }
 
-QList<rpc::SlaveBrokerClientConnection *> BrokerApp::masterBrokerConnections() const
+QList<rpc::MasterBrokerConnection *> BrokerApp::masterBrokerConnections() const
 {
-	return findChildren<rpc::SlaveBrokerClientConnection*>(QString(), Qt::FindDirectChildrenOnly);
+	return findChildren<rpc::MasterBrokerConnection*>(QString(), Qt::FindDirectChildrenOnly);
 }
 
-rpc::SlaveBrokerClientConnection *BrokerApp::masterBrokerConnectionById(int connection_id)
+rpc::MasterBrokerConnection *BrokerApp::masterBrokerConnectionById(int connection_id)
 {
-	for(rpc::SlaveBrokerClientConnection *bc : masterBrokerConnections()) {
+	for(rpc::MasterBrokerConnection *bc : masterBrokerConnections()) {
 		if(bc->connectionId() == connection_id)
 			return bc;
 	}
@@ -1178,7 +1255,7 @@ std::vector<rpc::CommonRpcClientHandle *> BrokerApp::allClientConnections()
 	std::vector<rpc::CommonRpcClientHandle *> ret;
 	for (int i : clientConnectionIds())
 		ret.push_back(clientConnectionById(i));
-	QList<rpc::SlaveBrokerClientConnection *> mbc = masterBrokerConnections();
+	QList<rpc::MasterBrokerConnection *> mbc = masterBrokerConnections();
 	std::copy(mbc.begin(), mbc.end(), std::back_inserter(ret));
 	return ret;
 }

@@ -16,7 +16,8 @@ namespace utils {
 class SHVCORE_DECL_EXPORT ShvFileJournal : public AbstractShvJournal
 {
 public:
-	static constexpr long DEFAULT_JOURNAL_SIZE_LIMIT = 100 * 100 * 1024;
+	static constexpr long DEFAULT_FILE_SIZE_LIMIT = 1024 * 1024;
+	static constexpr long DEFAULT_JOURNAL_SIZE_LIMIT = 100 * DEFAULT_FILE_SIZE_LIMIT;
 	static constexpr char FIELD_SEPARATOR = '\t';
 	static constexpr char RECORD_SEPARATOR = '\n';
 	static const std::string FILE_EXT;
@@ -35,6 +36,7 @@ public:
 	void setJournalSizeLimit(int64_t n) {m_journalSizeLimit = n;}
 	int64_t journalSizeLimit() const { return m_journalSizeLimit;}
 	void setTypeInfo(const ShvLogTypeInfo &i) { m_journalContext.typeInfo = i; }
+	const ShvLogTypeInfo& typeInfo() const { return m_journalContext.typeInfo; }
 	void setDeviceId(std::string id) { m_journalContext.deviceId = std::move(id); }
 	void setDeviceType(std::string type) { m_journalContext.deviceType = std::move(type); }
 

@@ -125,8 +125,9 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 	});
 	connect(ui->edDataFilter, &QLineEdit::textChanged, [this]() {
 		QString str = ui->edDataFilter->text().trimmed();
-		m_graph->createChannelsFromModel(str.toStdString());
-		ui->graphView->makeLayout();
+		auto filter = m_graph->channelFilter();
+		filter.setPathPattern(str.toStdString());
+		m_graph->setChannelFilter(filter);
 	});
 
 	ui->tblData->setContextMenuPolicy(Qt::ActionsContextMenu);
@@ -259,7 +260,7 @@ shv::chainpack::RpcValue DlgLogInspector::getLogParams()
 		params.pathPatternType = shv::core::utils::ShvGetLogParams::PatternType::RegEx;
 	if(ui->edMaxRecordCount->value() > ui->edMaxRecordCount->minimum())
 		params.recordCountLimit = ui->edMaxRecordCount->value();
-	//params.withUptime = ui->chkWithUptime->isChecked();
+	params.withPathsDict = ui->chkPathsDict->isChecked();
 	params.withSnapshot = ui->chkWithSnapshot->isChecked();
 	/*
 	unsigned header_opts = 0;

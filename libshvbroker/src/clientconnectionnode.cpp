@@ -1,6 +1,6 @@
 #include "clientconnectionnode.h"
 #include "brokerapp.h"
-#include "rpc/brokerclientserverconnection.h"
+#include "rpc/clientconnectiononbroker.h"
 
 #include <shv/chainpack/metamethod.h>
 #include <shv/chainpack/rpc.h>
@@ -10,9 +10,11 @@ namespace cp = shv::chainpack;
 namespace shv {
 namespace broker {
 
-static const char M_MOUNT_POINTS[] = "mountPoints";
+static const char M_MOUNT_POINT[] = "mountPoint";
 static const char M_DROP_CLIENT[] = "dropClient";
 static const char M_USER_NAME[] = "userName";
+static const char M_USER_ROLES[] = "userRoles";
+static const char M_USER_PROFILE[] = "userProfile";
 static const char M_IDLE_TIME[] = "idleTime";
 static const char M_IDLE_TIME_MAX[] = "idleTimeMax";
 
@@ -23,7 +25,9 @@ static std::vector<cp::MetaMethod> meta_methods {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_SERVICE},
 	{M_USER_NAME, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_SERVICE},
-	{M_MOUNT_POINTS, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_SERVICE},
+	{M_USER_ROLES, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_SERVICE},
+	{M_USER_PROFILE, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_SERVICE},
+	{M_MOUNT_POINT, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_SERVICE},
 	{M_DROP_CLIENT, cp::MetaMethod::Signature::VoidVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_SERVICE},
 	{M_IDLE_TIME, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_SERVICE, "Connection inactivity time in msec."},
 	{M_IDLE_TIME_MAX, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_SERVICE, "Maximum connection inactivity time in msec, before it is closed by server."},
@@ -39,35 +43,54 @@ shv::chainpack::RpcValue ClientConnectionNode::callMethod(const shv::iotqt::node
 {
 	if(shv_path.empty()) {
 		if(method == M_USER_NAME) {
-			rpc::BrokerClientServerConnection *cli = BrokerApp::instance()->clientById(m_clientId);
+			rpc::ClientConnectionOnBroker *cli = BrokerApp::instance()->clientById(m_clientId);
 			if(cli) {
 				return cli->loggedUserName();
 			}
 			return nullptr;
 		}
-		if(method == M_MOUNT_POINTS) {
-			rpc::BrokerClientServerConnection *cli = BrokerApp::instance()->clientById(m_clientId);
-			cp::RpcValue::List ret;
+		if(method == M_USER_ROLES) {
+			rpc::ClientConnectionOnBroker *cli = BrokerApp::instance()->clientById(m_clientId);
 			if(cli) {
-				for(auto s : cli->mountPoints())
-					ret.push_back(s);
+				const std::string user_name = cli->loggedUserName();
+				std::vector<shv::broker::AclManager::FlattenRole> roles = BrokerApp::instance()->aclManager()->userFlattenRoles(user_name);
+				cp::RpcValue::List ret;
+				std::transform(roles.begin(), roles.end(), std::back_inserter(ret), [](const shv::broker::AclManager::FlattenRole &r) -> cp::RpcValue {
+					return r.name;
+				});
+				return ret;
 			}
-			return std::move(ret);
+			return nullptr;
+		}
+		if(method == M_USER_PROFILE) {
+			rpc::ClientConnectionOnBroker *cli = BrokerApp::instance()->clientById(m_clientId);
+			if(cli) {
+				auto ret = BrokerApp::instance()->aclManager()->userProfile(cli->loggedUserName());
+				return ret.isValid()? ret: nullptr;
+			}
+			return nullptr;
+		}
+		if(method == M_MOUNT_POINT) {
+			rpc::ClientConnectionOnBroker *cli = BrokerApp::instance()->clientById(m_clientId);
+			if(cli) {
+				return cli->mountPoint();
+			}
+			return nullptr;
 		}
 		if(method == M_IDLE_TIME) {
-			rpc::BrokerClientServerConnection *cli = BrokerApp::instance()->clientById(m_clientId);
+			rpc::ClientConnectionOnBroker *cli = BrokerApp::instance()->clientById(m_clientId);
 			if(cli)
 				return cli->idleTime();
 			SHV_EXCEPTION("Invalid client id: " + std::to_string(m_clientId));
 		}
 		if(method == M_IDLE_TIME_MAX) {
-			rpc::BrokerClientServerConnection *cli = BrokerApp::instance()->clientById(m_clientId);
+			rpc::ClientConnectionOnBroker *cli = BrokerApp::instance()->clientById(m_clientId);
 			if(cli)
 				return cli->idleTimeMax();
 			SHV_EXCEPTION("Invalid client id: " + std::to_string(m_clientId));
 		}
 		if(method == M_DROP_CLIENT) {
-			rpc::BrokerClientServerConnection *cli = BrokerApp::instance()->clientById(m_clientId);
+			rpc::ClientConnectionOnBroker *cli = BrokerApp::instance()->clientById(m_clientId);
 			if(cli) {
 				cli->close();
 				return true;

@@ -60,26 +60,26 @@ bool AbstractShvJournal::PatternMatcher::match(const ShvJournalEntry &entry) con
 
 bool AbstractShvJournal::PatternMatcher::match(const std::string &path, const std::string &domain) const
 {
-	shvLogFuncFrame() << "path:" << path << "domain:" << domain;
+	//shvLogFuncFrame() << "path:" << path << "domain:" << domain;
 	if(isEmpty()) {
-		shvDebug() << "empty filter matches ALL";
+		//shvDebug() << "empty filter matches ALL";
 		return true;
 	}
 	if(m_usePathPatternRegEx) {
-		shvDebug() << "using path pattern regex";
+		//shvDebug() << "using path pattern regex";
 		std::smatch cmatch;
 		if(!std::regex_search(path, cmatch, m_pathPatternRegEx))
 			return false;
 	}
 	else if(!m_pathPatternWildCard.empty()) {
-		shvDebug() << "using path pattern wildcard:" << m_pathPatternWildCard;
+		//shvDebug() << "using path pattern wildcard:" << m_pathPatternWildCard;
 		const shv::core::StringViewList path_lst = shv::core::StringView(path).split('/');
 		const shv::core::StringViewList pattern_lst = shv::core::StringView(m_pathPatternWildCard).split('/');
 		if(!ShvPath::matchWild(path_lst, pattern_lst))
 			return false;
 	}
 	if(m_useDomainPatternregEx) {
-		shvDebug() << "using domain pattern regex";
+		//shvDebug() << "using domain pattern regex";
 		return std::regex_match(domain, m_domainPatternRegEx);
 	}
 	return true;

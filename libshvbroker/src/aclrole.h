@@ -2,10 +2,10 @@
 
 #include "shvbrokerglobal.h"
 
+#include "shv/chainpack/rpcvalue.h"
+
 #include <string>
 #include <vector>
-
-namespace shv { namespace chainpack { class RpcValue; } }
 
 namespace shv {
 namespace broker {
@@ -16,6 +16,7 @@ struct SHVBROKER_DECL_EXPORT AclRole
 	//std::string name;
 	int weight = INVALID_WEIGHT;
 	std::vector<std::string> roles;
+	shv::chainpack::RpcValue profile;
 
 	AclRole() {}
 	//AclRole(std::string n, int w = 0) : name(std::move(n)), weight(w) {}

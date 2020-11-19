@@ -135,10 +135,12 @@ AclRoleAccessRules AclManager::accessRoleRules(const std::string &role_name)
 	auto it = m_cache.aclPathsRoles.find(role_name);
 	if(it == m_cache.aclPathsRoles.end())
 		return AclRoleAccessRules();
-	if(!it->second.isValid()) {
-		it->second = aclAccessRoleRules(role_name);
+	if(std::get<1>(it->second) == false) {
+		AclRoleAccessRules acl = aclAccessRoleRules(role_name);
+		//acl.sortMostSpecificFirst();
+		it->second = std::pair<AclRoleAccessRules, bool>(acl, true);
 	}
-	return it->second;
+	return std::get<0>(it->second);
 }
 
 void AclManager::setAccessRoleRules(const std::string &role_name, const AclRoleAccessRules &v)
@@ -309,6 +311,34 @@ std::vector<AclManager::FlattenRole> AclManager::flattenRole(const std::string &
 	}
 	return m_cache.userFlattenRoles[key];
 }
+/*
+static cp::RpcValue merge_maps(const cp::RpcValue &m_base, const cp::RpcValue &m_over)
+{
+	shvDebug() << "merging:" << m_base << "and:" << m_over;
+	if(m_over.isMap() && m_base.isMap()) {
+		const shv::chainpack::RpcValue::Map &map_base = m_base.toMap();
+		const shv::chainpack::RpcValue::Map &map_over = m_over.toMap();
+		cp::RpcValue::Map map = map_base;
+		for(const auto &kv : map_over) {
+			map[kv.first] = merge_maps(map.value(kv.first), kv.second);
+		}
+		return cp::RpcValue(map);
+	}
+	else if(m_over.isValid())
+		return m_over;
+	return m_base;
+}
+*/
+chainpack::RpcValue AclManager::userProfile(const std::string &user_name)
+{
+	chainpack::RpcValue ret;
+	for(const auto &rn : userFlattenRoles(user_name)) {
+		AclRole r = role(rn.name);
+		//shvDebug() << "--------------------------merging:" << rn.name << r.toRpcValueMap();
+		ret = chainpack::Utils::mergeMaps(ret, r.profile);
+	}
+	return ret;
+}
 
 //================================================================
 // AclManagerConfigFiles
@@ -379,7 +409,10 @@ shv::chainpack::RpcValue AclManagerConfigFiles::loadAclConfig(const std::string 
 	}
 	if (!fis.good()) {
 		if(throw_exc)
-			throw std::runtime_error("Cannot open config file " + config_name + " for reading");
+			throw std::runtime_error("Cannot open config file for reading, attempts: "
+									 + std::accumulate(files.begin(), files.end(), std::string(), [this](std::string a, std::string b) {
+											return std::move(a) + (a.empty()? std::string(): std::string(", ")) + configDir() + '/' + std::move(b);
+									}));
 		else
 			return cp::RpcValue();
 	}

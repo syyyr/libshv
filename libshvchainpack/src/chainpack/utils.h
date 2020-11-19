@@ -14,6 +14,8 @@
 namespace shv {
 namespace chainpack {
 
+class RpcValue;
+
 class SHVCHAINPACK_DECL_EXPORT Utils
 {
 public:
@@ -41,6 +43,8 @@ public:
 			ret = '0' + ret;
 		return ret;
 	}
+
+	static RpcValue mergeMaps(const RpcValue &m_base, const RpcValue &m_over);
 
 	template<typename M>
 	static std::vector<std::string> mapKeys(const M &m, bool sorted = true)

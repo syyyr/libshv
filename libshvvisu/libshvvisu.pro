@@ -40,7 +40,7 @@ LIBS += \
     -lshvchainpack
 
 RESOURCES += \
-    libshvvisu.qrc \
+    images/images.qrc \
 
 include($$PWD/src/src.pri)
 

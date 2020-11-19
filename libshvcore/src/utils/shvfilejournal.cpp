@@ -622,7 +622,7 @@ chainpack::RpcValue ShvFileJournal::getSnapShotMap()
 		if(e.value.isValid())
 			m[e.path] = e.value;
 	}
-	return  std::move(m);
+	return m;
 }
 
 chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext &journal_context, const ShvGetLogParams &params)
@@ -674,7 +674,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		log.push_back(std::move(rec));
 		return true;
 	};
-	auto append_snapshot = [append_log_entry, &snapshot]() {
+	auto write_snapshot = [append_log_entry, &snapshot]() {
 		if(!snapshot.empty()) {
 			logDShvJournal() << "\t -------------- Snapshot";
 			for(const auto &kv : snapshot) {
@@ -751,7 +751,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 				}
 				else {
 					if(params.withSnapshot)
-						if(!append_snapshot())
+						if(!write_snapshot())
 							goto log_finish;
 					if(params_until_msec == 0 || e.epochMsec < params_until_msec) { // keep interval open to make log merge simpler
 						if(!append_log_entry(e))
@@ -769,7 +769,7 @@ log_finish:
 		// snapshot should be written already
 		// this is only case, when log is empty and
 		// only snapshot shall be returned
-		append_snapshot();
+		write_snapshot();
 	}
 
 	int64_t log_since_msec = params_since_msec;

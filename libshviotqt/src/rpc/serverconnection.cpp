@@ -66,17 +66,17 @@ void ServerConnection::sendMessage(const chainpack::RpcMessage &rpc_msg)
 	sendRpcValue(rpc_msg.value());
 }
 
-void ServerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len)
+void ServerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, std::string &&msg_data)
 {
 	//shvInfo() << __FILE__ << RCV_LOG_ARROW << md.toStdString() << shv::chainpack::Utils::toHexElided(data, start_pos, 100);
 	if(isLoginPhase()) {
-		shv::chainpack::RpcValue rpc_val = decodeData(protocol_type, data, start_pos);
+		shv::chainpack::RpcValue rpc_val = decodeData(protocol_type, msg_data, 0);
 		rpc_val.setMetaData(std::move(md));
 		cp::RpcMessage msg(rpc_val);
 		processLoginPhase(msg);
 		return;
 	}
-	Super::onRpcDataReceived(protocol_type, std::move(md), data, start_pos, data_len);
+	Super::onRpcDataReceived(protocol_type, std::move(md), std::move(msg_data));
 }
 
 void ServerConnection::onRpcValueReceived(const chainpack::RpcValue &rpc_val)

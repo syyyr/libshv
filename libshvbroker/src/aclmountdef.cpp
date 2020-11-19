@@ -12,7 +12,7 @@ shv::chainpack::RpcValue AclMountDef::toRpcValueMap() const
 	};
 	if(!description.empty())
 		m["description"] = description;
-	return std::move(m);
+	return m;
 }
 
 AclMountDef AclMountDef::fromRpcValue(const shv::chainpack::RpcValue &v)

@@ -13,31 +13,18 @@ class CommonRpcClientHandle
 public:
 	struct Subscription
 	{
-		std::string absolutePath;
-		std::string relativePath;
+		std::string localPath;
+		std::string subscribedPath;
 		std::string method;
+		//bool isRelative = false;
 
 		Subscription() {}
-		Subscription(const std::string &ap, const std::string &rp, const std::string &m);
+		Subscription(const std::string &local_path, const std::string &subscribed_path, const std::string &m);
 
-		std::string toRelativePath(const std::string &abs_path) const;
-
-		//bool operator<(const Subscription &o) const;
-		bool operator==(const Subscription &o) const;
+		bool cmpSubscribed(const CommonRpcClientHandle::Subscription &o) const;
 		bool match(const shv::core::StringView &shv_path, const shv::core::StringView &shv_method) const;
-		std::string toString() const {return absolutePath + ':' + method;}
+		std::string toString() const {return localPath + ':' + method;}
 	};
-	/*
-	struct SubsKeyLess
-	{
-		bool operator()(const SubsKey &k1, const SubsKey &k2) const
-		{
-			if(k1.pathPattern == k2.pathPattern)
-				return k1.method < k2.method;
-			return k1.pathPattern < k2.pathPattern;
-		}
-	};
-	*/
 public:
 	CommonRpcClientHandle();
 	virtual ~CommonRpcClientHandle();
@@ -45,12 +32,12 @@ public:
 	virtual int connectionId() const = 0;
 	virtual bool isConnectedAndLoggedIn() const = 0;
 
-	virtual unsigned addSubscription(const std::string &rel_path, const std::string &method) = 0;
+	virtual Subscription createSubscription(const std::string &shv_path, const std::string &method) = 0;
 	unsigned addSubscription(const Subscription &subs);
-	virtual bool removeSubscription(const std::string &rel_path, const std::string &method) = 0;
+	//virtual bool removeSubscription(const std::string &shv_path, const std::string &method) = 0;
 	bool removeSubscription(const Subscription &subs);
 	int isSubscribed(const std::string &shv_path, const std::string &method) const;
-	virtual std::string toSubscribedPath(const Subscription &subs, const std::string &abs_path) const;
+	virtual std::string toSubscribedPath(const Subscription &subs, const std::string &abs_path) const = 0;
 	size_t subscriptionCount() const {return m_subscriptions.size();}
 	const Subscription& subscriptionAt(size_t ix) const {return m_subscriptions.at(ix);}
 	bool rejectNotSubscribedSignal(const std::string &path, const std::string &method);

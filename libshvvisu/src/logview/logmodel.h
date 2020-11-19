@@ -3,6 +3,7 @@
 #include "../shvvisuglobal.h"
 
 #include <shv/chainpack/rpcvalue.h>
+#include <shv/core/utils/shvmemoryjournal.h>
 
 #include <QAbstractTableModel>
 #include <QTimeZone>

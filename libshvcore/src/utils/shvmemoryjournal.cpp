@@ -73,8 +73,18 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 	if((int)m_entries.size() >= m_inputFilterRecordCountLimit)
 		return;
 	int64_t epoch_msec = entry.epochMsec;
-	if(epoch_msec == 0)
+	if(epoch_msec == 0) {
 		epoch_msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
+	}
+	else if(isShortTimeCorrection()) {
+		if(entry.shortTime != shv::core::utils::ShvJournalEntry::NO_SHORT_TIME) {
+			uint16_t short_msec = static_cast<uint16_t>(entry.shortTime);
+			ShortTime &st = m_recentShortTimes[entry.path];
+			if(st.msec_sum == 0)
+				st.msec_sum = epoch_msec;
+			epoch_msec = st.addShortTime(short_msec);
+		}
+	}
 	if(m_inputFilterUntilMsec > 0 && epoch_msec >= m_inputFilterUntilMsec)
 		return;
 	if(m_inputFilterSinceMsec > 0 && epoch_msec < m_inputFilterSinceMsec) {
@@ -302,7 +312,17 @@ log_finish:
 	ret.setMetaData(hdr.toMetaData());
 	return ret;
 }
-
+/*
+size_t ShvMemoryJournal::timeToUpperBoundIndex(int64_t time) const
+{
+	Entry entry;
+	entry.epochMsec = time;
+	auto it = std::upper_bound(m_entries.begin(), m_entries.end(), entry, [](const Entry &e1, const Entry &e2) {
+		return e1.epochMsec < e2.epochMsec;
+	});
+	return it - m_entries.begin();
+}
+*/
 } // namespace utils
 } // namespace core
 } // namespace shv

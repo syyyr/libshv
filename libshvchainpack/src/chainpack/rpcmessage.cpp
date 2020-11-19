@@ -322,9 +322,9 @@ RpcValue::Int RpcMessage::popCallerId()
 	return ret;
 }
 
-RpcValue::Int RpcMessage::peekCallerId() const
+RpcValue::Int RpcMessage::peekCallerId(const RpcValue::MetaData &meta)
 {
-	RpcValue caller_ids = callerIds();
+	RpcValue caller_ids = callerIds(meta);
 	if(caller_ids.isList()) {
 		const shv::chainpack::RpcValue::List &array = caller_ids.toList();
 		if(array.empty()) {
@@ -337,6 +337,11 @@ RpcValue::Int RpcMessage::peekCallerId() const
 	else {
 		return  caller_ids.toInt();
 	}
+}
+
+RpcValue::Int RpcMessage::peekCallerId() const
+{
+	return peekCallerId(m_value.metaData());
 }
 
 RpcValue RpcMessage::callerIds() const
@@ -423,6 +428,11 @@ RpcValue RpcMessage::userId() const
 void RpcMessage::setUserId(const RpcValue &user_id)
 {
 	setMetaValue(RpcMessage::MetaType::Tag::UserId, user_id);
+}
+
+void RpcMessage::setUserId(RpcValue::MetaData &meta, const RpcValue &user_id)
+{
+	meta.setValue(RpcMessage::MetaType::Tag::UserId, user_id);
 }
 
 Rpc::ProtocolType RpcMessage::protocolType(const RpcValue::MetaData &meta)
@@ -569,6 +579,17 @@ RpcResponse RpcResponse::forRequest(const RpcValue::MetaData &meta)
 	if(caller_id.isValid())
 		ret.setCallerIds(caller_id);
 	return ret;
+}
+
+std::string RpcResponse::errorString() const
+{
+	if(isError())
+		return error().toString();
+	if(isSuccess())
+		return std::string();
+	if(isValid())
+		return "Empty RPC message";
+	return "Invalid RPC message";
 }
 
 RpcResponse::Error RpcResponse::error() const

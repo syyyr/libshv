@@ -1,9 +1,12 @@
 #pragma once
 
+#include "graphchannel.h"
+#include "graphbuttonbox.h"
 #include "sample.h"
 #include "../shvvisuglobal.h"
 
 #include <shv/coreqt/utils.h>
+#include <shv/core/exception.h>
 
 #include <QObject>
 #include <QVector>
@@ -12,6 +15,9 @@
 #include <QFont>
 #include <QPixmap>
 #include <QRect>
+#include <QTimeZone>
+
+#include <regex>
 
 namespace shv {
 namespace visu {
@@ -37,132 +43,84 @@ public:
 
 	using WidgetRange = Range<int>;
 
-	class SHVVISU_DECL_EXPORT GraphStyle : public QVariantMap
+	class SHVVISU_DECL_EXPORT Style : public QVariantMap
 	{
 		SHV_VARIANTMAP_FIELD2(int, u, setU, nitSize, 20) // px
+		SHV_VARIANTMAP_FIELD2(double, h, setH, eaderInset, 0.2) // units
+		SHV_VARIANTMAP_FIELD2(double, b, setB, uttonSize, 1.2) // units
 		SHV_VARIANTMAP_FIELD2(double, l, setL, eftMargin, 0.3) // units
 		SHV_VARIANTMAP_FIELD2(double, r, setR, ightMargin, 0.3) // units
 		SHV_VARIANTMAP_FIELD2(double, t, setT, opMargin, 0.3) // units
 		SHV_VARIANTMAP_FIELD2(double, b, setb, ottomMargin, 0.3) // units
-		SHV_VARIANTMAP_FIELD2(double, c, setC, hannelSpacing, 0.3) // units
+		SHV_VARIANTMAP_FIELD2(double, c, setC, hannelSpacing, 0.1) // units
 		SHV_VARIANTMAP_FIELD2(double, x, setX, AxisHeight, 1.5) // units
 		SHV_VARIANTMAP_FIELD2(double, y, setY, AxisWidth, 2.5) // units
 		SHV_VARIANTMAP_FIELD2(double, m, setM, iniMapHeight, 2) // units
 		SHV_VARIANTMAP_FIELD2(double, v, setV, erticalHeaderWidth, 10) // units
 		SHV_VARIANTMAP_FIELD2(bool, s, setS, eparateChannels, true)
 
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olor, QColor(Qt::yellow))
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorBackground, QColor(Qt::darkGray).darker(400))
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorGrid, QColor(Qt::darkGreen))
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorAxis, QColor(Qt::green))
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCrossBar1, QColor(QStringLiteral("white")))
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCrossBar2, QColor(QStringLiteral("salmon")))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olor, QColor("#c8c8c8"))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorPanel, QColor("#414343"))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorBackground, QColor(Qt::black))
+		//SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorGrid, QColor(Qt::darkGreen))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorAxis, QColor(Qt::gray))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCurrentTime, QColor(QStringLiteral("#cced5515")))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCrossBar, QColor(QStringLiteral("white")))
+		//SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCrossBar2, QColor(QStringLiteral("salmon")))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorSelection, QColor(QStringLiteral("deepskyblue")))
 
 		SHV_VARIANTMAP_FIELD(QFont, f, setF, ont)
 	public:
 		void init(QWidget *widget);
+
+		//double buttonSpacing() const { return buttonSize() / 5; }
 	};
-	class SHVVISU_DECL_EXPORT ChannelStyle : public QVariantMap
-	{
-	public:
-		struct Interpolation { enum Enum {None = 0, Line, Stepped};};
-		struct LineAreaStyle { enum Enum {Unfilled = 0, Filled};};
-		static constexpr double CosmeticLineWidth = 0;
-
-		SHV_VARIANTMAP_FIELD2(double, h, setH, eightMin, 2) // units
-		SHV_VARIANTMAP_FIELD2(double, h, setH, eightMax, 2) // units
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olor, QColor(Qt::magenta))
-		SHV_VARIANTMAP_FIELD(QColor, c, setC, olorLineArea)
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorGrid, QColor(Qt::darkGreen))
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorAxis, QColor(Qt::green))
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorBackground, QColor(Qt::black))
-
-		SHV_VARIANTMAP_FIELD2(int, i, setI, nterpolation, Interpolation::Stepped)
-		SHV_VARIANTMAP_FIELD2(int, l, setL, ineAreaStyle, LineAreaStyle::Unfilled)
-		SHV_VARIANTMAP_FIELD2(double, l, setL, ineWidth, CosmeticLineWidth)
-
-		//SHV_VARIANTMAP_FIELD(QFont, f, setF, ont)
-
-	public:
-		ChannelStyle() : QVariantMap() {}
-		ChannelStyle(const QVariantMap &o) : QVariantMap(o) {}
-
-		static constexpr double HEIGHT_HUGE = 10e3;
-
-		double heightRange() const
-		{
-			if(!heightMax_isset())
-				return HEIGHT_HUGE;
-			double ret = heightMax() - heightMin();
-			return ret < 0? 0: ret;
-		}
-	};
-
-	class SHVVISU_DECL_EXPORT Channel
-	{
-	public:
-		void setMetaTypeId(int id) { m_metaTypeId = id; }
-		int metaTypeId() const { return m_metaTypeId; }
-
-		inline int modelIndex() const {return m_modelIndex;}
-		void setModelIndex(int ix) {m_modelIndex = ix;}
-
-		YRange yRange() const { return m_state.yRange; }
-		YRange yRangeZoom() const { return m_state.yRangeZoom; }
-
-		const ChannelStyle& style() const {return m_style;}
-		void setStyle(const ChannelStyle& st) { m_style = st; }
-		ChannelStyle effectiveStyle;
-
-		const QRect& graphRect() const { return  m_layout.graphRect; }
-		const QRect& verticalHeaderRect() const { return  m_layout.verticalHeaderRect; }
-		const QRect& yAxisRect() const { return  m_layout.yAxisRect; }
-
-		int valueToPos(double val) const;
-		double posToValue(int y) const;
-
-		struct YAxis {
-			double tickInterval = 0;
-			int subtickEvery = 1;
-		};
-
-		struct
-		{
-			YRange yRange;
-			YRange yRangeZoom;
-			YAxis axis;
-		} m_state;
-
-		struct
-		{
-			//QRect rect;
-			QRect graphRect;
-			QRect verticalHeaderRect;
-			QRect yAxisRect;
-		} m_layout;
-	protected:
-		ChannelStyle m_style;
-		int m_modelIndex = 0;
-		int m_metaTypeId = 0;
-	};
-
-	//SHV_FIELD_BOOL_IMPL2(a, A, utoCreateChannels, true)
 public:
 	Graph(QObject *parent = nullptr);
-	virtual ~Graph() {}
+	virtual ~Graph();
+
+	const Style& effectiveStyle() const { return  m_effectiveStyle; }
 
 	void setModel(GraphModel *model);
 	GraphModel *model() const;
 
-	void createChannelsFromModel(const std::string &path_pattern = std::string(), bool is_regex = false);
+	void setTimeZone(const QTimeZone &tz);
+
+	class SHVVISU_DECL_EXPORT ChannelFilter
+	{
+	public:
+		enum class PathPatternFormat {Substring, Regex};
+
+		ChannelFilter(const std::string &pattern = std::string(), PathPatternFormat fmt = PathPatternFormat::Substring);
+
+		bool isHideFlat() const { return m_hideFlat; }
+		void setHideFlat(bool b) { m_hideFlat = b; }
+
+		void setPathPattern(const std::string &pattern, PathPatternFormat fmt = PathPatternFormat::Substring);
+		bool isPathMatch(const std::string &path) const;
+	private:
+		std::string m_pathPattern;
+		PathPatternFormat m_pathPatternFormat = PathPatternFormat::Substring;
+		bool m_hideFlat = false;
+
+		std::regex m_pathPatternRx;
+	};
+	void createChannelsFromModel();
 
 	int channelCount() const { return  m_channels.count(); }
 	void clearChannels();
-	Channel& appendChannel(int model_index = -1);
-	Channel& channelAt(int ix);
-	const Channel& channelAt(int ix) const;
-	DataRect dataRect(int channel_ix) const;
+	GraphChannel* appendChannel(int model_index = -1);
+	GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw);
+	const GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw) const;
+	int channelMetaTypeId(int ix) const;
+
+	void showAllChannels();
+	void hideFlatChannels();
+	const ChannelFilter& channelFilter() const { return m_channelFilter; }
+	void setChannelFilter(const ChannelFilter &filter);
+	void setChannelVisible(int channel_ix, bool b);
+	void setChannelMaximized(int channel_ix, bool b);
+	//DataRect dataRect(int channel_ix) const;
 
 	timemsec_t miniMapPosToTime(int pos) const;
 	int miniMapTimeToPos(timemsec_t time) const;
@@ -177,10 +135,25 @@ public:
 
 	const QRect& rect() const { return  m_layout.rect; }
 	const QRect& miniMapRect() const { return  m_layout.miniMapRect; }
-	QPoint crossBarPos1() const {return m_state.crossBarPos1;}
-	QPoint crossBarPos2() const {return m_state.crossBarPos2;}
-	void setCrossBarPos1(const QPoint &pos);
-	void setCrossBarPos2(const QPoint &pos);
+	const QRect& cornerCellRect() const { return  m_layout.cornerCellRect; }
+	QRect southFloatingBarRect() const;
+	//bool isCrossBarVisible() const {return !m_state.crossBarPos.isNull() && m_state.crossBarChannel >= 0;}
+	struct SHVVISU_DECL_EXPORT CrossHairPos
+	{
+		int channelIndex = -1;
+		QPoint possition;
+
+		CrossHairPos() {}
+		CrossHairPos(int ch_ix, const QPoint &pos) : channelIndex(ch_ix), possition(pos) {}
+
+		bool isValid() const { return channelIndex >= 0 && !possition.isNull(); }
+	};
+	CrossHairPos crossHairPos() const {return m_state.crossHairPos;}
+	void setCrossHairPos(const CrossHairPos &pos);
+	//void setCrossBarPos2(const QPoint &pos);
+
+	void setCurrentTime(timemsec_t time);
+	timemsec_t currentTime() const { return m_state.currentTime; }
 
 	void setSelectionRect(const QRect &rect);
 
@@ -195,35 +168,51 @@ public:
 	void resetZoom(int channel_ix);
 	void zoomToSelection();
 
-	const GraphStyle& style() const { return m_style; }
-	void setStyle(const GraphStyle &st);
-	void setDefaultChannelStyle(const ChannelStyle &st);
+	const Style& style() const { return m_style; }
+	void setStyle(const Style &st);
+	void setDefaultChannelStyle(const GraphChannel::Style &st);
+	GraphChannel::Style defaultChannelStyle() const { return m_defaultChannelStyle; }
 
-	void makeLayout(const QRect &rect);
-	void draw(QPainter *painter, const QRect &dirty_rect);
+	void makeLayout(const QRect &pref_rect);
+	void draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_rect);
 
 	int u2px(double u) const;
+	double u2pxf(double u) const;
 	double px2u(int px) const;
 
-	static std::function<QPoint (const Sample&)> dataToPointFn(const DataRect &src, const QRect &dest);
+	static std::function<QPoint (const Sample &s, int meta_type_id)> dataToPointFn(const DataRect &src, const QRect &dest);
 	static std::function<Sample (const QPoint &)> pointToDataFn(const QRect &src, const DataRect &dest);
 	static std::function<timemsec_t (int)> posToTimeFn(const QPoint &src, const XRange &dest);
 	static std::function<int (timemsec_t)> timeToPosFn(const XRange &src, const WidgetRange &dest);
 	static std::function<int (double)> valueToPosFn(const YRange &src, const WidgetRange &dest);
 	static std::function<double (int)> posToValueFn(const WidgetRange &src, const YRange &dest);
 
+	void processEvent(QEvent *ev);
+
 	Q_SIGNAL void presentationDirty(const QRect &rect);
+	void emitPresentationDirty(const QRect &rect) { emit presentationDirty(rect); }
+	Q_SIGNAL void layoutChanged();
+	Q_SIGNAL void channelContextMenuRequest(int channel_index, const QPoint &mouse_pos);
+	void emitChannelContextMenuRequest(int channel_index, const QPoint &mouse_pos) { emit channelContextMenuRequest(channel_index, mouse_pos); }
+	Q_SIGNAL void graphContextMenuRequest(const QPoint &mouse_pos);
+
+	static QString rectToString(const QRect &r);
 protected:
 	void sanityXRangeZoom();
 	//void onModelXRangeChanged(const timeline::XRange &range);
 
-	void drawRectText(QPainter *painter, const QRect &rect, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
+	void clearMiniMapCache();
 
-	virtual void drawBackground(QPainter *painter);
+	void drawRectText(QPainter *painter, const QRect &rect, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
+	void drawCenteredRectText(QPainter *painter, const QPoint &top_center, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
+
+	QVector<int> visibleChannels();
+
+	void drawBackground(QPainter *painter, const QRect &dirty_rect);
+	virtual void drawCornerCell(QPainter *painter);
 	virtual void drawMiniMap(QPainter *painter);
 	virtual void drawXAxis(QPainter *painter);
 
-	//virtual void drawGraph(int channel);
 	virtual void drawVerticalHeader(QPainter *painter, int channel);
 	virtual void drawBackground(QPainter *painter, int channel);
 	virtual void drawGrid(QPainter *painter, int channel);
@@ -231,27 +220,38 @@ protected:
 	virtual void drawSamples(QPainter *painter, int channel_ix
 			, const DataRect &src_rect = DataRect()
 			, const QRect &dest_rect = QRect()
-			, const ChannelStyle &channel_style = ChannelStyle());
-	virtual void drawCrossBar(QPainter *painter, int channel_ix, const QPoint &crossbar_pos, const QColor &color);
+			, const GraphChannel::Style &channel_style = GraphChannel::Style());
+	virtual void drawCrossHair(QPainter *painter, int channel_ix);
 	virtual void drawSelection(QPainter *painter);
+	virtual void drawCurrentTime(QPainter *painter, int channel_ix);
+	void drawXAxisTimeMark(QPainter *painter, time_t time, const QColor &color);
 
 	QVariantMap mergeMaps(const QVariantMap &base, const QVariantMap &overlay) const;
 	void makeXAxis();
 	void makeYAxis(int channel);
+
+	void moveSouthFloatingBarBottom(int bottom);
+protected:
+	void onButtonBoxClicked(int button_id);
 protected:
 	GraphModel *m_model = nullptr;
 
-	GraphStyle effectiveStyle;
+	QTimeZone m_timeZone;
 
-	GraphStyle m_style;
-	ChannelStyle m_channelStyle;
+	Style m_effectiveStyle;
 
-	QVector<Channel> m_channels;
+	Style m_style;
+	GraphChannel::Style m_defaultChannelStyle;
 
-	struct SHVVISU_DECL_EXPORT XAxis {
+	QVector<GraphChannel*> m_channels;
+	Graph::ChannelFilter m_channelFilter;
+
+	struct SHVVISU_DECL_EXPORT XAxis
+	{
 		enum class LabelFormat {MSec, Sec, Min, Hour, Day, Month, Year};
 		timemsec_t tickInterval = 0;
 		int subtickEvery = 1;
+		double tickLen = 0.15;
 		LabelFormat labelFormat = LabelFormat::MSec;
 
 		XAxis() {}
@@ -265,10 +265,10 @@ protected:
 	{
 		XRange xRange;
 		XRange xRangeZoom;
-		QPoint crossBarPos1;
-		QPoint crossBarPos2;
+		CrossHairPos crossHairPos;
+		timemsec_t currentTime = 0;
 		QRect selectionRect;
-		XAxis axis;
+		XAxis xAxis;
 	} m_state;
 
 	struct
@@ -276,9 +276,11 @@ protected:
 		QRect rect;
 		QRect miniMapRect;
 		QRect xAxisRect;
+		QRect cornerCellRect;
 	} m_layout;
 
 	QPixmap m_miniMapCache;
+	GraphButtonBox *m_cornerCellButtonBox = nullptr;
 };
 
 }}}

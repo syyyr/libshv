@@ -148,6 +148,7 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 				SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + "' doesn't exist");
 			}
 			else {
+				//int client_id = cp::RpcMessage::peekCallerId(meta);
 				ShvNode *nd = childNode(shv_path.at(0).toString());
 				if(nd) {
 					std::string new_path = core::StringView::join(++shv_path.begin(), shv_path.end(), '/');
@@ -316,7 +317,7 @@ chainpack::RpcValue ShvNode::lsAttributes(const StringViewList &shv_path, unsign
 	cp::RpcValue::List ret;
 	if(attributes & cp::MetaMethod::LsAttribute::HasChildren)
 		ret.push_back(hasChildren(shv_path));
-	return std::move(ret);
+	return ret;
 }
 
 int ShvNode::basicGrantToAccessLevel(const chainpack::RpcValue &acces_grant)
@@ -547,9 +548,10 @@ const char *RpcValueMapNode::M_COMMIT = "commitChanges";
 static std::vector<cp::MetaMethod> meta_methods_value_map_root_node {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_CONFIG},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_CONFIG},
-	{RpcValueMapNode::M_LOAD, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::ROLE_SERVICE},
-	{RpcValueMapNode::M_SAVE, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::ROLE_ADMIN},
-	{RpcValueMapNode::M_COMMIT, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::ROLE_ADMIN},
+	/// load, save, commit were exposed in value node, do not know why, they should be in config node
+	//{RpcValueMapNode::M_LOAD, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::ROLE_SERVICE},
+	//{RpcValueMapNode::M_SAVE, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::ROLE_ADMIN},
+	//{RpcValueMapNode::M_COMMIT, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::ROLE_ADMIN},
 };
 
 static std::vector<cp::MetaMethod> meta_methods_value_map_node {
@@ -581,8 +583,12 @@ size_t RpcValueMapNode::methodCount(const shv::iotqt::node::ShvNode::StringViewL
 		return meta_methods_value_map_root_node.size();
 	}
 	else {
-		return isDir(shv_path)? 2: meta_methods_value_map_node.size();
+		if(isDir(shv_path))
+			return 2;
+		if(isReadOnly())
+			return meta_methods_value_map_node.size() - 1;
 	}
+	return meta_methods_value_map_node.size();
 }
 
 const shv::chainpack::MetaMethod *RpcValueMapNode::metaMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, size_t ix)

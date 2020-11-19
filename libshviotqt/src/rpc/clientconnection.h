@@ -26,10 +26,19 @@ class SHVIOTQT_DECL_EXPORT ClientConnection : public SocketRpcConnection
 
 	SHV_FIELD_IMPL(std::string, u, U, ser)
 	SHV_FIELD_IMPL(std::string, h, H, ost)
-	SHV_FIELD_IMPL2(int, p, P, ort, shv::chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT)
+	SHV_FIELD_IMPL2(int, p, P, ort, shv::chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT_NONSECURED)
+	SHV_FIELD_IMPL2(bool, p, P, eerVerify, true)
 	SHV_FIELD_IMPL(std::string, p, P, assword)
 	SHV_FIELD_IMPL(shv::chainpack::IRpcConnection::LoginType, l, L, oginType)
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, c, C, onnectionOptions)
+public:
+	enum SecurityType { None = 0, Ssl = 1 };
+
+	static SecurityType securityTypeFromString(const std::string &val);
+	static std::string securityTypeToString(const SecurityType &security_type);
+
+	SecurityType securityType() const;
+	void setSecurityType(const std::string &val);
 
 public:
 	enum class State {NotConnected = 0, Connecting, SocketConnected, BrokerConnected, ConnectionError};
@@ -99,6 +108,7 @@ private:
 	int m_checkBrokerConnectedInterval = 0;
 	QTimer *m_heartBeatTimer = nullptr;
 	int m_heartbeatInterval = 0;
+	SecurityType m_securityType = None;
 };
 
 } // namespace chainpack

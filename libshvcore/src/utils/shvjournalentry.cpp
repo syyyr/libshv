@@ -13,6 +13,7 @@ const char *ShvJournalEntry::DOMAIN_VAL_CHANGE = "C";
 const char *ShvJournalEntry::DOMAIN_VAL_FASTCHANGE = "F";
 const char *ShvJournalEntry::DOMAIN_VAL_SERVICECHANGE = "S";
 const char *ShvJournalEntry::DOMAIN_SHV_SYSTEM = "SHV_SYS";
+const char *ShvJournalEntry::DOMAIN_SHV_COMMAND = "CMD";
 
 const char* ShvJournalEntry::PATH_APP_START = "APP_START";
 //const char* ShvJournalEntry::PATH_SNAPSHOT_END = "SNAPSHOT_END";
@@ -40,7 +41,7 @@ chainpack::RpcValue ShvJournalEntry::toRpcValueMap() const
 		m[ShvLogHeader::Column::name(ShvLogHeader::Column::SampleType)] = ShvLogTypeDescr::sampleTypeToString(sampleType);
 	if(!userId.empty())
 		m[ShvLogHeader::Column::name(ShvLogHeader::Column::UserId)] = userId;
-	return std::move(m);
+	return m;
 }
 
 chainpack::DataChange ShvJournalEntry::toDataChange() const

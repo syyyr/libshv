@@ -18,7 +18,7 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeDescrField
 	std::string typeName;
 	std::string description;
 	chainpack::RpcValue value;
-	chainpack::RpcValue::Map options;
+	chainpack::RpcValue::Map tags;
 
 	ShvLogTypeDescrField() {}
 	//ShvLogTypeDescrField(const std::string &n)
@@ -64,20 +64,23 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeDescr
 	static const char* OPT_MIN_VAL;
 	static const char* OPT_MAX_VAL;
 	static const char* OPT_DEC_PLACES;
-	chainpack::RpcValue::Map options;
+	chainpack::RpcValue::Map tags;
 
 	ShvLogTypeDescr() {}
 	ShvLogTypeDescr(const std::string &type_name) : type(typeFromString(type_name)) { }
-	ShvLogTypeDescr(Type t, std::vector<ShvLogTypeDescrField> &&flds, const std::string &descr = std::string(), SampleType st = SampleType::Continuous)
-		: ShvLogTypeDescr(t, std::move(flds), descr, st, chainpack::RpcValue(), chainpack::RpcValue()) {}
-	ShvLogTypeDescr(Type t, std::vector<ShvLogTypeDescrField> &&flds, const std::string &descr, SampleType st, const chainpack::RpcValue &min_val, const chainpack::RpcValue &max_val)
+	ShvLogTypeDescr(Type t, std::vector<ShvLogTypeDescrField> &&flds, SampleType st = SampleType::Continuous, const chainpack::RpcValue::Map &tags = chainpack::RpcValue::Map(), const std::string &descr = std::string())
+	    : ShvLogTypeDescr(t, std::move(flds), chainpack::RpcValue::Map(tags), descr, st) {}
+	ShvLogTypeDescr(Type t, SampleType st = SampleType::Continuous, const chainpack::RpcValue::Map &tags = chainpack::RpcValue::Map(), const std::string &descr = std::string())
+	    : ShvLogTypeDescr(t, std::vector<ShvLogTypeDescrField>(), chainpack::RpcValue::Map(tags), descr, st) {}
+	ShvLogTypeDescr(Type t, std::vector<ShvLogTypeDescrField> &&flds, chainpack::RpcValue::Map &&tags, const std::string &descr = std::string(), SampleType st = SampleType::Continuous)
 		: fields(std::move(flds))
 		, description(descr)
 		, type(t)
 		, sampleType(st)
+		, tags(std::move(tags))
 	{
-		options.setValue(OPT_MIN_VAL, min_val);
-		options.setValue(OPT_MAX_VAL, max_val);
+		//tags.setValue(OPT_MIN_VAL, min_val);
+		//tags.setValue(OPT_MAX_VAL, max_val);
 	}
 
 	bool isValid() const { return type != Type::Invalid; }

@@ -19,13 +19,15 @@ public:
 	//~AppCliOptions() Q_DECL_OVERRIDE {}
 
 	CLIOPTION_GETTER_SETTER(std::string, l, setL, ocale)
+	CLIOPTION_GETTER_SETTER2(std::string, "app.brokerId", b, setB, rokerId)
 	CLIOPTION_GETTER_SETTER2(int, "server.port", s, setS, erverPort)
+	CLIOPTION_GETTER_SETTER2(int, "server.sslPort", s, setS, erverSslPort)
 #ifdef WITH_SHV_WEBSOCKETS
 	CLIOPTION_GETTER_SETTER2(int, "server.websocket.port", s, setS, erverWebsocketPort)
 	CLIOPTION_GETTER_SETTER2(int, "server.websocket.sslport", s, setS, erverWebsocketSslPort)
+#endif
 	CLIOPTION_GETTER_SETTER2(std::string, "server.ssl.key", s, setS, erverSslKeyFile)
 	CLIOPTION_GETTER_SETTER2(std::string, "server.ssl.cert", s, setS, erverSslCertFile)
-#endif
 	CLIOPTION_GETTER_SETTER2(std::string, "server.publicIP", p, setP, ublicIP)
 
 	//CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.fstab", f, setF, stabFile)
@@ -40,7 +42,7 @@ public:
 	CLIOPTION_GETTER_SETTER2(shv::chainpack::RpcValue, "masters.connections", m, setM, asterBrokersConnections)
 	CLIOPTION_GETTER_SETTER2(bool, "masters.enabled", is, set, MasterBrokersEnabled)
 
-	CLIOPTION_GETTER_SETTER2(std::string, "master.broker.device.id", m, setM, asterBrokerDeviceId)
+	//CLIOPTION_GETTER_SETTER2(std::string, "master.broker.device.id", m, setM, asterBrokerDeviceId)
 };
 
 }}

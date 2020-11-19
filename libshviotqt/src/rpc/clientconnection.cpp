@@ -13,6 +13,7 @@
 #include <shv/chainpack/rpcmessage.h>
 
 #include <QTcpSocket>
+#include <QSslSocket>
 #include <QHostAddress>
 #include <QTimer>
 #include <QCryptographicHash>
@@ -45,6 +46,32 @@ ClientConnection::~ClientConnection()
 	abort();
 }
 
+ClientConnection::SecurityType ClientConnection::securityTypeFromString(const std::string &val)
+{
+	return val == "ssl" ? SecurityType::Ssl : SecurityType::None;
+}
+
+std::string ClientConnection::securityTypeToString(const SecurityType &security_type)
+{
+	switch (security_type) {
+	case SecurityType::None:
+		return "none";
+	case SecurityType::Ssl:
+		return "ssl";
+	}
+	return std::string();
+}
+
+ClientConnection::SecurityType ClientConnection::securityType() const
+{
+	return m_securityType;
+}
+
+void ClientConnection::setSecurityType(const std::string &val)
+{
+	m_securityType = securityTypeFromString(val);
+}
+
 void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 {
 	if(!cli_opts)
@@ -69,6 +96,8 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 
 	setHost(cli_opts->serverHost());
 	setPort(cli_opts->serverPort());
+	setSecurityType(cli_opts->serverSecurityType());
+	setPeerVerify(cli_opts->serverPeerVerify());
 	setUser(cli_opts->user());
 	setPassword(cli_opts->password());
 	if(password().empty() && !cli_opts->passwordFile().empty()) {
@@ -103,7 +132,8 @@ void ClientConnection::setTunnelOptions(const chainpack::RpcValue &opts)
 void ClientConnection::open()
 {
 	if(!hasSocket()) {
-		TcpSocket *socket = new TcpSocket(new QTcpSocket());
+		QSslSocket::PeerVerifyMode peer_verify_mode = m_peerVerify ? QSslSocket::AutoVerifyPeer : QSslSocket::VerifyNone;
+		TcpSocket *socket = m_securityType == None ? new TcpSocket(new QTcpSocket()) : new SslSocket(new QSslSocket(), peer_verify_mode);
 		setSocket(socket);
 	}
 	checkBrokerConnected();
@@ -204,7 +234,7 @@ void ClientConnection::checkBrokerConnected()
 	//shvWarning() << "check: " << isSocketConnected();
 	if(!isBrokerConnected()) {
 		abortSocket();
-		shvInfo().nospace() << "connecting to: " << user() << "@" << host() << ":" << port();
+		shvInfo().nospace() << "connecting to: " << user() << "@" << host() << ":" << port() << " security: " << securityTypeToString(securityType());
 		m_connectionState = ConnectionState();
 		setState(State::Connecting);
 		connectToHost(QString::fromStdString(host()), port());

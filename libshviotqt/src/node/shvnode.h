@@ -11,6 +11,8 @@
 #include <QObject>
 #include <QMetaProperty>
 
+#include <cstddef>
+
 //namespace shv { namespace chainpack { class MetaMethod; }}
 //namespace shv { namespace chainpack { class MetaMethod; class RpcValue; class RpcMessage; class RpcRequest; }}
 namespace shv { namespace core { namespace utils { class ShvPath; }}}
@@ -124,6 +126,8 @@ class SHVIOTQT_DECL_EXPORT RpcValueMapNode : public shv::iotqt::node::ShvNode
 {
 	Q_OBJECT
 	using Super = shv::iotqt::node::ShvNode;
+
+	SHV_FIELD_BOOL_IMPL(r, R, eadOnly)
 public:
 	static const char *M_LOAD;
 	static const char *M_SAVE;

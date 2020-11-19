@@ -43,5 +43,18 @@ VisuController::VisuController(QGraphicsItem *graphics_item, QObject *parent)
 	//	shvDebug() << key << "->" << attrs.value(key);
 }
 
+QString VisuController::graphicsItemAttributeValue(const QGraphicsItem *it, const QString &attr_name, const QString &default_value)
+{
+	svgscene::XmlAttributes attrs = qvariant_cast<svgscene::XmlAttributes>(it->data(Types::DataKey::XmlAttributes));
+	return attrs.value(attr_name, default_value);
+}
+
+QString VisuController::graphicsItemCssAttributeValue(const QGraphicsItem *it, const QString &attr_name, const QString &default_value)
+{
+	svgscene::CssAttributes attrs = qvariant_cast<svgscene::CssAttributes>(it->data(Types::DataKey::CssAttributes));
+	return attrs.value(attr_name, default_value);
+}
+
+
 }}}
 

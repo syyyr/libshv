@@ -38,7 +38,7 @@ public:
 	SaxHandler(QGraphicsScene *scene);
 	virtual ~SaxHandler();
 
-	void load(QXmlStreamReader *data);
+	void load(QXmlStreamReader *data, bool is_skip_definitions = false);
 
 	static QString point2str(QPointF r);
 	static QString rect2str(QRectF r);
@@ -68,6 +68,7 @@ private:
 	QGraphicsItem *m_topLevelItem = nullptr;
 	QXmlStreamReader *m_xml = nullptr;
 	QPen m_defaultPen;
+	bool m_skipDefinitions = false;
 };
 
 }}}

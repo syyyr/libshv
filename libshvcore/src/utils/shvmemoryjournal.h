@@ -26,6 +26,9 @@ public:
 	void setDeviceId(std::string id) { m_logHeader.setDeviceId(std::move(id)); }
 	void setDeviceType(std::string type) { m_logHeader.setDeviceType(std::move(type)); }
 
+	bool isShortTimeCorrection() const { return m_isShortTimeCorrection; }
+	void setShortTimeCorrection(bool b) { m_isShortTimeCorrection = b; }
+
 	void append(const ShvJournalEntry &entry) override;
 	int inputFilterRecordCountLimit() const { return  m_inputFilterRecordCountLimit; }
 
@@ -38,7 +41,9 @@ public:
 
 	const std::vector<ShvJournalEntry>& entries() const {return  m_entries;}
 	size_t size() const { return  m_entries.size(); }
+	const ShvJournalEntry& at(size_t ix) const { return  m_entries.at(ix); }
 	void clear() { m_entries.clear(); }
+	//size_t timeToUpperBoundIndex(int64_t time) const;
 private:
 	using Entry = ShvJournalEntry;
 
@@ -57,7 +62,22 @@ private:
 	std::map<std::string, ShvLogTypeDescr> m_pathsTypeDescr;
 
 	std::vector<Entry> m_entries;
-};
+
+
+	struct ShortTime {
+		int64_t msec_sum = 0;
+		uint16_t last_msec = 0;
+
+		int64_t addShortTime(uint16_t msec)
+		{
+			msec_sum += static_cast<uint16_t>(msec - last_msec);
+			last_msec = msec;
+			return msec_sum;
+		}
+	};
+
+	bool m_isShortTimeCorrection = false;
+	std::map<std::string, ShortTime> m_recentShortTimes;};
 
 } // namespace utils
 } // namespace core

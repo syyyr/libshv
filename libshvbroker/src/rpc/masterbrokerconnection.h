@@ -8,18 +8,18 @@ namespace shv {
 namespace broker {
 namespace rpc {
 
-class SlaveBrokerClientConnection : public shv::iotqt::rpc::DeviceConnection, public CommonRpcClientHandle
+class MasterBrokerConnection : public shv::iotqt::rpc::DeviceConnection, public CommonRpcClientHandle
 {
 	Q_OBJECT
 
 	using Super = shv::iotqt::rpc::DeviceConnection;
 public:
-	SlaveBrokerClientConnection(QObject *parent = nullptr);
+	MasterBrokerConnection(QObject *parent = nullptr);
 
 	int connectionId() const override {return Super::connectionId();}
 
-	// master broker connection cannot have userName
-	// because it is connected in oposite direction than client connections
+	/// master broker connection cannot have userName
+	/// because it is connected in oposite direction than client connections
 	std::string loggedUserName() override {return std::string();}
 
 	bool isConnectedAndLoggedIn() const override {return isSocketConnected() && !isInitPhase();}
@@ -29,9 +29,8 @@ public:
 	void sendRawData(const shv::chainpack::RpcValue::MetaData &meta_data, std::string &&data) override;
 	void sendMessage(const shv::chainpack::RpcMessage &rpc_msg) override;
 
-	unsigned addSubscription(const std::string &rel_path, const std::string &method) override;
-	bool removeSubscription(const std::string &rel_path, const std::string &method) override;
-	std::string toSubscribedPath(const Subscription &subs, const std::string &abs_path) const override;
+	Subscription createSubscription(const std::string &shv_path, const std::string &method) override;
+	std::string toSubscribedPath(const Subscription &subs, const std::string &signal_path) const override;
 
 	std::string masterExportedToLocalPath(const std::string &master_path) const;
 	std::string localPathToMasterExported(const std::string &local_path) const;
@@ -40,7 +39,7 @@ public:
 	void setOptions(const shv::chainpack::RpcValue &slave_broker_options);
 	shv::chainpack::RpcValue options() {return m_options;}
 protected:
-	void onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, const std::string &data, size_t start_pos, size_t data_len) override;
+	void onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, std::string &&msg_data) override;
 protected:
 	std::string m_exportedShvPath;
 	shv::chainpack::RpcValue m_options;

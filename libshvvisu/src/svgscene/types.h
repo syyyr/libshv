@@ -15,6 +15,7 @@ struct SHVVISU_DECL_EXPORT Types
 	{
 		enum {
 			XmlAttributes = 1,
+			CssAttributes,
 			Id,
 			ChildId,
 			ShvPath,

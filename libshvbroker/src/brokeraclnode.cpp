@@ -96,7 +96,7 @@ chainpack::RpcValue EtcAclRootNode::callMethod(const iotqt::node::ShvNode::Strin
 			cp::RpcValue::List ret;
 			for(auto *nd : findChildren<BrokerAclNode*>(QString(), Qt::FindDirectChildrenOnly))
 				ret.push_back(nd->saveConfigFile());
-			return std::move(ret);
+			return ret;
 		}
 	}
 	return Super::callMethod(shv_path, method, params);
@@ -246,6 +246,7 @@ std::string MountsAclNode::saveConfigFile()
 //static const std::string ACL_ROLE_NAME = "name";
 static const std::string ACL_ROLE_WEIGHT = "weight";
 static const std::string ACL_ROLE_ROLES = "roles";
+static const std::string ACL_ROLE_PROFILE = "profile";
 
 RolesAclNode::RolesAclNode(shv::iotqt::node::ShvNode *parent)
 	: Super("roles", parent)
@@ -260,7 +261,7 @@ iotqt::node::ShvNode::StringList RolesAclNode::childNames(const iotqt::node::Shv
 		return mng->roles();
 	}
 	else if(shv_path.size() == 1) {
-		return iotqt::node::ShvNode::StringList{ACL_ROLE_WEIGHT, ACL_ROLE_ROLES};
+		return iotqt::node::ShvNode::StringList{ACL_ROLE_WEIGHT, ACL_ROLE_ROLES, ACL_ROLE_PROFILE};
 	}
 	return Super::childNames(shv_path);
 }
@@ -275,8 +276,8 @@ chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringV
 
 				chainpack::RpcValue rv = lst.value(1);
 				auto v = AclRole::fromRpcValue(rv);
-				if(rv.isValid() && !rv.isNull() && !v.isValid())
-					throw shv::core::Exception("Invalid role: " + role_name + " definition: " + rv.toCpon());
+				//if(rv.isValid() && !rv.isNull() && !v.isValid())
+				//	throw shv::core::Exception("Invalid role: " + role_name + " definition: " + rv.toCpon());
 				AclManager *mng = BrokerApp::instance()->aclManager();
 				mng->setRole(role_name, v);
 				return true;
@@ -304,6 +305,8 @@ chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringV
 				return role_def.weight;
 			if(pn == ACL_ROLE_ROLES)
 				return shv::chainpack::RpcValue::List::fromStringList(role_def.roles);
+			if(pn == ACL_ROLE_PROFILE)
+				return role_def.profile;
 		}
 		if(method == cp::Rpc::METH_SET) {
 			if(pn == ACL_ROLE_WEIGHT) {
@@ -314,6 +317,10 @@ chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringV
 				role_def.roles.clear();
 				for(const auto &rv : params.toList())
 					role_def.roles.push_back(rv.toString());
+				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{role_name, role_def.toRpcValueMap()});
+			}
+			if(pn == ACL_ROLE_PROFILE) {
+				role_def.profile = params;
 				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{role_name, role_def.toRpcValueMap()});
 			}
 		}
@@ -507,8 +514,8 @@ chainpack::RpcValue AccessAclNode::callMethod(const iotqt::node::ShvNode::String
 				const std::string &role_name = lst.value(0).toString();
 				chainpack::RpcValue rv = lst.value(1);
 				auto v = AclRoleAccessRules::fromRpcValue(rv);
-				if(rv.isValid() && !rv.isNull() && !v.isValid())
-					throw shv::core::Exception("Invalid acces for role: " + role_name + " definition: " + rv.toCpon());
+				//if(rv.isValid() && !rv.isNull() && !v.isValid())
+				//	throw shv::core::Exception("Invalid acces for role: " + role_name + " definition: " + rv.toCpon());
 				AclManager *mng = BrokerApp::instance()->aclManager();
 				mng->setAccessRoleRules(role_name, v);
 				return true;
@@ -559,7 +566,7 @@ chainpack::RpcValue AccessAclNode::callMethod(const iotqt::node::ShvNode::String
 		}
 		if(method == M_SET_GRANT) {
 			rule.grant = cp::AccessGrant::fromRpcValue(params);
-			return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{rule_name, role_rules.toRpcValue()});
+			return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{rule_name, rule.toRpcValue()});
 		}
 	}
 	return Super::callMethod(shv_path, method, params);

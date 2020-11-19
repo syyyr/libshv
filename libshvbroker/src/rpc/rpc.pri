@@ -1,14 +1,14 @@
 HEADERS += \
-    $$PWD/brokerclientserverconnection.h \
     $$PWD/brokertcpserver.h \
+    $$PWD/clientconnectiononbroker.h \
     $$PWD/commonrpcclienthandle.h \
-    $$PWD/slavebrokerclientconnection.h
+    $$PWD/masterbrokerconnection.h
 
 SOURCES += \
-    $$PWD/brokerclientserverconnection.cpp \
     $$PWD/brokertcpserver.cpp \
+    $$PWD/clientconnectiononbroker.cpp \
     $$PWD/commonrpcclienthandle.cpp \
-    $$PWD/slavebrokerclientconnection.cpp
+    $$PWD/masterbrokerconnection.cpp
 
 with-shvwebsockets {
 HEADERS += \

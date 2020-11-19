@@ -13,12 +13,13 @@ namespace shv {
 namespace core {
 namespace utils {
 
-ShvLogRpcValueReader::ShvLogRpcValueReader(const shv::chainpack::RpcValue &log)
+ShvLogRpcValueReader::ShvLogRpcValueReader(const shv::chainpack::RpcValue &log, bool throw_exceptions)
 	: m_log(log)
+	, m_isThrowExceptions(throw_exceptions)
 {
 	m_logHeader = ShvLogHeader::fromMetaData(m_log.metaData());
 
-	if(!m_log.isList())
+	if(!m_log.isList() && m_isThrowExceptions)
 		SHV_EXCEPTION("Log is corrupted!");
 }
 
@@ -35,7 +36,10 @@ bool ShvLogRpcValueReader::next()
 		const chainpack::RpcValue::List &row = val.toList();
 		cp::RpcValue dt = row.value(Column::Timestamp);
 		if(!dt.isDateTime()) {
-			logWShvJournal() << "Skipping invalid date time, row:" << val.toCpon();
+			if(m_isThrowExceptions)
+				throw shv::core::Exception("Invalid date time, row: " + val.toCpon());
+			else
+				logWShvJournal() << "Skipping invalid date time, row:" << val.toCpon();
 			continue;
 		}
 		int64_t time = dt.toDateTime().msecsSinceEpoch();
@@ -44,7 +48,10 @@ bool ShvLogRpcValueReader::next()
 			p = m_logHeader.pathDictCRef().value(p.toInt());
 		const std::string &path = p.toString();
 		if(path.empty()) {
-			logWShvJournal() << "Path dictionary corrupted, row:" << val.toCpon();
+			if(m_isThrowExceptions)
+				throw shv::core::Exception("Path dictionary corrupted, row: " + val.toCpon());
+			else
+				logWShvJournal() << "Path dictionary corrupted, row:" << val.toCpon();
 			continue;
 		}
 		//logDShvJournal() << "row:" << val.toCpon();

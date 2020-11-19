@@ -12,6 +12,7 @@
 #define NECROLOG_NO_DEBUG_LOG
 #endif
 
+#include "stringview.h"
 #include <necrolog.h>
 
 #define shvCDebug(category) nCDebug(category)
@@ -63,5 +64,8 @@ shvDebug() << ">>>> ENTER FN" << __FUNCTION__
 #define shvWarning() shvCWarning("")
 #define shvError() shvCError("")
 
-#define logRpcMsg() shvCInfo("RpcMsg").color(NecroLog::Color::LightGray)
+#define logRpcMsg() shvCMessage("RpcMsg")
+//.color(NecroLog::Color::LightGray)
+
+inline NecroLog &operator<<(NecroLog log, const shv::core::StringView &v) { return log.operator<<(v.toString()); }
 

@@ -1,6 +1,6 @@
 #include "graphwidget.h"
 #include "graphmodel.h"
-#include "graphwidget.h"
+#include "graphview.h"
 
 #include <shv/core/exception.h>
 #include <shv/coreqt/log.h>
@@ -13,6 +13,7 @@
 #include <QToolTip>
 #include <QDateTime>
 #include <QMenu>
+#include <QScrollBar>
 
 #include <cmath>
 
@@ -36,13 +37,22 @@ void GraphWidget::setGraph(Graph *g)
 	if(m_graph)
 		m_graph->disconnect(this);
 	m_graph = g;
-	Graph::GraphStyle style = graph()->style();
+	Graph::Style style = graph()->style();
 	style.init(this);
 	graph()->setStyle(style);
 	update();
-	connect(m_graph, &Graph::presentationDirty, this, [this]() {
-		update();
+	connect(m_graph, &Graph::presentationDirty, this, [this](const QRect &rect) {
+		//shvInfo() << "presentsation dirty:" << Graph::rectToString(rect);
+		if(rect.isEmpty())
+			update();
+		else
+			update(rect);
 	});
+	connect(m_graph, &Graph::layoutChanged, this, [this]() {
+		makeLayout();
+	});
+	connect(m_graph, &Graph::graphContextMenuRequest, this, &GraphWidget::showGraphContextMenu);
+	connect(m_graph, &Graph::channelContextMenuRequest, this, &GraphWidget::showChannelContextMenu);
 }
 
 Graph *GraphWidget::graph()
@@ -55,26 +65,54 @@ const Graph *GraphWidget::graph() const
 	return m_graph;
 }
 
-void GraphWidget::makeLayout(const QSize &pref_size)
+void GraphWidget::makeLayout(const QSize &preferred_size)
 {
 	shvLogFuncFrame();
-	graph()->makeLayout(QRect(QPoint(), pref_size));
-	setMinimumSize(graph()->rect().size());
-	setMaximumSize(graph()->rect().size());
+	m_graphPreferredSize = preferred_size;
+	graph()->makeLayout(QRect(QPoint(), preferred_size));
+	QSize sz = graph()->rect().size();
+	shvDebug() << "new size:" << sz.width() << 'x' << sz.height();
+	setMinimumSize(sz);
 	update();
 }
 
 void GraphWidget::makeLayout()
 {
-	makeLayout(graph()->rect().size());
+	makeLayout(m_graphPreferredSize);
+}
+
+bool GraphWidget::event(QEvent *ev)
+{
+	if(Graph *gr = graph())
+		gr->processEvent(ev);
+	return Super::event(ev);
 }
 
 void GraphWidget::paintEvent(QPaintEvent *event)
 {
 	Super::paintEvent(event);
+	auto *view_port = parentWidget();
+	auto *scroll_area = qobject_cast<GraphView*>(view_port->parentWidget());
+	if(!scroll_area) {
+		shvError() << "Cannot find GraphView";
+		return;
+	}
+	//auto rect_to_string = [](const QRect &r) {
+	//	QString s = "%1,%2 %3x%4";
+	//	return s.arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
+	//};
 	QPainter painter(this);
-	graph()->draw(&painter, event->rect());
+	const QRect dirty_rect = event->rect();
+	//QRect view_rect = view_port->geometry();
+	//view_rect.moveTop(-geometry().y());
+	//shvInfo() << "-----------------------------------" << view_port->objectName();
+	//shvInfo() << "dirty rect:"  << rect_to_string(dirty_rect);
+	//shvInfo() << "view port :"  << rect_to_string(view_port->geometry());
+	//shvInfo() << "widget    :"  << rect_to_string(geometry());
+	//shvInfo() << "view_rect :"  << rect_to_string(view_rect);
+	graph()->draw(&painter, dirty_rect,  scroll_area->widgetViewRect());
 }
+
 /*
 void GraphWidget::keyPressEvent(QKeyEvent *event)
 {
@@ -89,6 +127,13 @@ void GraphWidget::keyReleaseEvent(QKeyEvent *event)
 	Super::keyReleaseEvent(event);
 }
 */
+
+bool GraphWidget::isMouseAboveMiniMap(const QPoint &mouse_pos) const
+{
+	const Graph *gr = graph();
+	return gr->miniMapRect().contains(mouse_pos);
+}
+
 bool GraphWidget::isMouseAboveMiniMapHandle(const QPoint &mouse_pos, bool left) const
 {
 	const Graph *gr = graph();
@@ -123,11 +168,36 @@ bool GraphWidget::isMouseAboveMiniMapSlider(const QPoint &pos) const
 	return (x1 < pos.x()) && (pos.x() < x2);
 }
 
-int GraphWidget::isMouseAboveGraphArea(const QPoint &pos) const
+int GraphWidget::isMouseAboveGraphVerticalHeader(const QPoint &pos) const
+{
+	const Graph *gr = graph();
+	for (int i = 0; i < gr->channelCount(); ++i) {
+		const GraphChannel *ch = gr->channelAt(i);
+		if(ch->verticalHeaderRect().contains(pos)) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+int GraphWidget::mouseAboveGraphDataAreaIndex(const QPoint &pos) const
 {
 	const Graph *gr = graph();
 	int ch_ix = gr->posToChannel(pos);
-	return ch_ix >= 0;
+	return ch_ix;
+}
+
+void GraphWidget::mouseDoubleClickEvent(QMouseEvent *event)
+{
+	QPoint pos = event->pos();
+	if(mouseAboveGraphDataAreaIndex(pos) >= 0) {
+		if(event->modifiers() == Qt::NoModifier) {
+			emit graphChannelDoubleClicked(pos);
+			event->accept();
+			return;
+		}
+	}
+	Super::mouseDoubleClickEvent(event);
 }
 
 void GraphWidget::mousePressEvent(QMouseEvent *event)
@@ -151,18 +221,20 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 			event->accept();
 			return;
 		}
-		else if(isMouseAboveGraphArea(pos) && event->modifiers() == Qt::ControlModifier) {
-			m_mouseOperation = MouseOperation::GraphAreaMove;
-			m_recentMousePos = pos;
-			event->accept();
-			return;
-		}
-		else if(isMouseAboveGraphArea(pos)) {
-			logMouseSelection() << "GraphAreaPress";
-			m_mouseOperation = MouseOperation::GraphAreaPress;
-			m_recentMousePos = pos;
-			event->accept();
-			return;
+		else if(mouseAboveGraphDataAreaIndex(pos) >= 0) {
+			if(event->modifiers() == Qt::ControlModifier) {
+				m_mouseOperation = MouseOperation::GraphAreaMove;
+				m_recentMousePos = pos;
+				event->accept();
+				return;
+			}
+			else {
+				logMouseSelection() << "GraphAreaPress";
+				m_mouseOperation = MouseOperation::GraphDataAreaPress;
+				m_recentMousePos = pos;
+				event->accept();
+				return;
+			}
 		}
 	}
 	Super::mousePressEvent(event);
@@ -174,10 +246,12 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 	auto old_mouse_op = m_mouseOperation;
 	m_mouseOperation = MouseOperation::None;
 	if(event->button() == Qt::LeftButton) {
-		if(old_mouse_op == MouseOperation::GraphAreaPress) {
+		if(old_mouse_op == MouseOperation::GraphDataAreaPress) {
+			/*
 			QPoint pos = event->pos();
 			if(event->modifiers() == Qt::NoModifier) {
 				Graph *gr = graph();
+				logMouseSelection() << "Set cross bar 1 pos to:" << pos.x() << pos.y();
 				gr->setCrossBarPos1(pos);
 				event->accept();
 				update();
@@ -190,6 +264,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 				update();
 				return;
 			}
+			*/
 		}
 		else if(old_mouse_op == MouseOperation::GraphAreaSelection) {
 			graph()->zoomToSelection();
@@ -204,7 +279,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 
 void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 {
-	logMouseSelection() << event->pos().x() << event->pos().y() << (int)m_mouseOperation;
+	//logMouseSelection() << event->pos().x() << event->pos().y() << (int)m_mouseOperation;
 	Super::mouseMoveEvent(event);
 	QPoint pos = event->pos();
 	Graph *gr = graph();
@@ -220,6 +295,8 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		setCursor(QCursor(Qt::ArrowCursor));
 	}
 	switch (m_mouseOperation) {
+	case MouseOperation::None:
+		break;
 	case MouseOperation::MiniMapLeftResize: {
 		timemsec_t t = gr->miniMapPosToTime(pos.x());
 		XRange r = gr->xRangeZoom();
@@ -258,7 +335,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		}
 		return;
 	}
-	case MouseOperation::GraphAreaPress: {
+	case MouseOperation::GraphDataAreaPress: {
 		QPoint point = pos - m_recentMousePos;
 		if (point.manhattanLength() > 3) {
 			m_mouseOperation = MouseOperation::GraphAreaSelection;
@@ -282,40 +359,47 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		update();
 		return;
 	}
-	case MouseOperation::None:
-		break;
 	}
-	/*
-	int ch_ix = gr->posToChannel(pos);
-	if(ch_ix >= 0) {
+	int ch_ix = mouseAboveGraphDataAreaIndex(pos);
+	if(ch_ix >= 0 && !isMouseAboveMiniMap(pos)) {
 		setCursor(Qt::BlankCursor);
-		gr->setCrossBarPos(pos);
+		gr->setCrossHairPos({ch_ix, pos});
 		timemsec_t t = gr->posToTime(pos.x());
 		Sample s = gr->timeToSample(ch_ix, t);
+		const GraphChannel *ch = gr->channelAt(ch_ix);
+		//update(ch->graphAreaRect());
 		if(s.isValid()) {
-			const Graph::Channel &ch = gr->channelAt(ch_ix);
 			shvDebug() << "time:" << s.time << "value:" << s.value.toDouble();
 			QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
 			QString text = QStringLiteral("%1\n%2: %3")
 					.arg(dt.toString(Qt::ISODateWithMs))
-					.arg(gr->model()->channelData(ch.modelIndex(), timeline::GraphModel::ChannelDataRole::Name).toString())
+					.arg(gr->model()->channelInfo(ch->modelIndex()).shvPath)
 					.arg(s.value.toString());
 			QToolTip::showText(mapToGlobal(pos + QPoint{gr->u2px(0.8), 0}), text, this);
 		}
 		else {
 			QToolTip::showText(QPoint(), QString());
 		}
-		update();
 	}
 	else {
-		if(!gr->crossBarPos().isNull()) {
-			gr->setCrossBarPos(QPoint());
-			setCursor(Qt::ArrowCursor);
-			QToolTip::showText(QPoint(), QString());
-			update();
-		}
+		hideCrossHair();
 	}
-	*/
+}
+
+void GraphWidget::leaveEvent(QEvent *)
+{
+	hideCrossHair();
+}
+
+void GraphWidget::hideCrossHair()
+{
+	Graph *gr = graph();
+	if(gr->crossHairPos().isValid()) {
+		gr->setCrossHairPos({});
+		setCursor(Qt::ArrowCursor);
+		QToolTip::showText(QPoint(), QString());
+		update();
+	}
 }
 
 void GraphWidget::wheelEvent(QWheelEvent *event)
@@ -326,7 +410,7 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
 	QPoint pos = event->position().toPoint();
 #endif
 	bool is_zoom_on_slider = isMouseAboveMiniMapSlider(pos);
-	bool is_zoom_on_graph = (event->modifiers() == Qt::ControlModifier) && isMouseAboveGraphArea(pos);
+	bool is_zoom_on_graph = (event->modifiers() == Qt::ControlModifier) && mouseAboveGraphDataAreaIndex(pos) >= 0;
 	static constexpr int ZOOM_STEP = 10;
 	if(is_zoom_on_slider) {
 		Graph *gr = graph();
@@ -368,18 +452,18 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
 	if(event->modifiers() == Qt::ControlModifier) {
 		/// resize vertical header cell on Ctrl + mouse_wheel
 		for (int i = 0; i < m_graph->channelCount(); ++i) {
-			Graph::Channel &ch = m_graph->channelAt(i);
-			if(ch.verticalHeaderRect().contains(pos)) {
+			GraphChannel *ch = m_graph->channelAt(i);
+			if(ch->verticalHeaderRect().contains(pos)) {
 				static constexpr int STEP = 2;
-				timeline::Graph::ChannelStyle ch_style = ch.style();
+				timeline::GraphChannel::Style ch_style = ch->style();
 				double deg = event->angleDelta().y();
-				int new_h = static_cast<int>(deg * ch.verticalHeaderRect().height() / 120 / STEP);
-				new_h = ch.verticalHeaderRect().height() + new_h;
+				int new_h = static_cast<int>(deg * ch->verticalHeaderRect().height() / 120 / STEP);
+				new_h = ch->verticalHeaderRect().height() + new_h;
 				double new_u = m_graph->px2u(new_h);
 				//shvInfo() << i << ch.verticalHeaderRect().height() << new_h << new_u;
 				ch_style.setHeightMax(new_u);
 				ch_style.setHeightMin(new_u);
-				ch.setStyle(ch_style);
+				ch->setStyle(ch_style);
 				makeLayout();
 				return;
 			}
@@ -390,26 +474,67 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
 
 void GraphWidget::contextMenuEvent(QContextMenuEvent *event)
 {
+	shvLogFuncFrame();
 	if(!m_graph)
 		return;
-	QMenu menu(this);
 	const QPoint pos = event->pos();
+	if(m_graph->cornerCellRect().contains(pos)) {
+		showGraphContextMenu(pos);
+		return;
+	}
 	for (int i = 0; i < m_graph->channelCount(); ++i) {
-		const Graph::Channel &ch = m_graph->channelAt(i);
-		if(ch.verticalHeaderRect().contains(pos)) {
-			menu.addAction(tr("Reset Y-range"), [this, ch, i]() {
-				//shvInfo() << "settings";
-				timeline::GraphModel *m = m_graph->model();
-				if(!m)
-					return;
-				timeline::YRange rng = m->yRange(ch.modelIndex());
-				m_graph->setYRange(i, rng);
-				this->update();
-			});
+		const GraphChannel *ch = m_graph->channelAt(i);
+		if(ch->verticalHeaderRect().contains(pos)) {
+			showChannelContextMenu(i, pos);
 		}
 	}
+}
+
+void GraphWidget::showGraphContextMenu(const QPoint &mouse_pos)
+{
+	QMenu menu(this);
+	menu.addAction(tr("Show all channels"), [this]() {
+		m_graph->showAllChannels();
+	});
+	menu.addAction(tr("Hide flat channels"), [this]() {
+		m_graph->hideFlatChannels();
+	});
 	if(menu.actions().count())
-		menu.exec(mapToGlobal(pos));
+		menu.exec(mapToGlobal(mouse_pos));
+}
+
+void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos)
+{
+	shvLogFuncFrame();
+	const GraphChannel *ch = m_graph->channelAt(channel_ix, !shv::core::Exception::Throw);
+	if(!ch)
+		return;
+	QMenu menu(this);
+	if(ch->isMaximized()) {
+		menu.addAction(tr("Normal size"), [this, channel_ix]() {
+			m_graph->setChannelMaximized(channel_ix, false);
+		});
+	}
+	else {
+		menu.addAction(tr("Maximize"), [this, channel_ix]() {
+			m_graph->setChannelMaximized(channel_ix, true);
+		});
+	}
+	menu.addAction(tr("Hide"), [this, channel_ix]() {
+		m_graph->setChannelVisible(channel_ix, false);
+	});
+	menu.addAction(tr("Reset Y-range"), [this, channel_ix, ch]() {
+		//shvInfo() << "settings";
+		timeline::GraphModel *m = m_graph->model();
+		if(!m)
+			return;
+		int chix = ch->modelIndex();
+		timeline::YRange rng = m->yRange(chix);
+		m_graph->setYRange(channel_ix, rng);
+		this->update();
+	});
+	if(menu.actions().count())
+		menu.exec(mapToGlobal(mouse_pos));
 }
 
 }}}

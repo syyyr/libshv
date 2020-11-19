@@ -25,29 +25,41 @@ public:
 	Graph *graph();
 	const Graph *graph() const;
 
-	void makeLayout(const QSize &pref_size);
+	void makeLayout(const QSize &preferred_size);
 	void makeLayout();
 
-	// QWidget interface
+	Q_SIGNAL void graphChannelDoubleClicked(const QPoint &mouse_pos);
 protected:
+	bool event(QEvent *event) override;
 	void paintEvent(QPaintEvent *event) override;
 	//void keyPressEvent(QKeyEvent *event) override;
 	//void keyReleaseEvent(QKeyEvent *event) override;
+
+	void mouseDoubleClickEvent(QMouseEvent *event) override;
 	void mousePressEvent(QMouseEvent *event) override;
 	void mouseReleaseEvent(QMouseEvent *event) override;
 	void mouseMoveEvent(QMouseEvent *event) override;
+	void leaveEvent(QEvent *event) override;
 	void wheelEvent(QWheelEvent *event) override;
 	void contextMenuEvent(QContextMenuEvent *event) override;
+
+	void hideCrossHair();
+
+	virtual void showGraphContextMenu(const QPoint &mouse_pos);
+	virtual void showChannelContextMenu(int channel_ix, const QPoint &mouse_pos);
 protected:
+	bool isMouseAboveMiniMap(const QPoint &mouse_pos) const;
 	bool isMouseAboveMiniMapHandle(const QPoint &mouse_pos, bool left) const;
 	bool isMouseAboveLeftMiniMapHandle(const QPoint &pos) const;
 	bool isMouseAboveRightMiniMapHandle(const QPoint &pos) const;
 	bool isMouseAboveMiniMapSlider(const QPoint &pos) const;
-	int isMouseAboveGraphArea(const QPoint &pos) const;
+	int isMouseAboveGraphVerticalHeader(const QPoint &pos) const;
+	int mouseAboveGraphDataAreaIndex(const QPoint &pos) const;
 protected:
 	Graph *m_graph = nullptr;
+	QSize m_graphPreferredSize;
 
-	enum class MouseOperation { None = 0, MiniMapLeftResize, MiniMapRightResize, MiniMapScrollZoom, GraphAreaPress, GraphAreaMove, GraphAreaSelection };
+	enum class MouseOperation { None = 0, MiniMapLeftResize, MiniMapRightResize, MiniMapScrollZoom, GraphDataAreaPress, GraphAreaMove, GraphAreaSelection };
 	MouseOperation m_mouseOperation = MouseOperation::None;
 	QPoint m_recentMousePos;
 };

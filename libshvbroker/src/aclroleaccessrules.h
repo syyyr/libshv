@@ -22,19 +22,23 @@ public:
 		: pathPattern(path_pattern), method(method) {}
 	AclAccessRule(const std::string &path_pattern, const std::string &method, const shv::chainpack::AccessGrant &grant)
 		: pathPattern(path_pattern), method(method), grant(grant) {}
-	//PathAccessGrant(Super &&o) : Super(std::move(o)) {}
 
 	chainpack::RpcValue toRpcValue() const;
 	static AclAccessRule fromRpcValue(const chainpack::RpcValue &rpcval);
 
 	bool isValid() const { return !pathPattern.empty() && grant.isValid(); }
+	bool isMoreSpecificThan(const AclAccessRule &other) const;
+	bool isPathMethodMatch(const std::string &shv_path, const std::string &method) const;
 };
 
-struct SHVBROKER_DECL_EXPORT AclRoleAccessRules : public std::vector<AclAccessRule>
+class SHVBROKER_DECL_EXPORT AclRoleAccessRules : public std::vector<AclAccessRule>
 {
-	bool isValid() const {return !empty();}
+public:
 	shv::chainpack::RpcValue toRpcValue() const;
 	shv::chainpack::RpcValue toRpcValue_legacy() const;
+
+	//void sortMostSpecificFirst();
+
 	static AclRoleAccessRules fromRpcValue(const shv::chainpack::RpcValue &v);
 };
 

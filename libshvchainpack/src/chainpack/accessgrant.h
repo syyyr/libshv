@@ -61,9 +61,6 @@ struct SHVCHAINPACK_DECL_EXPORT AccessGrant
 
 	enum class Type { Invalid = 0, AccessLevel, Role, UserLogin, };
 	Type type = Type::Invalid;
-	// acces grant sent by client or forwarded by master broker is not resolved through 'paths' table
-	// resolved grant is not translated in slave broker's 'paths' table when rpc message is sent to client
-	bool notResolved = false;
 	int accessLevel = shv::chainpack::MetaMethod::AccessLevel::None;
 	std::string role;
 	UserLogin login;
@@ -73,17 +70,15 @@ public:
 		using Super = chainpack::meta::MetaType;
 	public:
 		enum {ID = chainpack::meta::GlobalNS::MetaTypeId::AccessGrant};
-		struct Key { enum Enum {Type = 1, NotResolved, Role, AccessLevel, User, Password, LoginType, MAX};};
+		struct Key { enum Enum {Type = 1, NotResolved /*reserved NOT USED*/, Role, AccessLevel, User, Password, LoginType, MAX};};
 
 		MetaType();
 		static void registerMetaType();
 	};
-
-	static constexpr bool IS_RESOLVED = true;
 public:
 	AccessGrant() {}
-	AccessGrant(const std::string &role, bool is_resolved = !IS_RESOLVED)
-		: type(Type::Role), notResolved(!is_resolved), role(role) {}
+	AccessGrant(const std::string &role)
+		: type(Type::Role), role(role) {}
 
 	bool isValid() const;
 	bool isUserLogin() const;

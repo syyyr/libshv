@@ -36,11 +36,11 @@ AclManagerSqlite::~AclManagerSqlite()
 {
 }
 
-QSqlQuery AclManagerSqlite::execSql(const QString &query_str)
+QSqlQuery AclManagerSqlite::execSql(const QString &query_str, bool throw_exc)
 {
 	QSqlDatabase db = m_brokerApp->sqlConfigConnection();
 	QSqlQuery q(db);
-	if(!q.exec(query_str))
+	if(!q.exec(query_str) && throw_exc)
 		SHV_EXCEPTION("SQL ERROR: " + q.lastError().text().toStdString() + "\nQuery: " + query_str.toStdString());
 	return q;
 }
@@ -63,18 +63,27 @@ QSqlQuery AclManagerSqlite::sqlLoadRow(const QString &table, const QString &key_
 void AclManagerSqlite::checkAclTables()
 {
 	{
-		bool db_exist = true;
-		try {
-			execSql("SELECT COUNT(*) FROM " + TBL_ACL_USERS);
-		}
-		catch (const shv::core::Exception &) {
-			shvInfo() << "Table" << TBL_ACL_USERS << "does not exist.";
-			db_exist = false;
-		}
+		QSqlQuery q = execSql("SELECT COUNT(*) FROM " + TBL_ACL_USERS, !shv::core::Exception::Throw);
+		bool db_exist = q.isActive();
 		if(!db_exist) {
+			shvInfo() << "Table" << TBL_ACL_USERS << "does not exist.";
 			execSql("BEGIN TRANSACTION");
 			createAclSqlTables();
 			importAclConfigFiles();
+			execSql("COMMIT");
+		}
+	}
+	{
+		auto col_name = QStringLiteral("profile");
+		QSqlQuery q = execSql("SELECT " + col_name + " FROM " + TBL_ACL_ROLES + " WHERE name='xxx'", !shv::core::Exception::Throw);
+		bool column_exist = q.isActive();
+		if(!column_exist) {
+			shvWarning() << "Table:" << TBL_ACL_ROLES << "column:" << col_name << "does not exist.";
+			shvInfo() << "Adding column:" << TBL_ACL_ROLES << "::" << col_name;
+			execSql("BEGIN TRANSACTION");
+			execSql(QStringLiteral(R"kkt(
+					ALTER TABLE %1 ADD profile varchar;
+					)kkt").arg(TBL_ACL_ROLES));
 			execSql("COMMIT");
 		}
 	}
@@ -118,7 +127,8 @@ void AclManagerSqlite::createAclSqlTables()
 			CREATE TABLE IF NOT EXISTS %1 (
 				name character varying PRIMARY KEY,
 				weight integer,
-				roles character varying
+				roles character varying,
+				profile character varying
 			);
 			)kkt").arg(TBL_ACL_ROLES));
 	execSql(QStringLiteral(R"kkt(
@@ -180,10 +190,7 @@ void AclManagerSqlite::importAclConfigFiles()
 	}
 	for(std::string role : facl.accessRoles()) {
 		AclRoleAccessRules rpt = facl.accessRoleRules(role);
-		if(!rpt.isValid())
-			shvWarning() << "Cannot import invalid role paths definition for role:" << role;
-		else
-			aclSetAccessRoleRules(role, rpt);
+		aclSetAccessRoleRules(role, rpt);
 	}
 }
 
@@ -267,9 +274,17 @@ AclRole AclManagerSqlite::aclRole(const std::string &role_name)
 	AclRole ret;
 	QSqlQuery q = sqlLoadRow(TBL_ACL_ROLES, "name", QString::fromStdString(role_name));
 	if(q.next()) {
-		//ret.name = user_name;
 		ret.weight = q.value("weight").toInt();
 		ret.roles = split_str_vec(q.value("roles").toString());
+		std::string profile_str = q.value("profile").toString().toStdString();
+		if(!profile_str.empty()) {
+			std::string err;
+			ret.profile = shv::chainpack::RpcValue::fromCpon(profile_str, &err);
+			if(!err.empty())
+				shvError() << role_name << "invalid profile definition:" << profile_str;
+		}
+		if(!ret.profile.isMap())
+			ret.profile = cp::RpcValue();
 	}
 	return ret;
 }
@@ -277,10 +292,11 @@ AclRole AclManagerSqlite::aclRole(const std::string &role_name)
 void AclManagerSqlite::aclSetRole(const std::string &role_name, const AclRole &r)
 {
 	if(r.isValid()) {
-		QString qs = "INSERT OR REPLACE INTO " + TBL_ACL_ROLES + " (name, weight, roles) VALUES('%1', %2, '%3')";
+		QString qs = "INSERT OR REPLACE INTO " + TBL_ACL_ROLES + " (name, weight, roles, profile) VALUES('%1', %2, '%3', '%4')";
 		qs = qs.arg(QString::fromStdString(role_name));
 		qs = qs.arg(r.weight);
 		qs = qs.arg(join_str_vec(r.roles));
+		qs = qs.arg(QString::fromStdString(r.profile.isValid()? r.profile.toCpon(): ""));
 		logAclManagerM() << qs;
 		execSql(qs);
 	}
@@ -332,7 +348,7 @@ void AclManagerSqlite::aclSetAccessRoleRules(const std::string &role_name, const
 	QString qs = "DELETE FROM " + TBL_ACL_ACCESS + " WHERE role='" + QString::fromStdString(role_name) + "'";
 	logAclManagerM() << qs;
 	execSql(qs);
-	if(rules.isValid()) {
+	if(!rules.empty()) {
 		QSqlDatabase db = m_brokerApp->sqlConfigConnection();
 		QSqlDriver *drv = db.driver();
 		QSqlRecord rec = drv->record(TBL_ACL_ACCESS);

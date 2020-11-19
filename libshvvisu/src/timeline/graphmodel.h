@@ -17,8 +17,15 @@ class SHVVISU_DECL_EXPORT GraphModel : public QObject
 
 	using Super = QObject;
 public:
-	struct SHVVISU_DECL_EXPORT ChannelDataRole {enum Enum {ShvPath, Name, UserData = 64};};
-	//struct ValueRole {enum Enum {Display, Label, UserData = 64};};
+	class SHVVISU_DECL_EXPORT ChannelInfo
+	{
+	public:
+		QString shvPath;
+		QString name;
+		int metaTypeId = QMetaType::UnknownType;
+
+		//QString caption() const { return name.isEmpty()? shvPath: name; }
+	};
 
 	SHV_FIELD_BOOL_IMPL2(a, A, utoCreateChannels, true)
 
@@ -31,11 +38,10 @@ public:
 	void clear();
 	void appendChannel() {appendChannel(std::string(), std::string());}
 	void appendChannel(const std::string &shv_path, const std::string &name);
-	virtual int guessMetaType(int channel_ix);
-public: // API
-	virtual int channelCount() const { return qMin(m_channelsData.count(), m_samples.count()); }
-	virtual QVariant channelData(int channel, ChannelDataRole::Enum role) const;
-	virtual void setChannelData(int channel, const QVariant &v, ChannelDataRole::Enum role);
+public:
+	virtual int channelCount() const { return qMin(m_channelsInfo.count(), m_samples.count()); }
+	const ChannelInfo& channelInfo(int channel_ix) const { return m_channelsInfo.at(channel_ix); }
+	ChannelInfo& channelInfo(int channel_ix) { return m_channelsInfo[channel_ix]; }
 
 	virtual int count(int channel) const;
 	/// without bounds check
@@ -53,44 +59,22 @@ public: // API
 	virtual void appendValue(int channel, Sample &&sample);
 	void appendValueShvPath(const std::string &shv_path, Sample &&sample);
 
-	int pathToChannel(const std::string &path) const;
-	std::string channelPath(int channel) const { return channelData(channel, ChannelDataRole::ShvPath).toString().toStdString(); }
+	int pathToChannelIndex(const std::string &path) const;
+	QString channelPath(int channel) const { return channelInfo(channel).shvPath; }
 
 	Q_SIGNAL void xRangeChanged(XRange range);
 	Q_SIGNAL void channelCountChanged(int cnt);
 public:
-	static double valueToDouble(const QVariant v, bool *ok = nullptr);
+	static double valueToDouble(const QVariant v, int meta_type_id = QVariant::Invalid, bool *ok = nullptr);
+protected:
+	virtual int guessMetaType(int channel_ix);
 protected:
 	using ChannelSamples = QVector<Sample>;
 	QVector<ChannelSamples> m_samples;
-	using ChannelData = QMap<int, QVariant>;
-	QVector<ChannelData> m_channelsData;
+	QVector<ChannelInfo> m_channelsInfo;
 	XRange m_begginAppendXRange;
 
 	mutable std::map<std::string, int> m_pathToChannelCache;
 };
-/*
-class GraphModel : public AbstractGraphModel
-{
-	Q_OBJECT
 
-	using Super = AbstractGraphModel;
-
-	explicit GraphModel(QObject *parent = nullptr);
-
-	int channelCount() override;
-	QVariant channelData(SerieDataRole::Enum role) override;
-	int count(int channel) override;
-	Data data(int channel, int ix) override;
-
-	int lessOrEqualIndex(int channel, timemsec_t time) override;
-
-	void beginAppendData() override;
-	void endAppendData() override;
-	void appendData(int channel, Data &&data) override;
-private:
-	using Serie = QVector<Data>;
-	QVector<Serie> m_data;
-};
-*/
 }}}

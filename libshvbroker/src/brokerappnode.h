@@ -6,13 +6,13 @@
 namespace shv {
 namespace broker {
 
-class BrokerNode : public shv::iotqt::node::MethodsTableNode
+class BrokerAppNode : public shv::iotqt::node::MethodsTableNode
 {
 	Q_OBJECT
 
 	using Super = shv::iotqt::node::MethodsTableNode;
 public:
-	BrokerNode(shv::iotqt::node::ShvNode *parent = nullptr);
+	BrokerAppNode(shv::iotqt::node::ShvNode *parent = nullptr);
 
 	chainpack::RpcValue callMethodRq(const chainpack::RpcRequest &rq) override;
 	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
