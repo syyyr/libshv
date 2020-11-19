@@ -52,13 +52,12 @@ public:
 	    : m_name(std::move(name))
 	    , m_signature(ms)
 	    , m_flags(flags)
-		, m_accessGrant(access_grant)
-		, m_description(description)
+	    , m_accessGrant(access_grant)
+	    , m_description(description)
 	{}
 
-	//static constexpr bool IsSignal = true;
-
 	const std::string& name() const {return m_name;}
+	const std::string& description() const {return m_description;}
 	Signature signature() const {return m_signature;}
 	unsigned flags() const {return m_flags;}
 	const shv::chainpack::RpcValue& accessGrant() const {return m_accessGrant;}
@@ -80,6 +79,7 @@ public:
 	}
 
 	static Signature signatureFromString(const std::string &sigstr);
+	static const char* signatureToString(Signature sig);
 private:
 	std::string m_name;
 	Signature m_signature = Signature::VoidVoid;
