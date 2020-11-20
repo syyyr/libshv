@@ -60,7 +60,7 @@ public:
 	void appendValueShvPath(const std::string &shv_path, Sample &&sample);
 
 	int pathToChannelIndex(const std::string &path) const;
-	QString channelPath(int channel) const { return channelInfo(channel).shvPath; }
+	QString channelShvPath(int channel) const { return channelInfo(channel).shvPath; }
 
 	Q_SIGNAL void xRangeChanged(XRange range);
 	Q_SIGNAL void channelCountChanged(int cnt);

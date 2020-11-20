@@ -90,8 +90,14 @@ GraphModel *Graph::model() const
 
 void Graph::setTimeZone(const QTimeZone &tz)
 {
+	shvInfo() << "set timezone:" << tz.id();
 	m_timeZone = tz;
 	emit presentationDirty(QRect());
+}
+
+QTimeZone Graph::timeZone() const
+{
+	return m_timeZone;
 }
 
 void Graph::createChannelsFromModel()
@@ -110,7 +116,7 @@ void Graph::createChannelsFromModel()
 	// sort channels alphabetically
 	QMap<QString, int> path_to_model_index;
 	for (int i = 0; i < m_model->channelCount(); ++i) {
-		QString shv_path = m_model->channelPath(i);
+		QString shv_path = m_model->channelShvPath(i);
 		path_to_model_index[shv_path] = i;
 	}
 	XRange x_range;
@@ -1438,9 +1444,10 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	int ix2 = graph_model->lessOrEqualIndex(model_ix, xrange.max) + 1;
 	ix2++; // draw one more sample to correctly display (n-1)th one
 	//const GraphModel::ChannelInfo &chinfo = graph_model->channelInfo(channel_ix);
-	//shvInfo() << graph_model->channelPath(channel_ix) << "range:" << xrange.min << xrange.max;
-	//shvDebug() << "\t" << channel_ix
-	//		   << "from:" << ix1 << "to:" << ix2 << "cnt:" << (ix2 - ix1);
+	int samples_cnt = graph_model->count(model_ix);
+	shvDebug() << graph_model->channelShvPath(channel_ix) << "range:" << xrange.min << xrange.max;
+	shvDebug() << "\t" << channel_ix
+			   << "from:" << ix1 << "to:" << ix2 << "cnt:" << (ix2 - ix1) << "of:" << samples_cnt;
 	constexpr int NO_X = std::numeric_limits<int>::min();
 	struct OnePixelPoints {
 		int x = NO_X;
@@ -1449,10 +1456,9 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		int maxY = std::numeric_limits<int>::min();
 	};
 	OnePixelPoints current_px, recent_px;
-	int cnt = graph_model->count(model_ix);
-	for (int i = ix1; i <= ix2 && i <= cnt; ++i) {
+	for (int i = ix1; i <= ix2 && i <= samples_cnt; ++i) {
 		// sample is drawn one step behind, so one more loop is needed
-		const Sample s = (i < cnt)? graph_model->sampleAt(model_ix, i): Sample();
+		const Sample s = (i < samples_cnt)? graph_model->sampleAt(model_ix, i): Sample();
 		const QPoint sample_point = sample2point(s, channel_meta_type_id);
 		//shvDebug() << i << "t:" << s.time << "x:" << sample_point.x() << "y:" << sample_point.y();
 		//shvDebug() << "\t recent x:" << recent_px.x << " current x:" << current_px.x;
@@ -1532,7 +1538,7 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 	const GraphChannel *ch = channelAt(channel_ix);
 	if(ch->graphDataGridRect().left() >= crossbar_pos.x() || ch->graphDataGridRect().right() <= crossbar_pos.y())
 		return;
-	shvDebug() << "drawCrossHair:" << ch->shvPath();
+	shvMessage() << "drawCrossHair:" << ch->shvPath();
 	painter->save();
 	QColor color = m_effectiveStyle.colorCrossBar();
 	if(channel_ix == crossHairPos().channelIndex) {
@@ -1541,7 +1547,16 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 		Sample s = timeToSample(channel_ix, time);
 		if(s.value.isValid()) {
 			QPoint p = dataToPos(channel_ix, s);
-			shvDebug() << "sample point" << s.time << s.value.toString() << "--->" << p.x() << p.y();
+			{
+				QDateTime dt = QDateTime::fromMSecsSinceEpoch(time);
+				dt = dt.toTimeZone(m_timeZone);
+				shvDebug() << "sample point" << dt.toString(Qt::ISODateWithMs) << m_timeZone.id()
+						   << s.value.toString() << "--->" << p.x() << p.y();
+				GraphModel *m = model();
+				const GraphChannel *ch = channelAt(channel_ix);
+				int model_ix = ch->modelIndex();
+				shvDebug() << "samples cnt:" << m->count(model_ix);
+			}
 			int d = u2px(0.3);
 			QRect rect(0, 0, d, d);
 			rect.moveCenter(p);
@@ -1570,30 +1585,15 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 		QPoint p1{crossbar_pos.x(), ch->graphDataGridRect().top()};
 		QPoint p2{crossbar_pos.x(), ch->graphDataGridRect().bottom()};
 		painter->drawLine(p1, p2);
-		//if(bull_eye_rect.isNull()) {
-		//	QPoint p1{crossbar_pos.x(), ch->graphDataGridRect().top()};
-		//	QPoint p2{crossbar_pos.x(), ch->graphDataGridRect().bottom()};
-		//	painter->drawLine(p1, p2);
-		//}
-		//else {
-		//	QPoint p1{crossbar_pos.x(), ch->graphDataGridRect().top()};
-		//	QPoint p2{crossbar_pos.x(), bull_eye_rect.top()};
-		//	QPoint p4{crossbar_pos.x(), bull_eye_rect.bottom()};
-		//	QPoint p3{crossbar_pos.x(), ch->graphDataGridRect().bottom()};
-		//	painter->drawLine(p1, p2);
-		//	painter->drawLine(p3, p4);
-		//}
 	}
 	if(!bull_eye_rect.isNull()) {
 		//painter->setClipRect(c->dataAreaRect());
 		/// draw horizontal line
 		QPoint p1{ch->graphDataGridRect().left(), crossbar_pos.y()};
-		//QPoint p2{bull_eye_rect.left(), crossbar_pos.y()};
-		//QPoint p3{bull_eye_rect.right(), crossbar_pos.y()};
-		QPoint p4{ch->graphDataGridRect().right(), crossbar_pos.y()};
+		QPoint p2{ch->graphDataGridRect().right(), crossbar_pos.y()};
 		//painter->drawLine(p1, p2);
 		//painter->drawLine(p3, p4);
-		painter->drawLine(p1, p4);
+		painter->drawLine(p1, p2);
 
 		/// draw point
 		painter->setPen(pen_solid);
@@ -1668,7 +1668,8 @@ void Graph::drawXAxisTimeMark(QPainter *painter, time_t time, const QColor &colo
 	QDateTime dt = QDateTime::fromMSecsSinceEpoch(time);
 	if(m_timeZone.isValid())
 		dt = dt.toTimeZone(m_timeZone);
-	QString text = dt.toString(Qt::ISODateWithMs);
+	QString text = dt.toString(Qt::ISODate);
+	//shvInfo() << text;
 	p1.setY(p1.y() + tick_len);
 	drawCenteredRectText(painter, p1, text, m_effectiveStyle.font(), color.darker(400), color);
 }

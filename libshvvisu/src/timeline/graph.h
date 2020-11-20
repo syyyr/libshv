@@ -85,6 +85,7 @@ public:
 	GraphModel *model() const;
 
 	void setTimeZone(const QTimeZone &tz);
+	QTimeZone timeZone() const;
 
 	class SHVVISU_DECL_EXPORT ChannelFilter
 	{

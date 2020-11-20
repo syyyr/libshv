@@ -40,8 +40,18 @@ QTimeZone TimeZoneComboBox::currentTimeZone() const
 
 void TimeZoneComboBox::keyPressEvent(QKeyEvent *event)
 {
+	QLineEdit *ed = lineEdit();
+	if(event->key() == Qt::Key_A && event->modifiers() == Qt::ControlModifier) {
+		ed->selectAll();
+		event->accept();
+		return;
+	}
+	if(ed->text().length() > 0 && ed->selectionLength() == ed->text().length()) {
+		m_searchText = QString();
+		ed->setText(m_searchText);
+	}
 	QString c = event->text();
-	qDebug() << "pressed:" << event;
+	//qDebug() << "pressed:" << event;
 	if (c.isEmpty()) {
 		m_searchText.clear();
 		Super::keyPressEvent(event);
@@ -55,10 +65,9 @@ void TimeZoneComboBox::keyPressEvent(QKeyEvent *event)
 		m_searchText = c;
 		setCurrentIndex(ix);
 		auto curr_text = currentText();
-		QLineEdit *ed = lineEdit();
 		ed->setText(curr_text);
 		int sel_start = curr_text.indexOf(m_searchText, 0, Qt::CaseInsensitive);
-		qDebug() << "curr:" << curr_text << "search:" << m_searchText << "sel_start:" << sel_start;
+		//qDebug() << "curr:" << curr_text << "search:" << m_searchText << "sel_start:" << sel_start;
 		ed->setSelection(sel_start, m_searchText.length());
 		ed->setFocus();
 	}

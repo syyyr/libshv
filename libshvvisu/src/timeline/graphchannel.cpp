@@ -24,7 +24,7 @@ GraphChannel::GraphChannel(Graph *graph)
 QString GraphChannel::shvPath() const
 {
 	if(graph() && graph()->model()) {
-		return graph()->model()->channelPath(m_modelIndex);
+		return graph()->model()->channelShvPath(m_modelIndex);
 	}
 	return QString();
 }

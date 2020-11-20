@@ -65,6 +65,11 @@ const Graph *GraphWidget::graph() const
 	return m_graph;
 }
 
+void GraphWidget::setTimeZone(const QTimeZone &tz)
+{
+	graph()->setTimeZone(tz);
+}
+
 void GraphWidget::makeLayout(const QSize &preferred_size)
 {
 	shvLogFuncFrame();
@@ -371,6 +376,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		if(s.isValid()) {
 			shvDebug() << "time:" << s.time << "value:" << s.value.toDouble();
 			QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
+			dt = dt.toTimeZone(graph()->timeZone());
 			QString text = QStringLiteral("%1\n%2: %3")
 					.arg(dt.toString(Qt::ISODateWithMs))
 					.arg(gr->model()->channelInfo(ch->modelIndex()).shvPath)
