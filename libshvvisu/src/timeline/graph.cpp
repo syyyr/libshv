@@ -90,7 +90,7 @@ GraphModel *Graph::model() const
 
 void Graph::setTimeZone(const QTimeZone &tz)
 {
-	shvInfo() << "set timezone:" << tz.id();
+	shvDebug() << "set timezone:" << tz.id();
 	m_timeZone = tz;
 	emit presentationDirty(QRect());
 }
