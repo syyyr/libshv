@@ -1,5 +1,6 @@
 #include "graphchannel.h"
 #include "graph.h"
+#include "graphmodel.h"
 
 #include <shv/coreqt/log.h>
 
@@ -18,6 +19,14 @@ GraphChannel::GraphChannel(Graph *graph)
 	static int n = 0;
 	m_buttonBox->setObjectName(QString("channelButtonBox_%1").arg(++n));
 	connect(m_buttonBox, &GraphButtonBox::buttonClicked, this, &GraphChannel::onButtonBoxClicked);
+}
+
+QString GraphChannel::shvPath() const
+{
+	if(graph() && graph()->model()) {
+		return graph()->model()->channelPath(m_modelIndex);
+	}
+	return QString();
 }
 
 int GraphChannel::valueToPos(double val) const

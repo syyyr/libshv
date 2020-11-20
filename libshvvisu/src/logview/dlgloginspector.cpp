@@ -47,7 +47,7 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 			connect(a, &QAction::triggered, [this]() {
 				auto log = m_logModel->log();
 				std::string data = log.toChainPack();
-				saveData(data, ".chainpack");
+				saveData(data, ".chpk");
 			});
 			m->addAction(a);
 		}

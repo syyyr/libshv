@@ -68,6 +68,8 @@ public:
 	inline int modelIndex() const {return m_modelIndex;}
 	void setModelIndex(int ix) {m_modelIndex = ix;}
 
+	QString shvPath() const;
+
 	YRange yRange() const { return m_state.yRange; }
 	YRange yRangeZoom() const { return m_state.yRangeZoom; }
 

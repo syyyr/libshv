@@ -49,7 +49,7 @@ void Graph::ChannelFilter::setPathPattern(const std::string &pattern, Graph::Cha
 
 bool Graph::ChannelFilter::isPathMatch(const std::string &path) const
 {
-	shvLogFuncFrame() << "path:" << path << "pattern:" << m_pathPattern;
+	//shvLogFuncFrame() << "path:" << path << "pattern:" << m_pathPattern;
 	if(m_pathPattern.empty())
 		return true;
 	if(m_pathPatternFormat == ChannelFilter::PathPatternFormat::Regex) {
@@ -348,7 +348,12 @@ int Graph::posToChannel(const QPoint &pos) const
 {
 	for (int i = 0; i < channelCount(); ++i) {
 		const GraphChannel *ch = channelAt(i);
-		if(ch->graphAreaRect().contains(pos)) {
+		const QRect r = ch->graphAreaRect();
+		//shvInfo() << ch->shvPath()
+		//		  << QString("[%1, %2]").arg(pos.x()).arg(pos.y())
+		//		  << "in"
+		//		  << QString("[%1, %2](%3 x %4)").arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
+		if(r.contains(pos)) {
 			return i;
 		}
 	}
@@ -670,6 +675,12 @@ void Graph::makeLayout(const QRect &pref_rect)
 			bbx->hide();
 	}
 
+	// set height of all channels to 0
+	// if some channel is maximized, hidden channel must not interact with mouse
+	for (int i = 0; i < m_channels.count(); ++i) {
+		GraphChannel *ch = channelAt(i);
+		ch->m_layout.graphAreaRect.setHeight(0);
+	}
 	QVector<int> visible_channels = visibleChannels();
 	int sum_h_min = 0;
 	struct Rest { int index; int rest; };
@@ -1419,15 +1430,16 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	}
 
 	int channel_meta_type_id = channelMetaTypeId(channel_ix);
-	GraphModel *m = model();
-	int ix1 = m->lessOrEqualIndex(model_ix, xrange.min);
+	GraphModel *graph_model = model();
+	int ix1 = graph_model->lessOrEqualIndex(model_ix, xrange.min);
 	//ix1--; // draw one more sample to correctly display connection line to the first one in the zoom window
 	if(ix1 < 0)
 		ix1 = 0;
-	int ix2 = m->lessOrEqualIndex(model_ix, xrange.max) + 1;
+	int ix2 = graph_model->lessOrEqualIndex(model_ix, xrange.max) + 1;
 	ix2++; // draw one more sample to correctly display (n-1)th one
-	//shvInfo() << channel << "range:" << xrange.min << xrange.max;
-	//shvDebug() << "\t" << m->channelData(model_ix, GraphModel::ChannelDataRole::Name).toString()
+	//const GraphModel::ChannelInfo &chinfo = graph_model->channelInfo(channel_ix);
+	//shvInfo() << graph_model->channelPath(channel_ix) << "range:" << xrange.min << xrange.max;
+	//shvDebug() << "\t" << channel_ix
 	//		   << "from:" << ix1 << "to:" << ix2 << "cnt:" << (ix2 - ix1);
 	constexpr int NO_X = std::numeric_limits<int>::min();
 	struct OnePixelPoints {
@@ -1437,10 +1449,10 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		int maxY = std::numeric_limits<int>::min();
 	};
 	OnePixelPoints current_px, recent_px;
-	int cnt = m->count(model_ix);
+	int cnt = graph_model->count(model_ix);
 	for (int i = ix1; i <= ix2 && i <= cnt; ++i) {
 		// sample is drawn one step behind, so one more loop is needed
-		const Sample s = (i < cnt)? m->sampleAt(model_ix, i): Sample();
+		const Sample s = (i < cnt)? graph_model->sampleAt(model_ix, i): Sample();
 		const QPoint sample_point = sample2point(s, channel_meta_type_id);
 		//shvDebug() << i << "t:" << s.time << "x:" << sample_point.x() << "y:" << sample_point.y();
 		//shvDebug() << "\t recent x:" << recent_px.x << " current x:" << current_px.x;
@@ -1520,30 +1532,30 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 	const GraphChannel *ch = channelAt(channel_ix);
 	if(ch->graphDataGridRect().left() >= crossbar_pos.x() || ch->graphDataGridRect().right() <= crossbar_pos.y())
 		return;
-
+	shvDebug() << "drawCrossHair:" << ch->shvPath();
 	painter->save();
 	QColor color = m_effectiveStyle.colorCrossBar();
 	if(channel_ix == crossHairPos().channelIndex) {
-		/// draw point on sample graph
+		/// draw point on current value graph
 		timemsec_t time = posToTime(crossbar_pos.x());
 		Sample s = timeToSample(channel_ix, time);
 		if(s.value.isValid()) {
 			QPoint p = dataToPos(channel_ix, s);
-			//shvInfo() << s.time << s.value.toString() << "---" << p.x() << p.y();
+			shvDebug() << "sample point" << s.time << s.value.toString() << "--->" << p.x() << p.y();
 			int d = u2px(0.3);
 			QRect rect(0, 0, d, d);
 			rect.moveCenter(p);
 			//painter->fillRect(rect, c->effectiveStyle.color());
 			painter->fillRect(rect, color);
 			rect.adjust(2, 2, -2, -2);
-			painter->fillRect(rect, Qt::black);
+			painter->fillRect(rect, ch->m_effectiveStyle.colorBackground());
 		}
 	}
 	int d = u2px(0.4);
-	QRect focus_rect;
+	QRect bull_eye_rect;
 	if(ch->graphDataGridRect().top() < crossbar_pos.y() && ch->graphDataGridRect().bottom() > crossbar_pos.y()) {
-		focus_rect = QRect(0, 0, d, d);
-		focus_rect.moveCenter(crossbar_pos);
+		bull_eye_rect = QRect(0, 0, d, d);
+		bull_eye_rect.moveCenter(crossbar_pos);
 	}
 	QPen pen_solid;
 	pen_solid.setColor(color);
@@ -1555,43 +1567,49 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 	painter->setPen(pen_dash);
 	{
 		/// draw vertical line
-		if(focus_rect.isNull()) {
-			QPoint p1{crossbar_pos.x(), ch->graphDataGridRect().top()};
-			QPoint p2{crossbar_pos.x(), ch->graphDataGridRect().bottom()};
-			painter->drawLine(p1, p2);
-		}
-		else {
-			QPoint p1{crossbar_pos.x(), ch->graphDataGridRect().top()};
-			QPoint p2{crossbar_pos.x(), focus_rect.top()};
-			QPoint p4{crossbar_pos.x(), focus_rect.bottom()};
-			QPoint p3{crossbar_pos.x(), ch->graphDataGridRect().bottom()};
-			painter->drawLine(p1, p2);
-			painter->drawLine(p3, p4);
-		}
+		QPoint p1{crossbar_pos.x(), ch->graphDataGridRect().top()};
+		QPoint p2{crossbar_pos.x(), ch->graphDataGridRect().bottom()};
+		painter->drawLine(p1, p2);
+		//if(bull_eye_rect.isNull()) {
+		//	QPoint p1{crossbar_pos.x(), ch->graphDataGridRect().top()};
+		//	QPoint p2{crossbar_pos.x(), ch->graphDataGridRect().bottom()};
+		//	painter->drawLine(p1, p2);
+		//}
+		//else {
+		//	QPoint p1{crossbar_pos.x(), ch->graphDataGridRect().top()};
+		//	QPoint p2{crossbar_pos.x(), bull_eye_rect.top()};
+		//	QPoint p4{crossbar_pos.x(), bull_eye_rect.bottom()};
+		//	QPoint p3{crossbar_pos.x(), ch->graphDataGridRect().bottom()};
+		//	painter->drawLine(p1, p2);
+		//	painter->drawLine(p3, p4);
+		//}
 	}
-	if(!focus_rect.isNull()) {
+	if(!bull_eye_rect.isNull()) {
 		//painter->setClipRect(c->dataAreaRect());
 		/// draw horizontal line
 		QPoint p1{ch->graphDataGridRect().left(), crossbar_pos.y()};
-		QPoint p2{focus_rect.left(), crossbar_pos.y()};
-		QPoint p3{focus_rect.right(), crossbar_pos.y()};
+		//QPoint p2{bull_eye_rect.left(), crossbar_pos.y()};
+		//QPoint p3{bull_eye_rect.right(), crossbar_pos.y()};
 		QPoint p4{ch->graphDataGridRect().right(), crossbar_pos.y()};
-		painter->drawLine(p1, p2);
-		painter->drawLine(p3, p4);
+		//painter->drawLine(p1, p2);
+		//painter->drawLine(p3, p4);
+		painter->drawLine(p1, p4);
 
 		/// draw point
 		painter->setPen(pen_solid);
-		painter->drawRect(focus_rect);
-		/*
-		//timemsec_t t = posToTime(crossbar_pos.x());
-		Sample s = posToData(crossbar_pos);
-		//shvDebug() << "time:" << s.time << "value:" << s.value.toDouble();
-		cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromMSecsSinceEpoch(s.time);
-		QString str = QStringLiteral("%1, %2").arg(QString::fromStdString(dt.toIsoString())).arg(s.value.toDouble());
-		//painter->setClipRect(m_layout.rect);
-		painter->drawText(crossbar_pos + QPoint{focus_rect.width(), -focus_rect.height()}, str);
-		*/
+		painter->fillRect(bull_eye_rect, ch->m_effectiveStyle.colorBackground());
+		painter->drawRect(bull_eye_rect);
 
+		enum {DEBUG = 0};
+		if(DEBUG) {
+			//timemsec_t t = posToTime(crossbar_pos.x());
+			Sample s = posToData(crossbar_pos);
+			cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromMSecsSinceEpoch(s.time);
+			QString str = QStringLiteral("%1, %2").arg(QString::fromStdString(dt.toIsoString())).arg(s.value.toDouble());
+			shvDebug() << "bull eye:" << str;
+			//painter->setClipRect(m_layout.rect);
+			//painter->drawText(crossbar_pos + QPoint{focus_rect.width(), -focus_rect.height()}, str);
+		}
 	}
 	painter->restore();
 }
