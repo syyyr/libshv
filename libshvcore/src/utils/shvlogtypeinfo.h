@@ -120,6 +120,7 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeInfo
 		, paths(std::move(paths))
 	{}
 
+	bool isEmpty() const { return types.size() == 0 && paths.size() == 0; }
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogTypeInfo fromRpcValue(const chainpack::RpcValue &v);
 };
