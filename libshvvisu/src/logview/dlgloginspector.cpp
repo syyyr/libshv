@@ -126,7 +126,7 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 	connect(ui->edDataFilter, &QLineEdit::textChanged, [this]() {
 		QString str = ui->edDataFilter->text().trimmed();
 		auto filter = m_graph->channelFilter();
-		filter.setPathPattern(str.toStdString());
+		filter.setPathPattern(str);
 		m_graph->setChannelFilter(filter);
 	});
 

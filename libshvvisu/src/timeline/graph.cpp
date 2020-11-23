@@ -32,34 +32,6 @@ void Graph::Style::init(QWidget *widget)
 }
 
 //==========================================
-// Graph::FilterChannelsOptions
-//==========================================
-Graph::ChannelFilter::ChannelFilter(const std::string &pattern, Graph::ChannelFilter::PathPatternFormat fmt)
-{
-	setPathPattern(pattern, fmt);
-}
-
-void Graph::ChannelFilter::setPathPattern(const std::string &pattern, Graph::ChannelFilter::PathPatternFormat fmt)
-{
-	m_pathPattern = pattern;
-	m_pathPatternFormat = fmt;
-	if(m_pathPatternFormat == PathPatternFormat::Regex)
-		m_pathPatternRx = std::regex(m_pathPattern);
-}
-
-bool Graph::ChannelFilter::isPathMatch(const std::string &path) const
-{
-	shvLogFuncFrame() << "path:" << path << "pattern:" << m_pathPattern;
-	if(m_pathPattern.empty())
-		return true;
-	if(m_pathPatternFormat == ChannelFilter::PathPatternFormat::Regex) {
-		std::smatch cmatch;
-		return std::regex_search(path, cmatch, m_pathPatternRx);
-	}
-	return path.find(m_pathPattern) != std::string::npos;
-}
-
-//==========================================
 // Graph
 //==========================================
 Graph::Graph(QObject *parent)
@@ -191,7 +163,7 @@ int Graph::channelMetaTypeId(int ix) const
 
 void Graph::showAllChannels()
 {
-	m_channelFilter = ChannelFilter();
+	m_channelFilter.setPathPattern(QString());
 	emit layoutChanged();
 }
 
@@ -201,7 +173,7 @@ void Graph::hideFlatChannels()
 	emit layoutChanged();
 }
 
-void Graph::setChannelFilter(const Graph::ChannelFilter &filter)
+void Graph::setChannelFilter(const ChannelFilter &filter)
 {
 	m_channelFilter = filter;
 	emit layoutChanged();
@@ -817,7 +789,7 @@ QVector<int> Graph::visibleChannels()
 			continue;
 
 		QString shv_path = model()->channelInfo(ch->modelIndex()).shvPath;
-		if(!m_channelFilter.isPathMatch(shv_path.toStdString())) {
+		if(!m_channelFilter.isPathMatch(shv_path)) {
 			continue;
 		}
 		if(m_channelFilter.isHideFlat()) {
