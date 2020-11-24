@@ -1,5 +1,4 @@
-#ifndef SHV_VISU_TIMELINE_GRAPHBUTTONBOX_H
-#define SHV_VISU_TIMELINE_GRAPHBUTTONBOX_H
+#pragma once
 
 #include <shv/core/utils.h>
 
@@ -68,5 +67,3 @@ private:
 } // namespace timeline
 } // namespace visu
 } // namespace shv
-
-#endif // SHV_VISU_TIMELINE_GRAPHBUTTONBOX_H

@@ -1,5 +1,4 @@
-#ifndef SHV_VISU_TIMELINE_GRAPHCHANNEL_H
-#define SHV_VISU_TIMELINE_GRAPHCHANNEL_H
+#pragma once
 
 #include "graphbuttonbox.h"
 #include "sample.h"
@@ -129,5 +128,3 @@ protected:
 } // namespace timeline
 } // namespace visu
 } // namespace shv
-
-#endif // SHV_VISU_TIMELINE_GRAPHCHANNEL_H

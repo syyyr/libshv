@@ -1,5 +1,6 @@
 #pragma once
 
+#include "channelfilter.h"
 #include "graphchannel.h"
 #include "graphbuttonbox.h"
 #include "sample.h"
@@ -16,8 +17,6 @@
 #include <QPixmap>
 #include <QRect>
 #include <QTimeZone>
-
-#include <regex>
 
 namespace shv {
 namespace visu {
@@ -87,25 +86,6 @@ public:
 	void setTimeZone(const QTimeZone &tz);
 	QTimeZone timeZone() const;
 
-	class SHVVISU_DECL_EXPORT ChannelFilter
-	{
-	public:
-		enum class PathPatternFormat {Substring, Regex};
-
-		ChannelFilter(const std::string &pattern = std::string(), PathPatternFormat fmt = PathPatternFormat::Substring);
-
-		bool isHideFlat() const { return m_hideFlat; }
-		void setHideFlat(bool b) { m_hideFlat = b; }
-
-		void setPathPattern(const std::string &pattern, PathPatternFormat fmt = PathPatternFormat::Substring);
-		bool isPathMatch(const std::string &path) const;
-	private:
-		std::string m_pathPattern;
-		PathPatternFormat m_pathPatternFormat = PathPatternFormat::Substring;
-		bool m_hideFlat = false;
-
-		std::regex m_pathPatternRx;
-	};
 	void createChannelsFromModel();
 
 	int channelCount() const { return  m_channels.count(); }
@@ -245,7 +225,7 @@ protected:
 	GraphChannel::Style m_defaultChannelStyle;
 
 	QVector<GraphChannel*> m_channels;
-	Graph::ChannelFilter m_channelFilter;
+	ChannelFilter m_channelFilter;
 
 	struct SHVVISU_DECL_EXPORT XAxis
 	{
