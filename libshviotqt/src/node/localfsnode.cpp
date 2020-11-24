@@ -219,13 +219,13 @@ chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::
 		error = "Cannot open file " + file_path.toStdString() + " for writing.";
 	}
 	else if (methods_params.isList()){
-		chainpack::RpcValue::List params = methods_params.toList();
+		const chainpack::RpcValue::List &param_lst = methods_params.toList();
 
-		if (params.size() != 2){
-			SHV_EXCEPTION("Invalid params count.");
+		if (param_lst.size() != 2) {
+			throw shv::core::Exception("Invalid params, [\"name\", \"content\"] expected.");
 		}
 
-		QString file_path = m_rootDir.absolutePath() + '/' + path + '/' + QString::fromStdString(params[0].toString());
+		QString file_path = m_rootDir.absolutePath() + '/' + path + '/' + QString::fromStdString(param_lst[0].toString());
 		QDir d(QFileInfo(file_path).dir());
 
 		if (!d.mkpath(d.absolutePath())){
@@ -239,7 +239,8 @@ chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::
 		}
 
 		if(f.open(QFile::WriteOnly)) {
-			f.write(params[1].toString().data(), params[1].toString().size());
+			const std::string &data = param_lst[1].toString();
+			f.write(data.data(), data.size());
 			return true;
 		}
 		SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for writing.");

@@ -15,7 +15,8 @@
 
 //namespace shv { namespace chainpack { class MetaMethod; }}
 //namespace shv { namespace chainpack { class MetaMethod; class RpcValue; class RpcMessage; class RpcRequest; }}
-namespace shv { namespace core { namespace utils { class ShvPath; }}}
+namespace shv { namespace core { namespace utils { class ShvPath; class ShvJournalEntry; }}}
+
 
 namespace shv {
 namespace iotqt {
@@ -55,6 +56,7 @@ public:
 
 	ShvNode* rootNode();
 	virtual void emitSendRpcMessage(const shv::chainpack::RpcMessage &msg);
+	void emitLogUserCommand(const shv::core::utils::ShvJournalEntry &e);
 
 	void setSortedChildren(bool b) {m_isSortedChildren = b;}
 
@@ -89,6 +91,8 @@ public:
 	virtual shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params);
 public:
 	Q_SIGNAL void sendRpcMessage(const shv::chainpack::RpcMessage &msg);
+	Q_SIGNAL void logUserCommand(const shv::core::utils::ShvJournalEntry &e);
+
 protected:
 	bool m_isRootNode = false;
 private:

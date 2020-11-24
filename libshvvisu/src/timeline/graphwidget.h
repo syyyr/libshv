@@ -25,6 +25,8 @@ public:
 	Graph *graph();
 	const Graph *graph() const;
 
+	void setTimeZone(const QTimeZone &tz);
+
 	void makeLayout(const QSize &preferred_size);
 	void makeLayout();
 

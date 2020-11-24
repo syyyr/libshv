@@ -248,8 +248,21 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 		SHV_EXCEPTION(std::string("Method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' doesn't exist.");
 	const chainpack::RpcValue &rq_grant = rq.accessGrant();
 	const cp::RpcValue &mm_grant = mm->accessGrant();
-	if(grantToAccessLevel(mm_grant) > grantToAccessLevel(rq_grant))
+	int rq_access_level = grantToAccessLevel(rq_grant);
+	int mm_access_level = grantToAccessLevel(mm_grant);
+	if(mm_access_level > rq_access_level)
 		SHV_EXCEPTION(std::string("Call method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' permission denied, grant: " + rq_grant.toCpon() + " required: " + mm_grant.toCpon());
+
+	if(mm_access_level >= cp::MetaMethod::AccessLevel::Write) {
+		shv::core::utils::ShvJournalEntry e(shvPath()
+											, method + '(' + rq.params().toCpon() + ')'
+											, shv::core::utils::ShvJournalEntry::DOMAIN_SHV_COMMAND
+											, shv::core::utils::ShvJournalEntry::NO_SHORT_TIME
+											, cp::DataChange::SampleType::Discrete);
+		e.userId = rq.userId().toString();
+		rootNode()->emitLogUserCommand(e);
+	}
+
 	return callMethodRq(rq);
 }
 
@@ -491,6 +504,22 @@ void ShvNode::emitSendRpcMessage(const chainpack::RpcMessage &msg)
 		ShvNode *rnd = rootNode();
 		if(rnd) {
 			rnd->emitSendRpcMessage(msg);
+		}
+		else {
+			shvError() << "Cannot find root node to send RPC message";
+		}
+	}
+}
+
+void ShvNode::emitLogUserCommand(const shv::core::utils::ShvJournalEntry &e)
+{
+	if(isRootNode()) {
+		emit logUserCommand(e);
+	}
+	else {
+		ShvNode *rnd = rootNode();
+		if(rnd) {
+			rnd->emitLogUserCommand(e);
 		}
 		else {
 			shvError() << "Cannot find root node to send RPC message";

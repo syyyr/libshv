@@ -84,6 +84,7 @@ public:
 	GraphModel *model() const;
 
 	void setTimeZone(const QTimeZone &tz);
+	QTimeZone timeZone() const;
 
 	void createChannelsFromModel();
 

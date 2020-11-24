@@ -12,6 +12,8 @@
 #include <shv/core/string.h>
 #include <shv/coreqt/log.h>
 #include <shv/core/utils/shvgetlogparams.h>
+#include <shv/core/utils/shvjournalentry.h>
+#include <shv/core/utils/shvlogrpcvaluereader.h>
 #include <shv/iotqt/rpc/clientconnection.h>
 #include <shv/iotqt/rpc/rpcresponsecallback.h>
 #include <shv/iotqt/utils.h>
@@ -25,6 +27,7 @@
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
 #include <QTimeZone>
+#include <QMessageBox>
 
 namespace cp = shv::chainpack;
 namespace tl = shv::visu::timeline;
@@ -47,7 +50,7 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 			connect(a, &QAction::triggered, [this]() {
 				auto log = m_logModel->log();
 				std::string data = log.toChainPack();
-				saveData(data, ".chainpack");
+				saveData(data, ".chpk");
 			});
 			m->addAction(a);
 		}
@@ -318,7 +321,7 @@ void DlgLogInspector::parseLog(shv::chainpack::RpcValue log)
 		m_logModel->setLog(log);
 		ui->tblData->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
 	}
-	{
+	try {
 		struct ShortTime {
 			int64_t msec_sum = 0;
 			uint16_t last_msec = 0;
@@ -331,38 +334,25 @@ void DlgLogInspector::parseLog(shv::chainpack::RpcValue log)
 			}
 		};
 		QMap<std::string, ShortTime> short_times;
-		const shv::chainpack::RpcValue::IMap &dict = log.metaValue("pathsDict").toIMap();
-		const shv::chainpack::RpcValue::List lst = log.toList();
+		shv::core::utils::ShvLogRpcValueReader rd(log, shv::core::Exception::Throw);
 		m_graphModel->clear();
 		m_graphModel->beginAppendValues();
 		ShortTime anca_hook_short_time;
-		for(const cp::RpcValue &rec : lst) {
-			const cp::RpcValue::List &row = rec.toList();
-
-			cp::RpcValue::DateTime dt = row.value(0).toDateTime();
-			cp::RpcValue rv_path = row.value(1);
-			if(rv_path.isUInt() || rv_path.isInt())
-				rv_path = dict.value(rv_path.toInt());
-			const shv::chainpack::RpcValue::String &path = rv_path.toString();
-			if(path.empty()) {
-				shvError() << "invalid entry path:" << rec.toCpon();
-				continue;
-			}
-			cp::RpcValue rv = row.value(2);
-			int64_t msec = dt.msecsSinceEpoch();
-			cp::RpcValue short_time = row.value(3);
-			if(short_time.isUInt() || short_time.isInt()) {
-				uint16_t short_msec = static_cast<uint16_t>(short_time.toUInt());
-				ShortTime &st = short_times[path];
+		while(rd.next()) {
+			const core::utils::ShvJournalEntry &entry = rd.entry();
+			int64_t msec = entry.epochMsec;
+			if(entry.shortTime != core::utils::ShvJournalEntry::NO_SHORT_TIME) {
+				uint16_t short_msec = static_cast<uint16_t>(entry.shortTime);
+				ShortTime &st = short_times[entry.path];
 				if(st.msec_sum == 0)
 					st.msec_sum = msec;
 				msec = st.addShortTime(short_msec);
 			}
 			bool ok;
-			QVariant v = shv::coreqt::Utils::rpcValueToQVariant(rv, &ok);
+			QVariant v = shv::coreqt::Utils::rpcValueToQVariant(entry.value, &ok);
 			if(ok && v.isValid()) {
-				shvDebug() << path << v.typeName();
-				if(path == "data" && v.type() == QVariant::List) {
+				shvDebug() << entry.path << v.typeName();
+				if(entry.path == "data" && v.type() == QVariant::List) {
 					// Anca hook
 					QVariantList vl = v.toList();
 					uint16_t short_msec = static_cast<uint16_t>(vl.value(0).toInt());
@@ -374,12 +364,16 @@ void DlgLogInspector::parseLog(shv::chainpack::RpcValue log)
 					m_graphModel->appendValueShvPath("P", tl::Sample{msec, vl.value(3)});
 				}
 				else {
-					m_graphModel->appendValueShvPath(path, tl::Sample{msec, v});
+					m_graphModel->appendValueShvPath(entry.path, tl::Sample{msec, v});
 				}
 			}
 		}
 		m_graphModel->endAppendValues();
 	}
+	catch (const shv::core::Exception &e) {
+		QMessageBox::warning(this, tr("Warning"), QString::fromStdString(e.message()));
+	}
+
 	m_graph->createChannelsFromModel();
 	ui->graphView->makeLayout();
 }
@@ -418,6 +412,7 @@ void DlgLogInspector::setTimeZone(const QTimeZone &tz)
 	shvDebug() << "Setting timezone to:" << tz.id();
 	m_timeZone = tz;
 	m_logModel->setTimeZone(tz);
+	m_graphWidget->setTimeZone(tz);
 }
 
 }}}
