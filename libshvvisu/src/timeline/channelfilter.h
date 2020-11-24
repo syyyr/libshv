@@ -1,3 +1,5 @@
+#pragma once
+
 #include "graphchannel.h"
 
 #include <QSet>
@@ -13,7 +15,7 @@ public:
 	enum class PathPatternFormat {Substring, Regex, PathList};
 
 	ChannelFilter(const QString &pattern = QString(), PathPatternFormat fmt = PathPatternFormat::Substring);
-	ChannelFilter(const QStringList &filtered_paths);
+	ChannelFilter(const QStringList &matching_paths);
 
 	bool isHideFlat() const { return m_hideFlat; }
 	void setHideFlat(bool b) { m_hideFlat = b; }
@@ -21,8 +23,8 @@ public:
 	QString pathPattern() { return m_pathPattern; }
 	void setPathPattern(const QString &pattern, PathPatternFormat fmt = PathPatternFormat::Substring);
 
-	QStringList filteredPaths() const;
-	void setFilteredPaths(const QStringList &paths);
+	QStringList matchingPaths() const;
+	void setMatchingPaths(const QStringList &paths);
 
 	bool isPathMatch(const QString &path) const;
 private:
@@ -31,7 +33,7 @@ private:
 	bool m_hideFlat = false;
 
 	QRegularExpression m_pathPatternRx;
-	QSet<QString> m_filteredPaths;
+	QSet<QString> m_matchingPaths;
 };
 
 }

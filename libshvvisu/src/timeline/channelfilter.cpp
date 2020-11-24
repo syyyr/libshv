@@ -11,14 +11,14 @@ ChannelFilter::ChannelFilter(const QString &pattern, ChannelFilter::PathPatternF
 	setPathPattern(pattern, fmt);
 }
 
-ChannelFilter::ChannelFilter(const QStringList &filtered_paths)
+ChannelFilter::ChannelFilter(const QStringList &matching_paths)
 {
-	setFilteredPaths(filtered_paths);
+	setMatchingPaths(matching_paths);
 }
 
-QStringList ChannelFilter::filteredPaths() const
+QStringList ChannelFilter::matchingPaths() const
 {
-	return QStringList(m_filteredPaths.begin(), m_filteredPaths.end());
+	return QStringList(m_matchingPaths.begin(), m_matchingPaths.end());
 }
 
 void ChannelFilter::setPathPattern(const QString &pattern, ChannelFilter::PathPatternFormat fmt)
@@ -31,9 +31,9 @@ void ChannelFilter::setPathPattern(const QString &pattern, ChannelFilter::PathPa
 	}
 }
 
-void ChannelFilter::setFilteredPaths(const QStringList &paths)
+void ChannelFilter::setMatchingPaths(const QStringList &paths)
 {
-	m_filteredPaths = QSet<QString>(paths.begin(), paths.end());
+	m_matchingPaths = QSet<QString>(paths.begin(), paths.end());
 	m_pathPatternFormat = PathPatternFormat::PathList;
 }
 
@@ -48,7 +48,7 @@ bool ChannelFilter::isPathMatch(const QString &path) const
 		return (m_pathPatternRx.pattern().isEmpty()) ? true : m_pathPatternRx.match(path).hasMatch();
 	}
 	else if (m_pathPatternFormat == PathPatternFormat::PathList) {
-		return (m_filteredPaths.empty()) ? true : m_filteredPaths.contains(path);
+		return (m_matchingPaths.empty()) ? true : m_matchingPaths.contains(path);
 	}
 
 	return false;
