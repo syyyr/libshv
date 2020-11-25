@@ -10,6 +10,7 @@
 #include <shv/core/exception.h>
 #include <shv/core/stringview.h>
 #include <shv/core/log.h>
+#include <shv/iotqt/rpc/rpcresponsecallback.h>
 
 #include <QTimer>
 
@@ -74,6 +75,7 @@ static const char M_RESTART[] = "restart";
 static const char M_APP_VERSION[] = "appVersion";
 static const char M_GIT_COMMIT[] = "gitCommit";
 static const char M_BROKER_ID[] = "brokerId";
+static const char M_MASTER_BROKER_ID[] = "masterBrokerId";
 
 BrokerAppNode::BrokerAppNode(shv::iotqt::node::ShvNode *parent)
 	: Super("", &m_metaMethods, parent)
@@ -85,6 +87,7 @@ BrokerAppNode::BrokerAppNode(shv::iotqt::node::ShvNode *parent)
 		{M_APP_VERSION, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_BROWSE},
 		{M_GIT_COMMIT, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
 		{M_BROKER_ID, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
+		{M_MASTER_BROKER_ID, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
 		{cp::Rpc::METH_SUBSCRIBE, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 		{cp::Rpc::METH_UNSUBSCRIBE, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 		{cp::Rpc::METH_REJECT_NOT_SUBSCRIBED, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_READ},
@@ -124,6 +127,28 @@ chainpack::RpcValue BrokerAppNode::callMethodRq(const chainpack::RpcRequest &rq)
 			std::string method = pm.value(cp::Rpc::PAR_METHOD).toString();
 			int client_id = rq.peekCallerId();
 			return BrokerApp::instance()->rejectNotSubscribedSignal(client_id, path, method);
+		}
+		if (method == M_MASTER_BROKER_ID) {
+			auto *conn = BrokerApp::instance()->mainMasterBrokerConnection();
+			if (!conn) {
+				return std::string();
+			}
+			int rqid = conn->nextRequestId();
+			shv::iotqt::rpc::RpcResponseCallBack *cb = new shv::iotqt::rpc::RpcResponseCallBack(conn, rqid, this);
+			cb->start(this, [this, rq](const cp::RpcResponse &master_resp) {				cp::RpcResponse resp = cp::RpcResponse::forRequest(rq);
+				if (master_resp.isSuccess()) {
+					shvInfo() <<master_resp.result().toCpon();
+					resp.setResult(master_resp.result());
+				}
+				else {
+					shvError() << master_resp.errorString();
+					resp.setError(master_resp.error());
+				}
+				emitSendRpcMessage(resp);
+			});
+
+			conn->callShvMethod(rqid, ".broker/app", "brokerId", cp::RpcValue());
+			return cp::RpcValue();
 		}
 	}
 	return Super::callMethodRq(rq);
