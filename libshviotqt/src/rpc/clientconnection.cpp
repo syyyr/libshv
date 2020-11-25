@@ -179,7 +179,10 @@ void ClientConnection::setCheckBrokerConnectedInterval(int ms)
 
 void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
 {
-	logRpcMsg() << cp::RpcDriver::SND_LOG_ARROW << rpc_msg.toCpon();
+	logRpcMsg() << SND_LOG_ARROW
+				<< "client id:" << connectionId()
+				<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
+				<< rpc_msg.toPrettyString();
 	sendRpcValue(rpc_msg.value());
 }
 

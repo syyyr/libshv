@@ -614,7 +614,7 @@ void BrokerApp::propagateSubscriptionsToMasterBroker()
 
 chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHandle *conn, const std::string &rq_shv_path, const std::string &method, const shv::chainpack::RpcValue &rq_grant)
 {
-	logAclResolveM() << "<==== accessGrantForShvPath user:" << conn->loggedUserName() << "requested path:" << rq_shv_path << "method:" << method << "request grant:" << rq_grant.toCpon();
+	logAclResolveM() << "==== accessGrantForShvPath user:" << conn->loggedUserName() << "requested path:" << rq_shv_path << "method:" << method << "request grant:" << rq_grant.toCpon();
 #ifdef USE_SHV_PATHS_GRANTS_CACHE
 	PathGrantCache *user_path_grants = m_userPathGrantCache.object(user_name);
 	if(user_path_grants) {
@@ -726,7 +726,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	logAclResolveM() << "access user:" << conn->loggedUserName()
 				 << "shv_path:" << rq_shv_path
 				 << "rq_grant:" << (rq_grant.isValid()? rq_grant.toCpon(): "<none>")
-				 << "===> path:" << most_specific_rule.pathPattern << "method:" << most_specific_rule.method << "grant:" << most_specific_rule.grant.toRpcValue().toCpon();
+				 << "==== path:" << most_specific_rule.pathPattern << "method:" << most_specific_rule.method << "grant:" << most_specific_rule.grant.toRpcValue().toCpon();
 	return most_specific_rule.grant;
 }
 
@@ -927,9 +927,9 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 				const std::string &resolved_shv_path = cp::RpcMessage::shvPath(meta).toString();
 				cp::AccessGrant acg;
 				if(is_service_provider_mount_point_relative_call) {
-					logAclResolveM() << "<==== access grant for user:" << connection_handle->loggedUserName() << "requested path:" << shv_path << "method:" << method;
+					logAclResolveM() << "==== access grant for user:" << connection_handle->loggedUserName() << "requested path:" << shv_path << "method:" << method;
 					acg = cp::AccessGrant(cp::Rpc::ROLE_WRITE);
-					logAclResolveM() << "===> resolved path:" << resolved_shv_path << "grant:" << acg.toRpcValue().toCpon();
+					logAclResolveM() << "==== resolved path:" << resolved_shv_path << "grant:" << acg.toRpcValue().toCpon();
 				}
 				else {
 					acg = accessGrantForRequest(connection_handle, resolved_shv_path, method, cp::RpcMessage::accessGrant(meta));
