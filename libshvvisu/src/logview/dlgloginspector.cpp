@@ -265,6 +265,7 @@ shv::chainpack::RpcValue DlgLogInspector::getLogParams()
 		params.recordCountLimit = ui->edMaxRecordCount->value();
 	params.withPathsDict = ui->chkPathsDict->isChecked();
 	params.withSnapshot = ui->chkWithSnapshot->isChecked();
+	params.withTypeInfo = ui->chkWithTypeInfo->isChecked();
 	/*
 	unsigned header_opts = 0;
 	if(ui->chkBasicInfo->isChecked())
