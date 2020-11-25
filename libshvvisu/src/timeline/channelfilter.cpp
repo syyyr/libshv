@@ -18,7 +18,11 @@ ChannelFilter::ChannelFilter(const QStringList &matching_paths)
 
 QStringList ChannelFilter::matchingPaths() const
 {
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
+	return m_matchingPaths.toList();
+#else
 	return QStringList(m_matchingPaths.begin(), m_matchingPaths.end());
+#endif
 }
 
 void ChannelFilter::setPathPattern(const QString &pattern, ChannelFilter::PathPatternFormat fmt)
@@ -33,7 +37,11 @@ void ChannelFilter::setPathPattern(const QString &pattern, ChannelFilter::PathPa
 
 void ChannelFilter::setMatchingPaths(const QStringList &paths)
 {
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
+	m_matchingPaths = QSet<QString>::fromList(paths);
+#else
 	m_matchingPaths = QSet<QString>(paths.begin(), paths.end());
+#endif
 	m_pathPatternFormat = PathPatternFormat::PathList;
 }
 
