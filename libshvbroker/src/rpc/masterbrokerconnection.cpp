@@ -75,10 +75,6 @@ void MasterBrokerConnection::sendRawData(const shv::chainpack::RpcValue::MetaDat
 
 void MasterBrokerConnection::sendMessage(const shv::chainpack::RpcMessage &rpc_msg)
 {
-	logRpcMsg() << SND_LOG_ARROW
-				<< "client id:" << connectionId()
-				<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
-				<< rpc_msg.toPrettyString();
 	Super::sendMessage(rpc_msg);
 }
 
@@ -145,12 +141,12 @@ void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 				return;
 			}
 			else {
-				cp::RpcValue rpc_val = decodeData(protocol_type, msg_data, 0);
-				if (rpc_val.isValid()) {
-					rpc_val.setMetaData(std::move(md));
-					cp::RpcMessage msg(rpc_val);
-					Q_EMIT rpcMessageReceived(msg);
-				}
+				//cp::RpcValue rpc_val = decodeData(protocol_type, msg_data, 0);
+				//if (rpc_val.isValid()) {
+				//	rpc_val.setMetaData(std::move(md));
+				//	cp::RpcMessage msg(rpc_val);
+				//	Q_EMIT rpcMessageReceived(msg);
+				//}
 			}
 		}
 		BrokerApp::instance()->onRpcDataReceived(connectionId(), protocol_type, std::move(md), std::move(msg_data));
