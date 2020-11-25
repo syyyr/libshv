@@ -16,6 +16,54 @@
 namespace shv {
 namespace chainpack {
 
+template <class T>
+class CowPtr
+{
+public:
+	typedef std::shared_ptr<T> RefPtr;
+
+private:
+	RefPtr m_sp;
+
+	void detach()
+	{
+		T* tmp = m_sp.get();
+		if( !( tmp == nullptr || m_sp.use_count() == 1 ) ) {
+			m_sp = RefPtr( tmp->copy() );
+		}
+	}
+
+public:
+	CowPtr(T* t)
+		:   m_sp(t)
+	{}
+	CowPtr(const RefPtr& refptr)
+		:   m_sp(refptr)
+	{}
+	bool isNull() const
+	{
+		return m_sp.get() == nullptr;
+	}
+	const T& operator*() const
+	{
+		return *m_sp;
+	}
+	T& operator*()
+	{
+		detach();
+		return *m_sp;
+	}
+	const T* operator->() const
+	{
+		return m_sp.operator->();
+	}
+	T* operator->()
+	{
+		detach();
+		return m_sp.operator->();
+	}
+};
+
 class SHVCHAINPACK_DECL_EXPORT RpcValue
 {
 public:
@@ -259,8 +307,10 @@ public:
 		const RpcValue::Map& sValues() const;
 		std::string toPrettyString() const;
 		std::string toString(const std::string &indent = std::string()) const;
+
+		MetaData* clone() const;
 	private:
-		MetaData& operator=(const MetaData &o);
+		MetaData& operator=(const MetaData &o) = default;
 		void swap(MetaData &o);
 	private:
 		RpcValue::IMap *m_imap = nullptr;
@@ -397,7 +447,7 @@ public:
 	template<typename T> static inline RpcValue fromValue(const T &t);
 
 private:
-	std::shared_ptr<AbstractValueData> m_ptr;
+	CowPtr<AbstractValueData> m_ptr;
 };
 
 template<typename T> RpcValue::Type RpcValue::guessType() { throw std::runtime_error("guessing of this type is not implemented"); }

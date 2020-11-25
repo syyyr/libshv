@@ -99,6 +99,8 @@ public:
 	virtual void append(const RpcValue &);
 
 	virtual std::string toStdString() const = 0;
+
+	virtual AbstractValueData* copy() = 0;
 };
 
 //==============================================
@@ -152,6 +154,22 @@ protected:
 			m_metaData = new RpcValue::MetaData();
 		m_metaData->setValue(key, val);
 	}
+
+	virtual ValueData<tag, T>* create() = 0;
+	AbstractValueData* copy() override
+	{
+		return copy_helper(this);
+	}
+	AbstractValueData* copy_helper(ValueData<tag, T> *orig)
+	{
+		ValueData<tag, T> *tmp = create();
+		if(m_metaData) {
+			tmp->m_metaData = orig->metaData().clone();
+		}
+		tmp->m_value = orig->m_value;
+		return tmp;
+	}
+
 protected:
 	T m_value;
 	RpcValue::MetaData *m_metaData = nullptr;
@@ -159,6 +177,7 @@ protected:
 
 class ChainPackDouble final : public ValueData<RpcValue::Type::Double, double>
 {
+	ChainPackDouble* create() override { return new ChainPackDouble(0); }
 	std::string toStdString() const override { return shv::chainpack::Utils::toString(m_value); }
 	double toDouble() const override { return m_value; }
 	bool toBool() const override { return !(m_value == 0.); }
@@ -176,6 +195,7 @@ public:
 
 class ChainPackDecimal final : public ValueData<RpcValue::Type::Decimal, RpcValue::Decimal>
 {
+	ChainPackDecimal* create() override { return new ChainPackDecimal(RpcValue::Decimal()); }
 	std::string toStdString() const override { return m_value.toString(); }
 
 	double toDouble() const override { return m_value.toDouble(); }
@@ -193,6 +213,7 @@ public:
 
 class ChainPackInt final : public ValueData<RpcValue::Type::Int, int64_t>
 {
+	ChainPackInt* create() override { return new ChainPackInt(0); }
 	std::string toStdString() const override { return Utils::toString(m_value); }
 
 	double toDouble() const override { return m_value; }
@@ -209,6 +230,7 @@ public:
 
 class ChainPackUInt final : public ValueData<RpcValue::Type::UInt, uint64_t>
 {
+	ChainPackUInt* create() override { return new ChainPackUInt(0); }
 	std::string toStdString() const override { return Utils::toString(m_value); }
 
 	double toDouble() const override { return m_value; }
@@ -225,6 +247,7 @@ public:
 
 class ChainPackBoolean final : public ValueData<RpcValue::Type::Bool, bool>
 {
+	ChainPackBoolean* create() override { return new ChainPackBoolean(false); }
 	std::string toStdString() const override { return m_value? "true": "false"; }
 
 	bool toBool() const override { return m_value; }
@@ -239,6 +262,7 @@ public:
 
 class ChainPackDateTime final : public ValueData<RpcValue::Type::DateTime, RpcValue::DateTime>
 {
+	ChainPackDateTime* create() override { return new ChainPackDateTime(RpcValue::DateTime()); }
 	std::string toStdString() const override { return m_value.toIsoString(); }
 
 	bool toBool() const override { return m_value.msecsSinceEpoch() != 0; }
@@ -252,6 +276,7 @@ public:
 
 class ChainPackString : public ValueData<RpcValue::Type::String, RpcValue::String>
 {
+	ChainPackString* create() override { return new ChainPackString(RpcValue::String()); }
 	std::string toStdString() const override { return toString(); }
 
 	const std::string &toString() const override { return m_value; }
@@ -280,6 +305,7 @@ public:
 */
 class ChainPackList final : public ValueData<RpcValue::Type::List, RpcValue::List>
 {
+	ChainPackList* create() override { return new ChainPackList(RpcValue::List()); }
 	std::string toStdString() const override { return std::string(); }
 
 	size_t count() const override {return m_value.size();}
@@ -322,6 +348,7 @@ void ChainPackList::append(const RpcValue &v)
 
 class ChainPackMap final : public ValueData<RpcValue::Type::Map, RpcValue::Map>
 {
+	ChainPackMap* create() override { return new ChainPackMap(RpcValue::Map()); }
 	std::string toStdString() const override { return std::string(); }
 
 	size_t count() const override {return m_value.size();}
@@ -338,6 +365,7 @@ public:
 
 class ChainPackIMap final : public ValueData<RpcValue::Type::IMap, RpcValue::IMap>
 {
+	ChainPackIMap* create() override { return new ChainPackIMap(RpcValue::IMap()); }
 	std::string toStdString() const override { return std::string(); }
 	//const ChainPack::Map &toMap() const override { return m_value; }
 	size_t count() const override {return m_value.size();}
@@ -354,6 +382,7 @@ public:
 
 class ChainPackNull final : public ValueData<RpcValue::Type::Null, std::nullptr_t>
 {
+	ChainPackNull* create() override { return new ChainPackNull(); }
 	std::string toStdString() const override { return "null"; }
 
 	bool isNull() const override {return true;}
@@ -361,25 +390,6 @@ class ChainPackNull final : public ValueData<RpcValue::Type::Null, std::nullptr_
 public:
 	ChainPackNull() : ValueData({}) {}
 };
-
-/* * * * * * * * * * * * * * * * * * * *
- * Static globals - static-init-safe
-struct Statics
-{
-	const std::shared_ptr<RpcValue::AbstractValueData> null = std::make_shared<ChainPackNull>();
-	const std::shared_ptr<RpcValue::AbstractValueData> t = std::make_shared<ChainPackBoolean>(true);
-	const std::shared_ptr<RpcValue::AbstractValueData> f = std::make_shared<ChainPackBoolean>(false);
-	const RpcValue::String empty_string;
-	//const RpcValue::Blob empty_blob;
-	Statics() {}
-};
-
-static const Statics & statics()
-{
-	static const Statics s {};
-	return s;
-}
- */
 
 static const RpcValue::String & static_empty_string() { static const RpcValue::String s{}; return s; }
 static const RpcValue::List & static_empty_list() { static const RpcValue::List s{}; return s; }
@@ -390,7 +400,7 @@ static const RpcValue::IMap & static_empty_imap() { static const RpcValue::IMap 
  * Constructors
  */
 
-RpcValue::RpcValue() noexcept {}
+RpcValue::RpcValue() noexcept : m_ptr(nullptr) {}
 
 RpcValue RpcValue::fromType(RpcValue::Type t) noexcept
 {
@@ -459,18 +469,18 @@ void RpcValue::swap(RpcValue& other) noexcept
 
 RpcValue::Type RpcValue::type() const
 {
-	return m_ptr? m_ptr->type(): Type::Invalid;
+	return !m_ptr.isNull()? m_ptr->type(): Type::Invalid;
 }
 /*
 RpcValue::Type RpcValue::arrayType() const
 {
-	return m_ptr? m_ptr->arrayType(): Type::Invalid;
+	return !m_ptr.isNull()? m_ptr->arrayType(): Type::Invalid;
 }
 */
 const RpcValue::MetaData &RpcValue::metaData() const
 {
 	static MetaData md;
-	if(m_ptr)
+	if(!m_ptr.isNull())
 		return m_ptr->metaData();
 	return md;
 }
@@ -491,59 +501,59 @@ RpcValue RpcValue::metaValue(const RpcValue::String &key, const RpcValue &defaul
 
 void RpcValue::setMetaData(RpcValue::MetaData &&meta_data)
 {
-	if(!m_ptr && !meta_data.isEmpty())
+	if(m_ptr.isNull() && !meta_data.isEmpty())
 		SHVCHP_EXCEPTION("Cannot set valid meta data to invalid ChainPack value!");
-	if(m_ptr)
+	if(!m_ptr.isNull())
 		m_ptr->setMetaData(std::move(meta_data));
 }
 
 void RpcValue::setMetaValue(RpcValue::Int key, const RpcValue &val)
 {
-	if(!m_ptr && val.isValid())
+	if(m_ptr.isNull() && val.isValid())
 		SHVCHP_EXCEPTION("Cannot set valid meta value to invalid ChainPack value!");
-	if(m_ptr)
+	if(!m_ptr.isNull())
 		m_ptr->setMetaValue(key, val);
 }
 
 void RpcValue::setMetaValue(const RpcValue::String &key, const RpcValue &val)
 {
-	if(!m_ptr && val.isValid())
+	if(m_ptr.isNull() && val.isValid())
 		SHVCHP_EXCEPTION("Cannot set valid meta value to invalid ChainPack value!");
-	if(m_ptr)
+	if(!m_ptr.isNull())
 		m_ptr->setMetaValue(key, val);
 }
 
 bool RpcValue::isValid() const
 {
-	return !!m_ptr;
+	return !m_ptr.isNull();
 }
 
-double RpcValue::toDouble() const { return m_ptr? m_ptr->toDouble(): 0; }
-RpcValue::Decimal RpcValue::toDecimal() const { return m_ptr? m_ptr->toDecimal(): Decimal(); }
-RpcValue::Int RpcValue::toInt() const { return m_ptr? m_ptr->toInt(): 0; }
-RpcValue::UInt RpcValue::toUInt() const { return m_ptr? m_ptr->toUInt(): 0; }
-int64_t RpcValue::toInt64() const { return m_ptr? m_ptr->toInt64(): 0; }
-uint64_t RpcValue::toUInt64() const { return m_ptr? m_ptr->toUInt64(): 0; }
-bool RpcValue::toBool() const { return m_ptr? m_ptr->toBool(): false; }
-RpcValue::DateTime RpcValue::toDateTime() const { return m_ptr? m_ptr->toDateTime(): RpcValue::DateTime{}; }
+double RpcValue::toDouble() const { return !m_ptr.isNull()? m_ptr->toDouble(): 0; }
+RpcValue::Decimal RpcValue::toDecimal() const { return !m_ptr.isNull()? m_ptr->toDecimal(): Decimal(); }
+RpcValue::Int RpcValue::toInt() const { return !m_ptr.isNull()? m_ptr->toInt(): 0; }
+RpcValue::UInt RpcValue::toUInt() const { return !m_ptr.isNull()? m_ptr->toUInt(): 0; }
+int64_t RpcValue::toInt64() const { return !m_ptr.isNull()? m_ptr->toInt64(): 0; }
+uint64_t RpcValue::toUInt64() const { return !m_ptr.isNull()? m_ptr->toUInt64(): 0; }
+bool RpcValue::toBool() const { return !m_ptr.isNull()? m_ptr->toBool(): false; }
+RpcValue::DateTime RpcValue::toDateTime() const { return !m_ptr.isNull()? m_ptr->toDateTime(): RpcValue::DateTime{}; }
 
-const std::string & RpcValue::toString() const { return m_ptr? m_ptr->toString(): static_empty_string(); }
-//const RpcValue::Blob &RpcValue::toBlob() const { return m_ptr? m_ptr->toBlob(): static_empty_blob(); }
+const std::string & RpcValue::toString() const { return !m_ptr.isNull()? m_ptr->toString(): static_empty_string(); }
+//const RpcValue::Blob &RpcValue::toBlob() const { return !m_ptr.isNull()? m_ptr->toBlob(): static_empty_blob(); }
 
-size_t RpcValue::count() const { return m_ptr? m_ptr->count(): 0; }
-const RpcValue::List & RpcValue::toList() const { return m_ptr? m_ptr->toList(): static_empty_list(); }
-const RpcValue::Map & RpcValue::toMap() const { return m_ptr? m_ptr->toMap(): static_empty_map(); }
-const RpcValue::IMap &RpcValue::toIMap() const { return m_ptr? m_ptr->toIMap(): static_empty_imap(); }
-RpcValue RpcValue::at (RpcValue::Int i) const { return m_ptr? m_ptr->at(i): RpcValue(); }
-RpcValue RpcValue::at (const RpcValue::String &key) const { return m_ptr? m_ptr->at(key): RpcValue(); }
-bool RpcValue::has (RpcValue::Int i) const { return m_ptr? m_ptr->has(i): false; }
-bool RpcValue::has (const RpcValue::String &key) const { return m_ptr? m_ptr->has(key): false; }
+size_t RpcValue::count() const { return !m_ptr.isNull()? m_ptr->count(): 0; }
+const RpcValue::List & RpcValue::toList() const { return !m_ptr.isNull()? m_ptr->toList(): static_empty_list(); }
+const RpcValue::Map & RpcValue::toMap() const { return !m_ptr.isNull()? m_ptr->toMap(): static_empty_map(); }
+const RpcValue::IMap &RpcValue::toIMap() const { return !m_ptr.isNull()? m_ptr->toIMap(): static_empty_imap(); }
+RpcValue RpcValue::at (RpcValue::Int i) const { return !m_ptr.isNull()? m_ptr->at(i): RpcValue(); }
+RpcValue RpcValue::at (const RpcValue::String &key) const { return !m_ptr.isNull()? m_ptr->at(key): RpcValue(); }
+bool RpcValue::has (RpcValue::Int i) const { return !m_ptr.isNull()? m_ptr->has(i): false; }
+bool RpcValue::has (const RpcValue::String &key) const { return !m_ptr.isNull()? m_ptr->has(key): false; }
 
-std::string RpcValue::toStdString() const { return m_ptr? m_ptr->toStdString(): std::string(); }
+std::string RpcValue::toStdString() const { return !m_ptr.isNull()? m_ptr->toStdString(): std::string(); }
 
 void RpcValue::set(RpcValue::Int ix, const RpcValue &val)
 {
-	if(m_ptr)
+	if(!m_ptr.isNull())
 		m_ptr->set(ix, val);
 	else
 		nError() << " Cannot set value to invalid ChainPack value! Index: " << ix;
@@ -551,7 +561,7 @@ void RpcValue::set(RpcValue::Int ix, const RpcValue &val)
 
 void RpcValue::set(const RpcValue::String &key, const RpcValue &val)
 {
-	if(m_ptr)
+	if(!m_ptr.isNull())
 		m_ptr->set(key, val);
 	else
 		nError() << " Cannot set value to invalid ChainPack value! Key: " << key;
@@ -559,7 +569,7 @@ void RpcValue::set(const RpcValue::String &key, const RpcValue &val)
 
 void RpcValue::append(const RpcValue &val)
 {
-	if(m_ptr)
+	if(!m_ptr.isNull())
 		m_ptr->append(val);
 	else
 		nError() << "Cannot append to invalid ChainPack value!";
@@ -626,7 +636,7 @@ bool RpcValue::operator== (const RpcValue &other) const
 			|| (m_ptr->type() == RpcValue::Type::Double && other.m_ptr->type() == RpcValue::Type::Decimal)
 			|| (m_ptr->type() == RpcValue::Type::Decimal && other.m_ptr->type() == RpcValue::Type::Double)
 		) {
-			return m_ptr->equals(other.m_ptr.get());
+			return m_ptr->equals(other.m_ptr.operator->());
 		}
 		return false;
 	}
@@ -1124,6 +1134,12 @@ std::string RpcValue::MetaData::toString(const std::string &indent) const
 		wr << *this;
 	}
 	return out.str();
+}
+
+RpcValue::MetaData *RpcValue::MetaData::clone() const
+{
+	MetaData *md = new MetaData(*this);
+	return md;
 }
 
 void RpcValue::MetaData::swap(RpcValue::MetaData &o)
