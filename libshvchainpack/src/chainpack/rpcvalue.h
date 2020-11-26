@@ -16,6 +16,12 @@
 namespace shv {
 namespace chainpack {
 
+/// This implementation of copy-on-write is generic, but apart from the inconvenience of having to refer to the inner object through smart pointer dereferencing,
+/// it suffers from at least one drawback: classes that return references to their internal state, like
+///
+/// char & String::operator[](int)
+///
+/// can lead to unexpected behaviour.
 template <class T>
 class CowPtr
 {
@@ -43,6 +49,10 @@ public:
 	bool isNull() const
 	{
 		return m_sp.get() == nullptr;
+	}
+	long refCnt() const
+	{
+		return m_sp.use_count();
 	}
 	const T& operator*() const
 	{
@@ -278,15 +288,15 @@ public:
 	class SHVCHAINPACK_DECL_EXPORT MetaData
 	{
 	public:
-		MetaData() {}
+		MetaData();
+		MetaData(const MetaData &o);
 		MetaData(MetaData &&o);
 		MetaData(RpcValue::IMap &&imap);
 		MetaData(RpcValue::Map &&smap);
 		MetaData(RpcValue::IMap &&imap, RpcValue::Map &&smap);
-		MetaData(const MetaData &o);
 		~MetaData();
 
-		MetaData& operator =(MetaData &&o) {swap(o); return *this;}
+		MetaData& operator =(MetaData &&o);
 
 		int metaTypeId() const {return value(meta::Tag::MetaTypeId).toInt();}
 		void setMetaTypeId(RpcValue::Int id) {setValue(meta::Tag::MetaTypeId, id);}
@@ -310,7 +320,7 @@ public:
 
 		MetaData* clone() const;
 	private:
-		MetaData& operator=(const MetaData &o) = default;
+		MetaData& operator=(const MetaData &o);
 		void swap(MetaData &o);
 	private:
 		RpcValue::IMap *m_imap = nullptr;
@@ -424,7 +434,7 @@ public:
 	std::string toChainPack() const;
 	static RpcValue fromChainPack(const std::string & str, std::string *err = nullptr);
 	static constexpr bool CloneMetaData = true;
-	RpcValue clone(bool clone_meta_data = CloneMetaData) const;
+	//RpcValue clone(bool clone_meta_data = CloneMetaData) const;
 
 	bool operator== (const RpcValue &rhs) const;
 	bool operator!= (const RpcValue &rhs) const {return !operator==(rhs);}
@@ -446,6 +456,7 @@ public:
 	template<typename T> static inline Type guessType();
 	template<typename T> static inline RpcValue fromValue(const T &t);
 
+	long refCnt() const { return m_ptr.refCnt();}
 private:
 	CowPtr<AbstractValueData> m_ptr;
 };

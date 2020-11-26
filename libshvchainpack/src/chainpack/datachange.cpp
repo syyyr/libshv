@@ -70,12 +70,12 @@ DataChange DataChange::fromRpcValue(const RpcValue &val)
 			if(lst.size() == 1) {
 				RpcValue wrapped_val = val.toList().value(0);
 				if(!wrapped_val.metaData().isEmpty()) {
-					ret.setValue(wrapped_val.clone(RpcValue::CloneMetaData));
+					ret.setValue(wrapped_val);
 					goto set_meta_data;
 				}
 			}
 		}
-		ret.setValue(val.clone(!RpcValue::CloneMetaData));
+		ret.setValue(val);
 set_meta_data:
 		ret.setDateTime(val.metaValue(MetaType::Tag::DateTime));
 		ret.setShortTime(val.metaValue(MetaType::Tag::ShortTime));
@@ -83,7 +83,7 @@ set_meta_data:
 		ret.setSampleType(val.metaValue(MetaType::Tag::SampleType).toInt());
 		return ret;
 	}
-	return DataChange(val.clone(RpcValue::CloneMetaData), RpcValue::DateTime());
+	return DataChange(val, RpcValue::DateTime());
 }
 
 RpcValue DataChange::toRpcValue() const
@@ -91,7 +91,7 @@ RpcValue DataChange::toRpcValue() const
 	RpcValue ret;
 	if(m_value.isValid()) {
 		if(m_value.metaData().isEmpty())
-			ret = m_value.clone();
+			ret = m_value;
 		else
 			ret = RpcValue::List{m_value};
 	}

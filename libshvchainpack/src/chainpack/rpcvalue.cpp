@@ -18,6 +18,12 @@
 #include <sstream>
 #include <iostream>
 #include <chrono>
+
+#ifdef DEBUG_RPCVAL
+#define logDebugRpcVal nWarning
+#else
+#define logDebugRpcVal if(0) nWarning
+#endif
 /*
 namespace {
 #if defined _WIN32 || defined LIBC_NEWLIB
@@ -106,13 +112,29 @@ public:
 //==============================================
 // value wrappers
 //==============================================
+#ifdef DEBUG_RPCVAL
+inline NecroLog &operator<<(NecroLog log, const shv::chainpack::RpcValue::Decimal &d) { return log.operator <<(d.toDouble()); }
+inline NecroLog &operator<<(NecroLog log, const shv::chainpack::RpcValue::DateTime &d) { return log.operator <<(d.toIsoString()); }
+inline NecroLog &operator<<(NecroLog log, const shv::chainpack::RpcValue::List &d) { return log.operator <<("some_list:" + std::to_string(d.size())); }
+inline NecroLog &operator<<(NecroLog log, const shv::chainpack::RpcValue::Map &d) { return log.operator <<("some_map:" + std::to_string(d.size())); }
+inline NecroLog &operator<<(NecroLog log, const shv::chainpack::RpcValue::IMap &d) { return log.operator <<("some_imap:" + std::to_string(d.size())); }
+inline NecroLog &operator<<(NecroLog log, std::nullptr_t) { return log.operator <<("NULL"); }
+
+static int value_data_cnt = 0;
+#endif
 
 template <RpcValue::Type tag, typename T>
 class ValueData : public RpcValue::AbstractValueData
 {
 protected:
-	explicit ValueData(const T &value) : m_value(value) {}
-	explicit ValueData(T &&value) : m_value(std::move(value)) {}
+	explicit ValueData(const T &value)
+		: m_value(value)
+	{
+#ifdef DEBUG_RPCVAL
+		logDebugRpcVal() << "+++" << ++value_data_cnt << RpcValue::typeToName(tag) << this << value;
+#endif
+	}
+	//explicit ValueData(T &&value) : m_value(std::move(value)) {}
 	// disable copy (because of m_metaData)
 	ValueData(const ValueData &o) = delete;
 	ValueData& operator=(const ValueData &o) = delete;
@@ -120,6 +142,9 @@ protected:
 	//ValueData& operator=(ValueData &&o) = delete;
 	virtual ~ValueData() override
 	{
+#ifdef DEBUG_RPCVAL
+		logDebugRpcVal() << "---" << value_data_cnt-- << RpcValue::typeToName(tag) << this << m_value;
+#endif
 		if(m_metaData)
 			delete m_metaData;
 	}
@@ -709,7 +734,7 @@ RpcValue RpcValue::fromChainPack(const std::string &str, std::string *err)
 	}
 	return ret;
 }
-
+/*
 RpcValue RpcValue::clone(bool clone_meta_data) const
 {
 	if(!isValid())
@@ -724,7 +749,7 @@ RpcValue RpcValue::clone(bool clone_meta_data) const
 	RpcValue ret = rd.read();
 	return ret;
 }
-
+*/
 const char *RpcValue::typeToName(RpcValue::Type t)
 {
 	switch (t) {
@@ -959,47 +984,95 @@ std::string RpcValue::DateTime::toIsoString(RpcValue::DateTime::MsecPolicy msec_
 	return ret;
 #endif
 }
+#ifdef DEBUG_RPCVAL
+static int cnt = 0;
+#endif
+RpcValue::MetaData::MetaData()
+{
+#ifdef DEBUG_RPCVAL
+	logDebugRpcVal() << ++cnt << "+++MM default" << this;
+#endif
+}
+
+RpcValue::MetaData::MetaData(const RpcValue::MetaData &o)
+{
+#ifdef DEBUG_RPCVAL
+	logDebugRpcVal() << ++cnt << "+++MM copy" << this << "<------" << &o;
+#endif
+	if(o.m_imap && !o.m_imap->empty())
+		m_imap = new RpcValue::IMap(*o.m_imap);
+	if(o.m_smap && !o.m_smap->empty())
+		m_smap = new RpcValue::Map(*o.m_smap);
+}
 
 RpcValue::MetaData::MetaData(RpcValue::MetaData &&o)
 	: MetaData()
 {
+#ifdef DEBUG_RPCVAL
+	logDebugRpcVal() << ++cnt << "+++MM move" << this << "<------" << &o;
+#endif
 	swap(o);
 }
 
 RpcValue::MetaData::MetaData(RpcValue::IMap &&imap)
 {
+#ifdef DEBUG_RPCVAL
+	logDebugRpcVal() << ++cnt << "+++MM move imap" << this;
+#endif
 	if(!imap.empty())
 		m_imap = new RpcValue::IMap(std::move(imap));
 }
 
 RpcValue::MetaData::MetaData(RpcValue::Map &&smap)
 {
+#ifdef DEBUG_RPCVAL
+	logDebugRpcVal() << ++cnt << "+++MM move smap" << this;
+#endif
 	if(!smap.empty())
 		m_smap = new RpcValue::Map(std::move(smap));
 }
 
 RpcValue::MetaData::MetaData(RpcValue::IMap &&imap, RpcValue::Map &&smap)
 {
+#ifdef DEBUG_RPCVAL
+	logDebugRpcVal() << ++cnt << "+++MM move imap smap" << this;
+#endif
 	if(!imap.empty())
 		m_imap = new RpcValue::IMap(std::move(imap));
 	if(!smap.empty())
 		m_smap = new RpcValue::Map(std::move(smap));
 }
 
-RpcValue::MetaData::MetaData(const RpcValue::MetaData &o)
-{
-	for(auto kv : o.iValues())
-		setValue(kv.first, kv.second);
-	for(auto kv : o.sValues())
-		setValue(kv.first, kv.second);
-}
-
 RpcValue::MetaData::~MetaData()
 {
+#ifdef DEBUG_RPCVAL
+	logDebugRpcVal() << cnt-- << "---MM cnt:" << size() << this;
+#endif
 	if(m_imap)
 		delete m_imap;
 	if(m_smap)
 		delete m_smap;
+}
+
+RpcValue::MetaData &RpcValue::MetaData::operator =(RpcValue::MetaData &&o)
+{
+#ifdef DEBUG_RPCVAL
+	logDebugRpcVal() << "===MM op= move ref" << this;
+#endif
+	swap(o);
+	return *this;
+}
+
+RpcValue::MetaData &RpcValue::MetaData::operator=(const RpcValue::MetaData &o)
+{
+#ifdef DEBUG_RPCVAL
+	logDebugRpcVal() << "===MM op= const ref" << this;
+#endif
+	if(o.m_imap && !o.m_imap->empty())
+		m_imap = new RpcValue::IMap(*o.m_imap);
+	if(o.m_smap && !o.m_smap->empty())
+		m_smap = new RpcValue::Map(*o.m_smap);
+	return *this;
 }
 
 std::vector<RpcValue::Int> RpcValue::MetaData::iKeys() const

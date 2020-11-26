@@ -435,13 +435,6 @@ private:
 			QVERIFY(rpcval.metaValue(8) == "foo");
 			QVERIFY(rpcval.at(3) == 19);
 		}
-		{
-			auto rpcval = RpcValue::fromCpon(R"(<1:2,2:12,8:"foo",9:[1,2,3],"bar":"baz",>["META",17,18,19])");
-			auto rv1 = rpcval.clone();
-			QVERIFY(rpcval == rv1);
-			auto rv2 = rpcval.clone(false);
-			QVERIFY(RpcValue(rpcval.toList()) == rv2);
-		}
 	}
 
 	static std::string binary_dump(const RpcValue::String &out)
@@ -1132,6 +1125,33 @@ private slots:
 			}
 		}
 	}
+	void refCntTest()
+	{
+		qDebug() << "================================= RefCnt Test =====================================";
+		auto rpcval = RpcValue::fromCpon(R"(<1:2,2:12,8:"foo",9:[1,2,3],"bar":"baz",>{"META":17,"18":19})");
+		auto rv1 = rpcval;
+		//qDebug() << "rv1:" << rv1.toCpon().c_str();
+		QVERIFY(rpcval.refCnt() == 2);
+		{
+			auto rv2 = rpcval;
+			QVERIFY(rpcval.refCnt() == 3);
+			QVERIFY(rpcval == rv2);
+		}
+		QVERIFY(rpcval.refCnt() == 2);
+		rv1.set("foo", "bar");
+		QVERIFY(rv1.refCnt() == 1);
+		QVERIFY(rpcval.refCnt() == 1);
+		//QVERIFY(rpcval.at("foo") == RpcValue(42));
+		QVERIFY(rv1.at("foo") == RpcValue("bar"));
+		rv1 = rpcval;
+		QVERIFY(rpcval.refCnt() == 2);
+		rpcval.setMetaValue(2, 42);
+		QVERIFY(rv1.refCnt() == 1);
+		QVERIFY(rpcval.refCnt() == 1);
+		QVERIFY(rpcval.metaValue(2) == RpcValue(42));
+		QVERIFY(rv1.metaValue(2) == RpcValue(12));
+	}
+
 
 	void cleanupTestCase()
 	{

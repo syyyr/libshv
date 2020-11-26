@@ -961,7 +961,7 @@ void RpcValueConfigNode::loadValues()
 			new_values = cp::RpcValue::Map();
 		}
 	}
-	m_values = mergeMaps(m_templateValues, new_values).clone();
+	m_values = mergeMaps(m_templateValues, new_values);
 }
 
 void RpcValueConfigNode::saveValues()

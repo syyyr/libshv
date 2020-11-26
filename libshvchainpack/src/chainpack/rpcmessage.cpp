@@ -460,12 +460,12 @@ void RpcMessage::write(AbstractStreamWriter &wr) const
 	assert(m_value.isValid());
 	wr.write(m_value);
 }
-
+/*
 RpcMessage RpcMessage::clone() const
 {
 	return m_value.clone(RpcValue::CloneMetaData);
 }
-
+*/
 void RpcMessage::registerMetaTypes()
 {
 	RpcMessage::MetaType::registerMetaType();
