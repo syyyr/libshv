@@ -145,7 +145,7 @@ chainpack::RpcValue BrokerAppNode::callMethodRq(const chainpack::RpcRequest &rq)
 					shvError() << master_resp.errorString();
 					resp.setError(master_resp.error());
 				}
-				emitSendRpcMessage(resp);
+				rootNode()->emitSendRpcMessage(resp);
 			});
 			conn->sendMasterBrokerIdRequest();
 			return cp::RpcValue();
