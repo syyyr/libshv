@@ -487,7 +487,7 @@ chainpack::UserLoginResult BrokerApp::checkLogin(const chainpack::UserLoginConte
 
 void BrokerApp::sendNewLogEntryNotify(const std::string &msg)
 {
-	if(isLogEntryNotyfyEnabled())
+	if(isSendLogAsSignalEnabled())
 		sendNotifyToSubscribers(".broker/app/log", cp::Rpc::SIG_VAL_CHANGED, msg);
 }
 
