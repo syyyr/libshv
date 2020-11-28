@@ -133,21 +133,21 @@ chainpack::RpcValue BrokerAppNode::callMethodRq(const chainpack::RpcRequest &rq)
 			if (!conn) {
 				return std::string();
 			}
-			int rqid = conn->nextRequestId();
-			shv::iotqt::rpc::RpcResponseCallBack *cb = new shv::iotqt::rpc::RpcResponseCallBack(conn, rqid, this);
-			cb->start(this, [this, rq](const cp::RpcResponse &master_resp) {				cp::RpcResponse resp = cp::RpcResponse::forRequest(rq);
+			QMetaObject::Connection *connection = new QMetaObject::Connection;
+			*connection = connect(conn, &rpc::MasterBrokerConnection::masterBrokerIdReceived, [this, rq, connection](const cp::RpcResponse &master_resp) {
+				disconnect(*connection);
+				delete connection;
+				cp::RpcResponse resp = cp::RpcResponse::forRequest(rq);
 				if (master_resp.isSuccess()) {
-					shvInfo() <<master_resp.result().toCpon();
 					resp.setResult(master_resp.result());
 				}
 				else {
 					shvError() << master_resp.errorString();
 					resp.setError(master_resp.error());
 				}
-				emitSendRpcMessage(resp);
+				rootNode()->emitSendRpcMessage(resp);
 			});
-
-			conn->callShvMethod(rqid, ".broker/app", "brokerId", cp::RpcValue());
+			conn->sendMasterBrokerIdRequest();
 			return cp::RpcValue();
 		}
 	}
