@@ -35,6 +35,16 @@ void ChannelFilter::setPathPattern(const QString &pattern, ChannelFilter::PathPa
 	}
 }
 
+void ChannelFilter::addMatchingPath(const QString &shv_path)
+{
+	m_matchingPaths.insert(shv_path);
+}
+
+void ChannelFilter::removeMatchingPath(const QString &shv_path)
+{
+	m_matchingPaths.remove(shv_path);
+}
+
 void ChannelFilter::setMatchingPaths(const QStringList &paths)
 {
 #if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)

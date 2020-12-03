@@ -44,8 +44,6 @@ public:
 		SHV_VARIANTMAP_FIELD2(int, l, setL, ineAreaStyle, LineAreaStyle::Blank)
 		SHV_VARIANTMAP_FIELD2(double, l, setL, ineWidth, 0.2)
 
-		SHV_VARIANTMAP_FIELD(bool, is, set, Hidden)
-
 	public:
 		Style() : QVariantMap() {}
 		Style(const QVariantMap &o) : QVariantMap(o) {}
@@ -91,9 +89,6 @@ public:
 
 	const GraphButtonBox *buttonBox() const { return m_buttonBox; }
 	GraphButtonBox *buttonBox() { return m_buttonBox; }
-
-	void setVisible(bool b);
-	bool isVisible() const;
 
 	bool isMaximized() const { return m_state.isMaximized; }
 	void setMaximized(bool b) { m_state.isMaximized = b; }

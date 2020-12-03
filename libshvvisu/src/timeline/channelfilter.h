@@ -17,11 +17,11 @@ public:
 	ChannelFilter(const QString &pattern = QString(), PathPatternFormat fmt = PathPatternFormat::Substring);
 	ChannelFilter(const QStringList &matching_paths);
 
-	bool isHideFlat() const { return m_hideFlat; }
-	void setHideFlat(bool b) { m_hideFlat = b; }
-
 	QString pathPattern() { return m_pathPattern; }
 	void setPathPattern(const QString &pattern, PathPatternFormat fmt = PathPatternFormat::Substring);
+
+	void addMatchingPath(const QString &shv_path);
+	void removeMatchingPath(const QString &shv_path);
 
 	QStringList matchingPaths() const;
 	void setMatchingPaths(const QStringList &paths);
