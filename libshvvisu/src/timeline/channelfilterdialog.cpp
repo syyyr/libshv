@@ -36,6 +36,8 @@ ChannelFilterDialog::ChannelFilterDialog(QWidget *parent) :
 	connect(ui->pbDeleteFilter, &QPushButton::clicked, this, &ChannelFilterDialog::onDeleteFilterClicked);
 	connect(ui->pbSaveFilter, &QPushButton::clicked, this, &ChannelFilterDialog::onSaveFilterClicked);
 	connect(ui->cbFilters, qOverload<int>(&QComboBox::activated), this, &ChannelFilterDialog::onCbFiltersActivated);
+	connect(ui->leMatchingFilterText, &QLineEdit::textEdited, this, &ChannelFilterDialog::onLeMatchingFilterTextEdited);
+	connect(ui->chbFindRegex, &QCheckBox::stateChanged, this, &ChannelFilterDialog::onChbFindRegexChanged);
 	connect(ui->pbCheckItems, &QPushButton::clicked, this, &ChannelFilterDialog::onPbCheckItemsClicked);
 	connect(ui->pbUncheckItems, &QPushButton::clicked, this, &ChannelFilterDialog::onPbUncheckItemsClicked);
 }
@@ -61,6 +63,16 @@ QStringList ChannelFilterDialog::selectedChannels()
 void ChannelFilterDialog::setSelectedChannels(const QStringList &channels)
 {
 	m_channelsFilterModel->setSelectedChannels(channels);
+}
+
+void ChannelFilterDialog::applyTextFilter()
+{
+	if (ui->chbFindRegex->isChecked()) {
+		m_channelsFilterProxyModel->setFilterRegExp(ui->leMatchingFilterText->text());
+	}
+	else {
+		m_channelsFilterProxyModel->setFilterFixedString(ui->leMatchingFilterText->text());
+	}
 }
 
 void ChannelFilterDialog::saveChannelFilter(const QString &name)
@@ -118,11 +130,12 @@ void ChannelFilterDialog::onCustomContextMenuRequested(QPoint pos)
 
 	if (ix.isValid()) {
 		QMenu menu(this);
-		menu.addAction(tr("Collapse"), [this, ix]() {
-			ui->tvChannelsFilter->collapse(ix);
-		});
+
 		menu.addAction(tr("Expand"), [this, ix]() {
 			ui->tvChannelsFilter->expandRecursively(ix);
+		});
+		menu.addAction(tr("Collapse"), [this, ix]() {
+			ui->tvChannelsFilter->collapse(ix);
 		});
 
 		menu.exec(ui->tvChannelsFilter->mapToGlobal(pos));
@@ -165,40 +178,33 @@ void ChannelFilterDialog::onSaveFilterClicked()
 
 void ChannelFilterDialog::onPbCheckItemsClicked()
 {
-	setVisibleItemsCheckState(Qt::Checked);
+	setAllItemsCheckState(Qt::Checked);
 }
 
 void ChannelFilterDialog::onPbUncheckItemsClicked()
 {
-	setVisibleItemsCheckState(Qt::Unchecked);
+	setAllItemsCheckState(Qt::Unchecked);
 }
 
-void ChannelFilterDialog::setVisibleItemsCheckState(Qt::CheckState state)
+void ChannelFilterDialog::onLeMatchingFilterTextEdited(const QString &text)
 {
-	for (int row = 0; row < m_channelsFilterProxyModel->rowCount(); row++) {
-		shvInfo() << "row" << row;
-		//setVisibleItemsCheckState_helper(m_channelsFilterProxyModel->index(row, 0), state);
-	}
+	Q_UNUSED(text);
+	applyTextFilter();
 }
 
-void ChannelFilterDialog::setVisibleItemsCheckState_helper(const QModelIndex &mi, Qt::CheckState state)
+void ChannelFilterDialog::onChbFindRegexChanged(int state)
 {
-	if (!mi.isValid()) {
-		return;
-	}
+	Q_UNUSED(state);
+	applyTextFilter();
+}
 
-	m_channelsFilterProxyModel->hasChildren(mi);
-
-/*	if (m_channelsFilterProxyModel->children().isEmpty()) {
-		QModelIndex ix = m_channelsFilterProxyModel->mapToSource(mi);
+void ChannelFilterDialog::setAllItemsCheckState(Qt::CheckState state)
+{
+	for (int row = 0; row < m_channelsFilterModel->rowCount(); row++) {
+		QModelIndex ix = m_channelsFilterModel->index(row, 0);
 		m_channelsFilterModel->setItemCheckState(ix, state);
 	}
-	else {
-		for (auto ch: m_channelsFilterProxyModel->children()) {
-			setVisibleItemsCheckState_helper(ch, state);
-		}
-	}
-*/}
+}
 
 }
 }

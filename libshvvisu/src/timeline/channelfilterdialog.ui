@@ -24,8 +24,8 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset>
-           <normaloff>:/images/check-box-outline.svg</normaloff>:/images/check-box-outline.svg</iconset>
+          <iconset resource="../../images/images.qrc">
+           <normaloff>:/shv/visu/images/check-box-outline.svg</normaloff>:/shv/visu/images/check-box-outline.svg</iconset>
          </property>
         </widget>
        </item>
@@ -35,8 +35,8 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset>
-           <normaloff>:/images/checkbox-blank-outline.svg</normaloff>:/images/checkbox-blank-outline.svg</iconset>
+          <iconset resource="../../images/images.qrc">
+           <normaloff>:/shv/visu/images/checkbox-blank-outline.svg</normaloff>:/shv/visu/images/checkbox-blank-outline.svg</iconset>
          </property>
         </widget>
        </item>
@@ -50,8 +50,8 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset>
-           <normaloff>:/images/content-save.svg</normaloff>:/images/content-save.svg</iconset>
+          <iconset resource="../../images/images.qrc">
+           <normaloff>:/shv/visu/images/file-save.svg</normaloff>:/shv/visu/images/file-save.svg</iconset>
          </property>
         </widget>
        </item>
@@ -61,8 +61,8 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset>
-           <normaloff>:/images/delete.svg</normaloff>:/images/delete.svg</iconset>
+          <iconset resource="../../images/images.qrc">
+           <normaloff>:/shv/visu/images/delete.svg</normaloff>:/shv/visu/images/delete.svg</iconset>
          </property>
         </widget>
        </item>
@@ -125,7 +125,9 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../../images/images.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>

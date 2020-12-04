@@ -26,7 +26,7 @@ public:
 	QStringList selectedChannels();
 	void setSelectedChannels(const QStringList &channels);
 	void setItemCheckState(const QModelIndex &mi, Qt::CheckState check_state);
-
+	bool hasValidLogEntry(const QModelIndex &mi);
 protected:
 	enum UserData {ValidLogEntry = Qt::UserRole + 1};
 

@@ -35,6 +35,11 @@ private:
 
 	QStringList savedFilterNames();
 
+	void applyTextFilter();
+
+	void setAllItemsCheckState(Qt::CheckState state);
+	void setVisibleItemsCheckState_helper(const QModelIndex &mi, Qt::CheckState state);
+
 	void onCustomContextMenuRequested(QPoint pos);
 	void onDeleteFilterClicked();
 	void onCbFiltersActivated(int index);
@@ -43,8 +48,8 @@ private:
 	void onPbCheckItemsClicked();
 	void onPbUncheckItemsClicked();
 
-	void setVisibleItemsCheckState(Qt::CheckState state);
-	void setVisibleItemsCheckState_helper(const QModelIndex &mi, Qt::CheckState state);
+	void onLeMatchingFilterTextEdited(const QString &text);
+	void onChbFindRegexChanged(int state);
 
 	Ui::ChannelFilterDialog *ui;
 	ChannelFilterModel *m_channelsFilterModel = nullptr;
