@@ -1,5 +1,7 @@
 HEADERS += \
     $$PWD/channelfilter.h \
+    $$PWD/channelfilterdialog.h \
+    $$PWD/channelfiltermodel.h \
     $$PWD/graphbuttonbox.h \
     $$PWD/graphchannel.h \
     $$PWD/graphmodel.h \
@@ -10,6 +12,8 @@ HEADERS += \
 
 SOURCES += \
     $$PWD/channelfilter.cpp \
+    $$PWD/channelfilterdialog.cpp \
+    $$PWD/channelfiltermodel.cpp \
     $$PWD/graphbuttonbox.cpp \
     $$PWD/graphchannel.cpp \
     $$PWD/graphmodel.cpp \
@@ -17,3 +21,6 @@ SOURCES += \
     $$PWD/graphview.cpp \
     $$PWD/graphwidget.cpp \
     $$PWD/sample.cpp
+
+FORMS += \
+    $$PWD/channelfilterdialog.ui \
