@@ -36,8 +36,6 @@ ChannelFilterDialog::ChannelFilterDialog(QWidget *parent) :
 	connect(ui->pbDeleteFilter, &QPushButton::clicked, this, &ChannelFilterDialog::onDeleteFilterClicked);
 	connect(ui->pbSaveFilter, &QPushButton::clicked, this, &ChannelFilterDialog::onSaveFilterClicked);
 	connect(ui->cbFilters, qOverload<int>(&QComboBox::activated), this, &ChannelFilterDialog::onCbFiltersActivated);
-	connect(ui->leMatchingFilterText, &QLineEdit::textEdited, this, &ChannelFilterDialog::onLeMatchingFilterTextEdited);
-	connect(ui->chbFindRegex, &QCheckBox::stateChanged, this, &ChannelFilterDialog::onChbFindRegexChanged);
 	connect(ui->pbCheckItems, &QPushButton::clicked, this, &ChannelFilterDialog::onPbCheckItemsClicked);
 	connect(ui->pbUncheckItems, &QPushButton::clicked, this, &ChannelFilterDialog::onPbUncheckItemsClicked);
 }
@@ -47,7 +45,7 @@ ChannelFilterDialog::~ChannelFilterDialog()
 	delete ui;
 }
 
-void ChannelFilterDialog::load(const std::string site_path, const shv::chainpack::RpcValue &logged_paths)
+void ChannelFilterDialog::load(const QString &site_path, const QStringList &logged_paths)
 {
 	m_sitePath = site_path;
 	m_channelsFilterModel->createNodes(logged_paths);
@@ -65,23 +63,13 @@ void ChannelFilterDialog::setSelectedChannels(const QStringList &channels)
 	m_channelsFilterModel->setSelectedChannels(channels);
 }
 
-void ChannelFilterDialog::applyTextFilter()
-{
-	if (ui->chbFindRegex->isChecked()) {
-		m_channelsFilterProxyModel->setFilterRegExp(ui->leMatchingFilterText->text());
-	}
-	else {
-		m_channelsFilterProxyModel->setFilterFixedString(ui->leMatchingFilterText->text());
-	}
-}
-
 void ChannelFilterDialog::saveChannelFilter(const QString &name)
 {
 	QSettings settings;
 	settings.beginGroup(USER_PROFILES_KEY);
 	settings.beginGroup("user");
 	settings.beginGroup(SITES_KEY);
-	settings.beginGroup(QString::fromStdString(m_sitePath));
+	settings.beginGroup(m_sitePath);
 	settings.beginGroup(CHANNEL_FILTERS_KEY);
 	settings.setValue(name, m_channelsFilterModel->selectedChannels());
 }
@@ -94,7 +82,7 @@ QStringList ChannelFilterDialog::loadChannelFilter(const QString &name)
 	settings.beginGroup(USER_PROFILES_KEY);
 	settings.beginGroup("user");
 	settings.beginGroup(SITES_KEY);
-	settings.beginGroup(QString::fromStdString(m_sitePath));
+	settings.beginGroup(m_sitePath);
 	settings.beginGroup(CHANNEL_FILTERS_KEY);
 	return settings.value(name, m_channelsFilterModel->selectedChannels()).toStringList();
 }
@@ -105,7 +93,7 @@ void ChannelFilterDialog::deleteChannelFilter(const QString &name)
 	settings.beginGroup(USER_PROFILES_KEY);
 	settings.beginGroup("user");
 	settings.beginGroup(SITES_KEY);
-	settings.beginGroup(QString::fromStdString(m_sitePath));
+	settings.beginGroup(m_sitePath);
 	settings.beginGroup(CHANNEL_FILTERS_KEY);
 	settings.remove(name);
 }
@@ -118,7 +106,7 @@ QStringList ChannelFilterDialog::savedFilterNames()
 	settings.beginGroup(USER_PROFILES_KEY);
 	settings.beginGroup("user");
 	settings.beginGroup(SITES_KEY);
-	settings.beginGroup(QString::fromStdString(m_sitePath));
+	settings.beginGroup(m_sitePath);
 	settings.beginGroup(CHANNEL_FILTERS_KEY);
 	filters = settings.childKeys();
 	return filters;
@@ -185,25 +173,32 @@ void ChannelFilterDialog::onPbUncheckItemsClicked()
 	setVisibleItemsCheckState(Qt::Unchecked);
 }
 
-void ChannelFilterDialog::onLeMatchingFilterTextEdited(const QString &text)
-{
-	Q_UNUSED(text);
-	applyTextFilter();
-}
-
-void ChannelFilterDialog::onChbFindRegexChanged(int state)
-{
-	Q_UNUSED(state);
-	applyTextFilter();
-}
-
 void ChannelFilterDialog::setVisibleItemsCheckState(Qt::CheckState state)
 {
 	for (int row = 0; row < m_channelsFilterProxyModel->rowCount(); row++) {
-		QModelIndex ix = m_channelsFilterProxyModel->mapToSource(m_channelsFilterProxyModel->index(row, 0));
-		m_channelsFilterModel->setItemCheckState(ix, state);
+		shvInfo() << "row" << row;
+		//setVisibleItemsCheckState_helper(m_channelsFilterProxyModel->index(row, 0), state);
 	}
 }
+
+void ChannelFilterDialog::setVisibleItemsCheckState_helper(const QModelIndex &mi, Qt::CheckState state)
+{
+	if (!mi.isValid()) {
+		return;
+	}
+
+	m_channelsFilterProxyModel->hasChildren(mi);
+
+/*	if (m_channelsFilterProxyModel->children().isEmpty()) {
+		QModelIndex ix = m_channelsFilterProxyModel->mapToSource(mi);
+		m_channelsFilterModel->setItemCheckState(ix, state);
+	}
+	else {
+		for (auto ch: m_channelsFilterProxyModel->children()) {
+			setVisibleItemsCheckState_helper(ch, state);
+		}
+	}
+*/}
 
 }
 }

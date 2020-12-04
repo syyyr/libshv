@@ -21,7 +21,7 @@ public:
 	ChannelFilterModel(QObject *parent = nullptr);
 	~ChannelFilterModel() Q_DECL_OVERRIDE;
 
-	void createNodes(const shv::chainpack::RpcValue &logged_paths);
+	void createNodes(const QStringList &logged_paths);
 
 	QStringList selectedChannels();
 	void setSelectedChannels(const QStringList &channels);

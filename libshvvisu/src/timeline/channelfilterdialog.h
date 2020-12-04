@@ -23,13 +23,12 @@ public:
 	explicit ChannelFilterDialog(QWidget *parent = nullptr);
 	~ChannelFilterDialog();
 
-	void load(const std::string site_path, const shv::chainpack::RpcValue &logged_paths);
+	void load(const QString &site_path, const QStringList &logged_paths);
 
 	QStringList selectedChannels();
 	void setSelectedChannels(const QStringList &channels);
 
 private:
-	void applyTextFilter();
 	void saveChannelFilter(const QString &name);
 	QStringList loadChannelFilter(const QString &name);
 	void deleteChannelFilter(const QString &name);
@@ -44,14 +43,13 @@ private:
 	void onPbCheckItemsClicked();
 	void onPbUncheckItemsClicked();
 
-	void onLeMatchingFilterTextEdited(const QString &text);
-	void onChbFindRegexChanged(int state);
 	void setVisibleItemsCheckState(Qt::CheckState state);
+	void setVisibleItemsCheckState_helper(const QModelIndex &mi, Qt::CheckState state);
 
 	Ui::ChannelFilterDialog *ui;
 	ChannelFilterModel *m_channelsFilterModel = nullptr;
 	QSortFilterProxyModel *m_channelsFilterProxyModel = nullptr;
-	std::string m_sitePath;
+	QString m_sitePath;
 };
 
 }

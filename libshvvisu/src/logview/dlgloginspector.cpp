@@ -192,6 +192,9 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 
 	connect(ui->btLoad, &QPushButton::clicked, this, &DlgLogInspector::downloadLog);
 
+	connect(m_graph, &shv::visu::timeline::Graph::channelFilterChanged, this, &DlgLogInspector::onGraphChannelFilterChanged);
+	connect(ui->pbChannelsFilter, &QPushButton::clicked, this, &DlgLogInspector::onChannelsFilterClicked);
+
 	loadSettings();
 }
 
@@ -367,7 +370,11 @@ void DlgLogInspector::parseLog(shv::chainpack::RpcValue log)
 	}
 
 	m_graph->createChannelsFromModel();
+
+	QStringList channel_paths = m_graph->channelPaths();
+	m_channelFilterDialog->load(shvPath(), channel_paths);
 	ui->graphView->makeLayout();
+	applyFilters(channel_paths);
 }
 
 void DlgLogInspector::showInfo(const QString &msg, bool is_error)

@@ -22,18 +22,16 @@ ChannelFilterModel::~ChannelFilterModel()
 
 }
 
-void ChannelFilterModel::createNodes(const shv::chainpack::RpcValue &logged_paths)
+void ChannelFilterModel::createNodes(const QStringList &logged_paths)
 {
 	beginResetModel();
-	shv::chainpack::RpcValue::List logged_paths_list = logged_paths.toList();
 
-	for (auto shv_path: logged_paths_list){
-		QString p = QString::fromStdString(shv_path.toStdString());
-		if (p.section("/", -1) == "status"){
-			continue;
-		}
+	for (auto shv_path: logged_paths){
+//		if (shv_path.section("/", -1) == "status"){
+//			continue;
+//		}
 
-		createNodesForPath(p);
+		createNodesForPath(shv_path);
 	}
 	endResetModel();
 }
