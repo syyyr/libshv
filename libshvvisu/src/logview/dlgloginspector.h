@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../shvvisuglobal.h"
+#include "logsortfilterproxymodel.h"
 
 #include <shv/core/utils.h>
 
@@ -9,9 +10,7 @@
 
 namespace shv { namespace chainpack { class RpcValue; }}
 namespace shv { namespace iotqt { namespace rpc { class ClientConnection; }}}
-namespace shv { namespace visu { namespace timeline { class GraphWidget; class GraphModel; class Graph;}}}
-
-class QSortFilterProxyModel;
+namespace shv { namespace visu { namespace timeline { class GraphWidget; class GraphModel; class Graph; class ChannelFilterDialog;}}}
 
 namespace shv {
 namespace visu {
@@ -48,6 +47,10 @@ private:
 	void saveData(const std::string &data, QString ext);
 
 	void setTimeZone(const QTimeZone &tz);
+
+	void applyFilters(const QStringList &channels_filter);
+	void onChannelsFilterClicked();
+	void onGraphChannelFilterChanged();
 private:
 	Ui::DlgLogInspector *ui;
 
@@ -56,11 +59,12 @@ private:
 	shv::iotqt::rpc::ClientConnection* m_rpcConnection = nullptr;
 
 	LogModel *m_logModel = nullptr;
-	QSortFilterProxyModel *m_sortFilterProxy = nullptr;
+	LogSortFilterProxyModel *m_logSortFilterProxy = nullptr;
 
 	shv::visu::timeline::GraphModel *m_graphModel = nullptr;
 	shv::visu::timeline::Graph *m_graph = nullptr;
 	shv::visu::timeline::GraphWidget *m_graphWidget = nullptr;
+	shv::visu::timeline::ChannelFilterDialog *m_channelFilterDialog = nullptr;
 };
 
 }}}
