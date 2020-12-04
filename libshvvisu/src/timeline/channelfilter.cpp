@@ -41,7 +41,7 @@ void ChannelFilter::setMatchingPaths(const QStringList &paths)
 
 bool ChannelFilter::isPathMatch(const QString &path) const
 {
-	return (m_matchingPaths.empty()) ? true : m_matchingPaths.contains(path);
+	return (m_matchingPaths.empty()) ? false : m_matchingPaths.contains(path);
 }
 
 }

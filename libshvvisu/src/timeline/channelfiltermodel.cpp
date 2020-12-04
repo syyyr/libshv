@@ -77,19 +77,13 @@ void ChannelFilterModel::setItemCheckState(const QModelIndex &mi, Qt::CheckState
 
 		if (it) {
 			it->setCheckState(check_state);
-			setChildItemsCheckedState(it, check_state);
 		}
 	}
 }
 
-bool ChannelFilterModel::hasValidLogEntry(const QModelIndex &mi)
+void ChannelFilterModel::fixCheckBoxesIntegrity()
 {
-	if (mi.isValid()) {
-		QStandardItem *it = itemFromIndex(mi);
-		return (it) ? it->data(UserData::ValidLogEntry).toBool() : false;
-	}
-
-	return false;
+	fixChildItemsCheckboxesIntegrity(invisibleRootItem());
 }
 
 QString ChannelFilterModel::shvPathFromItem(QStandardItem *it) const

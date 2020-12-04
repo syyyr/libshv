@@ -3,9 +3,9 @@
 #include "../shvvisuglobal.h"
 
 #include "channelfiltermodel.h"
+#include "channelfiltersortfilterproxymodel.h"
 
 #include <QDialog>
-#include <QSortFilterProxyModel>
 
 namespace shv {
 namespace visu {
@@ -37,7 +37,7 @@ private:
 
 	void applyTextFilter();
 
-	void setAllItemsCheckState(Qt::CheckState state);
+	void setVisibleItemsCheckState(Qt::CheckState state);
 	void setVisibleItemsCheckState_helper(const QModelIndex &mi, Qt::CheckState state);
 
 	void onCustomContextMenuRequested(QPoint pos);
@@ -47,13 +47,13 @@ private:
 
 	void onPbCheckItemsClicked();
 	void onPbUncheckItemsClicked();
-
-	void onLeMatchingFilterTextEdited(const QString &text);
+	void onPbClearMatchingTextClicked();
+	void onLeMatchingFilterTextChanged(const QString &text);
 	void onChbFindRegexChanged(int state);
 
 	Ui::ChannelFilterDialog *ui;
 	ChannelFilterModel *m_channelsFilterModel = nullptr;
-	QSortFilterProxyModel *m_channelsFilterProxyModel = nullptr;
+	ChannelFilterSortFilterProxyModel *m_channelsFilterProxyModel = nullptr;
 	QString m_sitePath;
 };
 

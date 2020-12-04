@@ -23,7 +23,7 @@ ChannelFilterDialog::ChannelFilterDialog(QWidget *parent) :
 
 	m_channelsFilterModel = new ChannelFilterModel(this);
 
-	m_channelsFilterProxyModel = new QSortFilterProxyModel(this);
+	m_channelsFilterProxyModel = new ChannelFilterSortFilterProxyModel(this);
 	m_channelsFilterProxyModel->setSourceModel(m_channelsFilterModel);
 	m_channelsFilterProxyModel->setFilterCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
 	m_channelsFilterProxyModel->setRecursiveFilteringEnabled(true);
@@ -36,8 +36,9 @@ ChannelFilterDialog::ChannelFilterDialog(QWidget *parent) :
 	connect(ui->pbDeleteFilter, &QPushButton::clicked, this, &ChannelFilterDialog::onDeleteFilterClicked);
 	connect(ui->pbSaveFilter, &QPushButton::clicked, this, &ChannelFilterDialog::onSaveFilterClicked);
 	connect(ui->cbFilters, qOverload<int>(&QComboBox::activated), this, &ChannelFilterDialog::onCbFiltersActivated);
-	connect(ui->leMatchingFilterText, &QLineEdit::textEdited, this, &ChannelFilterDialog::onLeMatchingFilterTextEdited);
-	connect(ui->chbFindRegex, &QCheckBox::stateChanged, this, &ChannelFilterDialog::onChbFindRegexChanged);
+	connect(ui->leMatchingFilterText, &QLineEdit::textChanged, this, &ChannelFilterDialog::onLeMatchingFilterTextChanged);
+	connect(ui->pbClearMatchingText, &QPushButton::clicked, this, &ChannelFilterDialog::onPbClearMatchingTextClicked);
+	//	connect(ui->chbFindRegex, &QCheckBox::stateChanged, this, &ChannelFilterDialog::onChbFindRegexChanged);
 	connect(ui->pbCheckItems, &QPushButton::clicked, this, &ChannelFilterDialog::onPbCheckItemsClicked);
 	connect(ui->pbUncheckItems, &QPushButton::clicked, this, &ChannelFilterDialog::onPbUncheckItemsClicked);
 }
@@ -67,12 +68,20 @@ void ChannelFilterDialog::setSelectedChannels(const QStringList &channels)
 
 void ChannelFilterDialog::applyTextFilter()
 {
-	if (ui->chbFindRegex->isChecked()) {
+	m_channelsFilterProxyModel->setFilterString(ui->leMatchingFilterText->text());
+
+	if (m_channelsFilterProxyModel->rowCount() == 1){
+		ui->tvChannelsFilter->setCurrentIndex(m_channelsFilterProxyModel->index(0, 0));
+		ui->tvChannelsFilter->expandRecursively(ui->tvChannelsFilter->currentIndex());
+	}
+
+/*	if (ui->chbFindRegex->isChecked()) {
 		m_channelsFilterProxyModel->setFilterRegExp(ui->leMatchingFilterText->text());
 	}
 	else {
 		m_channelsFilterProxyModel->setFilterFixedString(ui->leMatchingFilterText->text());
 	}
+*/
 }
 
 void ChannelFilterDialog::saveChannelFilter(const QString &name)
@@ -178,15 +187,20 @@ void ChannelFilterDialog::onSaveFilterClicked()
 
 void ChannelFilterDialog::onPbCheckItemsClicked()
 {
-	setAllItemsCheckState(Qt::Checked);
+	setVisibleItemsCheckState(Qt::Checked);
 }
 
 void ChannelFilterDialog::onPbUncheckItemsClicked()
 {
-	setAllItemsCheckState(Qt::Unchecked);
+	setVisibleItemsCheckState(Qt::Unchecked);
 }
 
-void ChannelFilterDialog::onLeMatchingFilterTextEdited(const QString &text)
+void ChannelFilterDialog::onPbClearMatchingTextClicked()
+{
+	ui->leMatchingFilterText->setText(QString());
+}
+
+void ChannelFilterDialog::onLeMatchingFilterTextChanged(const QString &text)
 {
 	Q_UNUSED(text);
 	applyTextFilter();
@@ -198,11 +212,25 @@ void ChannelFilterDialog::onChbFindRegexChanged(int state)
 	applyTextFilter();
 }
 
-void ChannelFilterDialog::setAllItemsCheckState(Qt::CheckState state)
+void ChannelFilterDialog::setVisibleItemsCheckState(Qt::CheckState state)
 {
-	for (int row = 0; row < m_channelsFilterModel->rowCount(); row++) {
-		QModelIndex ix = m_channelsFilterModel->index(row, 0);
-		m_channelsFilterModel->setItemCheckState(ix, state);
+	for (int row = 0; row < m_channelsFilterProxyModel->rowCount(); row++) {
+		setVisibleItemsCheckState_helper(m_channelsFilterProxyModel->index(row, 0), state);
+	}
+
+	m_channelsFilterModel->fixCheckBoxesIntegrity();
+}
+
+void ChannelFilterDialog::setVisibleItemsCheckState_helper(const QModelIndex &mi, Qt::CheckState state)
+{
+	if (!mi.isValid()) {
+		return;
+	}
+
+	m_channelsFilterModel->setItemCheckState(m_channelsFilterProxyModel->mapToSource(mi), state);
+
+	for (int row = 0; row < m_channelsFilterProxyModel->rowCount(mi); row++) {
+		setVisibleItemsCheckState_helper(m_channelsFilterProxyModel->index(row, 0, mi), state);
 	}
 }
 
