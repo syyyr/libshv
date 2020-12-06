@@ -15,7 +15,7 @@ const char *ChainPack::PackingSchema::name(ChainPack::PackingSchema::Enum e)
 	case Int: return "Int";
 	case Double: return "Double";
 	case Bool: return "Bool";
-	case Blob_depr: return "Blob_depr";
+	case Blob: return "Blob";
 	case String: return "String";
 	case CString: return "CString";
 	case List: return "List";

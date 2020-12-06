@@ -24,7 +24,7 @@ public:
 			Int = CP_Int,
 			Double = CP_Double,
 			Bool = CP_Bool,
-			Blob_depr = CP_Blob_depr,
+			Blob = CP_Blob,
 			String = CP_String,
 			DateTimeEpoch_depr = CP_DateTimeEpoch_depr,
 			List = CP_List,

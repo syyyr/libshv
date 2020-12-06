@@ -232,7 +232,7 @@ RpcValue ChainPackReader1::readData(ChainPack::PackingSchema::Enum type_info, bo
 		case ChainPack::PackingSchema::DateTime: { RpcValue::DateTime val = readData_DateTime(m_in); ret = RpcValue(val); break; }
 		case ChainPack::PackingSchema::String: { RpcValue::String val = readData_Blob<RpcValue::String>(m_in); ret = RpcValue(val); break; }
 		case ChainPack::PackingSchema::CString: { RpcValue::String val = readData_CString(m_in); ret = RpcValue(val); break; }
-		case ChainPack::PackingSchema::Blob_depr: { RpcValue::String val = readData_Blob<RpcValue::String>(m_in); ret = RpcValue(val); break; }
+		case ChainPack::PackingSchema::Blob: { RpcValue::String val = readData_Blob<RpcValue::String>(m_in); ret = RpcValue(val); break; }
 		case ChainPack::PackingSchema::List: { RpcValue::List val = readData_List(); ret = RpcValue(val); break; }
 		case ChainPack::PackingSchema::Map: { RpcValue::Map val = readData_Map(); ret = RpcValue(val); break; }
 		case ChainPack::PackingSchema::IMap: { RpcValue::IMap val = readData_IMap(); ret = RpcValue(val); break; }

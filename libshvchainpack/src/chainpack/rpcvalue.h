@@ -86,8 +86,8 @@ public:
 		Int,
 		Double,
 		Bool,
-		//Blob //deprecated, not used
-		String,
+		Blob, //binary string
+		String, // UTF8 string
 		DateTime,
 		List,
 		//Array,
