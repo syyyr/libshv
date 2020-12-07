@@ -67,7 +67,7 @@ void ChannelFilterModel::setSelectedChannels(const QStringList &channels)
 		}
 	}
 
-	fixChildItemsCheckboxesIntegrity(invisibleRootItem());
+	fixChildItemsCheckBoxesIntegrity(invisibleRootItem());
 }
 
 void ChannelFilterModel::setItemCheckState(const QModelIndex &mi, Qt::CheckState check_state)
@@ -83,7 +83,7 @@ void ChannelFilterModel::setItemCheckState(const QModelIndex &mi, Qt::CheckState
 
 void ChannelFilterModel::fixCheckBoxesIntegrity()
 {
-	fixChildItemsCheckboxesIntegrity(invisibleRootItem());
+	fixChildItemsCheckBoxesIntegrity(invisibleRootItem());
 }
 
 QString ChannelFilterModel::shvPathFromItem(QStandardItem *it) const
@@ -171,7 +171,7 @@ bool ChannelFilterModel::setData(const QModelIndex &ix, const QVariant &val, int
 	if (role == Qt::CheckStateRole) {
 		QStandardItem *it = itemFromIndex(ix);
 		setChildItemsCheckedState(it, static_cast<Qt::CheckState>(val.toInt()));
-		fixChildItemsCheckboxesIntegrity(topVisibleParentItem(it));
+		fixChildItemsCheckBoxesIntegrity(topVisibleParentItem(it));
 	}
 
 	return ret;
@@ -186,7 +186,7 @@ void ChannelFilterModel::setChildItemsCheckedState(QStandardItem *it, Qt::CheckS
 	}
 }
 
-void ChannelFilterModel::fixChildItemsCheckboxesIntegrity(QStandardItem *it)
+void ChannelFilterModel::fixChildItemsCheckBoxesIntegrity(QStandardItem *it)
 {
 	if (it != invisibleRootItem()) {
 		Qt::CheckState check_state = (hasCheckedChild(it)) ? Qt::CheckState::Checked : Qt::CheckState::Unchecked;
@@ -197,7 +197,7 @@ void ChannelFilterModel::fixChildItemsCheckboxesIntegrity(QStandardItem *it)
 	}
 
 	for (int row = 0; row < it->rowCount(); row++) {
-		fixChildItemsCheckboxesIntegrity(it->child(row));
+		fixChildItemsCheckBoxesIntegrity(it->child(row));
 	}
 }
 

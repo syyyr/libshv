@@ -186,19 +186,14 @@ QStringList Graph::channelPaths()
 	return shv_paths;
 }
 
-void Graph::hideFlatChannels(bool is_hidden)
+void Graph::hideFlatChannels()
 {
 	QStringList matching_paths = m_channelFilter.matchingPaths();
 
 	for (int i = 0; i < m_channels.count(); ++i) {
 		GraphChannel *ch = m_channels[i];
 		if(isChannelFlat(ch)) {
-			if (is_hidden) {
-				matching_paths.removeOne(ch->shvPath());
-			}
-			else {
-				matching_paths.append(ch->shvPath());
-			}
+			matching_paths.removeOne(ch->shvPath());
 		}
 	}
 
@@ -841,7 +836,7 @@ QVector<int> Graph::visibleChannels()
 	QVector<int> visible_channels;
 	int maximized_channel = maximizedChannelIndex();
 
-	if (maximized_channel != -1) {
+	if (maximized_channel >= 0) {
 		visible_channels << maximized_channel;
 	}
 	else {

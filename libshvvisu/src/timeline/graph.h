@@ -97,7 +97,7 @@ public:
 
 	void showAllChannels();
 	QStringList channelPaths();
-	void hideFlatChannels(bool is_hidden);
+	void hideFlatChannels();
 	const ChannelFilter& channelFilter() const { return m_channelFilter; }
 	void setChannelFilter(const ChannelFilter &filter);
 	void setChannelVisible(int channel_ix, bool is_visible);

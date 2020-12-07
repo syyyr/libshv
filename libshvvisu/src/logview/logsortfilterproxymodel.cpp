@@ -25,14 +25,7 @@ void LogSortFilterProxyModel::setShvPathColumn(int column)
 
 bool LogSortFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
-	if (m_channelFilter.matchingPaths().isEmpty()) {
-		return true;
-	}
-	else {
-		if (m_shvPathColumn == -1) {
-			return false;
-		}
-
+	if (m_shvPathColumn >= 0) {
 		QModelIndex ix = sourceModel()->index(source_row, m_shvPathColumn, source_parent);
 		return m_channelFilter.isPathMatch(sourceModel()->data(ix).toString());
 	}

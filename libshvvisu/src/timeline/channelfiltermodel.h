@@ -41,7 +41,7 @@ protected:
 	void selectedChannels_helper(QStringList *channels, QStandardItem *it);
 	bool setData ( const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 	void setChildItemsCheckedState(QStandardItem *it, Qt::CheckState check_state);
-	void fixChildItemsCheckboxesIntegrity(QStandardItem *it);
+	void fixChildItemsCheckBoxesIntegrity(QStandardItem *it);
 	bool hasCheckedChild(QStandardItem *it);
 
 	QStandardItem* topVisibleParentItem(QStandardItem *it);

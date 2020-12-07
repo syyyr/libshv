@@ -147,6 +147,12 @@ void ChannelFilterDialog::onCustomContextMenuRequested(QPoint pos)
 			ui->tvChannelsFilter->collapse(ix);
 		});
 
+		menu.addSeparator();
+
+		menu.addAction(tr("Expand all nodes"), [this]() {
+			ui->tvChannelsFilter->expandAll();
+		});
+
 		menu.exec(ui->tvChannelsFilter->mapToGlobal(pos));
 	}
 }
@@ -172,17 +178,13 @@ void ChannelFilterDialog::onSaveFilterClicked()
 		return;
 	}
 
-	QString current_layout = ui->cbFilters->currentText();
-	saveChannelFilter(ui->cbFilters->currentText());
+	QString current_filter_name = ui->cbFilters->currentText();
+	saveChannelFilter(current_filter_name);
 
 	ui->cbFilters->clear();
 	ui->cbFilters->addItems(savedFilterNames());
 
-	for (int i = 0; i < ui->cbFilters->count(); i++) {
-		if (ui->cbFilters->itemText(i) == current_layout) {
-			ui->cbFilters->setCurrentIndex(i);
-		}
-	}
+	ui->cbFilters->setCurrentIndex(ui->cbFilters->findText(current_filter_name));
 }
 
 void ChannelFilterDialog::onPbCheckItemsClicked()

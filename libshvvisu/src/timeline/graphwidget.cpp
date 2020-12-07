@@ -504,7 +504,7 @@ void GraphWidget::showGraphContextMenu(const QPoint &mouse_pos)
 		m_graph->showAllChannels();
 	});
 	menu.addAction(tr("Hide channels without changes"), [this]() {
-		m_graph->hideFlatChannels(true);
+		m_graph->hideFlatChannels();
 	});
 	if(menu.actions().count())
 		menu.exec(mapToGlobal(mouse_pos));
