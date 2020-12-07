@@ -67,7 +67,7 @@ void SocketRpcConnection::setSocket(Socket *socket)
 			//m_socket->close();
 		}
 	});
-	connect(socket, &Socket::readyRead, this, &SocketRpcConnection::onReadyRead);
+	connect(socket, &Socket::readyRead, this, &SocketRpcConnection::onReadyRead, Qt::QueuedConnection);
 	// queued connection here is to write data in next event loop, not directly when previous chunk is written
 	// possibly not needed, its my feeling to do it this way
 	connect(socket, &Socket::bytesWritten, this, &SocketRpcConnection::onBytesWritten, Qt::QueuedConnection);
