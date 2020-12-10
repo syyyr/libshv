@@ -28,6 +28,7 @@ public:
 	QStringList selectedChannels();
 	void setSelectedChannels(const QStringList &channels);
 
+	void setSettingsUserName(const QString &user);
 private:
 	void saveChannelFilter(const QString &name);
 	QStringList loadChannelFilter(const QString &name);
@@ -55,6 +56,7 @@ private:
 	ChannelFilterModel *m_channelsFilterModel = nullptr;
 	ChannelFilterSortFilterProxyModel *m_channelsFilterProxyModel = nullptr;
 	QString m_sitePath;
+	QString m_settingsUserName ="default";
 };
 
 }

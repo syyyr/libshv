@@ -66,6 +66,11 @@ void ChannelFilterDialog::setSelectedChannels(const QStringList &channels)
 	m_channelsFilterModel->setSelectedChannels(channels);
 }
 
+void ChannelFilterDialog::setSettingsUserName(const QString &user)
+{
+	m_settingsUserName = user;
+}
+
 void ChannelFilterDialog::applyTextFilter()
 {
 	m_channelsFilterProxyModel->setFilterString(ui->leMatchingFilterText->text());
@@ -88,7 +93,7 @@ void ChannelFilterDialog::saveChannelFilter(const QString &name)
 {
 	QSettings settings;
 	settings.beginGroup(USER_PROFILES_KEY);
-	settings.beginGroup("user");
+	settings.beginGroup(m_settingsUserName);
 	settings.beginGroup(SITES_KEY);
 	settings.beginGroup(m_sitePath);
 	settings.beginGroup(CHANNEL_FILTERS_KEY);
@@ -101,7 +106,7 @@ QStringList ChannelFilterDialog::loadChannelFilter(const QString &name)
 
 	QSettings settings;
 	settings.beginGroup(USER_PROFILES_KEY);
-	settings.beginGroup("user");
+	settings.beginGroup(m_settingsUserName);
 	settings.beginGroup(SITES_KEY);
 	settings.beginGroup(m_sitePath);
 	settings.beginGroup(CHANNEL_FILTERS_KEY);
@@ -112,7 +117,7 @@ void ChannelFilterDialog::deleteChannelFilter(const QString &name)
 {
 	QSettings settings;
 	settings.beginGroup(USER_PROFILES_KEY);
-	settings.beginGroup("user");
+	settings.beginGroup(m_settingsUserName);
 	settings.beginGroup(SITES_KEY);
 	settings.beginGroup(m_sitePath);
 	settings.beginGroup(CHANNEL_FILTERS_KEY);
@@ -125,7 +130,7 @@ QStringList ChannelFilterDialog::savedFilterNames()
 	QSettings settings;
 
 	settings.beginGroup(USER_PROFILES_KEY);
-	settings.beginGroup("user");
+	settings.beginGroup(m_settingsUserName);
 	settings.beginGroup(SITES_KEY);
 	settings.beginGroup(m_sitePath);
 	settings.beginGroup(CHANNEL_FILTERS_KEY);
