@@ -68,14 +68,21 @@ DataChange DataChange::fromRpcValue(const RpcValue &val)
 		if(val.isList()) {
 			const RpcValue::List &lst = val.toList();
 			if(lst.size() == 1) {
-				RpcValue wrapped_val = val.toList().value(0);
+				// we cannot make DataChange from RpcValue with meta-data
+				// in this case, the inner DataChange must be wrapped in the list
+				// val is in form <data-change>[<meta-data>value]
+				RpcValue wrapped_val = lst.value(0);
 				if(!wrapped_val.metaData().isEmpty()) {
 					ret.setValue(wrapped_val);
 					goto set_meta_data;
 				}
 			}
 		}
-		ret.setValue(val);
+		{
+			//nInfo() << val.toCpon();
+			RpcValue raw_val = val.metaStripped();
+			ret.setValue(raw_val);
+		}
 set_meta_data:
 		ret.setDateTime(val.metaValue(MetaType::Tag::DateTime));
 		ret.setShortTime(val.metaValue(MetaType::Tag::ShortTime));

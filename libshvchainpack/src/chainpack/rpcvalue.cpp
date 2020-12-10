@@ -105,6 +105,7 @@ public:
 	virtual void append(const RpcValue &);
 
 	virtual std::string toStdString() const = 0;
+	virtual void stripMeta() = 0;
 
 	virtual AbstractValueData* copy() = 0;
 };
@@ -193,6 +194,13 @@ protected:
 		}
 		tmp->m_value = orig->m_value;
 		return tmp;
+	}
+
+	void stripMeta() override
+	{
+		if(m_metaData)
+			delete m_metaData;
+		m_metaData = nullptr;
 	}
 
 protected:
@@ -598,6 +606,13 @@ void RpcValue::append(const RpcValue &val)
 		m_ptr->append(val);
 	else
 		nError() << "Cannot append to invalid ChainPack value!";
+}
+
+RpcValue RpcValue::metaStripped() const
+{
+	RpcValue ret = *this;
+	ret.m_ptr->stripMeta();
+	return ret;
 }
 
 std::string RpcValue::toPrettyString(const std::string &indent) const

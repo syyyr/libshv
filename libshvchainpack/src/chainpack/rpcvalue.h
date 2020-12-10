@@ -426,6 +426,8 @@ public:
 	void set(const RpcValue::String &key, const RpcValue &val);
 	void append(const RpcValue &val);
 
+	RpcValue metaStripped() const;
+
 	std::string toPrettyString(const std::string &indent = std::string()) const;
 	std::string toStdString() const;
 	std::string toCpon(const std::string &indent = std::string()) const;
@@ -433,7 +435,7 @@ public:
 
 	std::string toChainPack() const;
 	static RpcValue fromChainPack(const std::string & str, std::string *err = nullptr);
-	static constexpr bool CloneMetaData = true;
+	//static constexpr bool CloneMetaData = true;
 	//RpcValue clone(bool clone_meta_data = CloneMetaData) const;
 
 	bool operator== (const RpcValue &rhs) const;
