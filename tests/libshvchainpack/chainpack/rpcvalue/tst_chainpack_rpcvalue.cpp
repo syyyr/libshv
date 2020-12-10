@@ -1151,6 +1151,20 @@ private slots:
 		QVERIFY(rpcval.metaValue(2) == RpcValue(42));
 		QVERIFY(rv1.metaValue(2) == RpcValue(12));
 	}
+	void stripMetaTest()
+	{
+		qDebug() << "================================= stripMeta Test =====================================";
+		auto rpcval = RpcValue::fromCpon(R"(<1:2,2:12,8:"foo",9:[1,2,3],"bar":"baz",>{"META":17,"18":19})");
+		auto rv1 = rpcval;
+		auto rv2 = rv1;
+		auto rv3 = rv1.metaStripped();
+		//qDebug() << "rv1:" << rv1.toCpon().c_str();
+		QVERIFY(rpcval.refCnt() == 3);
+		QVERIFY(rv3.refCnt() == 1);
+		QVERIFY(rv1.metaData().isEmpty() == false);
+		QVERIFY(rv3.metaData().isEmpty() == true);
+		QVERIFY(rv3.at("18") == rpcval.at("18"));
+	}
 
 
 	void cleanupTestCase()
