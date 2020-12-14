@@ -184,6 +184,8 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 	m_graph->setModel(m_graphModel);
 	m_graphWidget->setGraph(m_graph);
 
+	m_channelFilterDialog = new shv::visu::timeline::ChannelFilterDialog(this);
+
 	connect(ui->cbxTimeZone, &QComboBox::currentTextChanged, [this](const QString &) {
 		auto tz = ui->cbxTimeZone->currentTimeZone();
 		setTimeZone(tz);
@@ -419,7 +421,6 @@ void DlgLogInspector::applyFilters(const QStringList &channels_filter)
 	auto graph_filter = m_graph->channelFilter();
 	graph_filter.setMatchingPaths(channels_filter);
 	m_graph->setChannelFilter(graph_filter);
-	m_logSortFilterProxy->setChannelFilter(graph_filter);
 }
 
 void DlgLogInspector::onChannelsFilterClicked()

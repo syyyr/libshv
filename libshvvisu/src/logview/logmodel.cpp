@@ -1,6 +1,7 @@
 #include "logmodel.h"
 
 #include <shv/core/utils/shvfilejournal.h>
+#include <shv/core/log.h>
 
 namespace cp = shv::chainpack;
 
@@ -69,12 +70,17 @@ QVariant LogModel::data(const QModelIndex &index, int role) const
 				dt = dt.toTimeZone(m_timeZone);
 				return dt.toString(Qt::ISODateWithMs);
 			}
-			else if(index.column() == ColPath && (val.type() == cp::RpcValue::Type::UInt || val.type() == cp::RpcValue::Type::Int)) {
-				static std::string KEY_PATHS_DICT = shv::core::utils::ShvFileJournal::KEY_PATHS_DICT;
-				const chainpack::RpcValue::IMap &dict = m_log.metaValue(KEY_PATHS_DICT).toIMap();
-				auto it = dict.find(val.toInt());
-				if(it != dict.end())
-					val = it->second;
+			else if(index.column() == ColPath) {
+				if ((val.type() == cp::RpcValue::Type::UInt) || (val.type() == cp::RpcValue::Type::Int)) {
+					static std::string KEY_PATHS_DICT = shv::core::utils::ShvFileJournal::KEY_PATHS_DICT;
+					const chainpack::RpcValue::IMap &dict = m_log.metaValue(KEY_PATHS_DICT).toIMap();
+					auto it = dict.find(val.toInt());
+					if(it != dict.end())
+						val = it->second;
+				}
+
+				QString s = QString::fromStdString(val.toCpon());
+				return s.remove('\"');
 			}
 			return QString::fromStdString(val.toCpon());
 		}
