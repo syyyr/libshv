@@ -78,9 +78,7 @@ QVariant LogModel::data(const QModelIndex &index, int role) const
 					if(it != dict.end())
 						val = it->second;
 				}
-
-				QString s = QString::fromStdString(val.toCpon());
-				return s.remove('\"');
+				return QString::fromStdString(val.toString());
 			}
 			return QString::fromStdString(val.toCpon());
 		}

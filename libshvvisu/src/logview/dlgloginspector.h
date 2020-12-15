@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../shvvisuglobal.h"
-#include "logsortfilterproxymodel.h"
 
 #include <shv/core/utils.h>
 
@@ -21,6 +20,7 @@ class DlgLogInspector;
 }
 
 class LogModel;
+class LogSortFilterProxyModel;
 
 class SHVVISU_DECL_EXPORT DlgLogInspector : public QDialog
 {

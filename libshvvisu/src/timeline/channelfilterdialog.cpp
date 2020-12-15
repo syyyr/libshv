@@ -1,6 +1,9 @@
 #include "channelfilterdialog.h"
 #include "ui_channelfilterdialog.h"
 
+#include "channelfiltermodel.h"
+#include "channelfiltersortfilterproxymodel.h"
+
 #include <shv/core/log.h>
 
 #include <QLineEdit>
@@ -79,14 +82,6 @@ void ChannelFilterDialog::applyTextFilter()
 		ui->tvChannelsFilter->setCurrentIndex(m_channelsFilterProxyModel->index(0, 0));
 		ui->tvChannelsFilter->expandRecursively(ui->tvChannelsFilter->currentIndex());
 	}
-
-/*	if (ui->chbFindRegex->isChecked()) {
-		m_channelsFilterProxyModel->setFilterRegExp(ui->leMatchingFilterText->text());
-	}
-	else {
-		m_channelsFilterProxyModel->setFilterFixedString(ui->leMatchingFilterText->text());
-	}
-*/
 }
 
 void ChannelFilterDialog::saveChannelFilter(const QString &name)

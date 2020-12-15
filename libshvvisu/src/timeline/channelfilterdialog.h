@@ -2,9 +2,6 @@
 
 #include "../shvvisuglobal.h"
 
-#include "channelfiltermodel.h"
-#include "channelfiltersortfilterproxymodel.h"
-
 #include <QDialog>
 
 namespace shv {
@@ -14,6 +11,9 @@ namespace timeline {
 namespace Ui {
 class ChannelFilterDialog;
 }
+
+class ChannelFilterModel;
+class ChannelFilterSortFilterProxyModel;
 
 class SHVVISU_DECL_EXPORT ChannelFilterDialog : public QDialog
 {
