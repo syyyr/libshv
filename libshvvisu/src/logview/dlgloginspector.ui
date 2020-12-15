@@ -65,7 +65,7 @@
           <date>
            <year>1999</year>
            <month>12</month>
-           <day>26</day>
+           <day>24</day>
           </date>
          </property>
          <property name="displayFormat">
@@ -113,7 +113,7 @@
           <date>
            <year>1999</year>
            <month>12</month>
-           <day>25</day>
+           <day>23</day>
           </date>
          </property>
          <property name="displayFormat">
@@ -355,70 +355,60 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_4">
-      <property name="spacing">
-       <number>5</number>
-      </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
       <property name="leftMargin">
-       <number>5</number>
+       <number>0</number>
       </property>
       <property name="topMargin">
-       <number>5</number>
+       <number>0</number>
       </property>
       <property name="rightMargin">
-       <number>5</number>
+       <number>0</number>
       </property>
       <property name="bottomMargin">
-       <number>5</number>
+       <number>0</number>
       </property>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
-        <property name="spacing">
-         <number>0</number>
+       <widget class="QPushButton" name="btTabGraph">
+        <property name="text">
+         <string>Graph</string>
         </property>
-        <item>
-         <widget class="QPushButton" name="btTabGraph">
-          <property name="text">
-           <string>Graph</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-          <property name="autoExclusive">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="btTabData">
-          <property name="text">
-           <string>Data</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="autoExclusive">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="btTabInfo">
-          <property name="text">
-           <string>Info</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="autoExclusive">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+        <property name="autoExclusive">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btTabData">
+        <property name="text">
+         <string>Data</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="autoExclusive">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btTabInfo">
+        <property name="text">
+         <string>Info</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="autoExclusive">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item>
        <spacer name="horizontalSpacer_4">
@@ -434,16 +424,9 @@
        </spacer>
       </item>
       <item>
-       <widget class="QLabel" name="label_5">
+       <widget class="QPushButton" name="pbChannelsFilter">
         <property name="text">
-         <string>Filter</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="edDataFilter">
-        <property name="clearButtonEnabled">
-         <bool>true</bool>
+         <string>Channels filter</string>
         </property>
        </widget>
       </item>
@@ -483,7 +466,7 @@
             <x>0</x>
             <y>0</y>
             <width>1152</width>
-            <height>277</height>
+            <height>354</height>
            </rect>
           </property>
          </widget>
@@ -585,7 +568,6 @@
   <tabstop>btTabGraph</tabstop>
   <tabstop>btTabData</tabstop>
   <tabstop>btTabInfo</tabstop>
-  <tabstop>edDataFilter</tabstop>
   <tabstop>tblData</tabstop>
   <tabstop>edInfo</tabstop>
   <tabstop>btSaveData</tabstop>

@@ -96,11 +96,12 @@ public:
 	int channelMetaTypeId(int ix) const;
 
 	void showAllChannels();
+	QStringList channelPaths();
 	void hideFlatChannels();
 	const ChannelFilter& channelFilter() const { return m_channelFilter; }
 	void setChannelFilter(const ChannelFilter &filter);
-	void setChannelVisible(int channel_ix, bool b);
-	void setChannelMaximized(int channel_ix, bool b);
+	void setChannelVisible(int channel_ix, bool is_visible);
+	void setChannelMaximized(int channel_ix, bool is_maximized);
 	//DataRect dataRect(int channel_ix) const;
 
 	timemsec_t miniMapPosToTime(int pos) const;
@@ -173,6 +174,7 @@ public:
 	Q_SIGNAL void presentationDirty(const QRect &rect);
 	void emitPresentationDirty(const QRect &rect) { emit presentationDirty(rect); }
 	Q_SIGNAL void layoutChanged();
+	Q_SIGNAL void channelFilterChanged();
 	Q_SIGNAL void channelContextMenuRequest(int channel_index, const QPoint &mouse_pos);
 	void emitChannelContextMenuRequest(int channel_index, const QPoint &mouse_pos) { emit channelContextMenuRequest(channel_index, mouse_pos); }
 	Q_SIGNAL void graphContextMenuRequest(const QPoint &mouse_pos);
@@ -188,6 +190,9 @@ protected:
 	void drawCenteredRectText(QPainter *painter, const QPoint &top_center, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
 
 	QVector<int> visibleChannels();
+	int maximizedChannelIndex();
+
+	bool isChannelFlat(GraphChannel *ch);
 
 	void drawBackground(QPainter *painter, const QRect &dirty_rect);
 	virtual void drawCornerCell(QPainter *painter);
