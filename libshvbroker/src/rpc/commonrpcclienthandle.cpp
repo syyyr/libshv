@@ -122,7 +122,7 @@ unsigned CommonRpcClientHandle::addSubscription(const CommonRpcClientHandle::Sub
 						<< "subscribed path:" << subs.subscribedPath << "method:" << subs.method;
 	//auto it = std::find(m_subscriptions.begin(), m_subscriptions.end(), subs);
 	auto it = std::find_if(m_subscriptions.begin(), m_subscriptions.end(),
-					 [&subs](const auto& s) { return subs.cmpSubscribed(s); });
+					 [&subs](const Subscription &s) { return subs.cmpSubscribed(s); });
 
 	if(it == m_subscriptions.end()) {
 		logSubscriptionsD() << "new subscription";
@@ -144,7 +144,7 @@ bool CommonRpcClientHandle::removeSubscription(const CommonRpcClientHandle::Subs
 						<< "subscribed path:" << subs.subscribedPath << "method:" << subs.method;
 	//auto it = std::find(m_subscriptions.begin(), m_subscriptions.end(), subs);
 	auto it = std::find_if(m_subscriptions.begin(), m_subscriptions.end(),
-					 [&subs](const auto& s) { return subs.cmpSubscribed(s); });
+					 [&subs](const Subscription &s) { return subs.cmpSubscribed(s); });
 	if(it == m_subscriptions.end()) {
 		logSubscriptionsD() << "subscription not found";
 		return false;

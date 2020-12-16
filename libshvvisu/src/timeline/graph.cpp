@@ -169,33 +169,72 @@ int Graph::channelMetaTypeId(int ix) const
 
 void Graph::showAllChannels()
 {
-	m_channelFilter.setPathPattern(QString());
+	m_channelFilter.setMatchingPaths(channelPaths());
+
 	emit layoutChanged();
+	emit channelFilterChanged();
+}
+
+QStringList Graph::channelPaths()
+{
+	QStringList shv_paths;
+
+	for (int i = 0; i < m_channels.count(); ++i) {
+		shv_paths.append(m_channels[i]->shvPath());
+	}
+
+	return shv_paths;
 }
 
 void Graph::hideFlatChannels()
 {
-	m_channelFilter.setHideFlat(true);
+	QStringList matching_paths = m_channelFilter.matchingPaths();
+
+	for (int i = 0; i < m_channels.count(); ++i) {
+		GraphChannel *ch = m_channels[i];
+		if(isChannelFlat(ch)) {
+			matching_paths.removeOne(ch->shvPath());
+		}
+	}
+
+	m_channelFilter.setMatchingPaths(matching_paths);
+
 	emit layoutChanged();
+	emit channelFilterChanged();
+}
+
+bool Graph::isChannelFlat(GraphChannel *ch)
+{
+	YRange yrange = m_model->yRange(ch->modelIndex());
+	return yrange.isEmpty();
 }
 
 void Graph::setChannelFilter(const ChannelFilter &filter)
 {
 	m_channelFilter = filter;
 	emit layoutChanged();
+	emit channelFilterChanged();
 }
 
-void Graph::setChannelVisible(int channel_ix, bool b)
+void Graph::setChannelVisible(int channel_ix, bool is_visible)
 {
 	GraphChannel *ch = channelAt(channel_ix);
-	ch->setVisible(b);
+
+	if (is_visible) {
+		m_channelFilter.addMatchingPath(ch->shvPath());
+	}
+	else {
+		m_channelFilter.removeMatchingPath(ch->shvPath());
+	}
+
 	emit layoutChanged();
+	emit channelFilterChanged();
 }
 
-void Graph::setChannelMaximized(int channel_ix, bool b)
+void Graph::setChannelMaximized(int channel_ix, bool is_maximized)
 {
 	GraphChannel *ch = channelAt(channel_ix);
-	ch->setMaximized(b);
+	ch->setMaximized(is_maximized);
 	emit layoutChanged();
 }
 
@@ -795,29 +834,33 @@ void Graph::drawCenteredRectText(QPainter *painter, const QPoint &top_center, co
 QVector<int> Graph::visibleChannels()
 {
 	QVector<int> visible_channels;
+	int maximized_channel = maximizedChannelIndex();
+
+	if (maximized_channel >= 0) {
+		visible_channels << maximized_channel;
+	}
+	else {
+		for (int i = 0; i < m_channels.count(); ++i) {
+			QString shv_path = model()->channelInfo(m_channels[i]->modelIndex()).shvPath;
+			if(m_channelFilter.isPathMatch(shv_path)) {
+				visible_channels << i;
+			}
+		}
+	}
+
+	return visible_channels;
+}
+
+int Graph::maximizedChannelIndex()
+{
 	for (int i = 0; i < m_channels.count(); ++i) {
 		GraphChannel *ch = m_channels[i];
 		if(ch->isMaximized()) {
-			visible_channels.clear();
-			visible_channels << i;
-			break;
+			return i;
 		}
-		if(!ch->isVisible())
-			continue;
-
-		QString shv_path = model()->channelInfo(ch->modelIndex()).shvPath;
-		if(!m_channelFilter.isPathMatch(shv_path)) {
-			continue;
-		}
-		if(m_channelFilter.isHideFlat()) {
-			YRange yrange = m_model->yRange(ch->modelIndex());
-			bool is_flat = yrange.isEmpty();
-			if(is_flat)
-				continue;
-		}
-		visible_channels << i;
 	}
-	return visible_channels;
+
+	return -1;
 }
 
 void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_rect)
