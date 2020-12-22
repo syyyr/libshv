@@ -197,6 +197,10 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 	connect(m_graph, &shv::visu::timeline::Graph::channelFilterChanged, this, &DlgLogInspector::onGraphChannelFilterChanged);
 	connect(ui->pbChannelsFilter, &QPushButton::clicked, this, &DlgLogInspector::onChannelsFilterClicked);
 
+	connect(ui->btResizeColumnsToFitWidth, &QAbstractButton::clicked, [this]() {
+		ui->tblData->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
+	});
+
 	loadSettings();
 }
 

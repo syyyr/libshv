@@ -41,6 +41,16 @@ DataChange::DataChange(const RpcValue &val)
 	setValue(val);
 }
 */
+const char *DataChange::sampleTypeToString(DataChange::SampleType st)
+{
+	switch (st) {
+	case SampleType::Invalid: return "Invalid";
+	case SampleType::Continuous: return "Continuous";
+	case SampleType::Discrete: return "Discrete";
+	}
+	return "???";
+}
+
 DataChange::DataChange(const RpcValue &val, const RpcValue::DateTime &date_time, int short_time)
 	: m_dateTime(date_time)
 	, m_shortTime(short_time)

@@ -31,6 +31,8 @@ public:
 	enum GetValueAgeOption {DONT_CARE_TS = -2, USE_CACHE = -1, RELOAD_FORCE, RELOAD_OLDER};
 	static constexpr int NO_SHORT_TIME = -1;
 	enum class SampleType : uint8_t {Invalid = 0, Continuous , Discrete};
+	static const char* sampleTypeToString(SampleType st);
+
 	DataChange() {}
 	// ambiguous constructor for DataChange(const DataChange &) DataChange(const RpcValue &)
 	// better to assign value explicitelly
