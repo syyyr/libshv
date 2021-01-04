@@ -79,6 +79,7 @@ QVariant LogModel::data(const QModelIndex &index, int role) const
 					auto it = dict.find(val.toInt());
 					if(it != dict.end())
 						val = it->second;
+					return QString::fromStdString(val.toString());
 				}
 				return QString::fromStdString(val.toString());
 			}
