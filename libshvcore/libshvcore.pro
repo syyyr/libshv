@@ -8,10 +8,7 @@ CONFIG += hide_symbols
 TEMPLATE = lib
 TARGET = shvcore
 
-isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
-	SHV_PROJECT_TOP_BUILDDIR=$$shadowed($$PWD)/..
-}
-message ( SHV_PROJECT_TOP_BUILDDIR: '$$SHV_PROJECT_TOP_BUILDDIR' )
+include( ../subproject_integration.pri )
 
 unix:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/lib
 win32:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin
@@ -25,7 +22,7 @@ DEFINES += ANDROID_BUILD
 DEFINES += SHVCORE_BUILD_DLL
 
 INCLUDEPATH += \
-	../3rdparty/necrolog/include \
+    $$SHV_PROJECT_TOP_SRCDIR/3rdparty/necrolog/include \
 	../libshvchainpack/include \
 
 LIBS += \
