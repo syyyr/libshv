@@ -166,7 +166,7 @@ void GraphModel::appendValue(int channel, Sample &&sample)
 	ChannelSamples &dat = m_samples[channel];
 	if(!dat.isEmpty() && dat.last().time > sample.time) {
 		shvWarning() << channelInfo(channel).shvPath << "channel:" << channel
-					 << "ignoring value with lower timestamp than last value:"
+					 << "ignoring value with lower timestamp than last value (check possibly wrong short-time correction):"
 					 << dat.last().time << shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(dat.last().time).toIsoString()
 					 << "val:"
 					 << sample.time << shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(sample.time).toIsoString();

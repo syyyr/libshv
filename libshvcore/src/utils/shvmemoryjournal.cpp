@@ -2,7 +2,9 @@
 #include "shvlogheader.h"
 #include "shvpath.h"
 #include "shvfilejournal.h"
+#include "shvlogrpcvaluereader.h"
 
+#include "../exception.h"
 #include "../log.h"
 
 #define logWShvJournal() shvCWarning("ShvJournal")
@@ -31,40 +33,14 @@ ShvMemoryJournal::ShvMemoryJournal(const ShvGetLogParams &input_filter)
 
 void ShvMemoryJournal::loadLog(const chainpack::RpcValue &log, bool append_records)
 {
-	ShvLogHeader hdr = ShvLogHeader::fromMetaData(log.metaData());
-	using Column = ShvLogHeader::Column;
-
-	const chainpack::RpcValue::IMap &dict = hdr.pathDictCRef();
-
+	shv::core::utils::ShvLogRpcValueReader rd(log, !shv::core::Exception::Throw);
 	if(!append_records) {
 		m_entries.clear();
-		m_logHeader = hdr;
+		m_logHeader = rd.logHeader();
 	}
-
-	const chainpack::RpcValue::List &lst = log.toList();
-	for(const cp::RpcValue &v : lst) {
-		const cp::RpcValue::List &row = v.toList();
-		int64_t time = row.value(Column::Timestamp).toDateTime().msecsSinceEpoch();
-		cp::RpcValue p = row.value(Column::Path);
-		if(p.isInt())
-			p = dict.value(p.toInt());
-		const std::string &path = p.toString();
-		if(path.empty()) {
-			logWShvJournal() << "Path dictionary corrupted, row:" << v.toCpon();
-			continue;
-		}
-		Entry e;
-		e.epochMsec = time;
-		e.path = path;
-		e.value = row.value(Column::Value);
-		cp::RpcValue st = row.value(Column::ShortTime);
-		e.shortTime = st.isInt() && st.toInt() >= 0? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
-		e.domain = row.value(Column::Domain).toString();
-		e.sampleType = static_cast<ShvJournalEntry::SampleType>(row.value(Column::SampleType).toUInt());
-		if (e.sampleType == ShvJournalEntry::SampleType::Invalid) {
-			e.sampleType = ShvJournalEntry::SampleType::Continuous;
-		}
-		append(e);
+	while(rd.next()) {
+		const core::utils::ShvJournalEntry &entry = rd.entry();
+		append(entry);
 	}
 }
 
@@ -77,12 +53,34 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 		epoch_msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
 	}
 	else if(isShortTimeCorrection()) {
-		if(entry.shortTime != shv::core::utils::ShvJournalEntry::NO_SHORT_TIME) {
+		if(entry.sampleType == ShvJournalEntry::SampleType::Continuous && entry.shortTime != shv::core::utils::ShvJournalEntry::NO_SHORT_TIME) {
 			uint16_t short_msec = static_cast<uint16_t>(entry.shortTime);
 			ShortTime &st = m_recentShortTimes[entry.path];
-			if(st.msec_sum == 0)
-				st.msec_sum = epoch_msec;
-			epoch_msec = st.addShortTime(short_msec);
+			if(entry.shortTime == 0 && st.recentShortTime == 0) {
+				// do not fix short times == 0 in the row, because badly generated data contains this value very often
+				// this could never happen in correctly handled hort times
+				shvWarning() << "two short-times == 0 in the row:" << entry.path << cp::RpcValue::DateTime::fromMSecsSinceEpoch(entry.epochMsec).toIsoString() << entry.epochMsec;
+				st.msecSum = epoch_msec;
+			}
+			else {
+				if(st.msecSum == 0) {
+					st.msecSum = epoch_msec;
+				}
+				else {
+					int64_t new_epoch_msec = st.addShortTime(short_msec);
+					int64_t dt_diff = epoch_msec - new_epoch_msec;
+					if(dt_diff < 0)
+						dt_diff = -dt_diff;
+					if(dt_diff < 1000) {
+						// might drift as much
+						epoch_msec = new_epoch_msec;
+					}
+					else {
+						shvWarning() << "drifted too much:" << dt_diff << entry.path << cp::RpcValue::DateTime::fromMSecsSinceEpoch(entry.epochMsec).toIsoString() << entry.epochMsec;
+						st.msecSum = epoch_msec;
+					}
+				}
+			}
 		}
 	}
 	if(m_inputFilterUntilMsec > 0 && epoch_msec >= m_inputFilterUntilMsec)
