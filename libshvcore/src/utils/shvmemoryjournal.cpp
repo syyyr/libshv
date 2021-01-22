@@ -56,28 +56,39 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 		if(entry.sampleType == ShvJournalEntry::SampleType::Continuous && entry.shortTime != shv::core::utils::ShvJournalEntry::NO_SHORT_TIME) {
 			uint16_t short_msec = static_cast<uint16_t>(entry.shortTime);
 			ShortTime &st = m_recentShortTimes[entry.path];
-			if(entry.shortTime == 0 && st.recentShortTime == 0) {
-				// do not fix short times == 0 in the row, because badly generated data contains this value very often
-				// this could never happen in correctly handled hort times
-				shvWarning() << "two short-times == 0 in the row:" << entry.path << cp::RpcValue::DateTime::fromMSecsSinceEpoch(entry.epochMsec).toIsoString() << entry.epochMsec;
-				st.msecSum = epoch_msec;
+			if(entry.shortTime == st.recentShortTime) {
+				// the same short times in the row, this can happen only when
+				// data is badly generated, we will ignore such values
+				shvWarning() << "two sam short-times in the row:" << entry.shortTime << entry.path << cp::RpcValue::DateTime::fromMSecsSinceEpoch(entry.epochMsec).toIsoString() << entry.epochMsec;
+				st.epochTime = epoch_msec;
 			}
 			else {
-				if(st.msecSum == 0) {
-					st.msecSum = epoch_msec;
+				if(st.epochTime == 0) {
+					st.epochTime = epoch_msec;
+					st.recentShortTime = entry.shortTime;
 				}
 				else {
-					int64_t new_epoch_msec = st.addShortTime(short_msec);
-					int64_t dt_diff = epoch_msec - new_epoch_msec;
-					if(dt_diff < 0)
-						dt_diff = -dt_diff;
-					if(dt_diff < 1000) {
-						// might drift as much
-						epoch_msec = new_epoch_msec;
+					int64_t new_epoch_msec = st.toEpochTime(short_msec);
+					int64_t dt_diff = new_epoch_msec - epoch_msec;
+					constexpr int64_t MAX_SKEW = 500;
+					if(dt_diff < -MAX_SKEW) {
+						shvWarning() << "short time too late:" << -dt_diff << entry.path << cp::RpcValue::DateTime::fromMSecsSinceEpoch(entry.epochMsec).toIsoString() << entry.epochMsec;
+						// short time is too late
+						// pin it to date time from log entry
+						st.epochTime = epoch_msec - MAX_SKEW;
+						st.recentShortTime = entry.shortTime;
+						epoch_msec = st.epochTime;
+					}
+					else if(dt_diff > MAX_SKEW) {
+						shvWarning() << "short time too ahead:" << dt_diff << entry.path << cp::RpcValue::DateTime::fromMSecsSinceEpoch(entry.epochMsec).toIsoString() << entry.epochMsec;
+						// short time is too ahead
+						// pin it to greater of recent short-time and epoch-time
+						st.epochTime = epoch_msec + MAX_SKEW;
+						st.recentShortTime = entry.shortTime;
+						epoch_msec = st.epochTime;
 					}
 					else {
-						shvWarning() << "drifted too much:" << dt_diff << entry.path << cp::RpcValue::DateTime::fromMSecsSinceEpoch(entry.epochMsec).toIsoString() << entry.epochMsec;
-						st.msecSum = epoch_msec;
+						epoch_msec = st.addShortTime(short_msec);
 					}
 				}
 			}

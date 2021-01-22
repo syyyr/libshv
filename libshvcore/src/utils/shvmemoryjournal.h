@@ -65,18 +65,22 @@ private:
 
 
 	struct ShortTime {
-		int64_t msecSum = 0;
+		int64_t epochTime = 0;
 		uint16_t recentShortTime = 0;
 
-		uint16_t shortTimeDiff(uint16_t msec)
+		uint16_t shortTimeDiff(uint16_t msec) const
 		{
 			return static_cast<uint16_t>(msec - recentShortTime);
 		}
+		int64_t toEpochTime(uint16_t msec) const
+		{
+			return epochTime + shortTimeDiff(msec);
+		}
 		int64_t addShortTime(uint16_t msec)
 		{
-			msecSum += shortTimeDiff(msec);
+			epochTime = toEpochTime(msec);
 			recentShortTime = msec;
-			return msecSum;
+			return epochTime;
 		}
 	};
 
