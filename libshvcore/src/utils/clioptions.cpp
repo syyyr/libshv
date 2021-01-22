@@ -363,7 +363,7 @@ void CLIOptions::printHelp(std::ostream &os) const
 			os << "\t" << oc << endl;
 	}
 	//os << shv::core::ShvLog::logCLIHelp() << endl;
-	os << NecroLog::cliHelp() << endl;
+	os << NecroLog::cliHelp() << std::endl;
 	std::string topics = NecroLog::registeredTopicsInfo();
 	if(!topics.empty())
 		std::cout << topics << std::endl;
