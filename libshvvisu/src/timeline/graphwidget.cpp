@@ -77,7 +77,8 @@ void GraphWidget::makeLayout(const QSize &preferred_size)
 	graph()->makeLayout(QRect(QPoint(), preferred_size));
 	QSize sz = graph()->rect().size();
 	shvDebug() << "new size:" << sz.width() << 'x' << sz.height();
-	setMinimumSize(sz);
+	if(sz.width() > 0)
+		setMinimumSize(sz);
 	update();
 }
 

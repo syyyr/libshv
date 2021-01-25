@@ -558,13 +558,19 @@ void Graph::makeXAxis()
 	timemsec_t t1 = posToTime(0);
 	timemsec_t t2 = posToTime(tick_px);
 	int64_t interval = t2 - t1;
-	auto lb = intervals.lower_bound(interval);
-	if(lb == intervals.end())
-		lb = --intervals.end();
-	XAxis &axis = m_state.xAxis;
-	axis = lb->second;
-	axis.tickInterval = lb->first;
-	shvDebug() << "interval:" << axis.tickInterval;
+	if(interval > 0) {
+		auto lb = intervals.lower_bound(interval);
+		if(lb == intervals.end())
+			lb = --intervals.end();
+		XAxis &axis = m_state.xAxis;
+		axis = lb->second;
+		axis.tickInterval = lb->first;
+		shvDebug() << "interval:" << axis.tickInterval;
+	}
+	else {
+		XAxis &axis = m_state.xAxis;
+		axis.tickInterval = 0;
+	}
 }
 
 void Graph::makeYAxis(int channel)
@@ -911,6 +917,8 @@ void Graph::drawCornerCell(QPainter *painter)
 
 void Graph::drawMiniMap(QPainter *painter)
 {
+	if(m_layout.miniMapRect.width() <= 0)
+		return;
 	if(m_miniMapCache.isNull()) {
 		shvDebug() << "creating minimap cache";
 		m_miniMapCache = QPixmap(m_layout.miniMapRect.width(), m_layout.miniMapRect.height());
@@ -928,7 +936,6 @@ void Graph::drawMiniMap(QPainter *painter)
 			DataRect drect{xRange(), ch->yRange()};
 			drawSamples(painter2, i, drect, mm_rect, ch_st);
 		}
-
 	}
 	painter->drawPixmap(m_layout.miniMapRect.topLeft(), m_miniMapCache);
 	int x1 = miniMapTimeToPos(xRangeZoom().min);
@@ -1017,7 +1024,7 @@ void Graph::drawGrid(QPainter *painter, int channel)
 {
 	const GraphChannel *ch = channelAt(channel);
 	const XAxis &x_axis = m_state.xAxis;
-	if(x_axis.tickInterval == 0) {
+	if(!x_axis.isValid()) {
 		drawRectText(painter, ch->m_layout.graphAreaRect, "grid", m_effectiveStyle.font(), ch->m_effectiveStyle.colorGrid());
 		return;
 	}
@@ -1077,8 +1084,8 @@ void Graph::drawXAxis(QPainter *painter)
 {
 	painter->fillRect(m_layout.xAxisRect, m_effectiveStyle.colorPanel());
 	const XAxis &axis = m_state.xAxis;
-	if(axis.tickInterval == 0) {
-		drawRectText(painter, m_layout.xAxisRect, "x-axis", m_effectiveStyle.font(), Qt::green);
+	if(!axis.isValid()) {
+		//drawRectText(painter, m_layout.xAxisRect, "x-axis", m_effectiveStyle.font(), Qt::green);
 		return;
 	}
 	painter->save();

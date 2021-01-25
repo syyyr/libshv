@@ -59,7 +59,7 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 			if(entry.shortTime == st.recentShortTime) {
 				// the same short times in the row, this can happen only when
 				// data is badly generated, we will ignore such values
-				shvWarning() << "two sam short-times in the row:" << entry.shortTime << entry.path << cp::RpcValue::DateTime::fromMSecsSinceEpoch(entry.epochMsec).toIsoString() << entry.epochMsec;
+				shvWarning() << "two same short-times in the row:" << entry.shortTime << entry.path << cp::RpcValue::DateTime::fromMSecsSinceEpoch(entry.epochMsec).toIsoString() << entry.epochMsec;
 				st.epochTime = epoch_msec;
 			}
 			else {

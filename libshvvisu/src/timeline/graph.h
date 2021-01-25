@@ -246,6 +246,7 @@ protected:
 			, subtickEvery(se)
 			, labelFormat(f)
 		{}
+		bool isValid() const { return tickInterval > 0; }
 	};
 	struct
 	{
