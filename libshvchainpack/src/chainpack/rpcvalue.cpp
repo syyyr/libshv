@@ -556,6 +556,25 @@ void RpcValue::setMetaValue(const RpcValue::String &key, const RpcValue &val)
 		m_ptr->setMetaValue(key, val);
 }
 
+bool RpcValue::hasDefaultValue() const
+{
+	switch (type()) {
+	case RpcValue::Type::Invalid: return true;
+	case RpcValue::Type::Null: return true;
+	case RpcValue::Type::Bool: return (toBool() == false);
+	case RpcValue::Type::Int: return (toInt() == 0);
+	case RpcValue::Type::UInt: return (toUInt() == 0);
+	case RpcValue::Type::DateTime: return (toDateTime().msecsSinceEpoch() == 0);
+	case RpcValue::Type::Decimal: return (toDecimal().mantisa() == 0);
+	case RpcValue::Type::Double: return (toDouble() == 0);
+	case RpcValue::Type::String: return (toString().empty());
+	case RpcValue::Type::List: return (toList().empty());
+	case RpcValue::Type::Map: return (toMap().empty());
+	case RpcValue::Type::IMap: return (toIMap().empty());
+	}
+	return false;
+}
+
 bool RpcValue::isValid() const
 {
 	return !m_ptr.isNull();

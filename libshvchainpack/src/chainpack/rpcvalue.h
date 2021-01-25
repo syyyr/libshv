@@ -389,6 +389,8 @@ public:
 	void setMetaTypeId(int id) {setMetaValue(meta::Tag::MetaTypeId, id);}
 	void setMetaTypeId(int ns, int id) {setMetaValue(meta::Tag::MetaTypeNameSpaceId, ns); setMetaValue(meta::Tag::MetaTypeId, id);}
 
+	bool hasDefaultValue() const;
+
 	bool isValid() const;
 	bool isNull() const { return type() == Type::Null; }
 	bool isInt() const { return type() == Type::Int; }
