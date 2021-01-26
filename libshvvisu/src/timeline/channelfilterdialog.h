@@ -24,17 +24,22 @@ public:
 	~ChannelFilterDialog();
 
 	void load(const QString &site_path, const QStringList &logged_paths);
+	void load(const QStringList &logged_paths);
 
 	QStringList selectedChannels();
 	void setSelectedChannels(const QStringList &channels);
+	QString selectedFilter() const;
 
+	void setSitePath(const QString &site_path);
 	void setSettingsUserName(const QString &user);
-private:
-	void saveChannelFilter(const QString &name);
-	QStringList loadChannelFilter(const QString &name);
-	void deleteChannelFilter(const QString &name);
 
 	QStringList savedFilterNames();
+	QStringList loadChannelFilter(const QString &name);
+
+private:
+	void saveChannelFilter(const QString &name);
+	void deleteChannelFilter(const QString &name);
+
 
 	void applyTextFilter();
 
@@ -51,12 +56,14 @@ private:
 	void onPbClearMatchingTextClicked();
 	void onLeMatchingFilterTextChanged(const QString &text);
 	void onChbFindRegexChanged(int state);
+	void onItemChanged();
 
 	Ui::ChannelFilterDialog *ui;
 	ChannelFilterModel *m_channelsFilterModel = nullptr;
 	ChannelFilterSortFilterProxyModel *m_channelsFilterProxyModel = nullptr;
 	QString m_sitePath;
 	QString m_settingsUserName ="default";
+	bool m_isSavedFilterDirty = true;
 };
 
 }

@@ -25,6 +25,7 @@ ChannelFilterDialog::ChannelFilterDialog(QWidget *parent) :
 	ui->setupUi(this);
 
 	m_channelsFilterModel = new ChannelFilterModel(this);
+	connect(m_channelsFilterModel, &ChannelFilterModel::itemChanged, this, &ChannelFilterDialog::onItemChanged);
 
 	m_channelsFilterProxyModel = new ChannelFilterSortFilterProxyModel(this);
 	m_channelsFilterProxyModel->setSourceModel(m_channelsFilterModel);
@@ -53,7 +54,13 @@ ChannelFilterDialog::~ChannelFilterDialog()
 
 void ChannelFilterDialog::load(const QString &site_path, const QStringList &logged_paths)
 {
-	m_sitePath = site_path;
+	setSitePath(site_path);
+	load(logged_paths);
+}
+
+void ChannelFilterDialog::load(const QStringList &logged_paths)
+{
+	m_isSavedFilterDirty = true;
 	m_channelsFilterModel->createNodes(logged_paths);
 	ui->cbFilters->addItems(savedFilterNames());
 	ui->cbFilters->setCurrentIndex(-1);
@@ -67,6 +74,19 @@ QStringList ChannelFilterDialog::selectedChannels()
 void ChannelFilterDialog::setSelectedChannels(const QStringList &channels)
 {
 	m_channelsFilterModel->setSelectedChannels(channels);
+}
+
+QString ChannelFilterDialog::selectedFilter() const
+{
+	if (m_isSavedFilterDirty) {
+		return QString();
+	}
+	return ui->cbFilters->currentText();
+}
+
+void ChannelFilterDialog::setSitePath(const QString &site_path)
+{
+	m_sitePath = site_path;
 }
 
 void ChannelFilterDialog::setSettingsUserName(const QString &user)
@@ -170,10 +190,12 @@ void ChannelFilterDialog::onCbFiltersActivated(int index)
 	Q_UNUSED(index);
 	QStringList channels = loadChannelFilter(ui->cbFilters->currentText());
 	setSelectedChannels(channels);
+	m_isSavedFilterDirty = false;
 }
 
 void ChannelFilterDialog::onSaveFilterClicked()
 {
+	m_isSavedFilterDirty = false;
 	if (ui->cbFilters->currentText().isEmpty()){
 		return;
 	}
@@ -212,6 +234,11 @@ void ChannelFilterDialog::onChbFindRegexChanged(int state)
 {
 	Q_UNUSED(state);
 	applyTextFilter();
+}
+
+void ChannelFilterDialog::onItemChanged()
+{
+	m_isSavedFilterDirty = true;
 }
 
 void ChannelFilterDialog::setVisibleItemsCheckState(Qt::CheckState state)
