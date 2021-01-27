@@ -27,9 +27,18 @@ INCLUDEPATH += \
 	#$$PROJECT_TOP_SRCDIR/qfopcua/libqfopcua/include \
 
 LIBS += \
-    -L$$DESTDIR \
-    -lnecrolog
-    #-lqfcore
+	-L$$DESTDIR
+
+android {
+	LIBS += \
+		-lnecrolog_$${QT_ARCH}
+		#-lqfcore
+}
+else {
+	LIBS += \
+		-lnecrolog
+		#-lqfcore
+}
 
 include($$PWD/src/src.pri)
 include($$PWD/c/c.pri)
