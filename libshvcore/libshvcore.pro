@@ -26,8 +26,17 @@ INCLUDEPATH += \
 	../libshvchainpack/include \
 
 LIBS += \
-    -L$$DESTDIR \
-    -lnecrolog \
-    -lshvchainpack
+	-L$$DESTDIR
+
+android {
+LIBS += \
+	-lnecrolog_$${QT_ARCH} \
+	-lshvchainpack_$${QT_ARCH}
+}
+else {
+	LIBS += \
+		-lnecrolog \
+		-lshvchainpack
+}
 
 include($$PWD/src/src.pri)
