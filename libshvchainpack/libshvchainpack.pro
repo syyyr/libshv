@@ -29,16 +29,12 @@ INCLUDEPATH += \
 LIBS += \
 	-L$$DESTDIR
 
-android {
-	LIBS += \
-		-lnecrolog_$${QT_ARCH}
-		#-lqfcore
-}
-else {
-	LIBS += \
-		-lnecrolog
-		#-lqfcore
-}
+android: LIBEXT = "_$${QT_ARCH}"
+else: LIBEXT = ""
+
+LIBS += \
+	-lnecrolog$${LIBEXT}
+	#-lqfcore
 
 include($$PWD/src/src.pri)
 include($$PWD/c/c.pri)
