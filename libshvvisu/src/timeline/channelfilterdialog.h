@@ -28,7 +28,7 @@ public:
 
 	QStringList selectedChannels();
 	void setSelectedChannels(const QStringList &channels);
-	QString selectedFilter() const;
+	QString selectedFilterName() const;
 
 	void setSitePath(const QString &site_path);
 	void setSettingsUserName(const QString &user);
@@ -63,7 +63,7 @@ private:
 	ChannelFilterSortFilterProxyModel *m_channelsFilterProxyModel = nullptr;
 	QString m_sitePath;
 	QString m_settingsUserName ="default";
-	bool m_isSavedFilterDirty = true;
+	bool m_isSelectedFilterDirty = true;
 };
 
 }

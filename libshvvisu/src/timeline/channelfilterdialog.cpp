@@ -60,10 +60,10 @@ void ChannelFilterDialog::load(const QString &site_path, const QStringList &logg
 
 void ChannelFilterDialog::load(const QStringList &logged_paths)
 {
-	m_isSavedFilterDirty = true;
 	m_channelsFilterModel->createNodes(logged_paths);
 	ui->cbFilters->addItems(savedFilterNames());
 	ui->cbFilters->setCurrentIndex(-1);
+	m_isSelectedFilterDirty = true;
 }
 
 QStringList ChannelFilterDialog::selectedChannels()
@@ -73,12 +73,14 @@ QStringList ChannelFilterDialog::selectedChannels()
 
 void ChannelFilterDialog::setSelectedChannels(const QStringList &channels)
 {
+	bool is_selected_filter_dirty = m_isSelectedFilterDirty;
 	m_channelsFilterModel->setSelectedChannels(channels);
+	m_isSelectedFilterDirty = is_selected_filter_dirty;
 }
 
-QString ChannelFilterDialog::selectedFilter() const
+QString ChannelFilterDialog::selectedFilterName() const
 {
-	if (m_isSavedFilterDirty) {
+	if (m_isSelectedFilterDirty) {
 		return QString();
 	}
 	return ui->cbFilters->currentText();
@@ -190,12 +192,12 @@ void ChannelFilterDialog::onCbFiltersActivated(int index)
 	Q_UNUSED(index);
 	QStringList channels = loadChannelFilter(ui->cbFilters->currentText());
 	setSelectedChannels(channels);
-	m_isSavedFilterDirty = false;
+	m_isSelectedFilterDirty = false;
 }
 
 void ChannelFilterDialog::onSaveFilterClicked()
 {
-	m_isSavedFilterDirty = false;
+	m_isSelectedFilterDirty = false;
 	if (ui->cbFilters->currentText().isEmpty()){
 		return;
 	}
@@ -238,7 +240,7 @@ void ChannelFilterDialog::onChbFindRegexChanged(int state)
 
 void ChannelFilterDialog::onItemChanged()
 {
-	m_isSavedFilterDirty = true;
+	m_isSelectedFilterDirty = true;
 }
 
 void ChannelFilterDialog::setVisibleItemsCheckState(Qt::CheckState state)
