@@ -456,6 +456,9 @@ void Graph::zoomToSelection()
 	XRange xrange;
 	xrange.min = posToTime(m_state.selectionRect.left());
 	xrange.max = posToTime(m_state.selectionRect.right());
+	if (xrange.min > xrange.max) {
+		std::swap(xrange.min, xrange.max);
+	}
 	setXRangeZoom(xrange);
 }
 

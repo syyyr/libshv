@@ -25,6 +25,7 @@ ChannelFilterDialog::ChannelFilterDialog(QWidget *parent) :
 	ui->setupUi(this);
 
 	m_channelsFilterModel = new ChannelFilterModel(this);
+	connect(m_channelsFilterModel, &ChannelFilterModel::itemChanged, this, &ChannelFilterDialog::onItemChanged);
 
 	m_channelsFilterProxyModel = new ChannelFilterSortFilterProxyModel(this);
 	m_channelsFilterProxyModel->setSourceModel(m_channelsFilterModel);
@@ -53,10 +54,16 @@ ChannelFilterDialog::~ChannelFilterDialog()
 
 void ChannelFilterDialog::load(const QString &site_path, const QStringList &logged_paths)
 {
-	m_sitePath = site_path;
+	setSitePath(site_path);
+	load(logged_paths);
+}
+
+void ChannelFilterDialog::load(const QStringList &logged_paths)
+{
 	m_channelsFilterModel->createNodes(logged_paths);
 	ui->cbFilters->addItems(savedFilterNames());
 	ui->cbFilters->setCurrentIndex(-1);
+	m_isSelectedFilterDirty = true;
 }
 
 QStringList ChannelFilterDialog::selectedChannels()
@@ -66,7 +73,22 @@ QStringList ChannelFilterDialog::selectedChannels()
 
 void ChannelFilterDialog::setSelectedChannels(const QStringList &channels)
 {
+	bool is_selected_filter_dirty = m_isSelectedFilterDirty;
 	m_channelsFilterModel->setSelectedChannels(channels);
+	m_isSelectedFilterDirty = is_selected_filter_dirty;
+}
+
+QString ChannelFilterDialog::selectedFilterName() const
+{
+	if (m_isSelectedFilterDirty) {
+		return QString();
+	}
+	return ui->cbFilters->currentText();
+}
+
+void ChannelFilterDialog::setSitePath(const QString &site_path)
+{
+	m_sitePath = site_path;
 }
 
 void ChannelFilterDialog::setSettingsUserName(const QString &user)
@@ -170,10 +192,12 @@ void ChannelFilterDialog::onCbFiltersActivated(int index)
 	Q_UNUSED(index);
 	QStringList channels = loadChannelFilter(ui->cbFilters->currentText());
 	setSelectedChannels(channels);
+	m_isSelectedFilterDirty = false;
 }
 
 void ChannelFilterDialog::onSaveFilterClicked()
 {
+	m_isSelectedFilterDirty = false;
 	if (ui->cbFilters->currentText().isEmpty()){
 		return;
 	}
@@ -212,6 +236,11 @@ void ChannelFilterDialog::onChbFindRegexChanged(int state)
 {
 	Q_UNUSED(state);
 	applyTextFilter();
+}
+
+void ChannelFilterDialog::onItemChanged()
+{
+	m_isSelectedFilterDirty = true;
 }
 
 void ChannelFilterDialog::setVisibleItemsCheckState(Qt::CheckState state)
