@@ -131,9 +131,9 @@ public:
 
 	void parse(const StringList &cmd_line_args) override;
 	bool loadConfigFile();
+	void mergeConfig(const shv::chainpack::RpcValue &config_map);
 protected:
 	std::string configFile();
-	void mergeConfig(const shv::chainpack::RpcValue &config_map);
 	void mergeConfig_helper(const std::string &key_prefix, const shv::chainpack::RpcValue &config_map);
 };
 
