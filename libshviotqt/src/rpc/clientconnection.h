@@ -38,6 +38,7 @@ public:
 	static std::string securityTypeToString(const SecurityType &security_type);
 
 	SecurityType securityType() const;
+	void setSecurityType(SecurityType type);
 	void setSecurityType(const std::string &val);
 
 public:
@@ -69,6 +70,7 @@ public:
 
 	const shv::chainpack::RpcValue::Map &loginResult() const { return m_connectionState.loginResult.toMap(); }
 
+	int brokerClientId() const;
 	//std::string brokerClientPath() const {return brokerClientPath(brokerClientId());}
 	//std::string brokerMountPoint() const;
 public:
@@ -91,8 +93,6 @@ protected:
 	bool isInitPhase() const {return state() == State::SocketConnected;}
 	void processInitPhase(const chainpack::RpcMessage &msg);
 	shv::chainpack::RpcValue createLoginParams(const shv::chainpack::RpcValue &server_hello);
-
-	int brokerClientId() const;
 
 	struct ConnectionState
 	{

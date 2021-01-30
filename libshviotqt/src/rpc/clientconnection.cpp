@@ -67,6 +67,11 @@ ClientConnection::SecurityType ClientConnection::securityType() const
 	return m_securityType;
 }
 
+void ClientConnection::setSecurityType(SecurityType type)
+{
+	m_securityType = type;
+}
+
 void ClientConnection::setSecurityType(const std::string &val)
 {
 	m_securityType = securityTypeFromString(val);
