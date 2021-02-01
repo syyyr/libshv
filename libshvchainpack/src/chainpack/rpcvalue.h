@@ -97,6 +97,7 @@ public:
 		//MetaMap,
 	};
 	static const char* typeToName(Type t);
+	const char* typeName() const { return typeToName(type()); }
 	static Type typeForName(const std::string &type_name, int len = -1);
 
 	using Int = int; //int64_t;
