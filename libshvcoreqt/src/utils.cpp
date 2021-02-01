@@ -61,8 +61,8 @@ chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v, bool *ok)
 		*ok = true;
 	if(!v.isValid())
 		return chainpack::RpcValue();
-	if(v.isNull())
-		return chainpack::RpcValue(nullptr);
+	//if(v.isNull()) QString() is NULL
+	//	return chainpack::RpcValue(nullptr);
 	switch (v.userType()) {
 	case QMetaType::UChar:
 	case QMetaType::UShort:
