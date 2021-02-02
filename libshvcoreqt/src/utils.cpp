@@ -22,7 +22,10 @@ QVariant Utils::rpcValueToQVariant(const chainpack::RpcValue &v, bool *ok)
 	case chainpack::RpcValue::Type::Int: return QVariant(v.toInt());
 	case chainpack::RpcValue::Type::Double: return QVariant(v.toDouble());
 	case chainpack::RpcValue::Type::Bool: return QVariant(v.toBool());
-	case chainpack::RpcValue::Type::String: return QVariant(QString::fromStdString(v.toString()));
+	case chainpack::RpcValue::Type::String: {
+		const std::string &data = v.toString();
+		return QVariant(QByteArray(data.data(), data.size()));
+	}
 	case chainpack::RpcValue::Type::DateTime: {
 		QDateTime dt = QDateTime::fromMSecsSinceEpoch(v.toDateTime().msecsSinceEpoch());
 		dt.setTimeZone(QTimeZone::utc());
@@ -74,6 +77,10 @@ chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v, bool *ok)
 	case QMetaType::Double: return chainpack::RpcValue(v.toDouble());
 	case QMetaType::Bool: return chainpack::RpcValue(v.toBool());
 	case QMetaType::QString: return v.toString().toStdString();
+	case QMetaType::QByteArray: {
+		auto ba = v.toByteArray();
+		return std::string(ba.constData(), ba.size());
+	}
 	case QMetaType::QDateTime: return chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(v.toDateTime().toMSecsSinceEpoch());
 	case QMetaType::QVariantList: {
 		chainpack::RpcValue::List lst;

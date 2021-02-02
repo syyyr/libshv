@@ -413,10 +413,17 @@ public:
 	uint64_t toUInt64() const;
 	bool toBool() const;
 	DateTime toDateTime() const;
-	const RpcValue::String &toString() const;
-	const List &toList() const;
-	const Map &toMap() const;
-	const IMap &toIMap() const;
+
+	const RpcValue::String &asString() const;
+	const List &asList() const;
+	const Map &asMap() const;
+	const IMap &asIMap() const;
+
+	/// deprecated, new applications should us asString, asInt, ...
+	const RpcValue::String &toString() const { return asString(); }
+	const List &toList() const { return asList(); }
+	const Map &toMap() const { return asMap(); }
+	const IMap &toIMap() const { return asIMap(); }
 
 	size_t count() const;
 	bool has(Int i) const;
