@@ -317,7 +317,9 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 	if(loginType() == chainpack::IRpcConnection::LoginType::Sha1) {
 		std::string server_nonce = server_hello.toMap().value("nonce").toString();
 		std::string pwd = password();
-		if(pwd.size() > 0 && pwd.size() < 40)
+		if(pwd.size() == 40)
+			shvWarning() << "Using shadowed password directly by client is unsecure and it will be disabled in future SHV versions";
+		else
 			pwd = sha1_hex(pwd); /// SHA1 password must be 40 chars long, it is considered to be plain if shorter
 		std::string pn = server_nonce + pwd;
 		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
