@@ -92,7 +92,7 @@ private:
 	bool m_topMessageDataHeaderWritten = false;
 	size_t m_topMessageDataBytesWrittenSoFar = 0;
 	std::string m_readData;
-	Rpc::ProtocolType m_protocolType = Rpc::ProtocolType::Invalid;
+	Rpc::ProtocolType m_protocolType = Rpc::ProtocolType::ChainPack;
 	static int s_defaultRpcTimeoutMsec;
 };
 
