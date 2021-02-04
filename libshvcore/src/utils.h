@@ -2,6 +2,8 @@
 
 #include "shvcoreglobal.h"
 
+#include <shv/chainpack/rpcvalue.h>
+
 #include <string>
 #include <vector>
 
@@ -105,6 +107,7 @@ public:
 	static std::string toHex(const std::basic_string<uint8_t> &bytes);
 	static std::string fromHex(const std::string &bytes);
 
+	static shv::chainpack::RpcValue foldMap(const shv::chainpack::RpcValue::Map &plain_map, char key_delimiter = '.');
 
 	static std::string joinPath(const std::string &p1, const std::string &p2);
 	static std::string simplifyPath(const std::string &p);

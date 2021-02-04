@@ -5,6 +5,8 @@
 #include <iomanip>
 #include <sstream>
 
+using namespace std;
+
 namespace shv {
 namespace chainpack {
 

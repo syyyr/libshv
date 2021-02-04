@@ -7,6 +7,9 @@
 
 #include <unistd.h>
 
+using namespace std;
+using namespace shv::chainpack;
+
 namespace shv {
 namespace core {
 
@@ -134,6 +137,34 @@ std::string Utils::fromHex(const std::string &bytes)
 		if(i < bytes.size())
 			u += unhex_char(bytes[i++]);
 		ret.push_back(u);
+	}
+	return ret;
+}
+
+static void create_key_val(RpcValue &map, const StringViewList &path, const RpcValue &val)
+{
+	if(path.empty())
+		return;
+	if(path.size() == 1) {
+		map.set(path[path.length() - 1].toString(), val);
+	}
+	else {
+		string key = path[0].toString();
+		RpcValue mval = map.at(key);
+		if(!mval.isMap())
+			mval = RpcValue::Map();
+		create_key_val(mval, path.mid(1), val);
+		map.set(key, mval);
+	}
+}
+
+RpcValue Utils::foldMap(const chainpack::RpcValue::Map &plain_map, char key_delimiter)
+{
+	RpcValue ret = RpcValue::Map();
+	for(const auto &kv : plain_map) {
+		const string &key = kv.first;
+		StringViewList lst = StringView(key).split(key_delimiter);
+		create_key_val(ret, lst, kv.second);
 	}
 	return ret;
 }

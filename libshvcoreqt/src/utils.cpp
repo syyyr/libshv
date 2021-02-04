@@ -82,6 +82,7 @@ chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v, bool *ok)
 		return std::string(ba.constData(), ba.size());
 	}
 	case QMetaType::QDateTime: return chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(v.toDateTime().toMSecsSinceEpoch());
+	case QMetaType::QStringList:
 	case QMetaType::QVariantList: {
 		chainpack::RpcValue::List lst;
 		for(const QVariant &qv : v.toList()) {

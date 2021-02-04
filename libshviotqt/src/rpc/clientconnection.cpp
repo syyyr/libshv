@@ -119,10 +119,10 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 	shvDebug() << cli_opts->loginType() << "-->" << (int)shv::chainpack::UserLogin::loginTypeFromString(cli_opts->loginType());
 	setLoginType(shv::chainpack::UserLogin::loginTypeFromString(cli_opts->loginType()));
 
-	m_heartbeatInterval = cli_opts->heartbeatInterval();
+	setHeartBeatInterval(cli_opts->heartBeatInterval());
 	{
 		cp::RpcValue::Map opts;
-		opts[cp::Rpc::OPT_IDLE_WD_TIMEOUT] = 3 * m_heartbeatInterval;
+		opts[cp::Rpc::OPT_IDLE_WD_TIMEOUT] = 3 * heartBeatInterval();
 		setConnectionOptions(opts);
 	}
 }
@@ -253,11 +253,11 @@ void ClientConnection::whenBrokerConnectedChanged(bool b)
 {
 	if(b) {
 		shvInfo() << "Connected to broker" << "client id:" << brokerClientId();// << "mount point:" << brokerMountPoint();
-		if(m_heartbeatInterval > 0) {
+		if(heartBeatInterval() > 0) {
 			if(!m_heartBeatTimer) {
-				shvInfo() << "Creating heart-beat timer, interval:" << m_heartbeatInterval << "sec.";
+				shvInfo() << "Creating heart-beat timer, interval:" << heartBeatInterval() << "sec.";
 				m_heartBeatTimer = new QTimer(this);
-				m_heartBeatTimer->setInterval(m_heartbeatInterval * 1000);
+				m_heartBeatTimer->setInterval(heartBeatInterval() * 1000);
 				connect(m_heartBeatTimer, &QTimer::timeout, this, [this]() {
 					if(m_connectionState.pingRqId > 0) {
 						shvError() << "PING response not received within" << (m_heartBeatTimer->interval() / 1000) << "seconds, restarting conection to broker.";

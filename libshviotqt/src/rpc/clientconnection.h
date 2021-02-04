@@ -31,6 +31,7 @@ class SHVIOTQT_DECL_EXPORT ClientConnection : public SocketRpcConnection
 	SHV_FIELD_IMPL(std::string, p, P, assword)
 	SHV_FIELD_IMPL(shv::chainpack::IRpcConnection::LoginType, l, L, oginType)
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, c, C, onnectionOptions)
+	SHV_FIELD_IMPL2(int, h, H, eartBeatInterval, 60)
 public:
 	enum SecurityType { None = 0, Ssl = 1 };
 
@@ -107,7 +108,6 @@ private:
 	QTimer *m_checkConnectedTimer;
 	int m_checkBrokerConnectedInterval = 0;
 	QTimer *m_heartBeatTimer = nullptr;
-	int m_heartbeatInterval = 0;
 	SecurityType m_securityType = None;
 };
 

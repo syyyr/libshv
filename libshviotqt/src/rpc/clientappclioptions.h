@@ -32,7 +32,7 @@ public:
 	//CLIOPTION_GETTER_SETTER2(bool, "rpc.metaTypeExplicit", is, set, MetaTypeExplicit)
 	CLIOPTION_GETTER_SETTER2(int, "rpc.defaultRpcTimeout", d, setD, efaultRpcTimeout)
 	CLIOPTION_GETTER_SETTER2(int, "rpc.reconnectInterval", r, setR, econnectInterval)
-	CLIOPTION_GETTER_SETTER2(int, "rpc.heartbeatInterval", h, setH, eartbeatInterval)
+	CLIOPTION_GETTER_SETTER2(int, "rpc.heartbeatInterval", h, setH, eartBeatInterval)
 };
 
 } // namespace client
