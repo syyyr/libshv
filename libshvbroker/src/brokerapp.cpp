@@ -786,12 +786,12 @@ void BrokerApp::onClientLogin(int connection_id)
 				if(!m_nodesTree->mount(mount_point, cli_nd))
 					SHV_EXCEPTION("Cannot mount connection to device tree, connection id: " + std::to_string(connection_id));
 				connect(cli_nd, &ClientShvNode::destroyed, cli_nd->parentNode(), &shv::iotqt::node::ShvNode::deleteIfEmptyWithParents, Qt::QueuedConnection);
-				QTimer::singleShot(0, this, [this, mount_point]() {
-					//shvInfo() << "mounted node created:" << mount_point;
-					sendNotifyToSubscribers(mount_point, cp::Rpc::SIG_MOUNTED_CHANGED, true);
-				});
 			}
 			mount_point = cli_nd->shvPath();
+			QTimer::singleShot(0, this, [this, mount_point]() {
+				//shvInfo() << "mounted node created:" << mount_point;
+				sendNotifyToSubscribers(mount_point, cp::Rpc::SIG_MOUNTED_CHANGED, true);
+			});
 			shvInfo() << "client connection id:" << conn->connectionId() << "device id:" << conn->deviceId().toCpon() << " mounted on:" << mount_point;
 			/// overwrite client default mount point
 			conn->setMountPoint(mount_point);
