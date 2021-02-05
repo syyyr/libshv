@@ -3,6 +3,7 @@
 #include "../shviotqtglobal.h"
 
 #include <shv/core/utils.h>
+#include <shv/chainpack/rpc.h>
 #include <shv/chainpack/rpcvalue.h>
 
 #include <QObject>
@@ -55,7 +56,7 @@ class SHVIOTQT_DECL_EXPORT RpcCall : public QObject
 {
 	Q_OBJECT
 public:
-	static RpcCall* createSubscribtionRequest(::shv::iotqt::rpc::ClientConnection *connection, const QString &shv_path);
+	static RpcCall* createSubscribtionRequest(::shv::iotqt::rpc::ClientConnection *connection, const QString &shv_path, const QString &method = QString(shv::chainpack::Rpc::SIG_VAL_CHANGED));
 	static RpcCall* create(::shv::iotqt::rpc::ClientConnection *connection);
 	RpcCall* setShvPath(const std::string &shv_path);
 	RpcCall* setShvPath(const char *shv_path);

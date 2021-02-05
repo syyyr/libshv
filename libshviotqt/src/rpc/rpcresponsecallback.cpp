@@ -25,6 +25,7 @@ RpcResponseCallBack::RpcResponseCallBack(ClientConnection *conn, int rq_id, QObj
 	: RpcResponseCallBack(rq_id, parent)
 {
 	connect(conn, &ClientConnection::rpcMessageReceived, this, &RpcResponseCallBack::onRpcMessageReceived);
+	setTimeout(conn->defaultRpcTimeoutMsec());
 }
 
 void RpcResponseCallBack::start()
@@ -124,14 +125,14 @@ RpcCall::RpcCall(ClientConnection *connection)
 	connect(this, &RpcCall::error, this, &RpcCall::deleteLater);
 }
 
-RpcCall *RpcCall::createSubscribtionRequest(ClientConnection *connection, const QString &shv_path)
+RpcCall *RpcCall::createSubscribtionRequest(ClientConnection *connection, const QString &shv_path, const QString &method)
 {
 	RpcCall *rpc = create(connection);
 	rpc->setShvPath(cp::Rpc::DIR_BROKER_APP)
 			->setMethod(cp::Rpc::METH_SUBSCRIBE)
 			->setParams(cp::RpcValue::Map {
 							{cp::Rpc::PAR_PATH, shv_path.toStdString()},
-							{cp::Rpc::PAR_METHOD, cp::Rpc::SIG_VAL_CHANGED},
+							{cp::Rpc::PAR_METHOD, method.toStdString()},
 						});
 	return rpc;
 }
