@@ -8,6 +8,7 @@
 #include <shv/coreqt/log.h>
 
 #include <shv/core/exception.h>
+#include <shv/core/string.h>
 
 #include <shv/chainpack/cponreader.h>
 #include <shv/chainpack/rpcmessage.h>
@@ -184,16 +185,26 @@ void ClientConnection::setCheckBrokerConnectedInterval(int ms)
 
 void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
 {
-	logRpcMsg() << SND_LOG_ARROW
-				<< "client id:" << connectionId()
-				<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
-				<< rpc_msg.toPrettyString();
+	if(rpc_msg.isSignal() && shv::core::String::endsWith(rpc_msg.shvPath().toString(), "server/time")) {
+		// skip annoying messages
+	}
+	else {
+		logRpcMsg() << SND_LOG_ARROW
+					<< "client id:" << connectionId()
+					<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
+					<< rpc_msg.toPrettyString();
+	}
 	sendRpcValue(rpc_msg.value());
 }
 
 void ClientConnection::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 {
-	logRpcMsg() << cp::RpcDriver::RCV_LOG_ARROW << msg.toCpon();
+	if(msg.isSignal() && shv::core::String::endsWith(msg.shvPath().toString(), "server/time")) {
+		// skip annoying messages
+	}
+	else {
+		logRpcMsg() << cp::RpcDriver::RCV_LOG_ARROW << msg.toCpon();
+	}
 	if(isInitPhase()) {
 		processInitPhase(msg);
 		return;
