@@ -41,7 +41,7 @@ void MasterBrokerConnection::setOptions(const shv::chainpack::RpcValue &slave_br
 		}
 		const cp::RpcValue::Map &rpc = m.value("rpc").toMap();
 		if(rpc.count("heartbeatInterval") == 1)
-			device_opts.setHeartbeatInterval(rpc.value("heartbeatInterval", 60).toInt());
+			device_opts.setHeartBeatInterval(rpc.value("heartbeatInterval", 60).toInt());
 		if(rpc.count("reconnectInterval") == 1)
 			device_opts.setReconnectInterval(rpc.value("reconnectInterval").toInt());
 

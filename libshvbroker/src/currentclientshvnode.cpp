@@ -20,6 +20,7 @@ static string M_MOUNT_POINT = "mountPoint";
 static string M_USER_ROLES = "userRoles";
 static string M_USER_PROFILE = "userProfile";
 static string M_CHANGE_PASSWORD = "changePassword";
+static string M_ACCES_LEVEL_FOR_METHOD_CALL = "accesLevelForMethodCall";
 
 const char *CurrentClientShvNode::NodeId = "currentClient";
 
@@ -32,6 +33,8 @@ CurrentClientShvNode::CurrentClientShvNode(shv::iotqt::node::ShvNode *parent)
 		{M_MOUNT_POINT, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read},
 		{M_USER_ROLES, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read},
 		{M_USER_PROFILE, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read},
+		{M_ACCES_LEVEL_FOR_METHOD_CALL, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read,
+		  "params: [\"shv_path\", \"method\"]"},
 		{M_CHANGE_PASSWORD, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Write
 		  , "params: [\"old_password\", \"new_password\"], old and new passwords can be plain or SHA1"},
 	}
@@ -78,6 +81,23 @@ shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack
 				const string user_name = cli->userName();
 				cp::RpcValue ret = app->aclManager()->userProfile(user_name);
 				return ret.isValid()? ret: nullptr;
+			}
+			return nullptr;
+		}
+		if(method == M_ACCES_LEVEL_FOR_METHOD_CALL) {
+			int client_id = rq.peekCallerId();
+			auto *app = shv::broker::BrokerApp::instance();
+			auto *cli = app->clientById(client_id);
+			if(cli) {
+				const shv::chainpack::RpcValue::List &plist = rq.params().asList();
+				const string &shv_path = plist.value(0).asString();
+				if(shv_path.empty())
+					SHV_EXCEPTION("Shv path not specified in params.");
+				const string &method = plist.value(1).asString();
+				if(method.empty())
+					SHV_EXCEPTION("Method not specified in params.");
+				shv::chainpack::AccessGrant acg = app->accessGrantForRequest(cli, shv_path, method, rq.accessGrant());
+				return acg.isValid()? acg.toRpcValue(): nullptr;
 			}
 			return nullptr;
 		}
