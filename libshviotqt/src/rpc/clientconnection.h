@@ -50,9 +50,8 @@ public:
 	~ClientConnection() Q_DECL_OVERRIDE;
 
 	virtual void open();
-	void close() override;
-	void abort() override;
-	void restartIfActive();
+	void close() override { closeOrAbort(false); }
+	void abort() override { closeOrAbort(true); }
 
 	void setCliOptions(const ClientAppCliOptions *cli_opts);
 
@@ -80,6 +79,8 @@ public:
 	void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg) override;
 protected:
 	void setState(State state);
+	void closeOrAbort(bool is_abort);
+	void restartIfActive();
 
 	void sendHello();
 	void sendLogin(const shv::chainpack::RpcValue &server_hello);
