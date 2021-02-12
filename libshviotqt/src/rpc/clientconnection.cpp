@@ -37,8 +37,9 @@ ClientConnection::ClientConnection(QObject *parent)
 	connect(this, &SocketRpcConnection::socketConnectedChanged, this, &ClientConnection::onSocketConnectedChanged);
 
 	m_checkConnectedTimer = new QTimer(this);
+	m_checkConnectedTimer->setSingleShot(true);
 	//m_checkConnectedTimer->setInterval(10*1000);
-	connect(m_checkConnectedTimer, &QTimer::timeout, this, &ClientConnection::checkBrokerConnected);
+	connect(m_checkConnectedTimer, &QTimer::timeout, this, &ClientConnection::open);
 }
 
 ClientConnection::~ClientConnection()
@@ -151,27 +152,32 @@ void ClientConnection::open()
 
 void ClientConnection::close()
 {
+	if (state() != State::NotConnected) {
 	m_checkConnectedTimer->stop();
 	closeSocket();
 	m_socket->deleteLater();
 	m_socket = nullptr;
 	setState(State::NotConnected);
+	}
 }
 
 void ClientConnection::abort()
 {
+	if (state() != State::NotConnected) {
 	m_checkConnectedTimer->stop();
 	abortSocket();
 	m_socket->deleteLater();
 	m_socket = nullptr;
 	setState(State::NotConnected);
+	}
 }
 
 void ClientConnection::restartIfActive()
 {
 	close();
-	if(m_checkBrokerConnectedInterval > 0)
-		QTimer::singleShot(m_checkBrokerConnectedInterval, this, &ClientConnection::open);
+	if(m_checkBrokerConnectedInterval > 0) {
+		m_checkConnectedTimer->start();
+	}
 }
 
 void ClientConnection::setCheckBrokerConnectedInterval(int ms)
