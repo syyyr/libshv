@@ -574,6 +574,15 @@ std::string BrokerApp::resolveMountPoint(const shv::chainpack::RpcValue::Map &de
 	if(mount_point.empty()) {
 		shvWarning() << "cannot find mount point for device id:" << device_id.toCpon();// << "connection id:" << connection_id;
 	}
+	else {
+		for(int conn_id : clientConnectionIds()) {
+			rpc::ClientConnectionOnBroker *conn = clientConnectionById(conn_id);
+			if (conn && !conn->mountPoint().empty() && mount_point.size() > conn->mountPoint().size() && shv::core::String::startsWith(mount_point, conn->mountPoint())) {
+				shvWarning() << "mount point" << mount_point << "is busy";
+				return std::string();
+			}
+		}
+	}
 	return mount_point;
 }
 
