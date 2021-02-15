@@ -23,8 +23,6 @@ DEFINES += SHVCHAINPACK_BUILD_DLL
 
 INCLUDEPATH += \
     $$SHV_PROJECT_TOP_SRCDIR/3rdparty/necrolog/include
-	#$$QUICKBOX_HOME/libqf/libqfcore/include \
-	#$$PROJECT_TOP_SRCDIR/qfopcua/libqfopcua/include \
 
 LIBS += \
 	-L$$DESTDIR
@@ -34,7 +32,6 @@ else: LIBEXT = ""
 
 LIBS += \
 	-lnecrolog$${LIBEXT}
-	#-lqfcore
 
 include($$PWD/src/src.pri)
 include($$PWD/c/c.pri)
