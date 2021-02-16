@@ -32,7 +32,7 @@ ClientConnection::ClientConnection(QObject *parent)
 	: Super(parent)
 	, m_loginType(IRpcConnection::LoginType::Sha1)
 {
-	//setConnectionType(cp::Rpc::TYPE_CLIENT);
+	setProtocolType(shv::chainpack::Rpc::ProtocolType::ChainPack);
 
 	connect(this, &SocketRpcConnection::socketConnectedChanged, this, &ClientConnection::onSocketConnectedChanged);
 
@@ -202,7 +202,10 @@ void ClientConnection::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 		// skip annoying messages
 	}
 	else {
-		logRpcMsg() << cp::RpcDriver::RCV_LOG_ARROW << msg.toCpon();
+		logRpcMsg() << cp::RpcDriver::RCV_LOG_ARROW
+					<< "client id:" << connectionId()
+					<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
+					<< msg.toPrettyString();
 	}
 	if(isInitPhase()) {
 		processInitPhase(msg);
