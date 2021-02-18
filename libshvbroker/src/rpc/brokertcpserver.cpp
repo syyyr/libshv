@@ -14,47 +14,36 @@ namespace shv {
 namespace broker {
 namespace rpc {
 
-static const QSslCertificate load_ssl_certificate(const QString &cert_file_name)
+static QList<QSslCertificate> load_ssl_certificate_chain(const QString &cert_file_name)
 {
 	QFile cert_file(cert_file_name);
 	if(!cert_file.open(QIODevice::ReadOnly)) {
 		shvError() << "Cannot open SSL certificate file:" << cert_file.fileName() << "for reading";
-		return QSslCertificate();
+		return {};
 	}
-	QSslCertificate ssl_cert(&cert_file, QSsl::Pem);
-	cert_file.close();
-	shvDebug() << "CERT:" << ssl_cert.toText();
-	return ssl_cert;
+	const QList<QSslCertificate> certificate_chain = QSslCertificate::fromDevice(&cert_file, QSsl::Pem);
+	for (const auto &cert : certificate_chain) {
+		shvDebug() << "CERT:" << cert.toText();
+	}
+	return certificate_chain;
 }
 
 static QSslConfiguration load_ssl_configuration()
 {
 	AppCliOptions *opts = BrokerApp::instance()->cliOptions();
-
-	QString cert_fn = QString::fromStdString(opts->serverSslCertFile());
-	if(QDir::isRelativePath(cert_fn))
-		cert_fn = QString::fromStdString(opts->configDir()) + '/' + cert_fn;
-
-	const QSslCertificate leaf_certificate = load_ssl_certificate(cert_fn);
-	if (leaf_certificate.isNull()) {
-		shvError() << "Can't open leaf certificate";
-		return QSslConfiguration();
-	}
-
 	QList<QSslCertificate> certificate_chain;
-	certificate_chain.append(leaf_certificate);
+	QString cert_files_string = QString::fromStdString(opts->serverSslCertFiles());
+	QList<QString> cert_files = cert_files_string.split(',');
 
-	if (opts->serverSslIntermediateCertFile_isset()) {
-		QString interm_cert_file_name = QString::fromStdString(opts->serverSslIntermediateCertFile());
-		if(QDir::isRelativePath(interm_cert_file_name))
-			interm_cert_file_name = QString::fromStdString(opts->configDir()) + '/' + interm_cert_file_name;
+	for (QString cert_file : cert_files) {
+		if(QDir::isRelativePath(cert_file))
+			cert_file = QString::fromStdString(opts->configDir()) + '/' + cert_file;
 
-		const QSslCertificate intermediate_certificate = load_ssl_certificate(interm_cert_file_name);
-		if (intermediate_certificate.isNull()) {
-			shvError() << "Can't open intermediate certificate";
-			return QSslConfiguration();
+		const QList<QSslCertificate> certs = load_ssl_certificate_chain(cert_file);
+		if (certs.empty()) {
+			shvWarning() << "No certificates loaded from" << cert_file;
 		}
-		certificate_chain.append(intermediate_certificate);
+		certificate_chain.append(certs);
 	}
 
 	QString key_fn = QString::fromStdString(opts->serverSslKeyFile());

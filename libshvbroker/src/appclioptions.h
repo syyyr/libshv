@@ -27,8 +27,7 @@ public:
 	CLIOPTION_GETTER_SETTER2(int, "server.websocket.sslport", s, setS, erverWebsocketSslPort)
 #endif
 	CLIOPTION_GETTER_SETTER2(std::string, "server.ssl.key", s, setS, erverSslKeyFile)
-	CLIOPTION_GETTER_SETTER2(std::string, "server.ssl.cert", s, setS, erverSslCertFile)
-	CLIOPTION_GETTER_SETTER2(std::string, "server.ssl.intermediateCert", s, setS, erverSslIntermediateCertFile)
+	CLIOPTION_GETTER_SETTER2(std::string, "server.ssl.cert", s, setS, erverSslCertFiles)
 	CLIOPTION_GETTER_SETTER2(std::string, "server.publicIP", p, setP, ublicIP)
 
 	//CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.fstab", f, setF, stabFile)
