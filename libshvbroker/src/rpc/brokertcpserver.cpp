@@ -14,20 +14,48 @@ namespace shv {
 namespace broker {
 namespace rpc {
 
-static QSslConfiguration load_ssl_configuration()
+static const QSslCertificate load_ssl_certificate(const QString &cert_file_name)
 {
-	AppCliOptions *opts = BrokerApp::instance()->cliOptions();
-	QString cert_fn = QString::fromStdString(opts->serverSslCertFile());
-	if(QDir::isRelativePath(cert_fn))
-		cert_fn = QString::fromStdString(opts->configDir()) + '/' + cert_fn;
-	QFile cert_file(cert_fn);
+	QFile cert_file(cert_file_name);
 	if(!cert_file.open(QIODevice::ReadOnly)) {
 		shvError() << "Cannot open SSL certificate file:" << cert_file.fileName() << "for reading";
-		return QSslConfiguration();
+		return QSslCertificate();
 	}
 	QSslCertificate ssl_cert(&cert_file, QSsl::Pem);
 	cert_file.close();
 	shvDebug() << "CERT:" << ssl_cert.toText();
+	return ssl_cert;
+}
+
+static QSslConfiguration load_ssl_configuration()
+{
+	AppCliOptions *opts = BrokerApp::instance()->cliOptions();
+
+	QString cert_fn = QString::fromStdString(opts->serverSslCertFile());
+	if(QDir::isRelativePath(cert_fn))
+		cert_fn = QString::fromStdString(opts->configDir()) + '/' + cert_fn;
+
+	const QSslCertificate leaf_certificate = load_ssl_certificate(cert_fn);
+	if (leaf_certificate.isNull()) {
+		shvError() << "Can't open leaf certificate";
+		return QSslConfiguration();
+	}
+
+	QList<QSslCertificate> certificate_chain;
+	certificate_chain.append(leaf_certificate);
+
+	if (opts->serverSslIntermediateCertFile_isset()) {
+		QString interm_cert_file_name = QString::fromStdString(opts->serverSslIntermediateCertFile());
+		if(QDir::isRelativePath(interm_cert_file_name))
+			interm_cert_file_name = QString::fromStdString(opts->configDir()) + '/' + interm_cert_file_name;
+
+		const QSslCertificate intermediate_certificate = load_ssl_certificate(interm_cert_file_name);
+		if (intermediate_certificate.isNull()) {
+			shvError() << "Can't open intermediate certificate";
+			return QSslConfiguration();
+		}
+		certificate_chain.append(intermediate_certificate);
+	}
 
 	QString key_fn = QString::fromStdString(opts->serverSslKeyFile());
 	if(QDir::isRelativePath(key_fn))
@@ -42,7 +70,7 @@ static QSslConfiguration load_ssl_configuration()
 
 	QSslConfiguration ssl_configuration;
 	ssl_configuration.setPeerVerifyMode(QSslSocket::VerifyNone);
-	ssl_configuration.setLocalCertificate(ssl_cert);
+	ssl_configuration.setLocalCertificateChain(certificate_chain);
 	ssl_configuration.setPrivateKey(ssl_key);
 	//ssl_configuration.setProtocol(QSsl::TlsV1SslV3);
 	return ssl_configuration;
