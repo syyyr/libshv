@@ -26,6 +26,8 @@ AppCliOptions::AppCliOptions()
 			.setComment("SSL key file").setDefaultValue("wss.key");
 	addOption("server.ssl.cert").setType(cp::RpcValue::Type::String).setNames("--server-ssl-cert")
 			.setComment("SSL certificate file").setDefaultValue("wss.crt");
+	addOption("server.ssl.intermediateCert").setType(cp::RpcValue::Type::String).setNames("--server-ssl-intermediate-cert")
+			.setComment("SSL intermediate certificate file").setDefaultValue("wss.intermediateCrt");
 	addOption("server.publicIP").setType(cp::RpcValue::Type::String).setNames("--pip", "--server-public-ip").setComment("Server public IP address");
 	addOption("sqlconfig.enabled").setType(cp::RpcValue::Type::Bool).setNames("--sql-config-enabled")
 			.setComment("SQL config enabled")
