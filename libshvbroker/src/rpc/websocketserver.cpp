@@ -1,5 +1,6 @@
 #include "websocketserver.h"
 
+#include "ssl_common.h"
 #include "clientconnectiononbroker.h"
 #include "websocket.h"
 #include "../brokerapp.h"
@@ -19,27 +20,11 @@ WebSocketServer::WebSocketServer(SslMode secureMode, QObject *parent)
 	: Super("shvbroker", secureMode, parent)
 {
 	if (secureMode == SecureMode) {
-		AppCliOptions *opts = BrokerApp::instance()->cliOptions();
-		QString cert_fn = QString::fromStdString(opts->serverSslCertFile());
-		if(QDir::isRelativePath(cert_fn))
-			cert_fn = QString::fromStdString(opts->configDir()) + '/' + cert_fn;
-		QString key_fn = QString::fromStdString(opts->serverSslKeyFile());
-		if(QDir::isRelativePath(key_fn))
-			key_fn = QString::fromStdString(opts->configDir()) + '/' + key_fn;
-		QSslConfiguration sslConfiguration;
-		QFile certFile(cert_fn);
-		QFile keyFile(key_fn);
-		certFile.open(QIODevice::ReadOnly);
-		keyFile.open(QIODevice::ReadOnly);
-		QSslCertificate certificate(&certFile, QSsl::Pem);
-		QSslKey sslKey(&keyFile, QSsl::Rsa, QSsl::Pem);
-		certFile.close();
-		keyFile.close();
-		sslConfiguration.setPeerVerifyMode(QSslSocket::VerifyNone);
-		sslConfiguration.setLocalCertificate(certificate);
-		sslConfiguration.setPrivateKey(sslKey);
-		sslConfiguration.setProtocol(QSsl::TlsV1SslV3);
-		setSslConfiguration(sslConfiguration);
+		const QSslConfiguration ssl_configuration = load_ssl_configuration(BrokerApp::instance()->cliOptions());
+		if (ssl_configuration.isNull())
+			shvError() << "Cannot load SSL configuration";
+		else
+			setSslConfiguration(ssl_configuration);
 	}
 	connect(this, &WebSocketServer::newConnection, this, &WebSocketServer::onNewConnection);
 }
