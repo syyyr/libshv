@@ -679,6 +679,9 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 			logDShvJournal() << "\t -------------- Snapshot";
 			for(const auto &kv : snapshot) {
 				const ShvJournalEntry &e = kv.second;
+				if (e.value.hasDefaultValue()) {
+					continue;
+				}
 				if(!append_log_entry(e))
 					return false;
 			}
