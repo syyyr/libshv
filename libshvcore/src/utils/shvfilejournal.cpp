@@ -236,10 +236,14 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 			std::vector<ShvJournalEntry> snapshot;
 			m_snapShotFn(snapshot);
 			logDShvJournal() << "Writing snapshot, entries count:" << snapshot.size();
+			ShvJournalEntry e_begin(ShvJournalEntry::PATH_SNAPSHOT_BEGIN, true, ShvJournalEntry::DOMAIN_SHV_SYSTEM, ShvJournalEntry::NO_SHORT_TIME, ShvJournalEntry::SampleType::Discrete, journal_file_start_msec);
+			wr.append(e_begin);
 			for(ShvJournalEntry &e : snapshot) {
 				e.epochMsec = journal_file_start_msec;
-				wr.appendMonotonic(e);
+				wr.append(e);
 			}
+			ShvJournalEntry e_end(ShvJournalEntry::PATH_SNAPSHOT_END, true, ShvJournalEntry::DOMAIN_SHV_SYSTEM, ShvJournalEntry::NO_SHORT_TIME, ShvJournalEntry::SampleType::Discrete, journal_file_start_msec);
+			wr.append(e_end);
 		}
 		else {
 			logMShvJournal() << "SnapShot function not defined";

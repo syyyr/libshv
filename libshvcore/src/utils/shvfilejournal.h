@@ -37,7 +37,9 @@ public:
 	int64_t journalSizeLimit() const { return m_journalSizeLimit;}
 	void setTypeInfo(const ShvLogTypeInfo &i) { m_journalContext.typeInfo = i; }
 	const ShvLogTypeInfo& typeInfo() const { return m_journalContext.typeInfo; }
+	std::string deviceId() const { return m_journalContext.deviceId; }
 	void setDeviceId(std::string id) { m_journalContext.deviceId = std::move(id); }
+	std::string deviceType() const { return m_journalContext.deviceType; }
 	void setDeviceType(std::string type) { m_journalContext.deviceType = std::move(type); }
 
 	static int64_t findLastEntryDateTime(const std::string &fn, ssize_t *p_date_time_fpos = nullptr);

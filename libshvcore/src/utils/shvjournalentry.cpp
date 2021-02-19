@@ -16,7 +16,8 @@ const char *ShvJournalEntry::DOMAIN_SHV_SYSTEM = "SHV_SYS";
 const char *ShvJournalEntry::DOMAIN_SHV_COMMAND = "CMD";
 
 const char* ShvJournalEntry::PATH_APP_START = "APP_START";
-//const char* ShvJournalEntry::PATH_SNAPSHOT_END = "SNAPSHOT_END";
+const char* ShvJournalEntry::PATH_SNAPSHOT_BEGIN = "SNAPSHOT_BEGIN";
+const char* ShvJournalEntry::PATH_SNAPSHOT_END = "SNAPSHOT_END";
 const char* ShvJournalEntry::PATH_DATA_MISSING = "DATA_MISSING";
 const char* ShvJournalEntry::PATH_DATA_DIRTY = "DATA_DIRTY";
 

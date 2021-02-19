@@ -21,14 +21,15 @@ ShvNodeTree::ShvNodeTree(ShvNode *root, QObject *parent)
 	: QObject(parent)
 	, m_root(root)
 {
+	Q_ASSERT(root);
 	if(!root->isRootNode())
 		SHV_EXCEPTION("Node tree must begin with root node!");
+	if(!m_root->parent())
+		m_root->setParent(this);
 }
 
 ShvNodeTree::~ShvNodeTree()
 {
-	if(m_root && !m_root->parent())
-		delete m_root;
 }
 
 ShvNode *ShvNodeTree::mkdir(const ShvNode::String &path)
