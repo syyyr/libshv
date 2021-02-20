@@ -232,8 +232,11 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 						rec_cnt_limit_hit = true;
 						goto log_finish;
 					}
-					cp::RpcValue::List rec;
 					const auto &entry = kv.second;
+					if (entry.value.hasDefaultValue()) {
+						continue;
+					}
+					cp::RpcValue::List rec;
 					if(since_msec == 0)
 						since_msec = entry.epochMsec;
 					last_record_msec = since_msec;
