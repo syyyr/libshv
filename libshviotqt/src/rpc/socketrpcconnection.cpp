@@ -60,6 +60,7 @@ void SocketRpcConnection::setSocket(Socket *socket)
 	socket->setParent(nullptr);
 	socket->moveToThread(this->thread());
 	m_socket = socket;
+	connect(socket, &Socket::sslErrors, this, &SocketRpcConnection::sslErrors);
 	connect(socket, &Socket::error, this,
 		  [this](QAbstractSocket::SocketError socket_error) {
 		shvWarning() << "Socket error:" << socket_error << m_socket->errorString();
@@ -95,6 +96,11 @@ Socket *SocketRpcConnection::socket()
 bool SocketRpcConnection::isSocketConnected() const
 {
 	return m_socket && m_socket->state() == QTcpSocket::ConnectedState;
+}
+
+void SocketRpcConnection::ignoreSslErrors()
+{
+	m_socket->ignoreSslErrors();
 }
 
 void SocketRpcConnection::connectToHost(const QString &host_name, quint16 port)

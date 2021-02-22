@@ -113,6 +113,7 @@ SslSocket::SslSocket(QSslSocket *socket, QSslSocket::PeerVerifyMode peer_verify_
 	*/
 	disconnect(m_socket, &QTcpSocket::connected, this, &Socket::connected);
 	connect(socket, &QSslSocket::encrypted, this, &Socket::connected);
+	connect(socket, qOverload<const QList<QSslError> &>(&QSslSocket::sslErrors), this, &Socket::sslErrors);
 }
 
 void SslSocket::connectToHost(const QString &host_name, quint16 port)
@@ -121,6 +122,12 @@ void SslSocket::connectToHost(const QString &host_name, quint16 port)
 	ssl_socket->setPeerVerifyMode(m_peerVerifyMode);
 	shvDebug() << "connectToHostEncrypted" << "host:" << host_name << "port:" << port;
 	ssl_socket->connectToHostEncrypted(host_name, port);
+}
+
+void SslSocket::ignoreSslErrors()
+{
+	QSslSocket *ssl_socket = qobject_cast<QSslSocket *>(m_socket);
+	ssl_socket->ignoreSslErrors();
 }
 
 } // namespace rpc
