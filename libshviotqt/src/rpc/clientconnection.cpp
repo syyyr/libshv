@@ -164,7 +164,10 @@ void ClientConnection::closeOrAbort(bool is_abort)
 
 void ClientConnection::restartIfActive()
 {
+	bool is_active = m_checkConnectedTimer->isActive();
 	close();
+	if(is_active)
+		m_checkConnectedTimer->start();
 	if(m_checkBrokerConnectedInterval > 0) {
 		QTimer::singleShot(m_checkBrokerConnectedInterval, this, [this]() {
 			if(m_checkConnectedTimer->isActive())
