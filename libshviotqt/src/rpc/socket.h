@@ -36,6 +36,7 @@ public:
 	//virtual bool flush() = 0;
 	virtual void writeMessageBegin() = 0;
 	virtual void writeMessageEnd() = 0;
+	virtual void ignoreSslErrors() = 0;
 
 	Q_SIGNAL void connected();
 	Q_SIGNAL void disconnected();
@@ -45,6 +46,7 @@ public:
 
 	Q_SIGNAL void  stateChanged(QAbstractSocket::SocketState state);
 	Q_SIGNAL void error(QAbstractSocket::SocketError socket_error);
+	Q_SIGNAL void sslErrors(const QList<QSslError> &errors);
 };
 
 class SHVIOTQT_DECL_EXPORT TcpSocket : public Socket
@@ -67,6 +69,8 @@ public:
 	//bool flush() override;
 	void writeMessageBegin() override {}
 	void writeMessageEnd() override;
+	void ignoreSslErrors() override {}
+
 protected:
 	QTcpSocket *m_socket = nullptr;
 };
@@ -80,6 +84,8 @@ public:
 	SslSocket(QSslSocket *socket, QSslSocket::PeerVerifyMode peer_verify_mode = QSslSocket::AutoVerifyPeer, QObject *parent = nullptr);
 
 	void connectToHost(const QString &host_name, quint16 port) override;
+	void ignoreSslErrors() override;
+
 protected:
 	QSslSocket::PeerVerifyMode m_peerVerifyMode;
 };

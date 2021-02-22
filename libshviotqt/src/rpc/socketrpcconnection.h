@@ -7,6 +7,7 @@
 
 #include <QObject>
 
+class QSslError;
 class QTcpSocket;
 class QThread;
 
@@ -40,6 +41,8 @@ public:
 
 	bool isSocketConnected() const;
 	Q_SIGNAL void socketConnectedChanged(bool is_connected);
+	Q_SIGNAL void sslErrors(const QList<QSslError> &errors);
+	void ignoreSslErrors();
 
 	std::string peerAddress() const;
 	int peerPort() const;
