@@ -771,12 +771,14 @@ void BrokerApp::onClientLogin(int connection_id)
 		std::string mount_point = resolveMountPoint(device_opts);
 		if(!mount_point.empty()) {
 			string path_rest;
-			iotqt::node::ShvNode *nd = m_nodesTree->cd(mount_point, &path_rest);
-			ClientShvNode *cli_nd = qobject_cast<ClientShvNode*>(nd);
-			if(nd && !cli_nd) {
-				SHV_EXCEPTION("Cannot mount device to not-leaf node, connection id: " + std::to_string(connection_id));
-			}
-			else if(cli_nd) {
+//			iotqt::node::ShvNode *nd = m_nodesTree->cd(mount_point, &path_rest);
+//			ClientShvNode *cli_nd = qobject_cast<ClientShvNode*>(nd);
+			ClientShvNode *cli_nd = qobject_cast<ClientShvNode*>(m_nodesTree->cd(mount_point));
+//			if(nd && !cli_nd) {
+//				SHV_EXCEPTION("Cannot mount device to not-leaf node, connection id: " + std::to_string(connection_id));
+//			}
+//			else if(cli_nd) {
+			if(cli_nd) {
 				/*
 				shvWarning() << "The mount point" << mount_point << "exists already";
 				if(cli_nd->connection()->deviceId() == device_id) {
