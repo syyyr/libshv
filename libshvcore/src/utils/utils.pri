@@ -15,6 +15,8 @@ HEADERS += \
     $$PWD/versioninfo.h \
     $$PWD/clioptions.h \
     $$PWD/shvpath.h \
+    $$PWD/shvlogfilter.h \
+    $$PWD/patternmatcher.h
 
 SOURCES += \
     $$PWD/abstractshvjournal.cpp \
@@ -33,4 +35,6 @@ SOURCES += \
     $$PWD/versioninfo.cpp \
     $$PWD/clioptions.cpp \
     $$PWD/shvpath.cpp \
+    $$PWD/shvlogfilter.cpp \
+    $$PWD/patternmatcher.cpp
 

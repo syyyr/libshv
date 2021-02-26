@@ -1,4 +1,6 @@
 #include "shvfilejournal.h"
+
+#include "patternmatcher.h"
 #include "shvjournalfilewriter.h"
 #include "shvjournalfilereader.h"
 #include "shvlogheader.h"

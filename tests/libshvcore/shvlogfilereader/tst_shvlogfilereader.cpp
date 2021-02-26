@@ -285,54 +285,6 @@ private:
 					QVERIFY(e1 == e2);
 				}
 			}
-			{
-				qDebug() << "------------- Filtering chainpack appends to memory log 1";
-				ShvGetLogParams filter;
-				filter.pathPattern = "**/vetra/**";
-				ShvMemoryJournal mmj(filter);
-				string fn1 = TEST_DIR + "/log1.chpk";
-				ShvLogFileReader rd1(fn1);
-				while (rd1.next()) {
-					const ShvJournalEntry &e1 = rd1.entry();
-					mmj.append(e1);
-				}
-				for(auto e : mmj.entries()) {
-					QVERIFY(e.path.find("vetra") != string::npos);
-				}
-			}
-			{
-				qDebug() << "------------- Filtering chainpack appends to memory log 2";
-				string fn1 = TEST_DIR + "/log1.chpk";
-				ShvLogFileReader rd1(fn1);
-				ShvGetLogParams filter;
-				filter.pathPattern = "((temp.*)|(volt.+))";
-				filter.pathPatternType = ShvGetLogParams::PatternType::RegEx;
-				int64_t dt1 = rd1.logHeader().since().toDateTime().msecsSinceEpoch();
-				QVERIFY(dt1 > 0);
-				int64_t dt2 = rd1.logHeader().until().toDateTime().msecsSinceEpoch();
-				QVERIFY(dt2 > 0);
-				auto dt_since = dt1 + (dt2 - dt1) / 3;
-				auto dt_until = dt2 - (dt2 - dt1) / 3;
-				filter.since = RpcValue::DateTime::fromMSecsSinceEpoch(dt_since);
-				filter.until = RpcValue::DateTime::fromMSecsSinceEpoch(dt_until);
-				ShvMemoryJournal mmj(filter);
-				while (rd1.next()) {
-					const ShvJournalEntry &e1 = rd1.entry();
-					mmj.append(e1);
-				}
-				for(auto e : mmj.entries()) {
-					qDebug() << e.toRpcValueMap().toCpon();
-					QVERIFY(e.path.find("temp") == 0 || e.path.find("volt") == 0);
-					QVERIFY(e.epochMsec >= dt_since);
-					QVERIFY(e.epochMsec < dt_until);
-				}
-				{
-					ShvGetLogParams params;
-					params.withPathsDict = false;
-					params.withSnapshot = true;
-					write_cpon_file(TEST_DIR + "/memlog.cpon", mmj.getLog(params));
-				}
-			}
 		}
 	}
 private slots:
