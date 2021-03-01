@@ -7,8 +7,6 @@
 #include "shvgetlogparams.h"
 #include "shvlogheader.h"
 
-#include <regex>
-
 namespace shv {
 namespace core {
 namespace utils {
@@ -17,7 +15,6 @@ class SHVCORE_DECL_EXPORT ShvMemoryJournal : public AbstractShvJournal
 {
 public:
 	ShvMemoryJournal();
-	ShvMemoryJournal(const ShvGetLogParams &input_filter);
 
 	void setSince(const shv::chainpack::RpcValue &since) { m_logHeader.setSince(since); }
 	void setUntil(const shv::chainpack::RpcValue &until) { m_logHeader.setUntil(until); }
@@ -30,7 +27,6 @@ public:
 	void setShortTimeCorrection(bool b) { m_isShortTimeCorrection = b; }
 
 	void append(const ShvJournalEntry &entry) override;
-	int inputFilterRecordCountLimit() const { return  m_inputFilterRecordCountLimit; }
 
 	void loadLog(const shv::chainpack::RpcValue &log, bool append_records = false);
 	shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) override;
@@ -47,14 +43,6 @@ public:
 private:
 	using Entry = ShvJournalEntry;
 
-	ShvGetLogParams m_inputFilter;
-	PatternMatcher m_patternMatcher;
-	int64_t m_inputFilterSinceMsec = 0;
-	int64_t m_inputFilterUntilMsec = 0;
-	int m_inputFilterRecordCountLimit = DEFAULT_GET_LOG_RECORD_COUNT_LIMIT;
-
-	std::map<std::string, Entry> m_inputSnapshot;
-
 	std::map<std::string, int> m_pathDictionary;
 	int m_pathDictionaryIndex = 0;
 
@@ -62,7 +50,6 @@ private:
 	std::map<std::string, ShvLogTypeDescr> m_pathsTypeDescr;
 
 	std::vector<Entry> m_entries;
-
 
 	struct ShortTime {
 		int64_t epochTime = 0;
@@ -85,7 +72,8 @@ private:
 	};
 
 	bool m_isShortTimeCorrection = false;
-	std::map<std::string, ShortTime> m_recentShortTimes;};
+	std::map<std::string, ShortTime> m_recentShortTimes;
+};
 
 } // namespace utils
 } // namespace core

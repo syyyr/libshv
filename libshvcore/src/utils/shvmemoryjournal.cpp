@@ -3,6 +3,7 @@
 #include "shvpath.h"
 #include "shvfilejournal.h"
 #include "shvlogrpcvaluereader.h"
+#include "patternmatcher.h"
 
 #include "../exception.h"
 #include "../log.h"
@@ -21,16 +22,6 @@ ShvMemoryJournal::ShvMemoryJournal()
 {
 }
 
-ShvMemoryJournal::ShvMemoryJournal(const ShvGetLogParams &input_filter)
-	: m_patternMatcher(input_filter)
-{
-	if(input_filter.since.isDateTime())
-		m_inputFilterSinceMsec = input_filter.since.toDateTime().msecsSinceEpoch();
-	if(input_filter.until.isDateTime())
-		m_inputFilterUntilMsec = input_filter.until.toDateTime().msecsSinceEpoch();
-	m_inputFilterRecordCountLimit = std::min(input_filter.recordCountLimit, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
-}
-
 void ShvMemoryJournal::loadLog(const chainpack::RpcValue &log, bool append_records)
 {
 	shv::core::utils::ShvLogRpcValueReader rd(log, !shv::core::Exception::Throw);
@@ -46,8 +37,6 @@ void ShvMemoryJournal::loadLog(const chainpack::RpcValue &log, bool append_recor
 
 void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 {
-	if((int)m_entries.size() >= m_inputFilterRecordCountLimit)
-		return;
 	int64_t epoch_msec = entry.epochMsec;
 	if(epoch_msec == 0) {
 		epoch_msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
@@ -94,25 +83,11 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 			}
 		}
 	}
-	if(m_inputFilterUntilMsec > 0 && epoch_msec >= m_inputFilterUntilMsec)
-		return;
-	if(m_inputFilterSinceMsec > 0 && epoch_msec < m_inputFilterSinceMsec) {
-		if(entry.sampleType == ShvJournalEntry::SampleType::Continuous
-			&& m_patternMatcher.match(entry))
-		{
-			Entry &e = m_inputSnapshot[entry.path];
-			if(e.epochMsec < entry.epochMsec)
-				e = entry;
-		}
-		return;
+
+	if (m_pathDictionary.find(entry.path) == m_pathDictionary.end()) {
+		m_pathDictionary[entry.path] = m_pathDictionaryIndex++;
 	}
-	if(!m_patternMatcher.match(entry))
-		return;
-	{
-		auto it = m_pathDictionary.find(entry.path);
-		if(it == m_pathDictionary.end())
-			m_pathDictionary[entry.path] = m_pathDictionaryIndex++;
-	}
+
 	Entry e(entry);
 	e.epochMsec = epoch_msec;
 	int64_t last_time = m_entries.empty()? 0: m_entries[m_entries.size()-1].epochMsec;
@@ -146,20 +121,14 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 	int max_path_index = 0;
 	int rec_cnt = 0;
 
-	auto filter_since_msec = m_inputFilter.since.toDateTime().msecsSinceEpoch();
-	auto filter_until_msec = m_inputFilter.until.toDateTime().msecsSinceEpoch();
-
 	auto params_since_msec = params.since.toDateTime().msecsSinceEpoch();
 	auto params_until_msec = params.until.toDateTime().msecsSinceEpoch();
 
 	int64_t log_since_msec = m_logHeader.sinceMsec();
 	int64_t log_until_msec = m_logHeader.untilMsec();
 
-	int64_t datavalid_since_msec = std::max(log_since_msec, filter_since_msec);
-	int64_t datavalid_until_msec = min_valid(log_until_msec, filter_until_msec);
-
-	int64_t since_msec = std::max(datavalid_since_msec, params_since_msec);
-	int64_t until_msec = min_valid(datavalid_until_msec, params_until_msec);
+	int64_t since_msec = std::max(log_since_msec, params_since_msec);
+	int64_t until_msec = min_valid(log_until_msec, params_until_msec);
 
 	int rec_cnt_limit = std::min(params.recordCountLimit, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 	bool rec_cnt_limit_hit = false;
@@ -167,9 +136,9 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 	//int64_t first_record_msec = 0;
 	int64_t last_record_msec = 0;
 
-	if(params_since_msec > 0 && datavalid_until_msec > 0 && params_since_msec >= datavalid_until_msec)
+	if(params_since_msec > 0 && log_until_msec > 0 && params_since_msec >= log_until_msec)
 		goto log_finish;
-	if(params_until_msec > 0 && datavalid_since_msec > 0 && params_until_msec < datavalid_since_msec)
+	if(params_until_msec > 0 && log_since_msec > 0 && params_until_msec < log_since_msec)
 		goto log_finish;
 
 	{
@@ -209,12 +178,6 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 
 		std::map<std::string, Entry> snapshot;
 		if(params.withSnapshot) {
-			for(auto kv : m_inputSnapshot) {
-				const auto &e = kv.second;
-				if((params_until_msec == 0 || e.epochMsec < params_until_msec) && pm.match(e)) {
-					snapshot[e.path] = e;
-				}
-			}
 			for(auto it = m_entries.begin(); it != m_entries.end() && it < it1; ++it) {
 				const Entry &e = *it;
 				if (it < it1 || e.epochMsec == since_msec) {  //it1 (lower_bound) can be == since_msec (we want in snapshot)
