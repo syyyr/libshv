@@ -6,6 +6,7 @@
 #include <shv/core/utils/shvjournalfilewriter.h>
 #include <shv/core/utils/shvjournalfilereader.h>
 #include <shv/core/utils/shvmemoryjournal.h>
+#include <shv/core/utils/shvlogfilter.h>
 
 #include <shv/core/log.h>
 
@@ -283,6 +284,60 @@ private:
 					const ShvJournalEntry &e2 = memory_jurnal.entries()[cnt++];
 					//qDebug() << cnt << e1.toRpcValueMap().toCpon() << "vs" << e2.toRpcValueMap().toCpon();
 					QVERIFY(e1 == e2);
+				}
+			}
+			{
+				qDebug() << "------------- Filtering chainpack appends to memory log 1";
+				ShvGetLogParams params;
+				params.pathPattern = "**/vetra/**";
+				ShvLogFilter filter(params);
+				ShvMemoryJournal mmj;
+				string fn1 = TEST_DIR + "/log1.chpk";
+				ShvLogFileReader rd1(fn1);
+				while (rd1.next()) {
+					const ShvJournalEntry &e1 = rd1.entry();
+					if (filter.match(e1)) {
+						mmj.append(e1);
+					}
+				}
+				for(auto e : mmj.entries()) {
+					QVERIFY(e.path.find("vetra") != string::npos);
+				}
+			}
+			{
+				qDebug() << "------------- Filtering chainpack appends to memory log 2";
+				string fn1 = TEST_DIR + "/log1.chpk";
+				ShvLogFileReader rd1(fn1);
+				ShvGetLogParams params;
+				params.pathPattern = "((temp.*)|(volt.+))";
+				params.pathPatternType = ShvGetLogParams::PatternType::RegEx;
+				int64_t dt1 = rd1.logHeader().since().toDateTime().msecsSinceEpoch();
+				QVERIFY(dt1 > 0);
+				int64_t dt2 = rd1.logHeader().until().toDateTime().msecsSinceEpoch();
+				QVERIFY(dt2 > 0);
+				auto dt_since = dt1 + (dt2 - dt1) / 3;
+				auto dt_until = dt2 - (dt2 - dt1) / 3;
+				params.since = RpcValue::DateTime::fromMSecsSinceEpoch(dt_since);
+				params.until = RpcValue::DateTime::fromMSecsSinceEpoch(dt_until);
+				ShvLogFilter filter(params);
+				ShvMemoryJournal mmj;
+				while (rd1.next()) {
+					const ShvJournalEntry &e1 = rd1.entry();
+					if (filter.match(e1)) {
+						mmj.append(e1);
+					}
+				}
+				for(auto e : mmj.entries()) {
+					qDebug() << e.toRpcValueMap().toCpon();
+					QVERIFY(e.path.find("temp") == 0 || e.path.find("volt") == 0);
+					QVERIFY(e.epochMsec >= dt_since);
+					QVERIFY(e.epochMsec < dt_until);
+				}
+				{
+					ShvGetLogParams params;
+					params.withPathsDict = false;
+					params.withSnapshot = true;
+					write_cpon_file(TEST_DIR + "/memlog.cpon", mmj.getLog(params));
 				}
 			}
 		}
