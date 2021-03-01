@@ -1126,6 +1126,11 @@ void Graph::drawXAxis(QPainter *painter)
 		QPoint p1{x, m_layout.xAxisRect.top()};
 		QPoint p2{p1.x(), p1.y() + 2*tick_len};
 		painter->drawLine(p1, p2);
+		auto date_time_tz = [this](timemsec_t epoch_msec) {
+			QDateTime dt = QDateTime::fromMSecsSinceEpoch(epoch_msec);
+			dt = dt.toTimeZone(m_timeZone);
+			return dt;
+		};
 		QString text;
 		switch (axis.labelFormat) {
 		case XAxis::LabelFormat::MSec:
@@ -1136,22 +1141,22 @@ void Graph::drawXAxis(QPainter *painter)
 			break;
 		case XAxis::LabelFormat::Min:
 		case XAxis::LabelFormat::Hour: {
-			QTime tm = QDateTime::fromMSecsSinceEpoch(t).time();
+			QTime tm = date_time_tz(t).time();
 			text = QStringLiteral("%1:%2").arg(tm.hour()).arg(tm.minute(), 2, 10, QChar('0'));
 			break;
 		}
 		case XAxis::LabelFormat::Day: {
-			QDate dt = QDateTime::fromMSecsSinceEpoch(t).date();
+			QDate dt = date_time_tz(t).date();
 			text = QStringLiteral("%1/%2").arg(dt.month()).arg(dt.day(), 2, 10, QChar('0'));
 			break;
 		}
 		case XAxis::LabelFormat::Month: {
-			QDate dt = QDateTime::fromMSecsSinceEpoch(t).date();
+			QDate dt = date_time_tz(t).date();
 			text = QStringLiteral("%1-%2").arg(dt.year()).arg(dt.month(), 2, 10, QChar('0'));
 			break;
 		}
 		case XAxis::LabelFormat::Year: {
-			QDate dt = QDateTime::fromMSecsSinceEpoch(t).date();
+			QDate dt = date_time_tz(t).date();
 			text = QStringLiteral("%1").arg(dt.year());
 			break;
 		}
