@@ -174,7 +174,7 @@ bool GraphWidget::isMouseAboveMiniMapSlider(const QPoint &pos) const
 	return (x1 < pos.x()) && (pos.x() < x2);
 }
 
-int GraphWidget::isMouseAboveGraphVerticalHeader(const QPoint &pos) const
+int GraphWidget::channelIndexOnGraphVerticalHeader(const QPoint &pos) const
 {
 	const Graph *gr = graph();
 	for (int i = 0; i < gr->channelCount(); ++i) {
@@ -186,7 +186,7 @@ int GraphWidget::isMouseAboveGraphVerticalHeader(const QPoint &pos) const
 	return -1;
 }
 
-int GraphWidget::mouseAboveGraphDataAreaIndex(const QPoint &pos) const
+int GraphWidget::channelIndexOnGraphDataAreaIndex(const QPoint &pos) const
 {
 	const Graph *gr = graph();
 	int ch_ix = gr->posToChannel(pos);
@@ -196,7 +196,7 @@ int GraphWidget::mouseAboveGraphDataAreaIndex(const QPoint &pos) const
 void GraphWidget::mouseDoubleClickEvent(QMouseEvent *event)
 {
 	QPoint pos = event->pos();
-	if(mouseAboveGraphDataAreaIndex(pos) >= 0) {
+	if(channelIndexOnGraphDataAreaIndex(pos) >= 0) {
 		if(event->modifiers() == Qt::NoModifier) {
 			emit graphChannelDoubleClicked(pos);
 			event->accept();
@@ -227,7 +227,7 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 			event->accept();
 			return;
 		}
-		else if(mouseAboveGraphDataAreaIndex(pos) >= 0) {
+		else if(channelIndexOnGraphDataAreaIndex(pos) >= 0) {
 			if(event->modifiers() == Qt::ControlModifier) {
 				m_mouseOperation = MouseOperation::GraphAreaMove;
 				m_recentMousePos = pos;
@@ -366,7 +366,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		return;
 	}
 	}
-	int ch_ix = mouseAboveGraphDataAreaIndex(pos);
+	int ch_ix = channelIndexOnGraphDataAreaIndex(pos);
 	if(ch_ix >= 0 && !isMouseAboveMiniMap(pos)) {
 		setCursor(Qt::BlankCursor);
 		gr->setCrossHairPos({ch_ix, pos});
@@ -391,6 +391,13 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 	}
 	else {
 		hideCrossHair();
+	}
+
+	ch_ix = channelIndexOnGraphVerticalHeader(pos);
+	if(ch_ix > -1) {
+		const GraphChannel *ch = gr->channelAt(ch_ix);
+		QString text = tr("Channel:") + " " + ch->shvPath();
+		QToolTip::showText(mapToGlobal(pos + QPoint{gr->u2px(0.2), 0}), text, this);
 	}
 }
 
@@ -418,7 +425,7 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
 	QPoint pos = event->position().toPoint();
 #endif
 	bool is_zoom_on_slider = isMouseAboveMiniMapSlider(pos);
-	bool is_zoom_on_graph = (event->modifiers() == Qt::ControlModifier) && mouseAboveGraphDataAreaIndex(pos) >= 0;
+	bool is_zoom_on_graph = (event->modifiers() == Qt::ControlModifier) && channelIndexOnGraphDataAreaIndex(pos) >= 0;
 	static constexpr int ZOOM_STEP = 10;
 	if(is_zoom_on_slider) {
 		Graph *gr = graph();

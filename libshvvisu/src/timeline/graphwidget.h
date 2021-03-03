@@ -55,8 +55,8 @@ protected:
 	bool isMouseAboveLeftMiniMapHandle(const QPoint &pos) const;
 	bool isMouseAboveRightMiniMapHandle(const QPoint &pos) const;
 	bool isMouseAboveMiniMapSlider(const QPoint &pos) const;
-	int isMouseAboveGraphVerticalHeader(const QPoint &pos) const;
-	int mouseAboveGraphDataAreaIndex(const QPoint &pos) const;
+	int channelIndexOnGraphVerticalHeader(const QPoint &pos) const;
+	int channelIndexOnGraphDataAreaIndex(const QPoint &pos) const;
 protected:
 	Graph *m_graph = nullptr;
 	QSize m_graphPreferredSize;
