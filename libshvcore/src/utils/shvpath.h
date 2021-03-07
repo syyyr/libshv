@@ -23,6 +23,8 @@ public:
 	ShvPath(const shv::core::String &o) : Super(o) {}
 	using Super::Super;
 
+	const std::string &asString() const { return *this; }
+
 	bool startsWithPath(const StringView &path, size_t *pos = nullptr) const;
 	static bool startsWithPath(const StringView &str, const StringView &path, size_t *pos = nullptr);
 
