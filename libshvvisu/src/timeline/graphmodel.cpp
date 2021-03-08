@@ -84,6 +84,7 @@ double GraphModel::valueToDouble(const QVariant v, int meta_type_id, bool *ok)
 		meta_type_id = v.userType();
 	switch (meta_type_id) {
 	case QVariant::Invalid:
+	case QVariant::Map:
 		return 0;
 	case QVariant::Double:
 		return v.toDouble();
@@ -209,7 +210,7 @@ int GraphModel::pathToChannelIndex(const std::string &path) const
 	return it->second;
 }
 
-void GraphModel::appendChannel(const std::string &shv_path, const std::string &name)
+void GraphModel::appendChannel(const std::string &shv_path, const std::string &name, const shv::core::utils::ShvLogTypeDescr &type_descr)
 {
 	m_pathToChannelCache.clear();
 	m_channelsInfo.append(ChannelInfo());
@@ -219,6 +220,7 @@ void GraphModel::appendChannel(const std::string &shv_path, const std::string &n
 		chi.shvPath = QString::fromStdString(shv_path);
 	if(!name.empty())
 		chi.name = QString::fromStdString(name);
+	chi.typeDescr = type_descr;
 	emit channelCountChanged(channelCount());
 }
 

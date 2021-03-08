@@ -374,20 +374,62 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		Sample s = gr->timeToSample(ch_ix, t);
 		const GraphChannel *ch = gr->channelAt(ch_ix);
 		//update(ch->graphAreaRect());
-		if(s.isValid()) {
-			shvDebug() << "time:" << s.time << "value:" << s.value.toDouble();
+		GraphModel::ChannelInfo &channel_info = gr->model()->channelInfo(ch->modelIndex());
+		QPoint point;
+		QString text;
+
+		if (s.isValid()) {
+			if (channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Continuous || qAbs(pos.x() - gr->timeToPos(s.time)) < 7) {
+				point = mapToGlobal(pos + QPoint{gr->u2px(0.8), 0});
 			QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
 			dt = dt.toTimeZone(graph()->timeZone());
-			QString text = QStringLiteral("%1\nx: %2\ny: %3\nvalue: %4")
+
+				if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Map) {
+					text = QStringLiteral("%1\nx: %2\n")
+						   .arg(ch->shvPath())
+						   .arg(dt.toString(Qt::ISODateWithMs));
+					const QVariantMap &map = s.value.toMap();
+					for (auto it = map.cbegin(); it != map.cend(); ++it) {
+						text += it.key() + ": " + it.value().toString() + "\n";
+					}
+					text.chop(1);
+				}
+				else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::IMap) {
+					text = QStringLiteral("%1\nx: %2\n")
+						   .arg(ch->shvPath())
+						   .arg(dt.toString(Qt::ISODateWithMs));
+					const QVariantMap &map = s.value.toMap();
+					for (auto it = map.cbegin(); it != map.cend(); ++it) {
+						for (auto &field : channel_info.typeDescr.fields) {
+							if (it.key() == field.value.toInt()) {
+								text += QString::fromStdString(field.name) + ": " + it.value().toString() + "\n";
+								break;
+							}
+						}
+					}
+					text.chop(1);
+				}
+				else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+					text = QStringLiteral("%1\nx: %2")
+						   .arg(ch->shvPath())
+						   .arg(dt.toString(Qt::ISODateWithMs));
+					for (auto &field : channel_info.typeDescr.fields) {
+						if (s.value.toInt() == field.value.toInt()) {
+							text += "\nvalue: " + QString::fromStdString(field.name);
+							break;
+						}
+					}
+				}
+				else {
+					text = QStringLiteral("%1\nx: %2\ny: %3\nvalue: %4")
 					.arg(ch->shvPath())
 					.arg(dt.toString(Qt::ISODateWithMs))
 					.arg(ch->posToValue(pos.y()))
 					.arg(s.value.toString());
-			QToolTip::showText(mapToGlobal(pos + QPoint{gr->u2px(0.8), 0}), text, this);
 		}
-		else {
-			QToolTip::showText(QPoint(), QString());
 		}
+	}
+		QToolTip::showText(point, text);
 	}
 	else {
 		hideCrossHair();

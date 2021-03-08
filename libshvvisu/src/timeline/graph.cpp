@@ -136,6 +136,11 @@ shv::visu::timeline::GraphChannel *Graph::appendChannel(int model_index)
 	m_channels.append(new GraphChannel(this));
 	GraphChannel *ch = m_channels.last();
 	ch->setModelIndex(model_index < 0? m_channels.count() - 1: model_index);
+	if (m_model->channelInfo(model_index).typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Discrete) {
+		auto style = ch->style();
+		style.setInterpolation(GraphChannel::Style::Interpolation::None);
+		ch->setStyle(style);
+	}
 	return ch;
 }
 
@@ -268,16 +273,28 @@ Sample Graph::timeToSample(int channel_ix, timemsec_t time) const
 	const GraphChannel *ch = channelAt(channel_ix);
 	int model_ix = ch->modelIndex();
 	int ix1 = m->lessOrEqualIndex(model_ix, time);
-	if(ix1 < 0)
-		return Sample();
 	int interpolation = ch->m_effectiveStyle.interpolation();
 	//shvInfo() << channel_ix << "interpolation:" << interpolation;
 	if(interpolation == GraphChannel::Style::Interpolation::None) {
-		Sample s = m->sampleAt(model_ix, ix1);
-		if(s.time == time)
-			return s;
+		Sample s1;
+		Sample s2;
+		if (ix1 >= 0) {
+			s1 = m->sampleAt(model_ix, ix1);
 	}
-	else if(interpolation == GraphChannel::Style::Interpolation::Stepped) {
+		if (ix1 + 1 == m->count(model_ix)) {
+			return s1;
+		}
+		s2 = m->sampleAt(model_ix, ix1 + 1);
+		if (s1.isValid() && time - s1.time < s2.time - time) {
+			return s1;
+		}
+		else {
+			return s2;
+		}
+	}
+	if(ix1 < 0)
+		return Sample();
+	if(interpolation == GraphChannel::Style::Interpolation::Stepped) {
 		Sample s = m->sampleAt(model_ix, ix1);
 		s.time = time;
 		return s;
@@ -1489,6 +1506,20 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	for (int i = ix1; i <= ix2 && i <= samples_cnt; ++i) {
 		// sample is drawn one step behind, so one more loop is needed
 		const Sample s = (i < samples_cnt)? graph_model->sampleAt(model_ix, i): Sample();
+		if (interpolation == GraphChannel::Style::Interpolation::None) {
+			QPoint sample_point = sample2point(Sample{s.time, 0}, channel_meta_type_id); // <- this can be computed ahead
+			painter->drawLine(sample_point.x(), clip_rect.height() - 12, sample_point.x(), clip_rect.height());
+			QPainterPath path;
+			path.moveTo(sample_point.x() - 6, clip_rect.height() - 6);
+			path.lineTo(sample_point.x() + 6, clip_rect.height() - 6);
+			path.lineTo(sample_point.x(), clip_rect.height());
+			path.lineTo(sample_point.x() - 6, clip_rect.height() - 6);
+			path.closeSubpath();
+			painter->drawPath(path);
+			painter->fillPath(path, painter->pen().color());
+			continue;
+		}
+
 		const QPoint sample_point = sample2point(s, channel_meta_type_id);
 		//shvDebug() << i << "t:" << s.time << "x:" << sample_point.x() << "y:" << sample_point.y();
 		//shvDebug() << "\t recent x:" << recent_px.x << " current x:" << current_px.x;
@@ -1504,17 +1535,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 					drawn_point = QPoint{current_px.x, (current_px.minY + current_px.maxY) / 2};
 					painter->drawLine(current_px.x, current_px.minY, current_px.x, current_px.maxY);
 				}
-				if(interpolation == GraphChannel::Style::Interpolation::None) {
-					if(line_area_color.isValid()) {
-						QPoint p0 = sample2point(Sample{s.time, 0}, channel_meta_type_id); // <- this can be computed ahead
-						p0.setX(drawn_point.x());
-						painter->fillRect(QRect{drawn_point, p0}, line_area_color);
-					}
-					QRect r0{QPoint(), QSize{sample_point_size, sample_point_size}};
-					r0.moveCenter(drawn_point);
-					painter->fillRect(r0, line_color);
-				}
-				else if(interpolation == GraphChannel::Style::Interpolation::Stepped) {
+				if(interpolation == GraphChannel::Style::Interpolation::Stepped) {
 					if(recent_px.x != NO_X) {
 						QPoint pa{recent_px.x, recent_px.lastY};
 						if(line_area_color.isValid()) {

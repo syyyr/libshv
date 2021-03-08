@@ -7,6 +7,8 @@
 #include <QVariant>
 #include <QVector>
 
+#include <shv/core/utils/shvlogtypeinfo.h>
+
 namespace shv {
 namespace visu {
 namespace timeline {
@@ -23,6 +25,7 @@ public:
 		QString shvPath;
 		QString name;
 		int metaTypeId = QMetaType::UnknownType;
+		shv::core::utils::ShvLogTypeDescr typeDescr;
 
 		//QString caption() const { return name.isEmpty()? shvPath: name; }
 	};
@@ -37,7 +40,7 @@ public:
 	YRange yRange(int channel_ix) const;
 	void clear();
 	void appendChannel() {appendChannel(std::string(), std::string());}
-	void appendChannel(const std::string &shv_path, const std::string &name);
+	void appendChannel(const std::string &shv_path, const std::string &name, const shv::core::utils::ShvLogTypeDescr &type_descr = shv::core::utils::ShvLogTypeDescr());
 public:
 	virtual int channelCount() const { return qMin(m_channelsInfo.count(), m_samples.count()); }
 	const ChannelInfo& channelInfo(int channel_ix) const { return m_channelsInfo.at(channel_ix); }
