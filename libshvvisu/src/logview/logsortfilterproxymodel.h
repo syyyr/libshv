@@ -2,6 +2,7 @@
 
 #include "../shvvisuglobal.h"
 #include "../timeline/channelfilter.h"
+#include "../timeline/fulltextfilter.h"
 
 #include <QSortFilterProxyModel>
 
@@ -20,12 +21,16 @@ public:
 	void setChannelFilter(const shv::visu::timeline::ChannelFilter &filter);
 	void setFilterShvPaths(const QStringList &shv_paths);
 	void setShvPathColumn(int column);
+	void setValueColumn(int column);
+	void setFulltextFilter(const shv::visu::timeline::FullTextFilter &filter);
 
 	bool filterAcceptsRow(int source_rrow, const QModelIndex &source_parent) const override;
 
 private:
 	shv::visu::timeline::ChannelFilter m_channelFilter;
+	shv::visu::timeline::FullTextFilter m_fulltextFilter;
 	int m_shvPathColumn = -1;
+	int m_valueColumn = -1;
 };
 
 }}}

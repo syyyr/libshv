@@ -9,7 +9,8 @@ HEADERS += \
     $$PWD/graph.h \
     $$PWD/graphview.h \
     $$PWD/graphwidget.h \
-    $$PWD/sample.h
+    $$PWD/sample.h \
+    $$PWD/fulltextfilter.h
 
 SOURCES += \
     $$PWD/channelfilter.cpp \
@@ -22,7 +23,8 @@ SOURCES += \
     $$PWD/graph.cpp \
     $$PWD/graphview.cpp \
     $$PWD/graphwidget.cpp \
-    $$PWD/sample.cpp
+    $$PWD/sample.cpp \
+    $$PWD/fulltextfilter.cpp
 
 FORMS += \
     $$PWD/channelfilterdialog.ui \
