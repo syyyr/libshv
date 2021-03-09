@@ -38,6 +38,7 @@
 #include <QSocketNotifier>
 #include <QSqlDatabase>
 #include <QTimer>
+#include <QUdpSocket>
 
 #include <ctime>
 #include <fstream>
@@ -56,6 +57,7 @@
 #define logAclResolveW() nCWarning("AclResolve")
 #define logAclResolveM() nCMessage("AclResolve")
 
+#define logBrokerDiscoveryM() nCMessage("BrokerDiscovery")
 #define logServiceProvidersM() nCMessage("ServiceProviders")
 
 #define logSubscriptionsD() nCDebug("Subscr").color(NecroLog::Color::Yellow)
@@ -226,6 +228,35 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/masters", new MasterBrokersNode());
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/mounts", new MountsNode());
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/etc/acl", new EtcAclRootNode());
+
+	if (m_cliOptions->discoveryPort() > 0) {
+		QUdpSocket *udp_socket = new QUdpSocket(this);
+		udp_socket->bind(m_cliOptions->discoveryPort(), QUdpSocket::ShareAddress);
+		logBrokerDiscoveryM() << "shvbrokerDiscovery listen on UDP port:" << m_cliOptions->discoveryPort();
+		connect(udp_socket, &QUdpSocket::readyRead, this, [this, udp_socket]() {
+			QByteArray datagram;
+			QHostAddress address;
+			quint16 port;
+			while (udp_socket->hasPendingDatagrams()) {
+				datagram.resize(int(udp_socket->pendingDatagramSize()));
+				udp_socket->readDatagram(datagram.data(), datagram.size(), &address, &port);
+
+				std::string rq_cpon(datagram.constData(), datagram.length());
+				shv::chainpack::RpcValue rv = shv::chainpack::RpcValue::fromCpon(rq_cpon);
+				shv::chainpack::RpcRequest rq(rv);
+				if (rq.method() == "shvbrokerDiscovery") {
+					logBrokerDiscoveryM() << "Received broadcast request shvbrokerDiscovery:" << rq.toPrettyString();
+					shv::chainpack::RpcResponse resp = rq.makeResponse();
+					QString ipv4 = shv::iotqt::utils::Network::primaryIPv4Address().toString();
+					shv::chainpack::RpcValue response = shv::chainpack::RpcValue::Map { {"brokerId", m_brokerId}, {"brokerIPv4", ipv4.toStdString()}};
+					resp.setResult(response);
+					QByteArray response_datagram(resp.toCpon().c_str(), resp.toCpon().length());
+					udp_socket->writeDatagram(response_datagram, address, port);
+					logBrokerDiscoveryM() << "Send response on broadcast shvbrokerDiscovery:" << resp.toPrettyString();
+				}
+			}
+		});
+	}
 
 	QTimer::singleShot(0, this, &BrokerApp::lazyInit);
 }
