@@ -273,28 +273,16 @@ Sample Graph::timeToSample(int channel_ix, timemsec_t time) const
 	const GraphChannel *ch = channelAt(channel_ix);
 	int model_ix = ch->modelIndex();
 	int ix1 = m->lessOrEqualIndex(model_ix, time);
+	if(ix1 < 0)
+		return Sample();
 	int interpolation = ch->m_effectiveStyle.interpolation();
 	//shvInfo() << channel_ix << "interpolation:" << interpolation;
 	if(interpolation == GraphChannel::Style::Interpolation::None) {
-		Sample s1;
-		Sample s2;
-		if (ix1 >= 0) {
-			s1 = m->sampleAt(model_ix, ix1);
+		Sample s = m->sampleAt(model_ix, ix1);
+		if(s.time == time)
+			return s;
 	}
-		if (ix1 + 1 == m->count(model_ix)) {
-			return s1;
-		}
-		s2 = m->sampleAt(model_ix, ix1 + 1);
-		if (s1.isValid() && time - s1.time < s2.time - time) {
-			return s1;
-		}
-		else {
-			return s2;
-		}
-	}
-	if(ix1 < 0)
-		return Sample();
-	if(interpolation == GraphChannel::Style::Interpolation::Stepped) {
+	else if(interpolation == GraphChannel::Style::Interpolation::Stepped) {
 		Sample s = m->sampleAt(model_ix, ix1);
 		s.time = time;
 		return s;
@@ -311,6 +299,30 @@ Sample Graph::timeToSample(int channel_ix, timemsec_t time) const
 		return Sample(time, d);
 	}
 	return Sample();
+}
+
+Sample Graph::nearestSample(int channel_ix, timemsec_t time) const
+{
+	GraphModel *m = model();
+	const GraphChannel *ch = channelAt(channel_ix);
+	int model_ix = ch->modelIndex();
+	int ix1 = m->lessOrEqualIndex(model_ix, time);
+
+	Sample s1;
+	Sample s2;
+	if (ix1 >= 0) {
+		s1 = m->sampleAt(model_ix, ix1);
+	}
+	if (ix1 + 1 == m->count(model_ix)) {
+		return s1;
+	}
+	s2 = m->sampleAt(model_ix, ix1 + 1);
+	if (s1.isValid() && time - s1.time < s2.time - time) {
+		return s1;
+	}
+	else {
+		return s2;
+	}
 }
 
 Sample Graph::posToData(const QPoint &pos) const

@@ -193,6 +193,16 @@ int GraphWidget::channelIndexOnGraphDataAreaIndex(const QPoint &pos) const
 	return ch_ix;
 }
 
+QString GraphWidget::interpretEnum(int value, const ShvLogTypeDescr &type_descr)
+{
+	for (const auto &field : type_descr.fields) {
+		if (value == field.value.toInt()) {
+			return QString::fromStdString(field.name);
+		}
+	}
+	return QString();
+}
+
 void GraphWidget::mouseDoubleClickEvent(QMouseEvent *event)
 {
 	QPoint pos = event->pos();
@@ -371,18 +381,24 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		setCursor(Qt::BlankCursor);
 		gr->setCrossHairPos({ch_ix, pos});
 		timemsec_t t = gr->posToTime(pos.x());
-		Sample s = gr->timeToSample(ch_ix, t);
 		const GraphChannel *ch = gr->channelAt(ch_ix);
 		//update(ch->graphAreaRect());
 		GraphModel::ChannelInfo &channel_info = gr->model()->channelInfo(ch->modelIndex());
+		Sample s;
+		if (channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Discrete) {
+			s = gr->nearestSample(ch_ix, t);
+		}
+		else {
+			s = gr->timeToSample(ch_ix, t);
+		}
 		QPoint point;
 		QString text;
 
 		if (s.isValid()) {
 			if (channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Continuous || qAbs(pos.x() - gr->timeToPos(s.time)) < 7) {
 				point = mapToGlobal(pos + QPoint{gr->u2px(0.8), 0});
-			QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
-			dt = dt.toTimeZone(graph()->timeZone());
+				QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
+				dt = dt.toTimeZone(graph()->timeZone());
 
 				if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Map) {
 					text = QStringLiteral("%1\nx: %2\n")
@@ -390,7 +406,14 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 						   .arg(dt.toString(Qt::ISODateWithMs));
 					const QVariantMap &map = s.value.toMap();
 					for (auto it = map.cbegin(); it != map.cend(); ++it) {
-						text += it.key() + ": " + it.value().toString() + "\n";
+						QString value = it.value().toString();
+						for (auto &field : channel_info.typeDescr.fields) {
+							if (QString::fromStdString(field.name) == it.key() && field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+								value = interpretEnum(it.value().toInt(), field.typeDescr);
+								break;
+							}
+						}
+						text += it.key() + ": " + value + "\n";
 					}
 					text.chop(1);
 				}
@@ -401,8 +424,15 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 					const QVariantMap &map = s.value.toMap();
 					for (auto it = map.cbegin(); it != map.cend(); ++it) {
 						for (auto &field : channel_info.typeDescr.fields) {
-							if (it.key() == field.value.toInt()) {
-								text += QString::fromStdString(field.name) + ": " + it.value().toString() + "\n";
+							if (it.key().toInt() == field.value.toInt()) {
+								QString value;
+								if (field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+									value = interpretEnum(it.value().toInt(), field.typeDescr);
+								}
+								else {
+									value = it.value().toString();
+								}
+								text += QString::fromStdString(field.name) + ": " + value + "\n";
 								break;
 							}
 						}
@@ -410,25 +440,20 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 					text.chop(1);
 				}
 				else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-					text = QStringLiteral("%1\nx: %2")
+					text = QStringLiteral("%1\nx: %2\nvalue: %3")
 						   .arg(ch->shvPath())
-						   .arg(dt.toString(Qt::ISODateWithMs));
-					for (auto &field : channel_info.typeDescr.fields) {
-						if (s.value.toInt() == field.value.toInt()) {
-							text += "\nvalue: " + QString::fromStdString(field.name);
-							break;
-						}
-					}
+						   .arg(dt.toString(Qt::ISODateWithMs))
+						   .arg(interpretEnum(s.value.toInt(), channel_info.typeDescr));
 				}
 				else {
 					text = QStringLiteral("%1\nx: %2\ny: %3\nvalue: %4")
-					.arg(ch->shvPath())
-					.arg(dt.toString(Qt::ISODateWithMs))
-					.arg(ch->posToValue(pos.y()))
-					.arg(s.value.toString());
+						   .arg(ch->shvPath())
+						   .arg(dt.toString(Qt::ISODateWithMs))
+						   .arg(ch->posToValue(pos.y()))
+						   .arg(s.value.toString());
+				}
+			}
 		}
-		}
-	}
 		QToolTip::showText(point, text);
 	}
 	else {

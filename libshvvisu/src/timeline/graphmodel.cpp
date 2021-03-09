@@ -210,7 +210,7 @@ int GraphModel::pathToChannelIndex(const std::string &path) const
 	return it->second;
 }
 
-void GraphModel::appendChannel(const std::string &shv_path, const std::string &name, const shv::core::utils::ShvLogTypeDescr &type_descr)
+void GraphModel::appendChannel(const std::string &shv_path, const std::string &name, const ShvLogTypeDescr &type_descr)
 {
 	m_pathToChannelCache.clear();
 	m_channelsInfo.append(ChannelInfo());
@@ -228,6 +228,15 @@ int GraphModel::guessMetaType(int channel_ix)
 {
 	Sample s = sampleValue(channel_ix, 0);
 	return s.value.userType();
+}
+
+ShvLogTypeDescr::ShvLogTypeDescr(const core::utils::ShvLogTypeDescr &d)
+	: Super(d)
+{
+	for (const auto &field : Super::fields) {
+		fields.push_back(ShvLogTypeDescrField(field));
+	}
+	Super::fields.clear();
 }
 
 }}}
