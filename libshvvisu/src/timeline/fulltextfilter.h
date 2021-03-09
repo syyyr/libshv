@@ -2,8 +2,8 @@
 
 #include "../shvvisuglobal.h"
 
+#include <QRegularExpression>
 #include <QString>
-
 
 namespace shv {
 namespace visu {
@@ -24,9 +24,11 @@ public:
 	void setRegularExpression(bool regular_expression);
 
 	bool matches(const QString &value) const;
-
+private:
+	void initRegexp();
 private:
 	QString m_pattern;
+	QRegularExpression m_regexp;
 	bool m_isCaseSensitive = false;
 	bool m_isRegularExpression = false;
 };
