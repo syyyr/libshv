@@ -146,10 +146,12 @@ void ClientConnection::open()
 		shvInfo() << "Starting check-connected timer, interval:" << m_checkBrokerConnectedInterval/1000 << "sec.";
 		m_checkConnectedTimer->start(m_checkBrokerConnectedInterval);
 	}
+	m_isOpen = true;
 }
 
 void ClientConnection::closeOrAbort(bool is_abort)
 {
+	m_isOpen = false;
 	m_checkConnectedTimer->stop();
 	if(m_socket) {
 		if(is_abort)
@@ -164,10 +166,13 @@ void ClientConnection::closeOrAbort(bool is_abort)
 
 void ClientConnection::restartIfActive()
 {
-	bool is_active = m_checkConnectedTimer->isActive();
+	bool was_open = m_isOpen;
 	close();
-	if(is_active && m_checkBrokerConnectedInterval > 0)
-		QTimer::singleShot(m_checkBrokerConnectedInterval, this, &ClientConnection::open);
+	if(was_open && m_checkBrokerConnectedInterval > 0)
+		QTimer::singleShot(m_checkBrokerConnectedInterval, this, [this]() {
+			if(m_isOpen)
+				open();
+		});
 }
 
 void ClientConnection::setCheckBrokerConnectedInterval(int ms)

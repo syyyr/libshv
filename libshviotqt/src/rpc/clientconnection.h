@@ -110,6 +110,7 @@ private:
 	int m_checkBrokerConnectedInterval = 0;
 	QTimer *m_heartBeatTimer = nullptr;
 	SecurityType m_securityType = None;
+	bool m_isOpen = false;
 };
 
 } // namespace chainpack
