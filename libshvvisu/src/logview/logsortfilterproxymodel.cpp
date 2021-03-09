@@ -36,21 +36,24 @@ void LogSortFilterProxyModel::setFulltextFilter(const timeline::FullTextFilter &
 
 bool LogSortFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
-	bool res = false;
+	bool row_accepted = false;
 	if (m_shvPathColumn >= 0) {
 		QModelIndex ix = sourceModel()->index(source_row, m_shvPathColumn, source_parent);
-		res = m_channelFilter.isPathMatch(sourceModel()->data(ix).toString());
+		row_accepted = m_channelFilter.isPathMatch(sourceModel()->data(ix).toString());
 	}
-	if (res) {
+	if (row_accepted && !m_fulltextFilter.pattern().isEmpty()) {
+		bool fulltext_match = false;
+		{
+			QModelIndex ix = sourceModel()->index(source_row, m_shvPathColumn, source_parent);
+			fulltext_match = fulltext_match || m_fulltextFilter.matches(sourceModel()->data(ix).toString());
+		}
 		if (m_valueColumn >= 0) {
 			QModelIndex ix = sourceModel()->index(source_row, m_valueColumn, source_parent);
-			res = m_fulltextFilter.matches(sourceModel()->data(ix).toString());
+			fulltext_match = fulltext_match || m_fulltextFilter.matches(sourceModel()->data(ix).toString());
 		}
-		else {
-			res = false;
-		}
+		row_accepted = fulltext_match;
 	}
-	return res;
+	return row_accepted;
 }
 
 }}}
