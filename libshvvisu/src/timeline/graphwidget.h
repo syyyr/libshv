@@ -58,7 +58,7 @@ protected:
 	bool isMouseAboveMiniMapSlider(const QPoint &pos) const;
 	int channelIndexOnGraphVerticalHeader(const QPoint &pos) const;
 	int channelIndexOnGraphDataAreaIndex(const QPoint &pos) const;
-	QString interpretEnum(int value, const ShvLogTypeDescr &type_descr);
+	QString enumToString(int value, const TypeDescr &type_descr);
 
 protected:
 	Graph *m_graph = nullptr;

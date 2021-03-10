@@ -193,7 +193,7 @@ int GraphWidget::channelIndexOnGraphDataAreaIndex(const QPoint &pos) const
 	return ch_ix;
 }
 
-QString GraphWidget::interpretEnum(int value, const ShvLogTypeDescr &type_descr)
+QString GraphWidget::enumToString(int value, const TypeDescr &type_descr)
 {
 	for (const auto &field : type_descr.fields) {
 		if (value == field.value.toInt()) {
@@ -395,7 +395,8 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		QString text;
 
 		if (s.isValid()) {
-			if (channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Continuous || qAbs(pos.x() - gr->timeToPos(s.time)) < 7) {
+			if (channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Continuous ||
+				(channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Discrete && qAbs(pos.x() - gr->timeToPos(s.time)) < gr->u2px(1.1))) {
 				point = mapToGlobal(pos + QPoint{gr->u2px(0.8), 0});
 				QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
 				dt = dt.toTimeZone(graph()->timeZone());
@@ -409,7 +410,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 						QString value = it.value().toString();
 						for (auto &field : channel_info.typeDescr.fields) {
 							if (QString::fromStdString(field.name) == it.key() && field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-								value = interpretEnum(it.value().toInt(), field.typeDescr);
+								value = enumToString(it.value().toInt(), field.typeDescr);
 								break;
 							}
 						}
@@ -427,7 +428,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 							if (it.key().toInt() == field.value.toInt()) {
 								QString value;
 								if (field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-									value = interpretEnum(it.value().toInt(), field.typeDescr);
+									value = enumToString(it.value().toInt(), field.typeDescr);
 								}
 								else {
 									value = it.value().toString();
@@ -443,7 +444,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 					text = QStringLiteral("%1\nx: %2\nvalue: %3")
 						   .arg(ch->shvPath())
 						   .arg(dt.toString(Qt::ISODateWithMs))
-						   .arg(interpretEnum(s.value.toInt(), channel_info.typeDescr));
+						   .arg(enumToString(s.value.toInt(), channel_info.typeDescr));
 				}
 				else {
 					text = QStringLiteral("%1\nx: %2\ny: %3\nvalue: %4")

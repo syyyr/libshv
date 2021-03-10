@@ -13,19 +13,19 @@ namespace shv {
 namespace visu {
 namespace timeline {
 
-struct SHVVISU_DECL_EXPORT ShvLogTypeDescrField : public shv::core::utils::ShvLogTypeDescrField
+struct SHVVISU_DECL_EXPORT TypeDescrField : public shv::core::utils::ShvLogTypeDescrField
 {
 	using Super = shv::core::utils::ShvLogTypeDescrField;
-	ShvLogTypeDescrField(const shv::core::utils::ShvLogTypeDescrField &f) : Super(f) {}
+	TypeDescrField(const shv::core::utils::ShvLogTypeDescrField &f) : Super(f) {}
 	shv::core::utils::ShvLogTypeDescr typeDescr;
 };
 
-struct SHVVISU_DECL_EXPORT ShvLogTypeDescr : public shv::core::utils::ShvLogTypeDescr
+struct SHVVISU_DECL_EXPORT TypeDescr : public shv::core::utils::ShvLogTypeDescr
 {
 	using Super = shv::core::utils::ShvLogTypeDescr;
-	ShvLogTypeDescr(const shv::core::utils::ShvLogTypeDescr &d);
-	ShvLogTypeDescr() {}
-	QVector<ShvLogTypeDescrField> fields;
+	TypeDescr(const shv::core::utils::ShvLogTypeDescr &d);
+	TypeDescr() {}
+	QVector<TypeDescrField> fields;
 };
 
 class SHVVISU_DECL_EXPORT GraphModel : public QObject
@@ -40,7 +40,7 @@ public:
 		QString shvPath;
 		QString name;
 		int metaTypeId = QMetaType::UnknownType;
-		ShvLogTypeDescr typeDescr;
+		TypeDescr typeDescr;
 
 		//QString caption() const { return name.isEmpty()? shvPath: name; }
 	};
@@ -55,7 +55,7 @@ public:
 	YRange yRange(int channel_ix) const;
 	void clear();
 	void appendChannel() {appendChannel(std::string(), std::string());}
-	void appendChannel(const std::string &shv_path, const std::string &name, const ShvLogTypeDescr &type_descr = ShvLogTypeDescr());
+	void appendChannel(const std::string &shv_path, const std::string &name, const TypeDescr &type_descr = TypeDescr());
 public:
 	virtual int channelCount() const { return qMin(m_channelsInfo.count(), m_samples.count()); }
 	const ChannelInfo& channelInfo(int channel_ix) const { return m_channelsInfo.at(channel_ix); }
