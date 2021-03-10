@@ -262,8 +262,8 @@ void ClientConnection::whenBrokerConnectedChanged(bool b)
 				m_heartBeatTimer->setInterval(heartBeatInterval() * 1000);
 				connect(m_heartBeatTimer, &QTimer::timeout, this, [this]() {
 					if(m_connectionState.pingRqId > 0) {
-						shvWarning() << "PING response not received within" << (m_heartBeatTimer->interval() / 1000) << "seconds, restarting conection to broker.";
-						//restartIfActive();
+						shvError() << "PING response not received within" << (m_heartBeatTimer->interval() / 1000) << "seconds, restarting conection to broker.";
+						restartIfAutoConnect();
 					}
 					else {
 						m_connectionState.pingRqId = callShvMethod(".broker/app", cp::Rpc::METH_PING);
@@ -349,6 +349,14 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 	};
 }
 
+void ClientConnection::restartIfAutoConnect()
+{
+	if(isAutoConnect())
+		setState(State::ConnectionError);
+	else
+		close();
+}
+
 int ClientConnection::brokerClientId() const
 {
 	return m_connectionState.loginResult.toMap().value(cp::Rpc::KEY_CLIENT_ID).toInt();
@@ -380,10 +388,7 @@ void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
 		}
 	} while(false);
 	shvError() << "Invalid handshake message! Dropping connection." << msg.toCpon();
-	if(isAutoConnect())
-		setState(State::ConnectionError);
-	else
-		close();
+	restartIfAutoConnect();
 }
 
 const char *ClientConnection::stateToString(ClientConnection::State state)

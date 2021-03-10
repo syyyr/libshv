@@ -106,6 +106,7 @@ protected:
 	ConnectionState m_connectionState;
 private:
 	bool isAutoConnect() const { return m_checkBrokerConnectedInterval > 0; }
+	void restartIfAutoConnect();
 private:
 	QTimer *m_checkConnectedTimer;
 	int m_checkBrokerConnectedInterval = 0;
