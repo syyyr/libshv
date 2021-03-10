@@ -169,8 +169,8 @@ void ClientConnection::restartIfActive()
 	bool was_open = m_isOpen;
 	close();
 	if(was_open && m_checkBrokerConnectedInterval > 0)
-		QTimer::singleShot(m_checkBrokerConnectedInterval, this, [this]() {
-			if(m_isOpen)
+		QTimer::singleShot(m_checkBrokerConnectedInterval, this, [this, was_open]() {
+			if(was_open)
 				open();
 		});
 }
