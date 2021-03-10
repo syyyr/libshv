@@ -1466,8 +1466,6 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 
 	int interpolation = ch_style.interpolation();
 
-	int sample_point_size = u2px(0.2);
-
 	QPen pen;
 	QColor line_color = ch_style.color();
 	pen.setColor(line_color);
@@ -1521,12 +1519,12 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		if (interpolation == GraphChannel::Style::Interpolation::None) {
 			QPoint sample_point = sample2point(Sample{s.time, 0}, channel_meta_type_id); // <- this can be computed ahead
 			int arrow_width = u2px(1);
-			painter->drawLine(sample_point.x(), clip_rect.height() - arrow_width, sample_point.x(), clip_rect.height());
+			painter->drawLine(sample_point.x(), clip_rect.y() + clip_rect.height() - arrow_width, sample_point.x(), clip_rect.y() + clip_rect.height());
 			QPainterPath path;
-			path.moveTo(sample_point.x() - arrow_width / 2, clip_rect.height() - arrow_width / 2);
-			path.lineTo(sample_point.x() + arrow_width / 2, clip_rect.height() - arrow_width / 2);
-			path.lineTo(sample_point.x(), clip_rect.height());
-			path.lineTo(sample_point.x() - arrow_width / 2, clip_rect.height() - arrow_width / 2);
+			path.moveTo(sample_point.x() - arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
+			path.lineTo(sample_point.x() + arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
+			path.lineTo(sample_point.x(), clip_rect.y() + clip_rect.height());
+			path.lineTo(sample_point.x() - arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
 			path.closeSubpath();
 			painter->drawPath(path);
 			painter->fillPath(path, painter->pen().color());
