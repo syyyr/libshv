@@ -77,10 +77,9 @@ public:
 	/// AbstractRpcConnection interface implementation
 	void sendMessage(const shv::chainpack::RpcMessage &rpc_msg) override;
 	void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg) override;
-protected:
+protected:	
 	void setState(State state);
 	void closeOrAbort(bool is_abort);
-	void restartIfActive();
 
 	void sendHello();
 	void sendLogin(const shv::chainpack::RpcValue &server_hello);
@@ -106,11 +105,12 @@ protected:
 	};
 	ConnectionState m_connectionState;
 private:
+	bool isAutoConnect() const { return m_checkBrokerConnectedInterval > 0; }
+private:
 	QTimer *m_checkConnectedTimer;
 	int m_checkBrokerConnectedInterval = 0;
 	QTimer *m_heartBeatTimer = nullptr;
 	SecurityType m_securityType = None;
-	bool m_isOpen = false;
 };
 
 } // namespace chainpack

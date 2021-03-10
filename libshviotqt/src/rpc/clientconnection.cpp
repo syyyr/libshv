@@ -146,12 +146,10 @@ void ClientConnection::open()
 		shvInfo() << "Starting check-connected timer, interval:" << m_checkBrokerConnectedInterval/1000 << "sec.";
 		m_checkConnectedTimer->start(m_checkBrokerConnectedInterval);
 	}
-	m_isOpen = true;
 }
 
 void ClientConnection::closeOrAbort(bool is_abort)
 {
-	m_isOpen = false;
 	m_checkConnectedTimer->stop();
 	if(m_socket) {
 		if(is_abort)
@@ -162,17 +160,6 @@ void ClientConnection::closeOrAbort(bool is_abort)
 		m_socket = nullptr;
 	}
 	setState(State::NotConnected);
-}
-
-void ClientConnection::restartIfActive()
-{
-	bool was_open = m_isOpen;
-	close();
-	if(was_open && m_checkBrokerConnectedInterval > 0)
-		QTimer::singleShot(m_checkBrokerConnectedInterval, this, [this, was_open]() {
-			if(was_open)
-				open();
-		});
 }
 
 void ClientConnection::setCheckBrokerConnectedInterval(int ms)
@@ -275,8 +262,8 @@ void ClientConnection::whenBrokerConnectedChanged(bool b)
 				m_heartBeatTimer->setInterval(heartBeatInterval() * 1000);
 				connect(m_heartBeatTimer, &QTimer::timeout, this, [this]() {
 					if(m_connectionState.pingRqId > 0) {
-						shvError() << "PING response not received within" << (m_heartBeatTimer->interval() / 1000) << "seconds, restarting conection to broker.";
-						restartIfActive();
+						shvWarning() << "PING response not received within" << (m_heartBeatTimer->interval() / 1000) << "seconds, restarting conection to broker.";
+						//restartIfActive();
 					}
 					else {
 						m_connectionState.pingRqId = callShvMethod(".broker/app", cp::Rpc::METH_PING);
@@ -393,7 +380,10 @@ void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
 		}
 	} while(false);
 	shvError() << "Invalid handshake message! Dropping connection." << msg.toCpon();
-	restartIfActive();
+	if(isAutoConnect())
+		setState(State::ConnectionError);
+	else
+		close();
 }
 
 const char *ClientConnection::stateToString(ClientConnection::State state)
