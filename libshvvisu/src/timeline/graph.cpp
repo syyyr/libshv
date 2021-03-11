@@ -91,13 +91,31 @@ void Graph::createChannelsFromModel()
 		QString shv_path = m_model->channelShvPath(i);
 		path_to_model_index[shv_path] = i;
 	}
-	XRange x_range;
 	for(const auto &shv_path : path_to_model_index.keys()) {
 		int model_ix = path_to_model_index[shv_path];
+		shvDebug() << "adding channel:" << shv_path;
+		//shvInfo() << "new channel:" << model_ix;
+		GraphChannel *ch = appendChannel(model_ix);
+		//ch->buttonBox()->setObjectName(QString::fromStdString(shv_path));
+		int channel_ix = channelCount() - 1;
+		GraphChannel::Style style = ch->style();
+		style.setColor(colors.value(channel_ix % colors.count()));
+		ch->setStyle(style);
+		//ch->setMetaTypeId(m_model->guessMetaType(model_ix));
+	}
+	resetChannelsRanges();
+}
+
+void Graph::resetChannelsRanges()
+{
+	if(!m_model)
+		return;
+	XRange x_range;
+	for (int channel_ix = 0; channel_ix < channelCount(); ++channel_ix) {
+		GraphChannel *ch = channelAt(channel_ix);
+		int model_ix = ch->modelIndex();
 		YRange yrange = m_model->yRange(model_ix);
-		shvDebug() << "adding channel:" << shv_path << "y-range interval:" << yrange.interval();
 		if(yrange.isEmpty()) {
-			shvDebug() << "\t constant channel:" << shv_path;
 			if(yrange.max > 1)
 				yrange = YRange{0, yrange.max};
 			else if(yrange.max < -1)
@@ -108,15 +126,7 @@ void Graph::createChannelsFromModel()
 				yrange = YRange{0, 1};
 		}
 		x_range = x_range.united(m_model->xRange(model_ix));
-		//shvInfo() << "new channel:" << model_ix;
-		GraphChannel *ch = appendChannel(model_ix);
-		//ch->buttonBox()->setObjectName(QString::fromStdString(shv_path));
-		int graph_ix = channelCount() - 1;
-		GraphChannel::Style style = ch->style();
-		style.setColor(colors.value(graph_ix % colors.count()));
-		ch->setStyle(style);
-		//ch->setMetaTypeId(m_model->guessMetaType(model_ix));
-		setYRange(graph_ix, yrange);
+		setYRange(channel_ix, yrange);
 	}
 	setXRange(x_range);
 }

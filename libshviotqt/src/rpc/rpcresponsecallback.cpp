@@ -121,8 +121,13 @@ void RpcResponseCallBack::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 RpcCall::RpcCall(ClientConnection *connection)
 	: m_rpcConnection(connection)
 {
-	connect(this, &RpcCall::result, this, &RpcCall::deleteLater);
-	connect(this, &RpcCall::error, this, &RpcCall::deleteLater);
+	connect(this, &RpcCall::maybeResult, this, [this](const ::shv::chainpack::RpcValue &_result, const QString &_error) {
+		if(_error.isEmpty())
+			emit result(_result);
+		else
+			emit error(_error);
+		deleteLater();
+	});
 }
 
 RpcCall *RpcCall::createSubscribtionRequest(ClientConnection *connection, const QString &shv_path, const QString &method)
@@ -189,21 +194,21 @@ RpcCall *RpcCall::setParams(const cp::RpcValue &params)
 void RpcCall::start()
 {
 	if(m_rpcConnection.isNull()) {
-		emit error("RPC connection is NULL");
+		emit maybeResult(cp::RpcValue(), "RPC connection is NULL");
 		return;
 	}
 	if(!m_rpcConnection->isBrokerConnected()) {
-		emit error("RPC connection is not open");
+		emit maybeResult(cp::RpcValue(), "RPC connection is not open");
 		return;
 	}
 	int rqid = m_rpcConnection->nextRequestId();
 	RpcResponseCallBack *cb = new RpcResponseCallBack(m_rpcConnection, rqid, this);
 	cb->start(this, [this](const cp::RpcResponse &resp) {
 		if (resp.isSuccess()) {
-			emit result(resp.result());
+			emit maybeResult(resp.result(), QString());
 		}
 		else {
-			emit error(QString::fromStdString(resp.errorString()));
+			emit maybeResult(cp::RpcValue(), QString::fromStdString(resp.errorString()));
 		}
 	});
 	m_rpcConnection->callShvMethod(rqid, m_shvPath, m_method, m_params);

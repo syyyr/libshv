@@ -69,6 +69,7 @@ public:
 	//RpcCall* setParams(const QVariant &params); not implemented since we do not know how to convert arbitrary QVariant to RpcValue
 	void start();
 
+	Q_SIGNAL void maybeResult(const ::shv::chainpack::RpcValue &result, const QString &error);
 	Q_SIGNAL void result(const ::shv::chainpack::RpcValue &result);
 	Q_SIGNAL void error(const QString &error);
 private:

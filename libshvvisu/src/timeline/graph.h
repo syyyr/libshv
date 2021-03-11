@@ -87,6 +87,7 @@ public:
 	QTimeZone timeZone() const;
 
 	void createChannelsFromModel();
+	void resetChannelsRanges();
 
 	int channelCount() const { return  m_channels.count(); }
 	void clearChannels();
