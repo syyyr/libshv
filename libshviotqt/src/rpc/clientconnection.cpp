@@ -36,8 +36,8 @@ ClientConnection::ClientConnection(QObject *parent)
 
 	connect(this, &SocketRpcConnection::socketConnectedChanged, this, &ClientConnection::onSocketConnectedChanged);
 
-	m_checkConnectedTimer = new QTimer(this);
-	connect(m_checkConnectedTimer, &QTimer::timeout, this, &ClientConnection::checkBrokerConnected);
+	m_checkBrokerConnectedTimer = new QTimer(this);
+	connect(m_checkBrokerConnectedTimer, &QTimer::timeout, this, &ClientConnection::checkBrokerConnected);
 }
 
 ClientConnection::~ClientConnection()
@@ -144,13 +144,14 @@ void ClientConnection::open()
 	checkBrokerConnected();
 	if(m_checkBrokerConnectedInterval > 0) {
 		shvInfo() << "Starting check-connected timer, interval:" << m_checkBrokerConnectedInterval/1000 << "sec.";
-		m_checkConnectedTimer->start(m_checkBrokerConnectedInterval);
+		m_checkBrokerConnectedTimer->start(m_checkBrokerConnectedInterval);
 	}
 }
 
 void ClientConnection::closeOrAbort(bool is_abort)
 {
-	m_checkConnectedTimer->stop();
+	shvInfo() << "close connection, abort:" << is_abort;
+	m_checkBrokerConnectedTimer->stop();
 	if(m_socket) {
 		if(is_abort)
 			abortSocket();
@@ -166,9 +167,9 @@ void ClientConnection::setCheckBrokerConnectedInterval(int ms)
 {
 	m_checkBrokerConnectedInterval = ms;
 	if(ms == 0)
-		m_checkConnectedTimer->stop();
+		m_checkBrokerConnectedTimer->stop();
 	else
-		m_checkConnectedTimer->setInterval(ms);
+		m_checkBrokerConnectedTimer->setInterval(ms);
 }
 
 void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
@@ -241,7 +242,7 @@ void ClientConnection::sendLogin(const shv::chainpack::RpcValue &server_hello)
 
 void ClientConnection::checkBrokerConnected()
 {
-	//shvWarning() << "check: " << isSocketConnected();
+	shvInfo() << "check broker connected: " << isSocketConnected();
 	if(!isBrokerConnected()) {
 		abortSocket();
 		shvInfo().nospace() << "connecting to: " << user() << "@" << host() << ":" << port() << " security: " << securityTypeToString(securityType());

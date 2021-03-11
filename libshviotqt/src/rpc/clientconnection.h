@@ -108,7 +108,7 @@ private:
 	bool isAutoConnect() const { return m_checkBrokerConnectedInterval > 0; }
 	void restartIfAutoConnect();
 private:
-	QTimer *m_checkConnectedTimer;
+	QTimer *m_checkBrokerConnectedTimer;
 	int m_checkBrokerConnectedInterval = 0;
 	QTimer *m_heartBeatTimer = nullptr;
 	SecurityType m_securityType = None;
