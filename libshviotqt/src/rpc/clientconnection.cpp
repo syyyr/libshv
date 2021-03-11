@@ -242,7 +242,7 @@ void ClientConnection::sendLogin(const shv::chainpack::RpcValue &server_hello)
 
 void ClientConnection::checkBrokerConnected()
 {
-	shvInfo() << "check broker connected: " << isSocketConnected();
+	shvDebug() << "check broker connected: " << isSocketConnected();
 	if(!isBrokerConnected()) {
 		abortSocket();
 		shvInfo().nospace() << "connecting to: " << user() << "@" << host() << ":" << port() << " security: " << securityTypeToString(securityType());
