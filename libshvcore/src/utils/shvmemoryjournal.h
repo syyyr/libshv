@@ -36,6 +36,7 @@ public:
 	bool hasSnapshot() const { return m_logHeader.withSnapShot(); }
 
 	const std::vector<ShvJournalEntry>& entries() const {return  m_entries;}
+	bool isEmpty() const { return  m_entries.size() == 0; }
 	size_t size() const { return  m_entries.size(); }
 	const ShvJournalEntry& at(size_t ix) const { return  m_entries.at(ix); }
 	void clear() { m_entries.clear(); }
