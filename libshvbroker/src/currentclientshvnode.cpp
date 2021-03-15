@@ -21,6 +21,7 @@ static string M_USER_ROLES = "userRoles";
 static string M_USER_PROFILE = "userProfile";
 static string M_CHANGE_PASSWORD = "changePassword";
 static string M_ACCES_LEVEL_FOR_METHOD_CALL = "accesLevelForMethodCall";
+static string M_ACCESS_LEVEL_FOR_METHOD_CALL = "accessLevelForMethodCall";
 
 const char *CurrentClientShvNode::NodeId = "currentClient";
 
@@ -33,8 +34,10 @@ CurrentClientShvNode::CurrentClientShvNode(shv::iotqt::node::ShvNode *parent)
 		{M_MOUNT_POINT, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read},
 		{M_USER_ROLES, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read},
 		{M_USER_PROFILE, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read},
-		{M_ACCES_LEVEL_FOR_METHOD_CALL, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read,
+		{M_ACCESS_LEVEL_FOR_METHOD_CALL, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read,
 		  "params: [\"shv_path\", \"method\"]"},
+		{M_ACCES_LEVEL_FOR_METHOD_CALL, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read,
+		  "deprecated, use accessLevelForMethodCall instead"},
 		{M_CHANGE_PASSWORD, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Write
 		  , "params: [\"old_password\", \"new_password\"], old and new passwords can be plain or SHA1"},
 	}
@@ -84,7 +87,7 @@ shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack
 			}
 			return nullptr;
 		}
-		if(method == M_ACCES_LEVEL_FOR_METHOD_CALL) {
+		if(method == M_ACCESS_LEVEL_FOR_METHOD_CALL || method == M_ACCES_LEVEL_FOR_METHOD_CALL) {
 			int client_id = rq.peekCallerId();
 			auto *app = shv::broker::BrokerApp::instance();
 			auto *cli = app->clientById(client_id);
