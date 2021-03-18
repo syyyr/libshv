@@ -23,6 +23,8 @@ public:
 	void setDeviceId(std::string id) { m_logHeader.setDeviceId(std::move(id)); }
 	void setDeviceType(std::string type) { m_logHeader.setDeviceType(std::move(type)); }
 
+	const ShvLogTypeInfo &typeInfo(const std::string &path_prefix = ShvLogHeader::EMPTY_PREFIX_KEY) const { return m_logHeader.typeInfo(path_prefix); }
+
 	bool isShortTimeCorrection() const { return m_isShortTimeCorrection; }
 	void setShortTimeCorrection(bool b) { m_isShortTimeCorrection = b; }
 
