@@ -187,7 +187,7 @@ void GraphModel::appendValueShvPath(const std::string &shv_path, Sample &&sample
 			ch_ix = channelCount() - 1;
 		}
 		else {
-			shvWarning() << "Cannot find channel with shv path:" << shv_path;
+			shvMessage() << "Cannot find channel with shv path:" << shv_path;
 			return;
 		}
 	}
