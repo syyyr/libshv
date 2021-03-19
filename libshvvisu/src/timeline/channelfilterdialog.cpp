@@ -17,6 +17,8 @@ namespace timeline {
 static QString USER_PROFILES_KEY = QStringLiteral("userProfiles");
 static QString SITES_KEY = QStringLiteral("sites");
 static QString CHANNEL_FILTERS_KEY = QStringLiteral("channelFilters");
+const QString ChannelFilterDialog::DEFAULT_USER_PROFILE =  QStringLiteral("default");
+
 
 ChannelFilterDialog::ChannelFilterDialog(QWidget *parent) :
 	QDialog(parent),
@@ -54,14 +56,9 @@ ChannelFilterDialog::~ChannelFilterDialog()
 
 void ChannelFilterDialog::load(const QString &site_path, const QStringList &logged_paths)
 {
-	setSitePath(site_path);
-	load(logged_paths);
-}
-
-void ChannelFilterDialog::load(const QStringList &logged_paths)
-{
+	m_sitePath = site_path;
 	m_channelsFilterModel->createNodes(logged_paths);
-	ui->cbFilters->addItems(savedFilterNames());
+	ui->cbFilters->addItems(savedFilterNames(m_sitePath, m_settingsUserName));
 	ui->cbFilters->setCurrentIndex(-1);
 	m_isSelectedFilterDirty = true;
 }
@@ -78,17 +75,18 @@ void ChannelFilterDialog::setSelectedChannels(const QStringList &channels)
 	m_isSelectedFilterDirty = is_selected_filter_dirty;
 }
 
+void ChannelFilterDialog::selectFilter(const QString &name) const
+{
+	int ix = ui->cbFilters->findText(name);
+	ui->cbFilters->setCurrentIndex(ix);
+}
+
 QString ChannelFilterDialog::selectedFilterName() const
 {
 	if (m_isSelectedFilterDirty) {
 		return QString();
 	}
 	return ui->cbFilters->currentText();
-}
-
-void ChannelFilterDialog::setSitePath(const QString &site_path)
-{
-	m_sitePath = site_path;
 }
 
 void ChannelFilterDialog::setSettingsUserName(const QString &user)
@@ -117,17 +115,17 @@ void ChannelFilterDialog::saveChannelFilter(const QString &name)
 	settings.setValue(name, m_channelsFilterModel->selectedChannels());
 }
 
-QStringList ChannelFilterDialog::loadChannelFilter(const QString &name)
+QStringList ChannelFilterDialog::loadChannelFilter(const QString &site_path, const QString &name, const QString &user_name)
 {
 	std::vector<std::string> channels;
 
 	QSettings settings;
 	settings.beginGroup(USER_PROFILES_KEY);
-	settings.beginGroup(m_settingsUserName);
+	settings.beginGroup(user_name);
 	settings.beginGroup(SITES_KEY);
-	settings.beginGroup(m_sitePath);
+	settings.beginGroup(site_path);
 	settings.beginGroup(CHANNEL_FILTERS_KEY);
-	return settings.value(name, m_channelsFilterModel->selectedChannels()).toStringList();
+	return settings.value(name).toStringList();
 }
 
 void ChannelFilterDialog::deleteChannelFilter(const QString &name)
@@ -141,17 +139,17 @@ void ChannelFilterDialog::deleteChannelFilter(const QString &name)
 	settings.remove(name);
 }
 
-QStringList ChannelFilterDialog::savedFilterNames()
+QStringList ChannelFilterDialog::savedFilterNames(const QString &site_path, const QString &user_name)
 {
 	QStringList filters;
 	QSettings settings;
-
 	settings.beginGroup(USER_PROFILES_KEY);
-	settings.beginGroup(m_settingsUserName);
+	settings.beginGroup(user_name);
 	settings.beginGroup(SITES_KEY);
-	settings.beginGroup(m_sitePath);
+	settings.beginGroup(site_path);
 	settings.beginGroup(CHANNEL_FILTERS_KEY);
 	filters = settings.childKeys();
+	shvInfo() << site_path.toStdString() << user_name.toStdString() << filters.size();
 	return filters;
 }
 
@@ -183,14 +181,14 @@ void ChannelFilterDialog::onDeleteFilterClicked()
 {
 	deleteChannelFilter(ui->cbFilters->currentText());
 	ui->cbFilters->clear();
-	ui->cbFilters->addItems(savedFilterNames());
+	ui->cbFilters->addItems(savedFilterNames(m_sitePath, m_settingsUserName));
 	ui->cbFilters->setCurrentIndex(-1);
 }
 
 void ChannelFilterDialog::onCbFiltersActivated(int index)
 {
 	Q_UNUSED(index);
-	QStringList channels = loadChannelFilter(ui->cbFilters->currentText());
+	QStringList channels = loadChannelFilter(m_sitePath, ui->cbFilters->currentText());
 	setSelectedChannels(channels);
 	m_isSelectedFilterDirty = false;
 }
@@ -206,7 +204,7 @@ void ChannelFilterDialog::onSaveFilterClicked()
 	saveChannelFilter(current_filter_name);
 
 	ui->cbFilters->clear();
-	ui->cbFilters->addItems(savedFilterNames());
+	ui->cbFilters->addItems(savedFilterNames(m_sitePath, m_settingsUserName));
 
 	ui->cbFilters->setCurrentIndex(ui->cbFilters->findText(current_filter_name));
 }
