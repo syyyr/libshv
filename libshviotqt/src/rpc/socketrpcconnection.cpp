@@ -31,12 +31,8 @@ namespace rpc {
 SocketRpcConnection::SocketRpcConnection(QObject *parent)
 	: QObject(parent)
 {
+	//shvDebug() << __FUNCTION__;
 	Rpc::registerMetaTypes();
-	/*
-	setMessageReceivedCallback([this](const shv::shv::chainpack::RpcValue &msg) {
-		emit messageReceived(msg);
-	});
-	*/
 #ifdef DUMP_DATA_FILE
 	QFile *f = new QFile("/tmp/rpc.dat", this);
 	f->setObjectName("DUMP_DATA_FILE");
@@ -50,15 +46,18 @@ SocketRpcConnection::SocketRpcConnection(QObject *parent)
 
 SocketRpcConnection::~SocketRpcConnection()
 {
-	shvDebug() << __FUNCTION__;
+	//shvDebug() << __FUNCTION__;
 	abortSocket();
-	//SHV_SAFE_DELETE(m_socket);
+	SHV_SAFE_DELETE(m_socket);
 }
 
 void SocketRpcConnection::setSocket(Socket *socket)
 {
 	socket->setParent(nullptr);
-	socket->moveToThread(this->thread());
+	//shvDebug() << "setSocket" << socket << "pushing socket from thread:" << socket->thread() << "to:" << this->thread();
+	//connect(socket, &Socket::destroyed, [socket]() {
+	//	shvDebug() << socket << "destroyed";
+	//});
 	m_socket = socket;
 	connect(socket, &Socket::sslErrors, this, &SocketRpcConnection::sslErrors);
 	connect(socket, &Socket::error, this,
@@ -72,15 +71,15 @@ void SocketRpcConnection::setSocket(Socket *socket)
 	// queued connection here is to write data in next event loop, not directly when previous chunk is written
 	// possibly not needed, its my feeling to do it this way
 	connect(socket, &Socket::bytesWritten, this, &SocketRpcConnection::onBytesWritten, Qt::QueuedConnection);
-	connect(socket, &Socket::connected, [this]() {
+	connect(socket, &Socket::connected, this, [this]() {
 		shvDebug() << this << "Socket connected!!!";
 		//shvWarning() << (peerAddress().toStdString() + ':' + std::to_string(peerPort()));
 		emit socketConnectedChanged(true);
 	});
-	connect(socket, &Socket::stateChanged, [this](QAbstractSocket::SocketState state) {
+	connect(socket, &Socket::stateChanged, this, [this](QAbstractSocket::SocketState state) {
 		shvDebug() << this << "Socket state changed" << (int)state;
 	});
-	connect(socket, &Socket::disconnected, [this]() {
+	connect(socket, &Socket::disconnected, this, [this]() {
 		shvDebug() << this << "Socket disconnected!!!";
 		emit socketConnectedChanged(false);
 	});

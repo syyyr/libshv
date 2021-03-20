@@ -32,11 +32,13 @@ namespace rpc {
 ClientConnectionOnBroker::ClientConnectionOnBroker(shv::iotqt::rpc::Socket *socket, QObject *parent)
 	: Super(socket, parent)
 {
+	shvDebug() << __FUNCTION__;
 	connect(this, &ClientConnectionOnBroker::socketConnectedChanged, this, &ClientConnectionOnBroker::onSocketConnectedChanged);
 }
 
 ClientConnectionOnBroker::~ClientConnectionOnBroker()
 {
+	shvDebug() << __FUNCTION__;
 	//rpc::ServerConnectionshvWarning() << "destroying" << this;
 	//shvWarning() << __FUNCTION__;
 }
