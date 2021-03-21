@@ -72,7 +72,7 @@ private:
 	RpcValue m_value;
 	std::string m_domain;
 	RpcValue::DateTime m_dateTime;
-	int m_shortTime;
+	int m_shortTime = NO_SHORT_TIME;
 	SampleType m_sampleType = SampleType::Invalid;
 };
 
