@@ -30,7 +30,7 @@ public:
 	QStringList selectedChannels();
 	void setSelectedChannels(const QStringList &channels);
 
-	void selectFilter(const QString &name) const;
+	void setSelectFilterName(const QString &name) const;
 	QString selectedFilterName() const;
 
 	void setSettingsUserName(const QString &user);

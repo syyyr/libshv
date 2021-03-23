@@ -75,7 +75,7 @@ void ChannelFilterDialog::setSelectedChannels(const QStringList &channels)
 	m_isSelectedFilterDirty = is_selected_filter_dirty;
 }
 
-void ChannelFilterDialog::selectFilter(const QString &name) const
+void ChannelFilterDialog::setSelectFilterName(const QString &name) const
 {
 	int ix = ui->cbFilters->findText(name);
 	ui->cbFilters->setCurrentIndex(ix);
@@ -117,8 +117,6 @@ void ChannelFilterDialog::saveChannelFilter(const QString &name)
 
 QStringList ChannelFilterDialog::loadChannelFilter(const QString &site_path, const QString &name, const QString &user_name)
 {
-	std::vector<std::string> channels;
-
 	QSettings settings;
 	settings.beginGroup(USER_PROFILES_KEY);
 	settings.beginGroup(user_name);
@@ -149,7 +147,6 @@ QStringList ChannelFilterDialog::savedFilterNames(const QString &site_path, cons
 	settings.beginGroup(site_path);
 	settings.beginGroup(CHANNEL_FILTERS_KEY);
 	filters = settings.childKeys();
-	shvInfo() << site_path.toStdString() << user_name.toStdString() << filters.size();
 	return filters;
 }
 
