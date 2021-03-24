@@ -356,8 +356,9 @@ public:
 	RpcValue(IMap &&values);          // IMap
 
 	// Implicit constructor: anything with a toRpcValue() function.
-	template <class T, class = decltype(&T::toRpcValue)>
-	RpcValue(const T & t) : RpcValue(t.toRpcValue()) {}
+	// dangerous
+	//template <class T, class = decltype(&T::toRpcValue)>
+	//RpcValue(const T & t) : RpcValue(t.toRpcValue()) {}
 
 	// Implicit constructor: map-like objects (std::map, std::unordered_map, etc)
 	template <class M, typename std::enable_if<
