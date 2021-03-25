@@ -559,16 +559,10 @@ iotqt::node::ShvNode *BrokerApp::nodeForService(const core::utils::ServiceProvid
 	if(spp.isServicePath()) {
 		iotqt::node::ShvNode *ret = m_nodesTree->cd(spp.service().toString());
 		if(ret) {
-			core::StringView sid = spp.brokerId();
-			if(!sid.empty()) {
-				if(sid == "@") {
-					/// root broker
-					if(mainMasterBrokerConnection() != nullptr)
-						return nullptr;
-				}
-				else if(!(sid.mid(1) == brokerId())) {
+			core::StringView request_broker_id = spp.brokerId().mid(1);
+			if(!request_broker_id.empty()) {
+				if(!request_broker_id.empty() && !(request_broker_id.mid(1) == brokerId()))
 					return nullptr;
-				}
 			}
 			return ret;
 		}

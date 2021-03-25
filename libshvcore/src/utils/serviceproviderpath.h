@@ -21,6 +21,7 @@ public:
 	Type type() const { return m_type; }
 	const char* typeString() const;
 	StringView service() const { return m_service; }
+	/// broker ID including '@' separator
 	StringView brokerId() const { return m_brokerId; }
 	StringView pathRest() const { return m_pathRest; }
 	std::string makePlainPath(const StringView &prefix = StringView()) const;
