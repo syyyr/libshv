@@ -1,4 +1,5 @@
 #include "brokertcpserver.h"
+#include "ssl_common.h"
 #include "clientconnectiononbroker.h"
 #include "../brokerapp.h"
 
@@ -8,45 +9,10 @@
 
 #include <QFile>
 #include <QDir>
-#include <QSslKey>
 
 namespace shv {
 namespace broker {
 namespace rpc {
-
-static QSslConfiguration load_ssl_configuration()
-{
-	AppCliOptions *opts = BrokerApp::instance()->cliOptions();
-	QString cert_fn = QString::fromStdString(opts->serverSslCertFile());
-	if(QDir::isRelativePath(cert_fn))
-		cert_fn = QString::fromStdString(opts->configDir()) + '/' + cert_fn;
-	QFile cert_file(cert_fn);
-	if(!cert_file.open(QIODevice::ReadOnly)) {
-		shvError() << "Cannot open SSL certificate file:" << cert_file.fileName() << "for reading";
-		return QSslConfiguration();
-	}
-	QSslCertificate ssl_cert(&cert_file, QSsl::Pem);
-	cert_file.close();
-	shvDebug() << "CERT:" << ssl_cert.toText();
-
-	QString key_fn = QString::fromStdString(opts->serverSslKeyFile());
-	if(QDir::isRelativePath(key_fn))
-		key_fn = QString::fromStdString(opts->configDir()) + '/' + key_fn;
-	QFile key_file(key_fn);
-	if(!key_file.open(QIODevice::ReadOnly)) {
-		shvError() << "Cannot open SSL key file:" << key_file.fileName() << "for reading";
-		return QSslConfiguration();
-	}
-	QSslKey ssl_key(&key_file, QSsl::Rsa, QSsl::Pem);
-	key_file.close();
-
-	QSslConfiguration ssl_configuration;
-	ssl_configuration.setPeerVerifyMode(QSslSocket::VerifyNone);
-	ssl_configuration.setLocalCertificate(ssl_cert);
-	ssl_configuration.setPrivateKey(ssl_key);
-	//ssl_configuration.setProtocol(QSsl::TlsV1SslV3);
-	return ssl_configuration;
-}
 
 BrokerTcpServer::BrokerTcpServer(SslMode ssl_mode, QObject *parent)
 	: Super(parent)
@@ -62,7 +28,7 @@ ClientConnectionOnBroker *BrokerTcpServer::connectionById(int connection_id)
 bool BrokerTcpServer::loadSslConfig()
 {
 	if (m_sslMode == SslMode::SecureMode) {
-		m_sslConfiguration = load_ssl_configuration();
+		m_sslConfiguration = load_ssl_configuration(BrokerApp::instance()->cliOptions());
 	}
 	return !m_sslConfiguration.isNull();
 }

@@ -33,5 +33,15 @@ const char *Exception::what() const noexcept
 	return m_msg.c_str();
 }
 
+void Exception::Exception::setAbortOnException(bool on)
+{
+	s_abortOnException = on;
+}
+
+bool Exception::Exception::isAbortOnException()
+{
+	return s_abortOnException;
+}
+
 } // namespace chainpack
 } // namespace shv

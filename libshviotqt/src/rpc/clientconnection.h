@@ -31,6 +31,7 @@ class SHVIOTQT_DECL_EXPORT ClientConnection : public SocketRpcConnection
 	SHV_FIELD_IMPL(std::string, p, P, assword)
 	SHV_FIELD_IMPL(shv::chainpack::IRpcConnection::LoginType, l, L, oginType)
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, c, C, onnectionOptions)
+	SHV_FIELD_IMPL2(int, h, H, eartBeatInterval, 60)
 public:
 	enum SecurityType { None = 0, Ssl = 1 };
 
@@ -38,6 +39,7 @@ public:
 	static std::string securityTypeToString(const SecurityType &security_type);
 
 	SecurityType securityType() const;
+	void setSecurityType(SecurityType type);
 	void setSecurityType(const std::string &val);
 
 public:
@@ -48,9 +50,8 @@ public:
 	~ClientConnection() Q_DECL_OVERRIDE;
 
 	virtual void open();
-	void close() override;
-	void abort() override;
-	void restartIfActive();
+	void close() override { closeOrAbort(false); }
+	void abort() override { closeOrAbort(true); }
 
 	void setCliOptions(const ClientAppCliOptions *cli_opts);
 
@@ -69,14 +70,16 @@ public:
 
 	const shv::chainpack::RpcValue::Map &loginResult() const { return m_connectionState.loginResult.toMap(); }
 
+	int brokerClientId() const;
 	//std::string brokerClientPath() const {return brokerClientPath(brokerClientId());}
 	//std::string brokerMountPoint() const;
 public:
 	/// AbstractRpcConnection interface implementation
 	void sendMessage(const shv::chainpack::RpcMessage &rpc_msg) override;
 	void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg) override;
-protected:
+protected:	
 	void setState(State state);
+	void closeOrAbort(bool is_abort);
 
 	void sendHello();
 	void sendLogin(const shv::chainpack::RpcValue &server_hello);
@@ -92,8 +95,6 @@ protected:
 	void processInitPhase(const chainpack::RpcMessage &msg);
 	shv::chainpack::RpcValue createLoginParams(const shv::chainpack::RpcValue &server_hello);
 
-	int brokerClientId() const;
-
 	struct ConnectionState
 	{
 		State state = State::NotConnected;
@@ -104,10 +105,12 @@ protected:
 	};
 	ConnectionState m_connectionState;
 private:
-	QTimer *m_checkConnectedTimer;
+	bool isAutoConnect() const { return m_checkBrokerConnectedInterval > 0; }
+	void restartIfAutoConnect();
+private:
+	QTimer *m_checkBrokerConnectedTimer;
 	int m_checkBrokerConnectedInterval = 0;
 	QTimer *m_heartBeatTimer = nullptr;
-	int m_heartbeatInterval = 0;
 	SecurityType m_securityType = None;
 };
 

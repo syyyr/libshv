@@ -84,6 +84,7 @@ double GraphModel::valueToDouble(const QVariant v, int meta_type_id, bool *ok)
 		meta_type_id = v.userType();
 	switch (meta_type_id) {
 	case QVariant::Invalid:
+	case QVariant::Map:
 		return 0;
 	case QVariant::Double:
 		return v.toDouble();
@@ -166,7 +167,7 @@ void GraphModel::appendValue(int channel, Sample &&sample)
 	ChannelSamples &dat = m_samples[channel];
 	if(!dat.isEmpty() && dat.last().time > sample.time) {
 		shvWarning() << channelInfo(channel).shvPath << "channel:" << channel
-					 << "ignoring value with lower timestamp than last value:"
+					 << "ignoring value with lower timestamp than last value (check possibly wrong short-time correction):"
 					 << dat.last().time << shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(dat.last().time).toIsoString()
 					 << "val:"
 					 << sample.time << shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(sample.time).toIsoString();
@@ -186,7 +187,7 @@ void GraphModel::appendValueShvPath(const std::string &shv_path, Sample &&sample
 			ch_ix = channelCount() - 1;
 		}
 		else {
-			shvWarning() << "Cannot find channel with shv path:" << shv_path;
+			shvMessage() << "Cannot find channel with shv path:" << shv_path;
 			return;
 		}
 	}
@@ -209,7 +210,7 @@ int GraphModel::pathToChannelIndex(const std::string &path) const
 	return it->second;
 }
 
-void GraphModel::appendChannel(const std::string &shv_path, const std::string &name)
+void GraphModel::appendChannel(const std::string &shv_path, const std::string &name, const TypeDescr &type_descr)
 {
 	m_pathToChannelCache.clear();
 	m_channelsInfo.append(ChannelInfo());
@@ -219,6 +220,7 @@ void GraphModel::appendChannel(const std::string &shv_path, const std::string &n
 		chi.shvPath = QString::fromStdString(shv_path);
 	if(!name.empty())
 		chi.name = QString::fromStdString(name);
+	chi.typeDescr = type_descr;
 	emit channelCountChanged(channelCount());
 }
 
@@ -226,6 +228,15 @@ int GraphModel::guessMetaType(int channel_ix)
 {
 	Sample s = sampleValue(channel_ix, 0);
 	return s.value.userType();
+}
+
+TypeDescr::TypeDescr(const core::utils::ShvLogTypeDescr &d)
+	: Super(d)
+{
+	for (const auto &field : Super::fields) {
+		fields.push_back(TypeDescrField(field));
+	}
+	Super::fields.clear();
 }
 
 }}}

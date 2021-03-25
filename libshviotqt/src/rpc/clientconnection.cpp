@@ -8,6 +8,7 @@
 #include <shv/coreqt/log.h>
 
 #include <shv/core/exception.h>
+#include <shv/core/string.h>
 
 #include <shv/chainpack/cponreader.h>
 #include <shv/chainpack/rpcmessage.h>
@@ -31,13 +32,12 @@ ClientConnection::ClientConnection(QObject *parent)
 	: Super(parent)
 	, m_loginType(IRpcConnection::LoginType::Sha1)
 {
-	//setConnectionType(cp::Rpc::TYPE_CLIENT);
+	setProtocolType(shv::chainpack::Rpc::ProtocolType::ChainPack);
 
 	connect(this, &SocketRpcConnection::socketConnectedChanged, this, &ClientConnection::onSocketConnectedChanged);
 
-	m_checkConnectedTimer = new QTimer(this);
-	//m_checkConnectedTimer->setInterval(10*1000);
-	connect(m_checkConnectedTimer, &QTimer::timeout, this, &ClientConnection::checkBrokerConnected);
+	m_checkBrokerConnectedTimer = new QTimer(this);
+	connect(m_checkBrokerConnectedTimer, &QTimer::timeout, this, &ClientConnection::checkBrokerConnected);
 }
 
 ClientConnection::~ClientConnection()
@@ -65,6 +65,11 @@ std::string ClientConnection::securityTypeToString(const SecurityType &security_
 ClientConnection::SecurityType ClientConnection::securityType() const
 {
 	return m_securityType;
+}
+
+void ClientConnection::setSecurityType(SecurityType type)
+{
+	m_securityType = type;
 }
 
 void ClientConnection::setSecurityType(const std::string &val)
@@ -114,10 +119,10 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 	shvDebug() << cli_opts->loginType() << "-->" << (int)shv::chainpack::UserLogin::loginTypeFromString(cli_opts->loginType());
 	setLoginType(shv::chainpack::UserLogin::loginTypeFromString(cli_opts->loginType()));
 
-	m_heartbeatInterval = cli_opts->heartbeatInterval();
+	setHeartBeatInterval(cli_opts->heartBeatInterval());
 	{
 		cp::RpcValue::Map opts;
-		opts[cp::Rpc::OPT_IDLE_WD_TIMEOUT] = 3 * m_heartbeatInterval;
+		opts[cp::Rpc::OPT_IDLE_WD_TIMEOUT] = 3 * heartBeatInterval();
 		setConnectionOptions(opts);
 	}
 }
@@ -139,56 +144,59 @@ void ClientConnection::open()
 	checkBrokerConnected();
 	if(m_checkBrokerConnectedInterval > 0) {
 		shvInfo() << "Starting check-connected timer, interval:" << m_checkBrokerConnectedInterval/1000 << "sec.";
-		m_checkConnectedTimer->start(m_checkBrokerConnectedInterval);
+		m_checkBrokerConnectedTimer->start(m_checkBrokerConnectedInterval);
 	}
 }
 
-void ClientConnection::close()
+void ClientConnection::closeOrAbort(bool is_abort)
 {
-	m_checkConnectedTimer->stop();
-	closeSocket();
-	m_socket->deleteLater();
-	m_socket = nullptr;
+	shvInfo() << "close connection, abort:" << is_abort;
+	m_checkBrokerConnectedTimer->stop();
+	if(m_socket) {
+		if(is_abort)
+			abortSocket();
+		else
+			closeSocket();
+		m_socket->deleteLater();
+		m_socket = nullptr;
+	}
 	setState(State::NotConnected);
-}
-
-void ClientConnection::abort()
-{
-	m_checkConnectedTimer->stop();
-	abortSocket();
-	m_socket->deleteLater();
-	m_socket = nullptr;
-	setState(State::NotConnected);
-}
-
-void ClientConnection::restartIfActive()
-{
-	close();
-	if(m_checkBrokerConnectedInterval > 0)
-		QTimer::singleShot(m_checkBrokerConnectedInterval, this, &ClientConnection::open);
 }
 
 void ClientConnection::setCheckBrokerConnectedInterval(int ms)
 {
 	m_checkBrokerConnectedInterval = ms;
 	if(ms == 0)
-		m_checkConnectedTimer->stop();
+		m_checkBrokerConnectedTimer->stop();
 	else
-		m_checkConnectedTimer->setInterval(ms);
+		m_checkBrokerConnectedTimer->setInterval(ms);
 }
 
 void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
 {
-	logRpcMsg() << SND_LOG_ARROW
-				<< "client id:" << connectionId()
-				<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
-				<< rpc_msg.toPrettyString();
+	if(rpc_msg.isSignal() && shv::core::String::endsWith(rpc_msg.shvPath().toString(), "server/time")) {
+		// skip annoying messages
+	}
+	else {
+		logRpcMsg() << SND_LOG_ARROW
+					<< "client id:" << connectionId()
+					<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
+					<< rpc_msg.toPrettyString();
+	}
 	sendRpcValue(rpc_msg.value());
 }
 
 void ClientConnection::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 {
-	logRpcMsg() << cp::RpcDriver::RCV_LOG_ARROW << msg.toCpon();
+	if(msg.isSignal() && shv::core::String::endsWith(msg.shvPath().toString(), "server/time")) {
+		// skip annoying messages
+	}
+	else {
+		logRpcMsg() << cp::RpcDriver::RCV_LOG_ARROW
+					<< "client id:" << connectionId()
+					<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
+					<< msg.toPrettyString();
+	}
 	if(isInitPhase()) {
 		processInitPhase(msg);
 		return;
@@ -234,7 +242,7 @@ void ClientConnection::sendLogin(const shv::chainpack::RpcValue &server_hello)
 
 void ClientConnection::checkBrokerConnected()
 {
-	//shvWarning() << "check: " << isSocketConnected();
+	shvDebug() << "check broker connected: " << isSocketConnected();
 	if(!isBrokerConnected()) {
 		abortSocket();
 		shvInfo().nospace() << "connecting to: " << user() << "@" << host() << ":" << port() << " security: " << securityTypeToString(securityType());
@@ -248,15 +256,15 @@ void ClientConnection::whenBrokerConnectedChanged(bool b)
 {
 	if(b) {
 		shvInfo() << "Connected to broker" << "client id:" << brokerClientId();// << "mount point:" << brokerMountPoint();
-		if(m_heartbeatInterval > 0) {
+		if(heartBeatInterval() > 0) {
 			if(!m_heartBeatTimer) {
-				shvInfo() << "Creating heart-beat timer, interval:" << m_heartbeatInterval << "sec.";
+				shvInfo() << "Creating heart-beat timer, interval:" << heartBeatInterval() << "sec.";
 				m_heartBeatTimer = new QTimer(this);
-				m_heartBeatTimer->setInterval(m_heartbeatInterval * 1000);
+				m_heartBeatTimer->setInterval(heartBeatInterval() * 1000);
 				connect(m_heartBeatTimer, &QTimer::timeout, this, [this]() {
 					if(m_connectionState.pingRqId > 0) {
 						shvError() << "PING response not received within" << (m_heartBeatTimer->interval() / 1000) << "seconds, restarting conection to broker.";
-						restartIfActive();
+						restartIfAutoConnect();
 					}
 					else {
 						m_connectionState.pingRqId = callShvMethod(".broker/app", cp::Rpc::METH_PING);
@@ -312,7 +320,9 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 	if(loginType() == chainpack::IRpcConnection::LoginType::Sha1) {
 		std::string server_nonce = server_hello.toMap().value("nonce").toString();
 		std::string pwd = password();
-		if(pwd.size() > 0 && pwd.size() < 40)
+		if(pwd.size() == 40)
+			shvWarning() << "Using shadowed password directly by client is unsecure and it will be disabled in future SHV versions";
+		else
 			pwd = sha1_hex(pwd); /// SHA1 password must be 40 chars long, it is considered to be plain if shorter
 		std::string pn = server_nonce + pwd;
 		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
@@ -338,6 +348,14 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 		},
 		{"options", connectionOptions()},
 	};
+}
+
+void ClientConnection::restartIfAutoConnect()
+{
+	if(isAutoConnect())
+		setState(State::ConnectionError);
+	else
+		close();
 }
 
 int ClientConnection::brokerClientId() const
@@ -371,7 +389,7 @@ void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
 		}
 	} while(false);
 	shvError() << "Invalid handshake message! Dropping connection." << msg.toCpon();
-	restartIfActive();
+	restartIfAutoConnect();
 }
 
 const char *ClientConnection::stateToString(ClientConnection::State state)

@@ -27,6 +27,7 @@ public:
 	qint64 write(const char *data, qint64 data_size) override;
 	void writeMessageBegin() override;
 	void writeMessageEnd() override;
+	void ignoreSslErrors() override;
 private:
 	void onTextMessageReceived(const QString &message);
 	void onBinaryMessageReceived(const QByteArray &message);

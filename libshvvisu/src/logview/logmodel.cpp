@@ -1,6 +1,7 @@
 #include "logmodel.h"
 
 #include <shv/core/utils/shvfilejournal.h>
+#include <shv/core/log.h>
 
 namespace cp = shv::chainpack;
 
@@ -48,6 +49,8 @@ QVariant LogModel::headerData(int section, Qt::Orientation orientation, int role
 			case ColValue: return tr("Value");
 			case ColShortTime: return tr("ShortTime");
 			case ColDomain: return tr("Domain");
+			case ColSampleType: return tr("SampleType");
+			case ColUserId: return tr("UserId");
 			}
 		}
 	}
@@ -69,12 +72,20 @@ QVariant LogModel::data(const QModelIndex &index, int role) const
 				dt = dt.toTimeZone(m_timeZone);
 				return dt.toString(Qt::ISODateWithMs);
 			}
-			else if(index.column() == ColPath && (val.type() == cp::RpcValue::Type::UInt || val.type() == cp::RpcValue::Type::Int)) {
-				static std::string KEY_PATHS_DICT = shv::core::utils::ShvFileJournal::KEY_PATHS_DICT;
-				const chainpack::RpcValue::IMap &dict = m_log.metaValue(KEY_PATHS_DICT).toIMap();
-				auto it = dict.find(val.toInt());
-				if(it != dict.end())
-					val = it->second;
+			else if(index.column() == ColPath) {
+				if ((val.type() == cp::RpcValue::Type::UInt) || (val.type() == cp::RpcValue::Type::Int)) {
+					static std::string KEY_PATHS_DICT = shv::core::utils::ShvFileJournal::KEY_PATHS_DICT;
+					const chainpack::RpcValue::IMap &dict = m_log.metaValue(KEY_PATHS_DICT).toIMap();
+					auto it = dict.find(val.toInt());
+					if(it != dict.end())
+						val = it->second;
+					return QString::fromStdString(val.toString());
+				}
+				return QString::fromStdString(val.toString());
+			}
+			else if(index.column() == ColSampleType) {
+				int t = val.toInt();
+				return QString::fromUtf8(cp::DataChange::sampleTypeToString((cp::DataChange::SampleType)t));
 			}
 			return QString::fromStdString(val.toCpon());
 		}

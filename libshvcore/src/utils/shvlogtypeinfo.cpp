@@ -130,8 +130,18 @@ ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const chainpack::RpcValue &v)
 		ret.type = typeFromString(m.value("type").toString());
 		ret.sampleType = sampleTypeFromString(m.value("sampleType").toString());
 		ret.description = m.value("description").toString();
-		for(const auto &rv : m.value("fields").toList())
-			ret.fields.push_back(ShvLogTypeDescrField::fromRpcValue(rv));
+		int current_value = 0;
+		for(const auto &rv : m.value("fields").toList()) {
+			auto fld = ShvLogTypeDescrField::fromRpcValue(rv);
+			if(ret.type == Type::Enum) {
+				if(fld.value.isInt())
+					current_value = fld.value.toInt() + 1;
+				else
+					fld.value = current_value++;
+
+			}
+			ret.fields.push_back(std::move(fld));
+		}
 		ret.tags = m.value("tags").toMap();
 		if(ret.tags.empty())
 			ret.tags = m.value("options").toMap();

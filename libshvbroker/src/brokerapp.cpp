@@ -38,6 +38,7 @@
 #include <QSocketNotifier>
 #include <QSqlDatabase>
 #include <QTimer>
+#include <QUdpSocket>
 
 #include <ctime>
 #include <fstream>
@@ -56,6 +57,7 @@
 #define logAclResolveW() nCWarning("AclResolve")
 #define logAclResolveM() nCMessage("AclResolve")
 
+#define logBrokerDiscoveryM() nCMessage("BrokerDiscovery")
 #define logServiceProvidersM() nCMessage("ServiceProviders")
 
 #define logSubscriptionsD() nCDebug("Subscr").color(NecroLog::Color::Yellow)
@@ -226,6 +228,35 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/masters", new MasterBrokersNode());
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/mounts", new MountsNode());
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/etc/acl", new EtcAclRootNode());
+
+	if (m_cliOptions->discoveryPort() > 0) {
+		QUdpSocket *udp_socket = new QUdpSocket(this);
+		udp_socket->bind(m_cliOptions->discoveryPort(), QUdpSocket::ShareAddress);
+		logBrokerDiscoveryM() << "shvbrokerDiscovery listen on UDP port:" << m_cliOptions->discoveryPort();
+		connect(udp_socket, &QUdpSocket::readyRead, this, [this, udp_socket]() {
+			QByteArray datagram;
+			QHostAddress address;
+			quint16 port;
+			while (udp_socket->hasPendingDatagrams()) {
+				datagram.resize(int(udp_socket->pendingDatagramSize()));
+				udp_socket->readDatagram(datagram.data(), datagram.size(), &address, &port);
+
+				std::string rq_cpon(datagram.constData(), datagram.length());
+				shv::chainpack::RpcValue rv = shv::chainpack::RpcValue::fromCpon(rq_cpon);
+				shv::chainpack::RpcRequest rq(rv);
+				if (rq.method() == "shvbrokerDiscovery") {
+					logBrokerDiscoveryM() << "Received broadcast request shvbrokerDiscovery:" << rq.toPrettyString();
+					shv::chainpack::RpcResponse resp = rq.makeResponse();
+					QString ipv4 = shv::iotqt::utils::Network::primaryIPv4Address().toString();
+					shv::chainpack::RpcValue response = shv::chainpack::RpcValue::Map { {"brokerId", m_brokerId}, {"brokerIPv4", ipv4.toStdString()}};
+					resp.setResult(response);
+					QByteArray response_datagram(resp.toCpon().c_str(), resp.toCpon().length());
+					udp_socket->writeDatagram(response_datagram, address, port);
+					logBrokerDiscoveryM() << "Send response on broadcast shvbrokerDiscovery:" << resp.toPrettyString();
+				}
+			}
+		});
+	}
 
 	QTimer::singleShot(0, this, &BrokerApp::lazyInit);
 }
@@ -528,16 +559,10 @@ iotqt::node::ShvNode *BrokerApp::nodeForService(const core::utils::ServiceProvid
 	if(spp.isServicePath()) {
 		iotqt::node::ShvNode *ret = m_nodesTree->cd(spp.service().toString());
 		if(ret) {
-			core::StringView sid = spp.brokerId();
-			if(!sid.empty()) {
-				if(sid == "@") {
-					/// root broker
-					if(mainMasterBrokerConnection() != nullptr)
-						return nullptr;
-				}
-				else if(!(sid.mid(1) == brokerId())) {
+			core::StringView request_broker_id = spp.brokerId().mid(1);
+			if(!request_broker_id.empty()) {
+				if(!request_broker_id.empty() && !(request_broker_id.mid(1) == brokerId()))
 					return nullptr;
-				}
 			}
 			return ret;
 		}
@@ -770,7 +795,8 @@ void BrokerApp::onClientLogin(int connection_id)
 		const shv::chainpack::RpcValue::Map &device_opts = conn->deviceOptions().toMap();
 		std::string mount_point = resolveMountPoint(device_opts);
 		if(!mount_point.empty()) {
-			ClientShvNode *cli_nd = qobject_cast<ClientShvNode*>(m_nodesTree->cd(mount_point));
+			string path_rest;
+			ClientShvNode *cli_nd = qobject_cast<ClientShvNode*>(m_nodesTree->cd(mount_point, &path_rest));
 			if(cli_nd) {
 				/*
 				shvWarning() << "The mount point" << mount_point << "exists already";
@@ -781,17 +807,20 @@ void BrokerApp::onClientLogin(int connection_id)
 				*/
 				cli_nd->addConnection(conn);
 			}
+			else if(path_rest.empty()) {
+				SHV_EXCEPTION("Cannot mount device to not-leaf node, connection id: " + std::to_string(connection_id) + ", mount point: " + mount_point);
+			}
 			else {
 				cli_nd = new ClientShvNode(std::string(), conn);
 				if(!m_nodesTree->mount(mount_point, cli_nd))
 					SHV_EXCEPTION("Cannot mount connection to device tree, connection id: " + std::to_string(connection_id));
 				connect(cli_nd, &ClientShvNode::destroyed, cli_nd->parentNode(), &shv::iotqt::node::ShvNode::deleteIfEmptyWithParents, Qt::QueuedConnection);
-				QTimer::singleShot(0, this, [this, mount_point]() {
-					//shvInfo() << "mounted node created:" << mount_point;
-					sendNotifyToSubscribers(mount_point, cp::Rpc::SIG_MOUNTED_CHANGED, true);
-				});
 			}
 			mount_point = cli_nd->shvPath();
+			QTimer::singleShot(0, this, [this, mount_point]() {
+				//shvInfo() << "mounted node created:" << mount_point;
+				sendNotifyToSubscribers(mount_point, cp::Rpc::SIG_MOUNTED_CHANGED, true);
+			});
 			shvInfo() << "client connection id:" << conn->connectionId() << "device id:" << conn->deviceId().toCpon() << " mounted on:" << mount_point;
 			/// overwrite client default mount point
 			conn->setMountPoint(mount_point);

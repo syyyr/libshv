@@ -21,6 +21,7 @@ WebSocket::WebSocket(QWebSocket *socket, QObject *parent)
 	connect(m_socket, &QWebSocket::bytesWritten, this, &Socket::bytesWritten);
 	connect(m_socket, &QWebSocket::stateChanged, this, &Socket::stateChanged);
 	connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error), this, &Socket::error);
+	connect(m_socket, &QWebSocket::sslErrors, this, &Socket::sslErrors);
 }
 
 void WebSocket::connectToHost(const QString &host_name, quint16 port)
@@ -88,6 +89,11 @@ void WebSocket::writeMessageEnd()
 	if(n < m_writeBuffer.size())
 		shvError() << "Send message error, only" << n << "bytes written.";
 	m_socket->flush();
+}
+
+void WebSocket::ignoreSslErrors()
+{
+	m_socket->ignoreSslErrors();
 }
 
 void WebSocket::onTextMessageReceived(const QString &message)

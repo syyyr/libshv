@@ -41,7 +41,7 @@ void MasterBrokerConnection::setOptions(const shv::chainpack::RpcValue &slave_br
 		}
 		const cp::RpcValue::Map &rpc = m.value("rpc").toMap();
 		if(rpc.count("heartbeatInterval") == 1)
-			device_opts.setHeartbeatInterval(rpc.value("heartbeatInterval", 60).toInt());
+			device_opts.setHeartBeatInterval(rpc.value("heartbeatInterval", 60).toInt());
 		if(rpc.count("reconnectInterval") == 1)
 			device_opts.setReconnectInterval(rpc.value("reconnectInterval").toInt());
 
@@ -62,6 +62,12 @@ void MasterBrokerConnection::setOptions(const shv::chainpack::RpcValue &slave_br
 		}
 	}
 	m_exportedShvPath = slave_broker_options.toMap().value("exportedShvPath").toString();
+}
+
+void MasterBrokerConnection::sendMasterBrokerIdRequest()
+{
+	m_masterBrokerIdRqId = nextRequestId();
+	callShvMethod(m_masterBrokerIdRqId, ".broker/app", "brokerId", cp::RpcValue());
 }
 
 void MasterBrokerConnection::sendRawData(const shv::chainpack::RpcValue::MetaData &meta_data, std::string &&data)
@@ -136,17 +142,16 @@ void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 			cp::RpcMessage::setShvPath(md, shv_path);
 		}
 		else if(cp::RpcMessage::isResponse(md)) {
-			if(cp::RpcMessage::requestId(md) == m_connectionState.pingRqId) {
+			int rq_id = cp::RpcMessage::requestId(md).toInt();
+			if(rq_id == m_connectionState.pingRqId) {
 				m_connectionState.pingRqId = 0;
 				return;
 			}
-			else {
-				//cp::RpcValue rpc_val = decodeData(protocol_type, msg_data, 0);
-				//if (rpc_val.isValid()) {
-				//	rpc_val.setMetaData(std::move(md));
-				//	cp::RpcMessage msg(rpc_val);
-				//	Q_EMIT rpcMessageReceived(msg);
-				//}
+			else if (rq_id == m_masterBrokerIdRqId) {
+				m_masterBrokerIdRqId = 0;
+				cp::RpcValue rpc_val = decodeData(protocol_type, msg_data, 0);
+				rpc_val.setMetaData(cp::RpcValue::MetaData(md));
+				Q_EMIT masterBrokerIdReceived(cp::RpcResponse(cp::RpcMessage(rpc_val)));
 			}
 		}
 		BrokerApp::instance()->onRpcDataReceived(connectionId(), protocol_type, std::move(md), std::move(msg_data));

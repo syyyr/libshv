@@ -2,7 +2,10 @@
 #include "shvlogheader.h"
 #include "shvpath.h"
 #include "shvfilejournal.h"
+#include "shvlogrpcvaluereader.h"
+#include "patternmatcher.h"
 
+#include "../exception.h"
 #include "../log.h"
 
 #define logWShvJournal() shvCWarning("ShvJournal")
@@ -19,91 +22,72 @@ ShvMemoryJournal::ShvMemoryJournal()
 {
 }
 
-ShvMemoryJournal::ShvMemoryJournal(const ShvGetLogParams &input_filter)
-	: m_patternMatcher(input_filter)
-{
-	if(input_filter.since.isDateTime())
-		m_inputFilterSinceMsec = input_filter.since.toDateTime().msecsSinceEpoch();
-	if(input_filter.until.isDateTime())
-		m_inputFilterUntilMsec = input_filter.until.toDateTime().msecsSinceEpoch();
-	m_inputFilterRecordCountLimit = std::min(input_filter.recordCountLimit, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
-}
-
 void ShvMemoryJournal::loadLog(const chainpack::RpcValue &log, bool append_records)
 {
-	ShvLogHeader hdr = ShvLogHeader::fromMetaData(log.metaData());
-	using Column = ShvLogHeader::Column;
-
-	const chainpack::RpcValue::IMap &dict = hdr.pathDictCRef();
-
+	shv::core::utils::ShvLogRpcValueReader rd(log, !shv::core::Exception::Throw);
 	if(!append_records) {
 		m_entries.clear();
-		m_logHeader = hdr;
+		m_logHeader = rd.logHeader();
 	}
-
-	const chainpack::RpcValue::List &lst = log.toList();
-	for(const cp::RpcValue &v : lst) {
-		const cp::RpcValue::List &row = v.toList();
-		int64_t time = row.value(Column::Timestamp).toDateTime().msecsSinceEpoch();
-		cp::RpcValue p = row.value(Column::Path);
-		if(p.isInt())
-			p = dict.value(p.toInt());
-		const std::string &path = p.toString();
-		if(path.empty()) {
-			logWShvJournal() << "Path dictionary corrupted, row:" << v.toCpon();
-			continue;
-		}
-		Entry e;
-		e.epochMsec = time;
-		e.path = path;
-		e.value = row.value(Column::Value);
-		cp::RpcValue st = row.value(Column::ShortTime);
-		e.shortTime = st.isInt() && st.toInt() >= 0? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
-		e.domain = row.value(Column::Domain).toString();
-		e.sampleType = static_cast<ShvJournalEntry::SampleType>(row.value(Column::SampleType).toUInt());
-		if (e.sampleType == ShvJournalEntry::SampleType::Invalid) {
-			e.sampleType = ShvJournalEntry::SampleType::Continuous;
-		}
-		append(e);
+	while(rd.next()) {
+		const core::utils::ShvJournalEntry &entry = rd.entry();
+		append(entry);
 	}
 }
 
 void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 {
-	if((int)m_entries.size() >= m_inputFilterRecordCountLimit)
-		return;
 	int64_t epoch_msec = entry.epochMsec;
 	if(epoch_msec == 0) {
 		epoch_msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
 	}
 	else if(isShortTimeCorrection()) {
-		if(entry.shortTime != shv::core::utils::ShvJournalEntry::NO_SHORT_TIME) {
+		if(entry.sampleType == ShvJournalEntry::SampleType::Continuous && entry.shortTime != shv::core::utils::ShvJournalEntry::NO_SHORT_TIME) {
 			uint16_t short_msec = static_cast<uint16_t>(entry.shortTime);
 			ShortTime &st = m_recentShortTimes[entry.path];
-			if(st.msec_sum == 0)
-				st.msec_sum = epoch_msec;
-			epoch_msec = st.addShortTime(short_msec);
+			if(entry.shortTime == st.recentShortTime) {
+				// the same short times in the row, this can happen only when
+				// data is badly generated, we will ignore such values
+				shvWarning() << "two same short-times in the row:" << entry.shortTime << entry.path << cp::RpcValue::DateTime::fromMSecsSinceEpoch(entry.epochMsec).toIsoString() << entry.epochMsec;
+				st.epochTime = epoch_msec;
+			}
+			else {
+				if(st.epochTime == 0) {
+					st.epochTime = epoch_msec;
+					st.recentShortTime = entry.shortTime;
+				}
+				else {
+					int64_t new_epoch_msec = st.toEpochTime(short_msec);
+					int64_t dt_diff = new_epoch_msec - epoch_msec;
+					constexpr int64_t MAX_SKEW = 500;
+					if(dt_diff < -MAX_SKEW) {
+						shvWarning() << "short time too late:" << -dt_diff << entry.path << cp::RpcValue::DateTime::fromMSecsSinceEpoch(entry.epochMsec).toIsoString() << entry.epochMsec;
+						// short time is too late
+						// pin it to date time from log entry
+						st.epochTime = epoch_msec - MAX_SKEW;
+						st.recentShortTime = entry.shortTime;
+						epoch_msec = st.epochTime;
+					}
+					else if(dt_diff > MAX_SKEW) {
+						shvWarning() << "short time too ahead:" << dt_diff << entry.path << cp::RpcValue::DateTime::fromMSecsSinceEpoch(entry.epochMsec).toIsoString() << entry.epochMsec;
+						// short time is too ahead
+						// pin it to greater of recent short-time and epoch-time
+						st.epochTime = epoch_msec + MAX_SKEW;
+						st.recentShortTime = entry.shortTime;
+						epoch_msec = st.epochTime;
+					}
+					else {
+						epoch_msec = st.addShortTime(short_msec);
+					}
+				}
+			}
 		}
 	}
-	if(m_inputFilterUntilMsec > 0 && epoch_msec >= m_inputFilterUntilMsec)
-		return;
-	if(m_inputFilterSinceMsec > 0 && epoch_msec < m_inputFilterSinceMsec) {
-		if(entry.sampleType == ShvJournalEntry::SampleType::Continuous
-			&& m_patternMatcher.match(entry))
-		{
-			Entry &e = m_inputSnapshot[entry.path];
-			if(e.epochMsec < entry.epochMsec)
-				e = entry;
-		}
-		return;
+
+	if (m_pathDictionary.find(entry.path) == m_pathDictionary.end()) {
+		m_pathDictionary[entry.path] = m_pathDictionaryIndex++;
 	}
-	if(!m_patternMatcher.match(entry))
-		return;
-	{
-		auto it = m_pathDictionary.find(entry.path);
-		if(it == m_pathDictionary.end())
-			m_pathDictionary[entry.path] = m_pathDictionaryIndex++;
-	}
+
 	Entry e(entry);
 	e.epochMsec = epoch_msec;
 	int64_t last_time = m_entries.empty()? 0: m_entries[m_entries.size()-1].epochMsec;
@@ -137,20 +121,14 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 	int max_path_index = 0;
 	int rec_cnt = 0;
 
-	auto filter_since_msec = m_inputFilter.since.toDateTime().msecsSinceEpoch();
-	auto filter_until_msec = m_inputFilter.until.toDateTime().msecsSinceEpoch();
-
 	auto params_since_msec = params.since.toDateTime().msecsSinceEpoch();
 	auto params_until_msec = params.until.toDateTime().msecsSinceEpoch();
 
 	int64_t log_since_msec = m_logHeader.sinceMsec();
 	int64_t log_until_msec = m_logHeader.untilMsec();
 
-	int64_t datavalid_since_msec = std::max(log_since_msec, filter_since_msec);
-	int64_t datavalid_until_msec = min_valid(log_until_msec, filter_until_msec);
-
-	int64_t since_msec = std::max(datavalid_since_msec, params_since_msec);
-	int64_t until_msec = min_valid(datavalid_until_msec, params_until_msec);
+	int64_t since_msec = std::max(log_since_msec, params_since_msec);
+	int64_t until_msec = min_valid(log_until_msec, params_until_msec);
 
 	int rec_cnt_limit = std::min(params.recordCountLimit, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 	bool rec_cnt_limit_hit = false;
@@ -158,9 +136,9 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 	//int64_t first_record_msec = 0;
 	int64_t last_record_msec = 0;
 
-	if(params_since_msec > 0 && datavalid_until_msec > 0 && params_since_msec >= datavalid_until_msec)
+	if(params_since_msec > 0 && log_until_msec > 0 && params_since_msec >= log_until_msec)
 		goto log_finish;
-	if(params_until_msec > 0 && datavalid_since_msec > 0 && params_until_msec < datavalid_since_msec)
+	if(params_until_msec > 0 && log_since_msec > 0 && params_until_msec < log_since_msec)
 		goto log_finish;
 
 	{
@@ -200,12 +178,6 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 
 		std::map<std::string, Entry> snapshot;
 		if(params.withSnapshot) {
-			for(auto kv : m_inputSnapshot) {
-				const auto &e = kv.second;
-				if((params_until_msec == 0 || e.epochMsec < params_until_msec) && pm.match(e)) {
-					snapshot[e.path] = e;
-				}
-			}
 			for(auto it = m_entries.begin(); it != m_entries.end() && it < it1; ++it) {
 				const Entry &e = *it;
 				if (it < it1 || e.epochMsec == since_msec) {  //it1 (lower_bound) can be == since_msec (we want in snapshot)
@@ -223,8 +195,11 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 						rec_cnt_limit_hit = true;
 						goto log_finish;
 					}
-					cp::RpcValue::List rec;
 					const auto &entry = kv.second;
+					if (entry.value.hasDefaultValue()) {
+						continue;
+					}
+					cp::RpcValue::List rec;
 					if(since_msec == 0)
 						since_msec = entry.epochMsec;
 					last_record_msec = since_msec;

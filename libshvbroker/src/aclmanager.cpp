@@ -171,30 +171,36 @@ chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginC
 
 	std::string usr_pwd = login.password;
 	if(usr_login_type == LoginType::Plain) {
+		logAclManagerM() << "user_login_type: PLAIN";
 		if(acl_pwd.format == AclPassword::Format::Plain) {
 			if(acl_pwd.password == usr_pwd)
 				return cp::UserLoginResult(true);
+			logAclManagerM() << "\t Invalid password.";
 			return cp::UserLoginResult(false, "Invalid password.");
 		}
 		if(acl_pwd.format == AclPassword::Format::Sha1) {
 			if(acl_pwd.password == sha1_hex(usr_pwd))
 				return cp::UserLoginResult(true);
+			logAclManagerM() << "\t Invalid password.";
 			return cp::UserLoginResult(false, "Invalid password.");
 		}
 	}
 	if(usr_login_type == LoginType::Sha1) {
 		/// login_type == "SHA1" is default
+		logAclManagerM() << "user_login_type: SHA1";
 		if(acl_pwd.format == AclPassword::Format::Plain)
 			acl_pwd.password = sha1_hex(acl_pwd.password);
 
 		std::string nonce = login_context.serverNounce + acl_pwd.password;
-		//shvWarning() << m_pendingAuthNonce << "prd" << nonce;
+		//shvWarning() << "correct:" << login_context.serverNounce << "+" << acl_pwd.password;
 		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
 		hash.addData(nonce.data(), nonce.length());
 		std::string correct_sha1 = std::string(hash.result().toHex().constData());
-		//shvInfo() << nonce_sha1 << "vs" << sha1;
+		//shvWarning() << "correct:" << correct_sha1;
+		//shvWarning() << "user   :" << correct_sha1;
 		if(usr_pwd == correct_sha1)
 			return cp::UserLoginResult(true);
+		logAclManagerM() << "\t Invalid password.";
 		return cp::UserLoginResult(false, "Invalid password.");
 	}
 	shvError() << "Unsupported login type" << cp::UserLogin::loginTypeToString(login.loginType) << "for user:" << login.user;

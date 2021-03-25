@@ -8,10 +8,7 @@ CONFIG += hide_symbols
 TEMPLATE = lib
 TARGET = shvcoreqt
 
-isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
-	SHV_PROJECT_TOP_BUILDDIR=$$shadowed($$PWD)/..
-}
-message ( SHV_PROJECT_TOP_BUILDDIR: '$$SHV_PROJECT_TOP_BUILDDIR' )
+include( ../subproject_integration.pri )
 
 unix:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/lib
 win32:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin
@@ -25,14 +22,18 @@ DEFINES += ANDROID_BUILD
 DEFINES += SHVCOREQT_BUILD_DLL
 
 INCLUDEPATH += \
+    $$SHV_PROJECT_TOP_SRCDIR/3rdparty/necrolog/include \
 	$$PWD/../libshvcore/include \
 	$$PWD/../libshvchainpack/include \
-	$$PWD/../3rdparty/necrolog/include \
 
 LIBS += \
-    -L$$DESTDIR \
-    -lnecrolog \
-    -lshvcore \
-    -lshvchainpack
+	-L$$DESTDIR
+
+android: LIBEXT = "_$${QT_ARCH}"
+else: LIBEXT = ""
+
+LIBS += -lnecrolog$${LIBEXT} \
+		-lshvcore$${LIBEXT} \
+		-lshvchainpack$${LIBEXT}
 
 include($$PWD/src/src.pri)

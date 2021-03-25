@@ -105,6 +105,7 @@ public:
 	virtual void append(const RpcValue &);
 
 	virtual std::string toStdString() const = 0;
+	virtual void stripMeta() = 0;
 
 	virtual AbstractValueData* copy() = 0;
 };
@@ -193,6 +194,13 @@ protected:
 		}
 		tmp->m_value = orig->m_value;
 		return tmp;
+	}
+
+	void stripMeta() override
+	{
+		if(m_metaData)
+			delete m_metaData;
+		m_metaData = nullptr;
 	}
 
 protected:
@@ -548,6 +556,25 @@ void RpcValue::setMetaValue(const RpcValue::String &key, const RpcValue &val)
 		m_ptr->setMetaValue(key, val);
 }
 
+bool RpcValue::hasDefaultValue() const
+{
+	switch (type()) {
+	case RpcValue::Type::Invalid: return true;
+	case RpcValue::Type::Null: return true;
+	case RpcValue::Type::Bool: return (toBool() == false);
+	case RpcValue::Type::Int: return (toInt() == 0);
+	case RpcValue::Type::UInt: return (toUInt() == 0);
+	case RpcValue::Type::DateTime: return (toDateTime().msecsSinceEpoch() == 0);
+	case RpcValue::Type::Decimal: return (toDecimal().mantisa() == 0);
+	case RpcValue::Type::Double: return (toDouble() == 0);
+	case RpcValue::Type::String: return (toString().empty());
+	case RpcValue::Type::List: return (toList().empty());
+	case RpcValue::Type::Map: return (toMap().empty());
+	case RpcValue::Type::IMap: return (toIMap().empty());
+	}
+	return false;
+}
+
 bool RpcValue::isValid() const
 {
 	return !m_ptr.isNull();
@@ -562,13 +589,12 @@ uint64_t RpcValue::toUInt64() const { return !m_ptr.isNull()? m_ptr->toUInt64():
 bool RpcValue::toBool() const { return !m_ptr.isNull()? m_ptr->toBool(): false; }
 RpcValue::DateTime RpcValue::toDateTime() const { return !m_ptr.isNull()? m_ptr->toDateTime(): RpcValue::DateTime{}; }
 
-const std::string & RpcValue::toString() const { return !m_ptr.isNull()? m_ptr->toString(): static_empty_string(); }
-//const RpcValue::Blob &RpcValue::toBlob() const { return !m_ptr.isNull()? m_ptr->toBlob(): static_empty_blob(); }
+const std::string & RpcValue::asString() const { return !m_ptr.isNull()? m_ptr->toString(): static_empty_string(); }
+const RpcValue::List & RpcValue::asList() const { return !m_ptr.isNull()? m_ptr->toList(): static_empty_list(); }
+const RpcValue::Map & RpcValue::asMap() const { return !m_ptr.isNull()? m_ptr->toMap(): static_empty_map(); }
+const RpcValue::IMap &RpcValue::asIMap() const { return !m_ptr.isNull()? m_ptr->toIMap(): static_empty_imap(); }
 
 size_t RpcValue::count() const { return !m_ptr.isNull()? m_ptr->count(): 0; }
-const RpcValue::List & RpcValue::toList() const { return !m_ptr.isNull()? m_ptr->toList(): static_empty_list(); }
-const RpcValue::Map & RpcValue::toMap() const { return !m_ptr.isNull()? m_ptr->toMap(): static_empty_map(); }
-const RpcValue::IMap &RpcValue::toIMap() const { return !m_ptr.isNull()? m_ptr->toIMap(): static_empty_imap(); }
 RpcValue RpcValue::at (RpcValue::Int i) const { return !m_ptr.isNull()? m_ptr->at(i): RpcValue(); }
 RpcValue RpcValue::at (const RpcValue::String &key) const { return !m_ptr.isNull()? m_ptr->at(key): RpcValue(); }
 bool RpcValue::has (RpcValue::Int i) const { return !m_ptr.isNull()? m_ptr->has(i): false; }
@@ -598,6 +624,13 @@ void RpcValue::append(const RpcValue &val)
 		m_ptr->append(val);
 	else
 		nError() << "Cannot append to invalid ChainPack value!";
+}
+
+RpcValue RpcValue::metaStripped() const
+{
+	RpcValue ret = *this;
+	ret.m_ptr->stripMeta();
+	return ret;
 }
 
 std::string RpcValue::toPrettyString(const std::string &indent) const

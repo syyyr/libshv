@@ -14,9 +14,9 @@ ServiceProviderPath::ServiceProviderPath(const std::string &shv_path)
 	if(ix > 0) {
 		auto type_mark = shv_path[ix];
 		if(type_mark == ABSOLUTE_MARK)
-			m_type = Type::Absolute;
+			m_type = Type::AbsoluteService;
 		else if(type_mark == RELATIVE_MARK)
-			m_type = Type::MountPointRelative;
+			m_type = Type::MountPointRelativeService;
 		m_service = StringView(shv_path, 0, ix);
 		ssize_t bid_ix = m_service.lastIndexOf('@');
 		if(bid_ix > 0) {
@@ -31,8 +31,8 @@ const char *ServiceProviderPath::typeString() const
 {
 	switch (type()) {
 	case Type::Plain: return "Plain";
-	case Type::MountPointRelative: return "Relative";
-	case Type::Absolute: return "Absolute";
+	case Type::MountPointRelativeService: return "Relative";
+	case Type::AbsoluteService: return "Absolute";
 	}
 	return "???";
 }
@@ -41,8 +41,8 @@ std::string ServiceProviderPath::typeMark(Type t)
 {
 	switch (t) {
 	case Type::Plain: return std::string();
-	case Type::MountPointRelative: return std::string(1, RELATIVE_MARK) + END_MARK;
-	case Type::Absolute: return std::string(1, ABSOLUTE_MARK) + END_MARK;
+	case Type::MountPointRelativeService: return std::string(1, RELATIVE_MARK) + END_MARK;
+	case Type::AbsoluteService: return std::string(1, ABSOLUTE_MARK) + END_MARK;
 	}
 	return std::string();
 }

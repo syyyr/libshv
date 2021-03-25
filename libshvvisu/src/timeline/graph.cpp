@@ -91,13 +91,31 @@ void Graph::createChannelsFromModel()
 		QString shv_path = m_model->channelShvPath(i);
 		path_to_model_index[shv_path] = i;
 	}
-	XRange x_range;
 	for(const auto &shv_path : path_to_model_index.keys()) {
 		int model_ix = path_to_model_index[shv_path];
+		shvDebug() << "adding channel:" << shv_path;
+		//shvInfo() << "new channel:" << model_ix;
+		GraphChannel *ch = appendChannel(model_ix);
+		//ch->buttonBox()->setObjectName(QString::fromStdString(shv_path));
+		int channel_ix = channelCount() - 1;
+		GraphChannel::Style style = ch->style();
+		style.setColor(colors.value(channel_ix % colors.count()));
+		ch->setStyle(style);
+		//ch->setMetaTypeId(m_model->guessMetaType(model_ix));
+	}
+	resetChannelsRanges();
+}
+
+void Graph::resetChannelsRanges()
+{
+	if(!m_model)
+		return;
+	XRange x_range;
+	for (int channel_ix = 0; channel_ix < channelCount(); ++channel_ix) {
+		GraphChannel *ch = channelAt(channel_ix);
+		int model_ix = ch->modelIndex();
 		YRange yrange = m_model->yRange(model_ix);
-		shvDebug() << "adding channel:" << shv_path << "y-range interval:" << yrange.interval();
 		if(yrange.isEmpty()) {
-			shvDebug() << "\t constant channel:" << shv_path;
 			if(yrange.max > 1)
 				yrange = YRange{0, yrange.max};
 			else if(yrange.max < -1)
@@ -108,15 +126,7 @@ void Graph::createChannelsFromModel()
 				yrange = YRange{0, 1};
 		}
 		x_range = x_range.united(m_model->xRange(model_ix));
-		//shvInfo() << "new channel:" << model_ix;
-		GraphChannel *ch = appendChannel(model_ix);
-		//ch->buttonBox()->setObjectName(QString::fromStdString(shv_path));
-		int graph_ix = channelCount() - 1;
-		GraphChannel::Style style = ch->style();
-		style.setColor(colors.value(graph_ix % colors.count()));
-		ch->setStyle(style);
-		//ch->setMetaTypeId(m_model->guessMetaType(model_ix));
-		setYRange(graph_ix, yrange);
+		setYRange(channel_ix, yrange);
 	}
 	setXRange(x_range);
 }
@@ -136,6 +146,11 @@ shv::visu::timeline::GraphChannel *Graph::appendChannel(int model_index)
 	m_channels.append(new GraphChannel(this));
 	GraphChannel *ch = m_channels.last();
 	ch->setModelIndex(model_index < 0? m_channels.count() - 1: model_index);
+	if (m_model->channelInfo(model_index).typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Discrete) {
+		auto style = ch->style();
+		style.setInterpolation(GraphChannel::Style::Interpolation::None);
+		ch->setStyle(style);
+	}
 	return ch;
 }
 
@@ -169,33 +184,72 @@ int Graph::channelMetaTypeId(int ix) const
 
 void Graph::showAllChannels()
 {
-	m_channelFilter.setPathPattern(QString());
+	m_channelFilter.setMatchingPaths(channelPaths());
+
 	emit layoutChanged();
+	emit channelFilterChanged();
+}
+
+QStringList Graph::channelPaths()
+{
+	QStringList shv_paths;
+
+	for (int i = 0; i < m_channels.count(); ++i) {
+		shv_paths.append(m_channels[i]->shvPath());
+	}
+
+	return shv_paths;
 }
 
 void Graph::hideFlatChannels()
 {
-	m_channelFilter.setHideFlat(true);
+	QStringList matching_paths = m_channelFilter.matchingPaths();
+
+	for (int i = 0; i < m_channels.count(); ++i) {
+		GraphChannel *ch = m_channels[i];
+		if(isChannelFlat(ch)) {
+			matching_paths.removeOne(ch->shvPath());
+		}
+	}
+
+	m_channelFilter.setMatchingPaths(matching_paths);
+
 	emit layoutChanged();
+	emit channelFilterChanged();
+}
+
+bool Graph::isChannelFlat(GraphChannel *ch)
+{
+	YRange yrange = m_model->yRange(ch->modelIndex());
+	return yrange.isEmpty();
 }
 
 void Graph::setChannelFilter(const ChannelFilter &filter)
 {
 	m_channelFilter = filter;
 	emit layoutChanged();
+	emit channelFilterChanged();
 }
 
-void Graph::setChannelVisible(int channel_ix, bool b)
+void Graph::setChannelVisible(int channel_ix, bool is_visible)
 {
 	GraphChannel *ch = channelAt(channel_ix);
-	ch->setVisible(b);
+
+	if (is_visible) {
+		m_channelFilter.addMatchingPath(ch->shvPath());
+	}
+	else {
+		m_channelFilter.removeMatchingPath(ch->shvPath());
+	}
+
 	emit layoutChanged();
+	emit channelFilterChanged();
 }
 
-void Graph::setChannelMaximized(int channel_ix, bool b)
+void Graph::setChannelMaximized(int channel_ix, bool is_maximized)
 {
 	GraphChannel *ch = channelAt(channel_ix);
-	ch->setMaximized(b);
+	ch->setMaximized(is_maximized);
 	emit layoutChanged();
 }
 
@@ -255,6 +309,30 @@ Sample Graph::timeToSample(int channel_ix, timemsec_t time) const
 		return Sample(time, d);
 	}
 	return Sample();
+}
+
+Sample Graph::nearestSample(int channel_ix, timemsec_t time) const
+{
+	GraphModel *m = model();
+	const GraphChannel *ch = channelAt(channel_ix);
+	int model_ix = ch->modelIndex();
+	int ix1 = m->lessOrEqualIndex(model_ix, time);
+
+	Sample s1;
+	Sample s2;
+	if (ix1 >= 0) {
+		s1 = m->sampleAt(model_ix, ix1);
+	}
+	if (ix1 + 1 == m->count(model_ix)) {
+		return s1;
+	}
+	s2 = m->sampleAt(model_ix, ix1 + 1);
+	if (s1.isValid() && time - s1.time < s2.time - time) {
+		return s1;
+	}
+	else {
+		return s2;
+	}
 }
 
 Sample Graph::posToData(const QPoint &pos) const
@@ -417,6 +495,9 @@ void Graph::zoomToSelection()
 	XRange xrange;
 	xrange.min = posToTime(m_state.selectionRect.left());
 	xrange.max = posToTime(m_state.selectionRect.right());
+	if (xrange.min > xrange.max) {
+		std::swap(xrange.min, xrange.max);
+	}
 	setXRangeZoom(xrange);
 }
 
@@ -519,13 +600,19 @@ void Graph::makeXAxis()
 	timemsec_t t1 = posToTime(0);
 	timemsec_t t2 = posToTime(tick_px);
 	int64_t interval = t2 - t1;
-	auto lb = intervals.lower_bound(interval);
-	if(lb == intervals.end())
-		lb = --intervals.end();
-	XAxis &axis = m_state.xAxis;
-	axis = lb->second;
-	axis.tickInterval = lb->first;
-	shvDebug() << "interval:" << axis.tickInterval;
+	if(interval > 0) {
+		auto lb = intervals.lower_bound(interval);
+		if(lb == intervals.end())
+			lb = --intervals.end();
+		XAxis &axis = m_state.xAxis;
+		axis = lb->second;
+		axis.tickInterval = lb->first;
+		shvDebug() << "interval:" << axis.tickInterval;
+	}
+	else {
+		XAxis &axis = m_state.xAxis;
+		axis.tickInterval = 0;
+	}
 }
 
 void Graph::makeYAxis(int channel)
@@ -795,29 +882,33 @@ void Graph::drawCenteredRectText(QPainter *painter, const QPoint &top_center, co
 QVector<int> Graph::visibleChannels()
 {
 	QVector<int> visible_channels;
+	int maximized_channel = maximizedChannelIndex();
+
+	if (maximized_channel >= 0) {
+		visible_channels << maximized_channel;
+	}
+	else {
+		for (int i = 0; i < m_channels.count(); ++i) {
+			QString shv_path = model()->channelInfo(m_channels[i]->modelIndex()).shvPath;
+			if(m_channelFilter.isPathMatch(shv_path)) {
+				visible_channels << i;
+			}
+		}
+	}
+
+	return visible_channels;
+}
+
+int Graph::maximizedChannelIndex()
+{
 	for (int i = 0; i < m_channels.count(); ++i) {
 		GraphChannel *ch = m_channels[i];
 		if(ch->isMaximized()) {
-			visible_channels.clear();
-			visible_channels << i;
-			break;
+			return i;
 		}
-		if(!ch->isVisible())
-			continue;
-
-		QString shv_path = model()->channelInfo(ch->modelIndex()).shvPath;
-		if(!m_channelFilter.isPathMatch(shv_path)) {
-			continue;
-		}
-		if(m_channelFilter.isHideFlat()) {
-			YRange yrange = m_model->yRange(ch->modelIndex());
-			bool is_flat = yrange.isEmpty();
-			if(is_flat)
-				continue;
-		}
-		visible_channels << i;
 	}
-	return visible_channels;
+
+	return -1;
 }
 
 void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_rect)
@@ -868,6 +959,8 @@ void Graph::drawCornerCell(QPainter *painter)
 
 void Graph::drawMiniMap(QPainter *painter)
 {
+	if(m_layout.miniMapRect.width() <= 0)
+		return;
 	if(m_miniMapCache.isNull()) {
 		shvDebug() << "creating minimap cache";
 		m_miniMapCache = QPixmap(m_layout.miniMapRect.width(), m_layout.miniMapRect.height());
@@ -885,7 +978,6 @@ void Graph::drawMiniMap(QPainter *painter)
 			DataRect drect{xRange(), ch->yRange()};
 			drawSamples(painter2, i, drect, mm_rect, ch_st);
 		}
-
 	}
 	painter->drawPixmap(m_layout.miniMapRect.topLeft(), m_miniMapCache);
 	int x1 = miniMapTimeToPos(xRangeZoom().min);
@@ -974,7 +1066,7 @@ void Graph::drawGrid(QPainter *painter, int channel)
 {
 	const GraphChannel *ch = channelAt(channel);
 	const XAxis &x_axis = m_state.xAxis;
-	if(x_axis.tickInterval == 0) {
+	if(!x_axis.isValid()) {
 		drawRectText(painter, ch->m_layout.graphAreaRect, "grid", m_effectiveStyle.font(), ch->m_effectiveStyle.colorGrid());
 		return;
 	}
@@ -1034,8 +1126,8 @@ void Graph::drawXAxis(QPainter *painter)
 {
 	painter->fillRect(m_layout.xAxisRect, m_effectiveStyle.colorPanel());
 	const XAxis &axis = m_state.xAxis;
-	if(axis.tickInterval == 0) {
-		drawRectText(painter, m_layout.xAxisRect, "x-axis", m_effectiveStyle.font(), Qt::green);
+	if(!axis.isValid()) {
+		//drawRectText(painter, m_layout.xAxisRect, "x-axis", m_effectiveStyle.font(), Qt::green);
 		return;
 	}
 	painter->save();
@@ -1073,6 +1165,11 @@ void Graph::drawXAxis(QPainter *painter)
 		QPoint p1{x, m_layout.xAxisRect.top()};
 		QPoint p2{p1.x(), p1.y() + 2*tick_len};
 		painter->drawLine(p1, p2);
+		auto date_time_tz = [this](timemsec_t epoch_msec) {
+			QDateTime dt = QDateTime::fromMSecsSinceEpoch(epoch_msec);
+			dt = dt.toTimeZone(m_timeZone);
+			return dt;
+		};
 		QString text;
 		switch (axis.labelFormat) {
 		case XAxis::LabelFormat::MSec:
@@ -1083,22 +1180,22 @@ void Graph::drawXAxis(QPainter *painter)
 			break;
 		case XAxis::LabelFormat::Min:
 		case XAxis::LabelFormat::Hour: {
-			QTime tm = QDateTime::fromMSecsSinceEpoch(t).time();
+			QTime tm = date_time_tz(t).time();
 			text = QStringLiteral("%1:%2").arg(tm.hour()).arg(tm.minute(), 2, 10, QChar('0'));
 			break;
 		}
 		case XAxis::LabelFormat::Day: {
-			QDate dt = QDateTime::fromMSecsSinceEpoch(t).date();
+			QDate dt = date_time_tz(t).date();
 			text = QStringLiteral("%1/%2").arg(dt.month()).arg(dt.day(), 2, 10, QChar('0'));
 			break;
 		}
 		case XAxis::LabelFormat::Month: {
-			QDate dt = QDateTime::fromMSecsSinceEpoch(t).date();
+			QDate dt = date_time_tz(t).date();
 			text = QStringLiteral("%1-%2").arg(dt.year()).arg(dt.month(), 2, 10, QChar('0'));
 			break;
 		}
 		case XAxis::LabelFormat::Year: {
-			QDate dt = QDateTime::fromMSecsSinceEpoch(t).date();
+			QDate dt = date_time_tz(t).date();
 			text = QStringLiteral("%1").arg(dt.year());
 			break;
 		}
@@ -1379,8 +1476,6 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 
 	int interpolation = ch_style.interpolation();
 
-	int sample_point_size = u2px(0.2);
-
 	QPen pen;
 	QColor line_color = ch_style.color();
 	pen.setColor(line_color);
@@ -1431,6 +1526,20 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	for (int i = ix1; i <= ix2 && i <= samples_cnt; ++i) {
 		// sample is drawn one step behind, so one more loop is needed
 		const Sample s = (i < samples_cnt)? graph_model->sampleAt(model_ix, i): Sample();
+		if (interpolation == GraphChannel::Style::Interpolation::None) {
+			QPoint sample_point = sample2point(Sample{s.time, 0}, channel_meta_type_id); // <- this can be computed ahead
+			int arrow_width = u2px(1);
+			painter->drawLine(sample_point.x(), clip_rect.y() + clip_rect.height() / 2, sample_point.x(), clip_rect.y() + clip_rect.height());
+			QPainterPath path;
+			path.moveTo(sample_point.x() - arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
+			path.lineTo(sample_point.x() + arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
+			path.lineTo(sample_point.x(), clip_rect.y() + clip_rect.height());
+			path.lineTo(sample_point.x() - arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
+			path.closeSubpath();
+			painter->fillPath(path, painter->pen().color());
+			continue;
+		}
+
 		const QPoint sample_point = sample2point(s, channel_meta_type_id);
 		//shvDebug() << i << "t:" << s.time << "x:" << sample_point.x() << "y:" << sample_point.y();
 		//shvDebug() << "\t recent x:" << recent_px.x << " current x:" << current_px.x;
@@ -1446,17 +1555,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 					drawn_point = QPoint{current_px.x, (current_px.minY + current_px.maxY) / 2};
 					painter->drawLine(current_px.x, current_px.minY, current_px.x, current_px.maxY);
 				}
-				if(interpolation == GraphChannel::Style::Interpolation::None) {
-					if(line_area_color.isValid()) {
-						QPoint p0 = sample2point(Sample{s.time, 0}, channel_meta_type_id); // <- this can be computed ahead
-						p0.setX(drawn_point.x());
-						painter->fillRect(QRect{drawn_point, p0}, line_area_color);
-					}
-					QRect r0{QPoint(), QSize{sample_point_size, sample_point_size}};
-					r0.moveCenter(drawn_point);
-					painter->fillRect(r0, line_color);
-				}
-				else if(interpolation == GraphChannel::Style::Interpolation::Stepped) {
+				if(interpolation == GraphChannel::Style::Interpolation::Stepped) {
 					if(recent_px.x != NO_X) {
 						QPoint pa{recent_px.x, recent_px.lastY};
 						if(line_area_color.isValid()) {

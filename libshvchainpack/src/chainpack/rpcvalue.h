@@ -97,6 +97,7 @@ public:
 		//MetaMap,
 	};
 	static const char* typeToName(Type t);
+	const char* typeName() const { return typeToName(type()); }
 	static Type typeForName(const std::string &type_name, int len = -1);
 
 	using Int = int; //int64_t;
@@ -355,8 +356,9 @@ public:
 	RpcValue(IMap &&values);          // IMap
 
 	// Implicit constructor: anything with a toRpcValue() function.
-	template <class T, class = decltype(&T::toRpcValue)>
-	RpcValue(const T & t) : RpcValue(t.toRpcValue()) {}
+	// dangerous
+	//template <class T, class = decltype(&T::toRpcValue)>
+	//RpcValue(const T & t) : RpcValue(t.toRpcValue()) {}
 
 	// Implicit constructor: map-like objects (std::map, std::unordered_map, etc)
 	template <class M, typename std::enable_if<
@@ -389,6 +391,8 @@ public:
 	void setMetaTypeId(int id) {setMetaValue(meta::Tag::MetaTypeId, id);}
 	void setMetaTypeId(int ns, int id) {setMetaValue(meta::Tag::MetaTypeNameSpaceId, ns); setMetaValue(meta::Tag::MetaTypeId, id);}
 
+	bool hasDefaultValue() const;
+
 	bool isValid() const;
 	bool isNull() const { return type() == Type::Null; }
 	bool isInt() const { return type() == Type::Int; }
@@ -410,10 +414,17 @@ public:
 	uint64_t toUInt64() const;
 	bool toBool() const;
 	DateTime toDateTime() const;
-	const RpcValue::String &toString() const;
-	const List &toList() const;
-	const Map &toMap() const;
-	const IMap &toIMap() const;
+
+	const RpcValue::String &asString() const;
+	const List &asList() const;
+	const Map &asMap() const;
+	const IMap &asIMap() const;
+
+	/// deprecated, new applications should us asString, asInt, ...
+	const RpcValue::String &toString() const { return asString(); }
+	const List &toList() const { return asList(); }
+	const Map &toMap() const { return asMap(); }
+	const IMap &toIMap() const { return asIMap(); }
 
 	size_t count() const;
 	bool has(Int i) const;
@@ -426,6 +437,8 @@ public:
 	void set(const RpcValue::String &key, const RpcValue &val);
 	void append(const RpcValue &val);
 
+	RpcValue metaStripped() const;
+
 	std::string toPrettyString(const std::string &indent = std::string()) const;
 	std::string toStdString() const;
 	std::string toCpon(const std::string &indent = std::string()) const;
@@ -433,7 +446,7 @@ public:
 
 	std::string toChainPack() const;
 	static RpcValue fromChainPack(const std::string & str, std::string *err = nullptr);
-	static constexpr bool CloneMetaData = true;
+	//static constexpr bool CloneMetaData = true;
 	//RpcValue clone(bool clone_meta_data = CloneMetaData) const;
 
 	bool operator== (const RpcValue &rhs) const;

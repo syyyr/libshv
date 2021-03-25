@@ -21,7 +21,8 @@ public:
 	static const char *DOMAIN_SHV_COMMAND;
 
 	static const char* PATH_APP_START;
-	//static const char* PATH_SNAPSHOT_END;
+	static const char* PATH_SNAPSHOT_BEGIN;
+	static const char* PATH_SNAPSHOT_END;
 	static const char* PATH_DATA_MISSING;
 	static const char* PATH_DATA_DIRTY;
 

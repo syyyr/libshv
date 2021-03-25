@@ -77,7 +77,8 @@ void GraphWidget::makeLayout(const QSize &preferred_size)
 	graph()->makeLayout(QRect(QPoint(), preferred_size));
 	QSize sz = graph()->rect().size();
 	shvDebug() << "new size:" << sz.width() << 'x' << sz.height();
-	setMinimumSize(sz);
+	if(sz.width() > 0)
+		setMinimumSize(sz);
 	update();
 }
 
@@ -173,7 +174,7 @@ bool GraphWidget::isMouseAboveMiniMapSlider(const QPoint &pos) const
 	return (x1 < pos.x()) && (pos.x() < x2);
 }
 
-int GraphWidget::isMouseAboveGraphVerticalHeader(const QPoint &pos) const
+int GraphWidget::channelIndexOnGraphVerticalHeader(const QPoint &pos) const
 {
 	const Graph *gr = graph();
 	for (int i = 0; i < gr->channelCount(); ++i) {
@@ -185,17 +186,27 @@ int GraphWidget::isMouseAboveGraphVerticalHeader(const QPoint &pos) const
 	return -1;
 }
 
-int GraphWidget::mouseAboveGraphDataAreaIndex(const QPoint &pos) const
+int GraphWidget::channelIndexOnGraphDataAreaIndex(const QPoint &pos) const
 {
 	const Graph *gr = graph();
 	int ch_ix = gr->posToChannel(pos);
 	return ch_ix;
 }
 
+QString GraphWidget::enumToString(int value, const TypeDescr &type_descr)
+{
+	for (const auto &field : type_descr.fields) {
+		if (value == field.value.toInt()) {
+			return QString::fromStdString(field.name);
+		}
+	}
+	return QString();
+}
+
 void GraphWidget::mouseDoubleClickEvent(QMouseEvent *event)
 {
 	QPoint pos = event->pos();
-	if(mouseAboveGraphDataAreaIndex(pos) >= 0) {
+	if(channelIndexOnGraphDataAreaIndex(pos) >= 0) {
 		if(event->modifiers() == Qt::NoModifier) {
 			emit graphChannelDoubleClicked(pos);
 			event->accept();
@@ -226,7 +237,7 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 			event->accept();
 			return;
 		}
-		else if(mouseAboveGraphDataAreaIndex(pos) >= 0) {
+		else if(channelIndexOnGraphDataAreaIndex(pos) >= 0) {
 			if(event->modifiers() == Qt::ControlModifier) {
 				m_mouseOperation = MouseOperation::GraphAreaMove;
 				m_recentMousePos = pos;
@@ -365,31 +376,96 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		return;
 	}
 	}
-	int ch_ix = mouseAboveGraphDataAreaIndex(pos);
+	int ch_ix = channelIndexOnGraphDataAreaIndex(pos);
 	if(ch_ix >= 0 && !isMouseAboveMiniMap(pos)) {
 		setCursor(Qt::BlankCursor);
 		gr->setCrossHairPos({ch_ix, pos});
 		timemsec_t t = gr->posToTime(pos.x());
-		Sample s = gr->timeToSample(ch_ix, t);
 		const GraphChannel *ch = gr->channelAt(ch_ix);
 		//update(ch->graphAreaRect());
-		if(s.isValid()) {
-			shvDebug() << "time:" << s.time << "value:" << s.value.toDouble();
-			QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
-			dt = dt.toTimeZone(graph()->timeZone());
-			QString text = QStringLiteral("%1\nx: %2\ny: %3\nvalue: %4")
-					.arg(ch->shvPath())
-					.arg(dt.toString(Qt::ISODateWithMs))
-					.arg(ch->posToValue(pos.y()))
-					.arg(s.value.toString());
-			QToolTip::showText(mapToGlobal(pos + QPoint{gr->u2px(0.8), 0}), text, this);
+		GraphModel::ChannelInfo &channel_info = gr->model()->channelInfo(ch->modelIndex());
+		Sample s;
+		if (channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Discrete) {
+			s = gr->nearestSample(ch_ix, t);
 		}
 		else {
-			QToolTip::showText(QPoint(), QString());
+			s = gr->timeToSample(ch_ix, t);
 		}
+		QPoint point;
+		QString text;
+
+		if (s.isValid()) {
+			if (channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Continuous ||
+				(channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Discrete && qAbs(pos.x() - gr->timeToPos(s.time)) < gr->u2px(1.1))) {
+				point = mapToGlobal(pos + QPoint{gr->u2px(0.8), 0});
+				QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
+				dt = dt.toTimeZone(graph()->timeZone());
+
+				if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Map) {
+					text = QStringLiteral("%1\nx: %2\n")
+						   .arg(ch->shvPath())
+						   .arg(dt.toString(Qt::ISODateWithMs));
+					const QVariantMap &map = s.value.toMap();
+					for (auto it = map.cbegin(); it != map.cend(); ++it) {
+						QString value = it.value().toString();
+						for (auto &field : channel_info.typeDescr.fields) {
+							if (QString::fromStdString(field.name) == it.key() && field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+								value = enumToString(it.value().toInt(), field.typeDescr);
+								break;
+							}
+						}
+						text += it.key() + ": " + value + "\n";
+					}
+					text.chop(1);
+				}
+				else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::IMap) {
+					text = QStringLiteral("%1\nx: %2\n")
+						   .arg(ch->shvPath())
+						   .arg(dt.toString(Qt::ISODateWithMs));
+					const QVariantMap &map = s.value.toMap();
+					for (auto it = map.cbegin(); it != map.cend(); ++it) {
+						for (auto &field : channel_info.typeDescr.fields) {
+							if (it.key().toInt() == field.value.toInt()) {
+								QString value;
+								if (field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+									value = enumToString(it.value().toInt(), field.typeDescr);
+								}
+								else {
+									value = it.value().toString();
+								}
+								text += QString::fromStdString(field.name) + ": " + value + "\n";
+								break;
+							}
+						}
+					}
+					text.chop(1);
+				}
+				else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+					text = QStringLiteral("%1\nx: %2\nvalue: %3")
+						   .arg(ch->shvPath())
+						   .arg(dt.toString(Qt::ISODateWithMs))
+						   .arg(enumToString(s.value.toInt(), channel_info.typeDescr));
+				}
+				else {
+					text = QStringLiteral("%1\nx: %2\ny: %3\nvalue: %4")
+						   .arg(ch->shvPath())
+						   .arg(dt.toString(Qt::ISODateWithMs))
+						   .arg(ch->posToValue(pos.y()))
+						   .arg(s.value.toString());
+				}
+			}
+		}
+		QToolTip::showText(point, text);
 	}
 	else {
 		hideCrossHair();
+	}
+
+	ch_ix = channelIndexOnGraphVerticalHeader(pos);
+	if(ch_ix > -1) {
+		const GraphChannel *ch = gr->channelAt(ch_ix);
+		QString text = tr("Channel:") + " " + ch->shvPath();
+		QToolTip::showText(mapToGlobal(pos + QPoint{gr->u2px(0.2), 0}), text, this);
 	}
 }
 
@@ -417,7 +493,7 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
 	QPoint pos = event->position().toPoint();
 #endif
 	bool is_zoom_on_slider = isMouseAboveMiniMapSlider(pos);
-	bool is_zoom_on_graph = (event->modifiers() == Qt::ControlModifier) && mouseAboveGraphDataAreaIndex(pos) >= 0;
+	bool is_zoom_on_graph = (event->modifiers() == Qt::ControlModifier) && channelIndexOnGraphDataAreaIndex(pos) >= 0;
 	static constexpr int ZOOM_STEP = 10;
 	if(is_zoom_on_slider) {
 		Graph *gr = graph();
@@ -503,7 +579,7 @@ void GraphWidget::showGraphContextMenu(const QPoint &mouse_pos)
 	menu.addAction(tr("Show all channels"), [this]() {
 		m_graph->showAllChannels();
 	});
-	menu.addAction(tr("Hide flat channels"), [this]() {
+	menu.addAction(tr("Hide channels without changes"), [this]() {
 		m_graph->hideFlatChannels();
 	});
 	if(menu.actions().count())

@@ -32,11 +32,13 @@ namespace rpc {
 ClientConnectionOnBroker::ClientConnectionOnBroker(shv::iotqt::rpc::Socket *socket, QObject *parent)
 	: Super(socket, parent)
 {
+	shvDebug() << __FUNCTION__;
 	connect(this, &ClientConnectionOnBroker::socketConnectedChanged, this, &ClientConnectionOnBroker::onSocketConnectedChanged);
 }
 
 ClientConnectionOnBroker::~ClientConnectionOnBroker()
 {
+	shvDebug() << __FUNCTION__;
 	//rpc::ServerConnectionshvWarning() << "destroying" << this;
 	//shvWarning() << __FUNCTION__;
 }
@@ -92,7 +94,7 @@ std::string ClientConnectionOnBroker::resolveLocalPath(const shv::core::utils::S
 	string local_path;
 	iotqt::node::ShvNode *nd = nullptr;
 	if(spp.isServicePath()) {
-		if(spp.type() == shv::core::utils::ServiceProviderPath::Type::MountPointRelative) {
+		if(spp.type() == shv::core::utils::ServiceProviderPath::Type::MountPointRelativeService) {
 			std::string mount_point = mountPoint();
 			if(mount_point.empty())
 				SHV_EXCEPTION("Cannot resolve relative path on unmounted device: " + spp.shvPath());
@@ -113,7 +115,7 @@ std::string ClientConnectionOnBroker::resolveLocalPath(const shv::core::utils::S
 				local_path = spp.makeServicePath(mount_point);
 			}
 		}
-		else if(spp.type() == shv::core::utils::ServiceProviderPath::Type::Absolute) {
+		else if(spp.type() == shv::core::utils::ServiceProviderPath::Type::AbsoluteService) {
 			nd = app->nodeForService(spp);
 			if(nd) {
 				/// found on this broker
@@ -200,7 +202,7 @@ ClientConnectionOnBroker::Subscription ClientConnectionOnBroker::createSubscript
 		string shv_path_to_acl_check;
 		if(spp.isServicePath()) {
 			if(service_node) {
-				if(spp.type() == ServiceProviderPath::Type::Absolute) {
+				if(spp.type() == ServiceProviderPath::Type::AbsoluteService) {
 					shv_path_to_acl_check = local_path;
 				}
 			}

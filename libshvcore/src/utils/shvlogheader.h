@@ -14,7 +14,7 @@ namespace core {
 class StringViewList;
 namespace utils {
 
-class ShvGetLogParams;
+struct ShvGetLogParams;
 
 class SHVCORE_DECL_EXPORT ShvLogHeader //: public shv::chainpack::RpcValue::MetaData
 {

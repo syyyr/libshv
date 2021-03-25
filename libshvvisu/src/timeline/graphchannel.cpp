@@ -41,16 +41,6 @@ double GraphChannel::posToValue(int y) const
 	return pos2val? pos2val(y): 0;
 }
 
-void GraphChannel::setVisible(bool b)
-{
-	m_effectiveStyle.setHidden(!b);
-}
-
-bool GraphChannel::isVisible() const
-{
-	return !m_effectiveStyle.isHidden();
-}
-
 Graph *GraphChannel::graph() const
 {
 	return qobject_cast<Graph*>(parent());

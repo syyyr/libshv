@@ -12,6 +12,9 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
+//===================================================
+// RpcCall
+//===================================================
 RpcResponseCallBack::RpcResponseCallBack(int rq_id, QObject *parent)
 	: QObject(parent)
 {
@@ -22,10 +25,12 @@ RpcResponseCallBack::RpcResponseCallBack(ClientConnection *conn, int rq_id, QObj
 	: RpcResponseCallBack(rq_id, parent)
 {
 	connect(conn, &ClientConnection::rpcMessageReceived, this, &RpcResponseCallBack::onRpcMessageReceived);
+	setTimeout(conn->defaultRpcTimeoutMsec());
 }
 
 void RpcResponseCallBack::start()
 {
+	m_isFinished = false;
 	if(!m_timeoutTimer) {
 		m_timeoutTimer = new QTimer(this);
 		m_timeoutTimer->setSingleShot(true);
@@ -90,12 +95,15 @@ void RpcResponseCallBack::abort()
 
 void RpcResponseCallBack::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 {
+	if(m_isFinished)
+		return;
 	shvLogFuncFrame() << this << msg.toPrettyString();
 	if(!msg.isResponse())
 		return;
 	cp::RpcResponse rsp(msg);
 	if(rsp.peekCallerId() != 0 || !(rsp.requestId() == requestId()))
 		return;
+	m_isFinished = true;
 	if(m_timeoutTimer)
 		m_timeoutTimer->stop();
 	else
@@ -105,6 +113,105 @@ void RpcResponseCallBack::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 	else
 		emit finished(rsp);
 	deleteLater();
+}
+
+//===================================================
+// RpcCall
+//===================================================
+RpcCall::RpcCall(ClientConnection *connection)
+	: m_rpcConnection(connection)
+{
+	connect(this, &RpcCall::maybeResult, this, [this](const ::shv::chainpack::RpcValue &_result, const QString &_error) {
+		if(_error.isEmpty())
+			emit result(_result);
+		else
+			emit error(_error);
+		deleteLater();
+	});
+}
+
+RpcCall *RpcCall::createSubscribtionRequest(ClientConnection *connection, const QString &shv_path, const QString &method)
+{
+	RpcCall *rpc = create(connection);
+	rpc->setShvPath(cp::Rpc::DIR_BROKER_APP)
+			->setMethod(cp::Rpc::METH_SUBSCRIBE)
+			->setParams(cp::RpcValue::Map {
+							{cp::Rpc::PAR_PATH, shv_path.toStdString()},
+							{cp::Rpc::PAR_METHOD, method.toStdString()},
+						});
+	return rpc;
+}
+
+RpcCall *RpcCall::create(ClientConnection *connection)
+{
+	return new RpcCall(connection);
+}
+
+RpcCall *RpcCall::setShvPath(const std::string &shv_path)
+{
+	m_shvPath = shv_path;
+	return this;
+}
+
+RpcCall *RpcCall::setShvPath(const char *shv_path)
+{
+	return setShvPath(std::string(shv_path));
+}
+
+RpcCall *RpcCall::setShvPath(const QString &shv_path)
+{
+	return setShvPath(shv_path.toStdString());
+}
+
+RpcCall *RpcCall::setShvPath(const QStringList &shv_path)
+{
+	return setShvPath(shv_path.join('/'));
+}
+
+RpcCall *RpcCall::setMethod(const std::string &method)
+{
+	m_method = method;
+	return this;
+}
+
+RpcCall *RpcCall::setMethod(const char *method)
+{
+	return setMethod(std::string(method));
+}
+
+RpcCall *RpcCall::setMethod(const QString &method)
+{
+	m_method = method.toStdString();
+	return this;
+}
+
+RpcCall *RpcCall::setParams(const cp::RpcValue &params)
+{
+	m_params = params;
+	return this;
+}
+
+void RpcCall::start()
+{
+	if(m_rpcConnection.isNull()) {
+		emit maybeResult(cp::RpcValue(), "RPC connection is NULL");
+		return;
+	}
+	if(!m_rpcConnection->isBrokerConnected()) {
+		emit maybeResult(cp::RpcValue(), "RPC connection is not open");
+		return;
+	}
+	int rqid = m_rpcConnection->nextRequestId();
+	RpcResponseCallBack *cb = new RpcResponseCallBack(m_rpcConnection, rqid, this);
+	cb->start(this, [this](const cp::RpcResponse &resp) {
+		if (resp.isSuccess()) {
+			emit maybeResult(resp.result(), QString());
+		}
+		else {
+			emit maybeResult(cp::RpcValue(), QString::fromStdString(resp.errorString()));
+		}
+	});
+	m_rpcConnection->callShvMethod(rqid, m_shvPath, m_method, m_params);
 }
 
 } // namespace rpc

@@ -3,8 +3,11 @@
 #include "../shviotqtglobal.h"
 
 #include <shv/core/utils.h>
+#include <shv/chainpack/rpc.h>
+#include <shv/chainpack/rpcvalue.h>
 
 #include <QObject>
+#include <QPointer>
 
 #include <functional>
 
@@ -45,6 +48,37 @@ public:
 private:
 	CallBackFunction m_callBackFunction;
 	QTimer *m_timeoutTimer = nullptr;
+	bool m_isFinished = false;
+};
+
+
+class SHVIOTQT_DECL_EXPORT RpcCall : public QObject
+{
+	Q_OBJECT
+public:
+	static RpcCall* createSubscribtionRequest(::shv::iotqt::rpc::ClientConnection *connection, const QString &shv_path, const QString &method = QString(shv::chainpack::Rpc::SIG_VAL_CHANGED));
+	static RpcCall* create(::shv::iotqt::rpc::ClientConnection *connection);
+	RpcCall* setShvPath(const std::string &shv_path);
+	RpcCall* setShvPath(const char *shv_path);
+	RpcCall* setShvPath(const QString &shv_path);
+	RpcCall* setShvPath(const QStringList &shv_path);
+	RpcCall* setMethod(const std::string &method);
+	RpcCall* setMethod(const char *method);
+	RpcCall* setMethod(const QString &method);
+	RpcCall* setParams(const ::shv::chainpack::RpcValue &params);
+	//RpcCall* setParams(const QVariant &params); not implemented since we do not know how to convert arbitrary QVariant to RpcValue
+	void start();
+
+	Q_SIGNAL void maybeResult(const ::shv::chainpack::RpcValue &result, const QString &error);
+	Q_SIGNAL void result(const ::shv::chainpack::RpcValue &result);
+	Q_SIGNAL void error(const QString &error);
+private:
+	RpcCall(::shv::iotqt::rpc::ClientConnection *connection);
+private:
+	QPointer<::shv::iotqt::rpc::ClientConnection> m_rpcConnection;
+	std::string m_shvPath;
+	std::string m_method;
+	shv::chainpack::RpcValue m_params;
 };
 
 } // namespace rpc

@@ -23,8 +23,8 @@ public:
 	virtual std::string where() const {return m_where;}
 	const char* what() const noexcept override;
 	//operator const char *() const  throw(){return what();}
-	static void setAbortOnException(bool on) {s_abortOnException = on;}
-	static bool isAbortOnException() {return s_abortOnException;}
+	static void setAbortOnException(bool on);
+	static bool isAbortOnException();
 protected:
 	static bool s_abortOnException;
 	std::string m_msg;

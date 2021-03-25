@@ -1255,6 +1255,35 @@ void SaxHandler::setStyle(QAbstractGraphicsShapeItem *it, const CssAttributes &a
 			pen.setJoinStyle(Qt::BevelJoin);
 		else //if( join == QLatin1String("miter"))
 			pen.setJoinStyle(Qt::MiterJoin);
+		QString dash_pattern = attributes.value(QStringLiteral("stroke-dasharray"));
+		if(!(dash_pattern.isEmpty() || dash_pattern == QLatin1String("none"))) {
+			QStringList array = dash_pattern.split(',');
+			QVector<qreal> arr;
+			for(const auto &s : array) {
+				bool ok;
+				double d = s.toDouble(&ok);
+				if(!ok) {
+					logSvgW() << "Invalid stroke dash definition:" << dash_pattern.toStdString();
+					arr.clear();
+					break;
+				}
+				arr << d;
+			}
+			if(!arr.isEmpty()) {
+				pen.setDashPattern(arr);
+			}
+		}
+		QString dash_offset = attributes.value(QStringLiteral("stroke-dashoffset"));
+		if(!(dash_offset.isEmpty() || dash_offset == QLatin1String("none"))) {
+			bool ok;
+			double d = dash_offset.toDouble(&ok);
+			if(ok) {
+				pen.setDashOffset(d);
+			}
+			else {
+				logSvgW() << "Invalid stroke dash offset:" << dash_offset.toStdString();
+			}
+		}
 		it->setPen(pen);
 	}
 }

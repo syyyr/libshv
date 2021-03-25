@@ -2,10 +2,12 @@
 #include "ui_dlgloginspector.h"
 
 #include "logmodel.h"
+#include "logsortfilterproxymodel.h"
 
 #include "../timeline/graphmodel.h"
 #include "../timeline/graphwidget.h"
 #include "../timeline/graph.h"
+#include "../timeline/channelfilterdialog.h"
 
 #include <shv/chainpack/rpcvalue.h>
 #include <shv/core/exception.h>
@@ -115,23 +117,13 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 	});
 
 	m_logModel = new LogModel(this);
-	m_sortFilterProxy = new QSortFilterProxyModel(this);
-	m_sortFilterProxy->setFilterKeyColumn(-1);
-	m_sortFilterProxy->setSourceModel(m_logModel);
-	ui->tblData->setModel(m_sortFilterProxy);
+	m_logSortFilterProxy = new shv::visu::logview::LogSortFilterProxyModel(this);
+	m_logSortFilterProxy->setShvPathColumn(LogModel::ColPath);
+	m_logSortFilterProxy->setValueColumn(LogModel::ColValue);
+	m_logSortFilterProxy->setSourceModel(m_logModel);
+	ui->tblData->setModel(m_logSortFilterProxy);
 	ui->tblData->setSortingEnabled(false);
 	ui->tblData->verticalHeader()->setDefaultSectionSize((int)(fontMetrics().lineSpacing() * 1.3));
-
-	connect(ui->edDataFilter, &QLineEdit::textChanged, [this]() {
-		QString str = ui->edDataFilter->text().trimmed();
-		m_sortFilterProxy->setFilterRegularExpression(str);
-	});
-	connect(ui->edDataFilter, &QLineEdit::textChanged, [this]() {
-		QString str = ui->edDataFilter->text().trimmed();
-		auto filter = m_graph->channelFilter();
-		filter.setPathPattern(str);
-		m_graph->setChannelFilter(filter);
-	});
 
 	ui->tblData->setContextMenuPolicy(Qt::ActionsContextMenu);
 	{
@@ -193,6 +185,8 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 	m_graph->setModel(m_graphModel);
 	m_graphWidget->setGraph(m_graph);
 
+	m_channelFilterDialog = new shv::visu::timeline::ChannelFilterDialog(this);
+
 	connect(ui->cbxTimeZone, &QComboBox::currentTextChanged, [this](const QString &) {
 		auto tz = ui->cbxTimeZone->currentTimeZone();
 		setTimeZone(tz);
@@ -200,6 +194,13 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 	setTimeZone(ui->cbxTimeZone->currentTimeZone());
 
 	connect(ui->btLoad, &QPushButton::clicked, this, &DlgLogInspector::downloadLog);
+
+	connect(m_graph, &shv::visu::timeline::Graph::channelFilterChanged, this, &DlgLogInspector::onGraphChannelFilterChanged);
+	connect(ui->pbChannelsFilter, &QPushButton::clicked, this, &DlgLogInspector::onChannelsFilterClicked);
+
+	connect(ui->btResizeColumnsToFitWidth, &QAbstractButton::clicked, [this]() {
+		ui->tblData->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
+	});
 
 	loadSettings();
 }
@@ -376,7 +377,11 @@ void DlgLogInspector::parseLog(shv::chainpack::RpcValue log)
 	}
 
 	m_graph->createChannelsFromModel();
+
+	QStringList channel_paths = m_graph->channelPaths();
+	m_channelFilterDialog->load(shvPath(), channel_paths);
 	ui->graphView->makeLayout();
+	applyFilters(channel_paths);
 }
 
 void DlgLogInspector::showInfo(const QString &msg, bool is_error)
@@ -414,6 +419,27 @@ void DlgLogInspector::setTimeZone(const QTimeZone &tz)
 	m_timeZone = tz;
 	m_logModel->setTimeZone(tz);
 	m_graphWidget->setTimeZone(tz);
+}
+
+void DlgLogInspector::applyFilters(const QStringList &channels_filter)
+{
+	auto graph_filter = m_graph->channelFilter();
+	graph_filter.setMatchingPaths(channels_filter);
+	m_graph->setChannelFilter(graph_filter);
+}
+
+void DlgLogInspector::onChannelsFilterClicked()
+{
+	m_channelFilterDialog->setSelectedChannels(m_graph->channelFilter().matchingPaths());
+
+	if(m_channelFilterDialog->exec() == QDialog::Accepted) {
+		applyFilters(m_channelFilterDialog->selectedChannels());
+	}
+}
+
+void DlgLogInspector::onGraphChannelFilterChanged()
+{
+	m_logSortFilterProxy->setChannelFilter(m_graph->channelFilter());
 }
 
 }}}
