@@ -189,19 +189,7 @@ public:
 		MsTz m_dtm = {0, 0};
 	};
 	using String = std::string;
-	/*
-	struct SHVCHAINPACK_DECL_EXPORT Blob : public std::basic_string<char>
-	{
-	private:
-		using Super = std::basic_string<char>;
-	public:
-		using Super::Super; // expose base class constructors
-		Blob() : Super() {}
-		Blob(const Super &str) : Super(str) {}
-		Blob(Super &&str) : Super(std::move(str)) {}
-		//const std::string& toString() const {return *this;}
-	};
-	*/
+	using Blob = std::vector<uint8_t>;
 	class List : public std::vector<RpcValue>
 	{
 		using Super = std::vector<RpcValue>;
@@ -416,6 +404,7 @@ public:
 	DateTime toDateTime() const;
 
 	const RpcValue::String &asString() const;
+	const RpcValue::Blob &asBlob() const;
 	const List &asList() const;
 	const Map &asMap() const;
 	const IMap &asIMap() const;

@@ -421,10 +421,10 @@ private:
 			RpcValue toRpcValue() const { return RpcValue::List { x, y }; }
 		};
 
-		std::vector<Point> points = { { 1, 2 }, { 10, 20 }, { 100, 200 } };
-		std::string points_json = RpcValue(points).toCpon();
-		qDebug() << "points_json: " << points_json.c_str();
-		QVERIFY(points_json == "[[1,2],[10,20],[100,200]]");
+		//std::vector<Point> points = { { 1, 2 }, { 10, 20 }, { 100, 200 } };
+		//std::string points_json = RpcValue(points).toCpon();
+		//qDebug() << "points_json: " << points_json.c_str();
+		//QVERIFY(points_json == "[[1,2],[10,20],[100,200]]");
 		{
 			string err;
 			auto rpcval = RpcValue::fromCpon(R"(<1:2,2:12,8:"foo",9:[1,2,3],"bar":"baz",>["META",17,18,19])", &err);
@@ -661,10 +661,10 @@ private:
 				QVERIFY(cp1.toBool() == cp2.toBool());
 			}
 		}
-#if 0
 		{
 			qDebug() << "------------- Blob";
-			RpcValue::Blob blob{"blob containing zero character"};
+			std::string s = "blob containing zero character";
+			RpcValue::Blob blob{s.begin(), s.end()};
 			blob[blob.size() - 9] = 0;
 			RpcValue cp1{blob};
 			std::stringstream out;
@@ -672,9 +672,8 @@ private:
 			ChainPackReader rd(out); RpcValue cp2 = rd.read();
 			qDebug() << blob << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str()).c_str();
 			QVERIFY(cp1.type() == cp2.type());
-			QVERIFY(cp1.toBlob() == cp2.toBlob());
+			QVERIFY(cp1.asBlob() == cp2.asBlob());
 		}
-#endif
 		{
 			qDebug() << "------------- string";
 			{
@@ -748,110 +747,6 @@ private:
 				QVERIFY(cp1.toDateTime() == cp2.toDateTime());
 			}
 		}
-#ifdef HAS_ARRAY
-		{
-			qDebug() << "------------- Array";
-			{
-				qDebug() << "\t of Int";
-				RpcValue::Array t{RpcValue::Type::Int};
-				t.push_back(RpcValue::ArrayElement(RpcValue::Int(11)));
-				t.push_back(RpcValue::Int(12));
-				t.push_back(RpcValue::Int(13));
-				t.push_back(RpcValue::Int(14));
-				RpcValue cp1{t};
-				std::stringstream out;
-				{ ChainPackWriter wr(out);  wr.write(cp1); }
-				ChainPackReader rd(out); RpcValue cp2 = rd.read();
-				qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
-				QVERIFY(cp1.type() == cp2.type());
-				QVERIFY(cp1.toArray() == cp2.toArray());
-			}
-			{
-				static constexpr size_t N = 10;
-				uint16_t samples[N];
-				for (size_t i = 0; i < N; ++i) {
-					samples[i] = i+1;
-				}
-				RpcValue::Array t{samples};
-				RpcValue cp1{t};
-				std::stringstream out;
-				{ ChainPackWriter wr(out);  wr.write(cp1); }
-				ChainPackReader rd(out); RpcValue cp2 = rd.read();
-				qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
-				QVERIFY(cp1.type() == cp2.type());
-				QVERIFY(cp1.toArray() == cp2.toArray());
-			}
-			{
-				qDebug() << "\t of DateTime";
-				static constexpr size_t N = 10;
-				RpcValue::DateTime samples[N];
-				for (size_t i = 0; i < N; ++i) {
-					samples[i] = RpcValue::DateTime::fromMSecsSinceEpoch(100000 * i);
-				}
-				RpcValue::Array t{samples};
-				RpcValue cp1{t};
-				std::stringstream out;
-				{ ChainPackWriter wr(out);  wr.write(cp1); }
-				ChainPackReader rd(out); RpcValue cp2 = rd.read();
-				qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
-				QVERIFY(cp1.type() == cp2.type());
-				QVERIFY(cp1.toArray() == cp2.toArray());
-			}
-			{
-				qDebug() << "\t of Decimals";
-				static constexpr size_t N = 10;
-				RpcValue::Decimal samples[N];
-				for (size_t i = 0; i < N; ++i) {
-					int rnd = qrand() - RAND_MAX/2;
-					int prec = i;
-					prec -= N/2;
-					samples[i] = RpcValue::Decimal(rnd, prec);
-				}
-				RpcValue::Array t{samples};
-				RpcValue cp1{t};
-				std::stringstream out;
-				{ ChainPackWriter wr(out);  wr.write(cp1); }
-				ChainPackReader rd(out); RpcValue cp2 = rd.read();
-				qDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
-				QVERIFY(cp1.type() == cp2.type());
-				QVERIFY(cp1.toArray() == cp2.toArray());
-				const RpcValue::Array a1 = cp1.toArray();
-				const RpcValue::Array a2 = cp2.toArray();
-				for (size_t i = 0; i < a1.size(); ++i) {
-					qDebug() << i << a1.valueAt(i).toCpon() << a2.valueAt(i).toCpon();
- 				}
-			}
-			{
-				static constexpr size_t N = 10;
-				std::stringstream out;
-				ChainPackWriter wr(out);
-				wr.writeArrayBegin(RpcValue::Type::Bool, N);
-				bool b = false;
-				for (size_t i = 0; i < N; ++i) {
-					wr.writeArrayElement(RpcValue(b));
-					b = !b;
-				}
-				ChainPackReader rd(out); RpcValue cp2 = rd.read();
-				const RpcValue::Array array = cp2.toArray();
-				b = false;
-				for (size_t i = 0; i < array.size(); ++i) {
-					QVERIFY(RpcValue(b) == array.valueAt(i));
-					b = !b;
-				}
-			}
-			{
-				static constexpr size_t N = 10;
-				std::stringstream out;
-				ChainPackWriter wr(out);
-				wr.writeArrayBegin(RpcValue::Type::Null, N);
-				ChainPackReader rd(out); RpcValue cp2 = rd.read();
-				const RpcValue::Array array = cp2.toArray();
-				for (size_t i = 0; i < array.size(); ++i) {
-					QVERIFY(RpcValue(nullptr) == array.valueAt(i));
-				}
-			}
-		}
-#endif
 		{
 			qDebug() << "------------- List";
 			{

@@ -528,6 +528,7 @@ void test_vals()
 void test_cpons()
 {
 	const char* cpons[] = {
+		//"x\"abcd\"", "b\"ab\\xcd\"",
 		"null", NULL,
 		//"@", "null",
 		"0.", NULL,
@@ -538,7 +539,8 @@ void test_cpons()
 		"-0.00012", "-12e-5",
 		"-1234567890.", "-1234567890.",
 		"\"abc\"", NULL,
-		"x\"abcd\"", NULL,
+		//"x\"abcd\"", "b\"ab\\xcd\"",
+		"b\"ab\\xcd\"", NULL,
 		"[]", NULL,
 		"[1]", NULL,
 		"[1,]", "[1]",
