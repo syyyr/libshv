@@ -54,7 +54,7 @@ ChannelFilterDialog::~ChannelFilterDialog()
 	delete ui;
 }
 
-void ChannelFilterDialog::load(const QString &site_path, const QStringList &logged_paths)
+void ChannelFilterDialog::init(const QString &site_path, const QStringList &logged_paths)
 {
 	m_sitePath = site_path;
 	m_channelsFilterModel->createNodes(logged_paths);
@@ -75,10 +75,11 @@ void ChannelFilterDialog::setSelectedChannels(const QStringList &channels)
 	m_isSelectedFilterDirty = is_selected_filter_dirty;
 }
 
-void ChannelFilterDialog::setSelectFilterName(const QString &name) const
+void ChannelFilterDialog::loadFilter(const QString &name)
 {
 	int ix = ui->cbFilters->findText(name);
 	ui->cbFilters->setCurrentIndex(ix);
+	onCbFiltersActivated(ix);
 }
 
 QString ChannelFilterDialog::selectedFilterName() const
@@ -184,9 +185,14 @@ void ChannelFilterDialog::onDeleteFilterClicked()
 
 void ChannelFilterDialog::onCbFiltersActivated(int index)
 {
-	Q_UNUSED(index);
-	QStringList channels = loadChannelFilter(m_sitePath, ui->cbFilters->currentText());
-	setSelectedChannels(channels);
+	if (index > -1) {
+		QStringList channels = loadChannelFilter(m_sitePath, ui->cbFilters->currentText());
+		setSelectedChannels(channels);
+	}
+	else {
+		setSelectedChannels(QStringList());
+	}
+
 	m_isSelectedFilterDirty = false;
 }
 
