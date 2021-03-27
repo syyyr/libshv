@@ -29,7 +29,7 @@ void ChainPackWriter::write(const RpcValue &value)
 	case RpcValue::Type::Int: write_p(value.toInt64()); break;
 	case RpcValue::Type::Double: write_p(value.toDouble()); break;
 	case RpcValue::Type::Bool: write_p(value.toBool()); break;
-	//case RpcValue::Type::Blob: write_p(value.toBlob()); break;
+	case RpcValue::Type::Blob: write_p(value.asBlob()); break;
 	case RpcValue::Type::String: write_p(value.toString()); break;
 	case RpcValue::Type::DateTime: write_p(value.toDateTime()); break;
 	case RpcValue::Type::List: write_p(value.toList()); break;
@@ -171,6 +171,12 @@ ChainPackWriter &ChainPackWriter::write_p(RpcValue::DateTime value)
 ChainPackWriter &ChainPackWriter::write_p(const std::string &value)
 {
 	cchainpack_pack_string(&m_outCtx, value.data(), value.size());
+	return *this;
+}
+
+ChainPackWriter &ChainPackWriter::write_p(const RpcValue::Blob &value)
+{
+	cchainpack_pack_blob(&m_outCtx, value.data(), value.size());
 	return *this;
 }
 

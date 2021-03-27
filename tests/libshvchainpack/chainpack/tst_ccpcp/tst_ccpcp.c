@@ -335,12 +335,12 @@ static void test_cpon3(const char *cpon, const char *ref_cpon)
 	test_cpon_helper(cpon, ref_cpon, true, false);
 }
 */
-#define INIT_BUFF() \
+#define INIT_OUT_BUFF() \
 	char out_buff1[1024]; \
 	ccpcp_pack_context out_ctx; \
 	ccpcp_pack_context_init(&out_ctx, out_buff1, sizeof (out_buff1), NULL); \
 
-#define INIT_BUFFS() \
+#define INIT_OUT_BUFFS() \
 	char out_buff1[1024]; \
 	ccpcp_pack_context out_ctx; \
 	ccpcp_pack_context_init(&out_ctx, out_buff1, sizeof (out_buff1), NULL); \
@@ -350,7 +350,7 @@ void test_vals()
 {
 	printf("------------- NULL \n");
 	{
-		INIT_BUFFS();
+		INIT_OUT_BUFFS();
 		ccpon_pack_null(&out_ctx);
 		*out_ctx.current = 0;
 		snprintf(out_buff2, sizeof (out_buff2), "null");
@@ -358,7 +358,7 @@ void test_vals()
 	}
 	printf("------------- BOOL \n");
 	for (unsigned n = 0; n < 2; ++n) {
-		INIT_BUFFS();
+		INIT_OUT_BUFFS();
 		ccpon_pack_boolean(&out_ctx, n);
 		*out_ctx.current = 0;
 		snprintf(out_buff2, sizeof (out_buff2), n? "true": "false");
@@ -366,7 +366,7 @@ void test_vals()
 	}
 	printf("------------- tiny uint \n");
 	for (unsigned n = 0; n < 64; ++n) {
-		INIT_BUFFS();
+		INIT_OUT_BUFFS();
 		ccpon_pack_uint(&out_ctx, n);
 		*out_ctx.current = 0;
 		snprintf(out_buff2, sizeof (out_buff2), "%du", n);
@@ -376,7 +376,7 @@ void test_vals()
 	for (unsigned i = 0; i < sizeof(uint64_t); ++i) {
 		for (unsigned j = 0; j < 3; ++j) {
 			uint64_t n = (uint64_t)1 << (i*8 + j*3+1);
-			INIT_BUFFS();
+			INIT_OUT_BUFFS();
 			ccpon_pack_uint(&out_ctx, n);
 			*out_ctx.current = 0;
 			snprintf(out_buff2, sizeof (out_buff2), "%lluu", (unsigned long long)n);
@@ -386,7 +386,7 @@ void test_vals()
 	{
 		uint64_t n = 0;
 		n = ~n;
-		INIT_BUFFS();
+		INIT_OUT_BUFFS();
 		ccpon_pack_uint(&out_ctx, n);
 		*out_ctx.current = 0;
 		snprintf(out_buff2, sizeof (out_buff2), "%lluu", (unsigned long long)n);
@@ -394,7 +394,7 @@ void test_vals()
 	}
 	printf("------------- tiny int \n");
 	for (int n = 0; n < 64; ++n) {
-		INIT_BUFFS();
+		INIT_OUT_BUFFS();
 		ccpon_pack_int(&out_ctx, n);
 		*out_ctx.current = 0;
 		snprintf(out_buff2, sizeof (out_buff2), "%i", n);
@@ -405,7 +405,7 @@ void test_vals()
 		for (unsigned i = 0; i < sizeof(int64_t); ++i) {
 			for (unsigned j = 0; j < 3; ++j) {
 				int64_t n = sig * ((int64_t)1 << (i*8 + j*2+2));
-				INIT_BUFFS();
+				INIT_OUT_BUFFS();
 				ccpon_pack_int(&out_ctx, n);
 				*out_ctx.current = 0;
 				snprintf(out_buff2, sizeof (out_buff2), "%lli", (long long)n);
@@ -420,7 +420,7 @@ void test_vals()
 			n = ~n; // MAX INT
 		else
 			n = n + 1; // MIN INT + 1
-		INIT_BUFFS();
+		INIT_OUT_BUFFS();
 		ccpon_pack_int(&out_ctx, n);
 		*out_ctx.current = 0;
 		snprintf(out_buff2, sizeof (out_buff2), "%lli", (long long)n);
@@ -433,7 +433,7 @@ void test_vals()
 		int exp_max = 16;
 		int step = 1;
 		for (int exp = exp_min; exp <= exp_max; exp += step) {
-			INIT_BUFF();
+			INIT_OUT_BUFF();
 			ccpon_pack_decimal(&out_ctx, mant, exp);
 			*out_ctx.current = 0;
 			test_cpon((const char *)out_ctx.start, NULL);
@@ -446,7 +446,7 @@ void test_vals()
 			double n_min = -1000000.;
 			double step = (n_max - n_min) / 100.1;
 			for (double n = n_min; n < n_max; n += step) {
-				INIT_BUFF();
+				INIT_OUT_BUFF();
 				cchainpack_pack_double(&out_ctx, n);
 				assert(out_ctx.current - out_ctx.start == sizeof(double) + 1);
 				ccpcp_unpack_context in_ctx;
@@ -462,7 +462,7 @@ void test_vals()
 			double step = -1.23456789e10;
 			//qDebug() << n_min << " - " << n_max << ": " << step << " === " << (n_max / step / 10);
 			for (double n = n_min; n < n_max / -step / 10; n *= step) {
-				INIT_BUFF();
+				INIT_OUT_BUFF();
 				printf("%g\n", n);
 				cchainpack_pack_double(&out_ctx, n);
 				ccpcp_unpack_context in_ctx;
@@ -492,7 +492,7 @@ void test_vals()
 		};
 		for (size_t i = 0; i < sizeof (cpons) / sizeof(char*); i+=2) {
 			const char *cpon = cpons[i];
-			INIT_BUFF();
+			INIT_OUT_BUFF();
 			test_cpon(cpon, cpons[i+1]);
 		}
 	}
@@ -508,27 +508,17 @@ void test_vals()
 		};
 		for (size_t i = 0; i < sizeof (cpons) / sizeof(char*); i+=2) {
 			const char *cpon = cpons[i];
-			INIT_BUFF();
+			INIT_OUT_BUFF();
 			ccpon_pack_string_terminated(&out_ctx, cpon);
 			*out_ctx.current = 0;
 			test_cpon2(out_ctx.start, cpons[i+1]);
 		}
-	}
-	{
-		INIT_BUFF();
-		const char str[] = "zero \0 here";
-		ccpon_pack_string_start(&out_ctx, str, sizeof(str)-1);
-		ccpon_pack_string_cont(&out_ctx, "ahoj", 4);
-		ccpon_pack_string_finish(&out_ctx);
-		*out_ctx.current = 0;
-		test_cpon(out_ctx.start, "\"zero \\0 here""ahoj\"");
 	}
 }
 
 void test_cpons()
 {
 	const char* cpons[] = {
-		//"x\"abcd\"", "b\"ab\\xcd\"",
 		"null", NULL,
 		//"@", "null",
 		"0.", NULL,
@@ -539,7 +529,7 @@ void test_cpons()
 		"-0.00012", "-12e-5",
 		"-1234567890.", "-1234567890.",
 		"\"abc\"", NULL,
-		//"x\"abcd\"", "b\"ab\\xcd\"",
+		"x\"abcd\"", "b\"\\xab\\xcd\"",
 		"b\"ab\\xcd\"", NULL,
 		"[]", NULL,
 		"[1]", NULL,

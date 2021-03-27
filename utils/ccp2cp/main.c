@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 	ccpcp_convert(&in_ctx, o_cpon_input? CCPCP_Cpon: CCPCP_ChainPack, &out_ctx, o_chainpack_output? CCPCP_ChainPack: CCPCP_Cpon);
 
 	if(in_ctx.err_no != CCPCP_RC_OK && in_ctx.err_no != CCPCP_RC_BUFFER_UNDERFLOW)
-		fprintf(stderr, "Parse error: %d\n", in_ctx.err_no);
+		fprintf(stderr, "Parse error: %d - %s\n", in_ctx.err_no, in_ctx.err_msg);
 
 	return 0;
 }

@@ -120,13 +120,21 @@ private:
 		qDebug() << "--------------- String";
 		{
 			string err;
-			for(auto test : {
-					"\"a0728a532288587d76617976985992eb3830e259577c7a6d2e2d0758215e2b6f3a399b4d34e12cd91a96d288751ce29d1a8306dfa074bdff86f08c6fa15a54404cbce5ccd7aeb19042e3df52a5e8f6cc9f9bd7153b13530c5665ecafc1be7f9ad30a62d93870e26277b1d9c2d9a7aff6f397157e5248e2b97e126b65ec8f887246767e344ce152c34846e649ea0a7a9a2b79dbe40d55ec231c4104ccc0c3b7b48895c4ca7ab7cf89a1302ed7a3bf2a6cf3862f05d200488c37d8e98f0369d844078e63fced87df6195ecb2fb2f9b532fc3880d6b6e6d880bc79c0e3fbaf387ebbc020cd46675537252aff233cb205ca627fa803b8af672d8cb5bdbfbf75526f\"",
-				}) {
-				const RpcValue cp = RpcValue::fromCpon(test, &err);
-				qDebug() << test << "--->" << cp.toCpon();
+			const char* cpons[][2] = {
+				{"\"a0728a532288587d76617976985992eb3830e259577c7a6d2e2d0758215e2b6f3a399b4d34e12cd91a96d288751ce29d1a8306dfa074bdff86f08c6fa15a54404cbce5ccd7aeb19042e3df52a5e8f6cc9f9bd7153b13530c5665ecafc1be7f9ad30a62d93870e26277b1d9c2d9a7aff6f397157e5248e2b97e126b65ec8f887246767e344ce152c34846e649ea0a7a9a2b79dbe40d55ec231c4104ccc0c3b7b48895c4ca7ab7cf89a1302ed7a3bf2a6cf3862f05d200488c37d8e98f0369d844078e63fced87df6195ecb2fb2f9b532fc3880d6b6e6d880bc79c0e3fbaf387ebbc020cd46675537252aff233cb205ca627fa803b8af672d8cb5bdbfbf75526f\"", ""},
+				{ "b\"\\xa1fooBARab\"", ""},
+				{ "x\"6131d2\"", "b\"a1\\xd2\""},
+			};
+			for(auto test : cpons) {
+				const char *cpon1 = test[0];
+				const char *cpon2 = test[1];
+				if(cpon2[0] == 0)
+					cpon2 = cpon1;
+				const RpcValue cp = RpcValue::fromCpon(cpon1, &err);
+				string cpon = cp.toCpon();
+				qDebug() << test << "--->" << cpon;
 				QVERIFY(err.empty());
-				QVERIFY(cp.toCpon() == test);
+				QVERIFY(cpon == cpon2);
 			}
 		}
 		qDebug() << "--------------- Numbers";
@@ -668,8 +676,12 @@ private:
 			blob[blob.size() - 9] = 0;
 			RpcValue cp1{blob};
 			std::stringstream out;
-			{ ChainPackWriter wr(out);  wr.write(cp1); }
-			ChainPackReader rd(out); RpcValue cp2 = rd.read();
+			{
+				ChainPackWriter wr(out);
+				wr.write(cp1);
+			}
+			ChainPackReader rd(out);
+			RpcValue cp2 = rd.read();
 			qDebug() << blob << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str()).c_str();
 			QVERIFY(cp1.type() == cp2.type());
 			QVERIFY(cp1.asBlob() == cp2.asBlob());

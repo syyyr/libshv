@@ -66,7 +66,7 @@ private:
 	CponWriter& write_p(RpcValue::Decimal value);
 	CponWriter& write_p(RpcValue::DateTime value);
 	CponWriter& write_p(const std::string &value);
-	//CponWriter& write(const RpcValue::Blob &value);
+	CponWriter& write_p(const RpcValue::Blob &value);
 	CponWriter& write_p(const RpcValue::List &values);
 	//CponWriter& write(const RpcValue::Array &values);
 	CponWriter& write_p(const RpcValue::Map &values);

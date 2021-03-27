@@ -128,16 +128,16 @@ void CponReader::read(RpcValue &val)
 	}
 	case CCPCP_ITEM_BLOB: {
 		ccpcp_string *it = &(m_inCtx.item.as.String);
-		std::string str;
+		RpcValue::Blob blob;
 		while(m_inCtx.item.type == CCPCP_ITEM_BLOB) {
-			str += std::string(it->chunk_start, it->chunk_size);
+			blob.insert(blob.end(), it->chunk_start, it->chunk_start + it->chunk_size);
 			if(it->last_chunk)
 				break;
 			unpackNext();
 			if(m_inCtx.item.type != CCPCP_ITEM_BLOB)
 				PARSE_EXCEPTION("Unfinished blob key");
 		}
-		val = RpcValue(str);
+		val = RpcValue(blob);
 		break;
 	}
 	case CCPCP_ITEM_STRING: {
@@ -185,7 +185,7 @@ void CponReader::read(RpcValue &val)
 	}
 	if(!md.isEmpty()) {
 		if(!val.isValid())
-			PARSE_EXCEPTION("Attempt to set metadata to invalid RPC value.");
+			PARSE_EXCEPTION(std::string("Attempt to set metadata to invalid RPC value. error - ") + m_inCtx.err_msg);
 		val.setMetaData(std::move(md));
 	}
 }

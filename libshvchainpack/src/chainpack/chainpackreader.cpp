@@ -150,6 +150,20 @@ void ChainPackReader::read(RpcValue &val)
 		val = str;
 		break;
 	}
+	case CCPCP_ITEM_BLOB: {
+		ccpcp_string *it = &(m_inCtx.item.as.String);
+		RpcValue::Blob blob;
+		while(m_inCtx.item.type == CCPCP_ITEM_BLOB) {
+			blob.insert(blob.end(), it->chunk_start, it->chunk_start + it->chunk_size);
+			if(it->last_chunk)
+				break;
+			unpackNext();
+			if(m_inCtx.item.type != CCPCP_ITEM_BLOB)
+				PARSE_EXCEPTION("Unfinished blob");
+		}
+		val = blob;
+		break;
+	}
 	case CCPCP_ITEM_BOOLEAN: {
 		val = m_inCtx.item.as.Bool;
 		break;

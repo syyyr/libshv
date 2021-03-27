@@ -332,7 +332,11 @@ public:
 	RpcValue(double value);             // Double
 	RpcValue(Decimal value);             // Decimal
 	RpcValue(const DateTime &value);
+
 	RpcValue(const uint8_t *value, size_t size);
+	RpcValue(const RpcValue::Blob &value); // String
+	RpcValue(RpcValue::Blob &&value);      // String
+
 	RpcValue(const std::string &value); // String
 	RpcValue(std::string &&value);      // String
 	RpcValue(const char *value);       // String
