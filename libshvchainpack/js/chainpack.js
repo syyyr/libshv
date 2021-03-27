@@ -11,7 +11,7 @@ ChainPack.CP_UInt = 129;
 ChainPack.CP_Int = 130;
 ChainPack.CP_Double = 131;
 ChainPack.CP_Bool = 132;
-//ChainPack.CP_Blob_depr; // deprecated
+ChainPack.CP_Blob = 133;
 ChainPack.CP_String = 134;
 //ChainPack.CP_DateTimeEpoch_depr; // deprecated
 ChainPack.CP_List = 136;
@@ -159,12 +159,21 @@ ChainPackReader.prototype.read = function()
 			rpc_val.type = RpcValue.Type.List;
 			break;
 		}
-		case ChainPack.CP_String: {
+		case ChainPack.CP_Blob: {
 			let str_len = this.readUIntData();
 			let arr = new Uint8Array(str_len)
 			for (var i = 0; i < str_len; i++)
 				arr[i] = this.ctx.getByte()
 			rpc_val.value = arr.buffer;
+			rpc_val.type = RpcValue.Type.Blob;
+			break;
+		}
+		case ChainPack.CP_String: {
+			let str_len = this.readUIntData();
+			let arr = new Uint8Array(str_len)
+			for (var i = 0; i < str_len; i++)
+				arr[i] = this.ctx.getByte()
+			rpc_val.value = Cpon.utf8ToString(arr.buffer);
 			rpc_val.type = RpcValue.Type.String;
 			break;
 		}
@@ -192,9 +201,8 @@ ChainPackReader.prototype.read = function()
 					}
 				}
 			}
-			rpc_val.value = pctx.buffer();
+			rpc_val.value = Cpon.utf8ToString(pctx.buffer());
 			rpc_val.type = RpcValue.Type.String;
-
 			break;
 		}
 		default:
@@ -302,7 +310,8 @@ ChainPackWriter.prototype.write = function(rpc_val)
 		switch (rpc_val.type) {
 		case RpcValue.Type.Null: this.ctx.putByte(ChainPack.CP_Null); break;
 		case RpcValue.Type.Bool: this.ctx.putByte(rpc_val.value? ChainPack.CP_TRUE: ChainPack.CP_FALSE); break;
-		case RpcValue.Type.String: this.writeString(rpc_val.value); break;
+		case RpcValue.Type.String: this.writeJSString(rpc_val.value); break;
+		case RpcValue.Type.Blob: this.writeBlob(rpc_val.value); break;
 		case RpcValue.Type.UInt: this.writeUInt(rpc_val.value); break;
 		case RpcValue.Type.Int: this.writeInt(rpc_val.value); break;
 		case RpcValue.Type.Double: this.writeDouble(rpc_val.value); break;
@@ -482,7 +491,16 @@ ChainPackWriter.prototype.writeMeta = function(map)
 	this.writeMapData(map);
 }
 
-ChainPackWriter.prototype.writeString = function(str)
+ChainPackWriter.prototype.writeBlob = function(blob)
+{
+	this.ctx.putByte(ChainPack.CP_Blob);
+	let arr = new Uint8Array(blob)
+	this.writeUIntData(arr.length)
+	for (let i=0; i < arr.length; i++)
+		this.ctx.putByte(arr[i])
+}
+/*
+ChainPackWriter.prototype.writeUtf8String = function(str)
 {
 	this.ctx.putByte(ChainPack.CP_String);
 	let arr = new Uint8Array(str)
@@ -490,7 +508,7 @@ ChainPackWriter.prototype.writeString = function(str)
 	for (let i=0; i < arr.length; i++)
 		this.ctx.putByte(arr[i])
 }
-
+*/
 ChainPackWriter.prototype.writeJSString = function(str)
 {
 	this.ctx.putByte(ChainPack.CP_String);

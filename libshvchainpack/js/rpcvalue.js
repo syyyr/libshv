@@ -15,8 +15,10 @@ function RpcValue(value, meta, type)
 		else if(typeof value == "boolean")
 			this.type = RpcValue.Type.Bool;
 		else if(typeof value == "string") {
-			this.value = Cpon.stringToUtf8(value);
 			this.type = RpcValue.Type.String;
+		}
+		else if(typeof value == "ArrayBuffer") {
+			this.type = RpcValue.Type.Blob;
 		}
 		else if(Array.isArray(value))
 			this.type = RpcValue.Type.List;
@@ -48,14 +50,17 @@ RpcValue.Type = Object.freeze({
 	"List": 9,
 	"Map": 10,
 	"IMap": 11,
-	//"Meta": 11,
+	"Blob": 12,
 })
 
 RpcValue.fromCpon = function(cpon)
 {
 	let unpack_context = null;
-	if(typeof cpon === 'string') {
+	if(typeof cpon === 'string' || cpon instanceof String) {
 		unpack_context = new UnpackContext(Cpon.stringToUtf8(cpon));
+	}
+	else if(cpon instanceof ArrayBuffer) {
+		unpack_context = new UnpackContext(cpon);
 	}
 	if(unpack_context === null)
 		throw new TypeError("Invalid input data type")
@@ -98,7 +103,8 @@ RpcValue.prototype.asString = function()
 	case RpcValue.Type.DateTime:
 	case RpcValue.Type.Bool:
 		break;
-	case RpcValue.Type.String: return Cpon.utf8ToString(this.value);
+	case RpcValue.Type.String: return this.value;
+	case RpcValue.Type.Blob: return Cpon.utf8ToString(this.value);
 	}
 	return "";
 }
