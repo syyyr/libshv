@@ -20,21 +20,23 @@ class SHVVISU_DECL_EXPORT ChannelFilterDialog : public QDialog
 	Q_OBJECT
 
 public:
+	static const QString DEFAULT_USER_PROFILE;
+
 	explicit ChannelFilterDialog(QWidget *parent = nullptr);
 	~ChannelFilterDialog();
 
-	void load(const QString &site_path, const QStringList &logged_paths);
-	void load(const QStringList &logged_paths);
+	void init(const QString &site_path, const QStringList &logged_paths);
 
 	QStringList selectedChannels();
 	void setSelectedChannels(const QStringList &channels);
+
+	void loadFilter(const QString &name);
 	QString selectedFilterName() const;
 
-	void setSitePath(const QString &site_path);
 	void setSettingsUserName(const QString &user);
 
-	QStringList savedFilterNames();
-	QStringList loadChannelFilter(const QString &name);
+	static QStringList savedFilterNames(const QString &site_path, const QString &user_name = DEFAULT_USER_PROFILE);
+	static QStringList loadChannelFilter(const QString &site_path, const QString &name, const QString &user_name = DEFAULT_USER_PROFILE);
 
 private:
 	void saveChannelFilter(const QString &name);
@@ -62,7 +64,7 @@ private:
 	ChannelFilterModel *m_channelsFilterModel = nullptr;
 	ChannelFilterSortFilterProxyModel *m_channelsFilterProxyModel = nullptr;
 	QString m_sitePath;
-	QString m_settingsUserName ="default";
+	QString m_settingsUserName = DEFAULT_USER_PROFILE;
 	bool m_isSelectedFilterDirty = true;
 };
 
