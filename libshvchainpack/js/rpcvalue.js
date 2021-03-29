@@ -97,16 +97,35 @@ RpcValue.prototype.asString = function()
 	case RpcValue.Type.IMap:
 	case RpcValue.Type.DateTime:
 	case RpcValue.Type.Bool:
+	case RpcValue.Type.Blob:
 		break;
-	case RpcValue.Type.String: return Cpon.utf8ToString(this.value);
+	case RpcValue.Type.String: return this.value;
 	}
 	return "";
 }
 
 RpcValue.prototype.toString = function()
 {
-	let ba = this.toCpon();
-	return Cpon.utf8ToString(ba);
+	switch (this.type) {
+	case RpcValue.Type.Null:
+	case RpcValue.Type.UInt:
+	case RpcValue.Type.Int:
+	case RpcValue.Type.Double:
+	case RpcValue.Type.Decimal:
+	case RpcValue.Type.List:
+	case RpcValue.Type.Map:
+	case RpcValue.Type.IMap:
+	case RpcValue.Type.DateTime:
+	case RpcValue.Type.Bool:
+		let ba = this.toCpon();
+		return Cpon.utf8ToString(ba);
+	case RpcValue.Type.Blob: 
+			return Cpon.utf8ToString(this.value);
+	case RpcValue.Type.String: 
+			return this.value;
+	}
+	return "";
+
 }
 
 RpcValue.prototype.toCpon = function()
