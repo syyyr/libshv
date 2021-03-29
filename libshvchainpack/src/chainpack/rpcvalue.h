@@ -188,9 +188,15 @@ public:
 		};
 		MsTz m_dtm = {0, 0};
 	};
+
 	using String = std::string;
 	using Blob = std::vector<uint8_t>;
-	static Blob stringToBlob(std::string &&s);
+
+	// maybe in future I'll find a way how to do this without allocation
+	//static String blobToString(Blob &&s, bool *check_utf8 = nullptr);
+	static String blobToString(const Blob &s, bool *check_utf8 = nullptr);
+	static Blob stringToBlob(const String &s);
+
 	class List : public std::vector<RpcValue>
 	{
 		using Super = std::vector<RpcValue>;
@@ -393,6 +399,7 @@ public:
 	bool isDouble() const { return type() == Type::Double; }
 	bool isBool() const { return type() == Type::Bool; }
 	bool isString() const { return type() == Type::String; }
+	bool isBlob() const { return type() == Type::Blob; }
 	bool isDecimal() const { return type() == Type::Decimal; }
 	bool isDateTime() const { return type() == Type::DateTime; }
 	bool isList() const { return type() == Type::List; }
@@ -407,7 +414,7 @@ public:
 	uint64_t toUInt64() const;
 	bool toBool() const;
 	DateTime toDateTime() const;
-	RpcValue::String toString() const { return asString(); }
+	RpcValue::String toString() const;
 
 	const RpcValue::String &asString() const;
 	const RpcValue::Blob &asBlob() const;

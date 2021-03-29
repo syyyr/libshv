@@ -591,6 +591,13 @@ uint64_t RpcValue::toUInt64() const { return !m_ptr.isNull()? m_ptr->toUInt64():
 bool RpcValue::toBool() const { return !m_ptr.isNull()? m_ptr->toBool(): false; }
 RpcValue::DateTime RpcValue::toDateTime() const { return !m_ptr.isNull()? m_ptr->toDateTime(): RpcValue::DateTime{}; }
 
+RpcValue::String RpcValue::toString() const
+{
+	if(type() == Type::Blob)
+		return blobToString(asBlob());
+	return asString();
+}
+
 const RpcValue::String & RpcValue::asString() const { return !m_ptr.isNull()? m_ptr->asString(): static_empty_string(); }
 const RpcValue::Blob & RpcValue::asBlob() const { return !m_ptr.isNull()? m_ptr->asBlob(): static_empty_blob(); }
 const RpcValue::List & RpcValue::asList() const { return !m_ptr.isNull()? m_ptr->asList(): static_empty_list(); }
@@ -1249,9 +1256,14 @@ std::string RpcValue::Decimal::toString() const
 	return ret;
 }
 
-RpcValue::Blob RpcValue::stringToBlob(std::string &&s)
+RpcValue::String RpcValue::blobToString(const RpcValue::Blob &s, bool *check_utf8)
 {
-	// maybe in future I'll find a way how to do this without allocation
+	(void)check_utf8;
+	return String(s.begin(), s.end());
+}
+
+RpcValue::Blob RpcValue::stringToBlob(const RpcValue::String &s)
+{
 	return Blob(s.begin(), s.end());
 }
 
