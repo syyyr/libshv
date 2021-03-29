@@ -159,7 +159,7 @@ chainpack::RpcValue LocalFSNode::ndRead(const QString &path)
 	QFile f(m_rootDir.absolutePath() + '/' + path);
 	if(f.open(QFile::ReadOnly)) {
 		QByteArray ba = f.readAll();
-		return cp::RpcValue::String(ba.constData(), (size_t)ba.size());
+		return cp::RpcValue::Blob(ba.constData(), ba.constData() + ba.size());
 	}
 	SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for reading.");
 }

@@ -1249,4 +1249,12 @@ std::string RpcValue::Decimal::toString() const
 	return ret;
 }
 
+RpcValue::Blob RpcValue::stringToBlob(std::string &&s)
+{
+	// maybe in future I'll find a way how to do this without allocation
+	return Blob(s.begin(), s.end());
+}
+
 }}
+
+

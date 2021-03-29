@@ -190,6 +190,7 @@ public:
 	};
 	using String = std::string;
 	using Blob = std::vector<uint8_t>;
+	static Blob stringToBlob(std::string &&s);
 	class List : public std::vector<RpcValue>
 	{
 		using Super = std::vector<RpcValue>;
