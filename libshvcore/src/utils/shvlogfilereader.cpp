@@ -79,7 +79,7 @@ bool ShvLogFileReader::next()
 		cp::RpcValue p = row.value(Column::Path);
 		if(p.isInt())
 			p = m_logHeader.pathDictCRef().value(p.toInt());
-		const std::string &path = p.toString();
+		const std::string &path = p.asString();
 		if(path.empty()) {
 			logWShvJournal() << "Path dictionary corrupted, row:" << val.toCpon();
 			continue;
@@ -90,7 +90,7 @@ bool ShvLogFileReader::next()
 		m_currentEntry.value = row.value(Column::Value);
 		cp::RpcValue st = row.value(Column::ShortTime);
 		m_currentEntry.shortTime = st.isInt() && st.toInt() >= 0? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
-		m_currentEntry.domain = row.value(Column::Domain).toString();
+		m_currentEntry.domain = row.value(Column::Domain).asString();
 		m_currentEntry.sampleType = static_cast<ShvJournalEntry::SampleType>(row.value(Column::SampleType).toUInt());
 		if (m_currentEntry.sampleType == ShvJournalEntry::SampleType::Invalid) {
 			m_currentEntry.sampleType = ShvJournalEntry::SampleType::Continuous;

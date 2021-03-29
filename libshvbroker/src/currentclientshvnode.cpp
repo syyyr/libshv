@@ -47,8 +47,8 @@ CurrentClientShvNode::CurrentClientShvNode(shv::iotqt::node::ShvNode *parent)
 shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack::RpcRequest &rq)
 {
 	shv::chainpack::RpcValue shv_path = rq.shvPath();
-	if(shv_path.toString().empty()) {
-		const shv::chainpack::RpcValue::String &method = rq.method().toString();
+	if(shv_path.asString().empty()) {
+		const shv::chainpack::RpcValue::String method = rq.method().toString();
 		if(method == M_CLIENT_ID) {
 			int client_id = rq.peekCallerId();
 			return client_id;

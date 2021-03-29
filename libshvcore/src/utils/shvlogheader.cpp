@@ -30,8 +30,8 @@ ShvLogHeader ShvLogHeader::fromMetaData(const chainpack::RpcValue::MetaData &md)
 {
 	ShvLogHeader ret;
 	const chainpack::RpcValue::Map &device = md.value("device").toMap();
-	ret.setDeviceId(device.value("id").toString());
-	ret.setDeviceType(device.value("type").toString());
+	ret.setDeviceId(device.value("id").asString());
+	ret.setDeviceType(device.value("type").asString());
 	ret.setLogVersion(md.value("logVersion").toInt());
 	ShvGetLogParams params = ShvGetLogParams::fromRpcValue(md.value("logParams"));
 	ret.setLogParams(std::move(params));

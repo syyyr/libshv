@@ -170,7 +170,7 @@ chainpack::RpcValue LocalFSNode::ndWrite(const QString &path, const chainpack::R
 
 	if (methods_params.isString()){
 		if(f.open(QFile::WriteOnly)) {
-			const chainpack::RpcValue::String &content = methods_params.toString();
+			const chainpack::RpcValue::String &content = methods_params.asString();
 			f.write(content.data(), content.size());
 			return true;
 		}
@@ -210,7 +210,7 @@ chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::
 	std::string error;
 
 	if (methods_params.isString()){
-		QString file_path = m_rootDir.absolutePath() + '/' + path + '/' + QString::fromStdString(methods_params.toString());
+		QString file_path = m_rootDir.absolutePath() + '/' + path + '/' + QString::fromStdString(methods_params.asString());
 
 		QFile f(file_path);
 		if(f.open(QFile::WriteOnly)) {
@@ -225,7 +225,7 @@ chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::
 			throw shv::core::Exception("Invalid params, [\"name\", \"content\"] expected.");
 		}
 
-		QString file_path = m_rootDir.absolutePath() + '/' + path + '/' + QString::fromStdString(param_lst[0].toString());
+		QString file_path = m_rootDir.absolutePath() + '/' + path + '/' + QString::fromStdString(param_lst[0].asString());
 		QDir d(QFileInfo(file_path).dir());
 
 		if (!d.mkpath(d.absolutePath())){
@@ -239,7 +239,7 @@ chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::
 		}
 
 		if(f.open(QFile::WriteOnly)) {
-			const std::string &data = param_lst[1].toString();
+			const std::string &data = param_lst[1].asString();
 			f.write(data.data(), data.size());
 			return true;
 		}
@@ -259,7 +259,7 @@ chainpack::RpcValue LocalFSNode::ndMkdir(const QString &path, const chainpack::R
 	if (!methods_params.isString())
 		SHV_EXCEPTION("Cannot create directory in directory " + d.absolutePath().toStdString() + ". Invalid parameter: " + methods_params.toCpon());
 
-	return d.mkpath(m_rootDir.absolutePath()+ '/' + path + '/' + QString::fromStdString(methods_params.toString()));
+	return d.mkpath(m_rootDir.absolutePath()+ '/' + path + '/' + QString::fromStdString(methods_params.asString()));
 }
 
 chainpack::RpcValue LocalFSNode::ndRmdir(const QString &path, bool recursively)

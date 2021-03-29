@@ -46,7 +46,7 @@ bool ShvLogRpcValueReader::next()
 		cp::RpcValue p = row.value(Column::Path);
 		if(p.isInt())
 			p = m_logHeader.pathDictCRef().value(p.toInt());
-		const std::string &path = p.toString();
+		const std::string &path = p.asString();
 		if(path.empty()) {
 			if(m_isThrowExceptions)
 				throw shv::core::Exception("Path dictionary corrupted, row: " + val.toCpon());

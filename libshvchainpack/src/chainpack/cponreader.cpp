@@ -251,7 +251,7 @@ void CponReader::parseMetaData(RpcValue::MetaData &meta_data)
 		RpcValue val;
 		read(val);
 		if(key.isString())
-			meta_data.setValue(key.toString(), val);
+			meta_data.setValue(key.asString(), val);
 		else
 			meta_data.setValue(key.toInt(), val);
 	}
@@ -269,7 +269,7 @@ void CponReader::parseMap(RpcValue &val)
 		}
 		RpcValue val;
 		read(val);
-		map[key.toString()] = val;
+		map[key.asString()] = val;
 	}
 	val = map;
 }

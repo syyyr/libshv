@@ -30,7 +30,7 @@ void ChainPackWriter::write(const RpcValue &value)
 	case RpcValue::Type::Double: write_p(value.toDouble()); break;
 	case RpcValue::Type::Bool: write_p(value.toBool()); break;
 	case RpcValue::Type::Blob: write_p(value.asBlob()); break;
-	case RpcValue::Type::String: write_p(value.toString()); break;
+	case RpcValue::Type::String: write_p(value.asString()); break;
 	case RpcValue::Type::DateTime: write_p(value.toDateTime()); break;
 	case RpcValue::Type::List: write_p(value.toList()); break;
 	case RpcValue::Type::Map: write_p(value.toMap()); break;

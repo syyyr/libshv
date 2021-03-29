@@ -40,7 +40,7 @@ AclPassword AclPassword::fromRpcValue(const shv::chainpack::RpcValue &v)
 	else if(v.isMap()) {
 		const auto &m = v.toMap();
 		ret.password = m.value("password").toString();
-		ret.format = formatFromString(m.value("format").toString());
+		ret.format = formatFromString(m.value("format").asString());
 		if(ret.format == Format::Invalid && !ret.password.empty())
 			ret.format = std::regex_match(ret.password, sha1_regex)? Format::Sha1: Format::Plain;
 	}

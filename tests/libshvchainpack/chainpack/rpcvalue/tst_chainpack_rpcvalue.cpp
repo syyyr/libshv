@@ -388,7 +388,7 @@ private:
 		QVERIFY(obj.toCpon() == "{\"k1\":\"v1\",\"k2\":42.,\"k3\":[\"a\",123.,true,false,null]}");
 
 		QCOMPARE(RpcValue("a").toDouble(), 0.);
-		QCOMPARE(RpcValue("a").toString().c_str(), "a");
+		QCOMPARE(RpcValue("a").asString().c_str(), "a");
 		QCOMPARE(RpcValue().toDouble(), 0.);
 		/*
 		{
@@ -697,7 +697,7 @@ private:
 				ChainPackReader rd(out); RpcValue cp2 = rd.read();
 				qDebug() << str << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
 				QVERIFY(cp1.type() == cp2.type());
-				QVERIFY(cp1.toString() == cp2.toString());
+				QVERIFY(cp1.asString() == cp2.asString());
 			}
 			{
 				// long string
@@ -710,7 +710,7 @@ private:
 				ChainPackReader rd(out); RpcValue cp2 = rd.read();
 				//qDebug() << str << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
 				QVERIFY(cp1.type() == cp2.type());
-				QVERIFY(cp2.toString().size() == str.size());
+				QVERIFY(cp2.asString().size() == str.size());
 				QVERIFY(cp1 == cp2);
 			}
 		}

@@ -77,7 +77,7 @@ shv::chainpack::RpcValue AppRootNode::callMethod(const StringViewList &shv_path,
 
 shv::chainpack::RpcValue AppRootNode::processRpcRequest(const shv::chainpack::RpcRequest &rq)
 {
-	if(rq.shvPath().toString().empty()) {
+	if(rq.shvPath().asString().empty()) {
 		if(rq.method() == cp::Rpc::METH_DEVICE_ID) {
 			SampleShvClientApp *app = SampleShvClientApp::instance();
 			const cp::RpcValue::Map& opts = app->rpcConnection()->connectionOptions().toMap();

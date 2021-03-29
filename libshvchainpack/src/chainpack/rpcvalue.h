@@ -406,6 +406,7 @@ public:
 	uint64_t toUInt64() const;
 	bool toBool() const;
 	DateTime toDateTime() const;
+	RpcValue::String toString() const { return asString(); }
 
 	const RpcValue::String &asString() const;
 	const RpcValue::Blob &asBlob() const;
@@ -414,7 +415,6 @@ public:
 	const IMap &asIMap() const;
 
 	/// deprecated, new applications should us asString, asInt, ...
-	const RpcValue::String &toString() const { return asString(); }
 	const List &toList() const { return asList(); }
 	const Map &toMap() const { return asMap(); }
 	const IMap &toIMap() const { return asIMap(); }
@@ -519,6 +519,6 @@ template<> inline shv::chainpack::RpcValue rpcvalue_cast<shv::chainpack::RpcValu
 template<> inline bool rpcvalue_cast<bool>(const shv::chainpack::RpcValue &v) { return v.toBool(); }
 template<> inline shv::chainpack::RpcValue::Int rpcvalue_cast<shv::chainpack::RpcValue::Int>(const shv::chainpack::RpcValue &v) { return v.toInt(); }
 template<> inline shv::chainpack::RpcValue::UInt rpcvalue_cast<shv::chainpack::RpcValue::UInt>(const shv::chainpack::RpcValue &v) { return v.toUInt(); }
-template<> inline shv::chainpack::RpcValue::String rpcvalue_cast<shv::chainpack::RpcValue::String>(const shv::chainpack::RpcValue &v) { return v.toStdString(); }
+template<> inline shv::chainpack::RpcValue::String rpcvalue_cast<shv::chainpack::RpcValue::String>(const shv::chainpack::RpcValue &v) { return v.toString(); }
 template<> inline shv::chainpack::RpcValue::DateTime rpcvalue_cast<shv::chainpack::RpcValue::DateTime>(const shv::chainpack::RpcValue &v) { return v.toDateTime(); }
 template<> inline shv::chainpack::RpcValue::Decimal rpcvalue_cast<shv::chainpack::RpcValue::Decimal>(const shv::chainpack::RpcValue &v) { return v.toDecimal(); }

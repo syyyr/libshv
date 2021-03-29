@@ -185,8 +185,8 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 {
 	shvLogFuncFrame() << "node:" << nodeId();
-	const chainpack::RpcValue::String &method = rq.method().toString();
-	const chainpack::RpcValue::String &shv_path_str = rq.shvPath().toString();
+	const chainpack::RpcValue::String &method = rq.method().asString();
+	const chainpack::RpcValue::String &shv_path_str = rq.shvPath().asString();
 	core::StringViewList shv_path = shv::core::utils::ShvPath::split(shv_path_str);
 	cp::RpcResponse resp = cp::RpcResponse::forRequest(rq);
 	try {
@@ -241,8 +241,8 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 
 chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 {
-	core::StringViewList shv_path = core::utils::ShvPath::split(rq.shvPath().toString());
-	const chainpack::RpcValue::String &method = rq.method().toString();
+	core::StringViewList shv_path = core::utils::ShvPath::split(rq.shvPath().asString());
+	const chainpack::RpcValue::String &method = rq.method().asString();
 	const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
 	if(!mm)
 		SHV_EXCEPTION(std::string("Method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' doesn't exist.");
@@ -268,8 +268,8 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 
 chainpack::RpcValue ShvNode::callMethodRq(const chainpack::RpcRequest &rq)
 {
-	core::StringViewList shv_path = shv::core::utils::ShvPath::split(rq.shvPath().toString());
-	const chainpack::RpcValue::String &method = rq.method().toString();
+	core::StringViewList shv_path = shv::core::utils::ShvPath::split(rq.shvPath().asString());
+	const chainpack::RpcValue::String &method = rq.method().asString();
 	chainpack::RpcValue ret_val = callMethod(shv_path, method, rq.params());
 	return ret_val;
 }
@@ -888,7 +888,7 @@ shv::chainpack::RpcValue RpcValueConfigNode::loadConfigTemplate(const std::strin
 		if(err.empty()) {
 			const shv::chainpack::RpcValue::Map &map = rv.toMap();
 			static const char BASED_ON[] = "basedOn";
-			const std::string &based_on = map.value(BASED_ON).toString();
+			const std::string &based_on = map.value(BASED_ON).asString();
 			if(!based_on.empty()) {
 				shvDebug() << "based on:" << based_on;
 				std::string base_fn = templateDir() + '/' + based_on;

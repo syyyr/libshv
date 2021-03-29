@@ -235,7 +235,7 @@ public:
 			*/
 			return RpcValue::IMap {
 				{KeyCode, json.value(Rpc::JSONRPC_ERROR_CODE).toInt()},
-				{KeyMessage, json.value(Rpc::JSONRPC_ERROR_MESSAGE).toString()},
+				{KeyMessage, json.value(Rpc::JSONRPC_ERROR_MESSAGE).asString()},
 			};
 		}
 	public:

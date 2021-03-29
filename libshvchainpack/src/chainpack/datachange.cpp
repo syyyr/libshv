@@ -96,7 +96,7 @@ DataChange DataChange::fromRpcValue(const RpcValue &val)
 set_meta_data:
 		ret.setDateTime(val.metaValue(MetaType::Tag::DateTime));
 		ret.setShortTime(val.metaValue(MetaType::Tag::ShortTime));
-		ret.setDomain(val.metaValue(MetaType::Tag::Domain).toString());
+		ret.setDomain(val.metaValue(MetaType::Tag::Domain).asString());
 		ret.setSampleType(val.metaValue(MetaType::Tag::SampleType).toInt());
 		return ret;
 	}

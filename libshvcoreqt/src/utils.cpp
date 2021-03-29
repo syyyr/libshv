@@ -59,7 +59,7 @@ QVariant Utils::rpcValueToQVariant(const chainpack::RpcValue &v, bool *ok)
 		*ok = false;
 		return QVariant();
 	}
-	return QString::fromStdString(v.toString());
+	return QString::fromStdString(v.asString());
 }
 
 chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v, bool *ok)
@@ -118,7 +118,7 @@ QStringList Utils::rpcValueToStringList(const shv::chainpack::RpcValue &rpcval)
 {
 	QStringList ret;
 	for(const chainpack::RpcValue &v : rpcval.toList())
-		ret << QString::fromStdString(v.toString());
+		ret << QString::fromStdString(v.asString());
 	return ret;
 }
 

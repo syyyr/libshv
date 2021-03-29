@@ -179,7 +179,7 @@ chainpack::RpcValue MountsAclNode::callMethod(const iotqt::node::ShvNode::String
 		if(method == M_SET_VALUE) {
 			if(params.isList()) {
 				const auto &lst = params.toList();
-				const std::string &dev_id = lst.value(0).toString();
+				const std::string &dev_id = lst.value(0).asString();
 				chainpack::RpcValue rv = lst.value(1);
 				auto v = AclMountDef::fromRpcValue(rv);
 				if(rv.isValid() && !rv.isNull() && !v.isValid())
@@ -272,7 +272,7 @@ chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringV
 		if(method == M_SET_VALUE) {
 			if(params.isList()) {
 				const auto &lst = params.toList();
-				const std::string &role_name = lst.value(0).toString();
+				const std::string &role_name = lst.value(0).asString();
 
 				chainpack::RpcValue rv = lst.value(1);
 				auto v = AclRole::fromRpcValue(rv);
@@ -370,7 +370,7 @@ chainpack::RpcValue UsersAclNode::callMethod(const iotqt::node::ShvNode::StringV
 		if(method == M_SET_VALUE) {
 			if(params.isList()) {
 				const auto &lst = params.toList();
-				const std::string &name = lst.value(0).toString();
+				const std::string &name = lst.value(0).asString();
 				chainpack::RpcValue rv = lst.value(1);
 				auto user = AclUser::fromRpcValue(rv);
 				if(rv.isValid() && !rv.isNull() && !user.isValid())
@@ -413,7 +413,7 @@ chainpack::RpcValue UsersAclNode::callMethod(const iotqt::node::ShvNode::StringV
 				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{user_name, user_def.toRpcValueMap()});
 			}
 			if(pn == ACL_USER_PASSWORD_FORMAT) {
-				user_def.password.format = AclPassword::formatFromString(params.toString());
+				user_def.password.format = AclPassword::formatFromString(params.asString());
 				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{user_name, user_def.toRpcValueMap()});
 			}
 			if(pn == ACL_USER_ROLES) {
@@ -511,7 +511,7 @@ chainpack::RpcValue AccessAclNode::callMethod(const iotqt::node::ShvNode::String
 		if(method == M_SET_VALUE) {
 			if(params.isList()) {
 				const auto &lst = params.toList();
-				const std::string &role_name = lst.value(0).toString();
+				const std::string &role_name = lst.value(0).asString();
 				chainpack::RpcValue rv = lst.value(1);
 				auto v = AclRoleAccessRules::fromRpcValue(rv);
 				//if(rv.isValid() && !rv.isNull() && !v.isValid())

@@ -57,7 +57,7 @@ public:
 				return NecroLog::topicsLogTresholds();
 			}
 			if(method == M_SET_VERBOSITY) {
-				const std::string &s = params.toString();
+				const std::string &s = params.asString();
 				NecroLog::setTopicsLogTresholds(s);
 				return true;
 			}
@@ -100,7 +100,7 @@ BrokerAppNode::BrokerAppNode(shv::iotqt::node::ShvNode *parent)
 
 chainpack::RpcValue BrokerAppNode::callMethodRq(const chainpack::RpcRequest &rq)
 {
-	const cp::RpcValue::String &shv_path = rq.shvPath().toString();
+	const cp::RpcValue::String shv_path = rq.shvPath().toString();
 	if(shv_path.empty()) {
 		const cp::RpcValue::String method = rq.method().toString();
 		if(method == cp::Rpc::METH_SUBSCRIBE) {
