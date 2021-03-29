@@ -952,8 +952,8 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 						}
 					}
 				}
-				const std::string &method = cp::RpcMessage::method(meta).toString();
-				const std::string &resolved_shv_path = cp::RpcMessage::shvPath(meta).toString();
+				const std::string &method = cp::RpcMessage::method(meta).asString();
+				const std::string &resolved_shv_path = cp::RpcMessage::shvPath(meta).asString();
 				cp::AccessGrant acg;
 				if(is_service_provider_mount_point_relative_call) {
 					logAclResolveM() << "==== access grant for user:" << connection_handle->loggedUserName() << "requested path:" << shv_path << "method:" << method;
@@ -1050,7 +1050,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 	else if(cp::RpcMessage::isSignal(meta)) {
 		logSigResolveD() << "SIGNAL:" << meta.toPrettyString() << "from:" << connection_id;
 
-		const std::string sig_shv_path = cp::RpcMessage::shvPath(meta).toString();
+		const std::string sig_shv_path = cp::RpcMessage::shvPath(meta).asString();
 		std::string full_shv_path = sig_shv_path;
 		std::string mount_point;
 		rpc::ClientConnectionOnBroker *client_connection = clientConnectionById(connection_id);
@@ -1067,7 +1067,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 			cp::RpcMessage::setShvPath(meta, full_shv_path);
 			bool sig_sent = sendNotifyToSubscribers(meta, data);
 			if(!sig_sent && client_connection && client_connection->isSlaveBrokerConnection()) {
-				logSubscriptionsD() << "Rejecting unsubscribed signal, shv_path:" << full_shv_path << "method:" << cp::RpcMessage::method(meta).toString();
+				logSubscriptionsD() << "Rejecting unsubscribed signal, shv_path:" << full_shv_path << "method:" << cp::RpcMessage::method(meta).asString();
 				cp::RpcRequest rq;
 				rq.setRequestId(client_connection->nextRequestId());
 				rq.setMethod(cp::Rpc::METH_REJECT_NOT_SUBSCRIBED)
@@ -1095,7 +1095,7 @@ void BrokerApp::onRootNodeSendRpcMesage(const shv::chainpack::RpcMessage &msg)
 	}
 	else if(msg.isSignal()) {
 		cp::RpcSignal sig(msg);
-		sendNotifyToSubscribers(sig.shvPath().toString(), sig.method().toString(), sig.params());
+		sendNotifyToSubscribers(sig.shvPath().asString(), sig.method().asString(), sig.params());
 	}
 	else {
 		shvError() << "Send message not implemented.";// << msg.toCpon();
@@ -1136,12 +1136,12 @@ bool BrokerApp::sendNotifyToSubscribers(const shv::chainpack::RpcValue::MetaData
 		if(conn->isConnectedAndLoggedIn()) {
 			const cp::RpcValue shv_path = cp::RpcMessage::shvPath(meta_data);
 			const cp::RpcValue method = cp::RpcMessage::method(meta_data);
-			int subs_ix = conn->isSubscribed(shv_path.toString(), method.toString());
+			int subs_ix = conn->isSubscribed(shv_path.toString(), method.asString());
 			if(subs_ix >= 0) {
 				//shvDebug() << "\t broadcasting to connection id:" << id;
 				const rpc::ClientConnectionOnBroker::Subscription &subs = conn->subscriptionAt((size_t)subs_ix);
-				std::string new_path = conn->toSubscribedPath(subs, shv_path.toString());
-				if(new_path == shv_path.toString()) {
+				std::string new_path = conn->toSubscribedPath(subs, shv_path.asString());
+				if(new_path == shv_path.asString()) {
 					conn->sendRawData(meta_data, std::string(data));
 				}
 				else {

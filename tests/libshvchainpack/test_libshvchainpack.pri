@@ -1,6 +1,7 @@
 include ( $$PWD/../test.pri )
 
 QT -= gui
+CONFIG += c++11
 
 INCLUDEPATH += \
 	$$PWD/../../libshvchainpack/include

@@ -29,15 +29,15 @@ void MasterBrokerConnection::setOptions(const shv::chainpack::RpcValue &slave_br
 		shv::iotqt::rpc::DeviceAppCliOptions device_opts;
 
 		const cp::RpcValue::Map &server = m.value("server").toMap();
-		device_opts.setServerHost(server.value("host", "localhost").toString());
+		device_opts.setServerHost(server.value("host", "localhost").asString());
 		device_opts.setServerPort(server.value("port", shv::chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT_NONSECURED).toInt());
-		device_opts.setServerSecurityType(server.value("securityType", "none").toString());
+		device_opts.setServerSecurityType(server.value("securityType", "none").asString());
 		device_opts.setServerPeerVerify(server.value("peerVerify", true).toBool());
 
 		const cp::RpcValue::Map &login = m.value(cp::Rpc::KEY_LOGIN).toMap();
 		for(const std::string &key : {"user", "password", "passwordFile", "type"}) {
 			if(login.hasKey(key))
-				device_opts.setValue("login." + key, login.value(key).toString());
+				device_opts.setValue("login." + key, login.value(key).asString());
 		}
 		const cp::RpcValue::Map &rpc = m.value("rpc").toMap();
 		if(rpc.count("heartbeatInterval") == 1)
@@ -47,11 +47,11 @@ void MasterBrokerConnection::setOptions(const shv::chainpack::RpcValue &slave_br
 
 		const cp::RpcValue::Map &device = m.value(cp::Rpc::KEY_DEVICE).toMap();
 		if(device.count("id") == 1)
-			device_opts.setDeviceId(device.value("id").toString());
+			device_opts.setDeviceId(device.value("id").asString());
 		if(device.count("idFile") == 1)
-			device_opts.setDeviceIdFile(device.value("idFile").toString());
+			device_opts.setDeviceIdFile(device.value("idFile").asString());
 		if(device.count("mountPoint") == 1)
-			device_opts.setMountPoint(device.value("mountPoint").toString());
+			device_opts.setMountPoint(device.value("mountPoint").asString());
 		//device_opts.dump();
 		setCliOptions(&device_opts);
 		{
@@ -61,7 +61,7 @@ void MasterBrokerConnection::setOptions(const shv::chainpack::RpcValue &slave_br
 			setConnectionOptions(opts);
 		}
 	}
-	m_exportedShvPath = slave_broker_options.toMap().value("exportedShvPath").toString();
+	m_exportedShvPath = slave_broker_options.toMap().value("exportedShvPath").asString();
 }
 
 void MasterBrokerConnection::sendMasterBrokerIdRequest()

@@ -128,7 +128,7 @@ ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const chainpack::RpcValue &v)
 	if(v.isMap()) {
 		const chainpack::RpcValue::Map &m = v.toMap();
 		ret.type = typeFromString(m.value("type").toString());
-		ret.sampleType = sampleTypeFromString(m.value("sampleType").toString());
+		ret.sampleType = sampleTypeFromString(m.value("sampleType").asString());
 		ret.description = m.value("description").toString();
 		int current_value = 0;
 		for(const auto &rv : m.value("fields").toList()) {

@@ -378,7 +378,7 @@ void CLIOptions::dump(std::ostream &os) const
 {
 	for(const auto &kv : m_options) {
 		const Option &opt = kv.second;
-		os << kv.first << '(' << String::join(opt.names(), ", ") << ')' << ": " << opt.value().toString() << std::endl;
+		os << kv.first << '(' << String::join(opt.names(), ", ") << ')' << ": " << opt.value().asString() << std::endl;
 	}
 }
 

@@ -23,8 +23,12 @@ QVariant Utils::rpcValueToQVariant(const chainpack::RpcValue &v, bool *ok)
 	case chainpack::RpcValue::Type::Double: return QVariant(v.toDouble());
 	case chainpack::RpcValue::Type::Bool: return QVariant(v.toBool());
 	case chainpack::RpcValue::Type::String: {
-		const std::string &data = v.toString();
-		return QVariant(QByteArray(data.data(), data.size()));
+		const std::string &s = v.asString();
+		return QVariant(QString::fromStdString(s));
+	}
+	case chainpack::RpcValue::Type::Blob: {
+		const auto &blob = v.asBlob();
+		return QVariant(QByteArray((char*)blob.data(), blob.size()));
 	}
 	case chainpack::RpcValue::Type::DateTime: {
 		QDateTime dt = QDateTime::fromMSecsSinceEpoch(v.toDateTime().msecsSinceEpoch());
@@ -55,7 +59,7 @@ QVariant Utils::rpcValueToQVariant(const chainpack::RpcValue &v, bool *ok)
 		*ok = false;
 		return QVariant();
 	}
-	return QString::fromStdString(v.toString());
+	return QString::fromStdString(v.asString());
 }
 
 chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v, bool *ok)
@@ -79,7 +83,8 @@ chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v, bool *ok)
 	case QMetaType::QString: return v.toString().toStdString();
 	case QMetaType::QByteArray: {
 		auto ba = v.toByteArray();
-		return std::string(ba.constData(), ba.size());
+		auto *array = (const uint8_t*)ba.constData();
+		return chainpack::RpcValue::Blob(array, array + ba.size());
 	}
 	case QMetaType::QDateTime: return chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(v.toDateTime().toMSecsSinceEpoch());
 	case QMetaType::QStringList:
@@ -113,7 +118,7 @@ QStringList Utils::rpcValueToStringList(const shv::chainpack::RpcValue &rpcval)
 {
 	QStringList ret;
 	for(const chainpack::RpcValue &v : rpcval.toList())
-		ret << QString::fromStdString(v.toString());
+		ret << QString::fromStdString(v.asString());
 	return ret;
 }
 

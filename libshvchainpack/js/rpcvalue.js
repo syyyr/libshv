@@ -15,8 +15,13 @@ function RpcValue(value, meta, type)
 		else if(typeof value == "boolean")
 			this.type = RpcValue.Type.Bool;
 		else if(typeof value == "string") {
-			this.value = Cpon.stringToUtf8(value);
 			this.type = RpcValue.Type.String;
+		}
+		else if(value instanceof String) {
+			this.type = RpcValue.Type.String;
+		}
+		else if(value instanceof ArrayBuffer) {
+			this.type = RpcValue.Type.Blob;
 		}
 		else if(Array.isArray(value))
 			this.type = RpcValue.Type.List;
@@ -48,14 +53,17 @@ RpcValue.Type = Object.freeze({
 	"List": 9,
 	"Map": 10,
 	"IMap": 11,
-	//"Meta": 11,
+	"Blob": 12,
 })
 
 RpcValue.fromCpon = function(cpon)
 {
 	let unpack_context = null;
-	if(typeof cpon === 'string') {
+	if(typeof cpon === 'string' || cpon instanceof String) {
 		unpack_context = new UnpackContext(Cpon.stringToUtf8(cpon));
+	}
+	else if(cpon instanceof ArrayBuffer) {
+		unpack_context = new UnpackContext(cpon);
 	}
 	if(unpack_context === null)
 		throw new TypeError("Invalid input data type")
@@ -97,35 +105,17 @@ RpcValue.prototype.asString = function()
 	case RpcValue.Type.IMap:
 	case RpcValue.Type.DateTime:
 	case RpcValue.Type.Bool:
-	case RpcValue.Type.Blob:
 		break;
 	case RpcValue.Type.String: return this.value;
+	case RpcValue.Type.Blob: return Cpon.utf8ToString(this.value);
 	}
 	return "";
 }
 
 RpcValue.prototype.toString = function()
 {
-	switch (this.type) {
-	case RpcValue.Type.Null:
-	case RpcValue.Type.UInt:
-	case RpcValue.Type.Int:
-	case RpcValue.Type.Double:
-	case RpcValue.Type.Decimal:
-	case RpcValue.Type.List:
-	case RpcValue.Type.Map:
-	case RpcValue.Type.IMap:
-	case RpcValue.Type.DateTime:
-	case RpcValue.Type.Bool:
-		let ba = this.toCpon();
-		return Cpon.utf8ToString(ba);
-	case RpcValue.Type.Blob: 
-			return Cpon.utf8ToString(this.value);
-	case RpcValue.Type.String: 
-			return this.value;
-	}
-	return "";
-
+	let ba = this.toCpon();
+	return Cpon.utf8ToString(ba);
 }
 
 RpcValue.prototype.toCpon = function()

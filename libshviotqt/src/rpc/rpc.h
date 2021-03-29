@@ -23,7 +23,7 @@ public:
 } // namespace coreqt
 } // namespace shv
 
-template<> inline QString rpcvalue_cast<QString>(const shv::chainpack::RpcValue &v) { return QString::fromStdString(v.toString()); }
+template<> inline QString rpcvalue_cast<QString>(const shv::chainpack::RpcValue &v) { return QString::fromStdString(v.asString()); }
 template<> inline QDateTime rpcvalue_cast<QDateTime>(const shv::chainpack::RpcValue &v)
 {
 	if (!v.isValid() || !v.isDateTime()) {

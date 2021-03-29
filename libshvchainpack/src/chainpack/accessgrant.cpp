@@ -251,7 +251,7 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 				}
 			}
 			{
-				auto role = m.value(KEY_ROLE).toString();
+				auto role = m.value(KEY_ROLE).asString();
 				if(!role.empty()) {
 					ret.type = Type::Role;
 					ret.role = role;
@@ -260,7 +260,7 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 			}
 			{
 				// legacy configs used 'grant' intead of 'role'
-				auto role = m.value("grant").toString();
+				auto role = m.value("grant").asString();
 				if(!role.empty()) {
 					ret.type = Type::Role;
 					ret.role = role;

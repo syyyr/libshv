@@ -374,7 +374,7 @@ RpcValue RpcDriver::decodeData(Rpc::ProtocolType protocol_type, const std::strin
 		}
 	}
 	catch(AbstractStreamReader::ParseException &e) {
-		nError() << Rpc::protocolTypeToString(protocol_type) << "Decode data error:" << e.what();
+		nError() << Rpc::protocolTypeToString(protocol_type) << "Decode data error:" << e.msg();
 		std::string data_piece = data.substr(e.pos() - 10*16, 20*16);
 		nError().nospace() << "Start offset: " << start_pos << " Data: from pos:" << (e.pos() - 10*16) << "\n" << shv::chainpack::Utils::hexDump(data_piece);
 	}
@@ -461,20 +461,21 @@ void RpcDriver::onRpcValueReceived(const RpcValue &msg)
 }
 
 static int lock_cnt = 0;
+static int logged_lock_cnt = 0;
 void RpcDriver::lockSendQueueGuard()
 {
 	lock_cnt++;
 	if(lock_cnt != 1) {
-		logWriteQueueW() << "Invalid write queue lock count:" << lock_cnt;
+		if(logged_lock_cnt != lock_cnt) {
+			logged_lock_cnt = lock_cnt;
+			logWriteQueueW() << "Invalid write queue lock count:" << lock_cnt;
+		}
 	}
 }
 
 void RpcDriver::unlockSendQueueGuard()
 {
 	lock_cnt--;
-	if(lock_cnt != 0) {
-		logWriteQueueW() << "Invalid write queue unlock count:" << lock_cnt;
-	}
 }
 
 std::string RpcDriver::dataToPrettyCpon(Rpc::ProtocolType protocol_type, const RpcValue::MetaData &md, const std::string &data, size_t start_pos, size_t data_len)

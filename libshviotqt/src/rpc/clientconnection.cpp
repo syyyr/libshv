@@ -174,7 +174,7 @@ void ClientConnection::setCheckBrokerConnectedInterval(int ms)
 
 void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
 {
-	if(rpc_msg.isSignal() && shv::core::String::endsWith(rpc_msg.shvPath().toString(), "server/time")) {
+	if(rpc_msg.isSignal() && shv::core::String::endsWith(rpc_msg.shvPath().asString(), "server/time")) {
 		// skip annoying messages
 	}
 	else {
@@ -188,7 +188,7 @@ void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
 
 void ClientConnection::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 {
-	if(msg.isSignal() && shv::core::String::endsWith(msg.shvPath().toString(), "server/time")) {
+	if(msg.isSignal() && shv::core::String::endsWith(msg.shvPath().asString(), "server/time")) {
 		// skip annoying messages
 	}
 	else {

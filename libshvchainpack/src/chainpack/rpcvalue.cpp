@@ -90,10 +90,11 @@ public:
 	virtual uint64_t toUInt64() const {return 0;}
 	virtual bool toBool() const {return false;}
 	virtual RpcValue::DateTime toDateTime() const { return RpcValue::DateTime{}; }
-	virtual const std::string &toString() const;
-	virtual const RpcValue::List &toList() const;
-	virtual const RpcValue::Map &toMap() const;
-	virtual const RpcValue::IMap &toIMap() const;
+	virtual const RpcValue::String &asString() const;
+	virtual const RpcValue::Blob &asBlob() const;
+	virtual const RpcValue::List &asList() const;
+	virtual const RpcValue::Map &asMap() const;
+	virtual const RpcValue::IMap &asIMap() const;
 	virtual size_t count() const {return 0;}
 
 	virtual bool has(RpcValue::Int i) const { (void)i; return false; }
@@ -310,32 +311,28 @@ public:
 class ChainPackString : public ValueData<RpcValue::Type::String, RpcValue::String>
 {
 	ChainPackString* create() override { return new ChainPackString(RpcValue::String()); }
-	std::string toStdString() const override { return toString(); }
+	std::string toStdString() const override { return asString(); }
 
-	const std::string &toString() const override { return m_value; }
-	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toString(); }
+	const std::string &asString() const override { return m_value; }
+	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asString(); }
 public:
 	explicit ChainPackString(const RpcValue::String &value) : ValueData(value) {}
 	explicit ChainPackString(RpcValue::String &&value) : ValueData(std::move(value)) {}
 };
-/*
+
 class ChainPackBlob final : public ValueData<RpcValue::Type::Blob, RpcValue::Blob>
 {
-	std::string toStdString() const override { return toBlob(); }
+	ChainPackBlob* create() override { return new ChainPackBlob(RpcValue::Blob()); }
+	std::string toStdString() const override { return std::string(m_value.begin(), m_value.end()); }
 	//const std::string &toString() const override { return Utils::toHex(m_value); }
-	const RpcValue::Blob &toBlob() const override { return m_value; }
-	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toBlob(); }
+	const RpcValue::Blob &asBlob() const override { return m_value; }
+	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asBlob(); }
 public:
 	explicit ChainPackBlob(const RpcValue::Blob &value) : ValueData(value) {}
 	explicit ChainPackBlob(RpcValue::Blob &&value) : ValueData(std::move(value)) {}
-	explicit ChainPackBlob(const uint8_t *bytes, size_t size) : ValueData(RpcValue::Blob()) {
-		m_value.reserve(size);
-		for (size_t i = 0; i < size; ++i) {
-			m_value[i] = bytes[i];
-		}
-	}
+	explicit ChainPackBlob(const uint8_t *bytes, size_t size) : ValueData(RpcValue::Blob(bytes, bytes + size)) {}
 };
-*/
+
 class ChainPackList final : public ValueData<RpcValue::Type::List, RpcValue::List>
 {
 	ChainPackList* create() override { return new ChainPackList(RpcValue::List()); }
@@ -345,12 +342,12 @@ class ChainPackList final : public ValueData<RpcValue::Type::List, RpcValue::Lis
 	RpcValue at(RpcValue::Int i) const override;
 	void set(RpcValue::Int i, const RpcValue &val) override;
 	void append(const RpcValue &v) override;
-	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toList(); }
+	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asList(); }
 public:
 	explicit ChainPackList(const RpcValue::List &value) : ValueData(value) {}
 	explicit ChainPackList(RpcValue::List &&value) : ValueData(move(value)) {}
 
-	const RpcValue::List &toList() const override { return m_value; }
+	const RpcValue::List &asList() const override { return m_value; }
 };
 
 RpcValue ChainPackList::at(RpcValue::Int ix) const
@@ -388,12 +385,12 @@ class ChainPackMap final : public ValueData<RpcValue::Type::Map, RpcValue::Map>
 	bool has(const RpcValue::String &key) const override;
 	RpcValue at(const RpcValue::String &key) const override;
 	void set(const RpcValue::String &key, const RpcValue &val) override;
-	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toMap(); }
+	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asMap(); }
 public:
 	explicit ChainPackMap(const RpcValue::Map &value) : ValueData(value) {}
 	explicit ChainPackMap(RpcValue::Map &&value) : ValueData(move(value)) {}
 
-	const RpcValue::Map &toMap() const override { return m_value; }
+	const RpcValue::Map &asMap() const override { return m_value; }
 };
 
 class ChainPackIMap final : public ValueData<RpcValue::Type::IMap, RpcValue::IMap>
@@ -405,12 +402,12 @@ class ChainPackIMap final : public ValueData<RpcValue::Type::IMap, RpcValue::IMa
 	bool has(RpcValue::Int key) const override;
 	RpcValue at(RpcValue::Int key) const override;
 	void set(RpcValue::Int key, const RpcValue &val) override;
-	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toIMap(); }
+	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asIMap(); }
 public:
 	explicit ChainPackIMap(const RpcValue::IMap &value) : ValueData(value) {}
 	explicit ChainPackIMap(RpcValue::IMap &&value) : ValueData(std::move(value)) {}
 
-	const RpcValue::IMap &toIMap() const override { return m_value; }
+	const RpcValue::IMap &asIMap() const override { return m_value; }
 };
 
 class ChainPackNull final : public ValueData<RpcValue::Type::Null, std::nullptr_t>
@@ -425,6 +422,7 @@ public:
 };
 
 static const RpcValue::String & static_empty_string() { static const RpcValue::String s{}; return s; }
+static const RpcValue::Blob & static_empty_blob() { static const RpcValue::Blob s{}; return s; }
 static const RpcValue::List & static_empty_list() { static const RpcValue::List s{}; return s; }
 static const RpcValue::Map & static_empty_map() { static const RpcValue::Map s{}; return s; }
 static const RpcValue::IMap & static_empty_imap() { static const RpcValue::IMap s{}; return s; }
@@ -444,7 +442,8 @@ RpcValue RpcValue::fromType(RpcValue::Type t) noexcept
 	case Type::Int: return RpcValue{static_cast<Int>(0)};
 	case Type::Double: return RpcValue{static_cast<double>(0)};
 	case Type::Bool: return RpcValue{false};
-	case Type::String: return RpcValue{std::string()};
+	case Type::String: return RpcValue{String()};
+	case Type::Blob: return RpcValue{Blob()};
 	case Type::DateTime: return RpcValue{DateTime()};
 	case Type::List: return RpcValue{List()};
 	case Type::Map: return RpcValue{Map()};
@@ -463,12 +462,14 @@ RpcValue::RpcValue(uint64_t value) : m_ptr(std::make_shared<ChainPackUInt>(value
 RpcValue::RpcValue(bool value) : m_ptr(std::make_shared<ChainPackBoolean>(value)) {}
 RpcValue::RpcValue(const DateTime &value) : m_ptr(std::make_shared<ChainPackDateTime>(value)) {}
 
-//RpcValue::RpcValue(const RpcValue::Blob &value) : m_ptr(std::make_shared<ChainPackBlob>(value)) {}
-//RpcValue::RpcValue(RpcValue::Blob &&value) : m_ptr(std::make_shared<ChainPackBlob>(std::move(value))) {}
-//RpcValue::RpcValue(const uint8_t * value, size_t size) : m_ptr(std::make_shared<ChainPackBlob>(value, size)) {}
+RpcValue::RpcValue(const RpcValue::Blob &value) : m_ptr(std::make_shared<ChainPackBlob>(value)) {}
+RpcValue::RpcValue(RpcValue::Blob &&value) : m_ptr(std::make_shared<ChainPackBlob>(std::move(value))) {}
+RpcValue::RpcValue(const uint8_t * value, size_t size) : m_ptr(std::make_shared<ChainPackBlob>(value, size)) {}
+
 RpcValue::RpcValue(const std::string &value) : m_ptr(std::make_shared<ChainPackString>(value)) {}
 RpcValue::RpcValue(std::string &&value) : m_ptr(std::make_shared<ChainPackString>(std::move(value))) {}
 RpcValue::RpcValue(const char * value) : m_ptr(std::make_shared<ChainPackString>(value)) {}
+
 RpcValue::RpcValue(const RpcValue::List &values) : m_ptr(std::make_shared<ChainPackList>(values)) {}
 RpcValue::RpcValue(RpcValue::List &&values) : m_ptr(std::make_shared<ChainPackList>(std::move(values))) {}
 
@@ -567,10 +568,11 @@ bool RpcValue::hasDefaultValue() const
 	case RpcValue::Type::DateTime: return (toDateTime().msecsSinceEpoch() == 0);
 	case RpcValue::Type::Decimal: return (toDecimal().mantisa() == 0);
 	case RpcValue::Type::Double: return (toDouble() == 0);
-	case RpcValue::Type::String: return (toString().empty());
-	case RpcValue::Type::List: return (toList().empty());
-	case RpcValue::Type::Map: return (toMap().empty());
-	case RpcValue::Type::IMap: return (toIMap().empty());
+	case RpcValue::Type::String: return (asString().empty());
+	case RpcValue::Type::Blob: return (asBlob().empty());
+	case RpcValue::Type::List: return (asList().empty());
+	case RpcValue::Type::Map: return (asMap().empty());
+	case RpcValue::Type::IMap: return (asIMap().empty());
 	}
 	return false;
 }
@@ -589,10 +591,11 @@ uint64_t RpcValue::toUInt64() const { return !m_ptr.isNull()? m_ptr->toUInt64():
 bool RpcValue::toBool() const { return !m_ptr.isNull()? m_ptr->toBool(): false; }
 RpcValue::DateTime RpcValue::toDateTime() const { return !m_ptr.isNull()? m_ptr->toDateTime(): RpcValue::DateTime{}; }
 
-const std::string & RpcValue::asString() const { return !m_ptr.isNull()? m_ptr->toString(): static_empty_string(); }
-const RpcValue::List & RpcValue::asList() const { return !m_ptr.isNull()? m_ptr->toList(): static_empty_list(); }
-const RpcValue::Map & RpcValue::asMap() const { return !m_ptr.isNull()? m_ptr->toMap(): static_empty_map(); }
-const RpcValue::IMap &RpcValue::asIMap() const { return !m_ptr.isNull()? m_ptr->toIMap(): static_empty_imap(); }
+const RpcValue::String & RpcValue::asString() const { return !m_ptr.isNull()? m_ptr->asString(): static_empty_string(); }
+const RpcValue::Blob & RpcValue::asBlob() const { return !m_ptr.isNull()? m_ptr->asBlob(): static_empty_blob(); }
+const RpcValue::List & RpcValue::asList() const { return !m_ptr.isNull()? m_ptr->asList(): static_empty_list(); }
+const RpcValue::Map & RpcValue::asMap() const { return !m_ptr.isNull()? m_ptr->asMap(): static_empty_map(); }
+const RpcValue::IMap &RpcValue::asIMap() const { return !m_ptr.isNull()? m_ptr->asIMap(): static_empty_imap(); }
 
 size_t RpcValue::count() const { return !m_ptr.isNull()? m_ptr->count(): 0; }
 RpcValue RpcValue::at (RpcValue::Int i) const { return !m_ptr.isNull()? m_ptr->at(i): RpcValue(); }
@@ -660,11 +663,11 @@ std::string RpcValue::toCpon(const std::string &indent) const
 	return out.str();
 }
 
-const std::string & RpcValue::AbstractValueData::toString() const { return static_empty_string(); }
-//const RpcValue::Blob & RpcValue::AbstractValueData::toBlob() const { return static_empty_blob(); }
-const RpcValue::List & RpcValue::AbstractValueData::toList() const { return static_empty_list(); }
-const RpcValue::Map & RpcValue::AbstractValueData::toMap() const { return static_empty_map(); }
-const RpcValue::IMap & RpcValue::AbstractValueData::toIMap() const { return static_empty_imap(); }
+const std::string & RpcValue::AbstractValueData::asString() const { return static_empty_string(); }
+const RpcValue::Blob & RpcValue::AbstractValueData::asBlob() const { return static_empty_blob(); }
+const RpcValue::List & RpcValue::AbstractValueData::asList() const { return static_empty_list(); }
+const RpcValue::Map & RpcValue::AbstractValueData::asMap() const { return static_empty_map(); }
+const RpcValue::IMap & RpcValue::AbstractValueData::asIMap() const { return static_empty_imap(); }
 
 void RpcValue::AbstractValueData::set(RpcValue::Int ix, const RpcValue &)
 {
@@ -767,22 +770,7 @@ RpcValue RpcValue::fromChainPack(const std::string &str, std::string *err)
 	}
 	return ret;
 }
-/*
-RpcValue RpcValue::clone(bool clone_meta_data) const
-{
-	if(!isValid())
-		return RpcValue();
-	std::string cp = toChainPack();
-	std::istringstream in(cp);
-	ChainPackReader rd(in);
-	if(!clone_meta_data) {
-		RpcValue::MetaData md;
-		rd.read(md);
-	}
-	RpcValue ret = rd.read();
-	return ret;
-}
-*/
+
 const char *RpcValue::typeToName(RpcValue::Type t)
 {
 	switch (t) {
@@ -793,6 +781,7 @@ const char *RpcValue::typeToName(RpcValue::Type t)
 	case Type::Double: return "Double";
 	case Type::Bool: return "Bool";
 	case Type::String: return "String";
+	case Type::Blob: return "Blob";
 	case Type::List: return "List";
 	case Type::Map: return "Map";
 	case Type::IMap: return "IMap";

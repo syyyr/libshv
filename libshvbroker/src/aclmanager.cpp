@@ -209,7 +209,7 @@ chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginC
 
 std::string AclManager::mountPointForDevice(const chainpack::RpcValue &device_id)
 {
-	return mountDef(device_id.toString()).mountPoint;
+	return mountDef(device_id.asString()).mountPoint;
 }
 
 void AclManager::reload()

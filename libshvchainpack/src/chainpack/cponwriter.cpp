@@ -94,8 +94,8 @@ void CponWriter::write(const RpcValue &value)
 	case RpcValue::Type::Int: write_p(value.toInt64()); break;
 	case RpcValue::Type::Double: write_p(value.toDouble()); break;
 	case RpcValue::Type::Bool: write_p(value.toBool()); break;
-	//case RpcValue::Type::Blob: write(value.toBlob()); break;
-	case RpcValue::Type::String: write_p(value.toString()); break;
+	case RpcValue::Type::Blob: write_p(value.asBlob()); break;
+	case RpcValue::Type::String: write_p(value.asString()); break;
 	case RpcValue::Type::DateTime: write_p(value.toDateTime()); break;
 	case RpcValue::Type::List: write_p(value.toList()); break;
 	case RpcValue::Type::Map: write_p(value.toMap()); break;
@@ -311,6 +311,12 @@ CponWriter &CponWriter::write_p(RpcValue::DateTime value)
 CponWriter &CponWriter::write_p(const std::string &value)
 {
 	ccpon_pack_string(&m_outCtx, value.data(), value.size());
+	return *this;
+}
+
+CponWriter &CponWriter::write_p(const RpcValue::Blob &value)
+{
+	ccpon_pack_blob(&m_outCtx, value.data(), value.size());
 	return *this;
 }
 
