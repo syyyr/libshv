@@ -117,7 +117,7 @@ void ChannelFilterDialog::saveChannelFilter(const QString &name)
 	QSet<QString> selected_channels = m_channelsFilterModel->selectedChannels();
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-	settings.setValue(name, QStringList::fromSet(selected_channels));
+	settings.setValue(name, selected_channels.toList());
 #else
 	settings.setValue(name, QStringList(selected_channels.begin(), selected_channels.end()));
 #endif
