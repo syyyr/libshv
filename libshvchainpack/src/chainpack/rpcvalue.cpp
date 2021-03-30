@@ -600,6 +600,29 @@ RpcValue::String RpcValue::toString() const
 
 const RpcValue::String & RpcValue::asString() const { return !m_ptr.isNull()? m_ptr->asString(): static_empty_string(); }
 const RpcValue::Blob & RpcValue::asBlob() const { return !m_ptr.isNull()? m_ptr->asBlob(): static_empty_blob(); }
+
+std::pair<const uint8_t *, size_t> RpcValue::asBytes() const
+{
+	using Ret = std::pair<const uint8_t *, size_t>;
+	if(type() == Type::Blob) {
+		const Blob &blob = asBlob();
+		return Ret(blob.data(), blob.size());
+	}
+	const String &s = asString();
+	return Ret((const uint8_t*)s.data(), s.size());
+}
+
+std::pair<const char *, size_t> RpcValue::asData() const
+{
+	using Ret = std::pair<const char *, size_t>;
+	if(type() == Type::Blob) {
+		const Blob &blob = asBlob();
+		return Ret((const char*)blob.data(), blob.size());
+	}
+	const String &s = asString();
+	return Ret(s.data(), s.size());
+}
+
 const RpcValue::List & RpcValue::asList() const { return !m_ptr.isNull()? m_ptr->asList(): static_empty_list(); }
 const RpcValue::Map & RpcValue::asMap() const { return !m_ptr.isNull()? m_ptr->asMap(): static_empty_map(); }
 const RpcValue::IMap &RpcValue::asIMap() const { return !m_ptr.isNull()? m_ptr->asIMap(): static_empty_imap(); }
