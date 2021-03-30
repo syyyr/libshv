@@ -97,7 +97,7 @@ public:
 	int channelMetaTypeId(int ix) const;
 
 	void showAllChannels();
-	QStringList channelPaths();
+	QSet<QString> channelPaths();
 	void hideFlatChannels();
 	const ChannelFilter& channelFilter() const { return m_channelFilter; }
 	void setChannelFilter(const ChannelFilter &filter);

@@ -54,7 +54,7 @@ ChannelFilterDialog::~ChannelFilterDialog()
 	delete ui;
 }
 
-void ChannelFilterDialog::init(const QString &site_path, const QStringList &logged_paths)
+void ChannelFilterDialog::init(const QString &site_path, const QSet<QString> &logged_paths)
 {
 	m_sitePath = site_path;
 	m_channelsFilterModel->createNodes(logged_paths);
@@ -63,12 +63,12 @@ void ChannelFilterDialog::init(const QString &site_path, const QStringList &logg
 	m_isSelectedFilterDirty = true;
 }
 
-QStringList ChannelFilterDialog::selectedChannels()
+QSet<QString> ChannelFilterDialog::selectedChannels()
 {
 	return m_channelsFilterModel->selectedChannels();
 }
 
-void ChannelFilterDialog::setSelectedChannels(const QStringList &channels)
+void ChannelFilterDialog::setSelectedChannels(const QSet<QString> &channels)
 {
 	bool is_selected_filter_dirty = m_isSelectedFilterDirty;
 	m_channelsFilterModel->setSelectedChannels(channels);
@@ -113,10 +113,17 @@ void ChannelFilterDialog::saveChannelFilter(const QString &name)
 	settings.beginGroup(SITES_KEY);
 	settings.beginGroup(m_sitePath);
 	settings.beginGroup(CHANNEL_FILTERS_KEY);
-	settings.setValue(name, m_channelsFilterModel->selectedChannels());
+
+	QSet<QString> selected_channels = m_channelsFilterModel->selectedChannels();
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
+	settings.setValue(name, QStringList::fromSet(selected_channels));
+#else
+	settings.setValue(name, QStringList(selected_channels.begin(), selected_channels.end()));
+#endif
 }
 
-QStringList ChannelFilterDialog::loadChannelFilter(const QString &site_path, const QString &name, const QString &user_name)
+QSet<QString> ChannelFilterDialog::loadChannelFilter(const QString &site_path, const QString &name, const QString &user_name)
 {
 	QSettings settings;
 	settings.beginGroup(USER_PROFILES_KEY);
@@ -124,7 +131,14 @@ QStringList ChannelFilterDialog::loadChannelFilter(const QString &site_path, con
 	settings.beginGroup(SITES_KEY);
 	settings.beginGroup(site_path);
 	settings.beginGroup(CHANNEL_FILTERS_KEY);
-	return settings.value(name).toStringList();
+
+	QStringList paths = settings.value(name).toStringList();
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
+	return QSet<QString>::fromList(paths);
+#else
+	return QSet<QString>(paths.begin(), paths.end());
+#endif
 }
 
 void ChannelFilterDialog::deleteChannelFilter(const QString &name)
@@ -186,11 +200,11 @@ void ChannelFilterDialog::onDeleteFilterClicked()
 void ChannelFilterDialog::onCbFiltersActivated(int index)
 {
 	if (index > -1) {
-		QStringList channels = loadChannelFilter(m_sitePath, ui->cbFilters->currentText());
+		QSet<QString> channels = loadChannelFilter(m_sitePath, ui->cbFilters->currentText());
 		setSelectedChannels(channels);
 	}
 	else {
-		setSelectedChannels(QStringList());
+		setSelectedChannels(QSet<QString>());
 	}
 
 	m_isSelectedFilterDirty = false;

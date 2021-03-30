@@ -19,7 +19,6 @@ public:
 	explicit LogSortFilterProxyModel(QObject *parent = nullptr);
 
 	void setChannelFilter(const shv::visu::timeline::ChannelFilter &filter);
-	void setFilterShvPaths(const QStringList &shv_paths);
 	void setShvPathColumn(int column);
 	void setValueColumn(int column);
 	void setFulltextFilter(const shv::visu::timeline::FullTextFilter &filter);

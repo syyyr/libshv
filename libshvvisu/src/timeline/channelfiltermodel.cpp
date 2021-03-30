@@ -4,6 +4,8 @@
 #include <shv/coreqt/log.h>
 #include <shv/core/utils/shvpath.h>
 
+#include <QSet>
+
 namespace cp = shv::chainpack;
 
 namespace shv {
@@ -22,11 +24,11 @@ ChannelFilterModel::~ChannelFilterModel()
 
 }
 
-void ChannelFilterModel::createNodes(const QStringList &logged_paths)
+void ChannelFilterModel::createNodes(const QSet<QString> &channels)
 {
 	beginResetModel();
 
-	for (auto shv_path: logged_paths){
+	for (const auto &shv_path: channels) {
 //		if (shv_path.section("/", -1) == "status"){
 //			continue;
 //		}
@@ -36,17 +38,17 @@ void ChannelFilterModel::createNodes(const QStringList &logged_paths)
 	endResetModel();
 }
 
-QStringList ChannelFilterModel::selectedChannels()
+QSet<QString> ChannelFilterModel::selectedChannels()
 {
-	QStringList channels;
+	QSet<QString> channels;
 	selectedChannels_helper(&channels, invisibleRootItem());
 	return channels;
 }
 
-void ChannelFilterModel::selectedChannels_helper(QStringList *channels, QStandardItem *it)
+void ChannelFilterModel::selectedChannels_helper(QSet<QString> *channels, QStandardItem *it)
 {
 	if ((it != invisibleRootItem()) && (it->data(UserData::ValidLogEntry).toBool()) && (it->checkState() == Qt::CheckState::Checked)){
-		channels->append(shvPathFromItem(it));
+		channels->insert(shvPathFromItem(it));
 	}
 
 	for (int row = 0; row < it->rowCount(); row++) {
@@ -55,11 +57,11 @@ void ChannelFilterModel::selectedChannels_helper(QStringList *channels, QStandar
 	}
 }
 
-void ChannelFilterModel::setSelectedChannels(const QStringList &channels)
+void ChannelFilterModel::setSelectedChannels(const QSet<QString> &channels)
 {
 	setChildItemsCheckedState(invisibleRootItem(), Qt::CheckState::Unchecked);
 
-	for (auto ch: channels) {
+	for (const auto &ch: channels) {
 		QStandardItem *it = shvPathToItem(ch, invisibleRootItem());
 
 		if (it) {

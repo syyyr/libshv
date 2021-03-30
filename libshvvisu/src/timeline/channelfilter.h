@@ -12,13 +12,13 @@ namespace timeline {
 class SHVVISU_DECL_EXPORT ChannelFilter
 {
 public:
-	ChannelFilter(const QStringList &matching_paths = QStringList());
+	ChannelFilter(const QSet<QString> &matching_paths = QSet<QString>());
 
 	void addMatchingPath(const QString &shv_path);
 	void removeMatchingPath(const QString &shv_path);
 
-	QStringList matchingPaths() const;
-	void setMatchingPaths(const QStringList &paths);
+	QSet<QString> matchingPaths() const;
+	void setMatchingPaths(const QSet<QString> &paths);
 
 	bool isPathMatch(const QString &path) const;
 private:
