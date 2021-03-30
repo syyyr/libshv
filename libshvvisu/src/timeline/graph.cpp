@@ -190,12 +190,12 @@ void Graph::showAllChannels()
 	emit channelFilterChanged();
 }
 
-QStringList Graph::channelPaths()
+QSet<QString> Graph::channelPaths()
 {
-	QStringList shv_paths;
+	QSet<QString> shv_paths;
 
 	for (int i = 0; i < m_channels.count(); ++i) {
-		shv_paths.append(m_channels[i]->shvPath());
+		shv_paths.insert(m_channels[i]->shvPath());
 	}
 
 	return shv_paths;
@@ -203,12 +203,12 @@ QStringList Graph::channelPaths()
 
 void Graph::hideFlatChannels()
 {
-	QStringList matching_paths = m_channelFilter.matchingPaths();
+	QSet<QString> matching_paths = m_channelFilter.matchingPaths();
 
 	for (int i = 0; i < m_channels.count(); ++i) {
 		GraphChannel *ch = m_channels[i];
 		if(isChannelFlat(ch)) {
-			matching_paths.removeOne(ch->shvPath());
+			matching_paths.remove(ch->shvPath());
 		}
 	}
 

@@ -25,10 +25,10 @@ public:
 	explicit ChannelFilterDialog(QWidget *parent = nullptr);
 	~ChannelFilterDialog();
 
-	void init(const QString &site_path, const QStringList &logged_paths);
+	void init(const QString &site_path, const QSet<QString> &logged_paths);
 
-	QStringList selectedChannels();
-	void setSelectedChannels(const QStringList &channels);
+	QSet<QString> selectedChannels();
+	void setSelectedChannels(const QSet<QString> &channels);
 
 	void loadFilter(const QString &name);
 	QString selectedFilterName() const;
@@ -36,7 +36,7 @@ public:
 	void setSettingsUserName(const QString &user);
 
 	static QStringList savedFilterNames(const QString &site_path, const QString &user_name = DEFAULT_USER_PROFILE);
-	static QStringList loadChannelFilter(const QString &site_path, const QString &name, const QString &user_name = DEFAULT_USER_PROFILE);
+	static QSet<QString> loadChannelFilter(const QString &site_path, const QString &name, const QString &user_name = DEFAULT_USER_PROFILE);
 
 private:
 	void saveChannelFilter(const QString &name);

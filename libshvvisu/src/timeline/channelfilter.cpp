@@ -6,18 +6,14 @@ namespace shv {
 namespace visu {
 namespace timeline {
 
-ChannelFilter::ChannelFilter(const QStringList &matching_paths)
+ChannelFilter::ChannelFilter(const QSet<QString> &matching_paths)
 {
 	setMatchingPaths(matching_paths);
 }
 
-QStringList ChannelFilter::matchingPaths() const
+QSet<QString> ChannelFilter::matchingPaths() const
 {
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-	return m_matchingPaths.toList();
-#else
-	return QStringList(m_matchingPaths.begin(), m_matchingPaths.end());
-#endif
+	return m_matchingPaths;
 }
 
 void ChannelFilter::addMatchingPath(const QString &shv_path)
@@ -30,13 +26,9 @@ void ChannelFilter::removeMatchingPath(const QString &shv_path)
 	m_matchingPaths.remove(shv_path);
 }
 
-void ChannelFilter::setMatchingPaths(const QStringList &paths)
+void ChannelFilter::setMatchingPaths(const QSet<QString> &paths)
 {
-#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-	m_matchingPaths = QSet<QString>::fromList(paths);
-#else
-	m_matchingPaths = QSet<QString>(paths.begin(), paths.end());
-#endif
+	m_matchingPaths = paths;
 }
 
 bool ChannelFilter::isPathMatch(const QString &path) const
