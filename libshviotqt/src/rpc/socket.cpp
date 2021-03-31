@@ -113,7 +113,7 @@ SslSocket::SslSocket(QSslSocket *socket, QSslSocket::PeerVerifyMode peer_verify_
 	*/
 	disconnect(m_socket, &QTcpSocket::connected, this, &Socket::connected);
 	connect(socket, &QSslSocket::encrypted, this, &Socket::connected);
-	connect(socket, qOverload<const QList<QSslError> &>(&QSslSocket::sslErrors), this, &Socket::sslErrors);
+	connect(socket, QOverload<const QList<QSslError> &>::of(&QSslSocket::sslErrors), this, &Socket::sslErrors);
 }
 
 void SslSocket::connectToHost(const QString &host_name, quint16 port)
