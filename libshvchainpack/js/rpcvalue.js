@@ -142,6 +142,11 @@ RpcValue.prototype.toCpon = function()
 	return wr.ctx.buffer();
 }
 
+RpcValue.prototype.toCponAsString = function()
+{
+	return Cpon.utf8ToString(this.toCpon());
+}
+
 RpcValue.prototype.toChainPack = function()
 {
 	let wr = new ChainPackWriter();

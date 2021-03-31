@@ -287,7 +287,7 @@ ChainPackReader.prototype.readMap = function()
 			throw new TypeError("Malformed map, invalid key");
 		let val = this.read()
 		if(key.type === RpcValue.Type.String)
-			map[key.toString().slice(1, -1)] = val;
+			map[key.toString()] = val;
 		else
 			map[key.toInt()] = val;
 	}

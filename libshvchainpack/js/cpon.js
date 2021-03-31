@@ -480,7 +480,7 @@ CponReader.prototype.readMap = function(rpc_val, terminator = "}".charCodeAt(0))
 		this.skipWhiteIsignificant();
 		let val = this.read()
 		if(key.type === RpcValue.Type.String)
-			map[key.toString().slice(1, -1)] = val;
+			map[key.toString()] = val;
 		else
 			map[key.toInt()] = val;
 	}

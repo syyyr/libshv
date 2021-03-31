@@ -47,6 +47,7 @@ class Test
 			["[1,2,3]", null],
 			["[[]]", null],
 			["{\"foo\":\"bar\"}", null],
+			["{\"login\":{\"password\":\"lautr\",\"type\":\"PLAIN\",\"user\":\"revitest\"}}", null],
 			["i{1:2}", null],
 			["i{\n\t1: \"bar\",\n\t345u : \"foo\",\n}", "i{1:\"bar\",345:\"foo\"}"],
 			["[1u,{\"a\":1},2.30]", null],
@@ -79,13 +80,13 @@ class Test
 			let cpon2 = lst[1]? lst[1]: cpon1;
 
 			let rv1 = RpcValue.fromCpon(cpon1);
-			let cpn1 = rv1.toString();
+			let cpn1 = rv1.toCponAsString();
 			log(cpon1, "\t--cpon------>\t", cpn1)
 			this.checkEq(cpn1, cpon2);
 
 			let cpk1 = rv1.toChainPack();
 			let rv2 = RpcValue.fromChainPack(cpk1);
-			let cpn2 = rv2.toString();
+			let cpn2 = rv2.toCponAsString();
 			log(cpn1, "\t--chainpack->\t", cpn2, "\n")
 			this.checkEq(cpn1, cpn2);
 		}
