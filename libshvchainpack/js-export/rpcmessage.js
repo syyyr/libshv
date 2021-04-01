@@ -26,6 +26,7 @@ function RpcMessage(rpc_val)
 RpcMessage.TagRequestId = "8";
 RpcMessage.TagShvPath = "9";
 RpcMessage.TagMethod = "10";
+RpcMessage.TagCallerIds = "11";
 
 RpcMessage.KeyParams = "1";
 RpcMessage.KeyResult = "2";
@@ -38,6 +39,9 @@ RpcMessage.prototype.isSignal = function() {return !this.requestId() && this.met
 
 RpcMessage.prototype.requestId = function() {return this.isValid()? this.rpcValue.meta[RpcMessage.TagRequestId]: 0; }
 RpcMessage.prototype.setRequestId = function(id) {return this.rpcValue.meta[RpcMessage.TagRequestId] = id; }
+
+RpcMessage.prototype.callerIds = function() {return this.isValid()? this.rpcValue.meta[RpcMessage.TagCallerIds]: []; }
+RpcMessage.prototype.setCallerIds = function(id) {return this.rpcValue.meta[RpcMessage.TagCallerIds] = id; }
 
 RpcMessage.prototype.shvPath = function() {return this.isValid()? this.rpcValue.meta[RpcMessage.TagShvPath]: null; }
 RpcMessage.prototype.setShvPath = function(val) {return this.rpcValue.meta[RpcMessage.TagShvPath] = val; }
@@ -54,7 +58,7 @@ RpcMessage.prototype.setResult = function(result) {return this.rpcValue.value[Rp
 RpcMessage.prototype.error = function() {return this.isValid()? this.rpcValue.value[RpcMessage.KeyError]: null; }
 RpcMessage.prototype.setError = function(err) {return this.rpcValue.value[RpcMessage.KeyError] = err; }
 
-RpcMessage.prototype.toString = function() {return this.isValid() ? this.rpcValue.toString() : ""; }
+RpcMessage.prototype.toString = function() {return this.isValid()? this.rpcValue.toString(): ""; }
 RpcMessage.prototype.toCpon = function() {return this.isValid()? this.rpcValue.toCpon(): ""; }
 RpcMessage.prototype.toChainPack = function() {return this.isValid()? this.rpcValue.toChainPack(): ""; }
 

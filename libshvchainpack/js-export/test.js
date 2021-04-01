@@ -1,9 +1,7 @@
 /* eslint-disable */
 "use strict"
 
-import { RpcValue } from './rpcvalue'
-
-export class Test
+class Test
 {
 	checkEq(e1, e2, msg)
 	{
@@ -41,7 +39,9 @@ export class Test
 			["12.3e-10", "123e-11"],
 			["-0.00012", "-12e-5"],
 			["-1234567890.", "-1234567890."],
-			["\"foo\"", null],
+			['"foo"', null],
+			['b"a1\\xd2"', null],
+			['x"6131d2"', 'b"a1\\xd2"'],
 			["[]", null],
 			["[1]", null],
 			["[1,]", "[1]"],
@@ -105,6 +105,24 @@ export class Test
 		this.checkEq(v4.value.epochMsec, v1.value.epochMsec);
 	}
 
+	testMapKeys()
+	{
+		{
+			let c1 = '{"1":"a"}';
+			let v1 = RpcValue.fromCpon(c1);
+			let c2 = v1.toString();
+			log(c1, " vs. ", c2)
+			this.checkEq(c1, c2);
+		}
+		{
+			let c1 = 'i{1:"a"}';
+			let v1 = RpcValue.fromCpon(c1);
+			let c2 = v1.toString();
+			log(c1, " vs. ", c2)
+			this.checkEq(c1, c2);
+		}
+	}
+
 	static run()
 	{
 		//try {
@@ -123,6 +141,7 @@ export class Test
 
 			t.testConversions();
 			t.testDateTime();
+			t.testMapKeys();
 
 			log("PASSED")
 		//}

@@ -67,26 +67,31 @@ PackContext.prototype.writeStringUtf8 = function(str)
 {
 	for (let i=0; i < str.length; i++) {
 		let charcode = str.charCodeAt(i);
-		if (charcode < 0x80)
-			this.putByte(charcode);
-		else if (charcode < 0x800) {
-			this.putByte(0xc0 | (charcode >> 6));
-			this.putByte(0x80 | (charcode & 0x3f));
-		}
-		else if (charcode < 0xd800 || charcode >= 0xe000) {
-			this.putByte(0xe0 | (charcode >> 12));
-			this.putByte(0x80 | ((charcode>>6) & 0x3f));
-			this.putByte(0x80 | (charcode & 0x3f));
-		}
-		// surrogate pair
-		else {
-			i++;
-			charcode = ((charcode&0x3ff)<<10)|(str.charCodeAt(i)&0x3ff)
-			this.putByte(0xf0 | (charcode >>18));
-			this.putByte(0x80 | ((charcode>>12) & 0x3f));
-			this.putByte(0x80 | ((charcode>>6) & 0x3f));
-			this.putByte(0x80 | (charcode & 0x3f));
-		}
+		this.writeCharCodeUtf8(charcode);
+	}
+}
+
+PackContext.prototype.writeCharCodeUtf8 = function(charcode)
+{
+	if (charcode < 0x80)
+		this.putByte(charcode);
+	else if (charcode < 0x800) {
+		this.putByte(0xc0 | (charcode >> 6));
+		this.putByte(0x80 | (charcode & 0x3f));
+	}
+	else if (charcode < 0xd800 || charcode >= 0xe000) {
+		this.putByte(0xe0 | (charcode >> 12));
+		this.putByte(0x80 | ((charcode>>6) & 0x3f));
+		this.putByte(0x80 | (charcode & 0x3f));
+	}
+	// surrogate pair
+	else {
+		i++;
+		charcode = ((charcode&0x3ff)<<10)|(str.charCodeAt(i)&0x3ff)
+		this.putByte(0xf0 | (charcode >>18));
+		this.putByte(0x80 | ((charcode>>12) & 0x3f));
+		this.putByte(0x80 | ((charcode>>6) & 0x3f));
+		this.putByte(0x80 | (charcode & 0x3f));
 	}
 }
 /*
