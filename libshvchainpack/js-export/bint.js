@@ -46,7 +46,7 @@ BInt.prototype.byteCount = function()
 BInt.prototype.resize = function(byte_cnt)
 {
 	if(!(this.val instanceof Uint8Array))
-		throw TypeError(n + " cannot be resized");
+		throw TypeError(this.val + " cannot be resized");
 	if(byte_cnt < this.val.length) {
 		this.val = this.val.subarray(this.val.length - byte_cnt)
 	}

@@ -10,6 +10,26 @@ function Cpon()
 
 Cpon.ProtocolType = 2;
 
+Cpon.hexify = function(byte)
+{
+	if(byte < 10)
+		return 48 + byte;
+	if(byte < 16)
+		return 97 + byte - 10;
+	return '?'.charCodeAt(0);
+}
+
+Cpon.unhex = function(byte)
+{
+	if(byte >= 48 && byte <= 57) // 0-9
+		return byte - 48;
+	if(byte >= 65 && byte <= 70) // A-F
+		return byte - 65 + 10;
+	if(byte >= 97 && byte <= 102) // a-f
+		return byte - 97 + 10;
+	throw TypeError("Invalid HEX digit: " + byte)
+}
+
 Cpon.utf8ToString = function(bytearray)
 {
 	let uint8_array = new Uint8Array(bytearray)
@@ -128,6 +148,26 @@ CponReader.prototype.read = function()
 	}
 	else if(b == '"'.charCodeAt(0)) {
 		this.readCString(ret);
+	}
+	else if(b == 'b'.charCodeAt(0)) {
+		this.ctx.getByte();
+		b = this.ctx.peekByte();
+		if(b == "\"".charCodeAt(0)) {
+			this.readBlobEsc(ret);
+		}
+		else {
+			throw TypeError("Invalid Blob prefix.")
+		}
+	}
+	else if(b == 'x'.charCodeAt(0)) {
+		this.ctx.getByte();
+		b = this.ctx.peekByte();
+		if(b == "\"".charCodeAt(0)) {
+			this.readBlobHex(ret);
+		}
+		else {
+			throw TypeError("Invalid HEX Blob prefix.")
+		}
 	}
 	else if(b == "[".charCodeAt(0)) {
 		this.readList(ret);
@@ -322,13 +362,13 @@ CponReader.prototype.readCString = function(rpc_val)
 		if(b == '\\'.charCodeAt(0)) {
 			b = this.ctx.getByte();
 			switch (b) {
-			case '\\'.charCodeAt(0): pctx.putByte("\\"); break;
-			case '"'.charCodeAt(0): pctx.putByte('"'); break;
-			case 'b'.charCodeAt(0): pctx.putByte("\b"); break;
-			case 'f'.charCodeAt(0): pctx.putByte("\f"); break;
-			case 'n'.charCodeAt(0): pctx.putByte("\n"); break;
-			case 'r'.charCodeAt(0): pctx.putByte("\r"); break;
-			case 't'.charCodeAt(0): pctx.putByte("\t"); break;
+			case '\\'.charCodeAt(0): pctx.putByte('\\'.charCodeAt(0)); break;
+			case '"'.charCodeAt(0): pctx.putByte('"'.charCodeAt(0)); break;
+			case 'b'.charCodeAt(0): pctx.putByte('\b'.charCodeAt(0)); break;
+			case 'f'.charCodeAt(0): pctx.putByte('\f'.charCodeAt(0)); break;
+			case 'n'.charCodeAt(0): pctx.putByte('\n'.charCodeAt(0)); break;
+			case 'r'.charCodeAt(0): pctx.putByte('\r'.charCodeAt(0)); break;
+			case 't'.charCodeAt(0): pctx.putByte('\t'.charCodeAt(0)); break;
 			case '0'.charCodeAt(0): pctx.putByte(0); break;
 			default: pctx.putByte(b); break;
 			}
@@ -343,10 +383,72 @@ CponReader.prototype.readCString = function(rpc_val)
 			}
 		}
 	}
-	rpc_val.value = pctx.buffer();
+	rpc_val.value = Cpon.utf8ToString(pctx.buffer());
 	rpc_val.type = RpcValue.Type.String;
 }
 
+CponReader.prototype.readBlobEsc = function(rpc_val)
+{
+	let pctx = new PackContext();
+	this.ctx.getByte(); // eat '"'
+	while(true) {
+		let b = this.ctx.getByte();
+		if(b == '\\'.charCodeAt(0)) {
+			b = this.ctx.getByte();
+			switch (b) {
+			case '\\'.charCodeAt(0): pctx.putByte('\\'.charCodeAt(0)); break;
+			case '"'.charCodeAt(0): pctx.putByte('"'.charCodeAt(0)); break;
+			//case 'b'.charCodeAt(0): pctx.putByte('\b'.charCodeAt(0)); break;
+			//case 'f'.charCodeAt(0): pctx.putByte('\f'.charCodeAt(0)); break;
+			case 'n'.charCodeAt(0): pctx.putByte('\n'.charCodeAt(0)); break;
+			case 'r'.charCodeAt(0): pctx.putByte('\r'.charCodeAt(0)); break;
+			case 't'.charCodeAt(0): pctx.putByte('\t'.charCodeAt(0)); break;
+			case '0'.charCodeAt(0): pctx.putByte(0); break;
+			case 'x'.charCodeAt(0): {
+				let b2 = Cpon.unhex(this.ctx.getByte()) * 16 + Cpon.unhex(this.ctx.getByte());
+				pctx.putByte(b2);
+				break;
+			}
+			default:
+				throw TypeError("Invalid escaped Blob character, code: " + b);
+				break;
+			}
+		}
+		else {
+			if (b == '"'.charCodeAt(0)) {
+				// end of string
+				break;
+			}
+			else {
+				if(b < 128)
+					pctx.putByte(b);
+				else
+					throw TypeError("Escaped Blob characters must be lower than 128, code: " + b);
+			}
+		}
+	}
+	rpc_val.value = pctx.buffer();
+	rpc_val.type = RpcValue.Type.Blob;
+}
+
+CponReader.prototype.readBlobHex = function(rpc_val)
+{
+	let pctx = new PackContext();
+	this.ctx.getByte(); // eat '"'
+	while(true) {
+		let b = this.ctx.getByte();
+		if (b == '"'.charCodeAt(0)) {
+			// end of string
+			break;
+		}
+		else {
+			let b2 = Cpon.unhex(b) * 16 + Cpon.unhex(this.ctx.getByte());
+			pctx.putByte(b2);
+		}
+	}
+	rpc_val.value = pctx.buffer();
+	rpc_val.type = RpcValue.Type.Blob;
+}
 CponReader.prototype.readList = function(rpc_val)
 {
 	let lst = []
@@ -382,7 +484,7 @@ CponReader.prototype.readMap = function(rpc_val, terminator = "}".charCodeAt(0))
 		this.skipWhiteIsignificant();
 		let val = this.read()
 		if(key.type === RpcValue.Type.String)
-			map[key.toString().slice(1, -1)] = val;
+			map[key.toString()] = val;
 		else
 			map[key.toInt()] = val;
 	}
@@ -530,7 +632,8 @@ CponWriter.prototype.write = function(rpc_val)
 		switch (rpc_val.type) {
 		case RpcValue.Type.Null: this.ctx.writeStringUtf8("null"); break;
 		case RpcValue.Type.Bool: this.writeBool(rpc_val.value); break;
-		case RpcValue.Type.String: this.writeCString(rpc_val.value); break;
+		case RpcValue.Type.String: this.writeJSString(rpc_val.value); break;
+		case RpcValue.Type.Blob: this.writeBlob(rpc_val.value); break;
 		case RpcValue.Type.UInt: this.writeUInt(rpc_val.value); break;
 		case RpcValue.Type.Int: this.writeInt(rpc_val.value); break;
 		case RpcValue.Type.Double: this.writeDouble(rpc_val.value); break;
@@ -577,13 +680,12 @@ CponWriter.prototype.writeStringUtf8 = function(str)
 	}
 }
 */
-CponWriter.prototype.writeCString = function(buffer)
+CponWriter.prototype.writeJSString = function(str)
 {
 	this.ctx.writeStringUtf8("\"");
-	let data = new Uint8Array(buffer);
-	for (let i=0; i < data.length; i++) {
-		let b = data[i];
-		switch(b) {
+	for (let i=0; i < str.length; i++) {
+		let charcode = str.charCodeAt(i);
+		switch(charcode) {
 		case 0:
 			this.ctx.writeStringUtf8("\\0");
 			break;
@@ -606,7 +708,46 @@ CponWriter.prototype.writeCString = function(buffer)
 			this.ctx.writeStringUtf8("\\\"");
 			break;
 		default:
-			this.ctx.putByte(b);
+			this.ctx.writeCharCodeUtf8(charcode);
+		}
+	}
+	this.ctx.writeStringUtf8("\"");
+}
+
+CponWriter.prototype.writeBlob = function(buffer)
+{
+	this.ctx.writeStringUtf8("b\"");
+	let data = new Uint8Array(buffer);
+	for (let i=0; i < data.length; i++) {
+		let b = data[i];
+		switch(b) {
+		case 0:
+			this.ctx.writeStringUtf8("\\0");
+			break;
+		case '\\'.charCodeAt(0):
+			this.ctx.writeStringUtf8("\\\\");
+			break;
+		case '\t'.charCodeAt(0):
+			this.ctx.writeStringUtf8("\\t");
+			break;
+		case '\r'.charCodeAt(0):
+			this.ctx.writeStringUtf8("\\r");
+			break;
+		case '\n'.charCodeAt(0):
+			this.ctx.writeStringUtf8("\\n");
+			break;
+		case '"'.charCodeAt(0):
+			this.ctx.writeStringUtf8("\\\"");
+			break;
+		default:
+			if (b < 128) {
+				this.ctx.putByte(b);
+			}
+			else {
+				this.ctx.writeStringUtf8("\\x");
+				this.ctx.putByte(Cpon.hexify(b / 16));
+				this.ctx.putByte(Cpon.hexify(b % 16));
+			}
 		}
 	}
 	this.ctx.writeStringUtf8("\"");
@@ -654,40 +795,50 @@ CponWriter.prototype.writeBool = function(b)
 CponWriter.prototype.writeMeta = function(map)
 {
 	this.ctx.writeStringUtf8("<");
-	this.writeMapContent(map);
+	this.writeMapContent(map, RpcValue.Type.Meta);
 	this.ctx.writeStringUtf8(">")
 }
 
 CponWriter.prototype.writeIMap = function(map)
 {
 	this.ctx.writeStringUtf8("i{");
-	this.writeMapContent(map);
+	this.writeMapContent(map, RpcValue.Type.IMap);
 	this.ctx.writeStringUtf8("}")
 }
 
 CponWriter.prototype.writeMap = function(map)
 {
 	this.ctx.writeStringUtf8("{")
-	this.writeMapContent(map);
+	this.writeMapContent(map, RpcValue.Type.Map);
 	this.ctx.writeStringUtf8("}")
 }
 
-CponWriter.prototype.writeMapContent = function(map)
+CponWriter.prototype.writeMapContent = function(map, map_type)
 {
 	let i = 0;
 	for (let p in map) {
 		if (map.hasOwnProperty(p)) {
 			if(i++ > 0)
 				this.ctx.putByte(",".charCodeAt(0))
-			let c = p.charCodeAt(0);
-			if(c >= 48 && c <= 57) {
-				this.writeInt(parseInt(p))
-			}
-			else {
+			do {
+				if(map_type == RpcValue.Type.IMap || map_type == RpcValue.Type.Meta) {
+					let c = p.charCodeAt(0);
+					if(c >= 48 && c <= 57) {
+						let i = parseInt(p);
+						if(isNaN(i)) {
+							if(map_type == RpcValue.Type.IMap)
+								throw TypeError("Invalid IMap key: " + p);
+						}
+						else {
+							this.writeInt(i);
+							break;
+						}
+					}
+				}
 				this.ctx.putByte('"'.charCodeAt(0))
 				this.ctx.writeStringUtf8(p);
 				this.ctx.putByte('"'.charCodeAt(0))
-			}
+			} while(false);
 			this.ctx.writeStringUtf8(":")
 			this.write(map[p]);
 		}
