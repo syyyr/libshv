@@ -33,9 +33,12 @@ size_t String::lastIndexOf(char c) const
 {
 	if(empty())
 		return std::string::npos;
-	for (size_t i = size() - 1; i >= 0; i--)
+	for (size_t i = size() - 1; ; i--) {
 		if(at(i) == c)
 			return i;
+		if(i == 0)
+			break;
+	}
 	return std::string::npos;
 }
 
