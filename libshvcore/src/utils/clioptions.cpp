@@ -465,6 +465,20 @@ std::string ConfigCLIOptions::configFile()
 	return config_file;
 }
 
+std::string ConfigCLIOptions::effectiveConfigDir()
+{
+	if(!configDir().empty())
+		return configDir();
+	String cfg = config();
+	if(!cfg.empty() && cfg[0] == '/') {
+		auto ix = cfg.lastIndexOf('/');
+		if(ix != std::string::npos) {
+			return  cfg.mid(0, ix);
+		}
+	}
+	return applicationDir();
+}
+
 void ConfigCLIOptions::mergeConfig_helper(const std::string &key_prefix, const shv::chainpack::RpcValue &config_map)
 {
 	//shvLogFuncFrame() << key_prefix;

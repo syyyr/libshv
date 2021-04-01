@@ -29,6 +29,7 @@ public:
 	static std::string::size_type indexOf(const std::string & str_haystack, const std::string &str_needle, String::CaseSensitivity case_sensitivity);
 	static std::string::size_type indexOf(const std::string &haystack, char needle);
 	std::string::size_type indexOf(char needle) const { return indexOf(*this, needle); }
+	size_t lastIndexOf(char c) const;
 
 	bool startsWith(const std::string &with) const {return startsWith(*this, with);}
 	bool startsWith(const char c) const {return startsWith(*this, c);}
@@ -56,8 +57,7 @@ public:
 		return ltrim(rtrim(s, t), t);
 	}
 
-	// use substr() instead
-	//static std::string mid(const std::string& s, unsigned pos, unsigned cnt = std::numeric_limits<unsigned>::max());
+	std::string mid(size_t pos, size_t cnt = std::string::npos) { return substr(pos, cnt); }
 
 	static std::pair<size_t, size_t> indexOfBrackets(const std::string &haystack, size_t begin_pos, size_t end_pos, const std::string &open_bracket, const std::string &close_bracket);
 	static std::vector<std::string> split(const std::string &str, char delim, SplitBehavior split_behavior = SkipEmptyParts);

@@ -29,6 +29,16 @@ std::string::size_type String::indexOf(const std::string &haystack, char needle)
 	return std::string::npos;
 }
 
+size_t String::lastIndexOf(char c) const
+{
+	if(empty())
+		return std::string::npos;
+	for (size_t i = size() - 1; i >= 0; i--)
+		if(at(i) == c)
+			return i;
+	return std::string::npos;
+}
+
 bool String::endsWith(const std::string &str, const std::string &with)
 {
 	if(str.size() < with.size())
