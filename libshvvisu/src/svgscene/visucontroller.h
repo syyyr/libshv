@@ -61,6 +61,36 @@ protected:
 		}
 		return nullptr;
 	}
+
+	template<typename T>
+	QList<T> findChildGraphicsItems(const QString &attr_name = QString()) const
+	{
+		return findChildGraphicsItems<T>(m_graphicsItem, attr_name);
+	}
+
+	template<typename T>
+	static QList<T> findChildGraphicsItems(const QGraphicsItem *parent_it, const QString &attr_name = QString())
+	{
+		QList<T> ret;
+
+		if(!parent_it)
+			return ret;
+
+		for(QGraphicsItem *it : parent_it->childItems()) {
+			if(T tit = dynamic_cast<T>(it)) {
+				if(attr_name.isEmpty()) {
+					ret << tit;
+				}
+				else {
+					svgscene::XmlAttributes attrs = qvariant_cast<svgscene::XmlAttributes>(tit->data(Types::DataKey::XmlAttributes));
+					if(attrs.contains(attr_name))
+						ret << tit;
+				}
+			}
+			ret << findChildGraphicsItems<T>(it, attr_name);
+		}
+		return ret;
+	}
 protected:
 	QGraphicsItem *m_graphicsItem;
 };
