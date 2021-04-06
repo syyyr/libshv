@@ -555,19 +555,16 @@ int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, ssize_t *p_
 		std::string chunk(buff, static_cast<size_t>(n));
 		logDShvJournal() << "fpos:" << fpos << "chunk:" << chunk;
 		size_t line_start_pos = 0;
-		if(fpos == 0) {
-			line_start_pos = 0;
-		}
-		else {
-			auto pos = chunk.length() - 1;
-			// remove trailing blanks, like trailing '\n' in log file
-			for(; pos > 0; --pos)
-				if(!(chunk[pos] == '\n' || chunk[pos] == '\t' || chunk[pos] == ' '))
-					break;
-			line_start_pos = chunk.rfind(RECORD_SEPARATOR, pos);
-			if(line_start_pos != std::string::npos)
-				line_start_pos++;
-		}
+
+		auto pos = chunk.length() - 1;
+		// remove trailing blanks, like trailing '\n' in log file
+		for(; pos > 0; --pos)
+			if(!(chunk[pos] == '\n' || chunk[pos] == '\t' || chunk[pos] == ' '))
+				break;
+		line_start_pos = chunk.rfind(RECORD_SEPARATOR, pos);
+		if(line_start_pos != std::string::npos)
+			line_start_pos++;
+
 		if(line_start_pos != std::string::npos) {
 			auto tab_pos = chunk.find(FIELD_SEPARATOR, line_start_pos);
 			if(tab_pos != std::string::npos) {
