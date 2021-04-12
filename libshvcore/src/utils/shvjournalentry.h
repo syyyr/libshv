@@ -21,8 +21,11 @@ public:
 	static const char *DOMAIN_SHV_COMMAND;
 
 	static const char* PATH_APP_START;
-	static const char* PATH_SNAPSHOT_BEGIN;
-	static const char* PATH_SNAPSHOT_END;
+	// snapshot begin-end cannot be implemented in the consistent way
+	// for example: getLog() with since == log-file-beginning, have to parse log file to find snapshot-end
+	// without this feature we can use just log reply even filtered
+	//static const char* PATH_SNAPSHOT_BEGIN;
+	//static const char* PATH_SNAPSHOT_END;
 	static const char* PATH_DATA_MISSING;
 	static const char* PATH_DATA_DIRTY;
 
