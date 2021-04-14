@@ -263,6 +263,14 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 		rootNode()->emitLogUserCommand(e);
 	}
 
+	if(mm_access_level == cp::MetaMethod::AccessLevel::Command) {
+		cp::RpcSignal sig;
+		sig.setMethod(cp::Rpc::SIG_VAL_CHANGED);
+		sig.setShvPath(shvPath());
+		sig.setParams(method);
+		emitSendRpcMessage(sig);
+	}
+
 	return callMethodRq(rq);
 }
 
