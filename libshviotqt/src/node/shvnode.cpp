@@ -254,21 +254,27 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 		SHV_EXCEPTION(std::string("Call method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' permission denied, grant: " + rq_grant.toCpon() + " required: " + mm_grant.toCpon());
 
 	if(mm_access_level >= cp::MetaMethod::AccessLevel::Write) {
+
+
 		shv::core::utils::ShvJournalEntry e(shvPath()
 											, method + '(' + rq.params().toCpon() + ')'
 											, shv::core::utils::ShvJournalEntry::DOMAIN_SHV_COMMAND
 											, shv::core::utils::ShvJournalEntry::NO_SHORT_TIME
 											, cp::DataChange::SampleType::Discrete);
+
 		e.userId = rq.userId().toString();
 		rootNode()->emitLogUserCommand(e);
-	}
 
-	if(mm_access_level == cp::MetaMethod::AccessLevel::Command) {
+		cp::DataChange dc(method + '(' + rq.params().toCpon() + ')', cp::RpcValue::DateTime::now());
+		dc.setDomain(shv::core::utils::ShvJournalEntry::DOMAIN_SHV_COMMAND);
+		dc.setSampleType(cp::DataChange::SampleType::Discrete);
+
 		cp::RpcSignal sig;
 		sig.setMethod(cp::Rpc::SIG_VAL_CHANGED);
 		sig.setShvPath(shvPath());
-		sig.setParams(method);
+		sig.setParams(dc.toRpcValue());
 		emitSendRpcMessage(sig);
+
 	}
 
 	return callMethodRq(rq);
