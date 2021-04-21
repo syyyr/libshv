@@ -35,6 +35,7 @@ public:
 	static const char* METH_PING;
 	static const char* METH_ECHO;
 	static const char* METH_APP_NAME;
+	static const char* METH_APP_VERSION;
 	static const char* METH_DEVICE_ID;
 	static const char* METH_DEVICE_TYPE;
 	static const char* METH_CLIENT_ID;
