@@ -1096,27 +1096,31 @@ bool SaxHandler::startElement()
 		}
 		else if (el.name == QLatin1String("text")) {
 			QGraphicsRectItem *item = new QGraphicsRectItem();
+			//item->setBrush(Qt::magenta);
+			//item->setRect(0, 0, 100, 100);
 			setXmlAttributes(item, el);
-			//qreal x = attributes.value(QLatin1String("x")).toDouble();
-			//qreal y = attributes.value(QLatin1String("y")).toDouble();
-			//text->setPos(x, y);
 			setStyle(item, el.styleAttributes);
+			qreal x = toDouble(el.xmlAttributes.value(QStringLiteral("x")));
+			qreal y = toDouble(el.xmlAttributes.value(QStringLiteral("y")));
+			//item->setPos(-x, -y);
 			setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
+			QTransform t;
+			t.translate(x, y);
+			item->setTransform(t, true);
 			addItem(item);
 			return true;
 		}
 		else if (el.name == QLatin1String("tspan")) {
 			SimpleTextItem *item = new SimpleTextItem(el.styleAttributes);
 			setXmlAttributes(item, el);
-			qreal x = toDouble(el.xmlAttributes.value(QStringLiteral("x")));
-			qreal y = toDouble(el.xmlAttributes.value(QStringLiteral("y")));
-			//text->setPos(x, y);
 			setStyle(item, el.styleAttributes);
 			setTextStyle(item, el.styleAttributes);
 			setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
 			QFontMetricsF fm(item->font());
 			QTransform t;
-			t.translate(x, y - fm.ascent());
+			//qreal x = toDouble(el.xmlAttributes.value(QStringLiteral("x")));
+			//qreal y = toDouble(el.xmlAttributes.value(QStringLiteral("y")));
+			t.translate(0, 0 - fm.ascent());
 			item->setTransform(t, true);
 			addItem(item);
 			return true;
