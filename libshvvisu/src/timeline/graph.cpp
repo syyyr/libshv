@@ -1607,9 +1607,10 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 	//if(channel_ix != crossBarPos().channelIndex)
 	//	return;
 	const GraphChannel *ch = channelAt(channel_ix);
-	if(ch->graphDataGridRect().left() >= crossbar_pos.x() || ch->graphDataGridRect().right() <= crossbar_pos.y())
+	if(ch->graphDataGridRect().left() >= crossbar_pos.x() || ch->graphDataGridRect().right() <= crossbar_pos.x()) {
 		return;
-	shvMessage() << "drawCrossHair:" << ch->shvPath();
+	}
+	shvDebug() << "drawCrossHair:" << ch->shvPath();
 	painter->save();
 	QColor color = m_effectiveStyle.colorCrossBar();
 	if(channel_ix == crossHairPos().channelIndex) {
