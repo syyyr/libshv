@@ -582,6 +582,9 @@ const shv::chainpack::MetaMethod *MethodsTableNode::metaMethod(const shv::iotqt:
 }
 
 
+//===========================================================
+// RpcValueMapNode
+//===========================================================
 //static const char M_SIZE[] = "size";
 const char *RpcValueMapNode::M_LOAD = "loadFile";
 const char *RpcValueMapNode::M_SAVE = "saveFile";
@@ -598,16 +601,13 @@ static std::vector<cp::MetaMethod> meta_methods_value_map_root_node {
 };
 
 static std::vector<cp::MetaMethod> meta_methods_value_map_node {
-	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_CONFIG},
-	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_CONFIG},
-	{cp::Rpc::METH_GET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_CONFIG},
-	{cp::Rpc::METH_SET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsSetter, cp::Rpc::ROLE_DEVEL},
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_READ},
+	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_READ},
+	{cp::Rpc::METH_GET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
+	{cp::Rpc::METH_SET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsSetter, cp::Rpc::ROLE_CONFIG},
 	//{M_WRITE, cp::MetaMethod::Signature::RetParam, 0, cp::MetaMethod::AccessLevel::Service},
 };
 
-//===========================================================
-// RpcValueMapNode
-//===========================================================
 RpcValueMapNode::RpcValueMapNode(const std::string &node_id, ShvNode *parent)
 	: Super(node_id, parent)
 {
