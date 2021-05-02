@@ -184,7 +184,7 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 
 void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 {
-	shvLogFuncFrame() << "node:" << nodeId();
+	shvLogFuncFrame() << "node:" << nodeId() << metaObject()->className();
 	const chainpack::RpcValue::String &method = rq.method().asString();
 	const chainpack::RpcValue::String &shv_path_str = rq.shvPath().asString();
 	core::StringViewList shv_path = shv::core::utils::ShvPath::split(shv_path_str);
@@ -192,6 +192,7 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 	try {
 		const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
 		if(mm) {
+			shvDebug() << "Metamethod:" << method << "on path:" << shv_path.join('/') << "FOUND";
 			chainpack::RpcValue ret_val = processRpcRequest(rq);
 			if(ret_val.isValid()) {
 				resp.setResult(ret_val);
@@ -204,6 +205,7 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 			else {
 				ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
 				if(nd) {
+					shvDebug() << "Child node:" << shv_path.at(0).toString() << "on path:" << shv_path.join('/') << "FOUND";
 					std::string new_path = core::StringView::join(++shv_path.begin(), shv_path.end(), '/');
 					chainpack::RpcRequest rq2(rq);
 					//cp::RpcValue::MetaData meta2(meta);
