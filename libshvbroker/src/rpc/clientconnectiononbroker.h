@@ -62,6 +62,7 @@ private:
 private:
 	QTimer *m_idleWatchDogTimer = nullptr;
 	std::string m_mountPoint;
+	QVector<int> m_slaveLsRequestId;
 };
 
 }}}

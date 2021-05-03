@@ -169,6 +169,12 @@ void ClientConnectionOnBroker::sendMessage(const shv::chainpack::RpcMessage &rpc
 
 void ClientConnectionOnBroker::sendRawData(const shv::chainpack::RpcValue::MetaData &meta_data, std::string &&data)
 {
+	if (isSlaveBrokerConnection() &&
+		cp::RpcMessage::method(meta_data).toString() == cp::Rpc::METH_LS &&
+		cp::RpcMessage::shvPath(meta_data).toString().empty() &&
+		cp::RpcMessage::accessGrant(meta_data).toString() == cp::Rpc::ROLE_ADMIN) {
+		m_slaveLsRequestId << cp::RpcMessage::requestId(meta_data).toInt();
+	}
 	logRpcMsg() << SND_LOG_ARROW
 				<< "client id:" << connectionId()
 				<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
@@ -276,6 +282,18 @@ void ClientConnectionOnBroker::onRpcDataReceived(shv::chainpack::Rpc::ProtocolTy
 		}
 		if(m_idleWatchDogTimer)
 			m_idleWatchDogTimer->start();
+		if (isSlaveBrokerConnection() && cp::RpcMessage::isResponse(md)) {
+			int request_id = cp::RpcMessage::requestId(md).toInt();
+			if (m_slaveLsRequestId.contains(request_id)) {
+				cp::RpcValue resp = decodeData(protocol_type, msg_data, 0);
+				shv::chainpack::RpcValue::List result = resp.at(cp::RpcMessage::MetaType::Key::Result).toList();
+				result.push_back(cp::RpcValue::List{ ".local", true });
+				resp.set(cp::RpcMessage::MetaType::Key::Result, result);
+				BrokerApp::instance()->onRpcDataReceived(connectionId(), protocol_type, std::move(md), codeRpcValue(protocol_type, resp));
+				m_slaveLsRequestId.removeOne(request_id);
+				return;
+			}
+		}
 		BrokerApp::instance()->onRpcDataReceived(connectionId(), protocol_type, std::move(md), std::move(msg_data));
 	}
 	catch (std::exception &e) {
