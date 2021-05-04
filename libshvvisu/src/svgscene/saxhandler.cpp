@@ -1118,8 +1118,15 @@ bool SaxHandler::startElement()
 			setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
 			QFontMetricsF fm(item->font());
 			QTransform t;
-			//qreal x = toDouble(el.xmlAttributes.value(QStringLiteral("x")));
-			//qreal y = toDouble(el.xmlAttributes.value(QStringLiteral("y")));
+			qreal x = toDouble(el.xmlAttributes.value(QStringLiteral("x")));
+			qreal y = toDouble(el.xmlAttributes.value(QStringLiteral("y")));
+			if(x != 0 && y != 0 && m_topLevelItem) {
+				// https://www.w3.org/TR/SVG11/text.html#TSpanElement
+				QPointF p(x, y);
+				p = m_topLevelItem->mapFromScene(p);
+				//p = item->mapToParent(p);
+				t.translate(p.x(), p.y());
+			}
 			t.translate(0, 0 - fm.ascent());
 			item->setTransform(t, true);
 			addItem(item);
