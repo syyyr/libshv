@@ -37,6 +37,14 @@
 		} \
 		return false; \
 	}
+
+#define SHV_PROPERTY(ptype, lower_letter, upper_letter, name_rest) \
+	Q_PROPERTY(ptype lower_letter##name_rest READ lower_letter##name_rest WRITE set##upper_letter##name_rest NOTIFY lower_letter##name_rest##Changed) \
+	SHV_PROPERTY_IMPL(ptype, lower_letter, upper_letter, name_rest)
+
+#define SHV_PROPERTY2(ptype, lower_letter, upper_letter, name_rest) \
+	Q_PROPERTY(ptype lower_letter##name_rest READ lower_letter##name_rest WRITE set##upper_letter##name_rest NOTIFY lower_letter##name_rest##Changed) \
+	SHV_PROPERTY_IMPL2(ptype, lower_letter, upper_letter, name_rest, default_value)
 /*
 #define SHV_PROPERTY_BOOL2(name, default_value) \
 	private: bool m_is##name = default_value; \
