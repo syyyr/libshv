@@ -11,8 +11,6 @@ static const char *cpmerge_help =
 "\n"
 "USAGE: cpmerge config.file\n";
 
-shv::chainpack::RpcValue::Map mergeRpcMap(shv::chainpack::RpcValue::Map site_config, shv::chainpack::RpcValue::Map template_config);
-
 int main(int argc, char *argv[])
 {
 	if (argc < 2) {
