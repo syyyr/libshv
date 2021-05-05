@@ -190,6 +190,18 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 	core::StringViewList shv_path = shv::core::utils::ShvPath::split(shv_path_str);
 	cp::RpcResponse resp = cp::RpcResponse::forRequest(rq);
 	try {
+		if(!shv_path.empty()) {
+			ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
+			if(nd) {
+				shvDebug() << "Child node:" << shv_path.at(0).toString() << "on path:" << shv_path.join('/') << "FOUND";
+				std::string new_path = core::StringView::join(++shv_path.begin(), shv_path.end(), '/');
+				chainpack::RpcRequest rq2(rq);
+				//cp::RpcValue::MetaData meta2(meta);
+				rq2.setShvPath(new_path);
+				nd->handleRpcRequest(rq2);
+				return;
+			}
+		}
 		const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
 		if(mm) {
 			shvDebug() << "Metamethod:" << method << "on path:" << shv_path.join('/') << "FOUND";
@@ -199,28 +211,11 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 			}
 		}
 		else {
-			if(shv_path.empty()) {
-				SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + "' doesn't exist");
-			}
-			else {
-				ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
-				if(nd) {
-					shvDebug() << "Child node:" << shv_path.at(0).toString() << "on path:" << shv_path.join('/') << "FOUND";
-					std::string new_path = core::StringView::join(++shv_path.begin(), shv_path.end(), '/');
-					chainpack::RpcRequest rq2(rq);
-					//cp::RpcValue::MetaData meta2(meta);
-					rq2.setShvPath(new_path);
-					nd->handleRpcRequest(rq2);
-					return;
-				}
-				else {
-					core::utils::ShvPath path = shvPath();
-					if(!path.empty() && !shv_path_str.empty())
-						path += '/';
-					path += shv_path_str;
-					SHV_EXCEPTION("Method: '" + method + "' on path '" + path + "' doesn't exist");
-				}
-			}
+			core::utils::ShvPath path = shvPath();
+			if(!path.empty() && !shv_path_str.empty())
+				path += '/';
+			path += shv_path_str;
+			SHV_EXCEPTION("Method: '" + method + "' on path '" + path + "' doesn't exist");
 		}
 	}
 	catch (const chainpack::RpcException &e) {
