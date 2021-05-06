@@ -22,6 +22,24 @@ namespace shv {
 namespace visu {
 namespace svgscene {
 
+static QString transform_to_string(const QTransform &t)
+{
+	QString s = "\n|%1\t%2\t%3|\n|%4\t%5\t%6|\n|%7\t%8\t%9|";
+	return s.arg(t.m11()).arg(t.m12()).arg(t.m13())
+			.arg(t.m21()).arg(t.m22()).arg(t.m23())
+			.arg(t.m31()).arg(t.m32()).arg(t.m33());
+}
+
+class TextSpansRect : public QGraphicsRectItem
+{
+	using Super = QGraphicsRectItem;
+public:
+	explicit TextSpansRect(QGraphicsItem *parent = nullptr) : Super(parent) {}
+	~TextSpansRect() override {}
+
+	QPointF svgPosition;
+};
+
 //see: https://www.w3.org/TR/SVG11/
 
 // '0' is 0x30 and '9' is 0x39
@@ -1095,15 +1113,17 @@ bool SaxHandler::startElement()
 			return true;
 		}
 		else if (el.name == QLatin1String("text")) {
-			QGraphicsRectItem *item = new QGraphicsRectItem();
+			TextSpansRect *item = new TextSpansRect();
 			//item->setBrush(Qt::magenta);
 			//item->setRect(0, 0, 100, 100);
 			setXmlAttributes(item, el);
 			setStyle(item, el.styleAttributes);
 			qreal x = toDouble(el.xmlAttributes.value(QStringLiteral("x")));
 			qreal y = toDouble(el.xmlAttributes.value(QStringLiteral("y")));
-			//item->setPos(-x, -y);
 			setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
+			//item->setPos(x, y); is not same as translate
+			shvDebug() << "text x:" << x << "y:" << y;
+			item->svgPosition = QPointF(x, y);
 			QTransform t;
 			t.translate(x, y);
 			item->setTransform(t, true);
@@ -1115,18 +1135,25 @@ bool SaxHandler::startElement()
 			setXmlAttributes(item, el);
 			setStyle(item, el.styleAttributes);
 			setTextStyle(item, el.styleAttributes);
-			setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
-			QFontMetricsF fm(item->font());
+			//setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
 			QTransform t;
 			qreal x = toDouble(el.xmlAttributes.value(QStringLiteral("x")));
 			qreal y = toDouble(el.xmlAttributes.value(QStringLiteral("y")));
+			shvDebug() << "tspan x:" << x << "y:" << y;
 			if(x != 0 && y != 0 && m_topLevelItem) {
 				// https://www.w3.org/TR/SVG11/text.html#TSpanElement
-				QPointF p(x, y);
-				p = m_topLevelItem->mapFromScene(p);
-				//p = item->mapToParent(p);
-				t.translate(p.x(), p.y());
+				// if tspan sets x,y atributes, then they should be used
+				// tspan's parent container x,y should be used othervise
+				if(auto *txt = dynamic_cast<TextSpansRect*>(m_topLevelItem)) {
+					shvDebug() << transform_to_string(m_topLevelItem->transform());
+					QPointF p = txt->svgPosition;
+					// remove text element translation
+					t.translate(-p.x(), -p.y());
+					// set tspan translation
+					t.translate(x, y);
+				}
 			}
+			QFontMetricsF fm(item->font());
 			t.translate(0, 0 - fm.ascent());
 			item->setTransform(t, true);
 			addItem(item);
@@ -1135,7 +1162,6 @@ bool SaxHandler::startElement()
 		else if (el.name == QLatin1String("flowRoot")) {
 			QGraphicsTextItem *item = new QGraphicsTextItem();
 			setXmlAttributes(item, el);
-			//nWarning() << "FlowRoot:" << (QGraphicsItem*)item;
 			setTextStyle(item, el.styleAttributes);
 			setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
 			addItem(item);
