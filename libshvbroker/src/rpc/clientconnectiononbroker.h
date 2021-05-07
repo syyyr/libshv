@@ -57,12 +57,19 @@ private:
 	void onSocketConnectedChanged(bool is_connected);
 	void onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, std::string &&msg_data) override;
 	bool checkTunnelSecret(const std::string &s);
+	QVector<int> makeCallerIdList(const shv::chainpack::RpcValue &caller_ids);
 
 	void processLoginPhase() override;
 private:
 	QTimer *m_idleWatchDogTimer = nullptr;
 	std::string m_mountPoint;
-	QVector<int> m_slaveLsRequestId;
+
+	struct RequestId
+	{
+		int requestId;
+		QVector<int> callerIds;
+	};
+	QVector<RequestId> m_slaveLsRequestId;
 };
 
 }}}
