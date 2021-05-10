@@ -65,7 +65,7 @@
           <date>
            <year>1999</year>
            <month>12</month>
-           <day>23</day>
+           <day>22</day>
           </date>
          </property>
          <property name="displayFormat">
@@ -94,6 +94,9 @@
        <property name="text">
         <string>&amp;Until</string>
        </property>
+       <property name="buddy">
+        <cstring>edUntil</cstring>
+       </property>
       </widget>
      </item>
      <item>
@@ -113,7 +116,7 @@
           <date>
            <year>1999</year>
            <month>12</month>
-           <day>22</day>
+           <day>21</day>
           </date>
          </property>
          <property name="displayFormat">
