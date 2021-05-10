@@ -170,10 +170,10 @@ void ClientConnectionOnBroker::sendMessage(const shv::chainpack::RpcMessage &rpc
 void ClientConnectionOnBroker::sendRawData(const shv::chainpack::RpcValue::MetaData &meta_data, std::string &&data)
 {
 	if (isSlaveBrokerConnection() &&
-		cp::RpcMessage::method(meta_data).toString() == cp::Rpc::METH_LS &&
-		cp::RpcMessage::shvPath(meta_data).toString().empty() &&
-		cp::RpcMessage::accessGrant(meta_data).toString() == cp::Rpc::ROLE_ADMIN) {
-		m_slaveLsRequestId << RequestId{ cp::RpcMessage::requestId(meta_data).toInt(), makeCallerIdList(cp::RpcMessage::callerIds(meta_data)) };
+		cp::RpcMessage::method(meta_data).asString() == cp::Rpc::METH_LS &&
+		cp::RpcMessage::shvPath(meta_data).asString().empty() &&
+		cp::RpcMessage::accessGrant(meta_data).asString() == cp::Rpc::ROLE_ADMIN) {
+		m_slaveLsRequestId << RequestAndCallersIds{ cp::RpcMessage::requestId(meta_data).toInt(), callerIdsToList(cp::RpcMessage::callerIds(meta_data)) };
 	}
 	logRpcMsg() << SND_LOG_ARROW
 				<< "client id:" << connectionId()
@@ -282,13 +282,13 @@ void ClientConnectionOnBroker::onRpcDataReceived(shv::chainpack::Rpc::ProtocolTy
 		}
 		if(m_idleWatchDogTimer)
 			m_idleWatchDogTimer->start();
-		if (isSlaveBrokerConnection() && cp::RpcMessage::isResponse(md) && m_slaveLsRequestId.count()) {
+		if (isSlaveBrokerConnection() && m_slaveLsRequestId.count() && cp::RpcMessage::isResponse(md)) {
 			int request_id = cp::RpcMessage::requestId(md).toInt();
-			auto it = std::find_if(m_slaveLsRequestId.begin(), m_slaveLsRequestId.end(), [&request_id](const RequestId &r) {
+			auto it = std::find_if(m_slaveLsRequestId.begin(), m_slaveLsRequestId.end(), [&request_id](const RequestAndCallersIds &r) {
 				return r.requestId == request_id;
 			});
 			if (it != m_slaveLsRequestId.end()) {
-				QVector<int> caller_ids = makeCallerIdList(cp::RpcMessage::callerIds(md));
+				QVector<int> caller_ids = callerIdsToList(cp::RpcMessage::callerIds(md));
 				if (caller_ids == it->callerIds) {
 					m_slaveLsRequestId.erase(it);
 					cp::RpcValue resp = decodeData(protocol_type, msg_data, 0);
@@ -321,7 +321,7 @@ void ClientConnectionOnBroker::processLoginPhase()
 	auto t = opts.value(cp::Rpc::OPT_IDLE_WD_TIMEOUT, 3 * 60).toInt();
 	setIdleWatchDogTimeOut(t);
 	if(tunnelOptions().isMap()) {
-		std::string secret = tunnelOptions().toMap().value(cp::Rpc::KEY_SECRET).toString();
+		const std::string &secret = tunnelOptions().toMap().value(cp::Rpc::KEY_SECRET).asString();
 		cp::UserLoginResult result;
 		result.passwordOk = checkTunnelSecret(secret);
 		setLoginResult(result);
@@ -351,7 +351,7 @@ bool ClientConnectionOnBroker::checkTunnelSecret(const std::string &s)
 	return BrokerApp::instance()->checkTunnelSecret(s);
 }
 
-QVector<int> ClientConnectionOnBroker::makeCallerIdList(const shv::chainpack::RpcValue &caller_ids)
+QVector<int> ClientConnectionOnBroker::callerIdsToList(const shv::chainpack::RpcValue &caller_ids)
 {
 	QVector<int> res;
 	if(caller_ids.isList()) {
