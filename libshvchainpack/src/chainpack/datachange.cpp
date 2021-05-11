@@ -97,7 +97,8 @@ set_meta_data:
 		ret.setDateTime(val.metaValue(MetaType::Tag::DateTime));
 		ret.setShortTime(val.metaValue(MetaType::Tag::ShortTime));
 		ret.setDomain(val.metaValue(MetaType::Tag::Domain).asString());
-		ret.setSampleType(val.metaValue(MetaType::Tag::SampleType).toInt());
+		int st = val.metaValue(MetaType::Tag::SampleType).toInt();
+		ret.setSampleType(st == (int)SampleType::Discrete? SampleType::Discrete: SampleType::Continuous);
 		return ret;
 	}
 	return DataChange(val, RpcValue::DateTime());
@@ -120,6 +121,10 @@ RpcValue DataChange::toRpcValue() const
 		ret.setMetaValue(MetaType::Tag::DateTime, m_dateTime);
 	if(hasShortTime())
 		ret.setMetaValue(MetaType::Tag::ShortTime, (unsigned)m_shortTime);
+	if(hasDomain())
+		ret.setMetaValue(MetaType::Tag::Domain, m_domain);
+	if(sampleType() == SampleType::Discrete)
+		ret.setMetaValue(MetaType::Tag::SampleType, (int)m_sampleType);
 	return ret;
 }
 

@@ -49,6 +49,7 @@ const char* Rpc::SIG_VAL_CHANGED = "chng";
 const char* Rpc::SIG_VAL_FASTCHANGED = "fastchng";
 const char* Rpc::SIG_SERVICE_VAL_CHANGED = "svcchng";
 const char* Rpc::SIG_MOUNTED_CHANGED = "mntchng";
+const char* Rpc::SIG_COMMAND_LOGGED = "cmdlog";
 
 const char* Rpc::ROLE_BROWSE = "bws";
 const char* Rpc::ROLE_READ = "rd";

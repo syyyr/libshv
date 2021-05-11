@@ -182,6 +182,12 @@ void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
 					<< "client id:" << connectionId()
 					<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
 					<< rpc_msg.toPrettyString();
+		//if(rpc_msg.isSignal()) {
+		//	cp::RpcSignal sig(rpc_msg);
+		//	QString s = QString::fromStdString(sig.params().toCpon());
+		//	if(s.endsWith("Occupied(null)\""))
+		//		std::abort();
+		//}
 	}
 	sendRpcValue(rpc_msg.value());
 }

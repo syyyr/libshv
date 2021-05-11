@@ -59,9 +59,11 @@ public:
 	RpcValue shortTime() const { return hasShortTime()? RpcValue((unsigned)m_shortTime): RpcValue(); }
 	void setShortTime(const RpcValue &st) { m_shortTime = (st.isUInt() || (st.isInt() && st.toInt() >= 0))? st.toInt(): NO_SHORT_TIME; }
 
+	bool hasDomain() const { return !m_domain.empty(); }
 	void setDomain(const std::string &d) { m_domain = d; }
 	const std::string& domain() const { return m_domain; }
 
+	bool hasSampleType() const { return m_sampleType != SampleType::Invalid; }
 	void setSampleType(SampleType st) { m_sampleType = st; }
 	void setSampleType(int st) { m_sampleType = (st >= (int)SampleType::Invalid && st <= (int)SampleType::Discrete)? static_cast<SampleType>(st): SampleType::Invalid; }
 	SampleType sampleType() const { return m_sampleType; }

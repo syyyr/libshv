@@ -261,17 +261,6 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 
 		e.userId = rq.userId().toString();
 		rootNode()->emitLogUserCommand(e);
-
-		cp::DataChange dc(method + '(' + rq.params().toCpon() + ')', cp::RpcValue::DateTime::now());
-		dc.setDomain(shv::core::utils::ShvJournalEntry::DOMAIN_SHV_COMMAND);
-		dc.setSampleType(cp::DataChange::SampleType::Discrete);
-
-		cp::RpcSignal sig;
-		sig.setMethod(cp::Rpc::SIG_VAL_CHANGED);
-		sig.setShvPath(shvPath());
-		sig.setParams(dc.toRpcValue());
-		emitSendRpcMessage(sig);
-
 	}
 
 	return callMethodRq(rq);
@@ -526,6 +515,18 @@ void ShvNode::emitLogUserCommand(const shv::core::utils::ShvJournalEntry &e)
 {
 	if(isRootNode()) {
 		emit logUserCommand(e);
+
+		// emit also as change to have commands in HP dirty-log
+		// only HP should have this
+		cp::DataChange dc(e.value, cp::RpcValue::DateTime::now());
+		dc.setDomain(e.domain);
+		dc.setSampleType(e.sampleType);
+
+		cp::RpcSignal sig;
+		sig.setMethod(cp::Rpc::SIG_COMMAND_LOGGED);
+		sig.setShvPath(e.path);
+		sig.setParams(dc.toRpcValue());
+		emitSendRpcMessage(sig);
 	}
 	else {
 		ShvNode *rnd = rootNode();
