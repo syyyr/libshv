@@ -42,20 +42,20 @@ std::vector<std::string> AclManager::mountDeviceIds()
 	return cp::Utils::mapKeys(m_cache.aclMountDefs);
 }
 
-AclMountDef AclManager::mountDef(const std::string &device_id)
+shv::iotqt::acl::AclMountDef AclManager::mountDef(const std::string &device_id)
 {
 	if(m_cache.aclMountDefs.empty())
 		mountDeviceIds();
 	auto it = m_cache.aclMountDefs.find(device_id);
 	if(it == m_cache.aclMountDefs.end())
-		return AclMountDef();
+		return shv::iotqt::acl::AclMountDef();
 	if(!it->second.isValid()) {
 		it->second = aclMountDef(device_id);
 	}
 	return it->second;
 }
 
-void AclManager::setMountDef(const std::string &device_id, const AclMountDef &v)
+void AclManager::setMountDef(const std::string &device_id, const shv::iotqt::acl::AclMountDef &v)
 {
 	aclSetMountDef(device_id, v);
 	m_cache.aclMountDefs.clear();
@@ -70,20 +70,20 @@ std::vector<std::string> AclManager::users()
 	return cp::Utils::mapKeys(m_cache.aclUsers);
 }
 
-AclUser AclManager::user(const std::string &user_name)
+shv::iotqt::acl::AclUser AclManager::user(const std::string &user_name)
 {
 	if(m_cache.aclUsers.empty())
 		users();
 	auto it = m_cache.aclUsers.find(user_name);
 	if(it == m_cache.aclUsers.end())
-		return AclUser();
+		return shv::iotqt::acl::AclUser();
 	if(!it->second.isValid()) {
 		it->second = aclUser(user_name);
 	}
 	return it->second;
 }
 
-void AclManager::setUser(const std::string &user_name, const AclUser &u)
+void AclManager::setUser(const std::string &user_name, const shv::iotqt::acl::AclUser &u)
 {
 	aclSetUser(user_name, u);
 	m_cache.aclUsers.clear();
@@ -99,20 +99,20 @@ std::vector<std::string> AclManager::roles()
 	return cp::Utils::mapKeys(m_cache.aclRoles);
 }
 
-AclRole AclManager::role(const std::string &role_name)
+shv::iotqt::acl::AclRole AclManager::role(const std::string &role_name)
 {
 	if(m_cache.aclRoles.empty())
 		roles();
 	auto it = m_cache.aclRoles.find(role_name);
 	if(it == m_cache.aclRoles.end())
-		return AclRole();
+		return shv::iotqt::acl::AclRole();
 	if(!it->second.isValid()) {
 		it->second = aclRole(role_name);
 	}
 	return it->second;
 }
 
-void AclManager::setRole(const std::string &role_name, const AclRole &v)
+void AclManager::setRole(const std::string &role_name, const shv::iotqt::acl::AclRole &v)
 {
 	aclSetRole(role_name, v);
 	m_cache.aclRoles.clear();
@@ -128,22 +128,22 @@ std::vector<std::string> AclManager::accessRoles()
 	return cp::Utils::mapKeys(m_cache.aclPathsRoles);
 }
 
-AclRoleAccessRules AclManager::accessRoleRules(const std::string &role_name)
+shv::iotqt::acl::AclRoleAccessRules AclManager::accessRoleRules(const std::string &role_name)
 {
 	if(m_cache.aclPathsRoles.empty())
 		accessRoles();
 	auto it = m_cache.aclPathsRoles.find(role_name);
 	if(it == m_cache.aclPathsRoles.end())
-		return AclRoleAccessRules();
+		return shv::iotqt::acl::AclRoleAccessRules();
 	if(std::get<1>(it->second) == false) {
-		AclRoleAccessRules acl = aclAccessRoleRules(role_name);
+		shv::iotqt::acl::AclRoleAccessRules acl = aclAccessRoleRules(role_name);
 		//acl.sortMostSpecificFirst();
-		it->second = std::pair<AclRoleAccessRules, bool>(acl, true);
+		it->second = std::pair<shv::iotqt::acl::AclRoleAccessRules, bool>(acl, true);
 	}
 	return std::get<0>(it->second);
 }
 
-void AclManager::setAccessRoleRules(const std::string &role_name, const AclRoleAccessRules &v)
+void AclManager::setAccessRoleRules(const std::string &role_name, const shv::iotqt::acl::AclRoleAccessRules &v)
 {
 	aclSetAccessRoleRules(role_name, v);
 	m_cache.aclPathsRoles.clear();
@@ -153,7 +153,7 @@ chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginC
 {
 	using LoginType = cp::UserLogin::LoginType;
 	chainpack::UserLogin login = login_context.userLogin();
-	AclUser acl_user = user(login.user);
+	shv::iotqt::acl::AclUser acl_user = user(login.user);
 	if(!acl_user.isValid()) {
 		shvError() << "Invalid user name:" << login.user;
 		return cp::UserLoginResult(false, "Invalid user name.");
@@ -172,13 +172,13 @@ chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginC
 	std::string usr_pwd = login.password;
 	if(usr_login_type == LoginType::Plain) {
 		logAclManagerM() << "user_login_type: PLAIN";
-		if(acl_pwd.format == AclPassword::Format::Plain) {
+		if(acl_pwd.format == shv::iotqt::acl::AclPassword::Format::Plain) {
 			if(acl_pwd.password == usr_pwd)
 				return cp::UserLoginResult(true);
 			logAclManagerM() << "\t Invalid password.";
 			return cp::UserLoginResult(false, "Invalid password.");
 		}
-		if(acl_pwd.format == AclPassword::Format::Sha1) {
+		if(acl_pwd.format == shv::iotqt::acl::AclPassword::Format::Sha1) {
 			if(acl_pwd.password == sha1_hex(usr_pwd))
 				return cp::UserLoginResult(true);
 			logAclManagerM() << "\t Invalid password.";
@@ -188,7 +188,7 @@ chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginC
 	if(usr_login_type == LoginType::Sha1) {
 		/// login_type == "SHA1" is default
 		logAclManagerM() << "user_login_type: SHA1";
-		if(acl_pwd.format == AclPassword::Format::Plain)
+		if(acl_pwd.format == shv::iotqt::acl::AclPassword::Format::Plain)
 			acl_pwd.password = sha1_hex(acl_pwd.password);
 
 		std::string nonce = login_context.serverNounce + acl_pwd.password;
@@ -217,28 +217,28 @@ void AclManager::reload()
 	clearCache();
 }
 
-void AclManager::aclSetMountDef(const std::string &device_id, const AclMountDef &md)
+void AclManager::aclSetMountDef(const std::string &device_id, const shv::iotqt::acl::AclMountDef &md)
 {
 	Q_UNUSED(device_id)
 	Q_UNUSED(md)
 	SHV_EXCEPTION("Mount points definition is read only.");
 }
 
-void AclManager::aclSetUser(const std::string &user_name, const AclUser &u)
+void AclManager::aclSetUser(const std::string &user_name, const shv::iotqt::acl::AclUser &u)
 {
 	Q_UNUSED(user_name)
 	Q_UNUSED(u)
 	SHV_EXCEPTION("Users definition is read only.");
 }
 
-void AclManager::aclSetRole(const std::string &role_name, const AclRole &r)
+void AclManager::aclSetRole(const std::string &role_name, const shv::iotqt::acl::AclRole &r)
 {
 	Q_UNUSED(role_name)
 	Q_UNUSED(r)
 	SHV_EXCEPTION("Roles definition is read only.");
 }
 
-void AclManager::aclSetAccessRoleRules(const std::string &role_name, const AclRoleAccessRules &rp)
+void AclManager::aclSetAccessRoleRules(const std::string &role_name, const shv::iotqt::acl::AclRoleAccessRules &rp)
 {
 	Q_UNUSED(role_name)
 	Q_UNUSED(rp)
@@ -249,7 +249,7 @@ std::map<std::string, AclManager::FlattenRole> AclManager::flattenRole_helper(co
 {
 	//shvInfo() << __FUNCTION__ << "role:" << role_name << "nest level:" << nest_level;
 	std::map<std::string, FlattenRole> ret;
-	AclRole ar = aclRole(role_name);
+	shv::iotqt::acl::AclRole ar = aclRole(role_name);
 	if(ar.isValid()) {
 		FlattenRole fr{role_name, ar.weight, nest_level};
 		ret[role_name] = std::move(fr);
@@ -276,7 +276,7 @@ std::map<std::string, AclManager::FlattenRole> AclManager::flattenRole_helper(co
 std::vector<AclManager::FlattenRole> AclManager::userFlattenRoles(const std::string &user_name)
 {
 	if(m_cache.userFlattenRoles.find(user_name) == m_cache.userFlattenRoles.end()) {
-		AclUser user_def = aclUser(user_name);
+		shv::iotqt::acl::AclUser user_def = aclUser(user_name);
 		if(!user_def.isValid())
 			return std::vector<FlattenRole>();
 
@@ -339,7 +339,7 @@ chainpack::RpcValue AclManager::userProfile(const std::string &user_name)
 {
 	chainpack::RpcValue ret;
 	for(const auto &rn : userFlattenRoles(user_name)) {
-		AclRole r = role(rn.name);
+		shv::iotqt::acl::AclRole r = role(rn.name);
 		//shvDebug() << "--------------------------merging:" << rn.name << r.toRpcValueMap();
 		ret = chainpack::Utils::mergeMaps(ret, r.profile);
 	}
@@ -435,10 +435,10 @@ std::vector<std::string> AclManagerConfigFiles::aclMountDeviceIds()
 	return cp::Utils::mapKeys(cfg.toMap());
 }
 
-AclMountDef AclManagerConfigFiles::aclMountDef(const std::string &device_id)
+shv::iotqt::acl::AclMountDef AclManagerConfigFiles::aclMountDef(const std::string &device_id)
 {
 	chainpack::RpcValue v = aclConfig(FILE_ACL_MOUNTS).toMap().value(device_id);
-	return AclMountDef::fromRpcValue(v);
+	return shv::iotqt::acl::AclMountDef::fromRpcValue(v);
 }
 
 std::vector<std::string> AclManagerConfigFiles::aclUsers()
@@ -448,10 +448,10 @@ std::vector<std::string> AclManagerConfigFiles::aclUsers()
 	return cp::Utils::mapKeys(cfg.toMap());
 }
 
-AclUser AclManagerConfigFiles::aclUser(const std::string &user_name)
+shv::iotqt::acl::AclUser AclManagerConfigFiles::aclUser(const std::string &user_name)
 {
 	chainpack::RpcValue v = aclConfig(FILE_ACL_USERS).toMap().value(user_name);
-	return AclUser::fromRpcValue(v);
+	return shv::iotqt::acl::AclUser::fromRpcValue(v);
 }
 
 std::vector<std::string> AclManagerConfigFiles::aclRoles()
@@ -460,10 +460,10 @@ std::vector<std::string> AclManagerConfigFiles::aclRoles()
 	return cp::Utils::mapKeys(cfg.toMap());
 }
 
-AclRole AclManagerConfigFiles::aclRole(const std::string &role_name)
+shv::iotqt::acl::AclRole AclManagerConfigFiles::aclRole(const std::string &role_name)
 {
 	chainpack::RpcValue v = aclConfig(FILE_ACL_ROLES).toMap().value(role_name);
-	return AclRole::fromRpcValue(v);
+	return shv::iotqt::acl::AclRole::fromRpcValue(v);
 }
 
 std::vector<std::string> AclManagerConfigFiles::aclAccessRoles()
@@ -472,10 +472,10 @@ std::vector<std::string> AclManagerConfigFiles::aclAccessRoles()
 	return cp::Utils::mapKeys(cfg.toMap());
 }
 
-AclRoleAccessRules AclManagerConfigFiles::aclAccessRoleRules(const std::string &role_name)
+shv::iotqt::acl::AclRoleAccessRules AclManagerConfigFiles::aclAccessRoleRules(const std::string &role_name)
 {
 	chainpack::RpcValue v = aclConfig(FILE_ACL_ACCESS).toMap().value(role_name);
-	return AclRoleAccessRules::fromRpcValue(v);
+	return shv::iotqt::acl::AclRoleAccessRules::fromRpcValue(v);
 }
 
 } // namespace broker

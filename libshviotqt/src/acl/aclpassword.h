@@ -1,15 +1,16 @@
 #pragma once
 
-#include "shvbrokerglobal.h"
+#include "../shviotqtglobal.h"
 
 #include <string>
 
 namespace shv { namespace chainpack { class RpcValue; } }
 
 namespace shv {
-namespace broker {
+namespace iotqt {
+namespace acl {
 
-struct SHVBROKER_DECL_EXPORT AclPassword
+struct SHVIOTQT_DECL_EXPORT AclPassword
 {
 	enum class Format {Invalid, Plain, Sha1};
 
@@ -24,13 +25,14 @@ struct SHVBROKER_DECL_EXPORT AclPassword
 
 	bool isValid() const {return format != Format::Invalid;}
 
-	shv::chainpack::RpcValue toRpcValueMap() const;
+	shv::chainpack::RpcValue toRpcValue() const;
 	static AclPassword fromRpcValue(const shv::chainpack::RpcValue &v);
 
 	static const char *formatToString(Format f);
 	static Format formatFromString(const std::string &s);
 };
 
-} // namespace chainpack
+} // namespace acl
+} // namespace iotqt
 } // namespace shv
 

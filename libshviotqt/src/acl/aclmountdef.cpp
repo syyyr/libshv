@@ -3,9 +3,10 @@
 #include <shv/chainpack/rpcvalue.h>
 
 namespace shv {
-namespace broker {
+namespace iotqt {
+namespace acl {
 
-shv::chainpack::RpcValue AclMountDef::toRpcValueMap() const
+shv::chainpack::RpcValue AclMountDef::toRpcValue() const
 {
 	shv::chainpack::RpcValue::Map m {
 		{"mountPoint", mountPoint},
@@ -29,5 +30,6 @@ AclMountDef AclMountDef::fromRpcValue(const shv::chainpack::RpcValue &v)
 	return ret;
 }
 
-} // namespace chainpack
+} // namespace acl
+} // namespace iotqt
 } // namespace shv

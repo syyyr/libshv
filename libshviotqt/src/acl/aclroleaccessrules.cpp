@@ -9,7 +9,8 @@ using namespace shv::chainpack;
 using namespace std;
 
 namespace shv {
-namespace broker {
+namespace iotqt {
+namespace acl {
 
 //================================================================
 // PathAccessGrant
@@ -157,5 +158,6 @@ AclRoleAccessRules AclRoleAccessRules::fromRpcValue(const shv::chainpack::RpcVal
 	return ret;
 }
 
-} // namespace chainpack
+} // namespace acl
+} // namespace iotqt
 } // namespace shv

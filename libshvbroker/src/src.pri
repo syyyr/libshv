@@ -1,10 +1,5 @@
 
 HEADERS += \
-    $$PWD/aclmountdef.h \
-    $$PWD/aclpassword.h \
-    $$PWD/aclrole.h \
-    $$PWD/aclroleaccessrules.h \
-    $$PWD/acluser.h \
     $$PWD/aclmanager.h \
     $$PWD/aclmanagersqlite.h \
     $$PWD/brokeraclnode.h \
@@ -19,11 +14,6 @@ HEADERS += \
     $$PWD/tunnelsecretlist.h
 
 SOURCES += \
-    $$PWD/aclmountdef.cpp \
-    $$PWD/aclpassword.cpp \
-    $$PWD/aclrole.cpp \
-    $$PWD/aclroleaccessrules.cpp \
-    $$PWD/acluser.cpp \
     $$PWD/aclmanagersqlite.cpp \
     $$PWD/appclioptions.cpp \
     $$PWD/brokeraclnode.cpp \
@@ -37,7 +27,4 @@ SOURCES += \
     $$PWD/tunnelsecretlist.cpp
 
 include ($$PWD/rpc/rpc.pri)
-
-
-
 

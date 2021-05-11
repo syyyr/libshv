@@ -1,6 +1,6 @@
 #pragma once
 
-#include "shvbrokerglobal.h"
+#include "../shviotqtglobal.h"
 
 #include "shv/chainpack/rpcvalue.h"
 
@@ -8,9 +8,10 @@
 #include <vector>
 
 namespace shv {
-namespace broker {
+namespace iotqt {
+namespace acl {
 
-struct SHVBROKER_DECL_EXPORT AclRole
+struct SHVIOTQT_DECL_EXPORT AclRole
 {
 	static constexpr int INVALID_WEIGHT = std::numeric_limits<int>::min();
 	//std::string name;
@@ -25,10 +26,11 @@ struct SHVBROKER_DECL_EXPORT AclRole
 	AclRole(int w, std::vector<std::string> roles) : weight(w), roles(std::move(roles)) {}
 
 	bool isValid() const {return weight != INVALID_WEIGHT;}
-	shv::chainpack::RpcValue toRpcValueMap() const;
+	shv::chainpack::RpcValue toRpcValue() const;
 	static AclRole fromRpcValue(const shv::chainpack::RpcValue &v);
 };
 
-} // namespace chainpack
+} // namespace acl
+} // namespace iotqt
 } // namespace shv
 

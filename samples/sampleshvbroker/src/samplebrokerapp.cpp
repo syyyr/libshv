@@ -3,7 +3,7 @@
 
 #include <shv/iotqt/node/shvnodetree.h>
 #include <shv/coreqt/log.h>
-#include <shv/broker/aclrolepaths.h>
+#include <shv/iotqt/acl/aclroleaccessrules.h>
 
 #include <QTimer>
 

@@ -1,11 +1,10 @@
 #pragma once
 
 #include <shv/iotqt/node/shvnode.h>
+#include <shv/iotqt/acl/aclroleaccessrules.h>
 
 namespace shv {
 namespace broker {
-
-class AclAccessRule;
 
 class EtcAclRootNode : public shv::iotqt::node::MethodsTableNode
 {
@@ -82,7 +81,7 @@ protected:
 
 	std::string saveConfigFile() override;
 private:
-	std::string ruleKey(unsigned rule_ix, unsigned rules_cnt, const shv::broker::AclAccessRule &rule) const;
+	std::string ruleKey(unsigned rule_ix, unsigned rules_cnt, const shv::iotqt::acl::AclAccessRule &rule) const;
 	static constexpr auto InvalidIndex = std::numeric_limits<unsigned>::max();
 	static unsigned keyToRuleIndex(const std::string &key);
 };
