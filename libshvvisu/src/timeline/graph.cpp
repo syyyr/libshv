@@ -253,6 +253,17 @@ void Graph::setChannelMaximized(int channel_ix, bool is_maximized)
 	emit layoutChanged();
 }
 
+void Graph::setYAxisVisible(bool is_visible)
+{
+	m_effectiveStyle.setYAxisWidth((is_visible) ? 2.5 : 0);
+	emit layoutChanged();
+}
+
+bool Graph::isYAxisVisible()
+{
+	return (m_effectiveStyle.yAxisWidth() > 0);
+}
+
 timemsec_t Graph::miniMapPosToTime(int pos) const
 {
 	auto pos2time = posToTimeFn(QPoint{m_layout.miniMapRect.left(), m_layout.miniMapRect.right()}, xRange());
@@ -516,8 +527,7 @@ void Graph::clearMiniMapCache()
 
 void Graph::setStyle(const Graph::Style &st)
 {
-	m_style = st;
-	m_effectiveStyle = m_style;
+	m_effectiveStyle = st;
 }
 
 void Graph::setDefaultChannelStyle(const GraphChannel::Style &st)
@@ -1259,8 +1269,9 @@ void Graph::drawXAxis(QPainter *painter)
 
 void Graph::drawYAxis(QPainter *painter, int channel)
 {
-	if(m_effectiveStyle.yAxisWidth() == 0)
+	if(!isYAxisVisible())
 		return;
+
 	const GraphChannel *ch = channelAt(channel);
 	const GraphChannel::YAxis &axis = ch->m_state.axis;
 	if(qFuzzyCompare(axis.tickInterval, 0)) {

@@ -146,13 +146,17 @@ public:
 	void setXRange(const XRange &r, bool keep_zoom = false);
 	void setXRangeZoom(const XRange &r);
 
+	void setYAxisVisible(bool is_visible);
+	bool isYAxisVisible();
+
+
 	void setYRange(int channel_ix, const YRange &r);
 	void enlargeYRange(int channel_ix, double step);
 	void setYRangeZoom(int channel_ix, const YRange &r);
 	void resetZoom(int channel_ix);
 	void zoomToSelection();
 
-	const Style& style() const { return m_style; }
+	const Style& style() const { return m_effectiveStyle; }
 	void setStyle(const Style &st);
 	void setDefaultChannelStyle(const GraphChannel::Style &st);
 	GraphChannel::Style defaultChannelStyle() const { return m_defaultChannelStyle; }
@@ -227,8 +231,6 @@ protected:
 	QTimeZone m_timeZone;
 
 	Style m_effectiveStyle;
-
-	Style m_style;
 	GraphChannel::Style m_defaultChannelStyle;
 
 	QVector<GraphChannel*> m_channels;
