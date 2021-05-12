@@ -149,7 +149,6 @@ public:
 	void setYAxisVisible(bool is_visible);
 	bool isYAxisVisible();
 
-
 	void setYRange(int channel_ix, const YRange &r);
 	void enlargeYRange(int channel_ix, double step);
 	void setYRangeZoom(int channel_ix, const YRange &r);
@@ -268,6 +267,7 @@ protected:
 		QRect miniMapRect;
 		QRect xAxisRect;
 		QRect cornerCellRect;
+		bool isYAxisVisible = true;
 	} m_layout;
 
 	QPixmap m_miniMapCache;

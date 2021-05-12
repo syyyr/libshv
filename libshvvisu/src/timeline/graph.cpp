@@ -255,13 +255,13 @@ void Graph::setChannelMaximized(int channel_ix, bool is_maximized)
 
 void Graph::setYAxisVisible(bool is_visible)
 {
-	m_effectiveStyle.setYAxisWidth((is_visible) ? 2.5 : 0);
+	m_layout.isYAxisVisible = is_visible;
 	emit layoutChanged();
 }
 
 bool Graph::isYAxisVisible()
 {
-	return (m_effectiveStyle.yAxisWidth() > 0);
+	return m_layout.isYAxisVisible;
 }
 
 timemsec_t Graph::miniMapPosToTime(int pos) const
