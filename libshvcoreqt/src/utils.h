@@ -78,6 +78,14 @@
 #define SHV_PROPERTY_BOOL_IMPL(lower_letter, upper_letter, name_rest) \
 	SHV_PROPERTY_BOOL_IMPL2(lower_letter, upper_letter, name_rest, false)
 
+#define SHV_PROPERTY_BOOL(lower_letter, upper_letter, name_rest) \
+	Q_PROPERTY(bool lower_letter##name_rest READ is##upper_letter##name_rest WRITE set##upper_letter##name_rest NOTIFY lower_letter##name_rest##Changed) \
+	SHV_PROPERTY_BOOL_IMPL(lower_letter, upper_letter, name_rest)
+
+#define SHV_PROPERTY_BOOL2(lower_letter, upper_letter, name_rest, default_value) \
+	Q_PROPERTY(bool lower_letter##name_rest READ is##upper_letter##name_rest WRITE set##upper_letter##name_rest NOTIFY lower_letter##name_rest##Changed) \
+	SHV_PROPERTY_BOOL_IMPL2(lower_letter, upper_letter, name_rest, default_value)
+
 #define SHV_VARIANTMAP_FIELD(ptype, getter_prefix, setter_prefix, name_rest) \
 	public: bool getter_prefix##name_rest##_isset() const {return contains(SHV_QUOTE_QSTRINGLITERAL(getter_prefix##name_rest));} \
 	public: ptype getter_prefix##name_rest() const {return qvariant_cast<ptype>(value(SHV_QUOTE_QSTRINGLITERAL(getter_prefix##name_rest)));} \
