@@ -58,16 +58,21 @@ bool ShvJournalFileReader::next()
 			continue; // skip empty line
 		}
 		std::string dtstr = line_record[Column::Timestamp].toString();
-		auto sample_type = static_cast<ShvJournalEntry::SampleType>(shv::core::String::toInt(line_record.value(Column::SampleType).toString()));
 		size_t len;
 		cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr, &len);
+		//logDShvJournal() << dtstr << "-->" << dt.toIsoString();
 		if(len == 0) {
 			logWShvJournal() << "invalid date time string:" << dtstr << "line will be ignored";
+			continue;
+		}
+		if(len >= line.size() || line[len] != ShvFileJournal::FIELD_SEPARATOR) {
+			logWShvJournal() << "invalid date time string:" << dtstr << "correct date time should end with field separator on position:" << len << ", line will be ignored";
 			continue;
 		}
 		std::string path = line_record.value(Column::Path).toString();
 		std::string domain = line_record.value(Column::Domain).toString();
 		StringView short_time_sv = line_record.value(Column::ShortTime);
+		auto sample_type = static_cast<ShvJournalEntry::SampleType>(shv::core::String::toInt(line_record.value(Column::SampleType).toString()));
 
 		m_currentEntry.path = std::move(path);
 		m_currentEntry.epochMsec = dt.msecsSinceEpoch();
@@ -76,9 +81,8 @@ bool ShvJournalFileReader::next()
 		m_currentEntry.shortTime = ok && short_time >= 0? short_time: ShvJournalEntry::NO_SHORT_TIME;
 		m_currentEntry.domain = std::move(domain);
 		m_currentEntry.sampleType = sample_type;
-		if (m_currentEntry.sampleType == ShvJournalEntry::SampleType::Invalid) {
+		if (m_currentEntry.sampleType == ShvJournalEntry::SampleType::Invalid)
 			m_currentEntry.sampleType = ShvJournalEntry::SampleType::Continuous;
-		}
 		m_currentEntry.userId = line_record.value(Column::UserId).toString();
 		std::string err;
 		m_currentEntry.value = cp::RpcValue::fromCpon(line_record.value(Column::Value).toString(), &err);
