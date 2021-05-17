@@ -138,7 +138,14 @@ void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 			return;
 		}
 		if(cp::RpcMessage::isRequest(md)) {
-			shv::core::String shv_path = masterExportedToLocalPath(cp::RpcMessage::shvPath(md).toString());
+			shv::core::String request_shv_path = cp::RpcMessage::shvPath(md).toString();
+			std::string shv_path;
+			if (request_shv_path.startsWith(".local")) {
+				shv_path = request_shv_path.mid(6);
+			}
+			else {
+				shv_path = masterExportedToLocalPath(request_shv_path);
+			}
 			cp::RpcMessage::setShvPath(md, shv_path);
 		}
 		else if(cp::RpcMessage::isResponse(md)) {

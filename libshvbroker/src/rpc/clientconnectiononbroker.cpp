@@ -169,6 +169,12 @@ void ClientConnectionOnBroker::sendMessage(const shv::chainpack::RpcMessage &rpc
 
 void ClientConnectionOnBroker::sendRawData(const shv::chainpack::RpcValue::MetaData &meta_data, std::string &&data)
 {
+	if (isSlaveBrokerConnection() &&
+		cp::RpcMessage::method(meta_data).asString() == cp::Rpc::METH_LS &&
+		cp::RpcMessage::shvPath(meta_data).asString().empty() &&
+		cp::RpcMessage::accessGrant(meta_data).asString() == cp::Rpc::ROLE_ADMIN) {
+		m_slaveLsRequestId << RequestAndCallersIds{ cp::RpcMessage::requestId(meta_data).toInt(), callerIdsToList(cp::RpcMessage::callerIds(meta_data)) };
+	}
 	logRpcMsg() << SND_LOG_ARROW
 				<< "client id:" << connectionId()
 				<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
@@ -276,6 +282,31 @@ void ClientConnectionOnBroker::onRpcDataReceived(shv::chainpack::Rpc::ProtocolTy
 		}
 		if(m_idleWatchDogTimer)
 			m_idleWatchDogTimer->start();
+		if (isSlaveBrokerConnection() && m_slaveLsRequestId.count() && cp::RpcMessage::isResponse(md)) {
+			int request_id = cp::RpcMessage::requestId(md).toInt();
+			auto it = std::find_if(m_slaveLsRequestId.begin(), m_slaveLsRequestId.end(), [&request_id](const RequestAndCallersIds &r) {
+				return r.requestId == request_id;
+			});
+			if (it != m_slaveLsRequestId.end()) {
+				QVector<int> caller_ids = callerIdsToList(cp::RpcMessage::callerIds(md));
+				if (caller_ids == it->callerIds) {
+					m_slaveLsRequestId.erase(it);
+					cp::RpcValue resp = decodeData(protocol_type, msg_data, 0);
+					if (!resp.at(cp::RpcMessage::MetaType::Key::Error).isValid()) {
+						shv::chainpack::RpcValue::List result = resp.at(cp::RpcMessage::MetaType::Key::Result).toList();
+						if (result.size() && !result[0].isList()) {
+							result.push_back(".local");
+						}
+						else {
+							result.push_back(cp::RpcValue::List{ ".local", true });
+						}
+						resp.set(cp::RpcMessage::MetaType::Key::Result, result);
+						BrokerApp::instance()->onRpcDataReceived(connectionId(), protocol_type, std::move(md), codeRpcValue(protocol_type, resp));
+						return;
+					}
+				}
+			}
+		}
 		BrokerApp::instance()->onRpcDataReceived(connectionId(), protocol_type, std::move(md), std::move(msg_data));
 	}
 	catch (std::exception &e) {
@@ -290,7 +321,7 @@ void ClientConnectionOnBroker::processLoginPhase()
 	auto t = opts.value(cp::Rpc::OPT_IDLE_WD_TIMEOUT, 3 * 60).toInt();
 	setIdleWatchDogTimeOut(t);
 	if(tunnelOptions().isMap()) {
-		std::string secret = tunnelOptions().toMap().value(cp::Rpc::KEY_SECRET).toString();
+		const std::string &secret = tunnelOptions().toMap().value(cp::Rpc::KEY_SECRET).asString();
 		cp::UserLoginResult result;
 		result.passwordOk = checkTunnelSecret(secret);
 		setLoginResult(result);
@@ -318,6 +349,21 @@ void ClientConnectionOnBroker::setLoginResult(const chainpack::UserLoginResult &
 bool ClientConnectionOnBroker::checkTunnelSecret(const std::string &s)
 {
 	return BrokerApp::instance()->checkTunnelSecret(s);
+}
+
+QVector<int> ClientConnectionOnBroker::callerIdsToList(const shv::chainpack::RpcValue &caller_ids)
+{
+	QVector<int> res;
+	if(caller_ids.isList()) {
+		for (const cp::RpcValue &list_item : caller_ids.asList()) {
+			res << list_item.toInt();
+		}
+	}
+	else if(caller_ids.isInt() || caller_ids.isUInt()) {
+		res << caller_ids.toInt();
+	}
+	std::sort(res.begin(), res.end());
+	return res;
 }
 
 void ClientConnectionOnBroker::propagateSubscriptionToSlaveBroker(const CommonRpcClientHandle::Subscription &subs)
