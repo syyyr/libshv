@@ -44,7 +44,7 @@ DataChange::DataChange(const RpcValue &val)
 const char *DataChange::sampleTypeToString(DataChange::SampleType st)
 {
 	switch (st) {
-	case SampleType::Invalid: return "Invalid";
+	case SampleType::Invalid: return "";
 	case SampleType::Continuous: return "Continuous";
 	case SampleType::Discrete: return "Discrete";
 	}
