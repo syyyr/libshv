@@ -12,13 +12,13 @@ public:
 	// AclManager interface
 protected:
 	std::vector<std::string> aclMountDeviceIds() override { return std::vector<std::string>(); }
-	shv::broker::AclMountDef aclMountDef(const std::string &device_id) override { Q_UNUSED(device_id) return shv::broker::AclMountDef(); }
+	shv::iotqt::acl::AclMountDef aclMountDef(const std::string &device_id) override { Q_UNUSED(device_id) return shv::iotqt::acl::AclMountDef(); }
 	std::vector<std::string> aclUsers() override;
-	shv::broker::AclUser aclUser(const std::string &user_name) override;
+	shv::iotqt::acl::AclUser aclUser(const std::string &user_name) override;
 	std::vector<std::string> aclRoles() override;
-	shv::broker::AclRole aclRole(const std::string &role_name) override;
+	shv::iotqt::acl::AclRole aclRole(const std::string &role_name) override;
 	std::vector<std::string> aclAccessRoles() override;
-	shv::broker::AclRoleAccessRules aclAccessRoleRules(const std::string &role_name) override;
+	shv::iotqt::acl::AclRoleAccessRules aclAccessRoleRules(const std::string &role_name) override;
 };
 
 #endif // ACLMANAGER_H

@@ -5,7 +5,8 @@
 #include <regex>
 
 namespace shv {
-namespace broker {
+namespace iotqt {
+namespace acl {
 
 static bool str_eq(const std::string &s1, const char *s2)
 {
@@ -14,13 +15,13 @@ static bool str_eq(const std::string &s1, const char *s2)
 		char c2 = s2[i];
 		if(!c2)
 			return false;
-		if(toupper(c2 != toupper(s1[i])))
+		if(toupper(c2) != toupper(s1[i]))
 			return false;
 	}
 	return s2[i] == 0;
 }
 
-shv::chainpack::RpcValue AclPassword::toRpcValueMap() const
+shv::chainpack::RpcValue AclPassword::toRpcValue() const
 {
 	return shv::chainpack::RpcValue::Map {
 		{"password", password},
@@ -39,7 +40,7 @@ AclPassword AclPassword::fromRpcValue(const shv::chainpack::RpcValue &v)
 	}
 	else if(v.isMap()) {
 		const auto &m = v.toMap();
-		ret.password = m.value("password").toString();
+		ret.password = m.value("password").asString();
 		ret.format = formatFromString(m.value("format").asString());
 		if(ret.format == Format::Invalid && !ret.password.empty())
 			ret.format = std::regex_match(ret.password, sha1_regex)? Format::Sha1: Format::Plain;
@@ -65,5 +66,6 @@ AclPassword::Format AclPassword::formatFromString(const std::string &s)
 	return Format::Invalid;
 }
 
-} // namespace chainpack
+} // namespace acl
+} // namespace iotqt
 } // namespace shv

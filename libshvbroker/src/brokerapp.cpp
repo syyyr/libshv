@@ -66,6 +66,7 @@
 #define ACCESS_EXCEPTION(msg) SHV_EXCEPTION_V(msg, "Access")
 
 namespace cp = shv::chainpack;
+namespace acl = shv::iotqt::acl;
 
 using namespace std;
 
@@ -685,8 +686,8 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 			tbl += "\nrole\tweight\tpattern\tmethod\tgrant";
 			tbl += "\n--------------------------------------------------------";
 			for(const AclManager::FlattenRole &role : flatten_user_roles) {
-				const AclRoleAccessRules &role_rules = aclManager()->accessRoleRules(role.name);
-				for(const AclAccessRule &access_rule : role_rules) {
+				const acl::AclRoleAccessRules &role_rules = aclManager()->accessRoleRules(role.name);
+				for(const acl::AclAccessRule &access_rule : role_rules) {
 					tbl += '\n';
 					tbl += role.name + "'";
 					tbl += "\t" + to_string(role.weight);
@@ -701,7 +702,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	}
 	// find most specific path grant for role with highest weight
 	// user_flattent_grants are sorted by weight DESC
-	AclAccessRule most_specific_rule;
+	acl::AclAccessRule most_specific_rule;
 	if(rq_shv_path == CURRENT_CLIENT_SHV_PATH) {
 		// client has WR grant on currentClient node
 		most_specific_rule.grant = cp::AccessGrant{cp::Rpc::ROLE_WRITE};
@@ -718,11 +719,11 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 				old_weight = flatten_role.weight;
 			}
 			logAclResolveM() << "----- checking role:" << flatten_role.name << "with weight:" << flatten_role.weight << "nest level:" << flatten_role.nestLevel;
-			const AclRoleAccessRules &role_rules = aclManager()->accessRoleRules(flatten_role.name);
+			const acl::AclRoleAccessRules &role_rules = aclManager()->accessRoleRules(flatten_role.name);
 			if(role_rules.empty()) {
 				logAclResolveM() << "\t no paths defined.";
 			}
-			else for(const AclAccessRule &access_rule : role_rules) {
+			else for(const acl::AclAccessRule &access_rule : role_rules) {
 				// rules are sorted as most specific first
 				logAclResolveM() << "rule:" << access_rule.toRpcValue().toCpon();
 				if(access_rule.isPathMethodMatch(rq_shv_path, method)) {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "shvbrokerglobal.h"
+#include "../shviotqtglobal.h"
 
 #include <shv/chainpack/accessgrant.h>
 #include <shv/core/utils/shvpath.h>
@@ -8,9 +8,10 @@
 #include <map>
 
 namespace shv {
-namespace broker {
+namespace iotqt {
+namespace acl {
 
-struct SHVBROKER_DECL_EXPORT AclAccessRule
+struct SHVIOTQT_DECL_EXPORT AclAccessRule
 {
 public:
 	std::string pathPattern;
@@ -31,7 +32,7 @@ public:
 	bool isPathMethodMatch(const std::string &shv_path, const std::string &method) const;
 };
 
-class SHVBROKER_DECL_EXPORT AclRoleAccessRules : public std::vector<AclAccessRule>
+class SHVIOTQT_DECL_EXPORT AclRoleAccessRules : public std::vector<AclAccessRule>
 {
 public:
 	shv::chainpack::RpcValue toRpcValue() const;
@@ -42,6 +43,7 @@ public:
 	static AclRoleAccessRules fromRpcValue(const shv::chainpack::RpcValue &v);
 };
 
-} // namespace chainpack
+} // namespace acl
+} // namespace iotqt
 } // namespace shv
 

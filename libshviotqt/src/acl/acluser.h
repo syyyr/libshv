@@ -1,6 +1,6 @@
 #pragma once
 
-#include "shvbrokerglobal.h"
+#include "../shviotqtglobal.h"
 #include "aclpassword.h"
 
 #include <vector>
@@ -8,9 +8,10 @@
 namespace shv { namespace chainpack { class RpcValue; } }
 
 namespace shv {
-namespace broker {
+namespace iotqt {
+namespace acl {
 
-struct SHVBROKER_DECL_EXPORT AclUser
+struct SHVIOTQT_DECL_EXPORT AclUser
 {
 	//std::string name;
 	AclPassword password;
@@ -23,10 +24,11 @@ struct SHVBROKER_DECL_EXPORT AclUser
 	{}
 	//const std::string userName() const {return login.user;}
 	bool isValid() const {return password.isValid();}
-	shv::chainpack::RpcValue toRpcValueMap() const;
+	shv::chainpack::RpcValue toRpcValue() const;
 	static AclUser fromRpcValue(const shv::chainpack::RpcValue &v);
 };
 
-} // namespace chainpack
+} // namespace acl
+} // namespace iotqt
 } // namespace shv
 

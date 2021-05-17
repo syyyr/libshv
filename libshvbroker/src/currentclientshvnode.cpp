@@ -5,6 +5,7 @@
 #include <QCryptographicHash>
 
 namespace cp = shv::chainpack;
+namespace acl = shv::iotqt::acl;
 
 using namespace std;
 
@@ -117,9 +118,9 @@ shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack
 					if(cli) {
 						shv::broker::AclManager *acl = app->aclManager();
 						const string user_name = cli->userName();
-						shv::broker::AclUser acl_user = acl->user(user_name);
+						acl::AclUser acl_user = acl->user(user_name);
 						string current_password_sha1 = acl_user.password.password;
-						if(acl_user.password.format == shv::broker::AclPassword::Format::Plain) {
+						if(acl_user.password.format == acl::AclPassword::Format::Plain) {
 							current_password_sha1 = sha1_hex(current_password_sha1);
 						}
 						if(old_password_sha1.size() != current_password_sha1.size()) {
@@ -132,7 +133,7 @@ shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack
 							new_password_sha1 = sha1_hex(new_password_sha1);
 						}
 						acl_user.password.password = new_password_sha1;
-						acl_user.password.format = shv::broker::AclPassword::Format::Sha1;
+						acl_user.password.format = acl::AclPassword::Format::Sha1;
 						acl->setUser(user_name, acl_user);
 						return true;
 					}

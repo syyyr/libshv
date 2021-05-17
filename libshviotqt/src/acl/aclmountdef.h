@@ -1,25 +1,27 @@
 #pragma once
 
-#include "shvbrokerglobal.h"
+#include "../shviotqtglobal.h"
 
 #include <string>
 
 namespace shv { namespace chainpack { class RpcValue; } }
 
 namespace shv {
-namespace broker {
+namespace iotqt {
+namespace acl {
 
-struct SHVBROKER_DECL_EXPORT AclMountDef
+struct SHVIOTQT_DECL_EXPORT AclMountDef
 {
 	//std::string deviceId;
 	std::string mountPoint;
 	std::string description;
 
 	bool isValid() const {return !mountPoint.empty();}
-	shv::chainpack::RpcValue toRpcValueMap() const;
+	shv::chainpack::RpcValue toRpcValue() const;
 	static AclMountDef fromRpcValue(const shv::chainpack::RpcValue &v);
 };
 
-} // namespace chainpack
+} // namespace acl
+} // namespace iotqt
 } // namespace shv
 

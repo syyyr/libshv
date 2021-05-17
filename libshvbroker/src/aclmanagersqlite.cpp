@@ -16,6 +16,7 @@
 #define logAclManagerI() nCInfo("AclManager")
 
 namespace cp = shv::chainpack;
+namespace acl = shv::iotqt::acl;
 
 namespace shv {
 namespace broker {
@@ -173,7 +174,7 @@ void AclManagerSqlite::importAclConfigFiles()
 	AclManagerConfigFiles facl(m_brokerApp);
 	shvInfo() << "Importing ACL config files from:" << facl.configDir();
 	for(std::string id : facl.mountDeviceIds()) {
-		AclMountDef md = facl.mountDef(id);
+		acl::AclMountDef md = facl.mountDef(id);
 		//logAclManagerD() << id << md.toRpcValueMap().toCpon();
 		if(!md.isValid())
 			shvWarning() << "Cannot import invalid mount definition for device id:" << id;
@@ -181,15 +182,15 @@ void AclManagerSqlite::importAclConfigFiles()
 			aclSetMountDef(id, md);
 	}
 	for(std::string user : facl.users()) {
-		AclUser u = facl.user(user);
+		acl::AclUser u = facl.user(user);
 		aclSetUser(user, u);
 	}
 	for(std::string role : facl.roles()) {
-		AclRole r = facl.role(role);
+		acl::AclRole r = facl.role(role);
 		aclSetRole(role, r);
 	}
 	for(std::string role : facl.accessRoles()) {
-		AclRoleAccessRules rpt = facl.accessRoleRules(role);
+		acl::AclRoleAccessRules rpt = facl.accessRoleRules(role);
 		aclSetAccessRoleRules(role, rpt);
 	}
 }
@@ -199,9 +200,9 @@ std::vector<std::string> AclManagerSqlite::aclMountDeviceIds()
 	return sqlLoadFields(TBL_ACL_MOUNTS, "deviceId");
 }
 
-AclMountDef AclManagerSqlite::aclMountDef(const std::string &device_id)
+acl::AclMountDef AclManagerSqlite::aclMountDef(const std::string &device_id)
 {
-	AclMountDef ret;
+	acl::AclMountDef ret;
 	QSqlQuery q = sqlLoadRow(TBL_ACL_MOUNTS, "deviceId", QString::fromStdString(device_id));
 	if(q.next()) {
 		//ret.deviceId = device_id;
@@ -211,7 +212,7 @@ AclMountDef AclManagerSqlite::aclMountDef(const std::string &device_id)
 	return ret;
 }
 
-void AclManagerSqlite::aclSetMountDef(const std::string &device_id, const AclMountDef &md)
+void AclManagerSqlite::aclSetMountDef(const std::string &device_id, const acl::AclMountDef &md)
 {
 	if(md.isValid()) {
 		QString qs = "INSERT OR REPLACE INTO " + TBL_ACL_MOUNTS + " (deviceId, mountPoint, description) VALUES('%1', '%2', '%3')";
@@ -233,26 +234,26 @@ std::vector<std::string> AclManagerSqlite::aclUsers()
 	return sqlLoadFields(TBL_ACL_USERS, "name");
 }
 
-AclUser AclManagerSqlite::aclUser(const std::string &user_name)
+acl::AclUser AclManagerSqlite::aclUser(const std::string &user_name)
 {
-	AclUser ret;
+	acl::AclUser ret;
 	QSqlQuery q = sqlLoadRow(TBL_ACL_USERS, "name", QString::fromStdString(user_name));
 	if(q.next()) {
 		//ret.name = user_name;
 		ret.password.password = q.value("password").toString().toStdString();
-		ret.password.format = AclPassword::formatFromString(q.value("passwordFormat").toString().toStdString());
+		ret.password.format = acl::AclPassword::formatFromString(q.value("passwordFormat").toString().toStdString());
 		ret.roles = split_str_vec(q.value("roles").toString());
 	}
 	return ret;
 }
 
-void AclManagerSqlite::aclSetUser(const std::string &user_name, const AclUser &u)
+void AclManagerSqlite::aclSetUser(const std::string &user_name, const acl::AclUser &u)
 {
 	if(u.isValid()) {
 		QString qs = "INSERT OR REPLACE INTO " + TBL_ACL_USERS + " (name, password, passwordFormat, roles) VALUES('%1', '%2', '%3', '%4')";
 		qs = qs.arg(QString::fromStdString(user_name));
 		qs = qs.arg(QString::fromStdString(u.password.password));
-		qs = qs.arg(QString::fromStdString(AclPassword::formatToString(u.password.format)));
+		qs = qs.arg(QString::fromStdString(acl::AclPassword::formatToString(u.password.format)));
 		qs = qs.arg(join_str_vec(u.roles));
 		logAclManagerM() << qs;
 		execSql(qs);
@@ -269,9 +270,9 @@ std::vector<std::string> AclManagerSqlite::aclRoles()
 	return sqlLoadFields(TBL_ACL_ROLES, "name");
 }
 
-AclRole AclManagerSqlite::aclRole(const std::string &role_name)
+acl::AclRole AclManagerSqlite::aclRole(const std::string &role_name)
 {
-	AclRole ret;
+	acl::AclRole ret;
 	QSqlQuery q = sqlLoadRow(TBL_ACL_ROLES, "name", QString::fromStdString(role_name));
 	if(q.next()) {
 		ret.weight = q.value("weight").toInt();
@@ -289,7 +290,7 @@ AclRole AclManagerSqlite::aclRole(const std::string &role_name)
 	return ret;
 }
 
-void AclManagerSqlite::aclSetRole(const std::string &role_name, const AclRole &r)
+void AclManagerSqlite::aclSetRole(const std::string &role_name, const acl::AclRole &r)
 {
 	if(r.isValid()) {
 		QString qs = "INSERT OR REPLACE INTO " + TBL_ACL_ROLES + " (name, weight, roles, profile) VALUES('%1', %2, '%3', '%4')";
@@ -315,12 +316,12 @@ std::vector<std::string> AclManagerSqlite::aclAccessRoles()
 	return ret;
 }
 
-AclRoleAccessRules AclManagerSqlite::aclAccessRoleRules(const std::string &role_name)
+acl::AclRoleAccessRules AclManagerSqlite::aclAccessRoleRules(const std::string &role_name)
 {
-	AclRoleAccessRules ret;
+	acl::AclRoleAccessRules ret;
 	QSqlQuery q = execSql("SELECT * FROM " + TBL_ACL_ACCESS + " WHERE role='" + QString::fromStdString(role_name) + "'");
 	while(q.next()) {
-		AclAccessRule ag;
+		acl::AclAccessRule ag;
 		ag.pathPattern = q.value("path").toString().toStdString();
 		ag.method = q.value("method").toString().toStdString();
 		//ag.forwardUserLoginFromRequest = q.value(PathAccessGrant::FORWARD_USER_LOGIN).toBool();
@@ -343,7 +344,7 @@ AclRoleAccessRules AclManagerSqlite::aclAccessRoleRules(const std::string &role_
 	return ret;
 }
 
-void AclManagerSqlite::aclSetAccessRoleRules(const std::string &role_name, const AclRoleAccessRules &rules)
+void AclManagerSqlite::aclSetAccessRoleRules(const std::string &role_name, const acl::AclRoleAccessRules &rules)
 {
 	QString qs = "DELETE FROM " + TBL_ACL_ACCESS + " WHERE role='" + QString::fromStdString(role_name) + "'";
 	logAclManagerM() << qs;

@@ -3,13 +3,14 @@
 #include <shv/chainpack/rpcvalue.h>
 
 namespace shv {
-namespace broker {
+namespace iotqt {
+namespace acl {
 
-shv::chainpack::RpcValue AclUser::toRpcValueMap() const
+shv::chainpack::RpcValue AclUser::toRpcValue() const
 {
 	return shv::chainpack::RpcValue::Map {
 		//{"name", name},
-		{"password", password.toRpcValueMap()},
+		{"password", password.toRpcValue()},
 		{"roles", shv::chainpack::RpcValue::List::fromStringList(roles)},
 	};
 }
@@ -32,5 +33,6 @@ AclUser AclUser::fromRpcValue(const shv::chainpack::RpcValue &v)
 	return ret;
 }
 
-} // namespace chainpack
+} // namespace acl
+} // namespace iotqt
 } // namespace shv

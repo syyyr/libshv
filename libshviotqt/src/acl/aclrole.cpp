@@ -3,9 +3,10 @@
 #include <shv/chainpack/rpcvalue.h>
 
 namespace shv {
-namespace broker {
+namespace iotqt {
+namespace acl {
 
-shv::chainpack::RpcValue AclRole::toRpcValueMap() const
+shv::chainpack::RpcValue AclRole::toRpcValue() const
 {
 	if(isValid()) {
 		shv::chainpack::RpcValue::Map m { {"weight", weight}, };
@@ -39,5 +40,6 @@ AclRole AclRole::fromRpcValue(const shv::chainpack::RpcValue &v)
 	return ret;
 }
 
-} // namespace chainpack
+} // namespace acl
+} // namespace iotqt
 } // namespace shv

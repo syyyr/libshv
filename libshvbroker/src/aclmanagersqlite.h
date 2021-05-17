@@ -19,20 +19,20 @@ public:
 	// AclManager interface
 protected:
 	std::vector<std::string> aclMountDeviceIds() override;
-	AclMountDef aclMountDef(const std::string &device_id) override;
-	void aclSetMountDef(const std::string &device_id, const AclMountDef &md) override;
+	shv::iotqt::acl::AclMountDef aclMountDef(const std::string &device_id) override;
+	void aclSetMountDef(const std::string &device_id, const shv::iotqt::acl::AclMountDef &md) override;
 
 	std::vector<std::string> aclUsers() override;
-	AclUser aclUser(const std::string &user_name) override;
-	void aclSetUser(const std::string &user_name, const AclUser &u) override;
+	shv::iotqt::acl::AclUser aclUser(const std::string &user_name) override;
+	void aclSetUser(const std::string &user_name, const shv::iotqt::acl::AclUser &u) override;
 
 	std::vector<std::string> aclRoles() override;
-	AclRole aclRole(const std::string &role_name) override;
-	void aclSetRole(const std::string &role_name, const AclRole &r) override;
+	shv::iotqt::acl::AclRole aclRole(const std::string &role_name) override;
+	void aclSetRole(const std::string &role_name, const shv::iotqt::acl::AclRole &r) override;
 
 	std::vector<std::string> aclAccessRoles() override;
-	AclRoleAccessRules aclAccessRoleRules(const std::string &role_name) override;
-	void aclSetAccessRoleRules(const std::string &role_name, const AclRoleAccessRules &rules) override;
+	shv::iotqt::acl::AclRoleAccessRules aclAccessRoleRules(const std::string &role_name) override;
+	void aclSetAccessRoleRules(const std::string &role_name, const shv::iotqt::acl::AclRoleAccessRules &rules) override;
 private:
 	void checkAclTables();
 	void createAclSqlTables();
