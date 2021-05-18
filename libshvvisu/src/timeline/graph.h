@@ -57,6 +57,7 @@ public:
 		SHV_VARIANTMAP_FIELD2(double, m, setM, iniMapHeight, 2) // units
 		SHV_VARIANTMAP_FIELD2(double, v, setV, erticalHeaderWidth, 10) // units
 		SHV_VARIANTMAP_FIELD2(bool, s, setS, eparateChannels, true)
+		SHV_VARIANTMAP_FIELD2(bool, y, setY, AxisVisible, true)
 
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olor, QColor("#c8c8c8"))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorPanel, QColor("#414343"))
@@ -78,7 +79,7 @@ public:
 	Graph(QObject *parent = nullptr);
 	virtual ~Graph();
 
-	const Style& effectiveStyle() const { return  m_effectiveStyle; }
+	const Style& effectiveStyle() const { return  m_style; }
 
 	void setModel(GraphModel *model);
 	GraphModel *model() const;
@@ -155,7 +156,7 @@ public:
 	void resetZoom(int channel_ix);
 	void zoomToSelection();
 
-	const Style& style() const { return m_effectiveStyle; }
+	const Style& style() const { return m_style; }
 	void setStyle(const Style &st);
 	void setDefaultChannelStyle(const GraphChannel::Style &st);
 	GraphChannel::Style defaultChannelStyle() const { return m_defaultChannelStyle; }
@@ -229,7 +230,7 @@ protected:
 
 	QTimeZone m_timeZone;
 
-	Style m_effectiveStyle;
+	Style m_style;
 	GraphChannel::Style m_defaultChannelStyle;
 
 	QVector<GraphChannel*> m_channels;
@@ -267,7 +268,6 @@ protected:
 		QRect miniMapRect;
 		QRect xAxisRect;
 		QRect cornerCellRect;
-		bool isYAxisVisible = true;
 	} m_layout;
 
 	QPixmap m_miniMapCache;
