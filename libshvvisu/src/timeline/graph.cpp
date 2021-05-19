@@ -253,6 +253,17 @@ void Graph::setChannelMaximized(int channel_ix, bool is_maximized)
 	emit layoutChanged();
 }
 
+void Graph::setYAxisVisible(bool is_visible)
+{
+	m_style.setYAxisVisible(is_visible);
+	emit layoutChanged();
+}
+
+bool Graph::isYAxisVisible()
+{
+	return 	m_style.yAxisVisible();
+}
+
 timemsec_t Graph::miniMapPosToTime(int pos) const
 {
 	auto pos2time = posToTimeFn(QPoint{m_layout.miniMapRect.left(), m_layout.miniMapRect.right()}, xRange());
@@ -517,7 +528,6 @@ void Graph::clearMiniMapCache()
 void Graph::setStyle(const Graph::Style &st)
 {
 	m_style = st;
-	m_effectiveStyle = m_style;
 }
 
 void Graph::setDefaultChannelStyle(const GraphChannel::Style &st)
@@ -697,13 +707,13 @@ int Graph::u2px(double u) const
 
 double Graph::u2pxf(double u) const
 {
-	int sz = m_effectiveStyle.unitSize();
+	int sz = m_style.unitSize();
 	return sz * u;
 }
 
 double Graph::px2u(int px) const
 {
-	double sz = m_effectiveStyle.unitSize();
+	double sz = m_style.unitSize();
 	return (px / sz);
 }
 
@@ -716,21 +726,24 @@ void Graph::makeLayout(const QRect &pref_rect)
 	graph_size.setWidth(pref_rect.width());
 	int grid_w = graph_size.width();
 	int x_axis_pos = 0;
-	x_axis_pos += u2px(m_effectiveStyle.leftMargin());
-	x_axis_pos += u2px(m_effectiveStyle.verticalHeaderWidth());
-	x_axis_pos += u2px(m_effectiveStyle.yAxisWidth());
+	x_axis_pos += u2px(m_style.leftMargin());
+	x_axis_pos += u2px(m_style.verticalHeaderWidth());
+
+	if (m_style.yAxisVisible())
+		x_axis_pos += u2px(m_style.yAxisWidth());
+
 	grid_w -= x_axis_pos;
-	grid_w -= u2px(m_effectiveStyle.rightMargin());
-	m_layout.miniMapRect.setHeight(u2px(m_effectiveStyle.miniMapHeight()));
+	grid_w -= u2px(m_style.rightMargin());
+	m_layout.miniMapRect.setHeight(u2px(m_style.miniMapHeight()));
 	m_layout.miniMapRect.setLeft(x_axis_pos);
 	m_layout.miniMapRect.setWidth(grid_w);
 
 	m_layout.xAxisRect = m_layout.miniMapRect;
-	m_layout.xAxisRect.setHeight(u2px(m_effectiveStyle.xAxisHeight()));
+	m_layout.xAxisRect.setHeight(u2px(m_style.xAxisHeight()));
 
 	m_layout.cornerCellRect = m_layout.xAxisRect;
 	m_layout.cornerCellRect.setHeight(m_layout.cornerCellRect.height() + m_layout.miniMapRect.height());
-	m_layout.cornerCellRect.setLeft(u2px(m_effectiveStyle.leftMargin()));
+	m_layout.cornerCellRect.setLeft(u2px(m_style.leftMargin()));
 	m_layout.cornerCellRect.setWidth(m_layout.xAxisRect.left() - m_layout.cornerCellRect.left());
 
 	// hide clickable areas, visible channels will show them again
@@ -763,14 +776,14 @@ void Graph::makeLayout(const QRect &pref_rect)
 		ch->m_layout.graphAreaRect.setHeight(ch_h);
 		sum_h_min += ch_h;
 		if(i > 0)
-			sum_h_min += u2px(m_effectiveStyle.channelSpacing());
+			sum_h_min += u2px(m_style.channelSpacing());
 	}
-	sum_h_min += u2px(m_effectiveStyle.xAxisHeight());
-	sum_h_min += u2px(m_effectiveStyle.miniMapHeight());
+	sum_h_min += u2px(m_style.xAxisHeight());
+	sum_h_min += u2px(m_style.miniMapHeight());
 	int h_rest = pref_rect.height();
 	h_rest -= sum_h_min;
-	h_rest -= u2px(m_effectiveStyle.topMargin());
-	h_rest -= u2px(m_effectiveStyle.bottomMargin());
+	h_rest -= u2px(m_style.topMargin());
+	h_rest -= u2px(m_style.bottomMargin());
 	if(h_rest > 0) {
 		// distribute free widget height space to channel's rects heights
 		std::sort(rests.begin(), rests.end(), [](const Rest &a, const Rest &b) {
@@ -789,7 +802,7 @@ void Graph::makeLayout(const QRect &pref_rect)
 	}
 	// shift channel rects
 	int widget_height = 0;
-	widget_height += u2px(m_effectiveStyle.topMargin());
+	widget_height += u2px(m_style.topMargin());
 	for (int i = visible_channels.count() - 1; i >= 0; --i) {
 		GraphChannel *ch = channelAt(visible_channels[i]);
 
@@ -797,16 +810,16 @@ void Graph::makeLayout(const QRect &pref_rect)
 		//ch->layout.graphRect.setWidth(layout.navigationBarRect.width());
 
 		ch->m_layout.verticalHeaderRect = ch->m_layout.graphAreaRect;
-		ch->m_layout.verticalHeaderRect.setX(u2px(m_effectiveStyle.leftMargin()));
-		ch->m_layout.verticalHeaderRect.setWidth(u2px(m_effectiveStyle.verticalHeaderWidth()));
+		ch->m_layout.verticalHeaderRect.setX(u2px(m_style.leftMargin()));
+		ch->m_layout.verticalHeaderRect.setWidth(u2px(m_style.verticalHeaderWidth()));
 
 		ch->m_layout.yAxisRect = ch->m_layout.verticalHeaderRect;
 		ch->m_layout.yAxisRect.moveLeft(ch->m_layout.verticalHeaderRect.right());
-		ch->m_layout.yAxisRect.setWidth(u2px(m_effectiveStyle.yAxisWidth()));
+		ch->m_layout.yAxisRect.setWidth((m_style.yAxisVisible()) ? u2px(m_style.yAxisWidth()) : 0);
 
 		widget_height += ch->m_layout.graphAreaRect.height();
 		if(i > 0)
-			widget_height += u2px(m_effectiveStyle.channelSpacing());
+			widget_height += u2px(m_style.channelSpacing());
 	}
 
 	// make data area rect a bit slimmer to not clip wide graph line
@@ -824,10 +837,10 @@ void Graph::makeLayout(const QRect &pref_rect)
 	}
 
 	m_layout.xAxisRect.moveTop(widget_height);
-	widget_height += u2px(m_effectiveStyle.xAxisHeight());
+	widget_height += u2px(m_style.xAxisHeight());
 	m_layout.miniMapRect.moveTop(widget_height);
-	widget_height += u2px(m_effectiveStyle.miniMapHeight());
-	widget_height += u2px(m_effectiveStyle.bottomMargin());
+	widget_height += u2px(m_style.miniMapHeight());
+	widget_height += u2px(m_style.bottomMargin());
 
 	graph_size.setHeight(widget_height);
 	shvDebug() << "\tw:" << graph_size.width() << "h:" << graph_size.height();
@@ -942,16 +955,16 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 
 void Graph::drawBackground(QPainter *painter, const QRect &dirty_rect)
 {
-	painter->fillRect(dirty_rect, m_effectiveStyle.colorBackground());
+	painter->fillRect(dirty_rect, m_style.colorBackground());
 }
 
 void Graph::drawCornerCell(QPainter *painter)
 {
-	painter->fillRect(m_layout.cornerCellRect, m_effectiveStyle.colorPanel());
+	painter->fillRect(m_layout.cornerCellRect, m_style.colorPanel());
 
 	QPen pen;
 	pen.setWidth(u2px(0.1));
-	pen.setColor(m_effectiveStyle.colorBackground());
+	pen.setColor(m_style.colorBackground());
 	painter->setPen(pen);
 	painter->drawRect(m_layout.cornerCellRect);
 	m_cornerCellButtonBox->draw(painter);
@@ -1009,10 +1022,10 @@ void Graph::drawMiniMap(QPainter *painter)
 
 void Graph::drawVerticalHeader(QPainter *painter, int channel)
 {
-	int header_inset = u2px(m_effectiveStyle.headerInset());
+	int header_inset = u2px(m_style.headerInset());
 	GraphChannel *ch = channelAt(channel);
-	QColor c = m_effectiveStyle.color();
-	QColor bc = m_effectiveStyle.colorPanel();
+	QColor c = m_style.color();
+	QColor bc = m_style.colorPanel();
 	//bc.setAlphaF(0.05);
 	QPen pen;
 	pen.setColor(c);
@@ -1026,7 +1039,7 @@ void Graph::drawVerticalHeader(QPainter *painter, int channel)
 	if(name.isEmpty())
 		name = tr("<no name>");
 	//shvInfo() << channel << shv_path << name;
-	QFont font = m_effectiveStyle.font();
+	QFont font = m_style.font();
 	//drawRectText(painter, ch->m_layout.verticalHeaderRect, name, font, c, bc);
 	painter->save();
 	painter->fillRect(ch->m_layout.verticalHeaderRect, bc);
@@ -1067,7 +1080,7 @@ void Graph::drawGrid(QPainter *painter, int channel)
 	const GraphChannel *ch = channelAt(channel);
 	const XAxis &x_axis = m_state.xAxis;
 	if(!x_axis.isValid()) {
-		drawRectText(painter, ch->m_layout.graphAreaRect, "grid", m_effectiveStyle.font(), ch->m_effectiveStyle.colorGrid());
+		drawRectText(painter, ch->m_layout.graphAreaRect, "grid", m_style.font(), ch->m_effectiveStyle.colorGrid());
 		return;
 	}
 	QColor gc = ch->m_effectiveStyle.colorGrid();
@@ -1124,7 +1137,7 @@ void Graph::drawGrid(QPainter *painter, int channel)
 
 void Graph::drawXAxis(QPainter *painter)
 {
-	painter->fillRect(m_layout.xAxisRect, m_effectiveStyle.colorPanel());
+	painter->fillRect(m_layout.xAxisRect, m_style.colorPanel());
 	const XAxis &axis = m_state.xAxis;
 	if(!axis.isValid()) {
 		//drawRectText(painter, m_layout.xAxisRect, "x-axis", m_effectiveStyle.font(), Qt::green);
@@ -1132,13 +1145,13 @@ void Graph::drawXAxis(QPainter *painter)
 	}
 	painter->save();
 	painter->setClipRect(m_layout.xAxisRect);
-	QFont font = m_effectiveStyle.font();
+	QFont font = m_style.font();
 	QFontMetrics fm(font);
 	QPen pen;
 	pen.setWidth(u2px(0.1));
 	int tick_len = u2px(axis.tickLen);
 
-	pen.setColor(m_effectiveStyle.colorAxis());
+	pen.setColor(m_style.colorAxis());
 	painter->setPen(pen);
 	painter->drawLine(m_layout.xAxisRect.topLeft(), m_layout.xAxisRect.topRight());
 
@@ -1237,7 +1250,7 @@ void Graph::drawXAxis(QPainter *painter)
 		int inset = u2px(0.2);
 		r.adjust(-inset, 0, inset, 0);
 		r.moveTopLeft(m_layout.xAxisRect.topRight() + QPoint{-r.width() - u2px(0.2), 2*tick_len});
-		painter->fillRect(r, m_effectiveStyle.colorPanel());
+		painter->fillRect(r, m_style.colorPanel());
 		painter->drawText(r, text);
 	}
 	auto current_time = m_state.currentTime;
@@ -1245,13 +1258,13 @@ void Graph::drawXAxis(QPainter *painter)
 		int x = timeToPos(current_time);
 		if(x > m_layout.xAxisRect.left() + 10) {
 			// draw marker + time string only if current time is slightly greater than graph leftmost time
-			QColor color = m_effectiveStyle.colorCurrentTime();
+			QColor color = m_style.colorCurrentTime();
 			drawXAxisTimeMark(painter, current_time, color);
 		}
 	}
 	if(crossHairPos().isValid()) {
 		timemsec_t time = posToTime(crossHairPos().possition.x());
-		QColor color = m_effectiveStyle.colorCrossBar();
+		QColor color = m_style.colorCrossBar();
 		drawXAxisTimeMark(painter, time, color);
 	}
 	painter->restore();
@@ -1259,17 +1272,18 @@ void Graph::drawXAxis(QPainter *painter)
 
 void Graph::drawYAxis(QPainter *painter, int channel)
 {
-	if(m_effectiveStyle.yAxisWidth() == 0)
+	if(!isYAxisVisible())
 		return;
+
 	const GraphChannel *ch = channelAt(channel);
 	const GraphChannel::YAxis &axis = ch->m_state.axis;
 	if(qFuzzyCompare(axis.tickInterval, 0)) {
-		drawRectText(painter, ch->m_layout.yAxisRect, "y-axis", m_effectiveStyle.font(), ch->m_effectiveStyle.colorAxis());
+		drawRectText(painter, ch->m_layout.yAxisRect, "y-axis", m_style.font(), ch->m_effectiveStyle.colorAxis());
 		return;
 	}
 	painter->save();
-	painter->fillRect(ch->m_layout.yAxisRect, m_effectiveStyle.colorPanel());
-	QFont font = m_effectiveStyle.font();
+	painter->fillRect(ch->m_layout.yAxisRect, m_style.colorPanel());
+	QFont font = m_style.font();
 	QFontMetrics fm(font);
 	QPen pen;
 	pen.setWidth(u2px(0.1));
@@ -1612,7 +1626,7 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 	}
 	shvDebug() << "drawCrossHair:" << ch->shvPath();
 	painter->save();
-	QColor color = m_effectiveStyle.colorCrossBar();
+	QColor color = m_style.colorCrossBar();
 	if(channel_ix == crossHairPos().channelIndex) {
 		/// draw point on current value graph
 		timemsec_t time = posToTime(crossbar_pos.x());
@@ -1690,7 +1704,7 @@ void Graph::drawSelection(QPainter *painter)
 {
 	if(m_state.selectionRect.isNull())
 		return;
-	QColor c = m_effectiveStyle.colorSelection();
+	QColor c = m_style.colorSelection();
 	c.setAlphaF(0.3);
 	painter->fillRect(m_state.selectionRect, c);
 }
@@ -1707,7 +1721,7 @@ void Graph::drawCurrentTime(QPainter *painter, int channel_ix)
 
 	painter->save();
 	QPen pen;
-	auto color = m_effectiveStyle.colorCurrentTime();
+	auto color = m_style.colorCurrentTime();
 	auto d = u2pxf(0.2);
 	pen.setWidthF(d);
 	pen.setColor(color);
@@ -1743,7 +1757,7 @@ void Graph::drawXAxisTimeMark(QPainter *painter, time_t time, const QColor &colo
 	QString text = dt.toString(Qt::ISODate);
 	//shvInfo() << text;
 	p1.setY(p1.y() + tick_len);
-	drawCenteredRectText(painter, p1, text, m_effectiveStyle.font(), color.darker(400), color);
+	drawCenteredRectText(painter, p1, text, m_style.font(), color.darker(400), color);
 }
 
 void Graph::onButtonBoxClicked(int button_id)

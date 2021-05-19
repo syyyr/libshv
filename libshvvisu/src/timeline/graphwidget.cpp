@@ -582,6 +582,18 @@ void GraphWidget::showGraphContextMenu(const QPoint &mouse_pos)
 	menu.addAction(tr("Hide channels without changes"), [this]() {
 		m_graph->hideFlatChannels();
 	});
+
+	if (m_graph->isYAxisVisible()) {
+		menu.addAction(tr("Hide Y axis"), [this]() {
+			m_graph->setYAxisVisible(false);
+		});
+	}
+	else {
+		menu.addAction(tr("Show Y axis"), [this]() {
+			m_graph->setYAxisVisible(true);
+		});
+	}
+
 	if(menu.actions().count())
 		menu.exec(mapToGlobal(mouse_pos));
 }

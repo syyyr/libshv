@@ -57,6 +57,7 @@ public:
 		SHV_VARIANTMAP_FIELD2(double, m, setM, iniMapHeight, 2) // units
 		SHV_VARIANTMAP_FIELD2(double, v, setV, erticalHeaderWidth, 10) // units
 		SHV_VARIANTMAP_FIELD2(bool, s, setS, eparateChannels, true)
+		SHV_VARIANTMAP_FIELD2(bool, y, setY, AxisVisible, true)
 
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olor, QColor("#c8c8c8"))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorPanel, QColor("#414343"))
@@ -78,7 +79,7 @@ public:
 	Graph(QObject *parent = nullptr);
 	virtual ~Graph();
 
-	const Style& effectiveStyle() const { return  m_effectiveStyle; }
+	const Style& effectiveStyle() const { return  m_style; }
 
 	void setModel(GraphModel *model);
 	GraphModel *model() const;
@@ -145,6 +146,9 @@ public:
 	XRange xRangeZoom() const { return m_state.xRangeZoom; }
 	void setXRange(const XRange &r, bool keep_zoom = false);
 	void setXRangeZoom(const XRange &r);
+
+	void setYAxisVisible(bool is_visible);
+	bool isYAxisVisible();
 
 	void setYRange(int channel_ix, const YRange &r);
 	void enlargeYRange(int channel_ix, double step);
@@ -225,8 +229,6 @@ protected:
 	GraphModel *m_model = nullptr;
 
 	QTimeZone m_timeZone;
-
-	Style m_effectiveStyle;
 
 	Style m_style;
 	GraphChannel::Style m_defaultChannelStyle;
