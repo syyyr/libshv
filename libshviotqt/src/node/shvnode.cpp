@@ -130,8 +130,19 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 	core::StringViewList shv_path = shv::core::utils::ShvPath::split(shv_path_str);
 	cp::RpcResponse resp = cp::RpcResponse::forRequest(meta);
 	try {
+		if(!shv_path.empty()) {
+			ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
+			if(nd) {
+				shvDebug() << "Child node:" << shv_path.at(0).toString() << "on path:" << shv_path.join('/') << "FOUND";
+				std::string new_path = core::StringView::join(++shv_path.begin(), shv_path.end(), '/');
+				cp::RpcMessage::setShvPath(meta, new_path);
+				nd->handleRawRpcRequest(std::move(meta), std::move(data));
+				return;
+			}
+		}
 		const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
 		if(mm) {
+			shvDebug() << "Metamethod:" << method << "on path:" << shv_path.join('/') << "FOUND";
 			std::string errmsg;
 			cp::RpcMessage rpc_msg = cp::RpcDriver::composeRpcMessage(std::move(meta), data, &errmsg);
 			if(!errmsg.empty())
@@ -144,23 +155,11 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 			}
 		}
 		else {
-			if(shv_path.empty()) {
-				SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + "' doesn't exist");
-			}
-			else {
-				//int client_id = cp::RpcMessage::peekCallerId(meta);
-				ShvNode *nd = childNode(shv_path.at(0).toString());
-				if(nd) {
-					std::string new_path = core::StringView::join(++shv_path.begin(), shv_path.end(), '/');
-					//cp::RpcValue::MetaData meta2(meta);
-					cp::RpcMessage::setShvPath(meta, new_path);
-					nd->handleRawRpcRequest(std::move(meta), std::move(data));
-					return;
-				}
-				else {
-					SHV_EXCEPTION("Method: '" + method + "' on path '" + shvPath() + '/' + shv_path_str + "' doesn't exist");
-				}
-			}
+			core::utils::ShvPath path = shvPath();
+			if(!path.empty() && !shv_path_str.empty())
+				path += '/';
+			path += shv_path_str;
+			SHV_EXCEPTION("Method: '" + method + "' on path '" + path + "' doesn't exist");
 		}
 	}
 	catch (const chainpack::RpcException &e) {
