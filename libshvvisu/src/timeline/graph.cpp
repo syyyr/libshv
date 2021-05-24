@@ -522,11 +522,6 @@ void Graph::zoomToSelection(bool zoom_vertically)
 
 		}
 	}
-	else {
-		for (int i = 0; i < channelCount(); ++i) {
-			resetZoom(i);
-		}
-	}
 	setXRangeZoom(xrange);
 }
 

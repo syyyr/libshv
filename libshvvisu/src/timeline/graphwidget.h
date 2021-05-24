@@ -56,7 +56,7 @@ protected:
 	bool isMouseAboveLeftMiniMapHandle(const QPoint &pos) const;
 	bool isMouseAboveRightMiniMapHandle(const QPoint &pos) const;
 	bool isMouseAboveMiniMapSlider(const QPoint &pos) const;
-	int channelIndexOnGraphVerticalHeader(const QPoint &pos) const;
+	int posToChannelVerticalHeader(const QPoint &pos) const;
 	int posToChannel(const QPoint &pos) const;
 	QString enumToString(int value, const TypeDescr &type_descr);
 
@@ -64,7 +64,7 @@ protected:
 	Graph *m_graph = nullptr;
 	QSize m_graphPreferredSize;
 
-	enum class MouseOperation { None = 0, MiniMapLeftResize, MiniMapRightResize, MiniMapScrollZoom, GraphDataAreaPress, GraphAreaMove, GraphAreaSelection };
+	enum class MouseOperation { None = 0, MiniMapLeftResize, MiniMapRightResize, MiniMapScrollZoom, GraphDataAreaPress, GraphAreaMove, GraphAreaSelection, GraphDataAreaRightPress };
 	MouseOperation m_mouseOperation = MouseOperation::None;
 	QPoint m_recentMousePos;
 };

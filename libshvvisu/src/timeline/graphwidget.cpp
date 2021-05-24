@@ -174,7 +174,7 @@ bool GraphWidget::isMouseAboveMiniMapSlider(const QPoint &pos) const
 	return (x1 < pos.x()) && (pos.x() < x2);
 }
 
-int GraphWidget::channelIndexOnGraphVerticalHeader(const QPoint &pos) const
+int GraphWidget::posToChannelVerticalHeader(const QPoint &pos) const
 {
 	const Graph *gr = graph();
 	for (int i = 0; i < gr->channelCount(); ++i) {
@@ -253,6 +253,17 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 			}
 		}
 	}
+	else if(event->button() == Qt::RightButton) {
+		if(posToChannel(pos) >= 0) {
+			if(event->modifiers() == Qt::NoModifier) {
+				logMouseSelection() << "GraphAreaRightPress";
+				m_mouseOperation = MouseOperation::GraphDataAreaRightPress;
+				m_recentMousePos = pos;
+				event->accept();
+				return;
+			}
+		}
+	}
 	Super::mousePressEvent(event);
 }
 
@@ -283,12 +294,25 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 			*/
 		}
 		else if(old_mouse_op == MouseOperation::GraphAreaSelection) {
-			bool zoom_vertically = event->modifiers() & Qt::ShiftModifier;
+			bool zoom_vertically = event->modifiers() == Qt::ShiftModifier;
 			graph()->zoomToSelection(zoom_vertically);
 			graph()->setSelectionRect(QRect());
 			event->accept();
 			update();
 			return;
+		}
+	}
+	else if(event->button() == Qt::RightButton) {
+		if(old_mouse_op == MouseOperation::GraphDataAreaRightPress) {
+			if(event->modifiers() == Qt::NoModifier) {
+				int ch_ix = posToChannel(event->pos());
+				if(ch_ix >= 0) {
+					showChannelContextMenu(ch_ix, event->pos());
+					event->accept();
+					update();
+					return;
+				}
+			}
 		}
 	}
 	Super::mouseReleaseEvent(event);
@@ -376,6 +400,8 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		update();
 		return;
 	}
+	case MouseOperation::GraphDataAreaRightPress:
+		return;
 	}
 	int ch_ix = posToChannel(pos);
 	if(ch_ix >= 0 && !isMouseAboveMiniMap(pos)) {
@@ -462,7 +488,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		hideCrossHair();
 	}
 
-	ch_ix = channelIndexOnGraphVerticalHeader(pos);
+	ch_ix = posToChannelVerticalHeader(pos);
 	if(ch_ix > -1) {
 		const GraphChannel *ch = gr->channelAt(ch_ix);
 		QString text = tr("Channel:") + " " + ch->shvPath();
@@ -619,7 +645,7 @@ void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos
 	menu.addAction(tr("Hide"), [this, channel_ix]() {
 		m_graph->setChannelVisible(channel_ix, false);
 	});
-	menu.addAction(tr("Reset Y-range"), [this, channel_ix, ch]() {
+	menu.addAction(tr("Reset Y-zoom"), [this, channel_ix, ch]() {
 		//shvInfo() << "settings";
 		timeline::GraphModel *m = m_graph->model();
 		if(!m)
