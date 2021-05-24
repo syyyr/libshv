@@ -186,7 +186,7 @@ int GraphWidget::channelIndexOnGraphVerticalHeader(const QPoint &pos) const
 	return -1;
 }
 
-int GraphWidget::channelIndexOnGraphDataAreaIndex(const QPoint &pos) const
+int GraphWidget::posToChannel(const QPoint &pos) const
 {
 	const Graph *gr = graph();
 	int ch_ix = gr->posToChannel(pos);
@@ -206,7 +206,7 @@ QString GraphWidget::enumToString(int value, const TypeDescr &type_descr)
 void GraphWidget::mouseDoubleClickEvent(QMouseEvent *event)
 {
 	QPoint pos = event->pos();
-	if(channelIndexOnGraphDataAreaIndex(pos) >= 0) {
+	if(posToChannel(pos) >= 0) {
 		if(event->modifiers() == Qt::NoModifier) {
 			emit graphChannelDoubleClicked(pos);
 			event->accept();
@@ -237,7 +237,7 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 			event->accept();
 			return;
 		}
-		else if(channelIndexOnGraphDataAreaIndex(pos) >= 0) {
+		else if(posToChannel(pos) >= 0) {
 			if(event->modifiers() == Qt::ControlModifier) {
 				m_mouseOperation = MouseOperation::GraphAreaMove;
 				m_recentMousePos = pos;
@@ -283,7 +283,8 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 			*/
 		}
 		else if(old_mouse_op == MouseOperation::GraphAreaSelection) {
-			graph()->zoomToSelection();
+			bool zoom_vertically = event->modifiers() & Qt::ShiftModifier;
+			graph()->zoomToSelection(zoom_vertically);
 			graph()->setSelectionRect(QRect());
 			event->accept();
 			update();
@@ -376,7 +377,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		return;
 	}
 	}
-	int ch_ix = channelIndexOnGraphDataAreaIndex(pos);
+	int ch_ix = posToChannel(pos);
 	if(ch_ix >= 0 && !isMouseAboveMiniMap(pos)) {
 		setCursor(Qt::BlankCursor);
 		gr->setCrossHairPos({ch_ix, pos});
@@ -493,7 +494,7 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
 	QPoint pos = event->position().toPoint();
 #endif
 	bool is_zoom_on_slider = isMouseAboveMiniMapSlider(pos);
-	bool is_zoom_on_graph = (event->modifiers() == Qt::ControlModifier) && channelIndexOnGraphDataAreaIndex(pos) >= 0;
+	bool is_zoom_on_graph = (event->modifiers() == Qt::ControlModifier) && posToChannel(pos) >= 0;
 	static constexpr int ZOOM_STEP = 10;
 	if(is_zoom_on_slider) {
 		Graph *gr = graph();

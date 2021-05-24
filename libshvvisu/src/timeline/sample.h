@@ -38,6 +38,7 @@ struct Range
 
 	//bool operator==(const T &o) const { return min == o.min && max == o.max; }
 
+	Range& normalize() {if (min > max)  std::swap(min, max); return *this; }
 	bool isValid() const { return interval() >= 0; }
 	bool isEmpty() const { return interval() > 0; }
 	T interval() const {return max - min;}

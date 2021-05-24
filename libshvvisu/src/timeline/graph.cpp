@@ -500,14 +500,32 @@ void Graph::resetZoom(int channel_ix)
 	setYRangeZoom(channel_ix, ch->yRange());
 }
 
-void Graph::zoomToSelection()
+void Graph::zoomToSelection(bool zoom_vertically)
 {
 	shvLogFuncFrame();
 	XRange xrange;
 	xrange.min = posToTime(m_state.selectionRect.left());
 	xrange.max = posToTime(m_state.selectionRect.right());
-	if (xrange.min > xrange.max) {
-		std::swap(xrange.min, xrange.max);
+	xrange.normalize();
+	if(zoom_vertically) {
+		int ch1 = posToChannel(m_state.selectionRect.topLeft());
+		int ch2 = posToChannel(m_state.selectionRect.bottomRight());
+		if(ch1 == ch2 && ch1 >= 0) {
+			const GraphChannel *ch = channelAt(ch1);
+			if(ch) {
+				YRange yrange;
+				yrange.min = ch->posToValue(m_state.selectionRect.top());
+				yrange.max = ch->posToValue(m_state.selectionRect.bottom());
+				yrange.normalize();
+				setYRangeZoom(ch1, yrange);
+			}
+
+		}
+	}
+	else {
+		for (int i = 0; i < channelCount(); ++i) {
+			resetZoom(i);
+		}
 	}
 	setXRangeZoom(xrange);
 }

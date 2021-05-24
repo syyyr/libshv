@@ -154,7 +154,7 @@ public:
 	void enlargeYRange(int channel_ix, double step);
 	void setYRangeZoom(int channel_ix, const YRange &r);
 	void resetZoom(int channel_ix);
-	void zoomToSelection();
+	void zoomToSelection(bool zoom_vertically);
 
 	const Style& style() const { return m_style; }
 	void setStyle(const Style &st);
