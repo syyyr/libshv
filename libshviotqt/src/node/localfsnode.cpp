@@ -12,29 +12,55 @@ namespace shv {
 namespace iotqt {
 namespace node {
 
-static const char M_SIZE[] = "size";
-static const char M_READ[] = "read";
 static const char M_WRITE[] = "write";
 static const char M_DELETE[] = "delete";
 static const char M_MKFILE[] = "mkfile";
 static const char M_MKDIR[] = "mkdir";
 static const char M_RMDIR[] = "rmdir";
 
-LocalFSNode::LocalFSNode(const QString &root_path, Super *parent)
-	: Super(parent)
+static const std::vector<cp::MetaMethod> meta_methods_dir {
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_BROWSE},
+	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_BROWSE},
+	{M_MKFILE, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_WRITE},
+	{M_MKDIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_WRITE},
+	{M_RMDIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_SERVICE}
+};
+
+static const std::vector<cp::MetaMethod> meta_methods_dir_write_file {
+	{M_WRITE, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_WRITE},
+};
+
+static const std::vector<cp::MetaMethod> meta_methods_file_modificable {
+	{M_WRITE, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_WRITE},
+	{M_DELETE, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::ROLE_SERVICE}
+};
+
+static const std::vector<cp::MetaMethod> & get_meta_methods_file()
+{
+	static std::vector<cp::MetaMethod> meta_methods;
+	if (meta_methods.empty()) {
+		meta_methods = FileNode::meta_methods_file_base;
+		meta_methods.insert(meta_methods.end(), meta_methods_file_modificable.begin(), meta_methods_file_modificable.end());
+	}
+	return meta_methods;
+
+}
+
+LocalFSNode::LocalFSNode(const QString &root_path, ShvNode *parent)
+	: Super({}, parent)
+	, m_rootDir(root_path)
+{
+}
+
+LocalFSNode::LocalFSNode(const QString &root_path, const std::string &node_id, ShvNode *parent)
+	: Super(node_id, parent)
 	, m_rootDir(root_path)
 {
 }
 
 chainpack::RpcValue LocalFSNode::callMethod(const ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
 {
-	if(method == M_SIZE) {
-		return ndSize(QString::fromStdString(shv_path.join('/')));
-	}
-	else if(method == M_READ) {
-		return ndRead(QString::fromStdString(shv_path.join('/')));
-	}
-	else if(method == M_WRITE) {
+	if(method == M_WRITE) {
 		return ndWrite(QString::fromStdString(shv_path.join('/')), params);
 	}
 	else if(method == M_DELETE) {
@@ -78,32 +104,11 @@ chainpack::RpcValue LocalFSNode::hasChildren(const ShvNode::StringViewList &shv_
 	return isDir(shv_path);
 }
 
-static std::vector<cp::MetaMethod> meta_methods_dir {
-	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_BROWSE},
-	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_BROWSE},
-	{M_MKFILE, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_WRITE},
-	{M_MKDIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_WRITE},
-	{M_RMDIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_SERVICE}
-};
-
-static std::vector<cp::MetaMethod> meta_methods_dir_write_file {
-	{M_WRITE, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_WRITE},
-};
-
-static std::vector<cp::MetaMethod> meta_methods_file {
-	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_BROWSE},
-	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_BROWSE},
-	{M_SIZE, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::ROLE_BROWSE},
-	{M_READ, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::ROLE_READ},
-	{M_WRITE, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_WRITE},
-	{M_DELETE, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::ROLE_SERVICE}
-};
-
 size_t LocalFSNode::methodCount(const ShvNode::StringViewList &shv_path)
 {
 	QFileInfo fi = ndFileInfo(QString::fromStdString(shv_path.join('/')));
 	if(fi.exists())
-		return isDir(shv_path) ? meta_methods_dir.size() : meta_methods_file.size();
+		return isDir(shv_path) ? meta_methods_dir.size() : get_meta_methods_file().size();
 	if(!shv_path.empty()) {
 		StringViewList dir_path = shv_path.mid(0, shv_path.size() - 1);
 		fi = ndFileInfo(QString::fromStdString(dir_path.join('/')));
@@ -117,12 +122,12 @@ const chainpack::MetaMethod *LocalFSNode::metaMethod(const StringViewList &shv_p
 {
 	QFileInfo fi = ndFileInfo(QString::fromStdString(shv_path.join('/')));
 	if(fi.exists()) {
-		size_t meta_methods_size = (fi.isDir()) ? meta_methods_dir.size() : meta_methods_file.size();
+		size_t meta_methods_size = (fi.isDir()) ? meta_methods_dir.size() : get_meta_methods_file().size();
 
 		if(meta_methods_size <= ix)
 			SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " of: " + std::to_string(meta_methods_size));
 
-		return (fi.isDir()) ? &(meta_methods_dir[ix]) : &(meta_methods_file[ix]);
+		return (fi.isDir()) ? &(meta_methods_dir[ix]) : &(get_meta_methods_file()[ix]);
 	}
 	if(!shv_path.empty()) {
 		StringViewList dir_path = shv_path.mid(0, shv_path.size() - 1);
@@ -131,6 +136,21 @@ const chainpack::MetaMethod *LocalFSNode::metaMethod(const StringViewList &shv_p
 			return &(meta_methods_dir_write_file[ix]);
 	}
 	SHV_EXCEPTION("Invalid method index: " + std::to_string(ix));
+}
+
+std::string LocalFSNode::fileName(const ShvNode::StringViewList &shv_path) const
+{
+	return shv_path.size() > 0 ? shv_path.back().toString() : "";
+}
+
+chainpack::RpcValue LocalFSNode::readContent(const ShvNode::StringViewList &shv_path) const
+{
+	return ndRead(QString::fromStdString(shv_path.join('/')));
+}
+
+chainpack::RpcValue LocalFSNode::size(const ShvNode::StringViewList &shv_path) const
+{
+	return ndSize(QString::fromStdString(shv_path.join('/')));
 }
 
 bool LocalFSNode::isDir(const ShvNode::StringViewList &shv_path) const
@@ -143,18 +163,18 @@ bool LocalFSNode::isDir(const ShvNode::StringViewList &shv_path) const
 	return fi.isDir();
 }
 
-QFileInfo LocalFSNode::ndFileInfo(const QString &path)
+QFileInfo LocalFSNode::ndFileInfo(const QString &path) const
 {
 	QFileInfo fi(m_rootDir.absolutePath() + '/' + path);
 	return fi;
 }
 
-cp::RpcValue LocalFSNode::ndSize(const QString &path)
+cp::RpcValue LocalFSNode::ndSize(const QString &path) const
 {
 	return (unsigned)ndFileInfo(path).size();
 }
 
-chainpack::RpcValue LocalFSNode::ndRead(const QString &path)
+chainpack::RpcValue LocalFSNode::ndRead(const QString &path) const
 {
 	QFile f(m_rootDir.absolutePath() + '/' + path);
 	if(f.open(QFile::ReadOnly)) {
