@@ -1,6 +1,6 @@
 #pragma once
 
-#include "shvnode.h"
+#include "filenode.h"
 
 #include <QDir>
 #include <QMap>
@@ -9,13 +9,14 @@ namespace shv {
 namespace iotqt {
 namespace node {
 
-class SHVIOTQT_DECL_EXPORT LocalFSNode : public ShvNode
+class SHVIOTQT_DECL_EXPORT LocalFSNode : public FileNode
 {
 	Q_OBJECT
 
-	using Super = shv::iotqt::node::ShvNode;
+	using Super = FileNode;
 public:
-	LocalFSNode(const QString &root_path, Super *parent = nullptr);
+	LocalFSNode(const QString &root_path, ShvNode *parent = nullptr);
+	LocalFSNode(const QString &root_path, const std::string &node_id, ShvNode *parent = nullptr);
 
 	chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
 
@@ -25,11 +26,15 @@ public:
 	size_t methodCount(const StringViewList &shv_path) override;
 	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
 private:
+	std::string fileName(const ShvNode::StringViewList &shv_path) const override;
+	shv::chainpack::RpcValue readContent(const ShvNode::StringViewList &shv_path) const override;
+	shv::chainpack::RpcValue size(const ShvNode::StringViewList &shv_path) const override;
+
 	bool isDir(const ShvNode::StringViewList &shv_path) const;
 
-	QFileInfo ndFileInfo(const QString &path);
-	chainpack::RpcValue ndSize(const QString &path);
-	chainpack::RpcValue ndRead(const QString &path);
+	QFileInfo ndFileInfo(const QString &path) const;
+	chainpack::RpcValue ndSize(const QString &path) const;
+	chainpack::RpcValue ndRead(const QString &path) const;
 	chainpack::RpcValue ndWrite(const QString &path, const chainpack::RpcValue &methods_params);
 	chainpack::RpcValue ndDelete(const QString &path);
 	chainpack::RpcValue ndMkfile(const QString &path, const shv::chainpack::RpcValue &methods_params);
