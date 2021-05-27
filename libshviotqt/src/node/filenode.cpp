@@ -14,11 +14,11 @@ namespace shv {
 namespace iotqt {
 namespace node {
 
-const char *FileNode::M_HASH = "hash";
-const char *FileNode::M_SIZE = "size";
-const char *FileNode::M_SIZE_COMPRESSED = "sizeCompressed";
-const char *FileNode::M_READ = "read";
-const char *FileNode::M_READ_COMPRESSED = "readCompressed";
+static const char *M_HASH = "hash";
+static const char *M_SIZE = "size";
+static const char *M_SIZE_COMPRESSED = "sizeCompressed";
+static const char *M_READ = "read";
+static const char *M_READ_COMPRESSED = "readCompressed";
 
 const std::vector<shv::chainpack::MetaMethod> FileNode::meta_methods_file_base = {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_BROWSE},
@@ -144,17 +144,18 @@ chainpack::RpcValue FileNode::readFileCompressed(const ShvNode::StringViewList &
 		result = shv::chainpack::RpcValue::Blob(compressed_blob.cbegin(), compressed_blob.cend());
 
 		result.setMetaValue("compressionType", "qcompress");
-		result.setMetaValue("fileName", fileName(shv_path) + ".zz");
+		result.setMetaValue("fileName", fileName(shv_path) + ".qcompress");
 	}
 	else if (compression_type == CompressionType::GZip) {
 		QByteArray compressed_blob = qCompress(QByteArray::fromRawData(reinterpret_cast<const char *>(blob.data()), blob.size()));
 
-		// Remove 4 bytes of length a 2 bytes of zlib header from the beginning
+		// Remove 4 bytes of length added by Qt a 2 bytes of zlib header from the beginning
 		compressed_blob = compressed_blob.mid(6);
 
 		// Remove 4 bytes of ADLER-32 zlib checksum from the end
 		compressed_blob.chop(4);
 
+		// GZIP header according to GZIP File Format Specification (RFC 1952)
 		static const char gzip_header[] = {'\x1f', '\x8b', '\x08', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x03'};
 		compressed_blob.prepend(gzip_header, sizeof(gzip_header));
 

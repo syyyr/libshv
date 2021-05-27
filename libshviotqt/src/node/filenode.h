@@ -11,13 +11,8 @@ class SHVIOTQT_DECL_EXPORT FileNode : public ShvNode
 	Q_OBJECT
 
 	using Super = shv::iotqt::node::ShvNode;
-public:
-	static const char *M_HASH;
-	static const char *M_SIZE;
-	static const char *M_SIZE_COMPRESSED;
-	static const char *M_READ;
-	static const char *M_READ_COMPRESSED;
 
+public:
 	static const std::vector<shv::chainpack::MetaMethod> meta_methods_file_base;
 
 public:
