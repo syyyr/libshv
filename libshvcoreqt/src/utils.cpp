@@ -130,5 +130,27 @@ shv::chainpack::RpcValue Utils::stringListToRpcValue(const QStringList &sl)
 	return shv::chainpack::RpcValue(ret);
 }
 
+bool Utils::isDefaultQVariantValue(const QVariant &val)
+{
+	if(!val.isValid())
+		return true;
+	if(val.isNull())
+		return true;
+	switch(val.userType()) {
+	case QMetaType::LongLong:
+	case QMetaType::ULongLong:
+	case QMetaType::Short:
+	case QMetaType::Long:
+	case QMetaType::ULong:
+	case QMetaType::Int:
+	case QMetaType::UInt: return val.toInt() == 0;
+	case QMetaType::Char: return val.toInt() == 0;
+	case QMetaType::QString: return val.toString().isEmpty();
+	case QMetaType::QDateTime: return !val.toDateTime().isValid();
+	default:
+		return false;
+	}
+}
+
 } // namespace coreqt
 } // namespace shv
