@@ -1329,8 +1329,19 @@ void Graph::drawYAxis(QPainter *painter, int channel)
 		QPoint p2{p1.x() - 2*tick_len, p1.y()};
 		painter->drawLine(p1, p2);
 		QString s = QString::number(d);
-		QRect r = fm.boundingRect(s);
-		painter->drawText(QPoint{p2.x() - u2px(0.2) - r.width(), p1.y() + r.height()/4}, s);
+		QPoint label_pos;
+		label_pos.setX(p2.x() - u2px(0.2) - fm.boundingRect(s).width());
+		int digit_height = fm.ascent();
+		if (d == d1) {
+			label_pos.setY(p1.y());
+		}
+		else if (d == range.max) {
+			label_pos.setY(p1.y() + digit_height);
+		}
+		else {
+			label_pos.setY(p1.y() + digit_height/2);
+		}
+		painter->drawText(label_pos, s);
 	}
 	painter->restore();
 }
