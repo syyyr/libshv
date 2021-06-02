@@ -4,6 +4,8 @@
 
 #include <shv/iotqt/rpc/serverconnection.h>
 
+#include <QVector>
+
 class QTimer;
 
 namespace shv { namespace core { class StringView; }}
