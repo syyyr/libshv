@@ -130,7 +130,7 @@ RpcCall::RpcCall(ClientConnection *connection)
 	});
 }
 
-RpcCall *RpcCall::createSubscribtionRequest(ClientConnection *connection, const QString &shv_path, const QString &method)
+RpcCall *RpcCall::createSubscriptionRequest(ClientConnection *connection, const QString &shv_path, const QString &method)
 {
 	RpcCall *rpc = create(connection);
 	rpc->setShvPath(cp::Rpc::DIR_BROKER_APP)
