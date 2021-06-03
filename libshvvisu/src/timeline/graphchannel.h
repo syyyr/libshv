@@ -1,5 +1,6 @@
 #pragma once
 
+#include "channelprobe.h"
 #include "graphbuttonbox.h"
 #include "sample.h"
 

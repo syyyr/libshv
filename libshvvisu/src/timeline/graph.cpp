@@ -1,3 +1,4 @@
+#include "channelprobe.h"
 #include "graphwidget.h"
 #include "graphmodel.h"
 #include "graphwidget.h"
@@ -253,6 +254,15 @@ void Graph::setChannelMaximized(int channel_ix, bool is_maximized)
 	emit layoutChanged();
 }
 
+ChannelProbe *Graph::createChannelProbe(int channel_ix, timemsec_t time)
+{
+	GraphChannel *ch = channelAt(channel_ix);
+
+	ChannelProbe *probe = new ChannelProbe(this, channel_ix, time);
+	m_channelProbes.push_back(probe);
+	return probe;
+}
+
 void Graph::setYAxisVisible(bool is_visible)
 {
 	m_style.setYAxisVisible(is_visible);
@@ -361,6 +371,77 @@ QPoint Graph::dataToPos(int ch_ix, const Sample &s) const
 	const GraphChannel *ch = channelAt(ch_ix);
 	auto data2point = dataToPointFn(DataRect{xRangeZoom(), ch->yRangeZoom()}, ch->graphDataGridRect());
 	return data2point? data2point(s, channelMetaTypeId(ch_ix)): QPoint();
+}
+
+QString Graph::sampleToString(int channel_ix, const shv::visu::timeline::Sample &s) const
+{
+	QString text;
+
+	if (s.isValid()) {
+		GraphModel::ChannelInfo &channel_info = model()->channelInfo(m_channels[channel_ix]->modelIndex());
+
+		if (channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Continuous ||
+			(channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Discrete && qAbs(pos.x() - gr->timeToPos(s.time)) < gr->u2px(1.1))) {
+			point = mapToGlobal(pos + QPoint{gr->u2px(0.8), 0});
+			QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
+			dt = dt.toTimeZone(graph()->timeZone());
+
+			if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Map) {
+				text = QStringLiteral("%1\nx: %2\n")
+					   .arg(ch->shvPath())
+					   .arg(dt.toString(Qt::ISODateWithMs));
+				const QVariantMap &map = s.value.toMap();
+				for (auto it = map.cbegin(); it != map.cend(); ++it) {
+					QString value = it.value().toString();
+					for (auto &field : channel_info.typeDescr.fields) {
+						if (QString::fromStdString(field.name) == it.key() && field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+							value = enumToString(it.value().toInt(), field.typeDescr);
+							break;
+						}
+					}
+					text += it.key() + ": " + value + "\n";
+				}
+				text.chop(1);
+			}
+			else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::IMap) {
+				text = QStringLiteral("%1\nx: %2\n")
+					   .arg(ch->shvPath())
+					   .arg(dt.toString(Qt::ISODateWithMs));
+				const QVariantMap &map = s.value.toMap();
+				for (auto it = map.cbegin(); it != map.cend(); ++it) {
+					for (auto &field : channel_info.typeDescr.fields) {
+						if (it.key().toInt() == field.value.toInt()) {
+							QString value;
+							if (field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+								value = enumToString(it.value().toInt(), field.typeDescr);
+							}
+							else {
+								value = it.value().toString();
+							}
+							text += QString::fromStdString(field.name) + ": " + value + "\n";
+							break;
+						}
+					}
+				}
+				text.chop(1);
+			}
+			else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+				text = QStringLiteral("%1\nx: %2\nvalue: %3")
+					   .arg(ch->shvPath())
+					   .arg(dt.toString(Qt::ISODateWithMs))
+					   .arg(enumToString(s.value.toInt(), channel_info.typeDescr));
+			}
+			else {
+				text = QStringLiteral("%1\nx: %2\ny: %3\nvalue: %4")
+					   .arg(ch->shvPath())
+					   .arg(dt.toString(Qt::ISODateWithMs))
+					   .arg(ch->posToValue(pos.y()))
+					   .arg(s.value.toString());
+			}
+		}
+	}
+
+	return text;
 }
 
 void Graph::setCrossHairPos(const Graph::CrossHairPos &pos)
@@ -946,6 +1027,7 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 			drawBackground(painter, i);
 			drawGrid(painter, i);
 			drawSamples(painter, i);
+			drawProbes(painter, i);
 			drawCrossHair(painter, i);
 			drawCurrentTime(painter, i);
 		}
@@ -1196,7 +1278,8 @@ void Graph::drawXAxis(QPainter *painter)
 			dt = dt.toTimeZone(m_timeZone);
 			return dt;
 		};
-		QString text;
+
+		QString text = sampleToString(t);
 		switch (axis.labelFormat) {
 		case XAxis::LabelFormat::MSec:
 			text = QStringLiteral("%1.%2").arg((t / 1000) % 1000).arg(t % 1000, 3, 10, QChar('0'));
@@ -1722,6 +1805,33 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 		}
 	}
 	painter->restore();
+}
+
+void Graph::drawProbes(QPainter *painter, int channel_ix)
+{
+	const GraphChannel *ch = channelAt(channel_ix);
+
+	for (ChannelProbe *p: m_channelProbes) {
+		auto time = p->currentTime();
+		if(time <= 0)
+			return;
+		int x = timeToPos(time);
+
+		if(ch->graphAreaRect().left() >= x || ch->graphAreaRect().right() <= x)
+			return;
+
+		painter->save();
+		QPen pen;
+		auto color = channelAt(p->channelIndex())->style().color();
+		auto d = u2pxf(0.1);
+		pen.setWidthF(d);
+		pen.setColor(color);
+		painter->setPen(pen);
+		QPoint p1{x, ch->graphAreaRect().top()};
+		QPoint p2{x, ch->graphAreaRect().bottom()};
+		painter->drawLine(p1, p2);
+		painter->restore();
+	}
 }
 
 void Graph::drawSelection(QPainter *painter)

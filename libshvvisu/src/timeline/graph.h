@@ -1,6 +1,7 @@
 #pragma once
 
 #include "channelfilter.h"
+#include "channelprobe.h"
 #include "graphchannel.h"
 #include "graphbuttonbox.h"
 #include "sample.h"
@@ -104,6 +105,9 @@ public:
 	void setChannelFilter(const ChannelFilter &filter);
 	void setChannelVisible(int channel_ix, bool is_visible);
 	void setChannelMaximized(int channel_ix, bool is_maximized);
+
+	shv::visu::timeline::ChannelProbe *createChannelProbe(int channel_ix, timemsec_t time);
+
 	//DataRect dataRect(int channel_ix) const;
 
 	timemsec_t miniMapPosToTime(int pos) const;
@@ -117,6 +121,8 @@ public:
 	Sample posToData(const QPoint &pos) const;
 	//QVariant posToValue(const QPoint &pos) const;
 	QPoint dataToPos(int ch_ix, const Sample &s) const;
+
+	QString sampleToString(int channel_ix, const Sample &s) const;
 
 	const QRect& rect() const { return  m_layout.rect; }
 	const QRect& miniMapRect() const { return  m_layout.miniMapRect; }
@@ -214,6 +220,7 @@ protected:
 			, const QRect &dest_rect = QRect()
 			, const GraphChannel::Style &channel_style = GraphChannel::Style());
 	virtual void drawCrossHair(QPainter *painter, int channel_ix);
+	virtual void drawProbes(QPainter *painter, int channel_ix);
 	virtual void drawSelection(QPainter *painter);
 	virtual void drawCurrentTime(QPainter *painter, int channel_ix);
 	void drawXAxisTimeMark(QPainter *painter, time_t time, const QColor &color);
@@ -233,6 +240,7 @@ protected:
 	Style m_style;
 	GraphChannel::Style m_defaultChannelStyle;
 
+	QVector<ChannelProbe*> m_channelProbes;
 	QVector<GraphChannel*> m_channels;
 	ChannelFilter m_channelFilter;
 

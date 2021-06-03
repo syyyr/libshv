@@ -1,6 +1,8 @@
 #include "graphwidget.h"
 #include "graphmodel.h"
 #include "graphview.h"
+#include "graphprobewidget.h"
+
 
 #include <shv/core/exception.h>
 #include <shv/coreqt/log.h>
@@ -421,67 +423,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		QPoint point;
 		QString text;
 
-		if (s.isValid()) {
-			if (channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Continuous ||
-				(channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Discrete && qAbs(pos.x() - gr->timeToPos(s.time)) < gr->u2px(1.1))) {
-				point = mapToGlobal(pos + QPoint{gr->u2px(0.8), 0});
-				QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
-				dt = dt.toTimeZone(graph()->timeZone());
 
-				if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Map) {
-					text = QStringLiteral("%1\nx: %2\n")
-						   .arg(ch->shvPath())
-						   .arg(dt.toString(Qt::ISODateWithMs));
-					const QVariantMap &map = s.value.toMap();
-					for (auto it = map.cbegin(); it != map.cend(); ++it) {
-						QString value = it.value().toString();
-						for (auto &field : channel_info.typeDescr.fields) {
-							if (QString::fromStdString(field.name) == it.key() && field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-								value = enumToString(it.value().toInt(), field.typeDescr);
-								break;
-							}
-						}
-						text += it.key() + ": " + value + "\n";
-					}
-					text.chop(1);
-				}
-				else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::IMap) {
-					text = QStringLiteral("%1\nx: %2\n")
-						   .arg(ch->shvPath())
-						   .arg(dt.toString(Qt::ISODateWithMs));
-					const QVariantMap &map = s.value.toMap();
-					for (auto it = map.cbegin(); it != map.cend(); ++it) {
-						for (auto &field : channel_info.typeDescr.fields) {
-							if (it.key().toInt() == field.value.toInt()) {
-								QString value;
-								if (field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-									value = enumToString(it.value().toInt(), field.typeDescr);
-								}
-								else {
-									value = it.value().toString();
-								}
-								text += QString::fromStdString(field.name) + ": " + value + "\n";
-								break;
-							}
-						}
-					}
-					text.chop(1);
-				}
-				else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-					text = QStringLiteral("%1\nx: %2\nvalue: %3")
-						   .arg(ch->shvPath())
-						   .arg(dt.toString(Qt::ISODateWithMs))
-						   .arg(enumToString(s.value.toInt(), channel_info.typeDescr));
-				}
-				else {
-					text = QStringLiteral("%1\nx: %2\ny: %3\nvalue: %4")
-						   .arg(ch->shvPath())
-						   .arg(dt.toString(Qt::ISODateWithMs))
-						   .arg(ch->posToValue(pos.y()))
-						   .arg(s.value.toString());
-				}
-			}
-		}
 		QToolTip::showText(point, text);
 	}
 	else {
@@ -654,6 +596,19 @@ void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos
 		timeline::YRange rng = m->yRange(chix);
 		m_graph->setYRange(channel_ix, rng);
 		this->update();
+	});
+	menu.addAction(tr("Create probe window"), [this, channel_ix, mouse_pos]() {
+		const GraphChannel *ch = m_graph->channelAt(channel_ix, !shv::core::Exception::Throw);
+		timemsec_t mouse_pos_time = m_graph->posToTime(mouse_pos.x());
+		ChannelProbe *probe = m_graph->createChannelProbe(channel_ix, mouse_pos_time);
+		GraphProbeWidget *w = new GraphProbeWidget(nullptr, probe);
+		w->setAttribute(Qt::WA_DeleteOnClose, true);
+
+		const GraphModel::ChannelInfo& chi = graph()->model()->channelInfo(ch->modelIndex());
+		w->setWindowTitle(tr("Probe:") + " "+ chi.shvPath);
+
+		connect(this, &GraphWidget::destroyed, w, &GraphProbeWidget::close);
+		w->show();
 	});
 	if(menu.actions().count())
 		menu.exec(mapToGlobal(mouse_pos));
