@@ -254,13 +254,17 @@ void Graph::setChannelMaximized(int channel_ix, bool is_maximized)
 	emit layoutChanged();
 }
 
-ChannelProbe *Graph::createChannelProbe(int channel_ix, timemsec_t time)
+ChannelProbe *Graph::addChannelProbe(int channel_ix, timemsec_t time)
 {
-	GraphChannel *ch = channelAt(channel_ix);
-
 	ChannelProbe *probe = new ChannelProbe(this, channel_ix, time);
 	m_channelProbes.push_back(probe);
 	return probe;
+}
+
+void Graph::removeChannelProbe(ChannelProbe *probe)
+{
+	m_channelProbes.removeOne(probe);
+	probe->deleteLater();
 }
 
 void Graph::setYAxisVisible(bool is_visible)
@@ -380,11 +384,10 @@ QString Graph::sampleToString(int channel_ix, const shv::visu::timeline::Sample 
 	if (s.isValid()) {
 		GraphModel::ChannelInfo &channel_info = model()->channelInfo(m_channels[channel_ix]->modelIndex());
 
-		if (channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Continuous ||
-			(channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Discrete && qAbs(pos.x() - gr->timeToPos(s.time)) < gr->u2px(1.1))) {
-			point = mapToGlobal(pos + QPoint{gr->u2px(0.8), 0});
+		if (channel_info.typeDescr.sampleType != shv::chainpack::DataChange::SampleType::Invalid) {
+			const GraphChannel *ch = channelAt(channel_ix);
 			QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
-			dt = dt.toTimeZone(graph()->timeZone());
+			dt = dt.toTimeZone(timeZone());
 
 			if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Map) {
 				text = QStringLiteral("%1\nx: %2\n")
@@ -395,7 +398,7 @@ QString Graph::sampleToString(int channel_ix, const shv::visu::timeline::Sample 
 					QString value = it.value().toString();
 					for (auto &field : channel_info.typeDescr.fields) {
 						if (QString::fromStdString(field.name) == it.key() && field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-							value = enumToString(it.value().toInt(), field.typeDescr);
+							value = model()->enumToString(it.value().toInt(), field.typeDescr);
 							break;
 						}
 					}
@@ -413,7 +416,7 @@ QString Graph::sampleToString(int channel_ix, const shv::visu::timeline::Sample 
 						if (it.key().toInt() == field.value.toInt()) {
 							QString value;
 							if (field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-								value = enumToString(it.value().toInt(), field.typeDescr);
+								value = model()->enumToString(it.value().toInt(), field.typeDescr);
 							}
 							else {
 								value = it.value().toString();
@@ -429,14 +432,14 @@ QString Graph::sampleToString(int channel_ix, const shv::visu::timeline::Sample 
 				text = QStringLiteral("%1\nx: %2\nvalue: %3")
 					   .arg(ch->shvPath())
 					   .arg(dt.toString(Qt::ISODateWithMs))
-					   .arg(enumToString(s.value.toInt(), channel_info.typeDescr));
+					   .arg(model()->enumToString(s.value.toInt(), channel_info.typeDescr));
 			}
 			else {
-				text = QStringLiteral("%1\nx: %2\ny: %3\nvalue: %4")
+				/*text = QStringLiteral("%1\nx: %2\ny: %3\nvalue: %4")
 					   .arg(ch->shvPath())
 					   .arg(dt.toString(Qt::ISODateWithMs))
 					   .arg(ch->posToValue(pos.y()))
-					   .arg(s.value.toString());
+					   .arg(s.value.toString());*/
 			}
 		}
 	}
@@ -1278,8 +1281,7 @@ void Graph::drawXAxis(QPainter *painter)
 			dt = dt.toTimeZone(m_timeZone);
 			return dt;
 		};
-
-		QString text = sampleToString(t);
+		QString text;
 		switch (axis.labelFormat) {
 		case XAxis::LabelFormat::MSec:
 			text = QStringLiteral("%1.%2").arg((t / 1000) % 1000).arg(t % 1000, 3, 10, QChar('0'));
@@ -1822,10 +1824,9 @@ void Graph::drawProbes(QPainter *painter, int channel_ix)
 
 		painter->save();
 		QPen pen;
-		auto color = channelAt(p->channelIndex())->style().color();
 		auto d = u2pxf(0.1);
 		pen.setWidthF(d);
-		pen.setColor(color);
+		pen.setColor(p->color());
 		painter->setPen(pen);
 		QPoint p1{x, ch->graphAreaRect().top()};
 		QPoint p2{x, ch->graphAreaRect().bottom()};

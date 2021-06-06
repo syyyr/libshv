@@ -106,8 +106,8 @@ public:
 	void setChannelVisible(int channel_ix, bool is_visible);
 	void setChannelMaximized(int channel_ix, bool is_maximized);
 
-	shv::visu::timeline::ChannelProbe *createChannelProbe(int channel_ix, timemsec_t time);
-
+	ChannelProbe *addChannelProbe(int channel_ix, timemsec_t time);
+	void removeChannelProbe(ChannelProbe *probe);
 	//DataRect dataRect(int channel_ix) const;
 
 	timemsec_t miniMapPosToTime(int pos) const;

@@ -58,7 +58,6 @@ protected:
 	bool isMouseAboveMiniMapSlider(const QPoint &pos) const;
 	int posToChannelVerticalHeader(const QPoint &pos) const;
 	int posToChannel(const QPoint &pos) const;
-	QString enumToString(int value, const TypeDescr &type_descr);
 
 protected:
 	Graph *m_graph = nullptr;

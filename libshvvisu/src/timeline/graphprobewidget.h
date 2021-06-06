@@ -21,6 +21,10 @@ public:
 	~GraphProbeWidget();
 
 private:
+	void loadValues();
+	void onTbPrevSampleClicked();
+	void onTbNextSampleClicked();
+
 	ChannelProbe *m_probe = nullptr;
 
 	Ui::GraphProbeWidget *ui;

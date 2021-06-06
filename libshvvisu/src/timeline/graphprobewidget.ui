@@ -59,7 +59,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="toolButton">
+       <widget class="QToolButton" name="tbPrevSample">
         <property name="text">
          <string>...</string>
         </property>
@@ -70,7 +70,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="toolButton_2">
+       <widget class="QToolButton" name="tbNextSample">
         <property name="text">
          <string>...</string>
         </property>
