@@ -12,10 +12,12 @@ GraphProbeWidget::GraphProbeWidget(QWidget *parent, ChannelProbe *probe) :
 	ui(new Ui::GraphProbeWidget)
 {
 	ui->setupUi(this);
+	ui->line->setStyleSheet("color :" + probe->color().name() +";");
 	m_probe = probe;
 
-	setWindowTitle(tr("Probe:") + " " + m_probe->shvPath());
+	setWindowTitle(tr("Probe"));
 	setAttribute(Qt::WA_DeleteOnClose, true);
+	setWindowFlag(Qt::WindowType::Window, true);
 
 	loadValues();
 

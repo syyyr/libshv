@@ -2,6 +2,7 @@
 
 #include "graph.h"
 #include "graphmodel.h"
+#include "graphprobewidget.h"
 
 #include <shv/coreqt/utils.h>
 
@@ -62,7 +63,6 @@ protected:
 protected:
 	Graph *m_graph = nullptr;
 	QSize m_graphPreferredSize;
-
 	enum class MouseOperation { None = 0, MiniMapLeftResize, MiniMapRightResize, MiniMapScrollZoom, GraphDataAreaPress, GraphAreaMove, GraphAreaSelection, GraphDataAreaRightPress };
 	MouseOperation m_mouseOperation = MouseOperation::None;
 	QPoint m_recentMousePos;

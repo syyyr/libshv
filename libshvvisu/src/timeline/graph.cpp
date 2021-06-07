@@ -435,11 +435,10 @@ QString Graph::sampleToString(int channel_ix, const shv::visu::timeline::Sample 
 					   .arg(model()->enumToString(s.value.toInt(), channel_info.typeDescr));
 			}
 			else {
-				/*text = QStringLiteral("%1\nx: %2\ny: %3\nvalue: %4")
+				text = QStringLiteral("%1\nx: %2\nvalue: %3")
 					   .arg(ch->shvPath())
 					   .arg(dt.toString(Qt::ISODateWithMs))
-					   .arg(ch->posToValue(pos.y()))
-					   .arg(s.value.toString());*/
+					   .arg(s.value.toString());
 			}
 		}
 	}

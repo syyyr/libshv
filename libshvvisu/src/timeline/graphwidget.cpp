@@ -661,14 +661,13 @@ void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos
 			this->update();
 		});
 
-		GraphProbeWidget *w = new GraphProbeWidget(nullptr, probe);
+		GraphProbeWidget *w = new GraphProbeWidget(this, probe);
 
-		connect(w, &GraphProbeWidget::destroyed, w, [this, probe]() {
+		connect(w, &GraphProbeWidget::destroyed, this, [this, probe]() {
 			m_graph->removeChannelProbe(probe);
 			this->update();
 		});
 
-		connect(this, &GraphWidget::destroyed, w, &GraphProbeWidget::close);
 		w->show();
 	});
 	if(menu.actions().count())
