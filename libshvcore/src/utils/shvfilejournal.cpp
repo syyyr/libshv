@@ -636,7 +636,10 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 	cp::RpcValue::List log;
 
 	cp::RpcValue::Map path_cache;
-	const auto params_since_msec = params.since.isDateTime()? params.since.toDateTime().msecsSinceEpoch(): 0;
+	const auto params_since_msec = params.since.isDateTime()
+								   ? params.since.toDateTime().msecsSinceEpoch()
+								   : (params.since.asString() == ShvGetLogParams::SINCE_NOW
+									  ? cp::RpcValue::DateTime::now().msecsSinceEpoch() : 0);
 	const auto params_until_msec = params.until.isDateTime()? params.until.toDateTime().msecsSinceEpoch(): 0;
 	int64_t journal_start_msec = 0;
 	int64_t first_record_msec = 0;
@@ -746,10 +749,11 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 						continue;
 					logDShvJournal() << "\t\t MATCH";
 				}
-				if(params_since_msec > 0 && e.epochMsec < params_since_msec) {
+				if(params_since_msec > 0 && (e.epochMsec < params_since_msec || params.since.asString() == ShvGetLogParams::SINCE_NOW)) {
 					if(params.withSnapshot) {
 						if(e.sampleType == ShvJournalEntry::SampleType::Continuous) {
 							ShvJournalEntry e2 = e;
+							last_record_msec = e.epochMsec;
 							e2.epochMsec = params_since_msec;
 							snapshot[e2.path] = std::move(e2);
 						}
@@ -772,6 +776,11 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 	}
 log_finish:
 	if(params.withSnapshot) {
+		if (params.since.asString() == ShvGetLogParams::SINCE_NOW) {
+			for (auto &snapshot_item : snapshot) {
+				snapshot_item.second.epochMsec = last_record_msec;
+			}
+		}
 		// snapshot should be written already
 		// this is only case, when log is empty and
 		// only snapshot shall be returned
@@ -779,8 +788,13 @@ log_finish:
 	}
 
 	int64_t log_since_msec = params_since_msec;
-	if(log_since_msec < journal_start_msec) {
-		log_since_msec = journal_start_msec;
+	if (params.since.asString() == ShvGetLogParams::SINCE_NOW) {
+		log_since_msec = last_record_msec;
+	}
+	else {
+		if(log_since_msec < journal_start_msec) {
+			log_since_msec = journal_start_msec;
+		}
 	}
 	int64_t log_until_msec = params_until_msec;
 	if(params_until_msec == 0 || rec_cnt_limit_hit) {
