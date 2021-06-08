@@ -232,17 +232,18 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 		else if(posToChannel(pos) >= 0) {
 			if(event->modifiers() == Qt::ControlModifier) {
 				m_mouseOperation = MouseOperation::GraphDataAreaLeftCtrlPress;
-				m_recentMousePos = pos;
-				event->accept();
-				return;
+			}
+			else if(event->modifiers() == (Qt::ControlModifier | Qt::ShiftModifier)) {
+				m_mouseOperation = MouseOperation::GraphDataAreaLeftCtrlShiftPress;
 			}
 			else {
 				logMouseSelection() << "GraphAreaPress";
 				m_mouseOperation = MouseOperation::GraphDataAreaLeftPress;
-				m_recentMousePos = pos;
-				event->accept();
-				return;
 			}
+
+			m_recentMousePos = pos;
+			event->accept();
+			return;
 		}
 	}
 	else if(event->button() == Qt::RightButton) {
@@ -302,6 +303,13 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 				return;
 			}
 			*/
+		}
+		else if(old_mouse_op == MouseOperation::GraphDataAreaLeftCtrlShiftPress) {
+			int channel_ix = posToChannel(event->pos());
+			if(channel_ix >= 0) {
+				timemsec_t time = m_graph->posToTime(event->pos().x());
+				createProbe(channel_ix, time);
+			}
 		}
 		else if(old_mouse_op == MouseOperation::GraphAreaSelection) {
 			bool zoom_vertically = event->modifiers() == Qt::ShiftModifier;
@@ -700,6 +708,8 @@ void GraphWidget::createProbe(int channel_ix, timemsec_t time)
 	});
 
 	w->show();
+	QPoint pos(m_graph->timeToPos(time) - (w->width() / 2), -geometry().top() - w->height() - m_graph->u2px(0.2));
+	w->move(mapToGlobal(pos));
 }
 
 }}}

@@ -12,16 +12,20 @@ GraphProbeWidget::GraphProbeWidget(QWidget *parent, ChannelProbe *probe) :
 	ui(new Ui::GraphProbeWidget)
 {
 	ui->setupUi(this);
-	ui->line->setStyleSheet("color :" + probe->color().name() +";");
 	m_probe = probe;
 
-	setWindowTitle(tr("Probe"));
+	ui->lblShvPath->setText(m_probe->shvPath());
+	ui->fHeader->setStyleSheet("background-color:" + m_probe->color().name() + ";");
+	ui->tbClose->setStyleSheet("background-color:white;");
+	ui->lblProbe->setStyleSheet("QLabel { color : white; font-weight: bold;}");
+	ui->lblShvPath->setStyleSheet("QLabel { color : white;}");
+
 	setAttribute(Qt::WA_DeleteOnClose, true);
-	setWindowFlag(Qt::WindowType::Window, true);
-	setWindowFlag(Qt::FramelessWindowHint, true);
+	setWindowFlags(Qt::FramelessWindowHint | Qt::ToolTip | Qt::WindowType::Window);
 
 	loadValues();
 
+	connect(ui->tbClose, &QToolButton::clicked, this, &GraphProbeWidget::close);
 	connect(m_probe, &ChannelProbe::currentTimeChanged, this, &GraphProbeWidget::loadValues);
 	connect(ui->tbPrevSample, &QToolButton::clicked, this, &GraphProbeWidget::onTbPrevSampleClicked);
 	connect(ui->tbNextSample, &QToolButton::clicked, this, &GraphProbeWidget::onTbNextSampleClicked);
