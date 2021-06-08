@@ -3,6 +3,10 @@
 
 #include "ui_graphprobewidget.h"
 
+#include <shv/core/log.h>
+
+#include <QMouseEvent>
+
 namespace shv {
 namespace visu {
 namespace timeline {
@@ -34,6 +38,37 @@ GraphProbeWidget::GraphProbeWidget(QWidget *parent, ChannelProbe *probe) :
 GraphProbeWidget::~GraphProbeWidget()
 {
 	delete ui;
+}
+
+void GraphProbeWidget::mousePressEvent(QMouseEvent *event)
+{
+	QPoint pos = event->pos();
+	if (ui->fHeader->rect().contains(pos)) {
+		setCursor(QCursor(Qt::DragMoveCursor));
+		m_recentMousePos = pos;
+		m_mouseOperation = MouseOperation::Move;
+	}
+}
+
+void GraphProbeWidget::mouseReleaseEvent(QMouseEvent *event)
+{
+	m_mouseOperation = MouseOperation::None;
+	setCursor(QCursor(Qt::ArrowCursor));
+}
+
+void GraphProbeWidget::mouseMoveEvent(QMouseEvent *event)
+{
+	QPoint pos = event->pos();
+
+	if (m_mouseOperation == MouseOperation::Move) {
+		QPoint dist = pos - m_recentMousePos;
+		move(geometry().topLeft() + dist);
+		m_recentMousePos = pos - dist;
+		event->accept();
+	}
+	else {
+		Super::mouseMoveEvent(event);
+	}
 }
 
 void GraphProbeWidget::loadValues()
