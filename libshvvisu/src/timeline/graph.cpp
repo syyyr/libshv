@@ -254,6 +254,20 @@ void Graph::setChannelMaximized(int channel_ix, bool is_maximized)
 	emit layoutChanged();
 }
 
+ChannelProbe *Graph::channelProbe(const QString &shv_path, timemsec_t time)
+{
+	ChannelProbe *probe = nullptr;
+
+	for (ChannelProbe *p: m_channelProbes) {
+		if (p->shvPath() == shv_path) {
+			if ((probe == nullptr) || (qAbs(p->currentTime()-time) < (qAbs(probe->currentTime()-time))));
+				probe = p;
+		}
+	}
+
+	return probe;
+}
+
 ChannelProbe *Graph::addChannelProbe(int channel_ix, timemsec_t time)
 {
 	ChannelProbe *probe = new ChannelProbe(this, channel_ix, time);

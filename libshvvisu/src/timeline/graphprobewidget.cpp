@@ -18,6 +18,7 @@ GraphProbeWidget::GraphProbeWidget(QWidget *parent, ChannelProbe *probe) :
 	setWindowTitle(tr("Probe"));
 	setAttribute(Qt::WA_DeleteOnClose, true);
 	setWindowFlag(Qt::WindowType::Window, true);
+	setWindowFlag(Qt::FramelessWindowHint, true);
 
 	loadValues();
 

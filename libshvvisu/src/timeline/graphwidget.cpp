@@ -231,14 +231,14 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 		}
 		else if(posToChannel(pos) >= 0) {
 			if(event->modifiers() == Qt::ControlModifier) {
-				m_mouseOperation = MouseOperation::GraphAreaMove;
+				m_mouseOperation = MouseOperation::GraphDataAreaLeftCtrlPress;
 				m_recentMousePos = pos;
 				event->accept();
 				return;
 			}
 			else {
 				logMouseSelection() << "GraphAreaPress";
-				m_mouseOperation = MouseOperation::GraphDataAreaPress;
+				m_mouseOperation = MouseOperation::GraphDataAreaLeftPress;
 				m_recentMousePos = pos;
 				event->accept();
 				return;
@@ -265,7 +265,25 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 	auto old_mouse_op = m_mouseOperation;
 	m_mouseOperation = MouseOperation::None;
 	if(event->button() == Qt::LeftButton) {
-		if(old_mouse_op == MouseOperation::GraphDataAreaPress) {
+		if(old_mouse_op == MouseOperation::GraphDataAreaLeftCtrlPress) {
+			if(event->modifiers() == Qt::ControlModifier) {
+				int channel_ix = posToChannel(event->pos());
+				if(channel_ix >= 0) {
+					const GraphChannel *ch = m_graph->channelAt(channel_ix);
+					QString shv_path = m_graph->model()->channelInfo(ch->modelIndex()).shvPath;
+					timemsec_t time = m_graph->posToTime(event->pos().x());
+
+					ChannelProbe *p = m_graph->channelProbe(shv_path, time);
+
+					if (p == nullptr) {
+						createProbe(channel_ix, time);
+					}
+					else {
+						p->setCurrentTime(time);
+					}
+				}
+			}
+
 			/*
 			QPoint pos = event->pos();
 			if(event->modifiers() == Qt::NoModifier) {
@@ -327,6 +345,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 	else {
 		setCursor(QCursor(Qt::ArrowCursor));
 	}
+
 	switch (m_mouseOperation) {
 	case MouseOperation::None:
 		break;
@@ -368,7 +387,8 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		}
 		return;
 	}
-	case MouseOperation::GraphDataAreaPress: {
+	case MouseOperation::GraphDataAreaLeftPress: {
+
 		QPoint point = pos - m_recentMousePos;
 		if (point.manhattanLength() > 3) {
 			m_mouseOperation = MouseOperation::GraphAreaSelection;
@@ -380,7 +400,10 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		update();
 		break;
 	}
-	case MouseOperation::GraphAreaMove: {
+	case MouseOperation::GraphAreaMove:
+	case MouseOperation::GraphDataAreaLeftCtrlPress
+	: {
+		m_mouseOperation = MouseOperation::GraphAreaMove;
 		timemsec_t t0 = gr->posToTime(m_recentMousePos.x());
 		timemsec_t t1 = gr->posToTime(pos.x());
 		timemsec_t dt = t0 - t1;
@@ -649,29 +672,34 @@ void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos
 		this->update();
 	});
 	menu.addAction(tr("Create probe"), [this, channel_ix, mouse_pos]() {
-		const GraphChannel *ch = m_graph->channelAt(channel_ix, !shv::core::Exception::Throw);
-		if (ch == nullptr) {
-			shvError() << "Cannot get channel at index:" << channel_ix;
-			return;
-		}
-		timemsec_t mouse_pos_time = m_graph->posToTime(mouse_pos.x());
-
-		ChannelProbe *probe = m_graph->addChannelProbe(channel_ix, mouse_pos_time);
-		connect(probe, &ChannelProbe::currentTimeChanged, probe, [this]() {
-			this->update();
-		});
-
-		GraphProbeWidget *w = new GraphProbeWidget(this, probe);
-
-		connect(w, &GraphProbeWidget::destroyed, this, [this, probe]() {
-			m_graph->removeChannelProbe(probe);
-			this->update();
-		});
-
-		w->show();
+		timemsec_t time = m_graph->posToTime(mouse_pos.x());
+		createProbe(channel_ix, time);
 	});
 	if(menu.actions().count())
 		menu.exec(mapToGlobal(mouse_pos));
+}
+
+void GraphWidget::createProbe(int channel_ix, timemsec_t time)
+{
+	const GraphChannel *ch = m_graph->channelAt(channel_ix, !shv::core::Exception::Throw);
+	if (ch == nullptr) {
+		shvError() << "Cannot get channel at index:" << channel_ix;
+		return;
+	}
+
+	ChannelProbe *probe = m_graph->addChannelProbe(channel_ix, time);
+	connect(probe, &ChannelProbe::currentTimeChanged, probe, [this]() {
+		this->update();
+	});
+
+	GraphProbeWidget *w = new GraphProbeWidget(this, probe);
+
+	connect(w, &GraphProbeWidget::destroyed, this, [this, probe]() {
+		m_graph->removeChannelProbe(probe);
+		this->update();
+	});
+
+	w->show();
 }
 
 }}}

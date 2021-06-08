@@ -19,6 +19,12 @@ QColor ChannelProbe::color()
 	return m_graph->channelAt(m_channelIndex)->style().color();
 }
 
+void ChannelProbe::setCurrentTime(timemsec_t time)
+{
+	m_currentTime = time;
+	emit currentTimeChanged();
+}
+
 timemsec_t ChannelProbe::currentTime()
 {
 	return m_currentTime;

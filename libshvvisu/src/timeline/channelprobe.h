@@ -21,6 +21,7 @@ public:
 	ChannelProbe(Graph *graph, int channel_ix, timemsec_t time);
 
 	QColor color();
+	void setCurrentTime(timemsec_t time);
 	timemsec_t currentTime();
 	QString yValues();
 	QString shvPath();

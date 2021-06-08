@@ -52,6 +52,7 @@ protected:
 	virtual void showGraphContextMenu(const QPoint &mouse_pos);
 	virtual void showChannelContextMenu(int channel_ix, const QPoint &mouse_pos);
 protected:
+	void createProbe(int channel_ix, timemsec_t time);
 	bool isMouseAboveMiniMap(const QPoint &mouse_pos) const;
 	bool isMouseAboveMiniMapHandle(const QPoint &mouse_pos, bool left) const;
 	bool isMouseAboveLeftMiniMapHandle(const QPoint &pos) const;
@@ -63,7 +64,7 @@ protected:
 protected:
 	Graph *m_graph = nullptr;
 	QSize m_graphPreferredSize;
-	enum class MouseOperation { None = 0, MiniMapLeftResize, MiniMapRightResize, MiniMapScrollZoom, GraphDataAreaPress, GraphAreaMove, GraphAreaSelection, GraphDataAreaRightPress };
+	enum class MouseOperation { None = 0, MiniMapLeftResize, MiniMapRightResize, MiniMapScrollZoom, GraphDataAreaLeftPress, GraphDataAreaLeftCtrlPress, GraphAreaMove, GraphAreaSelection, GraphDataAreaRightPress };
 	MouseOperation m_mouseOperation = MouseOperation::None;
 	QPoint m_recentMousePos;
 };
