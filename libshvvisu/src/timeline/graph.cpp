@@ -391,22 +391,15 @@ QPoint Graph::dataToPos(int ch_ix, const Sample &s) const
 	return data2point? data2point(s, channelMetaTypeId(ch_ix)): QPoint();
 }
 
-QString Graph::sampleToString(int channel_ix, const shv::visu::timeline::Sample &s) const
+QMap<QString, QString> Graph::yValueToMap(int channel_ix, const shv::visu::timeline::Sample &s) const
 {
-	QString text;
+	QMap<QString, QString> ret;
 
 	if (s.isValid()) {
 		GraphModel::ChannelInfo &channel_info = model()->channelInfo(m_channels[channel_ix]->modelIndex());
 
 		if (channel_info.typeDescr.sampleType != shv::chainpack::DataChange::SampleType::Invalid) {
-			const GraphChannel *ch = channelAt(channel_ix);
-			QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
-			dt = dt.toTimeZone(timeZone());
-
 			if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Map) {
-				text = QStringLiteral("%1\nx: %2\n")
-					   .arg(ch->shvPath())
-					   .arg(dt.toString(Qt::ISODateWithMs));
 				const QVariantMap &map = s.value.toMap();
 				for (auto it = map.cbegin(); it != map.cend(); ++it) {
 					QString value = it.value().toString();
@@ -416,14 +409,10 @@ QString Graph::sampleToString(int channel_ix, const shv::visu::timeline::Sample 
 							break;
 						}
 					}
-					text += it.key() + ": " + value + "\n";
+					ret[it.key()] = value;
 				}
-				text.chop(1);
 			}
 			else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::IMap) {
-				text = QStringLiteral("%1\nx: %2\n")
-					   .arg(ch->shvPath())
-					   .arg(dt.toString(Qt::ISODateWithMs));
 				const QVariantMap &map = s.value.toMap();
 				for (auto it = map.cbegin(); it != map.cend(); ++it) {
 					for (auto &field : channel_info.typeDescr.fields) {
@@ -435,29 +424,34 @@ QString Graph::sampleToString(int channel_ix, const shv::visu::timeline::Sample 
 							else {
 								value = it.value().toString();
 							}
-							text += QString::fromStdString(field.name) + ": " + value + "\n";
+							ret[QString::fromStdString(field.name)] = value;
 							break;
 						}
 					}
 				}
-				text.chop(1);
 			}
 			else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-				text = QStringLiteral("%1\nx: %2\nvalue: %3")
-					   .arg(ch->shvPath())
-					   .arg(dt.toString(Qt::ISODateWithMs))
-					   .arg(model()->enumToString(s.value.toInt(), channel_info.typeDescr));
+				QStringList p = channel_info.shvPath.split("/");
+				if (p.isEmpty()) {
+					shvError() << "Failed to split shvPath:" << channel_info.shvPath;
+				}
+
+				QString key = (p.isEmpty()) ? "y" : p.last();
+				ret[key] = model()->enumToString(s.value.toInt(), channel_info.typeDescr);
 			}
 			else {
-				text = QStringLiteral("%1\nx: %2\nvalue: %3")
-					   .arg(ch->shvPath())
-					   .arg(dt.toString(Qt::ISODateWithMs))
-					   .arg(s.value.toString());
+				QStringList p = channel_info.shvPath.split("/");
+				if (p.isEmpty()) {
+					shvError() << "Failed to split shvPath:" << channel_info.shvPath;
+				}
+
+				QString key = (p.isEmpty()) ? "y" : p.last();
+				ret[key] = s.value.toString();
 			}
 		}
 	}
 
-	return text;
+	return ret;
 }
 
 void Graph::setCrossHairPos(const Graph::CrossHairPos &pos)
@@ -1828,23 +1822,20 @@ void Graph::drawProbes(QPainter *painter, int channel_ix)
 
 	for (ChannelProbe *p: m_channelProbes) {
 		auto time = p->currentTime();
-		if(time <= 0)
-			return;
 		int x = timeToPos(time);
 
-		if(ch->graphAreaRect().left() >= x || ch->graphAreaRect().right() <= x)
-			return;
-
-		painter->save();
-		QPen pen;
-		auto d = u2pxf(0.1);
-		pen.setWidthF(d);
-		pen.setColor(p->color());
-		painter->setPen(pen);
-		QPoint p1{x, ch->graphAreaRect().top()};
-		QPoint p2{x, ch->graphAreaRect().bottom()};
-		painter->drawLine(p1, p2);
-		painter->restore();
+		if ((time >= 0) && (x >= ch->graphAreaRect().left() && x <= ch->graphAreaRect().right())) {
+			painter->save();
+			QPen pen;
+			auto d = u2pxf(0.1);
+			pen.setWidthF(d);
+			pen.setColor(p->color());
+			painter->setPen(pen);
+			QPoint p1{x, ch->graphAreaRect().top()};
+			QPoint p2{x, ch->graphAreaRect().bottom()};
+			painter->drawLine(p1, p2);
+			painter->restore();
+		}
 	}
 }
 

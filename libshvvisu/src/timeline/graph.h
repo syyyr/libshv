@@ -123,7 +123,7 @@ public:
 	//QVariant posToValue(const QPoint &pos) const;
 	QPoint dataToPos(int ch_ix, const Sample &s) const;
 
-	QString sampleToString(int channel_ix, const Sample &s) const;
+	QMap<QString, QString> yValueToMap(int channel_ix, const Sample &s) const;
 
 	const QRect& rect() const { return  m_layout.rect; }
 	const QRect& miniMapRect() const { return  m_layout.miniMapRect; }

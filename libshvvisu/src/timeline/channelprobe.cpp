@@ -64,10 +64,10 @@ void ChannelProbe::prevValue()
 	}
 }
 
-QString ChannelProbe::yValues()
+QMap<QString, QString> ChannelProbe::yValues()
 {
 	Sample s = m_graph->nearestSample(m_channelIndex, m_currentTime);
-	return m_graph->sampleToString(m_channelIndex, s);
+	return m_graph->yValueToMap(m_channelIndex, s);
 }
 
 QString ChannelProbe::shvPath()

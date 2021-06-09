@@ -18,16 +18,23 @@ GraphProbeWidget::GraphProbeWidget(QWidget *parent, ChannelProbe *probe) :
 	ui->setupUi(this);
 	m_probe = probe;
 
-	ui->lblShvPath->setText(m_probe->shvPath());
+	ui->lblTitle->setText(m_probe->shvPath());
+
 	ui->fHeader->setStyleSheet("background-color:" + m_probe->color().name() + ";");
 	ui->tbClose->setStyleSheet("background-color:white;");
-	ui->lblProbe->setStyleSheet("QLabel { color : white; font-weight: bold;}");
-	ui->lblShvPath->setStyleSheet("QLabel { color : white;}");
+	ui->lblTitle->setStyleSheet("QLabel { color : white;}");
 
 	setAttribute(Qt::WA_DeleteOnClose, true);
 	setWindowFlags(Qt::FramelessWindowHint | Qt::ToolTip | Qt::WindowType::Window);
 
+	ui->twData->setColumnCount(DataTableColumn::ColCount);
+	ui->twData->setHorizontalHeaderItem(DataTableColumn::ColProperty, new QTableWidgetItem("Property"));
+	ui->twData->setHorizontalHeaderItem(DataTableColumn::ColValue, new QTableWidgetItem("Value"));
+	ui->twData->verticalHeader()->setDefaultSectionSize((int)(fontMetrics().lineSpacing() * 1.3));
+
 	loadValues();
+
+	ui->twData->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
 
 	connect(ui->tbClose, &QToolButton::clicked, this, &GraphProbeWidget::close);
 	connect(m_probe, &ChannelProbe::currentTimeChanged, this, &GraphProbeWidget::loadValues);
@@ -52,6 +59,7 @@ void GraphProbeWidget::mousePressEvent(QMouseEvent *event)
 
 void GraphProbeWidget::mouseReleaseEvent(QMouseEvent *event)
 {
+	Q_UNUSED(event);
 	m_mouseOperation = MouseOperation::None;
 	setCursor(QCursor(Qt::ArrowCursor));
 }
@@ -74,7 +82,25 @@ void GraphProbeWidget::mouseMoveEvent(QMouseEvent *event)
 void GraphProbeWidget::loadValues()
 {
 	ui->teCurrentTime->setDateTime(QDateTime::fromMSecsSinceEpoch(m_probe->currentTime()));
-	ui->tbYvalues->setText(m_probe->yValues());
+	ui->twData->clearContents();
+	ui->twData->setRowCount(0);
+
+	QMap<QString, QString> values = m_probe->yValues();
+	QMapIterator<QString, QString> i(values);
+
+	while (i.hasNext()) {
+		i.next();
+		int ix = ui->twData->rowCount();
+		ui->twData->insertRow(ix);
+
+		QTableWidgetItem *item = new QTableWidgetItem(i.key());
+		item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+		ui->twData->setItem(ix, DataTableColumn::ColProperty, item);
+
+		item = new QTableWidgetItem(i.value());
+		item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+		ui->twData->setItem(ix, DataTableColumn::ColValue, item);
+	}
 }
 
 void GraphProbeWidget::onTbPrevSampleClicked()

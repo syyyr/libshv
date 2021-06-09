@@ -24,6 +24,7 @@ public:
 
 protected:
 	enum class MouseOperation { None = 0, Move };
+	enum DataTableColumn { ColProperty = 0, ColValue, ColCount };
 
 	void mousePressEvent(QMouseEvent *event) override;
 	void mouseReleaseEvent(QMouseEvent *event) override;

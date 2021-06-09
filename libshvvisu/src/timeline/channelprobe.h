@@ -23,7 +23,7 @@ public:
 	QColor color();
 	void setCurrentTime(timemsec_t time);
 	timemsec_t currentTime();
-	QString yValues();
+	QMap<QString, QString> yValues();
 	QString shvPath();
 
 	void nextValue();

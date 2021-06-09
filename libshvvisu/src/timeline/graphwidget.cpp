@@ -679,7 +679,7 @@ void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos
 		m_graph->setYRange(channel_ix, rng);
 		this->update();
 	});
-	menu.addAction(tr("Create probe"), [this, channel_ix, mouse_pos]() {
+	menu.addAction(tr("Create probe (Ctrl + LMB)"), [this, channel_ix, mouse_pos]() {
 		timemsec_t time = m_graph->posToTime(mouse_pos.x());
 		createProbe(channel_ix, time);
 	});
