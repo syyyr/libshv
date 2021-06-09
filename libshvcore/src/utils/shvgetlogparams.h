@@ -26,6 +26,8 @@ struct SHVCORE_DECL_EXPORT ShvGetLogParams
 	static const char *KEY_PATH_PATTERN_TYPE;
 	static const char *KEY_DOMAIN_PATTERN;
 
+	static const char *SINCE_NOW;
+
 	shv::chainpack::RpcValue since;
 	shv::chainpack::RpcValue until;
 	/// '*' and '**' wild-cards are supported

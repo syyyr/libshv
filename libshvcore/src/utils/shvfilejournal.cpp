@@ -634,13 +634,17 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 	logIShvJournal() << "params:" << params.toRpcValue().toCpon();
 	std::map<std::string, ShvJournalEntry> snapshot;
 	cp::RpcValue::List log;
+	bool since_now = (params.since.asString() == ShvGetLogParams::SINCE_NOW);
 
 	cp::RpcValue::Map path_cache;
-	const auto params_since_msec = params.since.isDateTime()? params.since.toDateTime().msecsSinceEpoch(): 0;
+	const auto params_since_msec = params.since.isDateTime()
+								   ? params.since.toDateTime().msecsSinceEpoch()
+								   : (since_now ? std::numeric_limits<int64_t>::max() : 0);
 	const auto params_until_msec = params.until.isDateTime()? params.until.toDateTime().msecsSinceEpoch(): 0;
 	int64_t journal_start_msec = 0;
 	int64_t first_record_msec = 0;
 	int64_t last_record_msec = 0;
+	int64_t last_snapshot_msec = 0;
 	int rec_cnt_limit = std::min(params.recordCountLimit, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 	bool rec_cnt_limit_hit = false;
 
@@ -677,14 +681,21 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		log.push_back(std::move(rec));
 		return true;
 	};
-	auto write_snapshot = [append_log_entry, &snapshot]() {
+	auto write_snapshot = [append_log_entry, &since_now, &params_since_msec, &last_snapshot_msec, &snapshot]() {
 		if(!snapshot.empty()) {
 			logDShvJournal() << "\t -------------- Snapshot";
 			for(const auto &kv : snapshot) {
-				const ShvJournalEntry &e = kv.second;
+				ShvJournalEntry e = kv.second;
 				if (e.value.hasDefaultValue()) {
 					continue;
 				}
+				if (since_now) {
+					e.epochMsec = last_snapshot_msec;
+				}
+				else {
+					e.epochMsec = params_since_msec;
+				}
+
 				if(!append_log_entry(e))
 					return false;
 			}
@@ -750,7 +761,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 					if(params.withSnapshot) {
 						if(e.sampleType == ShvJournalEntry::SampleType::Continuous) {
 							ShvJournalEntry e2 = e;
-							e2.epochMsec = params_since_msec;
+							last_snapshot_msec = e.epochMsec;
 							snapshot[e2.path] = std::move(e2);
 						}
 					}
@@ -779,7 +790,10 @@ log_finish:
 	}
 
 	int64_t log_since_msec = params_since_msec;
-	if(log_since_msec < journal_start_msec) {
+	if (since_now) {
+		log_since_msec = last_snapshot_msec;
+	}
+	else if(log_since_msec < journal_start_msec) {
 		log_since_msec = journal_start_msec;
 	}
 	int64_t log_until_msec = params_until_msec;
