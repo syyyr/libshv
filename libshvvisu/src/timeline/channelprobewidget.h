@@ -33,8 +33,6 @@ protected:
 	void mouseMoveEvent(QMouseEvent *event) override;
 
 	void loadValues();
-	void onTbPrevSampleClicked();
-	void onTbNextSampleClicked();
 
 	ChannelProbe *m_probe = nullptr;
 	QPoint m_recentMousePos;

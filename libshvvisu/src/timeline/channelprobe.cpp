@@ -9,7 +9,7 @@ namespace timeline {
 ChannelProbe::ChannelProbe(Graph *graph, int channel_ix, timemsec_t time)
 	: QObject(graph)
 {
-	m_graph = qobject_cast<Graph*>(parent());
+	m_graph = graph;
 	m_channelIndex = channel_ix;
 	m_currentTime = time;
 }
@@ -37,7 +37,7 @@ QString ChannelProbe::currentTimeIsoFormat()
 	return dt.toString(Qt::ISODateWithMs);
 }
 
-void ChannelProbe::nextValue()
+void ChannelProbe::nextSample()
 {
 	GraphModel *m = m_graph->model();
 	const GraphChannel *ch = m_graph->channelAt(m_channelIndex);
@@ -48,13 +48,12 @@ void ChannelProbe::nextValue()
 		Sample s = m->sampleValue(model_ix, ix + 1);
 
 		if (s.isValid()) {
-			m_currentTime = s.time;
-			emit currentTimeChanged();
+			setCurrentTime(s.time);
 		}
 	}
 }
 
-void ChannelProbe::prevValue()
+void ChannelProbe::prevSample()
 {
 	GraphModel *m = m_graph->model();
 	const GraphChannel *ch = m_graph->channelAt(m_channelIndex);
@@ -65,8 +64,7 @@ void ChannelProbe::prevValue()
 		Sample s = m->sampleValue(model_ix, ix - 1);
 
 		if (s.isValid()) {
-			m_currentTime = s.time;
-			emit currentTimeChanged();
+			setCurrentTime(s.time);
 		}
 	}
 }

@@ -20,9 +20,10 @@ ChannelProbeWidget::ChannelProbeWidget(QWidget *parent, ChannelProbe *probe) :
 
 	ui->lblTitle->setText(m_probe->shvPath());
 
+	ui->edCurentTime->setStyleSheet("background-color: white");
 	ui->fHeader->setStyleSheet("background-color:" + m_probe->color().name() + ";");
 	ui->tbClose->setStyleSheet("background-color:white;");
-	ui->lblTitle->setStyleSheet("QLabel { color : white;}");
+	ui->lblTitle->setStyleSheet("color:white;");
 
 	setAttribute(Qt::WA_DeleteOnClose, true);
 	setWindowFlags(Qt::FramelessWindowHint | Qt::ToolTip | Qt::WindowType::Window);
@@ -38,8 +39,8 @@ ChannelProbeWidget::ChannelProbeWidget(QWidget *parent, ChannelProbe *probe) :
 
 	connect(ui->tbClose, &QToolButton::clicked, this, &ChannelProbeWidget::close);
 	connect(m_probe, &ChannelProbe::currentTimeChanged, this, &ChannelProbeWidget::loadValues);
-	connect(ui->tbPrevSample, &QToolButton::clicked, this, &ChannelProbeWidget::onTbPrevSampleClicked);
-	connect(ui->tbNextSample, &QToolButton::clicked, this, &ChannelProbeWidget::onTbNextSampleClicked);
+	connect(ui->tbPrevSample, &QToolButton::clicked, m_probe, &ChannelProbe::prevSample);
+	connect(ui->tbNextSample, &QToolButton::clicked, m_probe, &ChannelProbe::nextSample);
 }
 
 ChannelProbeWidget::~ChannelProbeWidget()
@@ -82,8 +83,6 @@ void ChannelProbeWidget::mouseMoveEvent(QMouseEvent *event)
 void ChannelProbeWidget::loadValues()
 {
 	ui->edCurentTime->setText(m_probe->currentTimeIsoFormat());
-	ui->edCurentTime->setStyleSheet("background-color: white");
-
 	ui->twData->clearContents();
 	ui->twData->setRowCount(0);
 
@@ -103,16 +102,6 @@ void ChannelProbeWidget::loadValues()
 		item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 		ui->twData->setItem(ix, DataTableColumn::ColValue, item);
 	}
-}
-
-void ChannelProbeWidget::onTbPrevSampleClicked()
-{
-	m_probe->prevValue();
-}
-
-void ChannelProbeWidget::onTbNextSampleClicked()
-{
-	m_probe->nextValue();
 }
 
 }}}
