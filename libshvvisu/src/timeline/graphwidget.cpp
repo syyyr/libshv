@@ -1,7 +1,7 @@
 #include "graphwidget.h"
 #include "graphmodel.h"
 #include "graphview.h"
-#include "graphprobewidget.h"
+#include "channelprobewidget.h"
 
 
 #include <shv/core/exception.h>
@@ -273,7 +273,6 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 					const GraphChannel *ch = m_graph->channelAt(channel_ix);
 					QString shv_path = m_graph->model()->channelInfo(ch->modelIndex()).shvPath;
 					timemsec_t time = m_graph->posToTime(event->pos().x());
-
 					ChannelProbe *p = m_graph->channelProbe(shv_path, time);
 
 					if (p == nullptr) {
@@ -424,8 +423,10 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		return;
 	}
 	case MouseOperation::GraphDataAreaRightPress:
+	case MouseOperation::GraphDataAreaLeftCtrlShiftPress:
 		return;
 	}
+
 	int ch_ix = posToChannel(pos);
 	if(ch_ix >= 0 && !isMouseAboveMiniMap(pos)) {
 		setCursor(Qt::BlankCursor);
@@ -460,7 +461,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 						QString value = it.value().toString();
 						for (auto &field : channel_info.typeDescr.fields) {
 							if (QString::fromStdString(field.name) == it.key() && field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-								value = m_graph->model()->enumToString(it.value().toInt(), field.typeDescr);
+								value = m_graph->model()->typeDescrToString(it.value().toInt(), field.typeDescr);
 								break;
 							}
 						}
@@ -478,7 +479,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 							if (it.key().toInt() == field.value.toInt()) {
 								QString value;
 								if (field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-									value = m_graph->model()->enumToString(it.value().toInt(), field.typeDescr);
+									value = m_graph->model()->typeDescrToString(it.value().toInt(), field.typeDescr);
 								}
 								else {
 									value = it.value().toString();
@@ -494,7 +495,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 					text = QStringLiteral("%1\nx: %2\nvalue: %3")
 						   .arg(ch->shvPath())
 						   .arg(dt.toString(Qt::ISODateWithMs))
-						   .arg(m_graph->model()->enumToString(s.value.toInt(), channel_info.typeDescr));
+						   .arg(m_graph->model()->typeDescrToString(s.value.toInt(), channel_info.typeDescr));
 				}
 				else {
 					text = QStringLiteral("%1\nx: %2\ny: %3\nvalue: %4")
@@ -700,9 +701,9 @@ void GraphWidget::createProbe(int channel_ix, timemsec_t time)
 		this->update();
 	});
 
-	GraphProbeWidget *w = new GraphProbeWidget(this, probe);
+	ChannelProbeWidget *w = new ChannelProbeWidget(this, probe);
 
-	connect(w, &GraphProbeWidget::destroyed, this, [this, probe]() {
+	connect(w, &ChannelProbeWidget::destroyed, this, [this, probe]() {
 		m_graph->removeChannelProbe(probe);
 		this->update();
 	});

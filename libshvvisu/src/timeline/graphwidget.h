@@ -2,7 +2,7 @@
 
 #include "graph.h"
 #include "graphmodel.h"
-#include "graphprobewidget.h"
+#include "channelprobewidget.h"
 
 #include <shv/coreqt/utils.h>
 

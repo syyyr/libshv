@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../shvvisuglobal.h"
+
 #include <QWidget>
 
 namespace shv {
@@ -7,20 +9,20 @@ namespace visu {
 namespace timeline {
 
 namespace Ui {
-class GraphProbeWidget;
+class ChannelProbeWidget;
 }
 
 class ChannelProbe;
 
-class GraphProbeWidget : public QWidget
+class SHVVISU_DECL_EXPORT ChannelProbeWidget : public QWidget
 {
 	Q_OBJECT
 
 	using Super = QWidget;
 
 public:
-	explicit GraphProbeWidget(QWidget *parent, ChannelProbe *probe);
-	~GraphProbeWidget();
+	explicit ChannelProbeWidget(QWidget *parent, ChannelProbe *probe);
+	~ChannelProbeWidget();
 
 protected:
 	enum class MouseOperation { None = 0, Move };
@@ -39,7 +41,7 @@ protected:
 
 	MouseOperation m_mouseOperation = MouseOperation::None;
 
-	Ui::GraphProbeWidget *ui;
+	Ui::ChannelProbeWidget *ui;
 };
 
 }}}

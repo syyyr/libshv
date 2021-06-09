@@ -30,6 +30,13 @@ timemsec_t ChannelProbe::currentTime()
 	return m_currentTime;
 }
 
+QString ChannelProbe::currentTimeIsoFormat()
+{
+	QDateTime dt = QDateTime::fromMSecsSinceEpoch(m_currentTime);
+	dt = dt.toTimeZone(m_graph->timeZone());
+	return dt.toString(Qt::ISODateWithMs);
+}
+
 void ChannelProbe::nextValue()
 {
 	GraphModel *m = m_graph->model();
@@ -67,7 +74,7 @@ void ChannelProbe::prevValue()
 QMap<QString, QString> ChannelProbe::yValues()
 {
 	Sample s = m_graph->nearestSample(m_channelIndex, m_currentTime);
-	return m_graph->yValueToMap(m_channelIndex, s);
+	return m_graph->yValuesToMap(m_channelIndex, s);
 }
 
 QString ChannelProbe::shvPath()

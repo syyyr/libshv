@@ -1,7 +1,7 @@
-#include "graphprobewidget.h"
+#include "channelprobewidget.h"
 #include "channelprobe.h"
 
-#include "ui_graphprobewidget.h"
+#include "ui_channelprobewidget.h"
 
 #include <shv/core/log.h>
 
@@ -11,9 +11,9 @@ namespace shv {
 namespace visu {
 namespace timeline {
 
-GraphProbeWidget::GraphProbeWidget(QWidget *parent, ChannelProbe *probe) :
+ChannelProbeWidget::ChannelProbeWidget(QWidget *parent, ChannelProbe *probe) :
 	QWidget(parent),
-	ui(new Ui::GraphProbeWidget)
+	ui(new Ui::ChannelProbeWidget)
 {
 	ui->setupUi(this);
 	m_probe = probe;
@@ -36,18 +36,18 @@ GraphProbeWidget::GraphProbeWidget(QWidget *parent, ChannelProbe *probe) :
 
 	ui->twData->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
 
-	connect(ui->tbClose, &QToolButton::clicked, this, &GraphProbeWidget::close);
-	connect(m_probe, &ChannelProbe::currentTimeChanged, this, &GraphProbeWidget::loadValues);
-	connect(ui->tbPrevSample, &QToolButton::clicked, this, &GraphProbeWidget::onTbPrevSampleClicked);
-	connect(ui->tbNextSample, &QToolButton::clicked, this, &GraphProbeWidget::onTbNextSampleClicked);
+	connect(ui->tbClose, &QToolButton::clicked, this, &ChannelProbeWidget::close);
+	connect(m_probe, &ChannelProbe::currentTimeChanged, this, &ChannelProbeWidget::loadValues);
+	connect(ui->tbPrevSample, &QToolButton::clicked, this, &ChannelProbeWidget::onTbPrevSampleClicked);
+	connect(ui->tbNextSample, &QToolButton::clicked, this, &ChannelProbeWidget::onTbNextSampleClicked);
 }
 
-GraphProbeWidget::~GraphProbeWidget()
+ChannelProbeWidget::~ChannelProbeWidget()
 {
 	delete ui;
 }
 
-void GraphProbeWidget::mousePressEvent(QMouseEvent *event)
+void ChannelProbeWidget::mousePressEvent(QMouseEvent *event)
 {
 	QPoint pos = event->pos();
 	if (ui->fHeader->rect().contains(pos)) {
@@ -57,14 +57,14 @@ void GraphProbeWidget::mousePressEvent(QMouseEvent *event)
 	}
 }
 
-void GraphProbeWidget::mouseReleaseEvent(QMouseEvent *event)
+void ChannelProbeWidget::mouseReleaseEvent(QMouseEvent *event)
 {
 	Q_UNUSED(event);
 	m_mouseOperation = MouseOperation::None;
 	setCursor(QCursor(Qt::ArrowCursor));
 }
 
-void GraphProbeWidget::mouseMoveEvent(QMouseEvent *event)
+void ChannelProbeWidget::mouseMoveEvent(QMouseEvent *event)
 {
 	QPoint pos = event->pos();
 
@@ -79,9 +79,11 @@ void GraphProbeWidget::mouseMoveEvent(QMouseEvent *event)
 	}
 }
 
-void GraphProbeWidget::loadValues()
+void ChannelProbeWidget::loadValues()
 {
-	ui->teCurrentTime->setDateTime(QDateTime::fromMSecsSinceEpoch(m_probe->currentTime()));
+	ui->edCurentTime->setText(m_probe->currentTimeIsoFormat());
+	ui->edCurentTime->setStyleSheet("background-color: white");
+
 	ui->twData->clearContents();
 	ui->twData->setRowCount(0);
 
@@ -103,12 +105,12 @@ void GraphProbeWidget::loadValues()
 	}
 }
 
-void GraphProbeWidget::onTbPrevSampleClicked()
+void ChannelProbeWidget::onTbPrevSampleClicked()
 {
 	m_probe->prevValue();
 }
 
-void GraphProbeWidget::onTbNextSampleClicked()
+void ChannelProbeWidget::onTbNextSampleClicked()
 {
 	m_probe->nextValue();
 }

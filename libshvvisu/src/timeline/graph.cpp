@@ -260,7 +260,7 @@ ChannelProbe *Graph::channelProbe(const QString &shv_path, timemsec_t time)
 
 	for (ChannelProbe *p: m_channelProbes) {
 		if (p->shvPath() == shv_path) {
-			if ((probe == nullptr) || (qAbs(p->currentTime()-time) < (qAbs(probe->currentTime()-time))));
+			if ((probe == nullptr) || (qAbs(p->currentTime()-time) < (qAbs(probe->currentTime()-time))))
 				probe = p;
 		}
 	}
@@ -391,7 +391,7 @@ QPoint Graph::dataToPos(int ch_ix, const Sample &s) const
 	return data2point? data2point(s, channelMetaTypeId(ch_ix)): QPoint();
 }
 
-QMap<QString, QString> Graph::yValueToMap(int channel_ix, const shv::visu::timeline::Sample &s) const
+QMap<QString, QString> Graph::yValuesToMap(int channel_ix, const shv::visu::timeline::Sample &s) const
 {
 	QMap<QString, QString> ret;
 
@@ -405,7 +405,7 @@ QMap<QString, QString> Graph::yValueToMap(int channel_ix, const shv::visu::timel
 					QString value = it.value().toString();
 					for (auto &field : channel_info.typeDescr.fields) {
 						if (QString::fromStdString(field.name) == it.key() && field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-							value = model()->enumToString(it.value().toInt(), field.typeDescr);
+							value = model()->typeDescrToString(it.value().toInt(), field.typeDescr);
 							break;
 						}
 					}
@@ -419,7 +419,7 @@ QMap<QString, QString> Graph::yValueToMap(int channel_ix, const shv::visu::timel
 						if (it.key().toInt() == field.value.toInt()) {
 							QString value;
 							if (field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-								value = model()->enumToString(it.value().toInt(), field.typeDescr);
+								value = model()->typeDescrToString(it.value().toInt(), field.typeDescr);
 							}
 							else {
 								value = it.value().toString();
@@ -437,7 +437,7 @@ QMap<QString, QString> Graph::yValueToMap(int channel_ix, const shv::visu::timel
 				}
 
 				QString key = (p.isEmpty()) ? "y" : p.last();
-				ret[key] = model()->enumToString(s.value.toInt(), channel_info.typeDescr);
+				ret[key] = model()->typeDescrToString(s.value.toInt(), channel_info.typeDescr);
 			}
 			else {
 				QStringList p = channel_info.shvPath.split("/");
