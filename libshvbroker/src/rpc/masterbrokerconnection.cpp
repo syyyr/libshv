@@ -145,6 +145,9 @@ void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 			}
 			else {
 				shv_path = masterExportedToLocalPath(request_shv_path);
+				if (shv_path.empty() && cp::RpcMessage::method(md) == cp::Rpc::METH_LS && cp::RpcMessage::accessGrant(md).toString() == cp::Rpc::ROLE_ADMIN) {
+					md.setValue("addLocal", true);
+				}
 			}
 			cp::RpcMessage::setShvPath(md, shv_path);
 		}
