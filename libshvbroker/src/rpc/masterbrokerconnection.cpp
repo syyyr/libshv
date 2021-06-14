@@ -14,6 +14,9 @@ namespace shv {
 namespace broker {
 namespace rpc {
 
+std::string MasterBrokerConnection::LOCAL_NODE = ".local";
+std::string MasterBrokerConnection::LOCAL_INTERNAL_META_KEY = "__add_local_to_ls_internal";
+
 MasterBrokerConnection::MasterBrokerConnection(QObject *parent)
 	: Super(parent)
 {
@@ -140,13 +143,19 @@ void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 		if(cp::RpcMessage::isRequest(md)) {
 			shv::core::String request_shv_path = cp::RpcMessage::shvPath(md).toString();
 			std::string shv_path;
-			if (request_shv_path.startsWith(".local")) {
-				shv_path = request_shv_path.mid(6);
+			if (request_shv_path == LOCAL_NODE || request_shv_path.startsWith(LOCAL_NODE + '/')) {
+				if (cp::RpcMessage::accessGrant(md).toString() != cp::Rpc::ROLE_ADMIN) {
+					shv::chainpack::RpcResponse rsp = cp::RpcResponse::forRequest(md);
+					rsp.setError(cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodCallException, "Insufficient rights for local node"));
+					sendMessage(rsp);
+					return;
+				}
+				shv_path = request_shv_path.mid(LOCAL_NODE.size());
 			}
 			else {
 				shv_path = masterExportedToLocalPath(request_shv_path);
 				if (shv_path.empty() && cp::RpcMessage::method(md) == cp::Rpc::METH_LS && cp::RpcMessage::accessGrant(md).toString() == cp::Rpc::ROLE_ADMIN) {
-					md.setValue("addLocal", true);
+					md.setValue(LOCAL_INTERNAL_META_KEY, true);
 				}
 			}
 			cp::RpcMessage::setShvPath(md, shv_path);
