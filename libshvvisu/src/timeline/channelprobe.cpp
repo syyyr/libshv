@@ -71,7 +71,16 @@ void ChannelProbe::prevSample()
 
 QMap<QString, QString> ChannelProbe::yValues()
 {
-	Sample s = m_graph->nearestSample(m_channelIndex, m_currentTime);
+	const GraphChannel *ch = m_graph->channelAt(m_channelIndex);
+	GraphModel::ChannelInfo &channel_info = m_graph->model()->channelInfo(ch->modelIndex());
+	Sample s;
+
+	if (channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Discrete) {
+		s = m_graph->nearestSample(m_channelIndex, m_currentTime);
+	}
+	else {
+		s = m_graph->timeToSample(m_channelIndex, m_currentTime);
+	}
 	return m_graph->yValuesToMap(m_channelIndex, s);
 }
 
@@ -79,6 +88,11 @@ QString ChannelProbe::shvPath()
 {
 	const GraphChannel *ch = m_graph->channelAt(m_channelIndex);
 	return m_graph->model()->channelInfo(ch->modelIndex()).shvPath;
+}
+
+int ChannelProbe::channelIndex()
+{
+	return m_channelIndex;
 }
 
 }

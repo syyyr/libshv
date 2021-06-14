@@ -254,12 +254,12 @@ void Graph::setChannelMaximized(int channel_ix, bool is_maximized)
 	emit layoutChanged();
 }
 
-ChannelProbe *Graph::channelProbe(const QString &shv_path, timemsec_t time)
+ChannelProbe *Graph::channelProbe(int channel_ix, timemsec_t time)
 {
 	ChannelProbe *probe = nullptr;
 
 	for (ChannelProbe *p: m_channelProbes) {
-		if (p->shvPath() == shv_path) {
+		if (p->channelIndex() == channel_ix) {
 			if ((probe == nullptr) || (qAbs(p->currentTime()-time) < (qAbs(probe->currentTime()-time))))
 				probe = p;
 		}
@@ -405,7 +405,7 @@ QMap<QString, QString> Graph::yValuesToMap(int channel_ix, const shv::visu::time
 					QString value = it.value().toString();
 					for (auto &field : channel_info.typeDescr.fields) {
 						if (QString::fromStdString(field.name) == it.key() && field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-							value = model()->typeDescrToString(it.value().toInt(), field.typeDescr);
+							value = model()->typeDescrFieldName(field.typeDescr, it.value().toInt());
 							break;
 						}
 					}
@@ -419,7 +419,7 @@ QMap<QString, QString> Graph::yValuesToMap(int channel_ix, const shv::visu::time
 						if (it.key().toInt() == field.value.toInt()) {
 							QString value;
 							if (field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-								value = model()->typeDescrToString(it.value().toInt(), field.typeDescr);
+								value = model()->typeDescrFieldName(field.typeDescr, it.value().toInt());
 							}
 							else {
 								value = it.value().toString();
@@ -437,7 +437,7 @@ QMap<QString, QString> Graph::yValuesToMap(int channel_ix, const shv::visu::time
 				}
 
 				QString key = (p.isEmpty()) ? "y" : p.last();
-				ret[key] = model()->typeDescrToString(s.value.toInt(), channel_info.typeDescr);
+				ret[key] = model()->typeDescrFieldName(channel_info.typeDescr, s.value.toInt());
 			}
 			else {
 				QStringList p = channel_info.shvPath.split("/");

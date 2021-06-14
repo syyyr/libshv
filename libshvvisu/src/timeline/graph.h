@@ -106,7 +106,7 @@ public:
 	void setChannelVisible(int channel_ix, bool is_visible);
 	void setChannelMaximized(int channel_ix, bool is_maximized);
 
-	ChannelProbe *channelProbe(const QString &shv_path, timemsec_t time = 0);
+	ChannelProbe *channelProbe(int channel_ix, timemsec_t time = 0);
 	ChannelProbe *addChannelProbe(int channel_ix, timemsec_t time);
 	void removeChannelProbe(ChannelProbe *probe);
 	//DataRect dataRect(int channel_ix) const;

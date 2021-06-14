@@ -21,6 +21,7 @@ public:
 
 	QColor color();
 	QString shvPath();
+	int channelIndex();
 
 	void setCurrentTime(timemsec_t time);
 	timemsec_t currentTime();

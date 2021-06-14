@@ -11,7 +11,7 @@ namespace shv {
 namespace visu {
 namespace timeline {
 
-ChannelProbeWidget::ChannelProbeWidget(QWidget *parent, ChannelProbe *probe) :
+ChannelProbeWidget::ChannelProbeWidget(ChannelProbe *probe, QWidget *parent) :
 	QWidget(parent),
 	ui(new Ui::ChannelProbeWidget)
 {

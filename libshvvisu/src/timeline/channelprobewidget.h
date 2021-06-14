@@ -21,7 +21,7 @@ class SHVVISU_DECL_EXPORT ChannelProbeWidget : public QWidget
 	using Super = QWidget;
 
 public:
-	explicit ChannelProbeWidget(QWidget *parent, ChannelProbe *probe);
+	explicit ChannelProbeWidget(ChannelProbe *probe, QWidget *parent);
 	~ChannelProbeWidget();
 
 protected:

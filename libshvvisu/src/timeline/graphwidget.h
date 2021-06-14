@@ -53,6 +53,7 @@ protected:
 	virtual void showChannelContextMenu(int channel_ix, const QPoint &mouse_pos);
 protected:
 	void createProbe(int channel_ix, timemsec_t time);
+	void removeProbes();
 	bool isMouseAboveMiniMap(const QPoint &mouse_pos) const;
 	bool isMouseAboveMiniMapHandle(const QPoint &mouse_pos, bool left) const;
 	bool isMouseAboveLeftMiniMapHandle(const QPoint &pos) const;

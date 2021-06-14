@@ -60,7 +60,7 @@ public:
 	virtual int channelCount() const { return qMin(m_channelsInfo.count(), m_samples.count()); }
 	const ChannelInfo& channelInfo(int channel_ix) const { return m_channelsInfo.at(channel_ix); }
 	ChannelInfo& channelInfo(int channel_ix) { return m_channelsInfo[channel_ix]; }
-	QString typeDescrToString(int value, const TypeDescr &type_descr);
+	QString typeDescrFieldName( const TypeDescr &type_descr, int field_index);
 
 	virtual int count(int channel) const;
 	/// without bounds check

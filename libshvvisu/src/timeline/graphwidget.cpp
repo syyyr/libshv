@@ -270,17 +270,9 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 			if(event->modifiers() == Qt::ControlModifier) {
 				int channel_ix = posToChannel(event->pos());
 				if(channel_ix >= 0) {
-					const GraphChannel *ch = m_graph->channelAt(channel_ix);
-					QString shv_path = m_graph->model()->channelInfo(ch->modelIndex()).shvPath;
+					removeProbes();
 					timemsec_t time = m_graph->posToTime(event->pos().x());
-					ChannelProbe *p = m_graph->channelProbe(shv_path, time);
-
-					if (p == nullptr) {
-						createProbe(channel_ix, time);
-					}
-					else {
-						p->setCurrentTime(time);
-					}
+					createProbe(channel_ix, time);
 				}
 			}
 
@@ -395,7 +387,6 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		return;
 	}
 	case MouseOperation::GraphDataAreaLeftPress: {
-
 		QPoint point = pos - m_recentMousePos;
 		if (point.manhattanLength() > 3) {
 			m_mouseOperation = MouseOperation::GraphAreaSelection;
@@ -408,8 +399,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		break;
 	}
 	case MouseOperation::GraphAreaMove:
-	case MouseOperation::GraphDataAreaLeftCtrlPress
-	: {
+	case MouseOperation::GraphDataAreaLeftCtrlPress: {
 		m_mouseOperation = MouseOperation::GraphAreaMove;
 		timemsec_t t0 = gr->posToTime(m_recentMousePos.x());
 		timemsec_t t1 = gr->posToTime(pos.x());
@@ -461,7 +451,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 						QString value = it.value().toString();
 						for (auto &field : channel_info.typeDescr.fields) {
 							if (QString::fromStdString(field.name) == it.key() && field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-								value = m_graph->model()->typeDescrToString(it.value().toInt(), field.typeDescr);
+								value = m_graph->model()->typeDescrFieldName(field.typeDescr, it.value().toInt());
 								break;
 							}
 						}
@@ -479,7 +469,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 							if (it.key().toInt() == field.value.toInt()) {
 								QString value;
 								if (field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-									value = m_graph->model()->typeDescrToString(it.value().toInt(), field.typeDescr);
+									value = m_graph->model()->typeDescrFieldName(field.typeDescr, it.value().toInt());
 								}
 								else {
 									value = it.value().toString();
@@ -495,7 +485,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 					text = QStringLiteral("%1\nx: %2\nvalue: %3")
 						   .arg(ch->shvPath())
 						   .arg(dt.toString(Qt::ISODateWithMs))
-						   .arg(m_graph->model()->typeDescrToString(s.value.toInt(), channel_info.typeDescr));
+						   .arg(m_graph->model()->typeDescrFieldName(channel_info.typeDescr, s.value.toInt()));
 				}
 				else {
 					text = QStringLiteral("%1\nx: %2\ny: %3\nvalue: %4")
@@ -680,28 +670,29 @@ void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos
 		m_graph->setYRange(channel_ix, rng);
 		this->update();
 	});
-	menu.addAction(tr("Create probe (Ctrl + LMB)"), [this, channel_ix, mouse_pos]() {
+	menu.addAction(tr("Set probe (Ctrl + Left mouse)"), [this, channel_ix, mouse_pos]() {
+		removeProbes();
 		timemsec_t time = m_graph->posToTime(mouse_pos.x());
 		createProbe(channel_ix, time);
 	});
+	menu.addAction(tr("Add probe (Ctrl + Shift + Left mouse)"), [this, channel_ix, mouse_pos]() {
+			timemsec_t time = m_graph->posToTime(mouse_pos.x());
+			createProbe(channel_ix, time);
+		});
 	if(menu.actions().count())
 		menu.exec(mapToGlobal(mouse_pos));
 }
 
 void GraphWidget::createProbe(int channel_ix, timemsec_t time)
 {
-	const GraphChannel *ch = m_graph->channelAt(channel_ix, !shv::core::Exception::Throw);
-	if (ch == nullptr) {
-		shvError() << "Cannot get channel at index:" << channel_ix;
-		return;
-	}
-
 	ChannelProbe *probe = m_graph->addChannelProbe(channel_ix, time);
+	Q_ASSERT(probe);
+
 	connect(probe, &ChannelProbe::currentTimeChanged, probe, [this]() {
 		this->update();
 	});
 
-	ChannelProbeWidget *w = new ChannelProbeWidget(this, probe);
+	ChannelProbeWidget *w = new ChannelProbeWidget(probe, this);
 
 	connect(w, &ChannelProbeWidget::destroyed, this, [this, probe]() {
 		m_graph->removeChannelProbe(probe);
@@ -711,6 +702,15 @@ void GraphWidget::createProbe(int channel_ix, timemsec_t time)
 	w->show();
 	QPoint pos(m_graph->timeToPos(time) - (w->width() / 2), -geometry().top() - w->height() - m_graph->u2px(0.2));
 	w->move(mapToGlobal(pos));
+}
+
+void GraphWidget::removeProbes()
+{
+	QList<ChannelProbeWidget*> probe_widgets = findChildren<ChannelProbeWidget*>(QString(), Qt::FindDirectChildrenOnly);
+
+	for (ChannelProbeWidget *pw: probe_widgets) {
+		pw->close();
+	}
 }
 
 }}}
