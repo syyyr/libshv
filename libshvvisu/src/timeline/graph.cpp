@@ -1,3 +1,4 @@
+#include "channelprobe.h"
 #include "graphwidget.h"
 #include "graphmodel.h"
 #include "graphwidget.h"
@@ -253,6 +254,33 @@ void Graph::setChannelMaximized(int channel_ix, bool is_maximized)
 	emit layoutChanged();
 }
 
+ChannelProbe *Graph::channelProbe(int channel_ix, timemsec_t time)
+{
+	ChannelProbe *probe = nullptr;
+
+	for (ChannelProbe *p: m_channelProbes) {
+		if (p->channelIndex() == channel_ix) {
+			if ((probe == nullptr) || (qAbs(p->currentTime()-time) < (qAbs(probe->currentTime()-time))))
+				probe = p;
+		}
+	}
+
+	return probe;
+}
+
+ChannelProbe *Graph::addChannelProbe(int channel_ix, timemsec_t time)
+{
+	ChannelProbe *probe = new ChannelProbe(this, channel_ix, time);
+	m_channelProbes.push_back(probe);
+	return probe;
+}
+
+void Graph::removeChannelProbe(ChannelProbe *probe)
+{
+	m_channelProbes.removeOne(probe);
+	probe->deleteLater();
+}
+
 void Graph::setYAxisVisible(bool is_visible)
 {
 	m_style.setYAxisVisible(is_visible);
@@ -361,6 +389,69 @@ QPoint Graph::dataToPos(int ch_ix, const Sample &s) const
 	const GraphChannel *ch = channelAt(ch_ix);
 	auto data2point = dataToPointFn(DataRect{xRangeZoom(), ch->yRangeZoom()}, ch->graphDataGridRect());
 	return data2point? data2point(s, channelMetaTypeId(ch_ix)): QPoint();
+}
+
+QMap<QString, QString> Graph::yValuesToMap(int channel_ix, const shv::visu::timeline::Sample &s) const
+{
+	QMap<QString, QString> ret;
+
+	if (s.isValid()) {
+		GraphModel::ChannelInfo &channel_info = model()->channelInfo(m_channels[channel_ix]->modelIndex());
+
+		if (channel_info.typeDescr.sampleType != shv::chainpack::DataChange::SampleType::Invalid) {
+			if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Map) {
+				const QVariantMap &map = s.value.toMap();
+				for (auto it = map.cbegin(); it != map.cend(); ++it) {
+					QString value = it.value().toString();
+					for (auto &field : channel_info.typeDescr.fields) {
+						if (QString::fromStdString(field.name) == it.key() && field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+							value = model()->typeDescrFieldName(field.typeDescr, it.value().toInt());
+							break;
+						}
+					}
+					ret[it.key()] = value;
+				}
+			}
+			else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::IMap) {
+				const QVariantMap &map = s.value.toMap();
+				for (auto it = map.cbegin(); it != map.cend(); ++it) {
+					for (auto &field : channel_info.typeDescr.fields) {
+						if (it.key().toInt() == field.value.toInt()) {
+							QString value;
+							if (field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+								value = model()->typeDescrFieldName(field.typeDescr, it.value().toInt());
+							}
+							else {
+								value = it.value().toString();
+							}
+							ret[QString::fromStdString(field.name)] = value;
+							break;
+						}
+					}
+				}
+			}
+			else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+				QStringList p = channel_info.shvPath.split("/");
+				if (p.isEmpty()) {
+					shvError() << "Failed to split shvPath:" << channel_info.shvPath;
+				}
+
+				QString key = (p.isEmpty()) ? "y" : p.last();
+				ret[key] = model()->typeDescrFieldName(channel_info.typeDescr, s.value.toInt());
+			}
+			else {
+				QStringList p = channel_info.shvPath.split("/");
+				if (p.isEmpty()) {
+					shvError() << "Failed to split shvPath:" << channel_info.shvPath;
+				}
+
+				QString key = (p.isEmpty()) ? "y" : p.last();
+				ret[key] = s.value.toString();
+			}
+		}
+	}
+
+	return ret;
 }
 
 void Graph::setCrossHairPos(const Graph::CrossHairPos &pos)
@@ -946,6 +1037,7 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 			drawBackground(painter, i);
 			drawGrid(painter, i);
 			drawSamples(painter, i);
+			drawProbes(painter, i);
 			drawCrossHair(painter, i);
 			drawCurrentTime(painter, i);
 		}
@@ -1722,6 +1814,29 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 		}
 	}
 	painter->restore();
+}
+
+void Graph::drawProbes(QPainter *painter, int channel_ix)
+{
+	const GraphChannel *ch = channelAt(channel_ix);
+
+	for (ChannelProbe *p: m_channelProbes) {
+		auto time = p->currentTime();
+		int x = timeToPos(time);
+
+		if ((time >= 0) && (x >= ch->graphAreaRect().left() && x <= ch->graphAreaRect().right())) {
+			painter->save();
+			QPen pen;
+			auto d = u2pxf(0.1);
+			pen.setWidthF(d);
+			pen.setColor(p->color());
+			painter->setPen(pen);
+			QPoint p1{x, ch->graphAreaRect().top()};
+			QPoint p2{x, ch->graphAreaRect().bottom()};
+			painter->drawLine(p1, p2);
+			painter->restore();
+		}
+	}
 }
 
 void Graph::drawSelection(QPainter *painter)

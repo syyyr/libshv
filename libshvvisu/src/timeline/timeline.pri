@@ -3,6 +3,8 @@ HEADERS += \
     $$PWD/channelfilterdialog.h \
     $$PWD/channelfiltermodel.h \
     $$PWD/channelfiltersortfilterproxymodel.h \
+    $$PWD/channelprobe.h \
+    $$PWD/channelprobewidget.h \
     $$PWD/graphbuttonbox.h \
     $$PWD/graphchannel.h \
     $$PWD/graphmodel.h \
@@ -17,6 +19,8 @@ SOURCES += \
     $$PWD/channelfilterdialog.cpp \
     $$PWD/channelfiltermodel.cpp \
     $$PWD/channelfiltersortfilterproxymodel.cpp \
+    $$PWD/channelprobe.cpp \
+    $$PWD/channelprobewidget.cpp \
     $$PWD/graphbuttonbox.cpp \
     $$PWD/graphchannel.cpp \
     $$PWD/graphmodel.cpp \
@@ -28,3 +32,4 @@ SOURCES += \
 
 FORMS += \
     $$PWD/channelfilterdialog.ui \
+    $$PWD/channelprobewidget.ui

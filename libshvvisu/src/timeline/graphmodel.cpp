@@ -224,6 +224,16 @@ void GraphModel::appendChannel(const std::string &shv_path, const std::string &n
 	emit channelCountChanged(channelCount());
 }
 
+QString GraphModel::typeDescrFieldName(const TypeDescr &type_descr, int field_index)
+{
+	for (const auto &field : type_descr.fields) {
+		if (field_index == field.value.toInt()) {
+			return QString::fromStdString(field.name);
+		}
+	}
+	return QString();
+}
+
 int GraphModel::guessMetaType(int channel_ix)
 {
 	Sample s = sampleValue(channel_ix, 0);

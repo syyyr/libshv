@@ -1,6 +1,8 @@
 #include "graphwidget.h"
 #include "graphmodel.h"
 #include "graphview.h"
+#include "channelprobewidget.h"
+
 
 #include <shv/core/exception.h>
 #include <shv/coreqt/log.h>
@@ -193,16 +195,6 @@ int GraphWidget::posToChannel(const QPoint &pos) const
 	return ch_ix;
 }
 
-QString GraphWidget::enumToString(int value, const TypeDescr &type_descr)
-{
-	for (const auto &field : type_descr.fields) {
-		if (value == field.value.toInt()) {
-			return QString::fromStdString(field.name);
-		}
-	}
-	return QString();
-}
-
 void GraphWidget::mouseDoubleClickEvent(QMouseEvent *event)
 {
 	QPoint pos = event->pos();
@@ -239,18 +231,19 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 		}
 		else if(posToChannel(pos) >= 0) {
 			if(event->modifiers() == Qt::ControlModifier) {
-				m_mouseOperation = MouseOperation::GraphAreaMove;
-				m_recentMousePos = pos;
-				event->accept();
-				return;
+				m_mouseOperation = MouseOperation::GraphDataAreaLeftCtrlPress;
+			}
+			else if(event->modifiers() == (Qt::ControlModifier | Qt::ShiftModifier)) {
+				m_mouseOperation = MouseOperation::GraphDataAreaLeftCtrlShiftPress;
 			}
 			else {
 				logMouseSelection() << "GraphAreaPress";
-				m_mouseOperation = MouseOperation::GraphDataAreaPress;
-				m_recentMousePos = pos;
-				event->accept();
-				return;
+				m_mouseOperation = MouseOperation::GraphDataAreaLeftPress;
 			}
+
+			m_recentMousePos = pos;
+			event->accept();
+			return;
 		}
 	}
 	else if(event->button() == Qt::RightButton) {
@@ -273,7 +266,16 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 	auto old_mouse_op = m_mouseOperation;
 	m_mouseOperation = MouseOperation::None;
 	if(event->button() == Qt::LeftButton) {
-		if(old_mouse_op == MouseOperation::GraphDataAreaPress) {
+		if(old_mouse_op == MouseOperation::GraphDataAreaLeftCtrlPress) {
+			if(event->modifiers() == Qt::ControlModifier) {
+				int channel_ix = posToChannel(event->pos());
+				if(channel_ix >= 0) {
+					removeProbes();
+					timemsec_t time = m_graph->posToTime(event->pos().x());
+					createProbe(channel_ix, time);
+				}
+			}
+
 			/*
 			QPoint pos = event->pos();
 			if(event->modifiers() == Qt::NoModifier) {
@@ -292,6 +294,13 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 				return;
 			}
 			*/
+		}
+		else if(old_mouse_op == MouseOperation::GraphDataAreaLeftCtrlShiftPress) {
+			int channel_ix = posToChannel(event->pos());
+			if(channel_ix >= 0) {
+				timemsec_t time = m_graph->posToTime(event->pos().x());
+				createProbe(channel_ix, time);
+			}
 		}
 		else if(old_mouse_op == MouseOperation::GraphAreaSelection) {
 			bool zoom_vertically = event->modifiers() == Qt::ShiftModifier;
@@ -335,6 +344,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 	else {
 		setCursor(QCursor(Qt::ArrowCursor));
 	}
+
 	switch (m_mouseOperation) {
 	case MouseOperation::None:
 		break;
@@ -376,7 +386,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		}
 		return;
 	}
-	case MouseOperation::GraphDataAreaPress: {
+	case MouseOperation::GraphDataAreaLeftPress: {
 		QPoint point = pos - m_recentMousePos;
 		if (point.manhattanLength() > 3) {
 			m_mouseOperation = MouseOperation::GraphAreaSelection;
@@ -388,7 +398,9 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		update();
 		break;
 	}
-	case MouseOperation::GraphAreaMove: {
+	case MouseOperation::GraphAreaMove:
+	case MouseOperation::GraphDataAreaLeftCtrlPress: {
+		m_mouseOperation = MouseOperation::GraphAreaMove;
 		timemsec_t t0 = gr->posToTime(m_recentMousePos.x());
 		timemsec_t t1 = gr->posToTime(pos.x());
 		timemsec_t dt = t0 - t1;
@@ -401,8 +413,10 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		return;
 	}
 	case MouseOperation::GraphDataAreaRightPress:
+	case MouseOperation::GraphDataAreaLeftCtrlShiftPress:
 		return;
 	}
+
 	int ch_ix = posToChannel(pos);
 	if(ch_ix >= 0 && !isMouseAboveMiniMap(pos)) {
 		setCursor(Qt::BlankCursor);
@@ -437,7 +451,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 						QString value = it.value().toString();
 						for (auto &field : channel_info.typeDescr.fields) {
 							if (QString::fromStdString(field.name) == it.key() && field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-								value = enumToString(it.value().toInt(), field.typeDescr);
+								value = m_graph->model()->typeDescrFieldName(field.typeDescr, it.value().toInt());
 								break;
 							}
 						}
@@ -455,7 +469,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 							if (it.key().toInt() == field.value.toInt()) {
 								QString value;
 								if (field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-									value = enumToString(it.value().toInt(), field.typeDescr);
+									value = m_graph->model()->typeDescrFieldName(field.typeDescr, it.value().toInt());
 								}
 								else {
 									value = it.value().toString();
@@ -471,7 +485,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 					text = QStringLiteral("%1\nx: %2\nvalue: %3")
 						   .arg(ch->shvPath())
 						   .arg(dt.toString(Qt::ISODateWithMs))
-						   .arg(enumToString(s.value.toInt(), channel_info.typeDescr));
+						   .arg(m_graph->model()->typeDescrFieldName(channel_info.typeDescr, s.value.toInt()));
 				}
 				else {
 					text = QStringLiteral("%1\nx: %2\ny: %3\nvalue: %4")
@@ -482,6 +496,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 				}
 			}
 		}
+
 		QToolTip::showText(point, text);
 	}
 	else {
@@ -655,8 +670,47 @@ void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos
 		m_graph->setYRange(channel_ix, rng);
 		this->update();
 	});
+	menu.addAction(tr("Set probe (Ctrl + Left mouse)"), [this, channel_ix, mouse_pos]() {
+		removeProbes();
+		timemsec_t time = m_graph->posToTime(mouse_pos.x());
+		createProbe(channel_ix, time);
+	});
+	menu.addAction(tr("Add probe (Ctrl + Shift + Left mouse)"), [this, channel_ix, mouse_pos]() {
+			timemsec_t time = m_graph->posToTime(mouse_pos.x());
+			createProbe(channel_ix, time);
+		});
 	if(menu.actions().count())
 		menu.exec(mapToGlobal(mouse_pos));
+}
+
+void GraphWidget::createProbe(int channel_ix, timemsec_t time)
+{
+	ChannelProbe *probe = m_graph->addChannelProbe(channel_ix, time);
+	Q_ASSERT(probe);
+
+	connect(probe, &ChannelProbe::currentTimeChanged, probe, [this]() {
+		this->update();
+	});
+
+	ChannelProbeWidget *w = new ChannelProbeWidget(probe, this);
+
+	connect(w, &ChannelProbeWidget::destroyed, this, [this, probe]() {
+		m_graph->removeChannelProbe(probe);
+		this->update();
+	});
+
+	w->show();
+	QPoint pos(m_graph->timeToPos(time) - (w->width() / 2), -geometry().top() - w->height() - m_graph->u2px(0.2));
+	w->move(mapToGlobal(pos));
+}
+
+void GraphWidget::removeProbes()
+{
+	QList<ChannelProbeWidget*> probe_widgets = findChildren<ChannelProbeWidget*>(QString(), Qt::FindDirectChildrenOnly);
+
+	for (ChannelProbeWidget *pw: probe_widgets) {
+		pw->close();
+	}
 }
 
 }}}
