@@ -145,6 +145,18 @@ bool StringView::startsWith(char c) const
 	return value(0) == c;
 }
 
+bool StringView::endsWith(const StringView &str) const
+{
+	size_t i;
+	size_t len1 = length();
+	size_t len2 = str.length();
+	for (i = 0; i < len1 && i < len2; ++i) {
+		if((*this)[len1 - 1 - i] != str[len2 - 1 - i])
+			return false;
+	}
+	return i == len2;
+}
+
 bool StringView::endsWith(char c) const
 {
 	return value(-1) == c;
