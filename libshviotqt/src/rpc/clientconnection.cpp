@@ -23,6 +23,7 @@
 #include <fstream>
 
 namespace cp = shv::chainpack;
+using namespace std;
 
 namespace shv {
 namespace iotqt {
@@ -174,30 +175,18 @@ void ClientConnection::setCheckBrokerConnectedInterval(int ms)
 
 void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
 {
-	if(rpc_msg.isSignal() && shv::core::String::endsWith(rpc_msg.shvPath().asString(), "server/time")) {
-		// skip annoying messages
-	}
-	else {
+	if(!isShvPathMutedInLog(rpc_msg.shvPath().asString())) {
 		logRpcMsg() << SND_LOG_ARROW
 					<< "client id:" << connectionId()
 					<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
 					<< rpc_msg.toPrettyString();
-		//if(rpc_msg.isSignal()) {
-		//	cp::RpcSignal sig(rpc_msg);
-		//	QString s = QString::fromStdString(sig.params().toCpon());
-		//	if(s.endsWith("Occupied(null)\""))
-		//		std::abort();
-		//}
 	}
 	sendRpcValue(rpc_msg.value());
 }
 
 void ClientConnection::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 {
-	if(msg.isSignal() && shv::core::String::endsWith(msg.shvPath().asString(), "server/time")) {
-		// skip annoying messages
-	}
-	else {
+	if(!isShvPathMutedInLog(msg.shvPath().asString())) {
 		logRpcMsg() << cp::RpcDriver::RCV_LOG_ARROW
 					<< "client id:" << connectionId()
 					<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
@@ -356,6 +345,24 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 	};
 }
 
+bool ClientConnection::isShvPathMutedInLog(const std::string &shv_path) const
+{
+	for(const string &pattern : m_mutedShvPathsInLog) {
+		shv::core::StringView sv(pattern);
+		if(sv.value(0) == '*') {
+			sv = sv.mid(1);
+			//shvInfo() << shv_path << "ends with:" << sv.toString() << shv::core::StringView(shv_path).endsWith(sv);
+			if(shv::core::StringView(shv_path).endsWith(sv))
+				return true;
+		}
+		else {
+			if(shv_path == pattern)
+				return true;
+		}
+	}
+	return false;
+}
+
 void ClientConnection::restartIfAutoConnect()
 {
 	if(isAutoConnect())
@@ -367,6 +374,11 @@ void ClientConnection::restartIfAutoConnect()
 int ClientConnection::brokerClientId() const
 {
 	return m_connectionState.loginResult.toMap().value(cp::Rpc::KEY_CLIENT_ID).toInt();
+}
+
+void ClientConnection::muteShvPathInLog(std::string shv_path)
+{
+	m_mutedShvPathsInLog.push_back(std::move(shv_path));
 }
 
 void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
