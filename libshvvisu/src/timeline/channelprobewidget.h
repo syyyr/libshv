@@ -25,19 +25,27 @@ public:
 	~ChannelProbeWidget();
 
 protected:
-	enum class MouseOperation { None = 0, Move };
+	enum class MouseOperation { None = 0, LeftMouseClick, Resize, Move };
+	enum class WindowFarmeSection { NoSection = 0, LeftSection, TopLeftSection, TopSection, TopRightSection, RightSection, BottomRightSection, BottomSection, BottomLeftSection };
 	enum DataTableColumn { ColProperty = 0, ColValue, ColCount };
 
-	void mousePressEvent(QMouseEvent *event) override;
-	void mouseReleaseEvent(QMouseEvent *event) override;
-	void mouseMoveEvent(QMouseEvent *event) override;
+	bool eventFilter(QObject *o, QEvent *e) override;
+
+	//void mousePressEvent(QMouseEvent *event) override;
+	//void mouseReleaseEvent(QMouseEvent *event) override;
+	//void mouseMoveEvent(QMouseEvent *event) override;
+
+//	void enterEvent(QEvent *event) override;
+//	void leaveEvent(QEvent *event) override;
 
 	void loadValues();
+	WindowFarmeSection getWindowFrameSection();
 
 	ChannelProbe *m_probe = nullptr;
 	QPoint m_recentMousePos;
 
 	MouseOperation m_mouseOperation = MouseOperation::None;
+	WindowFarmeSection m_windowFrameSection = WindowFarmeSection::NoSection;
 
 	Ui::ChannelProbeWidget *ui;
 };
