@@ -2,6 +2,7 @@
 
 #include "../shvvisuglobal.h"
 
+#include <QSet>
 #include <QWidget>
 
 namespace shv {
@@ -26,7 +27,7 @@ public:
 
 protected:
 	enum class MouseOperation { None = 0, LeftMouseClick, Resize, Move };
-	enum class WindowFarmeSection { NoSection = 0, LeftSection, TopLeftSection, TopSection, TopRightSection, RightSection, BottomRightSection, BottomSection, BottomLeftSection };
+	enum WindowFarmeSection { LeftSection = 0, TopSection, RightSection, BottomSection };
 	enum DataTableColumn { ColProperty = 0, ColValue, ColCount };
 
 	bool eventFilter(QObject *o, QEvent *e) override;
@@ -39,13 +40,15 @@ protected:
 //	void leaveEvent(QEvent *event) override;
 
 	void loadValues();
-	WindowFarmeSection getWindowFrameSection();
+	QSet<ChannelProbeWidget::WindowFarmeSection> getWindowFrameSection();
+	QCursor windowFrameSectionCursor(QSet<WindowFarmeSection> wfs);
+
 
 	ChannelProbe *m_probe = nullptr;
 	QPoint m_recentMousePos;
 
 	MouseOperation m_mouseOperation = MouseOperation::None;
-	WindowFarmeSection m_windowFrameSection = WindowFarmeSection::NoSection;
+	QSet<ChannelProbeWidget::WindowFarmeSection> m_windowFrameSection;
 
 	Ui::ChannelProbeWidget *ui;
 };

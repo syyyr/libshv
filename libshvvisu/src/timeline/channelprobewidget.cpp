@@ -58,28 +58,20 @@ bool ChannelProbeWidget::eventFilter(QObject *o, QEvent *e)
 
 	if (e->type() == QEvent::MouseButtonPress) {
 		QPoint pos = static_cast<QMouseEvent*>(e)->pos();
-		if (ui->fHeader->rect().contains(pos)) {
+		m_windowFrameSection = getWindowFrameSection();
+
+		if (!m_windowFrameSection.isEmpty()) {
+			m_mouseOperation = MouseOperation::Resize;
+			e->accept();
+			return true;
+		}
+
+		else if (ui->fHeader->rect().contains(pos)) {
 			setCursor(QCursor(Qt::DragMoveCursor));
 			m_recentMousePos = pos;
 			m_mouseOperation = MouseOperation::Move;
 			e->accept();
 			return true;
-		}
-		else {
-			m_recentMousePos = pos;
-			pos = QCursor::pos();
-			int w = 4;
-			shvInfo() << pos.x() - geometry().left() << geometry().right() - pos.x();
-			if ((pos.x() - geometry().left() < w) || (geometry().right() - pos.x() < w))
-				m_mouseOperation = MouseOperation::Resize;
-			else if ((pos.y() - geometry().top() < w ) || (geometry().bottom() - pos.y() < w))
-				m_mouseOperation = MouseOperation::Resize;
-
-			if (m_mouseOperation == MouseOperation::Resize) {
-				e->accept();
-				return true;
-				shvInfo() << "resize";
-			}
 		}
 	}
 	if (e->type() == QEvent::MouseButtonRelease) {
@@ -98,29 +90,38 @@ bool ChannelProbeWidget::eventFilter(QObject *o, QEvent *e)
 			return true;
 		}
 		else if (m_mouseOperation == MouseOperation::Resize) {
-			QPoint dist = pos - m_recentMousePos;
 			QRect g = geometry();
-			shvInfo() << g.right();
-			g.setRight(mapToGlobal(pos).x());
+
+			if (m_windowFrameSection == QSet<WindowFarmeSection>{WindowFarmeSection::LeftSection})
+				g.setLeft(mapToGlobal(pos).x());
+			if (m_windowFrameSection == QSet<WindowFarmeSection>{WindowFarmeSection::RightSection})
+				g.setRight(mapToGlobal(pos).x());
+			if (m_windowFrameSection == QSet<WindowFarmeSection>{WindowFarmeSection::TopSection})
+				g.setTop(mapToGlobal(pos).y());
+			if (m_windowFrameSection == QSet<WindowFarmeSection>{WindowFarmeSection::BottomSection})
+				g.setBottom(mapToGlobal(pos).y());
+			if (m_windowFrameSection == QSet<WindowFarmeSection>{WindowFarmeSection::TopSection, WindowFarmeSection::LeftSection})
+				g.setTopLeft(mapToGlobal(pos));
+			if (m_windowFrameSection == QSet<WindowFarmeSection>{WindowFarmeSection::BottomSection, WindowFarmeSection::RightSection})
+				g.setBottomRight(mapToGlobal(pos));
+			if (m_windowFrameSection == QSet<WindowFarmeSection>{WindowFarmeSection::TopSection, WindowFarmeSection::RightSection})
+				g.setTopRight(mapToGlobal(pos));
+			if (m_windowFrameSection == QSet<WindowFarmeSection>{WindowFarmeSection::BottomSection, WindowFarmeSection::LeftSection})
+				g.setBottomLeft(mapToGlobal(pos));
+
 			setGeometry(g);
-			//setGeometry(geometry().adjusted(0,0,dist.x(), dist.y()));
 			m_recentMousePos = pos;
 			e->accept();
 			return true;
 		}
 		else {
+			shvInfo() << geometry().bottomLeft().y() << pos.y() << mapToGlobal(pos).y();
 			m_mouseOperation = MouseOperation::None;
 		}
 
 
-		pos = QCursor::pos();
-		int w = 4;
-		if ((pos.x() - geometry().left() < w) || (geometry().right() - pos.x() < w))
-			setCursor(QCursor(Qt::SizeHorCursor));
-		else if ((pos.y() - geometry().top() < w ) || (geometry().bottom() - pos.y() < w))
-			setCursor(QCursor(Qt::SizeVerCursor));
-		else
-			setCursor(QCursor(Qt::ArrowCursor));
+		QSet<WindowFarmeSection> wfs = getWindowFrameSection();
+		setCursor(windowFrameSectionCursor(wfs));
 	}
 
 /*	if (o == ui->twData)
@@ -215,14 +216,37 @@ void ChannelProbeWidget::loadValues()
 	ui->twData->viewport()->installEventFilter(this);
 }
 
-ChannelProbeWidget::WindowFarmeSection ChannelProbeWidget::getWindowFrameSection()
+QSet<ChannelProbeWidget::WindowFarmeSection> ChannelProbeWidget::getWindowFrameSection()
 {
+	QSet<WindowFarmeSection> ret;
+
 	QPoint pos = QCursor::pos();
 	if (pos.x() - geometry().left() < FRAME_RECT_WIDTH)
-		return WindowFarmeSection::LeftSection;
-	else if (
-		|| (geometry().right() - pos.x() < w))
+		ret.insert(WindowFarmeSection::LeftSection);
+	if (geometry().right() - pos.x() < FRAME_RECT_WIDTH)
+		ret.insert(WindowFarmeSection::RightSection);
+	if (pos.y() - geometry().top() < FRAME_RECT_WIDTH)
+		ret.insert(WindowFarmeSection::TopSection);
+	if (geometry().bottom() - pos.y() < FRAME_RECT_WIDTH)
+		ret.insert(WindowFarmeSection::BottomSection);
 
+	return ret;
+}
+
+QCursor ChannelProbeWidget::windowFrameSectionCursor(QSet<ChannelProbeWidget::WindowFarmeSection> wfs)
+{
+	if ((wfs == QSet<WindowFarmeSection>{WindowFarmeSection::LeftSection}) || (wfs == QSet<WindowFarmeSection>{WindowFarmeSection::RightSection}))
+		return QCursor(Qt::SizeHorCursor);
+	if ((wfs == QSet<WindowFarmeSection>{WindowFarmeSection::TopSection}) || (wfs == QSet<WindowFarmeSection>{WindowFarmeSection::BottomSection}))
+		return QCursor(Qt::SizeVerCursor);
+	if ((wfs == QSet<WindowFarmeSection>{WindowFarmeSection::TopSection, WindowFarmeSection::LeftSection}) ||
+		(wfs == QSet<WindowFarmeSection>{WindowFarmeSection::BottomSection, WindowFarmeSection::RightSection}))
+		return QCursor(Qt::SizeFDiagCursor);
+	if ((wfs == QSet<WindowFarmeSection>{WindowFarmeSection::TopSection, WindowFarmeSection::RightSection}) ||
+		(wfs == QSet<WindowFarmeSection>{WindowFarmeSection::BottomSection, WindowFarmeSection::LeftSection}))
+		return QCursor(Qt::SizeBDiagCursor);
+
+	return QCursor(Qt::ArrowCursor);
 }
 
 }}}
