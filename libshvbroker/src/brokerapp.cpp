@@ -6,6 +6,7 @@
 #include "subscriptionsnode.h"
 #include "brokeraclnode.h"
 #include "clientconnectionnode.h"
+#include "brokerrootnode.h"
 #include "rpc/brokertcpserver.h"
 #include "rpc/clientconnectiononbroker.h"
 #include "rpc/masterbrokerconnection.h"
@@ -220,7 +221,7 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 	//syslog (LOG_INFO, "Server started");
 	installUnixSignalHandlers();
 #endif
-	m_nodesTree = new shv::iotqt::node::ShvNodeTree(this);
+	m_nodesTree = new shv::iotqt::node::ShvNodeTree(new BrokerRootNode(), this);
 	connect(m_nodesTree->root(), &shv::iotqt::node::ShvRootNode::sendRpcMessage, this, &BrokerApp::onRootNodeSendRpcMesage);
 	BrokerAppNode *bn = new BrokerAppNode();
 	m_nodesTree->mount(cp::Rpc::DIR_BROKER_APP, bn);
