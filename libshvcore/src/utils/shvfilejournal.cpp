@@ -760,9 +760,8 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 				if(params_since_msec > 0 && e.epochMsec < params_since_msec) {
 					if(params.withSnapshot) {
 						if(e.sampleType == ShvJournalEntry::SampleType::Continuous) {
-							ShvJournalEntry e2 = e;
 							last_snapshot_msec = e.epochMsec;
-							snapshot[e2.path] = std::move(e2);
+							addToSnapshot(snapshot, e);
 						}
 					}
 				}
