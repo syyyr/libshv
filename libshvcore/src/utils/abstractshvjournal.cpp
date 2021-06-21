@@ -39,7 +39,7 @@ void AbstractShvJournal::addToSnapshot(std::map<std::string, ShvJournalEntry> &s
 				it = snapshot.erase(it);
 			}
 			else {
-				++it;
+				return;
 			}
 		}
 	}
