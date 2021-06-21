@@ -34,10 +34,8 @@ ChannelProbeWidget::ChannelProbeWidget(ChannelProbe *probe, QWidget *parent) :
 	ui->twData->setHorizontalHeaderItem(DataTableColumn::ColProperty, new QTableWidgetItem("Property"));
 	ui->twData->setHorizontalHeaderItem(DataTableColumn::ColValue, new QTableWidgetItem("Value"));
 	ui->twData->verticalHeader()->setDefaultSectionSize((int)(fontMetrics().lineSpacing() * 1.3));
-	ui->twData->viewport()->setMouseTracking(true);
-	ui->twData->installEventFilter(this);
-	installEventFilter(this);
 
+	installEventFilter(this);
 	loadValues();
 
 	ui->twData->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
@@ -74,12 +72,11 @@ bool ChannelProbeWidget::eventFilter(QObject *o, QEvent *e)
 			return true;
 		}
 	}
-	if (e->type() == QEvent::MouseButtonRelease) {
+	else if (e->type() == QEvent::MouseButtonRelease) {
 		m_mouseOperation = MouseOperation::None;
 		setCursor(QCursor(Qt::ArrowCursor));
 	}
-
-	if (e->type() == QEvent::MouseMove) {
+	else if (e->type() == QEvent::MouseMove) {
 		QPoint pos = static_cast<QMouseEvent*>(e)->pos();
 
 		if (m_mouseOperation == MouseOperation::Move) {
@@ -90,35 +87,30 @@ bool ChannelProbeWidget::eventFilter(QObject *o, QEvent *e)
 			return true;
 		}
 		else if (m_mouseOperation == MouseOperation::Resize) {
+			QPoint pos =  QCursor::pos();
 			QRect g = geometry();
 
 			if (m_windowFrameSection == QSet<WindowFarmeSection>{WindowFarmeSection::LeftSection})
-				g.setLeft(mapToGlobal(pos).x());
+				g.setLeft(pos.x());
 			if (m_windowFrameSection == QSet<WindowFarmeSection>{WindowFarmeSection::RightSection})
-				g.setRight(mapToGlobal(pos).x());
+				g.setRight(pos.x());
 			if (m_windowFrameSection == QSet<WindowFarmeSection>{WindowFarmeSection::TopSection})
-				g.setTop(mapToGlobal(pos).y());
+				g.setTop(pos.y());
 			if (m_windowFrameSection == QSet<WindowFarmeSection>{WindowFarmeSection::BottomSection})
-				g.setBottom(mapToGlobal(pos).y());
+				g.setBottom(pos.y());
 			if (m_windowFrameSection == QSet<WindowFarmeSection>{WindowFarmeSection::TopSection, WindowFarmeSection::LeftSection})
-				g.setTopLeft(mapToGlobal(pos));
+				g.setTopLeft(pos);
 			if (m_windowFrameSection == QSet<WindowFarmeSection>{WindowFarmeSection::BottomSection, WindowFarmeSection::RightSection})
-				g.setBottomRight(mapToGlobal(pos));
+				g.setBottomRight(pos);
 			if (m_windowFrameSection == QSet<WindowFarmeSection>{WindowFarmeSection::TopSection, WindowFarmeSection::RightSection})
-				g.setTopRight(mapToGlobal(pos));
+				g.setTopRight(pos);
 			if (m_windowFrameSection == QSet<WindowFarmeSection>{WindowFarmeSection::BottomSection, WindowFarmeSection::LeftSection})
-				g.setBottomLeft(mapToGlobal(pos));
+				g.setBottomLeft(pos);
 
 			setGeometry(g);
-			m_recentMousePos = pos;
 			e->accept();
 			return true;
 		}
-		else {
-			shvInfo() << geometry().bottomLeft().y() << pos.y() << mapToGlobal(pos).y();
-			m_mouseOperation = MouseOperation::None;
-		}
-
 
 		QSet<WindowFarmeSection> wfs = getWindowFrameSection();
 		setCursor(windowFrameSectionCursor(wfs));
@@ -213,6 +205,7 @@ void ChannelProbeWidget::loadValues()
 		ui->twData->setItem(ix, DataTableColumn::ColValue, item);
 	}
 
+	ui->twData->viewport()->setMouseTracking(true);
 	ui->twData->viewport()->installEventFilter(this);
 }
 
