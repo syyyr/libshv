@@ -27,21 +27,22 @@ public:
 
 protected:
 	enum class MouseOperation { None = 0, LeftMouseClick, ResizeWidget, MoveWidget };
-	enum WindowFrameSection { LeftSection = 0, TopSection, RightSection, BottomSection };
+	enum class FrameSection { NoSection, Left, TopLeft, Top, TopRight, Right, BottomRight, Bottom, BottomLeft };
+
 	enum DataTableColumn { ColProperty = 0, ColValue, ColCount };
 
 	bool eventFilter(QObject *o, QEvent *e) override;
 
 	void loadValues();
-	QSet<ChannelProbeWidget::WindowFrameSection> getWindowFrameSection();
-	QCursor windowFrameSectionCursor(QSet<WindowFrameSection> wfs);
+	ChannelProbeWidget::FrameSection getFrameSection();
+	QCursor frameSectionCursor(FrameSection fs);
 
 
 	ChannelProbe *m_probe = nullptr;
 	QPoint m_recentMousePos;
 
 	MouseOperation m_mouseOperation = MouseOperation::None;
-	QSet<ChannelProbeWidget::WindowFrameSection> m_windowFrameSection;
+	ChannelProbeWidget::FrameSection m_frameSection = FrameSection::NoSection;
 
 	Ui::ChannelProbeWidget *ui;
 };

@@ -56,9 +56,9 @@ bool ChannelProbeWidget::eventFilter(QObject *o, QEvent *e)
 {
 	if (e->type() == QEvent::MouseButtonPress) {
 		QPoint pos = static_cast<QMouseEvent*>(e)->pos();
-		m_windowFrameSection = getWindowFrameSection();
+		m_frameSection = getFrameSection();
 
-		if (!m_windowFrameSection.isEmpty()) {
+		if (m_frameSection != FrameSection::NoSection) {
 			m_mouseOperation = MouseOperation::ResizeWidget;
 			e->accept();
 			return true;
@@ -89,30 +89,41 @@ bool ChannelProbeWidget::eventFilter(QObject *o, QEvent *e)
 			QPoint pos =  QCursor::pos();
 			QRect g = geometry();
 
-			if (m_windowFrameSection == QSet<WindowFrameSection>{WindowFrameSection::LeftSection})
+			switch (m_frameSection) {
+			case FrameSection::NoSection:
+				break;
+			case FrameSection::Left:
 				g.setLeft(pos.x());
-			if (m_windowFrameSection == QSet<WindowFrameSection>{WindowFrameSection::RightSection})
+				break;
+			case FrameSection::Right:
 				g.setRight(pos.x());
-			if (m_windowFrameSection == QSet<WindowFrameSection>{WindowFrameSection::TopSection})
+				break;
+			case FrameSection::Top:
 				g.setTop(pos.y());
-			if (m_windowFrameSection == QSet<WindowFrameSection>{WindowFrameSection::BottomSection})
+				break;
+			case FrameSection::Bottom:
 				g.setBottom(pos.y());
-			if (m_windowFrameSection == QSet<WindowFrameSection>{WindowFrameSection::TopSection, WindowFrameSection::LeftSection})
+				break;
+			case FrameSection::TopLeft:
 				g.setTopLeft(pos);
-			if (m_windowFrameSection == QSet<WindowFrameSection>{WindowFrameSection::BottomSection, WindowFrameSection::RightSection})
+				break;
+			case FrameSection::BottomRight:
 				g.setBottomRight(pos);
-			if (m_windowFrameSection == QSet<WindowFrameSection>{WindowFrameSection::TopSection, WindowFrameSection::RightSection})
+				break;
+			case FrameSection::TopRight:
 				g.setTopRight(pos);
-			if (m_windowFrameSection == QSet<WindowFrameSection>{WindowFrameSection::BottomSection, WindowFrameSection::LeftSection})
+				break;
+			case FrameSection::BottomLeft:
 				g.setBottomLeft(pos);
+				break;
+			}
 
 			setGeometry(g);
 			e->accept();
 			return true;
 		}
-
-		QSet<WindowFrameSection> wfs = getWindowFrameSection();
-		setCursor(windowFrameSectionCursor(wfs));
+		FrameSection fs = getFrameSection();
+		setCursor(frameSectionCursor(fs));
 	}
 
 	return Super::eventFilter(o, e);
@@ -142,38 +153,54 @@ void ChannelProbeWidget::loadValues()
 	}
 }
 
-QSet<ChannelProbeWidget::WindowFrameSection> ChannelProbeWidget::getWindowFrameSection()
+ChannelProbeWidget::FrameSection ChannelProbeWidget::getFrameSection()
 {
-	static const int FRAME_RECT_WIDTH = 6;
-
-	QSet<WindowFrameSection> ret;
+	static const int FRAME_MARGIN = 6;
 
 	QPoint pos = QCursor::pos();
-	if (pos.x() - geometry().left() < FRAME_RECT_WIDTH)
-		ret.insert(WindowFrameSection::LeftSection);
-	if (geometry().right() - pos.x() < FRAME_RECT_WIDTH)
-		ret.insert(WindowFrameSection::RightSection);
-	if (pos.y() - geometry().top() < FRAME_RECT_WIDTH)
-		ret.insert(WindowFrameSection::TopSection);
-	if (geometry().bottom() - pos.y() < FRAME_RECT_WIDTH)
-		ret.insert(WindowFrameSection::BottomSection);
+	bool left_margin = (pos.x() - geometry().left() < FRAME_MARGIN);
+	bool right_margin = (geometry().right() - pos.x() < FRAME_MARGIN);
+	bool top_margin = (pos.y() - geometry().top() < FRAME_MARGIN);
+	bool bottom_margin = (geometry().bottom() - pos.y() < FRAME_MARGIN);
 
-	return ret;
+	if (top_margin && left_margin)
+		return FrameSection::TopLeft;
+	else if (top_margin && right_margin)
+		return FrameSection::TopRight;
+	else if (bottom_margin && left_margin)
+		return FrameSection::BottomLeft;
+	else if (bottom_margin && right_margin)
+		return FrameSection::BottomRight;
+	else if (left_margin)
+		return FrameSection::Left;
+	else if (right_margin)
+		return FrameSection::Right;
+	else if (top_margin)
+		return FrameSection::Top;
+	else if (bottom_margin)
+		return FrameSection::Bottom;
+	else
+		return FrameSection::NoSection;
 }
 
-QCursor ChannelProbeWidget::windowFrameSectionCursor(QSet<ChannelProbeWidget::WindowFrameSection> wfs)
+QCursor ChannelProbeWidget::frameSectionCursor(ChannelProbeWidget::FrameSection fs)
 {
-	if ((wfs == QSet<WindowFrameSection>{WindowFrameSection::LeftSection}) || (wfs == QSet<WindowFrameSection>{WindowFrameSection::RightSection}))
+	switch (fs) {
+	case FrameSection::NoSection:
+		return QCursor(Qt::ArrowCursor);
+	case FrameSection::Left:
+	case FrameSection::Right:
 		return QCursor(Qt::SizeHorCursor);
-	if ((wfs == QSet<WindowFrameSection>{WindowFrameSection::TopSection}) || (wfs == QSet<WindowFrameSection>{WindowFrameSection::BottomSection}))
+	case FrameSection::Top:
+	case FrameSection::Bottom:
 		return QCursor(Qt::SizeVerCursor);
-	if ((wfs == QSet<WindowFrameSection>{WindowFrameSection::TopSection, WindowFrameSection::LeftSection}) ||
-		(wfs == QSet<WindowFrameSection>{WindowFrameSection::BottomSection, WindowFrameSection::RightSection}))
+	case FrameSection::TopLeft:
+	case FrameSection::BottomRight:
 		return QCursor(Qt::SizeFDiagCursor);
-	if ((wfs == QSet<WindowFrameSection>{WindowFrameSection::TopSection, WindowFrameSection::RightSection}) ||
-		(wfs == QSet<WindowFrameSection>{WindowFrameSection::BottomSection, WindowFrameSection::LeftSection}))
+	case FrameSection::TopRight:
+	case FrameSection::BottomLeft:
 		return QCursor(Qt::SizeBDiagCursor);
-
+	}
 	return QCursor(Qt::ArrowCursor);
 }
 
