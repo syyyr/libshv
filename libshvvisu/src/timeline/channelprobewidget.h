@@ -24,6 +24,8 @@ public:
 	explicit ChannelProbeWidget(ChannelProbe *probe, QWidget *parent);
 	~ChannelProbeWidget();
 
+	const ChannelProbe* probe();
+
 protected:
 	enum class MouseOperation { None = 0, Move };
 	enum DataTableColumn { ColProperty = 0, ColValue, ColCount };
