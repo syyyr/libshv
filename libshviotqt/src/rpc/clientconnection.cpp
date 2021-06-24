@@ -287,7 +287,7 @@ void ClientConnection::emitInitPhaseError(const std::string &err)
 void ClientConnection::onSocketConnectedChanged(bool is_connected)
 {
 	if(is_connected) {
-		shvInfo() << "Socket connected to RPC server";
+		shvInfo() << objectName() << connectionId() << "Socket connected to RPC server";
 		//sendKnockKnock(cp::RpcDriver::ChainPack);
 		//RpcResponse resp = callMethodSync("echo", "ahoj babi");
 		//shvInfo() << "+++" << resp.toStdString();
@@ -296,7 +296,7 @@ void ClientConnection::onSocketConnectedChanged(bool is_connected)
 		sendHello();
 	}
 	else {
-		shvInfo() << "Socket disconnected from RPC server";
+		shvInfo() << objectName() << connectionId() << "Socket disconnected from RPC server";
 		setState(State::NotConnected);
 	}
 }

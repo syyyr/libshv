@@ -357,6 +357,25 @@ int ShvNode::grantToAccessLevel(const chainpack::RpcValue &acces_grant) const
 {
 	return basicGrantToAccessLevel(acces_grant);
 }
+
+void ShvNode::treeWalk_helper(std::function<void (ShvNode *, const ShvNode::StringViewList &)> callback, ShvNode *parent_nd, const ShvNode::StringViewList &shv_path)
+{
+	callback(parent_nd, shv_path);
+	const auto child_names = parent_nd->childNames(shv_path);
+	for (const std::string &child_name : child_names) {
+		shv::iotqt::node::ShvNode *child_nd = nullptr;
+		if(shv_path.empty()) {
+			child_nd = parent_nd->childNode(child_name, false);
+			if (child_nd)
+				treeWalk_helper(callback, child_nd, {});
+		}
+		if(!child_nd) {
+			shv::core::StringViewList new_shv_path = shv_path;
+			new_shv_path.push_back(child_name);
+			treeWalk_helper(callback, parent_nd, new_shv_path);
+		}
+	}
+}
 /*
 chainpack::RpcValue ShvNode::call(const std::string &method, const chainpack::RpcValue &params)
 {

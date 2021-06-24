@@ -22,7 +22,8 @@ public:
 	static constexpr char RECORD_SEPARATOR = '\n';
 	static const std::string FILE_EXT;
 public:
-	using SnapShotFn = std::function<void (std::vector<ShvJournalEntry>&)>;
+	using SnapShot = std::vector<ShvJournalEntry>;
+	using SnapShotFn = std::function<void (SnapShot &snapshot)>;
 	using TSNowFn = std::function<int64_t ()>;
 
 	ShvFileJournal(std::string device_id, SnapShotFn snf);

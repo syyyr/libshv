@@ -69,16 +69,18 @@ public:
 	virtual chainpack::RpcValue processRpcRequest(const shv::chainpack::RpcRequest &rq);
 
 	virtual shv::chainpack::RpcValue dir(const StringViewList &shv_path, const shv::chainpack::RpcValue &methods_params);
-	//virtual StringList methodNames(const StringViewList &shv_path);
 
 	virtual shv::chainpack::RpcValue ls(const StringViewList &shv_path, const shv::chainpack::RpcValue &methods_params);
 	// returns null if does not know
 	virtual chainpack::RpcValue hasChildren(const StringViewList &shv_path);
-	//chainpack::RpcValue hasChildren() {return hasChildren(StringViewList());}
 	virtual shv::chainpack::RpcValue lsAttributes(const StringViewList &shv_path, unsigned attributes);
 
 	static int basicGrantToAccessLevel(const shv::chainpack::RpcValue &acces_grant);
 	virtual int grantToAccessLevel(const shv::chainpack::RpcValue &acces_grant) const;
+
+	void treeWalk(std::function<void (ShvNode *parent_nd, const StringViewList &shv_path)> callback) { treeWalk_helper(callback, this, {}); }
+private:
+	static void treeWalk_helper(std::function<void (ShvNode *parent_nd, const StringViewList &shv_path)> callback, ShvNode *parent_nd, const StringViewList &shv_path);
 public:
 	virtual size_t methodCount(const StringViewList &shv_path);
 	virtual const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix);
@@ -92,7 +94,6 @@ public:
 public:
 	Q_SIGNAL void sendRpcMessage(const shv::chainpack::RpcMessage &msg);
 	Q_SIGNAL void logUserCommand(const shv::core::utils::ShvJournalEntry &e);
-
 protected:
 	bool m_isRootNode = false;
 private:

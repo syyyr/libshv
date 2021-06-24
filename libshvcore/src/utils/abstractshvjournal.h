@@ -29,6 +29,7 @@ public:
 	virtual void append(const ShvJournalEntry &entry) = 0;
 	virtual shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) = 0;
 	virtual shv::chainpack::RpcValue getSnapShotMap();
+protected:
 	static void addToSnapshot(std::map<std::string, ShvJournalEntry> &snapshot, const ShvJournalEntry &entry);
 };
 
