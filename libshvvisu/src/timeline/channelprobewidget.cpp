@@ -48,6 +48,11 @@ ChannelProbeWidget::~ChannelProbeWidget()
 	delete ui;
 }
 
+const ChannelProbe *ChannelProbeWidget::probe()
+{
+	return m_probe;
+}
+
 void ChannelProbeWidget::mousePressEvent(QMouseEvent *event)
 {
 	QPoint pos = event->pos();

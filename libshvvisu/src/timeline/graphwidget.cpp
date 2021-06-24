@@ -270,7 +270,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 			if(event->modifiers() == Qt::ControlModifier) {
 				int channel_ix = posToChannel(event->pos());
 				if(channel_ix >= 0) {
-					removeProbes();
+					removeProbes(channel_ix);
 					timemsec_t time = m_graph->posToTime(event->pos().x());
 					createProbe(channel_ix, time);
 				}
@@ -671,7 +671,7 @@ void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos
 		this->update();
 	});
 	menu.addAction(tr("Set probe (Ctrl + Left mouse)"), [this, channel_ix, mouse_pos]() {
-		removeProbes();
+		removeProbes(channel_ix);
 		timemsec_t time = m_graph->posToTime(mouse_pos.x());
 		createProbe(channel_ix, time);
 	});
@@ -704,12 +704,13 @@ void GraphWidget::createProbe(int channel_ix, timemsec_t time)
 	w->move(mapToGlobal(pos));
 }
 
-void GraphWidget::removeProbes()
+void GraphWidget::removeProbes(int channel_ix)
 {
 	QList<ChannelProbeWidget*> probe_widgets = findChildren<ChannelProbeWidget*>(QString(), Qt::FindDirectChildrenOnly);
 
 	for (ChannelProbeWidget *pw: probe_widgets) {
-		pw->close();
+		if (pw->probe()->channelIndex() == channel_ix)
+			pw->close();
 	}
 }
 

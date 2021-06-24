@@ -19,17 +19,17 @@ class SHVVISU_DECL_EXPORT ChannelProbe: public QObject
 public:
 	ChannelProbe(Graph *graph, int channel_ix, timemsec_t time);
 
-	QColor color();
-	QString shvPath();
-	int channelIndex();
+	QColor color() const;
+	QString shvPath() const;
+	int channelIndex() const;
 
 	void setCurrentTime(timemsec_t time);
-	timemsec_t currentTime();
-	QString currentTimeIsoFormat();
+	timemsec_t currentTime() const;
+	QString currentTimeIsoFormat() const;
 
 	void nextSample();
 	void prevSample();
-	QMap<QString, QString> yValues();
+	QMap<QString, QString> yValues() const;
 
 	Q_SIGNAL void currentTimeChanged();
 
