@@ -26,7 +26,7 @@ ChannelProbeWidget::ChannelProbeWidget(ChannelProbe *probe, QWidget *parent) :
 	ui->lblTitle->setStyleSheet("color:white;");
 
 	setAttribute(Qt::WA_DeleteOnClose, true);
-	setWindowFlags(Qt::FramelessWindowHint | Qt::ToolTip | Qt::WindowType::Window);
+	setWindowFlags(Qt::FramelessWindowHint | Qt::WindowType::Window | Qt::WindowStaysOnTopHint);
 
 	ui->twData->setColumnCount(DataTableColumn::ColCount);
 	ui->twData->setHorizontalHeaderItem(DataTableColumn::ColProperty, new QTableWidgetItem("Property"));
@@ -50,6 +50,11 @@ ChannelProbeWidget::ChannelProbeWidget(ChannelProbe *probe, QWidget *parent) :
 ChannelProbeWidget::~ChannelProbeWidget()
 {
 	delete ui;
+}
+
+const ChannelProbe *ChannelProbeWidget::probe()
+{
+	return m_probe;
 }
 
 bool ChannelProbeWidget::eventFilter(QObject *o, QEvent *e)

@@ -43,6 +43,7 @@ public:
 
 	bool startsWith(const StringView &str) const;
 	bool startsWith(char c) const;
+	bool endsWith(const StringView &str) const;
 	bool endsWith(char c) const;
 	ssize_t indexOf(char c) const;
 	ssize_t lastIndexOf(char c) const;

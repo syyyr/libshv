@@ -92,6 +92,7 @@ public:
 			TunnelCtl,
 			AccessGrant,
 			DataChange,
+			NodeDrop,
 		};
 	};
 };

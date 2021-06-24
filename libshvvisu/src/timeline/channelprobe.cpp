@@ -14,7 +14,7 @@ ChannelProbe::ChannelProbe(Graph *graph, int channel_ix, timemsec_t time)
 	m_currentTime = time;
 }
 
-QColor ChannelProbe::color()
+QColor ChannelProbe::color() const
 {
 	return m_graph->channelAt(m_channelIndex)->style().color();
 }
@@ -25,12 +25,12 @@ void ChannelProbe::setCurrentTime(timemsec_t time)
 	emit currentTimeChanged();
 }
 
-timemsec_t ChannelProbe::currentTime()
+timemsec_t ChannelProbe::currentTime() const
 {
 	return m_currentTime;
 }
 
-QString ChannelProbe::currentTimeIsoFormat()
+QString ChannelProbe::currentTimeIsoFormat() const
 {
 	QDateTime dt = QDateTime::fromMSecsSinceEpoch(m_currentTime);
 	dt = dt.toTimeZone(m_graph->timeZone());
@@ -69,7 +69,7 @@ void ChannelProbe::prevSample()
 	}
 }
 
-QMap<QString, QString> ChannelProbe::yValues()
+QMap<QString, QString> ChannelProbe::yValues() const
 {
 	const GraphChannel *ch = m_graph->channelAt(m_channelIndex);
 	GraphModel::ChannelInfo &channel_info = m_graph->model()->channelInfo(ch->modelIndex());
@@ -84,13 +84,13 @@ QMap<QString, QString> ChannelProbe::yValues()
 	return m_graph->yValuesToMap(m_channelIndex, s);
 }
 
-QString ChannelProbe::shvPath()
+QString ChannelProbe::shvPath() const
 {
 	const GraphChannel *ch = m_graph->channelAt(m_channelIndex);
 	return m_graph->model()->channelInfo(ch->modelIndex()).shvPath;
 }
 
-int ChannelProbe::channelIndex()
+int ChannelProbe::channelIndex() const
 {
 	return m_channelIndex;
 }

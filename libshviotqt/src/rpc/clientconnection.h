@@ -73,6 +73,7 @@ public:
 	int brokerClientId() const;
 	//std::string brokerClientPath() const {return brokerClientPath(brokerClientId());}
 	//std::string brokerMountPoint() const;
+	void muteShvPathInLog(std::string shv_path);
 public:
 	/// AbstractRpcConnection interface implementation
 	void sendMessage(const shv::chainpack::RpcMessage &rpc_msg) override;
@@ -104,6 +105,8 @@ protected:
 		shv::chainpack::RpcValue loginResult;
 	};
 	ConnectionState m_connectionState;
+
+	bool isShvPathMutedInLog(const std::string &shv_path) const;
 private:
 	bool isAutoConnect() const { return m_checkBrokerConnectedInterval > 0; }
 	void restartIfAutoConnect();
@@ -112,6 +115,7 @@ private:
 	int m_checkBrokerConnectedInterval = 0;
 	QTimer *m_heartBeatTimer = nullptr;
 	SecurityType m_securityType = None;
+	std::vector<std::string> m_mutedShvPathsInLog;
 };
 
 } // namespace chainpack

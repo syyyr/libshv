@@ -65,13 +65,6 @@ private:
 private:
 	QTimer *m_idleWatchDogTimer = nullptr;
 	std::string m_mountPoint;
-
-	struct RequestAndCallersIds
-	{
-		int requestId;
-		QVector<int> callerIds;
-	};
-	QVector<RequestAndCallersIds> m_slaveLsRequestId;
 };
 
 }}}

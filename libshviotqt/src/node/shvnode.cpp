@@ -470,7 +470,7 @@ chainpack::RpcValue ShvNode::callMethod(const ShvNode::StringViewList &shv_path,
 	if(method == cp::Rpc::METH_LS)
 		return ls(shv_path, params);
 
-	SHV_EXCEPTION("Invalid method: " + method + " on path: " + shv_path.join('/'));
+	SHV_EXCEPTION("Node: " + shvPath() + " - invalid method: " + method + " on path: " + shv_path.join('/'));
 }
 
 ShvNode *ShvNode::rootNode()

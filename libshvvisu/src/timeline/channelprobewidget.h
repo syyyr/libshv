@@ -25,6 +25,8 @@ public:
 	explicit ChannelProbeWidget(ChannelProbe *probe, QWidget *parent);
 	~ChannelProbeWidget();
 
+	const ChannelProbe* probe();
+
 protected:
 	enum class MouseOperation { None = 0, LeftMouseClick, ResizeWidget, MoveWidget };
 	enum class FrameSection { NoSection, Left, TopLeft, Top, TopRight, Right, BottomRight, Bottom, BottomLeft };

@@ -184,7 +184,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 					if(!pm.match(e))                          //or > since_msec (we don't want in snapshot)
 						continue;
 					if(e.sampleType == ShvJournalEntry::SampleType::Continuous) {
-						snapshot[e.path] = e;
+						addToSnapshot(snapshot, e);
 					}
 				}
 			}

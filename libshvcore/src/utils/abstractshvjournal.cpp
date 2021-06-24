@@ -29,6 +29,25 @@ chainpack::RpcValue AbstractShvJournal::getSnapShotMap()
 	SHV_EXCEPTION("getSnapShot() not implemented");
 }
 
+void AbstractShvJournal::addToSnapshot(std::map<std::string, ShvJournalEntry> &snapshot, const ShvJournalEntry &entry)
+{
+	if(entry.value.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID && entry.value.metaTypeId() == shv::chainpack::meta::GlobalNS::MetaTypeId::NodeDrop) {
+		auto it = snapshot.lower_bound(entry.path);
+		while(it != snapshot.end()) {
+			if(it->first.rfind(entry.path, 0) == 0 && (it->first.size() == entry.path.size() || it->first[entry.path.size()] == '/')) {
+				// it.key starts with key, then delete it from snapshot
+				it = snapshot.erase(it);
+			}
+			else {
+				return;
+			}
+		}
+	}
+	else {
+		snapshot[entry.path] = entry;
+	}
+};
+
 } // namespace utils
 } // namespace core
 } // namespace shv

@@ -11,7 +11,8 @@ HEADERS += \
     $$PWD/subscriptionsnode.h \
     $$PWD/clientconnectionnode.h \
     $$PWD/clientshvnode.h \
-    $$PWD/tunnelsecretlist.h
+    $$PWD/tunnelsecretlist.h \
+    $$PWD/brokerrootnode.h
 
 SOURCES += \
     $$PWD/aclmanagersqlite.cpp \
@@ -24,7 +25,8 @@ SOURCES += \
     $$PWD/subscriptionsnode.cpp \
     $$PWD/clientconnectionnode.cpp \
     $$PWD/clientshvnode.cpp \
-    $$PWD/tunnelsecretlist.cpp
+    $$PWD/tunnelsecretlist.cpp \
+    $$PWD/brokerrootnode.cpp
 
 include ($$PWD/rpc/rpc.pri)
 
