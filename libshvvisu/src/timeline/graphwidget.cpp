@@ -229,6 +229,13 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 			event->accept();
 			return;
 		}
+		else if (isMouseAboveChannelResizeHandle(pos)) {
+			m_mouseOperation = MouseOperation::ChannelHeaderResize;
+			m_resizeChannelIx = graph()->posToChannelHeader(pos);
+			m_recentMousePos = pos;
+			event->accept();
+			return;
+		}
 		else if(posToChannel(pos) >= 0) {
 			if(event->modifiers() == Qt::ControlModifier) {
 				m_mouseOperation = MouseOperation::GraphDataAreaLeftCtrlPress;
@@ -273,6 +280,8 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 					removeProbes(channel_ix);
 					timemsec_t time = m_graph->posToTime(event->pos().x());
 					createProbe(channel_ix, time);
+					event->accept();
+					return;
 				}
 			}
 
@@ -300,12 +309,20 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 			if(channel_ix >= 0) {
 				timemsec_t time = m_graph->posToTime(event->pos().x());
 				createProbe(channel_ix, time);
+				event->accept();
+				return;
 			}
 		}
 		else if(old_mouse_op == MouseOperation::GraphAreaSelection) {
 			bool zoom_vertically = event->modifiers() == Qt::ShiftModifier;
 			graph()->zoomToSelection(zoom_vertically);
 			graph()->setSelectionRect(QRect());
+			event->accept();
+			update();
+			return;
+		}
+		else if(old_mouse_op == MouseOperation::ChannelHeaderResize) {
+			m_resizeChannelIx = -1;
 			event->accept();
 			update();
 			return;
@@ -340,6 +357,9 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 	else if(isMouseAboveMiniMapSlider(pos)) {
 		//shvDebug() << (vpos.x() - gr->miniMapRect().left()) << (vpos.y() - gr->miniMapRect().top());
 		setCursor(QCursor(Qt::SizeHorCursor));
+	}
+	else if((isMouseAboveChannelResizeHandle(pos)) || (m_mouseOperation == MouseOperation::ChannelHeaderResize)) {
+		setCursor(QCursor(Qt::SizeVerCursor));
 	}
 	else {
 		setCursor(QCursor(Qt::ArrowCursor));
@@ -414,6 +434,26 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 	}
 	case MouseOperation::GraphDataAreaRightPress:
 	case MouseOperation::GraphDataAreaLeftCtrlShiftPress:
+		return;
+
+	case MouseOperation::ChannelHeaderResize:
+		GraphChannel *ch = gr->channelAt(m_resizeChannelIx);
+
+		if (ch != nullptr) {
+			timeline::GraphChannel::Style ch_style = ch->style();
+
+			double new_u = m_graph->px2u(ch->verticalHeaderRect().height() + (pos.y() - m_recentMousePos.y()));
+
+			if (new_u > GraphChannel::Style::DEFAULT_HEIGHT_MIN) {
+				ch_style.setHeightMax(new_u);
+				ch_style.setHeightMin(new_u);
+				ch->setStyle(ch_style);
+				makeLayout();
+			}
+		}
+
+		m_recentMousePos = pos;
+
 		return;
 	}
 
@@ -574,26 +614,7 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
 		event->accept();
 		return;
 	}
-	if(event->modifiers() == Qt::ControlModifier) {
-		/// resize vertical header cell on Ctrl + mouse_wheel
-		for (int i = 0; i < m_graph->channelCount(); ++i) {
-			GraphChannel *ch = m_graph->channelAt(i);
-			if(ch->verticalHeaderRect().contains(pos)) {
-				static constexpr int STEP = 2;
-				timeline::GraphChannel::Style ch_style = ch->style();
-				double deg = event->angleDelta().y();
-				int new_h = static_cast<int>(deg * ch->verticalHeaderRect().height() / 120 / STEP);
-				new_h = ch->verticalHeaderRect().height() + new_h;
-				double new_u = m_graph->px2u(new_h);
-				//shvInfo() << i << ch.verticalHeaderRect().height() << new_h << new_u;
-				ch_style.setHeightMax(new_u);
-				ch_style.setHeightMin(new_u);
-				ch->setStyle(ch_style);
-				makeLayout();
-				return;
-			}
-		}
-	}
+
 	Super::wheelEvent(event);
 }
 
@@ -712,6 +733,22 @@ void GraphWidget::removeProbes(int channel_ix)
 		if (pw->probe()->channelIndex() == channel_ix)
 			pw->close();
 	}
+}
+
+bool GraphWidget::isMouseAboveChannelResizeHandle(const QPoint &mouse_pos) const
+{
+	const Graph *gr = graph();
+	const int MARGIN = gr->u2px(0.5);
+
+	int channel_ix = gr->posToChannelHeader(mouse_pos);
+
+	if (channel_ix > -1) {
+		const GraphChannel *ch = gr->channelAt(channel_ix);
+		QRect header_rect = ch->verticalHeaderRect();
+		return (header_rect.bottom() - mouse_pos.y() < MARGIN);
+	}
+
+	return false;
 }
 
 }}}
