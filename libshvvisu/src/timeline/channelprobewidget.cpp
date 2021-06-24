@@ -33,6 +33,10 @@ ChannelProbeWidget::ChannelProbeWidget(ChannelProbe *probe, QWidget *parent) :
 	ui->twData->setHorizontalHeaderItem(DataTableColumn::ColValue, new QTableWidgetItem("Value"));
 	ui->twData->verticalHeader()->setDefaultSectionSize((int)(fontMetrics().lineSpacing() * 1.3));
 
+	installEventFilter(this);
+	ui->fHeader->installEventFilter(this);
+	ui->twData->viewport()->installEventFilter(this);
+
 	loadValues();
 
 	ui->twData->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
@@ -53,36 +57,81 @@ const ChannelProbe *ChannelProbeWidget::probe()
 	return m_probe;
 }
 
-void ChannelProbeWidget::mousePressEvent(QMouseEvent *event)
+bool ChannelProbeWidget::eventFilter(QObject *o, QEvent *e)
 {
-	QPoint pos = event->pos();
-	if (ui->fHeader->rect().contains(pos)) {
-		setCursor(QCursor(Qt::DragMoveCursor));
-		m_recentMousePos = pos;
-		m_mouseOperation = MouseOperation::Move;
-	}
-}
+	if (e->type() == QEvent::MouseButtonPress) {
+		QPoint pos = static_cast<QMouseEvent*>(e)->pos();
+		m_frameSection = getFrameSection();
 
-void ChannelProbeWidget::mouseReleaseEvent(QMouseEvent *event)
-{
-	Q_UNUSED(event);
-	m_mouseOperation = MouseOperation::None;
-	setCursor(QCursor(Qt::ArrowCursor));
-}
-
-void ChannelProbeWidget::mouseMoveEvent(QMouseEvent *event)
-{
-	QPoint pos = event->pos();
-
-	if (m_mouseOperation == MouseOperation::Move) {
-		QPoint dist = pos - m_recentMousePos;
-		move(geometry().topLeft() + dist);
-		m_recentMousePos = pos - dist;
-		event->accept();
+		if (m_frameSection != FrameSection::NoSection) {
+			m_mouseOperation = MouseOperation::ResizeWidget;
+			e->accept();
+			return true;
+		}
+		else if (o == ui->fHeader) {
+			setCursor(QCursor(Qt::DragMoveCursor));
+			m_recentMousePos = pos;
+			m_mouseOperation = MouseOperation::MoveWidget;
+			e->accept();
+			return true;
+		}
 	}
-	else {
-		Super::mouseMoveEvent(event);
+	else if (e->type() == QEvent::MouseButtonRelease) {
+		m_mouseOperation = MouseOperation::None;
+		setCursor(QCursor(Qt::ArrowCursor));
 	}
+	else if (e->type() == QEvent::MouseMove) {
+		QPoint pos = static_cast<QMouseEvent*>(e)->pos();
+
+		if (m_mouseOperation == MouseOperation::MoveWidget) {
+			QPoint dist = pos - m_recentMousePos;
+			move(geometry().topLeft() + dist);
+			m_recentMousePos = pos - dist;
+			e->accept();
+			return true;
+		}
+		else if (m_mouseOperation == MouseOperation::ResizeWidget) {
+			QPoint pos =  QCursor::pos();
+			QRect g = geometry();
+
+			switch (m_frameSection) {
+			case FrameSection::NoSection:
+				break;
+			case FrameSection::Left:
+				g.setLeft(pos.x());
+				break;
+			case FrameSection::Right:
+				g.setRight(pos.x());
+				break;
+			case FrameSection::Top:
+				g.setTop(pos.y());
+				break;
+			case FrameSection::Bottom:
+				g.setBottom(pos.y());
+				break;
+			case FrameSection::TopLeft:
+				g.setTopLeft(pos);
+				break;
+			case FrameSection::BottomRight:
+				g.setBottomRight(pos);
+				break;
+			case FrameSection::TopRight:
+				g.setTopRight(pos);
+				break;
+			case FrameSection::BottomLeft:
+				g.setBottomLeft(pos);
+				break;
+			}
+
+			setGeometry(g);
+			e->accept();
+			return true;
+		}
+		FrameSection fs = getFrameSection();
+		setCursor(frameSectionCursor(fs));
+	}
+
+	return Super::eventFilter(o, e);
 }
 
 void ChannelProbeWidget::loadValues()
@@ -107,6 +156,57 @@ void ChannelProbeWidget::loadValues()
 		item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 		ui->twData->setItem(ix, DataTableColumn::ColValue, item);
 	}
+}
+
+ChannelProbeWidget::FrameSection ChannelProbeWidget::getFrameSection()
+{
+	static const int FRAME_MARGIN = 6;
+
+	QPoint pos = QCursor::pos();
+	bool left_margin = (pos.x() - geometry().left() < FRAME_MARGIN);
+	bool right_margin = (geometry().right() - pos.x() < FRAME_MARGIN);
+	bool top_margin = (pos.y() - geometry().top() < FRAME_MARGIN);
+	bool bottom_margin = (geometry().bottom() - pos.y() < FRAME_MARGIN);
+
+	if (top_margin && left_margin)
+		return FrameSection::TopLeft;
+	else if (top_margin && right_margin)
+		return FrameSection::TopRight;
+	else if (bottom_margin && left_margin)
+		return FrameSection::BottomLeft;
+	else if (bottom_margin && right_margin)
+		return FrameSection::BottomRight;
+	else if (left_margin)
+		return FrameSection::Left;
+	else if (right_margin)
+		return FrameSection::Right;
+	else if (top_margin)
+		return FrameSection::Top;
+	else if (bottom_margin)
+		return FrameSection::Bottom;
+	else
+		return FrameSection::NoSection;
+}
+
+QCursor ChannelProbeWidget::frameSectionCursor(ChannelProbeWidget::FrameSection fs)
+{
+	switch (fs) {
+	case FrameSection::NoSection:
+		return QCursor(Qt::ArrowCursor);
+	case FrameSection::Left:
+	case FrameSection::Right:
+		return QCursor(Qt::SizeHorCursor);
+	case FrameSection::Top:
+	case FrameSection::Bottom:
+		return QCursor(Qt::SizeVerCursor);
+	case FrameSection::TopLeft:
+	case FrameSection::BottomRight:
+		return QCursor(Qt::SizeFDiagCursor);
+	case FrameSection::TopRight:
+	case FrameSection::BottomLeft:
+		return QCursor(Qt::SizeBDiagCursor);
+	}
+	return QCursor(Qt::ArrowCursor);
 }
 
 }}}

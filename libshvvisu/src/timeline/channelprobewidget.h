@@ -2,6 +2,7 @@
 
 #include "../shvvisuglobal.h"
 
+#include <QSet>
 #include <QWidget>
 
 namespace shv {
@@ -27,19 +28,23 @@ public:
 	const ChannelProbe* probe();
 
 protected:
-	enum class MouseOperation { None = 0, Move };
+	enum class MouseOperation { None = 0, LeftMouseClick, ResizeWidget, MoveWidget };
+	enum class FrameSection { NoSection, Left, TopLeft, Top, TopRight, Right, BottomRight, Bottom, BottomLeft };
+
 	enum DataTableColumn { ColProperty = 0, ColValue, ColCount };
 
-	void mousePressEvent(QMouseEvent *event) override;
-	void mouseReleaseEvent(QMouseEvent *event) override;
-	void mouseMoveEvent(QMouseEvent *event) override;
+	bool eventFilter(QObject *o, QEvent *e) override;
 
 	void loadValues();
+	ChannelProbeWidget::FrameSection getFrameSection();
+	QCursor frameSectionCursor(FrameSection fs);
+
 
 	ChannelProbe *m_probe = nullptr;
 	QPoint m_recentMousePos;
 
 	MouseOperation m_mouseOperation = MouseOperation::None;
+	ChannelProbeWidget::FrameSection m_frameSection = FrameSection::NoSection;
 
 	Ui::ChannelProbeWidget *ui;
 };

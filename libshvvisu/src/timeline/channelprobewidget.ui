@@ -10,6 +10,9 @@
     <height>205</height>
    </rect>
   </property>
+  <property name="mouseTracking">
+   <bool>true</bool>
+  </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
@@ -31,6 +34,9 @@
    </property>
    <item>
     <widget class="QFrame" name="fHeader">
+     <property name="mouseTracking">
+      <bool>true</bool>
+     </property>
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>
@@ -61,6 +67,9 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="mouseTracking">
+         <bool>true</bool>
+        </property>
         <property name="text">
          <string>Title</string>
         </property>
@@ -71,11 +80,14 @@
       </item>
       <item>
        <widget class="QToolButton" name="tbClose">
+        <property name="mouseTracking">
+         <bool>true</bool>
+        </property>
         <property name="text">
          <string>...</string>
         </property>
         <property name="icon">
-         <iconset resource="../../../../../flatline/flatline.qrc">
+         <iconset>
           <normaloff>:/images/close.svg</normaloff>:/images/close.svg</iconset>
         </property>
        </widget>
@@ -85,6 +97,9 @@
    </item>
    <item>
     <widget class="QFrame" name="frame">
+     <property name="mouseTracking">
+      <bool>true</bool>
+     </property>
      <property name="frameShape">
       <enum>QFrame::StyledPanel</enum>
      </property>
@@ -115,6 +130,9 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="mouseTracking">
+         <bool>true</bool>
+        </property>
         <property name="frameShape">
          <enum>QFrame::StyledPanel</enum>
         </property>
@@ -128,6 +146,9 @@
       </item>
       <item>
        <widget class="QToolButton" name="tbPrevSample">
+        <property name="mouseTracking">
+         <bool>true</bool>
+        </property>
         <property name="text">
          <string>...</string>
         </property>
@@ -139,6 +160,9 @@
       </item>
       <item>
        <widget class="QToolButton" name="tbNextSample">
+        <property name="mouseTracking">
+         <bool>true</bool>
+        </property>
         <property name="text">
          <string>...</string>
         </property>
@@ -153,6 +177,9 @@
    </item>
    <item>
     <widget class="QTableWidget" name="twData">
+     <property name="mouseTracking">
+      <bool>true</bool>
+     </property>
      <property name="alternatingRowColors">
       <bool>true</bool>
      </property>
