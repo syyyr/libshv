@@ -577,6 +577,12 @@ bool RpcValue::hasDefaultValue() const
 	return false;
 }
 
+void RpcValue::setDefaultValue()
+{
+	auto val = RpcValue::fromType(type());
+	*this = val;
+}
+
 bool RpcValue::isValid() const
 {
 	return !m_ptr.isNull();
