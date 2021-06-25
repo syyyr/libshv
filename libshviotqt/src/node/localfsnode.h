@@ -18,7 +18,7 @@ public:
 	LocalFSNode(const QString &root_path, ShvNode *parent = nullptr);
 	LocalFSNode(const QString &root_path, const std::string &node_id, ShvNode *parent = nullptr);
 
-	chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+	chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id) override;
 
 	StringList childNames(const ShvNode::StringViewList &shv_path) override;
 	chainpack::RpcValue hasChildren(const StringViewList &shv_path) override;

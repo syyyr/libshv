@@ -269,7 +269,7 @@ chainpack::RpcValue ShvNode::callMethodRq(const chainpack::RpcRequest &rq)
 {
 	core::StringViewList shv_path = shv::core::utils::ShvPath::split(rq.shvPath().asString());
 	const chainpack::RpcValue::String &method = rq.method().asString();
-	chainpack::RpcValue ret_val = callMethod(shv_path, method, rq.params());
+	chainpack::RpcValue ret_val = callMethod(shv_path, method, rq.params(), rq.userId());
 	return ret_val;
 }
 /*
@@ -482,14 +482,14 @@ ShvNode::StringList ShvNode::methodNames(const StringViewList &shv_path)
 }
 */
 
-chainpack::RpcValue ShvNode::callMethod(const ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
+chainpack::RpcValue ShvNode::callMethod(const ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id)
 {
 	if(method == cp::Rpc::METH_DIR)
 		return dir(shv_path, params);
 	if(method == cp::Rpc::METH_LS)
 		return ls(shv_path, params);
 
-	SHV_EXCEPTION("Node: " + shvPath() + " - invalid method: " + method + " on path: " + shv_path.join('/'));
+	SHV_EXCEPTION("Node: " + shvPath() + " - invalid method: " + method + " on path: " + shv_path.join('/') + " user id: " + user_id.toCpon());
 }
 
 ShvNode *ShvNode::rootNode()
@@ -680,7 +680,7 @@ shv::chainpack::RpcValue RpcValueMapNode::hasChildren(const shv::iotqt::node::Sh
 	return isDir(shv_path);
 }
 
-chainpack::RpcValue RpcValueMapNode::callMethod(const ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
+chainpack::RpcValue RpcValueMapNode::callMethod(const ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id)
 {
 	if(shv_path.empty()) {
 		if(method == M_LOAD) {
@@ -706,7 +706,7 @@ chainpack::RpcValue RpcValueMapNode::callMethod(const ShvNode::StringViewList &s
 		setValueOnPath(shv_path, params);
 		return true;
 	}
-	return Super::callMethod(shv_path, method, params);
+	return Super::callMethod(shv_path, method, params, user_id);
 }
 
 void RpcValueMapNode::loadValues()
@@ -889,7 +889,7 @@ const shv::chainpack::MetaMethod *RpcValueConfigNode::metaMethod(const shv::iotq
 	return &(methods[ix]);
 }
 
-shv::chainpack::RpcValue RpcValueConfigNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
+shv::chainpack::RpcValue RpcValueConfigNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id)
 {
 	if(method == METH_ORIG_VALUE) {
 		return valueOnPath(m_templateValues, shv_path, shv::core::Exception::Throw);
@@ -903,7 +903,7 @@ shv::chainpack::RpcValue RpcValueConfigNode::callMethod(const shv::iotqt::node::
 		if(!params.isValid())
 			SHV_EXCEPTION("Invalid value to set on key: " + shv_path.join('/'));
 	}
-	return Super::callMethod(shv_path, method, params);
+	return Super::callMethod(shv_path, method, params, user_id);
 }
 
 shv::chainpack::RpcValue RpcValueConfigNode::loadConfigTemplate(const std::string &file_name)
@@ -1070,7 +1070,7 @@ const shv::chainpack::MetaMethod *ObjectPropertyProxyShvNode::metaMethod(const s
 	return  Super::metaMethod(shv_path, ix);
 }
 
-shv::chainpack::RpcValue ObjectPropertyProxyShvNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
+shv::chainpack::RpcValue ObjectPropertyProxyShvNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const chainpack::RpcValue &user_id)
 {
 	if(shv_path.empty()) {
 		if(method == cp::Rpc::METH_GET) {
@@ -1085,7 +1085,7 @@ shv::chainpack::RpcValue ObjectPropertyProxyShvNode::callMethod(const shv::iotqt
 			return ok;
 		}
 	}
-	return  Super::callMethod(shv_path, method, params);
+	return  Super::callMethod(shv_path, method, params, user_id);
 }
 
 //===========================================================
@@ -1179,7 +1179,7 @@ chainpack::RpcValue ValueProxyShvNode::callMethodRq(const chainpack::RpcRequest 
 	return ret;
 }
 
-chainpack::RpcValue ValueProxyShvNode::callMethod(const ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
+chainpack::RpcValue ValueProxyShvNode::callMethod(const ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id)
 {
 	if(shv_path.empty()) {
 		if(method == cp::Rpc::METH_GET) {
@@ -1195,7 +1195,7 @@ chainpack::RpcValue ValueProxyShvNode::callMethod(const ShvNode::StringViewList 
 			SHV_EXCEPTION("Property " + nodeId() + " on path: " + shv_path.join('/') + " is not writeable");
 		}
 	}
-	return  Super::callMethod(shv_path, method, params);
+	return  Super::callMethod(shv_path, method, params, user_id);
 }
 
 }}}

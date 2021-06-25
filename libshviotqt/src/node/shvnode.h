@@ -90,7 +90,7 @@ public:
 	StringList childNames() {return childNames(StringViewList());}
 
 	virtual shv::chainpack::RpcValue callMethodRq(const chainpack::RpcRequest &rq);
-	virtual shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params);
+	virtual shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id);
 public:
 	Q_SIGNAL void sendRpcMessage(const shv::chainpack::RpcMessage &msg);
 	Q_SIGNAL void logUserCommand(const shv::core::utils::ShvJournalEntry &e);
@@ -148,7 +148,7 @@ public:
 	StringList childNames(const ShvNode::StringViewList &shv_path) override;
 	shv::chainpack::RpcValue hasChildren(const StringViewList &shv_path) override;
 
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id) override;
 
 	shv::chainpack::RpcValue valueOnPath(const std::string &shv_path, bool throw_exc = true);
 	virtual shv::chainpack::RpcValue valueOnPath(const StringViewList &shv_path, bool throw_exc = true);
@@ -199,7 +199,7 @@ protected:
 
 	size_t methodCount(const StringViewList &shv_path) override;
 	const shv::chainpack::MetaMethod *metaMethod(const StringViewList &shv_path, size_t ix) override;
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const chainpack::RpcValue &user_id) override;
 protected:
 	shv::chainpack::RpcValue m_templateValues;
 };
@@ -217,7 +217,7 @@ public:
 	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
 
 	//shv::chainpack::RpcValue callMethod(const shv::chainpack::RpcRequest &rq) override {return  Super::callMethod(rq);}
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id) override;
 protected:
 	QMetaProperty m_metaProperty;
 	QObject *m_propertyObj = nullptr;
@@ -262,7 +262,7 @@ public:
 	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
 
 	shv::chainpack::RpcValue callMethodRq(const shv::chainpack::RpcRequest &rq) override;
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id) override;
 protected:
 	bool isWriteable() {return static_cast<int>(m_type) & static_cast<int>(Type::Write);}
 	bool isReadable() {return static_cast<int>(m_type) & static_cast<int>(Type::Read);}

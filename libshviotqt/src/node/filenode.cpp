@@ -71,7 +71,7 @@ FileNode::FileNode(const std::string &node_id, shv::iotqt::node::FileNode::Super
 {
 }
 
-cp::RpcValue FileNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
+cp::RpcValue FileNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id)
 {
 	if (method == M_READ) {
 		return read(shv_path);
@@ -92,7 +92,7 @@ cp::RpcValue FileNode::callMethod(const shv::iotqt::node::ShvNode::StringViewLis
 		return readFileCompressed(shv_path, params).asBlob().size();
 	}
 
-	return Super::callMethod(shv_path, method, params);
+	return Super::callMethod(shv_path, method, params, user_id);
 }
 
 size_t FileNode::methodCount(const ShvNode::StringViewList &shv_path)
