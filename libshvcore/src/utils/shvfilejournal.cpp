@@ -681,7 +681,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		log.push_back(std::move(rec));
 		return true;
 	};
-	auto write_snapshot = [append_log_entry, &since_now, &params_since_msec, &last_snapshot_msec, &snapshot]() {
+	auto write_snapshot = [append_log_entry, since_now, params_since_msec, last_snapshot_msec, &snapshot]() {
 		if(!snapshot.empty()) {
 			logDShvJournal() << "\t -------------- Snapshot";
 			for(const auto &kv : snapshot) {
@@ -744,10 +744,16 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		//	append_data_missing(journal_start_msec, false);
 		//}
 
+		std::map<std::string, ShvJournalEntry> prev_file_values;
 		PatternMatcher pattern_matcher(params);
 		for(; file_it != journal_context.files.end(); file_it++) {
 			std::string fn = journal_context.fileMsecToFilePath(*file_it);
 			logDShvJournal() << "-------- opening file:" << fn;
+
+			bool values_to_clear_written = false;
+			std::vector<ShvJournalEntry> entries_to_write{ShvJournalEntry{}};
+			std::map<std::string, ShvJournalEntry> this_file_values;
+
 			ShvJournalFileReader rd(fn);
 			while(rd.next()) {
 				const ShvJournalEntry &e = rd.entry();
@@ -757,27 +763,49 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 						continue;
 					logDShvJournal() << "\t\t MATCH";
 				}
-				if(params_since_msec > 0 && e.epochMsec < params_since_msec) {
-					if(params.withSnapshot) {
-						if(e.sampleType == ShvJournalEntry::SampleType::Continuous) {
-							last_snapshot_msec = e.epochMsec;
-							addToSnapshot(snapshot, e);
+				this_file_values[e.path] = e;
+				entries_to_write[0] = e;
+				entries_to_write.resize(1);
+				if(rd.isInSnapShot()) {
+					prev_file_values.erase(e.path);
+				}
+				else if(!values_to_clear_written) {
+					values_to_clear_written = true;
+					for(const auto &kv : prev_file_values) {
+						const ShvJournalEntry &e3 = kv.second;
+						if(!e3.value.hasDefaultValue() && this_file_values.find(e3.path) == this_file_values.cend()) {
+							// value is set in previous file, but it is not present in current file snapshot
+							// this can happen if device was switched off and for example error set to true
+							// was cleared meanwhile
+							// we have to inject this lost information into the current file snapshot
+							entries_to_write.push_back(kv.second);
 						}
 					}
 				}
-				else {
-					if(params.withSnapshot)
-						if(!write_snapshot())
-							goto log_finish;
-					if(params_until_msec == 0 || e.epochMsec < params_until_msec) { // keep interval open to make log merge simpler
-						if(!append_log_entry(e))
-							goto log_finish;
+				for(const ShvJournalEntry &e2 : entries_to_write) {
+					if(params_since_msec > 0 && e2.epochMsec < params_since_msec) {
+						if(params.withSnapshot) {
+							if(e2.sampleType == ShvJournalEntry::SampleType::Continuous) {
+								last_snapshot_msec = e2.epochMsec;
+								addToSnapshot(snapshot, e2);
+							}
+						}
 					}
 					else {
-						goto log_finish;
+						if(params.withSnapshot)
+							if(!write_snapshot())
+								goto log_finish;
+						if(params_until_msec == 0 || e2.epochMsec < params_until_msec) { // keep interval open to make log merge simpler
+							if(!append_log_entry(e2))
+								goto log_finish;
+						}
+						else {
+							goto log_finish;
+						}
 					}
 				}
 			}
+			prev_file_values = this_file_values;
 		}
 	}
 log_finish:

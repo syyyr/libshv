@@ -22,10 +22,12 @@ public:
 	bool next();
 	bool last();
 	const ShvJournalEntry& entry();
+	bool isInSnapShot() const { return m_snapShotEpochMsec > 0 && m_snapShotEpochMsec == m_currentEntry.epochMsec; }
 private:
 	std::string m_fileName;
 	std::ifstream m_ifstream;
 	ShvJournalEntry m_currentEntry;
+	int64_t m_snapShotEpochMsec = 0;;
 };
 
 } // namespace utils
