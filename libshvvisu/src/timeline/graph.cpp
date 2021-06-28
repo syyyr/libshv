@@ -518,6 +518,19 @@ int Graph::posToChannel(const QPoint &pos) const
 	return -1;
 }
 
+int Graph::posToChannelHeader(const QPoint &pos) const
+{
+	for (int i = 0; i < channelCount(); ++i) {
+		const GraphChannel *ch = channelAt(i);
+
+		if(ch->verticalHeaderRect().contains(pos)) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
 void Graph::setXRange(const XRange &r, bool keep_zoom)
 {
 	const auto old_r = m_state.xRange;

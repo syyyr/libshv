@@ -119,6 +119,7 @@ public:
 	Sample timeToSample(int channel_ix, timemsec_t time) const;
 	Sample nearestSample(int channel_ix, timemsec_t time) const;
 	int posToChannel(const QPoint &pos) const;
+	int posToChannelHeader(const QPoint &pos) const;
 	Sample posToData(const QPoint &pos) const;
 	//QVariant posToValue(const QPoint &pos) const;
 	QPoint dataToPos(int ch_ix, const Sample &s) const;

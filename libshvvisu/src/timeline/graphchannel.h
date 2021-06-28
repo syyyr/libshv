@@ -31,9 +31,9 @@ public:
 	public:
 		struct Interpolation { enum Enum {None = 0, Line, Stepped};};
 		struct LineAreaStyle { enum Enum {Blank = 0, Filled};};
-		static constexpr double CosmeticLineWidth = 0;
+		static constexpr double DEFAULT_HEIGHT_MIN = 2.5;
 
-		SHV_VARIANTMAP_FIELD2(double, h, setH, eightMin, 2.5) // units
+		SHV_VARIANTMAP_FIELD2(double, h, setH, eightMin, DEFAULT_HEIGHT_MIN) // units
 		SHV_VARIANTMAP_FIELD2(double, h, setH, eightMax, 1000) // units
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olor, QColor(Qt::magenta))
 		//SHV_VARIANTMAP_FIELD(QColor, c, setC, olorLineArea)
