@@ -232,27 +232,6 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 
 	ShvJournalFileWriter wr(journalDir(), journal_file_start_msec, m_journalContext.recentTimeStamp);
 	ssize_t orig_fsz = wr.fileSize();
-	if(orig_fsz == 0) {
-		logMShvJournal() << "New log file:" << wr.fileName() << "created.";
-		// new file should start with snapshot
-		if(m_snapShotFn) {
-			std::vector<ShvJournalEntry> snapshot;
-			m_snapShotFn(snapshot);
-			logDShvJournal() << "Writing snapshot, entries count:" << snapshot.size();
-			//ShvJournalEntry e_begin(ShvJournalEntry::PATH_SNAPSHOT_BEGIN, true, ShvJournalEntry::DOMAIN_SHV_SYSTEM, ShvJournalEntry::NO_SHORT_TIME, ShvJournalEntry::SampleType::Discrete, journal_file_start_msec);
-			//wr.append(e_begin);
-			for(ShvJournalEntry &e : snapshot) {
-				e.epochMsec = journal_file_start_msec;
-				wr.append(e);
-			}
-			//ShvJournalEntry e_end(ShvJournalEntry::PATH_SNAPSHOT_END, true, ShvJournalEntry::DOMAIN_SHV_SYSTEM, ShvJournalEntry::NO_SHORT_TIME, ShvJournalEntry::SampleType::Discrete, journal_file_start_msec);
-			//wr.append(e_end);
-		}
-		else {
-			logMShvJournal() << "SnapShot function not defined";
-		}
-		m_journalContext.files.push_back(journal_file_start_msec);
-	}
 	wr.appendMonotonic(entry);
 	m_journalContext.recentTimeStamp = wr.recentTimeStamp();
 	ssize_t new_fsz = wr.fileSize();
@@ -266,6 +245,7 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 void ShvFileJournal::createNewLogFile(int64_t journal_file_start_msec)
 {
 	if(journal_file_start_msec == 0) {
+		checkJournalContext();
 		journal_file_start_msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
 		if(!m_journalContext.files.empty() && m_journalContext.files[m_journalContext.files.size() - 1] >= journal_file_start_msec)
 			SHV_EXCEPTION("Journal context corrupted, new log file is older than last existing one.");
@@ -336,7 +316,7 @@ std::string ShvFileJournal::JournalContext::fileMsecToFilePath(int64_t file_msec
 void ShvFileJournal::checkJournalContext_helper(bool force)
 {
 	if(!m_journalContext.isConsistent() || force) {
-		logMShvJournal() << "journal status not consistent or check forced";
+		logMShvJournal() << "journal context not consistent or check forced, check forced:" << force;
 		m_journalContext.recentTimeStamp = 0;
 		m_journalContext.journalDirExists = journalDirExists();
 		if(!m_journalContext.journalDirExists)
@@ -345,6 +325,8 @@ void ShvFileJournal::checkJournalContext_helper(bool force)
 			updateJournalStatus();
 		else
 			shvWarning() << "Journal dir:" << journalDir() << "does not exist!";
+		if(m_journalContext.isConsistent())
+			logMShvJournal() << "journal context is consistent now";
 	}
 	if(!m_journalContext.isConsistent()) {
 		SHV_EXCEPTION("Journal cannot be brought to consistent state.");
@@ -455,7 +437,7 @@ void ShvFileJournal::convertLog1JournalDir()
 #endif
 void ShvFileJournal::updateJournalStatus()
 {
-	logMShvJournal() << "FileShvJournal2::updateJournalFiles()";
+	logMShvJournal() << "ShvFileJournal::updateJournalStatus()";
 	m_journalContext.journalSize = 0;
 	m_journalContext.lastFileSize = 0;
 	m_journalContext.files.clear();
@@ -632,6 +614,7 @@ const ShvFileJournal::JournalContext &ShvFileJournal::checkJournalContext()
 {
 	try {
 		checkJournalContext_helper();
+		return m_journalContext;
 	}
 	catch (std::exception &e) {
 		logIShvJournal() << "Check journal consistecy failed, journal dir will be read again, SD card might be replaced, error:" << e.what();
