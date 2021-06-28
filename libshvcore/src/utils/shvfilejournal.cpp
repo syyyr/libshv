@@ -780,6 +780,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 							entries_to_write.push_back(kv.second);
 						}
 					}
+					prev_file_values.clear();
 				}
 				for(const ShvJournalEntry &e2 : entries_to_write) {
 					if(params_since_msec > 0 && e2.epochMsec < params_since_msec) {
