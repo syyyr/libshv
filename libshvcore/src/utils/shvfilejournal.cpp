@@ -750,7 +750,6 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 			std::string fn = journal_context.fileMsecToFilePath(*file_it);
 			logDShvJournal() << "-------- opening file:" << fn;
 
-			bool values_to_clear_written = false;
 			std::vector<ShvJournalEntry> entries_to_write{ShvJournalEntry{}};
 			std::map<std::string, ShvJournalEntry> this_file_values;
 
@@ -769,15 +768,15 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 				if(rd.isInSnapShot()) {
 					prev_file_values.erase(e.path);
 				}
-				else if(!values_to_clear_written) {
-					values_to_clear_written = true;
+				else if(!prev_file_values.empty()) {
 					for(const auto &kv : prev_file_values) {
-						const ShvJournalEntry &e3 = kv.second;
+						ShvJournalEntry e3 = kv.second;
 						if(!e3.value.hasDefaultValue() && this_file_values.find(e3.path) == this_file_values.cend()) {
 							// value is set in previous file, but it is not present in current file snapshot
 							// this can happen if device was switched off and for example error set to true
 							// was cleared meanwhile
 							// we have to inject this lost information into the current file snapshot
+							e3.value.setDefaultValue();
 							entries_to_write.push_back(kv.second);
 						}
 					}
