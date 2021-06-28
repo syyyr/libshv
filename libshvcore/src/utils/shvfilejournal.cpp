@@ -784,6 +784,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 
 			std::vector<ShvJournalEntry> entries_to_write{ShvJournalEntry{}};
 			std::map<std::string, ShvJournalEntry> this_file_values;
+			int64_t snapshot_epoch_msec = *file_it;
 
 			ShvJournalFileReader rd(fn);
 			while(rd.next()) {
@@ -799,15 +800,17 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 				entries_to_write.resize(1);
 				if(rd.isInSnapShot()) {
 					prev_file_values.erase(e.path);
+					snapshot_epoch_msec = e.epochMsec;
 				}
 				else if(!prev_file_values.empty()) {
 					for(const auto &kv : prev_file_values) {
 						ShvJournalEntry e3 = kv.second;
-						if(!e3.value.hasDefaultValue() && this_file_values.find(e3.path) == this_file_values.cend()) {
+						if(!e3.value.hasDefaultValue()) {
 							// value is set in previous file, but it is not present in current file snapshot
 							// this can happen if device was switched off and for example error set to true
 							// was cleared meanwhile
 							// we have to inject this lost information into the current file snapshot
+							e3.epochMsec = snapshot_epoch_msec;
 							e3.value.setDefaultValue();
 							entries_to_write.push_back(kv.second);
 						}
