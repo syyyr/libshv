@@ -82,7 +82,7 @@ shv::iotqt::node::ShvNode::StringList SubscriptionsNode::childNames(const String
 	return shv::iotqt::node::ShvNode::StringList{};
 }
 
-shv::chainpack::RpcValue SubscriptionsNode::callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
+shv::chainpack::RpcValue SubscriptionsNode::callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const chainpack::RpcValue &user_id)
 {
 	if(shv_path.size() == 2) {
 		if(method == METH_PATH || method == METH_METHOD) {
@@ -109,7 +109,7 @@ shv::chainpack::RpcValue SubscriptionsNode::callMethod(const StringViewList &shv
 				return subs->method;
 		}
 	}
-	return Super::callMethod(shv_path, method, params);
+	return Super::callMethod(shv_path, method, params, user_id);
 }
 
 /*

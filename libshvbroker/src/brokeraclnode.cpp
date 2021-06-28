@@ -90,7 +90,7 @@ EtcAclRootNode::EtcAclRootNode(shv::iotqt::node::ShvNode *parent)
 	}
 }
 
-chainpack::RpcValue EtcAclRootNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
+chainpack::RpcValue EtcAclRootNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params, const chainpack::RpcValue &user_id)
 {
 	if(shv_path.empty()) {
 		if(method == M_SAVE_TO_CONFIG_FILES) {
@@ -100,7 +100,7 @@ chainpack::RpcValue EtcAclRootNode::callMethod(const iotqt::node::ShvNode::Strin
 			return ret;
 		}
 	}
-	return Super::callMethod(shv_path, method, params);
+	return Super::callMethod(shv_path, method, params, user_id);
 }
 
 //========================================================
@@ -174,7 +174,7 @@ iotqt::node::ShvNode::StringList MountsAclNode::childNames(const iotqt::node::Sh
 	return Super::childNames(shv_path);
 }
 
-chainpack::RpcValue MountsAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
+chainpack::RpcValue MountsAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params, const chainpack::RpcValue &user_id)
 {
 	if(shv_path.size() == 0) {
 		if(method == M_SET_VALUE) {
@@ -219,15 +219,15 @@ chainpack::RpcValue MountsAclNode::callMethod(const iotqt::node::ShvNode::String
 			auto pn = shv_path.value(1);
 			if(pn == ACL_MOUNTS_DESCR) {
 				md.description = params.toString();
-				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{device_id, md.toRpcValue()});
+				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{device_id, md.toRpcValue()}, user_id);
 			}
 			if(pn == ACL_MOUNTS_MOUNT_POINT) {
 				md.mountPoint = params.toString();
-				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{device_id, md.toRpcValue()});
+				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{device_id, md.toRpcValue()}, user_id);
 			}
 		}
 	}
-	return Super::callMethod(shv_path, method, params);
+	return Super::callMethod(shv_path, method, params, user_id);
 }
 
 std::string MountsAclNode::saveConfigFile()
@@ -267,7 +267,7 @@ iotqt::node::ShvNode::StringList RolesAclNode::childNames(const iotqt::node::Shv
 	return Super::childNames(shv_path);
 }
 
-chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
+chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params, const chainpack::RpcValue &user_id)
 {
 	if(shv_path.size() == 0) {
 		if(method == M_SET_VALUE) {
@@ -312,21 +312,21 @@ chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringV
 		if(method == cp::Rpc::METH_SET) {
 			if(pn == ACL_ROLE_WEIGHT) {
 				role_def.weight = params.toInt();
-				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{role_name, role_def.toRpcValue()});
+				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{role_name, role_def.toRpcValue()}, user_id);
 			}
 			if(pn == ACL_ROLE_ROLES) {
 				role_def.roles.clear();
 				for(const auto &rv : params.toList())
 					role_def.roles.push_back(rv.toString());
-				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{role_name, role_def.toRpcValue()});
+				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{role_name, role_def.toRpcValue()}, user_id);
 			}
 			if(pn == ACL_ROLE_PROFILE) {
 				role_def.profile = params;
-				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{role_name, role_def.toRpcValue()});
+				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{role_name, role_def.toRpcValue()}, user_id);
 			}
 		}
 	}
-	return Super::callMethod(shv_path, method, params);
+	return Super::callMethod(shv_path, method, params, user_id);
 }
 
 std::string RolesAclNode::saveConfigFile()
@@ -365,7 +365,7 @@ iotqt::node::ShvNode::StringList UsersAclNode::childNames(const iotqt::node::Shv
 	return Super::childNames(shv_path);
 }
 
-chainpack::RpcValue UsersAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
+chainpack::RpcValue UsersAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params, const chainpack::RpcValue &user_id)
 {
 	if(shv_path.size() == 0) {
 		if(method == M_SET_VALUE) {
@@ -411,21 +411,21 @@ chainpack::RpcValue UsersAclNode::callMethod(const iotqt::node::ShvNode::StringV
 		if(method == cp::Rpc::METH_SET) {
 			if(pn == ACL_USER_PASSWORD) {
 				user_def.password.password = params.toString();
-				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{user_name, user_def.toRpcValue()});
+				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{user_name, user_def.toRpcValue()}, user_id);
 			}
 			if(pn == ACL_USER_PASSWORD_FORMAT) {
 				user_def.password.format = acl::AclPassword::formatFromString(params.asString());
-				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{user_name, user_def.toRpcValue()});
+				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{user_name, user_def.toRpcValue()}, user_id);
 			}
 			if(pn == ACL_USER_ROLES) {
 				user_def.roles.clear();
 				for(const auto &rv : params.toList())
 					user_def.roles.push_back(rv.toString());
-				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{user_name, user_def.toRpcValue()});
+				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{user_name, user_def.toRpcValue()}, user_id);
 			}
 		}
 	}
-	return Super::callMethod(shv_path, method, params);
+	return Super::callMethod(shv_path, method, params, user_id);
 }
 
 std::string UsersAclNode::saveConfigFile()
@@ -506,7 +506,7 @@ iotqt::node::ShvNode::StringList AccessAclNode::childNames(const iotqt::node::Sh
 	return Super::childNames(shv_path);
 }
 
-chainpack::RpcValue AccessAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params)
+chainpack::RpcValue AccessAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params, const chainpack::RpcValue &user_id)
 {
 	if(shv_path.size() == 0) {
 		if(method == M_SET_VALUE) {
@@ -559,18 +559,18 @@ chainpack::RpcValue AccessAclNode::callMethod(const iotqt::node::ShvNode::String
 		using namespace shv::core;
 		if(method == M_SET_PATH_PATTERN) {
 			rule.pathPattern = params.toString();
-			return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{rule_name, rule.toRpcValue()});
+			return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{rule_name, rule.toRpcValue()}, user_id);
 		}
 		if(method == M_SET_METHOD) {
 			rule.method = params.toString();
-			return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{rule_name, rule.toRpcValue()});
+			return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{rule_name, rule.toRpcValue()}, user_id);
 		}
 		if(method == M_SET_GRANT) {
 			rule.grant = cp::AccessGrant::fromRpcValue(params);
-			return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{rule_name, rule.toRpcValue()});
+			return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{rule_name, rule.toRpcValue()}, user_id);
 		}
 	}
-	return Super::callMethod(shv_path, method, params);
+	return Super::callMethod(shv_path, method, params, user_id);
 }
 
 std::string AccessAclNode::saveConfigFile()

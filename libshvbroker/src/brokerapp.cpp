@@ -175,7 +175,7 @@ public:
 		return Super::childNames(shv_path);
 	}
 
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id) override
 	{
 		if(shv_path.size() == 1) {
 			if(method == METH_CLIENT_IDS) {
@@ -193,7 +193,7 @@ public:
 				return cp::RpcValue{lst};
 			}
 		}
-		return Super::callMethod(shv_path, method, params);
+		return Super::callMethod(shv_path, method, params, user_id);
 	}
 private:
 	static const char *METH_CLIENT_IDS;
