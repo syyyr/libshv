@@ -39,7 +39,7 @@ ClientConnectionNode::ClientConnectionNode(int client_id, shv::iotqt::node::ShvN
 {
 }
 
-shv::chainpack::RpcValue ClientConnectionNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
+shv::chainpack::RpcValue ClientConnectionNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const chainpack::RpcValue &user_id)
 {
 	if(shv_path.empty()) {
 		if(method == M_USER_NAME) {
@@ -98,7 +98,7 @@ shv::chainpack::RpcValue ClientConnectionNode::callMethod(const shv::iotqt::node
 			return false;
 		}
 	}
-	return Super::callMethod(shv_path, method, params);
+	return Super::callMethod(shv_path, method, params, user_id);
 }
 
 }}

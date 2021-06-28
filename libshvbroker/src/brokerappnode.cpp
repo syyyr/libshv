@@ -43,7 +43,7 @@ public:
 		}
 	{ }
 
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id) override
 	{
 		if(shv_path.empty()) {
 			if(method == M_GET_SEND_LOG_SIGNAL_ENABLED) {
@@ -62,7 +62,7 @@ public:
 				return true;
 			}
 		}
-		return Super::callMethod(shv_path, method, params);
+		return Super::callMethod(shv_path, method, params, user_id);
 	}
 private:
 	std::vector<cp::MetaMethod> m_metaMethods;
@@ -154,7 +154,7 @@ chainpack::RpcValue BrokerAppNode::callMethodRq(const chainpack::RpcRequest &rq)
 	return Super::callMethodRq(rq);
 }
 
-shv::chainpack::RpcValue BrokerAppNode::callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params)
+shv::chainpack::RpcValue BrokerAppNode::callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const chainpack::RpcValue &user_id)
 {
 	if(shv_path.empty()) {
 		if(method == cp::Rpc::METH_PING) {
@@ -186,7 +186,7 @@ shv::chainpack::RpcValue BrokerAppNode::callMethod(const StringViewList &shv_pat
 			return true;
 		}
 	}
-	return Super::callMethod(shv_path, method, params);
+	return Super::callMethod(shv_path, method, params, user_id);
 }
 
 }}

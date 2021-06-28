@@ -21,7 +21,7 @@ public:
 
 	StringList childNames(const StringViewList &shv_path) override;
 
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id) override;
 private:
 	rpc::CommonRpcClientHandle *m_client;
 };
