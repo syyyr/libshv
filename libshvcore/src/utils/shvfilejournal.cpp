@@ -222,6 +222,7 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 	else if(m_journalContext.lastFileSize > m_fileSizeLimit) {
 		/// create new file
 		journal_file_start_msec = msec;
+		createNewLogFile(journal_file_start_msec);
 	}
 	else {
 		journal_file_start_msec = m_journalContext.files[m_journalContext.files.size() - 1];
@@ -260,6 +261,36 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 	if(m_journalContext.journalSize > m_journalSizeLimit) {
 		rotateJournal();
 	}
+}
+
+void ShvFileJournal::createNewLogFile(int64_t journal_file_start_msec)
+{
+	if(journal_file_start_msec == 0) {
+		journal_file_start_msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
+		if(!m_journalContext.files.empty() && m_journalContext.files[m_journalContext.files.size() - 1] >= journal_file_start_msec)
+			SHV_EXCEPTION("Journal context corrupted, new log file is older than last existing one.");
+	}
+	ShvJournalFileWriter wr(journalDir(), journal_file_start_msec, journal_file_start_msec);
+	logMShvJournal() << "New log file:" << wr.fileName() << "created.";
+	// new file should start with snapshot
+	if(m_snapShotFn) {
+		std::vector<ShvJournalEntry> snapshot;
+		m_snapShotFn(snapshot);
+		logDShvJournal() << "Writing snapshot, entries count:" << snapshot.size();
+		//ShvJournalEntry e_begin(ShvJournalEntry::PATH_SNAPSHOT_BEGIN, true, ShvJournalEntry::DOMAIN_SHV_SYSTEM, ShvJournalEntry::NO_SHORT_TIME, ShvJournalEntry::SampleType::Discrete, journal_file_start_msec);
+		//wr.append(e_begin);
+		for(ShvJournalEntry &e : snapshot) {
+			e.epochMsec = journal_file_start_msec;
+			wr.append(e);
+		}
+		//ShvJournalEntry e_end(ShvJournalEntry::PATH_SNAPSHOT_END, true, ShvJournalEntry::DOMAIN_SHV_SYSTEM, ShvJournalEntry::NO_SHORT_TIME, ShvJournalEntry::SampleType::Discrete, journal_file_start_msec);
+		//wr.append(e_end);
+	}
+	else {
+		logMShvJournal() << "SnapShot function not defined";
+	}
+	m_journalContext.files.push_back(journal_file_start_msec);
+	m_journalContext.recentTimeStamp = journal_file_start_msec;
 }
 
 int64_t ShvFileJournal::JournalContext::fileNameToFileMsec(const std::string &fn)
@@ -338,7 +369,7 @@ bool ShvFileJournal::journalDirExists()
 void ShvFileJournal::rotateJournal()
 {
 	logMShvJournal() << "Rotating journal of size:" << m_journalContext.journalSize;
-	updateJournalFiles();
+	updateJournalStatus();
 	size_t file_sz = m_journalContext.files.size();
 	size_t file_cnt = m_journalContext.files.size();
 	for(int64_t file_msec : m_journalContext.files) {
@@ -424,11 +455,6 @@ void ShvFileJournal::convertLog1JournalDir()
 #endif
 void ShvFileJournal::updateJournalStatus()
 {
-	updateJournalFiles();
-}
-
-void ShvFileJournal::updateJournalFiles()
-{
 	logMShvJournal() << "FileShvJournal2::updateJournalFiles()";
 	m_journalContext.journalSize = 0;
 	m_journalContext.lastFileSize = 0;
@@ -499,7 +525,8 @@ void ShvFileJournal::checkRecentTimeStamp()
 		m_journalContext.recentTimeStamp = 0; //cp::RpcValue::DateTime::now().msecsSinceEpoch();
 	}
 	else {
-		std::string fn = m_journalContext.fileMsecToFilePath(m_journalContext.files[m_journalContext.files.size() - 1]);
+		auto last_file_start_msec = m_journalContext.files[m_journalContext.files.size() - 1];
+		std::string fn = m_journalContext.fileMsecToFilePath(last_file_start_msec);
 		m_journalContext.recentTimeStamp = findLastEntryDateTime(fn);
 		logMShvJournal() << "setting recent timestamp to last entry in:" << fn
 						 << "to:" << m_journalContext.recentTimeStamp << "epoch msec"
@@ -515,6 +542,7 @@ void ShvFileJournal::checkRecentTimeStamp()
 int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, ssize_t *p_date_time_fpos)
 {
 	shvLogFuncFrame() << "'" + fn + "'";
+	int64_t file_start_epoch_msec = JournalContext::fileNameToFileMsec(fn);
 	ssize_t date_time_fpos = -1;
 	if(p_date_time_fpos)
 		*p_date_time_fpos = date_time_fpos;
@@ -524,6 +552,10 @@ int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, ssize_t *p_
 	int64_t dt_msec = -1;
 	in.seekg(0, std::ios::end);
 	long fpos = in.tellg();
+	if(fpos == 0) {
+		// empty file
+		return file_start_epoch_msec;
+	}
 	static constexpr int TS_LEN = 30;
 	static constexpr int CHUNK_LEN = 512;
 	char buff[CHUNK_LEN + TS_LEN];

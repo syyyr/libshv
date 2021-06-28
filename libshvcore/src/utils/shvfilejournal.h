@@ -90,6 +90,7 @@ public:
 		std::string fileMsecToFilePath(int64_t file_msec) const;
 	};
 	const JournalContext& checkJournalContext();
+	void createNewLogFile(int64_t journal_file_start_msec = 0);
 	static shv::chainpack::RpcValue getLog(const JournalContext &journal_context, const ShvGetLogParams &params);
 private:
 
@@ -97,8 +98,6 @@ private:
 
 	void rotateJournal();
 	void updateJournalStatus();
-	void updateJournalFiles();
-	//int64_t lastEntryTimeStamp();
 	void checkRecentTimeStamp();
 	void ensureJournalDir();
 	bool journalDirExists();

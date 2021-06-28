@@ -23,6 +23,7 @@ static int uptimeSec()
 ShvJournalFileWriter::ShvJournalFileWriter(const std::string &file_name)
 	: m_fileName(file_name)
 {
+	m_recentTimeStamp = ShvFileJournal::findLastEntryDateTime(m_fileName);
 	open();
 }
 
@@ -38,6 +39,8 @@ void ShvJournalFileWriter::open()
 	m_out.open(m_fileName, std::ios::binary | std::ios::out | std::ios::app);
 	if(!m_out)
 		SHV_EXCEPTION("Cannot open file " + m_fileName + " for writing");
+	if(m_recentTimeStamp <= 0)
+		SHV_EXCEPTION("Cannot append to file " + m_fileName + ", find recent entry timestamp error.");
 }
 
 ssize_t ShvJournalFileWriter::fileSize()
@@ -48,13 +51,6 @@ ssize_t ShvJournalFileWriter::fileSize()
 void ShvJournalFileWriter::appendMonotonic(const ShvJournalEntry &entry)
 {
 
-	ssize_t fsz = fileSize();
-	if(m_recentTimeStamp == 0) {
-		if(fsz == 0)
-			m_recentTimeStamp = ShvFileJournal::JournalContext::fileNameToFileMsec(m_fileName);
-		else
-			m_recentTimeStamp = ShvFileJournal::findLastEntryDateTime(m_fileName);
-	}
 	int64_t msec = entry.epochMsec;
 	if(msec == 0)
 		msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
