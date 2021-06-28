@@ -15,7 +15,7 @@ public:
 	BrokerAppNode(shv::iotqt::node::ShvNode *parent = nullptr);
 
 	chainpack::RpcValue callMethodRq(const chainpack::RpcRequest &rq) override;
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id) override;
 private:
 	std::vector<shv::chainpack::MetaMethod> m_metaMethods;
 };

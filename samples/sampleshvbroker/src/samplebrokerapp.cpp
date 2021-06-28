@@ -43,7 +43,7 @@ public:
 	{
 	}
 
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id) override
 	{
 		if(shv_path.empty()) {
 			if(method == cp::Rpc::METH_GET) {
@@ -54,7 +54,7 @@ public:
 				return true;
 			}
 		}
-		return Super::callMethod(shv_path, method, params);
+		return Super::callMethod(shv_path, method, params, user_id);
 	}
 
 	cp::RpcValue getValue() const {return m_value;}
@@ -88,7 +88,7 @@ public:
 		t->start(1000);
 	}
 
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id) override
 	{
 		if(shv_path.empty()) {
 			if(method == METH_RESET) {
@@ -96,7 +96,7 @@ public:
 				return true;
 			}
 		}
-		return Super::callMethod(shv_path, method, params);
+		return Super::callMethod(shv_path, method, params, user_id);
 	}
 private:
 	void incUptime()

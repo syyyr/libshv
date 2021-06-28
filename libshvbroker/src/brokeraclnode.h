@@ -12,7 +12,7 @@ class EtcAclRootNode : public shv::iotqt::node::MethodsTableNode
 public:
 	EtcAclRootNode(shv::iotqt::node::ShvNode *parent = nullptr);
 
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id) override;
 };
 
 class BrokerAclNode : public shv::iotqt::node::MethodsTableNode
@@ -38,7 +38,7 @@ public:
 
 protected:
 	StringList childNames(const ShvNode::StringViewList &shv_path) override;
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id) override;
 
 	std::string saveConfigFile() override;
 };
@@ -51,7 +51,7 @@ public:
 
 protected:
 	StringList childNames(const ShvNode::StringViewList &shv_path) override;
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id) override;
 
 	std::string saveConfigFile() override;
 };
@@ -63,7 +63,7 @@ public:
 	UsersAclNode(shv::iotqt::node::ShvNode *parent = nullptr);
 protected:
 	StringList childNames(const ShvNode::StringViewList &shv_path) override;
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id) override;
 
 	std::string saveConfigFile() override;
 };
@@ -77,7 +77,7 @@ public:
 protected:
 	StringList childNames(const ShvNode::StringViewList &shv_path) override;
 	std::vector<shv::chainpack::MetaMethod> *metaMethodsForPath(const StringViewList &shv_path) override;
-	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params) override;
+	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id) override;
 
 	std::string saveConfigFile() override;
 private:
