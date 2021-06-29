@@ -647,7 +647,13 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 {
 	logIShvJournal() << "========================= getLog ==================";
 	logIShvJournal() << "params:" << params.toRpcValue().toCpon();
-	std::map<std::string, ShvJournalEntry> snapshot;
+
+	struct {
+		std::map<std::string, ShvJournalEntry> snapshot;
+		bool snapshotWritten = false;
+		int64_t snapshotMsec = 0;
+	} snapshot_ctx;
+
 	cp::RpcValue::List log;
 	bool since_now = (params.since.asString() == ShvGetLogParams::SINCE_NOW);
 
@@ -659,7 +665,6 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 	int64_t journal_start_msec = 0;
 	int64_t first_record_msec = 0;
 	int64_t last_record_msec = 0;
-	int64_t last_snapshot_msec = 0;
 	int rec_cnt_limit = std::min(params.recordCountLimit, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 	bool rec_cnt_limit_hit = false;
 
@@ -696,25 +701,26 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		log.push_back(std::move(rec));
 		return true;
 	};
-	auto write_snapshot = [append_log_entry, since_now, params_since_msec, last_snapshot_msec, &snapshot]() {
-		if(!snapshot.empty()) {
+	auto write_snapshot = [append_log_entry, since_now, params_since_msec, &snapshot_ctx]() {
+		if(snapshot_ctx.snapshotWritten) {
+			shvWarning() << "Snapshot written already";
+			return false;
+		}
+		snapshot_ctx.snapshotWritten = true;
+		if(!snapshot_ctx.snapshot.empty()) {
 			logDShvJournal() << "\t -------------- Snapshot";
-			for(const auto &kv : snapshot) {
+			snapshot_ctx.snapshotMsec = params_since_msec;
+			if(since_now) {
+				snapshot_ctx.snapshotMsec = 0;
+				for(const auto &kv : snapshot_ctx.snapshot)
+					snapshot_ctx.snapshotMsec = std::max(snapshot_ctx.snapshotMsec, kv.second.epochMsec);
+			}
+			for(const auto &kv : snapshot_ctx.snapshot) {
 				ShvJournalEntry e = kv.second;
-				if (e.value.hasDefaultValue()) {
-					continue;
-				}
-				if (since_now) {
-					e.epochMsec = last_snapshot_msec;
-				}
-				else {
-					e.epochMsec = params_since_msec;
-				}
-
+				e.epochMsec = snapshot_ctx.snapshotMsec;
 				if(!append_log_entry(e))
 					return false;
 			}
-			snapshot.clear();
 		}
 		return true;
 	};
@@ -754,20 +760,14 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 			}
 		}
 
-		//if(log_since_msec > 0 && log_since_msec < journal_start_msec) {
-		//	append_data_missing(log_since_msec, true);
-		//	append_data_missing(journal_start_msec, false);
-		//}
-
-		std::map<std::string, ShvJournalEntry> prev_file_values;
 		PatternMatcher pattern_matcher(params);
 		for(; file_it != journal_context.files.end(); file_it++) {
 			std::string fn = journal_context.fileMsecToFilePath(*file_it);
 			logDShvJournal() << "-------- opening file:" << fn;
 
 			std::vector<ShvJournalEntry> entries_to_write{ShvJournalEntry{}};
-			std::map<std::string, ShvJournalEntry> this_file_values;
-			int64_t snapshot_epoch_msec = *file_it;
+			std::map<std::string, ShvJournalEntry> this_file_snapshot;
+			int64_t this_file_snapshot_msec = *file_it;
 
 			ShvJournalFileReader rd(fn);
 			while(rd.next()) {
@@ -778,56 +778,51 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 						continue;
 					logDShvJournal() << "\t\t MATCH";
 				}
-				this_file_values[e.path] = e;
+
+				addToSnapshot(snapshot_ctx.snapshot, e);
+
+				this_file_snapshot[e.path] = e;
 				entries_to_write[0] = e;
 				entries_to_write.resize(1);
 				if(rd.isInSnapShot()) {
-					prev_file_values.erase(e.path);
-					snapshot_epoch_msec = e.epochMsec;
+					this_file_snapshot[e.path] = e;
+					this_file_snapshot_msec = e.epochMsec;
 				}
-				else if(!prev_file_values.empty()) {
-					for(const auto &kv : prev_file_values) {
+				else if(!this_file_snapshot.empty()) {
+					for(const auto &kv : snapshot_ctx.snapshot) {
 						ShvJournalEntry e3 = kv.second;
-						if(!e3.value.hasDefaultValue()) {
-							// value is set in previous file, but it is not present in current file snapshot
-							// this can happen if device was switched off and for example error set to true
-							// was cleared meanwhile
-							// we have to inject this lost information into the current file snapshot
-							e3.epochMsec = snapshot_epoch_msec;
-							e3.value.setDefaultValue();
-							entries_to_write.push_back(kv.second);
-						}
+						// value is set in snapshot, but it is not present in current file snapshot
+						// this can happen if device was switched off and for example error set to true
+						// was cleared meanwhile
+						// we have to inject this lost information into the current file snapshot
+						e3.epochMsec = this_file_snapshot_msec;
+						e3.value.setDefaultValue();
+						entries_to_write.push_back(kv.second);
 					}
-					prev_file_values.clear();
+					this_file_snapshot.clear();
 				}
 				for(const ShvJournalEntry &e2 : entries_to_write) {
-					if(params_since_msec > 0 && e2.epochMsec < params_since_msec) {
-						if(params.withSnapshot) {
-							if(e2.sampleType == ShvJournalEntry::SampleType::Continuous) {
-								last_snapshot_msec = e2.epochMsec;
-								addToSnapshot(snapshot, e2);
-							}
-						}
-					}
-					else {
-						if(params.withSnapshot)
+					if(params_since_msec > 0 && e2.epochMsec >= params_since_msec) {
+						if(params.withSnapshot && !snapshot_ctx.snapshotWritten) {
 							if(!write_snapshot())
 								goto log_finish;
+						}
+					}
+					if(params_since_msec == 0 || e2.epochMsec >= params_since_msec) {
 						if(params_until_msec == 0 || e2.epochMsec < params_until_msec) { // keep interval open to make log merge simpler
 							if(!append_log_entry(e2))
 								goto log_finish;
 						}
-						else {
-							goto log_finish;
-						}
+					}
+					else {
+						goto log_finish;
 					}
 				}
 			}
-			prev_file_values = this_file_values;
 		}
 	}
 log_finish:
-	if(params.withSnapshot) {
+	if(params.withSnapshot && !snapshot_ctx.snapshotWritten) {
 		// snapshot should be written already
 		// this is only case, when log is empty and
 		// only snapshot shall be returned
@@ -836,7 +831,7 @@ log_finish:
 
 	int64_t log_since_msec = params_since_msec;
 	if (since_now) {
-		log_since_msec = last_snapshot_msec;
+		log_since_msec = snapshot_ctx.snapshotMsec;
 	}
 	else if(log_since_msec < journal_start_msec) {
 		log_since_msec = journal_start_msec;

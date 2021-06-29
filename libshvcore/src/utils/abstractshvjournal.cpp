@@ -43,7 +43,7 @@ void AbstractShvJournal::addToSnapshot(std::map<std::string, ShvJournalEntry> &s
 			}
 		}
 	}
-	else {
+	else if(entry.sampleType == ShvJournalEntry::SampleType::Continuous && !entry.value.hasDefaultValue()) {
 		snapshot[entry.path] = entry;
 	}
 };
