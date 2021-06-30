@@ -34,6 +34,6 @@ More detailed information can be found on wiki.
 
 ## Build
 ```sh
-qmake SHV_PROJECT_TOP_BUILDDIR=`pwd`
+qmake SHV_PROJECT_TOP_SRCDIR=`pwd` SHV_PROJECT_TOP_BUILDDIR=`pwd`
 make
 ```
