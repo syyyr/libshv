@@ -216,10 +216,7 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 	if(msec < m_journalContext.recentTimeStamp)
 		msec = m_journalContext.recentTimeStamp;
 	int64_t journal_file_start_msec = 0;
-	if(m_journalContext.files.empty()) {
-		journal_file_start_msec = msec;
-	}
-	else if(m_journalContext.lastFileSize > m_fileSizeLimit) {
+	if(m_journalContext.files.empty() || m_journalContext.lastFileSize > m_fileSizeLimit) {
 		/// create new file
 		journal_file_start_msec = msec;
 		createNewLogFile(journal_file_start_msec);
@@ -509,7 +506,7 @@ void ShvFileJournal::checkRecentTimeStamp()
 	else {
 		auto last_file_start_msec = m_journalContext.files[m_journalContext.files.size() - 1];
 		std::string fn = m_journalContext.fileMsecToFilePath(last_file_start_msec);
-		m_journalContext.recentTimeStamp = findLastEntryDateTime(fn);
+		m_journalContext.recentTimeStamp = findLastEntryDateTime(fn, last_file_start_msec);
 		logMShvJournal() << "setting recent timestamp to last entry in:" << fn
 						 << "to:" << m_journalContext.recentTimeStamp << "epoch msec"
 						 << cp::RpcValue::DateTime::fromMSecsSinceEpoch(m_journalContext.recentTimeStamp).toIsoString();
@@ -521,10 +518,9 @@ void ShvFileJournal::checkRecentTimeStamp()
 	//logDShvJournal() << "update recent time stamp:" << m_journalContext.recentTimeStamp << cp::RpcValue::DateTime::fromMSecsSinceEpoch(m_journalContext.recentTimeStamp).toIsoString();
 }
 
-int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, ssize_t *p_date_time_fpos)
+int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, int64_t journal_start_msec, ssize_t *p_date_time_fpos)
 {
 	shvLogFuncFrame() << "'" + fn + "'";
-	int64_t file_start_epoch_msec = JournalContext::fileNameToFileMsec(fn);
 	ssize_t date_time_fpos = -1;
 	if(p_date_time_fpos)
 		*p_date_time_fpos = date_time_fpos;
@@ -536,7 +532,7 @@ int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, ssize_t *p_
 	long fpos = in.tellg();
 	if(fpos == 0) {
 		// empty file
-		return file_start_epoch_msec;
+		return journal_start_msec;
 	}
 	static constexpr int TS_LEN = 30;
 	static constexpr int CHUNK_LEN = 512;

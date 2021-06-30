@@ -9,11 +9,11 @@ namespace utils {
 //==============================================================
 // ShvJournalEntry
 //==============================================================
-const char *ShvJournalEntry::DOMAIN_VAL_CHANGE = "C";
-const char *ShvJournalEntry::DOMAIN_VAL_FASTCHANGE = "F";
-const char *ShvJournalEntry::DOMAIN_VAL_SERVICECHANGE = "S";
-const char *ShvJournalEntry::DOMAIN_SHV_SYSTEM = "SHV_SYS";
-const char *ShvJournalEntry::DOMAIN_SHV_COMMAND = "CMD";
+//const char *ShvJournalEntry::DOMAIN_VAL_CHANGE = "C";
+//const char *ShvJournalEntry::DOMAIN_VAL_FASTCHANGE = "F";
+//const char *ShvJournalEntry::DOMAIN_VAL_SERVICECHANGE = "S";
+//const char *ShvJournalEntry::DOMAIN_SHV_SYSTEM = "SHV_SYS";
+//const char *ShvJournalEntry::DOMAIN_SHV_COMMAND = "CMD";
 
 const char* ShvJournalEntry::PATH_APP_START = "APP_START";
 //const char* ShvJournalEntry::PATH_SNAPSHOT_BEGIN = "SNAPSHOT_BEGIN";

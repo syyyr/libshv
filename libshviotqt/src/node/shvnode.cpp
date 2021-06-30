@@ -254,7 +254,7 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 
 		shv::core::utils::ShvJournalEntry e(shvPath()
 											, method + '(' + rq.params().toCpon() + ')'
-											, shv::core::utils::ShvJournalEntry::DOMAIN_SHV_COMMAND
+											, shv::chainpack::Rpc::SIG_COMMAND_LOGGED
 											, shv::core::utils::ShvJournalEntry::NO_SHORT_TIME
 											, cp::DataChange::SampleType::Discrete);
 

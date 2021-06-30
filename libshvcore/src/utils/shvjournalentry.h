@@ -6,6 +6,7 @@
 #include "shvlogtypeinfo.h"
 
 #include <shv/chainpack/datachange.h>
+#include <shv/chainpack/rpc.h>
 
 namespace shv {
 namespace core {
@@ -14,11 +15,11 @@ namespace utils {
 class SHVCORE_DECL_EXPORT ShvJournalEntry
 {
 public:
-	static const char *DOMAIN_VAL_CHANGE; /// see shv::chainpack::Rpc::SIG_VAL_CHANGED
-	static const char *DOMAIN_VAL_FASTCHANGE; /// see shv::chainpack::Rpc::SIG_VAL_FASTCHANGED
-	static const char *DOMAIN_VAL_SERVICECHANGE; /// see shv::chainpack::Rpc::SIG_SERVICE_VAL_CHANGED
-	static const char *DOMAIN_SHV_SYSTEM;
-	static const char *DOMAIN_SHV_COMMAND;
+	//static const char *DOMAIN_VAL_CHANGE; /// see shv::chainpack::Rpc::SIG_VAL_CHANGED
+	//static const char *DOMAIN_VAL_FASTCHANGE; /// see shv::chainpack::Rpc::SIG_VAL_FASTCHANGED
+	//static const char *DOMAIN_VAL_SERVICECHANGE; /// see shv::chainpack::Rpc::SIG_SERVICE_VAL_CHANGED
+	//static const char *DOMAIN_SHV_SYSTEM;
+	//static const char *DOMAIN_SHV_COMMAND;
 
 	static const char* PATH_APP_START;
 	// snapshot begin-end cannot be implemented in the consistent way
@@ -55,9 +56,9 @@ public:
 	{
 	}
 	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value)
-		: ShvJournalEntry(path, value, DOMAIN_VAL_CHANGE, NO_SHORT_TIME, SampleType::Continuous) {}
+		: ShvJournalEntry(path, value, shv::chainpack::Rpc::SIG_VAL_CHANGED, NO_SHORT_TIME, SampleType::Continuous) {}
 	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, int short_time)
-		: ShvJournalEntry(path, value, DOMAIN_VAL_FASTCHANGE, short_time, SampleType::Continuous) {}
+		: ShvJournalEntry(path, value, shv::chainpack::Rpc::SIG_VAL_FASTCHANGED, short_time, SampleType::Continuous) {}
 	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, std::string domain)
 		: ShvJournalEntry(path, value, std::move(domain), NO_SHORT_TIME, SampleType::Continuous) {}
 

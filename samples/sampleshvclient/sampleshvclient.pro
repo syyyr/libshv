@@ -8,7 +8,7 @@ else {
 message ( SHV_PROJECT_TOP_BUILDDIR == '$$SHV_PROJECT_TOP_BUILDDIR' )
 
 isEmpty(LIBSHV_SRC_DIR) {
-    LIBSHV_SRC_DIR=$$SHV_PROJECT_TOP_SRCDIR/3rdparty/libshv
+    LIBSHV_SRC_DIR=$$PWD/../..
 }
 
 QT += core network

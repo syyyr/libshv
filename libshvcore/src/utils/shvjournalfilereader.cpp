@@ -97,7 +97,7 @@ bool ShvJournalFileReader::next()
 bool ShvJournalFileReader::last()
 {
 	ssize_t fpos;
-	ShvFileJournal::findLastEntryDateTime(m_fileName, &fpos);
+	ShvFileJournal::findLastEntryDateTime(m_fileName, 0, &fpos);
 	if(fpos >= 0) {
 		m_ifstream.clear();
 		m_ifstream.seekg(fpos, std::ios::beg);

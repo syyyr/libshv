@@ -183,9 +183,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 				if (it < it1 || e.epochMsec == since_msec) {  //it1 (lower_bound) can be == since_msec (we want in snapshot)
 					if(!pm.match(e))                          //or > since_msec (we don't want in snapshot)
 						continue;
-					if(e.sampleType == ShvJournalEntry::SampleType::Continuous) {
-						addToSnapshot(snapshot, e);
-					}
+					addToSnapshot(snapshot, e);
 				}
 			}
 			if(!snapshot.empty()) {
@@ -196,9 +194,6 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 						goto log_finish;
 					}
 					const auto &entry = kv.second;
-					if (entry.value.hasDefaultValue()) {
-						continue;
-					}
 					cp::RpcValue::List rec;
 					if(since_msec == 0)
 						since_msec = entry.epochMsec;
