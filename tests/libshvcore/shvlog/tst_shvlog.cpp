@@ -47,6 +47,7 @@ struct Channel
 {
 	ShvLogTypeInfo typeInfo;
 	string domain;
+	ShvJournalEntry::SampleType sampleType = ShvJournalEntry::SampleType::Continuous;
 	int minVal = 0;
 	int maxVal = 0;
 	uint16_t period = 1;
@@ -62,6 +63,8 @@ void snapshot_fn(std::vector<ShvJournalEntry> &ev)
 		ShvJournalEntry e;
 		e.path = kv.first;
 		e.value = kv.second.value;
+		e.domain = kv.second.domain;
+		e.sampleType = kv.second.sampleType;
 		ev.push_back(std::move(e));
 	}
 }
@@ -239,6 +242,7 @@ private:
 							e.value = rv;
 						}
 						e.domain = c.domain;
+						e.sampleType = c.sampleType;
 						e.shortTime = msec % 0x100;
 						dirty_log.append(e);
 						memory_jurnal.append(e);
@@ -356,12 +360,14 @@ private slots:
 			c.period = 50;
 			c.minVal = 0;
 			c.maxVal = 5000;
+			c.domain = ShvJournalEntry::DOMAIN_VAL_CHANGE;
 		}
 		{
 			Channel &c = channels["voltage"];
 			c.value = 0;
 			c.minVal = 0;
 			c.maxVal = 1500;
+			c.domain = ShvJournalEntry::DOMAIN_VAL_FASTCHANGE;
 		}
 		{
 			Channel &c = channels["doorOpen"];
@@ -369,6 +375,7 @@ private slots:
 			c.period = 500;
 			c.minVal = 0;
 			c.maxVal = 1;
+			c.domain = ShvJournalEntry::DOMAIN_VAL_CHANGE;
 		}
 		{
 			Channel &c = channels["vetra/vehicleDetected"];
@@ -376,12 +383,15 @@ private slots:
 			c.period = 100;
 			c.minVal = 6000;
 			c.maxVal = 6999;
+			c.domain = ShvJournalEntry::DOMAIN_VAL_CHANGE;
+			c.sampleType = ShvJournalEntry::SampleType::Discrete;
 		}
 		{
 			Channel &c = channels["vetra/status"];
 			c.value = 10;
 			c.minVal = 0;
 			c.maxVal = 0xFF;
+			c.domain = ShvJournalEntry::DOMAIN_VAL_CHANGE;
 		}
 	}
 	void tests()

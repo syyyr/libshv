@@ -46,8 +46,8 @@ const char* Rpc::PAR_METHOD = "method";
 const char* Rpc::PAR_PARAMS = "params";
 
 const char* Rpc::SIG_VAL_CHANGED = "chng";
-const char* Rpc::SIG_VAL_FASTCHANGED = "fchng";
-const char* Rpc::SIG_SERVICE_VAL_CHANGED = "schng";
+const char* Rpc::SIG_VAL_FASTCHANGED = "fastchng";
+const char* Rpc::SIG_SERVICE_VAL_CHANGED = "svcchng";
 const char* Rpc::SIG_MOUNTED_CHANGED = "mntchng";
 const char* Rpc::SIG_COMMAND_LOGGED = "cmdlog";
 
