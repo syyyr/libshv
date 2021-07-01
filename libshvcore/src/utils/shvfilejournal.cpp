@@ -691,7 +691,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		rec.push_back(make_path_shared(e.path));
 		rec.push_back(e.value);
 		rec.push_back(e.shortTime == ShvJournalEntry::NO_SHORT_TIME? cp::RpcValue(nullptr): cp::RpcValue(e.shortTime));
-		rec.push_back((e.domain.empty() || e.domain == cp::Rpc::SIG_VAL_CHANGED)? cp::RpcValue(nullptr): e.domain);
+		rec.push_back((e.domain.empty() || e.domain == ShvJournalEntry::DOMAIN_VAL_CHANGE)? cp::RpcValue(nullptr): e.domain);
 		rec.push_back((int)e.sampleType);
 		rec.push_back(e.userId.empty()? cp::RpcValue(nullptr): cp::RpcValue(e.userId));
 		log.push_back(std::move(rec));
