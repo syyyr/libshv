@@ -6,6 +6,8 @@
 
 #include <shv/coreqt/utils.h>
 
+#include <QLabel>
+#include <QTimer>
 #include <QWidget>
 
 namespace shv {
@@ -62,14 +64,23 @@ protected:
 	bool isMouseAboveMiniMapSlider(const QPoint &pos) const;
 	int posToChannelVerticalHeader(const QPoint &pos) const;
 	int posToChannel(const QPoint &pos) const;
+	void scrollOnMouseMove();
+	bool scrollOnMouseMove(const QPoint &mouse_pos);
+	void moveYellowThickLineAccordingToPos(const QPoint &mouse_pos);
+	int targetChannel(const QPoint &mouse_pos) const;
 
 protected:
 	Graph *m_graph = nullptr;
 	QSize m_graphPreferredSize;
-	enum class MouseOperation { None = 0, MiniMapLeftResize, MiniMapRightResize, ChannelHeaderResize, MiniMapScrollZoom, GraphDataAreaLeftPress, GraphDataAreaLeftCtrlPress, GraphDataAreaLeftCtrlShiftPress, GraphAreaMove, GraphAreaSelection, GraphDataAreaRightPress};
+	enum class MouseOperation { None = 0, MiniMapLeftResize, MiniMapRightResize, ChannelHeaderResize, MiniMapScrollZoom, ChannelHeaderMove, GraphDataAreaLeftPress, GraphDataAreaLeftCtrlPress, GraphDataAreaLeftCtrlShiftPress, GraphAreaMove, GraphAreaSelection, GraphDataAreaRightPress };
 	MouseOperation m_mouseOperation = MouseOperation::None;
 	QPoint m_recentMousePos;
 	int m_resizeChannelIx = -1;
+	QPoint m_channelScreenShotOffset;
+	QLabel *m_channelScreenShot = nullptr;
+	QTimer m_mouseMoveScrollTimer;
+	QWidget *m_thickYellowLine;
+	int m_draggedChannel;
 };
 
 }}}
