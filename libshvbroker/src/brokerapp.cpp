@@ -908,10 +908,14 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 							}
 						}
 						{
-							// fill in user_id, for current client issueng rpc request
-							cp::RpcRequest::setUserId(meta, client_connection->userName()
-													  + '@'
-													  + cliOptions()->brokerId());
+							// fill in user_id, for current client issuing rpc request
+							auto current_client = client_connection->userName() + '@' + cliOptions()->brokerId();
+							cp::RpcValue user_id = cp::RpcRequest::userId(meta);
+							if(user_id.isValid())
+								user_id = cp::RpcValue::List{user_id, current_client};
+							else
+								user_id = current_client;
+							cp::RpcRequest::setUserId(meta, user_id);
 						}
 					}
 					/// check service provider call

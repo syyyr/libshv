@@ -430,6 +430,11 @@ void RpcMessage::setUserId(const RpcValue &user_id)
 	setMetaValue(RpcMessage::MetaType::Tag::UserId, user_id);
 }
 
+RpcValue RpcMessage::userId(RpcValue::MetaData &meta)
+{
+	return meta.value(RpcMessage::MetaType::Tag::UserId);
+}
+
 void RpcMessage::setUserId(RpcValue::MetaData &meta, const RpcValue &user_id)
 {
 	meta.setValue(RpcMessage::MetaType::Tag::UserId, user_id);
