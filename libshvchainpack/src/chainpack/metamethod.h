@@ -48,12 +48,16 @@ public:
 	};
 public:
 	MetaMethod() {}
-	MetaMethod(std::string name, Signature ms, unsigned flags = 0, const shv::chainpack::RpcValue &access_grant = shv::chainpack::Rpc::ROLE_BROWSE, const std::string &description = std::string())
+	MetaMethod(std::string name, Signature ms, unsigned flags = 0
+			, const shv::chainpack::RpcValue &access_grant = shv::chainpack::Rpc::ROLE_BROWSE
+			, const std::string &description = {}
+			, const shv::chainpack::RpcValue::Map &tags = {})
 	    : m_name(std::move(name))
 	    , m_signature(ms)
 	    , m_flags(flags)
 	    , m_accessGrant(access_grant)
-	    , m_description(description)
+		, m_description(description)
+		, m_tags(tags)
 	{}
 
 	const std::string& name() const {return m_name;}
@@ -77,6 +81,7 @@ public:
 		lst.insert(lst.begin(), name());
 		return RpcValue{lst};
 	}
+	const shv::chainpack::RpcValue::Map& tags() const { return m_tags; }
 
 	static Signature signatureFromString(const std::string &sigstr);
 	static const char* signatureToString(Signature sig);
@@ -86,6 +91,7 @@ private:
 	unsigned m_flags = 0;
 	shv::chainpack::RpcValue m_accessGrant;
 	std::string m_description;
+	shv::chainpack::RpcValue::Map m_tags;
 };
 
 } // namespace chainpack
