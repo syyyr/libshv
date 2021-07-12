@@ -201,8 +201,8 @@ void RpcCall::start()
 		emit maybeResult(cp::RpcValue(), "RPC connection is not open");
 		return;
 	}
-	int rqid = m_rpcConnection->nextRequestId();
-	RpcResponseCallBack *cb = new RpcResponseCallBack(m_rpcConnection, rqid, this);
+	int rq_id = m_rpcConnection->nextRequestId();
+	RpcResponseCallBack *cb = new RpcResponseCallBack(m_rpcConnection, rq_id, this);
 	cb->start(this, [this](const cp::RpcResponse &resp) {
 		if (resp.isSuccess()) {
 			emit maybeResult(resp.result(), QString());
@@ -211,7 +211,7 @@ void RpcCall::start()
 			emit maybeResult(cp::RpcValue(), QString::fromStdString(resp.errorString()));
 		}
 	});
-	m_rpcConnection->callShvMethod(rqid, m_shvPath, m_method, m_params);
+	m_rpcConnection->callShvMethod(rq_id, m_shvPath, m_method, m_params);
 }
 
 } // namespace rpc
