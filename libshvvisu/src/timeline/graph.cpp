@@ -183,7 +183,7 @@ int Graph::channelMetaTypeId(int ix) const
 	return m_model->channelInfo(ch->modelIndex()).metaTypeId;
 }
 
-int Graph::moveChannel(int channel, int new_pos)
+void Graph::moveChannel(int channel, int new_pos)
 {
 	if (channel > new_pos) {
 		m_channels.insert(new_pos, m_channels.takeAt(channel));

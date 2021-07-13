@@ -6,7 +6,6 @@
 
 #include <shv/core/exception.h>
 #include <shv/coreqt/log.h>
-//#include <shv/chainpack/rpcvalue.h>
 
 #include <QApplication>
 #include <QPainter>
@@ -19,7 +18,8 @@
 #include <QScreen>
 #include <QScrollBar>
 #include <QWindow>
-
+#include <QDrag>
+#include <QMimeData>
 #include <cmath>
 
 #define logMouseSelection() nCDebug("MouseSelection")
@@ -32,12 +32,10 @@ namespace timeline {
 
 GraphWidget::GraphWidget(QWidget *parent)
 	: Super(parent)
-	, m_mouseMoveScrollTimer(this)
+	, m_channelHeaderMoveContext(nullptr)
 {
 	setMouseTracking(true);
 	setContextMenuPolicy(Qt::DefaultContextMenu);
-	m_mouseMoveScrollTimer.setInterval(100);
-	connect(&m_mouseMoveScrollTimer, &QTimer::timeout, this, qOverload<>(&GraphWidget::scrollOnMouseMove));
 }
 
 void GraphWidget::setGraph(Graph *g)
@@ -283,16 +281,6 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 {
 	logMouseSelection() << "mouseReleaseEvent, button:" << event->button() << "op:" << (int)m_mouseOperation;
-	if (m_channelScreenShot) {
-		delete m_channelScreenShot;
-		m_channelScreenShot = nullptr;
-		delete m_thickYellowLine;
-	}
-	m_mouseMoveScrollTimer.stop();
-	if (QApplication::overrideCursor() && QApplication::overrideCursor()->shape() == Qt::CursorShape::ForbiddenCursor) {
-		QApplication::restoreOverrideCursor();
-	}
-
 	auto old_mouse_op = m_mouseOperation;
 	m_mouseOperation = MouseOperation::None;
 	if(event->button() == Qt::LeftButton) {
@@ -348,12 +336,6 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 			m_resizeChannelIx = -1;
 			event->accept();
 			update();
-			return;
-		}
-		else if (old_mouse_op == MouseOperation::ChannelHeaderMove) {
-			Graph *gr = graph();
-			gr->moveChannel(m_draggedChannel, targetChannel(event->pos()));
-			event->accept();
 			return;
 		}
 	}
@@ -485,70 +467,50 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		return;
 	}
 	case MouseOperation::ChannelHeaderMove:
+		m_mouseOperation = MouseOperation::None;
 		if (gr->channelCount() == 0) {
 			return;
 		}
-		if (!m_channelScreenShot) {
+
 			QRect header_rect;
+		int dragged_channel = -1;
 			for (int i = 0; i < gr->channelCount(); ++i) {
 				const GraphChannel *ch = gr->channelAt(i);
 				if (ch->verticalHeaderRect().contains(pos)) {
 					header_rect = ch->verticalHeaderRect();
-					m_draggedChannel = i;
+				dragged_channel = i;
 					break;
 				}
 			}
-			if (header_rect.isValid()) {
+		if (dragged_channel != -1) {
+			QDrag *drag = new QDrag(this);
+			QMimeData *mime = new QMimeData;
+			mime->setText(QString());
+			drag->setMimeData(mime);
 				QPoint p = mapToGlobal(header_rect.topLeft());
-				m_channelScreenShotOffset = mapToGlobal(pos) - p;
-				m_channelScreenShot = new QLabel(this);
-				m_channelScreenShot->setPixmap(screen()->grabWindow(0, p.x(), p.y(), header_rect.width(), header_rect.height()));
-				m_channelScreenShot->setWindowFlag(Qt::WindowType::ToolTip, true);
-				m_channelScreenShot->show();
-				m_thickYellowLine = new QWidget(this);
-				QPalette pal = m_thickYellowLine->palette();
-				pal.setColor(QPalette::ColorRole::Window, Qt::yellow);
-				m_thickYellowLine->setAutoFillBackground(true);
-				m_thickYellowLine->setPalette(pal);
-				m_thickYellowLine->resize(header_rect.width(), QFontMetrics(font()).height() / 2);
-				m_thickYellowLine->show();
-			}
-		}
-		if (m_channelScreenShot) {
-			QRect first_channel_vertical_header_rect;
-			for (int i = 0; i < gr->channelCount(); ++i) {
-				const GraphChannel *ch = gr->channelAt(i);
-				if (ch->verticalHeaderRect().width()) {
-					first_channel_vertical_header_rect = ch->verticalHeaderRect();
-					break;
-				}
-			}
+			drag->setPixmap(screen()->grabWindow(0, p.x(), p.y(), header_rect.width(), header_rect.height()));
+			drag->setHotSpot(mapToGlobal(pos) - p);
+			setAcceptDrops(true);
 
-			if (first_channel_vertical_header_rect.isEmpty() ||
-				pos.y() <= 0 || pos.y() >= height() - gr->southFloatingBarRect().height() ||
-				pos.x() <= first_channel_vertical_header_rect.left() || pos.x() >= first_channel_vertical_header_rect.right()) {
-				if (!QApplication::overrideCursor() || QApplication::overrideCursor()->shape() != Qt::CursorShape::ForbiddenCursor) {
-					QApplication::setOverrideCursor(QCursor(Qt::CursorShape::ForbiddenCursor));
-					m_channelScreenShot->hide();
-					m_thickYellowLine->hide();
-					m_mouseMoveScrollTimer.stop();
-				}
-			}
-			else {
-				if (QApplication::overrideCursor() && QApplication::overrideCursor()->shape() == Qt::CursorShape::ForbiddenCursor) {
-					QApplication::restoreOverrideCursor();
-					m_channelScreenShot->show();
-					m_thickYellowLine->show();
-				}
-				m_channelScreenShot->move(mapToGlobal(pos) - m_channelScreenShotOffset);
-				if (scrollOnMouseMove(mapToGlobal(pos))) {
-					m_mouseMoveScrollTimer.start();
-				}
-				else {
-					m_mouseMoveScrollTimer.stop();
-				}
-				moveYellowThickLineAccordingToPos(pos);
-			}
+			m_channelHeaderMoveContext = new ChannelHeaderMoveContext;
+			m_channelHeaderMoveContext->mouseMoveScrollTimer = new QTimer(this);
+			m_channelHeaderMoveContext->mouseMoveScrollTimer->setInterval(100);
+			connect(m_channelHeaderMoveContext->mouseMoveScrollTimer, &QTimer::timeout, this, qOverload<>(&GraphWidget::scrollToCurrentMousePosOnMouseMove));
+			m_channelHeaderMoveContext->draggedChannel = dragged_channel;
+			m_channelHeaderMoveContext->channelDropMarker = new QWidget(this);
+			QPalette pal = m_channelHeaderMoveContext->channelDropMarker->palette();
+			pal.setColor(QPalette::ColorRole::Window, Qt::yellow);
+			m_channelHeaderMoveContext->channelDropMarker->setAutoFillBackground(true);
+			m_channelHeaderMoveContext->channelDropMarker->setPalette(pal);
+			m_channelHeaderMoveContext->channelDropMarker->resize(header_rect.width(), QFontMetrics(font()).height() / 2);
+			m_channelHeaderMoveContext->channelDropMarker->show();
+			drag->exec();
+			event->accept();
+			setAcceptDrops(false);
+			delete m_channelHeaderMoveContext->mouseMoveScrollTimer;
+			delete m_channelHeaderMoveContext->channelDropMarker;
+			delete m_channelHeaderMoveContext;
+			m_channelHeaderMoveContext = nullptr;
 		}
 		return;
 	}
@@ -653,11 +615,11 @@ void GraphWidget::moveYellowThickLineAccordingToPos(const QPoint &mouse_pos)
 	int ix = targetChannel(mouse_pos);
 	if (ix < gr->channelCount()) {
 		QRect ch_rect = gr->channelAt(ix)->verticalHeaderRect();
-		m_thickYellowLine->move(ch_rect.left(), ch_rect.bottom() - m_thickYellowLine->height() / 2);
+		m_channelHeaderMoveContext->channelDropMarker->move(ch_rect.left(), ch_rect.bottom() - m_channelHeaderMoveContext->channelDropMarker->height() / 2);
 	}
 	else {
 		QRect ch_rect = gr->channelAt(ix - 1)->verticalHeaderRect();
-		m_thickYellowLine->move(ch_rect.left(), ch_rect.top() - m_thickYellowLine->height() / 2);
+		m_channelHeaderMoveContext->channelDropMarker->move(ch_rect.left(), ch_rect.top() - m_channelHeaderMoveContext->channelDropMarker->height() / 2);
 	}
 }
 
@@ -688,7 +650,7 @@ int GraphWidget::targetChannel(const QPoint &mouse_pos) const
 	return 0;
 }
 
-void GraphWidget::scrollOnMouseMove()
+void GraphWidget::scrollToCurrentMousePosOnMouseMove()
 {
 	QPoint mouse_pos = QCursor::pos();
 	scrollOnMouseMove(mouse_pos);
@@ -806,6 +768,39 @@ void GraphWidget::contextMenuEvent(QContextMenuEvent *event)
 			showChannelContextMenu(i, pos);
 		}
 	}
+}
+
+void GraphWidget::dragEnterEvent(QDragEnterEvent *event)
+{
+	event->accept();
+}
+
+void GraphWidget::dragLeaveEvent(QDragLeaveEvent *event)
+{
+	Q_UNUSED(event);
+}
+
+void GraphWidget::dragMoveEvent(QDragMoveEvent *event)
+{
+	QPoint pos = event->pos();
+
+	if (scrollOnMouseMove(mapToGlobal(pos))) {
+		m_channelHeaderMoveContext->mouseMoveScrollTimer->start();
+	}
+	else {
+		m_channelHeaderMoveContext->mouseMoveScrollTimer->stop();
+	}
+
+	moveYellowThickLineAccordingToPos(pos);
+}
+
+void GraphWidget::dropEvent(QDropEvent *event)
+{
+	int target_channel = targetChannel(event->pos());
+	if (target_channel != m_channelHeaderMoveContext->draggedChannel) {
+		graph()->moveChannel(m_channelHeaderMoveContext->draggedChannel, target_channel);
+	}
+	event->accept();
 }
 
 void GraphWidget::showGraphContextMenu(const QPoint &mouse_pos)

@@ -49,6 +49,11 @@ protected:
 	void wheelEvent(QWheelEvent *event) override;
 	void contextMenuEvent(QContextMenuEvent *event) override;
 
+	void dragEnterEvent(QDragEnterEvent *event) override;
+	void dragLeaveEvent(QDragLeaveEvent *event) override;
+	void dragMoveEvent(QDragMoveEvent *event) override;
+	void dropEvent(QDropEvent *event) override;
+
 	void hideCrossHair();
 
 	virtual void showGraphContextMenu(const QPoint &mouse_pos);
@@ -64,7 +69,7 @@ protected:
 	bool isMouseAboveMiniMapSlider(const QPoint &pos) const;
 	int posToChannelVerticalHeader(const QPoint &pos) const;
 	int posToChannel(const QPoint &pos) const;
-	void scrollOnMouseMove();
+	void scrollToCurrentMousePosOnMouseMove();
 	bool scrollOnMouseMove(const QPoint &mouse_pos);
 	void moveYellowThickLineAccordingToPos(const QPoint &mouse_pos);
 	int targetChannel(const QPoint &mouse_pos) const;
@@ -76,11 +81,13 @@ protected:
 	MouseOperation m_mouseOperation = MouseOperation::None;
 	QPoint m_recentMousePos;
 	int m_resizeChannelIx = -1;
-	QPoint m_channelScreenShotOffset;
-	QLabel *m_channelScreenShot = nullptr;
-	QTimer m_mouseMoveScrollTimer;
-	QWidget *m_thickYellowLine;
-	int m_draggedChannel;
+
+	struct ChannelHeaderMoveContext {
+		QTimer *mouseMoveScrollTimer;
+		QWidget *channelDropMarker;
+		int draggedChannel;
+	};
+	ChannelHeaderMoveContext *m_channelHeaderMoveContext;
 };
 
 }}}
