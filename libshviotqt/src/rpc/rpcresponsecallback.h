@@ -67,6 +67,8 @@ public:
 	RpcCall* setMethod(const QString &method);
 	RpcCall* setParams(const ::shv::chainpack::RpcValue &params);
 	//RpcCall* setParams(const QVariant &params); not implemented since we do not know how to convert arbitrary QVariant to RpcValue
+	RpcCall* setUserId(const ::shv::chainpack::RpcValue &user_id);
+
 	void start();
 
 	Q_SIGNAL void maybeResult(const ::shv::chainpack::RpcValue &result, const QString &error);
@@ -79,6 +81,7 @@ private:
 	std::string m_shvPath;
 	std::string m_method;
 	shv::chainpack::RpcValue m_params;
+	shv::chainpack::RpcValue m_userId;
 };
 
 } // namespace rpc

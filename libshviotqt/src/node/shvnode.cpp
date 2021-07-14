@@ -252,7 +252,7 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 	if(mm_access_level >= cp::MetaMethod::AccessLevel::Write) {
 
 
-		shv::core::utils::ShvJournalEntry e(shvPath()
+		shv::core::utils::ShvJournalEntry e(shv::core::Utils::joinPath(shvPath(), rq.shvPath().asString())
 											, method + '(' + rq.params().toCpon() + ')'
 											, shv::chainpack::Rpc::SIG_COMMAND_LOGGED
 											, shv::core::utils::ShvJournalEntry::NO_SHORT_TIME
