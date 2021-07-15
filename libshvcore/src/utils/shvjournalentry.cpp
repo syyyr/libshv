@@ -48,7 +48,7 @@ chainpack::RpcValue ShvJournalEntry::toRpcValueMap() const
 chainpack::DataChange ShvJournalEntry::toDataChange() const
 {
 	shv::chainpack::DataChange ret(value, chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(epochMsec), shortTime);
-	ret.setDomain(domain);
+	//ret.setDomain(domain);
 	ret.setSampleType(sampleType);
 	return ret;
 }

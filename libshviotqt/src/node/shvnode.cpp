@@ -537,7 +537,7 @@ void ShvNode::emitLogUserCommand(const shv::core::utils::ShvJournalEntry &e)
 		// emit also as change to have commands in HP dirty-log
 		// only HP should have this
 		cp::DataChange dc(e.value, e.epochMsec > 0? cp::RpcValue::DateTime::fromMSecsSinceEpoch(e.epochMsec): cp::RpcValue::DateTime::now());
-		dc.setDomain(e.domain);
+		//dc.setDomain(e.domain);
 		dc.setSampleType(e.sampleType);
 
 		cp::RpcSignal sig;

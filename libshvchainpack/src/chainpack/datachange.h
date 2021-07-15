@@ -18,7 +18,8 @@ public:
 		enum {ID = chainpack::meta::GlobalNS::MetaTypeId::DataChange};
 		struct Tag { enum Enum {DateTime = chainpack::meta::Tag::USER,
 								ShortTime,
-								Domain,
+								//Domain, domain should not be part of DataChange,
+								// because Domain is name of signal emitted with DataChange
 								SampleType,
 								MAX};};
 		//struct Key { enum Enum {Value = 1, DateTime, ShortTime, MAX};};
@@ -59,9 +60,9 @@ public:
 	RpcValue shortTime() const { return hasShortTime()? RpcValue((unsigned)m_shortTime): RpcValue(); }
 	void setShortTime(const RpcValue &st) { m_shortTime = (st.isUInt() || (st.isInt() && st.toInt() >= 0))? st.toInt(): NO_SHORT_TIME; }
 
-	bool hasDomain() const { return !m_domain.empty(); }
-	void setDomain(const std::string &d) { m_domain = d; }
-	const std::string& domain() const { return m_domain; }
+	//bool hasDomain() const { return !m_domain.empty(); }
+	//void setDomain(const std::string &d) { m_domain = d; }
+	//const std::string& domain() const { return m_domain; }
 
 	bool hasSampleType() const { return m_sampleType != SampleType::Invalid; }
 	void setSampleType(SampleType st) { m_sampleType = st; }
@@ -72,7 +73,7 @@ public:
 	RpcValue toRpcValue() const;
 private:
 	RpcValue m_value;
-	std::string m_domain;
+	//std::string m_domain;
 	RpcValue::DateTime m_dateTime;
 	int m_shortTime = NO_SHORT_TIME;
 	SampleType m_sampleType = SampleType::Invalid;

@@ -21,7 +21,7 @@ DataChange::MetaType::MetaType()
 	m_tags = {
 		RPC_META_TAG_DEF(DateTime),
 		RPC_META_TAG_DEF(ShortTime),
-		RPC_META_TAG_DEF(Domain),
+		//RPC_META_TAG_DEF(Domain),
 		RPC_META_TAG_DEF(SampleType),
 	};
 }
@@ -96,7 +96,7 @@ DataChange DataChange::fromRpcValue(const RpcValue &val)
 set_meta_data:
 		ret.setDateTime(val.metaValue(MetaType::Tag::DateTime));
 		ret.setShortTime(val.metaValue(MetaType::Tag::ShortTime));
-		ret.setDomain(val.metaValue(MetaType::Tag::Domain).asString());
+		//ret.setDomain(val.metaValue(MetaType::Tag::Domain).asString());
 		int st = val.metaValue(MetaType::Tag::SampleType).toInt();
 		ret.setSampleType(st == (int)SampleType::Discrete? SampleType::Discrete: SampleType::Continuous);
 		return ret;
@@ -121,8 +121,8 @@ RpcValue DataChange::toRpcValue() const
 		ret.setMetaValue(MetaType::Tag::DateTime, m_dateTime);
 	if(hasShortTime())
 		ret.setMetaValue(MetaType::Tag::ShortTime, (unsigned)m_shortTime);
-	if(hasDomain())
-		ret.setMetaValue(MetaType::Tag::Domain, m_domain);
+	//if(hasDomain())
+	//	ret.setMetaValue(MetaType::Tag::Domain, m_domain);
 	if(sampleType() == SampleType::Discrete)
 		ret.setMetaValue(MetaType::Tag::SampleType, (int)m_sampleType);
 	return ret;
