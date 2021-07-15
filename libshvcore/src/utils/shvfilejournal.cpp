@@ -760,6 +760,11 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		for(auto file_it = first_file_it; file_it != journal_context.files.end(); file_it++) {
 			std::string fn = journal_context.fileMsecToFilePath(*file_it);
 			logDShvJournal() << "-------- opening file:" << fn;
+
+			std::vector<ShvJournalEntry> entries_to_write{ShvJournalEntry{}};
+			std::map<std::string, ShvJournalEntry> this_file_snapshot;
+			int64_t this_file_snapshot_msec = *file_it;
+
 			ShvJournalFileReader rd(fn);
 			while(rd.next()) {
 				const ShvJournalEntry &e = rd.entry();
@@ -769,23 +774,51 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 						continue;
 					logDShvJournal() << "\t\t MATCH";
 				}
+				entries_to_write[0] = e;
+				entries_to_write.resize(1);
+				if(rd.isInSnapShot()) {
+					this_file_snapshot[e.path] = e;
+					this_file_snapshot_msec = e.epochMsec;
+				}
+				else if(!this_file_snapshot.empty()) {
+					for(const auto &kv : snapshot_ctx.snapshot) {
+						ShvJournalEntry e3 = kv.second;
+						if(this_file_snapshot.find(e3.path) == this_file_snapshot.cend()) {
+							/*
+							Clear previously set values not present in the current file snapshot
 
-				logDShvJournal() << "\t entry:" << e.toRpcValueMap().toCpon();
-				bool before_since = params_since_msec > 0 && e.epochMsec < params_since_msec;
-				bool after_until = params_until_msec > 0 && e.epochMsec >= params_until_msec;
-				if(before_since) {
-					addToSnapshot(snapshot_ctx.snapshot, e);
+							Value is set in previous file, but it is not present in current file
+							snapshot. This might happen if device was switched off and the value was
+							cleared during device inactivity. For example TC got free whilst cabinet
+							was without power.
+							We have to append this lost information after the current file snapshot,
+							to reflect cleared value.
+							*/
+							e3.epochMsec = this_file_snapshot_msec;
+							e3.value.setDefaultValue();
+							entries_to_write.push_back(kv.second);
+						}
+					}
+					this_file_snapshot.clear();
 				}
-				else if(after_until) {
-					goto log_finish;
-				}
-				else {
-					if(params.withSnapshot && !snapshot_ctx.snapshotWritten) {
-						if(!write_snapshot())
+				for(const ShvJournalEntry &e2 : entries_to_write) {
+					logDShvJournal() << "\t entry:" << e.toRpcValueMap().toCpon();
+					bool before_since = params_since_msec > 0 && e2.epochMsec < params_since_msec;
+					bool after_until = params_until_msec > 0 && e2.epochMsec >= params_until_msec;
+					if(before_since) {
+						addToSnapshot(snapshot_ctx.snapshot, e2);
+					}
+					else if(after_until) {
+						goto log_finish;
+					}
+					else {
+						if(params.withSnapshot && !snapshot_ctx.snapshotWritten) {
+							if(!write_snapshot())
+								goto log_finish;
+						}
+						if(!append_log_entry(e2))
 							goto log_finish;
 					}
-					if(!append_log_entry(e))
-						goto log_finish;
 				}
 			}
 		}
