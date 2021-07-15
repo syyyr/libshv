@@ -31,6 +31,8 @@ chainpack::RpcValue AbstractShvJournal::getSnapShotMap()
 
 void AbstractShvJournal::addToSnapshot(std::map<std::string, ShvJournalEntry> &snapshot, const ShvJournalEntry &entry)
 {
+	if(entry.domain != ShvJournalEntry::DOMAIN_VAL_CHANGE)
+		return;
 	if(entry.value.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID && entry.value.metaTypeId() == shv::chainpack::meta::GlobalNS::MetaTypeId::NodeDrop) {
 		auto it = snapshot.lower_bound(entry.path);
 		while(it != snapshot.end()) {
