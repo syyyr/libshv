@@ -69,9 +69,9 @@ protected:
 	bool isMouseAboveMiniMapSlider(const QPoint &pos) const;
 	int posToChannelVerticalHeader(const QPoint &pos) const;
 	int posToChannel(const QPoint &pos) const;
-	void scrollToCurrentMousePosOnMouseMove();
-	bool scrollOnMouseMove(const QPoint &mouse_pos);
-	void moveYellowThickLineAccordingToPos(const QPoint &mouse_pos);
+	void scrollToCurrentMousePosOnDrag();
+	bool scrollByMouseOuterOverlap(const QPoint &mouse_pos);
+	void moveDropMarker(const QPoint &mouse_pos);
 	int targetChannel(const QPoint &mouse_pos) const;
 
 protected:

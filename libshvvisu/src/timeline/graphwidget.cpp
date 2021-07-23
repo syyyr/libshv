@@ -495,7 +495,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 			m_channelHeaderMoveContext = new ChannelHeaderMoveContext;
 			m_channelHeaderMoveContext->mouseMoveScrollTimer = new QTimer(this);
 			m_channelHeaderMoveContext->mouseMoveScrollTimer->setInterval(100);
-			connect(m_channelHeaderMoveContext->mouseMoveScrollTimer, &QTimer::timeout, this, qOverload<>(&GraphWidget::scrollToCurrentMousePosOnMouseMove));
+			connect(m_channelHeaderMoveContext->mouseMoveScrollTimer, &QTimer::timeout, this, &GraphWidget::scrollToCurrentMousePosOnDrag);
 			m_channelHeaderMoveContext->draggedChannel = dragged_channel;
 			m_channelHeaderMoveContext->channelDropMarker = new QWidget(this);
 			QPalette pal = m_channelHeaderMoveContext->channelDropMarker->palette();
@@ -609,7 +609,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 	}
 }
 
-void GraphWidget::moveYellowThickLineAccordingToPos(const QPoint &mouse_pos)
+void GraphWidget::moveDropMarker(const QPoint &mouse_pos)
 {
 	Graph *gr = graph();
 	int ix = targetChannel(mouse_pos);
@@ -650,13 +650,13 @@ int GraphWidget::targetChannel(const QPoint &mouse_pos) const
 	return 0;
 }
 
-void GraphWidget::scrollToCurrentMousePosOnMouseMove()
+void GraphWidget::scrollToCurrentMousePosOnDrag()
 {
 	QPoint mouse_pos = QCursor::pos();
-	scrollOnMouseMove(mouse_pos);
+	scrollByMouseOuterOverlap(mouse_pos);
 }
 
-bool GraphWidget::scrollOnMouseMove(const QPoint &mouse_pos)
+bool GraphWidget::scrollByMouseOuterOverlap(const QPoint &mouse_pos)
 {
 	auto *view_port = parentWidget();
 	auto *scroll_area = qobject_cast<GraphView*>(view_port->parentWidget());
@@ -670,7 +670,7 @@ bool GraphWidget::scrollOnMouseMove(const QPoint &mouse_pos)
 			diff = 5;
 		}
 		vs->setValue(vs->value() - diff);
-		moveYellowThickLineAccordingToPos(mapFromGlobal(mouse_pos));
+		moveDropMarker(mapFromGlobal(mouse_pos));
 		return true;
 	}
 	else if (mouse_pos.y() + 5 > view_port_bottom) {
@@ -679,7 +679,7 @@ bool GraphWidget::scrollOnMouseMove(const QPoint &mouse_pos)
 			diff = 5;
 		}
 		vs->setValue(vs->value() + diff);
-		moveYellowThickLineAccordingToPos(mapFromGlobal(mouse_pos));
+		moveDropMarker(mapFromGlobal(mouse_pos));
 		return true;
 	}
 	return false;
@@ -784,14 +784,14 @@ void GraphWidget::dragMoveEvent(QDragMoveEvent *event)
 {
 	QPoint pos = event->pos();
 
-	if (scrollOnMouseMove(mapToGlobal(pos))) {
+	if (scrollByMouseOuterOverlap(mapToGlobal(pos))) {
 		m_channelHeaderMoveContext->mouseMoveScrollTimer->start();
 	}
 	else {
 		m_channelHeaderMoveContext->mouseMoveScrollTimer->stop();
 	}
 
-	moveYellowThickLineAccordingToPos(pos);
+	moveDropMarker(pos);
 }
 
 void GraphWidget::dropEvent(QDropEvent *event)
