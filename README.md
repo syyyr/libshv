@@ -34,6 +34,10 @@ More detailed information can be found on wiki.
 
 ## Build
 ```sh
-qmake SHV_PROJECT_TOP_SRCDIR=`pwd` SHV_PROJECT_TOP_BUILDDIR=`pwd`
+qmake SHV_PROJECT_TOP_SRCDIR=`pwd` LIBSHV_SRC_DIR=`pwd` SHV_PROJECT_TOP_BUILDDIR=`pwd`
 make
+```
+QtCreator qmake additional arguments
+```
+SHV_PROJECT_TOP_SRCDIR=%{sourceDir} LIBSHV_SRC_DIR=%{sourceDir} SHV_PROJECT_TOP_BUILDDIR=%{buildDir}
 ```
