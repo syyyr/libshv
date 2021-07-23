@@ -25,7 +25,7 @@ INCLUDEPATH += \
 	$$SHV_PROJECT_TOP_SRCDIR/3rdparty/necrolog/include \
 	$$PWD/../libshvcore/include \
     $$PWD/../libshvcoreqt/include \
-    $$PWD/../libshviotqt/include \
+	$$PWD/../libshviotqt/include \
     $$PWD/../libshvchainpack/include \
 
 LIBS += \
@@ -33,7 +33,7 @@ LIBS += \
     -lnecrolog \
     -lshvcore \
     -lshvcoreqt \
-    -lshviotqt \
+	-lshviotqt \
     -lshvchainpack
 
 RESOURCES += \

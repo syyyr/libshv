@@ -42,7 +42,7 @@ void ChannelProbe::nextSample()
 	GraphModel *m = m_graph->model();
 	const GraphChannel *ch = m_graph->channelAt(m_channelIndex);
 	int model_ix = ch->modelIndex();
-	int ix = m->lessOrEqualIndex(model_ix, m_currentTime);
+	int ix = m->lessOrEqualTimeIndex(model_ix, m_currentTime);
 
 	if(ix >= 0) {
 		Sample s = m->sampleValue(model_ix, ix + 1);
@@ -58,7 +58,7 @@ void ChannelProbe::prevSample()
 	GraphModel *m = m_graph->model();
 	const GraphChannel *ch = m_graph->channelAt(m_channelIndex);
 	int model_ix = ch->modelIndex();
-	int ix = m->lessOrEqualIndex(model_ix, m_currentTime);
+	int ix = m->lessOrEqualTimeIndex(model_ix, m_currentTime);
 
 	if(ix >= 0) {
 		Sample s = m->sampleValue(model_ix, ix - 1);

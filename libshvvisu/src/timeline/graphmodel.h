@@ -71,7 +71,8 @@ public:
 	/// displaySampleValue() returns original time and value
 	virtual Sample displaySampleValue(int channel, int ix) const { return sampleValue(channel, ix); }
 
-	virtual int lessOrEqualIndex(int channel, timemsec_t time) const;
+	int lessOrEqualTimeIndex(int channel, timemsec_t time) const;
+	int greaterOrEqualTimeIndex(int channel, timemsec_t time) const;
 
 	virtual void beginAppendValues();
 	virtual void endAppendValues();

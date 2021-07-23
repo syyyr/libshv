@@ -6,6 +6,6 @@ isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
 }
 
 SUBDIRS += \
-    necrolog \
+    necrolog/libnecrolog \
 
 
