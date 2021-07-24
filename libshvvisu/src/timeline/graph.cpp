@@ -1672,20 +1672,18 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		OnePixelValue(const QPoint &p) : x(p.x()), y1(p.y()), y2(p.y()), minY(p.y()), maxY(p.y()) {}
 		bool isValid() const { return x != NO_X; }
 	};
-	auto line_y = [](const QPoint &p1, const QPoint &p2, int x) {
-		// y = y1 + (y2-y1)/(x2-x1)*(x-x1)
-		int y = p1.y() + (p2.y() - p1.y()) * (x - p1.x()) / (p2.x() - p1.x());
-		return y;
-	};
+	//auto line_y = [](const QPoint &p1, const QPoint &p2, int x) {
+	//	// y = y1 + (y2-y1)/(x2-x1)*(x-x1)
+	//	int y = p1.y() + (p2.y() - p1.y()) * (x - p1.x()) / (p2.x() - p1.x());
+	//	return y;
+	//};
 	OnePixelValue left_px;
 	if(ix1 > 0) {
 		QPoint px1 = sample2point(graph_model->sampleAt(model_ix, ix1-1), channel_meta_type_id);
 		QPoint px2 = sample2point(graph_model->sampleAt(model_ix, ix1), channel_meta_type_id);
 		if(px1.x() != px2.x()) {
-			int x = sample2point(Sample{xrange.min, 0}, channel_meta_type_id).x();
-			int y = line_y(px1, px2, x);
-			left_px = OnePixelValue(QPoint{x, y});
-			shvDebug() << "\t left:" << x << y;
+			left_px = px1;
+			shvDebug() << "\t left:" << left_px.x << left_px.y2;
 		}
 	}
 	OnePixelValue right_px;
@@ -1693,23 +1691,21 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		QPoint px1 = sample2point(graph_model->sampleAt(model_ix, ix2), channel_meta_type_id);
 		QPoint px2 = sample2point(graph_model->sampleAt(model_ix, ix2 + 1), channel_meta_type_id);
 		if(px1.x() != px2.x()) {
-			int x = sample2point(Sample{xrange.max, 0}, channel_meta_type_id).x();
-			int y = line_y(px1, px2, x);
-			right_px = OnePixelValue(QPoint{x, y});
-			shvDebug() << "\t right:" << x << y;
+			right_px = px2;
+			shvDebug() << "\t right:" << right_px.x << right_px.y1;
 		}
 	}
 
-	OnePixelValue current_px = right_px;
+	OnePixelValue current_px = left_px;
 	OnePixelValue prev_px;
 
-	{
-		QRect r0{QPoint(), QSize{sample_point_size+2, sample_point_size+2}};
-		r0.moveCenter(QPoint{left_px.x, left_px.y1});
-		painter->fillRect(r0, Qt::yellow);
-		r0.moveCenter(QPoint{right_px.x, right_px.y1});
-		painter->fillRect(r0, Qt::yellow);
-	}
+	//{
+	//	QRect r0{QPoint(), QSize{sample_point_size+2, sample_point_size+2}};
+	//	r0.moveCenter(QPoint{left_px.x, left_px.y1});
+	//	painter->fillRect(r0, Qt::yellow);
+	//	r0.moveCenter(QPoint{right_px.x, right_px.y1});
+	//	painter->fillRect(r0, Qt::yellow);
+	//}
 	for (int i = ix1; i < ix2 + 2; ++i) {
 		OnePixelValue p;
 		if(i == ix2 + 1) {
@@ -1760,8 +1756,8 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		*/
 		{
 			{
-				// paint recent sample ymin-ymax area
-				if(prev_px.maxY != prev_px.minY) {
+				// paint prev sample ymin-ymax area
+				if(prev_px.isValid() && prev_px.maxY != prev_px.minY) {
 					painter->drawLine(prev_px.x, prev_px.minY, prev_px.x, prev_px.maxY);
 				}
 			}
