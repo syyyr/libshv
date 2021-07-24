@@ -21,6 +21,7 @@ public:
 	void setMatchingPaths(const QSet<QString> &paths);
 
 	bool isPathMatch(const QString &path) const;
+	bool isValid() const { return !m_matchingPaths.isEmpty(); }
 private:
 	QSet<QString> m_matchingPaths;
 };

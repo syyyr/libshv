@@ -681,6 +681,15 @@ void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos
 	menu.addAction(tr("Hide"), [this, channel_ix]() {
 		m_graph->setChannelVisible(channel_ix, false);
 	});
+	menu.addAction(tr("Reset X-zoom"), [this]() {
+		//shvInfo() << "settings";
+		timeline::GraphModel *m = m_graph->model();
+		if(!m)
+			return;
+		timeline::XRange rng = m->xRange();
+		m_graph->setXRange(rng);
+		this->update();
+	});
 	menu.addAction(tr("Reset Y-zoom"), [this, channel_ix, ch]() {
 		//shvInfo() << "settings";
 		timeline::GraphModel *m = m_graph->model();

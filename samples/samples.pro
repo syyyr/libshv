@@ -4,4 +4,5 @@ CONFIG += ordered
 SUBDIRS += \
 	sampleshvclient \
 	sampleshvbroker \
+	samplegraph \
 
