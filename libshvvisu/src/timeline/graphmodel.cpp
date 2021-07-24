@@ -169,6 +169,7 @@ void GraphModel::endAppendValues()
 
 void GraphModel::appendValue(int channel, Sample &&sample)
 {
+	//shvInfo() << channel << sample.time << sample.value.toString();
 	if(channel < 0 || channel > channelCount()) {
 		shvError() << "Invalid channel index:" << channel;
 		return;

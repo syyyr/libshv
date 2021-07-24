@@ -48,7 +48,7 @@ MainWindow::~MainWindow()
 void MainWindow::generateSampleData()
 {
 	int sample_cnt = ui->samplesCount->value();
-	int64_t min_time = 0;
+	int64_t min_time = 100;
 	int64_t max_time = 1000LL * 60 * 60 * 24 * 365;
 	double min_val = -3;
 	double max_val = 5;
@@ -66,16 +66,19 @@ void MainWindow::generateSampleData()
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
 	std::uniform_int_distribution<> time_distrib(min_time, max_time);
 	std::uniform_real_distribution<> val_distrib(min_val, max_val);
+
 	vector<int64_t> times;
-	for (int n=0; n<sample_cnt; ++n)
+	for (int n=0; n<sample_cnt+2; ++n)
 		times.push_back(time_distrib(gen));
 	sort(times.begin(), times.end());
-	for(auto time : times) {
+	m_graphModel->appendValue(0, tl::Sample{times[0], val_distrib(gen)});
+	for(size_t j=1; j<times.size()-1; ++j) {
 		double val = val_distrib(gen);
 		for (int i=0; i<m_graphModel->channelCount(); i++) {
-			m_graphModel->appendValue(i, tl::Sample{time, val});
+			m_graphModel->appendValue(i, tl::Sample{times[j], val});
 		}
 	}
+	m_graphModel->appendValue(0, tl::Sample{times[times.size()-1], val_distrib(gen)});
 
 	m_graphModel->endAppendValues();
 
@@ -95,6 +98,7 @@ void MainWindow::generateSampleData()
 			style.setInterpolation(tl::GraphChannel::Style::Interpolation::Stepped);
 			style.setLineAreaStyle(tl::GraphChannel::Style::LineAreaStyle::Filled);
 		}
+		//style.setInterpolation(tl::GraphChannel::Style::Interpolation::None);
 		ch->setStyle(style);
 	}
 	ui->graphView->makeLayout();

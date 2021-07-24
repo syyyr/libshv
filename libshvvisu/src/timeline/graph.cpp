@@ -1687,7 +1687,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		}
 	}
 	OnePixelValue right_px;
-	if(ix2 < samples_cnt - 1) {
+	if(ix2 >= 0 && ix2 < samples_cnt - 1) {
 		QPoint px1 = sample2point(graph_model->sampleAt(model_ix, ix2), channel_meta_type_id);
 		QPoint px2 = sample2point(graph_model->sampleAt(model_ix, ix2 + 1), channel_meta_type_id);
 		if(px1.x() != px2.x()) {
