@@ -17,6 +17,9 @@ MainWindow::MainWindow(QWidget *parent)
 	, ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
+
+	ui->btGenerateSamples->setDefaultAction(ui->actionGenerate_sample_data);
+
 	m_graphModel = new tl::GraphModel(this);
 	m_graphWidget = new tl::GraphWidget();
 
@@ -44,10 +47,10 @@ MainWindow::~MainWindow()
 
 void MainWindow::generateSampleData()
 {
-	int sample_cnt = 10;
+	int sample_cnt = ui->samplesCount->value();
 	int64_t min_time = 0;
 	int64_t max_time = 1000LL * 60 * 60 * 24 * 365;
-	double min_val = -1;
+	double min_val = -3;
 	double max_val = 5;
 
 	m_graphModel->clear();

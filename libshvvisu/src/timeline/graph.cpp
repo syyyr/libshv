@@ -1601,7 +1601,7 @@ QString Graph::rectToString(const QRect &r)
 
 void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_rect, const QRect &dest_rect, const GraphChannel::Style &channel_style)
 {
-	//shvLogFuncFrame() << "channel:" << channel_ix;
+	shvLogFuncFrame() << "channel:" << channel_ix;
 	const GraphChannel *ch = channelAt(channel_ix);
 	int model_ix = ch->modelIndex();
 	QRect rect = dest_rect.isEmpty()? ch->graphDataGridRect(): dest_rect;
@@ -1650,15 +1650,15 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		//line_area_color.setHsv(line_area_color.hslHue(), line_area_color.hsvSaturation() / 2, line_area_color.lightness());
 	}
 
+	const int sample_point_size = u2px(0.5);
 	int channel_meta_type_id = channelMetaTypeId(channel_ix);
 	GraphModel *graph_model = model();
 	int ix1 = graph_model->greaterOrEqualTimeIndex(model_ix, xrange.min);
 	int ix2 = graph_model->lessOrEqualTimeIndex(model_ix, xrange.max);
 	int samples_cnt = graph_model->count(model_ix);
 	shvDebug() << graph_model->channelShvPath(channel_ix) << "range:" << xrange.min << xrange.max;
-	shvDebug() << "\t" << channel_ix
-			   << "from:" << ix1 << "to:" << ix2 << "cnt:" << (ix2 - ix1) << "of:" << samples_cnt;
-	const int sample_point_size = u2px(0.5);
+	shvDebug() << "\t channel" << channel_ix
+			   << "from:" << ix1 << "to:" << ix2 << "cnt:" << (ix2 - ix1 + 1) << "of:" << samples_cnt;
 	static constexpr int NO_X = std::numeric_limits<int>::min();
 	struct OnePixelValue {
 		int x = NO_X;
@@ -1685,6 +1685,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 			int x = sample2point(Sample{xrange.min, 0}, channel_meta_type_id).x();
 			int y = line_y(px1, px2, x);
 			left_px = OnePixelValue(QPoint{x, y});
+			shvDebug() << "\t left:" << x << y;
 		}
 	}
 	OnePixelValue right_px;
@@ -1695,12 +1696,20 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 			int x = sample2point(Sample{xrange.max, 0}, channel_meta_type_id).x();
 			int y = line_y(px1, px2, x);
 			right_px = OnePixelValue(QPoint{x, y});
+			shvDebug() << "\t right:" << x << y;
 		}
 	}
 
 	OnePixelValue current_px = right_px;
 	OnePixelValue prev_px;
 
+	{
+		QRect r0{QPoint(), QSize{sample_point_size+2, sample_point_size+2}};
+		r0.moveCenter(QPoint{left_px.x, left_px.y1});
+		painter->fillRect(r0, Qt::yellow);
+		r0.moveCenter(QPoint{right_px.x, right_px.y1});
+		painter->fillRect(r0, Qt::yellow);
+	}
 	for (int i = ix1; i < ix2 + 2; ++i) {
 		OnePixelValue p;
 		if(i == ix2 + 1) {
