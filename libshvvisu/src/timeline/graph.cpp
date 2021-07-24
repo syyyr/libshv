@@ -1699,13 +1699,6 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	OnePixelValue current_px = left_px;
 	OnePixelValue prev_px;
 
-	//{
-	//	QRect r0{QPoint(), QSize{sample_point_size+2, sample_point_size+2}};
-	//	r0.moveCenter(QPoint{left_px.x, left_px.y1});
-	//	painter->fillRect(r0, Qt::yellow);
-	//	r0.moveCenter(QPoint{right_px.x, right_px.y1});
-	//	painter->fillRect(r0, Qt::yellow);
-	//}
 	for (int i = ix1; i < ix2 + 2; ++i) {
 		OnePixelValue p;
 		if(i == ix2 + 1) {
@@ -1725,35 +1718,6 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 			prev_px = current_px;
 			current_px = p;
 		}
-		/*
-		if(i == ix2) {
-			if(interpolation == GraphChannel::Style::Interpolation::Stepped) {
-				// draw continuations of last value
-				if(prev_px.isValid()) {
-					// draw horizontal line from last value to end of graph area
-					painter->setPen(pen);
-					painter->drawLine(QPoint{prev_px.x, prev_px.y2}, QPoint{rect.right(), prev_px.y2});
-				}
-			}
-			break;
-		}
-		{
-			Q_ASSERT(i >= 0 && i < samples_cnt);
-			const Sample s = (i < samples_cnt)? graph_model->sampleAt(model_ix, i): Sample();
-			QPoint p = sample2point(s, channel_meta_type_id);
-			if(current_px.x == p.x()) {
-				current_px.minY = qMin(current_px.minY, p.y());
-				current_px.maxY = qMax(current_px.maxY, p.y());
-				current_px.y2 = p.y();
-				current_px_changed = false;
-			}
-			else {
-				prev_px = current_px;
-				current_px = OnePixelValue{p};
-				current_px_changed = true;
-			}
-		}
-		*/
 		{
 			{
 				// paint prev sample ymin-ymax area
@@ -1762,7 +1726,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 				}
 			}
 			if(interpolation == GraphChannel::Style::Interpolation::None) {
-				static constexpr bool arrows_hack = false;
+				static constexpr bool arrows_hack = true;
 				if(arrows_hack) {
 					QPoint sample_point{current_px.x, 0};
 					int arrow_width = u2px(1);
