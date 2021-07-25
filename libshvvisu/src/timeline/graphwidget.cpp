@@ -472,7 +472,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 			return;
 		}
 
-			QRect header_rect;
+		QRect header_rect;
 		int dragged_channel = -1;
 			for (int i = 0; i < gr->channelCount(); ++i) {
 				const GraphChannel *ch = gr->channelAt(i);
@@ -487,28 +487,19 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 			QMimeData *mime = new QMimeData;
 			mime->setText(QString());
 			drag->setMimeData(mime);
-				QPoint p = mapToGlobal(header_rect.topLeft());
+			QPoint p = mapToGlobal(header_rect.topLeft());
 			drag->setPixmap(screen()->grabWindow(0, p.x(), p.y(), header_rect.width(), header_rect.height()));
 			drag->setHotSpot(mapToGlobal(pos) - p);
 			setAcceptDrops(true);
 
-			m_channelHeaderMoveContext = new ChannelHeaderMoveContext;
-			m_channelHeaderMoveContext->mouseMoveScrollTimer = new QTimer(this);
-			m_channelHeaderMoveContext->mouseMoveScrollTimer->setInterval(100);
+			m_channelHeaderMoveContext = new ChannelHeaderMoveContext(this);
 			connect(m_channelHeaderMoveContext->mouseMoveScrollTimer, &QTimer::timeout, this, &GraphWidget::scrollToCurrentMousePosOnDrag);
 			m_channelHeaderMoveContext->draggedChannel = dragged_channel;
-			m_channelHeaderMoveContext->channelDropMarker = new QWidget(this);
-			QPalette pal = m_channelHeaderMoveContext->channelDropMarker->palette();
-			pal.setColor(QPalette::ColorRole::Window, Qt::yellow);
-			m_channelHeaderMoveContext->channelDropMarker->setAutoFillBackground(true);
-			m_channelHeaderMoveContext->channelDropMarker->setPalette(pal);
 			m_channelHeaderMoveContext->channelDropMarker->resize(header_rect.width(), QFontMetrics(font()).height() / 2);
 			m_channelHeaderMoveContext->channelDropMarker->show();
 			drag->exec();
 			event->accept();
 			setAcceptDrops(false);
-			delete m_channelHeaderMoveContext->mouseMoveScrollTimer;
-			delete m_channelHeaderMoveContext->channelDropMarker;
 			delete m_channelHeaderMoveContext;
 			m_channelHeaderMoveContext = nullptr;
 		}
@@ -916,6 +907,23 @@ bool GraphWidget::isMouseAboveChannelResizeHandle(const QPoint &mouse_pos) const
 	}
 
 	return false;
+}
+
+GraphWidget::ChannelHeaderMoveContext::ChannelHeaderMoveContext(QWidget *parent)
+{
+	mouseMoveScrollTimer = new QTimer(parent);
+	mouseMoveScrollTimer->setInterval(100);
+	channelDropMarker = new QWidget(parent);
+	QPalette pal = channelDropMarker->palette();
+	pal.setColor(QPalette::ColorRole::Window, Qt::yellow);
+	channelDropMarker->setAutoFillBackground(true);
+	channelDropMarker->setPalette(pal);
+}
+
+GraphWidget::ChannelHeaderMoveContext::~ChannelHeaderMoveContext()
+{
+	delete mouseMoveScrollTimer;
+	delete channelDropMarker;
 }
 
 }}}

@@ -82,7 +82,10 @@ protected:
 	QPoint m_recentMousePos;
 	int m_resizeChannelIx = -1;
 
-	struct ChannelHeaderMoveContext {
+	struct ChannelHeaderMoveContext
+	{
+		ChannelHeaderMoveContext(QWidget *parent);
+		~ChannelHeaderMoveContext();
 		QTimer *mouseMoveScrollTimer;
 		QWidget *channelDropMarker;
 		int draggedChannel;
