@@ -106,6 +106,15 @@ double GraphModel::valueToDouble(const QVariant v, int meta_type_id, bool *ok)
 	}
 }
 
+int GraphModel::lessTimeIndex(int channel, timemsec_t time) const
+{
+	int ix = lessOrEqualTimeIndex(channel, time);
+	Sample s = sampleValue(channel, ix);
+	if(s.time == time)
+		return ix - 1;
+	return ix;
+}
+
 int GraphModel::lessOrEqualTimeIndex(int channel, timemsec_t time) const
 {
 	if(channel < 0 || channel > channelCount())
@@ -135,15 +144,18 @@ int GraphModel::lessOrEqualTimeIndex(int channel, timemsec_t time) const
 	return ret;
 }
 
+int GraphModel::greaterTimeIndex(int channel, timemsec_t time) const
+{
+	int ix = lessOrEqualTimeIndex(channel, time);
+	Sample s = sampleValue(channel, ix);
+	return ix + 1;
+}
+
 int GraphModel::greaterOrEqualTimeIndex(int channel, timemsec_t time) const
 {
 	int ix = lessOrEqualTimeIndex(channel, time);
-	if(ix < 0)
-		return 0;
-	int cnt = count(channel);
-	if(ix >= cnt)
-		return cnt;
-	if (sampleAt(channel, ix).time == time)
+	Sample s = sampleValue(channel, ix);
+	if(s.time == time)
 		return ix;
 	return ix + 1;
 }

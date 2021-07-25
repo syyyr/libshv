@@ -1653,8 +1653,8 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	const int sample_point_size = u2px(0.5);
 	int channel_meta_type_id = channelMetaTypeId(channel_ix);
 	GraphModel *graph_model = model();
-	int ix1 = graph_model->greaterOrEqualTimeIndex(model_ix, xrange.min);
-	int ix2 = graph_model->lessOrEqualTimeIndex(model_ix, xrange.max);
+	int ix1 = graph_model->lessTimeIndex(model_ix, xrange.min);
+	int ix2 = graph_model->greaterTimeIndex(model_ix, xrange.max);
 	int samples_cnt = graph_model->count(model_ix);
 	shvDebug() << graph_model->channelShvPath(channel_ix) << "range:" << xrange.min << xrange.max;
 	shvDebug() << "\t channel" << channel_ix
@@ -1677,38 +1677,15 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	//	int y = p1.y() + (p2.y() - p1.y()) * (x - p1.x()) / (p2.x() - p1.x());
 	//	return y;
 	//};
-	OnePixelValue left_px;
-	if(ix1 > 0) {
-		QPoint px1 = sample2point(graph_model->sampleAt(model_ix, ix1-1), channel_meta_type_id);
-		QPoint px2 = sample2point(graph_model->sampleAt(model_ix, ix1), channel_meta_type_id);
-		if(px1.x() != px2.x()) {
-			left_px = px1;
-			shvDebug() << "\t left:" << left_px.x << left_px.y2;
-		}
-	}
-	OnePixelValue right_px;
-	if(ix2 >= 0 && ix2 < samples_cnt - 1) {
-		QPoint px1 = sample2point(graph_model->sampleAt(model_ix, ix2), channel_meta_type_id);
-		QPoint px2 = sample2point(graph_model->sampleAt(model_ix, ix2 + 1), channel_meta_type_id);
-		if(px1.x() != px2.x()) {
-			right_px = px2;
-			shvDebug() << "\t right:" << right_px.x << right_px.y1;
-		}
-	}
-
-	OnePixelValue current_px = left_px;
+	OnePixelValue current_px;
 	OnePixelValue prev_px;
 
-	for (int i = ix1; i < ix2 + 2; ++i) {
-		OnePixelValue p;
-		if(i == ix2 + 1) {
-			if(!right_px.isValid())
-				break;
-			p = right_px;
-		}
-		else {
-			p = sample2point(graph_model->sampleAt(model_ix, i), channel_meta_type_id);
-		}
+	while(ix1 < 0)
+		ix1++;
+	while(ix2 >= samples_cnt)
+		ix2--;
+	for (int i = ix1; i <= ix2; ++i) {
+		OnePixelValue p = sample2point(graph_model->sampleAt(model_ix, i), channel_meta_type_id);
 		if(p.x == current_px.x) {
 			current_px.y2 = p.y1;
 			current_px.minY = qMin(current_px.minY, current_px.y2);
@@ -1717,9 +1694,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		else {
 			prev_px = current_px;
 			current_px = p;
-		}
-		{
-			{
+			if(prev_px.isValid()) {
 				// paint prev sample ymin-ymax area
 				if(prev_px.isValid() && prev_px.maxY != prev_px.minY) {
 					painter->drawLine(prev_px.x, prev_px.minY, prev_px.x, prev_px.maxY);
