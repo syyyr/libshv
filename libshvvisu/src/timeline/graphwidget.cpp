@@ -602,6 +602,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 
 void GraphWidget::moveDropMarker(const QPoint &mouse_pos)
 {
+	Q_ASSERT(m_channelHeaderMoveContext);
 	Graph *gr = graph();
 	int ix = targetChannel(mouse_pos);
 	if (ix < gr->channelCount()) {
@@ -773,6 +774,7 @@ void GraphWidget::dragLeaveEvent(QDragLeaveEvent *event)
 
 void GraphWidget::dragMoveEvent(QDragMoveEvent *event)
 {
+	Q_ASSERT(m_channelHeaderMoveContext);
 	QPoint pos = event->pos();
 
 	if (scrollByMouseOuterOverlap(mapToGlobal(pos))) {
@@ -787,6 +789,7 @@ void GraphWidget::dragMoveEvent(QDragMoveEvent *event)
 
 void GraphWidget::dropEvent(QDropEvent *event)
 {
+	Q_ASSERT(m_channelHeaderMoveContext);
 	int target_channel = targetChannel(event->pos());
 	if (target_channel != m_channelHeaderMoveContext->draggedChannel) {
 		graph()->moveChannel(m_channelHeaderMoveContext->draggedChannel, target_channel);
