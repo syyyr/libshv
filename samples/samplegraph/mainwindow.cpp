@@ -73,9 +73,14 @@ void MainWindow::generateSampleData()
 	sort(times.begin(), times.end());
 	m_graphModel->appendValue(0, tl::Sample{times[0], val_distrib(gen)});
 	for(size_t j=1; j<times.size()-1; ++j) {
-		double val = val_distrib(gen);
 		for (int i=0; i<m_graphModel->channelCount(); i++) {
-			m_graphModel->appendValue(i, tl::Sample{times[j], val});
+			if(j == 3) {
+				for(int k=0; k<5; k++)
+					m_graphModel->appendValue(i, tl::Sample{times[j]+k, val_distrib(gen)});
+			}
+			else {
+				m_graphModel->appendValue(i, tl::Sample{times[j], val_distrib(gen)});
+			}
 		}
 	}
 	m_graphModel->appendValue(0, tl::Sample{times[times.size()-1], val_distrib(gen)});

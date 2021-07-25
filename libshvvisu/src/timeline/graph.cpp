@@ -1458,10 +1458,11 @@ void Graph::drawYAxis(QPainter *painter, int channel)
 
 std::function<QPoint (const Sample &s, int meta_type_id)> Graph::dataToPointFn(const DataRect &src, const QRect &dest)
 {
-	int le = dest.left();
-	int ri = dest.right();
-	int to = dest.top();
-	int bo = dest.bottom();
+	using Int = int;
+	Int le = dest.left();
+	Int ri = dest.right();
+	Int to = dest.top();
+	Int bo = dest.bottom();
 
 	timemsec_t t1 = src.xRange.min;
 	timemsec_t t2 = src.xRange.max;
@@ -1485,8 +1486,13 @@ std::function<QPoint (const Sample &s, int meta_type_id)> Graph::dataToPointFn(c
 		if(!ok)
 			return QPoint();
 		double x = le + (t - t1) * kx;
+		// too big or too small pixel sizes can make painting problems
+		static constexpr int MIN_INT2 = std::numeric_limits<int>::min() / 2;
+		static constexpr int MAX_INT2 = std::numeric_limits<int>::max() / 2;
+		int int_x = (x > MAX_INT2)? MAX_INT2 : (x < MIN_INT2)? MIN_INT2 : static_cast<int>(x);
 		double y = bo + (d - d1) * ky;
-		return QPoint{static_cast<int>(x), static_cast<int>(y)};
+		int int_y = (y > MAX_INT2)? MAX_INT2 : (y < MIN_INT2)? MIN_INT2 : static_cast<int>(y);
+		return QPoint{int_x, int_y};
 	};
 }
 
@@ -1604,7 +1610,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	shvLogFuncFrame() << "channel:" << channel_ix;
 	const GraphChannel *ch = channelAt(channel_ix);
 	int model_ix = ch->modelIndex();
-	QRect rect = dest_rect.isEmpty()? ch->graphDataGridRect(): dest_rect;
+	QRect effective_dest_rect = dest_rect.isEmpty()? ch->graphDataGridRect(): dest_rect;
 	GraphChannel::Style ch_style = channel_style.isEmpty()? ch->m_effectiveStyle: channel_style;
 
 	XRange xrange;
@@ -1617,7 +1623,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		xrange = src_rect.xRange;
 		yrange = src_rect.yRange;
 	}
-	auto sample2point = dataToPointFn(DataRect{xrange, yrange}, rect);
+	auto sample2point = dataToPointFn(DataRect{xrange, yrange}, effective_dest_rect);
 
 	if(!sample2point)
 		return;
@@ -1640,7 +1646,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		steps_join_pen.setColor(c);
 	}
 	painter->save();
-	QRect clip_rect = rect.adjusted(0, -pen.width(), 0, pen.width());
+	QRect clip_rect = effective_dest_rect.adjusted(0, -pen.width(), 0, pen.width());
 	painter->setClipRect(clip_rect);
 	painter->setPen(pen);
 	QColor line_area_color;
@@ -1656,6 +1662,19 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	int ix1 = graph_model->lessTimeIndex(model_ix, xrange.min);
 	int ix2 = graph_model->greaterTimeIndex(model_ix, xrange.max);
 	int samples_cnt = graph_model->count(model_ix);
+	while(ix1 < 0)
+		ix1++;
+	while(ix2 >= samples_cnt)
+		ix2--;
+	static constexpr bool draw_last_stepped_point_contunuation = true;
+	if(draw_last_stepped_point_contunuation) {
+		if(interpolation == GraphChannel::Style::Interpolation::Stepped) {
+			if(ix1 >= 0 && ix2 >= 0 && ix2 == samples_cnt - 1) {
+				// add fake point to paint continuation of last value until the end of graph
+				ix2++;
+			}
+		}
+	}
 	shvDebug() << graph_model->channelShvPath(channel_ix) << "range:" << xrange.min << xrange.max;
 	shvDebug() << "\t channel" << channel_ix
 			   << "from:" << ix1 << "to:" << ix2 << "cnt:" << (ix2 - ix1 + 1) << "of:" << samples_cnt;
@@ -1679,13 +1698,17 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	//};
 	OnePixelValue current_px;
 	OnePixelValue prev_px;
-
-	while(ix1 < 0)
-		ix1++;
-	while(ix2 >= samples_cnt)
-		ix2--;
+	int x_axis_y = sample2point(Sample{xrange.min, 0}, channel_meta_type_id).y();
 	for (int i = ix1; i <= ix2; ++i) {
-		OnePixelValue p = sample2point(graph_model->sampleAt(model_ix, i), channel_meta_type_id);
+		OnePixelValue p;
+		if(draw_last_stepped_point_contunuation && i == samples_cnt) {
+			// add fake point to paint continuation of last value until the end of graph
+			p = OnePixelValue{effective_dest_rect.right(), current_px.y2};
+		}
+		else {
+			p = sample2point(graph_model->sampleAt(model_ix, i), channel_meta_type_id);
+			shvDebug() << "i:" << i << "point:" << p.x << p.y1 << p.y2;
+		}
 		if(p.x == current_px.x) {
 			current_px.y2 = p.y1;
 			current_px.minY = qMin(current_px.minY, current_px.y2);
@@ -1716,8 +1739,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 				}
 				else {
 					if(line_area_color.isValid()) {
-						auto p0 = sample2point(Sample{xrange.min, 0}, channel_meta_type_id);
-						p0.setX(current_px.x);
+						QPoint p0{current_px.x, x_axis_y};
 						// draw vertical line lighter
 						painter->setPen(steps_join_pen);
 						painter->drawLine(p0, QPoint{current_px.x, current_px.y1});
@@ -1731,9 +1753,8 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 				// paint connections to recent sample y2
 				if(prev_px.isValid()) {
 					if(line_area_color.isValid()) {
-						int y0 = sample2point(Sample{xrange.min, 0}, channel_meta_type_id).y();
 						QPoint top_left{prev_px.x + 1, prev_px.y2};
-						QPoint bottom_right{current_px.x, y0};
+						QPoint bottom_right{current_px.x, x_axis_y};
 						painter->fillRect(QRect{top_left, bottom_right}, line_area_color);
 					}
 					// draw vertical line lighter
@@ -1748,11 +1769,10 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 				if(prev_px.isValid()) {
 					if(line_area_color.isValid()) {
 						QPainterPath pp;
-						int y0 = sample2point(Sample{xrange.min, 0}, channel_meta_type_id).y();
 						pp.moveTo(QPoint{prev_px.x, prev_px.y2});
 						pp.lineTo(QPoint{current_px.x, current_px.y1});
-						pp.lineTo(QPoint{current_px.x, y0});
-						pp.lineTo(QPoint{prev_px.x, y0});
+						pp.lineTo(QPoint{current_px.x, x_axis_y});
+						pp.lineTo(QPoint{prev_px.x, x_axis_y});
 						pp.closeSubpath();
 						painter->fillPath(pp, line_area_color);
 					}
