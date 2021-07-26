@@ -921,6 +921,7 @@ GraphWidget::ChannelHeaderMoveContext::ChannelHeaderMoveContext(QWidget *parent)
 	pal.setColor(QPalette::ColorRole::Window, Qt::yellow);
 	channelDropMarker->setAutoFillBackground(true);
 	channelDropMarker->setPalette(pal);
+	channelDropMarker->hide();
 }
 
 GraphWidget::ChannelHeaderMoveContext::~ChannelHeaderMoveContext()
