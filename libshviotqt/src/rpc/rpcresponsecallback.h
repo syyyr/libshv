@@ -66,6 +66,7 @@ public:
 	RpcCall* setMethod(const char *method);
 	RpcCall* setMethod(const QString &method);
 	RpcCall* setParams(const ::shv::chainpack::RpcValue &params);
+	RpcCall* setTimeout(int timeout) { m_timeout = timeout; return this; }
 	//RpcCall* setParams(const QVariant &params); not implemented since we do not know how to convert arbitrary QVariant to RpcValue
 	void start();
 
@@ -79,6 +80,7 @@ private:
 	std::string m_shvPath;
 	std::string m_method;
 	shv::chainpack::RpcValue m_params;
+	int m_timeout = 0;
 };
 
 } // namespace rpc

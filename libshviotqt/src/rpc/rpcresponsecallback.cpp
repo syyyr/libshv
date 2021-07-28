@@ -37,6 +37,7 @@ void RpcResponseCallBack::start()
 		connect(m_timeoutTimer, &QTimer::timeout, this, [this]() {
 			shv::chainpack::RpcResponse resp;
 			resp.setError(shv::chainpack::RpcResponse::Error::create(shv::chainpack::RpcResponse::Error::MethodCallTimeout, "Shv call timeout after: " + std::to_string(m_timeoutTimer->interval()) + " msec."));
+			m_isFinished = true;
 			if(m_callBackFunction)
 				m_callBackFunction(resp);
 			else
@@ -85,6 +86,7 @@ void RpcResponseCallBack::abort()
 {
 	shv::chainpack::RpcResponse resp;
 	resp.setError(shv::chainpack::RpcResponse::Error::create(shv::chainpack::RpcResponse::Error::MethodCallCancelled, "Shv call aborted"));
+	m_isFinished = true;
 
 	if(m_callBackFunction)
 		m_callBackFunction(resp);
@@ -203,6 +205,9 @@ void RpcCall::start()
 	}
 	int rqid = m_rpcConnection->nextRequestId();
 	RpcResponseCallBack *cb = new RpcResponseCallBack(m_rpcConnection, rqid, this);
+	if (m_timeout) {
+		cb->setTimeout(m_timeout);
+	}
 	cb->start(this, [this](const cp::RpcResponse &resp) {
 		if (resp.isSuccess()) {
 			emit maybeResult(resp.result(), QString());
