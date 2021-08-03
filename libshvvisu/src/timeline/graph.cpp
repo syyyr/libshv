@@ -147,11 +147,6 @@ shv::visu::timeline::GraphChannel *Graph::appendChannel(int model_index)
 	m_channels.append(new GraphChannel(this));
 	GraphChannel *ch = m_channels.last();
 	ch->setModelIndex(model_index < 0? m_channels.count() - 1: model_index);
-	if (m_model->channelInfo(model_index).typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Discrete) {
-		auto style = ch->style();
-		style.setInterpolation(GraphChannel::Style::Interpolation::None);
-		ch->setStyle(style);
-	}
 	return ch;
 }
 
@@ -1735,21 +1730,19 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 					painter->drawLine(prev_px.x, prev_px.minY, prev_px.x, prev_px.maxY);
 				}
 			}
-			if(interpolation == GraphChannel::Style::Interpolation::None) {
-				static constexpr bool arrows_hack = true;
-				if(arrows_hack) {
-					QPoint sample_point{current_px.x, 0};
-					int arrow_width = u2px(1);
-					painter->drawLine(sample_point.x(), clip_rect.y() + clip_rect.height() / 2, sample_point.x(), clip_rect.y() + clip_rect.height());
-					QPainterPath path;
-					path.moveTo(sample_point.x() - arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
-					path.lineTo(sample_point.x() + arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
-					path.lineTo(sample_point.x(), clip_rect.y() + clip_rect.height());
-					path.lineTo(sample_point.x() - arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
-					path.closeSubpath();
-					painter->fillPath(path, painter->pen().color());
-				}
-				else {
+			if (model()->channelInfo(ch->modelIndex()).typeDescr.sampleType == shv::visu::timeline::TypeDescr::SampleType::Discrete) {
+				QPoint sample_point{current_px.x, 0};
+				int arrow_width = u2px(1);
+				painter->drawLine(sample_point.x(), clip_rect.y() + clip_rect.height() / 2, sample_point.x(), clip_rect.y() + clip_rect.height());
+				QPainterPath path;
+				path.moveTo(sample_point.x() - arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
+				path.lineTo(sample_point.x() + arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
+				path.lineTo(sample_point.x(), clip_rect.y() + clip_rect.height());
+				path.lineTo(sample_point.x() - arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
+				path.closeSubpath();
+				painter->fillPath(path, painter->pen().color());
+			}
+			else if(interpolation == GraphChannel::Style::Interpolation::None) {
 					if(line_area_color.isValid()) {
 						QPoint p0{current_px.x, x_axis_y};
 						// draw vertical line lighter
@@ -1760,7 +1753,6 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 					r0.moveCenter(QPoint{current_px.x, current_px.y1});
 					painter->fillRect(r0, line_color);
 				}
-			}
 			else if(interpolation == GraphChannel::Style::Interpolation::Stepped) {
 				// paint connections to recent sample y2
 				if(prev_px.isValid()) {
