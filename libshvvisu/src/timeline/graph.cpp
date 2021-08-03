@@ -689,50 +689,50 @@ void Graph::makeXAxis()
 	static constexpr int64_t Year = 365 * Day;
 	static const std::map<int64_t, XAxis> intervals
 	{
-		{1 * MSec, {0, 1, XAxis::LabelFormat::MSec}},
-		{2 * MSec, {0, 2, XAxis::LabelFormat::MSec}},
-		{5 * MSec, {0, 5, XAxis::LabelFormat::MSec}},
-		{10 * MSec, {0, 5, XAxis::LabelFormat::MSec}},
-		{20 * MSec, {0, 5, XAxis::LabelFormat::MSec}},
-		{50 * MSec, {0, 5, XAxis::LabelFormat::MSec}},
-		{100 * MSec, {0, 5, XAxis::LabelFormat::MSec}},
-		{200 * MSec, {0, 5, XAxis::LabelFormat::MSec}},
-		{500 * MSec, {0, 5, XAxis::LabelFormat::MSec}},
-		{1 * Sec, {0, 1, XAxis::LabelFormat::Sec}},
-		{2 * Sec, {0, 2, XAxis::LabelFormat::Sec}},
-		{5 * Sec, {0, 5, XAxis::LabelFormat::Sec}},
-		{10 * Sec, {0, 5, XAxis::LabelFormat::Sec}},
-		{20 * Sec, {0, 5, XAxis::LabelFormat::Sec}},
-		{30 * Sec, {0, 3, XAxis::LabelFormat::Sec}},
-		{1 * Min, {0, 1, XAxis::LabelFormat::Min}},
-		{2 * Min, {0, 2, XAxis::LabelFormat::Min}},
-		{5 * Min, {0, 5, XAxis::LabelFormat::Min}},
-		{10 * Min, {0, 5, XAxis::LabelFormat::Min}},
-		{20 * Min, {0, 5, XAxis::LabelFormat::Min}},
-		{30 * Min, {0, 3, XAxis::LabelFormat::Min}},
-		{1 * Hour, {0, 1, XAxis::LabelFormat::Hour}},
-		{2 * Hour, {0, 2, XAxis::LabelFormat::Hour}},
-		{3 * Hour, {0, 3, XAxis::LabelFormat::Hour}},
-		{6 * Hour, {0, 6, XAxis::LabelFormat::Hour}},
-		{12 * Hour, {0, 6, XAxis::LabelFormat::Hour}},
-		{1 * Day, {0, 1, XAxis::LabelFormat::Day}},
-		{2 * Day, {0, 2, XAxis::LabelFormat::Day}},
-		{5 * Day, {0, 5, XAxis::LabelFormat::Day}},
-		{10 * Day, {0, 5, XAxis::LabelFormat::Day}},
-		{20 * Day, {0, 5, XAxis::LabelFormat::Day}},
-		{1 * Month, {0, 1, XAxis::LabelFormat::Month}},
-		{3 * Month, {0, 1, XAxis::LabelFormat::Month}},
-		{6 * Month, {0, 1, XAxis::LabelFormat::Month}},
-		{1 * Year, {0, 1, XAxis::LabelFormat::Year}},
-		{2 * Year, {0, 1, XAxis::LabelFormat::Year}},
-		{5 * Year, {0, 1, XAxis::LabelFormat::Year}},
-		{10 * Year, {0, 1, XAxis::LabelFormat::Year}},
-		{20 * Year, {0, 1, XAxis::LabelFormat::Year}},
-		{50 * Year, {0, 1, XAxis::LabelFormat::Year}},
-		{100 * Year, {0, 1, XAxis::LabelFormat::Year}},
-		{200 * Year, {0, 1, XAxis::LabelFormat::Year}},
-		{500 * Year, {0, 1, XAxis::LabelFormat::Year}},
-		{1000 * Year, {0, 1, XAxis::LabelFormat::Year}},
+		{1 * MSec, {0, 1, XAxis::LabelScale::MSec}},
+		{2 * MSec, {0, 2, XAxis::LabelScale::MSec}},
+		{5 * MSec, {0, 5, XAxis::LabelScale::MSec}},
+		{10 * MSec, {0, 5, XAxis::LabelScale::MSec}},
+		{20 * MSec, {0, 5, XAxis::LabelScale::MSec}},
+		{50 * MSec, {0, 5, XAxis::LabelScale::MSec}},
+		{100 * MSec, {0, 5, XAxis::LabelScale::MSec}},
+		{200 * MSec, {0, 5, XAxis::LabelScale::MSec}},
+		{500 * MSec, {0, 5, XAxis::LabelScale::MSec}},
+		{1 * Sec, {0, 1, XAxis::LabelScale::Sec}},
+		{2 * Sec, {0, 2, XAxis::LabelScale::Sec}},
+		{5 * Sec, {0, 5, XAxis::LabelScale::Sec}},
+		{10 * Sec, {0, 5, XAxis::LabelScale::Sec}},
+		{20 * Sec, {0, 5, XAxis::LabelScale::Sec}},
+		{30 * Sec, {0, 3, XAxis::LabelScale::Sec}},
+		{1 * Min, {0, 1, XAxis::LabelScale::Min}},
+		{2 * Min, {0, 2, XAxis::LabelScale::Min}},
+		{5 * Min, {0, 5, XAxis::LabelScale::Min}},
+		{10 * Min, {0, 5, XAxis::LabelScale::Min}},
+		{20 * Min, {0, 5, XAxis::LabelScale::Min}},
+		{30 * Min, {0, 3, XAxis::LabelScale::Min}},
+		{1 * Hour, {0, 1, XAxis::LabelScale::Hour}},
+		{2 * Hour, {0, 2, XAxis::LabelScale::Hour}},
+		{3 * Hour, {0, 3, XAxis::LabelScale::Hour}},
+		{6 * Hour, {0, 6, XAxis::LabelScale::Hour}},
+		{12 * Hour, {0, 6, XAxis::LabelScale::Hour}},
+		{1 * Day, {0, 1, XAxis::LabelScale::Day}},
+		{2 * Day, {0, 2, XAxis::LabelScale::Day}},
+		{5 * Day, {0, 5, XAxis::LabelScale::Day}},
+		{10 * Day, {0, 5, XAxis::LabelScale::Day}},
+		{20 * Day, {0, 5, XAxis::LabelScale::Day}},
+		{1 * Month, {0, 1, XAxis::LabelScale::Month}},
+		{3 * Month, {0, 1, XAxis::LabelScale::Month}},
+		{6 * Month, {0, 1, XAxis::LabelScale::Month}},
+		{1 * Year, {0, 1, XAxis::LabelScale::Year}},
+		{2 * Year, {0, 1, XAxis::LabelScale::Year}},
+		{5 * Year, {0, 1, XAxis::LabelScale::Year}},
+		{10 * Year, {0, 1, XAxis::LabelScale::Year}},
+		{20 * Year, {0, 1, XAxis::LabelScale::Year}},
+		{50 * Year, {0, 1, XAxis::LabelScale::Year}},
+		{100 * Year, {0, 1, XAxis::LabelScale::Year}},
+		{200 * Year, {0, 1, XAxis::LabelScale::Year}},
+		{500 * Year, {0, 1, XAxis::LabelScale::Year}},
+		{1000 * Year, {0, 1, XAxis::LabelScale::Year}},
 	};
 	int tick_units = 5;
 	int tick_px = u2px(tick_units);
@@ -1315,34 +1315,35 @@ void Graph::drawXAxis(QPainter *painter)
 		painter->drawLine(p1, p2);
 		auto date_time_tz = [this](timemsec_t epoch_msec) {
 			QDateTime dt = QDateTime::fromMSecsSinceEpoch(epoch_msec);
-			dt = dt.toTimeZone(m_timeZone);
+			if(m_timeZone.isValid())
+				dt = dt.toTimeZone(m_timeZone);
 			return dt;
 		};
 		QString text;
-		switch (axis.labelFormat) {
-		case XAxis::LabelFormat::MSec:
+		switch (axis.labelScale) {
+		case XAxis::LabelScale::MSec:
 			text = QStringLiteral("%1.%2").arg((t / 1000) % 1000).arg(t % 1000, 3, 10, QChar('0'));
 			break;
-		case XAxis::LabelFormat::Sec:
+		case XAxis::LabelScale::Sec:
 			text = QString::number((t / 1000) % 1000);
 			break;
-		case XAxis::LabelFormat::Min:
-		case XAxis::LabelFormat::Hour: {
+		case XAxis::LabelScale::Min:
+		case XAxis::LabelScale::Hour: {
 			QTime tm = date_time_tz(t).time();
 			text = QStringLiteral("%1:%2").arg(tm.hour()).arg(tm.minute(), 2, 10, QChar('0'));
 			break;
 		}
-		case XAxis::LabelFormat::Day: {
+		case XAxis::LabelScale::Day: {
 			QDate dt = date_time_tz(t).date();
 			text = QStringLiteral("%1/%2").arg(dt.month()).arg(dt.day(), 2, 10, QChar('0'));
 			break;
 		}
-		case XAxis::LabelFormat::Month: {
+		case XAxis::LabelScale::Month: {
 			QDate dt = date_time_tz(t).date();
 			text = QStringLiteral("%1-%2").arg(dt.year()).arg(dt.month(), 2, 10, QChar('0'));
 			break;
 		}
-		case XAxis::LabelFormat::Year: {
+		case XAxis::LabelScale::Year: {
 			QDate dt = date_time_tz(t).date();
 			text = QStringLiteral("%1").arg(dt.year());
 			break;
@@ -1353,29 +1354,31 @@ void Graph::drawXAxis(QPainter *painter)
 		r.adjust(-inset, -inset, inset, inset);
 		r.moveTopLeft(p2 + QPoint{-r.width() / 2, 0});
 		painter->drawText(r, text);
-		//shvInfo() << text;
+		//shvInfo() << t << cp::RpcValue::DateTime::fromMSecsSinceEpoch(t).toIsoString() << text
+		//		  << QDateTime::fromMSecsSinceEpoch(t).toString(Qt::ISODateWithMs)
+		//		  << "with TZ" << date_time_tz(t).isValid() << date_time_tz(t).toString(Qt::ISODateWithMs);
 	}
 	{
 		QString text;
-		switch (axis.labelFormat) {
-		case XAxis::LabelFormat::MSec:
-		case XAxis::LabelFormat::Sec:
+		switch (axis.labelScale) {
+		case XAxis::LabelScale::MSec:
+		case XAxis::LabelScale::Sec:
 			text = QStringLiteral("sec");
 			break;
-		case XAxis::LabelFormat::Min:
-		case XAxis::LabelFormat::Hour: {
+		case XAxis::LabelScale::Min:
+		case XAxis::LabelScale::Hour: {
 			text = QStringLiteral("hour:min");
 			break;
 		}
-		case XAxis::LabelFormat::Day: {
+		case XAxis::LabelScale::Day: {
 			text = QStringLiteral("month/day");
 			break;
 		}
-		case XAxis::LabelFormat::Month: {
+		case XAxis::LabelScale::Month: {
 			text = QStringLiteral("year-month");
 			break;
 		}
-		case XAxis::LabelFormat::Year: {
+		case XAxis::LabelScale::Year: {
 			text = QStringLiteral("year");
 			break;
 		}

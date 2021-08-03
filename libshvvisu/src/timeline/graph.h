@@ -249,17 +249,17 @@ protected:
 
 	struct SHVVISU_DECL_EXPORT XAxis
 	{
-		enum class LabelFormat {MSec, Sec, Min, Hour, Day, Month, Year};
+		enum class LabelScale {MSec, Sec, Min, Hour, Day, Month, Year};
 		timemsec_t tickInterval = 0;
 		int subtickEvery = 1;
 		double tickLen = 0.15;
-		LabelFormat labelFormat = LabelFormat::MSec;
+		LabelScale labelScale = LabelScale::MSec;
 
 		XAxis() {}
-		XAxis(timemsec_t t, int se, LabelFormat f)
+		XAxis(timemsec_t t, int se, LabelScale f)
 			: tickInterval(t)
 			, subtickEvery(se)
-			, labelFormat(f)
+			, labelScale(f)
 		{}
 		bool isValid() const { return tickInterval > 0; }
 	};

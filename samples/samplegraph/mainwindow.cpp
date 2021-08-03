@@ -48,8 +48,9 @@ MainWindow::~MainWindow()
 void MainWindow::generateSampleData()
 {
 	int sample_cnt = ui->samplesCount->value();
+	static constexpr int64_t YEAR = 1000LL * 60 * 60 * 24 * 365;
 	int64_t min_time = 100;
-	int64_t max_time = 1000LL * 60 * 60 * 24 * 365;
+	int64_t max_time = min_time + YEAR;
 	double min_val = -3;
 	double max_val = 5;
 
@@ -64,7 +65,7 @@ void MainWindow::generateSampleData()
 
 	std::random_device rd;  //Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-	std::uniform_int_distribution<> time_distrib(min_time, max_time);
+	std::uniform_int_distribution<int64_t> time_distrib(min_time, max_time);
 	std::uniform_real_distribution<> val_distrib(min_val, max_val);
 
 	vector<int64_t> times;
