@@ -4,7 +4,7 @@
 #include <shv/chainpack/rpcmessage.h>
 #include <shv/core/string.h>
 #include <shv/coreqt/log.h>
-#include <shv/core/utils/serviceproviderpath.h>
+#include <shv/core/utils/shvurl.h>
 #include <shv/core/utils/shvpath.h>
 #include <shv/iotqt/rpc/deviceappclioptions.h>
 
@@ -13,9 +13,6 @@ namespace cp = shv::chainpack;
 namespace shv {
 namespace broker {
 namespace rpc {
-
-std::string MasterBrokerConnection::LOCAL_NODE = ".local";
-std::string MasterBrokerConnection::LOCAL_INTERNAL_META_KEY = "__add_local_to_ls_internal";
 
 MasterBrokerConnection::MasterBrokerConnection(QObject *parent)
 	: Super(parent)
@@ -89,7 +86,7 @@ void MasterBrokerConnection::sendMessage(const shv::chainpack::RpcMessage &rpc_m
 
 CommonRpcClientHandle::Subscription MasterBrokerConnection::createSubscription(const std::string &shv_path, const std::string &method)
 {
-	using ServiceProviderPath = shv::core::utils::ServiceProviderPath;
+	using ServiceProviderPath = shv::core::utils::ShvUrl;
 	ServiceProviderPath spp(shv_path);
 	if(spp.isServicePath())
 		SHV_EXCEPTION("This could never happen by SHV design logic, master broker tries to subscribe service provided path: "  + shv_path);
@@ -101,7 +98,7 @@ std::string MasterBrokerConnection::toSubscribedPath(const Subscription &subs, c
 	//Q_UNUSED(subs)
 	bool debug = true;
 	if(debug) {
-		using ServiceProviderPath = shv::core::utils::ServiceProviderPath;
+		using ServiceProviderPath = shv::core::utils::ShvUrl;
 		ServiceProviderPath spp(signal_path);
 		if(spp.isServicePath())
 			shvWarning() << "Master broker subscription should not have to handle service provider signal:" << signal_path << "subscription:" << subs.subscribedPath;
@@ -141,21 +138,21 @@ void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 			return;
 		}
 		if(cp::RpcMessage::isRequest(md)) {
-			shv::core::String request_shv_path = cp::RpcMessage::shvPath(md).toString();
+			shv::core::utils::ShvPath request_shv_path = cp::RpcMessage::shvPath(md).toString();
 			std::string shv_path;
-			if (request_shv_path == LOCAL_NODE || request_shv_path.startsWith(LOCAL_NODE + '/')) {
+			if (request_shv_path.startsWithPath(shv::iotqt::node::ShvNode::LOCAL_NODE_HACK)) {
 				if (cp::RpcMessage::accessGrant(md).toString() != cp::Rpc::ROLE_ADMIN) {
 					shv::chainpack::RpcResponse rsp = cp::RpcResponse::forRequest(md);
-					rsp.setError(cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodCallException, "Insufficient rights for local node"));
+					rsp.setError(cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodCallException, "Insufficient rights for node: " + shv::iotqt::node::ShvNode::LOCAL_NODE_HACK));
 					sendMessage(rsp);
 					return;
 				}
-				shv_path = request_shv_path.mid(LOCAL_NODE.size());
+				shv_path = shv::core::utils::ShvPath::mid(request_shv_path, 1).toString();
 			}
 			else {
 				shv_path = masterExportedToLocalPath(request_shv_path);
-				if (shv_path.empty() && cp::RpcMessage::method(md) == cp::Rpc::METH_LS && cp::RpcMessage::accessGrant(md).toString() == cp::Rpc::ROLE_ADMIN) {
-					md.setValue(LOCAL_INTERNAL_META_KEY, true);
+				if (request_shv_path.empty() && cp::RpcMessage::method(md) == cp::Rpc::METH_LS && cp::RpcMessage::accessGrant(md).toString() == cp::Rpc::ROLE_ADMIN) {
+					md.setValue(shv::iotqt::node::ShvNode::ADD_LOCAL_TO_LS_RESULT_HACK_META_KEY, true);
 				}
 			}
 			cp::RpcMessage::setShvPath(md, shv_path);

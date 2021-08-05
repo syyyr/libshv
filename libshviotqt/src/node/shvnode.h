@@ -36,6 +36,9 @@ public:
 	using StringView = shv::core::StringView;
 	using StringViewList = shv::core::StringViewList;
 public:
+	static std::string ADD_LOCAL_TO_LS_RESULT_HACK_META_KEY;
+	static std::string LOCAL_NODE_HACK;
+public:
 	explicit ShvNode(ShvNode *parent);
 	explicit ShvNode(const std::string &node_id, ShvNode *parent = nullptr);
 	~ShvNode() override;

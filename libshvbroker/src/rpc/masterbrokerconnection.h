@@ -14,10 +14,6 @@ class MasterBrokerConnection : public shv::iotqt::rpc::DeviceConnection, public 
 
 	using Super = shv::iotqt::rpc::DeviceConnection;
 public:
-
-	static std::string LOCAL_NODE;
-	static std::string LOCAL_INTERNAL_META_KEY;
-
 	MasterBrokerConnection(QObject *parent = nullptr);
 
 	int connectionId() const override {return Super::connectionId();}

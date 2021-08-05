@@ -34,6 +34,9 @@ namespace node {
 //===========================================================
 // ShvNode
 //===========================================================
+std::string ShvNode::LOCAL_NODE_HACK = ".local";
+std::string ShvNode::ADD_LOCAL_TO_LS_RESULT_HACK_META_KEY = "__add_local_to_ls_hack";
+
 ShvNode::ShvNode(ShvNode *parent)
 	: QObject(parent)
 {
@@ -128,6 +131,7 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 	const chainpack::RpcValue::String method = cp::RpcMessage::method(meta).toString();
 	const chainpack::RpcValue::String shv_path_str = cp::RpcMessage::shvPath(meta).toString();
 	core::StringViewList shv_path = shv::core::utils::ShvPath::split(shv_path_str);
+	const bool ls_hook = meta.hasKey(ADD_LOCAL_TO_LS_RESULT_HACK_META_KEY);
 	cp::RpcResponse resp = cp::RpcResponse::forRequest(meta);
 	try {
 		if(!shv_path.empty()) {
@@ -176,6 +180,15 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 	if(resp.hasRetVal()) {
 		ShvNode *root = rootNode();
 		if(root) {
+			if (ls_hook && resp.isSuccess()) {
+				chainpack::RpcValue::List res_list = resp.result().asList();
+				if (res_list.size() && !res_list[0].isList())
+					res_list.insert(res_list.begin(), LOCAL_NODE_HACK);
+				else
+					res_list.insert(res_list.begin(), chainpack::RpcValue::List{ LOCAL_NODE_HACK, true });
+				resp.setResult(res_list);
+				shvDebug() << resp.toCpon();
+			}
 			root->emitSendRpcMessage(resp);
 		}
 	}
