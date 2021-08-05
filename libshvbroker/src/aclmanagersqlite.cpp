@@ -74,35 +74,23 @@ void AclManagerSqlite::checkAclTables()
 			execSql("COMMIT");
 		}
 	}
-	{
-		auto col_name = QStringLiteral("profile");
-		QSqlQuery q = execSql("SELECT " + col_name + " FROM " + TBL_ACL_ROLES + " WHERE name='xxx'", !shv::core::Exception::Throw);
-		bool column_exist = q.isActive();
-		if(!column_exist) {
-			shvWarning() << "Table:" << TBL_ACL_ROLES << "column:" << col_name << "does not exist.";
-			shvInfo() << "Adding column:" << TBL_ACL_ROLES << "::" << col_name;
-			execSql("BEGIN TRANSACTION");
-			execSql(QStringLiteral(R"kkt(
-					ALTER TABLE %1 ADD profile varchar;
-					)kkt").arg(TBL_ACL_ROLES));
-			execSql("COMMIT");
-		}
-	}
-	{
-		bool column_method_exists = true;
-		try {
-			execSql("SELECT method FROM " + TBL_ACL_ACCESS);
-		}
-		catch (const shv::core::Exception &) {
-			shvInfo().nospace() << "Column " << TBL_ACL_ACCESS << ".method does not exist.";
-			column_method_exists = false;
-		}
-		if(!column_method_exists) {
-			execSql("BEGIN TRANSACTION");
-			createAclSqlTables();
-			importAclConfigFiles();
-			execSql("ALTER TABLE " + TBL_ACL_ACCESS + " ADD COLUMN method varchar");
-		}
+	checkTableColumn(TBL_ACL_ROLES, "profile");
+	checkTableColumn(TBL_ACL_ACCESS, "method");
+	checkTableColumn(TBL_ACL_ACCESS, "service");
+}
+
+void AclManagerSqlite::checkTableColumn(const QString &table_name, const QString &column_name)
+{
+	QSqlQuery q = execSql("SELECT " + column_name + " FROM " + table_name + " LIMIT 1", !shv::core::Exception::Throw);
+	bool column_exist = q.isActive();
+	if(!column_exist) {
+		shvWarning() << "Table:" << table_name << "column:" << column_name << "does not exist.";
+		shvInfo().nospace() << "Adding column: " << table_name << "." << column_name;
+		execSql("BEGIN TRANSACTION");
+		execSql(QStringLiteral(R"kkt(
+				ALTER TABLE %1 ADD %2 varchar;
+				)kkt").arg(table_name).arg(column_name));
+		execSql("COMMIT");
 	}
 }
 
@@ -135,6 +123,7 @@ void AclManagerSqlite::createAclSqlTables()
 	execSql(QStringLiteral(R"kkt(
 			CREATE TABLE IF NOT EXISTS %1 (
 				role character varying,
+				service character varying,
 				path character varying,
 				method character varying,
 				grantType character varying,
@@ -183,6 +172,7 @@ void AclManagerSqlite::importAclConfigFiles()
 	}
 	for(std::string user : facl.users()) {
 		acl::AclUser u = facl.user(user);
+		//shvWarning() << user << u.toRpcValue().toCpon();
 		aclSetUser(user, u);
 	}
 	for(std::string role : facl.roles()) {

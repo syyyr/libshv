@@ -1,7 +1,7 @@
 #include "commonrpcclienthandle.h"
 
 #include <shv/iotqt/node/shvnode.h>
-#include <shv/core/utils/serviceproviderpath.h>
+#include <shv/core/utils/shvurl.h>
 #include <shv/core/utils/shvpath.h>
 
 #include <shv/coreqt/log.h>

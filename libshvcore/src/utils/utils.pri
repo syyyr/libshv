@@ -1,7 +1,6 @@
 HEADERS += \
     $$PWD/abstractshvjournal.h \
     $$PWD/crypt.h \
-    $$PWD/serviceproviderpath.h \
     $$PWD/shvfilejournal.h \
     $$PWD/shvgetlogparams.h \
     $$PWD/shvjournalentry.h \
@@ -12,6 +11,7 @@ HEADERS += \
     $$PWD/shvlogrpcvaluereader.h \
     $$PWD/shvlogtypeinfo.h \
     $$PWD/shvmemoryjournal.h \
+    $$PWD/shvurl.h \
     $$PWD/versioninfo.h \
     $$PWD/clioptions.h \
     $$PWD/shvpath.h \
@@ -21,7 +21,6 @@ HEADERS += \
 SOURCES += \
     $$PWD/abstractshvjournal.cpp \
     $$PWD/crypt.cpp \
-    $$PWD/serviceproviderpath.cpp \
     $$PWD/shvfilejournal.cpp \
     $$PWD/shvgetlogparams.cpp \
     $$PWD/shvjournalentry.cpp \
@@ -32,6 +31,7 @@ SOURCES += \
     $$PWD/shvlogrpcvaluereader.cpp \
     $$PWD/shvlogtypeinfo.cpp \
     $$PWD/shvmemoryjournal.cpp \
+    $$PWD/shvurl.cpp \
     $$PWD/versioninfo.cpp \
     $$PWD/clioptions.cpp \
     $$PWD/shvpath.cpp \

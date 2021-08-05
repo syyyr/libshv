@@ -2,6 +2,7 @@
 
 #include <shv/chainpack/rpcvalue.h>
 #include <shv/core/log.h>
+#include <shv/core/utils/shvurl.h>
 
 #include <QString>
 
@@ -20,6 +21,7 @@ namespace acl {
 RpcValue AclAccessRule::toRpcValue() const
 {
 	RpcValue::Map m = grant.toRpcValueMap().toMap();
+	m["service"] = service;
 	m["method"] = method;
 	m["pathPattern"] = pathPattern;
 	return m;
@@ -29,6 +31,7 @@ AclAccessRule AclAccessRule::fromRpcValue(const RpcValue &rpcval)
 {
 	AclAccessRule ret;
 	ret.grant = AccessGrant::fromRpcValue(rpcval);
+	ret.service = rpcval.at("service").toString();
 	ret.method = rpcval.at("method").toString();
 	ret.pathPattern = rpcval.at("pathPattern").toString();
 	return ret;
@@ -49,10 +52,22 @@ bool AclAccessRule::isMoreSpecificThan(const AclAccessRule &other) const
 		return false;
 	if(!other.isValid())
 		return true;
-	bool is_exact_path = !is_wild_card_pattern(pathPattern);
-	bool other_is_exact_path = !is_wild_card_pattern(other.pathPattern);
-	bool has_method = !method.empty();
-	bool other_has_method = !other.method.empty();
+
+	const bool has_any_service = service == "*";
+	const bool has_some_service = !service.empty() && !has_any_service;
+	const bool has_no_service = service.empty();
+	const bool other_has_any_service = other.service == "*";
+	//const bool other_has_some_service = !other.service.empty() && !other_has_any_service;
+	const bool other_has_no_service = other.service.empty();
+	if(has_some_service && (other_has_any_service || other_has_no_service))
+		return true;
+	if(has_no_service && other_has_any_service)
+		return true;
+
+	const bool is_exact_path = !is_wild_card_pattern(pathPattern);
+	const bool other_is_exact_path = !is_wild_card_pattern(other.pathPattern);
+	const bool has_method = !method.empty();
+	const bool other_has_method = !other.method.empty();
 	if(is_exact_path && other_is_exact_path) {
 		return has_method && !other_has_method;
 	}
@@ -71,24 +86,37 @@ bool AclAccessRule::isMoreSpecificThan(const AclAccessRule &other) const
 	return patt_len > other_patt_len;
 }
 
-bool AclAccessRule::isPathMethodMatch(const string &shv_path, const string &method) const
+bool AclAccessRule::isPathMethodMatch(const shv::core::utils::ShvUrl &shv_url, const string &method) const
 {
+	const bool any_service = this->service == "*";
+	const bool some_service = !this->service.empty() && !any_service;
+	const bool no_service = this->service.empty();
+	if(shv_url.service().empty()) {
+		if(!(any_service || no_service))
+			return false;
+	}
+	else {
+		if(no_service)
+			return false;
+		if(some_service && !(this->service == service))
+			return false;
+	}
+	// sevice check OK here
 	bool is_exact_pattern_path = !is_wild_card_pattern(pathPattern);
 	if(is_exact_pattern_path) {
-		if(shv_path == pathPattern) {
+		if(shv_url.pathPart() == pathPattern) {
 			if(this->method.empty())
 				return true;
 			return this->method == method;
 		}
 		return false;
 	}
-	auto path = shv::core::utils::ShvPath(shv_path);
 	shv::core::StringView patt(pathPattern);
 	// trim "**"
 	patt = patt.mid(0, patt.length() - 2);
 	if(patt.length() > 0)
 		patt = patt.mid(0, patt.length() - 1); // trim '/'
-	if(path.startsWithPath(patt)) {
+	if(shv::core::utils::ShvPath::startsWithPath(shv_url.pathPart(), patt)) {
 		if(this->method.empty())
 			return true;
 		return this->method == method;

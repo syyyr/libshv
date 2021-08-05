@@ -121,19 +121,19 @@ void AclManager::setRole(const std::string &role_name, const shv::iotqt::acl::Ac
 
 std::vector<std::string> AclManager::accessRoles()
 {
-	if(m_cache.aclPathsRoles.empty()) {
+	if(m_cache.aclAccessRules.empty()) {
 		for(auto id : aclAccessRoles())
-			m_cache.aclPathsRoles[id];
+			m_cache.aclAccessRules[id];
 	}
-	return cp::Utils::mapKeys(m_cache.aclPathsRoles);
+	return cp::Utils::mapKeys(m_cache.aclAccessRules);
 }
 
 shv::iotqt::acl::AclRoleAccessRules AclManager::accessRoleRules(const std::string &role_name)
 {
-	if(m_cache.aclPathsRoles.empty())
+	if(m_cache.aclAccessRules.empty())
 		accessRoles();
-	auto it = m_cache.aclPathsRoles.find(role_name);
-	if(it == m_cache.aclPathsRoles.end())
+	auto it = m_cache.aclAccessRules.find(role_name);
+	if(it == m_cache.aclAccessRules.end())
 		return shv::iotqt::acl::AclRoleAccessRules();
 	if(std::get<1>(it->second) == false) {
 		shv::iotqt::acl::AclRoleAccessRules acl = aclAccessRoleRules(role_name);
@@ -146,7 +146,7 @@ shv::iotqt::acl::AclRoleAccessRules AclManager::accessRoleRules(const std::strin
 void AclManager::setAccessRoleRules(const std::string &role_name, const shv::iotqt::acl::AclRoleAccessRules &v)
 {
 	aclSetAccessRoleRules(role_name, v);
-	m_cache.aclPathsRoles.clear();
+	m_cache.aclAccessRules.clear();
 }
 
 chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginContext &login_context)

@@ -92,7 +92,7 @@ protected:
 		std::map<std::string, shv::iotqt::acl::AclMountDef> aclMountDefs;
 		std::map<std::string, shv::iotqt::acl::AclUser> aclUsers;
 		std::map<std::string, shv::iotqt::acl::AclRole> aclRoles;
-		std::map<std::string, std::pair<shv::iotqt::acl::AclRoleAccessRules, bool>> aclPathsRoles;
+		std::map<std::string, std::pair<shv::iotqt::acl::AclRoleAccessRules, bool>> aclAccessRules;
 
 		std::map<std::string, std::vector<FlattenRole>> userFlattenRoles;
 	} m_cache;

@@ -8,12 +8,14 @@
 #include <map>
 
 namespace shv {
+namespace core { namespace utils { class ShvUrl; } }
 namespace iotqt {
 namespace acl {
 
 struct SHVIOTQT_DECL_EXPORT AclAccessRule
 {
 public:
+	std::string service;
 	std::string pathPattern;
 	std::string method;
 	shv::chainpack::AccessGrant grant;
@@ -29,7 +31,7 @@ public:
 
 	bool isValid() const { return !pathPattern.empty() && grant.isValid(); }
 	bool isMoreSpecificThan(const AclAccessRule &other) const;
-	bool isPathMethodMatch(const std::string &shv_path, const std::string &method) const;
+	bool isPathMethodMatch(const shv::core::utils::ShvUrl &shv_url, const std::string &method) const;
 };
 
 class SHVIOTQT_DECL_EXPORT AclRoleAccessRules : public std::vector<AclAccessRule>

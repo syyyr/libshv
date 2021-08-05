@@ -38,6 +38,8 @@ private:
 	void createAclSqlTables();
 	void importAclConfigFiles();
 
+	void checkTableColumn(const QString &table_name, const QString &column_name);
+
 	QSqlQuery execSql(const QString &query_str, bool throw_exc = shv::core::Exception::Throw);
 	std::vector<std::string> sqlLoadFields(const QString &table, const QString &column);
 	QSqlQuery sqlLoadRow(const QString &table, const QString &key_name, const QString &key_value);

@@ -14,7 +14,7 @@ class BrokerRootNode : public shv::iotqt::node::ShvRootNode
 public:
 	BrokerRootNode(shv::iotqt::node::ShvNode *parent = nullptr);
 
-	chainpack::RpcValue callMethodRq(const chainpack::RpcRequest &rq) override;
+	//chainpack::RpcValue callMethodRq(const chainpack::RpcRequest &rq) override;
 };
 
 }

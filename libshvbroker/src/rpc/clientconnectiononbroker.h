@@ -9,7 +9,7 @@
 class QTimer;
 
 namespace shv { namespace core { class StringView; }}
-namespace shv { namespace core { namespace utils { class ServiceProviderPath; }}}
+namespace shv { namespace core { namespace utils { class ShvUrl; }}}
 namespace shv { namespace iotqt { namespace rpc { class Socket; }}}
 namespace shv { namespace iotqt { namespace node { class ShvNode; }}}
 
@@ -43,7 +43,7 @@ public:
 	int idleTime() const;
 	int idleTimeMax() const;
 
-	std::string resolveLocalPath(const shv::core::utils::ServiceProviderPath &spp, shv::iotqt::node::ShvNode **pnd = nullptr);
+	std::string resolveLocalPath(const shv::core::utils::ShvUrl &spp, shv::iotqt::node::ShvNode **pnd = nullptr);
 
 	void setIdleWatchDogTimeOut(int sec);
 

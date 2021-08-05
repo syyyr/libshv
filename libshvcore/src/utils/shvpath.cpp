@@ -165,6 +165,8 @@ StringView ShvPath::mid(const std::string &path, size_t start, size_t len)
 			in_quote = !in_quote;
 		}
 	}
+	if(slash_cnt == 0 && start > 0)
+		return StringView();
 	return StringView(path, start_ix, subpath_len);
 }
 

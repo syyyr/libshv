@@ -2,6 +2,8 @@
 #include "brokerapp.h"
 #include "rpc/clientconnectiononbroker.h"
 
+#include <shv/core/utils/shvurl.h>
+
 #include <QCryptographicHash>
 
 namespace cp = shv::chainpack;
@@ -100,7 +102,7 @@ shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack
 				const string &method = plist.value(1).asString();
 				if(method.empty())
 					SHV_EXCEPTION("Method not specified in params.");
-				shv::chainpack::AccessGrant acg = app->accessGrantForRequest(cli, shv_path, method, rq.accessGrant());
+				shv::chainpack::AccessGrant acg = app->accessGrantForRequest(cli, shv::core::utils::ShvUrl(shv_path), method, rq.accessGrant());
 				return acg.isValid()? acg.toRpcValue(): nullptr;
 			}
 			return nullptr;
