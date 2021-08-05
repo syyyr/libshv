@@ -548,6 +548,38 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 					}
 					text.chop(1);
 				}
+				else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::BitField) {
+					text = QStringLiteral("%1\nx: %2\n")
+						   .arg(ch->shvPath())
+						   .arg(dt.toString(Qt::ISODateWithMs));
+					if (s.value.type() == QVariant::Int) {
+						int value = s.value.toInt();
+						if (value) {
+							for (auto &field : channel_info.typeDescr.fields) {
+								if (field.value.isInt()) {
+									int desc_val = field.value.toInt();
+									if (value & 1 << desc_val) {
+										QString t = QString::fromStdString(field.description);
+										if (t.isEmpty()) {
+											t = QString::fromStdString(field.tags.value("description").toString());
+										}
+										if (t.isEmpty()) {
+											t = QString::fromStdString(field.name);
+										}
+										if (t.isEmpty()) {
+											t = QString::number(desc_val);
+										}
+										text += t + ", ";
+									}
+								}
+							}
+							text.chop(2);
+						}
+					}
+					else {
+						text += "value: " + s.value.toString();
+					}
+				}
 				else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::IMap) {
 					text = QStringLiteral("%1\nx: %2\n")
 						   .arg(ch->shvPath())

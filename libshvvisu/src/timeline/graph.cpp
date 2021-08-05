@@ -442,15 +442,6 @@ QMap<QString, QString> Graph::yValuesToMap(int channel_ix, const shv::visu::time
 					}
 				}
 			}
-			else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-				QStringList p = channel_info.shvPath.split("/");
-				if (p.isEmpty()) {
-					shvError() << "Failed to split shvPath:" << channel_info.shvPath;
-				}
-
-				QString key = (p.isEmpty()) ? "y" : p.last();
-				ret[key] = model()->typeDescrFieldName(channel_info.typeDescr, s.value.toInt());
-			}
 			else {
 				QStringList p = channel_info.shvPath.split("/");
 				if (p.isEmpty()) {
@@ -458,7 +449,41 @@ QMap<QString, QString> Graph::yValuesToMap(int channel_ix, const shv::visu::time
 				}
 
 				QString key = (p.isEmpty()) ? "y" : p.last();
-				ret[key] = s.value.toString();
+
+				if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::BitField) {
+					QString text;
+					if (s.value.type() == QVariant::Int) {
+						int value = s.value.toInt();
+						if (value) {
+							for (auto &field : channel_info.typeDescr.fields) {
+								if (field.value.isInt()) {
+									int desc_val = field.value.toInt();
+									if (value & 1 << desc_val) {
+										QString t = QString::fromStdString(field.description);
+										if (t.isEmpty()) {
+											t = QString::fromStdString(field.tags.value("description").toString());
+										}
+										if (t.isEmpty()) {
+											t = QString::fromStdString(field.name);
+										}
+										if (t.isEmpty()) {
+											t = QString::number(desc_val);
+										}
+										text += t + ", ";
+									}
+								}
+							}
+							text.chop(2);
+						}
+					}
+					ret[key] = text;
+				}
+				else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+					ret[key] = model()->typeDescrFieldName(channel_info.typeDescr, s.value.toInt());
+				}
+				else {
+					ret[key] = s.value.toString();
+				}
 			}
 		}
 	}
