@@ -16,7 +16,7 @@ namespace acl {
 //================================================================
 // PathAccessGrant
 //================================================================
-//const char* PathAccessGrant::FORWARD_USER_LOGIN = "forwardLogin";
+const char *AclAccessRule::ALL_SERVICES = "*";
 
 RpcValue AclAccessRule::toRpcValue() const
 {
@@ -53,10 +53,10 @@ bool AclAccessRule::isMoreSpecificThan(const AclAccessRule &other) const
 	if(!other.isValid())
 		return true;
 
-	const bool has_any_service = service == "*";
+	const bool has_any_service = service == ALL_SERVICES;
 	const bool has_some_service = !service.empty() && !has_any_service;
 	const bool has_no_service = service.empty();
-	const bool other_has_any_service = other.service == "*";
+	const bool other_has_any_service = other.service == ALL_SERVICES;
 	//const bool other_has_some_service = !other.service.empty() && !other_has_any_service;
 	const bool other_has_no_service = other.service.empty();
 	if(has_some_service && (other_has_any_service || other_has_no_service))
@@ -88,7 +88,7 @@ bool AclAccessRule::isMoreSpecificThan(const AclAccessRule &other) const
 
 bool AclAccessRule::isPathMethodMatch(const shv::core::utils::ShvUrl &shv_url, const string &method) const
 {
-	const bool any_service = this->service == "*";
+	const bool any_service = this->service == ALL_SERVICES;
 	const bool some_service = !this->service.empty() && !any_service;
 	const bool no_service = this->service.empty();
 	if(shv_url.service().empty()) {

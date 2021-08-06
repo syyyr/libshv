@@ -20,6 +20,8 @@ public:
 	std::string method;
 	shv::chainpack::AccessGrant grant;
 
+	static const char *ALL_SERVICES;
+
 	AclAccessRule() {}
 	AclAccessRule(const std::string &path_pattern, const std::string &method = std::string())
 		: pathPattern(path_pattern), method(method) {}
