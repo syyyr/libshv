@@ -28,10 +28,10 @@ public:
 	StringView brokerId() const { return m_fullBrokerId.mid(1); }
 	StringView pathPart() const { return m_pathPart; }
 	std::string toPlainPath(const StringView &path_part_prefix = {}) const;
-	std::string toShvUrl(const StringView &path_part_prefix = {}) const;
+	std::string toString(const StringView &path_part_prefix = {}) const;
 	const std::string& shvPath() const { return m_shvPath;}
 
-	static std::string makeShvUrl(Type type, const StringView &service, const StringView &full_server_id, const StringView &path_rest);
+	static std::string makeShvUrlString(Type type, const StringView &service, const StringView &full_broker_id, const StringView &path_rest);
 	//static std::string joinPath(const StringView &a, const StringView &b);
 private:
 	static constexpr char END_MARK = ':';

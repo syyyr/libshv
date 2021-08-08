@@ -31,10 +31,10 @@ public:
 	static ShvPath join(const shv::core::StringViewList &shv_path);
 	static ShvPath join(StringView path1, StringView path2);
 
-	static StringView mid(const std::string &path, size_t start, size_t len = std::numeric_limits<size_t>::max());
+	static StringView midPath(const std::string &path, size_t start, size_t len = std::numeric_limits<size_t>::max());
 
 	shv::core::StringViewList split() const;
-	static shv::core::StringViewList split(const std::string &shv_path);
+	static shv::core::StringViewList split(const shv::core::StringView &shv_path);
 
 	bool matchWild(const std::string &pattern) const;
 	bool matchWild(const shv::core::StringViewList &pattern_lst) const;

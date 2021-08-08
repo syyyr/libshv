@@ -16,6 +16,7 @@
 #include <shv/core/stringview.h>
 #include <shv/core/string.h>
 #include <shv/core/utils/shvpath.h>
+#include <shv/core/utils/shvurl.h>
 
 #include <QTimer>
 #include <QFile>
@@ -128,9 +129,11 @@ void ShvNode::deleteIfEmptyWithParents()
 void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&data)
 {
 	shvLogFuncFrame() << "node:" << nodeId() << "meta:" << meta.toPrettyString();
+	using namespace shv::core::utils;
 	const chainpack::RpcValue::String method = cp::RpcMessage::method(meta).toString();
 	const chainpack::RpcValue::String shv_path_str = cp::RpcMessage::shvPath(meta).toString();
-	core::StringViewList shv_path = shv::core::utils::ShvPath::split(shv_path_str);
+	ShvUrl shv_url(cp::RpcMessage::shvPath(meta).asString());
+	core::StringViewList shv_path = shv::core::utils::ShvPath::split(shv_url.pathPart());
 	const bool ls_hook = meta.hasKey(ADD_LOCAL_TO_LS_RESULT_HACK_META_KEY);
 	cp::RpcResponse resp = cp::RpcResponse::forRequest(meta);
 	try {
@@ -138,7 +141,10 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 			ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
 			if(nd) {
 				shvDebug() << "Child node:" << shv_path.at(0).toString() << "on path:" << shv_path.join('/') << "FOUND";
-				std::string new_path = core::StringView::join(++shv_path.begin(), shv_path.end(), '/');
+				std::string new_path = ShvUrl::makeShvUrlString(shv_url.type(),
+																shv_url.service(),
+																shv_url.fullBrokerId(),
+																core::StringView::join(++shv_path.begin(), shv_path.end(), '/'));
 				cp::RpcMessage::setShvPath(meta, new_path);
 				nd->handleRawRpcRequest(std::move(meta), std::move(data));
 				return;

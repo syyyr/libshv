@@ -101,7 +101,7 @@ std::string ClientConnectionOnBroker::resolveLocalPath(const shv::core::utils::S
 			nd = app->nodeForService(spp);
 			if(nd) {
 				/// found on this broker
-				core::StringView mp_rest = shv::core::utils::ShvPath::mid(mount_point, 1);
+				core::StringView mp_rest = shv::core::utils::ShvPath::midPath(mount_point, 1);
 				local_path = spp.toPlainPath(mp_rest);
 			}
 			else {
@@ -112,7 +112,7 @@ std::string ClientConnectionOnBroker::resolveLocalPath(const shv::core::utils::S
 				/// if the client is mounted on exported path,
 				/// then relative path must be resolved with respect to it
 				mount_point = mbconn->localPathToMasterExported(mount_point);
-				local_path = spp.toShvUrl(mount_point);
+				local_path = spp.toString(mount_point);
 			}
 		}
 		else if(spp.isUpTreeAbsolute()) {
@@ -126,7 +126,7 @@ std::string ClientConnectionOnBroker::resolveLocalPath(const shv::core::utils::S
 				MasterBrokerConnection *mbconn = BrokerApp::instance()->mainMasterBrokerConnection();
 				if(!mbconn)
 					SHV_EXCEPTION("Cannot forward relative service provider path, no master broker connection, path: " + spp.shvPath());
-				local_path = spp.toShvUrl();
+				local_path = spp.toString();
 			}
 		}
 	}
@@ -248,16 +248,16 @@ string ClientConnectionOnBroker::toSubscribedPath(const CommonRpcClientHandle::S
 			auto sv = StringView(signal_path).mid(spp_subs.service().length() + 1);
 			// cut mount point rest and slash
 			const string mount_point = mountPoint();
-			StringView mount_point_rest = ShvPath::mid(mount_point, 1);
+			StringView mount_point_rest = ShvPath::midPath(mount_point, 1);
 			sv = sv.mid(mount_point_rest.length() + 1);
-			auto ret = ServiceProviderPath::makeShvUrl(spp_subs.type(), spp_subs.service(), spp_subs.fullBrokerId(), sv);
+			auto ret = ServiceProviderPath::makeShvUrlString(spp_subs.type(), spp_subs.service(), spp_subs.fullBrokerId(), sv);
 			return ret;
 		}
 		else if(spp_subs.isUpTreeAbsolute()) {
 			/// a/b/c/d --> a|/b/c/d
 			// cut service and slash
 			auto sv = StringView(signal_path).mid(spp_subs.service().length() + 1);
-			return ServiceProviderPath::makeShvUrl(spp_subs.type(), spp_subs.service(), spp_subs.fullBrokerId(), sv);
+			return ServiceProviderPath::makeShvUrlString(spp_subs.type(), spp_subs.service(), spp_subs.fullBrokerId(), sv);
 		}
 	}
 	return signal_path;

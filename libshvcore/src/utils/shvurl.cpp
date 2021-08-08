@@ -65,13 +65,13 @@ std::string ShvUrl::toPlainPath(const StringView &path_part_prefix) const
 	return ret;
 }
 
-std::string ShvUrl::toShvUrl(const StringView &path_part_prefix) const
+std::string ShvUrl::toString(const StringView &path_part_prefix) const
 {
-	string rest = path_part_prefix.empty()? pathPart().toString(): path_part_prefix.toString() + ShvPath::SHV_PATH_DELIM + pathPart().toString();
-	return makeShvUrl(type(), service(), fullBrokerId(), rest);
+	string rest = ShvPath::join(path_part_prefix, pathPart());
+	return makeShvUrlString(type(), service(), fullBrokerId(), rest);
 }
 
-std::string ShvUrl::makeShvUrl(ShvUrl::Type type, const StringView &service, const StringView &full_server_id, const StringView &path_rest)
+std::string ShvUrl::makeShvUrlString(ShvUrl::Type type, const StringView &service, const StringView &full_broker_id, const StringView &path_rest)
 {
 	if(type == Type::Plain) {
 		if(service.empty())
@@ -80,8 +80,8 @@ std::string ShvUrl::makeShvUrl(ShvUrl::Type type, const StringView &service, con
 			return StringViewList{service, path_rest}.join(ShvPath::SHV_PATH_DELIM);
 	}
 	string srv = service.toString();
-	if(!full_server_id.empty())
-		srv += full_server_id.toString();
+	if(!full_broker_id.empty())
+		srv += full_broker_id.toString();
 	srv += typeMark(type);
 	return StringViewList{srv, path_rest}.join(ShvPath::SHV_PATH_DELIM);
 }
@@ -90,7 +90,7 @@ size_t ShvUrl::serviceProviderMarkIndex(const std::string &path)
 {
 	for (size_t ix = 1; ix + 1 < path.size(); ++ix) {
 		if(path[ix + 1] == END_MARK && (path.size() == ix + 2 || path[ix + 2] == ShvPath::SHV_PATH_DELIM)) {
-			if(path[ix] == RELATIVE_MARK || path[ix] == ABSOLUTE_MARK)
+			if(path[ix] == RELATIVE_MARK || path[ix] == ABSOLUTE_MARK || path[ix] == DOWNTREE_MARK)
 				return ix;
 		}
 	}

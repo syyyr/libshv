@@ -30,6 +30,7 @@ RpcValue AclAccessRule::toRpcValue() const
 AclAccessRule AclAccessRule::fromRpcValue(const RpcValue &rpcval)
 {
 	AclAccessRule ret;
+	shvDebug() << rpcval.toCpon();
 	ret.grant = AccessGrant::fromRpcValue(rpcval);
 	ret.service = rpcval.at("service").toString();
 	ret.method = rpcval.at("method").toString();
@@ -91,8 +92,9 @@ bool AclAccessRule::isPathMethodMatch(const shv::core::utils::ShvUrl &shv_url, c
 	const bool any_service = this->service == ALL_SERVICES;
 	const bool some_service = !this->service.empty() && !any_service;
 	const bool no_service = this->service.empty();
+	//shvInfo() << shv_url.toShvUrlString();
 	if(shv_url.service().empty()) {
-		if(!(any_service || no_service))
+		if(any_service || some_service)
 			return false;
 	}
 	else {
@@ -102,6 +104,7 @@ bool AclAccessRule::isPathMethodMatch(const shv::core::utils::ShvUrl &shv_url, c
 			return false;
 	}
 	// sevice check OK here
+	//shvInfo() << "service check OK";
 	bool is_exact_pattern_path = !is_wild_card_pattern(pathPattern);
 	if(is_exact_pattern_path) {
 		if(shv_url.pathPart() == pathPattern) {
@@ -117,6 +120,7 @@ bool AclAccessRule::isPathMethodMatch(const shv::core::utils::ShvUrl &shv_url, c
 	if(patt.length() > 0)
 		patt = patt.mid(0, patt.length() - 1); // trim '/'
 	if(shv::core::utils::ShvPath::startsWithPath(shv_url.pathPart(), patt)) {
+		//shvInfo() << "starts with OK";
 		if(this->method.empty())
 			return true;
 		return this->method == method;

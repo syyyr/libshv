@@ -639,7 +639,7 @@ void BrokerApp::propagateSubscriptionsToMasterBroker()
 
 chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHandle *conn, const shv::core::utils::ShvUrl &shv_url, const std::string &method, const shv::chainpack::RpcValue &rq_grant)
 {
-	logAclResolveM() << "==== accessGrantForShvPath user:" << conn->loggedUserName() << "requested path:" << shv_url.toShvUrl() << "method:" << method << "request grant:" << rq_grant.toCpon();
+	logAclResolveM() << "==== accessGrantForShvPath user:" << conn->loggedUserName() << "requested path:" << shv_url.toString() << "method:" << method << "request grant:" << rq_grant.toCpon();
 #ifdef USE_SHV_PATHS_GRANTS_CACHE
 	PathGrantCache *user_path_grants = m_userPathGrantCache.object(user_name);
 	if(user_path_grants) {
@@ -655,6 +655,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 	if(is_request_from_master_broker) {
 		if(request_grant.isValid()) {
 			// access resolved by master broker already, forward use this
+			logAclResolveM() << "\t Resolved on master broker already.";
 			return request_grant;
 		}
 	}
@@ -762,7 +763,9 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 				logAclResolveM() << "rule:" << access_rule.toRpcValue().toCpon();
 				if(access_rule.isPathMethodMatch(shv_url, method)) {
 					if(access_rule.isMoreSpecificThan(most_specific_rule)) {
-						logAclResolveM() << "\t+++HIT more specific rule found" << most_specific_rule.toRpcValue().toCpon();
+						logAclResolveM() << "\t+++HIT more specific rule than previous:"
+											<< (most_specific_rule.isValid()? most_specific_rule.toRpcValue().toCpon(): "INVALID")
+											<< "found";
 						most_specific_rule = access_rule;
 					}
 					else if(!most_specific_rule.isMoreSpecificThan(access_rule)) {
@@ -782,7 +785,7 @@ chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHand
 		logAclResolveM() << "no match found, permission denied!";
 	}
 	logAclResolveM() << "access user:" << conn->loggedUserName()
-				 << "shv_path:" << shv_url.toShvUrl()
+				 << "shv_path:" << shv_url.toString()
 				 << "rq_grant:" << (rq_grant.isValid()? rq_grant.toCpon(): "<none>")
 				 << "==== path:" << most_specific_rule.pathPattern << "method:" << most_specific_rule.method << "grant:" << most_specific_rule.grant.toRpcValue().toCpon();
 	return most_specific_rule.grant;
@@ -918,6 +921,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 	if(cp::RpcMessage::isRegisterRevCallerIds(meta))
 		cp::RpcMessage::pushRevCallerId(meta, connection_id);
 	if(cp::RpcMessage::isRequest(meta)) {
+		shvMessage() << "RPC request on broker connection id:" << connection_id << "protocol type:" << shv::chainpack::Rpc::protocolTypeToString(protocol_type) << meta.toPrettyString();
 		// prepare response for catch block
 		// it cannot be constructed from meta, since meta is moved in the try block
 		shv::chainpack::RpcResponse rsp = cp::RpcResponse::forRequest(meta);
@@ -933,10 +937,11 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 				using ShvUrl = shv::core::utils::ShvUrl;
 				ShvUrl shv_url(shv_path);
 				if(shv_url.isServicePath()) {
-					logServiceProvidersM() << "Service path found:" << shv_path
-										   << "service:" << shv_url.service().toString()
-										   << "type:" << shv_url.typeString()
-										   << "path part:" << shv_url.pathPart().toString();
+					logServiceProvidersM()  << "broker id:" << brokerId()
+											<< "Service path found:" << shv_path
+											<< "service:" << shv_url.service().toString()
+											<< "type:" << shv_url.typeString()
+											<< "path part:" << shv_url.pathPart().toString();
 				}
 				if(client_connection) {
 					if(!client_connection->isSlaveBrokerConnection()) {
@@ -962,7 +967,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 					if(shv_url.isUpTree()) {
 						iotqt::node::ShvNode *service_node = nullptr;
 						string resolved_local_path = client_connection->resolveLocalPath(shv_url, &service_node);
-						logServiceProvidersM() << "Resolved local path:" << resolved_local_path << "service node:" << service_node;
+						logServiceProvidersM() << "Up-tree SP call, resolved local path:" << resolved_local_path << "service node:" << service_node;
 						if(service_node) {
 							logServiceProvidersM() << shv_path << "service path resolved on this broker, making path absolute:" << resolved_local_path;
 							cp::RpcRequest::setShvPath(meta, resolved_local_path);
@@ -982,17 +987,40 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 					}
 				}
 				else if(master_broker_connection) {
-					if(shv_url.isDownTree()) {
-						iotqt::node::ShvNode *service_node = BrokerApp::instance()->nodeForService(shv_url);
+					//shvInfo() << "request from master broker:" << shv_url.toString() << "is plain:" << shv_url.isPlain();
+					if (shv::core::utils::ShvPath::startsWithPath(shv_path, shv::iotqt::node::ShvNode::LOCAL_NODE_HACK)) {
+						if (cp::RpcMessage::accessGrant(meta).toString() != cp::Rpc::ROLE_ADMIN)
+							ACCESS_EXCEPTION("Insufficient access rights to make call on node: " + shv::iotqt::node::ShvNode::LOCAL_NODE_HACK);
+						auto path = shv::core::utils::ShvPath::midPath(shv_path, 1).toString();
+						cp::RpcMessage::setShvPath(meta, path);
+					}
+					else if(shv_url.isPlain()) {
+						if (shv_path.empty() && cp::RpcMessage::method(meta) == cp::Rpc::METH_LS && cp::RpcMessage::accessGrant(meta).toString() == cp::Rpc::ROLE_ADMIN) {
+							/// if superuser calls 'ls' on broker exported root, then '.local' dir is added to the ls result
+							/// this enables access slave broker root via virtual '.local' directory
+							meta.setValue(shv::iotqt::node::ShvNode::ADD_LOCAL_TO_LS_RESULT_HACK_META_KEY, true);
+						}
+						auto path = master_broker_connection->masterExportedToLocalPath(shv_path);
+						cp::RpcMessage::setShvPath(meta, path);
+					}
+					else if(shv_url.isDownTree()) {
+						iotqt::node::ShvNode *service_node = nodeForService(shv_url);
+						logServiceProvidersM() << "Down-tree SP call,  path:" << shv_url.toString() << "resolved on local broker:" << (service_node != nullptr);
 						//logServiceProvidersM() << "Resolved local path:" << resolved_local_path << "service node:" << service_node;
 						if(service_node) {
-							string exported_path = master_broker_connection->exportedShvPath();
-							if(shv::core::String::startsWith(exported_path, "shv/"))
-								exported_path = exported_path.substr(4);
-							string resolved_local_path = shv::core::Utils::joinPath(shv_url.service().toString(), exported_path);
-							resolved_local_path = shv::core::Utils::joinPath(resolved_local_path, shv_url.pathPart().toString());
+							string resolved_local_path = shv::core::Utils::joinPath(shv_url.service().toString(), shv_url.pathPart().toString());
+							//resolved_local_path = shv::core::Utils::joinPath(resolved_local_path, shv_url.pathPart().toString());
 							logServiceProvidersM() << shv_path << "service path resolved on this broker, making path absolute:" << resolved_local_path;
 							cp::RpcRequest::setShvPath(meta, resolved_local_path);
+						}
+						else {
+							string exported_path = master_broker_connection->exportedShvPath();
+							//if(shv::core::String::startsWith(exported_path, "shv/"))
+							//	exported_path = exported_path.substr(4);
+							string resolved_path = shv::core::Utils::joinPath(exported_path, shv_url.pathPart().toString());
+							resolved_path = shv::core::utils::ShvUrl::makeShvUrlString(shv_url.type(), shv_url.service(), shv_url.fullBrokerId(), resolved_path);
+							logServiceProvidersM() << shv_path << "service path not resolved on this broker, preppending exported path:" << resolved_path;
+							cp::RpcRequest::setShvPath(meta, resolved_path);
 						}
 					}
 				}
