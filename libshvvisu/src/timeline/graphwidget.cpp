@@ -535,16 +535,9 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 					text = QStringLiteral("%1\nx: %2\n")
 						   .arg(ch->shvPath())
 						   .arg(dt.toString(Qt::ISODateWithMs));
-					const QVariantMap &map = s.value.toMap();
-					for (auto it = map.cbegin(); it != map.cend(); ++it) {
-						QString value = it.value().toString();
-						for (auto &field : channel_info.typeDescr.fields) {
-							if (QString::fromStdString(field.name) == it.key() && field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-								value = m_graph->model()->typeDescrFieldName(field.typeDescr, it.value().toInt());
-								break;
-							}
-						}
-						text += it.key() + ": " + value + "\n";
+					QMap<QString, QString> value_map = m_graph->prettyMapValue(s.value, channel_info.typeDescr);
+					for (auto it = value_map.begin(); it != value_map.end(); ++it) {
+						text += it.key() + ": " + it.value() + "\n";
 					}
 					text.chop(1);
 				}
@@ -553,28 +546,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 						   .arg(ch->shvPath())
 						   .arg(dt.toString(Qt::ISODateWithMs));
 					if (s.value.type() == QVariant::Int) {
-						int value = s.value.toInt();
-						if (value) {
-							for (auto &field : channel_info.typeDescr.fields) {
-								if (field.value.isInt()) {
-									int desc_val = field.value.toInt();
-									if (value & 1 << desc_val) {
-										QString t = QString::fromStdString(field.description);
-										if (t.isEmpty()) {
-											t = QString::fromStdString(field.tags.value("description").toString());
-										}
-										if (t.isEmpty()) {
-											t = QString::fromStdString(field.name);
-										}
-										if (t.isEmpty()) {
-											t = QString::number(desc_val);
-										}
-										text += t + ", ";
-									}
-								}
-							}
-							text.chop(2);
-						}
+						text += graph()->prettyBitFieldValue(s.value, channel_info.typeDescr);
 					}
 					else {
 						text += "value: " + s.value.toString();
@@ -584,21 +556,9 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 					text = QStringLiteral("%1\nx: %2\n")
 						   .arg(ch->shvPath())
 						   .arg(dt.toString(Qt::ISODateWithMs));
-					const QVariantMap &map = s.value.toMap();
-					for (auto it = map.cbegin(); it != map.cend(); ++it) {
-						for (auto &field : channel_info.typeDescr.fields) {
-							if (it.key().toInt() == field.value.toInt()) {
-								QString value;
-								if (field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-									value = m_graph->model()->typeDescrFieldName(field.typeDescr, it.value().toInt());
-								}
-								else {
-									value = it.value().toString();
-								}
-								text += QString::fromStdString(field.name) + ": " + value + "\n";
-								break;
-							}
-						}
+					QMap<QString, QString> value_map = m_graph->prettyIMapValue(s.value, channel_info.typeDescr);
+					for (auto it = value_map.begin(); it != value_map.end(); ++it) {
+						text += it.key() + ": " + it.value() + "\n";
 					}
 					text.chop(1);
 				}
