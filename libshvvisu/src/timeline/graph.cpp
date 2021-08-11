@@ -407,44 +407,10 @@ QMap<QString, QString> Graph::yValuesToMap(int channel_ix, const shv::visu::time
 
 		if (channel_info.typeDescr.sampleType != shv::chainpack::DataChange::SampleType::Invalid) {
 			if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Map) {
-				const QVariantMap &map = s.value.toMap();
-				for (auto it = map.cbegin(); it != map.cend(); ++it) {
-					QString value = it.value().toString();
-					for (auto &field : channel_info.typeDescr.fields) {
-						if (QString::fromStdString(field.name) == it.key() && field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-							value = model()->typeDescrFieldName(field.typeDescr, it.value().toInt());
-							break;
-						}
-					}
-					ret[it.key()] = value;
-				}
+				ret = prettyMapValue(s.value, channel_info.typeDescr);
 			}
 			else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::IMap) {
-				const QVariantMap &map = s.value.toMap();
-				for (auto it = map.cbegin(); it != map.cend(); ++it) {
-					for (auto &field : channel_info.typeDescr.fields) {
-						if (it.key().toInt() == field.value.toInt()) {
-							QString value;
-							if (field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-								value = model()->typeDescrFieldName(field.typeDescr, it.value().toInt());
-							}
-							else {
-								value = it.value().toString();
-							}
-							ret[QString::fromStdString(field.name)] = value;
-							break;
-						}
-					}
-				}
-			}
-			else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-				QStringList p = channel_info.shvPath.split("/");
-				if (p.isEmpty()) {
-					shvError() << "Failed to split shvPath:" << channel_info.shvPath;
-				}
-
-				QString key = (p.isEmpty()) ? "y" : p.last();
-				ret[key] = model()->typeDescrFieldName(channel_info.typeDescr, s.value.toInt());
+				ret = prettyIMapValue(s.value, channel_info.typeDescr);
 			}
 			else {
 				QStringList p = channel_info.shvPath.split("/");
@@ -453,7 +419,87 @@ QMap<QString, QString> Graph::yValuesToMap(int channel_ix, const shv::visu::time
 				}
 
 				QString key = (p.isEmpty()) ? "y" : p.last();
-				ret[key] = s.value.toString();
+
+				if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::BitField) {
+					ret[key] = prettyBitFieldValue(s.value, channel_info.typeDescr);
+				}
+				else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+					ret[key] = model()->typeDescrFieldName(channel_info.typeDescr, s.value.toInt());
+				}
+				else {
+					ret[key] = s.value.toString();
+				}
+			}
+		}
+	}
+
+	return ret;
+}
+
+QString Graph::prettyBitFieldValue(const QVariant &value, const TypeDescr &type_descr) const
+{
+	QString text;
+	if (value.type() == QVariant::Int) {
+		int i = value.toInt();
+		if (i) {
+			for (auto &field : type_descr.fields) {
+				if (field.value.isInt()) {
+					int desc_val = field.value.toInt();
+					if (i & 1 << desc_val) {
+						QString t = QString::fromStdString(field.description);
+						if (t.isEmpty()) {
+							t = QString::fromStdString(field.tags.value("description").toString());
+						}
+						if (t.isEmpty()) {
+							t = QString::fromStdString(field.name);
+						}
+						if (t.isEmpty()) {
+							t = QString::number(desc_val);
+						}
+						text += t + ", ";
+					}
+				}
+			}
+			text.chop(2);
+		}
+	}
+	return text;
+}
+
+QMap<QString, QString> Graph::prettyMapValue(const QVariant &value, const TypeDescr &type_descr) const
+{
+	QMap<QString, QString> ret;
+	const QVariantMap &map = value.toMap();
+	for (auto it = map.cbegin(); it != map.cend(); ++it) {
+		QString value = it.value().toString();
+		for (auto &field : type_descr.fields) {
+			if (QString::fromStdString(field.name) == it.key() && field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+				value = model()->typeDescrFieldName(field.typeDescr, it.value().toInt());
+				break;
+			}
+		}
+		ret[it.key()] = value;
+	}
+	return ret;
+}
+
+QMap<QString, QString> Graph::prettyIMapValue(const QVariant &value, const TypeDescr &type_descr) const
+{
+	QMap<QString, QString> ret;
+
+	const QVariantMap &map = value.toMap();
+	for (auto it = map.cbegin(); it != map.cend(); ++it) {
+		for (auto &field : type_descr.fields) {
+			if (it.key().toInt() == field.value.toInt()) {
+				QString value;
+				if (field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+					value = model()->typeDescrFieldName(field.typeDescr, it.value().toInt());
+				}
+				else {
+					value = it.value().toString();
+				}
+				ret[QString::fromStdString(field.name)] = value;
+				break;
 			}
 		}
 	}
