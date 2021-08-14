@@ -24,14 +24,39 @@ ShvMemoryJournal::ShvMemoryJournal()
 
 void ShvMemoryJournal::loadLog(const chainpack::RpcValue &log, bool append_records)
 {
+	shvLogFuncFrame();
+	chainpack::RpcValue::Map default_snapshot_values;
 	shv::core::utils::ShvLogRpcValueReader rd(log, !shv::core::Exception::Throw);
 	if(!append_records) {
 		m_entries.clear();
 		m_logHeader = rd.logHeader();
 	}
+	const bool create_default_snapshot_values = m_logHeader.logParamsCRef().withSnapshot && m_logHeader.logParamsCRef().withPathsDict && !append_records;
+	if(create_default_snapshot_values) {
+		for(const auto &kv : m_logHeader.pathDictCRef()) {
+			//shvDebug() << "++:" << kv.second.asString();
+			default_snapshot_values[kv.second.asString()];
+		}
+	}
 	while(rd.next()) {
 		const core::utils::ShvJournalEntry &entry = rd.entry();
 		append(entry);
+		if(create_default_snapshot_values) {
+			if(rd.isInSnapshot()) {
+				//shvDebug() << "--:" << entry.path;
+				default_snapshot_values.erase(entry.path);
+			}
+			else if(!default_snapshot_values.empty()) {
+				for(const auto &kv : default_snapshot_values) {
+					core::utils::ShvJournalEntry e;
+					e.epochMsec = m_logHeader.sinceMsec();
+					e.path = kv.first;
+					shvDebug() << "generating snapshot entry with default value, path:" << e.path;
+					append(e);
+				}
+				default_snapshot_values.clear();
+			}
+		}
 	}
 }
 
