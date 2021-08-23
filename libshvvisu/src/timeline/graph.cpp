@@ -1722,13 +1722,12 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		ix1++;
 	while(ix2 >= samples_cnt)
 		ix2--;
-	static constexpr bool draw_last_stepped_point_contunuation = true;
+	const bool draw_last_stepped_point_contunuation = interpolation == GraphChannel::Style::Interpolation::Stepped
+			&& model()->channelInfo(ch->modelIndex()).typeDescr.sampleType != shv::visu::timeline::TypeDescr::SampleType::Discrete;
 	if(draw_last_stepped_point_contunuation) {
-		if(interpolation == GraphChannel::Style::Interpolation::Stepped) {
-			if(ix1 >= 0 && ix2 >= 0 && ix2 == samples_cnt - 1) {
-				// add fake point to paint continuation of last value until the end of graph
-				ix2++;
-			}
+		if(ix1 >= 0 && ix2 >= 0 && ix2 == samples_cnt - 1) {
+			// add fake point to paint continuation of last value until the end of graph
+			ix2++;
 		}
 	}
 	shvDebug() << graph_model->channelShvPath(channel_ix) << "range:" << xrange.min << xrange.max;
