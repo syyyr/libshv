@@ -868,23 +868,34 @@ void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos
 
 void GraphWidget::createProbe(int channel_ix, timemsec_t time)
 {
+	const GraphChannel *ch = m_graph->channelAt(channel_ix);
+	GraphModel::ChannelInfo &channel_info = m_graph->model()->channelInfo(ch->modelIndex());
+
+	if (channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Discrete) {
+		Sample s = m_graph->nearestSample(channel_ix, time);
+
+		if (s.isValid())
+			time = s.time;
+	}
+
 	ChannelProbe *probe = m_graph->addChannelProbe(channel_ix, time);
 	Q_ASSERT(probe);
 
 	connect(probe, &ChannelProbe::currentTimeChanged, probe, [this]() {
-		this->update();
+		update();
 	});
 
 	ChannelProbeWidget *w = new ChannelProbeWidget(probe, this);
 
 	connect(w, &ChannelProbeWidget::destroyed, this, [this, probe]() {
 		m_graph->removeChannelProbe(probe);
-		this->update();
+		update();
 	});
 
 	w->show();
 	QPoint pos(m_graph->timeToPos(time) - (w->width() / 2), -geometry().top() - w->height() - m_graph->u2px(0.2));
 	w->move(mapToGlobal(pos));
+	update();
 }
 
 void GraphWidget::removeProbes(int channel_ix)
