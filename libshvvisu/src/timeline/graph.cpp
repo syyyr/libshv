@@ -436,7 +436,7 @@ QMap<QString, QString> Graph::yValuesToMap(int channel_ix, const shv::visu::time
 	return ret;
 }
 
-QString Graph::prettyBitFieldValue(const QVariant &value, const TypeDescr &type_descr) const
+QString Graph::prettyBitFieldValue(const QVariant &value, const shv::core::utils::ShvLogTypeDescr &type_descr) const
 {
 	QString text;
 	if (value.type() == QVariant::Int) {
@@ -466,16 +466,19 @@ QString Graph::prettyBitFieldValue(const QVariant &value, const TypeDescr &type_
 	return text;
 }
 
-QMap<QString, QString> Graph::prettyMapValue(const QVariant &value, const TypeDescr &type_descr) const
+QMap<QString, QString> Graph::prettyMapValue(const QVariant &value, const shv::core::utils::ShvLogTypeDescr &type_descr) const
 {
 	QMap<QString, QString> ret;
 	const QVariantMap &map = value.toMap();
 	for (auto it = map.cbegin(); it != map.cend(); ++it) {
 		QString value = it.value().toString();
 		for (auto &field : type_descr.fields) {
-			if (QString::fromStdString(field.name) == it.key() && field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-				value = model()->typeDescrFieldName(field.typeDescr, it.value().toInt());
-				break;
+			if (QString::fromStdString(field.name) == it.key()) {
+				const shv::core::utils::ShvLogTypeDescr &field_type_descr = model()->typeInfo().types.at(field.typeName);
+				if (field_type_descr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+					value = model()->typeDescrFieldName(field_type_descr, it.value().toInt());
+					break;
+				}
 			}
 		}
 		ret[it.key()] = value;
@@ -483,7 +486,7 @@ QMap<QString, QString> Graph::prettyMapValue(const QVariant &value, const TypeDe
 	return ret;
 }
 
-QMap<QString, QString> Graph::prettyIMapValue(const QVariant &value, const TypeDescr &type_descr) const
+QMap<QString, QString> Graph::prettyIMapValue(const QVariant &value, const shv::core::utils::ShvLogTypeDescr &type_descr) const
 {
 	QMap<QString, QString> ret;
 
@@ -492,8 +495,9 @@ QMap<QString, QString> Graph::prettyIMapValue(const QVariant &value, const TypeD
 		for (auto &field : type_descr.fields) {
 			if (it.key().toInt() == field.value.toInt()) {
 				QString value;
-				if (field.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-					value = model()->typeDescrFieldName(field.typeDescr, it.value().toInt());
+				const shv::core::utils::ShvLogTypeDescr &field_type_descr = model()->typeInfo().types.at(field.typeName);
+				if (field_type_descr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+					value = model()->typeDescrFieldName(field_type_descr, it.value().toInt());
 				}
 				else {
 					value = it.value().toString();
@@ -1723,7 +1727,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	while(ix2 >= samples_cnt)
 		ix2--;
 	const bool draw_last_stepped_point_contunuation = interpolation == GraphChannel::Style::Interpolation::Stepped
-			&& model()->channelInfo(ch->modelIndex()).typeDescr.sampleType != shv::visu::timeline::TypeDescr::SampleType::Discrete;
+			&& model()->channelInfo(ch->modelIndex()).typeDescr.sampleType != shv::core::utils::ShvLogTypeDescr::SampleType::Discrete;
 	if(draw_last_stepped_point_contunuation) {
 		if(ix1 >= 0 && ix2 >= 0 && ix2 == samples_cnt - 1) {
 			// add fake point to paint continuation of last value until the end of graph
@@ -1778,7 +1782,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 					painter->drawLine(prev_px.x, prev_px.minY, prev_px.x, prev_px.maxY);
 				}
 			}
-			if (model()->channelInfo(ch->modelIndex()).typeDescr.sampleType == shv::visu::timeline::TypeDescr::SampleType::Discrete) {
+			if (model()->channelInfo(ch->modelIndex()).typeDescr.sampleType == shv::core::utils::ShvLogTypeDescr::SampleType::Discrete) {
 				QPoint sample_point{current_px.x, 0};
 				int arrow_width = u2px(1);
 				painter->drawLine(sample_point.x(), clip_rect.y() + clip_rect.height() / 2, sample_point.x(), clip_rect.y() + clip_rect.height());

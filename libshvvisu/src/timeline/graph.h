@@ -9,6 +9,7 @@
 
 #include <shv/coreqt/utils.h>
 #include <shv/core/exception.h>
+#include <shv/core/utils/shvlogtypeinfo.h>
 
 #include <QObject>
 #include <QVector>
@@ -24,7 +25,6 @@ namespace visu {
 namespace timeline {
 
 class GraphModel;
-class TypeDescr;
 
 class SHVVISU_DECL_EXPORT Graph : public QObject
 {
@@ -127,9 +127,9 @@ public:
 	QPoint dataToPos(int ch_ix, const Sample &s) const;
 
 	QMap<QString, QString> yValuesToMap(int channel_ix, const Sample &s) const;
-	QString prettyBitFieldValue(const QVariant &value, const TypeDescr &type_descr) const;
-	QMap<QString, QString> prettyMapValue(const QVariant &value, const TypeDescr &type_descr) const;
-	QMap<QString, QString> prettyIMapValue(const QVariant &value, const TypeDescr &type_descr) const;
+	QString prettyBitFieldValue(const QVariant &value, const shv::core::utils::ShvLogTypeDescr &type_descr) const;
+	QMap<QString, QString> prettyMapValue(const QVariant &value, const shv::core::utils::ShvLogTypeDescr &type_descr) const;
+	QMap<QString, QString> prettyIMapValue(const QVariant &value, const shv::core::utils::ShvLogTypeDescr &type_descr) const;
 
 	const QRect& rect() const { return  m_layout.rect; }
 	const QRect& miniMapRect() const { return  m_layout.miniMapRect; }
