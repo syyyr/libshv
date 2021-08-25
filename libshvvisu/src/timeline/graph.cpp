@@ -472,14 +472,18 @@ QMap<QString, QString> Graph::prettyMapValue(const QVariant &value, const shv::c
 	const QVariantMap &map = value.toMap();
 	for (auto it = map.cbegin(); it != map.cend(); ++it) {
 		QString value = it.value().toString();
-		for (auto &field : type_descr.fields) {
-			if (QString::fromStdString(field.name) == it.key()) {
-				const shv::core::utils::ShvLogTypeDescr &field_type_descr = model()->typeInfo().types.at(field.typeName);
-				if (field_type_descr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-					value = model()->typeDescrFieldName(field_type_descr, it.value().toInt());
-					break;
+		try {
+			for (auto &field : type_descr.fields) {
+				if (QString::fromStdString(field.name) == it.key()) {
+					const shv::core::utils::ShvLogTypeDescr &field_type_descr = model()->typeInfo().types.at(field.typeName);
+					if (field_type_descr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+						value = model()->typeDescrFieldName(field_type_descr, it.value().toInt());
+						break;
+					}
 				}
 			}
+		}
+		catch(const std::out_of_range &) {
 		}
 		ret[it.key()] = value;
 	}
@@ -494,13 +498,14 @@ QMap<QString, QString> Graph::prettyIMapValue(const QVariant &value, const shv::
 	for (auto it = map.cbegin(); it != map.cend(); ++it) {
 		for (auto &field : type_descr.fields) {
 			if (it.key().toInt() == field.value.toInt()) {
-				QString value;
-				const shv::core::utils::ShvLogTypeDescr &field_type_descr = model()->typeInfo().types.at(field.typeName);
-				if (field_type_descr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-					value = model()->typeDescrFieldName(field_type_descr, it.value().toInt());
+				QString value = it.value().toString();
+				try {
+					const shv::core::utils::ShvLogTypeDescr &field_type_descr = model()->typeInfo().types.at(field.typeName);
+					if (field_type_descr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+						value = model()->typeDescrFieldName(field_type_descr, it.value().toInt());
+					}
 				}
-				else {
-					value = it.value().toString();
+				catch(const std::out_of_range &) {
 				}
 				ret[QString::fromStdString(field.name)] = value;
 				break;
