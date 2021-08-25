@@ -42,10 +42,10 @@ void ChannelProbe::nextSample()
 	GraphModel *m = m_graph->model();
 	const GraphChannel *ch = m_graph->channelAt(m_channelIndex);
 	int model_ix = ch->modelIndex();
-	int ix = m->lessOrEqualTimeIndex(model_ix, m_currentTime);
+	int ix = m->greaterTimeIndex(model_ix, m_currentTime);
 
 	if(ix >= 0) {
-		Sample s = m->sampleValue(model_ix, ix + 1);
+		Sample s = m->sampleValue(model_ix, ix);
 
 		if (s.isValid()) {
 			setCurrentTime(s.time);
@@ -58,10 +58,10 @@ void ChannelProbe::prevSample()
 	GraphModel *m = m_graph->model();
 	const GraphChannel *ch = m_graph->channelAt(m_channelIndex);
 	int model_ix = ch->modelIndex();
-	int ix = m->lessOrEqualTimeIndex(model_ix, m_currentTime);
+	int ix = m->lessTimeIndex(model_ix, m_currentTime);
 
 	if(ix >= 0) {
-		Sample s = m->sampleValue(model_ix, ix - 1);
+		Sample s = m->sampleValue(model_ix, ix);
 
 		if (s.isValid()) {
 			setCurrentTime(s.time);
@@ -71,16 +71,7 @@ void ChannelProbe::prevSample()
 
 QMap<QString, QString> ChannelProbe::yValues() const
 {
-	const GraphChannel *ch = m_graph->channelAt(m_channelIndex);
-	GraphModel::ChannelInfo &channel_info = m_graph->model()->channelInfo(ch->modelIndex());
-	Sample s;
-
-	if (channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Discrete) {
-		s = m_graph->nearestSample(m_channelIndex, m_currentTime);
-	}
-	else {
-		s = m_graph->timeToSample(m_channelIndex, m_currentTime);
-	}
+	Sample s = m_graph->timeToSample(m_channelIndex, m_currentTime);
 	return m_graph->yValuesToMap(m_channelIndex, s);
 }
 
