@@ -13,21 +13,6 @@ namespace shv {
 namespace visu {
 namespace timeline {
 
-struct SHVVISU_DECL_EXPORT TypeDescrField : public shv::core::utils::ShvLogTypeDescrField
-{
-	using Super = shv::core::utils::ShvLogTypeDescrField;
-	TypeDescrField(const shv::core::utils::ShvLogTypeDescrField &f) : Super(f) {}
-	shv::core::utils::ShvLogTypeDescr typeDescr;
-};
-
-struct SHVVISU_DECL_EXPORT TypeDescr : public shv::core::utils::ShvLogTypeDescr
-{
-	using Super = shv::core::utils::ShvLogTypeDescr;
-	TypeDescr(const shv::core::utils::ShvLogTypeDescr &d);
-	TypeDescr() {}
-	QVector<TypeDescrField> fields;
-};
-
 class SHVVISU_DECL_EXPORT GraphModel : public QObject
 {
 	Q_OBJECT
@@ -40,7 +25,7 @@ public:
 		QString shvPath;
 		QString name;
 		int metaTypeId = QMetaType::UnknownType;
-		TypeDescr typeDescr;
+		shv::core::utils::ShvLogTypeDescr typeDescr;
 
 		//QString caption() const { return name.isEmpty()? shvPath: name; }
 	};
@@ -55,12 +40,15 @@ public:
 	YRange yRange(int channel_ix) const;
 	void clear();
 	void appendChannel() {appendChannel(std::string(), std::string());}
-	void appendChannel(const std::string &shv_path, const std::string &name, const TypeDescr &type_descr = TypeDescr());
+	void appendChannel(const std::string &shv_path, const std::string &name,
+					   const shv::core::utils::ShvLogTypeDescr &type_descr = shv::core::utils::ShvLogTypeDescr());
 public:
 	virtual int channelCount() const { return qMin(m_channelsInfo.count(), m_samples.count()); }
 	const ChannelInfo& channelInfo(int channel_ix) const { return m_channelsInfo.at(channel_ix); }
 	ChannelInfo& channelInfo(int channel_ix) { return m_channelsInfo[channel_ix]; }
-	QString typeDescrFieldName( const TypeDescr &type_descr, int field_index);
+	QString typeDescrFieldName( const shv::core::utils::ShvLogTypeDescr &type_descr, int field_index);
+	const shv::core::utils::ShvLogTypeInfo &typeInfo() const { return m_typeInfo; }
+	void setTypeInfo(const shv::core::utils::ShvLogTypeInfo &type_info) { m_typeInfo = type_info; }
 
 	virtual int count(int channel) const;
 	/// without bounds check
@@ -97,6 +85,7 @@ protected:
 	XRange m_begginAppendXRange;
 
 	mutable std::map<std::string, int> m_pathToChannelCache;
+	shv::core::utils::ShvLogTypeInfo m_typeInfo;
 };
 
 }}}
