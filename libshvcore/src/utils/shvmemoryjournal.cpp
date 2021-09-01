@@ -253,9 +253,10 @@ log_finish:
 
 		hdr.setSince((since_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(since_msec)): cp::RpcValue(nullptr));
 		// if record count < limit and params until is specified and it is > log end, then set until to log end
-		if(rec_cnt_limit_hit) {
+		if(until_msec == 0 || rec_cnt_limit_hit) {
 			until_msec = last_record_msec;
 		}
+
 		hdr.setUntil((until_msec > 0)? cp::RpcValue(cp::RpcValue::DateTime::fromMSecsSinceEpoch(until_msec)): cp::RpcValue(nullptr));
 		hdr.setRecordCount(rec_cnt);
 		hdr.setRecordCountLimit(rec_cnt_limit);
