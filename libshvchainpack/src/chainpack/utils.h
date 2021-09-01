@@ -44,7 +44,7 @@ public:
 		return ret;
 	}
 
-	static RpcValue mergeMaps(const RpcValue &m_base, const RpcValue &m_over);
+	static RpcValue mergeMaps(const RpcValue &value_base, const RpcValue &value_over);
 
 	template<typename M>
 	static std::vector<std::string> mapKeys(const M &m, bool sorted = true)

@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "rpcvalue.h"
+//#include "necrolog.h"
 
 #include <regex>
 #include <iomanip>
@@ -142,20 +143,31 @@ std::string Utils::hexDump(const std::string &bytes)
 	return ret;
 }
 
-RpcValue Utils::mergeMaps(const RpcValue &m_base, const RpcValue &m_over)
+RpcValue Utils::mergeMaps(const RpcValue &value_base, const RpcValue &value_over)
 {
-	if(m_over.isMap() && m_base.isMap()) {
-		const shv::chainpack::RpcValue::Map &map_base = m_base.toMap();
-		const shv::chainpack::RpcValue::Map &map_over = m_over.toMap();
-		RpcValue::Map map = map_base;
+	if(value_over.isMap() && value_base.isMap()) {
+		const shv::chainpack::RpcValue::Map &map_over = value_over.toMap();
+		RpcValue merged = value_base;
 		for(const auto &kv : map_over) {
-			map[kv.first] = mergeMaps(map.value(kv.first), kv.second);
+			merged.set(kv.first, mergeMaps(merged.at(kv.first), kv.second));
 		}
-		return RpcValue(map);
+		{
+			// merge meta data
+			const RpcValue::MetaData &meta_base = value_base.metaData();
+			const RpcValue::MetaData &meta_over = value_over.metaData();
+			for(const auto &k : meta_over.iKeys()) {
+				merged.setMetaValue(k, mergeMaps(meta_base.value(k), meta_over.value(k)));
+			}
+			for(const auto &k : meta_over.sKeys()) {
+				merged.setMetaValue(k, mergeMaps(meta_base.value(k), meta_over.value(k)));
+			}
+		}
+		return merged;
 	}
-	else if(m_over.isValid())
-		return m_over;
-	return m_base;
+	else if(value_over.isValid()) {
+		return value_over;
+	}
+	return value_base;
 }
 
 } // namespace chainpack
