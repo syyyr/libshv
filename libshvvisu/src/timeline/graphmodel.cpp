@@ -112,10 +112,16 @@ double GraphModel::valueToDouble(const QVariant v, shv::core::utils::ShvLogTypeD
 		return v.toDouble();
 	case Type::Int:
 		return v.toLongLong();
+	case Type::UInt:
+		return v.toULongLong();
 	case Type::Bool:
 		return v.toBool()? 1: 0;
 	case Type::String:
 		return v.toString().isEmpty()? 0: 1;
+	case Type::Enum:
+	case Type::BitField:
+		// show integer value for now
+		return v.toInt();
 	default:
 		if(ok)
 			*ok = false;
