@@ -63,7 +63,7 @@ XRange GraphModel::xRange(int channel_ix) const
 YRange GraphModel::yRange(int channel_ix) const
 {
 	YRange ret;
-	auto mtid = channelInfo(channel_ix).metaTypeId;
+	auto mtid = channelInfo(channel_ix).typeDescr.type;
 	for (int i = 0; i < count(channel_ix); ++i) {
 		QVariant v = sampleAt(channel_ix, i).value;
 		bool ok;
@@ -76,26 +76,45 @@ YRange GraphModel::yRange(int channel_ix) const
 	return ret;
 }
 
-double GraphModel::valueToDouble(const QVariant v, int meta_type_id, bool *ok)
+static shv::core::utils::ShvLogTypeDescr::Type qt_to_shv_type(int meta_type_id)
 {
-	if(ok)
-		*ok = true;
-	if(meta_type_id == QMetaType::UnknownType)
-		meta_type_id = v.userType();
+	using Type = shv::core::utils::ShvLogTypeDescr::Type;
 	switch (meta_type_id) {
-	case QVariant::Invalid:
 	case QVariant::Map:
-		return 0;
+		return Type::Map;
 	case QVariant::Double:
-		return v.toDouble();
+		return Type::Double;
 	case QVariant::LongLong:
 	case QVariant::ULongLong:
 	case QVariant::UInt:
 	case QVariant::Int:
-		return v.toLongLong();
+		return Type::Int;
 	case QVariant::Bool:
-		return v.toBool()? 1: 0;
+		return Type::Bool;
 	case QVariant::String:
+		return Type::String;
+	}
+	return Type::Invalid;
+}
+
+double GraphModel::valueToDouble(const QVariant v, shv::core::utils::ShvLogTypeDescr::Type type_id, bool *ok)
+{
+	using Type = shv::core::utils::ShvLogTypeDescr::Type;
+	if(ok)
+		*ok = true;
+	if(type_id == Type::Invalid)
+		type_id = qt_to_shv_type(v.userType());
+	switch (type_id) {
+	case Type::Invalid:
+	case Type::Map:
+		return 0;
+	case Type::Double:
+		return v.toDouble();
+	case Type::Int:
+		return v.toLongLong();
+	case Type::Bool:
+		return v.toBool()? 1: 0;
+	case Type::String:
 		return v.toString().isEmpty()? 0: 1;
 	default:
 		if(ok)
@@ -171,12 +190,12 @@ void GraphModel::endAppendValues()
 	if(xr.max > m_begginAppendXRange.max)
 		emit xRangeChanged(xr);
 	m_begginAppendXRange = XRange();
-	for (int i = 0; i < channelCount(); ++i) {
-		ChannelInfo &chi = channelInfo(i);
-		if(chi.metaTypeId == QMetaType::UnknownType) {
-			chi.metaTypeId = guessMetaType(i);
-		}
-	}
+	//for (int i = 0; i < channelCount(); ++i) {
+	//	ChannelInfo &chi = channelInfo(i);
+	//	if(chi.metaTypeId == QMetaType::UnknownType) {
+	//		chi.metaTypeId = guessMetaType(i);
+	//	}
+	//}
 }
 
 void GraphModel::appendValue(int channel, Sample &&sample)
@@ -260,10 +279,10 @@ QString GraphModel::typeDescrFieldName(const shv::core::utils::ShvLogTypeDescr &
 	return QString();
 }
 
-int GraphModel::guessMetaType(int channel_ix)
-{
-	Sample s = sampleValue(channel_ix, 0);
-	return s.value.userType();
-}
+//int GraphModel::guessMetaType(int channel_ix)
+//{
+//	Sample s = sampleValue(channel_ix, 0);
+//	return s.value.userType();
+//}
 
 }}}

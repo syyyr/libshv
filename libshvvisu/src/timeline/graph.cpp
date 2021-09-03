@@ -170,12 +170,12 @@ const GraphChannel *Graph::channelAt(int ix, bool throw_exc) const
 	return m_channels[ix];
 }
 
-int Graph::channelMetaTypeId(int ix) const
+shv::core::utils::ShvLogTypeDescr::Type Graph::channelTypeId(int ix) const
 {
 	if(!m_model)
 		SHV_EXCEPTION("Graph model is NULL");
 	const GraphChannel *ch = channelAt(ix);
-	return m_model->channelInfo(ch->modelIndex()).metaTypeId;
+	return m_model->channelInfo(ch->modelIndex()).typeDescr.type;
 }
 
 void Graph::moveChannel(int channel, int new_pos)
@@ -395,7 +395,7 @@ QPoint Graph::dataToPos(int ch_ix, const Sample &s) const
 {
 	const GraphChannel *ch = channelAt(ch_ix);
 	auto data2point = dataToPointFn(DataRect{xRangeZoom(), ch->yRangeZoom()}, ch->graphDataGridRect());
-	return data2point? data2point(s, channelMetaTypeId(ch_ix)): QPoint();
+	return data2point? data2point(s, channelTypeId(ch_ix)): QPoint();
 }
 
 QMap<QString, QString> Graph::yValuesToMap(int channel_ix, const shv::visu::timeline::Sample &s) const
@@ -1073,7 +1073,7 @@ void Graph::drawCenteredRectText(QPainter *painter, const QPoint &top_center, co
 
 QVector<int> Graph::visibleChannels()
 {
-	shvLogFuncFrame() << "chanel cnt:" << m_channels.count() << "filter valid:" << m_channelFilter.isValid() << "maximized channel:" << maximizedChannelIndex();
+	//shvLogFuncFrame() << "chanel cnt:" << m_channels.count() << "filter valid:" << m_channelFilter.isValid() << "maximized channel:" << maximizedChannelIndex();
 	QVector<int> visible_channels;
 	int maximized_channel = maximizedChannelIndex();
 
@@ -1521,7 +1521,7 @@ void Graph::drawYAxis(QPainter *painter, int channel)
 	painter->restore();
 }
 
-std::function<QPoint (const Sample &s, int meta_type_id)> Graph::dataToPointFn(const DataRect &src, const QRect &dest)
+std::function<QPoint (const Sample &s, Graph::TypeId meta_type_id)> Graph::dataToPointFn(const DataRect &src, const QRect &dest)
 {
 	using Int = int;
 	Int le = dest.left();
@@ -1542,14 +1542,17 @@ std::function<QPoint (const Sample &s, int meta_type_id)> Graph::dataToPointFn(c
 		return nullptr;
 	double ky = (to - bo) / (d2 - d1);
 
-	return  [le, bo, kx, t1, d1, ky](const Sample &s, int meta_type_id) -> QPoint {
+	return  [le, bo, kx, t1, d1, ky](const Sample &s, TypeId meta_type_id) -> QPoint {
 		if(!s.isValid())
 			return QPoint();
 		const timemsec_t t = s.time;
 		bool ok;
 		double d = GraphModel::valueToDouble(s.value, meta_type_id, &ok);
-		if(!ok)
+		//shvInfo() << "Convert qt type:" << s.value.typeName() << "through shv type:" << shv::core::utils::ShvLogTypeDescr::typeToString(meta_type_id) << "to double:" << d;
+		if(!ok) {
+			shvWarning() << "Don't know how to convert qt type:" << s.value.typeName() << "to shv type:" << shv::core::utils::ShvLogTypeDescr::typeToString(meta_type_id);
 			return QPoint();
+		}
 		double x = le + (t - t1) * kx;
 		// too big or too small pixel sizes can make painting problems
 		static constexpr int MIN_INT2 = std::numeric_limits<int>::min() / 2;
@@ -1722,7 +1725,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	}
 
 	const int sample_point_size = u2px(0.5);
-	int channel_meta_type_id = channelMetaTypeId(channel_ix);
+	Graph::TypeId channel_meta_type_id = channelTypeId(channel_ix);
 	GraphModel *graph_model = model();
 	int ix1 = graph_model->lessTimeIndex(model_ix, xrange.min);
 	int ix2 = graph_model->greaterTimeIndex(model_ix, xrange.max);
@@ -1739,7 +1742,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 			ix2++;
 		}
 	}
-	shvDebug() << graph_model->channelShvPath(channel_ix) << "range:" << xrange.min << xrange.max;
+	shvDebug() << ch->shvPath() << "range:" << xrange.min << xrange.max;
 	shvDebug() << "\t channel" << channel_ix
 			   << "from:" << ix1 << "to:" << ix2 << "cnt:" << (ix2 - ix1 + 1) << "of:" << samples_cnt;
 	static constexpr int NO_X = std::numeric_limits<int>::min();
@@ -1847,6 +1850,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 
 void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 {
+	enum {DEBUG = 0};
 	if(!crossHairPos().isValid())
 		return;
 	auto crossbar_pos = crossHairPos().possition;
@@ -1856,7 +1860,7 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 	if(ch->graphDataGridRect().left() >= crossbar_pos.x() || ch->graphDataGridRect().right() <= crossbar_pos.x()) {
 		return;
 	}
-	shvDebug() << "drawCrossHair:" << ch->shvPath();
+	//shvDebug() << "drawCrossHair:" << ch->shvPath();
 	painter->save();
 	QColor color = m_style.colorCrossBar();
 	if(channel_ix == crossHairPos().channelIndex) {
@@ -1865,7 +1869,7 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 		Sample s = timeToSample(channel_ix, time);
 		if(s.value.isValid()) {
 			QPoint p = dataToPos(channel_ix, s);
-			{
+			if(DEBUG) {
 				QDateTime dt = QDateTime::fromMSecsSinceEpoch(time);
 				dt = dt.toTimeZone(m_timeZone);
 				shvDebug() << "sample point" << dt.toString(Qt::ISODateWithMs) << m_timeZone.id()
@@ -1918,7 +1922,6 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 		painter->fillRect(bull_eye_rect, ch->m_effectiveStyle.colorBackground());
 		painter->drawRect(bull_eye_rect);
 
-		enum {DEBUG = 0};
 		if(DEBUG) {
 			//timemsec_t t = posToTime(crossbar_pos.x());
 			Sample s = posToData(crossbar_pos);

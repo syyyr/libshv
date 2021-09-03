@@ -16,6 +16,7 @@ public:
 	ShvLogRpcValueReader(const shv::chainpack::RpcValue &log, bool throw_exceptions = false);
 
 	bool next();
+	bool isInSnapshot() const { return m_snapshotMsec == m_currentEntry.epochMsec; }
 	const ShvJournalEntry& entry() { return m_currentEntry; }
 
 	const ShvLogHeader &logHeader() const {return m_logHeader;}
@@ -26,6 +27,7 @@ private:
 	const shv::chainpack::RpcValue m_log;
 	bool m_isThrowExceptions;
 	size_t m_currentIndex = 0;
+	int64_t m_snapshotMsec = -1;
 };
 
 } // namespace utils

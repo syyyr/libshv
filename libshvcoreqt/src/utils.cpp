@@ -17,7 +17,7 @@ QVariant Utils::rpcValueToQVariant(const chainpack::RpcValue &v, bool *ok)
 		*ok = true;
 	switch (v.type()) {
 	case chainpack::RpcValue::Type::Invalid: return QVariant();
-	case chainpack::RpcValue::Type::Null: return QVariant();
+	case chainpack::RpcValue::Type::Null: return QVariant::fromValue(nullptr);
 	case chainpack::RpcValue::Type::UInt: return QVariant(v.toUInt());
 	case chainpack::RpcValue::Type::Int: return QVariant(v.toInt());
 	case chainpack::RpcValue::Type::Double: return QVariant(v.toDouble());
@@ -71,6 +71,7 @@ chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v, bool *ok)
 	//if(v.isNull()) QString() is NULL
 	//	return chainpack::RpcValue(nullptr);
 	switch (v.userType()) {
+	case QMetaType::Nullptr: return chainpack::RpcValue(nullptr);
 	case QMetaType::UChar:
 	case QMetaType::UShort:
 	case QMetaType::UInt: return chainpack::RpcValue(v.toUInt());

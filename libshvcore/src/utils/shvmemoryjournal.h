@@ -31,6 +31,7 @@ public:
 	void append(const ShvJournalEntry &entry) override;
 
 	void loadLog(const shv::chainpack::RpcValue &log, bool append_records = false);
+	void loadLog(const shv::chainpack::RpcValue &log, const shv::chainpack::RpcValue::Map &default_snapshot_values);
 	shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) override;
 
 	// we do not expose whole header, since append() does not update field until
@@ -47,11 +48,8 @@ private:
 	using Entry = ShvJournalEntry;
 
 	std::map<std::string, int> m_pathDictionary;
-	int m_pathDictionaryIndex = 0;
 
 	ShvLogHeader m_logHeader;
-	std::map<std::string, ShvLogTypeDescr> m_pathsTypeDescr;
-
 	std::vector<Entry> m_entries;
 
 	struct ShortTime {

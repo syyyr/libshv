@@ -30,6 +30,7 @@ class SHVVISU_DECL_EXPORT Graph : public QObject
 {
 	Q_OBJECT
 public:
+	using TypeId = shv::core::utils::ShvLogTypeDescr::Type;
 	struct SHVVISU_DECL_EXPORT DataRect
 	{
 		XRange xRange;
@@ -97,7 +98,7 @@ public:
 	GraphChannel* appendChannel(int model_index = -1);
 	GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw);
 	const GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw) const;
-	int channelMetaTypeId(int ix) const;
+	core::utils::ShvLogTypeDescr::Type channelTypeId(int ix) const;
 	void moveChannel(int channel, int new_pos);
 
 	void showAllChannels();
@@ -181,7 +182,7 @@ public:
 	double u2pxf(double u) const;
 	double px2u(int px) const;
 
-	static std::function<QPoint (const Sample &s, int meta_type_id)> dataToPointFn(const DataRect &src, const QRect &dest);
+	static std::function<QPoint (const Sample &s, TypeId meta_type_id)> dataToPointFn(const DataRect &src, const QRect &dest);
 	static std::function<Sample (const QPoint &)> pointToDataFn(const QRect &src, const DataRect &dest);
 	static std::function<timemsec_t (int)> posToTimeFn(const QPoint &src, const XRange &dest);
 	static std::function<int (timemsec_t)> timeToPosFn(const XRange &src, const WidgetRange &dest);

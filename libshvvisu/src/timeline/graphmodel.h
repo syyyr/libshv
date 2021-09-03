@@ -24,7 +24,7 @@ public:
 	public:
 		QString shvPath;
 		QString name;
-		int metaTypeId = QMetaType::UnknownType;
+		//int metaTypeId = QMetaType::UnknownType;
 		shv::core::utils::ShvLogTypeDescr typeDescr;
 
 		//QString caption() const { return name.isEmpty()? shvPath: name; }
@@ -75,9 +75,9 @@ public:
 	Q_SIGNAL void xRangeChanged(XRange range);
 	Q_SIGNAL void channelCountChanged(int cnt);
 public:
-	static double valueToDouble(const QVariant v, int meta_type_id = QVariant::Invalid, bool *ok = nullptr);
+	static double valueToDouble(const QVariant v, core::utils::ShvLogTypeDescr::Type type_id = core::utils::ShvLogTypeDescr::Type::Invalid, bool *ok = nullptr);
 protected:
-	virtual int guessMetaType(int channel_ix);
+	//virtual int guessMetaType(int channel_ix);
 protected:
 	using ChannelSamples = QVector<Sample>;
 	QVector<ChannelSamples> m_samples;
