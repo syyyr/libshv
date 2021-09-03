@@ -312,6 +312,7 @@ acl::AclRoleAccessRules AclManagerSqlite::aclAccessRoleRules(const std::string &
 	QSqlQuery q = execSql("SELECT * FROM " + TBL_ACL_ACCESS + " WHERE role='" + QString::fromStdString(role_name) + "'");
 	while(q.next()) {
 		acl::AclAccessRule ag;
+		ag.service = q.value("service").toString().toStdString();
 		ag.pathPattern = q.value("path").toString().toStdString();
 		ag.method = q.value("method").toString().toStdString();
 		//ag.forwardUserLoginFromRequest = q.value(PathAccessGrant::FORWARD_USER_LOGIN).toBool();
@@ -345,6 +346,7 @@ void AclManagerSqlite::aclSetAccessRoleRules(const std::string &role_name, const
 		QSqlRecord rec = drv->record(TBL_ACL_ACCESS);
 		for(const auto &rule : rules) {
 			rec.setValue("role", QString::fromStdString(role_name));
+			rec.setValue("service", QString::fromStdString(rule.service));
 			rec.setValue("path", QString::fromStdString(rule.pathPattern));
 			rec.setValue("method", rule.method.empty()? QVariant(): QString::fromStdString(rule.method));
 			rec.setValue("grantType", cp::AccessGrant::typeToString(rule.grant.type));
