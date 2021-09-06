@@ -43,25 +43,30 @@ void ShvMemoryJournal::loadLog(const chainpack::RpcValue &log, const chainpack::
 	m_entries.clear();
 	m_logHeader = rd.logHeader();
 	chainpack::RpcValue::Map missing_snapshot_values = default_snapshot_values;
+	auto append_default_snapshot_values = [&missing_snapshot_values, this]() {
+		for(const auto &kv : missing_snapshot_values) {
+			core::utils::ShvJournalEntry e;
+			e.epochMsec = m_logHeader.sinceMsec();
+			e.path = kv.first;
+			e.value = kv.second;
+			shvDebug() << "generating snapshot entry with default value, path:" << e.path;
+			append(e);
+		}
+		missing_snapshot_values.clear();
+	};
 	while(rd.next()) {
 		const core::utils::ShvJournalEntry &entry = rd.entry();
-		append(entry);
 		if(rd.isInSnapshot()) {
 			shvDebug() << "--:" << entry.path;
 			missing_snapshot_values.erase(entry.path);
 		}
 		else if(!missing_snapshot_values.empty()) {
-			for(const auto &kv : missing_snapshot_values) {
-				core::utils::ShvJournalEntry e;
-				e.epochMsec = m_logHeader.sinceMsec();
-				e.path = kv.first;
-				e.value = kv.second;
-				shvDebug() << "generating snapshot entry with default value, path:" << e.path;
-				append(e);
-			}
-			missing_snapshot_values.clear();
+			append_default_snapshot_values();
 		}
+		append(entry);
 	}
+	// call append_default_snapshot_values() for case, that log contains snapshot only
+	append_default_snapshot_values();
 }
 
 void ShvMemoryJournal::append(const ShvJournalEntry &entry)
