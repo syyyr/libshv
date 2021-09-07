@@ -9,6 +9,7 @@
 
 #include <QPainter>
 #include <QFontMetrics>
+#include <QJsonDocument>
 #include <QLabel>
 #include <QMouseEvent>
 #include <QPainterPath>
@@ -471,19 +472,25 @@ QMap<QString, QString> Graph::prettyMapValue(const QVariant &value, const shv::c
 	QMap<QString, QString> ret;
 	const QVariantMap &map = value.toMap();
 	for (auto it = map.cbegin(); it != map.cend(); ++it) {
-		QString value = it.value().toString();
-		try {
-			for (auto &field : type_descr.fields) {
-				if (QString::fromStdString(field.name) == it.key()) {
-					const shv::core::utils::ShvLogTypeDescr &field_type_descr = model()->typeInfo().types.at(field.typeName);
-					if (field_type_descr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-						value = model()->typeDescrFieldName(field_type_descr, it.value().toInt());
-						break;
+		QString value;
+		if (it.value().type() == QVariant::Map) {
+			value = QJsonDocument::fromVariant(it.value()).toJson(QJsonDocument::Compact);
+		}
+		else {
+			value = it.value().toString();
+			try {
+				for (auto &field : type_descr.fields) {
+					if (QString::fromStdString(field.name) == it.key()) {
+						const shv::core::utils::ShvLogTypeDescr &field_type_descr = model()->typeInfo().types.at(field.typeName);
+						if (field_type_descr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+							value = model()->typeDescrFieldName(field_type_descr, it.value().toInt());
+							break;
+						}
 					}
 				}
 			}
-		}
-		catch(const std::out_of_range &) {
+			catch(const std::out_of_range &) {
+			}
 		}
 		ret[it.key()] = value;
 	}
@@ -498,14 +505,20 @@ QMap<QString, QString> Graph::prettyIMapValue(const QVariant &value, const shv::
 	for (auto it = map.cbegin(); it != map.cend(); ++it) {
 		for (auto &field : type_descr.fields) {
 			if (it.key().toInt() == field.value.toInt()) {
-				QString value = it.value().toString();
-				try {
-					const shv::core::utils::ShvLogTypeDescr &field_type_descr = model()->typeInfo().types.at(field.typeName);
-					if (field_type_descr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
-						value = model()->typeDescrFieldName(field_type_descr, it.value().toInt());
-					}
+				QString value;
+				if (it.value().type() == QVariant::Map) {
+					value = QJsonDocument::fromVariant(it.value()).toJson(QJsonDocument::Compact);
 				}
-				catch(const std::out_of_range &) {
+				else {
+					value = it.value().toString();
+					try {
+						const shv::core::utils::ShvLogTypeDescr &field_type_descr = model()->typeInfo().types.at(field.typeName);
+						if (field_type_descr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+							value = model()->typeDescrFieldName(field_type_descr, it.value().toInt());
+						}
+					}
+					catch(const std::out_of_range &) {
+					}
 				}
 				ret[QString::fromStdString(field.name)] = value;
 				break;
