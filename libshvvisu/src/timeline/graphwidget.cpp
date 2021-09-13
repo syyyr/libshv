@@ -448,23 +448,8 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 	case MouseOperation::GraphDataAreaLeftCtrlShiftPress:
 		return;
 	case MouseOperation::ChannelHeaderResize: {
-		GraphChannel *ch = gr->channelAt(m_resizeChannelIx);
-
-		if (ch != nullptr) {
-			timeline::GraphChannel::Style ch_style = ch->style();
-
-			double new_u = m_graph->px2u(ch->verticalHeaderRect().height() + (pos.y() - m_recentMousePos.y()));
-
-			if (new_u > GraphChannel::Style::DEFAULT_HEIGHT_MIN) {
-				ch_style.setHeightMax(new_u);
-				ch_style.setHeightMin(new_u);
-				ch->setStyle(ch_style);
-				makeLayout();
-			}
-		}
-
+		gr->resizeChannel(m_resizeChannelIx, pos.y() - m_recentMousePos.y());
 		m_recentMousePos = pos;
-
 		return;
 	}
 	case MouseOperation::ChannelHeaderMove:
@@ -475,14 +460,14 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 
 		QRect header_rect;
 		int dragged_channel = -1;
-			for (int i = 0; i < gr->channelCount(); ++i) {
-				const GraphChannel *ch = gr->channelAt(i);
-				if (ch->verticalHeaderRect().contains(pos)) {
-					header_rect = ch->verticalHeaderRect();
+		for (int i = 0; i < gr->channelCount(); ++i) {
+			const GraphChannel *ch = gr->channelAt(i);
+			if (ch->verticalHeaderRect().contains(pos)) {
+				header_rect = ch->verticalHeaderRect();
 				dragged_channel = i;
-					break;
-				}
+				break;
 			}
+		}
 		if (dragged_channel != -1) {
 			QDrag *drag = new QDrag(this);
 			QMimeData *mime = new QMimeData;
@@ -799,7 +784,12 @@ void GraphWidget::showGraphContextMenu(const QPoint &mouse_pos)
 	menu.addAction(tr("Hide channels without changes"), [this]() {
 		m_graph->hideFlatChannels();
 	});
-
+	menu.addAction(tr("Reset channel headers"), [this]() {
+		m_graph->createChannelsFromModel();
+		auto graph_filter = m_graph->channelFilter();
+		graph_filter.setMatchingPaths(m_graph->channelPaths());
+		m_graph->setChannelFilter(graph_filter);
+	});
 	if (m_graph->isYAxisVisible()) {
 		menu.addAction(tr("Hide Y axis"), [this]() {
 			m_graph->setYAxisVisible(false);

@@ -13,8 +13,13 @@
 #include <QLabel>
 #include <QMouseEvent>
 #include <QPainterPath>
+#include <QSettings>
 
 #include <cmath>
+
+static QString USER_PROFILES_KEY = QStringLiteral("userProfiles");
+static QString SITES_KEY = QStringLiteral("sites");
+static QString VIEWS_KEY = QStringLiteral("channelViews");
 
 namespace cp = shv::chainpack;
 
@@ -72,6 +77,14 @@ void Graph::setTimeZone(const QTimeZone &tz)
 QTimeZone Graph::timeZone() const
 {
 	return m_timeZone;
+}
+
+void Graph::reset()
+{
+	createChannelsFromModel();
+	m_channelFilter.setMatchingPaths(channelPaths());
+	Q_EMIT layoutChanged();
+	Q_EMIT channelFilterChanged();
 }
 
 void Graph::createChannelsFromModel()
@@ -1109,6 +1122,56 @@ QVector<int> Graph::visibleChannels()
 	return visible_channels;
 }
 
+void Graph::setView(const shv::visu::timeline::Graph::View &view)
+{
+	QSet<QString> new_filter;
+	createChannelsFromModel();
+	for (int i = 0; i < view.channels.count(); ++i) {
+		const View::Channel &channel_settings = view.channels[i];
+		for (int j = 0; j < m_channels.count(); ++j) {
+			GraphChannel *channel = m_channels[j];
+			if (channel->shvPath() == channel_settings.name) {
+				new_filter << channel_settings.name;
+				channel->setStyle(channel_settings.style);
+				m_channels.insert(i, m_channels.takeAt(j));
+				break;
+			}
+		}
+	}
+
+	m_channelFilter.setMatchingPaths(new_filter);
+	Q_EMIT layoutChanged();
+	Q_EMIT channelFilterChanged();
+}
+
+void Graph::resizeChannel(int ix, int delta_px)
+{
+	GraphChannel *ch = channelAt(ix);
+
+	if (ch != nullptr) {
+		timeline::GraphChannel::Style ch_style = ch->style();
+
+		double new_u = px2u(ch->verticalHeaderRect().height() + (delta_px));
+
+		if (new_u > GraphChannel::Style::DEFAULT_HEIGHT_MIN) {
+			ch_style.setHeightMax(new_u);
+			ch_style.setHeightMin(new_u);
+			ch->setStyle(ch_style);
+			Q_EMIT layoutChanged();
+		}
+	}
+}
+
+shv::visu::timeline::Graph::View Graph::view()
+{
+	View view;
+	for (int ix : visibleChannels()) {
+		GraphChannel *channel = channelAt(ix);
+		view.channels << View::Channel{ channel->shvPath(), channel->style() };
+	}
+	return view;
+}
+
 int Graph::maximizedChannelIndex()
 {
 	for (int i = 0; i < m_channels.count(); ++i) {
@@ -2047,5 +2110,64 @@ void Graph::onButtonBoxClicked(int button_id)
 		emit graphContextMenuRequest(pos);
 	}
 }
+
+void Graph::saveView(const QString &shv_path, const QString &name, const Graph::View &view) const
+{
+	QSettings settings;
+	settings.beginGroup(USER_PROFILES_KEY);
+	settings.beginGroup(SITES_KEY);
+	settings.beginGroup(shv_path);
+	settings.beginGroup(VIEWS_KEY);
+	settings.beginWriteArray(name);
+
+
+	for (int i = 0; i < view.channels.count(); ++i) {
+		settings.setArrayIndex(i);
+		settings.setValue("name", view.channels[i].name);
+		settings.setValue("style", view.channels[i].style);
+	}
+	settings.endArray();
+}
+
+Graph::View Graph::loadView(const QString &shv_path, const QString &name) const
+{
+	View graph_view;
+	QSettings settings;
+	settings.beginGroup(USER_PROFILES_KEY);
+	settings.beginGroup(SITES_KEY);
+	settings.beginGroup(shv_path);
+	settings.beginGroup(VIEWS_KEY);
+	int size = settings.beginReadArray(name);
+	for (int i = 0; i < size; ++i) {
+		settings.setArrayIndex(i);
+		graph_view.channels << View::Channel {
+							       settings.value("name").toString(),
+							       settings.value("style").value<GraphChannel::Style>()
+	                           };
+	}
+	settings.endArray();
+	return graph_view;
+}
+
+void Graph::deleteView(const QString &shv_path, const QString &name) const
+{
+	QSettings settings;
+	settings.beginGroup(USER_PROFILES_KEY);
+	settings.beginGroup(SITES_KEY);
+	settings.beginGroup(shv_path);
+	settings.beginGroup(VIEWS_KEY);
+	settings.remove(name);
+}
+
+QStringList Graph::savedViewNames(const QString &shv_path) const
+{
+	QSettings settings;
+	settings.beginGroup(USER_PROFILES_KEY);
+	settings.beginGroup(SITES_KEY);
+	settings.beginGroup(shv_path);
+	settings.beginGroup(VIEWS_KEY);
+	return settings.childGroups();
+}
+
 
 }}}

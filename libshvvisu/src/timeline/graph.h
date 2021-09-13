@@ -79,6 +79,18 @@ public:
 		//double buttonSpacing() const { return buttonSize() / 5; }
 	};
 public:
+	class View
+	{
+	public:
+		class Channel
+		{
+		public:
+			QString name;
+			GraphChannel::Style style;
+		};
+		QVector<Channel> channels;
+	};
+
 	Graph(QObject *parent = nullptr);
 	virtual ~Graph();
 
@@ -90,6 +102,7 @@ public:
 	void setTimeZone(const QTimeZone &tz);
 	QTimeZone timeZone() const;
 
+	void reset();
 	void createChannelsFromModel();
 	void resetChannelsRanges();
 
@@ -200,6 +213,16 @@ public:
 	Q_SIGNAL void graphContextMenuRequest(const QPoint &mouse_pos);
 
 	static QString rectToString(const QRect &r);
+
+	View view();
+	void setView(const View &view);
+	void resizeChannel(int ix, int delta_px);
+
+	void saveView(const QString &shv_path, const QString &name, const View &view) const;
+	void deleteView(const QString &shv_path, const QString &name) const;
+	QStringList savedViewNames(const QString &shv_path) const;
+	View loadView(const QString &shv_path, const QString &name) const;
+
 protected:
 	void sanityXRangeZoom();
 	//void onModelXRangeChanged(const timeline::XRange &range);
