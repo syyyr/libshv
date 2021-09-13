@@ -42,6 +42,8 @@ chainpack::RpcValue ShvJournalEntry::toRpcValueMap() const
 		m[ShvLogHeader::Column::name(ShvLogHeader::Column::SampleType)] = ShvLogTypeDescr::sampleTypeToString(sampleType);
 	if(!userId.empty())
 		m[ShvLogHeader::Column::name(ShvLogHeader::Column::UserId)] = userId;
+	if(isSnapshotValue)
+		m[ShvLogHeader::Column::name(ShvLogHeader::Column::IsSnapshotValue)] = isSnapshotValue;
 	return m;
 }
 

@@ -678,6 +678,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		rec.push_back((e.domain.empty() || e.domain == cp::Rpc::SIG_VAL_CHANGED)? cp::RpcValue(nullptr): e.domain);
 		rec.push_back((int)e.sampleType);
 		rec.push_back(e.userId.empty()? cp::RpcValue(nullptr): cp::RpcValue(e.userId));
+		rec.push_back(e.isSnapshotValue);
 		log.push_back(std::move(rec));
 		return true;
 	};
@@ -695,7 +696,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 				else {
 					e.epochMsec = params_since_msec;
 				}
-
+				e.isSnapshotValue = true;
 				if(!append_log_entry(e))
 					return false;
 			}
@@ -822,6 +823,8 @@ log_finish:
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::ShortTime)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Domain)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::SampleType)}});
+		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::UserId)}});
+		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::IsSnapshotValue)}});
 		log_header.setFields(std::move(fields));
 	}
 	if(params.withPathsDict) {

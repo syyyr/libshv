@@ -95,6 +95,8 @@ bool ShvLogFileReader::next()
 		if (m_currentEntry.sampleType == ShvJournalEntry::SampleType::Invalid) {
 			m_currentEntry.sampleType = ShvJournalEntry::SampleType::Continuous;
 		}
+		m_currentEntry.userId = row.value(Column::UserId).asString();
+		m_currentEntry.isSnapshotValue = row.value(Column::IsSnapshotValue).toBool();
 		return true;
 	}
 }

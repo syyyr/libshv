@@ -62,11 +62,13 @@ bool ShvLogRpcValueReader::next()
 		m_currentEntry.value = row.value(Column::Value);
 		cp::RpcValue st = row.value(Column::ShortTime);
 		m_currentEntry.shortTime = st.isInt() && st.toInt() >= 0? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
-		m_currentEntry.domain = row.value(Column::Domain).toString();
+		m_currentEntry.domain = row.value(Column::Domain).asString();
 		m_currentEntry.sampleType = static_cast<ShvJournalEntry::SampleType>(row.value(Column::SampleType).toUInt());
 		if (m_currentEntry.sampleType == ShvJournalEntry::SampleType::Invalid) {
 			m_currentEntry.sampleType = ShvJournalEntry::SampleType::Continuous;
 		}
+		m_currentEntry.userId = row.value(Column::UserId).asString();
+		m_currentEntry.isSnapshotValue = row.value(Column::IsSnapshotValue).toBool();
 		return true;
 	}
 }

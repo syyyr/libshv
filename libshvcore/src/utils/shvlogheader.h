@@ -46,6 +46,7 @@ public:
 			Domain,
 			SampleType,
 			UserId,
+			IsSnapshotValue,
 		};
 		static const char* name(Enum e);
 	};

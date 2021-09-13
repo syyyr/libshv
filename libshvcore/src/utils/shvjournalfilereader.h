@@ -26,6 +26,7 @@ private:
 	std::string m_fileName;
 	std::ifstream m_ifstream;
 	ShvJournalEntry m_currentEntry;
+	int64_t m_snapshotMsec = -1;
 };
 
 } // namespace utils

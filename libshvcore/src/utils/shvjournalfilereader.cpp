@@ -76,6 +76,9 @@ bool ShvJournalFileReader::next()
 
 		m_currentEntry.path = std::move(path);
 		m_currentEntry.epochMsec = dt.msecsSinceEpoch();
+		if(m_snapshotMsec < 0)
+			m_snapshotMsec = m_currentEntry.epochMsec;
+		m_currentEntry.isSnapshotValue = m_currentEntry.epochMsec == m_snapshotMsec;
 		bool ok;
 		int short_time = short_time_sv.toInt(&ok);
 		m_currentEntry.shortTime = ok && short_time >= 0? short_time: ShvJournalEntry::NO_SHORT_TIME;
