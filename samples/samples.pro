@@ -2,7 +2,11 @@ TEMPLATE = subdirs
 CONFIG += ordered
 
 SUBDIRS += \
-	sampleshvclient \
-	sampleshvbroker \
-	samplegraph \
+	cli \
+
+qtHaveModule(gui) {
+SUBDIRS += \
+    gui \
+}
+
 
