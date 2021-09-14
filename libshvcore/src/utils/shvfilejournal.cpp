@@ -204,12 +204,10 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 	if(msec < m_journalContext.recentTimeStamp)
 		msec = m_journalContext.recentTimeStamp;
 	int64_t journal_file_start_msec = 0;
-	if(m_journalContext.files.empty()) {
-		journal_file_start_msec = msec;
-	}
-	else if(m_journalContext.lastFileSize > m_fileSizeLimit) {
+	if(m_journalContext.files.empty() || m_journalContext.lastFileSize > m_fileSizeLimit) {
 		/// create new file
 		journal_file_start_msec = msec;
+		createNewLogFile(journal_file_start_msec);
 	}
 	else {
 		journal_file_start_msec = m_journalContext.files[m_journalContext.files.size() - 1];
@@ -219,27 +217,6 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 
 	ShvJournalFileWriter wr(journalDir(), journal_file_start_msec, m_journalContext.recentTimeStamp);
 	ssize_t orig_fsz = wr.fileSize();
-	if(orig_fsz == 0) {
-		logMShvJournal() << "New log file:" << wr.fileName() << "created.";
-		// new file should start with snapshot
-		if(m_snapShotFn) {
-			std::vector<ShvJournalEntry> snapshot;
-			m_snapShotFn(snapshot);
-			logDShvJournal() << "Writing snapshot, entries count:" << snapshot.size();
-			//ShvJournalEntry e_begin(ShvJournalEntry::PATH_SNAPSHOT_BEGIN, true, ShvJournalEntry::DOMAIN_SHV_SYSTEM, ShvJournalEntry::NO_SHORT_TIME, ShvJournalEntry::SampleType::Discrete, journal_file_start_msec);
-			//wr.append(e_begin);
-			for(ShvJournalEntry &e : snapshot) {
-				e.epochMsec = journal_file_start_msec;
-				wr.append(e);
-			}
-			//ShvJournalEntry e_end(ShvJournalEntry::PATH_SNAPSHOT_END, true, ShvJournalEntry::DOMAIN_SHV_SYSTEM, ShvJournalEntry::NO_SHORT_TIME, ShvJournalEntry::SampleType::Discrete, journal_file_start_msec);
-			//wr.append(e_end);
-		}
-		else {
-			logMShvJournal() << "SnapShot function not defined";
-		}
-		m_journalContext.files.push_back(journal_file_start_msec);
-	}
 	wr.appendMonotonic(entry);
 	m_journalContext.recentTimeStamp = wr.recentTimeStamp();
 	ssize_t new_fsz = wr.fileSize();
@@ -248,6 +225,37 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 	if(m_journalContext.journalSize > m_journalSizeLimit) {
 		rotateJournal();
 	}
+}
+
+void ShvFileJournal::createNewLogFile(int64_t journal_file_start_msec)
+{
+	if(journal_file_start_msec == 0) {
+		checkJournalContext();
+		journal_file_start_msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
+		if(!m_journalContext.files.empty() && m_journalContext.files[m_journalContext.files.size() - 1] >= journal_file_start_msec)
+			SHV_EXCEPTION("Journal context corrupted, new log file is older than last existing one.");
+	}
+	ShvJournalFileWriter wr(journalDir(), journal_file_start_msec, journal_file_start_msec);
+	logMShvJournal() << "New log file:" << wr.fileName() << "created.";
+	// new file should start with snapshot
+	if(m_snapShotFn) {
+		std::vector<ShvJournalEntry> snapshot;
+		m_snapShotFn(snapshot);
+		logDShvJournal() << "Writing snapshot, entries count:" << snapshot.size();
+		//ShvJournalEntry e_begin(ShvJournalEntry::PATH_SNAPSHOT_BEGIN, true, ShvJournalEntry::DOMAIN_SHV_SYSTEM, ShvJournalEntry::NO_SHORT_TIME, ShvJournalEntry::SampleType::Discrete, journal_file_start_msec);
+		//wr.append(e_begin);
+		for(ShvJournalEntry &e : snapshot) {
+			e.epochMsec = journal_file_start_msec;
+			wr.append(e);
+		}
+		//ShvJournalEntry e_end(ShvJournalEntry::PATH_SNAPSHOT_END, true, ShvJournalEntry::DOMAIN_SHV_SYSTEM, ShvJournalEntry::NO_SHORT_TIME, ShvJournalEntry::SampleType::Discrete, journal_file_start_msec);
+		//wr.append(e_end);
+	}
+	else {
+		logMShvJournal() << "SnapShot function not defined";
+	}
+	m_journalContext.files.push_back(journal_file_start_msec);
+	m_journalContext.recentTimeStamp = journal_file_start_msec;
 }
 
 int64_t ShvFileJournal::JournalContext::fileNameToFileMsec(const std::string &fn)
@@ -274,7 +282,7 @@ std::string ShvFileJournal::JournalContext::fileMsecToFilePath(int64_t file_msec
 void ShvFileJournal::checkJournalContext_helper(bool force)
 {
 	if(!m_journalContext.isConsistent() || force) {
-		logMShvJournal() << "journal status not consistent or check forced";
+		logMShvJournal() << "journal context not consistent or check forced, check forced:" << force;
 		m_journalContext.recentTimeStamp = 0;
 		m_journalContext.journalDirExists = journalDirExists();
 		if(!m_journalContext.journalDirExists)
@@ -283,6 +291,8 @@ void ShvFileJournal::checkJournalContext_helper(bool force)
 			updateJournalStatus();
 		else
 			shvWarning() << "Journal dir:" << journalDir() << "does not exist!";
+		if(m_journalContext.isConsistent())
+			logMShvJournal() << "journal context is consistent now";
 	}
 	if(!m_journalContext.isConsistent()) {
 		SHV_EXCEPTION("Journal cannot be brought to consistent state.");
@@ -307,7 +317,7 @@ bool ShvFileJournal::journalDirExists()
 void ShvFileJournal::rotateJournal()
 {
 	logMShvJournal() << "Rotating journal of size:" << m_journalContext.journalSize;
-	updateJournalFiles();
+	updateJournalStatus();
 	size_t file_sz = m_journalContext.files.size();
 	size_t file_cnt = m_journalContext.files.size();
 	for(int64_t file_msec : m_journalContext.files) {
@@ -393,12 +403,7 @@ void ShvFileJournal::convertLog1JournalDir()
 #endif
 void ShvFileJournal::updateJournalStatus()
 {
-	updateJournalFiles();
-}
-
-void ShvFileJournal::updateJournalFiles()
-{
-	logMShvJournal() << "FileShvJournal2::updateJournalFiles()";
+	logMShvJournal() << "ShvFileJournal::updateJournalStatus()";
 	m_journalContext.journalSize = 0;
 	m_journalContext.lastFileSize = 0;
 	m_journalContext.files.clear();
@@ -468,8 +473,9 @@ void ShvFileJournal::checkRecentTimeStamp()
 		m_journalContext.recentTimeStamp = 0; //cp::RpcValue::DateTime::now().msecsSinceEpoch();
 	}
 	else {
-		std::string fn = m_journalContext.fileMsecToFilePath(m_journalContext.files[m_journalContext.files.size() - 1]);
-		m_journalContext.recentTimeStamp = findLastEntryDateTime(fn);
+		auto last_file_start_msec = m_journalContext.files[m_journalContext.files.size() - 1];
+		std::string fn = m_journalContext.fileMsecToFilePath(last_file_start_msec);
+		m_journalContext.recentTimeStamp = findLastEntryDateTime(fn, last_file_start_msec);
 		logMShvJournal() << "setting recent timestamp to last entry in:" << fn
 						 << "to:" << m_journalContext.recentTimeStamp << "epoch msec"
 						 << cp::RpcValue::DateTime::fromMSecsSinceEpoch(m_journalContext.recentTimeStamp).toIsoString();
@@ -481,7 +487,7 @@ void ShvFileJournal::checkRecentTimeStamp()
 	//logDShvJournal() << "update recent time stamp:" << m_journalContext.recentTimeStamp << cp::RpcValue::DateTime::fromMSecsSinceEpoch(m_journalContext.recentTimeStamp).toIsoString();
 }
 
-int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, ssize_t *p_date_time_fpos)
+int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, int64_t journal_start_msec, ssize_t *p_date_time_fpos)
 {
 	shvLogFuncFrame() << "'" + fn + "'";
 	ssize_t date_time_fpos = -1;
@@ -493,6 +499,10 @@ int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, ssize_t *p_
 	int64_t dt_msec = -1;
 	in.seekg(0, std::ios::end);
 	long fpos = in.tellg();
+	if(fpos == 0) {
+		// empty file
+		return journal_start_msec;
+	}
 	static constexpr int TS_LEN = 30;
 	static constexpr int CHUNK_LEN = 512;
 	char buff[CHUNK_LEN + TS_LEN];
@@ -569,6 +579,7 @@ const ShvFileJournal::JournalContext &ShvFileJournal::checkJournalContext()
 {
 	try {
 		checkJournalContext_helper();
+		return m_journalContext;
 	}
 	catch (std::exception &e) {
 		logIShvJournal() << "Check journal consistecy failed, journal dir will be read again, SD card might be replaced, error:" << e.what();
@@ -601,7 +612,13 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 {
 	logIShvJournal() << "========================= getLog ==================";
 	logIShvJournal() << "params:" << params.toRpcValue().toCpon();
-	std::map<std::string, ShvJournalEntry> snapshot;
+
+	struct {
+		std::map<std::string, ShvJournalEntry> snapshot;
+		bool snapshotWritten = false;
+		int64_t snapshotMsec = 0;
+	} snapshot_ctx;
+
 	cp::RpcValue::List log;
 	bool since_now = (params.since.asString() == ShvGetLogParams::SINCE_NOW);
 
@@ -613,7 +630,6 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 	int64_t journal_start_msec = 0;
 	int64_t first_record_msec = 0;
 	int64_t last_record_msec = 0;
-	int64_t last_snapshot_msec = 0;
 	int rec_cnt_limit = std::min(params.recordCountLimit, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 	bool rec_cnt_limit_hit = false;
 
@@ -644,32 +660,34 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		rec.push_back(make_path_shared(e.path));
 		rec.push_back(e.value);
 		rec.push_back(e.shortTime == ShvJournalEntry::NO_SHORT_TIME? cp::RpcValue(nullptr): cp::RpcValue(e.shortTime));
-		rec.push_back((e.domain.empty() || e.domain == cp::Rpc::SIG_VAL_CHANGED)? cp::RpcValue(nullptr): e.domain);
+		rec.push_back((e.domain.empty() || e.domain == ShvJournalEntry::DOMAIN_VAL_CHANGE)? cp::RpcValue(nullptr): e.domain);
 		rec.push_back((int)e.sampleType);
 		rec.push_back(e.userId.empty()? cp::RpcValue(nullptr): cp::RpcValue(e.userId));
 		rec.push_back(e.isSnapshotValue);
 		log.push_back(std::move(rec));
 		return true;
 	};
-	auto write_snapshot = [append_log_entry, &since_now, &params_since_msec, &last_snapshot_msec, &snapshot]() {
-		if(!snapshot.empty()) {
+	auto write_snapshot = [append_log_entry, since_now, params_since_msec, &snapshot_ctx]() {
+		if(snapshot_ctx.snapshotWritten) {
+			shvWarning() << "Snapshot written already";
+			return false;
+		}
+		snapshot_ctx.snapshotWritten = true;
+		if(!snapshot_ctx.snapshot.empty()) {
 			logDShvJournal() << "\t -------------- Snapshot";
-			for(const auto &kv : snapshot) {
+			snapshot_ctx.snapshotMsec = params_since_msec;
+			if(since_now) {
+				snapshot_ctx.snapshotMsec = 0;
+				for(const auto &kv : snapshot_ctx.snapshot)
+					snapshot_ctx.snapshotMsec = std::max(snapshot_ctx.snapshotMsec, kv.second.epochMsec);
+			}
+			for(const auto &kv : snapshot_ctx.snapshot) {
 				ShvJournalEntry e = kv.second;
-				if (e.value.hasDefaultValue()) {
-					continue;
-				}
-				if (since_now) {
-					e.epochMsec = last_snapshot_msec;
-				}
-				else {
-					e.epochMsec = params_since_msec;
-				}
+				e.epochMsec = snapshot_ctx.snapshotMsec;
 				e.isSnapshotValue = true;
 				if(!append_log_entry(e))
 					return false;
 			}
-			snapshot.clear();
 		}
 		return true;
 	};
@@ -684,40 +702,40 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 	};
 	*/
 	if(journal_context.files.size()) {
-		std::vector<int64_t>::const_iterator file_it = journal_context.files.begin();
-		journal_start_msec = *file_it;
+		std::vector<int64_t>::const_iterator first_file_it = journal_context.files.begin();
+		journal_start_msec = *first_file_it;
 		if(params_since_msec > 0) {
 			logDShvJournal() << "since:" << params.since.toCpon() << "msec:" << params_since_msec;
-			file_it = std::lower_bound(journal_context.files.begin(), journal_context.files.end(), params_since_msec);
-			if(file_it == journal_context.files.end()) {
+			first_file_it = std::lower_bound(journal_context.files.begin(), journal_context.files.end(), params_since_msec);
+			if(first_file_it == journal_context.files.end()) {
 				/// take last file
-				--file_it;
-				logDShvJournal() << "\t" << "not found, taking last file:" << *file_it << journal_context.fileMsecToFileName(*file_it);
+				--first_file_it;
+				logDShvJournal() << "\t" << "not found, taking last file:" << *first_file_it << journal_context.fileMsecToFileName(*first_file_it);
 			}
-			else if(*file_it == params_since_msec) {
+			else if(*first_file_it == params_since_msec) {
 				/// take exactly this file
-				logDShvJournal() << "\t" << "found exactly:" << *file_it << journal_context.fileMsecToFileName(*file_it);
+				logDShvJournal() << "\t" << "found exactly:" << *first_file_it << journal_context.fileMsecToFileName(*first_file_it);
 			}
-			else if(file_it == journal_context.files.begin()) {
+			else if(first_file_it == journal_context.files.begin()) {
 				/// take first file
-				logDShvJournal() << "\t" << "begin, taking first file:" << *file_it << journal_context.fileMsecToFileName(*file_it);
+				logDShvJournal() << "\t" << "begin, taking first file:" << *first_file_it << journal_context.fileMsecToFileName(*first_file_it);
 			}
 			else {
 				/// take previous file
-				logDShvJournal() << "\t" << "lower bound found, taking previous file:" << *file_it << journal_context.fileMsecToFileName(*file_it);
-				--file_it;
+				logDShvJournal() << "\t" << "lower bound found, taking previous file:" << *first_file_it << journal_context.fileMsecToFileName(*first_file_it);
+				--first_file_it;
 			}
 		}
 
-		//if(log_since_msec > 0 && log_since_msec < journal_start_msec) {
-		//	append_data_missing(log_since_msec, true);
-		//	append_data_missing(journal_start_msec, false);
-		//}
-
 		PatternMatcher pattern_matcher(params);
-		for(; file_it != journal_context.files.end(); file_it++) {
+		for(auto file_it = first_file_it; file_it != journal_context.files.end(); file_it++) {
 			std::string fn = journal_context.fileMsecToFilePath(*file_it);
 			logDShvJournal() << "-------- opening file:" << fn;
+
+			std::vector<ShvJournalEntry> entries_to_write{ShvJournalEntry{}};
+			std::map<std::string, ShvJournalEntry> this_file_snapshot;
+			int64_t this_file_snapshot_msec = *file_it;
+
 			ShvJournalFileReader rd(fn);
 			while(rd.next()) {
 				const ShvJournalEntry &e = rd.entry();
@@ -727,31 +745,57 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 						continue;
 					logDShvJournal() << "\t\t MATCH";
 				}
-				if(params_since_msec > 0 && e.epochMsec < params_since_msec) {
-					if(params.withSnapshot) {
-						if(e.sampleType == ShvJournalEntry::SampleType::Continuous) {
-							last_snapshot_msec = e.epochMsec;
-							addToSnapshot(snapshot, e);
+				entries_to_write[0] = e;
+				entries_to_write.resize(1);
+				if(rd.isInSnapShot()) {
+					this_file_snapshot[e.path] = e;
+					this_file_snapshot_msec = e.epochMsec;
+				}
+				else if(!this_file_snapshot.empty()) {
+					for(const auto &kv : snapshot_ctx.snapshot) {
+						ShvJournalEntry e3 = kv.second;
+						if(this_file_snapshot.find(e3.path) == this_file_snapshot.cend()) {
+							/*
+							Clear previously set values not present in the current file snapshot
+
+							Value is set in previous file, but it is not present in current file
+							snapshot. This might happen if device was switched off and the value was
+							cleared during device inactivity. For example TC got free whilst cabinet
+							was without power.
+							We have to append this lost information after the current file snapshot,
+							to reflect cleared value.
+							*/
+							e3.epochMsec = this_file_snapshot_msec;
+							e3.value.setDefaultValue();
+							entries_to_write.push_back(kv.second);
 						}
 					}
+					this_file_snapshot.clear();
 				}
-				else {
-					if(params.withSnapshot)
-						if(!write_snapshot())
-							goto log_finish;
-					if(params_until_msec == 0 || e.epochMsec < params_until_msec) { // keep interval open to make log merge simpler
-						if(!append_log_entry(e))
-							goto log_finish;
+				for(const ShvJournalEntry &e2 : entries_to_write) {
+					logDShvJournal() << "\t entry:" << e.toRpcValueMap().toCpon();
+					bool before_since = params_since_msec > 0 && e2.epochMsec < params_since_msec;
+					bool after_until = params_until_msec > 0 && e2.epochMsec >= params_until_msec;
+					if(before_since) {
+						addToSnapshot(snapshot_ctx.snapshot, e2);
+					}
+					else if(after_until) {
+						goto log_finish;
 					}
 					else {
-						goto log_finish;
+						if(params.withSnapshot && !snapshot_ctx.snapshotWritten) {
+							if(!write_snapshot())
+								goto log_finish;
+						}
+						if(!append_log_entry(e2))
+							goto log_finish;
 					}
 				}
 			}
 		}
 	}
 log_finish:
-	if(params.withSnapshot) {
+	if(params.withSnapshot && !snapshot_ctx.snapshotWritten) {
 		// snapshot should be written already
 		// this is only case, when log is empty and
 		// only snapshot shall be returned
@@ -760,7 +804,7 @@ log_finish:
 
 	int64_t log_since_msec = params_since_msec;
 	if (since_now) {
-		log_since_msec = last_snapshot_msec;
+		log_since_msec = snapshot_ctx.snapshotMsec;
 	}
 	else if(log_since_msec < journal_start_msec) {
 		log_since_msec = journal_start_msec;

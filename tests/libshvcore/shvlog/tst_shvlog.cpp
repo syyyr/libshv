@@ -40,13 +40,14 @@ void write_cpon_file(const string &fn, const RpcValue &log)
 	wr << log;
 }
 
-const string TEST_DIR = "/tmp/TestShvFileReader";
+const string TEST_DIR = "/tmp/TestShvLog";
 const string JOURNAL_DIR = TEST_DIR + "/journal";
 
 struct Channel
 {
 	ShvLogTypeInfo typeInfo;
 	string domain;
+	ShvJournalEntry::SampleType sampleType = ShvJournalEntry::SampleType::Continuous;
 	int minVal = 0;
 	int maxVal = 0;
 	uint16_t period = 1;
@@ -62,6 +63,8 @@ void snapshot_fn(std::vector<ShvJournalEntry> &ev)
 		ShvJournalEntry e;
 		e.path = kv.first;
 		e.value = kv.second.value;
+		e.domain = kv.second.domain;
+		e.sampleType = kv.second.sampleType;
 		ev.push_back(std::move(e));
 	}
 }
@@ -139,7 +142,7 @@ ShvLogTypeInfo typeInfo
 };
 }
 
-class TestShvFileReader: public QObject
+class TestShvLog: public QObject
 {
 	Q_OBJECT
 private:
@@ -155,7 +158,7 @@ private:
 			ShvFileJournal file_journal("testdev", snapshot_fn);
 			file_journal.setJournalDir(JOURNAL_DIR);
 			file_journal.setFileSizeLimit(1024*64*20);
-			file_journal.setJournalSizeLimit(file_journal.fileSizeLimit() * 3);
+			file_journal.setJournalSizeLimit(file_journal.fileSizeLimit() * 10);
 			qDebug() << "------------- Generating log files";
 			auto msec = RpcValue::DateTime::now().msecsSinceEpoch();
 			int64_t msec1 = msec;
@@ -163,7 +166,7 @@ private:
 			std::mt19937 mt(randev());
 			std::uniform_int_distribution<int> rndmsec(0, 2000);
 			std::uniform_int_distribution<int> rndval(0, 1000);
-			constexpr int CNT = 6000;//0;
+			constexpr int CNT = 60000;
 			for (int i = 0; i < CNT; ++i) {
 				msec += rndmsec(mt);
 				for(auto &kv : channels) {
@@ -178,16 +181,19 @@ private:
 						}
 						else if(e.path == "vetra/vehicleDetected") {
 							e.value = RpcValue::List{rv, i %2? "R": "L"};
+							e.sampleType = ShvJournalEntry::SampleType::Discrete;
 						}
 						else {
 							e.value = rv;
 						}
 						e.domain = c.domain;
-						e.shortTime = msec % 0x100;
+						//e.shortTime = msec % 0x100;
+						//qDebug() << i << "-->" << e.value.toCpon();
 						file_journal.append(e);
 					}
 				}
 			}
+			qDebug() << "\t" << CNT << "records written, recent timestamp:" << RpcValue::DateTime::fromMSecsSinceEpoch(file_journal.recentlyWrittenEntryDateTime()).toIsoString();
 			int64_t msec2 = msec;
 			{
 				ShvGetLogParams params;
@@ -236,6 +242,7 @@ private:
 							e.value = rv;
 						}
 						e.domain = c.domain;
+						e.sampleType = c.sampleType;
 						e.shortTime = msec % 0x100;
 						dirty_log.append(e);
 						memory_jurnal.append(e);
@@ -345,6 +352,7 @@ private:
 private slots:
 	void initTestCase()
 	{
+		//shv::chainpack::Exception::setAbortOnException(true);
 		NecroLog::setTopicsLogTresholds("ShvJournal:D");
 		{
 			Channel &c = channels["temperature"];
@@ -352,12 +360,14 @@ private slots:
 			c.period = 50;
 			c.minVal = 0;
 			c.maxVal = 5000;
+			c.domain = ShvJournalEntry::DOMAIN_VAL_CHANGE;
 		}
 		{
 			Channel &c = channels["voltage"];
 			c.value = 0;
 			c.minVal = 0;
 			c.maxVal = 1500;
+			c.domain = ShvJournalEntry::DOMAIN_VAL_FASTCHANGE;
 		}
 		{
 			Channel &c = channels["doorOpen"];
@@ -365,6 +375,7 @@ private slots:
 			c.period = 500;
 			c.minVal = 0;
 			c.maxVal = 1;
+			c.domain = ShvJournalEntry::DOMAIN_VAL_CHANGE;
 		}
 		{
 			Channel &c = channels["vetra/vehicleDetected"];
@@ -372,12 +383,15 @@ private slots:
 			c.period = 100;
 			c.minVal = 6000;
 			c.maxVal = 6999;
+			c.domain = ShvJournalEntry::DOMAIN_VAL_CHANGE;
+			c.sampleType = ShvJournalEntry::SampleType::Discrete;
 		}
 		{
 			Channel &c = channels["vetra/status"];
 			c.value = 10;
 			c.minVal = 0;
 			c.maxVal = 0xFF;
+			c.domain = ShvJournalEntry::DOMAIN_VAL_CHANGE;
 		}
 	}
 	void tests()
@@ -391,5 +405,5 @@ private slots:
 	}
 };
 
-QTEST_MAIN(TestShvFileReader)
-#include "tst_shvlogfilereader.moc"
+QTEST_MAIN(TestShvLog)
+#include "tst_shvlog.moc"

@@ -193,6 +193,12 @@ RpcCall *RpcCall::setParams(const cp::RpcValue &params)
 	return this;
 }
 
+RpcCall *RpcCall::setUserId(const chainpack::RpcValue &user_id)
+{
+	m_userId = user_id;
+	return this;
+}
+
 void RpcCall::start()
 {
 	if(m_rpcConnection.isNull()) {
@@ -203,8 +209,8 @@ void RpcCall::start()
 		emit maybeResult(cp::RpcValue(), "RPC connection is not open");
 		return;
 	}
-	int rqid = m_rpcConnection->nextRequestId();
-	RpcResponseCallBack *cb = new RpcResponseCallBack(m_rpcConnection, rqid, this);
+	int rq_id = m_rpcConnection->nextRequestId();
+	RpcResponseCallBack *cb = new RpcResponseCallBack(m_rpcConnection, rq_id, this);
 	if (m_timeout) {
 		cb->setTimeout(m_timeout);
 	}
@@ -216,7 +222,7 @@ void RpcCall::start()
 			emit maybeResult(cp::RpcValue(), QString::fromStdString(resp.errorString()));
 		}
 	});
-	m_rpcConnection->callShvMethod(rqid, m_shvPath, m_method, m_params);
+	m_rpcConnection->callShvMethod(rq_id, m_shvPath, m_method, m_params, m_userId);
 }
 
 } // namespace rpc

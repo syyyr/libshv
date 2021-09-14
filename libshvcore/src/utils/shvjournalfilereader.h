@@ -23,7 +23,7 @@ public:
 	bool next();
 	bool last();
 	const ShvJournalEntry& entry();
-
+	bool isInSnapShot() const { return m_snapShotEpochMsec > 0 && m_snapShotEpochMsec == m_currentEntry.epochMsec; }
 	static int64_t fileNameToFileMsec(const std::string &fn, bool throw_exc = shv::core::Exception::Throw);
 	static std::string msecToBaseFileName(int64_t msec);
 private:

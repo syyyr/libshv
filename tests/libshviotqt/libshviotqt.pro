@@ -3,5 +3,5 @@ CONFIG += ordered
 
 unix {
 SUBDIRS += \
-	shvjournal \
+	utils \
 }

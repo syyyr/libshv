@@ -9,7 +9,9 @@ else {
 }
 message ( SHV_PROJECT_TOP_BUILDDIR == '$$SHV_PROJECT_TOP_BUILDDIR' )
 
-LIBSHV_SRC_DIR = $$PWD/../..
+isEmpty(LIBSHV_SRC_DIR) {
+    LIBSHV_SRC_DIR=$$PWD/../..
+}
 
 QT -= gui
 QT += core network sql

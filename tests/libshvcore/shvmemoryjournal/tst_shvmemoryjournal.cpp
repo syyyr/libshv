@@ -18,7 +18,7 @@ private:
 		journal.append(ShvJournalEntry(
 						   path,
 						   value,
-						   ShvJournalEntry::DOMAIN_VAL_CHANGE,
+						   shv::chainpack::Rpc::SIG_VAL_CHANGED,
 						   ShvJournalEntry::NO_SHORT_TIME,
 						   ShvJournalEntry::SampleType::Continuous,
 						   time));

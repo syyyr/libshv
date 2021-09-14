@@ -227,12 +227,12 @@ void ClientConnection::onRpcValueReceived(const chainpack::RpcValue &rpc_val)
 
 void ClientConnection::sendHello()
 {
-	m_connectionState.helloRequestId = callMethod(cp::Rpc::METH_HELLO);
+	m_connectionState.helloRequestId = callShvMethod({}, cp::Rpc::METH_HELLO);
 }
 
 void ClientConnection::sendLogin(const shv::chainpack::RpcValue &server_hello)
 {
-	m_connectionState.loginRequestId = callMethod(cp::Rpc::METH_LOGIN, createLoginParams(server_hello));
+	m_connectionState.loginRequestId = callShvMethod({}, cp::Rpc::METH_LOGIN, createLoginParams(server_hello));
 }
 
 void ClientConnection::checkBrokerConnected()

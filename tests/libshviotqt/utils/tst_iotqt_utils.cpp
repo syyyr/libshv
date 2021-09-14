@@ -16,7 +16,7 @@ QDebug operator<<(QDebug debug, const std::string &s)
 
 }
 
-class TestFileShvJournal: public QObject
+class TestIotqtUtils: public QObject
 {
 	Q_OBJECT
 private:
@@ -85,5 +85,5 @@ private slots:
 	}
 };
 
-QTEST_MAIN(TestFileShvJournal)
-#include "tst_shvjournal.moc"
+QTEST_MAIN(TestIotqtUtils)
+#include "tst_iotqt_utils.moc"
