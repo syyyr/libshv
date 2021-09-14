@@ -79,15 +79,21 @@ public:
 		//double buttonSpacing() const { return buttonSize() / 5; }
 	};
 public:
-	class View
+	static const QString DEFAULT_USER_PROFILE;
+
+	class VisualSettings
 	{
 	public:
 		class Channel
 		{
 		public:
-			QString name;
+			QString shvPath;
 			GraphChannel::Style style;
 		};
+
+		QString toJson() const;
+		static VisualSettings fromJson(const QString &json);
+
 		QVector<Channel> channels;
 	};
 
@@ -101,6 +107,8 @@ public:
 
 	void setTimeZone(const QTimeZone &tz);
 	QTimeZone timeZone() const;
+
+	void setSettingsUserName(const QString &user);
 
 	void reset();
 	void createChannelsFromModel();
@@ -214,14 +222,14 @@ public:
 
 	static QString rectToString(const QRect &r);
 
-	View view();
-	void setView(const View &view);
+	VisualSettings visualSettings();
+	void setVisualSettings(const VisualSettings &settings);
 	void resizeChannel(int ix, int delta_px);
 
-	void saveView(const QString &shv_path, const QString &name, const View &view) const;
-	void deleteView(const QString &shv_path, const QString &name) const;
-	QStringList savedViewNames(const QString &shv_path) const;
-	View loadView(const QString &shv_path, const QString &name) const;
+	void saveVisualSettings(const QString &settings_id, const QString &name, const VisualSettings &visual_settings) const;
+	void deleteVisualSettings(const QString &settings_id, const QString &name) const;
+	QStringList savedVisualSettingsNames(const QString &settings_id) const;
+	VisualSettings loadVisualSettings(const QString &settings_id, const QString &name) const;
 
 protected:
 	void sanityXRangeZoom();
@@ -311,6 +319,7 @@ protected:
 
 	QPixmap m_miniMapCache;
 	GraphButtonBox *m_cornerCellButtonBox = nullptr;
+	QString m_settingsUserName = DEFAULT_USER_PROFILE;
 };
 
 }}}

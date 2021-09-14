@@ -125,5 +125,3 @@ protected:
 } // namespace visu
 } // namespace shv
 
-Q_DECLARE_METATYPE(shv::visu::timeline::GraphChannel::Style)
-
