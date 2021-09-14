@@ -47,6 +47,15 @@ ssize_t ShvJournalFileWriter::fileSize()
 	return m_out.tellp();
 }
 
+void ShvJournalFileWriter::append(const ShvJournalEntry &entry)
+{
+	int64_t msec = entry.epochMsec;
+	if(msec == 0)
+		msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
+	m_recentTimeStamp = msec;
+	append(msec, uptimeSec(), entry);
+}
+
 void ShvJournalFileWriter::appendMonotonic(const ShvJournalEntry &entry)
 {
 
@@ -63,12 +72,12 @@ void ShvJournalFileWriter::appendMonotonic(const ShvJournalEntry &entry)
 	append(msec, uptimeSec(), entry);
 }
 
-void ShvJournalFileWriter::append(const ShvJournalEntry &entry)
+void ShvJournalFileWriter::appendSnapshot(int64_t msec, const std::vector<ShvJournalEntry> &snapshot)
 {
-	int64_t msec = entry.epochMsec;
-	if(msec == 0)
-		msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
-	append(msec, 0, entry);
+	for(const ShvJournalEntry &e : snapshot) {
+		append(msec, 0, e);
+	}
+	m_recentTimeStamp = msec;
 }
 
 void ShvJournalFileWriter::append(int64_t msec, int uptime, const ShvJournalEntry &entry)

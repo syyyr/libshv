@@ -3,6 +3,7 @@
 #include "../shvcoreglobal.h"
 
 #include <string>
+#include <vector>
 #include <fstream>
 
 namespace shv {
@@ -17,8 +18,9 @@ public:
 	ShvJournalFileWriter(const std::string &file_name);
 	ShvJournalFileWriter(const std::string &journal_dir, int64_t journal_start_time, int64_t last_entry_ts);
 
-	void appendMonotonic(const ShvJournalEntry &entry);
 	void append(const ShvJournalEntry &entry);
+	void appendMonotonic(const ShvJournalEntry &entry);
+	void appendSnapshot(int64_t msec, const std::vector<ShvJournalEntry> &snapshot);
 
 	ssize_t fileSize();
 	const std::string& fileName() const { return m_fileName; }
