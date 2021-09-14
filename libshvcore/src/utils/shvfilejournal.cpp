@@ -124,13 +124,6 @@ static int64_t str_to_size(const std::string &str)
 	return n;
 }
 
-//==============================================================
-// FileShvJournal2
-//==============================================================
-static constexpr size_t MIN_SEP_POS = 13;
-static constexpr size_t SEC_SEP_POS = MIN_SEP_POS + 3;
-static constexpr size_t MSEC_SEP_POS = SEC_SEP_POS + 3;
-
 const std::string ShvFileJournal::FILE_EXT = ".log2";
 
 ShvFileJournal::ShvFileJournal(std::string device_id, ShvFileJournal::SnapShotFn snf)
@@ -140,11 +133,6 @@ ShvFileJournal::ShvFileJournal(std::string device_id, ShvFileJournal::SnapShotFn
 	//setDefaultAppendLogTSNowFn();
 	setDeviceId(device_id);
 }
-
-//void ShvFileJournal::setDefaultAppendLogTSNowFn()
-//{
-//	m_appendLogTSNowFn = []() {return cp::RpcValue::DateTime::now().msecsSinceEpoch();};
-//}
 
 void ShvFileJournal::setJournalDir(std::string s)
 {
@@ -264,31 +252,12 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 
 int64_t ShvFileJournal::JournalContext::fileNameToFileMsec(const std::string &fn)
 {
-	std::string utc_str;
-	auto ix = fn.rfind('/');
-	if(ix != std::string::npos)
-		utc_str = fn.substr(ix + 1);
-	else
-		utc_str = fn;
-	if(MSEC_SEP_POS >= utc_str.size())
-		SHV_EXCEPTION("fileNameToFileMsec(): File name: '" + fn + "' too short.");
-	utc_str[MIN_SEP_POS] = ':';
-	utc_str[SEC_SEP_POS] = ':';
-	utc_str[MSEC_SEP_POS] = '.';
-	size_t len;
-	int64_t msec = cp::RpcValue::DateTime::fromUtcString(utc_str, &len).msecsSinceEpoch();
-	if(msec == 0 || len == 0)
-		SHV_EXCEPTION("fileNameToFileMsec(): Invalid file name: '" + fn + "' cannot be converted to date time");
-	return msec;
+	return ShvJournalFileReader::fileNameToFileMsec(fn);
 }
 
 std::string ShvFileJournal::JournalContext::msecToBaseFileName(int64_t msec)
 {
-	std::string fn = cp::RpcValue::DateTime::fromMSecsSinceEpoch(msec).toIsoString(cp::RpcValue::DateTime::MsecPolicy::Always, false);
-	fn[MIN_SEP_POS] = '-';
-	fn[SEC_SEP_POS] = '-';
-	fn[MSEC_SEP_POS] = '-';
-	return fn;
+	return ShvJournalFileReader::msecToBaseFileName(msec);
 }
 
 std::string ShvFileJournal::JournalContext::fileMsecToFileName(int64_t msec)

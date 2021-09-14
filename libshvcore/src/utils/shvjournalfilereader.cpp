@@ -40,6 +40,7 @@ ShvJournalFileReader::ShvJournalFileReader(const std::string &file_name)
 	m_ifstream.open(file_name, std::ios::binary);
 	if(!m_ifstream)
 		SHV_EXCEPTION("Cannot open file " + file_name + " for reading.");
+	m_snapshotMsec = fileNameToFileMsec(file_name, !shv::core::Exception::Throw);
 }
 
 bool ShvJournalFileReader::next()
@@ -76,9 +77,7 @@ bool ShvJournalFileReader::next()
 
 		m_currentEntry.path = std::move(path);
 		m_currentEntry.epochMsec = dt.msecsSinceEpoch();
-		if(m_snapshotMsec < 0)
-			m_snapshotMsec = m_currentEntry.epochMsec;
-		m_currentEntry.isSnapshotValue = m_currentEntry.epochMsec == m_snapshotMsec;
+		m_currentEntry.isSnapshotValue = (m_currentEntry.epochMsec == m_snapshotMsec);
 		bool ok;
 		int short_time = short_time_sv.toInt(&ok);
 		m_currentEntry.shortTime = ok && short_time >= 0? short_time: ShvJournalEntry::NO_SHORT_TIME;
@@ -113,6 +112,47 @@ bool ShvJournalFileReader::last()
 const ShvJournalEntry &ShvJournalFileReader::entry()
 {
 	return m_currentEntry;
+}
+
+static constexpr size_t MIN_SEP_POS = 13;
+static constexpr size_t SEC_SEP_POS = MIN_SEP_POS + 3;
+static constexpr size_t MSEC_SEP_POS = SEC_SEP_POS + 3;
+
+int64_t ShvJournalFileReader::fileNameToFileMsec(const std::string &fn, bool throw_exc)
+{
+	std::string utc_str;
+	auto ix = fn.rfind('/');
+	if(ix != std::string::npos)
+		utc_str = fn.substr(ix + 1);
+	else
+		utc_str = fn;
+	if(MSEC_SEP_POS >= utc_str.size()) {
+		if(throw_exc)
+			SHV_EXCEPTION("fileNameToFileMsec(): File name: '" + fn + "' too short.");
+		else
+			return -1;
+	}
+	utc_str[MIN_SEP_POS] = ':';
+	utc_str[SEC_SEP_POS] = ':';
+	utc_str[MSEC_SEP_POS] = '.';
+	size_t len;
+	int64_t msec = cp::RpcValue::DateTime::fromUtcString(utc_str, &len).msecsSinceEpoch();
+	if(msec == 0 || len == 0) {
+		if(throw_exc)
+			SHV_EXCEPTION("fileNameToFileMsec(): Invalid file name: '" + fn + "' cannot be converted to date time");
+		else
+			return -1;
+	}
+	return msec;
+}
+
+std::string ShvJournalFileReader::msecToBaseFileName(int64_t msec)
+{
+	std::string fn = cp::RpcValue::DateTime::fromMSecsSinceEpoch(msec).toIsoString(cp::RpcValue::DateTime::MsecPolicy::Always, false);
+	fn[MIN_SEP_POS] = '-';
+	fn[SEC_SEP_POS] = '-';
+	fn[MSEC_SEP_POS] = '-';
+	return fn;
 }
 
 } // namespace utils

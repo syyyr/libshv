@@ -4,6 +4,7 @@
 #include "../shvcoreglobal.h"
 #include "shvjournalentry.h"
 #include "shvlogtypeinfo.h"
+#include "../exception.h"
 
 #include <string>
 #include <fstream>
@@ -22,6 +23,9 @@ public:
 	bool next();
 	bool last();
 	const ShvJournalEntry& entry();
+
+	static int64_t fileNameToFileMsec(const std::string &fn, bool throw_exc = shv::core::Exception::Throw);
+	static std::string msecToBaseFileName(int64_t msec);
 private:
 	std::string m_fileName;
 	std::ifstream m_ifstream;
