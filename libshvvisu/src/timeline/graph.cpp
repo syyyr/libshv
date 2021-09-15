@@ -406,7 +406,7 @@ QMap<QString, QString> Graph::yValuesToMap(int channel_ix, const shv::visu::time
 	if (s.isValid()) {
 		GraphModel::ChannelInfo &channel_info = model()->channelInfo(m_channels[channel_ix]->modelIndex());
 
-		if (channel_info.typeDescr.sampleType != shv::chainpack::DataChange::SampleType::Invalid) {
+		if (channel_info.typeDescr.sampleType != shv::core::utils::ShvLogTypeDescr::SampleType::Invalid) {
 			if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Map) {
 				ret = prettyMapValue(s.value, channel_info.typeDescr);
 			}

@@ -65,7 +65,7 @@ public:
 			Value,
 			ShortTime,
 			Domain,
-			SampleType,
+			ValueFlags,
 			UserId,
 		};
 		static const char* name(Enum e);

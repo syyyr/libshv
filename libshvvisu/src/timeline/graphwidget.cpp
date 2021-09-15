@@ -516,7 +516,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		//update(ch->graphAreaRect());
 		GraphModel::ChannelInfo &channel_info = gr->model()->channelInfo(ch->modelIndex());
 		Sample s;
-		if (channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Discrete) {
+		if (channel_info.typeDescr.sampleType == shv::core::utils::ShvLogTypeDescr::SampleType::Discrete) {
 			s = gr->nearestSample(ch_ix, t);
 		}
 		else {
@@ -526,8 +526,8 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		QString text;
 
 		if (s.isValid()) {
-			if (channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Continuous ||
-				(channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Discrete && qAbs(pos.x() - gr->timeToPos(s.time)) < gr->u2px(1.1))) {
+			if (channel_info.typeDescr.sampleType == shv::core::utils::ShvLogTypeDescr::SampleType::Continuous ||
+				(channel_info.typeDescr.sampleType == shv::core::utils::ShvLogTypeDescr::SampleType::Discrete && qAbs(pos.x() - gr->timeToPos(s.time)) < gr->u2px(1.1))) {
 				point = mapToGlobal(pos + QPoint{gr->u2px(0.8), 0});
 				QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
 				dt = dt.toTimeZone(graph()->timeZone());
@@ -872,7 +872,7 @@ void GraphWidget::createProbe(int channel_ix, timemsec_t time)
 	const GraphChannel *ch = m_graph->channelAt(channel_ix);
 	GraphModel::ChannelInfo &channel_info = m_graph->model()->channelInfo(ch->modelIndex());
 
-	if (channel_info.typeDescr.sampleType == shv::chainpack::DataChange::SampleType::Discrete) {
+	if (channel_info.typeDescr.sampleType == shv::core::utils::ShvLogTypeDescr::SampleType::Discrete) {
 		Sample s = m_graph->nearestSample(channel_ix, time);
 
 		if (s.isValid())

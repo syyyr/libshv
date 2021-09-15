@@ -20,7 +20,7 @@ private:
 						   value,
 						   shv::chainpack::Rpc::SIG_VAL_CHANGED,
 						   ShvJournalEntry::NO_SHORT_TIME,
-						   ShvJournalEntry::SampleType::Continuous,
+						   ShvJournalEntry::NO_VALUE_FLAGS,
 						   time));
 	}
 

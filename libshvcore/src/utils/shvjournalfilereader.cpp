@@ -73,18 +73,15 @@ bool ShvJournalFileReader::next()
 		std::string path = line_record.value(Column::Path).toString();
 		std::string domain = line_record.value(Column::Domain).toString();
 		StringView short_time_sv = line_record.value(Column::ShortTime);
-		auto sample_type = static_cast<ShvJournalEntry::SampleType>(shv::core::String::toInt(line_record.value(Column::SampleType).toString()));
+		auto value_flags = shv::core::String::toInt(line_record.value(Column::ValueFlags).toString());
 
 		m_currentEntry.path = std::move(path);
 		m_currentEntry.epochMsec = dt.msecsSinceEpoch();
-		m_currentEntry.isSnapshotValue = (m_currentEntry.epochMsec == m_snapshotMsec);
 		bool ok;
 		int short_time = short_time_sv.toInt(&ok);
 		m_currentEntry.shortTime = ok && short_time >= 0? short_time: ShvJournalEntry::NO_SHORT_TIME;
 		m_currentEntry.domain = std::move(domain);
-		m_currentEntry.sampleType = sample_type;
-		if (m_currentEntry.sampleType == ShvJournalEntry::SampleType::Invalid)
-			m_currentEntry.sampleType = ShvJournalEntry::SampleType::Continuous;
+		m_currentEntry.valueFlags = value_flags;
 		m_currentEntry.userId = line_record.value(Column::UserId).toString();
 		std::string err;
 		m_currentEntry.value = cp::RpcValue::fromCpon(line_record.value(Column::Value).toString(), &err);

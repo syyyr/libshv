@@ -655,9 +655,8 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		rec.push_back(e.value);
 		rec.push_back(e.shortTime == ShvJournalEntry::NO_SHORT_TIME? cp::RpcValue(nullptr): cp::RpcValue(e.shortTime));
 		rec.push_back((e.domain.empty() || e.domain == ShvJournalEntry::DOMAIN_VAL_CHANGE)? cp::RpcValue(nullptr): e.domain);
-		rec.push_back((int)e.sampleType);
+		rec.push_back(e.valueFlags);
 		rec.push_back(e.userId.empty()? cp::RpcValue(nullptr): cp::RpcValue(e.userId));
-		rec.push_back(e.isSnapshotValue);
 		log.push_back(std::move(rec));
 		return true;
 	};
@@ -678,23 +677,16 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 			for(const auto &kv : snapshot_ctx.snapshot) {
 				ShvJournalEntry e = kv.second;
 				e.epochMsec = snapshot_ctx.snapshotMsec;
-				e.isSnapshotValue = true;
+				e.setSnapshotValue(true);
+				// erase EVENT flag in the snapshot values,
+				// they can trigger events during reply otherwise
+				e.setEventValue(false);
 				if(!append_log_entry(e))
 					return false;
 			}
 		}
 		return true;
 	};
-	/*
-	auto append_data_missing = [&append_log_entry](int64_t msec, bool b) {
-		ShvJournalEntry e;
-		e.epochMsec = msec;
-		e.path = ShvJournalEntry::PATH_DATA_MISSING;
-		e.value = b? ShvJournalEntry::DATA_MISSING_LOG_FILE_MISSING: "";
-		e.domain = ShvJournalEntry::DOMAIN_SHV_SYSTEM;
-		return append_log_entry(e);
-	};
-	*/
 	if(journal_context.files.size()) {
 		std::vector<int64_t>::const_iterator first_file_it = journal_context.files.begin();
 		journal_start_msec = *first_file_it;
@@ -721,7 +713,6 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 			}
 		}
 
-		std::map<std::string, ShvJournalEntry> overall_snapshot;
 		PatternMatcher pattern_matcher(params);
 		auto path_match = [&params, &pattern_matcher](const ShvJournalEntry &e) {
 			if(!params.pathPattern.empty()) {
@@ -736,75 +727,24 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 			std::string fn = journal_context.fileMsecToFilePath(*file_it);
 			logDShvJournal() << "-------- opening file:" << fn;
 
-			std::map<std::string, ShvJournalEntry> current_file_snapshot;
-			int64_t current_file_snapshot_msec = *file_it;
-
 			ShvJournalFileReader rd(fn);
-
-			// read snapshot
 			while(rd.next()) {
 				const ShvJournalEntry &e = rd.entry();
 				if(!path_match(e))
 					continue;
-				if(e.isSnapshotValue)
-					current_file_snapshot[e.path] = e;
-			}
-			// remove from snapshot all values same as ones in the all_files_snapshot (duplicit values)
-			for (auto it1 = current_file_snapshot.cbegin(); it1 != current_file_snapshot.cend();) {
-				auto it2 = overall_snapshot.find(it1->first);
-				if (it2 != overall_snapshot.cend() && it2->second.value == it1->second.value) {
-					// delete duplicit value
-					it1 = current_file_snapshot.erase(it1);
-				}
-				else {
-					++it1;
-				}
-			}
-			/*
-			Clear previously set values not present in the current file snapshot
-
-			Value is set in previous file, but it is not present in current file
-			snapshot. This might happen if device was switched off and the value was
-			cleared during device inactivity. For example TC got free whilst cabinet
-			was without power.
-			We have to append this lost information after the current file snapshot,
-			to reflect cleared value.
-			*/
-			for (auto it1 = overall_snapshot.cbegin(); it1 != overall_snapshot.cend(); ++it1) {
-				auto it2 = current_file_snapshot.find(it1->first);
-				if (it2 == current_file_snapshot.cend()) {
-					// add default value for value present in all_files_snapshot
-					ShvJournalEntry e = it1->second;
-					e.epochMsec = current_file_snapshot_msec;
-					e.isSnapshotValue = true;
-					e.value.setDefaultValue();
-					current_file_snapshot[it1->first] = e;
-				}
-			}
-
-			auto current_file_snapshot_write_it = current_file_snapshot.cbegin();
-			while(true) {
-				ShvJournalEntry e;
-				if(current_file_snapshot_write_it == current_file_snapshot.cend()) {
-					if(rd.next()) {
-						e = rd.entry();
-						if(!path_match(e))
+				{
+					// skip CHNG duplicates, values that are the same as last log entry for the same path
+					auto it = snapshot_ctx.snapshot.find(e.path);
+					if (it != snapshot_ctx.snapshot.cend()) {
+						if(it->second.value == e.value && e.domain == chainpack::Rpc::SIG_VAL_CHANGED)
 							continue;
 					}
-					else {
-						break;
-					}
 				}
-				else {
-					e = current_file_snapshot_write_it->second;
-					++current_file_snapshot_write_it;
-				}
-				overall_snapshot[e.path] = e;
+				addToSnapshot(snapshot_ctx.snapshot, e);
 				logDShvJournal() << "\t entry:" << e.toRpcValueMap().toCpon();
 				bool before_since = params_since_msec > 0 && e.epochMsec < params_since_msec;
 				bool after_until = params_until_msec > 0 && e.epochMsec >= params_until_msec;
 				if(before_since) {
-					addToSnapshot(snapshot_ctx.snapshot, e);
 				}
 				else if(after_until) {
 					goto log_finish;
@@ -857,9 +797,8 @@ log_finish:
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Value)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::ShortTime)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Domain)}});
-		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::SampleType)}});
+		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::ValueFlags)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::UserId)}});
-		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::IsSnapshotValue)}});
 		log_header.setFields(std::move(fields));
 	}
 	if(params.withPathsDict) {
@@ -887,7 +826,7 @@ const char *ShvFileJournal::TxtColumn::name(ShvFileJournal::TxtColumn::Enum e)
 	case TxtColumn::Enum::Value: return ShvLogHeader::Column::name(ShvLogHeader::Column::Value);
 	case TxtColumn::Enum::ShortTime: return ShvLogHeader::Column::name(ShvLogHeader::Column::ShortTime);
 	case TxtColumn::Enum::Domain: return ShvLogHeader::Column::name(ShvLogHeader::Column::Domain);
-	case TxtColumn::Enum::SampleType: return ShvLogHeader::Column::name(ShvLogHeader::Column::SampleType);
+	case TxtColumn::Enum::ValueFlags: return ShvLogHeader::Column::name(ShvLogHeader::Column::ValueFlags);
 	case TxtColumn::Enum::UserId: return ShvLogHeader::Column::name(ShvLogHeader::Column::UserId);
 	}
 	return "invalid";

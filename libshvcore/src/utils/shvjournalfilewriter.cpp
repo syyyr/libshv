@@ -95,7 +95,7 @@ void ShvJournalFileWriter::append(int64_t msec, int uptime, const ShvJournalEntr
 	m_out << ShvFileJournal::FIELD_SEPARATOR;
 	m_out << entry.domain;
 	m_out << ShvFileJournal::FIELD_SEPARATOR;
-	m_out << (int)entry.sampleType;
+	m_out << (int)entry.valueFlags;
 	m_out << ShvFileJournal::FIELD_SEPARATOR;
 	m_out << entry.userId;
 	m_out << ShvFileJournal::RECORD_SEPARATOR;

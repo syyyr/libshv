@@ -44,9 +44,8 @@ public:
 			Value,
 			ShortTime,
 			Domain,
-			SampleType,
+			ValueFlags,
 			UserId,
-			IsSnapshotValue,
 		};
 		static const char* name(Enum e);
 	};

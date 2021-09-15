@@ -47,7 +47,7 @@ struct Channel
 {
 	ShvLogTypeInfo typeInfo;
 	string domain;
-	ShvJournalEntry::SampleType sampleType = ShvJournalEntry::SampleType::Continuous;
+	DataChange::ValueFlags valueFlags = 0;
 	int minVal = 0;
 	int maxVal = 0;
 	uint16_t period = 1;
@@ -64,7 +64,7 @@ void snapshot_fn(std::vector<ShvJournalEntry> &ev)
 		e.path = kv.first;
 		e.value = kv.second.value;
 		e.domain = kv.second.domain;
-		e.sampleType = kv.second.sampleType;
+		e.valueFlags = kv.second.valueFlags;
 		ev.push_back(std::move(e));
 	}
 }
@@ -181,7 +181,7 @@ private:
 						}
 						else if(e.path == "vetra/vehicleDetected") {
 							e.value = RpcValue::List{rv, i %2? "R": "L"};
-							e.sampleType = ShvJournalEntry::SampleType::Discrete;
+							e.setEventValue(true);
 						}
 						else {
 							e.value = rv;
@@ -242,7 +242,7 @@ private:
 							e.value = rv;
 						}
 						e.domain = c.domain;
-						e.sampleType = c.sampleType;
+						e.valueFlags = c.valueFlags;
 						e.shortTime = msec % 0x100;
 						dirty_log.append(e);
 						memory_jurnal.append(e);
@@ -384,7 +384,7 @@ private slots:
 			c.minVal = 6000;
 			c.maxVal = 6999;
 			c.domain = ShvJournalEntry::DOMAIN_VAL_CHANGE;
-			c.sampleType = ShvJournalEntry::SampleType::Discrete;
+			c.valueFlags = 1 << DataChange::ValueFlag::Event;
 		}
 		{
 			Channel &c = channels["vetra/status"];

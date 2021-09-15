@@ -33,37 +33,42 @@ public:
 	static const char* DATA_MISSING_UNAVAILABLE;
 	static const char* DATA_MISSING_NOT_EXISTS;
 
-	using SampleType = shv::chainpack::DataChange::SampleType;
+	using ValueFlag = shv::chainpack::DataChange::ValueFlag;
+	using ValueFlags = shv::chainpack::DataChange::ValueFlags;
 
-	static constexpr int NO_SHORT_TIME = -1;
+	static constexpr int NO_SHORT_TIME = shv::chainpack::DataChange::NO_SHORT_TIME;
+	static constexpr ValueFlags NO_VALUE_FLAGS = shv::chainpack::DataChange::NO_VALUE_FLAGS;
 
 	int64_t epochMsec = 0;
 	std::string path;
 	shv::chainpack::RpcValue value;
 	int shortTime = NO_SHORT_TIME;
 	std::string domain;
-	SampleType sampleType = SampleType::Continuous;
+	unsigned valueFlags = 0;
 	std::string userId;
-	bool isSnapshotValue = false;
 
 	ShvJournalEntry() {}
-	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, std::string domain, int short_time, SampleType sample_type, int64_t epoch_msec = 0)
+	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, std::string domain, int short_time, ValueFlags flags, int64_t epoch_msec = 0)
 		: epochMsec(epoch_msec)
 		, path(std::move(path))
 		, value{value}
 		, shortTime(short_time)
 		, domain(std::move(domain))
-		, sampleType(sample_type)
+		, valueFlags(flags)
 	{
 	}
 	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value)
-		: ShvJournalEntry(path, value, DOMAIN_VAL_CHANGE, NO_SHORT_TIME, SampleType::Continuous) {}
+		: ShvJournalEntry(path, value, DOMAIN_VAL_CHANGE, NO_SHORT_TIME, NO_VALUE_FLAGS) {}
 	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, int short_time)
-		: ShvJournalEntry(path, value, DOMAIN_VAL_FASTCHANGE, short_time, SampleType::Continuous) {}
+		: ShvJournalEntry(path, value, DOMAIN_VAL_FASTCHANGE, short_time, NO_VALUE_FLAGS) {}
 	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, std::string domain)
-		: ShvJournalEntry(path, value, std::move(domain), NO_SHORT_TIME, SampleType::Continuous) {}
+		: ShvJournalEntry(path, value, std::move(domain), NO_SHORT_TIME, NO_VALUE_FLAGS) {}
 
 	bool isValid() const {return !path.empty() && epochMsec > 0;}
+	bool isEventValue() const { return valueFlags & ValueFlag::Event; }
+	void setEventValue(bool b) { setBit(valueFlags, ValueFlag::Event, b); }
+	bool isSnapshotValue() const { return valueFlags & ValueFlag::Snapshot; }
+	void setSnapshotValue(bool b) { setBit(valueFlags, ValueFlag::Snapshot, b); }
 	bool operator==(const ShvJournalEntry &o) const
 	{
 		return epochMsec == o.epochMsec
@@ -71,15 +76,16 @@ public:
 				&& value == o.value
 				&& shortTime == o.shortTime
 				&& domain == o.domain
-				&& sampleType == o.sampleType
-		        && userId == o.userId
-		        && isSnapshotValue == o.isSnapshotValue
-		        ;
+				&& valueFlags == o.valueFlags
+				&& userId == o.userId
+				;
 	}
 	void setShortTime(int short_time) {shortTime = short_time;}
 	shv::chainpack::RpcValue::DateTime dateTime() const { return shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(epochMsec); }
 	shv::chainpack::RpcValue toRpcValueMap() const;
 	shv::chainpack::DataChange toDataChange() const;
+
+	static void setBit(unsigned &n, int pos, bool b);
 };
 
 } // namespace utils

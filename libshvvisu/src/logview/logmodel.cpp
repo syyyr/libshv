@@ -49,7 +49,7 @@ QVariant LogModel::headerData(int section, Qt::Orientation orientation, int role
 			case ColValue: return tr("Value");
 			case ColShortTime: return tr("ShortTime");
 			case ColDomain: return tr("Domain");
-			case ColSampleType: return tr("SampleType");
+			case ColValueFlags: return tr("ValueFlags");
 			case ColUserId: return tr("UserId");
 			}
 		}
@@ -83,9 +83,9 @@ QVariant LogModel::data(const QModelIndex &index, int role) const
 				}
 				return QString::fromStdString(val.asString());
 			}
-			else if(index.column() == ColSampleType) {
-				int t = val.toInt();
-				return QString::fromUtf8(cp::DataChange::sampleTypeToString((cp::DataChange::SampleType)t));
+			else if(index.column() == ColValueFlags) {
+				int t = val.toUInt();
+				return QString::fromStdString(cp::DataChange::valueFlagsToString(t));
 			}
 			return QString::fromStdString(val.toCpon());
 		}

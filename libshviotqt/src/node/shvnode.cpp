@@ -275,7 +275,7 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 											, method + '(' + rq.params().toCpon() + ')'
 											, shv::chainpack::Rpc::SIG_COMMAND_LOGGED
 											, shv::core::utils::ShvJournalEntry::NO_SHORT_TIME
-											, cp::DataChange::SampleType::Discrete);
+											, cp::DataChange::ValueFlag::Event);
 		e.epochMsec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
 		e.userId = rq.userId().toString();
 		rootNode()->emitLogUserCommand(e);
@@ -557,7 +557,7 @@ void ShvNode::emitLogUserCommand(const shv::core::utils::ShvJournalEntry &e)
 		// only HP should have this
 		cp::DataChange dc(e.value, e.epochMsec > 0? cp::RpcValue::DateTime::fromMSecsSinceEpoch(e.epochMsec): cp::RpcValue::DateTime::now());
 		//dc.setDomain(e.domain);
-		dc.setSampleType(e.sampleType);
+		dc.setValueFlags(e.valueFlags);
 
 		cp::RpcSignal sig;
 		sig.setMethod(cp::Rpc::SIG_COMMAND_LOGGED);

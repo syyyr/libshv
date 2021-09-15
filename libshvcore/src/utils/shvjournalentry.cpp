@@ -38,12 +38,10 @@ chainpack::RpcValue ShvJournalEntry::toRpcValueMap() const
 		m[ShvLogHeader::Column::name(ShvLogHeader::Column::ShortTime)] = shortTime;
 	if(!domain.empty())
 		m[ShvLogHeader::Column::name(ShvLogHeader::Column::Domain)] = domain;
-	if(sampleType != ShvLogTypeDescr::SampleType::Continuous)
-		m[ShvLogHeader::Column::name(ShvLogHeader::Column::SampleType)] = ShvLogTypeDescr::sampleTypeToString(sampleType);
+	if(valueFlags != 0)
+		m[ShvLogHeader::Column::name(ShvLogHeader::Column::ValueFlags)] = valueFlags;
 	if(!userId.empty())
 		m[ShvLogHeader::Column::name(ShvLogHeader::Column::UserId)] = userId;
-	if(isSnapshotValue)
-		m[ShvLogHeader::Column::name(ShvLogHeader::Column::IsSnapshotValue)] = isSnapshotValue;
 	return m;
 }
 
@@ -51,8 +49,16 @@ chainpack::DataChange ShvJournalEntry::toDataChange() const
 {
 	shv::chainpack::DataChange ret(value, chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(epochMsec), shortTime);
 	//ret.setDomain(domain);
-	ret.setSampleType(sampleType);
+	ret.setValueFlags(valueFlags);
 	return ret;
+}
+
+void ShvJournalEntry::setBit(unsigned &n, int pos, bool b)
+{
+	unsigned mask = 1 << pos;
+	n &= ~mask;
+	if(b)
+		n |= mask;
 }
 
 } // namespace utils
