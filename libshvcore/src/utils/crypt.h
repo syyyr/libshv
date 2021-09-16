@@ -2,8 +2,10 @@
 
 #include "../shvcoreglobal.h"
 
+#include <string>
 #include <limits>
 #include <functional>
+#include <cstdint>
 
 namespace shv {
 namespace core {
