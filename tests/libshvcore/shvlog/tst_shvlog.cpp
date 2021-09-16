@@ -180,6 +180,9 @@ private:
 						if(e.path == "temperature") {
 							e.value = RpcValue::Decimal(rv.toInt(), -2);
 						}
+						else if(e.path == "doorOpen") {
+							e.value = (rndval(mt) > 500);
+						}
 						else if(e.path == "vetra/vehicleDetected") {
 							e.value = RpcValue::List{rv, i %2? "R": "L"};
 							e.setEventValue(true);
@@ -196,12 +199,14 @@ private:
 			}
 			qDebug() << "\t" << CNT << "records written, recent timestamp:" << RpcValue::DateTime::fromMSecsSinceEpoch(file_journal.recentlyWrittenEntryDateTime()).toIsoString();
 			int64_t msec2 = msec;
+			qDebug() << "------------- testing getlog()";
 			{
 				ShvGetLogParams params;
 				params.withSnapshot = true;
 				params.withPathsDict = false;
 				params.since = RpcValue::DateTime::fromMSecsSinceEpoch(msec1 + (msec2 - msec1) / 4);
-				params.until = RpcValue::DateTime::fromMSecsSinceEpoch(msec2 - (msec2 - msec1) / 2);
+				params.until = RpcValue::DateTime::fromMSecsSinceEpoch(msec2 - (msec2 - msec1) / 4);
+				qDebug() << "\t params:" << params.toRpcValue().toCpon();
 				RpcValue log1 = file_journal.getLog(params);
 				string fn = TEST_DIR + "/log1.chpk";
 				{
@@ -209,7 +214,11 @@ private:
 					ChainPackWriter wr(out);
 					wr << log1;
 				}
-				write_cpon_file(TEST_DIR + "/log1.cpon", log1);
+				{
+					string fn2 = TEST_DIR + "/log1.cpon";
+					qDebug() << "\t file:" << fn2;
+					write_cpon_file(fn2, log1);
+				}
 				int cnt = 0;
 				ShvLogFileReader rd(fn);
 				while(rd.next()) {
@@ -218,6 +227,25 @@ private:
 				}
 				QVERIFY(cnt == rd.logHeader().recordCount());
 				QVERIFY(cnt == (int)log1.toList().size());
+			}
+			qDebug() << "------------- testing getlog() filtered";
+			{
+				ShvGetLogParams params;
+				params.withSnapshot = true;
+				params.withPathsDict = false;
+				params.pathPattern = "doorOpen";
+				params.since = RpcValue::DateTime::fromMSecsSinceEpoch(msec1 + (msec2 - msec1) / 4);
+				//params.until = RpcValue::DateTime::fromMSecsSinceEpoch(msec2 - (msec2 - msec1) / 4);
+				qDebug() << "\t params:" << params.toRpcValue().toCpon();
+				RpcValue log1 = file_journal.getLog(params);
+				string fn = TEST_DIR + "/log1-filtered.cpon";
+				qDebug() << "\t file:" << fn;
+				write_cpon_file(fn, log1);
+				ShvLogRpcValueReader rd(log1);
+				while(rd.next()) {
+					auto e = rd.entry();
+					QVERIFY(e.path == "doorOpen");
+				}
 			}
 			qDebug() << "------------- testing SINCE_NOW";
 			{
@@ -355,7 +383,7 @@ private:
 					}
 				}
 				for(const auto &e : mmj.entries()) {
-					qDebug() << e.toRpcValueMap().toCpon();
+					//qDebug() << e.toRpcValueMap().toCpon();
 					QVERIFY(e.path.find("temp") == 0 || e.path.find("volt") == 0);
 					QVERIFY(e.epochMsec >= dt_since);
 					QVERIFY(e.epochMsec < dt_until);
@@ -373,7 +401,8 @@ private slots:
 	void initTestCase()
 	{
 		//shv::chainpack::Exception::setAbortOnException(true);
-		NecroLog::setTopicsLogTresholds("ShvJournal:D");
+		//NecroLog::setTopicsLogTresholds("ShvJournal:D");
+		qDebug() << "Registered topics:" << NecroLog::registeredTopicsInfo();
 		{
 			Channel &c = channels["temperature"];
 			c.value = RpcValue::Decimal(2200, -2);
