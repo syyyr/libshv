@@ -7,6 +7,7 @@
 #include <shv/core/utils/shvjournalfilereader.h>
 #include <shv/core/utils/shvmemoryjournal.h>
 #include <shv/core/utils/shvlogfilter.h>
+#include <shv/core/utils/shvlogrpcvaluereader.h>
 
 #include <shv/core/log.h>
 
@@ -197,6 +198,8 @@ private:
 			int64_t msec2 = msec;
 			{
 				ShvGetLogParams params;
+				params.withSnapshot = true;
+				params.withPathsDict = false;
 				params.since = RpcValue::DateTime::fromMSecsSinceEpoch(msec1 + (msec2 - msec1) / 4);
 				params.until = RpcValue::DateTime::fromMSecsSinceEpoch(msec2 - (msec2 - msec1) / 2);
 				RpcValue log1 = file_journal.getLog(params);
@@ -216,6 +219,23 @@ private:
 				QVERIFY(cnt == rd.logHeader().recordCount());
 				QVERIFY(cnt == (int)log1.toList().size());
 			}
+			qDebug() << "------------- testing SINCE_NOW";
+			{
+				ShvGetLogParams params;
+				params.withSnapshot = true;
+				params.withPathsDict = false;
+				params.since = ShvGetLogParams::SINCE_NOW;
+				RpcValue log1 = file_journal.getLog(params);
+				write_cpon_file(TEST_DIR + "/log1-since-now.cpon", log1);
+				ShvLogRpcValueReader rd(log1);
+				while(rd.next()) {
+					const ShvJournalEntry &e = rd.entry();
+					//shvWarning() << "entry:" << e.toRpcValueMap().toCpon();
+					QVERIFY(e.isSnapshotValue());
+					QVERIFY(!e.isEventValue());
+				}
+			}
+
 			qDebug() << "------------- Generating dirty log + memory log";
 			unsigned dirty_cnt = 0;
 			string dirty_fn = JOURNAL_DIR + "/dirty.log2";
@@ -334,7 +354,7 @@ private:
 						mmj.append(e1);
 					}
 				}
-				for(auto e : mmj.entries()) {
+				for(const auto &e : mmj.entries()) {
 					qDebug() << e.toRpcValueMap().toCpon();
 					QVERIFY(e.path.find("temp") == 0 || e.path.find("volt") == 0);
 					QVERIFY(e.epochMsec >= dt_since);

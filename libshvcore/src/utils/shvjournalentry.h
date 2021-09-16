@@ -65,9 +65,9 @@ public:
 		: ShvJournalEntry(path, value, std::move(domain), NO_SHORT_TIME, NO_VALUE_FLAGS) {}
 
 	bool isValid() const {return !path.empty() && epochMsec > 0;}
-	bool isEventValue() const { return valueFlags & ValueFlag::Event; }
+	bool isEventValue() const { return testBit(valueFlags, ValueFlag::Event); }
 	void setEventValue(bool b) { setBit(valueFlags, ValueFlag::Event, b); }
-	bool isSnapshotValue() const { return valueFlags & ValueFlag::Snapshot; }
+	bool isSnapshotValue() const { return testBit(valueFlags, ValueFlag::Snapshot); }
 	void setSnapshotValue(bool b) { setBit(valueFlags, ValueFlag::Snapshot, b); }
 	bool operator==(const ShvJournalEntry &o) const
 	{
@@ -85,6 +85,7 @@ public:
 	shv::chainpack::RpcValue toRpcValueMap() const;
 	shv::chainpack::DataChange toDataChange() const;
 
+	static bool testBit(const unsigned &n, int pos);
 	static void setBit(unsigned &n, int pos, bool b);
 };
 

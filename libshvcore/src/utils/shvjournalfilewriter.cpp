@@ -74,8 +74,13 @@ void ShvJournalFileWriter::appendMonotonic(const ShvJournalEntry &entry)
 
 void ShvJournalFileWriter::appendSnapshot(int64_t msec, const std::vector<ShvJournalEntry> &snapshot)
 {
-	for(const ShvJournalEntry &e : snapshot) {
-		append(msec, 0, e);
+	int uptime = uptimeSec();
+	for(ShvJournalEntry e : snapshot) {
+		e.setSnapshotValue(true);
+		// erase EVENT flag in the snapshot values,
+		// they can trigger events during reply otherwise
+		e.setEventValue(false);
+		append(msec, uptime, e);
 	}
 	m_recentTimeStamp = msec;
 }

@@ -61,7 +61,7 @@ bool ShvLogRpcValueReader::next()
 		m_currentEntry.path = path;
 		m_currentEntry.value = row.value(Column::Value);
 		cp::RpcValue st = row.value(Column::ShortTime);
-		m_currentEntry.shortTime = st.isInt() && st.toInt() >= 0? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
+		m_currentEntry.shortTime = (st.isInt() && st.toInt() >= 0)? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
 		m_currentEntry.domain = row.value(Column::Domain).asString();
 		if(m_currentEntry.domain.empty() || m_currentEntry.domain == "C")
 			m_currentEntry.domain = ShvJournalEntry::DOMAIN_VAL_CHANGE;
