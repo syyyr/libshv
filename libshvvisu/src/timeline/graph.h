@@ -79,6 +79,24 @@ public:
 		//double buttonSpacing() const { return buttonSize() / 5; }
 	};
 public:
+	static const QString DEFAULT_USER_PROFILE;
+
+	class VisualSettings
+	{
+	public:
+		class Channel
+		{
+		public:
+			QString shvPath;
+			GraphChannel::Style style;
+		};
+
+		QString toJson() const;
+		static VisualSettings fromJson(const QString &json);
+
+		QVector<Channel> channels;
+	};
+
 	Graph(QObject *parent = nullptr);
 	virtual ~Graph();
 
@@ -90,6 +108,9 @@ public:
 	void setTimeZone(const QTimeZone &tz);
 	QTimeZone timeZone() const;
 
+	void setSettingsUserName(const QString &user);
+
+	void reset();
 	void createChannelsFromModel();
 	void resetChannelsRanges();
 
@@ -200,6 +221,16 @@ public:
 	Q_SIGNAL void graphContextMenuRequest(const QPoint &mouse_pos);
 
 	static QString rectToString(const QRect &r);
+
+	VisualSettings visualSettings();
+	void setVisualSettings(const VisualSettings &settings);
+	void resizeChannel(int ix, int delta_px);
+
+	void saveVisualSettings(const QString &settings_id, const QString &name, const VisualSettings &visual_settings) const;
+	void deleteVisualSettings(const QString &settings_id, const QString &name) const;
+	QStringList savedVisualSettingsNames(const QString &settings_id) const;
+	VisualSettings loadVisualSettings(const QString &settings_id, const QString &name) const;
+
 protected:
 	void sanityXRangeZoom();
 	//void onModelXRangeChanged(const timeline::XRange &range);
@@ -288,6 +319,7 @@ protected:
 
 	QPixmap m_miniMapCache;
 	GraphButtonBox *m_cornerCellButtonBox = nullptr;
+	QString m_settingsUserName = DEFAULT_USER_PROFILE;
 };
 
 }}}

@@ -9,18 +9,27 @@
 
 #include <QPainter>
 #include <QFontMetrics>
+#include <QJsonArray>
 #include <QJsonDocument>
+#include <QJsonObject>
 #include <QLabel>
 #include <QMouseEvent>
 #include <QPainterPath>
+#include <QSettings>
 
 #include <cmath>
+
+static QString USER_PROFILES_KEY = QStringLiteral("userProfiles");
+static QString SITES_KEY = QStringLiteral("sites");
+static QString VIEWS_KEY = QStringLiteral("channelViews");
 
 namespace cp = shv::chainpack;
 
 namespace shv {
 namespace visu {
 namespace timeline {
+
+const QString Graph::DEFAULT_USER_PROFILE = QStringLiteral("default");
 
 //==========================================
 // Graph::GraphStyle
@@ -62,6 +71,11 @@ GraphModel *Graph::model() const
 	return m_model;
 }
 
+void Graph::setSettingsUserName(const QString &user)
+{
+	m_settingsUserName = user;
+}
+
 void Graph::setTimeZone(const QTimeZone &tz)
 {
 	shvDebug() << "set timezone:" << tz.id();
@@ -72,6 +86,14 @@ void Graph::setTimeZone(const QTimeZone &tz)
 QTimeZone Graph::timeZone() const
 {
 	return m_timeZone;
+}
+
+void Graph::reset()
+{
+	createChannelsFromModel();
+	m_channelFilter.setMatchingPaths(channelPaths());
+	Q_EMIT layoutChanged();
+	Q_EMIT channelFilterChanged();
 }
 
 void Graph::createChannelsFromModel()
@@ -1109,6 +1131,56 @@ QVector<int> Graph::visibleChannels()
 	return visible_channels;
 }
 
+void Graph::setVisualSettings(const VisualSettings &settings)
+{
+	QSet<QString> new_filter;
+	createChannelsFromModel();
+	for (int i = 0; i < settings.channels.count(); ++i) {
+		const VisualSettings::Channel &channel_settings = settings.channels[i];
+		for (int j = i; j < m_channels.count(); ++j) {
+			GraphChannel *channel = m_channels[j];
+			if (channel->shvPath() == channel_settings.shvPath) {
+				new_filter << channel_settings.shvPath;
+				channel->setStyle(channel_settings.style);
+				m_channels.insert(i, m_channels.takeAt(j));
+				break;
+			}
+		}
+	}
+
+	m_channelFilter.setMatchingPaths(new_filter);
+	Q_EMIT layoutChanged();
+	Q_EMIT channelFilterChanged();
+}
+
+void Graph::resizeChannel(int ix, int delta_px)
+{
+	GraphChannel *ch = channelAt(ix);
+
+	if (ch != nullptr) {
+		GraphChannel::Style ch_style = ch->style();
+
+		double new_u = px2u(ch->verticalHeaderRect().height() + (delta_px));
+
+		if (new_u > GraphChannel::Style::DEFAULT_HEIGHT_MIN) {
+			ch_style.setHeightMax(new_u);
+			ch_style.setHeightMin(new_u);
+			ch->setStyle(ch_style);
+			Q_EMIT layoutChanged();
+		}
+	}
+}
+
+Graph::VisualSettings Graph::visualSettings()
+{
+	VisualSettings view;
+	for (int ix : visibleChannels()) {
+		GraphChannel *channel = channelAt(ix);
+		view.channels << VisualSettings::Channel{ channel->shvPath(), channel->style() };
+	}
+	return view;
+}
+
 int Graph::maximizedChannelIndex()
 {
 	for (int i = 0; i < m_channels.count(); ++i) {
@@ -2047,5 +2119,85 @@ void Graph::onButtonBoxClicked(int button_id)
 		emit graphContextMenuRequest(pos);
 	}
 }
+
+void Graph::saveVisualSettings(const QString &settings_id, const QString &name, const Graph::VisualSettings &visual_settings) const
+{
+	QSettings settings;
+	settings.beginGroup(USER_PROFILES_KEY);
+	settings.beginGroup(m_settingsUserName);
+	settings.beginGroup(SITES_KEY);
+	settings.beginGroup(settings_id);
+	settings.beginGroup(VIEWS_KEY);
+	settings.setValue(name, visual_settings.toJson());
+}
+
+Graph::VisualSettings Graph::loadVisualSettings(const QString &settings_id, const QString &name) const
+{
+	VisualSettings graph_view;
+	QSettings settings;
+	settings.beginGroup(USER_PROFILES_KEY);
+	settings.beginGroup(m_settingsUserName);
+	settings.beginGroup(SITES_KEY);
+	settings.beginGroup(settings_id);
+	settings.beginGroup(VIEWS_KEY);
+	return VisualSettings::fromJson(settings.value(name).toString());
+}
+
+void Graph::deleteVisualSettings(const QString &settings_id, const QString &name) const
+{
+	QSettings settings;
+	settings.beginGroup(USER_PROFILES_KEY);
+	settings.beginGroup(m_settingsUserName);
+	settings.beginGroup(SITES_KEY);
+	settings.beginGroup(settings_id);
+	settings.beginGroup(VIEWS_KEY);
+	settings.remove(name);
+}
+
+QStringList Graph::savedVisualSettingsNames(const QString &settings_id) const
+{
+	QSettings settings;
+	settings.beginGroup(USER_PROFILES_KEY);
+	settings.beginGroup(m_settingsUserName);
+	settings.beginGroup(SITES_KEY);
+	settings.beginGroup(settings_id);
+	settings.beginGroup(VIEWS_KEY);
+	return settings.childKeys();
+}
+
+QString Graph::VisualSettings::toJson() const
+{
+	QJsonArray settings;
+
+	for (int i = 0; i < channels.count(); ++i) {
+		settings << QJsonObject {
+					    { "shvPath", channels[i].shvPath },
+					    { "style", QJsonObject::fromVariantMap(channels[i].style) }
+	                };
+	}
+	return QJsonDocument(QJsonObject{{ "channels", settings }}).toJson(QJsonDocument::Compact);
+}
+
+Graph::VisualSettings Graph::VisualSettings::fromJson(const QString &json)
+{
+	VisualSettings settings;
+
+	QJsonParseError parse_error;
+	QJsonArray array = QJsonDocument::fromJson(json.toUtf8(), &parse_error).object()["channels"].toArray();
+	if (parse_error.error == QJsonParseError::NoError) {
+		for (int i = 0; i < array.count(); ++i) {
+			QJsonObject item = array[i].toObject();
+			settings.channels << VisualSettings::Channel({
+										 item["shvPath"].toString(),
+										 item["style"].toVariant().toMap()
+									 });
+		}
+	}
+	else {
+		shvWarning() << "Error on parsing user settings" << parse_error.errorString();
+	}
+	return settings;
+}
+
 
 }}}
