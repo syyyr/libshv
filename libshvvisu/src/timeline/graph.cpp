@@ -2175,7 +2175,7 @@ QString Graph::VisualSettings::toJson() const
 					    { "style", QJsonObject::fromVariantMap(channels[i].style) }
 	                };
 	}
-	return QJsonDocument(settings).toJson(QJsonDocument::Compact);
+	return QJsonDocument(QJsonObject{{ "channels", settings }}).toJson(QJsonDocument::Compact);
 }
 
 Graph::VisualSettings Graph::VisualSettings::fromJson(const QString &json)
@@ -2183,7 +2183,7 @@ Graph::VisualSettings Graph::VisualSettings::fromJson(const QString &json)
 	VisualSettings settings;
 
 	QJsonParseError parse_error;
-	QJsonArray array = QJsonDocument::fromJson(json.toUtf8(), &parse_error).array();
+	QJsonArray array = QJsonDocument::fromJson(json.toUtf8(), &parse_error).object()["channels"].toArray();
 	if (parse_error.error == QJsonParseError::NoError) {
 		for (int i = 0; i < array.count(); ++i) {
 			QJsonObject item = array[i].toObject();
