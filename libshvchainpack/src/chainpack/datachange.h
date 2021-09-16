@@ -18,8 +18,9 @@ public:
 		enum {ID = chainpack::meta::GlobalNS::MetaTypeId::DataChange};
 		struct Tag { enum Enum {DateTime = chainpack::meta::Tag::USER,
 								ShortTime,
-								Domain,
-								SampleType,
+								//Domain, domain should not be part of DataChange,
+								// because Domain is name of signal emitted with DataChange
+				                ValueFlags,
 								MAX};};
 		//struct Key { enum Enum {Value = 1, DateTime, ShortTime, MAX};};
 
@@ -30,8 +31,11 @@ public:
 public:
 	enum GetValueAgeOption {DONT_CARE_TS = -2, USE_CACHE = -1, RELOAD_FORCE, RELOAD_OLDER};
 	static constexpr int NO_SHORT_TIME = -1;
-	enum class SampleType : uint8_t {Invalid = 0, Continuous , Discrete};
-	static const char* sampleTypeToString(SampleType st);
+	enum ValueFlag {Snapshot = 0, Event, ValueFlagCount};
+	using ValueFlags = unsigned;
+	static constexpr ValueFlags NO_VALUE_FLAGS = 0;
+	static const char* valueFlagToString(ValueFlag flag);
+	static std::string valueFlagsToString(ValueFlags st);
 
 	DataChange() {}
 	// ambiguous constructor for DataChange(const DataChange &) DataChange(const RpcValue &)
@@ -59,23 +63,22 @@ public:
 	RpcValue shortTime() const { return hasShortTime()? RpcValue((unsigned)m_shortTime): RpcValue(); }
 	void setShortTime(const RpcValue &st) { m_shortTime = (st.isUInt() || (st.isInt() && st.toInt() >= 0))? st.toInt(): NO_SHORT_TIME; }
 
-	bool hasDomain() const { return !m_domain.empty(); }
-	void setDomain(const std::string &d) { m_domain = d; }
-	const std::string& domain() const { return m_domain; }
+	//bool hasDomain() const { return !m_domain.empty(); }
+	//void setDomain(const std::string &d) { m_domain = d; }
+	//const std::string& domain() const { return m_domain; }
 
-	bool hasSampleType() const { return m_sampleType != SampleType::Invalid; }
-	void setSampleType(SampleType st) { m_sampleType = st; }
-	void setSampleType(int st) { m_sampleType = (st >= (int)SampleType::Invalid && st <= (int)SampleType::Discrete)? static_cast<SampleType>(st): SampleType::Invalid; }
-	SampleType sampleType() const { return m_sampleType; }
+	bool hasValueflags() const { return m_valueFlags != NO_VALUE_FLAGS; }
+	void setValueFlags(ValueFlags st) { m_valueFlags = st; }
+	ValueFlags valueFlags() const { return m_valueFlags; }
 
 	static DataChange fromRpcValue(const RpcValue &val);
 	RpcValue toRpcValue() const;
 private:
 	RpcValue m_value;
-	std::string m_domain;
+	//std::string m_domain;
 	RpcValue::DateTime m_dateTime;
 	int m_shortTime = NO_SHORT_TIME;
-	SampleType m_sampleType = SampleType::Invalid;
+	ValueFlags m_valueFlags = NO_VALUE_FLAGS;
 };
 
 } // namespace chainpack

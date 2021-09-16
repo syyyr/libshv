@@ -13,8 +13,6 @@ namespace shv {
 namespace core {
 namespace utils {
 
-class ShvLogHeader;
-
 class SHVCORE_DECL_EXPORT ShvJournalFileReader
 {
 public:

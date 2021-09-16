@@ -21,8 +21,8 @@ DataChange::MetaType::MetaType()
 	m_tags = {
 		RPC_META_TAG_DEF(DateTime),
 		RPC_META_TAG_DEF(ShortTime),
-		RPC_META_TAG_DEF(Domain),
-		RPC_META_TAG_DEF(SampleType),
+		//RPC_META_TAG_DEF(Domain),
+		RPC_META_TAG_DEF(ValueFlags),
 	};
 }
 
@@ -41,14 +41,30 @@ DataChange::DataChange(const RpcValue &val)
 	setValue(val);
 }
 */
-const char *DataChange::sampleTypeToString(DataChange::SampleType st)
+const char *DataChange::valueFlagToString(DataChange::ValueFlag flag)
 {
-	switch (st) {
-	case SampleType::Invalid: return "";
-	case SampleType::Continuous: return "Continuous";
-	case SampleType::Discrete: return "Discrete";
+	switch (flag) {
+	case ValueFlag::Snapshot: return "Snapshot";
+	case ValueFlag::Event: return "Event";
+	case ValueFlag::ValueFlagCount: return "ValueFlagCount";
 	}
 	return "???";
+}
+
+std::string DataChange::valueFlagsToString(ValueFlags st)
+{
+	std::string ret;
+	auto append_str = [&ret](const char *str) {
+		if(!ret.empty())
+			ret += ',';
+		ret += str;
+	};
+	for (int flag = 0; flag < ValueFlagCount; ++flag) {
+		unsigned mask = 1 << flag;
+		if(st & mask)
+			append_str(valueFlagToString((ValueFlag)flag));
+	}
+	return ret;
 }
 
 DataChange::DataChange(const RpcValue &val, const RpcValue::DateTime &date_time, int short_time)
@@ -96,9 +112,9 @@ DataChange DataChange::fromRpcValue(const RpcValue &val)
 set_meta_data:
 		ret.setDateTime(val.metaValue(MetaType::Tag::DateTime));
 		ret.setShortTime(val.metaValue(MetaType::Tag::ShortTime));
-		ret.setDomain(val.metaValue(MetaType::Tag::Domain).asString());
-		int st = val.metaValue(MetaType::Tag::SampleType).toInt();
-		ret.setSampleType(st == (int)SampleType::Discrete? SampleType::Discrete: SampleType::Continuous);
+		//ret.setDomain(val.metaValue(MetaType::Tag::Domain).asString());
+		int st = val.metaValue(MetaType::Tag::ValueFlags).toInt();
+		ret.setValueFlags(st);
 		return ret;
 	}
 	return DataChange(val, RpcValue::DateTime());
@@ -121,10 +137,10 @@ RpcValue DataChange::toRpcValue() const
 		ret.setMetaValue(MetaType::Tag::DateTime, m_dateTime);
 	if(hasShortTime())
 		ret.setMetaValue(MetaType::Tag::ShortTime, (unsigned)m_shortTime);
-	if(hasDomain())
-		ret.setMetaValue(MetaType::Tag::Domain, m_domain);
-	if(sampleType() == SampleType::Discrete)
-		ret.setMetaValue(MetaType::Tag::SampleType, (int)m_sampleType);
+	//if(hasDomain())
+	//	ret.setMetaValue(MetaType::Tag::Domain, m_domain);
+	if(valueFlags() == ValueFlag::Event)
+		ret.setMetaValue(MetaType::Tag::ValueFlags, (int)m_valueFlags);
 	return ret;
 }
 

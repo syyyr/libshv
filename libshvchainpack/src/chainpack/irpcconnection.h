@@ -42,9 +42,10 @@ public:
 	void sendResponse(const shv::chainpack::RpcValue &request_id, const shv::chainpack::RpcValue &result);
 	void sendError(const shv::chainpack::RpcValue &request_id, const shv::chainpack::RpcResponse::Error &error);
 	int callMethod(const shv::chainpack::RpcRequest &rq);
-	int callMethod(std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
+	//int callMethod(std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
 	int callShvMethod(const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
 	int callShvMethod(int rq_id, const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
+	int callShvMethod(int rq_id, const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id);
 	int callMethodSubscribe(const std::string &shv_path, std::string method);
 	int callMethodSubscribe(int rq_id, const std::string &shv_path, std::string method);
 	int callMethodUnsubscribe(const std::string &shv_path, std::string method);

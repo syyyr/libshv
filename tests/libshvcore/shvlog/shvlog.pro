@@ -1,6 +1,6 @@
 include ( ../test_libshvcore.pri )
 
-TARGET = tst_shvlogfilereader
+TARGET = tst_shvlog
 
 SOURCES += \
     $${TARGET}.cpp \

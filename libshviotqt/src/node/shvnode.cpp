@@ -271,12 +271,12 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 	if(mm_access_level >= cp::MetaMethod::AccessLevel::Write) {
 
 
-		shv::core::utils::ShvJournalEntry e(shvPath()
+		shv::core::utils::ShvJournalEntry e(shv::core::Utils::joinPath(shvPath(), rq.shvPath().asString())
 											, method + '(' + rq.params().toCpon() + ')'
-											, shv::core::utils::ShvJournalEntry::DOMAIN_SHV_COMMAND
+											, shv::chainpack::Rpc::SIG_COMMAND_LOGGED
 											, shv::core::utils::ShvJournalEntry::NO_SHORT_TIME
-											, cp::DataChange::SampleType::Discrete);
-
+											, cp::DataChange::ValueFlag::Event);
+		e.epochMsec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
 		e.userId = rq.userId().toString();
 		rootNode()->emitLogUserCommand(e);
 	}
@@ -555,9 +555,9 @@ void ShvNode::emitLogUserCommand(const shv::core::utils::ShvJournalEntry &e)
 
 		// emit also as change to have commands in HP dirty-log
 		// only HP should have this
-		cp::DataChange dc(e.value, cp::RpcValue::DateTime::now());
-		dc.setDomain(e.domain);
-		dc.setSampleType(e.sampleType);
+		cp::DataChange dc(e.value, e.epochMsec > 0? cp::RpcValue::DateTime::fromMSecsSinceEpoch(e.epochMsec): cp::RpcValue::DateTime::now());
+		//dc.setDomain(e.domain);
+		dc.setValueFlags(e.valueFlags);
 
 		cp::RpcSignal sig;
 		sig.setMethod(cp::Rpc::SIG_COMMAND_LOGGED);

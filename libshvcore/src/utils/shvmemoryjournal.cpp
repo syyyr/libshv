@@ -76,7 +76,7 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 		epoch_msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
 	}
 	else if(isShortTimeCorrection()) {
-		if(entry.sampleType == ShvJournalEntry::SampleType::Continuous && entry.shortTime != shv::core::utils::ShvJournalEntry::NO_SHORT_TIME) {
+		if(!entry.isEventValue() && entry.shortTime != shv::core::utils::ShvJournalEntry::NO_SHORT_TIME) {
 			uint16_t short_msec = static_cast<uint16_t>(entry.shortTime);
 			ShortTime &st = m_recentShortTimes[entry.path];
 			if(entry.shortTime == st.recentShortTime) {
@@ -217,9 +217,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 				if (it < it1 || e.epochMsec == since_msec) {  //it1 (lower_bound) can be == since_msec (we want in snapshot)
 					if(!pm.match(e))                          //or > since_msec (we don't want in snapshot)
 						continue;
-					if(e.sampleType == ShvJournalEntry::SampleType::Continuous) {
-						addToSnapshot(snapshot, e);
-					}
+					addToSnapshot(snapshot, e);
 				}
 			}
 			if(!snapshot.empty()) {
@@ -230,9 +228,6 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 						goto log_finish;
 					}
 					const auto &entry = kv.second;
-					if (entry.value.hasDefaultValue()) {
-						continue;
-					}
 					cp::RpcValue::List rec;
 					if(since_msec == 0)
 						since_msec = entry.epochMsec;
@@ -242,7 +237,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 					rec.push_back(entry.value);
 					rec.push_back(entry.shortTime);
 					rec.push_back(entry.domain.empty()? cp::RpcValue(nullptr): entry.domain);
-					rec.push_back((int)entry.sampleType);
+					rec.push_back(entry.valueFlags);
 					rec.push_back(entry.userId.empty()? cp::RpcValue(nullptr): cp::RpcValue(entry.userId));
 					rec.push_back(true);
 					log.push_back(std::move(rec));
@@ -268,9 +263,8 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 					rec.push_back(it->value);
 					rec.push_back(it->shortTime);
 					rec.push_back(it->domain.empty()? cp::RpcValue(nullptr): it->domain);
-					rec.push_back((int)it->sampleType);
+					rec.push_back((int)it->valueFlags);
 					rec.push_back(it->userId.empty()? cp::RpcValue(nullptr): cp::RpcValue(it->userId));
-					rec.push_back(it->isSnapshotValue);
 					log.push_back(std::move(rec));
 					rec_cnt++;
 				}
@@ -305,9 +299,8 @@ log_finish:
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Value)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::ShortTime)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::Domain)}});
-		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::SampleType)}});
+		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::ValueFlags)}});
 		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::UserId)}});
-		fields.push_back(cp::RpcValue::Map{{KEY_NAME, Column::name(Column::Enum::IsSnapshotValue)}});
 		hdr.setFields(std::move(fields));
 
 		if(params.withTypeInfo)

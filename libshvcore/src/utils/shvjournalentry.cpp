@@ -9,11 +9,11 @@ namespace utils {
 //==============================================================
 // ShvJournalEntry
 //==============================================================
-const char *ShvJournalEntry::DOMAIN_VAL_CHANGE = "C";
-const char *ShvJournalEntry::DOMAIN_VAL_FASTCHANGE = "F";
-const char *ShvJournalEntry::DOMAIN_VAL_SERVICECHANGE = "S";
+const char *ShvJournalEntry::DOMAIN_VAL_CHANGE = shv::chainpack::Rpc::SIG_VAL_CHANGED;
+const char *ShvJournalEntry::DOMAIN_VAL_FASTCHANGE = shv::chainpack::Rpc::SIG_VAL_FASTCHANGED;
+const char *ShvJournalEntry::DOMAIN_VAL_SERVICECHANGE = shv::chainpack::Rpc::SIG_SERVICE_VAL_CHANGED;
 const char *ShvJournalEntry::DOMAIN_SHV_SYSTEM = "SHV_SYS";
-const char *ShvJournalEntry::DOMAIN_SHV_COMMAND = "CMD";
+const char *ShvJournalEntry::DOMAIN_SHV_COMMAND = shv::chainpack::Rpc::SIG_COMMAND_LOGGED;
 
 const char* ShvJournalEntry::PATH_APP_START = "APP_START";
 //const char* ShvJournalEntry::PATH_SNAPSHOT_BEGIN = "SNAPSHOT_BEGIN";
@@ -38,21 +38,33 @@ chainpack::RpcValue ShvJournalEntry::toRpcValueMap() const
 		m[ShvLogHeader::Column::name(ShvLogHeader::Column::ShortTime)] = shortTime;
 	if(!domain.empty())
 		m[ShvLogHeader::Column::name(ShvLogHeader::Column::Domain)] = domain;
-	if(sampleType != ShvLogTypeDescr::SampleType::Continuous)
-		m[ShvLogHeader::Column::name(ShvLogHeader::Column::SampleType)] = ShvLogTypeDescr::sampleTypeToString(sampleType);
+	if(valueFlags != 0)
+		m[ShvLogHeader::Column::name(ShvLogHeader::Column::ValueFlags)] = valueFlags;
 	if(!userId.empty())
 		m[ShvLogHeader::Column::name(ShvLogHeader::Column::UserId)] = userId;
-	if(isSnapshotValue)
-		m[ShvLogHeader::Column::name(ShvLogHeader::Column::IsSnapshotValue)] = isSnapshotValue;
 	return m;
 }
 
 chainpack::DataChange ShvJournalEntry::toDataChange() const
 {
 	shv::chainpack::DataChange ret(value, chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(epochMsec), shortTime);
-	ret.setDomain(domain);
-	ret.setSampleType(sampleType);
+	//ret.setDomain(domain);
+	ret.setValueFlags(valueFlags);
 	return ret;
+}
+
+bool ShvJournalEntry::testBit(const unsigned &n, int pos)
+{
+	unsigned mask = 1 << pos;
+	return n & mask;
+}
+
+void ShvJournalEntry::setBit(unsigned &n, int pos, bool b)
+{
+	unsigned mask = 1 << pos;
+	n &= ~mask;
+	if(b)
+		n |= mask;
 }
 
 } // namespace utils

@@ -1,7 +1,7 @@
 TEMPLATE = subdirs
 CONFIG += ordered
 
-unix {
 SUBDIRS += \
-	utils \
-}
+	sampleshvclient \
+	sampleshvbroker \
+

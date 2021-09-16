@@ -20,9 +20,8 @@ const char *ShvLogHeader::Column::name(ShvLogHeader::Column::Enum e)
 	case Column::Enum::Value: return "value";
 	case Column::Enum::ShortTime: return "shortTime";
 	case Column::Enum::Domain: return "domain";
-	case Column::Enum::SampleType: return "sampleType";
+	case Column::Enum::ValueFlags: return "valueFlags";
 	case Column::Enum::UserId: return "userId";
-	case Column::Enum::IsSnapshotValue: return "isSnapshotValue";
 	}
 	return "invalid";
 }

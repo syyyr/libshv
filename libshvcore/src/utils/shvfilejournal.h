@@ -42,8 +42,9 @@ public:
 	void setDeviceId(std::string id) { m_journalContext.deviceId = std::move(id); }
 	std::string deviceType() const { return m_journalContext.deviceType; }
 	void setDeviceType(std::string type) { m_journalContext.deviceType = std::move(type); }
+	int64_t recentlyWrittenEntryDateTime() const { return m_journalContext.recentTimeStamp; }
 
-	static int64_t findLastEntryDateTime(const std::string &fn, ssize_t *p_date_time_fpos = nullptr);
+	static int64_t findLastEntryDateTime(const std::string &fn, int64_t journal_start_msec, ssize_t *p_date_time_fpos = nullptr);
 	void append(const ShvJournalEntry &entry) override;
 
 	// testing purposes
@@ -64,7 +65,7 @@ public:
 			Value,
 			ShortTime,
 			Domain,
-			SampleType,
+			ValueFlags,
 			UserId,
 		};
 		static const char* name(Enum e);
@@ -90,6 +91,7 @@ public:
 		std::string fileMsecToFilePath(int64_t file_msec) const;
 	};
 	const JournalContext& checkJournalContext();
+	void createNewLogFile(int64_t journal_file_start_msec = 0);
 	static shv::chainpack::RpcValue getLog(const JournalContext &journal_context, const ShvGetLogParams &params);
 private:
 
@@ -97,8 +99,6 @@ private:
 
 	void rotateJournal();
 	void updateJournalStatus();
-	void updateJournalFiles();
-	//int64_t lastEntryTimeStamp();
 	void checkRecentTimeStamp();
 	void ensureJournalDir();
 	bool journalDirExists();

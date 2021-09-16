@@ -18,7 +18,7 @@ class SHVVISU_DECL_EXPORT LogModel : public QAbstractTableModel
 
 	using Super = QAbstractTableModel;
 public:
-	enum {ColDateTime = 0, ColPath, ColValue, ColShortTime, ColDomain, ColSampleType, ColUserId,  ColCnt};
+	enum {ColDateTime = 0, ColPath, ColValue, ColShortTime, ColDomain, ColValueFlags, ColUserId,  ColCnt};
 public:
 	LogModel(QObject *parent = nullptr);
 

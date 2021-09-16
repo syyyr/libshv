@@ -4,5 +4,5 @@ CONFIG += ordered
 SUBDIRS += \
 	crypt \
 	stringview \
-	shvlogfilereader \
+	shvlog \
 	shvmemoryjournal \
