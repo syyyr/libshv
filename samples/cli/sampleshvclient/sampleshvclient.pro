@@ -1,5 +1,5 @@
 isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
-        SHV_PROJECT_TOP_BUILDDIR = $$OUT_PWD/..
+        SHV_PROJECT_TOP_BUILDDIR = $$OUT_PWD/../../..
 }
 else {
         message ( SHV_PROJECT_TOP_BUILDDIR is not empty and set to $$SHV_PROJECT_TOP_BUILDDIR )
@@ -8,7 +8,7 @@ else {
 message ( SHV_PROJECT_TOP_BUILDDIR == '$$SHV_PROJECT_TOP_BUILDDIR' )
 
 isEmpty(LIBSHV_SRC_DIR) {
-    LIBSHV_SRC_DIR=$$PWD/../..
+    LIBSHV_SRC_DIR=$$PWD/../../..
 }
 
 QT += core network
