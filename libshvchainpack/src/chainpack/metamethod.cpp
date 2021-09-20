@@ -22,6 +22,28 @@ const char *MetaMethod::signatureToString(MetaMethod::Signature sig)
 	return "";
 }
 
+std::string MetaMethod::flagsToString(unsigned flags)
+{
+	std::string ret;
+	auto add_str = [&ret](const char *str) {
+		if(ret.empty()) {
+			ret = str;
+		}
+		else {
+			ret += ',';
+			ret += str;
+		}
+		return ret;
+	};
+	if(flags & Flag::IsGetter)
+		add_str("Getter");
+	if(flags & Flag::IsSetter)
+		add_str("Setter");
+	if(flags & Flag::IsSignal)
+		add_str("Signal");
+	return ret;
+}
+
 
 } // namespace chainpack
 } // namespace shv

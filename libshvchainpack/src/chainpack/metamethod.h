@@ -85,6 +85,7 @@ public:
 
 	static Signature signatureFromString(const std::string &sigstr);
 	static const char* signatureToString(Signature sig);
+	static std::string flagsToString(unsigned flags);
 private:
 	std::string m_name;
 	Signature m_signature = Signature::VoidVoid;
