@@ -1,11 +1,11 @@
 message("including $$PWD")
 
 isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
-        SHV_PROJECT_TOP_BUILDDIR = $$OUT_PWD/../..
+        SHV_PROJECT_TOP_BUILDDIR = $$OUT_PWD/../../..
 }
 
 isEmpty(LIBSHV_SRC_DIR) {
-        LIBSHV_SRC_DIR = $$PWD/../..
+        LIBSHV_SRC_DIR = $$PWD/../../..
 }
 message ( SHV_PROJECT_TOP_BUILDDIR == '$$SHV_PROJECT_TOP_BUILDDIR' )
 message ( SHV_PROJECT_TOP_SRCDIR == '$$SHV_PROJECT_TOP_SRCDIR' )
