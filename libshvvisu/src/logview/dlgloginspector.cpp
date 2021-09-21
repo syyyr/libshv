@@ -40,6 +40,8 @@ namespace logview {
 
 enum { TabGraph = 0, TabData, TabInfo };
 
+static const int VIEW_SELECTOR_NO_VIEW_INDEX = 0;
+
 DlgLogInspector::DlgLogInspector(QWidget *parent) :
 	QDialog(parent),
 	ui(new Ui::DlgLogInspector)
@@ -203,6 +205,15 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 	});
 
 	loadSettings();
+
+	initVisualSettingSelector();
+	ui->cbViews->setCurrentIndex(VIEW_SELECTOR_NO_VIEW_INDEX);
+
+	connect(ui->cbViews, qOverload<int>(&QComboBox::activated), this, &DlgLogInspector::onViewSelected);
+
+	connect(ui->pbDeleteView, &QPushButton::clicked, this, &DlgLogInspector::onDeleteViewClicked);
+	connect(ui->pbSaveView, &QPushButton::clicked, this, &DlgLogInspector::onSaveViewClicked);
+	onViewSelected(VIEW_SELECTOR_NO_VIEW_INDEX);
 }
 
 DlgLogInspector::~DlgLogInspector()
@@ -216,6 +227,61 @@ void DlgLogInspector::loadSettings()
 	QSettings settings;
 	QByteArray ba = settings.value("ui/DlgLogInspector/geometry").toByteArray();
 	restoreGeometry(ba);
+}
+
+void DlgLogInspector::initVisualSettingSelector()
+{
+	ui->cbViews->clear();
+
+	ui->cbViews->addItem(tr("No view"));
+	for (const QString &view_name : m_graph->savedVisualSettingsNames(shvPath())) {
+		ui->cbViews->addItem(view_name);
+	}
+}
+
+void DlgLogInspector::onSaveViewClicked()
+{
+	QString current_name = ui->cbViews->currentText();
+	if (current_name.isEmpty() || current_name == ui->cbViews->itemText(0)) {
+		return;
+	}
+	if (ui->cbViews->findText(current_name) == -1) {
+		int index = ui->cbViews->count();
+		ui->cbViews->addItem(current_name);
+		ui->cbViews->setCurrentIndex(index);
+	}
+	m_graph->saveVisualSettings(shvPath(), current_name, m_graph->visualSettings());
+}
+
+void DlgLogInspector::onDeleteViewClicked()
+{
+	int index = ui->cbViews->currentIndex();
+	const QString &current_name = ui->cbViews->currentText();
+	if (ui->cbViews->findText(current_name) == -1) {
+		ui->cbViews->setEditText(ui->cbViews->itemText(index));
+		return;
+	}
+
+	m_graph->deleteVisualSettings(shvPath(), current_name);
+	ui->cbViews->removeItem(index);
+	ui->cbViews->setCurrentIndex(VIEW_SELECTOR_NO_VIEW_INDEX);
+	onViewSelected(VIEW_SELECTOR_NO_VIEW_INDEX);
+}
+
+void DlgLogInspector::onViewSelected(int index)
+{
+	if (index == VIEW_SELECTOR_NO_VIEW_INDEX) {
+		m_graph->reset();
+	}
+	else {
+		setView(ui->cbViews->currentText());
+	}
+}
+
+void DlgLogInspector::setView(const QString &name)
+{
+	tl::Graph::VisualSettings settings = m_graph->loadVisualSettings(shvPath(), name);
+	m_graph->setVisualSettings(settings);
 }
 
 void DlgLogInspector::saveSettings()

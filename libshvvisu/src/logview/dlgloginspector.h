@@ -51,6 +51,13 @@ private:
 	void applyFilters(const QSet<QString> &channel_paths);
 	void onChannelsFilterClicked();
 	void onGraphChannelFilterChanged();
+
+	void initVisualSettingSelector();
+	void onSaveViewClicked();
+	void onDeleteViewClicked();
+	void onViewSelected(int index);
+	void setView(const QString &name);
+
 private:
 	Ui::DlgLogInspector *ui;
 

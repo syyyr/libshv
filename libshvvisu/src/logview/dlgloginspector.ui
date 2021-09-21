@@ -427,6 +427,42 @@
        </spacer>
       </item>
       <item>
+       <widget class="QLabel" name="lblViews">
+        <property name="text">
+         <string>Saved views:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="cbViews">
+        <property name="editable">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pbSaveView">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../../images/images.qrc">
+          <normaloff>:/shv/visu/images/file-save.svg</normaloff>:/shv/visu/images/file-save.svg</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pbDeleteView">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../../images/images.qrc">
+          <normaloff>:/shv/visu/images/delete.svg</normaloff>:/shv/visu/images/delete.svg</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="pbChannelsFilter">
         <property name="text">
          <string>Channels filter</string>
