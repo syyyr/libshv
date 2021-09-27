@@ -60,7 +60,7 @@ static bool mkpath(const std::string &dir_name)
 	// helper function to check if a given path is a directory, since mkdir can
 	// fail if the dir already exists (it may have been created by another
 	// thread or another process)
-	shvWarning() << dir_name << "exists:" << is_dir(dir_name);
+	shvDebug() << dir_name << "exists:" << is_dir(dir_name);
 	if(is_dir(dir_name))
 		return true;
 	logIShvJournal() << "Creating journal dir:" << dir_name;
