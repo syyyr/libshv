@@ -93,6 +93,7 @@ public:
 			AccessGrant,
 			DataChange,
 			NodeDrop,
+			ValueNotAvailable,
 		};
 	};
 };
