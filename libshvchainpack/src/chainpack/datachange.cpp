@@ -23,6 +23,7 @@ DataChange::MetaType::MetaType()
 		RPC_META_TAG_DEF(ShortTime),
 		//RPC_META_TAG_DEF(Domain),
 		RPC_META_TAG_DEF(ValueFlags),
+		RPC_META_TAG_DEF(SpecialListValue),
 	};
 }
 
@@ -92,13 +93,10 @@ DataChange DataChange::fromRpcValue(const RpcValue &val)
 	if(isDataChange(val)) {
 		DataChange ret;
 		if(val.isList()) {
-			const RpcValue::List &lst = val.toList();
+			const RpcValue::List &lst = val.asList();
 			if(lst.size() == 1) {
-				// we cannot make DataChange from RpcValue with meta-data
-				// in this case, the inner DataChange must be wrapped in the list
-				// val is in form <data-change>[<meta-data>value]
 				RpcValue wrapped_val = lst.value(0);
-				if(!wrapped_val.metaData().isEmpty()) {
+				if(!wrapped_val.metaData().isEmpty() && !val.metaValue(MetaType::Tag::SpecialListValue).isValid()) {
 					ret.setValue(wrapped_val);
 					goto set_meta_data;
 				}
@@ -124,10 +122,20 @@ RpcValue DataChange::toRpcValue() const
 {
 	RpcValue ret;
 	if(m_value.isValid()) {
-		if(m_value.metaData().isEmpty())
+		if(m_value.metaData().isEmpty()) {
 			ret = m_value;
-		else
+			const RpcValue::List &lst = m_value.asList();
+			if(lst.size() == 1 && !lst[0].metaData().isEmpty()) {
+				// [<meta>value] will be packed as <dc-meta>[<meta>value]
+				// what will be unpacked to DataChange as <meta>value
+				// mark such a rare case with tag SpecialListValue
+				// to avoid this mis-interpretation
+				ret.setMetaValue(MetaType::Tag::SpecialListValue, true);
+			}
+		}
+		else {
 			ret = RpcValue::List{m_value};
+		}
 	}
 	else {
 		ret = RpcValue{nullptr};

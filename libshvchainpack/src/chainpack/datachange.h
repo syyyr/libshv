@@ -20,7 +20,8 @@ public:
 								ShortTime,
 								//Domain, domain should not be part of DataChange,
 								// because Domain is name of signal emitted with DataChange
-				                ValueFlags,
+								ValueFlags,
+								SpecialListValue,
 								MAX};};
 		//struct Key { enum Enum {Value = 1, DateTime, ShortTime, MAX};};
 
