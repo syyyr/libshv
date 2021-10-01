@@ -43,7 +43,7 @@ INCLUDEPATH += \
 	$$LIBSHV_SRC_DIR/libshvchainpack/include \
 	$$LIBSHV_SRC_DIR/libshvcore/include \
 	$$LIBSHV_SRC_DIR/libshvcoreqt/include \
-	#$$LIBSHV_SRC_DIR/libshviotqt/include \
+	$$LIBSHV_SRC_DIR/libshviotqt/include \
 	$$LIBSHV_SRC_DIR/libshvvisu/include \
 
 # You can make your code fail to compile if it uses deprecated APIs.

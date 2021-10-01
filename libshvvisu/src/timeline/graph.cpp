@@ -31,6 +31,8 @@ namespace timeline {
 
 const QString Graph::DEFAULT_USER_PROFILE = QStringLiteral("default");
 
+static int VALUE_NOT_AVILABLE_Y = std::numeric_limits<int>::max();
+
 //==========================================
 // Graph::GraphStyle
 //==========================================
@@ -1631,20 +1633,27 @@ std::function<QPoint (const Sample &s, Graph::TypeId meta_type_id)> Graph::dataT
 		if(!s.isValid())
 			return QPoint();
 		const timemsec_t t = s.time;
-		bool ok;
-		double d = GraphModel::valueToDouble(s.value, meta_type_id, &ok);
-		//shvInfo() << "Convert qt type:" << s.value.typeName() << "through shv type:" << shv::core::utils::ShvLogTypeDescr::typeToString(meta_type_id) << "to double:" << d;
-		if(!ok) {
-			shvWarning() << "Don't know how to convert qt type:" << s.value.typeName() << "to shv type:" << shv::core::utils::ShvLogTypeDescr::typeToString(meta_type_id);
-			return QPoint();
-		}
 		double x = le + (t - t1) * kx;
 		// too big or too small pixel sizes can make painting problems
 		static constexpr int MIN_INT2 = std::numeric_limits<int>::min() / 2;
 		static constexpr int MAX_INT2 = std::numeric_limits<int>::max() / 2;
 		int int_x = (x > MAX_INT2)? MAX_INT2 : (x < MIN_INT2)? MIN_INT2 : static_cast<int>(x);
-		double y = bo + (d - d1) * ky;
-		int int_y = (y > MAX_INT2)? MAX_INT2 : (y < MIN_INT2)? MIN_INT2 : static_cast<int>(y);
+		int int_y;
+		if(shv::coreqt::Utils::isValueNotAvailable(s.value)) {
+			int_y = VALUE_NOT_AVILABLE_Y;
+		}
+		else {
+			bool ok;
+			double d = GraphModel::valueToDouble(s.value, meta_type_id, &ok);
+			//shvInfo() << "Convert qt type:" << s.value.typeName() << "through shv type:" << shv::core::utils::ShvLogTypeDescr::typeToString(meta_type_id) << "to double:" << d;
+			if(!ok) {
+				shvWarning() << "Don't know how to convert qt type:" << s.value.typeName() << "to shv type:" << shv::core::utils::ShvLogTypeDescr::typeToString(meta_type_id);
+				return QPoint();
+			}
+			double y = bo + (d - d1) * ky;
+			int_y = (y > MAX_INT2)? MAX_INT2 : (y < MIN_INT2)? MIN_INT2 : static_cast<int>(y);
+		}
+
 		return QPoint{int_x, int_y};
 	};
 }
@@ -1814,7 +1823,6 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	if(ch_style.lineAreaStyle() == GraphChannel::Style::LineAreaStyle::Filled) {
 		line_area_color = line_color;
 		line_area_color.setAlphaF(0.4);
-		//line_area_color.setHsv(line_area_color.hslHue(), line_area_color.hsvSaturation() / 2, line_area_color.lightness());
 	}
 
 	const int sample_point_size = u2px(0.5);
@@ -1850,12 +1858,8 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		OnePixelValue(int x, int y) : x(x), y1(y), y2(y), minY(y), maxY(y) {}
 		OnePixelValue(const QPoint &p) : x(p.x()), y1(p.y()), y2(p.y()), minY(p.y()), maxY(p.y()) {}
 		bool isValid() const { return x != NO_X; }
+		bool isValueNotAvailable() const { return y1 == VALUE_NOT_AVILABLE_Y; }
 	};
-	//auto line_y = [](const QPoint &p1, const QPoint &p2, int x) {
-	//	// y = y1 + (y2-y1)/(x2-x1)*(x-x1)
-	//	int y = p1.y() + (p2.y() - p1.y()) * (x - p1.x()) / (p2.x() - p1.x());
-	//	return y;
-	//};
 	OnePixelValue current_px;
 	OnePixelValue prev_px;
 	int x_axis_y = sample2point(Sample{xrange.min, 0}, channel_meta_type_id).y();
@@ -1878,9 +1882,19 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 			prev_px = current_px;
 			current_px = p;
 			if(prev_px.isValid()) {
-				// paint prev sample ymin-ymax area
-				if(prev_px.isValid() && prev_px.maxY != prev_px.minY) {
-					painter->drawLine(prev_px.x, prev_px.minY, prev_px.x, prev_px.maxY);
+				if(prev_px.isValueNotAvailable()) {
+					// draw hashed area from prev to current x
+					QRect rect = effective_dest_rect;
+					rect.setLeft(prev_px.x);
+					rect.setRight(current_px.x);
+					QBrush brush(pen.color().lighter(), Qt::BDiagPattern);
+					painter->fillRect(rect, brush);
+				}
+				else {
+					// paint prev sample ymin-ymax area
+					if(prev_px.isValid() && prev_px.maxY != prev_px.minY) {
+						painter->drawLine(prev_px.x, prev_px.minY, prev_px.x, prev_px.maxY);
+					}
 				}
 			}
 			if (model()->channelInfo(ch->modelIndex()).typeDescr.sampleType == shv::core::utils::ShvLogTypeDescr::SampleType::Discrete) {
@@ -1908,7 +1922,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 				}
 			else if(interpolation == GraphChannel::Style::Interpolation::Stepped) {
 				// paint connections to recent sample y2
-				if(prev_px.isValid()) {
+				if(prev_px.isValid() && !prev_px.isValueNotAvailable()) {
 					if(line_area_color.isValid()) {
 						QPoint top_left{prev_px.x + 1, prev_px.y2};
 						QPoint bottom_right{current_px.x, x_axis_y};
@@ -1923,7 +1937,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 				}
 			}
 			else if(interpolation == GraphChannel::Style::Interpolation::Line) {
-				if(prev_px.isValid()) {
+				if(prev_px.isValid() && !prev_px.isValueNotAvailable()) {
 					if(line_area_color.isValid()) {
 						QPainterPath pp;
 						pp.moveTo(QPoint{prev_px.x, prev_px.y2});

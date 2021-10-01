@@ -55,7 +55,7 @@ void MainWindow::generateSampleData()
 	double max_val = 5;
 
 	m_graphModel->clear();
-	const vector<string>paths{"discrete", "stepped", "line"};
+	const vector<string>paths{"discrete", "stepped", "line", "withMissingData"};
 	for (const auto &ch : paths) {
 		m_graphModel->appendChannel(ch, std::string());
 	}
@@ -74,7 +74,7 @@ void MainWindow::generateSampleData()
 	sort(times.begin(), times.end());
 	m_graphModel->appendValue(0, tl::Sample{times[0], val_distrib(gen)});
 	for(size_t j=1; j<times.size()-1; ++j) {
-		for (int i=0; i<m_graphModel->channelCount(); i++) {
+		for (int i=0; i<m_graphModel->channelCount() - 1; i++) {
 			if(j == 3) {
 				for(int k=0; k<5; k++)
 					m_graphModel->appendValue(i, tl::Sample{times[j]+k, val_distrib(gen)});
@@ -85,7 +85,21 @@ void MainWindow::generateSampleData()
 		}
 	}
 	m_graphModel->appendValue(0, tl::Sample{times[times.size()-1], val_distrib(gen)});
-
+	{
+		// generate data with not available part in center third
+		bool na_added = false;
+		for(size_t j=1; j<times.size()-1; ++j) {
+			if(j > times.size()/3 && j < times.size()/3*2) {
+				if(!na_added) {
+					na_added = true;
+					m_graphModel->appendValue(m_graphModel->channelCount() - 1, tl::Sample{times[j], QVariant::fromValue(shv::chainpack::ValueNotAvailable())});
+				}
+			}
+			else {
+				m_graphModel->appendValue(m_graphModel->channelCount() - 1, tl::Sample{times[j], val_distrib(gen)});
+			}
+		}
+	}
 	m_graphModel->endAppendValues();
 
 	m_graph->createChannelsFromModel();

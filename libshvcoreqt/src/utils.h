@@ -2,7 +2,10 @@
 
 #include "shvcoreqtglobal.h"
 
+#include <shv/chainpack/valuenotavailable.h>
 #include <shv/core/utils.h>
+
+#include <QMetaType>
 
 #include <string>
 
@@ -117,7 +120,8 @@ namespace coreqt {
 class SHVCOREQT_DECL_EXPORT Utils
 {
 public:
-	static bool isDefaultQVariantValue(const QVariant &val);
+	//static bool isDefaultQVariantValue(const QVariant &val);
+	static bool isValueNotAvailable(const QVariant &val);
 	static QVariant rpcValueToQVariant(const chainpack::RpcValue &v, bool *ok = nullptr);
 	static chainpack::RpcValue qVariantToRpcValue(const QVariant &v, bool *ok = nullptr);
 	static QStringList rpcValueToStringList(const shv::chainpack::RpcValue &rpcval);
@@ -126,3 +130,5 @@ public:
 
 } // namespace coreqt
 } // namespace shv
+
+Q_DECLARE_METATYPE(shv::chainpack::ValueNotAvailable);

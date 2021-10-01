@@ -3,6 +3,8 @@
 #include <shv/chainpack/rpcvalue.h>
 #include <shv/coreqt/log.h>
 
+#include <cmath>
+
 namespace shv {
 namespace visu {
 namespace timeline {
@@ -102,6 +104,8 @@ double GraphModel::valueToDouble(const QVariant v, shv::core::utils::ShvLogTypeD
 	using Type = shv::core::utils::ShvLogTypeDescr::Type;
 	if(ok)
 		*ok = true;
+	if(shv::coreqt::Utils::isValueNotAvailable(v))
+		return std::numeric_limits<double>::quiet_NaN();
 	if(type_id == Type::Invalid)
 		type_id = qt_to_shv_type(v.userType());
 	switch (type_id) {
