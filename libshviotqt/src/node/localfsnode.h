@@ -31,6 +31,7 @@ private:
 	shv::chainpack::RpcValue size(const ShvNode::StringViewList &shv_path) const override;
 
 	bool isDir(const ShvNode::StringViewList &shv_path) const;
+	void checkIsPathValid(const QString &path) const;
 
 	QFileInfo ndFileInfo(const QString &path) const;
 	chainpack::RpcValue ndSize(const QString &path) const;

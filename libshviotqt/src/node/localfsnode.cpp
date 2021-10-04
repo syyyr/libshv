@@ -163,6 +163,15 @@ bool LocalFSNode::isDir(const ShvNode::StringViewList &shv_path) const
 	return fi.isDir();
 }
 
+void LocalFSNode::checkIsPathValid(const QString &path) const
+{
+	shvInfo() << path.toStdString() << m_rootDir.absolutePath().toStdString();
+
+	if (QDir::cleanPath(path).indexOf(m_rootDir.absolutePath()) != 0) {
+		SHV_EXCEPTION("Path:" + path.toStdString() + " is out of fs root directory:" + m_rootDir.path().toStdString());
+	}
+}
+
 QFileInfo LocalFSNode::ndFileInfo(const QString &path) const
 {
 	QFileInfo fi(m_rootDir.absolutePath() + '/' + path);
@@ -221,7 +230,11 @@ chainpack::RpcValue LocalFSNode::ndWrite(const QString &path, const chainpack::R
 
 chainpack::RpcValue LocalFSNode::ndDelete(const QString &path)
 {
-	QFile file (m_rootDir.absolutePath() + '/' + path);
+	QString file_path = m_rootDir.absolutePath() + '/' + path;
+	QFile file (file_path);
+
+	checkIsPathValid(file_path);
+
 	return file.remove();
 }
 
@@ -231,6 +244,8 @@ chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::
 
 	if (methods_params.isString()){
 		QString file_path = m_rootDir.absolutePath() + '/' + path + '/' + QString::fromStdString(methods_params.asString());
+
+		checkIsPathValid(file_path);
 
 		QFile f(file_path);
 		if(f.open(QFile::WriteOnly)) {
@@ -284,7 +299,11 @@ chainpack::RpcValue LocalFSNode::ndMkdir(const QString &path, const chainpack::R
 
 chainpack::RpcValue LocalFSNode::ndRmdir(const QString &path, bool recursively)
 {
-	QDir d(m_rootDir.absolutePath() + '/' + path);
+	QString file_path = m_rootDir.absolutePath() + '/' + path;
+
+	checkIsPathValid(file_path);
+
+	QDir d(file_path);
 
 	if (path.isEmpty())
 		SHV_EXCEPTION("Cannot remove root directory " + d.absolutePath().toStdString());
