@@ -106,7 +106,7 @@ std::string ClientConnectionOnBroker::resolveLocalPath(const shv::core::utils::S
 			}
 			else {
 				/// forward to master broker
-				MasterBrokerConnection *mbconn = BrokerApp::instance()->mainMasterBrokerConnection();
+				MasterBrokerConnection *mbconn = BrokerApp::instance()->masterBrokerConnectionForClient(connectionId());
 				if(!mbconn)
 					SHV_EXCEPTION("Cannot forward relative service provider path, no master broker connection, path: " + spp.shvPath());
 				/// if the client is mounted on exported path,
@@ -123,7 +123,7 @@ std::string ClientConnectionOnBroker::resolveLocalPath(const shv::core::utils::S
 			}
 			else {
 				/// forward to master broker
-				MasterBrokerConnection *mbconn = BrokerApp::instance()->mainMasterBrokerConnection();
+				MasterBrokerConnection *mbconn = BrokerApp::instance()->masterBrokerConnectionForClient(connectionId());
 				if(!mbconn)
 					SHV_EXCEPTION("Cannot forward relative service provider path, no master broker connection, path: " + spp.shvPath());
 				local_path = spp.toString();

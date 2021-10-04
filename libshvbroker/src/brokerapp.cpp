@@ -618,11 +618,8 @@ std::string BrokerApp::primaryIPAddress(bool &is_public)
 	return std::string();
 }
 
-void BrokerApp::propagateSubscriptionsToMasterBroker()
+void BrokerApp::propagateSubscriptionsToMasterBroker(rpc::MasterBrokerConnection *mbrconn)
 {
-	rpc::MasterBrokerConnection *mbrconn = mainMasterBrokerConnection();
-	if(!mbrconn)
-		return;
 	logSubscriptionsD() << "Connected to main master broker, propagating client subscriptions.";
 	for(int id : clientConnectionIds()) {
 		rpc::ClientConnectionOnBroker *conn = clientConnectionById(id);
@@ -901,9 +898,9 @@ void BrokerApp::onConnectedToMasterBrokerChanged(int connection_id, bool is_conn
 			new shv::iotqt::node::RpcValueMapNode("config", conn->options(), mbnd);
 			new SubscriptionsNode(conn, mbnd);
 		}
-		if(conn == mainMasterBrokerConnection()) {
+		if(conn == masterBrokerConnectionForClient(connection_id)) {
 			/// propagate relative subscriptions
-			propagateSubscriptionsToMasterBroker();
+			propagateSubscriptionsToMasterBroker(conn);
 		}
 	}
 	else {
@@ -974,7 +971,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 							is_service_provider_mount_point_relative_call = shv_url.isUpTreeMountPointRelative();
 						}
 						else {
-							rpc::MasterBrokerConnection *master_broker = mainMasterBrokerConnection();
+							rpc::MasterBrokerConnection *master_broker = masterBrokerConnectionForClient(connection_id);
 							logServiceProvidersM() << "service path not found, forwarding it to master broker:" << master_broker;
 							if(master_broker == nullptr)
 								ACCESS_EXCEPTION("Cannot call service provider path " + cp::RpcMessage::shvPath(meta).toString() + ", there is no master broker to forward the request.");
@@ -1155,6 +1152,13 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 	}
 }
 
+rpc::MasterBrokerConnection *BrokerApp::masterBrokerConnectionForClient(int client_id)
+{
+	Q_UNUSED(client_id)
+	//TODO: find master broker connection according to client mount path
+	return masterBrokerConnections().value(0);
+}
+
 void BrokerApp::onRootNodeSendRpcMesage(const shv::chainpack::RpcMessage &msg)
 {
 	if(msg.isResponse()) {
@@ -1266,7 +1270,7 @@ void BrokerApp::addSubscription(int client_id, const std::string &shv_path, cons
 	//logSubscriptionsD() << "addSubscription path:" << subs.localPath << "method:" << subs.method << "for client:" << cli;
 	if(spp.isServicePath()) {
 		/// not served here, should be propagated to the master broker
-		rpc::MasterBrokerConnection *mbrconn = mainMasterBrokerConnection();
+		rpc::MasterBrokerConnection *mbrconn = masterBrokerConnectionForClient(client_id);
 		if(mbrconn) {
 			mbrconn->callMethodSubscribe(subs.localPath, method);
 		}

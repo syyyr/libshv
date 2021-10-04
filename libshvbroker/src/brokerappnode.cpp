@@ -129,7 +129,8 @@ chainpack::RpcValue BrokerAppNode::callMethodRq(const chainpack::RpcRequest &rq)
 			return BrokerApp::instance()->rejectNotSubscribedSignal(client_id, path, method);
 		}
 		if (method == M_MASTER_BROKER_ID) {
-			auto *conn = BrokerApp::instance()->mainMasterBrokerConnection();
+			int client_id = rq.peekCallerId();
+			auto *conn = BrokerApp::instance()->masterBrokerConnectionForClient(client_id);
 			if (!conn) {
 				return std::string();
 			}

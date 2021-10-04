@@ -63,7 +63,7 @@ public:
 
 	void onRpcDataReceived(int connection_id, shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&meta, std::string &&data);
 
-	rpc::MasterBrokerConnection* mainMasterBrokerConnection() { return masterBrokerConnections().value(0); }
+	rpc::MasterBrokerConnection* masterBrokerConnectionForClient(int client_id);
 
 	void addSubscription(int client_id, const std::string &path, const std::string &method);
 	bool removeSubscription(int client_id, const std::string &shv_path, const std::string &method);
@@ -134,7 +134,7 @@ private:
 
 	std::string primaryIPAddress(bool &is_public);
 
-	void propagateSubscriptionsToMasterBroker();
+	void propagateSubscriptionsToMasterBroker(rpc::MasterBrokerConnection *mbrconn);
 protected:
 	AppCliOptions *m_cliOptions;
 	std::string m_brokerId;
