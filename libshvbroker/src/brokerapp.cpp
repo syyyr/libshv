@@ -250,7 +250,7 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 					logBrokerDiscoveryM() << "Received broadcast request shvbrokerDiscovery:" << rq.toPrettyString();
 					shv::chainpack::RpcResponse resp = rq.makeResponse();
 					QString ipv4 = shv::iotqt::utils::Network::primaryIPv4Address().toString();
-					shv::chainpack::RpcValue response = shv::chainpack::RpcValue::Map { {"brokerId", m_brokerId}, {"brokerIPv4", ipv4.toStdString()}};
+					shv::chainpack::RpcValue response = shv::chainpack::RpcValue::Map { {"brokerId", m_brokerId}, {"brokerIPv4", ipv4.toStdString()}, {"brokerPort", m_cliOptions->serverPort() } };
 					resp.setResult(response);
 					QByteArray response_datagram(resp.toCpon().c_str(), resp.toCpon().length());
 					udp_socket->writeDatagram(response_datagram, address, port);
