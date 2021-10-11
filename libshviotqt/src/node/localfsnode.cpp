@@ -163,10 +163,8 @@ bool LocalFSNode::isDir(const ShvNode::StringViewList &shv_path) const
 	return fi.isDir();
 }
 
-void LocalFSNode::checkIsPathValid(const QString &path) const
+void LocalFSNode::checkPathIsBoundedToFsRoot(const QString &path) const
 {
-	shvInfo() << path.toStdString() << m_rootDir.absolutePath().toStdString();
-
 	if (QDir::cleanPath(path).indexOf(m_rootDir.absolutePath()) != 0) {
 		SHV_EXCEPTION("Path:" + path.toStdString() + " is out of fs root directory:" + m_rootDir.path().toStdString());
 	}
@@ -185,7 +183,10 @@ cp::RpcValue LocalFSNode::ndSize(const QString &path) const
 
 chainpack::RpcValue LocalFSNode::ndRead(const QString &path) const
 {
-	QFile f(m_rootDir.absolutePath() + '/' + path);
+	QString file_path = m_rootDir.absolutePath() + '/' + path;
+	checkPathIsBoundedToFsRoot(file_path);
+
+	QFile f(file_path);
 	if(f.open(QFile::ReadOnly)) {
 		QByteArray ba = f.readAll();
 		return cp::RpcValue::Blob(ba.constData(), ba.constData() + ba.size());
@@ -231,10 +232,9 @@ chainpack::RpcValue LocalFSNode::ndWrite(const QString &path, const chainpack::R
 chainpack::RpcValue LocalFSNode::ndDelete(const QString &path)
 {
 	QString file_path = m_rootDir.absolutePath() + '/' + path;
+	checkPathIsBoundedToFsRoot(file_path);
+
 	QFile file (file_path);
-
-	checkIsPathValid(file_path);
-
 	return file.remove();
 }
 
@@ -244,8 +244,7 @@ chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::
 
 	if (methods_params.isString()){
 		QString file_path = m_rootDir.absolutePath() + '/' + path + '/' + QString::fromStdString(methods_params.asString());
-
-		checkIsPathValid(file_path);
+		checkPathIsBoundedToFsRoot(file_path);
 
 		QFile f(file_path);
 		if(f.open(QFile::WriteOnly)) {
@@ -289,7 +288,10 @@ chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::
 
 chainpack::RpcValue LocalFSNode::ndMkdir(const QString &path, const chainpack::RpcValue &methods_params)
 {
-	QDir d(m_rootDir.absolutePath()+ '/' + path);
+	QString dir_path = m_rootDir.absolutePath()+ '/' + path;
+	checkPathIsBoundedToFsRoot(dir_path);
+
+	QDir d(dir_path);
 
 	if (!methods_params.isString())
 		SHV_EXCEPTION("Cannot create directory in directory " + d.absolutePath().toStdString() + ". Invalid parameter: " + methods_params.toCpon());
@@ -300,8 +302,7 @@ chainpack::RpcValue LocalFSNode::ndMkdir(const QString &path, const chainpack::R
 chainpack::RpcValue LocalFSNode::ndRmdir(const QString &path, bool recursively)
 {
 	QString file_path = m_rootDir.absolutePath() + '/' + path;
-
-	checkIsPathValid(file_path);
+	checkPathIsBoundedToFsRoot(file_path);
 
 	QDir d(file_path);
 
