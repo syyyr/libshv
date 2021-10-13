@@ -90,7 +90,8 @@ public:
 		static std::string fileMsecToFileName(int64_t msec);
 		std::string fileMsecToFilePath(int64_t file_msec) const;
 	};
-	const JournalContext& checkJournalContext();
+	static constexpr bool Force = true;
+	const JournalContext& checkJournalContext(bool force = !Force);
 	void createNewLogFile(int64_t journal_file_start_msec = 0);
 	static shv::chainpack::RpcValue getLog(const JournalContext &journal_context, const ShvGetLogParams &params);
 private:

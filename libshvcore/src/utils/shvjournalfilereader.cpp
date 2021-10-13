@@ -71,7 +71,13 @@ bool ShvJournalFileReader::next()
 			continue;
 		}
 		std::string path = line_record.value(Column::Path).toString();
+		if(path.empty()) {
+			logWShvJournal() << "skipping invalid line with empy path, line:" << line;
+			continue;
+		}
 		std::string domain = line_record.value(Column::Domain).toString();
+		if(domain.empty())
+			domain = ShvJournalEntry::DOMAIN_VAL_CHANGE;
 		StringView short_time_sv = line_record.value(Column::ShortTime);
 		auto value_flags = shv::core::String::toInt(line_record.value(Column::ValueFlags).toString());
 
