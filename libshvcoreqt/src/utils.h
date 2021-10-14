@@ -120,7 +120,7 @@ namespace coreqt {
 class SHVCOREQT_DECL_EXPORT Utils
 {
 public:
-	//static bool isDefaultQVariantValue(const QVariant &val);
+	static bool isDefaultQVariantValue(const QVariant &val);
 	static bool isValueNotAvailable(const QVariant &val);
 	static QVariant rpcValueToQVariant(const chainpack::RpcValue &v, bool *ok = nullptr);
 	static chainpack::RpcValue qVariantToRpcValue(const QVariant &v, bool *ok = nullptr);

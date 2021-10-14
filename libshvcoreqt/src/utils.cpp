@@ -138,7 +138,6 @@ bool Utils::isValueNotAvailable(const QVariant &val)
 	return qMetaTypeId<shv::chainpack::ValueNotAvailable>() == val.userType();
 }
 
-/*
 bool Utils::isDefaultQVariantValue(const QVariant &val)
 {
 	if(!val.isValid())
@@ -160,6 +159,6 @@ bool Utils::isDefaultQVariantValue(const QVariant &val)
 		return false;
 	}
 }
-*/
+
 } // namespace coreqt
 } // namespace shv
