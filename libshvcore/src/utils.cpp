@@ -171,15 +171,17 @@ RpcValue Utils::foldMap(const chainpack::RpcValue::Map &plain_map, char key_deli
 
 std::string Utils::joinPath(const std::string &p1, const std::string &p2)
 {
-	if(p2.empty())
-		return p1;
-	if(p1.empty())
-		return p2;
-	std::string ret = p1;
-	if(p1[p1.length()  -1] != '/' && p2[0] != '/')
-		ret += '/';
-	ret += p2;
-	return ret;
+	StringView sv1(p1);
+	while(sv1.endsWith('/'))
+		sv1 = sv1.mid(0, sv1.size() - 1);
+	StringView sv2(p2);
+	while(sv2.startsWith('/'))
+		sv2 = sv2.mid(1);
+	if(sv2.empty())
+		return sv1.toString();
+	if(sv1.empty())
+		return sv2.toString();
+	return sv1.toString() + '/' + sv2.toString();
 }
 
 std::string Utils::simplifyPath(const std::string &p)

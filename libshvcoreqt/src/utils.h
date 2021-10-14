@@ -126,6 +126,8 @@ public:
 	static chainpack::RpcValue qVariantToRpcValue(const QVariant &v, bool *ok = nullptr);
 	static QStringList rpcValueToStringList(const shv::chainpack::RpcValue &rpcval);
 	static shv::chainpack::RpcValue stringListToRpcValue(const QStringList &sl);
+	static QString joinPath(const QString &p1, const QString &p2);
+	static QString joinPath(const QString &p1, const QString &p2, const QString &p3);
 };
 
 } // namespace coreqt

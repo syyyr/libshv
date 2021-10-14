@@ -4,6 +4,7 @@
 
 #include <shv/core/log.h>
 
+#include <QStringView>
 #include <QVariant>
 #include <QDateTime>
 #include <QTimeZone>
@@ -131,6 +132,26 @@ shv::chainpack::RpcValue Utils::stringListToRpcValue(const QStringList &sl)
 	for(const QString &s : sl)
 		ret.push_back(s.toStdString());
 	return shv::chainpack::RpcValue(ret);
+}
+
+QString Utils::joinPath(const QString &p1, const QString &p2)
+{
+	QStringView sv1(p1);
+	while(!sv1.isEmpty() && sv1.last() == '/')
+		sv1.chop(1);
+	QStringView sv2(p2);
+	while(!sv2.isEmpty() && sv2.first() == '/')
+		sv2 = sv2.mid(1);
+	if(sv2.isEmpty())
+		return sv1.toString();
+	if(sv1.isEmpty())
+		return sv2.toString();
+	return sv1.toString() + '/' + sv2.toString();
+}
+
+QString Utils::joinPath(const QString &p1, const QString &p2, const QString &p3)
+{
+	return joinPath(joinPath(p1, p2), p3);
 }
 
 bool Utils::isValueNotAvailable(const QVariant &val)
