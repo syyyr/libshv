@@ -26,11 +26,13 @@ public:
 	size_t methodCount(const StringViewList &shv_path) override;
 	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
 private:
+	QString makeAbsolutePath(const QString &relative_path) const;
 	std::string fileName(const ShvNode::StringViewList &shv_path) const override;
 	shv::chainpack::RpcValue readContent(const ShvNode::StringViewList &shv_path) const override;
 	shv::chainpack::RpcValue size(const ShvNode::StringViewList &shv_path) const override;
 
 	bool isDir(const ShvNode::StringViewList &shv_path) const;
+	void checkPathIsBoundedToFsRoot(const QString &path) const;
 
 	QFileInfo ndFileInfo(const QString &path) const;
 	chainpack::RpcValue ndSize(const QString &path) const;
