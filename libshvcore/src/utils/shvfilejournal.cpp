@@ -614,12 +614,12 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 	snapshot_ctx.snapshotWritten = !params.withSnapshot;
 
 	cp::RpcValue::List log;
-	bool since_now = (params.since.asString() == ShvGetLogParams::SINCE_NOW);
+	bool since_last = params.isSinceLast();
 
 	cp::RpcValue::Map path_cache;
 	const auto params_since_msec = params.since.isDateTime()
 								   ? params.since.toDateTime().msecsSinceEpoch()
-								   : (since_now ? std::numeric_limits<int64_t>::max() : 0);
+								   : (since_last ? std::numeric_limits<int64_t>::max() : 0);
 	const auto params_until_msec = params.until.isDateTime()? params.until.toDateTime().msecsSinceEpoch(): 0;
 	int64_t journal_start_msec = 0;
 	int64_t first_record_msec = 0;
@@ -660,13 +660,13 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		log.push_back(std::move(rec));
 		return true;
 	};
-	auto write_snapshot = [append_log_entry, since_now, params_since_msec, &snapshot_ctx]() {
+	auto write_snapshot = [append_log_entry, since_last, params_since_msec, &snapshot_ctx]() {
 		//shvWarning() << "write_snapshot, snapshot size:" << snapshot_ctx.snapshot.size();
 		logMShvJournal() << "\t writing snapshot, record count:" << snapshot_ctx.snapshot.size();
 		snapshot_ctx.snapshotWritten = true;
 		if(!snapshot_ctx.snapshot.empty()) {
 			snapshot_ctx.snapshotMsec = params_since_msec;
-			if(since_now) {
+			if(since_last) {
 				snapshot_ctx.snapshotMsec = 0;
 				for(const auto &kv : snapshot_ctx.snapshot)
 					snapshot_ctx.snapshotMsec = std::max(snapshot_ctx.snapshotMsec, kv.second.epochMsec);
@@ -776,7 +776,7 @@ log_finish:
 	}
 
 	int64_t log_since_msec = params_since_msec;
-	if (since_now) {
+	if (since_last) {
 		log_since_msec = snapshot_ctx.snapshotMsec;
 	}
 	else if(log_since_msec < journal_start_msec) {

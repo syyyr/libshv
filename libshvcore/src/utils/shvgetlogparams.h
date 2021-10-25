@@ -27,6 +27,7 @@ struct SHVCORE_DECL_EXPORT ShvGetLogParams
 	static const char *KEY_DOMAIN_PATTERN;
 
 	static const char *SINCE_NOW;
+	static const char *SINCE_LAST;
 
 	shv::chainpack::RpcValue since;
 	shv::chainpack::RpcValue until;
@@ -51,6 +52,8 @@ struct SHVCORE_DECL_EXPORT ShvGetLogParams
 
 	shv::chainpack::RpcValue toRpcValue(bool fill_legacy_fields = true) const;
 	static ShvGetLogParams fromRpcValue(const shv::chainpack::RpcValue &v);
+
+	bool isSinceLast() const;
 };
 
 } // namespace utils

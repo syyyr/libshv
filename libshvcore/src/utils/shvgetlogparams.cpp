@@ -22,6 +22,7 @@ const char *ShvGetLogParams::KEY_PATH_PATTERN = "pathPattern";
 const char *ShvGetLogParams::KEY_DOMAIN_PATTERN = "domainPattern";
 
 const char *ShvGetLogParams::SINCE_NOW = "now";
+const char *ShvGetLogParams::SINCE_LAST = "last";
 
 static const char REG_EX[] = "regex";
 
@@ -90,6 +91,11 @@ ShvGetLogParams ShvGetLogParams::fromRpcValue(const chainpack::RpcValue &v)
 	ret.withSnapshot = m.value(KEY_WITH_SNAPSHOT,ret.withSnapshot).toBool();
 	ret.withPathsDict = m.value(KEY_WITH_PATHS_DICT, ret.withPathsDict).toBool();
 	return ret;
+}
+
+bool ShvGetLogParams::isSinceLast() const
+{
+	return since.asString() == SINCE_NOW || since.asString() == SINCE_LAST;
 }
 
 } // namespace utils
