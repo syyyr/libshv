@@ -677,7 +677,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 				e.setSnapshotValue(true);
 				// erase EVENT flag in the snapshot values,
 				// they can trigger events during reply otherwise
-				e.setEventValue(false);
+				e.setSpontaneous(false);
 				if(!append_log_entry(e))
 					return false;
 			}

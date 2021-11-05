@@ -65,10 +65,10 @@ public:
 		: ShvJournalEntry(path, value, std::move(domain), NO_SHORT_TIME, NO_VALUE_FLAGS) {}
 
 	bool isValid() const {return !path.empty() && epochMsec > 0;}
-	bool isEventValue() const { return testBit(valueFlags, ValueFlag::Event); }
-	void setEventValue(bool b) { setBit(valueFlags, ValueFlag::Event, b); }
-	bool isSnapshotValue() const { return testBit(valueFlags, ValueFlag::Snapshot); }
-	void setSnapshotValue(bool b) { setBit(valueFlags, ValueFlag::Snapshot, b); }
+	bool isSpontaneous() const { return shv::chainpack::DataChange::testBit(valueFlags, ValueFlag::Spontaneous); }
+	void setSpontaneous(bool b) { shv::chainpack::DataChange::setBit(valueFlags, ValueFlag::Spontaneous, b); }
+	bool isSnapshotValue() const { return shv::chainpack::DataChange::testBit(valueFlags, ValueFlag::Snapshot); }
+	void setSnapshotValue(bool b) { shv::chainpack::DataChange::setBit(valueFlags, ValueFlag::Snapshot, b); }
 	bool operator==(const ShvJournalEntry &o) const
 	{
 		return epochMsec == o.epochMsec
@@ -84,9 +84,6 @@ public:
 	shv::chainpack::RpcValue::DateTime dateTime() const { return shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(epochMsec); }
 	shv::chainpack::RpcValue toRpcValueMap() const;
 	shv::chainpack::DataChange toDataChange() const;
-
-	static bool testBit(const unsigned &n, int pos);
-	static void setBit(unsigned &n, int pos, bool b);
 };
 
 } // namespace utils

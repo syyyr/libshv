@@ -79,7 +79,7 @@ void ShvJournalFileWriter::appendSnapshot(int64_t msec, const std::vector<ShvJou
 		e.setSnapshotValue(true);
 		// erase EVENT flag in the snapshot values,
 		// they can trigger events during reply otherwise
-		e.setEventValue(false);
+		e.setSpontaneous(false);
 		append(msec, uptime, e);
 	}
 	m_recentTimeStamp = msec;

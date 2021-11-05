@@ -275,7 +275,7 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 											, method + '(' + rq.params().toCpon() + ')'
 											, shv::chainpack::Rpc::SIG_COMMAND_LOGGED
 											, shv::core::utils::ShvJournalEntry::NO_SHORT_TIME
-											, cp::DataChange::ValueFlag::Event);
+											, cp::DataChange::ValueFlag::Spontaneous);
 		e.epochMsec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
 		e.userId = rq.userId().toString();
 		rootNode()->emitLogUserCommand(e);

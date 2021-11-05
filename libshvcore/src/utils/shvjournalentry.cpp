@@ -53,20 +53,6 @@ chainpack::DataChange ShvJournalEntry::toDataChange() const
 	return ret;
 }
 
-bool ShvJournalEntry::testBit(const unsigned &n, int pos)
-{
-	unsigned mask = 1 << pos;
-	return n & mask;
-}
-
-void ShvJournalEntry::setBit(unsigned &n, int pos, bool b)
-{
-	unsigned mask = 1 << pos;
-	n &= ~mask;
-	if(b)
-		n |= mask;
-}
-
 } // namespace utils
 } // namespace core
 } // namespace shv

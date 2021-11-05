@@ -46,7 +46,7 @@ const char *DataChange::valueFlagToString(DataChange::ValueFlag flag)
 {
 	switch (flag) {
 	case ValueFlag::Snapshot: return "Snapshot";
-	case ValueFlag::Event: return "Event";
+	case ValueFlag::Spontaneous: return "Spontaneous";
 	case ValueFlag::ValueFlagCount: return "ValueFlagCount";
 	}
 	return "???";
@@ -147,9 +147,23 @@ RpcValue DataChange::toRpcValue() const
 		ret.setMetaValue(MetaType::Tag::ShortTime, (unsigned)m_shortTime);
 	//if(hasDomain())
 	//	ret.setMetaValue(MetaType::Tag::Domain, m_domain);
-	if(valueFlags() == ValueFlag::Event)
+	if(valueFlags() == ValueFlag::Spontaneous)
 		ret.setMetaValue(MetaType::Tag::ValueFlags, (int)m_valueFlags);
 	return ret;
+}
+
+bool DataChange::testBit(const unsigned &n, int pos)
+{
+	unsigned mask = 1 << pos;
+	return n & mask;
+}
+
+void DataChange::setBit(unsigned &n, int pos, bool b)
+{
+	unsigned mask = 1 << pos;
+	n &= ~mask;
+	if(b)
+		n |= mask;
 }
 
 } // namespace chainpack
