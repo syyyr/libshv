@@ -39,6 +39,7 @@ public:
 			Flags = 1 << 1,
 			AccessGrant = 1 << 2,
 			Description = 1 << 3,
+			Tags = 1 << 4,
 		};
 	};
 	struct LsAttribute {
@@ -76,6 +77,8 @@ public:
 			lst.push_back(m_accessGrant);
 		if(mask & DirAttribute::Description)
 			lst.push_back(m_description);
+		if(mask & DirAttribute::Tags)
+			lst.push_back(m_tags);
 		if(lst.empty())
 			return name();
 		lst.insert(lst.begin(), name());
