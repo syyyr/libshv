@@ -1,0 +1,49 @@
+#ifndef SHV_CORE_UTILS_SHVALARM_H
+#define SHV_CORE_UTILS_SHVALARM_H
+
+#include "../shvcoreglobal.h"
+
+#include <string>
+
+namespace shv { namespace chainpack { class RpcValue; }}
+
+namespace shv {
+namespace core {
+namespace utils {
+
+class SHVCORE_DECL_EXPORT ShvAlarm {
+public:
+	// must be the same as one in shvgate
+	enum class Severity {NoAlarm = 0, Info, Warning, Error};
+
+public:
+	ShvAlarm();
+	ShvAlarm(const std::string &path, bool is_active = false, Severity severity = Severity::NoAlarm, int level = 0, const std::string &description = {});
+
+public:
+	static Severity severityToString(std::string lvl);
+	std::string severityAsString() const;
+	bool operator<(const ShvAlarm &a) const;
+	bool operator==(const ShvAlarm &a) const;
+
+	Severity severity() const { return m_severity; }
+	const std::string& path() const { return m_path; }
+	const std::string& description() const { return m_description; }
+	Severity severityToString() const { return m_severity; }
+	int level() const { return m_level; }
+	bool isActive() const { return m_isActive; }
+
+	shv::chainpack::RpcValue toRpcValue() const;
+private:
+	std::string m_path = "";
+	bool m_isActive = false;
+	std::string m_description = "";
+	int m_level = 0;
+	Severity m_severity = Severity::NoAlarm;
+};
+
+} // namespace utils
+} // namespace core
+} // namespace shv
+
+#endif // SHV_CORE_UTILS_SHVALARM_H
