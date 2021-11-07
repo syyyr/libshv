@@ -21,7 +21,7 @@ const char *ShvGetLogParams::KEY_PATH_PATTERN_TYPE = "pathPatternType";
 const char *ShvGetLogParams::KEY_PATH_PATTERN = "pathPattern";
 const char *ShvGetLogParams::KEY_DOMAIN_PATTERN = "domainPattern";
 
-const char *ShvGetLogParams::SINCE_NOW = "now";
+static const char *SINCE_NOW = "now";
 const char *ShvGetLogParams::SINCE_LAST = "last";
 
 static const char REG_EX[] = "regex";

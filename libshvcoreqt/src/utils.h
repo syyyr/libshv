@@ -4,8 +4,10 @@
 
 #include <shv/chainpack/valuenotavailable.h>
 #include <shv/core/utils.h>
+#include <shv/core/exception.h>
 
 #include <QMetaType>
+#include <QObject>
 
 #include <string>
 
@@ -128,6 +130,31 @@ public:
 	static shv::chainpack::RpcValue stringListToRpcValue(const QStringList &sl);
 	static QString joinPath(const QString &p1, const QString &p2);
 	static QString joinPath(const QString &p1, const QString &p2, const QString &p3);
+
+	template <class T>
+	static T findParent(const QObject *_o, bool throw_exc = shv::core::Exception::Throw)
+	{
+		T t = nullptr;
+		QObject *o = const_cast<QObject*>(_o);
+		while(o) {
+			o = o->parent();
+			if(!o)
+				break;
+			t = qobject_cast<T>(o);
+			if(t)
+				break;
+		}
+		if(!t && throw_exc) {
+			SHV_EXCEPTION("Object has not any parent of requested type.");
+		}
+		return t;
+	}
+
+	template <typename V, typename... T>
+	constexpr static inline auto make_array(T&&... t) -> std::array < V, sizeof...(T) >
+	{
+		return {{ std::forward<T>(t)... }};
+	}
 };
 
 } // namespace coreqt

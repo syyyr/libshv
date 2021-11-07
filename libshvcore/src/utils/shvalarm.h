@@ -3,6 +3,8 @@
 
 #include "../shvcoreglobal.h"
 
+#include <necrolog.h>
+
 #include <string>
 
 namespace shv { namespace chainpack { class RpcValue; }}
@@ -13,33 +15,31 @@ namespace utils {
 
 class SHVCORE_DECL_EXPORT ShvAlarm {
 public:
-	// must be the same as one in shvgate
-	enum class Severity {NoAlarm = 0, Info, Warning, Error};
-
+	typedef NecroLog::Level Severity;
 public:
 	ShvAlarm();
-	ShvAlarm(const std::string &path, bool is_active = false, Severity severity = Severity::NoAlarm, int level = 0, const std::string &description = {});
+	ShvAlarm(const std::string &path, bool is_active = false, Severity severity = Severity::Invalid, int level = 0, const std::string &description = {});
 
 public:
-	static Severity severityToString(std::string lvl);
-	std::string severityAsString() const;
+	static Severity severityFromString(const std::string &lvl);
+	const char *severityName() const;
 	bool operator<(const ShvAlarm &a) const;
 	bool operator==(const ShvAlarm &a) const;
 
 	Severity severity() const { return m_severity; }
 	const std::string& path() const { return m_path; }
 	const std::string& description() const { return m_description; }
-	Severity severityToString() const { return m_severity; }
+	Severity severityFromString() const { return m_severity; }
 	int level() const { return m_level; }
 	bool isActive() const { return m_isActive; }
 
 	shv::chainpack::RpcValue toRpcValue() const;
-private:
+protected:
 	std::string m_path = "";
 	bool m_isActive = false;
 	std::string m_description = "";
 	int m_level = 0;
-	Severity m_severity = Severity::NoAlarm;
+	NecroLog::Level m_severity = Severity::Invalid;
 };
 
 } // namespace utils
