@@ -39,7 +39,7 @@ protected:
 	bool m_isActive = false;
 	std::string m_description = "";
 	int m_level = 0;
-	NecroLog::Level m_severity = Severity::Invalid;
+	Severity m_severity = Severity::Invalid;
 };
 
 } // namespace utils
