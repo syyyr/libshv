@@ -101,30 +101,9 @@ ShvPath ShvPath::join(const std::vector<std::string> &shv_path)
 	return ret;
 }
 
-ShvPath ShvPath::join(const core::StringViewList &shv_path)
+ShvPath ShvPath::join(const StringViewList &shv_path)
 {
-	ShvPath ret;
-	for(const core::StringView &sv : shv_path) {
-		bool need_quotes = false;
-		if(sv.indexOf(SHV_PATH_DELIM) >= 0)
-			need_quotes = true;
-		//shvWarning() << sv.toString() << "~~~" << need_quotes;
-		if(!ret.empty())
-			ret += SHV_PATH_DELIM;
-		if(need_quotes)
-			ret += SHV_PATH_QUOTE;
-		ret += sv.toString();
-		if(need_quotes)
-			ret += SHV_PATH_QUOTE;
-	}
-	/*
-	shvWarning() << std::accumulate(shv_path.begin(), shv_path.end(), std::string(),
-									[](const core::StringView& a, const core::StringView& b) -> std::string {
-										return a.toString() + (a.length() > 0 ? "/" : "") + b.toString();
-									} )
-				 << "--->" << ret;
-	*/
-	return ret;
+	return join(shv_path.cbegin(), shv_path.cend());
 }
 
 ShvPath ShvPath::join(StringView path1, StringView path2)
@@ -139,6 +118,25 @@ ShvPath ShvPath::join(StringView path1, StringView path2)
 		return path1.toString();
 	//shvWarning() << path1 << "+" << path2 << "--->" << ret;
 	return path1.toString() + SHV_PATH_DELIM + path2.toString();
+}
+
+ShvPath ShvPath::join(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last)
+{
+	ShvPath ret;
+	for(std::vector<StringView>::const_iterator it = first; it != last; ++it) {
+		bool need_quotes = false;
+		if(it->indexOf(SHV_PATH_DELIM) >= 0)
+			need_quotes = true;
+		//shvWarning() << sv.toString() << "~~~" << need_quotes;
+		if(!ret.empty())
+			ret += SHV_PATH_DELIM;
+		if(need_quotes)
+			ret += SHV_PATH_QUOTE;
+		ret += it->toString();
+		if(need_quotes)
+			ret += SHV_PATH_QUOTE;
+	}
+	return ret;
 }
 
 StringView ShvPath::midPath(const std::string &path, size_t start, size_t len)

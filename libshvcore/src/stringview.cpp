@@ -1,7 +1,7 @@
 #include "stringview.h"
 #include "string.h"
 
-//#include "log.h"
+#include "log.h"
 
 namespace shv {
 namespace core {
@@ -231,9 +231,11 @@ std::vector<StringView> StringView::split(char delim, char quote, StringView::Sp
 		StringView token = strv.getToken(delim, quote);
 		if(split_behavior == KeepEmptyParts || token.length()) {
 			if(quotes_behavior == RemoveQuotes && token.size() >= 2 && token.at(0) == quote && token.at(token.size() - 1) == quote) {
-				token = token.mid(1, token.size() - 2);
+				ret.push_back(token.mid(1, token.size() - 2));
 			}
-			ret.push_back(token);
+			else {
+				ret.push_back(token);
+			}
 		}
 		if(token.end() >= strv.end())
 			break;
