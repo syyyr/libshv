@@ -5,6 +5,7 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include <array>
 #include <algorithm>
 
 #if defined LIBC_NEWLIB || defined ANDROID_BUILD
@@ -42,6 +43,13 @@ public:
 		while(ret.size() < prepend_0s_to_len)
 			ret = '0' + ret;
 		return ret;
+	}
+
+
+	template <typename V, typename... T>
+	constexpr static inline auto make_array(T&&... t) -> std::array < V, sizeof...(T) >
+	{
+		return {{ std::forward<T>(t)... }};
 	}
 
 	static RpcValue mergeMaps(const RpcValue &value_base, const RpcValue &value_over);
