@@ -28,6 +28,7 @@ public:
 	bool startsWithPath(const StringView &path, size_t *pos = nullptr) const;
 	static bool startsWithPath(const StringView &str, const StringView &path, size_t *pos = nullptr);
 
+	static ShvPath join(const std::vector<std::string> &shv_path);
 	static ShvPath join(const shv::core::StringViewList &shv_path);
 	static ShvPath join(StringView path1, StringView path2);
 

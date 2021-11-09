@@ -79,15 +79,15 @@ core::StringViewList ShvPath::split() const
 
 core::StringViewList ShvPath::split(const shv::core::StringView &shv_path)
 {
-	return core::StringView{shv_path}.split(SHV_PATH_DELIM, SHV_PATH_QUOTE, core::StringView::SkipEmptyParts);
+	return core::StringView{shv_path}.split(SHV_PATH_DELIM, SHV_PATH_QUOTE, core::StringView::SkipEmptyParts, core::StringView::RemoveQuotes);
 }
-/*
+
 ShvPath ShvPath::join(const std::vector<std::string> &shv_path)
 {
 	ShvPath ret;
 	for(const std::string &s : shv_path) {
 		bool need_quotes = false;
-		if(s.find(SHV_PATH_DELIM) >= 0)
+		if(s.find(SHV_PATH_DELIM) != std::string::npos)
 			need_quotes = true;
 		//shvWarning() << sv.toString() << "~~~" << need_quotes;
 		if(!ret.empty())
@@ -100,7 +100,7 @@ ShvPath ShvPath::join(const std::vector<std::string> &shv_path)
 	}
 	return ret;
 }
-*/
+
 ShvPath ShvPath::join(const core::StringViewList &shv_path)
 {
 	ShvPath ret;

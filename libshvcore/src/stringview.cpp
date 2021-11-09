@@ -220,7 +220,7 @@ StringView StringView::getToken(char delim, char quote)
 	return *this;
 }
 
-std::vector<StringView> StringView::split(char delim, char quote, StringView::SplitBehavior split_behavior) const
+std::vector<StringView> StringView::split(char delim, char quote, StringView::SplitBehavior split_behavior, QuoteBehavior quotes_behavior) const
 {
 	using namespace std;
 	vector<StringView> ret;
@@ -229,8 +229,12 @@ std::vector<StringView> StringView::split(char delim, char quote, StringView::Sp
 	StringView strv(*this);
 	while(true) {
 		StringView token = strv.getToken(delim, quote);
-		if(split_behavior == KeepEmptyParts || token.length())
+		if(split_behavior == KeepEmptyParts || token.length()) {
+			if(quotes_behavior == RemoveQuotes && token.size() >= 2 && token.at(0) == quote && token.at(token.size() - 1) == quote) {
+				token = token.mid(1, token.size() - 2);
+			}
 			ret.push_back(token);
+		}
 		if(token.end() >= strv.end())
 			break;
 		strv = strv.mid(token.length() + 1);

@@ -13,6 +13,7 @@ class SHVCORE_DECL_EXPORT StringView
 {
 public:
 	enum SplitBehavior {KeepEmptyParts, SkipEmptyParts};
+	enum QuoteBehavior {KeepQuotes, RemoveQuotes};
 public:
 	StringView();
 	StringView(const StringView &strv);
@@ -53,7 +54,7 @@ public:
 	StringView slice(int start, int end) const;
 
 	StringView getToken(char delim = ' ', char quote = '\0');
-	std::vector<StringView> split(char delim, char quote, SplitBehavior split_behavior = SkipEmptyParts) const;
+	std::vector<StringView> split(char delim, char quote, SplitBehavior split_behavior = SkipEmptyParts, QuoteBehavior quotes_behavior = KeepQuotes) const;
 	std::vector<StringView> split(char delim, SplitBehavior split_behavior = SkipEmptyParts) const { return  split(delim, '\0', split_behavior); }
 
 	int toInt(bool *ok = nullptr) const;
