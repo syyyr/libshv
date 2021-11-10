@@ -34,6 +34,7 @@ public:
 	bool isActive() const { return m_isActive; }
 
 	shv::chainpack::RpcValue toRpcValue() const;
+	static ShvAlarm fromRpcValue(const shv::chainpack::RpcValue &rv);
 protected:
 	std::string m_path = "";
 	bool m_isActive = false;

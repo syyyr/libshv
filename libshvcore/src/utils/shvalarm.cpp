@@ -58,6 +58,19 @@ shv::chainpack::RpcValue ShvAlarm::toRpcValue() const
 	};
 }
 
+ShvAlarm ShvAlarm::fromRpcValue(const chainpack::RpcValue &rv)
+{
+	const chainpack::RpcValue::Map &m = rv.asMap();
+	ShvAlarm a {
+		m.value("path").asString(),
+		m.value("isActive").toBool(),
+		static_cast<Severity>(m.value("severity").toInt()),
+		m.value("alarmLevel").toInt(),
+		m.value("description").asString(),
+	};
+	return a;
+}
+
 
 } // namespace utils
 } // namespace core
