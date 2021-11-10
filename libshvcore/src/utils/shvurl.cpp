@@ -1,5 +1,6 @@
 #include "shvurl.h"
 #include "shvpath.h"
+#include "../utils.h"
 
 using namespace std;
 
@@ -67,7 +68,7 @@ std::string ShvUrl::toPlainPath(const StringView &path_part_prefix) const
 
 std::string ShvUrl::toString(const StringView &path_part_prefix) const
 {
-	string rest = ShvPath::join(path_part_prefix, pathPart());
+	string rest = shv::core::Utils::joinPath(path_part_prefix, pathPart());
 	return makeShvUrlString(type(), service(), fullBrokerId(), rest);
 }
 

@@ -86,6 +86,8 @@ ShvPath ShvPath::join(const std::vector<std::string> &shv_path)
 {
 	ShvPath ret;
 	for(const std::string &s : shv_path) {
+		if(s.empty())
+			continue;
 		bool need_quotes = false;
 		if(s.find(SHV_PATH_DELIM) != std::string::npos)
 			need_quotes = true;
@@ -106,24 +108,18 @@ ShvPath ShvPath::join(const StringViewList &shv_path)
 	return join(shv_path.cbegin(), shv_path.cend());
 }
 
-ShvPath ShvPath::join(StringView path1, StringView path2)
-{
-	while(path1.endsWith(SHV_PATH_DELIM))
-		path1 = path1.mid(0, path1.length() - 1);
-	while(path2.startsWith(SHV_PATH_DELIM))
-		path2 = path2.mid(1);
-	if(path1.empty())
-		return path2.toString();
-	if(path2.empty())
-		return path1.toString();
-	//shvWarning() << path1 << "+" << path2 << "--->" << ret;
-	return path1.toString() + SHV_PATH_DELIM + path2.toString();
-}
+//ShvPath ShvPath::join(StringView path1, StringView path2)
+//{
+//	std::vector<StringView> lst{path1, path2};
+//	return join(lst);
+//}
 
 ShvPath ShvPath::join(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last)
 {
 	ShvPath ret;
 	for(std::vector<StringView>::const_iterator it = first; it != last; ++it) {
+		if(it->empty())
+			continue;
 		bool need_quotes = false;
 		if(it->indexOf(SHV_PATH_DELIM) >= 0)
 			need_quotes = true;
@@ -137,6 +133,21 @@ ShvPath ShvPath::join(std::vector<StringView>::const_iterator first, std::vector
 			ret += SHV_PATH_QUOTE;
 	}
 	return ret;
+}
+
+ShvPath ShvPath::appendDir(StringView path1, StringView dir)
+{
+	while(path1.endsWith('/'))
+		path1 = path1.mid(0, path1.size() - 1);
+	if(dir.empty())
+		return path1.toString();
+	bool need_quotes = dir.indexOf(SHV_PATH_DELIM) >= 0;
+	std::string dir_str = dir.toString();
+	if(need_quotes)
+		dir_str = '\'' + dir_str + '\'';
+	if(path1.empty())
+		return dir_str;
+	return path1.toString() + '/' + dir_str;
 }
 
 StringView ShvPath::midPath(const std::string &path, size_t start, size_t len)

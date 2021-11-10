@@ -1,6 +1,7 @@
 #pragma once
 
 #include "shvcoreglobal.h"
+#include "stringview.h"
 
 #include <shv/chainpack/rpcvalue.h>
 
@@ -109,7 +110,7 @@ public:
 
 	static shv::chainpack::RpcValue foldMap(const shv::chainpack::RpcValue::Map &plain_map, char key_delimiter = '.');
 
-	static std::string joinPath(const std::string &p1, const std::string &p2);
+	static std::string joinPath(const StringView &p1, const StringView &p2);
 	static std::string simplifyPath(const std::string &p);
 
 	static std::vector<char> readAllFd(int fd);
