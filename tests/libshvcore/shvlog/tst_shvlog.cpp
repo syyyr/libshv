@@ -185,7 +185,7 @@ private:
 						}
 						else if(e.path == "vetra/vehicleDetected") {
 							e.value = RpcValue::List{rv, i %2? "R": "L"};
-							e.setEventValue(true);
+							e.setSpontaneous(true);
 						}
 						else {
 							e.value = rv;
@@ -252,7 +252,7 @@ private:
 				ShvGetLogParams params;
 				params.withSnapshot = true;
 				params.withPathsDict = false;
-				params.since = ShvGetLogParams::SINCE_NOW;
+				params.since = ShvGetLogParams::SINCE_LAST;
 				RpcValue log1 = file_journal.getLog(params);
 				write_cpon_file(TEST_DIR + "/log1-since-now.cpon", log1);
 				ShvLogRpcValueReader rd(log1);
@@ -260,7 +260,7 @@ private:
 					const ShvJournalEntry &e = rd.entry();
 					//shvWarning() << "entry:" << e.toRpcValueMap().toCpon();
 					QVERIFY(e.isSnapshotValue());
-					QVERIFY(!e.isEventValue());
+					QVERIFY(!e.isSpontaneous());
 				}
 			}
 
@@ -433,7 +433,7 @@ private slots:
 			c.minVal = 6000;
 			c.maxVal = 6999;
 			c.domain = ShvJournalEntry::DOMAIN_VAL_CHANGE;
-			c.valueFlags = 1 << DataChange::ValueFlag::Event;
+			c.valueFlags = 1 << DataChange::ValueFlag::Spontaneous;
 		}
 		{
 			Channel &c = channels["vetra/status"];
