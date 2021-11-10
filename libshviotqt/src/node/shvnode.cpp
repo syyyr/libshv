@@ -129,11 +129,13 @@ void ShvNode::deleteIfEmptyWithParents()
 void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&data)
 {
 	shvLogFuncFrame() << "node:" << nodeId() << "meta:" << meta.toPrettyString();
+	using ShvPath = shv::core::utils::ShvPath;
+	using namespace std;
 	using namespace shv::core::utils;
 	const chainpack::RpcValue::String method = cp::RpcMessage::method(meta).toString();
 	const chainpack::RpcValue::String shv_path_str = cp::RpcMessage::shvPath(meta).toString();
 	ShvUrl shv_url(cp::RpcMessage::shvPath(meta).asString());
-	core::StringViewList shv_path = shv::core::utils::ShvPath::split(shv_url.pathPart());
+	core::StringViewList shv_path = ShvPath::split(shv_url.pathPart());
 	const bool ls_hook = meta.hasKey(ADD_LOCAL_TO_LS_RESULT_HACK_META_KEY);
 	cp::RpcResponse resp = cp::RpcResponse::forRequest(meta);
 	try {
@@ -144,7 +146,7 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 				std::string new_path = ShvUrl::makeShvUrlString(shv_url.type(),
 																shv_url.service(),
 																shv_url.fullBrokerId(),
-																core::StringView::join(++shv_path.begin(), shv_path.end(), '/'));
+																ShvPath::join(++shv_path.begin(), shv_path.end()));
 				cp::RpcMessage::setShvPath(meta, new_path);
 				nd->handleRawRpcRequest(std::move(meta), std::move(data));
 				return;
@@ -152,7 +154,7 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 		}
 		const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
 		if(mm) {
-			shvDebug() << "Metamethod:" << method << "on path:" << shv_path.join('/') << "FOUND";
+			shvDebug() << "Metamethod:" << method << "on path:" << ShvPath::join(shv_path) << "FOUND";
 			std::string errmsg;
 			cp::RpcMessage rpc_msg = cp::RpcDriver::composeRpcMessage(std::move(meta), data, &errmsg);
 			if(!errmsg.empty())
@@ -165,10 +167,7 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 			}
 		}
 		else {
-			core::utils::ShvPath path = shvPath();
-			if(!path.empty() && !shv_path_str.empty())
-				path += '/';
-			path += shv_path_str;
+			string path = shv::core::Utils::joinPath(shvPath(), shv_path_str);
 			SHV_EXCEPTION("Method: '" + method + "' on path '" + path + "' doesn't exist");
 		}
 	}
