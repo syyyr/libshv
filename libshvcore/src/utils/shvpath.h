@@ -37,7 +37,8 @@ public:
 
 	static StringView midPath(const std::string &path, size_t start, size_t len = std::numeric_limits<size_t>::max());
 
-	shv::core::StringViewList split() const;
+	// very dangerous, consider ShvPath("a/b").split() will return dangling references
+	// shv::core::StringViewList split() const;
 	static shv::core::StringViewList split(const shv::core::StringView &shv_path);
 
 	bool matchWild(const std::string &pattern) const;

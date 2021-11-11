@@ -72,11 +72,6 @@ ShvPath ShvPath::joinAndClean(const std::string &path1, const std::string &path2
 	return cleanPath(path1 + '/' + path2);
 }
 */
-core::StringViewList ShvPath::split() const
-{
-	return split(*this);
-}
-
 core::StringViewList ShvPath::split(const shv::core::StringView &shv_path)
 {
 	return core::StringView{shv_path}.split(SHV_PATH_DELIM, SHV_PATH_QUOTE, core::StringView::SkipEmptyParts, core::StringView::RemoveQuotes);
