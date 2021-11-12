@@ -239,7 +239,7 @@ string ClientConnectionOnBroker::toSubscribedPath(const CommonRpcClientHandle::S
 			shvWarning() << "Relative signal must have relative subscription, signal:" << signal_path << "subscription:" << subs.subscribedPath;
 		auto a = StringView(subs.subscribedPath);
 		auto b = StringView(signal_path).mid(subs.localPath.size());
-		return ShvPath::join(a, b);
+		return ShvPath::joinPath(a, b);
 	}
 	else if(spp_signal.isPlain()) {
 		if(spp_subs.isUpTreeMountPointRelative()) {

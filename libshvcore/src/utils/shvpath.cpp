@@ -1,4 +1,5 @@
 #include "shvpath.h"
+#include "../utils.h"
 
 #include "../log.h"
 #include "../stringview.h"
@@ -103,12 +104,6 @@ ShvPath ShvPath::join(const StringViewList &shv_path)
 	return join(shv_path.cbegin(), shv_path.cend());
 }
 
-//ShvPath ShvPath::join(StringView path1, StringView path2)
-//{
-//	std::vector<StringView> lst{path1, path2};
-//	return join(lst);
-//}
-
 ShvPath ShvPath::join(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last)
 {
 	ShvPath ret;
@@ -128,6 +123,11 @@ ShvPath ShvPath::join(std::vector<StringView>::const_iterator first, std::vector
 			ret += SHV_PATH_QUOTE;
 	}
 	return ret;
+}
+
+ShvPath ShvPath::joinPath(StringView path1, StringView path2)
+{
+	return shv::core::Utils::joinPath(path1, path2);
 }
 
 ShvPath ShvPath::appendDir(StringView path1, StringView dir)
