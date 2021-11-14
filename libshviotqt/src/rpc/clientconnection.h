@@ -58,6 +58,7 @@ public:
 	void setTunnelOptions(const shv::chainpack::RpcValue &opts);
 
 	void setCheckBrokerConnectedInterval(int ms);
+	int checkBrokerConnectedInterval() const { return m_checkBrokerConnectedInterval; }
 
 	Q_SIGNAL void rpcMessageReceived(const shv::chainpack::RpcMessage &msg);
 
