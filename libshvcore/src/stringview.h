@@ -53,7 +53,7 @@ public:
 	StringView mid(size_t start, size_t len) const;
 	StringView slice(int start, int end) const;
 
-	StringView getToken(char delim = ' ', char quote = '\0');
+	StringView getToken(char delim = ' ', char quote = '\0') const;
 	std::vector<StringView> split(char delim, char quote, SplitBehavior split_behavior = SkipEmptyParts, QuoteBehavior quotes_behavior = KeepQuotes) const;
 	std::vector<StringView> split(char delim, SplitBehavior split_behavior = SkipEmptyParts) const { return  split(delim, '\0', split_behavior); }
 

@@ -35,11 +35,15 @@ public:
 	static ShvPath joinPath(StringView path1, StringView path2);
 	static ShvPath appendDir(StringView path1, StringView dir);
 
-	static StringView midPath(const std::string &path, size_t start, size_t len = std::numeric_limits<size_t>::max());
+	//static StringView midPath(const std::string &path, size_t start, size_t len = std::numeric_limits<size_t>::max());
 
 	// very dangerous, consider ShvPath("a/b").split() will return dangling references
 	// shv::core::StringViewList split() const;
+
+	// split is deprecated, use splitPath instead
 	static shv::core::StringViewList split(const shv::core::StringView &shv_path);
+	static shv::core::StringViewList splitPath(const shv::core::StringView &shv_path);
+	static shv::core::StringView firstDir(const shv::core::StringView &shv_path, bool *was_quoted = nullptr);
 
 	bool matchWild(const std::string &pattern) const;
 	bool matchWild(const shv::core::StringViewList &pattern_lst) const;

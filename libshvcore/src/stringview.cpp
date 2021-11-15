@@ -201,7 +201,7 @@ StringView StringView::slice(int start, int end) const
 	return StringView(str(), (size_t)s, (size_t)(e - s));
 }
 
-StringView StringView::getToken(char delim, char quote)
+StringView StringView::getToken(char delim, char quote) const
 {
 	if(empty())
 		return *this;

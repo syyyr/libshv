@@ -30,9 +30,9 @@ bool ShvPath::startsWithPath(const StringView &str, const StringView &path, size
 	if(StringView(str).startsWith(path)) {
 		if(str.size() == path.size())
 			return set_pos(str.size(), true);
-		if(str[path.size()] == '/')
+		if(str[path.size()] == SHV_PATH_DELIM)
 			return set_pos(path.size() + 1, true);
-		if(path[path.size() - 1] == '/') // path contains trailing /
+		if(path[path.size() - 1] == SHV_PATH_DELIM) // path contains trailing /
 			return set_pos(path.size(), true);
 	}
 	return set_pos(std::string::npos, false);
@@ -73,9 +73,22 @@ ShvPath ShvPath::joinAndClean(const std::string &path1, const std::string &path2
 	return cleanPath(path1 + '/' + path2);
 }
 */
-core::StringViewList ShvPath::split(const shv::core::StringView &shv_path)
+core::StringViewList ShvPath::splitPath(const shv::core::StringView &shv_path)
 {
 	return core::StringView{shv_path}.split(SHV_PATH_DELIM, SHV_PATH_QUOTE, core::StringView::SkipEmptyParts, core::StringView::RemoveQuotes);
+}
+
+StringView ShvPath::firstDir(const StringView &shv_path, bool *was_quoted)
+{
+	bool quoted = false;
+	StringView dir = shv_path.getToken(SHV_PATH_DELIM, SHV_PATH_QUOTE);
+	if(dir.size() >= 2 && dir.at(0) == SHV_PATH_QUOTE && dir.at(dir.size() - 1) == SHV_PATH_QUOTE) {
+		dir = dir.mid(1, dir.size() - 2);
+		quoted = true;
+	}
+	if(was_quoted)
+		*was_quoted = quoted;
+	return dir;
 }
 
 ShvPath ShvPath::join(const std::vector<std::string> &shv_path)
@@ -139,12 +152,12 @@ ShvPath ShvPath::appendDir(StringView path1, StringView dir)
 	bool need_quotes = dir.indexOf(SHV_PATH_DELIM) >= 0;
 	std::string dir_str = dir.toString();
 	if(need_quotes)
-		dir_str = '\'' + dir_str + '\'';
+		dir_str = SHV_PATH_QUOTE + dir_str + SHV_PATH_QUOTE;
 	if(path1.empty())
 		return dir_str;
-	return path1.toString() + '/' + dir_str;
+	return path1.toString() + SHV_PATH_DELIM + dir_str;
 }
-
+/*
 StringView ShvPath::midPath(const std::string &path, size_t start, size_t len)
 {
 	bool in_quote = false;
@@ -173,16 +186,21 @@ StringView ShvPath::midPath(const std::string &path, size_t start, size_t len)
 		return StringView();
 	return StringView(path, start_ix, subpath_len);
 }
+*/
+StringViewList ShvPath::split(const StringView &shv_path)
+{
+	return splitPath(shv_path);
+}
 
 bool ShvPath::matchWild(const std::string &pattern) const
 {
-	const shv::core::StringViewList ptlst = shv::core::StringView(pattern).split('/');
+	const shv::core::StringViewList ptlst = shv::core::StringView(pattern).split(SHV_PATH_DELIM);
 	return matchWild(ptlst);
 }
 
 bool ShvPath::matchWild(const shv::core::StringViewList &pattern_lst) const
 {
-	const shv::core::StringViewList path_lst = shv::core::StringView(*this).split('/');
+	const shv::core::StringViewList path_lst = shv::core::StringView(*this).split(SHV_PATH_DELIM);
 	return matchWild(path_lst, pattern_lst);
 }
 
