@@ -1117,19 +1117,12 @@ QVector<int> Graph::visibleChannels()
 	if (maximized_channel >= 0) {
 		visible_channels << maximized_channel;
 	}
-	else if(m_channelFilter.isValid()) {
-		for (int i = 0; i < m_channels.count(); ++i) {
-			QString shv_path = model()->channelInfo(m_channels[i]->modelIndex()).shvPath;
-			if(m_channelFilter.isPathMatch(shv_path)) {
-				visible_channels << i;
-			}
+	for (int i = 0; i < m_channels.count(); ++i) {
+		QString shv_path = model()->channelInfo(m_channels[i]->modelIndex()).shvPath;
+		if(m_channelFilter.isPathMatch(shv_path)) {
+			visible_channels << i;
 		}
 	}
-	else {
-		for (int i = 0; i < m_channels.count(); ++i)
-			visible_channels << i;
-	}
-
 	return visible_channels;
 }
 
