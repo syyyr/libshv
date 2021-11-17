@@ -101,8 +101,9 @@ std::string ClientConnectionOnBroker::resolveLocalPath(const shv::core::utils::S
 			nd = app->nodeForService(spp);
 			if(nd) {
 				/// found on this broker
-				core::StringView mp_rest = shv::core::utils::ShvPath::midPath(mount_point, 1);
-				local_path = spp.toPlainPath(mp_rest);
+				core::StringView mp(mount_point);
+				shv::core::utils::ShvPath::takeFirsDir(mp);
+				local_path = spp.toPlainPath(mp);
 			}
 			else {
 				/// forward to master broker
@@ -248,7 +249,8 @@ string ClientConnectionOnBroker::toSubscribedPath(const CommonRpcClientHandle::S
 			auto sv = StringView(signal_path).mid(spp_subs.service().length() + 1);
 			// cut mount point rest and slash
 			const string mount_point = mountPoint();
-			StringView mount_point_rest = ShvPath::midPath(mount_point, 1);
+			StringView mount_point_rest(mount_point);
+			ShvPath::takeFirsDir(mount_point_rest);
 			sv = sv.mid(mount_point_rest.length() + 1);
 			auto ret = ServiceProviderPath::makeShvUrlString(spp_subs.type(), spp_subs.service(), spp_subs.fullBrokerId(), sv);
 			return ret;

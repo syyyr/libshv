@@ -43,7 +43,8 @@ public:
 	// split is deprecated, use splitPath instead
 	static shv::core::StringViewList split(const shv::core::StringView &shv_path);
 	static shv::core::StringViewList splitPath(const shv::core::StringView &shv_path);
-	static shv::core::StringView firstDir(const shv::core::StringView &shv_path, bool *was_quoted = nullptr);
+	static shv::core::StringView firstDir(const shv::core::StringView &shv_path, size_t *next_dir_pos = nullptr);
+	static shv::core::StringView takeFirsDir(shv::core::StringView &shv_path);
 
 	bool matchWild(const std::string &pattern) const;
 	bool matchWild(const shv::core::StringViewList &pattern_lst) const;

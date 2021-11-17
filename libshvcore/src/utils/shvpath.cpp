@@ -78,17 +78,26 @@ core::StringViewList ShvPath::splitPath(const shv::core::StringView &shv_path)
 	return core::StringView{shv_path}.split(SHV_PATH_DELIM, SHV_PATH_QUOTE, core::StringView::SkipEmptyParts, core::StringView::RemoveQuotes);
 }
 
-StringView ShvPath::firstDir(const StringView &shv_path, bool *was_quoted)
+StringView ShvPath::firstDir(const StringView &shv_path, size_t *next_dir_pos)
 {
-	bool quoted = false;
 	StringView dir = shv_path.getToken(SHV_PATH_DELIM, SHV_PATH_QUOTE);
+	size_t next_pos = dir.size() + 1;
+	if(next_pos > shv_path.size())
+		next_pos = shv_path.size();
 	if(dir.size() >= 2 && dir.at(0) == SHV_PATH_QUOTE && dir.at(dir.size() - 1) == SHV_PATH_QUOTE) {
 		dir = dir.mid(1, dir.size() - 2);
-		quoted = true;
 	}
-	if(was_quoted)
-		*was_quoted = quoted;
+	if(next_dir_pos)
+		*next_dir_pos = next_pos;
 	return dir;
+}
+
+StringView ShvPath::takeFirsDir(StringView &shv_path)
+{
+	size_t next_dir_pos;
+	StringView first = firstDir(shv_path, &next_dir_pos);
+	shv_path = shv_path.mid(next_dir_pos).normalized();
+	return first;
 }
 
 ShvPath ShvPath::join(const std::vector<std::string> &shv_path)
@@ -117,22 +126,30 @@ ShvPath ShvPath::join(const StringViewList &shv_path)
 	return join(shv_path.cbegin(), shv_path.cend());
 }
 
+static bool need_quotes(const StringView &dir)
+{
+	if(dir.indexOf(ShvPath::SHV_PATH_DELIM) >= 0) {
+		if(dir.size() >= 2 && dir.at(0) == ShvPath::SHV_PATH_QUOTE && dir.at(dir.size() - 1) == ShvPath::SHV_PATH_QUOTE)
+			return false;
+		return true;
+	}
+	return false;
+}
+
 ShvPath ShvPath::join(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last)
 {
 	ShvPath ret;
 	for(std::vector<StringView>::const_iterator it = first; it != last; ++it) {
 		if(it->empty())
 			continue;
-		bool need_quotes = false;
-		if(it->indexOf(SHV_PATH_DELIM) >= 0)
-			need_quotes = true;
+		bool quotes = need_quotes(*it);
 		//shvWarning() << sv.toString() << "~~~" << need_quotes;
 		if(!ret.empty())
 			ret += SHV_PATH_DELIM;
-		if(need_quotes)
+		if(quotes)
 			ret += SHV_PATH_QUOTE;
 		ret += it->toString();
-		if(need_quotes)
+		if(quotes)
 			ret += SHV_PATH_QUOTE;
 	}
 	return ret;
@@ -149,9 +166,9 @@ ShvPath ShvPath::appendDir(StringView path1, StringView dir)
 		path1 = path1.mid(0, path1.size() - 1);
 	if(dir.empty())
 		return path1.toString();
-	bool need_quotes = dir.indexOf(SHV_PATH_DELIM) >= 0;
+	bool quotes = need_quotes(dir);
 	std::string dir_str = dir.toString();
-	if(need_quotes)
+	if(quotes)
 		dir_str = SHV_PATH_QUOTE + dir_str + SHV_PATH_QUOTE;
 	if(path1.empty())
 		return dir_str;

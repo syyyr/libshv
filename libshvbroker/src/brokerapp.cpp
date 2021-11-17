@@ -988,8 +988,9 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 					if (shv::core::utils::ShvPath::startsWithPath(shv_path, shv::iotqt::node::ShvNode::LOCAL_NODE_HACK)) {
 						if (cp::RpcMessage::accessGrant(meta).toString() != cp::Rpc::ROLE_ADMIN)
 							ACCESS_EXCEPTION("Insufficient access rights to make call on node: " + shv::iotqt::node::ShvNode::LOCAL_NODE_HACK);
-						auto path = shv::core::utils::ShvPath::midPath(shv_path, 1).toString();
-						cp::RpcMessage::setShvPath(meta, path);
+						shv::core::StringView path(shv_path);
+						shv::core::utils::ShvPath::takeFirsDir(path);
+						cp::RpcMessage::setShvPath(meta, path.toString());
 					}
 					else if(shv_url.isPlain()) {
 						if (shv_path.empty() && cp::RpcMessage::method(meta) == cp::Rpc::METH_LS && cp::RpcMessage::accessGrant(meta).toString() == cp::Rpc::ROLE_ADMIN) {
