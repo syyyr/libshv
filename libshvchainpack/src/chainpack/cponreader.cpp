@@ -11,7 +11,8 @@ namespace chainpack {
 
 #define PARSE_EXCEPTION(msg) {\
 	char buff[40]; \
-	m_in.readsome(buff, sizeof(buff)); \
+	int l = m_in.readsome(buff, sizeof(buff) - 1); \
+	buff[l] = 0; \
 	if(exception_aborts) { \
 		std::clog << __FILE__ << ':' << __LINE__;  \
 		std::clog << ' ' << (msg) << " at pos: " << m_in.tellg() << " near to: " << buff << std::endl; \
