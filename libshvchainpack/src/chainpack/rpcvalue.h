@@ -406,6 +406,7 @@ public:
 	bool isList() const { return type() == Type::List; }
 	bool isMap() const { return type() == Type::Map; }
 	bool isIMap() const { return type() == Type::IMap; }
+	bool isValueNotAvailable() const;
 
 	double toDouble() const;
 	Decimal toDecimal() const;

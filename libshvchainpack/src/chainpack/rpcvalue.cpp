@@ -588,6 +588,11 @@ bool RpcValue::isValid() const
 	return !m_ptr.isNull();
 }
 
+bool RpcValue::isValueNotAvailable() const
+{
+	return metaTypeId() == meta::GlobalNS::MetaTypeId::ValueNotAvailable && metaTypeNameSpaceId() == meta::GlobalNS::ID;
+}
+
 double RpcValue::toDouble() const { return !m_ptr.isNull()? m_ptr->toDouble(): 0; }
 RpcValue::Decimal RpcValue::toDecimal() const { return !m_ptr.isNull()? m_ptr->toDecimal(): Decimal(); }
 RpcValue::Int RpcValue::toInt() const { return !m_ptr.isNull()? m_ptr->toInt(): 0; }

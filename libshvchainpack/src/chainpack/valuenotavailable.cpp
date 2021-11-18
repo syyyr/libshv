@@ -23,7 +23,7 @@ void ValueNotAvailable::MetaType::registerMetaType()
 
 bool ValueNotAvailable::isValueNotAvailable(const RpcValue &rv)
 {
-	return rv.metaTypeId() == MetaType::ID && rv.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID;
+	return rv.isValueNotAvailable();
 }
 
 RpcValue ValueNotAvailable::toRpcValue() const
