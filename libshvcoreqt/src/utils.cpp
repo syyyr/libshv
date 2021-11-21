@@ -34,8 +34,7 @@ QVariant Utils::rpcValueToQVariant(const chainpack::RpcValue &v, bool *ok)
 		return QVariant(QByteArray((char*)blob.data(), blob.size()));
 	}
 	case chainpack::RpcValue::Type::DateTime: {
-		QDateTime dt = QDateTime::fromMSecsSinceEpoch(v.toDateTime().msecsSinceEpoch());
-		dt.setTimeZone(QTimeZone::utc());
+		QDateTime dt = QDateTime::fromMSecsSinceEpoch(v.toDateTime().msecsSinceEpoch(), QTimeZone::utc());
 		return dt;
 	}
 	case chainpack::RpcValue::Type::List: {
@@ -73,6 +72,8 @@ chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v, bool *ok)
 		return chainpack::RpcValue();
 	if(isValueNotAvailable(v))
 		return shv::chainpack::ValueNotAvailable().toRpcValue();
+	if(v.isNull())
+		return chainpack::RpcValue(nullptr);
 	switch (v.userType()) {
 	case QMetaType::Nullptr: return chainpack::RpcValue(nullptr);
 	case QMetaType::UChar:
@@ -92,7 +93,12 @@ chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v, bool *ok)
 		auto *array = (const uint8_t*)ba.constData();
 		return chainpack::RpcValue::Blob(array, array + ba.size());
 	}
-	case QMetaType::QDateTime: return chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(v.toDateTime().toMSecsSinceEpoch());
+	case QMetaType::QDateTime: {
+		QDateTime dt = v.toDateTime();
+		if(dt.timeSpec() == Qt::LocalTime)
+			dt = dt.toUTC();
+		return chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(dt.toMSecsSinceEpoch());
+	}
 	case QMetaType::QStringList:
 	case QMetaType::QVariantList: {
 		chainpack::RpcValue::List lst;
