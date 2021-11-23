@@ -123,10 +123,12 @@ public:
 	const RpcValue::MetaData& metaData() const {return m_value.metaData();}
 	RpcValue metaValue(RpcValue::Int key) const;
 	void setMetaValue(RpcValue::Int key, const RpcValue &val);
+	RpcValue metaValue(const RpcValue::String &key) const;
+	void setMetaValue(const RpcValue::String &key, const RpcValue &val);
 
 	virtual void write(AbstractStreamWriter &wr) const;
 
-	//RpcMessage clone() const;
+	//std::string callerFingerprint() const;
 
 	static void registerMetaTypes();
 protected:

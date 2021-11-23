@@ -211,6 +211,11 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 	//	shvInfo() << "\t" << s.toString();
 	cp::RpcResponse resp = cp::RpcResponse::forRequest(rq);
 	try {
+		chainpack::RpcValue ret_val = handleRpcRequestImpl(rq);
+		if(ret_val.isValid()) {
+			resp.setResult(ret_val);
+		}
+		/*
 		if(!shv_path.empty()) {
 			ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
 			if(nd) {
@@ -238,6 +243,7 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 			path += shv_path_str;
 			SHV_EXCEPTION("Method: '" + method + "' on path '" + path + "' doesn't exist");
 		}
+		*/
 	}
 	catch (const chainpack::RpcException &e) {
 		shvDebug() << "method:"  << method << "path:" << shv_path_str << "err code:" << e.errorCode() << "msg:" << e.message();
@@ -255,6 +261,42 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 			root->emitSendRpcMessage(resp);
 		}
 	}
+}
+
+chainpack::RpcValue ShvNode::handleRpcRequestImpl(const chainpack::RpcRequest &rq)
+{
+	shvLogFuncFrame() << "node:" << nodeId() << metaObject()->className();
+	using ShvPath = shv::core::utils::ShvPath;
+	const chainpack::RpcValue::String &method = rq.method().asString();
+	const chainpack::RpcValue::String &shv_path_str = rq.shvPath().asString();
+	core::StringViewList shv_path = ShvPath::split(shv_path_str);
+	//shvInfo() << shv_path_str;
+	//for(auto s : shv_path)
+	//	shvInfo() << "\t" << s.toString();
+	cp::RpcResponse resp = cp::RpcResponse::forRequest(rq);
+	if(!shv_path.empty()) {
+		ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
+		if(nd) {
+			shvDebug() << "Child node:" << shv_path.at(0).toString() << "on path:" << ShvPath::join(shv_path) << "FOUND";
+			std::string new_path = ShvPath::join(++shv_path.begin(), shv_path.end());
+			chainpack::RpcRequest rq2(rq);
+			//cp::RpcValue::MetaData meta2(meta);
+			rq2.setShvPath(new_path);
+			return nd->handleRpcRequestImpl(rq2);
+		}
+	}
+	/*
+	const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
+	if(!mm) {
+		core::utils::ShvPath path = shvPath();
+		if(!path.empty() && !shv_path_str.empty())
+			path += '/';
+		path += shv_path_str;
+		SHV_EXCEPTION("Method: '" + method + "' on path '" + path + "' doesn't exist");
+	}
+	*/
+	shvDebug() << "Metamethod:" << method << "on path:" << shv_path.join('/');
+	return processRpcRequest(rq);
 }
 
 chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
@@ -511,7 +553,7 @@ chainpack::RpcValue ShvNode::callMethod(const ShvNode::StringViewList &shv_path,
 	if(method == cp::Rpc::METH_LS)
 		return ls(shv_path, params);
 
-	SHV_EXCEPTION("Node: " + shvPath() + " - invalid method: " + method + " on path: " + shv_path.join('/') + " user id: " + user_id.toCpon());
+	SHV_EXCEPTION("Node: " + shvPath() + " - method: " + method + " not exists on path: " + shv_path.join('/') + " user id: " + user_id.toCpon());
 }
 
 ShvNode *ShvNode::rootNode()

@@ -69,6 +69,7 @@ public:
 
 	virtual void handleRawRpcRequest(chainpack::RpcValue::MetaData &&meta, std::string &&data);
 	virtual void handleRpcRequest(const chainpack::RpcRequest &rq);
+	virtual chainpack::RpcValue handleRpcRequestImpl(const chainpack::RpcRequest &rq);
 	virtual chainpack::RpcValue processRpcRequest(const shv::chainpack::RpcRequest &rq);
 
 	virtual shv::chainpack::RpcValue dir(const StringViewList &shv_path, const shv::chainpack::RpcValue &methods_params);

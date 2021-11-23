@@ -100,6 +100,17 @@ void RpcMessage::setMetaValue(RpcValue::Int key, const RpcValue &val)
 	m_value.setMetaValue(key, val);
 }
 
+RpcValue RpcMessage::metaValue(const RpcValue::String &key) const
+{
+	return m_value.metaValue(key);
+}
+
+void RpcMessage::setMetaValue(const RpcValue::String &key, const RpcValue &val)
+{
+	checkMetaValues();
+	m_value.setMetaValue(key, val);
+}
+
 RpcValue RpcMessage::requestId() const
 {
 	if(isValid())
@@ -466,9 +477,23 @@ void RpcMessage::write(AbstractStreamWriter &wr) const
 	wr.write(m_value);
 }
 /*
-RpcMessage RpcMessage::clone() const
+std::string RpcMessage::callerFingerprint() const
 {
-	return m_value.clone(RpcValue::CloneMetaData);
+	RpcValue caller_ids = callerIds();
+	std::string ret;
+	if(caller_ids.isList()) {
+		RpcValue::List array = caller_ids.asList();
+		for(const RpcValue &rv : array) {
+			if(!ret.empty())
+				ret += '-';
+			ret += rv.toCpon();
+		}
+	}
+	else {
+		ret = caller_ids.toCpon();
+	}
+	ret += '#' + requestId().toCpon();
+	return ret;
 }
 */
 void RpcMessage::registerMetaTypes()
