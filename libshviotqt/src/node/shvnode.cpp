@@ -221,7 +221,7 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 		shvError() << e.what();
 		resp.setError(cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodCallException, e.what()));
 	}
-	if(resp.hasRetVal()) {
+	if(resp.hasResult()) {
 		ShvNode *root = rootNode();
 		if(root) {
 			shvDebug() << "emit resp:"  << resp.toCpon();

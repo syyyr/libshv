@@ -286,7 +286,10 @@ public:
 	static RpcResponse forRequest(const RpcValue::MetaData &meta);
 	static RpcResponse forRequest(const RpcRequest &rq) {return forRequest(rq.metaData());}
 public:
+	/// hasRetVal() is deprecated, use hasResult() instead
 	bool hasRetVal() const {return !error().empty() || result().isValid();}
+
+	bool hasResult() const {return !error().empty() || result().isValid();}
 	bool isSuccess() const {return result().isValid() && !isError();}
 	bool isError() const {return !error().empty();}
 	std::string errorString() const;
