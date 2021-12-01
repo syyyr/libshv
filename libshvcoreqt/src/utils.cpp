@@ -34,7 +34,8 @@ QVariant Utils::rpcValueToQVariant(const chainpack::RpcValue &v, bool *ok)
 		return QVariant(QByteArray((char*)blob.data(), blob.size()));
 	}
 	case chainpack::RpcValue::Type::DateTime: {
-		QDateTime dt = QDateTime::fromMSecsSinceEpoch(v.toDateTime().msecsSinceEpoch(), QTimeZone::utc());
+		chainpack::RpcValue::DateTime cdt = v.toDateTime();
+		QDateTime dt = QDateTime::fromMSecsSinceEpoch(cdt.msecsSinceEpoch(), Qt::OffsetFromUTC, cdt.minutesFromUtc() * 60);
 		return dt;
 	}
 	case chainpack::RpcValue::Type::List: {
@@ -94,10 +95,11 @@ chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v, bool *ok)
 		return chainpack::RpcValue::Blob(array, array + ba.size());
 	}
 	case QMetaType::QDateTime: {
-		QDateTime dt = v.toDateTime();
-		if(dt.timeSpec() == Qt::LocalTime)
-			dt = dt.toUTC();
-		return chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(dt.toMSecsSinceEpoch());
+		QDateTime qdt = v.toDateTime();
+		chainpack::RpcValue::DateTime cdt = chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(qdt.toMSecsSinceEpoch());
+		int offset = qdt.offsetFromUtc();
+		cdt.setUtcOffsetMin(offset / 60);
+		return cdt;
 	}
 	case QMetaType::QStringList:
 	case QMetaType::QVariantList: {
