@@ -93,7 +93,7 @@ QTimeZone Graph::timeZone() const
 void Graph::reset()
 {
 	createChannelsFromModel();
-	m_channelFilter.setMatchingPaths(channelPaths());
+	m_channelFilter = ChannelFilter();
 	Q_EMIT layoutChanged();
 	Q_EMIT channelFilterChanged();
 }
