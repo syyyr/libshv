@@ -81,7 +81,7 @@ public:
 public:
 	static const QString DEFAULT_USER_PROFILE;
 
-	class VisualSettings
+	class SHVVISU_DECL_EXPORT VisualSettings
 	{
 	public:
 		class Channel
