@@ -66,6 +66,7 @@ public:
 	static const char* ROLE_COMMAND;
 	static const char* ROLE_CONFIG;
 	static const char* ROLE_SERVICE;
+	static const char* ROLE_SUPER_SERVICE;
 	static const char* ROLE_DEVEL;
 	static const char* ROLE_ADMIN;
 	static const char* ROLE_MASTER_BROKER;

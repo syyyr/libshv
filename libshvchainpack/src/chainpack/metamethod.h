@@ -29,6 +29,7 @@ public:
 			Command = 30,
 			Config = 40,
 			Service = 50,
+			SuperService = 55,
 			Devel = 60,
 			Admin = 70,
 		};

@@ -371,6 +371,7 @@ int ShvNode::basicGrantToAccessLevel(const chainpack::RpcValue &acces_grant)
 		if(std::strcmp(acces_level, cp::Rpc::ROLE_COMMAND) == 0) return cp::MetaMethod::AccessLevel::Command;
 		if(std::strcmp(acces_level, cp::Rpc::ROLE_CONFIG) == 0) return cp::MetaMethod::AccessLevel::Config;
 		if(std::strcmp(acces_level, cp::Rpc::ROLE_SERVICE) == 0) return cp::MetaMethod::AccessLevel::Service;
+		if(std::strcmp(acces_level, cp::Rpc::ROLE_SUPER_SERVICE) == 0) return cp::MetaMethod::AccessLevel::SuperService;
 		if(std::strcmp(acces_level, cp::Rpc::ROLE_DEVEL) == 0) return cp::MetaMethod::AccessLevel::Devel;
 		if(std::strcmp(acces_level, cp::Rpc::ROLE_ADMIN) == 0) return cp::MetaMethod::AccessLevel::Admin;
 		return -1;

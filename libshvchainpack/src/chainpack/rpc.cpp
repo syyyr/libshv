@@ -57,6 +57,7 @@ const char* Rpc::ROLE_WRITE = "wr";
 const char* Rpc::ROLE_COMMAND = "cmd";
 const char* Rpc::ROLE_CONFIG = "cfg";
 const char* Rpc::ROLE_SERVICE = "srv";
+const char* Rpc::ROLE_SUPER_SERVICE = "ssrv";
 const char* Rpc::ROLE_DEVEL = "dev";
 const char* Rpc::ROLE_ADMIN = "su";
 
