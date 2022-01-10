@@ -101,6 +101,27 @@ ShvLogTypeDescr::SampleType ShvLogTypeDescr::sampleTypeFromString(const std::str
 	return SampleType::Invalid;
 }
 
+chainpack::RpcValue::Type ShvLogTypeDescr::typeToRpcValueType(ShvLogTypeDescr::Type t)
+{
+	switch (t) {
+	case Type::Invalid: return chainpack::RpcValue::Type::Invalid; break;
+	case Type::BitField: return chainpack::RpcValue::Type::Int; break;
+	case Type::Enum: return chainpack::RpcValue::Type::Int; break;
+	case Type::Bool: return chainpack::RpcValue::Type::Bool; break;
+	case Type::UInt: return chainpack::RpcValue::Type::UInt; break;
+	case Type::Int: return chainpack::RpcValue::Type::Int; break;
+	case Type::Decimal: return chainpack::RpcValue::Type::Decimal; break;
+	case Type::Double: return chainpack::RpcValue::Type::Double; break;
+	case Type::String: return chainpack::RpcValue::Type::String; break;
+	case Type::DateTime: return chainpack::RpcValue::Type::DateTime; break;
+	case Type::List: return chainpack::RpcValue::Type::List; break;
+	case Type::Map: return chainpack::RpcValue::Type::Map; break;
+	case Type::IMap: return chainpack::RpcValue::Type::IMap; break;
+	}
+
+	return chainpack::RpcValue::Type::Null;
+}
+
 chainpack::RpcValue ShvLogTypeDescr::toRpcValue() const
 {
 	chainpack::RpcValue::Map m;
@@ -175,6 +196,31 @@ ShvLogPathDescr ShvLogPathDescr::fromRpcValue(const chainpack::RpcValue &v)
 //=====================================================================
 // ShvLogTypeInfo
 //=====================================================================
+ShvLogTypeDescr ShvLogTypeInfo::typeDescription(const std::string &shv_path) const
+{
+	auto path_descr = paths.find(shv_path);
+
+	if (path_descr != paths.end()) {
+		auto type_descr = types.find(path_descr->second.typeName);
+
+		if (type_descr != types.end()) {
+			return type_descr->second;
+		}
+	}
+
+	return ShvLogTypeDescr();
+}
+
+chainpack::RpcValue ShvLogTypeInfo::defaultRpcValue(const std::string &shv_path, const ShvLogTypeDescr &default_type) const
+{
+	ShvLogTypeDescr type_descr = typeDescription(shv_path);
+
+	if (!type_descr.isValid())
+		type_descr = default_type;
+
+	return chainpack::RpcValue::fromType(ShvLogTypeDescr::typeToRpcValueType(type_descr.type));
+}
+
 chainpack::RpcValue ShvLogTypeInfo::toRpcValue() const
 {
 	chainpack::RpcValue::Map m;

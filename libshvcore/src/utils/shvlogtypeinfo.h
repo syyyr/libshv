@@ -91,6 +91,8 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeDescr
 	static const std::string sampleTypeToString(SampleType t);
 	static SampleType sampleTypeFromString(const std::string &s);
 
+	static chainpack::RpcValue::Type typeToRpcValueType(Type t);
+
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogTypeDescr fromRpcValue(const chainpack::RpcValue &v);
 };
@@ -121,6 +123,9 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeInfo
 	{}
 
 	bool isEmpty() const { return types.size() == 0 && paths.size() == 0; }
+	ShvLogTypeDescr typeDescription(const std::string &shv_path) const;
+	chainpack::RpcValue defaultRpcValue(const std::string &shv_path, const ShvLogTypeDescr &default_type) const;
+
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogTypeInfo fromRpcValue(const chainpack::RpcValue &v);
 };
