@@ -27,6 +27,7 @@ struct SHVCHAINPACK_DECL_EXPORT UserLoginResult
 	bool passwordOk = false;
 	std::string loginError;
 	int clientId = 0;
+	std::string brokerId;
 
 	UserLoginResult() {}
 	UserLoginResult(bool password_ok) : UserLoginResult(password_ok, std::string()) {}
@@ -34,8 +35,8 @@ struct SHVCHAINPACK_DECL_EXPORT UserLoginResult
 		: passwordOk(password_ok)
 		, loginError(std::move(login_error)) {}
 
-	const RpcValue::Map &loginParams() const;
-	shv::chainpack::UserLogin userLogin() const;
+	//const RpcValue::Map &loginParams() const;
+	//shv::chainpack::UserLogin userLogin() const;
 	shv::chainpack::RpcValue toRpcValue() const;
 };
 

@@ -234,7 +234,7 @@ std::string MountsAclNode::saveConfigFile()
 {
 	cp::RpcValue::Map m;
 	AclManager *mng = BrokerApp::instance()->aclManager();
-	for(const std::string n : childNames(StringViewList{})) {
+	for(const std::string &n : childNames(StringViewList{})) {
 		auto md = mng->mountDef(n);
 		m[n] = md.toRpcValue();
 	}
@@ -333,7 +333,7 @@ std::string RolesAclNode::saveConfigFile()
 {
 	cp::RpcValue::Map m;
 	AclManager *mng = BrokerApp::instance()->aclManager();
-	for(const std::string n : childNames(StringViewList{})) {
+	for(const std::string &n : childNames(StringViewList{})) {
 		auto role = mng->role(n);
 		m[n] = role.toRpcValue();
 	}
@@ -432,7 +432,7 @@ std::string UsersAclNode::saveConfigFile()
 {
 	cp::RpcValue::Map m;
 	AclManager *mng = BrokerApp::instance()->aclManager();
-	for(const std::string n : childNames(StringViewList{})) {
+	for(const std::string &n : childNames(StringViewList{})) {
 		auto user = mng->user(n);
 		m[n] = user.toRpcValue();
 	}
@@ -577,7 +577,7 @@ std::string AccessAclNode::saveConfigFile()
 {
 	cp::RpcValue::Map m;
 	AclManager *mng = BrokerApp::instance()->aclManager();
-	for(const std::string n : childNames(StringViewList{})) {
+	for(const std::string &n : childNames(StringViewList{})) {
 		auto rules = mng->accessRoleRules(n);
 		m[n] = rules.toRpcValue();
 	}

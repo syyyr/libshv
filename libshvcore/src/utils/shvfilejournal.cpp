@@ -311,7 +311,6 @@ void ShvFileJournal::rotateJournal()
 {
 	logMShvJournal() << "Rotating journal of size:" << m_journalContext.journalSize;
 	updateJournalStatus();
-	size_t file_sz = m_journalContext.files.size();
 	size_t file_cnt = m_journalContext.files.size();
 	for(int64_t file_msec : m_journalContext.files) {
 		if(file_cnt == 1) {
@@ -323,7 +322,6 @@ void ShvFileJournal::rotateJournal()
 		std::string fn = m_journalContext.fileMsecToFilePath(file_msec);
 		logMShvJournal() << "\t deleting file:" << fn;
 		m_journalContext.journalSize -= rm_file(fn);
-		file_sz--;
 		file_cnt--;
 	}
 	updateJournalStatus();
