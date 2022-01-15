@@ -80,8 +80,13 @@ int IRpcConnection::callMethod(const RpcRequest &rq)
 
 int IRpcConnection::callShvMethod(const std::string &shv_path, std::string method, const RpcValue &params)
 {
+	return callShvMethod(shv_path, method, params, {});
+}
+
+int IRpcConnection::callShvMethod(const std::string &shv_path, std::string method, const RpcValue &params, const RpcValue &user_id)
+{
 	int id = nextRequestId();
-	return callShvMethod(id, shv_path, method, params);
+	return callShvMethod(id, shv_path, method, params, user_id);
 }
 
 int IRpcConnection::callShvMethod(int rq_id, const std::string &shv_path, std::string method, const RpcValue &params)

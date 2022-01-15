@@ -44,6 +44,7 @@ public:
 	int callMethod(const shv::chainpack::RpcRequest &rq);
 	//int callMethod(std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
 	int callShvMethod(const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
+	int callShvMethod(const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id);
 	int callShvMethod(int rq_id, const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params = shv::chainpack::RpcValue());
 	int callShvMethod(int rq_id, const std::string &shv_path, std::string method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id);
 	int callMethodSubscribe(const std::string &shv_path, std::string method);
