@@ -25,6 +25,8 @@ public:
 	static const char* KEY_TUNNEL;
 	static const char* KEY_BROKER;
 	static const char* KEY_SECRET;
+	static const char* KEY_SHV_USER;
+	static const char* KEY_BROKER_ID;
 
 	static const char* METH_HELLO;
 	static const char* METH_LOGIN;

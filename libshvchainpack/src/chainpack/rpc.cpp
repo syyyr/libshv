@@ -15,6 +15,8 @@ const char* Rpc::KEY_BROKER = "broker";
 const char* Rpc::KEY_TUNNEL = "tunnel";
 const char* Rpc::KEY_LOGIN = "login";
 const char* Rpc::KEY_SECRET = "secret";
+const char* Rpc::KEY_SHV_USER = "shvUser";
+const char* Rpc::KEY_BROKER_ID = "brokerId";
 
 const char* Rpc::METH_HELLO = "hello";
 const char* Rpc::METH_LOGIN = Rpc::KEY_LOGIN;

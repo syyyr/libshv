@@ -952,17 +952,11 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 						}
 						{
 							// fill in user_id, for current client issuing rpc request
-							auto current_client = client_connection->userName() + '@' + cliOptions()->brokerId();
 							cp::RpcValue user_id = cp::RpcRequest::userId(meta);
-							if(user_id.isValid()) {
-								user_id = cp::RpcValue::Map{
-									{"appId", user_id},
-									{"shvId", current_client},
-								};
-							}
-							else {
-								user_id = current_client;
-							}
+							cp::RpcValue::Map m = user_id.asMap();
+							m[cp::Rpc::KEY_SHV_USER] = client_connection->userName();
+							m[cp::Rpc::KEY_BROKER_ID] = cliOptions()->brokerId();
+							user_id = m;
 							cp::RpcRequest::setUserId(meta, user_id);
 						}
 					}
