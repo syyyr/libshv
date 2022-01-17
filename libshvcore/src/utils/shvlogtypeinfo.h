@@ -107,6 +107,8 @@ struct SHVCORE_DECL_EXPORT ShvLogPathDescr
 
 	std::string typeName() const;
 	std::string unit() const;
+	std::string visualStyleName() const;
+	std::string alarm() const;
 	int decimalPlaces() const;
 
 	void setTypeName(const std::string &type_name);
@@ -137,7 +139,7 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeInfo
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogTypeInfo fromRpcValue(const chainpack::RpcValue &v);
 
-	std::map<std::string, std::vector<std::string>> systemPathsToPaths() const;
+	std::map<std::string, std::vector<std::string>> systemPathsToMap() const;
 
 	void createShvLogPathDescriptions(const chainpack::RpcValue &nodes_tree);
 	void createShvLogPathDescriptions_helper(std::string path, std::string current_system_path, const shv::chainpack::RpcValue &nodes_tree);

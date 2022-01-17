@@ -175,20 +175,27 @@ ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const chainpack::RpcValue &v)
 //=====================================================================
 std::string ShvLogPathDescr::typeName() const
 {
-	auto tn = tags.find("typeName");
-	return (tn != tags.cend()) ? tn->second.toString() : std::string();
+	return tags.value("typeName", std::string()).toStdString();
 }
 
 std::string ShvLogPathDescr::unit() const
 {
-	auto tn = tags.find("unit");
-	return (tn != tags.cend()) ? tn->second.toString() : std::string();
+	return tags.value("unit", std::string()).toStdString();
+}
+
+std::string ShvLogPathDescr::visualStyleName() const
+{
+	return tags.value("visualStyle", std::string()).toStdString();
+}
+
+std::string ShvLogPathDescr::alarm() const
+{
+	return tags.value("alarm", std::string()).toStdString();
 }
 
 int ShvLogPathDescr::decimalPlaces() const
 {
-	auto tn = tags.find("decPlaces");
-	return (tn != tags.cend()) ? tn->second.toInt() : 0;
+	return tags.value("decPlaces", 0).toInt();
 }
 
 void ShvLogPathDescr::setTypeName(const std::string &type_name)
@@ -281,11 +288,11 @@ ShvLogTypeInfo ShvLogTypeInfo::fromRpcValue(const chainpack::RpcValue &v)
 	return ret;
 }
 
-std::map<std::string, std::vector<std::string> > ShvLogTypeInfo::systemPathsToPaths() const
+std::map<std::string, std::vector<std::string>> ShvLogTypeInfo::systemPathsToMap() const
 {
 	std::map<std::string, std::vector<std::string>> ret;
 
-	for (auto p: paths) {
+	for (const auto &p: paths) {
 		ret[p.second.systemPath].push_back(p.first);
 	}
 
