@@ -7,6 +7,8 @@
 
 #include <QObject>
 
+#include <cstddef>
+
 namespace shv { namespace chainpack { class MetaMethod; class RpcValue; class RpcMessage; class RpcRequest; }}
 namespace shv { namespace core { class StringView; }}
 
