@@ -91,7 +91,7 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeDescr
 	static const std::string sampleTypeToString(SampleType t);
 	static SampleType sampleTypeFromString(const std::string &s);
 
-	void appendTags(const chainpack::RpcValue::Map &t);
+	void applyTags(const chainpack::RpcValue::Map &t);
 	chainpack::RpcValue defaultRpcValue() const;
 
 	std::string unit() const;
@@ -111,6 +111,10 @@ struct SHVCORE_DECL_EXPORT ShvLogPathDescr
 	chainpack::RpcValue::Map tags;
 
 	ShvLogPathDescr() {}
+	ShvLogPathDescr(const std::string &t, const std::string &d = std::string())
+		: typeName(t)
+		, description(d)
+	{}
 
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogPathDescr fromRpcValue(const chainpack::RpcValue &v);
