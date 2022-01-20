@@ -91,7 +91,13 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeDescr
 	static const std::string sampleTypeToString(SampleType t);
 	static SampleType sampleTypeFromString(const std::string &s);
 
-	static chainpack::RpcValue::Type typeToRpcValueType(Type t);
+	void appendTags(const chainpack::RpcValue::Map &t);
+	chainpack::RpcValue defaultRpcValue() const;
+
+	std::string unit() const;
+	std::string visualStyleName() const;
+	std::string alarm() const;
+	int decimalPlaces() const;
 
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogTypeDescr fromRpcValue(const chainpack::RpcValue &v);
@@ -99,19 +105,12 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeDescr
 
 struct SHVCORE_DECL_EXPORT ShvLogPathDescr
 {
+	std::string typeName;
 	std::string description;
 	std::string systemPath;
 	chainpack::RpcValue::Map tags;
 
 	ShvLogPathDescr() {}
-
-	std::string typeName() const;
-	std::string unit() const;
-	std::string visualStyleName() const;
-	std::string alarm() const;
-	int decimalPlaces() const;
-
-	void setTypeName(const std::string &type_name);
 
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogPathDescr fromRpcValue(const chainpack::RpcValue &v);
@@ -131,18 +130,11 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeInfo
 
 	bool isEmpty() const { return types.size() == 0 && paths.size() == 0; }
 
-	ShvLogPathDescr pathDescription(const std::string &shv_path) const;
 	ShvLogTypeDescr typeDescription(const std::string &shv_path) const;
-
-	chainpack::RpcValue defaultRpcValue(const std::string &shv_path, const ShvLogTypeDescr &default_type) const;
+	std::string findSystemPath(const std::string &shv_path) const;
 
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogTypeInfo fromRpcValue(const chainpack::RpcValue &v);
-
-	std::map<std::string, std::vector<std::string>> systemPathsToMap() const;
-
-	void createShvLogPathDescriptions(const chainpack::RpcValue &nodes_tree);
-	void createShvLogPathDescriptions_helper(std::string path, std::string current_system_path, const shv::chainpack::RpcValue &nodes_tree);
 };
 
 } // namespace utils

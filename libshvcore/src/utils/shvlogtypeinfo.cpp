@@ -101,25 +101,52 @@ ShvLogTypeDescr::SampleType ShvLogTypeDescr::sampleTypeFromString(const std::str
 	return SampleType::Invalid;
 }
 
-chainpack::RpcValue::Type ShvLogTypeDescr::typeToRpcValueType(ShvLogTypeDescr::Type t)
+void ShvLogTypeDescr::appendTags(const chainpack::RpcValue::Map &t)
 {
-	switch (t) {
-	case Type::Invalid: return chainpack::RpcValue::Type::Invalid; break;
-	case Type::BitField: return chainpack::RpcValue::Type::Int; break;
-	case Type::Enum: return chainpack::RpcValue::Type::Int; break;
-	case Type::Bool: return chainpack::RpcValue::Type::Bool; break;
-	case Type::UInt: return chainpack::RpcValue::Type::UInt; break;
-	case Type::Int: return chainpack::RpcValue::Type::Int; break;
-	case Type::Decimal: return chainpack::RpcValue::Type::Decimal; break;
-	case Type::Double: return chainpack::RpcValue::Type::Double; break;
-	case Type::String: return chainpack::RpcValue::Type::String; break;
-	case Type::DateTime: return chainpack::RpcValue::Type::DateTime; break;
-	case Type::List: return chainpack::RpcValue::Type::List; break;
-	case Type::Map: return chainpack::RpcValue::Type::Map; break;
-	case Type::IMap: return chainpack::RpcValue::Type::IMap; break;
+	tags.insert(t.begin(), t.end());
+}
+
+chainpack::RpcValue ShvLogTypeDescr::defaultRpcValue() const
+{
+	chainpack::RpcValue::Type t = chainpack::RpcValue::Type::Null;
+
+	switch (type) {
+	case Type::Invalid: t = chainpack::RpcValue::Type::Invalid; break;
+	case Type::BitField: t = chainpack::RpcValue::Type::Int; break;
+	case Type::Enum: t = chainpack::RpcValue::Type::Int; break;
+	case Type::Bool: t = chainpack::RpcValue::Type::Bool; break;
+	case Type::UInt: t = chainpack::RpcValue::Type::UInt; break;
+	case Type::Int: t = chainpack::RpcValue::Type::Int; break;
+	case Type::Decimal: t = chainpack::RpcValue::Type::Decimal; break;
+	case Type::Double: t = chainpack::RpcValue::Type::Double; break;
+	case Type::String: t = chainpack::RpcValue::Type::String; break;
+	case Type::DateTime: t = chainpack::RpcValue::Type::DateTime; break;
+	case Type::List: t = chainpack::RpcValue::Type::List; break;
+	case Type::Map: t = chainpack::RpcValue::Type::Map; break;
+	case Type::IMap: t = chainpack::RpcValue::Type::IMap; break;
 	}
 
-	return chainpack::RpcValue::Type::Null;
+	return chainpack::RpcValue::fromType(t);
+}
+
+std::string ShvLogTypeDescr::unit() const
+{
+	return tags.value("unit", std::string()).toStdString();
+}
+
+std::string ShvLogTypeDescr::visualStyleName() const
+{
+	return tags.value("visualStyle", std::string()).toStdString();
+}
+
+std::string ShvLogTypeDescr::alarm() const
+{
+	return tags.value("alarm", std::string()).toStdString();
+}
+
+int ShvLogTypeDescr::decimalPlaces() const
+{
+	return tags.value("decPlaces", 0).toInt();
 }
 
 chainpack::RpcValue ShvLogTypeDescr::toRpcValue() const
@@ -159,7 +186,6 @@ ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const chainpack::RpcValue &v)
 					current_value = fld.value.toInt() + 1;
 				else
 					fld.value = current_value++;
-
 			}
 			ret.fields.push_back(std::move(fld));
 		}
@@ -173,40 +199,10 @@ ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const chainpack::RpcValue &v)
 //=====================================================================
 // ShvLogPathDescr
 //=====================================================================
-std::string ShvLogPathDescr::typeName() const
-{
-	return tags.value("typeName", std::string()).toStdString();
-}
-
-std::string ShvLogPathDescr::unit() const
-{
-	return tags.value("unit", std::string()).toStdString();
-}
-
-std::string ShvLogPathDescr::visualStyleName() const
-{
-	return tags.value("visualStyle", std::string()).toStdString();
-}
-
-std::string ShvLogPathDescr::alarm() const
-{
-	return tags.value("alarm", std::string()).toStdString();
-}
-
-int ShvLogPathDescr::decimalPlaces() const
-{
-	return tags.value("decPlaces", 0).toInt();
-}
-
-void ShvLogPathDescr::setTypeName(const std::string &type_name)
-{
-	tags["typeName"] = type_name;
-}
-
 chainpack::RpcValue ShvLogPathDescr::toRpcValue() const
 {
 	chainpack::RpcValue::Map m;
-	m["type"] = typeName();
+	m["type"] = typeName;
 	if(!description.empty())
 		m["description"] = description;
 	return m;
@@ -217,7 +213,7 @@ ShvLogPathDescr ShvLogPathDescr::fromRpcValue(const chainpack::RpcValue &v)
 	ShvLogPathDescr ret;
 	if(v.isMap()) {
 		const chainpack::RpcValue::Map &m = v.toMap();
-		ret.setTypeName(m.value("type").toString());
+		ret.typeName = m.value("type").toString();
 		ret.description = m.value("description").toString();
 	}
 	return ret;
@@ -226,35 +222,33 @@ ShvLogPathDescr ShvLogPathDescr::fromRpcValue(const chainpack::RpcValue &v)
 //=====================================================================
 // ShvLogTypeInfo
 //=====================================================================
-ShvLogPathDescr ShvLogTypeInfo::pathDescription(const std::string &shv_path) const
-{
-	auto path_descr = paths.find(shv_path);
-	return (path_descr == paths.end()) ? ShvLogPathDescr() : path_descr->second;
-}
-
 ShvLogTypeDescr ShvLogTypeInfo::typeDescription(const std::string &shv_path) const
 {
+	ShvLogTypeDescr td;
+
 	auto path_descr = paths.find(shv_path);
 
 	if (path_descr != paths.end()) {
-		auto type_descr = types.find(path_descr->second.typeName());
+		auto type_descr = types.find(path_descr->second.typeName);
 
 		if (type_descr != types.end()) {
-			return type_descr->second;
+			td = type_descr->second;
 		}
+
+		if (!td.isValid()) {
+			td.type = ShvLogTypeDescr::typeFromString(path_descr->second.typeName);
+		}
+
+		td.appendTags(path_descr->second.tags);
 	}
 
-	return ShvLogTypeDescr();
+	return td;
 }
 
-chainpack::RpcValue ShvLogTypeInfo::defaultRpcValue(const std::string &shv_path, const ShvLogTypeDescr &default_type) const
+std::string ShvLogTypeInfo::findSystemPath(const std::string &shv_path) const
 {
-	ShvLogTypeDescr type_descr = typeDescription(shv_path);
-
-	if (!type_descr.isValid())
-		type_descr = default_type;
-
-	return chainpack::RpcValue::fromType(ShvLogTypeDescr::typeToRpcValueType(type_descr.type));
+	auto path_descr = paths.find(shv_path);
+	return (path_descr == paths.end()) ? std::string() : path_descr->second.systemPath;
 }
 
 chainpack::RpcValue ShvLogTypeInfo::toRpcValue() const
@@ -286,55 +280,6 @@ ShvLogTypeInfo ShvLogTypeInfo::fromRpcValue(const chainpack::RpcValue &v)
 		ret.paths[kv.first] = ShvLogPathDescr::fromRpcValue(kv.second);
 	}
 	return ret;
-}
-
-std::map<std::string, std::vector<std::string>> ShvLogTypeInfo::systemPathsToMap() const
-{
-	std::map<std::string, std::vector<std::string>> ret;
-
-	for (const auto &p: paths) {
-		ret[p.second.systemPath].push_back(p.first);
-	}
-
-	return ret;
-}
-
-void ShvLogTypeInfo::createShvLogPathDescriptions(const chainpack::RpcValue &nodes_tree)
-{
-	paths.clear();
-	createShvLogPathDescriptions_helper(std::string(), std::string(), nodes_tree);
-}
-
-void ShvLogTypeInfo::createShvLogPathDescriptions_helper(std::string path, std::string current_system_path, const chainpack::RpcValue &nodes_tree)
-{
-	chainpack::RpcValue::Map tags = nodes_tree.metaData().value("tags").asMap();
-	std::string system_path = tags.value("systemPath").toStdString();
-
-	if (!system_path.empty()) {
-		current_system_path = system_path;
-
-		if (std::find(systemPaths.begin(), systemPaths.end(), current_system_path) == systemPaths.end()) {
-			systemPaths.push_back(current_system_path);
-		}
-	}
-
-	for (const chainpack::RpcValue &method : nodes_tree.metaData().value("methods").asList()) {
-		if (method.at("name").asString() == "get") {
-			std::string type_name = nodes_tree.metaData().value("tags").at("typeName").toString();
-			shv::core::utils::ShvLogPathDescr descr;
-			descr.systemPath = current_system_path;
-			descr.tags = tags;
-			paths[path] = descr;
-			break;
-		}
-	}
-
-	if (nodes_tree.isMap()) {
-		const shv::chainpack::RpcValue::Map &nodes_tree_map = nodes_tree.toMap();
-		for (auto it = nodes_tree_map.begin(); it != nodes_tree_map.cend(); ++it) {
-			createShvLogPathDescriptions_helper(path + (!path.empty() ? "/" : "") + it->first, current_system_path, it->second);
-		}
-	}
 }
 
 } // namespace utils
