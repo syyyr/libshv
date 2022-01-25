@@ -13,8 +13,12 @@ chainpack::RpcValue ShvLogTypeDescrField::toRpcValue() const
 	m["name"] = name;
 	if(!typeName.empty())
 		m["typeName"] = typeName;
+	if(!label.empty())
+		m["label"] = label;
 	if(!description.empty())
 		m["description"] = description;
+	if(!label.empty() && label != name)
+		m["label"] = label;
 	if(value.isValid())
 		m["value"] = value;
 	if(!tags.empty())
@@ -28,6 +32,7 @@ ShvLogTypeDescrField ShvLogTypeDescrField::fromRpcValue(const chainpack::RpcValu
 	if(v.isMap()) {
 		const chainpack::RpcValue::Map &m = v.toMap();
 		ret.name = m.value("name").toString();
+		ret.label = m.value("label").toString();
 		ret.description = m.value("description").toString();
 		ret.typeName = m.value("typeName").toString();
 		ret.value = m.value("value");

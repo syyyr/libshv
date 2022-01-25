@@ -86,6 +86,8 @@ public:
 		return RpcValue{lst};
 	}
 	const shv::chainpack::RpcValue::Map& tags() const { return m_tags; }
+	shv::chainpack::RpcValue tag(const std::string &key, const shv::chainpack::RpcValue& default_value = {}) const { return m_tags.value(key, default_value); }
+	MetaMethod& setTag(const std::string &key, const shv::chainpack::RpcValue& value) { m_tags.setValue(key, value); return *this; }
 
 	static Signature signatureFromString(const std::string &sigstr);
 	static const char* signatureToString(Signature sig);
