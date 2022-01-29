@@ -22,6 +22,7 @@
 #define shvCError(category) nCError(category)
 
 #define shvLogFuncFrame() nLogFuncFrame()
+#define shvLogScope(name) nLogScope(name)
 
 #else
 
@@ -67,5 +68,5 @@ shvDebug() << ">>>> ENTER FN" << __FUNCTION__
 #define logRpcMsg() shvCMessage("RpcMsg")
 //.color(NecroLog::Color::LightGray)
 
-inline NecroLog &operator<<(NecroLog log, const shv::core::StringView &v) { return log.operator<<(v.toString()); }
+inline NecroLog operator<<(NecroLog log, const shv::core::StringView &v) { return log.operator<<(v.toString()); }
 

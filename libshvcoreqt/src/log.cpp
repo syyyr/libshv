@@ -1,5 +1,5 @@
 #include "log.h"
-
+/*
 #include <QByteArray>
 #include <QString>
 #include <QtGlobal>
@@ -27,7 +27,7 @@ static inline bool isPrintable(uchar c)
 	return c >= ' ' && c <= '~'; 
 }
 
-NecroLog &operator<<(NecroLog log, const QByteArray &input)
+NecroLog operator<<(NecroLog log, const QByteArray &input)
 {
 	const char *begin = input.constData();
 	int length = input.length();
@@ -99,4 +99,4 @@ NecroLog &operator<<(NecroLog log, const QByteArray &input)
 	slog << quote;
 	return log << slog.str();
 }
-
+*/
