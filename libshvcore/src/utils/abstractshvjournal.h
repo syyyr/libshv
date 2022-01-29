@@ -4,6 +4,7 @@
 #include "../shvcoreglobal.h"
 
 #include <string>
+#include <map>
 #include <regex>
 
 namespace shv {
@@ -12,7 +13,7 @@ namespace core {
 namespace utils {
 
 class ShvJournalEntry;
-class ShvGetLogParams;
+struct ShvGetLogParams;
 
 class SHVCORE_DECL_EXPORT AbstractShvJournal
 {

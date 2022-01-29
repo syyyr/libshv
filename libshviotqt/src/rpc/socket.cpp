@@ -42,7 +42,7 @@ TcpSocket::TcpSocket(QTcpSocket *socket, QObject *parent)
 #endif
 }
 
-void TcpSocket::connectToHost(const QString &host_name, quint16 port)
+void TcpSocket::connectToHost(const QString &host_name, quint16 port, const QString &)
 {
 	m_socket->connectToHost(host_name, port);
 }
@@ -96,6 +96,7 @@ void TcpSocket::writeMessageEnd()
 	//QTimer::singleShot(0, m_socket, &QTcpSocket::flush);
 }
 
+#ifndef QT_NO_SSL
 //======================================================
 // SslSocket
 //======================================================
@@ -116,7 +117,7 @@ SslSocket::SslSocket(QSslSocket *socket, QSslSocket::PeerVerifyMode peer_verify_
 	connect(socket, QOverload<const QList<QSslError> &>::of(&QSslSocket::sslErrors), this, &Socket::sslErrors);
 }
 
-void SslSocket::connectToHost(const QString &host_name, quint16 port)
+void SslSocket::connectToHost(const QString &host_name, quint16 port, const QString &)
 {
 	QSslSocket *ssl_socket = qobject_cast<QSslSocket *>(m_socket);
 	ssl_socket->setPeerVerifyMode(m_peerVerifyMode);
@@ -129,7 +130,7 @@ void SslSocket::ignoreSslErrors()
 	QSslSocket *ssl_socket = qobject_cast<QSslSocket *>(m_socket);
 	ssl_socket->ignoreSslErrors();
 }
-
+#endif
 } // namespace rpc
 } // namespace iotqt
 } // namespace shv

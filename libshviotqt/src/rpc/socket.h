@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QAbstractSocket>
 #include <QSslSocket>
+#include <QSslError>
 
 class QTcpSocket;
 
@@ -20,7 +21,7 @@ class SHVIOTQT_DECL_EXPORT Socket : public QObject
 public:
 	explicit Socket(QObject *parent = nullptr);
 
-	virtual void connectToHost(const QString &host_name, quint16 port) = 0;
+	virtual void connectToHost(const QString &host_name, quint16 port, const QString &scheme = {}) = 0;
 
 	virtual void close() = 0;
 	virtual void abort() = 0;
@@ -57,7 +58,7 @@ class SHVIOTQT_DECL_EXPORT TcpSocket : public Socket
 public:
 	TcpSocket(QTcpSocket *socket, QObject *parent = nullptr);
 
-	void connectToHost(const QString &host_name, quint16 port) override;
+	void connectToHost(const QString &host_name, quint16 port, const QString &scheme = {}) override;
 	void close() override;
 	void abort() override;
 	QAbstractSocket::SocketState state() const override;
@@ -75,6 +76,7 @@ protected:
 	QTcpSocket *m_socket = nullptr;
 };
 
+#ifndef QT_NO_SSL
 class SHVIOTQT_DECL_EXPORT SslSocket : public TcpSocket
 {
 	Q_OBJECT
@@ -83,13 +85,13 @@ class SHVIOTQT_DECL_EXPORT SslSocket : public TcpSocket
 public:
 	SslSocket(QSslSocket *socket, QSslSocket::PeerVerifyMode peer_verify_mode = QSslSocket::AutoVerifyPeer, QObject *parent = nullptr);
 
-	void connectToHost(const QString &host_name, quint16 port) override;
+	void connectToHost(const QString &host_name, quint16 port, const QString &scheme = {}) override;
 	void ignoreSslErrors() override;
 
 protected:
 	QSslSocket::PeerVerifyMode m_peerVerifyMode;
 };
-
+#endif
 } // namespace rpc
 } // namespace iotqt
 } // namespace shv

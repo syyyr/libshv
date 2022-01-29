@@ -102,9 +102,9 @@ void SocketRpcConnection::ignoreSslErrors()
 	m_socket->ignoreSslErrors();
 }
 
-void SocketRpcConnection::connectToHost(const QString &host_name, quint16 port)
+void SocketRpcConnection::connectToHost(const QString &host_name, quint16 port, const QString &scheme)
 {
-	socket()->connectToHost(host_name, port);
+	socket()->connectToHost(host_name, port, scheme);
 }
 
 void SocketRpcConnection::onReadyRead()
@@ -138,17 +138,20 @@ bool SocketRpcConnection::isOpen()
 
 int64_t SocketRpcConnection::writeBytes(const char *bytes, size_t length)
 {
+	//shvLogFuncFrame();
 	return socket()->write(bytes, length);
 }
 
 void SocketRpcConnection::writeMessageBegin()
 {
+	//shvLogFuncFrame() << "socket:" << m_socket;
 	if(m_socket)
 		m_socket->writeMessageBegin();
 }
 
 void SocketRpcConnection::writeMessageEnd()
 {
+	//shvLogFuncFrame();
 	if(m_socket)
 		m_socket->writeMessageEnd();
 }

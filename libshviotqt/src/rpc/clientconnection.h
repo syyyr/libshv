@@ -10,6 +10,7 @@
 #include <shv/coreqt/utils.h>
 
 #include <QObject>
+#include <QUrl>
 
 class QTimer;
 
@@ -24,6 +25,7 @@ class SHVIOTQT_DECL_EXPORT ClientConnection : public SocketRpcConnection
 	Q_OBJECT
 	using Super = SocketRpcConnection;
 
+	SHV_FIELD_IMPL(std::string, s, S, cheme)
 	SHV_FIELD_IMPL(std::string, u, U, ser)
 	SHV_FIELD_IMPL(std::string, h, H, ost)
 	SHV_FIELD_IMPL2(int, p, P, ort, shv::chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT_NONSECURED)
@@ -41,7 +43,7 @@ public:
 	SecurityType securityType() const;
 	void setSecurityType(SecurityType type);
 	void setSecurityType(const std::string &val);
-
+	QUrl connectionUrl() const;
 public:
 	enum class State {NotConnected = 0, Connecting, SocketConnected, BrokerConnected, ConnectionError};
 	static const char* stateToString(State state);

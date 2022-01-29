@@ -89,7 +89,7 @@ cp::RpcValue FileNode::callMethod(const shv::iotqt::node::ShvNode::StringViewLis
 		return size(shv_path);
 	}
 	if(method == M_SIZE_COMPRESSED) {
-		return readFileCompressed(shv_path, params).asBlob().size();
+		return (unsigned)readFileCompressed(shv_path, params).asBlob().size();
 	}
 
 	return Super::callMethod(shv_path, method, params, user_id);
@@ -126,7 +126,7 @@ chainpack::RpcValue FileNode::read(const ShvNode::StringViewList &shv_path) cons
 
 chainpack::RpcValue FileNode::size(const ShvNode::StringViewList &shv_path) const
 {
-	return read(shv_path).asBlob().size();
+	return (unsigned)read(shv_path).asBlob().size();
 }
 
 chainpack::RpcValue FileNode::readFileCompressed(const ShvNode::StringViewList &shv_path, const chainpack::RpcValue &params) const

@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#if defined LIBC_NEWLIB || defined ANDROID_BUILD
+#if defined LIBC_NEWLIB || defined SHV_ANDROID_BUILD
 #include <sstream>
 #endif
 
@@ -118,7 +118,7 @@ public:
 	template<typename T>
 	static std::string toString(T i)
 	{
-#if defined LIBC_NEWLIB || defined ANDROID_BUILD
+#if defined LIBC_NEWLIB || defined SHV_ANDROID_BUILD
 		std::ostringstream ss;
 		ss << i;
 		return ss.str();

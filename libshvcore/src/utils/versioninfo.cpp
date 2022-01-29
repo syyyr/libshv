@@ -3,7 +3,7 @@
 #include "../string.h"
 #include "../utils.h"
 
-#if defined LIBC_NEWLIB || defined ANDROID_BUILD
+#if defined LIBC_NEWLIB || defined SHV_ANDROID_BUILD
 #include <cstdlib>
 #endif
 
@@ -26,7 +26,7 @@ VersionInfo::VersionInfo(const std::string &version, const std::string &branch)
 	while (parts.size() < 3) {
 		parts.push_back("0");
 	}
-#if defined LIBC_NEWLIB || defined ANDROID_BUILD
+#if defined LIBC_NEWLIB || defined SHV_ANDROID_BUILD
 	m_majorNumber = std::atoi(parts[0].c_str());
 	m_minorNumber = std::atoi(parts[1].c_str());
 	m_patchNumber = std::atoi(parts[2].c_str());

@@ -3,6 +3,12 @@ message("including $$PWD")
 QT += network
 QT -= gui
 
+with-shvwebsockets {
+	message("$$PWD" with websockets)
+	QT += websockets
+	DEFINES += WITH_SHV_WEBSOCKETS
+}
+
 CONFIG += C++11
 CONFIG += hide_symbols
 
@@ -16,11 +22,15 @@ win32:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin
 
 message ( DESTDIR: $$DESTDIR )
 
-android {
-DEFINES += ANDROID_BUILD
-}
-
 DEFINES += SHVIOTQT_BUILD_DLL
+
+android {
+DEFINES += SHV_ANDROID_BUILD
+}
+wasm {
+DEFINES += SHV_NO_SSL_SOCKET
+DEFINES += SHV_WASM_BUILD
+}
 
 INCLUDEPATH += \
     $$SHV_PROJECT_TOP_SRCDIR/3rdparty/necrolog/include \

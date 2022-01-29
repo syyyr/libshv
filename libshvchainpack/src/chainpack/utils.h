@@ -8,7 +8,7 @@
 #include <array>
 #include <algorithm>
 
-#if defined LIBC_NEWLIB || defined ANDROID_BUILD
+#if defined LIBC_NEWLIB || defined SHV_ANDROID_BUILD
 #include <sstream>
 #endif
 
@@ -33,7 +33,7 @@ public:
 	template<typename T>
 	static std::string toString(T i, size_t prepend_0s_to_len = 0)
 	{
-#if defined LIBC_NEWLIB || defined ANDROID_BUILD
+#if defined LIBC_NEWLIB || defined SHV_ANDROID_BUILD
 		std::ostringstream ss;
 		ss << i;
 		std::string ret = ss.str();

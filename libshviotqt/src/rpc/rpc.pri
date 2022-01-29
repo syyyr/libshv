@@ -12,7 +12,7 @@ SOURCES += \
     #$$PWD/iclientconnection.cpp \
     $$PWD/rpcresponsecallback.cpp \
     $$PWD/socket.cpp \
-    $$PWD/deviceappclioptions.cpp
+    $$PWD/deviceappclioptions.cpp \
 
 HEADERS += \
     $$PWD/rpc.h \
@@ -28,5 +28,12 @@ HEADERS += \
     #$$PWD/iclientconnection.h \
     $$PWD/rpcresponsecallback.h \
     $$PWD/socket.h \
-    $$PWD/deviceappclioptions.h
+    $$PWD/deviceappclioptions.h \
 
+with-shvwebsockets {
+HEADERS += \
+	$$PWD/websocket.h
+
+SOURCES += \
+	$$PWD/websocket.cpp
+}

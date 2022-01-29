@@ -4,6 +4,7 @@
 #include "rpc.h"
 #include "socket.h"
 #include "socketrpcconnection.h"
+#include "websocket.h"
 
 #include <shv/coreqt/log.h>
 
@@ -19,6 +20,10 @@
 #include <QTimer>
 #include <QCryptographicHash>
 #include <QThread>
+
+#ifdef WITH_SHV_WEBSOCKETS
+#include <QWebSocket>
+#endif
 
 #include <fstream>
 
@@ -36,6 +41,7 @@ ClientConnection::ClientConnection(QObject *parent)
 	setProtocolType(shv::chainpack::Rpc::ProtocolType::ChainPack);
 
 	connect(this, &SocketRpcConnection::socketConnectedChanged, this, &ClientConnection::onSocketConnectedChanged);
+	connect(this, &QObject::destroyed, this, &QObject::deleteLater);
 
 	m_checkBrokerConnectedTimer = new QTimer(this);
 	connect(m_checkBrokerConnectedTimer, &QTimer::timeout, this, &ClientConnection::checkBrokerConnected);
@@ -44,7 +50,6 @@ ClientConnection::ClientConnection(QObject *parent)
 ClientConnection::~ClientConnection()
 {
 	shvDebug() << __FUNCTION__;
-	abort();
 }
 
 ClientConnection::SecurityType ClientConnection::securityTypeFromString(const std::string &val)
@@ -76,6 +81,15 @@ void ClientConnection::setSecurityType(SecurityType type)
 void ClientConnection::setSecurityType(const std::string &val)
 {
 	m_securityType = securityTypeFromString(val);
+}
+
+QUrl ClientConnection::connectionUrl() const
+{
+	QUrl url;
+	url.setScheme(QString::fromStdString(scheme()));
+	url.setHost(QString::fromStdString(host()));
+	url.setPort(port());
+	return url;
 }
 
 void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
@@ -138,8 +152,29 @@ void ClientConnection::setTunnelOptions(const chainpack::RpcValue &opts)
 void ClientConnection::open()
 {
 	if(!hasSocket()) {
-		QSslSocket::PeerVerifyMode peer_verify_mode = m_peerVerify ? QSslSocket::AutoVerifyPeer : QSslSocket::VerifyNone;
-		TcpSocket *socket = m_securityType == None ? new TcpSocket(new QTcpSocket()) : new SslSocket(new QSslSocket(), peer_verify_mode);
+		Socket *socket;
+		if(scheme() == "ws") {
+#ifdef WITH_SHV_WEBSOCKETS
+			socket = new WebSocket(new QWebSocket());
+#else
+			SHV_EXCEPTION("Web socket support is not part of this build.");
+#endif
+		}
+		else if(scheme() == "wss") {
+#ifdef WITH_SHV_WEBSOCKETS
+			socket = new WebSocket(new QWebSocket());
+#else
+			SHV_EXCEPTION("Web socket support is not part of this build.");
+#endif
+		}
+		else {
+	#ifndef QT_NO_SSL
+			QSslSocket::PeerVerifyMode peer_verify_mode = m_peerVerify ? QSslSocket::AutoVerifyPeer : QSslSocket::VerifyNone;
+			socket = m_securityType == None ? new TcpSocket(new QTcpSocket()) : new SslSocket(new QSslSocket(), peer_verify_mode);
+	#else
+			socket = new TcpSocket(new QTcpSocket());
+	#endif
+		}
 		setSocket(socket);
 	}
 	checkBrokerConnected();
@@ -240,10 +275,10 @@ void ClientConnection::checkBrokerConnected()
 	shvDebug() << "check broker connected: " << isSocketConnected();
 	if(!isBrokerConnected()) {
 		abortSocket();
-		shvInfo().nospace() << "connecting to: " << user() << "@" << host() << ":" << port() << " security: " << securityTypeToString(securityType());
+		shvInfo().nospace() << "connecting to: " << connectionUrl().toString() << " security: " << securityTypeToString(securityType());
 		m_connectionState = ConnectionState();
 		setState(State::Connecting);
-		connectToHost(QString::fromStdString(host()), port());
+		connectToHost(QString::fromStdString(host()), port(), QString::fromStdString(scheme()));
 	}
 }
 

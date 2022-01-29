@@ -63,6 +63,7 @@ bool Network::isPublicIPv4Address(uint32_t addr)
 
 QHostAddress Network::primaryPublicIPv4Address()
 {
+#ifndef SHV_WASM_BUILD
 	QList<QHostAddress> addrs = QNetworkInterface::allAddresses();
 	for(const QHostAddress &addr : addrs) {
 		//shvDebug() << addr.toString() << "is global:" << addr.isGlobal();
@@ -73,11 +74,13 @@ QHostAddress Network::primaryPublicIPv4Address()
 			}
 		}
 	}
+#endif
 	return QHostAddress();
 }
 
 QHostAddress Network::primaryIPv4Address()
 {
+#ifndef SHV_WASM_BUILD
 	QList<QHostAddress> addrs = QNetworkInterface::allAddresses();
 	for(const QHostAddress &addr : addrs) {
 		//shvDebug() << addr.toString() << "is global:" << addr.isGlobal();
@@ -89,6 +92,9 @@ QHostAddress Network::primaryIPv4Address()
 		}
 	}
 	return QHostAddress(QHostAddress::LocalHost);
+#else
+	return QHostAddress();
+#endif
 }
 
 }}}
