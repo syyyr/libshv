@@ -13,6 +13,7 @@ include( ../subproject_integration.pri )
 unix:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/lib
 win32:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin
 
+message ( SHV_PROJECT_TOP_SRCDIR: $$SHV_PROJECT_TOP_SRCDIR )
 message ( DESTDIR: $$DESTDIR )
 
 android {

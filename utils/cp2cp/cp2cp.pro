@@ -1,11 +1,20 @@
+message("including $$PWD")
+
+isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
+		SHV_PROJECT_TOP_BUILDDIR = $$OUT_PWD/../../..
+}
+isEmpty(SHV_PROJECT_TOP_SRCDIR) {
+	SHV_PROJECT_TOP_SRCDIR = $$PWD/../../..
+}
+LIBSHV_SRC_DIR = $$SHV_PROJECT_TOP_SRCDIR/3rdparty/libshv
+
+message ( SHV_PROJECT_TOP_BUILDDIR == '$$SHV_PROJECT_TOP_BUILDDIR' )
+message ( SHV_PROJECT_TOP_SRCDIR == '$$SHV_PROJECT_TOP_SRCDIR' )
+message ( LIBSHV_SRC_DIR == '$$LIBSHV_SRC_DIR' )
+
 TEMPLATE = app
 
 QT -= core widgets gui
-
-isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
-	SHV_PROJECT_TOP_BUILDDIR=$$shadowed($$PWD)/..
-}
-message ( SHV_PROJECT_TOP_BUILDDIR: '$$SHV_PROJECT_TOP_BUILDDIR' )
 
 DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin
 unix:LIBDIR = $$SHV_PROJECT_TOP_BUILDDIR/lib
@@ -23,9 +32,8 @@ unix {
 }
 
 INCLUDEPATH += \
-	../../3rdparty/necrolog/include \
-	../../libshvchainpack/include \
-	#../../libshvcore/include \
+	$$SHV_PROJECT_TOP_SRCDIR/3rdparty/necrolog/include \
+	$$LIBSHV_SRC_DIR/libshvchainpack/include \
 
 SOURCES += \
 	main.cpp \

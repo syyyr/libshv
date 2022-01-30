@@ -2,16 +2,23 @@ message("including $$PWD")
 
 isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
         SHV_PROJECT_TOP_BUILDDIR = $$OUT_PWD/../../..
-}
-else {
+} else {
         message ( SHV_PROJECT_TOP_BUILDDIR is not empty and set to $$SHV_PROJECT_TOP_BUILDDIR )
         message ( This is obviously done in file $$SHV_PROJECT_TOP_SRCDIR/.qmake.conf )
 }
-message ( SHV_PROJECT_TOP_BUILDDIR == '$$SHV_PROJECT_TOP_BUILDDIR' )
 
-isEmpty(LIBSHV_SRC_DIR) {
-    LIBSHV_SRC_DIR=$$PWD/../../..
+isEmpty(SHV_PROJECT_TOP_SRCDIR) {
+	SHV_PROJECT_TOP_SRCDIR = $$PWD/../../..
+	LIBSHV_SRC_DIR = $$SHV_PROJECT_TOP_SRCDIR
+} else {
+	LIBSHV_SRC_DIR = $$SHV_PROJECT_TOP_SRCDIR/3rdparty/libshv
+	message ( SHV_PROJECT_TOP_SRCDIR is not empty and set to $$SHV_PROJECT_TOP_SRCDIR )
+	message ( This is obviously done in file $$SHV_PROJECT_TOP_SRCDIR/.qmake.conf )
 }
+
+message ( SHV_PROJECT_TOP_BUILDDIR == '$$SHV_PROJECT_TOP_BUILDDIR' )
+message ( SHV_PROJECT_TOP_SRCDIR == '$$SHV_PROJECT_TOP_SRCDIR' )
+message ( LIBSHV_SRC_DIR == '$$LIBSHV_SRC_DIR' )
 
 QT -= gui
 QT += core network sql
@@ -30,6 +37,14 @@ DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin
 unix:LIBDIR = $$SHV_PROJECT_TOP_BUILDDIR/lib
 win32:LIBDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin
 
+INCLUDEPATH += \
+	$$SHV_PROJECT_TOP_SRCDIR/3rdparty/necrolog/include \
+	$$LIBSHV_SRC_DIR/libshvchainpack/include \
+	$$LIBSHV_SRC_DIR/libshvcore/include \
+	$$LIBSHV_SRC_DIR/libshvcoreqt/include \
+	$$LIBSHV_SRC_DIR/libshviotqt/include \
+	$$LIBSHV_SRC_DIR/libshvbroker/include \
+
 LIBS += \
         -L$$LIBDIR \
 
@@ -45,14 +60,6 @@ unix {
         LIBS += \
                 -Wl,-rpath,\'\$\$ORIGIN/../lib\'
 }
-
-INCLUDEPATH += \
-    $$LIBSHV_SRC_DIR/3rdparty/necrolog/include \
-    $$LIBSHV_SRC_DIR/libshvchainpack/include \
-    $$LIBSHV_SRC_DIR/libshvcore/include \
-    $$LIBSHV_SRC_DIR/libshvcoreqt/include \
-    $$LIBSHV_SRC_DIR/libshviotqt/include \
-    $$LIBSHV_SRC_DIR/libshvbroker/include \
 
 RESOURCES += \
         #shvbroker.qrc \

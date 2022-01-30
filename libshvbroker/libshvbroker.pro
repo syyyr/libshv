@@ -14,9 +14,8 @@ CONFIG += hide_symbols
 TEMPLATE = lib
 TARGET = shvbroker
 
-isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
-	SHV_PROJECT_TOP_BUILDDIR=$$shadowed($$PWD)/..
-}
+include( ../subproject_integration.pri )
+
 message ( SHV_PROJECT_TOP_BUILDDIR: '$$SHV_PROJECT_TOP_BUILDDIR' )
 
 unix:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/lib
@@ -31,11 +30,11 @@ DEFINES += ANDROID_BUILD
 DEFINES += SHVBROKER_BUILD_DLL
 
 INCLUDEPATH += \
+	$$SHV_PROJECT_TOP_SRCDIR/3rdparty/necrolog/include \
 	$$PWD/../libshvcore/include \
 	$$PWD/../libshvcoreqt/include \
 	$$PWD/../libshviotqt/include \
 	$$PWD/../libshvchainpack/include \
-	$$PWD/../3rdparty/necrolog/include \
 
 LIBS += \
     -L$$DESTDIR \
