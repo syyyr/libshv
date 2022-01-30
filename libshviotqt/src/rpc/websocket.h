@@ -9,7 +9,7 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
-class WebSocket : public Socket
+class SHVIOTQT_DECL_EXPORT WebSocket : public Socket
 {
 	Q_OBJECT
 

@@ -14,10 +14,8 @@ SOURCES += \
 
 with-shvwebsockets {
 HEADERS += \
-    $$PWD/websocketserver.h \
-    $$PWD/websocket.h
+    $$PWD/websocketserver.h
 
 SOURCES += \
-    $$PWD/websocketserver.cpp \
-    $$PWD/websocket.cpp
+    $$PWD/websocketserver.cpp
 }

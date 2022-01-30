@@ -2,10 +2,10 @@
 
 #include "ssl_common.h"
 #include "clientconnectiononbroker.h"
-#include "websocket.h"
 #include "../brokerapp.h"
 
 #include <shv/coreqt/log.h>
+#include <shv/iotqt/rpc/websocket.h>
 
 #include <QFile>
 #include <QDir>
@@ -67,7 +67,7 @@ ClientConnectionOnBroker *WebSocketServer::connectionById(int connection_id)
 
 ClientConnectionOnBroker *WebSocketServer::createServerConnection(QWebSocket *socket, QObject *parent)
 {
-	return new ClientConnectionOnBroker(new WebSocket(socket), parent);
+	return new ClientConnectionOnBroker(new shv::iotqt::rpc::WebSocket(socket), parent);
 }
 
 void WebSocketServer::onNewConnection()
