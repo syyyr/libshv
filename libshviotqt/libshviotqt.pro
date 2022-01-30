@@ -1,4 +1,5 @@
-message("including $$PWD")
+message("========== project: $$PWD")
+include( ../subproject_integration.pri )
 
 QT += network
 QT -= gui
@@ -15,8 +16,6 @@ CONFIG += hide_symbols
 TEMPLATE = lib
 TARGET = shviotqt
 
-include( ../subproject_integration.pri )
-
 unix:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/lib
 win32:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin
 
@@ -25,11 +24,11 @@ message ( DESTDIR: $$DESTDIR )
 DEFINES += SHVIOTQT_BUILD_DLL
 
 android {
-DEFINES += SHV_ANDROID_BUILD
+	DEFINES += SHV_ANDROID_BUILD
 }
 wasm {
-DEFINES += SHV_NO_SSL_SOCKET
-DEFINES += SHV_WASM_BUILD
+	DEFINES += SHV_NO_SSL_SOCKET
+	DEFINES += SHV_WASM_BUILD
 }
 
 INCLUDEPATH += \

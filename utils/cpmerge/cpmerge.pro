@@ -1,11 +1,9 @@
+message("========== project: $$PWD")
+include( ../../subproject_integration.pri )
+
 TEMPLATE = app
 
 QT -= core widgets gui
-
-isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
-	SHV_PROJECT_TOP_BUILDDIR=$$shadowed($$PWD)/..
-}
-message ( SHV_PROJECT_TOP_BUILDDIR: '$$SHV_PROJECT_TOP_BUILDDIR' )
 
 DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin
 unix:LIBDIR = $$SHV_PROJECT_TOP_BUILDDIR/lib
@@ -21,7 +19,8 @@ unix {
 }
 
 INCLUDEPATH += \
-	../../libshvchainpack/include \
+	$$SHV_PROJECT_TOP_SRCDIR/3rdparty/necrolog/include \
+	$$LIBSHV_SRC_DIR/libshvchainpack/include \
 
 SOURCES += \
 	main.cpp \

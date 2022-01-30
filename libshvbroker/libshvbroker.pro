@@ -1,4 +1,5 @@
-message("including $$PWD")
+message("========== project: $$PWD")
+include( ../subproject_integration.pri )
 
 QT += network sql
 QT -= gui
@@ -14,9 +15,6 @@ CONFIG += hide_symbols
 TEMPLATE = lib
 TARGET = shvbroker
 
-include( ../subproject_integration.pri )
-
-message ( SHV_PROJECT_TOP_BUILDDIR: '$$SHV_PROJECT_TOP_BUILDDIR' )
 
 unix:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/lib
 win32:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin

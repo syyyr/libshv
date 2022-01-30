@@ -1,4 +1,5 @@
-message("including $$PWD")
+message("========== project: $$PWD")
+include( ../subproject_integration.pri )
 
 QT -= core gui
 
@@ -7,8 +8,6 @@ CONFIG += hide_symbols
 
 TEMPLATE = lib
 TARGET = shvcore
-
-include( ../subproject_integration.pri )
 
 unix:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/lib
 win32:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin

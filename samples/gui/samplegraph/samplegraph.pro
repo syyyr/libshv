@@ -1,15 +1,5 @@
-message("including $$PWD")
-
-isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
-        SHV_PROJECT_TOP_BUILDDIR = $$OUT_PWD/../../..
-}
-
-isEmpty(LIBSHV_SRC_DIR) {
-        LIBSHV_SRC_DIR = $$PWD/../../..
-}
-message ( SHV_PROJECT_TOP_BUILDDIR == '$$SHV_PROJECT_TOP_BUILDDIR' )
-message ( SHV_PROJECT_TOP_SRCDIR == '$$SHV_PROJECT_TOP_SRCDIR' )
-message ( LIBSHV_SRC_DIR == '$$LIBSHV_SRC_DIR' )
+message("========== project: $$PWD")
+include( ../../../subproject_integration.pri )
 
 QT       += core gui widgets
 
@@ -39,7 +29,7 @@ unix {
 }
 
 INCLUDEPATH += \
-    $$LIBSHV_SRC_DIR/3rdparty/necrolog/include \
+	$$SHV_PROJECT_TOP_SRCDIR/3rdparty/necrolog/include \
 	$$LIBSHV_SRC_DIR/libshvchainpack/include \
 	$$LIBSHV_SRC_DIR/libshvcore/include \
 	$$LIBSHV_SRC_DIR/libshvcoreqt/include \

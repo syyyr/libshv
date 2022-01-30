@@ -1,11 +1,9 @@
+message("========== project: $$PWD")
+include( ../../subproject_integration.pri )
+
 TEMPLATE = app
 
 QT -= core widgets gui
-
-isEmpty(SHV_PROJECT_TOP_BUILDDIR) {
-	SHV_PROJECT_TOP_BUILDDIR=$$shadowed($$PWD)/..
-}
-message ( SHV_PROJECT_TOP_BUILDDIR: '$$SHV_PROJECT_TOP_BUILDDIR' )
 
 QMAKE_CFLAGS += -std=gnu11
 
