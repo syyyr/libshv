@@ -39,5 +39,5 @@ make
 ```
 QtCreator qmake additional arguments
 ```
-SHV_PROJECT_TOP_SRCDIR=%{sourceDir} LIBSHV_SRC_DIR=%{sourceDir} SHV_PROJECT_TOP_BUILDDIR=%{buildDir}
+SHV_PROJECT_TOP_SRCDIR=%{sourceDir} SHV_PROJECT_TOP_BUILDDIR=%{buildDir}
 ```
