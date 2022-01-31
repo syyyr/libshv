@@ -106,6 +106,63 @@ ShvLogTypeDescr::SampleType ShvLogTypeDescr::sampleTypeFromString(const std::str
 	return SampleType::Invalid;
 }
 
+void ShvLogTypeDescr::applyTags(const chainpack::RpcValue::Map &t)
+{
+	if (type == Type::Invalid)
+		type = typeFromString(t.value("typeName").toStdString());
+
+	if (t.hasKey("sampleType"))
+		sampleType = sampleTypeFromString(t.value("sampleType").asString());
+
+	if (t.hasKey(description))
+		description = t.value("description").toStdString();
+
+	tags.insert(t.begin(), t.end());
+}
+
+chainpack::RpcValue ShvLogTypeDescr::defaultRpcValue() const
+{
+	using namespace chainpack;
+
+	switch (type) {
+	case Type::Invalid: return RpcValue::fromType(RpcValue::Type::Invalid); break;
+	case Type::BitField: return RpcValue::fromType(RpcValue::Type::UInt); break;
+	case Type::Enum: return RpcValue::fromType(RpcValue::Type::Int); break;
+	case Type::Bool: return RpcValue::fromType(RpcValue::Type::Bool); break;
+	case Type::UInt: return RpcValue::fromType(RpcValue::Type::UInt); break;
+	case Type::Int: return RpcValue::fromType(RpcValue::Type::Int); break;
+	case Type::Decimal: return RpcValue::fromType(RpcValue::Type::Decimal); break;
+	case Type::Double: return RpcValue::fromType(RpcValue::Type::Double); break;
+	case Type::String: return RpcValue::fromType(RpcValue::Type::String); break;
+	case Type::DateTime: return RpcValue::fromType(RpcValue::Type::DateTime); break;
+	case Type::List: return RpcValue::fromType(RpcValue::Type::List); break;
+	case Type::Map: return RpcValue::fromType(RpcValue::Type::Map); break;
+	case Type::IMap: return RpcValue::fromType(RpcValue::Type::IMap); break;
+	}
+
+	return RpcValue::fromType(RpcValue::Type::Null);
+}
+
+std::string ShvLogTypeDescr::unit() const
+{
+	return tags.value("unit", std::string()).toStdString();
+}
+
+std::string ShvLogTypeDescr::visualStyleName() const
+{
+	return tags.value("visualStyle", std::string()).toStdString();
+}
+
+std::string ShvLogTypeDescr::alarm() const
+{
+	return tags.value("alarm", std::string()).toStdString();
+}
+
+int ShvLogTypeDescr::decimalPlaces() const
+{
+	return tags.value("decPlaces", 0).toInt();
+}
+
 chainpack::RpcValue ShvLogTypeDescr::toRpcValue() const
 {
 	chainpack::RpcValue::Map m;
@@ -143,10 +200,10 @@ ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const chainpack::RpcValue &v)
 					current_value = fld.value.toInt() + 1;
 				else
 					fld.value = current_value++;
-
 			}
 			ret.fields.push_back(std::move(fld));
 		}
+
 		ret.tags = m.value("tags").toMap();
 		if(ret.tags.empty())
 			ret.tags = m.value("options").toMap();
@@ -180,6 +237,27 @@ ShvLogPathDescr ShvLogPathDescr::fromRpcValue(const chainpack::RpcValue &v)
 //=====================================================================
 // ShvLogTypeInfo
 //=====================================================================
+ShvLogTypeDescr ShvLogTypeInfo::typeDescription(const std::string &shv_path) const
+{
+	ShvLogTypeDescr ret;
+	auto it_path_descr = paths.find(shv_path);
+	if (it_path_descr == paths.end())
+		return ret;
+
+	auto it_type_descr = types.find(it_path_descr->second.typeName);
+	if (it_type_descr != types.end())
+		ret = it_type_descr->second;
+
+	ret.applyTags(it_path_descr->second.tags);
+	return ret;
+}
+
+std::string ShvLogTypeInfo::findSystemPath(const std::string &shv_path) const
+{
+	auto path_descr = paths.find(shv_path);
+	return (path_descr == paths.end()) ? std::string() : path_descr->second.systemPath;
+}
+
 chainpack::RpcValue ShvLogTypeInfo::toRpcValue() const
 {
 	chainpack::RpcValue::Map m;

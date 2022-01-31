@@ -84,6 +84,9 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeDescr
 		//tags.setValue(OPT_MAX_VAL, max_val);
 	}
 
+	ShvLogTypeDescr& withTags(const chainpack::RpcValue::Map &tags) { this->tags = tags; return *this; }
+	ShvLogTypeDescr& withType(Type t) { this->type = t; return *this; }
+
 	bool isValid() const { return type != Type::Invalid; }
 
 	static const std::string typeToString(Type t);
@@ -91,6 +94,14 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeDescr
 
 	static const std::string sampleTypeToString(SampleType t);
 	static SampleType sampleTypeFromString(const std::string &s);
+
+	void applyTags(const chainpack::RpcValue::Map &t);
+	chainpack::RpcValue defaultRpcValue() const;
+
+	std::string unit() const;
+	std::string visualStyleName() const;
+	std::string alarm() const;
+	int decimalPlaces() const;
 
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogTypeDescr fromRpcValue(const chainpack::RpcValue &v);
@@ -100,12 +111,15 @@ struct SHVCORE_DECL_EXPORT ShvLogPathDescr
 {
 	std::string typeName;
 	std::string description;
+	std::string systemPath;
+	chainpack::RpcValue::Map tags;
 
 	ShvLogPathDescr() {}
 	ShvLogPathDescr(const std::string &t, const std::string &d = std::string())
 		: typeName(t)
 		, description(d)
 	{}
+
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogPathDescr fromRpcValue(const chainpack::RpcValue &v);
 };
@@ -114,6 +128,7 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeInfo
 {
 	std::map<std::string, ShvLogTypeDescr> types; // type_name -> type_description
 	std::map<std::string, ShvLogPathDescr> paths; // path -> type_name
+	std::vector<std::string> systemPaths;
 
 	ShvLogTypeInfo() {}
 	ShvLogTypeInfo(std::map<std::string, ShvLogTypeDescr> &&types, std::map<std::string, ShvLogPathDescr> &&paths)
@@ -122,6 +137,10 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeInfo
 	{}
 
 	bool isEmpty() const { return types.size() == 0 && paths.size() == 0; }
+
+	ShvLogTypeDescr typeDescription(const std::string &shv_path) const;
+	std::string findSystemPath(const std::string &shv_path) const;
+
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogTypeInfo fromRpcValue(const chainpack::RpcValue &v);
 };
