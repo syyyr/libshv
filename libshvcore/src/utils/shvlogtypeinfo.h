@@ -83,6 +83,9 @@ struct SHVCORE_DECL_EXPORT ShvLogTypeDescr
 		//tags.setValue(OPT_MAX_VAL, max_val);
 	}
 
+	ShvLogTypeDescr& withTags(const chainpack::RpcValue::Map &tags) { this->tags = tags; return *this; }
+	ShvLogTypeDescr& withType(Type t) { this->type = t; return *this; }
+
 	bool isValid() const { return type != Type::Invalid; }
 
 	static const std::string typeToString(Type t);
