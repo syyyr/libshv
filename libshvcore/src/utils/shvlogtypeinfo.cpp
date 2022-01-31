@@ -121,7 +121,7 @@ chainpack::RpcValue ShvLogTypeDescr::defaultRpcValue() const
 
 	switch (type) {
 	case Type::Invalid: return RpcValue::fromType(RpcValue::Type::Invalid); break;
-	case Type::BitField: return RpcValue::fromType(RpcValue::Type::Int); break;
+	case Type::BitField: return RpcValue::fromType(RpcValue::Type::UInt); break;
 	case Type::Enum: return RpcValue::fromType(RpcValue::Type::Int); break;
 	case Type::Bool: return RpcValue::fromType(RpcValue::Type::Bool); break;
 	case Type::UInt: return RpcValue::fromType(RpcValue::Type::UInt); break;
