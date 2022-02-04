@@ -126,8 +126,7 @@ static int64_t str_to_size(const std::string &str)
 
 const std::string ShvFileJournal::FILE_EXT = ".log2";
 
-ShvFileJournal::ShvFileJournal(std::string device_id, ShvFileJournal::SnapShotFn snf)
-	: m_snapShotFn(snf)
+ShvFileJournal::ShvFileJournal(std::string device_id)
 	//, m_appendLogTSNowFn([]() {return cp::RpcValue::DateTime::now().msecsSinceEpoch();})
 {
 	//setDefaultAppendLogTSNowFn();
@@ -198,11 +197,13 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 	checkJournalContext_helper();
 	checkRecentTimeStamp();
 
+	ShvJournalEntry e = entry;
 	int64_t msec = entry.epochMsec;
 	if(msec == 0)
 		msec = cp::RpcValue::DateTime::now().msecsSinceEpoch(); //m_appendLogTSNowFn();
 	if(msec < m_journalContext.recentTimeStamp)
 		msec = m_journalContext.recentTimeStamp;
+	e.epochMsec = msec;
 	int64_t journal_file_start_msec = 0;
 	if(m_journalContext.files.empty() || m_journalContext.lastFileSize > m_fileSizeLimit) {
 		/// create new file
@@ -215,9 +216,11 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 	if(!m_journalContext.files.empty() && journal_file_start_msec < m_journalContext.files[m_journalContext.files.size() - 1])
 		SHV_EXCEPTION("Journal context corrupted!");
 
+	addToSnapshot(m_snapshot, e);
+
 	ShvJournalFileWriter wr(journalDir(), journal_file_start_msec, m_journalContext.recentTimeStamp);
 	ssize_t orig_fsz = wr.fileSize();
-	wr.appendMonotonic(entry);
+	wr.appendMonotonic(e);
 	m_journalContext.recentTimeStamp = wr.recentTimeStamp();
 	ssize_t new_fsz = wr.fileSize();
 	m_journalContext.lastFileSize = new_fsz;
@@ -238,15 +241,8 @@ void ShvFileJournal::createNewLogFile(int64_t journal_file_start_msec)
 	ShvJournalFileWriter wr(journalDir(), journal_file_start_msec, journal_file_start_msec);
 	logMShvJournal() << "New log file:" << wr.fileName() << "created.";
 	// new file should start with snapshot
-	if(m_snapShotFn) {
-		std::vector<ShvJournalEntry> snapshot;
-		m_snapShotFn(snapshot);
-		logDShvJournal() << "Writing snapshot, entries count:" << snapshot.size();
-		wr.appendSnapshot(journal_file_start_msec, snapshot);
-	}
-	else {
-		logMShvJournal() << "SnapShot function not defined";
-	}
+	logDShvJournal() << "Writing snapshot, entries count:" << m_snapshot.size();
+	wr.appendSnapshot(journal_file_start_msec, m_snapshot);
 	m_journalContext.files.push_back(journal_file_start_msec);
 	m_journalContext.recentTimeStamp = journal_file_start_msec;
 }
@@ -587,12 +583,10 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvGetLogParams &params)
 
 chainpack::RpcValue ShvFileJournal::getSnapShotMap()
 {
-	if(!m_snapShotFn)
-		SHV_EXCEPTION("SnapShot function not defined");
 	std::vector<ShvJournalEntry> snapshot;
-	m_snapShotFn(snapshot);
 	cp::RpcValue::Map m;
-	for(const ShvJournalEntry &e : snapshot) {
+	for(const auto &kv : m_snapshot) {
+		const ShvJournalEntry &e = kv.second;
 		if(e.value.isValid())
 			m[e.path] = e.value;
 	}

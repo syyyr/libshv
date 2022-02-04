@@ -32,6 +32,8 @@ public:
 	virtual shv::chainpack::RpcValue getSnapShotMap();
 protected:
 	static void addToSnapshot(std::map<std::string, ShvJournalEntry> &snapshot, const ShvJournalEntry &entry);
+protected:
+	std::map<std::string, ShvJournalEntry> m_snapshot;
 };
 
 } // namespace utils

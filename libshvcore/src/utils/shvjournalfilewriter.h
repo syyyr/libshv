@@ -4,6 +4,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <fstream>
 
 namespace shv {
@@ -21,6 +22,7 @@ public:
 	void append(const ShvJournalEntry &entry);
 	void appendMonotonic(const ShvJournalEntry &entry);
 	void appendSnapshot(int64_t msec, const std::vector<ShvJournalEntry> &snapshot);
+	void appendSnapshot(int64_t msec, const std::map<std::string, ShvJournalEntry> &snapshot);
 
 	ssize_t fileSize();
 	const std::string& fileName() const { return m_fileName; }

@@ -85,6 +85,20 @@ void ShvJournalFileWriter::appendSnapshot(int64_t msec, const std::vector<ShvJou
 	m_recentTimeStamp = msec;
 }
 
+void ShvJournalFileWriter::appendSnapshot(int64_t msec, const std::map<std::string, ShvJournalEntry> &snapshot)
+{
+	int uptime = uptimeSec();
+	for(const auto &kv : snapshot) {
+		ShvJournalEntry e = kv.second;
+		e.setSnapshotValue(true);
+		// erase EVENT flag in the snapshot values,
+		// they can trigger events during reply otherwise
+		e.setSpontaneous(false);
+		append(msec, uptime, e);
+	}
+	m_recentTimeStamp = msec;
+}
+
 void ShvJournalFileWriter::append(int64_t msec, int uptime, const ShvJournalEntry &entry)
 {
 	m_out << cp::RpcValue::DateTime::fromMSecsSinceEpoch(msec).toIsoString();

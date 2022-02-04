@@ -23,10 +23,9 @@ public:
 	static const std::string FILE_EXT;
 public:
 	using SnapShot = std::vector<ShvJournalEntry>;
-	using SnapShotFn = std::function<void (SnapShot &snapshot)>;
 	using TSNowFn = std::function<int64_t ()>;
 
-	ShvFileJournal(std::string device_id, SnapShotFn snf);
+	ShvFileJournal(std::string device_id);
 
 	void setJournalDir(std::string s);
 	const std::string& journalDir();
@@ -108,7 +107,6 @@ private:
 private:
 	JournalContext m_journalContext;
 
-	SnapShotFn m_snapShotFn;
 	int64_t m_fileSizeLimit = DEFAULT_FILE_SIZE_LIMIT;
 	int64_t m_journalSizeLimit = DEFAULT_JOURNAL_SIZE_LIMIT;
 
