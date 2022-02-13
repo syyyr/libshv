@@ -1,6 +1,7 @@
 #include "shvalarm.h"
 
 #include <shv/chainpack/rpcvalue.h>
+#include <necrolog.h>
 
 namespace shv {
 namespace core {

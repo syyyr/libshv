@@ -3,7 +3,7 @@
 
 #include "../shvcoreglobal.h"
 
-#include <necrolog.h>
+#include <necrologlevel.h>
 
 #include <string>
 
@@ -15,7 +15,7 @@ namespace utils {
 
 class SHVCORE_DECL_EXPORT ShvAlarm {
 public:
-	typedef NecroLog::Level Severity;
+	using Severity = NecroLogLevel;
 public:
 	ShvAlarm();
 	ShvAlarm(const std::string &path, bool is_active = false, Severity severity = Severity::Invalid, int level = 0, const std::string &description = {});

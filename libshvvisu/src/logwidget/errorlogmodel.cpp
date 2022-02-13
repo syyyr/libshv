@@ -1,5 +1,7 @@
 #include "errorlogmodel.h"
 
+#include <necrolog.h>
+
 #include <QDateTime>
 #include <QColor>
 
@@ -60,12 +62,12 @@ QVariant ErrorLogModel::data(const QModelIndex &index, int role) const
 	return Super::data(index, role);
 }
 
-NecroLog::Level ErrorLogModel::level(int row) const
+NecroLogLevel ErrorLogModel::level(int row) const
 {
 	return static_cast<NecroLog::Level>(data(index(row, Cols::Level), Qt::EditRole).toInt());
 }
 
-void ErrorLogModel::addLogRow(NecroLog::Level level, const std::string &msg, const QVariant &user_data)
+void ErrorLogModel::addLogRow(NecroLogLevel level, const std::string &msg, const QVariant &user_data)
 {
 	LogTableModelRow row(Cols::Count);
 	row[Cols::Level] = (int)level;

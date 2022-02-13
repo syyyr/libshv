@@ -4,7 +4,7 @@
 
 #include "logtablemodelbase.h"
 
-#include <necrolog.h>
+#include <necrologlevel.h>
 
 namespace shv {
 namespace visu {
@@ -24,9 +24,9 @@ public:
 
 	QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
 
-	NecroLog::Level level(int row) const;
+	NecroLogLevel level(int row) const;
 
-	void addLogRow(NecroLog::Level level, const std::string &msg, const QVariant &user_data = QVariant());
+	void addLogRow(NecroLogLevel level, const std::string &msg, const QVariant &user_data = QVariant());
 
 };
 
