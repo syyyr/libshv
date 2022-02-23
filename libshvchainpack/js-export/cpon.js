@@ -50,7 +50,7 @@ Cpon.utf8ToString = function(bytearray)
 		}
 		else {
 			// surrogate pair
-			var char_code = ((value & 0x07) << 18 | (uint8_array[i + 1] & 0x3F) << 12 | (uint8_array[i + 2] & 0x3F) << 6 | data[i + 3] & 0x3F) - 0x010000;
+			var char_code = ((value & 0x07) << 18 | (uint8_array[i + 1] & 0x3F) << 12 | (uint8_array[i + 2] & 0x3F) << 6 | uint8_array[i + 3] & 0x3F) - 0x010000;
 
 			str += String.fromCharCode(char_code >> 10 | 0xD800, char_code & 0x03FF | 0xDC00);
 			i += 3;
