@@ -41,6 +41,7 @@ public:
 
 	bool isSocketConnected() const;
 	Q_SIGNAL void socketConnectedChanged(bool is_connected);
+	Q_SIGNAL void socketError(const QString &error_msg);
 	Q_SIGNAL void sslErrors(const QList<QSslError> &errors);
 	void ignoreSslErrors();
 
