@@ -4,10 +4,10 @@
 
 #include "../../c/ccpon.h"
 
-#include <iostream>
 #include <cmath>
 #include <sstream>
-
+#include <iostream>
+#include <fstream>
 #include <string.h>
 
 namespace shv {
@@ -81,6 +81,28 @@ CponWriter::CponWriter(std::ostream &out, const CponWriterOptions &opts)
 {
 	m_outCtx.cpon_options.json_output = opts.isJsonFormat();
 	m_outCtx.cpon_options.indent = m_opts.indent().empty()? nullptr: m_opts.indent().data();
+}
+
+bool CponWriter::writeFile(const std::string &file_name, const RpcValue &rv, std::string *err)
+{
+	std::ofstream ofs(file_name, std::ios::binary);
+	if(ofs) {
+		{
+			CponWriterOptions opts;
+			opts.setIndent("\t");
+			CponWriter wr(ofs, opts);
+			wr.write(rv);
+		}
+		if(!ofs) {
+			if(err)
+				*err = "Error write file '" + file_name + "'.";
+			return false;
+		}
+		return true;
+	}
+	if(err)
+		*err = "Cannot open file '" + file_name + "' for writing.";
+	return false;
 }
 
 void CponWriter::write(const RpcValue &value)

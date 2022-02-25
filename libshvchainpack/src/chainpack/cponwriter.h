@@ -37,6 +37,8 @@ public:
 	CponWriter(std::ostream &out) : Super(out) {}
 	CponWriter(std::ostream &out, const CponWriterOptions &opts);
 
+	static bool writeFile(const std::string &file_name, const shv::chainpack::RpcValue &rv, std::string *err = nullptr);
+
 	CponWriter& operator <<(const RpcValue &value) {write(value); return *this;}
 	CponWriter& operator <<(const RpcValue::MetaData &meta_data) {write(meta_data); return *this;}
 
