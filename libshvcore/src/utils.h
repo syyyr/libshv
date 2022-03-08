@@ -144,6 +144,9 @@ public:
 		}
 		return static_cast<T>(val);
 	}
+
+	static shv::chainpack::RpcValue decompressNodesTree(const shv::chainpack::RpcValue &compressed_nodes_tree);
+
 };
 
 }}

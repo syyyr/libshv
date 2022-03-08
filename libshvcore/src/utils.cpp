@@ -249,6 +249,44 @@ std::vector<char> Utils::readAllFd(int fd)
 	return ret;
 }
 
+static RpcValue decompress_node(const RpcValue::Map &node_types, const RpcValue &node)
+{
+	const RpcValue &node_type_ref = node.metaValue("nodeTypeRef");
+
+	if (!node_type_ref.isValid())
+		return node;
+
+	const auto &node_type_ref_str = node_type_ref.asString();
+
+	if(node_types.hasKey(node_type_ref_str))
+		return node_types.value(node_type_ref_str);
+
+	shvWarning() << "Unknown nodeTypeRef in nodesTree:" << node_type_ref_str;
+	return node;
+}
+
+static RpcValue decompress_nodes_tree_helper(const RpcValue::Map &node_types, const RpcValue &node)
+{
+	RpcValue decompressed_node = decompress_node(node_types, node);
+	for (const auto &child_iter : decompressed_node.asMap()) {
+		RpcValue child_value = decompress_nodes_tree_helper(node_types, child_iter.second);
+		decompressed_node.set(child_iter.first, child_value);
+	}
+	return decompressed_node;
+}
+
+RpcValue Utils::decompressNodesTree(const chainpack::RpcValue &compressed_nodes_tree)
+{
+	const RpcValue::Map &node_types = compressed_nodes_tree.metaData().value("nodeTypes").asMap();
+
+	if (node_types.empty()) {
+		shvDebug() << "nodesTree is not compressed";
+		return compressed_nodes_tree;
+	}
+
+	return decompress_nodes_tree_helper(node_types, compressed_nodes_tree);
+}
+
 #if 0
 const QString& Utils::nullValueString()
 {
