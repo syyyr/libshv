@@ -265,6 +265,7 @@ chainpack::RpcValue ShvNode::handleRpcRequestImpl(const chainpack::RpcRequest &r
 
 chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 {
+	shvLogFuncFrame() << rq.shvPath() << rq.method();
 	core::StringViewList shv_path = core::utils::ShvPath::split(rq.shvPath().asString());
 	const chainpack::RpcValue::String &method = rq.method().asString();
 	const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
@@ -277,6 +278,7 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 	if(mm_access_level > rq_access_level)
 		SHV_EXCEPTION(std::string("Call method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' permission denied, grant: " + rq_grant.toCpon() + " required: " + mm_grant.toCpon());
 
+	//shvWarning() << mm_access_level;
 	if(mm_access_level >= cp::MetaMethod::AccessLevel::Write) {
 
 
@@ -286,7 +288,9 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 											, shv::core::utils::ShvJournalEntry::NO_SHORT_TIME
 											, cp::DataChange::ValueFlag::Spontaneous);
 		e.epochMsec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
-		e.userId = rq.userId().toString();
+		chainpack::RpcValue user_id = rq.userId();
+		if(user_id.isValid())
+			e.userId = user_id.toCpon();
 		rootNode()->emitLogUserCommand(e);
 	}
 
@@ -374,7 +378,7 @@ int ShvNode::basicGrantToAccessLevel(const chainpack::RpcValue &acces_grant)
 		if(std::strcmp(acces_level, cp::Rpc::ROLE_SUPER_SERVICE) == 0) return cp::MetaMethod::AccessLevel::SuperService;
 		if(std::strcmp(acces_level, cp::Rpc::ROLE_DEVEL) == 0) return cp::MetaMethod::AccessLevel::Devel;
 		if(std::strcmp(acces_level, cp::Rpc::ROLE_ADMIN) == 0) return cp::MetaMethod::AccessLevel::Admin;
-		return -1;
+		return shv::chainpack::MetaMethod::AccessLevel::None;
 	}
 	else if(grant.isAccessLevel()) {
 		return grant.accessLevel;

@@ -56,14 +56,16 @@ bool AbstractShvJournal::addToSnapshot(std::map<std::string, ShvJournalEntry> &s
 		// writing default value to the snapshot must erase previous value if any
 		auto it = snapshot.find(entry.path);
 		if(it == snapshot.end()) {
+			// not-spontaneous values are sent to log for all the nodes after app restart
+			// this can create snapshot in new log file which is created when device is restarted
+
 			// change to default value is not present in snapshot
-			// that means that it is firs time after restart
-			// or two default-values in the row
-			// exclude it from logging
-			// this can create snapshot from mot-default values only after device restart
-			// when all nodes properties values are send to log, default and not-default
+			// that means that it is firs time after restart or two default-values in the row
+			// exclude it from logging id change is not spontaneous
+
+			// this can create snapshot from not-default values only when device is restarted
 			// this optimization can make snapshot on start of log file 10x smaller
-			return false;
+			return entry.isSpontaneous();
 		}
 		else {
 			// change from not-default to default must be logged
