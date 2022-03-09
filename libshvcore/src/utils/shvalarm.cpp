@@ -34,7 +34,7 @@ const char* ShvAlarm::severityName() const
 
 bool ShvAlarm::operator<(const ShvAlarm &a) const
 {
-	if (m_severity < a.m_severity) return true;
+	if (m_severity > a.m_severity) return true;
 	if (m_severity == a.m_severity && m_level < a.m_level) return true;
 	return false;
 }
