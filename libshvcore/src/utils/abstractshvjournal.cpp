@@ -31,11 +31,12 @@ chainpack::RpcValue AbstractShvJournal::getSnapShotMap()
 	SHV_EXCEPTION("getSnapShot() not implemented");
 }
 
-void AbstractShvJournal::addToSnapshot(std::map<std::string, ShvJournalEntry> &snapshot, const ShvJournalEntry &entry)
+bool AbstractShvJournal::addToSnapshot(std::map<std::string, ShvJournalEntry> &snapshot, const ShvJournalEntry &entry)
 {
 	if(entry.domain != ShvJournalEntry::DOMAIN_VAL_CHANGE) {
-		shvDebug() << "remove not CHNG from snapshot:" << RpcValue(entry.toRpcValueMap()).toCpon();
-		return;
+		//shvDebug() << "remove not CHNG from snapshot:" << RpcValue(entry.toRpcValueMap()).toCpon();
+		// always add not-chng to log
+		return true;
 	}
 	if(entry.value.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID && entry.value.metaTypeId() == shv::chainpack::meta::GlobalNS::MetaTypeId::NodeDrop) {
 		auto it = snapshot.lower_bound(entry.path);
@@ -45,20 +46,36 @@ void AbstractShvJournal::addToSnapshot(std::map<std::string, ShvJournalEntry> &s
 				it = snapshot.erase(it);
 			}
 			else {
-				return;
+				break;
 			}
 		}
+		// always add node-drop to log
+		return true;
 	}
 	else if(entry.value.hasDefaultValue()) {
 		// writing default value to the snapshot must erase previous value if any
 		auto it = snapshot.find(entry.path);
-		if(it != snapshot.end())
+		if(it == snapshot.end()) {
+			// change to default value is not present in snapshot
+			// that means that it is firs time after restart
+			// or two default-values in the row
+			// exclude it from logging
+			// this can create snapshot from mot-default values only after device restart
+			// when all nodes properties values are send to log, default and not-default
+			// this optimization can make snapshot on start of log file 10x smaller
+			return false;
+		}
+		else {
+			// change from not-default to default must be logged
 			snapshot.erase(it);
+			return true;
+		}
 	}
 	else {
 		/*entry.sampleType == ShvJournalEntry::NO_VALUE_FLAGS && */
 		snapshot[entry.path] = entry;
 	}
+	return true;
 };
 
 } // namespace utils

@@ -216,17 +216,18 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 	if(!m_journalContext.files.empty() && journal_file_start_msec < m_journalContext.files[m_journalContext.files.size() - 1])
 		SHV_EXCEPTION("Journal context corrupted!");
 
-	addToSnapshot(m_snapshot, e);
-
-	ShvJournalFileWriter wr(journalDir(), journal_file_start_msec, m_journalContext.recentTimeStamp);
-	ssize_t orig_fsz = wr.fileSize();
-	wr.appendMonotonic(e);
-	m_journalContext.recentTimeStamp = wr.recentTimeStamp();
-	ssize_t new_fsz = wr.fileSize();
-	m_journalContext.lastFileSize = new_fsz;
-	m_journalContext.journalSize += new_fsz - orig_fsz;
-	if(m_journalContext.journalSize > m_journalSizeLimit) {
-		rotateJournal();
+	if(addToSnapshot(m_snapshot, e)) {
+		// log only not-default changes or changes from not-default to default
+		ShvJournalFileWriter wr(journalDir(), journal_file_start_msec, m_journalContext.recentTimeStamp);
+		ssize_t orig_fsz = wr.fileSize();
+		wr.appendMonotonic(e);
+		m_journalContext.recentTimeStamp = wr.recentTimeStamp();
+		ssize_t new_fsz = wr.fileSize();
+		m_journalContext.lastFileSize = new_fsz;
+		m_journalContext.journalSize += new_fsz - orig_fsz;
+		if(m_journalContext.journalSize > m_journalSizeLimit) {
+			rotateJournal();
+		}
 	}
 }
 

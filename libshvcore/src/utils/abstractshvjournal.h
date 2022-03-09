@@ -31,7 +31,7 @@ public:
 	virtual shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) = 0;
 	virtual shv::chainpack::RpcValue getSnapShotMap();
 protected:
-	static void addToSnapshot(std::map<std::string, ShvJournalEntry> &snapshot, const ShvJournalEntry &entry);
+	static bool addToSnapshot(std::map<std::string, ShvJournalEntry> &snapshot, const ShvJournalEntry &entry);
 protected:
 	std::map<std::string, ShvJournalEntry> m_snapshot;
 };
