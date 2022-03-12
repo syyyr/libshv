@@ -47,7 +47,7 @@
 	Q_PROPERTY(ptype lower_letter##name_rest READ lower_letter##name_rest WRITE set##upper_letter##name_rest NOTIFY lower_letter##name_rest##Changed) \
 	SHV_PROPERTY_IMPL(ptype, lower_letter, upper_letter, name_rest)
 
-#define SHV_PROPERTY2(ptype, lower_letter, upper_letter, name_rest) \
+#define SHV_PROPERTY2(ptype, lower_letter, upper_letter, name_rest, default_value) \
 	Q_PROPERTY(ptype lower_letter##name_rest READ lower_letter##name_rest WRITE set##upper_letter##name_rest NOTIFY lower_letter##name_rest##Changed) \
 	SHV_PROPERTY_IMPL2(ptype, lower_letter, upper_letter, name_rest, default_value)
 /*
