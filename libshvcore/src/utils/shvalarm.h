@@ -23,7 +23,7 @@ public:
 public:
 	static Severity severityFromString(const std::string &lvl);
 	const char *severityName() const;
-	bool operator<(const ShvAlarm &a) const;
+	bool isLessSevere(const ShvAlarm &a) const;
 	bool operator==(const ShvAlarm &a) const;
 
 	Severity severity() const { return m_severity; }
@@ -31,6 +31,7 @@ public:
 	const std::string& description() const { return m_description; }
 	Severity severityFromString() const { return m_severity; }
 	int level() const { return m_level; }
+	bool isValid() const { return severity() != Severity::Invalid; }
 	bool isActive() const { return m_isActive; }
 
 	shv::chainpack::RpcValue toRpcValue() const;

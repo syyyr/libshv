@@ -32,11 +32,13 @@ const char* ShvAlarm::severityName() const
 	return NecroLog::levelToString(m_severity);
 }
 
-bool ShvAlarm::operator<(const ShvAlarm &a) const
+bool ShvAlarm::isLessSevere(const ShvAlarm &a) const
 {
-	if (m_severity > a.m_severity) return true;
-	if (m_severity == a.m_severity && m_level < a.m_level) return true;
-	return false;
+	if (m_severity == a.m_severity)
+		return m_level < a.m_level;
+	if(m_severity == Severity::Invalid)
+		return true;
+	return (m_severity > a.m_severity);
 }
 
 bool ShvAlarm::operator==(const ShvAlarm &a) const
@@ -49,14 +51,17 @@ bool ShvAlarm::operator==(const ShvAlarm &a) const
 
 shv::chainpack::RpcValue ShvAlarm::toRpcValue() const
 {
-	return shv::chainpack::RpcValue::Map{
-		{"path", path()},
-		{"isActive", isActive()},
-		{"severity", static_cast<int>(severity())},
-		{"severityName", severityName()},
-		{"alarmLevel", level()},
-		{"description", description()}
-	};
+	if(isValid()) {
+		return shv::chainpack::RpcValue::Map{
+			{"path", path()},
+			{"isActive", isActive()},
+			{"severity", static_cast<int>(severity())},
+			{"severityName", severityName()},
+			{"alarmLevel", level()},
+			{"description", description()}
+		};
+	}
+	return nullptr;
 }
 
 ShvAlarm ShvAlarm::fromRpcValue(const chainpack::RpcValue &rv)
