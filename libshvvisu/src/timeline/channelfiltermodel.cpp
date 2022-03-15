@@ -161,6 +161,9 @@ void ChannelFilterModel::createNodesForPath(const QString &path)
 			parent_item = item;
 		}
 		else {
+			if (sub_path == path) {
+				it->setData(true, UserData::ValidLogEntry);
+			}
 			parent_item = it;
 		}
 	}
