@@ -25,6 +25,7 @@ const char* Rpc::METH_GET = "get";
 const char* Rpc::METH_SET = "set";
 const char* Rpc::METH_DIR = "dir";
 const char* Rpc::METH_LS = "ls";
+const char* Rpc::METH_TAGS = "tags";
 const char* Rpc::METH_PING = "ping";
 const char* Rpc::METH_ECHO = "echo";
 const char* Rpc::METH_APP_NAME = "appName";

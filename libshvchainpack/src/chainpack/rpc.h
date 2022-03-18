@@ -34,6 +34,7 @@ public:
 	static const char* METH_SET;
 	static const char* METH_DIR;
 	static const char* METH_LS;
+	static const char* METH_TAGS;
 	static const char* METH_PING;
 	static const char* METH_ECHO;
 	static const char* METH_APP_NAME;
