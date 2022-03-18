@@ -160,6 +160,11 @@ ShvPath ShvPath::joinPath(StringView path1, StringView path2)
 	return shv::core::Utils::joinPath(path1, path2);
 }
 
+ShvPath ShvPath::joinPath(StringView path) const
+{
+	return joinPath(*this, path);
+}
+
 ShvPath ShvPath::appendDir(StringView path1, StringView dir)
 {
 	while(path1.endsWith('/'))
@@ -173,6 +178,11 @@ ShvPath ShvPath::appendDir(StringView path1, StringView dir)
 	if(path1.empty())
 		return dir_str;
 	return path1.toString() + SHV_PATH_DELIM + dir_str;
+}
+
+ShvPath ShvPath::appendDir(StringView dir) const
+{
+	return appendDir(*this, dir);
 }
 /*
 StringView ShvPath::midPath(const std::string &path, size_t start, size_t len)

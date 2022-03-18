@@ -33,7 +33,9 @@ public:
 	static ShvPath join(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last);
 
 	static ShvPath joinPath(StringView path1, StringView path2);
+	ShvPath joinPath(StringView path) const;
 	static ShvPath appendDir(StringView path1, StringView dir);
+	ShvPath appendDir(StringView dir) const;
 
 	//static StringView midPath(const std::string &path, size_t start, size_t len = std::numeric_limits<size_t>::max());
 
