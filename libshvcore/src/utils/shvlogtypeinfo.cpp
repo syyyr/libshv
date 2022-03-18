@@ -1,5 +1,8 @@
 #include "shvlogtypeinfo.h"
 
+using namespace std;
+using namespace shv::chainpack;
+
 namespace shv {
 namespace core {
 namespace utils {
@@ -7,9 +10,9 @@ namespace utils {
 //=====================================================================
 // ShvLogTypeDescrField
 //=====================================================================
-chainpack::RpcValue ShvLogTypeDescrField::toRpcValue() const
+RpcValue ShvLogTypeDescrField::toRpcValue() const
 {
-	chainpack::RpcValue::Map m;
+	RpcValue::Map m;
 	m["name"] = name;
 	if(!typeName.empty())
 		m["typeName"] = typeName;
@@ -26,11 +29,11 @@ chainpack::RpcValue ShvLogTypeDescrField::toRpcValue() const
 	return m;
 }
 
-ShvLogTypeDescrField ShvLogTypeDescrField::fromRpcValue(const chainpack::RpcValue &v)
+ShvLogTypeDescrField ShvLogTypeDescrField::fromRpcValue(const RpcValue &v)
 {
 	ShvLogTypeDescrField ret;
 	if(v.isMap()) {
-		const chainpack::RpcValue::Map &m = v.toMap();
+		const RpcValue::Map &m = v.toMap();
 		ret.name = m.value("name").toString();
 		ret.label = m.value("label").toString();
 		ret.description = m.value("description").toString();
@@ -106,7 +109,7 @@ ShvLogTypeDescr::SampleType ShvLogTypeDescr::sampleTypeFromString(const std::str
 	return SampleType::Invalid;
 }
 
-void ShvLogTypeDescr::applyTags(const chainpack::RpcValue::Map &t)
+void ShvLogTypeDescr::applyTags(const RpcValue::Map &t)
 {
 	if (type == Type::Invalid)
 		type = typeFromString(t.value("typeName").toStdString());
@@ -120,7 +123,7 @@ void ShvLogTypeDescr::applyTags(const chainpack::RpcValue::Map &t)
 	tags.insert(t.begin(), t.end());
 }
 
-chainpack::RpcValue ShvLogTypeDescr::defaultRpcValue() const
+RpcValue ShvLogTypeDescr::defaultRpcValue() const
 {
 	using namespace chainpack;
 
@@ -163,9 +166,9 @@ int ShvLogTypeDescr::decimalPlaces() const
 	return tags.value("decPlaces", 0).toInt();
 }
 
-chainpack::RpcValue ShvLogTypeDescr::toRpcValue() const
+RpcValue ShvLogTypeDescr::toRpcValue() const
 {
-	chainpack::RpcValue::Map m;
+	RpcValue::Map m;
 	if(type != Type::Invalid)
 		m["type"] = typeToString(type);
 	if(sampleType != SampleType::Continuous)
@@ -173,7 +176,7 @@ chainpack::RpcValue ShvLogTypeDescr::toRpcValue() const
 	if(!description.empty())
 		m["description"] = description;
 	if(!fields.empty()) {
-		chainpack::RpcValue::List lst;
+		RpcValue::List lst;
 		for(const ShvLogTypeDescrField &fld : fields)
 			lst.push_back(fld.toRpcValue());
 		m["fields"] = std::move(lst);
@@ -184,11 +187,11 @@ chainpack::RpcValue ShvLogTypeDescr::toRpcValue() const
 	return m;
 }
 
-ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const chainpack::RpcValue &v)
+ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const RpcValue &v)
 {
 	ShvLogTypeDescr ret;
 	if(v.isMap()) {
-		const chainpack::RpcValue::Map &m = v.toMap();
+		const RpcValue::Map &m = v.toMap();
 		ret.type = typeFromString(m.value("type").toString());
 		ret.sampleType = sampleTypeFromString(m.value("sampleType").asString());
 		ret.description = m.value("description").toString();
@@ -214,24 +217,40 @@ ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const chainpack::RpcValue &v)
 //=====================================================================
 // ShvLogPathDescr
 //=====================================================================
-chainpack::RpcValue ShvLogPathDescr::toRpcValue() const
+ShvLogPathDescr ShvLogPathDescr::fromTags(const RpcValue::Map &tags)
 {
-	chainpack::RpcValue::Map m;
+	ShvLogPathDescr ret;
+	ret.typeName = tags.value("typeName").asString();
+	ret.description = tags.value("description").asString();
+	ret.tags = tags;
+	return ret;
+}
+
+RpcValue ShvLogPathDescr::toRpcValue() const
+{
+	RpcValue::Map m;
 	m["type"] = typeName;
 	if(!description.empty())
 		m["description"] = description;
+	if(!tags.empty())
+		m["tags"] = tags;
 	return m;
 }
 
-ShvLogPathDescr ShvLogPathDescr::fromRpcValue(const chainpack::RpcValue &v)
+ShvLogPathDescr ShvLogPathDescr::fromRpcValue(const RpcValue &v)
 {
-	ShvLogPathDescr ret;
 	if(v.isMap()) {
-		const chainpack::RpcValue::Map &m = v.toMap();
-		ret.typeName = m.value("type").toString();
-		ret.description = m.value("description").toString();
+		const RpcValue::Map &m = v.toMap();
+		ShvLogPathDescr ret = ShvLogPathDescr::fromTags(m.value("tags").asMap());
+		const string &type_name = m.value("type").asString();
+		if(!type_name.empty())
+			ret.typeName = type_name;
+		const string &description = m.value("description").asString();
+		if(!description.empty())
+			ret.description = description;
+		return ret;
 	}
-	return ret;
+	return {};
 }
 
 //=====================================================================
@@ -258,15 +277,15 @@ std::string ShvLogTypeInfo::findSystemPath(const std::string &shv_path) const
 	return (path_descr == paths.end()) ? std::string() : path_descr->second.systemPath;
 }
 
-chainpack::RpcValue ShvLogTypeInfo::toRpcValue() const
+RpcValue ShvLogTypeInfo::toRpcValue() const
 {
-	chainpack::RpcValue::Map m;
-	chainpack::RpcValue::Map mt;
+	RpcValue::Map m;
+	RpcValue::Map mt;
 	for(const auto &kv : types) {
 		mt[kv.first] = kv.second.toRpcValue();
 	}
 	m["types"] = std::move(mt);
-	chainpack::RpcValue::Map mp;
+	RpcValue::Map mp;
 	for(const auto &kv : paths) {
 		mp[kv.first] = kv.second.toRpcValue();
 	}
@@ -274,15 +293,15 @@ chainpack::RpcValue ShvLogTypeInfo::toRpcValue() const
 	return m;
 }
 
-ShvLogTypeInfo ShvLogTypeInfo::fromRpcValue(const chainpack::RpcValue &v)
+ShvLogTypeInfo ShvLogTypeInfo::fromRpcValue(const RpcValue &v)
 {
 	ShvLogTypeInfo ret;
-	const chainpack::RpcValue::Map &m = v.toMap();
-	const chainpack::RpcValue::Map &mt = m.value("types").toMap();
+	const RpcValue::Map &m = v.toMap();
+	const RpcValue::Map &mt = m.value("types").toMap();
 	for(const auto &kv : mt) {
 		ret.types[kv.first] = ShvLogTypeDescr::fromRpcValue(kv.second);
 	}
-	const chainpack::RpcValue::Map &mp = m.value("paths").toMap();
+	const RpcValue::Map &mp = m.value("paths").toMap();
 	for(const auto &kv : mp) {
 		ret.paths[kv.first] = ShvLogPathDescr::fromRpcValue(kv.second);
 	}

@@ -120,6 +120,8 @@ struct SHVCORE_DECL_EXPORT ShvLogPathDescr
 		, description(d)
 	{}
 
+	static ShvLogPathDescr fromTags(const chainpack::RpcValue::Map &tags);
+
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogPathDescr fromRpcValue(const chainpack::RpcValue &v);
 };
