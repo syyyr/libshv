@@ -38,10 +38,9 @@ bool ShvPath::startsWithPath(const StringView &str, const StringView &path, size
 	return set_pos(std::string::npos, false);
 }
 
-ShvPath &ShvPath::appendPath(const StringView &path)
+ShvPath ShvPath::appendPath(const StringView &path) const
 {
-	*this = shv::core::Utils::joinPath(*this, path);
-	return *this;
+	return shv::core::Utils::joinPath(*this, path);
 }
 
 /*

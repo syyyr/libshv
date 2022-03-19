@@ -29,7 +29,7 @@ public:
 	static bool startsWithPath(const StringView &str, const StringView &path, size_t *pos = nullptr);
 
 	//static ShvPath joinPaths(const StringView &p1, const StringView &p2);
-	ShvPath& appendPath(const StringView &path);
+	ShvPath appendPath(const StringView &path) const;
 
 	static ShvPath joinDirs(const std::vector<std::string> &dirs);
 	static ShvPath joinDirs(const shv::core::StringViewList &dirs);
