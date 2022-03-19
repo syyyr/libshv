@@ -38,6 +38,12 @@ bool ShvPath::startsWithPath(const StringView &str, const StringView &path, size
 	return set_pos(std::string::npos, false);
 }
 
+ShvPath &ShvPath::appendPath(const StringView &path)
+{
+	*this = shv::core::Utils::joinPath(*this, path);
+	return *this;
+}
+
 /*
 core::StringViewList ShvPath::cleanPath(const core::StringViewList &path_list)
 {
@@ -100,10 +106,10 @@ StringView ShvPath::takeFirsDir(StringView &shv_path)
 	return first;
 }
 
-ShvPath ShvPath::join(const std::vector<std::string> &shv_path)
+ShvPath ShvPath::joinDirs(const std::vector<std::string> &dirs)
 {
 	ShvPath ret;
-	for(const std::string &s : shv_path) {
+	for(const std::string &s : dirs) {
 		if(s.empty())
 			continue;
 		bool need_quotes = false;
@@ -121,9 +127,9 @@ ShvPath ShvPath::join(const std::vector<std::string> &shv_path)
 	return ret;
 }
 
-ShvPath ShvPath::join(const StringViewList &shv_path)
+ShvPath ShvPath::joinDirs(const StringViewList &dirs)
 {
-	return join(shv_path.cbegin(), shv_path.cend());
+	return joinDirs(dirs.cbegin(), dirs.cend());
 }
 
 static bool need_quotes(const StringView &dir)
@@ -136,7 +142,7 @@ static bool need_quotes(const StringView &dir)
 	return false;
 }
 
-ShvPath ShvPath::join(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last)
+ShvPath ShvPath::joinDirs(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last)
 {
 	ShvPath ret;
 	for(std::vector<StringView>::const_iterator it = first; it != last; ++it) {
@@ -155,14 +161,10 @@ ShvPath ShvPath::join(std::vector<StringView>::const_iterator first, std::vector
 	return ret;
 }
 
-ShvPath ShvPath::joinPath(StringView path1, StringView path2)
+ShvPath ShvPath::joinDirs(StringView dir1, StringView dir2)
 {
-	return shv::core::Utils::joinPath(path1, path2);
-}
-
-ShvPath ShvPath::joinPath(StringView path) const
-{
-	return joinPath(*this, path);
+	std::vector<StringView> array = {dir1, dir2};
+	return joinDirs(array);
 }
 
 ShvPath ShvPath::appendDir(StringView path1, StringView dir)

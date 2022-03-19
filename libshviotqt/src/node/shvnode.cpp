@@ -146,7 +146,7 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 				std::string new_path = ShvUrl::makeShvUrlString(shv_url.type(),
 																shv_url.service(),
 																shv_url.fullBrokerId(),
-																ShvPath::join(++shv_path.begin(), shv_path.end()));
+																ShvPath::joinDirs(++shv_path.begin(), shv_path.end()));
 				cp::RpcMessage::setShvPath(meta, new_path);
 				nd->handleRawRpcRequest(std::move(meta), std::move(data));
 				return;
@@ -154,7 +154,7 @@ void ShvNode::handleRawRpcRequest(cp::RpcValue::MetaData &&meta, std::string &&d
 		}
 		const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
 		if(mm) {
-			shvDebug() << "Metamethod:" << method << "on path:" << ShvPath::join(shv_path) << "FOUND";
+			shvDebug() << "Metamethod:" << method << "on path:" << ShvPath::joinDirs(shv_path) << "FOUND";
 			std::string errmsg;
 			cp::RpcMessage rpc_msg = cp::RpcDriver::composeRpcMessage(std::move(meta), data, &errmsg);
 			if(!errmsg.empty())
@@ -241,8 +241,8 @@ chainpack::RpcValue ShvNode::handleRpcRequestImpl(const chainpack::RpcRequest &r
 	if(!shv_path.empty()) {
 		ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
 		if(nd) {
-			shvDebug() << "Child node:" << shv_path.at(0).toString() << "on path:" << ShvPath::join(shv_path) << "FOUND";
-			std::string new_path = ShvPath::join(++shv_path.begin(), shv_path.end());
+			shvDebug() << "Child node:" << shv_path.at(0).toString() << "on path:" << ShvPath::joinDirs(shv_path) << "FOUND";
+			std::string new_path = ShvPath::joinDirs(++shv_path.begin(), shv_path.end());
 			chainpack::RpcRequest rq2(rq);
 			//cp::RpcValue::MetaData meta2(meta);
 			rq2.setShvPath(new_path);

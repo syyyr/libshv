@@ -28,12 +28,13 @@ public:
 	bool startsWithPath(const StringView &path, size_t *pos = nullptr) const;
 	static bool startsWithPath(const StringView &str, const StringView &path, size_t *pos = nullptr);
 
-	static ShvPath join(const std::vector<std::string> &shv_path);
-	static ShvPath join(const shv::core::StringViewList &shv_path);
-	static ShvPath join(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last);
+	//static ShvPath joinPaths(const StringView &p1, const StringView &p2);
+	ShvPath& appendPath(const StringView &path);
 
-	static ShvPath joinPath(StringView path1, StringView path2);
-	ShvPath joinPath(StringView path) const;
+	static ShvPath joinDirs(const std::vector<std::string> &dirs);
+	static ShvPath joinDirs(const shv::core::StringViewList &dirs);
+	static ShvPath joinDirs(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last);
+	static ShvPath joinDirs(StringView dir1, StringView dir2);
 	static ShvPath appendDir(StringView path1, StringView dir);
 	ShvPath appendDir(StringView dir) const;
 
