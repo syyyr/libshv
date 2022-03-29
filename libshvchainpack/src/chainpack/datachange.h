@@ -45,11 +45,7 @@ public:
 	DataChange(const RpcValue &val, const RpcValue::DateTime &date_time, int short_time = NO_SHORT_TIME);
 	DataChange(const RpcValue &val, unsigned short_time);
 
-	static bool isDataChange(const RpcValue &rv)
-	{
-		return rv.metaTypeId() == shv::chainpack::DataChange::MetaType::ID
-				&& rv.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID;
-	}
+	static bool isDataChange(const RpcValue &rv);
 
 	RpcValue value() const { return m_value; }
 	void setValue(const RpcValue &val);

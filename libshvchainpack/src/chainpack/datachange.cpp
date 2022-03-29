@@ -81,6 +81,12 @@ DataChange::DataChange(const RpcValue &val, unsigned short_time)
 	setValue(val);
 }
 
+bool DataChange::isDataChange(const RpcValue &rv)
+{
+	return rv.metaTypeId() == MetaType::ID
+			&& rv.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID;
+}
+
 void DataChange::setValue(const RpcValue &val)
 {
 	m_value = val;

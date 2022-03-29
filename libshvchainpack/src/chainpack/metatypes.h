@@ -94,6 +94,7 @@ public:
 			DataChange,
 			NodeDrop,
 			ValueNotAvailable,
+			ShvJournalEntry,
 		};
 	};
 };

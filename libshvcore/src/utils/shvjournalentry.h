@@ -15,6 +15,15 @@ namespace utils {
 class SHVCORE_DECL_EXPORT ShvJournalEntry
 {
 public:
+	class MetaType : public chainpack::meta::MetaType
+	{
+		using Super = chainpack::meta::MetaType;
+	public:
+		enum {ID = chainpack::meta::GlobalNS::MetaTypeId::ShvJournalEntry};
+		MetaType();
+		static void registerMetaType();
+	};
+public:
 	static const char *DOMAIN_VAL_CHANGE;
 	static const char *DOMAIN_VAL_FASTCHANGE;
 	static const char *DOMAIN_VAL_SERVICECHANGE;
@@ -83,7 +92,14 @@ public:
 	void setShortTime(int short_time) {shortTime = short_time;}
 	shv::chainpack::RpcValue::DateTime dateTime() const { return shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(epochMsec); }
 	shv::chainpack::RpcValue toRpcValueMap() const;
-	shv::chainpack::DataChange toDataChange() const;
+
+	static bool isShvJournalEntry(const shv::chainpack::RpcValue &rv);
+	shv::chainpack::RpcValue toRpcValue() const;
+	static ShvJournalEntry fromRpcValue(const shv::chainpack::RpcValue &rv);
+	static ShvJournalEntry fromRpcValueMap(const shv::chainpack::RpcValue::Map &m);
+
+	// commented as not used in projects and not clear, how to implement correctly
+	//shv::chainpack::DataChange toDataChange() const;
 };
 
 } // namespace utils
