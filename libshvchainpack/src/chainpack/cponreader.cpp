@@ -194,8 +194,16 @@ void CponReader::read(RpcValue &val)
 RpcValue CponReader::readFile(const std::string &file_name, std::string *error)
 {
 	std::ifstream ifs(file_name);
-	CponReader rd(ifs);
-	return rd.read(error);
+	if(ifs) {
+		CponReader rd(ifs);
+		return rd.read(error);
+	}
+	std::string err_msg = "Cannot open file " + file_name + " for reading";
+	if(error)
+		*error = err_msg;
+	else
+		throw ParseException(err_msg, 0);
+	return {};
 }
 
 /*
