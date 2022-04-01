@@ -285,7 +285,7 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 											, method + '(' + rq.params().toCpon() + ')'
 											, shv::chainpack::Rpc::SIG_COMMAND_LOGGED
 											, shv::core::utils::ShvJournalEntry::NO_SHORT_TIME
-											, DataChange::ValueFlag::Spontaneous);
+											, (1 << DataChange::ValueFlag::Spontaneous));
 		e.epochMsec = RpcValue::DateTime::now().msecsSinceEpoch();
 		chainpack::RpcValue user_id = rq.userId();
 		if(user_id.isValid())
