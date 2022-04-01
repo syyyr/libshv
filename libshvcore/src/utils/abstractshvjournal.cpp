@@ -30,7 +30,16 @@ chainpack::RpcValue AbstractShvJournal::getSnapShotMap()
 {
 	SHV_EXCEPTION("getSnapShot() not implemented");
 }
+/**
+Log only ANY->NOT_DEFAULT changes or changes from NOT_DEFAULT->DEFAULT
+Adding DEFAULT value to snapshot will remove this path, so it will be MISSING next time
 
+We can save many log lines thanks to this simple rule
+1. short snapshot does not contain paths with default values (can have thousands of lines otherwise)
+2. when OPC-UA is disconnected and connected again, then short snapshot is created
+
+Short snapshot is snapshot which does not contain paths with DEFAULT values
+*/
 bool AbstractShvJournal::addToSnapshot(std::map<std::string, ShvJournalEntry> &snapshot, const ShvJournalEntry &entry)
 {
 	if(entry.domain != ShvJournalEntry::DOMAIN_VAL_CHANGE) {
@@ -39,6 +48,7 @@ bool AbstractShvJournal::addToSnapshot(std::map<std::string, ShvJournalEntry> &s
 		return true;
 	}
 	if(entry.value.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID && entry.value.metaTypeId() == shv::chainpack::meta::GlobalNS::MetaTypeId::NodeDrop) {
+		// NODE_DROP
 		auto it = snapshot.lower_bound(entry.path);
 		while(it != snapshot.end()) {
 			if(it->first.rfind(entry.path, 0) == 0 && (it->first.size() == entry.path.size() || it->first[entry.path.size()] == '/')) {
@@ -56,19 +66,22 @@ bool AbstractShvJournal::addToSnapshot(std::map<std::string, ShvJournalEntry> &s
 		// writing default value to the snapshot must erase previous value if any
 		auto it = snapshot.find(entry.path);
 		if(it == snapshot.end()) {
+			// DEFAULT->DEFAULT
 			// not-spontaneous values are sent to log for all the nodes after app restart
 			// this can create snapshot in new log file which is created when device is restarted
 
 			// change to default value is not present in snapshot
 			// that means that it is firs time after restart or two default-values in the row
-			// exclude it from logging id change is not spontaneous
+			// exclude it from logging if the change is not spontaneous
 
 			// this can create snapshot from not-default values only when device is restarted
 			// this optimization can make snapshot on start of log file 10x smaller
 			return entry.isSpontaneous();
 		}
 		else {
+			// NOT_DEFAULT->DEFAULT
 			// change from not-default to default must be logged
+			// we know, that value is not-default, bacause default values are not stored in snapshot
 			snapshot.erase(it);
 			return true;
 		}

@@ -275,7 +275,7 @@ void ClientConnection::checkBrokerConnected()
 	shvDebug() << "check broker connected: " << isSocketConnected();
 	if(!isBrokerConnected()) {
 		abortSocket();
-		shvInfo().nospace() << "connecting to: " << connectionUrl().toString() << " security: " << securityTypeToString(securityType());
+		shvInfo().nospace() << "connecting to: " << host() << ":" << port() << " security: " << securityTypeToString(securityType());
 		m_connectionState = ConnectionState();
 		setState(State::Connecting);
 		connectToHost(QString::fromStdString(host()), port(), QString::fromStdString(scheme()));
