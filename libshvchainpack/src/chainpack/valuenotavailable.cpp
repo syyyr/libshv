@@ -30,7 +30,7 @@ RpcValue ValueNotAvailable::toRpcValue() const
 {
 	static RpcValue NA;
 	if(!NA.isValid()) {
-		NA = RpcValue{"N!A"};
+		NA = RpcValue{nullptr};
 		NA.setMetaTypeId(meta::GlobalNS::MetaTypeId::ValueNotAvailable);
 	}
 	return NA;
