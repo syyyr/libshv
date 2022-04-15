@@ -153,8 +153,8 @@ RpcValue DataChange::toRpcValue() const
 		ret.setMetaValue(MetaType::Tag::ShortTime, (unsigned)m_shortTime);
 	//if(hasDomain())
 	//	ret.setMetaValue(MetaType::Tag::Domain, m_domain);
-	if(valueFlags() == ValueFlag::Spontaneous)
-		ret.setMetaValue(MetaType::Tag::ValueFlags, (int)m_valueFlags);
+	if(valueFlags() != 0)
+		ret.setMetaValue(MetaType::Tag::ValueFlags, (int)valueFlags());
 	return ret;
 }
 
