@@ -95,8 +95,10 @@ public:
 			NodeDrop,
 			ValueNotAvailable,
 			ShvJournalEntry,
+			NodePropertyMap,
 		};
 	};
+	static void registerMetaTypes();
 };
 
 class ElesysNS : public meta::MetaNameSpace

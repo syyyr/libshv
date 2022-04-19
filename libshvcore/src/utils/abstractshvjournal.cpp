@@ -40,7 +40,7 @@ We can save many log lines thanks to this simple rule
 
 Short snapshot is snapshot which does not contain paths with DEFAULT values
 */
-bool AbstractShvJournal::addToSnapshot(std::map<std::string, ShvJournalEntry> &snapshot, const ShvJournalEntry &entry)
+bool AbstractShvJournal::addToSnapshot(ShvSnapshot &snapshot, const ShvJournalEntry &entry)
 {
 	if(entry.domain != ShvJournalEntry::DOMAIN_VAL_CHANGE) {
 		//shvDebug() << "remove not CHNG from snapshot:" << RpcValue(entry.toRpcValueMap()).toCpon();
@@ -49,23 +49,46 @@ bool AbstractShvJournal::addToSnapshot(std::map<std::string, ShvJournalEntry> &s
 	}
 	if(entry.value.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID && entry.value.metaTypeId() == shv::chainpack::meta::GlobalNS::MetaTypeId::NodeDrop) {
 		// NODE_DROP
-		auto it = snapshot.lower_bound(entry.path);
-		while(it != snapshot.end()) {
+		auto it = snapshot.keyvals.lower_bound(entry.path);
+		while(it != snapshot.keyvals.end()) {
 			if(it->first.rfind(entry.path, 0) == 0 && (it->first.size() == entry.path.size() || it->first[entry.path.size()] == '/')) {
 				// it.key starts with key, then delete it from snapshot
-				it = snapshot.erase(it);
+				it = snapshot.keyvals.erase(it);
 			}
 			else {
 				break;
 			}
 		}
 		// always add node-drop to log
+		snapshot.liveNodePropertyMaps.erase(entry.path);
+		return true;
+	}
+	if(entry.value.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID && entry.value.metaTypeId() == shv::chainpack::meta::GlobalNS::MetaTypeId::NodePropertyMap) {
+		// bulk node update, possibly NODE_NEW
+		snapshot.keyvals[entry.path] = entry;
+		snapshot.liveNodePropertyMaps.insert(entry.path);
+		/*
+		We have to keep track of live node objects created by NodePropertyMap
+
+		Imagine this log example
+		-> 2022-04-16T18:59:47Z tram/1234 <PropertyMap>{"coupled": true}
+		-> 2022-04-16T19:59:47Z tram/1234/coupled false
+		Making snapshot from this log will lead to
+		-> 2022-04-16T18:59:47Z tram/1234 <PropertyMap>{"coupled": true}
+		because
+		-> 2022-04-16T19:59:47Z tram/1234/coupled false
+		has default value.
+
+		We are registering active NodePropertyMaps to mitigate this problem.
+		This is not optimal solution, but it is also not bad solution.
+		In the worst case, the snapshot will behave like if 'not-default-values' optimisation will be OFF
+		*/
 		return true;
 	}
 	else if(entry.value.hasDefaultValue()) {
 		// writing default value to the snapshot must erase previous value if any
-		auto it = snapshot.find(entry.path);
-		if(it == snapshot.end()) {
+		auto it = snapshot.keyvals.find(entry.path);
+		if(it == snapshot.keyvals.end()) {
 			// DEFAULT->DEFAULT
 			// not-spontaneous values are sent to log for all the nodes after app restart
 			// this can create snapshot in new log file which is created when device is restarted
@@ -82,13 +105,12 @@ bool AbstractShvJournal::addToSnapshot(std::map<std::string, ShvJournalEntry> &s
 			// NOT_DEFAULT->DEFAULT
 			// change from not-default to default must be logged
 			// we know, that value is not-default, bacause default values are not stored in snapshot
-			snapshot.erase(it);
+			snapshot.keyvals.erase(it);
 			return true;
 		}
 	}
 	else {
-		/*entry.sampleType == ShvJournalEntry::NO_VALUE_FLAGS && */
-		snapshot[entry.path] = entry;
+		snapshot.keyvals[entry.path] = entry;
 	}
 	return true;
 };

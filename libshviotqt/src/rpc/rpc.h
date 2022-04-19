@@ -16,7 +16,7 @@ namespace rpc {
 class SHVIOTQT_DECL_EXPORT Rpc
 {
 public:
-	static void registerMetaTypes();
+	static void registerQtMetaTypes();
 };
 
 } // namespace chainack

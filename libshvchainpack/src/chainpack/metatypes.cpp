@@ -38,9 +38,55 @@ GlobalNS::GlobalNS()
 {
 }
 
+#define DEFINE_GLOBALNS_METATYPE(name) \
+	class name##_globalns_MetaType : public MetaType \
+	{ \
+		using Super = MetaType; \
+	public: \
+		enum {ID = GlobalNS::MetaTypeId::name}; \
+		name##_globalns_MetaType() : Super(#name) {} \
+	};
+
+
+DEFINE_GLOBALNS_METATYPE(RpcConnectionParams)
+DEFINE_GLOBALNS_METATYPE(TunnelCtl)
+DEFINE_GLOBALNS_METATYPE(AccessGrant)
+DEFINE_GLOBALNS_METATYPE(DataChange)
+DEFINE_GLOBALNS_METATYPE(NodeDrop)
+DEFINE_GLOBALNS_METATYPE(ValueNotAvailable)
+DEFINE_GLOBALNS_METATYPE(NodePropertyMap)
+
+#define STATIC_GLOBALNS_INSTANCE(name) \
+{ \
+	static name##_globalns_MetaType s; \
+	registerType(GlobalNS::ID, name##_globalns_MetaType::ID, &s); \
+}
+
+void GlobalNS::registerMetaTypes()
+{
+	static bool is_init = false;
+	if(!is_init) {
+		is_init = true;
+		if(!registeredNameSpace(GlobalNS::ID).isValid()) {
+			static GlobalNS ns;
+			registerNameSpace(GlobalNS::ID, &ns);
+		}
+		STATIC_GLOBALNS_INSTANCE(RpcConnectionParams)
+		STATIC_GLOBALNS_INSTANCE(TunnelCtl)
+		STATIC_GLOBALNS_INSTANCE(AccessGrant)
+		STATIC_GLOBALNS_INSTANCE(DataChange)
+		STATIC_GLOBALNS_INSTANCE(NodeDrop)
+		STATIC_GLOBALNS_INSTANCE(ValueNotAvailable)
+		STATIC_GLOBALNS_INSTANCE(NodePropertyMap)
+	}
+}
+
 namespace {
 
-std::map<int, MetaNameSpace*> registered_ns;
+std::map<int, MetaNameSpace*>& registered_ns() {
+	static std::map<int, MetaNameSpace*> s;
+	return s;
+}
 
 }
 
@@ -64,16 +110,16 @@ void registerNameSpace(int ns_id, MetaNameSpace *ns)
 {
 	initMetaTypes();
 	if(ns == nullptr)
-		registered_ns.erase(ns_id);
+		registered_ns().erase(ns_id);
 	else
-		registered_ns[ns_id] = ns;
+		registered_ns()[ns_id] = ns;
 }
 
 void registerType(int ns_id, int type_id, MetaType *type)
 {
 	initMetaTypes();
-	auto it = registered_ns.find(ns_id);
-	if(it == registered_ns.end())
+	auto it = registered_ns().find(ns_id);
+	if(it == registered_ns().end())
 		SHVCHP_EXCEPTION("Unknown namespace id!");
 	if(type == nullptr)
 		it->second->types().erase(type_id);
@@ -85,8 +131,8 @@ const MetaNameSpace &registeredNameSpace(int ns_id)
 {
 	initMetaTypes();
 	static MetaNameSpace invalid("");
-	auto it = registered_ns.find(ns_id);
-	if(it == registered_ns.end())
+	auto it = registered_ns().find(ns_id);
+	if(it == registered_ns().end())
 		return invalid;
 	return *(it->second);
 }

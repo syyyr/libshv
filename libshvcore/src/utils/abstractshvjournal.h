@@ -5,6 +5,7 @@
 
 #include <string>
 #include <map>
+#include <set>
 #include <regex>
 
 namespace shv {
@@ -15,6 +16,12 @@ namespace utils {
 class ShvJournalEntry;
 struct ShvGetLogParams;
 
+struct SHVCORE_DECL_EXPORT ShvSnapshot
+{
+	std::map<std::string, ShvJournalEntry> keyvals;
+	std::set<std::string> liveNodePropertyMaps;
+};
+
 class SHVCORE_DECL_EXPORT AbstractShvJournal
 {
 public:
@@ -23,7 +30,6 @@ public:
 	static const char *KEY_NAME;
 	static const char *KEY_RECORD_COUNT;
 	static const char *KEY_PATHS_DICT;
-
 public:
 	virtual ~AbstractShvJournal();
 
@@ -31,9 +37,9 @@ public:
 	virtual shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) = 0;
 	virtual shv::chainpack::RpcValue getSnapShotMap();
 protected:
-	static bool addToSnapshot(std::map<std::string, ShvJournalEntry> &snapshot, const ShvJournalEntry &entry);
+	static bool addToSnapshot(ShvSnapshot &snapshot, const ShvJournalEntry &entry);
 protected:
-	std::map<std::string, ShvJournalEntry> m_snapshot;
+	ShvSnapshot m_snapshot;
 };
 
 } // namespace utils

@@ -242,8 +242,8 @@ void ShvFileJournal::createNewLogFile(int64_t journal_file_start_msec)
 	ShvJournalFileWriter wr(journalDir(), journal_file_start_msec, journal_file_start_msec);
 	logMShvJournal() << "New log file:" << wr.fileName() << "created.";
 	// new file should start with snapshot
-	logDShvJournal() << "Writing snapshot, entries count:" << m_snapshot.size();
-	wr.appendSnapshot(journal_file_start_msec, m_snapshot);
+	logDShvJournal() << "Writing snapshot, entries count:" << m_snapshot.keyvals.size();
+	wr.appendSnapshot(journal_file_start_msec, m_snapshot.keyvals);
 	m_journalContext.files.push_back(journal_file_start_msec);
 	m_journalContext.recentTimeStamp = journal_file_start_msec;
 }
@@ -586,7 +586,7 @@ chainpack::RpcValue ShvFileJournal::getSnapShotMap()
 {
 	std::vector<ShvJournalEntry> snapshot;
 	cp::RpcValue::Map m;
-	for(const auto &kv : m_snapshot) {
+	for(const auto &kv : m_snapshot.keyvals) {
 		const ShvJournalEntry &e = kv.second;
 		if(e.value.isValid())
 			m[e.path] = e.value;
@@ -600,7 +600,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 	logIShvJournal() << "params:" << params.toRpcValue().toCpon();
 
 	struct {
-		std::map<std::string, ShvJournalEntry> snapshot;
+		ShvSnapshot snapshot;
 		bool snapshotWritten;
 		int64_t snapshotMsec = 0;
 	} snapshot_ctx;
@@ -655,16 +655,16 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 	};
 	auto write_snapshot = [append_log_entry, since_last, params_since_msec, &snapshot_ctx]() {
 		//shvWarning() << "write_snapshot, snapshot size:" << snapshot_ctx.snapshot.size();
-		logMShvJournal() << "\t writing snapshot, record count:" << snapshot_ctx.snapshot.size();
+		logMShvJournal() << "\t writing snapshot, record count:" << snapshot_ctx.snapshot.keyvals.size();
 		snapshot_ctx.snapshotWritten = true;
-		if(!snapshot_ctx.snapshot.empty()) {
+		if(!snapshot_ctx.snapshot.keyvals.empty()) {
 			snapshot_ctx.snapshotMsec = params_since_msec;
 			if(since_last) {
 				snapshot_ctx.snapshotMsec = 0;
-				for(const auto &kv : snapshot_ctx.snapshot)
+				for(const auto &kv : snapshot_ctx.snapshot.keyvals)
 					snapshot_ctx.snapshotMsec = std::max(snapshot_ctx.snapshotMsec, kv.second.epochMsec);
 			}
-			for(const auto &kv : snapshot_ctx.snapshot) {
+			for(const auto &kv : snapshot_ctx.snapshot.keyvals) {
 				ShvJournalEntry e = kv.second;
 				e.epochMsec = snapshot_ctx.snapshotMsec;
 				e.setSnapshotValue(true);

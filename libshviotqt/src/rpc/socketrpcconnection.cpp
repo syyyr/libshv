@@ -32,7 +32,7 @@ SocketRpcConnection::SocketRpcConnection(QObject *parent)
 	: QObject(parent)
 {
 	//shvDebug() << __FUNCTION__;
-	Rpc::registerMetaTypes();
+	Rpc::registerQtMetaTypes();
 #ifdef DUMP_DATA_FILE
 	QFile *f = new QFile("/tmp/rpc.dat", this);
 	f->setObjectName("DUMP_DATA_FILE");

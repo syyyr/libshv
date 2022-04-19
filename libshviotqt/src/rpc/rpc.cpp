@@ -6,7 +6,7 @@ namespace shv {
 namespace iotqt {
 namespace rpc {
 
-void Rpc::registerMetaTypes()
+void Rpc::registerQtMetaTypes()
 {
 	static int rpcvalue_id = 0;
 	if(rpcvalue_id == 0) {

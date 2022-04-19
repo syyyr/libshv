@@ -222,7 +222,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 			return rec;
 		};
 
-		std::map<std::string, Entry> snapshot;
+		ShvSnapshot snapshot;
 		if(params.withSnapshot) {
 			for(auto it = m_entries.begin(); it != m_entries.end() && it < it1; ++it) {
 				const Entry &e = *it;
@@ -232,9 +232,9 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 					addToSnapshot(snapshot, e);
 				}
 			}
-			if(!snapshot.empty()) {
+			if(!snapshot.keyvals.empty()) {
 				logDShvJournal() << "\t -------------- Snapshot";
-				for(const auto &kv : snapshot) {
+				for(const auto &kv : snapshot.keyvals) {
 					if(rec_cnt >= rec_cnt_limit) {
 						rec_cnt_limit_hit = true;
 						goto log_finish;
