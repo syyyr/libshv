@@ -323,9 +323,7 @@ void ClientConnection::onSocketConnectedChanged(bool is_connected)
 {
 	if(is_connected) {
 		shvInfo() << objectName() << connectionId() << "Socket connected to RPC server";
-		//sendKnockKnock(cp::RpcDriver::ChainPack);
-		//RpcResponse resp = callMethodSync("echo", "ahoj babi");
-		//shvInfo() << "+++" << resp.toStdString();
+		shvInfo() << "peer:" << peerAddress() << "port:" << peerPort();
 		setState(State::SocketConnected);
 		clearBuffers();
 		sendHello();
