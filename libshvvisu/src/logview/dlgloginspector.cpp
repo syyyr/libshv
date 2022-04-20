@@ -209,7 +209,7 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 	initVisualSettingSelector();
 	ui->cbViews->setCurrentIndex(VIEW_SELECTOR_NO_VIEW_INDEX);
 
-	connect(ui->cbViews, qOverload<int>(&QComboBox::activated), this, &DlgLogInspector::onViewSelected);
+	connect(ui->cbViews, QOverload<int>::of(&QComboBox::activated), this, &DlgLogInspector::onViewSelected);
 
 	connect(ui->pbDeleteView, &QPushButton::clicked, this, &DlgLogInspector::onDeleteViewClicked);
 	connect(ui->pbSaveView, &QPushButton::clicked, this, &DlgLogInspector::onSaveViewClicked);
