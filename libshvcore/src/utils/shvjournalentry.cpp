@@ -97,15 +97,17 @@ ShvJournalEntry ShvJournalEntry::fromRpcValueMap(const chainpack::RpcValue::Map 
 	ret.userId = m.value(ShvLogHeader::Column::name(ShvLogHeader::Column::UserId)).asString();
 	return ret;
 }
-/*
+
 chainpack::DataChange ShvJournalEntry::toDataChange() const
 {
-	shv::chainpack::DataChange ret(value, chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(epochMsec), shortTime);
-	//ret.setDomain(domain);
-	ret.setValueFlags(valueFlags);
-	return ret;
+	if(domain == shv::chainpack::Rpc::SIG_VAL_CHANGED) {
+		shv::chainpack::DataChange ret(value, shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(epochMsec), shortTime);
+		ret.setValueFlags(valueFlags);
+		return ret;
+	}
+	return {};
 }
-*/
+
 } // namespace utils
 } // namespace core
 } // namespace shv

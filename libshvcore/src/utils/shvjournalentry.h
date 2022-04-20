@@ -98,8 +98,7 @@ public:
 	static ShvJournalEntry fromRpcValue(const shv::chainpack::RpcValue &rv);
 	static ShvJournalEntry fromRpcValueMap(const shv::chainpack::RpcValue::Map &m);
 
-	// commented as not used in projects and not clear, how to implement correctly
-	//shv::chainpack::DataChange toDataChange() const;
+	shv::chainpack::DataChange toDataChange() const;
 };
 
 } // namespace utils
