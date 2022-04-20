@@ -118,6 +118,8 @@ double GraphModel::valueToDouble(const QVariant v, shv::core::utils::ShvLogTypeD
 		return v.toLongLong();
 	case Type::UInt:
 		return v.toULongLong();
+	case Type::Decimal:
+		return v.toDouble();
 	case Type::Bool:
 		return v.toBool()? 1: 0;
 	case Type::String:
