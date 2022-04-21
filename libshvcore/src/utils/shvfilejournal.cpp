@@ -745,6 +745,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 							e2.value.setDefaultValue();
 							entries.push_back(e2);
 						}
+						not_default_keys_missing_in_snapshot.clear();
 					}
 					for(const ShvJournalEntry &e : entries) {
 						bool before_since = params_since_msec > 0 && e.epochMsec < params_since_msec;
