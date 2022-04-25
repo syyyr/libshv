@@ -250,7 +250,7 @@ void DlgLogInspector::onSaveViewClicked()
 		ui->cbViews->addItem(current_name);
 		ui->cbViews->setCurrentIndex(index);
 	}
-	m_graph->saveVisualSettings(shvPath(), current_name, m_graph->visualSettings());
+	m_graph->saveVisualSettings(shvPath(), current_name);
 }
 
 void DlgLogInspector::onDeleteViewClicked()
@@ -280,8 +280,7 @@ void DlgLogInspector::onViewSelected(int index)
 
 void DlgLogInspector::setView(const QString &name)
 {
-	tl::Graph::VisualSettings settings = m_graph->loadVisualSettings(shvPath(), name);
-	m_graph->setVisualSettings(settings);
+	m_graph->loadVisualSettings(shvPath(), name);
 }
 
 void DlgLogInspector::saveSettings()
