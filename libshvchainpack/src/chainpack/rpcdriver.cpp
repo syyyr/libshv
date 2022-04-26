@@ -123,10 +123,6 @@ void RpcDriver::enqueueDataToSend(RpcDriver::MessageData &&chunk_to_enqueue)
 		m_sendQueue.push_back(std::move(chunk_to_enqueue));
 		logWriteQueue() << "===========> write chunk added, new queue len:" << m_sendQueue.size();
 	}
-	if(!isOpen()) {
-		nError() << "write data error, socket is not open!";
-		return;
-	}
 	//flush();
 	writeQueue();
 	/// UNLOCK_FOR_SEND unlock mutex here in the multithreaded environment
@@ -138,6 +134,10 @@ void RpcDriver::writeQueue()
 	if(m_sendQueue.empty())
 		return;
 	logWriteQueue() << "writeQueue(), queue len:" << m_sendQueue.size();
+	if(!isOpen()) {
+		nError() << "write data error, socket is not open!";
+		return;
+	}
 	//static int hi_cnt = 0;
 	const MessageData &chunk = m_sendQueue[0];
 	//nInfo() << "M:" << chunk.metaData;
