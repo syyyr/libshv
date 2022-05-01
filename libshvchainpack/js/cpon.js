@@ -399,14 +399,9 @@ CponReader.prototype.readBlobEsc = function(rpc_val)
 			case 'n'.charCodeAt(0): pctx.putByte('\n'.charCodeAt(0)); break;
 			case 'r'.charCodeAt(0): pctx.putByte('\r'.charCodeAt(0)); break;
 			case 't'.charCodeAt(0): pctx.putByte('\t'.charCodeAt(0)); break;
-			case '0'.charCodeAt(0): pctx.putByte(0); break;
-			case 'x'.charCodeAt(0): {
-				let b2 = Cpon.unhex(this.ctx.getByte()) * 16 + Cpon.unhex(this.ctx.getByte());
-				pctx.putByte(b2);
-				break;
-			}
 			default:
-				throw TypeError("Invalid escaped Blob character, code: " + b);
+				let b2 = Cpon.unhex(b) * 16 + Cpon.unhex(this.ctx.getByte());
+				pctx.putByte(b2);
 				break;
 			}
 		}
@@ -717,9 +712,6 @@ CponWriter.prototype.writeBlob = function(buffer)
 	for (let i=0; i < data.length; i++) {
 		let b = data[i];
 		switch(b) {
-		case 0:
-			this.ctx.writeStringUtf8("\\0");
-			break;
 		case '\\'.charCodeAt(0):
 			this.ctx.writeStringUtf8("\\\\");
 			break;
@@ -736,11 +728,11 @@ CponWriter.prototype.writeBlob = function(buffer)
 			this.ctx.writeStringUtf8("\\\"");
 			break;
 		default:
-			if (b < 128) {
+			if (b >= 32 && b < 127) {
 				this.ctx.putByte(b);
 			}
 			else {
-				this.ctx.writeStringUtf8("\\x");
+				this.ctx.putByte('\\'.charCodeAt(0));
 				this.ctx.putByte(Cpon.hexify(b / 16));
 				this.ctx.putByte(Cpon.hexify(b % 16));
 			}
