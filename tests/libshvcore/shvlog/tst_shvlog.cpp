@@ -57,7 +57,7 @@ struct Channel
 };
 
 std::map<string, Channel> channels;
-
+/*
 void snapshot_fn(std::vector<ShvJournalEntry> &ev)
 {
 	for(const auto &kv : channels) {
@@ -69,7 +69,7 @@ void snapshot_fn(std::vector<ShvJournalEntry> &ev)
 		ev.push_back(std::move(e));
 	}
 }
-
+*/
 ShvLogTypeInfo typeInfo
 {
 	// types
@@ -156,7 +156,7 @@ private:
 				qWarning() << "Cannot delete journal dir:" << JOURNAL_DIR;
 			//if(!QDir().mkpath(QString::fromStdString(JOURNAL_DIR)))
 			//	qWarning() << "Cannot create journal dir:" << JOURNAL_DIR;
-			ShvFileJournal file_journal("testdev", snapshot_fn);
+			ShvFileJournal file_journal("testdev");
 			file_journal.setJournalDir(JOURNAL_DIR);
 			file_journal.setFileSizeLimit(1024*64*20);
 			file_journal.setJournalSizeLimit(file_journal.fileSizeLimit() * 10);
