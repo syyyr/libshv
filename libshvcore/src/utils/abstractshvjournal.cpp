@@ -30,6 +30,22 @@ chainpack::RpcValue AbstractShvJournal::getSnapShotMap()
 {
 	SHV_EXCEPTION("getSnapShot() not implemented");
 }
+
+static bool starts_with(const std::string &path, const std::string &with)
+{
+	return path.rfind(with, 0);
+}
+
+static bool is_property_of_live_object(const std::string &property_path, const std::set<std::string> &object_paths)
+{
+	// not optimal, but we do not expect to have thousands live objects in the snapshot
+	for(const std::string &object_path : object_paths) {
+		if(starts_with(property_path, object_path))
+			return true;
+	}
+	return false;
+}
+
 /**
 Log only ANY->NOT_DEFAULT changes or changes from NOT_DEFAULT->DEFAULT
 Adding DEFAULT value to snapshot will remove this path, so it will be MISSING next time
@@ -49,9 +65,18 @@ bool AbstractShvJournal::addToSnapshot(ShvSnapshot &snapshot, const ShvJournalEn
 	}
 	if(entry.value.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID && entry.value.metaTypeId() == shv::chainpack::meta::GlobalNS::MetaTypeId::NodeDrop) {
 		// NODE_DROP
-		auto it = snapshot.keyvals.lower_bound(entry.path);
-		while(it != snapshot.keyvals.end()) {
-			if(it->first.rfind(entry.path, 0) == 0 && (it->first.size() == entry.path.size() || it->first[entry.path.size()] == '/')) {
+		/*
+		be aware of exact match that might be out of property paths range
+
+		a/b
+		a/b-c
+		a/b/c
+		a/b/c/d
+		*/
+		snapshot.keyvals.erase(entry.path);
+		std::string property_prefix = entry.path + '/';
+		for (auto it = snapshot.keyvals.lower_bound(property_prefix); it != snapshot.keyvals.end(); ) {
+			if(starts_with(it->first, property_prefix)) {
 				// it.key starts with key, then delete it from snapshot
 				it = snapshot.keyvals.erase(it);
 			}
@@ -60,14 +85,14 @@ bool AbstractShvJournal::addToSnapshot(ShvSnapshot &snapshot, const ShvJournalEn
 			}
 		}
 		// always add node-drop to log
-		snapshot.liveNodePropertyMaps.erase(entry.path);
+		snapshot.liveNodePropertyMaps.erase(entry.path + '/');
 		return true;
 	}
 	if(entry.value.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID && entry.value.metaTypeId() == shv::chainpack::meta::GlobalNS::MetaTypeId::NodePropertyMap) {
 		// bulk node update, possibly NODE_NEW
 		snapshot.keyvals[entry.path] = entry;
-		snapshot.liveNodePropertyMaps.insert(entry.path);
-		/*
+		snapshot.liveNodePropertyMaps.insert(entry.path + '/');
+		/**
 		We have to keep track of live node objects created by NodePropertyMap
 
 		Imagine this log example
@@ -77,41 +102,53 @@ bool AbstractShvJournal::addToSnapshot(ShvSnapshot &snapshot, const ShvJournalEn
 		-> 2022-04-16T18:59:47Z tram/1234 <PropertyMap>{"coupled": true}
 		because
 		-> 2022-04-16T19:59:47Z tram/1234/coupled false
-		has default value.
+		has default value, so it is not saved in the snapshot.
 
-		We are registering active NodePropertyMaps to mitigate this problem.
+		To mitigate this problem, we are registering live NodePropertyMaps (objects)
+		and changes of their properties are saved to the snapshot even if they have default value.
 		This is not optimal solution, but it is also not bad solution.
-		In the worst case, the snapshot will behave like if 'not-default-values' optimisation will be OFF
+		In the worst case, the snapshot will behave like if 'not-default-values' optimization will be OFF
 		*/
 		return true;
 	}
-	else if(entry.value.hasDefaultValue()) {
+	if(is_property_of_live_object(entry.path, snapshot.liveNodePropertyMaps)) {
+		// property of live object must be stored in the snaphot always
+		// doesn't matter if it is default or not-default value
+		snapshot.keyvals[entry.path] = entry;
+		return true;
+	}
+	if(entry.value.isDefaultValue()) {
 		// writing default value to the snapshot must erase previous value if any
 		auto it = snapshot.keyvals.find(entry.path);
 		if(it == snapshot.keyvals.end()) {
-			// DEFAULT->DEFAULT
-			// not-spontaneous values are sent to log for all the nodes after app restart
-			// this can create snapshot in new log file which is created when device is restarted
+			/**
+			DEFAULT->DEFAULT
+			not-spontaneous values are sent to log for all the nodes after app restart
+			this can create snapshot like list of log entries when device is restarted
 
-			// change to default value is not present in snapshot
-			// that means that it is firs time after restart or two default-values in the row
-			// exclude it from logging if the change is not spontaneous
+			change to default value is not present in snapshot
+			that means that it is firs time after restart or two default-values in the row
+			exclude it from logging if the change is not spontaneous
 
-			// this can create snapshot from not-default values only when device is restarted
-			// this optimization can make snapshot on start of log file 10x smaller
+			this can create snapshot from not-default values only when device is restarted
+			this optimization can make snapshot on start of log file 10x smaller
+
+			We still have to log SPONTANEOUS values, even with default value, because this is change which
+			has happen in reality, thus it is not a subject of the snapshot size optimization
+			*/
 			return entry.isSpontaneous();
 		}
 		else {
-			// NOT_DEFAULT->DEFAULT
-			// change from not-default to default must be logged
-			// we know, that value is not-default, bacause default values are not stored in snapshot
+			/**
+			NOT_DEFAULT->DEFAULT
+			change from not-default to default must be logged
+			we know, that value is not-default, because default values are not stored in snapshot
+			*/
 			snapshot.keyvals.erase(it);
 			return true;
 		}
 	}
-	else {
-		snapshot.keyvals[entry.path] = entry;
-	}
+	snapshot.keyvals[entry.path] = entry;
 	return true;
 };
 

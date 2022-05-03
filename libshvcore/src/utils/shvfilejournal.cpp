@@ -733,15 +733,13 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 						not_default_keys_missing_in_snapshot.erase(e1.path);
 					}
 					else if(!not_default_keys_missing_in_snapshot.empty()) {
-						/*
+						/**
 						 * If cabinet is switched off and on again and some property goes to false meanwhile,
 						 * then its property path is present in prev file, but not in this file snapshot.
 						 */
 						for(const auto &path : not_default_keys_missing_in_snapshot) {
 							logDShvJournal() << "\t Setting missing snapshot entry to default value, path:" << path;
-							// ensure const access to snapshot
-							const auto &kvref = snapshot_ctx.snapshot.keyvals;
-							ShvJournalEntry e2 = kvref.at(path);
+							ShvJournalEntry e2 = snapshot_ctx.snapshot.keyvals[path];
 							e2.value.setDefaultValue();
 							entries.push_back(e2);
 						}

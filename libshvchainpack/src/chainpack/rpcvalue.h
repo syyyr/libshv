@@ -390,7 +390,7 @@ public:
 	void setMetaTypeId(int id) {setMetaValue(meta::Tag::MetaTypeId, id);}
 	void setMetaTypeId(int ns, int id) {setMetaValue(meta::Tag::MetaTypeNameSpaceId, ns); setMetaValue(meta::Tag::MetaTypeId, id);}
 
-	bool hasDefaultValue() const;
+	bool isDefaultValue() const;
 	void setDefaultValue();
 
 	bool isValid() const;

@@ -557,7 +557,7 @@ void RpcValue::setMetaValue(const RpcValue::String &key, const RpcValue &val)
 		m_ptr->setMetaValue(key, val);
 }
 
-bool RpcValue::hasDefaultValue() const
+bool RpcValue::isDefaultValue() const
 {
 	switch (type()) {
 	case RpcValue::Type::Invalid: return true;
