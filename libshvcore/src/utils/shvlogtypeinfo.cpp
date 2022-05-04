@@ -33,15 +33,15 @@ ShvLogTypeDescrField ShvLogTypeDescrField::fromRpcValue(const RpcValue &v)
 {
 	ShvLogTypeDescrField ret;
 	if(v.isMap()) {
-		const RpcValue::Map &m = v.toMap();
-		ret.name = m.value("name").toString();
-		ret.label = m.value("label").toString();
-		ret.description = m.value("description").toString();
-		ret.typeName = m.value("typeName").toString();
+		const RpcValue::Map &m = v.asMap();
+		ret.name = m.value("name").asString();
+		ret.label = m.value("label").asString();
+		ret.description = m.value("description").asString();
+		ret.typeName = m.value("typeName").asString();
 		ret.value = m.value("value");
-		ret.tags = m.value("tags").toMap();
+		ret.tags = m.value("tags").asMap();
 		if(ret.tags.empty())
-			ret.tags = m.value("options").toMap();
+			ret.tags = m.value("options").asMap();
 	}
 	return ret;
 }
