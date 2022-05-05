@@ -114,6 +114,7 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 	else
 		setProtocolType(shv::chainpack::Rpc::ProtocolType::ChainPack);
 
+	setScheme(cli_opts->serverScheme());
 	setHost(cli_opts->serverHost());
 	setPort(cli_opts->serverPort());
 	setSecurityType(cli_opts->serverSecurityType());
