@@ -93,7 +93,7 @@ public:
 
 		QString toJson() const;
 		static VisualSettings fromJson(const QString &json);
-
+		bool isValid() const { return channels.count(); }
 		QVector<Channel> channels;
 	};
 
@@ -113,6 +113,7 @@ public:
 	void reset();
 	void createChannelsFromModel();
 	void resetChannelsRanges();
+	bool isInitialView() const;
 
 	int channelCount() const { return  m_channels.count(); }
 	void clearChannels();
@@ -222,14 +223,14 @@ public:
 
 	static QString rectToString(const QRect &r);
 
-	VisualSettings visualSettings();
+	VisualSettings visualSettings() const;
 	void setVisualSettings(const VisualSettings &settings);
 	void resizeChannel(int ix, int delta_px);
 
-	void saveVisualSettings(const QString &settings_id, const QString &name, const VisualSettings &visual_settings) const;
+	void saveVisualSettings(const QString &settings_id, const QString &name) const;
 	void deleteVisualSettings(const QString &settings_id, const QString &name) const;
 	QStringList savedVisualSettingsNames(const QString &settings_id) const;
-	VisualSettings loadVisualSettings(const QString &settings_id, const QString &name) const;
+	void loadVisualSettings(const QString &settings_id, const QString &name);
 
 protected:
 	void sanityXRangeZoom();
@@ -240,8 +241,8 @@ protected:
 	void drawRectText(QPainter *painter, const QRect &rect, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
 	void drawCenteredRectText(QPainter *painter, const QPoint &top_center, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
 
-	QVector<int> visibleChannels();
-	int maximizedChannelIndex();
+	QVector<int> visibleChannels() const;
+	int maximizedChannelIndex() const;
 
 	bool isChannelFlat(GraphChannel *ch);
 
