@@ -31,16 +31,11 @@ chainpack::RpcValue AbstractShvJournal::getSnapShotMap()
 	SHV_EXCEPTION("getSnapShot() not implemented");
 }
 
-static bool starts_with(const std::string &path, const std::string &with)
-{
-	return path.rfind(with, 0);
-}
-
 static bool is_property_of_live_object(const std::string &property_path, const std::set<std::string> &object_paths)
 {
 	// not optimal, but we do not expect to have thousands live objects in the snapshot
 	for(const std::string &object_path : object_paths) {
-		if(starts_with(property_path, object_path))
+		if(String::startsWith(property_path, object_path))
 			return true;
 	}
 	return false;
@@ -73,14 +68,18 @@ bool AbstractShvJournal::addToSnapshot(ShvSnapshot &snapshot, const ShvJournalEn
 		a/b/c
 		a/b/c/d
 		*/
+		shvDebug() << "dropping path:" << entry.path;
 		snapshot.keyvals.erase(entry.path);
 		std::string property_prefix = entry.path + '/';
 		for (auto it = snapshot.keyvals.lower_bound(property_prefix); it != snapshot.keyvals.end(); ) {
-			if(starts_with(it->first, property_prefix)) {
+			shvDebug() << "  checking if path:" << it->first << "starts with:" << property_prefix;
+			if(String::startsWith(it->first, property_prefix)) {
 				// it.key starts with key, then delete it from snapshot
+				shvDebug() << "  DROP:" << it->first;
 				it = snapshot.keyvals.erase(it);
 			}
 			else {
+				shvDebug() << "  BREAK";
 				break;
 			}
 		}
