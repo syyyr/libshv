@@ -623,15 +623,17 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 	/// this ensure that there be only one copy of each path in memory
 	int max_path_id = 0;
 	auto make_path_shared = [&path_cache, &max_path_id, &params](const std::string &path) -> RpcValue {
-		RpcValue ret = path_cache.value(path);
-		if(ret.isValid())
-			return ret;
-		if(params.withPathsDict)
+		if(!params.withPathsDict)
+			return path;
+		RpcValue ret;
+		if(auto it = path_cache.find(path); it == path_cache.end()) {
 			ret = ++max_path_id;
-		else
-			ret = path;
-		logDShvJournal() << "Adding record to path cache:" << path << "-->" << ret.toCpon();
-		path_cache[path] = ret;
+			logDShvJournal() << "Adding record to path cache:" << path << "-->" << ret.toCpon();
+			path_cache[path] = ret;
+		}
+		else {
+			ret = it->second;
+		}
 		return ret;
 	};
 	auto append_log_entry = [make_path_shared, rec_cnt_limit, &rec_cnt_limit_hit, &first_record_msec, &last_record_msec, &log](const ShvJournalEntry &e) {
@@ -706,83 +708,124 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		PatternMatcher pattern_matcher(params);
 		auto path_match = [&params, &pattern_matcher](const ShvJournalEntry &e) {
 			if(!params.pathPattern.empty()) {
-				logDShvJournal() << "\t MATCHING:" << params.pathPattern << "vs:" << e.path;
+				//logDShvJournal() << "\t MATCHING:" << params.pathPattern << "vs:" << e.path;
 				if(!pattern_matcher.match(e.path, e.domain))
 					return false;
-				logDShvJournal() << "\t\t MATCH";
+				//logDShvJournal() << "\t\t MATCH";
 			}
 			return true;
 		};
+		ShvSnapshot all_entries_snapshot;
 		for(auto file_it = first_file_it; file_it != journal_context.files.end(); file_it++) {
 			std::string fn = journal_context.fileMsecToFilePath(*file_it);
 			logMShvJournal() << "-------- opening file:" << fn;
 			try {
+				/**
+				 We must check, that any value set to not-default value in previous file,
+				 will be set to default value after snapshot of current file is read
+				 if it will not be found in current snapshot
+
+				 This solves the case when for example alarm is set felse while shvgate was down
+				 */
 				std::set<std::string> not_default_keys_missing_in_snapshot;
-				for(const auto &kv : snapshot_ctx.snapshot.keyvals)
-					if(kv.second.domain == Rpc::SIG_VAL_CHANGED)
+				// note that snapshot contains ND values only
+				logMShvJournal() << "Snapshot size:" << all_entries_snapshot.keyvals.size();
+				for(const auto &kv : all_entries_snapshot.keyvals) {
+					if(kv.second.domain == Rpc::SIG_VAL_CHANGED) {
+						logMShvJournal() << "\t adding ND path:" << kv.first;
 						not_default_keys_missing_in_snapshot.insert(kv.first);
-				std::vector<ShvJournalEntry> entries;
+					}
+				}
 				ShvJournalFileReader rd(fn);
-				while(rd.next()) {
-					const ShvJournalEntry &e1 = rd.entry();
-					if(!path_match(e1))
-						continue;
-					entries.resize(0);
-					entries.push_back(e1);
-					if(rd.inSnapshot()) {
-						not_default_keys_missing_in_snapshot.erase(e1.path);
-					}
-					else if(!not_default_keys_missing_in_snapshot.empty()) {
-						/**
-						 * If cabinet is switched off and on again and some property goes to false meanwhile,
-						 * then its property path is present in prev file, but not in this file snapshot.
-						 */
-						for(const auto &path : not_default_keys_missing_in_snapshot) {
-							logDShvJournal() << "\t Setting missing snapshot entry to default value, path:" << path;
-							ShvJournalEntry e2 = snapshot_ctx.snapshot.keyvals[path];
-							e2.value.setDefaultValue();
-							entries.push_back(e2);
-						}
-						not_default_keys_missing_in_snapshot.clear();
-					}
-					for(const ShvJournalEntry &e : entries) {
-						bool before_since = params_since_msec > 0 && e.epochMsec < params_since_msec;
-						bool after_until = params_until_msec > 0 && e.epochMsec >= params_until_msec;
-						if(before_since) {
-							logDShvJournal() << "\t SNAPSHOT entry:" << e.toRpcValueMap().toCpon();
-							addToSnapshot(snapshot_ctx.snapshot, e);
-						}
-						else if(after_until) {
-							goto log_finish;
+				enum class ReaderState { ReadSnapshot, ClearDefaultSnapshotValues, ReadRest };
+				ReaderState reader_state = ReaderState::ReadSnapshot;
+				ShvJournalEntry first_entry_after_snapshot;
+				while(true) {
+					ShvJournalEntry entry;
+					switch (reader_state) {
+					case ReaderState::ReadSnapshot: {
+						if(!rd.next())
+							goto next_file;
+						if(rd.inSnapshot()) {
+							entry = rd.entry();
+							logDShvJournal() << "\t snapshot path:" << entry.path;
+							not_default_keys_missing_in_snapshot.erase(entry.path);
 						}
 						else {
-							if(!snapshot_ctx.snapshotWritten) {
-								if(!write_snapshot())
-									goto log_finish;
+							first_entry_after_snapshot = rd.entry();
+							reader_state = ReaderState::ClearDefaultSnapshotValues;
+							continue;
+						}
+						break;
+					}
+					case ReaderState::ClearDefaultSnapshotValues: {
+						if(not_default_keys_missing_in_snapshot.empty()) {
+							if(first_entry_after_snapshot.isValid()) {
+								entry = first_entry_after_snapshot;
+								first_entry_after_snapshot = {};
 							}
-	#ifdef SKIP_DUP_LOG_ENTRIES
-							{
-								// skip CHNG duplicates, values that are the same as last log entry for the same path
-								auto it = snapshot_ctx.snapshot.find(e.path);
-								if (it != snapshot_ctx.snapshot.cend()) {
-									if(it->second.value == e.value && e.domain == chainpack::Rpc::SIG_VAL_CHANGED) {
-										logDShvJournal() << "\t Skipping DUP LOG entry:" << e.toRpcValueMap().toCpon();
-										snapshot_ctx.snapshot.erase(it);
-										continue;
-									}
-								}
+							else {
+								reader_state = ReaderState::ReadRest;
+								continue;
 							}
-	#endif
-							logDShvJournal() << "\t LOG entry:" << e.toRpcValueMap().toCpon();
-							if(!append_log_entry(e))
+						}
+						else {
+							auto it = not_default_keys_missing_in_snapshot.begin();
+							logDShvJournal() << "\t Setting missing snapshot entry to default value, path:" << *it;
+							entry = all_entries_snapshot.keyvals[*it];
+							entry.value.setDefaultValue();
+							entry.setSnapshotValue(true);
+							not_default_keys_missing_in_snapshot.erase(it);
+						}
+						break;
+					}
+					case ReaderState::ReadRest: {
+						if(!rd.next())
+							goto next_file;
+						entry = rd.entry();
+						break;
+					}
+					}
+					addToSnapshot(all_entries_snapshot, entry);
+					if(!path_match(entry))
+						continue;
+					bool before_since = params_since_msec > 0 && entry.epochMsec < params_since_msec;
+					bool after_until = params_until_msec > 0 && entry.epochMsec >= params_until_msec;
+					if(before_since) {
+						logDShvJournal() << "\t SNAPSHOT entry:" << entry.toRpcValueMap().toCpon();
+						addToSnapshot(snapshot_ctx.snapshot, entry);
+					}
+					else if(after_until) {
+						goto log_finish;
+					}
+					else {
+						if(!snapshot_ctx.snapshotWritten) {
+							if(!write_snapshot())
 								goto log_finish;
 						}
+#ifdef SKIP_DUP_LOG_ENTRIES
+						{
+							// skip CHNG duplicates, values that are the same as last log entry for the same path
+							auto it = snapshot_ctx.snapshot.find(e.path);
+							if (it != snapshot_ctx.snapshot.cend()) {
+								if(it->second.value == e.value && e.domain == chainpack::Rpc::SIG_VAL_CHANGED) {
+									logDShvJournal() << "\t Skipping DUP LOG entry:" << e.toRpcValueMap().toCpon();
+									snapshot_ctx.snapshot.erase(it);
+									continue;
+								}
+							}
+						}
+#endif
+						logDShvJournal() << "\t LOG entry:" << entry.toRpcValueMap().toCpon();
+						if(!append_log_entry(entry))
+							goto log_finish;
 					}
 				}
 			}
 			catch (const shv::core::Exception &e) {
 				shvError() << "Cannot read shv journal file:" << fn;
 			}
+next_file: ;
 		}
 	}
 log_finish:
