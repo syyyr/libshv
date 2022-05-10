@@ -117,9 +117,12 @@ const ShvJournalEntry &ShvJournalFileReader::entry()
 	return m_currentEntry;
 }
 
-bool ShvJournalFileReader::inSnapshot() const
+bool ShvJournalFileReader::inSnapshot()
 {
-	return m_currentEntry.epochMsec == m_snapshotMsec;
+	if(m_inSnapshot) {
+		m_inSnapshot = (m_currentEntry.epochMsec == m_snapshotMsec) && m_currentEntry.isSnapshotValue();
+	}
+	return m_inSnapshot;
 }
 
 static constexpr size_t MIN_SEP_POS = 13;

@@ -673,6 +673,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 				// erase EVENT flag in the snapshot values,
 				// they can trigger events during reply otherwise
 				e.setSpontaneous(false);
+				logDShvJournal() << "\t SNAPSHOT entry:" << e.toRpcValueMap().toCpon();
 				if(!append_log_entry(e))
 					return false;
 			}
@@ -715,7 +716,6 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 			}
 			return true;
 		};
-		ShvSnapshot all_entries_snapshot;
 		for(auto file_it = first_file_it; file_it != journal_context.files.end(); file_it++) {
 			std::string fn = journal_context.fileMsecToFilePath(*file_it);
 			logMShvJournal() << "-------- opening file:" << fn;
@@ -727,73 +727,71 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 
 				 This solves the case when for example alarm is set felse while shvgate was down
 				 */
-				std::set<std::string> not_default_keys_missing_in_snapshot;
-				// note that snapshot contains ND values only
-				logMShvJournal() << "Snapshot size:" << all_entries_snapshot.keyvals.size();
-				for(const auto &kv : all_entries_snapshot.keyvals) {
+				std::set<std::string> snapshot_keys;
+				std::vector<ShvJournalEntry> generated_entries;
+				logMShvJournal() << "Snapshot size:" << snapshot_ctx.snapshot.keyvals.size();
+				for(const auto &kv : snapshot_ctx.snapshot.keyvals) {
+					// note that snapshot contains ND values only
 					if(kv.second.domain == Rpc::SIG_VAL_CHANGED) {
 						logMShvJournal() << "\t adding ND path:" << kv.first;
-						not_default_keys_missing_in_snapshot.insert(kv.first);
+						snapshot_keys.insert(kv.first);
 					}
 				}
 				ShvJournalFileReader rd(fn);
-				enum class ReaderState { ReadSnapshot, ClearDefaultSnapshotValues, ReadRest };
-				ReaderState reader_state = ReaderState::ReadSnapshot;
-				ShvJournalEntry first_entry_after_snapshot;
-				while(true) {
-					ShvJournalEntry entry;
-					switch (reader_state) {
-					case ReaderState::ReadSnapshot: {
-						if(!rd.next())
-							goto next_file;
-						if(rd.inSnapshot()) {
-							entry = rd.entry();
-							logDShvJournal() << "\t snapshot path:" << entry.path;
-							not_default_keys_missing_in_snapshot.erase(entry.path);
+				// read this file snapshot
+				while(rd.next()) {
+					const ShvJournalEntry &entry = rd.entry();
+					if(rd.inSnapshot()) {
+						logDShvJournal() << "\t snapshot path:" << entry.path;
+						if(auto it = snapshot_keys.find(entry.path); it == snapshot_keys.end()) {
+							// value in current file snapshot is not present in previous files
+							// it might happen for example when some log file is missing
+							generated_entries.push_back(entry);
 						}
 						else {
-							first_entry_after_snapshot = rd.entry();
-							reader_state = ReaderState::ClearDefaultSnapshotValues;
+							// value is in snapshot already
+							// it will be ignored
+							snapshot_keys.erase(it);
 							continue;
 						}
+					}
+					else {
+						for(const std::string &key : snapshot_keys) {
+							logDShvJournal() << "\t Setting missing snapshot entry to default value, path:" << key;
+							if(auto it = snapshot_ctx.snapshot.keyvals.find(key); it != snapshot_ctx.snapshot.keyvals.end()) {
+								ShvJournalEntry e = it->second;
+								e.value.setDefaultValue();
+								e.setSnapshotValue(true);
+								generated_entries.push_back(std::move(e));
+							}
+							//snapshot_keys.clear();
+						}
+						generated_entries.push_back(entry);
 						break;
 					}
-					case ReaderState::ClearDefaultSnapshotValues: {
-						if(not_default_keys_missing_in_snapshot.empty()) {
-							if(first_entry_after_snapshot.isValid()) {
-								entry = first_entry_after_snapshot;
-								first_entry_after_snapshot = {};
-							}
-							else {
-								reader_state = ReaderState::ReadRest;
-								continue;
-							}
-						}
-						else {
-							auto it = not_default_keys_missing_in_snapshot.begin();
-							logDShvJournal() << "\t Setting missing snapshot entry to default value, path:" << *it;
-							entry = all_entries_snapshot.keyvals[*it];
-							entry.value.setDefaultValue();
-							entry.setSnapshotValue(true);
-							not_default_keys_missing_in_snapshot.erase(it);
-						}
-						break;
-					}
-					case ReaderState::ReadRest: {
+				}
+				// read rest of file
+				logMShvJournal() << "Writing generated values, cnt:" << generated_entries.size();
+				while(true) {
+					ShvJournalEntry entry;
+					if(generated_entries.empty()) {
 						if(!rd.next())
 							goto next_file;
 						entry = rd.entry();
-						break;
 					}
+					else {
+						entry = *generated_entries.begin();
+						generated_entries.erase(generated_entries.begin());
+						if(generated_entries.empty())
+							logMShvJournal() << "Writing regular values";
 					}
-					addToSnapshot(all_entries_snapshot, entry);
 					if(!path_match(entry))
 						continue;
+					addToSnapshot(snapshot_ctx.snapshot, entry);
 					bool before_since = params_since_msec > 0 && entry.epochMsec < params_since_msec;
 					bool after_until = params_until_msec > 0 && entry.epochMsec >= params_until_msec;
 					if(before_since) {
-						logDShvJournal() << "\t SNAPSHOT entry:" << entry.toRpcValueMap().toCpon();
-						addToSnapshot(snapshot_ctx.snapshot, entry);
+						//logDShvJournal() << "\t SNAPSHOT entry:" << entry.toRpcValueMap().toCpon();
 					}
 					else if(after_until) {
 						goto log_finish;

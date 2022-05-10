@@ -21,7 +21,7 @@ public:
 	bool next();
 	bool last();
 	const ShvJournalEntry& entry();
-	bool inSnapshot() const;
+	bool inSnapshot();
 
 	static int64_t fileNameToFileMsec(const std::string &fn, bool throw_exc = shv::core::Exception::Throw);
 	static std::string msecToBaseFileName(int64_t msec);
@@ -30,6 +30,7 @@ private:
 	std::ifstream m_ifstream;
 	ShvJournalEntry m_currentEntry;
 	int64_t m_snapshotMsec = -1;
+	bool m_inSnapshot = true;
 };
 
 } // namespace utils
