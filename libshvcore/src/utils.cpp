@@ -2,6 +2,7 @@
 #include "log.h"
 #include "stringview.h"
 
+#include <cstring>
 #include <regex>
 #include <sstream>
 
