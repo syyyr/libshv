@@ -5,6 +5,8 @@
 
 #include <shv/chainpack/rpc.h>
 
+#define logDShvJournal() shvCDebug("ShvJournal")
+
 namespace cp = shv::chainpack;
 
 namespace shv {
@@ -101,6 +103,7 @@ void ShvJournalFileWriter::appendSnapshot(int64_t msec, const std::map<std::stri
 
 void ShvJournalFileWriter::append(int64_t msec, int uptime, const ShvJournalEntry &entry)
 {
+	logDShvJournal() << "ShvJournalFileWriter::append:" << entry.toRpcValue().toCpon();
 	m_out << cp::RpcValue::DateTime::fromMSecsSinceEpoch(msec).toIsoString();
 	m_out << ShvFileJournal::FIELD_SEPARATOR;
 	m_out << uptime;

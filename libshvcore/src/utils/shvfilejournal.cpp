@@ -181,7 +181,7 @@ void ShvFileJournal::append(const ShvJournalEntry &entry)
 		logIShvJournal() << "Append to log failed, journal dir will be read again, SD card might be replaced:" << e.what();
 	}
 	try {
-		ensureJournalDir();
+		createJournalDirIfNotExist();
 		checkJournalContext_helper(true);
 		appendThrow(entry);
 	}
@@ -233,8 +233,8 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 
 void ShvFileJournal::createNewLogFile(int64_t journal_file_start_msec)
 {
+	checkJournalContext();
 	if(journal_file_start_msec == 0) {
-		checkJournalContext();
 		journal_file_start_msec = RpcValue::DateTime::now().msecsSinceEpoch();
 		if(!m_journalContext.files.empty() && m_journalContext.files[m_journalContext.files.size() - 1] >= journal_file_start_msec)
 			SHV_EXCEPTION("Journal context corrupted, new log file is older than last existing one.");
@@ -276,7 +276,7 @@ void ShvFileJournal::checkJournalContext_helper(bool force)
 		m_journalContext.recentTimeStamp = 0;
 		m_journalContext.journalDirExists = journalDirExists();
 		if(!m_journalContext.journalDirExists)
-			ensureJournalDir();
+			createJournalDirIfNotExist();
 		if(m_journalContext.journalDirExists)
 			updateJournalStatus();
 		else
@@ -289,7 +289,7 @@ void ShvFileJournal::checkJournalContext_helper(bool force)
 	}
 }
 
-void ShvFileJournal::ensureJournalDir()
+void ShvFileJournal::createJournalDirIfNotExist()
 {
 	if(!mkpath(journalDir())) {
 		m_journalContext.journalDirExists = false;
@@ -623,15 +623,17 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 	/// this ensure that there be only one copy of each path in memory
 	int max_path_id = 0;
 	auto make_path_shared = [&path_cache, &max_path_id, &params](const std::string &path) -> RpcValue {
-		RpcValue ret = path_cache.value(path);
-		if(ret.isValid())
-			return ret;
-		if(params.withPathsDict)
+		if(!params.withPathsDict)
+			return path;
+		RpcValue ret;
+		if(auto it = path_cache.find(path); it == path_cache.end()) {
 			ret = ++max_path_id;
-		else
-			ret = path;
-		logDShvJournal() << "Adding record to path cache:" << path << "-->" << ret.toCpon();
-		path_cache[path] = ret;
+			logDShvJournal() << "Adding record to path cache:" << path << "-->" << ret.toCpon();
+			path_cache[path] = ret;
+		}
+		else {
+			ret = it->second;
+		}
 		return ret;
 	};
 	auto append_log_entry = [make_path_shared, rec_cnt_limit, &rec_cnt_limit_hit, &first_record_msec, &last_record_msec, &log](const ShvJournalEntry &e) {
@@ -671,6 +673,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 				// erase EVENT flag in the snapshot values,
 				// they can trigger events during reply otherwise
 				e.setSpontaneous(false);
+				logDShvJournal() << "\t SNAPSHOT entry:" << e.toRpcValueMap().toCpon();
 				if(!append_log_entry(e))
 					return false;
 			}
@@ -698,7 +701,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 			}
 			else {
 				/// take previous file
-				logMShvJournal() << "\t" << "lower bound found, taking previous file:" << *first_file_it << journal_context.fileMsecToFileName(*first_file_it);
+				logMShvJournal() << "\t" << "lower bound found:" << *first_file_it << journal_context.fileMsecToFileName(*first_file_it) << "taking previous file";
 				--first_file_it;
 			}
 		}
@@ -706,10 +709,10 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		PatternMatcher pattern_matcher(params);
 		auto path_match = [&params, &pattern_matcher](const ShvJournalEntry &e) {
 			if(!params.pathPattern.empty()) {
-				logDShvJournal() << "\t MATCHING:" << params.pathPattern << "vs:" << e.path;
+				//logDShvJournal() << "\t MATCHING:" << params.pathPattern << "vs:" << e.path;
 				if(!pattern_matcher.match(e.path, e.domain))
 					return false;
-				logDShvJournal() << "\t\t MATCH";
+				//logDShvJournal() << "\t\t MATCH";
 			}
 			return true;
 		};
@@ -717,72 +720,116 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 			std::string fn = journal_context.fileMsecToFilePath(*file_it);
 			logMShvJournal() << "-------- opening file:" << fn;
 			try {
-				std::set<std::string> not_default_keys_missing_in_snapshot;
-				for(const auto &kv : snapshot_ctx.snapshot.keyvals)
-					if(kv.second.domain == Rpc::SIG_VAL_CHANGED)
-						not_default_keys_missing_in_snapshot.insert(kv.first);
-				std::vector<ShvJournalEntry> entries;
+				/**
+				 We must check, that any value set to not-default value in previous file,
+				 will be set to default value after snapshot of current file is read
+				 if it will not be found in current snapshot
+
+				 This solves the case when for example alarm is set felse while shvgate was down
+				 */
+				std::set<std::string> snapshot_keys;
+				std::vector<ShvJournalEntry> generated_entries;
+				logMShvJournal() << "Snapshot size:" << snapshot_ctx.snapshot.keyvals.size();
+				for(const auto &kv : snapshot_ctx.snapshot.keyvals) {
+					// note that snapshot contains ND values only
+					if(kv.second.domain == Rpc::SIG_VAL_CHANGED) {
+						logMShvJournal() << "\t adding ND path:" << kv.first;
+						snapshot_keys.insert(kv.first);
+					}
+				}
 				ShvJournalFileReader rd(fn);
+				// read this file snapshot
 				while(rd.next()) {
-					const ShvJournalEntry &e1 = rd.entry();
-					if(!path_match(e1))
-						continue;
-					entries.resize(0);
-					entries.push_back(e1);
+					const ShvJournalEntry &entry = rd.entry();
+					//if(entry.path == "someError") logDShvJournal() << "1. snapshot:" << entry.toRpcValue().toCpon();
 					if(rd.inSnapshot()) {
-						not_default_keys_missing_in_snapshot.erase(e1.path);
-					}
-					else if(!not_default_keys_missing_in_snapshot.empty()) {
-						/**
-						 * If cabinet is switched off and on again and some property goes to false meanwhile,
-						 * then its property path is present in prev file, but not in this file snapshot.
-						 */
-						for(const auto &path : not_default_keys_missing_in_snapshot) {
-							logDShvJournal() << "\t Setting missing snapshot entry to default value, path:" << path;
-							ShvJournalEntry e2 = snapshot_ctx.snapshot.keyvals[path];
-							e2.value.setDefaultValue();
-							entries.push_back(e2);
-						}
-						not_default_keys_missing_in_snapshot.clear();
-					}
-					for(const ShvJournalEntry &e : entries) {
-						bool before_since = params_since_msec > 0 && e.epochMsec < params_since_msec;
-						bool after_until = params_until_msec > 0 && e.epochMsec >= params_until_msec;
-						if(before_since) {
-							logDShvJournal() << "\t SNAPSHOT entry:" << e.toRpcValueMap().toCpon();
-							addToSnapshot(snapshot_ctx.snapshot, e);
-						}
-						else if(after_until) {
-							goto log_finish;
+						logDShvJournal() << "\t snapshot:" << entry.path;
+						if(auto it = snapshot_keys.find(entry.path); it == snapshot_keys.end()) {
+							// value in current file snapshot is not present in previous files
+							// it might happen for example when some log file is missing
+							generated_entries.push_back(entry);
 						}
 						else {
-							if(!snapshot_ctx.snapshotWritten) {
-								if(!write_snapshot())
-									goto log_finish;
+							// value is in snapshot already
+							// it will be ignored
+							snapshot_keys.erase(it);
+							continue;
+						}
+					}
+					else {
+						for(const std::string &key : snapshot_keys) {
+							//logDShvJournal() << "\t Setting missing snapshot entry to default value, path:" << key;
+							if(auto it = snapshot_ctx.snapshot.keyvals.find(key); it != snapshot_ctx.snapshot.keyvals.end()) {
+								ShvJournalEntry e = it->second;
+								e.epochMsec = rd.snapshotMsec();
+								e.value.setDefaultValue();
+								//e.setSnapshotValue(true); not snapshot value, it is result of file merge
+								generated_entries.push_back(std::move(e));
 							}
-	#ifdef SKIP_DUP_LOG_ENTRIES
-							{
-								// skip CHNG duplicates, values that are the same as last log entry for the same path
-								auto it = snapshot_ctx.snapshot.find(e.path);
-								if (it != snapshot_ctx.snapshot.cend()) {
-									if(it->second.value == e.value && e.domain == chainpack::Rpc::SIG_VAL_CHANGED) {
-										logDShvJournal() << "\t Skipping DUP LOG entry:" << e.toRpcValueMap().toCpon();
-										snapshot_ctx.snapshot.erase(it);
-										continue;
-									}
-								}
-							}
-	#endif
-							logDShvJournal() << "\t LOG entry:" << e.toRpcValueMap().toCpon();
-							if(!append_log_entry(e))
+							//snapshot_keys.clear();
+						}
+						generated_entries.push_back(entry);
+						break;
+					}
+				}
+				// read rest of file
+				logMShvJournal() << "Writing generated values, cnt:" << generated_entries.size() << "note, that last generated value is the first value after snapshot";
+				while(true) {
+					ShvJournalEntry entry;
+					if(generated_entries.empty()) {
+						if(!rd.next())
+							goto next_file;
+						entry = rd.entry();
+						//if(entry.path == "someError") logDShvJournal() << "2. regular:" << entry.toRpcValue().toCpon();
+					}
+					else {
+						entry = *generated_entries.begin();
+						generated_entries.erase(generated_entries.begin());
+						if(generated_entries.empty())
+							logMShvJournal() << "Writing regular values";
+					}
+					if(!path_match(entry))
+						continue;
+					//logDShvJournal() << "3. filtered:" << entry.toRpcValue().toCpon();
+					bool before_since = params_since_msec > 0 && entry.epochMsec < params_since_msec;
+					bool after_until = params_until_msec > 0 && entry.epochMsec >= params_until_msec;
+					if(before_since) {
+						logDShvJournal() << "\t SNAPSHOT entry:" << entry.toRpcValueMap().toCpon();
+						addToSnapshot(snapshot_ctx.snapshot, entry);
+					}
+					else if(after_until) {
+						goto log_finish;
+					}
+					else {
+						if(!snapshot_ctx.snapshotWritten) {
+							if(!write_snapshot())
 								goto log_finish;
 						}
+#ifdef SKIP_DUP_LOG_ENTRIES
+						{
+							// skip CHNG duplicates, values that are the same as last log entry for the same path
+							auto it = snapshot_ctx.snapshot.find(e.path);
+							if (it != snapshot_ctx.snapshot.cend()) {
+								if(it->second.value == e.value && e.domain == chainpack::Rpc::SIG_VAL_CHANGED) {
+									logDShvJournal() << "\t Skipping DUP LOG entry:" << e.toRpcValueMap().toCpon();
+									snapshot_ctx.snapshot.erase(it);
+									continue;
+								}
+							}
+						}
+#endif
+						logDShvJournal() << "\t LOG entry:" << entry.toRpcValueMap().toCpon();
+						// keep updating snapshot to enable snapshot erasule on log merge
+						addToSnapshot(snapshot_ctx.snapshot, entry);
+						if(!append_log_entry(entry))
+							goto log_finish;
 					}
 				}
 			}
 			catch (const shv::core::Exception &e) {
 				shvError() << "Cannot read shv journal file:" << fn;
 			}
+next_file: ;
 		}
 	}
 log_finish:
