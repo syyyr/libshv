@@ -20,7 +20,7 @@ AppCliOptions::AppCliOptions()
 #ifdef WITH_SHV_WEBSOCKETS
 	addOption("server.websocket.port").setType(cp::RpcValue::Type::Int).setNames("--server-ws-port")
 			.setComment("Web socket server port, set this option to enable websocket server").setDefaultValue(3777);
-	addOption("server.websocket.sslport").setType(cp::RpcValue::Type::Int).setNames("--server-wss-port")
+	addOption("server.websocket.sslPort").setType(cp::RpcValue::Type::Int).setNames("--server-wss-port")
 			.setComment("Secure web socket server port, set this option to enable secure websocket server").setDefaultValue(3778);
 #endif
 	addOption("server.ssl.key").setType(cp::RpcValue::Type::String).setNames("--server-ssl-key")

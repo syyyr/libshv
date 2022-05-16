@@ -25,7 +25,7 @@ public:
 	CLIOPTION_GETTER_SETTER2(int, "server.discoveryPort", d, setD, iscoveryPort)
 #ifdef WITH_SHV_WEBSOCKETS
 	CLIOPTION_GETTER_SETTER2(int, "server.websocket.port", s, setS, erverWebsocketPort)
-	CLIOPTION_GETTER_SETTER2(int, "server.websocket.sslport", s, setS, erverWebsocketSslPort)
+	CLIOPTION_GETTER_SETTER2(int, "server.websocket.sslPort", s, setS, erverWebsocketSslPort)
 #endif
 	CLIOPTION_GETTER_SETTER2(std::string, "server.ssl.key", s, setS, erverSslKeyFile)
 	CLIOPTION_GETTER_SETTER2(std::string, "server.ssl.cert", s, setS, erverSslCertFiles)
