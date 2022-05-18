@@ -23,6 +23,11 @@ message ( DESTDIR: $$DESTDIR )
 
 DEFINES += SHVIOTQT_BUILD_DLL
 
+unix {
+	LIBS += \
+		-Wl,-rpath,\'\$\$ORIGIN\'
+}
+
 android {
 	DEFINES += SHV_ANDROID_BUILD
 }

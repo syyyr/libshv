@@ -14,6 +14,11 @@ win32:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin
 
 message ( DESTDIR: $$DESTDIR )
 
+unix {
+	LIBS += \
+		-Wl,-rpath,\'\$\$ORIGIN\'
+}
+
 android {
 DEFINES += SHV_ANDROID_BUILD
 }
