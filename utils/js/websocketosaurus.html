@@ -9,6 +9,7 @@
 		<script type="text/javascript" src="../../libshvchainpack/js/cpon.js"></script>
 		<script type="text/javascript" src="../../libshvchainpack/js/bint.js"></script>
 		<script type="text/javascript" src="../../libshvchainpack/js/rpcmessage.js"></script>
+		<script type="text/javascript" src="../../libshvchainpack/js/ws_client.js"></script>
 	</head>
 	<body>
 		<h1>WebSocketoSaurus</h1>
@@ -24,8 +25,6 @@
 			<button onClick="initWebSocket(true);">Connect ChainPack</button>
 			<button onClick="initWebSocket(false);">Connect Cpon</button>
 			<button onClick="stopWebSocket();">Disconnect</button>
-			<button onClick="checkSocket();">State</button>
-			<span id="lblState">---</span>
 		</p>
 		<p>
 			<input type="text" id="edShvPath" onkeydown="if(event.keyCode==13)sendMessage();"/>
@@ -40,6 +39,6 @@
 			<textarea id="txtLog" style="width:50em;height:200px;"></textarea>
 		</p>
 
-		<script type="text/javascript" src="websocketosaurus.js"></script>
+		<script type="text/javascript" src="websocketosaurus.js" ></script>
 	</body>
 </html>
