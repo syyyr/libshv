@@ -57,7 +57,7 @@ public:
 		return ltrim(rtrim(s, t), t);
 	}
 
-	std::string mid(size_t pos, size_t cnt = std::string::npos) { return substr(pos, cnt); }
+	std::string mid(size_t pos, size_t cnt = std::string::npos) const;
 
 	static std::pair<size_t, size_t> indexOfBrackets(const std::string &haystack, size_t begin_pos, size_t end_pos, const std::string &open_bracket, const std::string &close_bracket);
 	static std::vector<std::string> split(const std::string &str, char delim, SplitBehavior split_behavior = SkipEmptyParts);

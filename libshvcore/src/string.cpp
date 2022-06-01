@@ -50,6 +50,13 @@ bool String::endsWith(const std::string &str, const std::string &with)
 	return ix == (str.size() - with.size());
 }
 
+std::string String::mid(size_t pos, size_t cnt) const
+{
+	if(pos < size())
+		return substr(pos, cnt);
+	return {};
+}
+
 bool String::equal(std::string const& a, std::string const& b, String::CaseSensitivity case_sensitivity)
 {
 	if (a.length() == b.length()) {
