@@ -226,7 +226,7 @@ shv::core::utils::ShvLogTypeDescr::Type Graph::channelTypeId(int ix) const
 	if(!m_model)
 		SHV_EXCEPTION("Graph model is NULL");
 	const GraphChannel *ch = channelAt(ix);
-	return m_model->channelInfo(ch->modelIndex()).typeDescr.type;
+	return m_model->channelInfo(ch->modelIndex()).typeDescr.type();
 }
 
 void Graph::moveChannel(int channel, int new_pos)
@@ -459,11 +459,11 @@ QMap<QString, QString> Graph::yValuesToMap(int channel_ix, const shv::visu::time
 	if (s.isValid()) {
 		GraphModel::ChannelInfo &channel_info = model()->channelInfo(m_channels[channel_ix]->modelIndex());
 
-		if (channel_info.typeDescr.sampleType != shv::core::utils::ShvLogTypeDescr::SampleType::Invalid) {
-			if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Map) {
+		if (channel_info.typeDescr.sampleType() != shv::core::utils::ShvLogTypeDescr::SampleType::Invalid) {
+			if (channel_info.typeDescr.type() == shv::core::utils::ShvLogTypeDescr::Type::Map) {
 				ret = prettyMapValue(s.value, channel_info.typeDescr);
 			}
-			else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::IMap) {
+			else if (channel_info.typeDescr.type() == shv::core::utils::ShvLogTypeDescr::Type::IMap) {
 				ret = prettyIMapValue(s.value, channel_info.typeDescr);
 			}
 			else {
@@ -474,10 +474,10 @@ QMap<QString, QString> Graph::yValuesToMap(int channel_ix, const shv::visu::time
 
 				QString key = (p.isEmpty()) ? "y" : p.last();
 
-				if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::BitField) {
+				if (channel_info.typeDescr.type() == shv::core::utils::ShvLogTypeDescr::Type::BitField) {
 					ret[key] = prettyBitFieldValue(s.value, channel_info.typeDescr);
 				}
-				else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+				else if (channel_info.typeDescr.type() == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
 					ret[key] = model()->typeDescrFieldName(channel_info.typeDescr, s.value.toInt());
 				}
 				else {
@@ -496,16 +496,16 @@ QString Graph::prettyBitFieldValue(const QVariant &value, const shv::core::utils
 	if (value.type() == QVariant::Int) {
 		int i = value.toInt();
 		if (i) {
-			for (auto &field : type_descr.fields) {
-				if (field.value.isInt()) {
-					int desc_val = field.value.toInt();
+			for (auto &field : type_descr.fields()) {
+				if (field.value().isInt()) {
+					int desc_val = field.value().toInt();
 					if (i & 1 << desc_val) {
-						QString t = QString::fromStdString(field.description);
+						QString t = QString::fromStdString(field.description());
 						if (t.isEmpty()) {
-							t = QString::fromStdString(field.tags.value("description").toString());
+							t = QString::fromStdString(field.description());
 						}
 						if (t.isEmpty()) {
-							t = QString::fromStdString(field.name);
+							t = QString::fromStdString(field.name());
 						}
 						if (t.isEmpty()) {
 							t = QString::number(desc_val);
@@ -532,10 +532,10 @@ QMap<QString, QString> Graph::prettyMapValue(const QVariant &value, const shv::c
 		else {
 			value = it.value().toString();
 			try {
-				for (auto &field : type_descr.fields) {
-					if (QString::fromStdString(field.name) == it.key()) {
-						const shv::core::utils::ShvLogTypeDescr &field_type_descr = model()->typeInfo().types.at(field.typeName);
-						if (field_type_descr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+				for (auto &field : type_descr.fields()) {
+					if (QString::fromStdString(field.name()) == it.key()) {
+						const shv::core::utils::ShvLogTypeDescr field_type_descr = model()->typeInfo().typeDescriptionForName(field.typeName());
+						if (field_type_descr.type() == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
 							value = model()->typeDescrFieldName(field_type_descr, it.value().toInt());
 							break;
 						}
@@ -556,8 +556,8 @@ QMap<QString, QString> Graph::prettyIMapValue(const QVariant &value, const shv::
 
 	const QVariantMap &map = value.toMap();
 	for (auto it = map.cbegin(); it != map.cend(); ++it) {
-		for (auto &field : type_descr.fields) {
-			if (it.key().toInt() == field.value.toInt()) {
+		for (auto &field : type_descr.fields()) {
+			if (it.key().toInt() == field.value().toInt()) {
 				QString value;
 				if (it.value().type() == QVariant::Map) {
 					value = QJsonDocument::fromVariant(it.value()).toJson(QJsonDocument::Compact);
@@ -565,15 +565,15 @@ QMap<QString, QString> Graph::prettyIMapValue(const QVariant &value, const shv::
 				else {
 					value = it.value().toString();
 					try {
-						const shv::core::utils::ShvLogTypeDescr &field_type_descr = model()->typeInfo().types.at(field.typeName);
-						if (field_type_descr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+						const shv::core::utils::ShvLogTypeDescr field_type_descr = model()->typeInfo().typeDescriptionForName(field.typeName());
+						if (field_type_descr.type() == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
 							value = model()->typeDescrFieldName(field_type_descr, it.value().toInt());
 						}
 					}
 					catch(const std::out_of_range &) {
 					}
 				}
-				ret[QString::fromStdString(field.name)] = value;
+				ret[QString::fromStdString(field.name())] = value;
 				break;
 			}
 		}
@@ -1872,7 +1872,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	while(ix2 >= samples_cnt)
 		ix2--;
 	const bool draw_last_stepped_point_contunuation = interpolation == GraphChannel::Style::Interpolation::Stepped
-			&& model()->channelInfo(ch->modelIndex()).typeDescr.sampleType != shv::core::utils::ShvLogTypeDescr::SampleType::Discrete;
+			&& model()->channelInfo(ch->modelIndex()).typeDescr.sampleType() != shv::core::utils::ShvLogTypeDescr::SampleType::Discrete;
 	if(draw_last_stepped_point_contunuation) {
 		if(ix1 >= 0 && ix2 >= 0 && ix2 == samples_cnt - 1) {
 			// add fake point to paint continuation of last value until the end of graph
@@ -1933,7 +1933,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 					}
 				}
 			}
-			if (model()->channelInfo(ch->modelIndex()).typeDescr.sampleType == shv::core::utils::ShvLogTypeDescr::SampleType::Discrete) {
+			if (model()->channelInfo(ch->modelIndex()).typeDescr.sampleType() == shv::core::utils::ShvLogTypeDescr::SampleType::Discrete) {
 				QPoint sample_point{current_px.x, 0};
 				int arrow_width = u2px(1);
 				painter->drawLine(sample_point.x(), clip_rect.y() + clip_rect.height() / 2, sample_point.x(), clip_rect.y() + clip_rect.height());

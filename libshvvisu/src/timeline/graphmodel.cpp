@@ -65,7 +65,7 @@ XRange GraphModel::xRange(int channel_ix) const
 YRange GraphModel::yRange(int channel_ix) const
 {
 	YRange ret;
-	auto mtid = channelInfo(channel_ix).typeDescr.type;
+	auto mtid = channelInfo(channel_ix).typeDescr.type();
 	for (int i = 0; i < count(channel_ix); ++i) {
 		QVariant v = sampleAt(channel_ix, i).value;
 		bool ok;
@@ -104,8 +104,6 @@ double GraphModel::valueToDouble(const QVariant v, shv::core::utils::ShvLogTypeD
 	using Type = shv::core::utils::ShvLogTypeDescr::Type;
 	if(ok)
 		*ok = true;
-	if(shv::coreqt::Utils::isValueNotAvailable(v))
-		return std::numeric_limits<double>::quiet_NaN();
 	if(type_id == Type::Invalid)
 		type_id = qt_to_shv_type(v.userType());
 	switch (type_id) {
@@ -283,9 +281,9 @@ void GraphModel::appendChannel(const std::string &shv_path, const std::string &n
 
 QString GraphModel::typeDescrFieldName(const shv::core::utils::ShvLogTypeDescr &type_descr, int field_index)
 {
-	for (const auto &field : type_descr.fields) {
-		if (field_index == field.value.toInt()) {
-			return QString::fromStdString(field.name);
+	for (const auto &field : type_descr.fields()) {
+		if (field_index == field.value().toInt()) {
+			return QString::fromStdString(field.name());
 		}
 	}
 	return QString();

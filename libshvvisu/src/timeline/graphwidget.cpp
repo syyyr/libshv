@@ -500,8 +500,10 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		const GraphChannel *ch = gr->channelAt(ch_ix);
 		//update(ch->graphAreaRect());
 		GraphModel::ChannelInfo &channel_info = gr->model()->channelInfo(ch->modelIndex());
+		auto channel_type = channel_info.typeDescr.type();
+		auto channel_sample_type = channel_info.typeDescr.sampleType();
 		Sample s;
-		if (channel_info.typeDescr.sampleType == shv::core::utils::ShvLogTypeDescr::SampleType::Discrete) {
+		if (channel_sample_type == shv::core::utils::ShvLogTypeDescr::SampleType::Discrete) {
 			s = gr->nearestSample(ch_ix, t);
 		}
 		else {
@@ -511,13 +513,13 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		QString text;
 
 		if (s.isValid()) {
-			if (channel_info.typeDescr.sampleType == shv::core::utils::ShvLogTypeDescr::SampleType::Continuous ||
-				(channel_info.typeDescr.sampleType == shv::core::utils::ShvLogTypeDescr::SampleType::Discrete && qAbs(pos.x() - gr->timeToPos(s.time)) < gr->u2px(1.1))) {
+			if (channel_sample_type == shv::core::utils::ShvLogTypeDescr::SampleType::Continuous ||
+				(channel_sample_type == shv::core::utils::ShvLogTypeDescr::SampleType::Discrete && qAbs(pos.x() - gr->timeToPos(s.time)) < gr->u2px(1.1))) {
 				point = mapToGlobal(pos + QPoint{gr->u2px(0.8), 0});
 				QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
 				dt = dt.toTimeZone(graph()->timeZone());
 
-				if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Map) {
+				if (channel_type == shv::core::utils::ShvLogTypeDescr::Type::Map) {
 					text = QStringLiteral("%1\nx: %2\n")
 						   .arg(ch->shvPath())
 						   .arg(dt.toString(Qt::ISODateWithMs));
@@ -527,7 +529,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 					}
 					text.chop(1);
 				}
-				else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::BitField) {
+				else if (channel_type == shv::core::utils::ShvLogTypeDescr::Type::BitField) {
 					text = QStringLiteral("%1\nx: %2\n")
 						   .arg(ch->shvPath())
 						   .arg(dt.toString(Qt::ISODateWithMs));
@@ -538,7 +540,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 						text += "value: " + s.value.toString();
 					}
 				}
-				else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::IMap) {
+				else if (channel_type == shv::core::utils::ShvLogTypeDescr::Type::IMap) {
 					text = QStringLiteral("%1\nx: %2\n")
 						   .arg(ch->shvPath())
 						   .arg(dt.toString(Qt::ISODateWithMs));
@@ -548,7 +550,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 					}
 					text.chop(1);
 				}
-				else if (channel_info.typeDescr.type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
+				else if (channel_type == shv::core::utils::ShvLogTypeDescr::Type::Enum) {
 					text = QStringLiteral("%1\nx: %2\nvalue: %3")
 						   .arg(ch->shvPath())
 						   .arg(dt.toString(Qt::ISODateWithMs))
@@ -862,7 +864,7 @@ void GraphWidget::createProbe(int channel_ix, timemsec_t time)
 	const GraphChannel *ch = m_graph->channelAt(channel_ix);
 	GraphModel::ChannelInfo &channel_info = m_graph->model()->channelInfo(ch->modelIndex());
 
-	if (channel_info.typeDescr.sampleType == shv::core::utils::ShvLogTypeDescr::SampleType::Discrete) {
+	if (channel_info.typeDescr.sampleType() == shv::core::utils::ShvLogTypeDescr::SampleType::Discrete) {
 		Sample s = m_graph->nearestSample(channel_ix, time);
 
 		if (s.isValid())

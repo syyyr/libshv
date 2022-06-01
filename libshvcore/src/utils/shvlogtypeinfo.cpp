@@ -1,4 +1,5 @@
 #include "shvlogtypeinfo.h"
+#include "../string.h"
 
 using namespace std;
 using namespace shv::chainpack;
@@ -7,51 +8,104 @@ namespace shv {
 namespace core {
 namespace utils {
 
+static const char* KEY_LABEL = "label";
+static const char* KEY_DESCRIPTION = "description";
+static const char* KEY_UNIT = "unit";
+static const char* KEY_NAME = "name";
+static const char* KEY_TYPE_NAME = "typeName";
+static const char* KEY_TYPE = "type";
+static const char* KEY_VALUE = "value";
+static const char* KEY_FIELDS = "fields";
+static const char* KEY_SAMPLE_TYPE = "sampleType";
+static const char* KEY_TAGS = "tags";
+//static const char* KEY_MIN_VAL = "minVal";
+//static const char* KEY_MAX_VAL = "maxVal";
+static const char* KEY_DEC_PLACES = "decPlaces";
+static const char* KEY_VISUAL_STYLE = "visualStyle";
+static const char* KEY_ALARM = "alarm";
+
+//=====================================================================
+// ShvLogDescrBase
+//=====================================================================
+RpcValue ShvLogDescrBase::dataValue(const std::string &key, const chainpack::RpcValue &default_val) const
+{
+	return m_data.asMap().value(key, default_val);
+}
+
+void ShvLogDescrBase::setDataValue(const std::string &key, const chainpack::RpcValue &val)
+{
+	if(!m_data.isMap()) {
+		m_data = RpcValue::Map();
+	}
+	m_data.set(key, val);
+}
 //=====================================================================
 // ShvLogTypeDescrField
 //=====================================================================
+ShvLogTypeDescrField::ShvLogTypeDescrField(const std::string &name, const std::string &type_name, const chainpack::RpcValue &value)
+{
+	setDataValue(KEY_NAME, name);
+	setDataValue(KEY_TYPE_NAME, type_name);
+	setDataValue(KEY_VALUE, value);
+}
+
+string ShvLogTypeDescrField::name() const
+{
+	return dataValue(KEY_NAME).asString();
+}
+
+string ShvLogTypeDescrField::typeName() const
+{
+	return dataValue(KEY_TYPE_NAME).asString();
+}
+
+string ShvLogTypeDescrField::label() const
+{
+	return dataValue(KEY_LABEL).asString();
+}
+
+string ShvLogTypeDescrField::description() const
+{
+	return dataValue(KEY_DESCRIPTION).asString();
+}
+
+RpcValue ShvLogTypeDescrField::value() const
+{
+	return dataValue(KEY_VALUE);
+}
+
 RpcValue ShvLogTypeDescrField::toRpcValue() const
 {
-	RpcValue::Map m;
-	m["name"] = name;
-	if(!typeName.empty())
-		m["typeName"] = typeName;
-	if(!label.empty())
-		m["label"] = label;
-	if(!description.empty())
-		m["description"] = description;
-	if(!label.empty() && label != name)
-		m["label"] = label;
-	if(value.isValid())
-		m["value"] = value;
-	if(!tags.empty())
-		m["tags"] = tags;
-	return m;
+	return m_data;
 }
 
 ShvLogTypeDescrField ShvLogTypeDescrField::fromRpcValue(const RpcValue &v)
 {
 	ShvLogTypeDescrField ret;
-	if(v.isMap()) {
-		const RpcValue::Map &m = v.asMap();
-		ret.name = m.value("name").asString();
-		ret.label = m.value("label").asString();
-		ret.description = m.value("description").asString();
-		ret.typeName = m.value("typeName").asString();
-		ret.value = m.value("value");
-		ret.tags = m.value("tags").asMap();
-		if(ret.tags.empty())
-			ret.tags = m.value("options").asMap();
-	}
+	ret.m_data = v;
 	return ret;
 }
 
 //=====================================================================
 // ShvLogTypeDescr
 //=====================================================================
-const char* ShvLogTypeDescr::OPT_MIN_VAL = "minVal";
-const char* ShvLogTypeDescr::OPT_MAX_VAL = "maxVal";
-const char* ShvLogTypeDescr::OPT_DEC_PLACES = "decPlaces";
+ShvLogTypeDescr::Type ShvLogTypeDescr::type() const
+{
+	return static_cast<Type>(dataValue(KEY_TYPE).toInt());
+}
+
+std::vector<ShvLogTypeDescrField> ShvLogTypeDescr::fields() const
+{
+	std::vector<ShvLogTypeDescrField> ret;
+	for(const RpcValue &rv : dataValue(KEY_FIELDS).asList())
+		ret.push_back(ShvLogTypeDescrField::fromRpcValue(rv));
+	return ret;
+}
+
+ShvLogTypeDescr::SampleType ShvLogTypeDescr::sampleType() const
+{
+	return static_cast<SampleType>(dataValue(KEY_SAMPLE_TYPE).toInt());
+}
 
 const std::string ShvLogTypeDescr::typeToString(ShvLogTypeDescr::Type t)
 {
@@ -108,7 +162,7 @@ ShvLogTypeDescr::SampleType ShvLogTypeDescr::sampleTypeFromString(const std::str
 		return SampleType::Continuous;
 	return SampleType::Invalid;
 }
-
+/*
 void ShvLogTypeDescr::applyTags(const RpcValue::Map &t)
 {
 	if (type == Type::Invalid)
@@ -117,8 +171,8 @@ void ShvLogTypeDescr::applyTags(const RpcValue::Map &t)
 	if (t.hasKey("sampleType"))
 		sampleType = sampleTypeFromString(t.value("sampleType").asString());
 
-	if (t.hasKey(description))
-		description = t.value("description").toStdString();
+	//if (t.hasKey(description))
+	//	description = t.value(KEY_DESCRIPTION).toStdString();
 
 	tags.insert(t.begin(), t.end());
 }
@@ -145,71 +199,32 @@ RpcValue ShvLogTypeDescr::defaultRpcValue() const
 
 	return RpcValue::fromType(RpcValue::Type::Null);
 }
-
-std::string ShvLogTypeDescr::unit() const
-{
-	return tags.value("unit", std::string()).toStdString();
-}
-
+*/
 std::string ShvLogTypeDescr::visualStyleName() const
 {
-	return tags.value("visualStyle", std::string()).toStdString();
+	return dataValue(KEY_VISUAL_STYLE, std::string()).asString();
 }
 
 std::string ShvLogTypeDescr::alarm() const
 {
-	return tags.value("alarm", std::string()).toStdString();
+	return dataValue(KEY_ALARM, std::string()).asString();
 }
 
 int ShvLogTypeDescr::decimalPlaces() const
 {
-	return tags.value("decPlaces", 0).toInt();
+	return dataValue(KEY_DEC_PLACES, 0).toInt();
 }
 
 RpcValue ShvLogTypeDescr::toRpcValue() const
 {
-	RpcValue::Map m;
-	if(type != Type::Invalid)
-		m["type"] = typeToString(type);
-	if(sampleType != SampleType::Continuous)
-		m["sampleType"] = sampleTypeToString(sampleType);
-	if(!description.empty())
-		m["description"] = description;
-	if(!fields.empty()) {
-		RpcValue::List lst;
-		for(const ShvLogTypeDescrField &fld : fields)
-			lst.push_back(fld.toRpcValue());
-		m["fields"] = std::move(lst);
-	}
-	if(!tags.empty()) {
-		m["tags"] = tags;
-	}
-	return m;
+	return m_data;
 }
 
 ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const RpcValue &v)
 {
 	ShvLogTypeDescr ret;
 	if(v.isMap()) {
-		const RpcValue::Map &m = v.toMap();
-		ret.type = typeFromString(m.value("type").toString());
-		ret.sampleType = sampleTypeFromString(m.value("sampleType").asString());
-		ret.description = m.value("description").toString();
-		int current_value = 0;
-		for(const auto &rv : m.value("fields").toList()) {
-			auto fld = ShvLogTypeDescrField::fromRpcValue(rv);
-			if(ret.type == Type::Enum) {
-				if(fld.value.isInt())
-					current_value = fld.value.toInt() + 1;
-				else
-					fld.value = current_value++;
-			}
-			ret.fields.push_back(std::move(fld));
-		}
-
-		ret.tags = m.value("tags").toMap();
-		if(ret.tags.empty())
-			ret.tags = m.value("options").toMap();
+		ret.m_data = v.toMap();
 	}
 	return ret;
 }
@@ -217,93 +232,225 @@ ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const RpcValue &v)
 //=====================================================================
 // ShvLogPathDescr
 //=====================================================================
+string ShvLogPathDescr::typeName() const
+{
+	return dataValue(KEY_TYPE_NAME).asString();
+}
+
+string ShvLogPathDescr::label() const
+{
+	return dataValue(KEY_LABEL).asString();
+}
+
+string ShvLogPathDescr::description() const
+{
+	return dataValue(KEY_DESCRIPTION).asString();
+}
+
+string ShvLogPathDescr::unit() const
+{
+	return dataValue(KEY_UNIT).asString();
+}
+
+RpcValue ShvLogPathDescr::tags() const
+{
+	return dataValue(KEY_TAGS);
+}
+/*
 ShvLogPathDescr ShvLogPathDescr::fromTags(const RpcValue::Map &tags)
 {
 	ShvLogPathDescr ret;
-	ret.typeName = tags.value("typeName").asString();
-	ret.description = tags.value("description").asString();
-	ret.tags = tags;
+	ret.m_data = tags;
+	//ret.typeName = ret.tags.take(KEY_TYPE_NAME).asString();
+	//ret.description = ret.tags.take(KEY_DESCRIPTION).asString();
 	return ret;
 }
-
+*/
 RpcValue ShvLogPathDescr::toRpcValue() const
 {
-	RpcValue::Map m;
-	m["type"] = typeName;
-	if(!description.empty())
-		m["description"] = description;
-	if(!tags.empty())
-		m["tags"] = tags;
-	return m;
+	//RpcValue::Map m;
+	//m[KEY_TYPE_NAME] = typeName;
+	//if(!description.empty())
+	//	m[KEY_DESCRIPTION] = description;
+	//if(!tags.empty())
+	//	m[KEY_TAGS] = tags;
+	return m_data;
 }
 
 ShvLogPathDescr ShvLogPathDescr::fromRpcValue(const RpcValue &v)
 {
+	ShvLogPathDescr ret;
 	if(v.isMap()) {
-		const RpcValue::Map &m = v.toMap();
-		ShvLogPathDescr ret = ShvLogPathDescr::fromTags(m.value("tags").asMap());
-		const string &type_name = m.value("type").asString();
-		if(!type_name.empty())
-			ret.typeName = type_name;
-		const string &description = m.value("description").asString();
-		if(!description.empty())
-			ret.description = description;
-		return ret;
+		ret.m_data = v.toMap();
 	}
-	return {};
+	return ret;
 }
 
 //=====================================================================
 // ShvLogTypeInfo
 //=====================================================================
-ShvLogTypeDescr ShvLogTypeInfo::typeDescription(const std::string &shv_path) const
+map<string, string>::const_iterator find_longest_prefix(const map<string, string> &map, const string &path)
+{
+	shv::core::String prefix = path;
+	while(true) {
+		auto it = map.find(prefix);
+		if(it == map.end()) {
+			// if not found, cut last path part
+			size_t ix = prefix.lastIndexOf('/');
+			if(ix == string::npos) {
+				return map.cend();
+			}
+			else {
+				prefix = prefix.mid(0, ix);
+			}
+		}
+		else {
+			return it;
+		}
+	}
+	return map.cend();
+}
+
+ShvLogTypeInfo &ShvLogTypeInfo::addDevicePath(const std::string &device_path, const std::string &device_type)
+{
+	m_devicePaths[device_path] = device_type;
+	return *this;
+}
+
+ShvLogTypeInfo &ShvLogTypeInfo::addPathDescription(const ShvLogPathDescr &path_descr, const std::string &property_path, const std::string &device_type)
+{
+	string path = property_path;
+	if(!device_type.empty()) {
+		path = path.empty()? device_type: device_type + '/' + path;
+	}
+	m_propertyPaths[path] = path_descr;
+	return *this;
+}
+
+ShvLogPathDescr ShvLogTypeInfo::pathDescriptionForPath(const std::string &shv_path) const
+{
+	if (auto it_path_descr = m_propertyPaths.find(shv_path); it_path_descr == m_propertyPaths.cend()) {
+		if(auto it = find_longest_prefix(m_devicePaths, shv_path); it == m_devicePaths.cend()) {
+			return {};
+		}
+		else {
+			string prefix = it->first;
+			string device = it->second;
+			string property = String(shv_path).mid(prefix.size() + 1);
+			string property_path = property.empty()? device: device + '/' + property;
+			if(it_path_descr = m_propertyPaths.find(property_path); it_path_descr == m_propertyPaths.cend()) {
+				return {};
+			}
+			else {
+				return it_path_descr->second;
+			}
+		}
+	}
+	else {
+		return it_path_descr->second;
+	}
+}
+
+ShvLogTypeDescr ShvLogTypeInfo::typeDescriptionForPath(const std::string &shv_path) const
 {
 	ShvLogTypeDescr ret;
-	auto it_path_descr = paths.find(shv_path);
-	if (it_path_descr == paths.end())
-		return ret;
+	auto it_path_descr = m_propertyPaths.find(shv_path);
+	if (it_path_descr == m_propertyPaths.end()) {
+		auto it = find_longest_prefix(m_devicePaths, shv_path);
+		if(it == m_devicePaths.end()) {
+			return ret;
+		}
+		else {
+			string prefix = it->first;
+			string device = it->second;
+			String property = shv_path;
+			property = property.mid(prefix.size() + 1);
+			it_path_descr = m_propertyPaths.find(device + '/' + property);
+		}
+	}
 
-	auto it_type_descr = types.find(it_path_descr->second.typeName);
-	if (it_type_descr != types.end())
+	auto it_type_descr = m_types.find(it_path_descr->second.typeName());
+	if (it_type_descr != m_types.end())
 		ret = it_type_descr->second;
 
-	ret.applyTags(it_path_descr->second.tags);
+	//ret.applyTags(it_path_descr->second.data);
 	return ret;
+}
+
+ShvLogTypeDescr ShvLogTypeInfo::typeDescriptionForName(const std::string &type_name) const
+{
+	if(auto it = m_types.find(type_name); it == m_types.end())
+		return {};
+	else
+		return it->second;
 }
 
 std::string ShvLogTypeInfo::findSystemPath(const std::string &shv_path) const
 {
-	auto path_descr = paths.find(shv_path);
-	return (path_descr == paths.end()) ? std::string() : path_descr->second.systemPath;
+	string current_root;
+	string ret;
+	for(const auto &kv : m_systemPathsRoots) {
+		if(String::startsWith(shv_path, kv.first)) {
+			if(shv_path.size() == kv.first.size() || shv_path[kv.first.size()] == '/') {
+				if(kv.first.size() > current_root.size()) {
+					// fing longest match
+					current_root = kv.first;
+					ret = kv.second;
+				}
+			}
+		}
+	}
+	return ret;
 }
 
 RpcValue ShvLogTypeInfo::toRpcValue() const
 {
-	RpcValue::Map m;
-	RpcValue::Map mt;
-	for(const auto &kv : types) {
-		mt[kv.first] = kv.second.toRpcValue();
+	RpcValue::Map ret;
+	{
+		RpcValue::Map m;
+		for(const auto &kv : m_types) {
+			m[kv.first] = kv.second.toRpcValue();
+		}
+		ret["types"] = std::move(m);
 	}
-	m["types"] = std::move(mt);
-	RpcValue::Map mp;
-	for(const auto &kv : paths) {
-		mp[kv.first] = kv.second.toRpcValue();
+	{
+		RpcValue::Map m;
+		for(const auto &kv : m_devicePaths) {
+			m[kv.first] = kv.second;
+		}
+		ret["devices"] = std::move(m);
 	}
-	m["paths"] = std::move(mp);
-	return m;
+	{
+		RpcValue::Map m;
+		for(const auto &kv : m_propertyPaths) {
+			m[kv.first] = kv.second.toRpcValue();
+		}
+		ret["paths"] = std::move(m);
+	}
+	return ret;
 }
 
 ShvLogTypeInfo ShvLogTypeInfo::fromRpcValue(const RpcValue &v)
 {
 	ShvLogTypeInfo ret;
-	const RpcValue::Map &m = v.toMap();
-	const RpcValue::Map &mt = m.value("types").toMap();
-	for(const auto &kv : mt) {
-		ret.types[kv.first] = ShvLogTypeDescr::fromRpcValue(kv.second);
+	const RpcValue::Map &map = v.asMap();
+	{
+		const RpcValue::Map &m = map.value("types").asMap();
+		for(const auto &kv : m) {
+			ret.m_types[kv.first] = ShvLogTypeDescr::fromRpcValue(kv.second);
+		}
 	}
-	const RpcValue::Map &mp = m.value("paths").toMap();
-	for(const auto &kv : mp) {
-		ret.paths[kv.first] = ShvLogPathDescr::fromRpcValue(kv.second);
+	{
+		const RpcValue::Map &m = map.value("devices").asMap();
+		for(const auto &kv : m) {
+			ret.m_devicePaths[kv.first] = kv.second.asString();
+		}
+	}
+	{
+		const RpcValue::Map &m = map.value("paths").asMap();
+		for(const auto &kv : m) {
+			ret.m_propertyPaths[kv.first] = ShvLogPathDescr::fromRpcValue(kv.second);
+		}
 	}
 	return ret;
 }
