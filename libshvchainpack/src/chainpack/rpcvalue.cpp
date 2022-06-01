@@ -590,7 +590,7 @@ bool RpcValue::isValid() const
 
 bool RpcValue::isValueNotAvailable() const
 {
-	return metaTypeId() == meta::GlobalNS::MetaTypeId::ValueNotAvailable && metaTypeNameSpaceId() == meta::GlobalNS::ID;
+	return !isValid() || isNull();
 }
 
 double RpcValue::toDouble() const { return !m_ptr.isNull()? m_ptr->toDouble(): 0; }
@@ -648,26 +648,26 @@ std::string RpcValue::toStdString() const { return !m_ptr.isNull()? m_ptr->toStd
 
 void RpcValue::set(RpcValue::Int ix, const RpcValue &val)
 {
-	if(!m_ptr.isNull())
-		m_ptr->set(ix, val);
-	else
+	if(m_ptr.isNull())
 		nError() << " Cannot set value to invalid ChainPack value! Index: " << ix;
+	else
+		m_ptr->set(ix, val);
 }
 
 void RpcValue::set(const RpcValue::String &key, const RpcValue &val)
 {
-	if(!m_ptr.isNull())
-		m_ptr->set(key, val);
-	else
+	if(m_ptr.isNull())
 		nError() << " Cannot set value to invalid ChainPack value! Key: " << key;
+	else
+		m_ptr->set(key, val);
 }
 
 void RpcValue::append(const RpcValue &val)
 {
-	if(!m_ptr.isNull())
-		m_ptr->append(val);
-	else
+	if(m_ptr.isNull())
 		nError() << "Cannot append to invalid ChainPack value!";
+	else
+		m_ptr->append(val);
 }
 
 RpcValue RpcValue::metaStripped() const

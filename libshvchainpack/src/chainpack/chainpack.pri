@@ -19,8 +19,7 @@ SOURCES += \
     $$PWD/metamethod.cpp \
     $$PWD/tunnelctl.cpp \
     $$PWD/irpcconnection.cpp \
-    $$PWD/accessgrant.cpp \
-    $$PWD/valuenotavailable.cpp
+    $$PWD/accessgrant.cpp
 
 HEADERS += \
     $$PWD/datachange.h \
@@ -43,8 +42,7 @@ HEADERS += \
     $$PWD/metamethod.h \
     $$PWD/tunnelctl.h \
     $$PWD/irpcconnection.h \
-    $$PWD/accessgrant.h \
-    $$PWD/valuenotavailable.h
+    $$PWD/accessgrant.h
 
 unix {
 SOURCES += \

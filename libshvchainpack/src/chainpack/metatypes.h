@@ -93,7 +93,7 @@ public:
 			AccessGrant,
 			DataChange,
 			NodeDrop,
-			ValueNotAvailable,
+			ValueNotAvailable, // DEPRECATED WE ARE USING null INSTEAD
 			ShvJournalEntry,
 			NodePropertyMap,
 		};

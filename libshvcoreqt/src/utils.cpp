@@ -16,8 +16,6 @@ QVariant Utils::rpcValueToQVariant(const chainpack::RpcValue &v, bool *ok)
 {
 	if(ok)
 		*ok = true;
-	if(shv::chainpack::ValueNotAvailable::isValueNotAvailable(v))
-		return QVariant::fromValue(shv::chainpack::ValueNotAvailable());
 	switch (v.type()) {
 	case chainpack::RpcValue::Type::Invalid: return QVariant();
 	case chainpack::RpcValue::Type::Null: return QVariant::fromValue(nullptr);
@@ -71,8 +69,6 @@ chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v, bool *ok)
 		*ok = true;
 	if(!v.isValid())
 		return chainpack::RpcValue();
-	if(isValueNotAvailable(v))
-		return shv::chainpack::ValueNotAvailable().toRpcValue();
 	if(v.isNull())
 		return chainpack::RpcValue(nullptr);
 	switch (v.userType()) {
@@ -166,7 +162,7 @@ QString Utils::joinPath(const QString &p1, const QString &p2, const QString &p3)
 
 bool Utils::isValueNotAvailable(const QVariant &val)
 {
-	return qMetaTypeId<shv::chainpack::ValueNotAvailable>() == val.userType();
+	return !val.isValid();
 }
 
 bool Utils::isDefaultQVariantValue(const QVariant &val)

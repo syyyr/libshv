@@ -2,7 +2,6 @@
 
 #include "shvcoreqtglobal.h"
 
-#include <shv/chainpack/valuenotavailable.h>
 #include <shv/core/utils.h>
 #include <shv/core/exception.h>
 
@@ -154,4 +153,3 @@ public:
 } // namespace coreqt
 } // namespace shv
 
-Q_DECLARE_METATYPE(shv::chainpack::ValueNotAvailable);
