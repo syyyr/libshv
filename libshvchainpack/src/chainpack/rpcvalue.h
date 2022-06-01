@@ -221,6 +221,15 @@ public:
 		using Super = std::map<String, RpcValue>;
 		using Super::Super; // expose base class constructors
 	public:
+		RpcValue take(const String &key, const RpcValue &default_val = RpcValue())
+		{
+			auto it = find(key);
+			if(it == end())
+				return default_val;
+			auto ret = it->second;
+			erase(it);
+			return ret;
+		}
 		RpcValue value(const String &key, const RpcValue &default_val = RpcValue()) const
 		{
 			auto it = find(key);
