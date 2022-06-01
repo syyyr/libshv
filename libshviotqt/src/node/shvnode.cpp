@@ -423,19 +423,29 @@ chainpack::RpcValue ShvNode::call(const std::string &method, const chainpack::Rp
 */
 chainpack::RpcValue ShvNode::dir(const StringViewList &shv_path, const chainpack::RpcValue &methods_params)
 {
-	RpcValue::List ret;
 	chainpack::RpcValueGenList params(methods_params);
 	const std::string method = params.value(0).toString();
-	unsigned attrs = params.value(1).toUInt();
+	RpcValue rvattrs = params.value(1);
+	bool is_attr_dict = !(rvattrs.isInt() || rvattrs.isUInt());
+	unsigned nattrs = 0;
+	if(is_attr_dict) {
+		if(rvattrs.isValid() || rvattrs.isNull())
+			nattrs = 0;
+		else
+			nattrs = 0xff;
+	}
+	else {
+		nattrs = rvattrs.toUInt();
+	}
+	RpcValue::List ret;
 	size_t cnt = methodCount(shv_path);
 	for (size_t ix = 0; ix < cnt; ++ix) {
 		const chainpack::MetaMethod *mm = metaMethod(shv_path, ix);
-		if(method.empty()) {
-			ret.push_back(mm->attributes(attrs));
-		}
-		else if(method == mm->name()) {
-				ret.push_back(mm->attributes(attrs));
-				break;
+		if(method.empty() || method == mm->name()) {
+			if(is_attr_dict)
+				ret.push_back(mm->toRpcValue());
+			else
+				ret.push_back(mm->attributes(nattrs));
 		}
 	}
 	return RpcValue{ret};

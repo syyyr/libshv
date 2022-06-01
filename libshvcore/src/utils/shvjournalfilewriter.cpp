@@ -12,7 +12,7 @@ namespace cp = shv::chainpack;
 namespace shv {
 namespace core {
 namespace utils {
-
+/*
 static int uptimeSec()
 {
 	int uptime;
@@ -21,7 +21,7 @@ static int uptimeSec()
 	}
 	return 0;
 }
-
+*/
 ShvJournalFileWriter::ShvJournalFileWriter(const std::string &file_name)
 	: m_fileName(file_name)
 {
@@ -55,7 +55,7 @@ void ShvJournalFileWriter::append(const ShvJournalEntry &entry)
 	if(msec == 0)
 		msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
 	m_recentTimeStamp = msec;
-	append(msec, uptimeSec(), entry);
+	append(msec, msec, entry);
 }
 
 void ShvJournalFileWriter::appendMonotonic(const ShvJournalEntry &entry)
@@ -64,6 +64,7 @@ void ShvJournalFileWriter::appendMonotonic(const ShvJournalEntry &entry)
 	int64_t msec = entry.epochMsec;
 	if(msec == 0)
 		msec = cp::RpcValue::DateTime::now().msecsSinceEpoch();
+	int64_t msec2 = msec;
 	if(m_recentTimeStamp > 0) {
 		if(msec < m_recentTimeStamp)
 			msec = m_recentTimeStamp;
@@ -71,42 +72,41 @@ void ShvJournalFileWriter::appendMonotonic(const ShvJournalEntry &entry)
 	else {
 		m_recentTimeStamp = msec;
 	}
-	append(msec, uptimeSec(), entry);
+	append(msec, msec2, entry);
 }
 
 void ShvJournalFileWriter::appendSnapshot(int64_t msec, const std::vector<ShvJournalEntry> &snapshot)
 {
-	int uptime = uptimeSec();
 	for(ShvJournalEntry e : snapshot) {
 		e.setSnapshotValue(true);
 		// erase EVENT flag in the snapshot values,
 		// they can trigger events during reply otherwise
 		e.setSpontaneous(false);
-		append(msec, uptime, e);
+		append(msec, msec, e);
 	}
 	m_recentTimeStamp = msec;
 }
 
 void ShvJournalFileWriter::appendSnapshot(int64_t msec, const std::map<std::string, ShvJournalEntry> &snapshot)
 {
-	int uptime = uptimeSec();
 	for(const auto &kv : snapshot) {
 		ShvJournalEntry e = kv.second;
 		e.setSnapshotValue(true);
 		// erase EVENT flag in the snapshot values,
 		// they can trigger events during reply otherwise
 		e.setSpontaneous(false);
-		append(msec, uptime, e);
+		append(msec, msec, e);
 	}
 	m_recentTimeStamp = msec;
 }
 
-void ShvJournalFileWriter::append(int64_t msec, int uptime, const ShvJournalEntry &entry)
+void ShvJournalFileWriter::append(int64_t msec, int64_t orig_time, const ShvJournalEntry &entry)
 {
 	logDShvJournal() << "ShvJournalFileWriter::append:" << entry.toRpcValue().toCpon();
 	m_out << cp::RpcValue::DateTime::fromMSecsSinceEpoch(msec).toIsoString();
 	m_out << ShvFileJournal::FIELD_SEPARATOR;
-	m_out << uptime;
+	if(orig_time != msec)
+		m_out << cp::RpcValue::DateTime::fromMSecsSinceEpoch(orig_time).toIsoString();
 	m_out << ShvFileJournal::FIELD_SEPARATOR;
 	m_out << entry.path;
 	m_out << ShvFileJournal::FIELD_SEPARATOR;

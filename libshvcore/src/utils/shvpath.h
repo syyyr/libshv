@@ -4,6 +4,8 @@
 
 #include "../string.h"
 
+#include <functional>
+
 namespace shv {
 namespace core {
 class StringViewList;
@@ -53,6 +55,65 @@ public:
 	bool matchWild(const shv::core::StringViewList &pattern_lst) const;
 	static bool matchWild(const shv::core::StringViewList &path_lst, const shv::core::StringViewList &pattern_lst);
 };
+
+template<typename T>
+void forEachDirAndSubdirs(const T &map, const std::string &root_dir, std::function<void (typename T::const_iterator)> fn)
+{
+	for (auto it = map.lower_bound(root_dir); it != map.end(); ) {
+		const auto &key = it->first;
+		if(key.rfind(root_dir, 0) == 0) {
+			// key starts with key
+			// key must be either equal to root or ended with slash
+			if(key.size() == root_dir.size() || key[root_dir.size()] == '/') {
+				fn(it);
+			}
+			++it;
+		}
+		else {
+			break;
+		}
+	}
+}
+
+template<typename T>
+void forEachDirAndSubdirsDeleteIf(T &map, const std::string &root_dir, std::function<bool (typename T::const_iterator)> fn)
+{
+	for (auto it = map.lower_bound(root_dir); it != map.end(); ) {
+		const auto &key = it->first;
+		if(key.rfind(root_dir, 0) == 0) {
+			// key starts with key
+			// key must be either equal to root or ended with slash
+			if(key.size() == root_dir.size() || key[root_dir.size()] == '/') {
+				if(fn(it)) {
+					it = map.erase(it);
+					continue;
+				}
+			}
+			++it;
+		}
+		else {
+			break;
+		}
+	}
+}
+#if 0
+int test()
+{
+	using Map = std::map<std::string, std::string>;
+	Map m {
+		{"A/b", "a"},
+		{"a/b", "a"},
+		{"a/b-c", "a"},
+		{"a/b/c", "a"},
+		{"a/b/c/d", "a"},
+		{"a/b/d", "a"},
+		{"a/c/d", "a"},
+	};
+	forEachDirAndSubdirs(m, "a/b", [](Map::const_iterator it) {
+		std::cout << "key: " << it->first << std::endl;
+	});
+}
+#endif
 
 }}}
 

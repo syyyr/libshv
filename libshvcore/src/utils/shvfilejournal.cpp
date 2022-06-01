@@ -216,18 +216,16 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 	if(!m_journalContext.files.empty() && journal_file_start_msec < m_journalContext.files[m_journalContext.files.size() - 1])
 		SHV_EXCEPTION("Journal context corrupted!");
 
-	if(addToSnapshot(m_snapshot, e)) {
-		// log only not-default changes or changes from not-default to default
-		ShvJournalFileWriter wr(journalDir(), journal_file_start_msec, m_journalContext.recentTimeStamp);
-		ssize_t orig_fsz = wr.fileSize();
-		wr.appendMonotonic(e);
-		m_journalContext.recentTimeStamp = wr.recentTimeStamp();
-		ssize_t new_fsz = wr.fileSize();
-		m_journalContext.lastFileSize = new_fsz;
-		m_journalContext.journalSize += new_fsz - orig_fsz;
-		if(m_journalContext.journalSize > m_journalSizeLimit) {
-			rotateJournal();
-		}
+	addToSnapshot(m_snapshot, e);
+	ShvJournalFileWriter wr(journalDir(), journal_file_start_msec, m_journalContext.recentTimeStamp);
+	ssize_t orig_fsz = wr.fileSize();
+	wr.appendMonotonic(e);
+	m_journalContext.recentTimeStamp = wr.recentTimeStamp();
+	ssize_t new_fsz = wr.fileSize();
+	m_journalContext.lastFileSize = new_fsz;
+	m_journalContext.journalSize += new_fsz - orig_fsz;
+	if(m_journalContext.journalSize > m_journalSizeLimit) {
+		rotateJournal();
 	}
 }
 
@@ -720,13 +718,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 			std::string fn = journal_context.fileMsecToFilePath(*file_it);
 			logMShvJournal() << "-------- opening file:" << fn;
 			try {
-				/**
-				 We must check, that any value set to not-default value in previous file,
-				 will be set to default value after snapshot of current file is read
-				 if it will not be found in current snapshot
-
-				 This solves the case when for example alarm is set felse while shvgate was down
-				 */
+				/*
 				std::set<std::string> snapshot_keys;
 				std::vector<ShvJournalEntry> generated_entries;
 				logMShvJournal() << "Snapshot size:" << snapshot_ctx.snapshot.keyvals.size();
@@ -737,60 +729,22 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 						snapshot_keys.insert(kv.first);
 					}
 				}
+				*/
 				ShvJournalFileReader rd(fn);
-				// read this file snapshot
 				while(rd.next()) {
 					const ShvJournalEntry &entry = rd.entry();
 					//if(entry.path == "someError") logDShvJournal() << "1. snapshot:" << entry.toRpcValue().toCpon();
 					if(rd.inSnapshot()) {
 						logDShvJournal() << "\t snapshot:" << entry.path;
-						if(auto it = snapshot_keys.find(entry.path); it == snapshot_keys.end()) {
-							// value in current file snapshot is not present in previous files
-							// it might happen for example when some log file is missing
-							generated_entries.push_back(entry);
-						}
-						else {
-							// value is in snapshot already
-							// it will be ignored
-							snapshot_keys.erase(it);
-							continue;
-						}
-					}
-					else {
-						for(const std::string &key : snapshot_keys) {
-							//logDShvJournal() << "\t Setting missing snapshot entry to default value, path:" << key;
-							if(auto it = snapshot_ctx.snapshot.keyvals.find(key); it != snapshot_ctx.snapshot.keyvals.end()) {
-								ShvJournalEntry e = it->second;
-								e.epochMsec = rd.snapshotMsec();
-								e.value.setDefaultValue();
-								//e.setSnapshotValue(true); not snapshot value, it is result of file merge
-								generated_entries.push_back(std::move(e));
+						if(auto it = snapshot_ctx.snapshot.keyvals.find(entry.path); it != snapshot_ctx.snapshot.keyvals.end()) {
+							if(it->second.value == entry.value) {
+								// throw away current file snapshot values present already in global snapshot
+								continue;
 							}
-							//snapshot_keys.clear();
 						}
-						generated_entries.push_back(entry);
-						break;
-					}
-				}
-				// read rest of file
-				logMShvJournal() << "Writing generated values, cnt:" << generated_entries.size() << "note, that last generated value is the first value after snapshot";
-				while(true) {
-					ShvJournalEntry entry;
-					if(generated_entries.empty()) {
-						if(!rd.next())
-							goto next_file;
-						entry = rd.entry();
-						//if(entry.path == "someError") logDShvJournal() << "2. regular:" << entry.toRpcValue().toCpon();
-					}
-					else {
-						entry = *generated_entries.begin();
-						generated_entries.erase(generated_entries.begin());
-						if(generated_entries.empty())
-							logMShvJournal() << "Writing regular values";
 					}
 					if(!path_match(entry))
 						continue;
-					//logDShvJournal() << "3. filtered:" << entry.toRpcValue().toCpon();
 					bool before_since = params_since_msec > 0 && entry.epochMsec < params_since_msec;
 					bool after_until = params_until_msec > 0 && entry.epochMsec >= params_until_msec;
 					if(before_since) {
@@ -819,7 +773,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 						}
 #endif
 						logDShvJournal() << "\t LOG entry:" << entry.toRpcValueMap().toCpon();
-						// keep updating snapshot to enable snapshot erasule on log merge
+						// keep updating snapshot to enable snapshot erasure on log merge
 						addToSnapshot(snapshot_ctx.snapshot, entry);
 						if(!append_log_entry(entry))
 							goto log_finish;
@@ -829,7 +783,6 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 			catch (const shv::core::Exception &e) {
 				shvError() << "Cannot read shv journal file:" << fn;
 			}
-next_file: ;
 		}
 	}
 log_finish:

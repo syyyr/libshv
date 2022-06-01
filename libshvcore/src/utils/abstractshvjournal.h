@@ -19,7 +19,7 @@ struct ShvGetLogParams;
 struct SHVCORE_DECL_EXPORT ShvSnapshot
 {
 	std::map<std::string, ShvJournalEntry> keyvals;
-	std::set<std::string> liveNodePropertyMaps;
+	//std::set<std::string> liveNodePropertyMaps;
 };
 
 class SHVCORE_DECL_EXPORT AbstractShvJournal
@@ -38,7 +38,7 @@ public:
 	virtual shv::chainpack::RpcValue getSnapShotMap();
 	void clearSnapshot();
 protected:
-	static bool addToSnapshot(ShvSnapshot &snapshot, const ShvJournalEntry &entry);
+	static void addToSnapshot(ShvSnapshot &snapshot, const ShvJournalEntry &entry);
 protected:
 	ShvSnapshot m_snapshot;
 };

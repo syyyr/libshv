@@ -29,7 +29,7 @@ public:
 	int64_t recentTimeStamp() const { return m_recentTimeStamp; }
 private:
 	void open();
-	void append(int64_t msec, int uptime, const ShvJournalEntry &entry);
+	void append(int64_t msec, int64_t orig_time, const ShvJournalEntry &entry);
 private:
 	std::string m_fileName;
 	std::ofstream m_out;
