@@ -3,6 +3,20 @@
 namespace shv {
 namespace chainpack {
 
+RpcValue MetaMethod::toRpcValue() const
+{
+	RpcValue::Map ret;
+	ret["name"] = m_name;
+	ret["signature"] = (int)m_signature;
+	ret["flags"] = m_flags;
+	ret["accessGrant"] = m_accessGrant;
+	if(!m_description.empty())
+		ret["description"] = m_description;
+	auto tags = m_tags;
+	ret.merge(tags);
+	return ret;
+}
+
 MetaMethod::Signature MetaMethod::signatureFromString(const std::string &sigstr)
 {
 	if(sigstr == "VoidParam") return Signature::VoidParam;

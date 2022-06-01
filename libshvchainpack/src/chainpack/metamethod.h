@@ -51,13 +51,13 @@ public:
 public:
 	MetaMethod() {}
 	MetaMethod(std::string name, Signature ms, unsigned flags = 0
-			, const shv::chainpack::RpcValue &access_grant = shv::chainpack::Rpc::ROLE_BROWSE
-			, const std::string &description = {}
-			, const shv::chainpack::RpcValue::Map &tags = {})
-	    : m_name(std::move(name))
-	    , m_signature(ms)
-	    , m_flags(flags)
-	    , m_accessGrant(access_grant)
+				, const RpcValue &access_grant = Rpc::ROLE_BROWSE
+				, const std::string &description = {}
+				, const RpcValue::Map &tags = {})
+		: m_name(std::move(name))
+		, m_signature(ms)
+		, m_flags(flags)
+		, m_accessGrant(access_grant)
 		, m_description(description)
 		, m_tags(tags)
 	{}
@@ -66,7 +66,7 @@ public:
 	const std::string& description() const {return m_description;}
 	Signature signature() const {return m_signature;}
 	unsigned flags() const {return m_flags;}
-	const shv::chainpack::RpcValue& accessGrant() const {return m_accessGrant;}
+	const RpcValue& accessGrant() const {return m_accessGrant;}
 	RpcValue attributes(unsigned mask) const
 	{
 		RpcValue::List lst;
@@ -85,9 +85,11 @@ public:
 		lst.insert(lst.begin(), name());
 		return RpcValue{lst};
 	}
-	const shv::chainpack::RpcValue::Map& tags() const { return m_tags; }
-	shv::chainpack::RpcValue tag(const std::string &key, const shv::chainpack::RpcValue& default_value = {}) const { return m_tags.value(key, default_value); }
-	MetaMethod& setTag(const std::string &key, const shv::chainpack::RpcValue& value) { m_tags.setValue(key, value); return *this; }
+	const RpcValue::Map& tags() const { return m_tags; }
+	RpcValue tag(const std::string &key, const RpcValue& default_value = {}) const { return m_tags.value(key, default_value); }
+	MetaMethod& setTag(const std::string &key, const RpcValue& value) { m_tags.setValue(key, value); return *this; }
+
+	RpcValue toRpcValue() const;
 
 	static Signature signatureFromString(const std::string &sigstr);
 	static const char* signatureToString(Signature sig);
@@ -96,9 +98,9 @@ private:
 	std::string m_name;
 	Signature m_signature = Signature::VoidVoid;
 	unsigned m_flags = 0;
-	shv::chainpack::RpcValue m_accessGrant;
+	RpcValue m_accessGrant;
 	std::string m_description;
-	shv::chainpack::RpcValue::Map m_tags;
+	RpcValue::Map m_tags;
 };
 
 } // namespace chainpack
