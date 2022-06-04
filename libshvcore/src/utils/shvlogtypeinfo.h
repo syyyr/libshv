@@ -33,7 +33,7 @@ class SHVCORE_DECL_EXPORT ShvLogTypeDescrField : public ShvLogDescrBase
 	using Super = ShvLogDescrBase;
 public:
 	ShvLogTypeDescrField() {}
-	ShvLogTypeDescrField(const chainpack::RpcValue &v) : Super(v) {}
+	//ShvLogTypeDescrField(const chainpack::RpcValue &v) : Super(v) {} DANGEROUS
 	//ShvLogTypeDescrField(const std::string &n)
 	//	: ShvLogTypeDescrField(n, std::string(), chainpack::RpcValue(), std::string()) {}
 	//ShvLogTypeDescrField(const std::string &name, int bit_pos)
@@ -76,7 +76,7 @@ public:
 	enum class SampleType {Invalid = 0, Continuous , Discrete};
 
 	ShvLogTypeDescr() {}
-	ShvLogTypeDescr(const chainpack::RpcValue &v) : Super(v) {}
+	//ShvLogTypeDescr(const chainpack::RpcValue &v) : Super(v) {} DANGEROUS
 	//ShvLogTypeDescr(const std::string &type_name) : type(typeFromString(type_name)) { }
 	ShvLogTypeDescr(Type t, SampleType st = SampleType::Continuous)
 		: ShvLogTypeDescr(t, std::vector<ShvLogTypeDescrField>(), st) {}
@@ -117,7 +117,7 @@ class SHVCORE_DECL_EXPORT ShvLogPathDescr : public ShvLogDescrBase
 	using Super = ShvLogDescrBase;
 public:
 	ShvLogPathDescr() {}
-	ShvLogPathDescr(const chainpack::RpcValue &v) : Super(v) {}
+	//ShvLogPathDescr(const chainpack::RpcValue &v) : Super(v) {} DANGEROUS
 
 	std::string typeName() const;
 	std::string label() const;

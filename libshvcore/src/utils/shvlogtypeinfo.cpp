@@ -246,14 +246,25 @@ ShvLogTypeDescr &ShvLogTypeDescr::setDecimalPlaces(int n)
 
 RpcValue ShvLogTypeDescr::toRpcValue() const
 {
-	return m_data;
+	RpcValue::Map map = m_data.asMap();
+	map.setValue(KEY_TYPE, typeToString(type()));
+	map.setValue(KEY_SAMPLE_TYPE, sampleTypeToString(sampleType()));
+	return map;
 }
 
 ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const RpcValue &v)
 {
 	ShvLogTypeDescr ret;
-	if(v.isMap()) {
-		ret.m_data = v.toMap();
+	ret.m_data = v.asMap();
+	{
+		auto rv = ret.dataValue(KEY_TYPE);
+		if(rv.isString())
+			ret.setDataValue(KEY_TYPE, (int)typeFromString(rv.asString()));
+	}
+	{
+		auto rv = ret.dataValue(KEY_SAMPLE_TYPE);
+		if(rv.isString())
+			ret.setDataValue(KEY_SAMPLE_TYPE, (int)sampleTypeFromString(rv.asString()));
 	}
 	return ret;
 }
@@ -506,6 +517,7 @@ ShvLogTypeInfo ShvLogTypeInfo::fromRpcValue(const RpcValue &v)
 RpcValue ShvLogTypeInfo::applyType(const shv::chainpack::RpcValue &val, const std::string &type_name) const
 {
 	ShvLogTypeDescr td = typeDescriptionForName(type_name);
+	//shvWarning() << type_name << "--->" << td.toRpcValue().toCpon();
 	switch(td.type()) {
 	case ShvLogTypeDescr::Type::Invalid:
 		return val;
