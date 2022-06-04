@@ -1,5 +1,6 @@
 #include "shvlogtypeinfo.h"
 #include "../string.h"
+#include "../log.h"
 
 using namespace std;
 using namespace shv::chainpack;
@@ -23,6 +24,7 @@ static const char* KEY_TAGS = "tags";
 static const char* KEY_DEC_PLACES = "decPlaces";
 static const char* KEY_VISUAL_STYLE = "visualStyle";
 static const char* KEY_ALARM = "alarm";
+static const char* KEY_ALARM_LEVEL = "alarmLevel";
 
 //=====================================================================
 // ShvLogDescrBase
@@ -74,6 +76,16 @@ RpcValue ShvLogTypeDescrField::value() const
 	return dataValue(KEY_VALUE);
 }
 
+string ShvLogTypeDescrField::alarm() const
+{
+	return dataValue(KEY_ALARM).asString();
+}
+
+int ShvLogTypeDescrField::alarmLevel() const
+{
+	return dataValue(KEY_ALARM_LEVEL).toInt();
+}
+
 RpcValue ShvLogTypeDescrField::toRpcValue() const
 {
 	return m_data;
@@ -92,6 +104,12 @@ ShvLogTypeDescrField ShvLogTypeDescrField::fromRpcValue(const RpcValue &v)
 ShvLogTypeDescr::Type ShvLogTypeDescr::type() const
 {
 	return static_cast<Type>(dataValue(KEY_TYPE).toInt());
+}
+
+ShvLogTypeDescr &ShvLogTypeDescr::setType(Type t)
+{
+	setDataValue(KEY_TYPE, (int)t);
+	return *this;
 }
 
 std::vector<ShvLogTypeDescrField> ShvLogTypeDescr::fields() const
@@ -210,9 +228,20 @@ std::string ShvLogTypeDescr::alarm() const
 	return dataValue(KEY_ALARM, std::string()).asString();
 }
 
+int ShvLogTypeDescr::alarmLevel() const
+{
+	return dataValue(KEY_ALARM_LEVEL).toInt();
+}
+
 int ShvLogTypeDescr::decimalPlaces() const
 {
 	return dataValue(KEY_DEC_PLACES, 0).toInt();
+}
+
+ShvLogTypeDescr &ShvLogTypeDescr::setDecimalPlaces(int n)
+{
+	setDataValue(KEY_DEC_PLACES, n);
+	return *this;
 }
 
 RpcValue ShvLogTypeDescr::toRpcValue() const
@@ -327,6 +356,15 @@ ShvLogTypeInfo &ShvLogTypeInfo::addPathDescription(const ShvLogPathDescr &path_d
 	return *this;
 }
 
+ShvLogTypeInfo &ShvLogTypeInfo::addTypeDescription(const ShvLogTypeDescr &type_descr, const std::string &type_name)
+{
+	if(type_descr.isValid())
+		m_types[type_name] = type_descr;
+	else
+		m_types.erase(type_name);
+	return *this;
+}
+
 ShvLogPathDescr ShvLogTypeInfo::pathDescriptionForPath(const std::string &shv_path) const
 {
 	if (auto it_path_descr = m_propertyPaths.find(shv_path); it_path_descr == m_propertyPaths.cend()) {
@@ -403,35 +441,45 @@ std::string ShvLogTypeInfo::findSystemPath(const std::string &shv_path) const
 	return ret;
 }
 
+RpcValue ShvLogTypeInfo::typesAsRpcValue() const
+{
+	RpcValue::Map m;
+	for(const auto &kv : m_types) {
+		m[kv.first] = kv.second.toRpcValue();
+	}
+	return m;
+}
+
 RpcValue ShvLogTypeInfo::toRpcValue() const
 {
-	RpcValue::Map ret;
-	{
-		RpcValue::Map m;
-		for(const auto &kv : m_types) {
-			m[kv.first] = kv.second.toRpcValue();
-		}
-		ret["types"] = std::move(m);
-	}
+	RpcValue::Map map;
+	map["types"] = typesAsRpcValue();
 	{
 		RpcValue::Map m;
 		for(const auto &kv : m_devicePaths) {
 			m[kv.first] = kv.second;
 		}
-		ret["devices"] = std::move(m);
+		map["devices"] = std::move(m);
 	}
 	{
 		RpcValue::Map m;
 		for(const auto &kv : m_propertyPaths) {
 			m[kv.first] = kv.second.toRpcValue();
 		}
-		ret["paths"] = std::move(m);
+		map["paths"] = std::move(m);
 	}
+	RpcValue ret = map;
+	ret.setMetaValue("version", 3);
 	return ret;
 }
 
 ShvLogTypeInfo ShvLogTypeInfo::fromRpcValue(const RpcValue &v)
 {
+	int version = v.metaValue("version").toInt();
+	if(version != 3) {
+		shvError() << "Type info version:" << version << "is not supported.";
+		return {};
+	}
 	ShvLogTypeInfo ret;
 	const RpcValue::Map &map = v.asMap();
 	{
@@ -453,6 +501,87 @@ ShvLogTypeInfo ShvLogTypeInfo::fromRpcValue(const RpcValue &v)
 		}
 	}
 	return ret;
+}
+
+RpcValue ShvLogTypeInfo::applyType(const shv::chainpack::RpcValue &val, const std::string &type_name) const
+{
+	ShvLogTypeDescr td = typeDescriptionForName(type_name);
+	switch(td.type()) {
+	case ShvLogTypeDescr::Type::Invalid:
+		return val;
+	case ShvLogTypeDescr::Type::BitField: {
+		RpcValue::Map map;
+		uint64_t uval = val.toUInt64();
+		for(const ShvLogTypeDescrField &fld : td.fields()) {
+			unsigned bit_no1 = 0;
+			unsigned bit_no2 = 0;
+			if(fld.value().isList()) {
+				const auto &lst = fld.value().asList();
+				bit_no1 = lst.value(0).toUInt();
+				bit_no2 = lst.value(1).toUInt();
+				if(bit_no2 < bit_no1) {
+					shvError() << "Invalid bit specification:" << fld.value().toCpon();
+					bit_no2 = bit_no1;
+				}
+			}
+			else {
+				bit_no1 = bit_no2 = fld.value().toUInt();
+			}
+			uint64_t mask = ~((~static_cast<uint64_t>(0)) << (bit_no2 + 1));
+			shvDebug() << "bits:" << bit_no1 << bit_no2 << (bit_no1 == bit_no2) << "uval:" << uval << "mask:" << mask;
+			uval = (uval & mask) >> bit_no1;
+			shvDebug() << "uval masked and rotated right by:" << bit_no1 << "bits, uval:" << uval;
+			RpcValue result;
+			if(bit_no1 == bit_no2)
+				result = static_cast<bool>(uval != 0);
+			else
+				result = uval;
+			result = applyType(result, fld.typeName());
+			map[fld.name()] = result;
+		}
+		return map;
+	}
+	case ShvLogTypeDescr::Type::Enum: {
+		int ival = val.toInt();
+		for(const ShvLogTypeDescrField &fld : td.fields()) {
+			if(fld.value().toInt() == ival)
+				return fld.name();
+		}
+		return "UNKNOWN_" + val.toCpon();
+	}
+	case ShvLogTypeDescr::Type::Bool:
+		return val.toBool();
+	case ShvLogTypeDescr::Type::UInt:
+		return val.toUInt();
+	case ShvLogTypeDescr::Type::Int:
+		return val.toInt();
+	case ShvLogTypeDescr::Type::Decimal:
+		if(val.isDecimal())
+			return val;
+		return RpcValue::Decimal::fromDouble(val.toDouble(), td.decimalPlaces());
+	case ShvLogTypeDescr::Type::Double:
+		return val.toDouble();
+	case ShvLogTypeDescr::Type::String:
+		if(val.isString())
+			return val;
+		return val.asString();
+	case ShvLogTypeDescr::Type::DateTime:
+		return val.toDateTime();
+	case ShvLogTypeDescr::Type::List:
+		if(val.isList())
+			return val;
+		return val.asList();
+	case ShvLogTypeDescr::Type::Map:
+		if(val.isMap())
+			return val;
+		return val.asMap();
+	case ShvLogTypeDescr::Type::IMap:
+		if(val.isIMap())
+			return val;
+		return val.asIMap();
+	}
+	shvError() << "Invalid type:" << (int)td.type();
+	return val;
 }
 
 } // namespace utils

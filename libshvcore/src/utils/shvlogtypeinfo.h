@@ -13,7 +13,7 @@ namespace shv {
 namespace core {
 namespace utils {
 
-struct SHVCORE_DECL_EXPORT ShvLogDescrBase
+class SHVCORE_DECL_EXPORT ShvLogDescrBase
 {
 public:
 	ShvLogDescrBase() {}
@@ -28,7 +28,7 @@ protected:
 	chainpack::RpcValue m_data;
 };
 
-struct SHVCORE_DECL_EXPORT ShvLogTypeDescrField : public ShvLogDescrBase
+class SHVCORE_DECL_EXPORT ShvLogTypeDescrField : public ShvLogDescrBase
 {
 	using Super = ShvLogDescrBase;
 public:
@@ -47,6 +47,8 @@ public:
 	std::string label() const;
 	std::string description() const;
 	chainpack::RpcValue value() const;
+	std::string alarm() const;
+	int alarmLevel() const;
 
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogTypeDescrField fromRpcValue(const chainpack::RpcValue &v);
@@ -80,7 +82,8 @@ public:
 		: ShvLogTypeDescr(t, std::vector<ShvLogTypeDescrField>(), st) {}
 	ShvLogTypeDescr(Type t, std::vector<ShvLogTypeDescrField> &&flds, SampleType st = SampleType::Continuous);
 
-	Type type() const; // Type::Invalid;
+	Type type() const;
+	ShvLogTypeDescr& setType(Type t);
 	std::vector<ShvLogTypeDescrField> fields() const;
 	SampleType sampleType() const; // = SampleType::Continuous;
 
@@ -101,13 +104,15 @@ public:
 	//std::string unit() const;
 	std::string visualStyleName() const;
 	std::string alarm() const;
+	int alarmLevel() const;
 	int decimalPlaces() const;
+	ShvLogTypeDescr& setDecimalPlaces(int n);
 
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogTypeDescr fromRpcValue(const chainpack::RpcValue &v);
 };
 
-struct SHVCORE_DECL_EXPORT ShvLogPathDescr : public ShvLogDescrBase
+class SHVCORE_DECL_EXPORT ShvLogPathDescr : public ShvLogDescrBase
 {
 	using Super = ShvLogDescrBase;
 public:
@@ -125,7 +130,7 @@ public:
 	//static ShvLogPathDescr fromTags(const chainpack::RpcValue::Map &tags);
 };
 
-struct SHVCORE_DECL_EXPORT ShvLogTypeInfo
+class SHVCORE_DECL_EXPORT ShvLogTypeInfo
 {
 public:
 	ShvLogTypeInfo() {}
@@ -135,16 +140,21 @@ public:
 	{}
 
 	bool isEmpty() const { return m_types.size() == 0 && m_propertyPaths.size() == 0; }
+	//const std::map<std::string, ShvLogTypeDescr>& types() const { return m_types; }
 
 	ShvLogTypeInfo& addDevicePath(const std::string &device_path, const std::string &device_type);
 	ShvLogTypeInfo& addPathDescription(const ShvLogPathDescr &path_descr, const std::string &property_path, const std::string &device_type = {} );
+	ShvLogTypeInfo& addTypeDescription(const ShvLogTypeDescr &type_descr, const std::string &type_name);
 	ShvLogPathDescr pathDescriptionForPath(const std::string &shv_path) const;
 	ShvLogTypeDescr typeDescriptionForPath(const std::string &shv_path) const;
 	ShvLogTypeDescr typeDescriptionForName(const std::string &type_name) const;
 	std::string findSystemPath(const std::string &shv_path) const;
 
+	chainpack::RpcValue typesAsRpcValue() const;
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogTypeInfo fromRpcValue(const chainpack::RpcValue &v);
+
+	shv::chainpack::RpcValue applyType(const shv::chainpack::RpcValue &val, const std::string &type_name) const;
 private:
 	std::map<std::string, ShvLogTypeDescr> m_types; // type_name -> type_description
 	std::map<std::string, std::string> m_devicePaths; // path -> device
