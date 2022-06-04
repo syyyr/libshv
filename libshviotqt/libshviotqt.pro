@@ -10,7 +10,7 @@ with-shvwebsockets {
 	DEFINES += WITH_SHV_WEBSOCKETS
 }
 
-CONFIG += C++11
+CONFIG += C++17
 CONFIG += hide_symbols
 
 TEMPLATE = lib

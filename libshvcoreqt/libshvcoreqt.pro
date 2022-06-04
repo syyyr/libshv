@@ -3,7 +3,7 @@ include( ../subproject_integration.pri )
 
 QT -= gui
 
-CONFIG += C++11
+CONFIG += C++17
 CONFIG += hide_symbols
 
 TEMPLATE = lib
