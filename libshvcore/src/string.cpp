@@ -14,9 +14,9 @@ std::string::size_type String::indexOf(const std::string & str_haystack, const s
 	auto it = std::search(
 				  str_haystack.begin(), str_haystack.end(),
 				  str_needle.begin(), str_needle.end(),
-				  (case_sensitivity == CaseInsensitive) ?
-					  [](char a, char b) { return std::tolower(a) == std::tolower(b); }:
-	[](char a, char b) { return a == b;}
+				  (case_sensitivity == CaseInsensitive)
+					? [](char a, char b) { return std::tolower(a) == std::tolower(b); }
+					: [](char a, char b) { return a == b;}
 	);
 	return (it == str_haystack.end())? std::string::npos: static_cast<std::string::size_type>(it - str_haystack.begin());
 }

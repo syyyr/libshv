@@ -26,8 +26,9 @@ public:
 	String(std::string &&o) : Super(o) {}
 
 	static bool equal(const std::string &a, const std::string &b, String::CaseSensitivity case_sensitivity);
-	static std::string::size_type indexOf(const std::string & str_haystack, const std::string &str_needle, String::CaseSensitivity case_sensitivity);
+	static std::string::size_type indexOf(const std::string & str_haystack, const std::string &str_needle, String::CaseSensitivity case_sensitivity = CaseSensitive);
 	static std::string::size_type indexOf(const std::string &haystack, char needle);
+	std::string::size_type indexOf(const std::string &needle, String::CaseSensitivity case_sensitivity = CaseSensitive) const { return indexOf(*this, needle, case_sensitivity); }
 	std::string::size_type indexOf(char needle) const { return indexOf(*this, needle); }
 	size_t lastIndexOf(char c) const;
 
