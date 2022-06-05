@@ -514,7 +514,7 @@ ShvLogTypeInfo ShvLogTypeInfo::fromRpcValue(const RpcValue &v)
 	return ret;
 }
 
-RpcValue ShvLogTypeInfo::applyType(const shv::chainpack::RpcValue &val, const std::string &type_name) const
+RpcValue ShvLogTypeInfo::applyType(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums) const
 {
 	ShvLogTypeDescr td = typeDescriptionForName(type_name);
 	//shvWarning() << type_name << "--->" << td.toRpcValue().toCpon();
@@ -555,11 +555,16 @@ RpcValue ShvLogTypeInfo::applyType(const shv::chainpack::RpcValue &val, const st
 	}
 	case ShvLogTypeDescr::Type::Enum: {
 		int ival = val.toInt();
-		for(const ShvLogTypeDescrField &fld : td.fields()) {
-			if(fld.value().toInt() == ival)
-				return fld.name();
+		if(translate_enums) {
+			for(const ShvLogTypeDescrField &fld : td.fields()) {
+				if(fld.value().toInt() == ival)
+					return fld.name();
+			}
+			return "UNKNOWN_" + val.toCpon();
 		}
-		return "UNKNOWN_" + val.toCpon();
+		else {
+			return ival;
+		}
 	}
 	case ShvLogTypeDescr::Type::Bool:
 		return val.toBool();

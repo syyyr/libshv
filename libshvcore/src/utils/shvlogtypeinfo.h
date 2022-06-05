@@ -154,7 +154,7 @@ public:
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogTypeInfo fromRpcValue(const chainpack::RpcValue &v);
 
-	shv::chainpack::RpcValue applyType(const shv::chainpack::RpcValue &val, const std::string &type_name) const;
+	shv::chainpack::RpcValue applyType(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums = true) const;
 private:
 	std::map<std::string, ShvLogTypeDescr> m_types; // type_name -> type_description
 	std::map<std::string, std::string> m_devicePaths; // path -> device

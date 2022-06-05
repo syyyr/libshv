@@ -12,7 +12,7 @@ RpcValue MetaMethod::toRpcValue() const
 	ret["accessGrant"] = m_accessGrant;
 	if(!m_description.empty())
 		ret["description"] = m_description;
-	auto tags = m_tags;
+	RpcValue::Map tags = m_tags;
 	ret.merge(tags);
 	return ret;
 }
