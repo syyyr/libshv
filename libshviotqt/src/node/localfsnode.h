@@ -28,7 +28,7 @@ public:
 private:
 	QString makeAbsolutePath(const QString &relative_path) const;
 	std::string fileName(const ShvNode::StringViewList &shv_path) const override;
-	shv::chainpack::RpcValue readContent(const ShvNode::StringViewList &shv_path) const override;
+	shv::chainpack::RpcValue readContent(const ShvNode::StringViewList &shv_path, int64_t offset, int64_t size) const override;
 	shv::chainpack::RpcValue size(const ShvNode::StringViewList &shv_path) const override;
 
 	bool isDir(const ShvNode::StringViewList &shv_path) const;
@@ -36,12 +36,13 @@ private:
 
 	QFileInfo ndFileInfo(const QString &path) const;
 	chainpack::RpcValue ndSize(const QString &path) const;
-	chainpack::RpcValue ndRead(const QString &path) const;
+	chainpack::RpcValue ndRead(const QString &path, qint64 offset, qint64 size) const;
 	chainpack::RpcValue ndWrite(const QString &path, const chainpack::RpcValue &methods_params);
 	chainpack::RpcValue ndDelete(const QString &path);
 	chainpack::RpcValue ndMkfile(const QString &path, const shv::chainpack::RpcValue &methods_params);
 	chainpack::RpcValue ndMkdir(const QString &path, const shv::chainpack::RpcValue &methods_params);
 	chainpack::RpcValue ndRmdir(const QString &path, bool recursively);
+	chainpack::RpcValue ndLsDir(const QString &path, const shv::chainpack::RpcValue &methods_params);
 protected:
 	QDir m_rootDir;
 };

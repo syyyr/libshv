@@ -14,7 +14,6 @@ class SHVIOTQT_DECL_EXPORT FileNode : public ShvNode
 
 public:
 	static const std::vector<shv::chainpack::MetaMethod> meta_methods_file_base;
-
 public:
 	FileNode(const std::string &node_id, Super *parent = nullptr);
 
@@ -25,11 +24,11 @@ public:
 
 protected:
 	virtual std::string fileName(const ShvNode::StringViewList &shv_path) const;
-	virtual shv::chainpack::RpcValue size(const ShvNode::StringViewList &shv_path) const;
-	virtual shv::chainpack::RpcValue readContent(const ShvNode::StringViewList &shv_path) const = 0;
+	virtual shv::chainpack::RpcValue size(const ShvNode::StringViewList &shv_path) const = 0;
+	virtual shv::chainpack::RpcValue readContent(const ShvNode::StringViewList &shv_path, int64_t offset, int64_t size) const = 0;
 
 private:
-	shv::chainpack::RpcValue read(const ShvNode::StringViewList &shv_path) const;
+	shv::chainpack::RpcValue read(const ShvNode::StringViewList &shv_path, const chainpack::RpcValue &params) const;
 	shv::chainpack::RpcValue readFileCompressed(const ShvNode::StringViewList &shv_path, const shv::chainpack::RpcValue &params) const;
 };
 

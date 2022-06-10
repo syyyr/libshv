@@ -25,9 +25,21 @@ const std::vector<shv::chainpack::MetaMethod> FileNode::meta_methods_file_base =
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_BROWSE},
 	{M_HASH, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 	{M_SIZE, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::LargeResultHint, cp::Rpc::ROLE_BROWSE},
-	{M_SIZE_COMPRESSED, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_BROWSE, "Parameters\n - compressionType: gzip (default) | qcompress"},
-	{M_READ, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::LargeResultHint, cp::Rpc::ROLE_READ},
-	{M_READ_COMPRESSED, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ, "Parameters\n - compressionType: gzip (default) | qcompress"},
+	{M_SIZE_COMPRESSED, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_BROWSE
+	 , "Parameters\n"
+	   "  read() parameters\n"
+	   "  compressionType: gzip (default) | qcompress"
+	},
+	{M_READ, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::LargeResultHint, cp::Rpc::ROLE_READ
+	 , "Parameters\n"
+	 "  offset: file offset to start read, default is 0\n"
+	 "  size: number of bytes to read starting on offset, default is till end of file\n"
+	},
+	{M_READ_COMPRESSED, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ
+	 , "Parameters\n"
+	   "  read() parameters\n"
+	   "  compressionType: gzip (default) | qcompress"
+	},
 };
 
 enum class CompressionType {
@@ -74,13 +86,13 @@ FileNode::FileNode(const std::string &node_id, shv::iotqt::node::FileNode::Super
 cp::RpcValue FileNode::callMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id)
 {
 	if (method == M_READ) {
-		return read(shv_path);
+		return read(shv_path, params);
 	}
 	if (method == M_READ_COMPRESSED) {
 		return readFileCompressed(shv_path, params);
 	}
 	if(method == M_HASH) {
-		shv::chainpack::RpcValue::Blob bytes = read(shv_path).asBlob();
+		shv::chainpack::RpcValue::Blob bytes = read(shv_path, params).asBlob();
 		QCryptographicHash h(QCryptographicHash::Sha1);
 		h.addData((const char*)bytes.data(), bytes.size());
 		return h.result().toHex().toStdString();
@@ -117,16 +129,15 @@ std::string FileNode::fileName(const ShvNode::StringViewList &shv_path) const
 	return nodeId();
 }
 
-chainpack::RpcValue FileNode::read(const ShvNode::StringViewList &shv_path) const
+chainpack::RpcValue FileNode::read(const ShvNode::StringViewList &shv_path, const chainpack::RpcValue &params) const
 {
-	cp::RpcValue ret_value = readContent(shv_path);
+	int64_t offset = params.asMap().value("offset").toInt64();
+	int64_t size = params.asMap().value("size", std::numeric_limits<int64_t>::max()).toInt64();
+	cp::RpcValue ret_value = readContent(shv_path, offset, size);
 	ret_value.setMetaValue("fileName", fileName(shv_path));
+	ret_value.setMetaValue("offset", offset);
+	ret_value.setMetaValue("size", ret_value.asBlob().size());
 	return ret_value;
-}
-
-chainpack::RpcValue FileNode::size(const ShvNode::StringViewList &shv_path) const
-{
-	return (unsigned)read(shv_path).asBlob().size();
 }
 
 chainpack::RpcValue FileNode::readFileCompressed(const ShvNode::StringViewList &shv_path, const chainpack::RpcValue &params) const
@@ -138,7 +149,9 @@ chainpack::RpcValue FileNode::readFileCompressed(const ShvNode::StringViewList &
 	}
 
 	cp::RpcValue result;
-	const cp::RpcValue::Blob blob = readContent(shv_path).asBlob();
+	int64_t offset = params.asMap().value("offset").toInt64();
+	int64_t size = params.asMap().value("size", std::numeric_limits<int64_t>::max()).toInt64();
+	const cp::RpcValue::Blob blob = readContent(shv_path, offset, size).asBlob();
 	if (compression_type == CompressionType::QCompress) {
 		const auto compressed_blob = qCompress(QByteArray::fromRawData(reinterpret_cast<const char *>(blob.data()), blob.size()));
 		result = shv::chainpack::RpcValue::Blob(compressed_blob.cbegin(), compressed_blob.cend());
@@ -176,6 +189,8 @@ chainpack::RpcValue FileNode::readFileCompressed(const ShvNode::StringViewList &
 		result.setMetaValue("compressionType", "gzip");
 		result.setMetaValue("fileName", fileName(shv_path) + ".gz");
 	}
+	result.setMetaValue("offset", offset);
+	result.setMetaValue("size", result.asBlob().size());
 
 	return result;
 }

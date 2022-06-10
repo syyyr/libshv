@@ -6,7 +6,7 @@
 #include <shv/core/stringview.h>
 #include <shv/coreqt/log.h>
 
-namespace cp = shv::chainpack;
+using namespace shv::chainpack;
 
 namespace shv {
 namespace iotqt {
@@ -18,26 +18,26 @@ static const char M_MKFILE[] = "mkfile";
 static const char M_MKDIR[] = "mkdir";
 static const char M_RMDIR[] = "rmdir";
 
-static const std::vector<cp::MetaMethod> meta_methods_dir {
-	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_BROWSE},
-	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_BROWSE},
-	{M_MKFILE, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_WRITE},
-	{M_MKDIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_WRITE},
-	{M_RMDIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_SERVICE}
+static const std::vector<MetaMethod> meta_methods_dir {
+	{Rpc::METH_DIR, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_BROWSE},
+	{Rpc::METH_LS, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_BROWSE},
+	{M_MKFILE, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_WRITE},
+	{M_MKDIR, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_WRITE},
+	{M_RMDIR, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_SERVICE}
 };
 
-static const std::vector<cp::MetaMethod> meta_methods_dir_write_file {
-	{M_WRITE, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_WRITE},
+static const std::vector<MetaMethod> meta_methods_dir_write_file {
+	{M_WRITE, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_WRITE},
 };
 
-static const std::vector<cp::MetaMethod> meta_methods_file_modificable {
-	{M_WRITE, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_WRITE},
-	{M_DELETE, cp::MetaMethod::Signature::RetVoid, 0, cp::Rpc::ROLE_SERVICE}
+static const std::vector<MetaMethod> meta_methods_file_modificable {
+	{M_WRITE, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_WRITE},
+	{M_DELETE, MetaMethod::Signature::RetVoid, 0, Rpc::ROLE_SERVICE}
 };
 
-static const std::vector<cp::MetaMethod> & get_meta_methods_file()
+static const std::vector<MetaMethod> & get_meta_methods_file()
 {
-	static std::vector<cp::MetaMethod> meta_methods;
+	static std::vector<MetaMethod> meta_methods;
 	if (meta_methods.empty()) {
 		meta_methods = FileNode::meta_methods_file_base;
 		meta_methods.insert(meta_methods.end(), meta_methods_file_modificable.begin(), meta_methods_file_modificable.end());
@@ -76,6 +76,12 @@ chainpack::RpcValue LocalFSNode::callMethod(const ShvNode::StringViewList &shv_p
 		bool recursively = (params.isBool()) ? params.toBool() : false;
 		return ndRmdir(QString::fromStdString(shv_path.join('/')), recursively);
 	}
+	else if(method == Rpc::METH_LS) {
+		if(params.isMap()) {
+			// override SHV method `ls` id parameter `long` is defined
+			return ndLsDir(QString::fromStdString(shv_path.join('/')), params);
+		}
+	}
 
 	return Super::callMethod(shv_path, method, params, user_id);
 }
@@ -83,20 +89,12 @@ chainpack::RpcValue LocalFSNode::callMethod(const ShvNode::StringViewList &shv_p
 ShvNode::StringList LocalFSNode::childNames(const ShvNode::StringViewList &shv_path)
 {
 	QString qpath = QString::fromStdString(shv_path.join('/'));
-	QFileInfo fi_path(makeAbsolutePath(qpath));
-	//shvInfo() << __FUNCTION__ << fi_path.absoluteFilePath() << "is dir:" << fi_path.isDir();
-	if(fi_path.isDir()) {
-		QDir d2(fi_path.absoluteFilePath());
-		if(!d2.exists())
-			SHV_EXCEPTION("Path " + d2.absolutePath().toStdString() + " do not exists.");
-		ShvNode::StringList lst;
-		for(const QFileInfo &fi : d2.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot, QDir::Name | QDir::IgnoreCase | QDir::DirsFirst)) {
-			//shvInfo() << fi.fileName();
-			lst.push_back(fi.fileName().toStdString());
-		}
-		return lst;
+	ShvNode::StringList ret;
+	RpcValue dirs = ndLsDir(qpath, {});
+	for(const auto &rv : dirs.asList()) {
+		ret.push_back(rv.asString());
 	}
-	return ShvNode::StringList();
+	return ret;
 }
 
 chainpack::RpcValue LocalFSNode::hasChildren(const ShvNode::StringViewList &shv_path)
@@ -148,9 +146,9 @@ std::string LocalFSNode::fileName(const ShvNode::StringViewList &shv_path) const
 	return shv_path.size() > 0 ? shv_path.back().toString() : "";
 }
 
-chainpack::RpcValue LocalFSNode::readContent(const ShvNode::StringViewList &shv_path) const
+chainpack::RpcValue LocalFSNode::readContent(const ShvNode::StringViewList &shv_path, int64_t offset, int64_t size) const
 {
-	return ndRead(QString::fromStdString(shv_path.join('/')));
+	return ndRead(QString::fromStdString(shv_path.join('/')), offset, size);
 }
 
 chainpack::RpcValue LocalFSNode::size(const ShvNode::StringViewList &shv_path) const
@@ -181,20 +179,27 @@ QFileInfo LocalFSNode::ndFileInfo(const QString &path) const
 	return fi;
 }
 
-cp::RpcValue LocalFSNode::ndSize(const QString &path) const
+RpcValue LocalFSNode::ndSize(const QString &path) const
 {
 	return (unsigned)ndFileInfo(path).size();
 }
 
-chainpack::RpcValue LocalFSNode::ndRead(const QString &path) const
+chainpack::RpcValue LocalFSNode::ndRead(const QString &path, qint64 offset, qint64 size) const
 {
 	QString file_path = makeAbsolutePath(path);
 	checkPathIsBoundedToFsRoot(file_path);
 
 	QFile f(file_path);
 	if(f.open(QFile::ReadOnly)) {
-		QByteArray ba = f.readAll();
-		return cp::RpcValue::Blob(ba.constData(), ba.constData() + ba.size());
+		qint64 sz = f.size() - offset;
+		if(sz <= 0)
+			return {};
+		sz = std::min(sz, size);
+		f.seek(offset);
+		RpcValue::Blob blob;
+		blob.resize(sz);
+		f.read((char*)blob.data(), sz);
+		return RpcValue(std::move(blob));
 	}
 	SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for reading.");
 }
@@ -318,6 +323,53 @@ chainpack::RpcValue LocalFSNode::ndRmdir(const QString &path, bool recursively)
 		return d.removeRecursively();
 	else
 		return d.rmdir(makeAbsolutePath(path));
+}
+
+RpcValue LocalFSNode::ndLsDir(const QString &path, const chainpack::RpcValue &methods_params)
+{
+	bool with_size = methods_params.asMap().value("size").toBool();
+	bool with_ctime = methods_params.asMap().value("ctime").toBool();
+	bool with_dirs = methods_params.asMap().value("dirs", true).toBool();
+	bool with_files = methods_params.asMap().value("files", true).toBool();
+	QFileInfo fi_path(makeAbsolutePath(path));
+	//shvInfo() << __FUNCTION__ << fi_path.absoluteFilePath() << "is dir:" << fi_path.isDir();
+	if(fi_path.isDir()) {
+		QDir d2(fi_path.absoluteFilePath());
+		if(!d2.exists())
+			SHV_EXCEPTION("Path " + d2.absolutePath().toStdString() + " do not exists.");
+		RpcValue::List lst;
+		QDir::Filters filters = QDir::NoDotAndDotDot;
+		if(with_dirs)
+			filters |= QDir::Dirs;
+		if(with_files)
+			filters |= QDir::Files;
+		for(const QFileInfo &fi : d2.entryInfoList(filters, QDir::Name | QDir::IgnoreCase | QDir::DirsFirst)) {
+			//shvInfo() << fi.fileName();
+			if(with_size || with_ctime) {
+				RpcValue::List lst2;
+				lst2.push_back(fi.fileName().toStdString());
+				lst2.push_back(fi.isDir()? "d": "f");
+				if(with_size) {
+					if(fi.isDir())
+						lst2.push_back(0);
+					else
+						lst2.push_back((int64_t)fi.size());
+				}
+				if(with_ctime)
+					lst2.push_back(RpcValue::DateTime::fromMSecsSinceEpoch(fi.birthTime().toMSecsSinceEpoch()));
+
+				lst.push_back(lst2);
+			}
+			else {
+				lst.push_back(fi.fileName().toStdString());
+			}
+		}
+		return lst;
+	}
+	else {
+		SHV_EXCEPTION("Path " + path.toStdString() + " is not dir.");
+	}
+	return {};
 }
 
 } // namespace node
