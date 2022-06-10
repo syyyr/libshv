@@ -187,5 +187,52 @@ bool Utils::isDefaultQVariantValue(const QVariant &val)
 	}
 }
 
+static uint32_t crc32_checksum(const uint8_t *data, int size)
+{
+	uint32_t crc = 0xFFFFFFFF;
+
+	for (int i = 0; i < size; i++) {
+		uint8_t byte = data[i];
+		for (int j = 0; j < 8; j++) {
+			uint32_t bit = (byte ^ crc) & 1;
+			crc >>= 1;
+			if (bit)
+				crc = crc ^ 0xEDB88320;
+			byte >>= 1;
+		}
+	}
+
+	return ~crc;
+}
+
+std::vector<uint8_t> Utils::compressGZip(const std::vector<uint8_t> &data)
+{
+	QByteArray compressed_data = qCompress(QByteArray::fromRawData(reinterpret_cast<const char *>(data.data()), data.size()));
+
+	// Remove 4 bytes of length added by Qt a 2 bytes of zlib header from the beginning
+	compressed_data = compressed_data.mid(6);
+
+	// Remove 4 bytes of ADLER-32 zlib checksum from the end
+	compressed_data.chop(4);
+
+	// GZIP header according to GZIP File Format Specification (RFC 1952)
+	static const char gzip_header[] = {'\x1f', '\x8b', '\x08', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x03'};
+	compressed_data.prepend(gzip_header, sizeof(gzip_header));
+
+	const uint32_t crc32 = crc32_checksum(data.data(), data.size());
+	compressed_data.append(crc32 & 0xff);
+	compressed_data.append((crc32 >> 8) & 0xff);
+	compressed_data.append((crc32 >> 16) & 0xff);
+	compressed_data.append((crc32 >> 24) & 0xff);
+
+	const uint32_t data_size = data.size();
+	compressed_data.append(data_size & 0xff);
+	compressed_data.append((data_size >> 8) & 0xff);
+	compressed_data.append((data_size >> 16) & 0xff);
+	compressed_data.append((data_size >> 24) & 0xff);
+
+	return shv::chainpack::RpcValue::Blob(compressed_data.cbegin(), compressed_data.cend());
+}
+
 } // namespace coreqt
 } // namespace shv

@@ -21,7 +21,6 @@ public:
 
 	size_t methodCount(const StringViewList &shv_path) override;
 	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
-
 protected:
 	virtual std::string fileName(const ShvNode::StringViewList &shv_path) const;
 	virtual shv::chainpack::RpcValue size(const ShvNode::StringViewList &shv_path) const = 0;

@@ -4,6 +4,7 @@
 #include <shv/chainpack/metamethod.h>
 #include <shv/core/exception.h>
 #include <shv/core/stringview.h>
+#include <shv/coreqt/utils.h>
 #include <shv/coreqt/log.h>
 
 #include <QCryptographicHash>
@@ -58,24 +59,6 @@ static CompressionType compression_type_from_string(const std::string &type_str,
 		return CompressionType::QCompress;
 	else
 		return CompressionType::Invalid;
-}
-
-static uint32_t crc32_checksum(const uint8_t *data, int size)
-{
-	uint32_t crc = 0xFFFFFFFF;
-
-	for (int i = 0; i < size; i++) {
-		uint8_t byte = data[i];
-		for (int j = 0; j < 8; j++) {
-			uint32_t bit = (byte ^ crc) & 1;
-			crc >>= 1;
-			if (bit)
-				crc = crc ^ 0xEDB88320;
-			byte >>= 1;
-		}
-	}
-
-	return ~crc;
 }
 
 FileNode::FileNode(const std::string &node_id, shv::iotqt::node::FileNode::Super *parent)
@@ -160,32 +143,7 @@ chainpack::RpcValue FileNode::readFileCompressed(const ShvNode::StringViewList &
 		result.setMetaValue("fileName", fileName(shv_path) + ".qcompress");
 	}
 	else if (compression_type == CompressionType::GZip) {
-		QByteArray compressed_blob = qCompress(QByteArray::fromRawData(reinterpret_cast<const char *>(blob.data()), blob.size()));
-
-		// Remove 4 bytes of length added by Qt a 2 bytes of zlib header from the beginning
-		compressed_blob = compressed_blob.mid(6);
-
-		// Remove 4 bytes of ADLER-32 zlib checksum from the end
-		compressed_blob.chop(4);
-
-		// GZIP header according to GZIP File Format Specification (RFC 1952)
-		static const char gzip_header[] = {'\x1f', '\x8b', '\x08', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x03'};
-		compressed_blob.prepend(gzip_header, sizeof(gzip_header));
-
-		const uint32_t crc32 = crc32_checksum(blob.data(), blob.size());
-		compressed_blob.append(crc32 & 0xff);
-		compressed_blob.append((crc32 >> 8) & 0xff);
-		compressed_blob.append((crc32 >> 16) & 0xff);
-		compressed_blob.append((crc32 >> 24) & 0xff);
-
-		const uint32_t data_size = blob.size();
-		compressed_blob.append(data_size & 0xff);
-		compressed_blob.append((data_size >> 8) & 0xff);
-		compressed_blob.append((data_size >> 16) & 0xff);
-		compressed_blob.append((data_size >> 24) & 0xff);
-
-		result = shv::chainpack::RpcValue::Blob(compressed_blob.cbegin(), compressed_blob.cend());
-
+		result = shv::coreqt::Utils::compressGZip(blob);
 		result.setMetaValue("compressionType", "gzip");
 		result.setMetaValue("fileName", fileName(shv_path) + ".gz");
 	}

@@ -130,6 +130,8 @@ public:
 	static QString joinPath(const QString &p1, const QString &p2);
 	static QString joinPath(const QString &p1, const QString &p2, const QString &p3);
 
+	static std::vector<uint8_t> compressGZip(const std::vector<uint8_t> &data);
+
 	template <class T>
 	static T findParent(const QObject *_o, bool throw_exc = shv::core::Exception::Throw)
 	{
