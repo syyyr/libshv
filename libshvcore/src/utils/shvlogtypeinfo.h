@@ -23,7 +23,9 @@ public:
 protected:
 	chainpack::RpcValue dataValue(const std::string &key, const chainpack::RpcValue &default_val = {}) const;
 	void setDataValue(const std::string &key, const chainpack::RpcValue &val);
-	//const chainpack::RpcValue::Map& asMap() const { return m_data.asMap(); }
+
+	void setData(const chainpack::RpcValue &data);
+	static void mergeTags(shv::chainpack::RpcValue::Map &map);
 protected:
 	chainpack::RpcValue m_data;
 };

@@ -41,6 +41,24 @@ void ShvLogDescrBase::setDataValue(const std::string &key, const chainpack::RpcV
 	}
 	m_data.set(key, val);
 }
+
+void ShvLogDescrBase::setData(const chainpack::RpcValue &data)
+{
+	if(data.isMap()) {
+		RpcValue::Map map = data.asMap();
+		mergeTags(map);
+		m_data = map;
+	}
+}
+
+void ShvLogDescrBase::mergeTags(chainpack::RpcValue::Map &map)
+{
+	auto nh = map.extract("tags");
+	if(!nh.empty()) {
+		RpcValue::Map tags = nh.mapped().asMap();
+		map.merge(tags);
+	}
+}
 //=====================================================================
 // ShvLogTypeDescrField
 //=====================================================================
@@ -88,13 +106,16 @@ int ShvLogTypeDescrField::alarmLevel() const
 
 RpcValue ShvLogTypeDescrField::toRpcValue() const
 {
-	return m_data;
+	RpcValue ret = m_data;
+	if(description().empty())
+		ret.set(KEY_DESCRIPTION, {});
+	return ret;
 }
 
 ShvLogTypeDescrField ShvLogTypeDescrField::fromRpcValue(const RpcValue &v)
 {
 	ShvLogTypeDescrField ret;
-	ret.m_data = v;
+	ret.setData(v);
 	return ret;
 }
 
@@ -248,14 +269,29 @@ RpcValue ShvLogTypeDescr::toRpcValue() const
 {
 	RpcValue::Map map = m_data.asMap();
 	map.setValue(KEY_TYPE, typeToString(type()));
-	map.setValue(KEY_SAMPLE_TYPE, sampleTypeToString(sampleType()));
+	if(sampleType() != ShvLogTypeDescr::SampleType::Invalid)
+		map.setValue(KEY_SAMPLE_TYPE, sampleTypeToString(sampleType()));
+	else
+		map.setValue(KEY_SAMPLE_TYPE, {});
 	return map;
 }
 
 ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const RpcValue &v)
 {
 	ShvLogTypeDescr ret;
-	ret.m_data = v.asMap();
+	{
+		RpcValue::Map map = v.asMap();
+		auto nd = map.extract("fields");
+		RpcValue::List fields;
+		for(const auto &rv : nd.mapped().asList()) {
+			RpcValue::Map field = rv.asMap();
+			mergeTags(field);
+			fields.push_back(move(field));
+		}
+		mergeTags(map);
+		map[KEY_FIELDS] = RpcValue(move(fields));
+		ret.m_data = RpcValue(move(map));
+	}
 	{
 		auto rv = ret.dataValue(KEY_TYPE);
 		if(rv.isString())
@@ -320,9 +356,7 @@ RpcValue ShvLogPathDescr::toRpcValue() const
 ShvLogPathDescr ShvLogPathDescr::fromRpcValue(const RpcValue &v)
 {
 	ShvLogPathDescr ret;
-	if(v.isMap()) {
-		ret.m_data = v.toMap();
-	}
+	ret.setData(v);
 	return ret;
 }
 
