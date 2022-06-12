@@ -114,12 +114,12 @@ public:
 	static ShvLogTypeDescr fromRpcValue(const chainpack::RpcValue &v);
 };
 
-class SHVCORE_DECL_EXPORT ShvLogPathDescr : public ShvLogDescrBase
+class SHVCORE_DECL_EXPORT ShvLogNodeDescr : public ShvLogDescrBase
 {
 	using Super = ShvLogDescrBase;
 public:
-	ShvLogPathDescr() {}
-	//ShvLogPathDescr(const chainpack::RpcValue &v) : Super(v) {} DANGEROUS
+	ShvLogNodeDescr() {}
+	//ShvLogNodeDescr(const chainpack::RpcValue &v) : Super(v) {} DANGEROUS
 
 	std::string typeName() const;
 	std::string label() const;
@@ -128,26 +128,27 @@ public:
 	chainpack::RpcValue tags() const;
 
 	chainpack::RpcValue toRpcValue() const;
-	static ShvLogPathDescr fromRpcValue(const chainpack::RpcValue &v);
-	//static ShvLogPathDescr fromTags(const chainpack::RpcValue::Map &tags);
+	static ShvLogNodeDescr fromRpcValue(const chainpack::RpcValue &v);
+	//static ShvLogNodeDescr fromTags(const chainpack::RpcValue::Map &tags);
 };
 
 class SHVCORE_DECL_EXPORT ShvLogTypeInfo
 {
 public:
 	ShvLogTypeInfo() {}
-	ShvLogTypeInfo(std::map<std::string, ShvLogTypeDescr> &&types, std::map<std::string, ShvLogPathDescr> &&paths)
+	ShvLogTypeInfo(std::map<std::string, ShvLogTypeDescr> &&types, std::map<std::string, ShvLogNodeDescr> &&paths)
 		: m_types(std::move(types))
-		, m_propertyPaths(std::move(paths))
+		, m_nodeDescriptions(std::move(paths))
 	{}
 
-	bool isEmpty() const { return m_types.size() == 0 && m_propertyPaths.size() == 0; }
+	bool isEmpty() const { return m_types.size() == 0 && m_nodeDescriptions.size() == 0; }
 	//const std::map<std::string, ShvLogTypeDescr>& types() const { return m_types; }
+	const std::map<std::string, std::string> devicePaths() const { return m_devicePaths; }
 
 	ShvLogTypeInfo& addDevicePath(const std::string &device_path, const std::string &device_type);
-	ShvLogTypeInfo& addPathDescription(const ShvLogPathDescr &path_descr, const std::string &property_path, const std::string &device_type = {} );
+	ShvLogTypeInfo& addNodeDescription(const ShvLogNodeDescr &node_descr, const std::string &node_path, const std::string &device_type = {} );
 	ShvLogTypeInfo& addTypeDescription(const ShvLogTypeDescr &type_descr, const std::string &type_name);
-	ShvLogPathDescr pathDescriptionForPath(const std::string &shv_path) const;
+	ShvLogNodeDescr nodeDescriptionForPath(const std::string &shv_path) const;
 	ShvLogTypeDescr typeDescriptionForPath(const std::string &shv_path) const;
 	ShvLogTypeDescr typeDescriptionForName(const std::string &type_name) const;
 	std::string findSystemPath(const std::string &shv_path) const;
@@ -160,9 +161,12 @@ public:
 private:
 	std::map<std::string, ShvLogTypeDescr> m_types; // type_name -> type_description
 	std::map<std::string, std::string> m_devicePaths; // path -> device
-	std::map<std::string, ShvLogPathDescr> m_propertyPaths; // device_property_path -> path_descr
+	std::map<std::string, ShvLogNodeDescr> m_nodeDescriptions; // node/device_property path -> node_descr
 	std::map<std::string, std::string> m_systemPathsRoots;
 };
+
+// backward compatibility
+using ShvLogPathDescr = ShvLogNodeDescr;
 
 } // namespace utils
 } // namespace core
