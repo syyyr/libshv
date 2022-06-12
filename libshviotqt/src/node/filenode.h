@@ -23,7 +23,7 @@ public:
 	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
 protected:
 	virtual std::string fileName(const ShvNode::StringViewList &shv_path) const;
-	virtual shv::chainpack::RpcValue size(const ShvNode::StringViewList &shv_path) const = 0;
+	virtual shv::chainpack::RpcValue size(const ShvNode::StringViewList &shv_path) const;
 	virtual shv::chainpack::RpcValue readContent(const ShvNode::StringViewList &shv_path, int64_t offset, int64_t size) const = 0;
 
 private:

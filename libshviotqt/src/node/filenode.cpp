@@ -112,6 +112,11 @@ std::string FileNode::fileName(const ShvNode::StringViewList &shv_path) const
 	return nodeId();
 }
 
+chainpack::RpcValue FileNode::size(const StringViewList &shv_path) const
+{
+	return readContent(shv_path, 0, std::numeric_limits<int64_t>::max()).asBlob().size();
+}
+
 chainpack::RpcValue FileNode::read(const ShvNode::StringViewList &shv_path, const chainpack::RpcValue &params) const
 {
 	int64_t offset = params.asMap().value("offset").toInt64();
