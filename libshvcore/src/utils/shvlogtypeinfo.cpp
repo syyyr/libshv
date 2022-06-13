@@ -281,9 +281,9 @@ ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const RpcValue &v)
 	ShvLogTypeDescr ret;
 	{
 		RpcValue::Map map = v.asMap();
-		auto nd = map.extract("fields");
+		RpcValue src_fields = map.take("fields");
 		RpcValue::List fields;
-		for(const auto &rv : nd.mapped().asList()) {
+		for(const auto &rv : src_fields.asList()) {
 			RpcValue::Map field = rv.asMap();
 			mergeTags(field);
 			fields.push_back(move(field));
