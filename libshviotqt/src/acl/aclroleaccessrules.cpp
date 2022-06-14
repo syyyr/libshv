@@ -46,6 +46,7 @@ static bool is_wild_card_pattern(const string path)
 		return true;
 	return shv::core::String::endsWith(path, SLASH_ASTERISKS);
 }
+
 bool AclAccessRule::isMoreSpecificThan(const AclAccessRule &other) const
 {
 	//shvWarning() << this->toRpcValue().toCpon();
@@ -56,13 +57,13 @@ bool AclAccessRule::isMoreSpecificThan(const AclAccessRule &other) const
 
 	const bool has_any_service = service == ALL_SERVICES;
 	const bool has_some_service = !service.empty() && !has_any_service;
-	const bool has_no_service = service.empty();
+	//const bool has_no_service = service.empty();
 	const bool other_has_any_service = other.service == ALL_SERVICES;
 	//const bool other_has_some_service = !other.service.empty() && !other_has_any_service;
 	const bool other_has_no_service = other.service.empty();
 	if(has_some_service && (other_has_any_service || other_has_no_service))
 		return true;
-	if(has_no_service && other_has_any_service)
+	if(has_any_service && other_has_no_service)
 		return true;
 
 	const bool is_exact_path = !is_wild_card_pattern(pathPattern);
