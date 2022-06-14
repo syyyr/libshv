@@ -92,7 +92,7 @@ void MainWindow::generateSampleData()
 			if(j > times.size()/3 && j < times.size()/3*2) {
 				if(!na_added) {
 					na_added = true;
-					m_graphModel->appendValue(m_graphModel->channelCount() - 1, tl::Sample{times[j], QVariant::fromValue(shv::chainpack::ValueNotAvailable())});
+					m_graphModel->appendValue(m_graphModel->channelCount() - 1, tl::Sample{times[j], QVariant()});
 				}
 			}
 			else {
