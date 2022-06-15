@@ -53,7 +53,7 @@ void ShvLogDescrBase::setData(const chainpack::RpcValue &data)
 
 void ShvLogDescrBase::mergeTags(chainpack::RpcValue::Map &map)
 {
-	auto nh = map.extract("tags");
+	auto nh = map.extract(KEY_TAGS);
 	if(!nh.empty()) {
 		RpcValue::Map tags = nh.mapped().asMap();
 		map.merge(tags);
@@ -328,11 +328,21 @@ string ShvLogNodeDescr::unit() const
 	return dataValue(KEY_UNIT).asString();
 }
 
+string ShvLogNodeDescr::alarm() const
+{
+	return dataValue(KEY_ALARM, std::string()).asString();
+}
+
+int ShvLogNodeDescr::alarmLevel() const
+{
+	return dataValue(KEY_ALARM_LEVEL).toInt();
+}
+
+/*
 RpcValue ShvLogNodeDescr::tags() const
 {
 	return dataValue(KEY_TAGS);
 }
-/*
 ShvLogNodeDescr ShvLogNodeDescr::fromTags(const RpcValue::Map &tags)
 {
 	ShvLogNodeDescr ret;
@@ -412,7 +422,7 @@ ShvLogTypeInfo &ShvLogTypeInfo::addTypeDescription(const ShvLogTypeDescr &type_d
 
 ShvLogNodeDescr ShvLogTypeInfo::nodeDescriptionForPath(const std::string &shv_path) const
 {
-	if (auto it_path_descr = m_nodeDescriptions.find(shv_path); it_path_descr == m_nodeDescriptions.cend()) {
+	if (auto it_node_descr = m_nodeDescriptions.find(shv_path); it_node_descr == m_nodeDescriptions.cend()) {
 		if(auto it = find_longest_prefix(m_devicePaths, shv_path); it == m_devicePaths.cend()) {
 			return {};
 		}
@@ -421,43 +431,23 @@ ShvLogNodeDescr ShvLogTypeInfo::nodeDescriptionForPath(const std::string &shv_pa
 			string device = it->second;
 			string property = String(shv_path).mid(prefix.size() + 1);
 			string property_path = property.empty()? device: device + '/' + property;
-			if(it_path_descr = m_nodeDescriptions.find(property_path); it_path_descr == m_nodeDescriptions.cend()) {
+			if(it_node_descr = m_nodeDescriptions.find(property_path); it_node_descr == m_nodeDescriptions.cend()) {
 				return {};
 			}
 			else {
-				return it_path_descr->second;
+				return it_node_descr->second;
 			}
 		}
 	}
 	else {
-		return it_path_descr->second;
+		return it_node_descr->second;
 	}
 }
 
 ShvLogTypeDescr ShvLogTypeInfo::typeDescriptionForPath(const std::string &shv_path) const
 {
-	ShvLogTypeDescr ret;
-	auto it_path_descr = m_nodeDescriptions.find(shv_path);
-	if (it_path_descr == m_nodeDescriptions.end()) {
-		auto it = find_longest_prefix(m_devicePaths, shv_path);
-		if(it == m_devicePaths.end()) {
-			return ret;
-		}
-		else {
-			string prefix = it->first;
-			string device = it->second;
-			String property = shv_path;
-			property = property.mid(prefix.size() + 1);
-			it_path_descr = m_nodeDescriptions.find(device + '/' + property);
-		}
-	}
-
-	auto it_type_descr = m_types.find(it_path_descr->second.typeName());
-	if (it_type_descr != m_types.end())
-		ret = it_type_descr->second;
-
-	//ret.applyTags(it_path_descr->second.data);
-	return ret;
+	ShvLogNodeDescr node_descr = nodeDescriptionForPath(shv_path);
+	return typeDescriptionForName(node_descr.typeName());
 }
 
 ShvLogTypeDescr ShvLogTypeInfo::typeDescriptionForName(const std::string &type_name) const
@@ -548,7 +538,7 @@ ShvLogTypeInfo ShvLogTypeInfo::fromRpcValue(const RpcValue &v)
 	return ret;
 }
 
-RpcValue ShvLogTypeInfo::applyType(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums) const
+RpcValue ShvLogTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums) const
 {
 	ShvLogTypeDescr td = typeDescriptionForName(type_name);
 	//shvWarning() << type_name << "--->" << td.toRpcValue().toCpon();
@@ -557,32 +547,9 @@ RpcValue ShvLogTypeInfo::applyType(const shv::chainpack::RpcValue &val, const st
 		return val;
 	case ShvLogTypeDescr::Type::BitField: {
 		RpcValue::Map map;
-		uint64_t uval = val.toUInt64();
 		for(const ShvLogTypeDescrField &fld : td.fields()) {
-			unsigned bit_no1 = 0;
-			unsigned bit_no2 = 0;
-			if(fld.value().isList()) {
-				const auto &lst = fld.value().asList();
-				bit_no1 = lst.value(0).toUInt();
-				bit_no2 = lst.value(1).toUInt();
-				if(bit_no2 < bit_no1) {
-					shvError() << "Invalid bit specification:" << fld.value().toCpon();
-					bit_no2 = bit_no1;
-				}
-			}
-			else {
-				bit_no1 = bit_no2 = fld.value().toUInt();
-			}
-			uint64_t mask = ~((~static_cast<uint64_t>(0)) << (bit_no2 + 1));
-			shvDebug() << "bits:" << bit_no1 << bit_no2 << (bit_no1 == bit_no2) << "uval:" << uval << "mask:" << mask;
-			uval = (uval & mask) >> bit_no1;
-			shvDebug() << "uval masked and rotated right by:" << bit_no1 << "bits, uval:" << uval;
-			RpcValue result;
-			if(bit_no1 == bit_no2)
-				result = static_cast<bool>(uval != 0);
-			else
-				result = uval;
-			result = applyType(result, fld.typeName());
+			RpcValue result = fieldValue(val, fld);
+			result = applyTypeDescription(result, fld.typeName());
 			map[fld.name()] = result;
 		}
 		return map;
@@ -633,6 +600,35 @@ RpcValue ShvLogTypeInfo::applyType(const shv::chainpack::RpcValue &val, const st
 	}
 	shvError() << "Invalid type:" << (int)td.type();
 	return val;
+}
+
+RpcValue ShvLogTypeInfo::fieldValue(const chainpack::RpcValue &val, const ShvLogTypeDescrField &field_descr)
+{
+	uint64_t uval = val.toUInt64();
+	unsigned bit_no1 = 0;
+	unsigned bit_no2 = 0;
+	if(field_descr.value().isList()) {
+		const auto &lst = field_descr.value().asList();
+		bit_no1 = lst.value(0).toUInt();
+		bit_no2 = lst.value(1).toUInt();
+		if(bit_no2 < bit_no1) {
+			shvError() << "Invalid bit specification:" << field_descr.value().toCpon();
+			bit_no2 = bit_no1;
+		}
+	}
+	else {
+		bit_no1 = bit_no2 = field_descr.value().toUInt();
+	}
+	uint64_t mask = ~((~static_cast<uint64_t>(0)) << (bit_no2 + 1));
+	shvDebug() << "bits:" << bit_no1 << bit_no2 << (bit_no1 == bit_no2) << "uval:" << uval << "mask:" << mask;
+	uval = (uval & mask) >> bit_no1;
+	shvDebug() << "uval masked and rotated right by:" << bit_no1 << "bits, uval:" << uval;
+	RpcValue result;
+	if(bit_no1 == bit_no2)
+		result = static_cast<bool>(uval != 0);
+	else
+		result = uval;
+	return result;
 }
 
 } // namespace utils

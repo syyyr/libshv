@@ -125,7 +125,9 @@ public:
 	std::string label() const;
 	std::string description() const;
 	std::string unit() const;
-	chainpack::RpcValue tags() const;
+	std::string alarm() const;
+	int alarmLevel() const;
+	//chainpack::RpcValue tags() const;
 
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogNodeDescr fromRpcValue(const chainpack::RpcValue &v);
@@ -157,7 +159,9 @@ public:
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogTypeInfo fromRpcValue(const chainpack::RpcValue &v);
 
-	shv::chainpack::RpcValue applyType(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums = true) const;
+	shv::chainpack::RpcValue applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums = true) const;
+
+	static shv::chainpack::RpcValue fieldValue(const shv::chainpack::RpcValue &val, const ShvLogTypeDescrField &field_descr);
 private:
 	std::map<std::string, ShvLogTypeDescr> m_types; // type_name -> type_description
 	std::map<std::string, std::string> m_devicePaths; // path -> device

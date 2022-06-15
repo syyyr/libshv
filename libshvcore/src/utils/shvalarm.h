@@ -6,12 +6,15 @@
 #include <necrologlevel.h>
 
 #include <string>
+#include <vector>
 
 namespace shv { namespace chainpack { class RpcValue; }}
 
 namespace shv {
 namespace core {
 namespace utils {
+
+class ShvLogTypeInfo;
 
 class SHVCORE_DECL_EXPORT ShvAlarm {
 public:
@@ -31,15 +34,16 @@ public:
 	const std::string& description() const { return m_description; }
 	Severity severityFromString() const { return m_severity; }
 	int level() const { return m_level; }
-	bool isValid() const { return severity() != Severity::Invalid; }
+	bool isValid() const { return !path().empty(); }
 	bool isActive() const { return m_isActive; }
 
 	shv::chainpack::RpcValue toRpcValue() const;
 	static ShvAlarm fromRpcValue(const shv::chainpack::RpcValue &rv);
+	static std::vector<ShvAlarm> checkAlarms(const ShvLogTypeInfo &type_info, const std::string &shv_path, const shv::chainpack::RpcValue &value);
 protected:
-	std::string m_path = "";
+	std::string m_path;
 	bool m_isActive = false;
-	std::string m_description = "";
+	std::string m_description;
 	int m_level = 0;
 	Severity m_severity = Severity::Invalid;
 };
