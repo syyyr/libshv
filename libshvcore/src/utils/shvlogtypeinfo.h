@@ -51,6 +51,7 @@ public:
 	chainpack::RpcValue value() const;
 	std::string alarm() const;
 	int alarmLevel() const;
+	std::string alarmDescription() const { return description(); }
 
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogTypeDescrField fromRpcValue(const chainpack::RpcValue &v);
@@ -107,6 +108,7 @@ public:
 	std::string visualStyleName() const;
 	std::string alarm() const;
 	int alarmLevel() const;
+	std::string alarmDescription() const;
 	int decimalPlaces() const;
 	ShvLogTypeDescr& setDecimalPlaces(int n);
 
@@ -125,8 +127,8 @@ public:
 	std::string label() const;
 	std::string description() const;
 	std::string unit() const;
-	std::string alarm() const;
-	int alarmLevel() const;
+	//std::string alarm() const;
+	//int alarmLevel() const;
 	//chainpack::RpcValue tags() const;
 
 	chainpack::RpcValue toRpcValue() const;

@@ -254,6 +254,11 @@ int ShvLogTypeDescr::alarmLevel() const
 	return dataValue(KEY_ALARM_LEVEL).toInt();
 }
 
+string ShvLogTypeDescr::alarmDescription() const
+{
+	return dataValue(KEY_DESCRIPTION, std::string()).asString();
+}
+
 int ShvLogTypeDescr::decimalPlaces() const
 {
 	return dataValue(KEY_DEC_PLACES, 0).toInt();
@@ -328,6 +333,7 @@ string ShvLogNodeDescr::unit() const
 	return dataValue(KEY_UNIT).asString();
 }
 
+/*
 string ShvLogNodeDescr::alarm() const
 {
 	return dataValue(KEY_ALARM, std::string()).asString();
@@ -338,7 +344,6 @@ int ShvLogNodeDescr::alarmLevel() const
 	return dataValue(KEY_ALARM_LEVEL).toInt();
 }
 
-/*
 RpcValue ShvLogNodeDescr::tags() const
 {
 	return dataValue(KEY_TAGS);
