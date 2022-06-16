@@ -2,6 +2,8 @@
 #include "../string.h"
 #include "../log.h"
 
+#include<shv/chainpack/metamethod.h>
+
 using namespace std;
 using namespace shv::chainpack;
 
@@ -19,6 +21,7 @@ static const char* KEY_VALUE = "value";
 static const char* KEY_FIELDS = "fields";
 static const char* KEY_SAMPLE_TYPE = "sampleType";
 static const char* KEY_TAGS = "tags";
+static const char* KEY_METHODS = "methods";
 //static const char* KEY_MIN_VAL = "minVal";
 //static const char* KEY_MAX_VAL = "maxVal";
 static const char* KEY_DEC_PLACES = "decPlaces";
@@ -333,6 +336,16 @@ string ShvLogNodeDescr::unit() const
 	return dataValue(KEY_UNIT).asString();
 }
 
+std::vector<shv::chainpack::MetaMethod> ShvLogNodeDescr::methods() const
+{
+	std::vector<shv::chainpack::MetaMethod> ret;
+	RpcValue rv = dataValue(KEY_METHODS);
+	for(const auto &m : rv.asList()) {
+		ret.push_back(shv::chainpack::MetaMethod::fromRpcValue(m));
+	}
+	return ret;
+}
+
 /*
 string ShvLogNodeDescr::alarm() const
 {
@@ -400,13 +413,13 @@ map<string, string>::const_iterator find_longest_prefix(const map<string, string
 	return map.cend();
 }
 
-ShvLogTypeInfo &ShvLogTypeInfo::addDevicePath(const std::string &device_path, const std::string &device_type)
+ShvLogTypeInfo &ShvLogTypeInfo::setDevicePath(const std::string &device_path, const std::string &device_type)
 {
 	m_devicePaths[device_path] = device_type;
 	return *this;
 }
 
-ShvLogTypeInfo &ShvLogTypeInfo::addNodeDescription(const ShvLogNodeDescr &node_descr, const std::string &node_path, const std::string &device_type)
+ShvLogTypeInfo &ShvLogTypeInfo::setNodeDescription(const ShvLogNodeDescr &node_descr, const std::string &node_path, const std::string &device_type)
 {
 	string path = node_path;
 	if(!device_type.empty()) {
@@ -416,13 +429,24 @@ ShvLogTypeInfo &ShvLogTypeInfo::addNodeDescription(const ShvLogNodeDescr &node_d
 	return *this;
 }
 
-ShvLogTypeInfo &ShvLogTypeInfo::addTypeDescription(const ShvLogTypeDescr &type_descr, const std::string &type_name)
+ShvLogTypeInfo &ShvLogTypeInfo::setTypeDescription(const ShvLogTypeDescr &type_descr, const std::string &type_name)
 {
 	if(type_descr.isValid())
 		m_types[type_name] = type_descr;
 	else
 		m_types.erase(type_name);
 	return *this;
+}
+
+ShvLogNodeDescr ShvLogTypeInfo::nodeDescriptionForDevice(const std::string &device_type, const string &property_path) const
+{
+	string property = property_path.empty()? device_type: device_type + '/' + property_path;
+	if(auto it_node_descr = m_nodeDescriptions.find(property); it_node_descr == m_nodeDescriptions.cend()) {
+		return {};
+	}
+	else {
+		return it_node_descr->second;
+	}
 }
 
 ShvLogNodeDescr ShvLogTypeInfo::nodeDescriptionForPath(const std::string &shv_path) const
@@ -433,28 +457,22 @@ ShvLogNodeDescr ShvLogTypeInfo::nodeDescriptionForPath(const std::string &shv_pa
 		}
 		else {
 			string prefix = it->first;
-			string device = it->second;
-			string property = String(shv_path).mid(prefix.size() + 1);
-			string property_path = property.empty()? device: device + '/' + property;
-			if(it_node_descr = m_nodeDescriptions.find(property_path); it_node_descr == m_nodeDescriptions.cend()) {
-				return {};
-			}
-			else {
-				return it_node_descr->second;
-			}
+			string device_type = it->second;
+			string property_path = String(shv_path).mid(prefix.size() + 1);
+			return nodeDescriptionForDevice(device_type, property_path);
 		}
 	}
 	else {
 		return it_node_descr->second;
 	}
 }
-
+/*
 ShvLogTypeDescr ShvLogTypeInfo::typeDescriptionForPath(const std::string &shv_path) const
 {
 	ShvLogNodeDescr node_descr = nodeDescriptionForPath(shv_path);
 	return typeDescriptionForName(node_descr.typeName());
 }
-
+*/
 ShvLogTypeDescr ShvLogTypeInfo::typeDescriptionForName(const std::string &type_name) const
 {
 	if(auto it = m_types.find(type_name); it == m_types.end())

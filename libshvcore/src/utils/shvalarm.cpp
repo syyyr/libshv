@@ -85,18 +85,15 @@ ShvAlarm ShvAlarm::fromRpcValue(const chainpack::RpcValue &rv)
 
 vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvLogTypeInfo &type_info, const std::string &shv_path, const chainpack::RpcValue &value)
 {
-	if(ShvLogTypeDescr type_descr = type_info.typeDescriptionForPath(shv_path); type_descr.isValid()) {
-		ShvLogNodeDescr node_descr = type_info.nodeDescriptionForPath(shv_path);
+	if(ShvLogNodeDescr node_descr = type_info.nodeDescriptionForPath(shv_path); node_descr.isValid()) {
 		nDebug() << shv_path << node_descr.toRpcValue().toCpon();
-		return checkAlarms(type_info, node_descr.typeName(), shv_path, value);
+		return checkAlarms(type_info, shv_path, node_descr.typeName(), value);
 	}
 	return {};
 }
 
-std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvLogTypeInfo &type_info, const std::string &type_name, const std::string &shv_path, const chainpack::RpcValue &value)
+std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvLogTypeInfo &type_info, const std::string &shv_path, const std::string &type_name, const chainpack::RpcValue &value)
 {
-	if(type_name == "ReasonAB")
-		nDebug() << type_name;
 	if(ShvLogTypeDescr type_descr = type_info.typeDescriptionForName(type_name); type_descr.isValid()) {
 		if (type_descr.type() == ShvLogTypeDescr::Type::Bool) {
 			if(string alarm = type_descr.alarm(); !alarm.empty()) {

@@ -3,11 +3,13 @@
 
 #include "../shvcoreglobal.h"
 
-#include <shv/chainpack/datachange.h>
-//#include <shv/chainpack/rpcvalue.h>
+//#include <shv/chainpack/datachange.h>
+#include <shv/chainpack/rpcvalue.h>
 
 #include <string>
 #include <variant>
+
+namespace shv::chainpack { class MetaMethod; }
 
 namespace shv {
 namespace core {
@@ -130,6 +132,7 @@ public:
 	//std::string alarm() const;
 	//int alarmLevel() const;
 	//chainpack::RpcValue tags() const;
+	std::vector<shv::chainpack::MetaMethod> methods() const;
 
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogNodeDescr fromRpcValue(const chainpack::RpcValue &v);
@@ -147,13 +150,16 @@ public:
 
 	bool isEmpty() const { return m_types.size() == 0 && m_nodeDescriptions.size() == 0; }
 	//const std::map<std::string, ShvLogTypeDescr>& types() const { return m_types; }
-	const std::map<std::string, std::string> devicePaths() const { return m_devicePaths; }
+	const std::map<std::string, std::string>& devicePaths() const { return m_devicePaths; }
+	const std::map<std::string, ShvLogTypeDescr>& types() const { return m_types; }
+	const std::map<std::string, ShvLogNodeDescr>& nodeDescriptions() const { return m_nodeDescriptions; }
 
-	ShvLogTypeInfo& addDevicePath(const std::string &device_path, const std::string &device_type);
-	ShvLogTypeInfo& addNodeDescription(const ShvLogNodeDescr &node_descr, const std::string &node_path, const std::string &device_type = {} );
-	ShvLogTypeInfo& addTypeDescription(const ShvLogTypeDescr &type_descr, const std::string &type_name);
+	ShvLogTypeInfo& setDevicePath(const std::string &device_path, const std::string &device_type);
+	ShvLogTypeInfo& setNodeDescription(const ShvLogNodeDescr &node_descr, const std::string &node_path, const std::string &device_type = {} );
+	ShvLogTypeInfo& setTypeDescription(const ShvLogTypeDescr &type_descr, const std::string &type_name);
 	ShvLogNodeDescr nodeDescriptionForPath(const std::string &shv_path) const;
-	ShvLogTypeDescr typeDescriptionForPath(const std::string &shv_path) const;
+	ShvLogNodeDescr nodeDescriptionForDevice(const std::string &device_type, const std::string &property_path) const;
+	//ShvLogTypeDescr typeDescriptionForPath(const std::string &shv_path) const;
 	ShvLogTypeDescr typeDescriptionForName(const std::string &type_name) const;
 	std::string findSystemPath(const std::string &shv_path) const;
 

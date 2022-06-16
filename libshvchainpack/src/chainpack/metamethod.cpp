@@ -17,6 +17,19 @@ RpcValue MetaMethod::toRpcValue() const
 	return ret;
 }
 
+MetaMethod MetaMethod::fromRpcValue(const RpcValue &rv)
+{
+	MetaMethod ret;
+	RpcValue::Map map = rv.asMap();
+	ret.m_name = map.take("name").asString();
+	ret.m_signature = (Signature)map.take("signature").toInt();
+	ret.m_flags = map.take("flags").toUInt();
+	ret.m_accessGrant = map.take("accessGrant");
+	ret.m_description = map.take("description").asString();
+	ret.m_tags = map;
+	return ret;
+}
+
 MetaMethod::Signature MetaMethod::signatureFromString(const std::string &sigstr)
 {
 	if(sigstr == "VoidParam") return Signature::VoidParam;

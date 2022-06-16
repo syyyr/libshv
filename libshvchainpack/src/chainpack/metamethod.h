@@ -90,6 +90,7 @@ public:
 	MetaMethod& setTag(const std::string &key, const RpcValue& value) { m_tags.setValue(key, value); return *this; }
 
 	RpcValue toRpcValue() const;
+	static MetaMethod fromRpcValue(const RpcValue &rv);
 
 	static Signature signatureFromString(const std::string &sigstr);
 	static const char* signatureToString(Signature sig);
