@@ -32,11 +32,11 @@ protected:
 	chainpack::RpcValue m_data;
 };
 
-class SHVCORE_DECL_EXPORT ShvLogTypeDescrField : public ShvLogDescrBase
+class SHVCORE_DECL_EXPORT ShvLogFieldDescr : public ShvLogDescrBase
 {
 	using Super = ShvLogDescrBase;
 public:
-	ShvLogTypeDescrField() {}
+	ShvLogFieldDescr() {}
 	//ShvLogTypeDescrField(const chainpack::RpcValue &v) : Super(v) {} DANGEROUS
 	//ShvLogTypeDescrField(const std::string &n)
 	//	: ShvLogTypeDescrField(n, std::string(), chainpack::RpcValue(), std::string()) {}
@@ -44,7 +44,7 @@ public:
 	//	: ShvLogTypeDescrField(n, std::string(), bit_pos, d) {}
 	//ShvLogTypeDescrField(const std::string &n, const std::string &type_name)
 	//	: ShvLogTypeDescrField(n, type_name, chainpack::RpcValue(), std::string()) {}
-	ShvLogTypeDescrField(const std::string &n, const std::string &type_name = std::string(), const chainpack::RpcValue &v = chainpack::RpcValue());
+	ShvLogFieldDescr(const std::string &n, const std::string &type_name = std::string(), const chainpack::RpcValue &v = chainpack::RpcValue());
 
 	std::string name() const;
 	std::string typeName() const;
@@ -56,8 +56,11 @@ public:
 	std::string alarmDescription() const { return description(); }
 
 	chainpack::RpcValue toRpcValue() const;
-	static ShvLogTypeDescrField fromRpcValue(const chainpack::RpcValue &v);
+	static ShvLogFieldDescr fromRpcValue(const chainpack::RpcValue &v);
 };
+
+// backward compatibility
+using ShvLogTypeDescrField = ShvLogFieldDescr;
 
 class SHVCORE_DECL_EXPORT ShvLogTypeDescr : public ShvLogDescrBase
 {
@@ -84,13 +87,13 @@ public:
 	//ShvLogTypeDescr(const chainpack::RpcValue &v) : Super(v) {} DANGEROUS
 	//ShvLogTypeDescr(const std::string &type_name) : type(typeFromString(type_name)) { }
 	ShvLogTypeDescr(Type t, SampleType st = SampleType::Continuous)
-		: ShvLogTypeDescr(t, std::vector<ShvLogTypeDescrField>(), st) {}
-	ShvLogTypeDescr(Type t, std::vector<ShvLogTypeDescrField> &&flds, SampleType st = SampleType::Continuous);
+		: ShvLogTypeDescr(t, std::vector<ShvLogFieldDescr>(), st) {}
+	ShvLogTypeDescr(Type t, std::vector<ShvLogFieldDescr> &&flds, SampleType st = SampleType::Continuous);
 
 	Type type() const;
 	ShvLogTypeDescr& setType(Type t);
-	std::vector<ShvLogTypeDescrField> fields() const;
-	ShvLogTypeDescr &setFields(const std::vector<ShvLogTypeDescrField> &fields);
+	std::vector<ShvLogFieldDescr> fields() const;
+	ShvLogTypeDescr &setFields(const std::vector<ShvLogFieldDescr> &fields);
 	SampleType sampleType() const; // = SampleType::Continuous;
 	ShvLogTypeDescr &setSampleType(SampleType st);
 
@@ -120,6 +123,8 @@ public:
 	static ShvLogTypeDescr fromRpcValue(const chainpack::RpcValue &v);
 };
 
+using ShvLogMethodDescr = shv::chainpack::MetaMethod;
+
 class SHVCORE_DECL_EXPORT ShvLogNodeDescr : public ShvLogDescrBase
 {
 	using Super = ShvLogDescrBase;
@@ -134,7 +139,7 @@ public:
 	//std::string alarm() const;
 	//int alarmLevel() const;
 	//chainpack::RpcValue tags() const;
-	std::vector<shv::chainpack::MetaMethod> methods() const;
+	std::vector<ShvLogMethodDescr> methods() const;
 
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogNodeDescr fromRpcValue(const chainpack::RpcValue &v);
@@ -171,7 +176,7 @@ public:
 
 	shv::chainpack::RpcValue applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums = true) const;
 
-	static shv::chainpack::RpcValue fieldValue(const shv::chainpack::RpcValue &val, const ShvLogTypeDescrField &field_descr);
+	static shv::chainpack::RpcValue fieldValue(const shv::chainpack::RpcValue &val, const ShvLogFieldDescr &field_descr);
 private:
 	std::map<std::string, ShvLogTypeDescr> m_types; // type_name -> type_description
 	std::map<std::string, std::string> m_devicePaths; // path -> device

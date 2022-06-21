@@ -65,49 +65,49 @@ void ShvLogDescrBase::mergeTags(chainpack::RpcValue::Map &map)
 //=====================================================================
 // ShvLogTypeDescrField
 //=====================================================================
-ShvLogTypeDescrField::ShvLogTypeDescrField(const std::string &name, const std::string &type_name, const chainpack::RpcValue &value)
+ShvLogFieldDescr::ShvLogFieldDescr(const std::string &name, const std::string &type_name, const chainpack::RpcValue &value)
 {
 	setDataValue(KEY_NAME, name);
 	setDataValue(KEY_TYPE_NAME, type_name);
 	setDataValue(KEY_VALUE, value);
 }
 
-string ShvLogTypeDescrField::name() const
+string ShvLogFieldDescr::name() const
 {
 	return dataValue(KEY_NAME).asString();
 }
 
-string ShvLogTypeDescrField::typeName() const
+string ShvLogFieldDescr::typeName() const
 {
 	return dataValue(KEY_TYPE_NAME).asString();
 }
 
-string ShvLogTypeDescrField::label() const
+string ShvLogFieldDescr::label() const
 {
 	return dataValue(KEY_LABEL).asString();
 }
 
-string ShvLogTypeDescrField::description() const
+string ShvLogFieldDescr::description() const
 {
 	return dataValue(KEY_DESCRIPTION).asString();
 }
 
-RpcValue ShvLogTypeDescrField::value() const
+RpcValue ShvLogFieldDescr::value() const
 {
 	return dataValue(KEY_VALUE);
 }
 
-string ShvLogTypeDescrField::alarm() const
+string ShvLogFieldDescr::alarm() const
 {
 	return dataValue(KEY_ALARM).asString();
 }
 
-int ShvLogTypeDescrField::alarmLevel() const
+int ShvLogFieldDescr::alarmLevel() const
 {
 	return dataValue(KEY_ALARM_LEVEL).toInt();
 }
 
-RpcValue ShvLogTypeDescrField::toRpcValue() const
+RpcValue ShvLogFieldDescr::toRpcValue() const
 {
 	RpcValue ret = m_data;
 	if(description().empty())
@@ -115,9 +115,9 @@ RpcValue ShvLogTypeDescrField::toRpcValue() const
 	return ret;
 }
 
-ShvLogTypeDescrField ShvLogTypeDescrField::fromRpcValue(const RpcValue &v)
+ShvLogFieldDescr ShvLogFieldDescr::fromRpcValue(const RpcValue &v)
 {
-	ShvLogTypeDescrField ret;
+	ShvLogFieldDescr ret;
 	ret.setData(v);
 	return ret;
 }
@@ -136,18 +136,18 @@ ShvLogTypeDescr &ShvLogTypeDescr::setType(Type t)
 	return *this;
 }
 
-std::vector<ShvLogTypeDescrField> ShvLogTypeDescr::fields() const
+std::vector<ShvLogFieldDescr> ShvLogTypeDescr::fields() const
 {
-	std::vector<ShvLogTypeDescrField> ret;
+	std::vector<ShvLogFieldDescr> ret;
 	for(const RpcValue &rv : dataValue(KEY_FIELDS).asList())
-		ret.push_back(ShvLogTypeDescrField::fromRpcValue(rv));
+		ret.push_back(ShvLogFieldDescr::fromRpcValue(rv));
 	return ret;
 }
 
-ShvLogTypeDescr &ShvLogTypeDescr::setFields(const std::vector<ShvLogTypeDescrField> &fields)
+ShvLogTypeDescr &ShvLogTypeDescr::setFields(const std::vector<ShvLogFieldDescr> &fields)
 {
 	RpcValue::List cp_fields;
-	for (const ShvLogTypeDescrField &field : fields) {
+	for (const ShvLogFieldDescr &field : fields) {
 		cp_fields.push_back(field.toRpcValue());
 	}
 	setDataValue(KEY_FIELDS, cp_fields);
@@ -352,12 +352,12 @@ string ShvLogNodeDescr::unit() const
 	return dataValue(KEY_UNIT).asString();
 }
 
-std::vector<shv::chainpack::MetaMethod> ShvLogNodeDescr::methods() const
+std::vector<ShvLogMethodDescr> ShvLogNodeDescr::methods() const
 {
-	std::vector<shv::chainpack::MetaMethod> ret;
+	std::vector<ShvLogMethodDescr> ret;
 	RpcValue rv = dataValue(KEY_METHODS);
 	for(const auto &m : rv.asList()) {
-		ret.push_back(shv::chainpack::MetaMethod::fromRpcValue(m));
+		ret.push_back(ShvLogMethodDescr::fromRpcValue(m));
 	}
 	return ret;
 }
@@ -586,7 +586,7 @@ RpcValue ShvLogTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &va
 		return val;
 	case ShvLogTypeDescr::Type::BitField: {
 		RpcValue::Map map;
-		for(const ShvLogTypeDescrField &fld : td.fields()) {
+		for(const ShvLogFieldDescr &fld : td.fields()) {
 			RpcValue result = fieldValue(val, fld);
 			result = applyTypeDescription(result, fld.typeName());
 			map[fld.name()] = result;
@@ -596,7 +596,7 @@ RpcValue ShvLogTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &va
 	case ShvLogTypeDescr::Type::Enum: {
 		int ival = val.toInt();
 		if(translate_enums) {
-			for(const ShvLogTypeDescrField &fld : td.fields()) {
+			for(const ShvLogFieldDescr &fld : td.fields()) {
 				if(fld.value().toInt() == ival)
 					return fld.name();
 			}
@@ -641,7 +641,7 @@ RpcValue ShvLogTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &va
 	return val;
 }
 
-RpcValue ShvLogTypeInfo::fieldValue(const chainpack::RpcValue &val, const ShvLogTypeDescrField &field_descr)
+RpcValue ShvLogTypeInfo::fieldValue(const chainpack::RpcValue &val, const ShvLogFieldDescr &field_descr)
 {
 	uint64_t uval = val.toUInt64();
 	unsigned bit_no1 = 0;
