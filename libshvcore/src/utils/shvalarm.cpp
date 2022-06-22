@@ -128,17 +128,15 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvLogTypeInfo &type_info, con
 		}
 		else if (type_descr.type() == ShvLogTypeDescr::Type::Enum) {
 			auto flds = type_descr.fields();
-			bool has_alarm = false;
 			size_t active_alarm_ix = flds.size();
 			for (size_t i = 0; i < flds.size(); ++i) {
 				const ShvLogFieldDescr &fld_descr = flds[i];
 				if(string alarm = fld_descr.alarm(); !alarm.empty()) {
-					has_alarm = true;
 					if(value == fld_descr.value())
 						active_alarm_ix = i;
 				}
 			}
-			if(has_alarm) {
+			if(active_alarm_ix < flds.size()) {
 				const ShvLogFieldDescr &fld_descr = flds[active_alarm_ix];
 				return {ShvAlarm(shv_path,
 						active_alarm_ix < flds.size(),
