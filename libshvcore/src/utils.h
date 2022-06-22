@@ -111,6 +111,7 @@ public:
 	static shv::chainpack::RpcValue foldMap(const shv::chainpack::RpcValue::Map &plain_map, char key_delimiter = '.');
 
 	static std::string joinPath(const StringView &p1, const StringView &p2);
+	static std::string joinPath(const StringViewList &p);
 	static std::string simplifyPath(const std::string &p);
 
 	static std::vector<char> readAllFd(int fd);
