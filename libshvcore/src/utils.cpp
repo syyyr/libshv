@@ -175,7 +175,7 @@ std::string Utils::joinPath(const StringViewList &p)
 {
 	string ret;
 	for(StringView path : p) {
-		joinPath(ret, path);
+		ret = joinPath(ret, path);
 	}
 	return ret;
 }
