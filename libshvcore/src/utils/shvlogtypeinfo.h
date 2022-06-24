@@ -102,6 +102,8 @@ public:
 
 	bool isValid() const { return type() != Type::Invalid; }
 
+	ShvLogFieldDescr fieldDescriptionForName(const std::string &field_name) const;
+
 	static const std::string typeToString(Type t);
 	static Type typeFromString(const std::string &s);
 
