@@ -111,7 +111,7 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvLogTypeInfo &type_info, con
 			for (size_t i = 0; i < flds.size(); ++i) {
 				const ShvLogFieldDescr &fld_descr = flds[i];
 				if(string alarm = fld_descr.alarm(); !alarm.empty()) {
-					bool is_alarm = ShvLogTypeInfo::fieldValue(value, fld_descr).toBool();
+					bool is_alarm = fld_descr.bitfieldValue(value).toBool();
 					alarms.push_back(ShvAlarm(shv_path + '/' + fld_descr.name(),
 						is_alarm,
 						ShvAlarm::severityFromString(alarm),
@@ -120,7 +120,7 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvLogTypeInfo &type_info, con
 					));
 				}
 				else {
-					auto alarms2 = checkAlarms(type_info, fld_descr.typeName(), shv_path + '/' + fld_descr.name(), ShvLogTypeInfo::fieldValue(value, fld_descr));
+					auto alarms2 = checkAlarms(type_info, fld_descr.typeName(), shv_path + '/' + fld_descr.name(), fld_descr.bitfieldValue(value));
 					alarms.insert(alarms.end(), alarms2.begin(), alarms2.end());
 				}
 			}

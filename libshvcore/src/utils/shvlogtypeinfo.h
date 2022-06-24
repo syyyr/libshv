@@ -57,6 +57,8 @@ public:
 
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogFieldDescr fromRpcValue(const chainpack::RpcValue &v);
+
+	shv::chainpack::RpcValue bitfieldValue(const shv::chainpack::RpcValue &val) const;
 };
 
 // backward compatibility
@@ -102,7 +104,8 @@ public:
 
 	bool isValid() const { return type() != Type::Invalid; }
 
-	ShvLogFieldDescr fieldDescriptionForName(const std::string &field_name) const;
+	ShvLogFieldDescr field(const std::string &field_name) const;
+	shv::chainpack::RpcValue bitfieldValue(const shv::chainpack::RpcValue &val, const std::string &field_name) const;
 
 	static const std::string typeToString(Type t);
 	static Type typeFromString(const std::string &s);
@@ -177,8 +180,6 @@ public:
 	static ShvLogTypeInfo fromRpcValue(const chainpack::RpcValue &v);
 
 	shv::chainpack::RpcValue applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums = true) const;
-
-	static shv::chainpack::RpcValue fieldValue(const shv::chainpack::RpcValue &val, const ShvLogFieldDescr &field_descr);
 private:
 	std::map<std::string, ShvLogTypeDescr> m_types; // type_name -> type_description
 	std::map<std::string, std::string> m_devicePaths; // path -> device

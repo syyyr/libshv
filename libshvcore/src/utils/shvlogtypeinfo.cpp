@@ -122,6 +122,35 @@ ShvLogFieldDescr ShvLogFieldDescr::fromRpcValue(const RpcValue &v)
 	return ret;
 }
 
+RpcValue ShvLogFieldDescr::bitfieldValue(const chainpack::RpcValue &val) const
+{
+	uint64_t uval = val.toUInt64();
+	unsigned bit_no1 = 0;
+	unsigned bit_no2 = 0;
+	if(value().isList()) {
+		const auto &lst = value().asList();
+		bit_no1 = lst.value(0).toUInt();
+		bit_no2 = lst.value(1).toUInt();
+		if(bit_no2 < bit_no1) {
+			shvError() << "Invalid bit specification:" << value().toCpon();
+			bit_no2 = bit_no1;
+		}
+	}
+	else {
+		bit_no1 = bit_no2 = value().toUInt();
+	}
+	uint64_t mask = ~((~static_cast<uint64_t>(0)) << (bit_no2 + 1));
+	shvDebug() << "bits:" << bit_no1 << bit_no2 << (bit_no1 == bit_no2) << "uval:" << uval << "mask:" << mask;
+	uval = (uval & mask) >> bit_no1;
+	shvDebug() << "uval masked and rotated right by:" << bit_no1 << "bits, uval:" << uval;
+	RpcValue result;
+	if(bit_no1 == bit_no2)
+		result = static_cast<bool>(uval != 0);
+	else
+		result = uval;
+	return result;
+}
+
 //=====================================================================
 // ShvLogTypeDescr
 //=====================================================================
@@ -166,7 +195,7 @@ ShvLogTypeDescr &ShvLogTypeDescr::setSampleType(ShvLogTypeDescr::SampleType st)
 	return *this;
 }
 
-ShvLogFieldDescr ShvLogTypeDescr::fieldDescriptionForName(const std::string &field_name) const
+ShvLogFieldDescr ShvLogTypeDescr::field(const std::string &field_name) const
 {
 	auto flds = dataValue(KEY_FIELDS);
 	for(const RpcValue &rv : flds.asList()) {
@@ -176,6 +205,12 @@ ShvLogFieldDescr ShvLogTypeDescr::fieldDescriptionForName(const std::string &fie
 		}
 	}
 	return {};
+}
+
+RpcValue ShvLogTypeDescr::bitfieldValue(const chainpack::RpcValue &val, const std::string &field_name) const
+{
+	auto field_descr = field(field_name);
+	return field_descr.bitfieldValue(val);
 }
 
 const std::string ShvLogTypeDescr::typeToString(ShvLogTypeDescr::Type t)
@@ -600,7 +635,7 @@ RpcValue ShvLogTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &va
 	case ShvLogTypeDescr::Type::BitField: {
 		RpcValue::Map map;
 		for(const ShvLogFieldDescr &fld : td.fields()) {
-			RpcValue result = fieldValue(val, fld);
+			RpcValue result = fld.bitfieldValue(val);
 			result = applyTypeDescription(result, fld.typeName());
 			map[fld.name()] = result;
 		}
@@ -652,35 +687,6 @@ RpcValue ShvLogTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &va
 	}
 	shvError() << "Invalid type:" << (int)td.type();
 	return val;
-}
-
-RpcValue ShvLogTypeInfo::fieldValue(const chainpack::RpcValue &val, const ShvLogFieldDescr &field_descr)
-{
-	uint64_t uval = val.toUInt64();
-	unsigned bit_no1 = 0;
-	unsigned bit_no2 = 0;
-	if(field_descr.value().isList()) {
-		const auto &lst = field_descr.value().asList();
-		bit_no1 = lst.value(0).toUInt();
-		bit_no2 = lst.value(1).toUInt();
-		if(bit_no2 < bit_no1) {
-			shvError() << "Invalid bit specification:" << field_descr.value().toCpon();
-			bit_no2 = bit_no1;
-		}
-	}
-	else {
-		bit_no1 = bit_no2 = field_descr.value().toUInt();
-	}
-	uint64_t mask = ~((~static_cast<uint64_t>(0)) << (bit_no2 + 1));
-	shvDebug() << "bits:" << bit_no1 << bit_no2 << (bit_no1 == bit_no2) << "uval:" << uval << "mask:" << mask;
-	uval = (uval & mask) >> bit_no1;
-	shvDebug() << "uval masked and rotated right by:" << bit_no1 << "bits, uval:" << uval;
-	RpcValue result;
-	if(bit_no1 == bit_no2)
-		result = static_cast<bool>(uval != 0);
-	else
-		result = uval;
-	return result;
 }
 
 } // namespace utils
