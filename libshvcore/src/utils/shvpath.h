@@ -5,6 +5,7 @@
 #include "../string.h"
 
 #include <functional>
+#include <map>
 
 namespace shv {
 namespace core {
@@ -114,6 +115,39 @@ int test()
 	});
 }
 #endif
+
+template<typename V>
+std::string findLongestPathMatch(const std::map<std::string, V> &map, const std::string &needle_path, size_t &matched_len)
+{
+	std::string prefix = needle_path;
+	matched_len = 0;
+	while(true) {
+		for (auto it = map.lower_bound(prefix); it != map.end(); ) {
+			const auto &key = it->first;
+			if(key.rfind(prefix, 0) == 0) {
+				// key starts with key
+				// key must be either equal to prefix or ended with slash
+				if(key.size() == prefix.size() || key[prefix.size()] == '/') {
+					matched_len = prefix.size();
+					return key;
+				}
+				++it;
+			}
+			else {
+				break;
+			}
+		}
+		// if not found, cut last prefix part
+		auto ix = prefix.find_last_of('/');
+		if(ix == std::string::npos) {
+			matched_len = 0;
+			return {};
+		}
+		else {
+			prefix = prefix.substr(0, ix);
+		}
+	}
+}
 
 }}}
 
