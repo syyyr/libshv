@@ -49,6 +49,7 @@ ClientConnection::ClientConnection(QObject *parent)
 
 ClientConnection::~ClientConnection()
 {
+	disconnect(this, &SocketRpcConnection::socketConnectedChanged, this, &ClientConnection::onSocketConnectedChanged);
 	shvDebug() << __FUNCTION__;
 }
 
