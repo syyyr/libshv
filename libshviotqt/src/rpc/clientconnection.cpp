@@ -41,7 +41,6 @@ ClientConnection::ClientConnection(QObject *parent)
 	setProtocolType(shv::chainpack::Rpc::ProtocolType::ChainPack);
 
 	connect(this, &SocketRpcConnection::socketConnectedChanged, this, &ClientConnection::onSocketConnectedChanged);
-	connect(this, &QObject::destroyed, this, &QObject::deleteLater);
 
 	m_checkBrokerConnectedTimer = new QTimer(this);
 	connect(m_checkBrokerConnectedTimer, &QTimer::timeout, this, &ClientConnection::checkBrokerConnected);
