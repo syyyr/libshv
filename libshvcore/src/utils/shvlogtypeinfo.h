@@ -59,6 +59,9 @@ public:
 	static ShvLogFieldDescr fromRpcValue(const chainpack::RpcValue &v);
 
 	shv::chainpack::RpcValue bitfieldValue(const shv::chainpack::RpcValue &val) const;
+	unsigned setBitfieldValue(uint64_t bitfield, unsigned uval) const;
+private:
+	std::pair<unsigned, unsigned> bitRange() const;
 };
 
 // backward compatibility

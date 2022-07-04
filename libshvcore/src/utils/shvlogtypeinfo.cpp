@@ -122,9 +122,8 @@ ShvLogFieldDescr ShvLogFieldDescr::fromRpcValue(const RpcValue &v)
 	return ret;
 }
 
-RpcValue ShvLogFieldDescr::bitfieldValue(const chainpack::RpcValue &val) const
+std::pair<unsigned, unsigned> ShvLogFieldDescr::bitRange() const
 {
-	uint64_t uval = val.toUInt64();
 	unsigned bit_no1 = 0;
 	unsigned bit_no2 = 0;
 	if(value().isList()) {
@@ -139,6 +138,13 @@ RpcValue ShvLogFieldDescr::bitfieldValue(const chainpack::RpcValue &val) const
 	else {
 		bit_no1 = bit_no2 = value().toUInt();
 	}
+	return std::pair<unsigned, unsigned>(bit_no1, bit_no2);
+}
+
+RpcValue ShvLogFieldDescr::bitfieldValue(const chainpack::RpcValue &val) const
+{
+	uint64_t uval = val.toUInt64();
+	auto [bit_no1, bit_no2] = bitRange();
 	uint64_t mask = ~((~static_cast<uint64_t>(0)) << (bit_no2 + 1));
 	shvDebug() << "bits:" << bit_no1 << bit_no2 << (bit_no1 == bit_no2) << "uval:" << uval << "mask:" << mask;
 	uval = (uval & mask) >> bit_no1;
@@ -149,6 +155,18 @@ RpcValue ShvLogFieldDescr::bitfieldValue(const chainpack::RpcValue &val) const
 	else
 		result = uval;
 	return result;
+}
+
+unsigned ShvLogFieldDescr::setBitfieldValue(uint64_t bitfield, unsigned uval) const
+{
+	auto [bit_no1, bit_no2] = bitRange();
+	unsigned mask = ~((~static_cast<unsigned>(0)) << (bit_no2 - bit_no1 + 1));
+	uval &= mask;
+	mask <<= bit_no1;
+	uval <<= bit_no1;
+	bitfield &= ~mask;
+	bitfield |= uval;
+	return bitfield;
 }
 
 //=====================================================================
