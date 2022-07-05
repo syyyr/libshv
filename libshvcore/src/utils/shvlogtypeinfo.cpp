@@ -141,9 +141,8 @@ std::pair<unsigned, unsigned> ShvLogFieldDescr::bitRange() const
 	return std::pair<unsigned, unsigned>(bit_no1, bit_no2);
 }
 
-RpcValue ShvLogFieldDescr::bitfieldValue(const chainpack::RpcValue &val) const
+RpcValue ShvLogFieldDescr::bitfieldValue(uint64_t uval) const
 {
-	uint64_t uval = val.toUInt64();
 	auto [bit_no1, bit_no2] = bitRange();
 	uint64_t mask = ~((~static_cast<uint64_t>(0)) << (bit_no2 + 1));
 	shvDebug() << "bits:" << bit_no1 << bit_no2 << (bit_no1 == bit_no2) << "uval:" << uval << "mask:" << mask;
@@ -157,10 +156,10 @@ RpcValue ShvLogFieldDescr::bitfieldValue(const chainpack::RpcValue &val) const
 	return result;
 }
 
-unsigned ShvLogFieldDescr::setBitfieldValue(uint64_t bitfield, unsigned uval) const
+uint64_t ShvLogFieldDescr::setBitfieldValue(uint64_t bitfield, uint64_t uval) const
 {
 	auto [bit_no1, bit_no2] = bitRange();
-	unsigned mask = ~((~static_cast<unsigned>(0)) << (bit_no2 - bit_no1 + 1));
+	uint64_t mask = ~((~static_cast<uint64_t>(0)) << (bit_no2 - bit_no1 + 1));
 	uval &= mask;
 	mask <<= bit_no1;
 	uval <<= bit_no1;
@@ -225,10 +224,19 @@ ShvLogFieldDescr ShvLogTypeDescr::field(const std::string &field_name) const
 	return {};
 }
 
-RpcValue ShvLogTypeDescr::bitfieldValue(const chainpack::RpcValue &val, const std::string &field_name) const
+RpcValue ShvLogTypeDescr::fieldValue(const chainpack::RpcValue &val, const std::string &field_name) const
 {
-	auto field_descr = field(field_name);
-	return field_descr.bitfieldValue(val);
+	switch (type()) {
+	case Type::BitField:
+		return field(field_name).bitfieldValue(val.toUInt64());
+	case Type::Map:
+		return val.asMap().value(field_name);
+	case Type::Enum:
+		return field(field_name).value().toInt();
+	default:
+		break;
+	}
+	return {};
 }
 
 const std::string ShvLogTypeDescr::typeToString(ShvLogTypeDescr::Type t)
@@ -653,7 +661,7 @@ RpcValue ShvLogTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &va
 	case ShvLogTypeDescr::Type::BitField: {
 		RpcValue::Map map;
 		for(const ShvLogFieldDescr &fld : td.fields()) {
-			RpcValue result = fld.bitfieldValue(val);
+			RpcValue result = fld.bitfieldValue(val.toUInt64());
 			result = applyTypeDescription(result, fld.typeName());
 			map[fld.name()] = result;
 		}

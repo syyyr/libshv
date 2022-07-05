@@ -58,8 +58,8 @@ public:
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogFieldDescr fromRpcValue(const chainpack::RpcValue &v);
 
-	shv::chainpack::RpcValue bitfieldValue(const shv::chainpack::RpcValue &val) const;
-	unsigned setBitfieldValue(uint64_t bitfield, unsigned uval) const;
+	shv::chainpack::RpcValue bitfieldValue(uint64_t val) const;
+	uint64_t setBitfieldValue(uint64_t bitfield, uint64_t uval) const;
 private:
 	std::pair<unsigned, unsigned> bitRange() const;
 };
@@ -108,7 +108,7 @@ public:
 	bool isValid() const { return type() != Type::Invalid; }
 
 	ShvLogFieldDescr field(const std::string &field_name) const;
-	shv::chainpack::RpcValue bitfieldValue(const shv::chainpack::RpcValue &val, const std::string &field_name) const;
+	shv::chainpack::RpcValue fieldValue(const shv::chainpack::RpcValue &val, const std::string &field_name) const;
 
 	static const std::string typeToString(Type t);
 	static Type typeFromString(const std::string &s);
