@@ -163,6 +163,7 @@ int test_unpack_number(const char *str, int expected_type, double expected_val)
 		printf("FAIL! unpack number str: '%s' unexpected type: %d\n", str, ctx.item.type);
 		assert(false);
 	}
+	return 1;
 }
 
 int test_unpack_datetime(const char *str, int add_msecs, int expected_utc_offset_min)
@@ -206,6 +207,7 @@ int test_unpack_datetime(const char *str, int add_msecs, int expected_utc_offset
 		   , dt->msecs_since_epoch, dt->minutes_from_utc
 		   , expected_epoch_msec - 60000 * expected_utc_offset_min, expected_utc_offset_min);
 	assert(false);
+	return 0;
 #endif
 }
 
@@ -375,17 +377,25 @@ void test_vals()
 	printf("------------- uint \n");
 	for (unsigned i = 0; i < sizeof(uint64_t); ++i) {
 		for (unsigned j = 0; j < 3; ++j) {
-			uint64_t n = (uint64_t)1 << (i*8 + j*3+1);
+			// cpon parser can handle only int64_t numbers
+			unsigned shift_n = i*8 + j*3+1;
+			static unsigned max_shift_n = 8 * sizeof(int64_t) - 2;
+			if(shift_n >= max_shift_n)
+				shift_n = max_shift_n;
+			int64_t n = ((int64_t)1) << shift_n;
+			uint64_t un = (uint64_t)n;
 			INIT_OUT_BUFFS();
-			ccpon_pack_uint(&out_ctx, n);
+			ccpon_pack_uint(&out_ctx, un);
 			*out_ctx.current = 0;
-			snprintf(out_buff2, sizeof (out_buff2), "%lluu", (unsigned long long)n);
+			snprintf(out_buff2, sizeof (out_buff2), "%lluu", (unsigned long long)un);
 			test_cpon((const char *)out_ctx.start, out_buff2);
 		}
 	}
 	{
 		uint64_t n = 0;
 		n = ~n;
+		// cpon parser can handle only int64_t numbers
+		n /= 2;
 		INIT_OUT_BUFFS();
 		ccpon_pack_uint(&out_ctx, n);
 		*out_ctx.current = 0;
@@ -404,7 +414,11 @@ void test_vals()
 	for (int sig = 1; sig >= -1; sig-=2) {
 		for (unsigned i = 0; i < sizeof(int64_t); ++i) {
 			for (unsigned j = 0; j < 3; ++j) {
-				int64_t n = sig * ((int64_t)1 << (i*8 + j*2+2));
+				unsigned shift_n = i*8 + j*2+2;
+				static unsigned max_shift_n = 8 * sizeof(int64_t) - 2;
+				if(shift_n >= max_shift_n)
+					shift_n = max_shift_n;
+				int64_t n = sig * ((int64_t)1 << shift_n);
 				INIT_OUT_BUFFS();
 				ccpon_pack_int(&out_ctx, n);
 				*out_ctx.current = 0;
@@ -414,12 +428,7 @@ void test_vals()
 		}
 	}
 	for (int i = 0; i < 2; i++) {
-		int64_t n = 1;
-		n <<= sizeof (n) * 8 - 1; // -MIN INT
-		if(i)
-			n = ~n; // MAX INT
-		else
-			n = n + 1; // MIN INT + 1
+		int64_t n = i? INT64_MAX: INT64_MIN + 1;
 		INIT_OUT_BUFFS();
 		ccpon_pack_int(&out_ctx, n);
 		*out_ctx.current = 0;
@@ -479,12 +488,12 @@ void test_vals()
 	{
 		const char *cpons[] = {
 			//"d\"\"", NULL,
+			"d\"1970-01-01T0:00:00\"", "d\"1970-01-01T00:00:00Z\"",
 			"d\"2018-02-02T0:00:00.001\"", "d\"2018-02-02T00:00:00.001Z\"",
 			"d\"2018-02-02 01:00:00.001+01\"", "d\"2018-02-02T01:00:00.001+01\"",
 			"d\"2018-12-02 0:00:00\"", "d\"2018-12-02T00:00:00Z\"",
 			"d\"2041-03-04 0:00:00-1015\"", "d\"2041-03-04T00:00:00-1015\"",
 			"d\"2041-03-04T0:00:00.123-1015\"", "d\"2041-03-04T00:00:00.123-1015\"",
-			"d\"1970-01-01T0:00:00\"", "d\"1970-01-01T00:00:00Z\"",
 			"d\"2017-05-03T5:52:03\"", "d\"2017-05-03T05:52:03Z\"",
 			"d\"2017-05-03T15:52:03.923Z\"", NULL,
 			"d\"2017-05-03T15:52:03.000-0130\"", "d\"2017-05-03T15:52:03-0130\"",
