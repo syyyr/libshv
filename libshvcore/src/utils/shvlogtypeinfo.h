@@ -8,6 +8,7 @@
 
 #include <string>
 #include <variant>
+#include <functional>
 
 namespace shv::chainpack { class MetaMethod; }
 
@@ -90,7 +91,7 @@ public:
 
 	ShvLogTypeDescr() {}
 	//ShvLogTypeDescr(const chainpack::RpcValue &v) : Super(v) {} DANGEROUS
-	//ShvLogTypeDescr(const std::string &type_name) : type(typeFromString(type_name)) { }
+	ShvLogTypeDescr(const std::string &type_name) { setType(typeFromString(type_name)); }
 	ShvLogTypeDescr(Type t, SampleType st = SampleType::Continuous)
 		: ShvLogTypeDescr(t, std::vector<ShvLogFieldDescr>(), st) {}
 	ShvLogTypeDescr(Type t, std::vector<ShvLogFieldDescr> &&flds, SampleType st = SampleType::Continuous);
@@ -101,9 +102,6 @@ public:
 	ShvLogTypeDescr &setFields(const std::vector<ShvLogFieldDescr> &fields);
 	SampleType sampleType() const; // = SampleType::Continuous;
 	ShvLogTypeDescr &setSampleType(SampleType st);
-
-	//ShvLogTypeDescr& withTags(const chainpack::RpcValue::Map &tags) { this->tags = tags; return *this; }
-	ShvLogTypeDescr& withType(Type t);
 
 	bool isValid() const { return type() != Type::Invalid; }
 
@@ -116,12 +114,14 @@ public:
 	static const std::string sampleTypeToString(SampleType t);
 	static SampleType sampleTypeFromString(const std::string &s);
 
-	//void applyTags(const chainpack::RpcValue::Map &t);
-	//chainpack::RpcValue defaultRpcValue() const;
+	/// unit should be property of node description,
+	/// but FlatLine stores it also type description
+	std::string unit() const;
+	ShvLogTypeDescr& setUnit(const std::string &unit);
 
-	//std::string unit() const;
 	std::string visualStyleName() const;
 	std::string alarm() const;
+	ShvLogTypeDescr& setAlarm(const std::string &alarm);
 	int alarmLevel() const;
 	std::string alarmDescription() const;
 	int decimalPlaces() const;
@@ -129,6 +129,8 @@ public:
 
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogTypeDescr fromRpcValue(const chainpack::RpcValue &v);
+
+	chainpack::RpcValue defaultRpcValue() const;
 };
 
 using ShvLogMethodDescr = shv::chainpack::MetaMethod;
@@ -148,6 +150,7 @@ public:
 	//int alarmLevel() const;
 	//chainpack::RpcValue tags() const;
 	std::vector<ShvLogMethodDescr> methods() const;
+	ShvLogMethodDescr method(const std::string &name) const;
 
 	chainpack::RpcValue toRpcValue() const;
 	static ShvLogNodeDescr fromRpcValue(const chainpack::RpcValue &v);
@@ -163,11 +166,13 @@ public:
 		, m_nodeDescriptions(std::move(paths))
 	{}
 
-	bool isEmpty() const { return m_types.size() == 0 && m_nodeDescriptions.size() == 0; }
+	bool isValid() const { return !(m_types.empty() && m_devicePaths.empty() && m_nodeDescriptions.empty()); }
+
 	//const std::map<std::string, ShvLogTypeDescr>& types() const { return m_types; }
 	const std::map<std::string, std::string>& devicePaths() const { return m_devicePaths; }
 	const std::map<std::string, ShvLogTypeDescr>& types() const { return m_types; }
 	const std::map<std::string, ShvLogNodeDescr>& nodeDescriptions() const { return m_nodeDescriptions; }
+	const std::map<std::string, std::string>& systemPathsRoots() const { return m_systemPathsRoots; }
 
 	ShvLogTypeInfo& setDevicePath(const std::string &device_path, const std::string &device_type);
 	ShvLogTypeInfo& setNodeDescription(const ShvLogNodeDescr &node_descr, const std::string &node_path, const std::string &device_type = {} );
@@ -176,6 +181,7 @@ public:
 	ShvLogNodeDescr nodeDescriptionForDevice(const std::string &device_type, const std::string &property_path) const;
 	//ShvLogTypeDescr typeDescriptionForPath(const std::string &shv_path) const;
 	ShvLogTypeDescr typeDescriptionForName(const std::string &type_name) const;
+	ShvLogTypeDescr typeDescriptionForPath(const std::string &shv_path) const;
 	std::string findSystemPath(const std::string &shv_path) const;
 
 	chainpack::RpcValue typesAsRpcValue() const;
@@ -183,11 +189,16 @@ public:
 	static ShvLogTypeInfo fromRpcValue(const chainpack::RpcValue &v);
 
 	shv::chainpack::RpcValue applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums = true) const;
+
+	void forEachNodeDescription(const std::string &node_descr_root, std::function<void (const std::string &property_path, const ShvLogNodeDescr &node_descr)> fn) const;
+	void forEachNode(std::function<void (const std::string &shv_path, const ShvLogNodeDescr &node_descr)> fn) const;
+private:
+	static ShvLogTypeInfo fromNodesTree(const chainpack::RpcValue &v);
 private:
 	std::map<std::string, ShvLogTypeDescr> m_types; // type_name -> type_description
 	std::map<std::string, std::string> m_devicePaths; // path -> device
 	std::map<std::string, ShvLogNodeDescr> m_nodeDescriptions; // node/device_property path -> node_descr
-	std::map<std::string, std::string> m_systemPathsRoots;
+	std::map<std::string, std::string> m_systemPathsRoots; // shv-path-root -> system-path
 };
 
 // backward compatibility

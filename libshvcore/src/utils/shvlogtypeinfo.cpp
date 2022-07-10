@@ -1,8 +1,12 @@
 #include "shvlogtypeinfo.h"
+#include "shvpath.h"
 #include "../string.h"
+#include "../utils.h"
 #include "../log.h"
 
 #include<shv/chainpack/metamethod.h>
+
+#include <cassert>
 
 using namespace std;
 using namespace shv::chainpack;
@@ -294,6 +298,17 @@ ShvLogTypeDescr::SampleType ShvLogTypeDescr::sampleTypeFromString(const std::str
 		return SampleType::Continuous;
 	return SampleType::Invalid;
 }
+
+string ShvLogTypeDescr::unit() const
+{
+	return dataValue(KEY_UNIT).asString();
+}
+
+ShvLogTypeDescr &ShvLogTypeDescr::setUnit(const std::string &unit)
+{
+	setDataValue(KEY_UNIT, unit);
+	return *this;
+}
 /*
 void ShvLogTypeDescr::applyTags(const RpcValue::Map &t)
 {
@@ -308,12 +323,13 @@ void ShvLogTypeDescr::applyTags(const RpcValue::Map &t)
 
 	tags.insert(t.begin(), t.end());
 }
+*/
 
 RpcValue ShvLogTypeDescr::defaultRpcValue() const
 {
 	using namespace chainpack;
 
-	switch (type) {
+	switch (type()) {
 	case Type::Invalid: return RpcValue::fromType(RpcValue::Type::Invalid); break;
 	case Type::BitField: return RpcValue::fromType(RpcValue::Type::UInt); break;
 	case Type::Enum: return RpcValue::fromType(RpcValue::Type::Int); break;
@@ -331,15 +347,21 @@ RpcValue ShvLogTypeDescr::defaultRpcValue() const
 
 	return RpcValue::fromType(RpcValue::Type::Null);
 }
-*/
+
 std::string ShvLogTypeDescr::visualStyleName() const
 {
-	return dataValue(KEY_VISUAL_STYLE, std::string()).asString();
+	return dataValue(KEY_VISUAL_STYLE).asString();
 }
 
 std::string ShvLogTypeDescr::alarm() const
 {
-	return dataValue(KEY_ALARM, std::string()).asString();
+	return dataValue(KEY_ALARM).asString();
+}
+
+ShvLogTypeDescr &ShvLogTypeDescr::setAlarm(const std::string &alarm)
+{
+	setDataValue(KEY_ALARM, alarm);
+	return *this;
 }
 
 int ShvLogTypeDescr::alarmLevel() const
@@ -349,12 +371,12 @@ int ShvLogTypeDescr::alarmLevel() const
 
 string ShvLogTypeDescr::alarmDescription() const
 {
-	return dataValue(KEY_DESCRIPTION, std::string()).asString();
+	return dataValue(KEY_DESCRIPTION).asString();
 }
 
 int ShvLogTypeDescr::decimalPlaces() const
 {
-	return dataValue(KEY_DEC_PLACES, 0).toInt();
+	return dataValue(KEY_DEC_PLACES).toInt();
 }
 
 ShvLogTypeDescr &ShvLogTypeDescr::setDecimalPlaces(int n)
@@ -434,6 +456,17 @@ std::vector<ShvLogMethodDescr> ShvLogNodeDescr::methods() const
 		ret.push_back(ShvLogMethodDescr::fromRpcValue(m));
 	}
 	return ret;
+}
+
+ShvLogMethodDescr ShvLogNodeDescr::method(const std::string &name) const
+{
+	RpcValue rv = dataValue(KEY_METHODS);
+	for(const auto &m : rv.asList()) {
+		auto mm = ShvLogMethodDescr::fromRpcValue(m);
+		if(mm.name() == name)
+			return mm;
+	}
+	return {};
 }
 
 /*
@@ -571,17 +604,22 @@ ShvLogTypeDescr ShvLogTypeInfo::typeDescriptionForName(const std::string &type_n
 		return it->second;
 }
 
+ShvLogTypeDescr ShvLogTypeInfo::typeDescriptionForPath(const std::string &shv_path) const
+{
+	return typeDescriptionForName(nodeDescriptionForPath(shv_path).typeName());
+}
+
 std::string ShvLogTypeInfo::findSystemPath(const std::string &shv_path) const
 {
 	string current_root;
 	string ret;
-	for(const auto &kv : m_systemPathsRoots) {
-		if(String::startsWith(shv_path, kv.first)) {
-			if(shv_path.size() == kv.first.size() || shv_path[kv.first.size()] == '/') {
-				if(kv.first.size() > current_root.size()) {
+	for(const auto& [shv_root_path, system_path] : m_systemPathsRoots) {
+		if(String::startsWith(shv_path, shv_root_path)) {
+			if(shv_path.size() == shv_root_path.size() || shv_path[shv_root_path.size()] == '/') {
+				if(shv_root_path.size() > current_root.size()) {
 					// fing longest match
-					current_root = kv.first;
-					ret = kv.second;
+					current_root = shv_root_path;
+					ret = system_path;
 				}
 			}
 		}
@@ -625,8 +663,8 @@ ShvLogTypeInfo ShvLogTypeInfo::fromRpcValue(const RpcValue &v)
 {
 	int version = v.metaValue("version").toInt();
 	if(version != 3) {
-		shvError() << "Type info version:" << version << "is not supported.";
-		return {};
+		//shvError() << "Type info version:" << version << "is not supported.";
+		return fromNodesTree(v);
 	}
 	ShvLogTypeInfo ret;
 	const RpcValue::Map &map = v.asMap();
@@ -713,6 +751,118 @@ RpcValue ShvLogTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &va
 	}
 	shvError() << "Invalid type:" << (int)td.type();
 	return val;
+}
+
+void ShvLogTypeInfo::forEachNodeDescription(const std::string &node_descr_root, std::function<void (const std::string &, const ShvLogNodeDescr &)> fn) const
+{
+	ShvPath::forEachDirAndSubdirs(nodeDescriptions(), node_descr_root, [=](auto it) {
+		string property_path = it->first;
+		assert(property_path.size() >= node_descr_root.size());
+		property_path = property_path.substr(node_descr_root.size());
+		if(property_path.size() > 0 && property_path[0] == '/')
+			property_path = property_path.substr(1);
+		const ShvLogNodeDescr &node_descr = it->second;
+		fn(property_path, node_descr);
+	});
+}
+
+void ShvLogTypeInfo::forEachNode(std::function<void (const std::string &shv_path, const ShvLogNodeDescr &node_descr)> fn) const
+{
+	map<string, vector<string>> device_id_to_path;
+	for(const auto& [path, device_id] : m_devicePaths)
+		device_id_to_path[device_id].push_back(path);
+	for(const auto& [path, node_descr] : m_nodeDescriptions) {
+		if(auto ix = path.find('/'); ix != string::npos) {
+			string device_id = path.substr(0, ix);
+			if(auto it = device_id_to_path.find(device_id); it != device_id_to_path.end()) {
+				// device paths
+				for(const auto &device_path : it->second) {
+					string shv_path = shv::core::Utils::joinPath(device_path, path);
+					fn(shv_path, node_descr);
+				}
+				continue;
+			}
+		}
+		// not device paths
+		fn(path, node_descr);
+	}
+}
+
+static void fromNodesTree_helper(shv::core::utils::ShvLogTypeInfo &type_info,
+								const RpcValue &node,
+								const std::string &_shv_path,
+								const std::string &recent_device_type,
+								const std::string &recent_device_path,
+								const RpcValue::Map &node_types)
+{
+	using namespace shv::core::utils;
+	using namespace shv::core;
+	if(!node.isValid())
+		return;
+
+	string device_type = recent_device_type;
+	string device_path = recent_device_path;
+	string type_name;
+	RpcValue::Map property_descr;
+	RpcValue::List property_methods;
+	String shv_path = _shv_path;
+	if(shv_path.indexOf("/status/") != string::npos) {
+		// TODO: find better way how to exclude subtrees created from type description
+		return;
+	}
+	if(auto ref = node.metaValue("nodeTypeRef").asString(); !ref.empty()) {
+		fromNodesTree_helper(type_info, node_types.value(ref), shv_path, recent_device_type, recent_device_path, node_types);
+		return;
+	}
+	//shvInfo() << "id:" << node->nodeId() << "node path:" << node_shv_path << "shv path:" << shv_path;
+	//StringViewList node_shv_dir_list = ShvPath::splitPath(node_shv_path);
+	for(const RpcValue &rv : node.asMap().value("methods").asList()) {
+		const auto mm = MetaMethod::fromRpcValue(rv);
+		const string &method_name = mm.name();
+		if(method_name == Rpc::METH_LS || method_name == Rpc::METH_DIR)
+			continue;
+		property_methods.push_back(mm.toRpcValue());
+	}
+	if(auto tags = node.metaValue("tags"); tags.isMap()) {
+		RpcValue::Map tags_map = tags.asMap();
+		const string &dtype = tags_map.value("deviceType").asString();
+		if(!dtype.empty()) {
+			device_type = dtype;
+			device_path = shv_path;
+		}
+		property_descr.merge(tags_map);
+	}
+	if(!property_methods.empty())
+		property_descr["methods"] = property_methods;
+	if(!property_descr.empty()) {
+		auto pd = shv::core::utils::ShvLogNodeDescr::fromRpcValue(property_descr);
+		string node_path = device_path.empty()? shv_path: shv_path.mid(device_path.size() + 1);
+		type_info.setNodeDescription(pd, node_path, device_type);
+	}
+	if(device_type != recent_device_type)
+		type_info.setDevicePath(device_path, device_type);
+
+	for (const auto& [child_name, child_node] : node.asMap()) {
+		if(child_name.empty())
+			continue;
+		ShvPath child_shv_path = shv::core::Utils::joinPath(shv_path, child_name);
+		fromNodesTree_helper(type_info, child_node, child_shv_path, device_type, device_path, node_types);
+	}
+}
+
+ShvLogTypeInfo ShvLogTypeInfo::fromNodesTree(const chainpack::RpcValue &v)
+{
+	ShvLogTypeInfo ret;
+	{
+		const RpcValue types = v.asMap().value("typeInfo").asMap().value("types");
+		const RpcValue::Map &m = types.asMap();
+		for(const auto &kv : m) {
+			ret.m_types[kv.first] = ShvLogTypeDescr::fromRpcValue(kv.second);
+		}
+	}
+	const RpcValue node_types = v.asMap().value("nodeTypes");
+	fromNodesTree_helper(ret, v, {}, {}, {}, node_types.asMap());
+	return ret;
 }
 
 } // namespace utils

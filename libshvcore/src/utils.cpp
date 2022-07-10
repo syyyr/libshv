@@ -259,7 +259,7 @@ std::vector<char> Utils::readAllFd(int fd)
 	}
 	return ret;
 }
-
+#if 0
 static RpcValue decompress_node(const RpcValue::Map &node_types, const RpcValue &node)
 {
 	const RpcValue &node_type_ref = node.metaValue("nodeTypeRef");
@@ -297,7 +297,7 @@ RpcValue Utils::decompressNodesTree(const chainpack::RpcValue &compressed_nodes_
 
 	return decompress_nodes_tree_helper(node_types, compressed_nodes_tree);
 }
-
+#endif
 #if 0
 const QString& Utils::nullValueString()
 {

@@ -62,6 +62,7 @@ public:
 		, m_tags(tags)
 	{}
 
+	bool isValid() const { return !name().empty(); }
 	const std::string& name() const {return m_name;}
 	const std::string& description() const {return m_description;}
 	Signature signature() const {return m_signature;}

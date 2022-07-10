@@ -45,7 +45,7 @@ void AbstractShvJournal::addToSnapshot(ShvSnapshot &snapshot, const ShvJournalEn
 	if(entry.value.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID && entry.value.metaTypeId() == shv::chainpack::meta::GlobalNS::MetaTypeId::NodeDrop) {
 		// NODE_DROP
 		shvDebug() << "dropping path:" << entry.path;
-		forEachDirAndSubdirsDeleteIf(snapshot.keyvals, entry.path, [](decltype(snapshot.keyvals)::const_iterator){return true;});
+		ShvPath::forEachDirAndSubdirsDeleteIf(snapshot.keyvals, entry.path, [](decltype(snapshot.keyvals)::const_iterator){return true;});
 	}
 	else {
 		snapshot.keyvals[entry.path] = entry;
