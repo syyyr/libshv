@@ -236,7 +236,7 @@ std::vector<char> Utils::readAllFd(int fd)
 				return ret;
 			}
 			else {
-				shvError() << "error read fd:" << fd << ::strerror(errno);
+				shvError() << "error read fd:" << fd << std::strerror(errno);
 				return std::vector<char>();
 			}
 		}
