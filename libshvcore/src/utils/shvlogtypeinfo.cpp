@@ -514,7 +514,8 @@ ShvLogNodeDescr ShvLogNodeDescr::fromRpcValue(const RpcValue &v)
 //=====================================================================
 // ShvLogTypeInfo
 //=====================================================================
-map<string, string>::const_iterator find_longest_prefix(const map<string, string> &map, const string &path)
+template<typename T>
+typename map<string, T>::const_iterator find_longest_prefix(const map<string, T> &map, const string &path)
 {
 	shv::core::String prefix = path;
 	while(true) {
@@ -552,6 +553,12 @@ ShvLogTypeInfo &ShvLogTypeInfo::setNodeDescription(const ShvLogNodeDescr &node_d
 	return *this;
 }
 
+ShvLogTypeInfo &ShvLogTypeInfo::setNodeTags(const std::string &node_path, const chainpack::RpcValue &tags)
+{
+	m_nodeTags[node_path] = tags;
+	return *this;
+}
+
 ShvLogTypeInfo &ShvLogTypeInfo::setTypeDescription(const ShvLogTypeDescr &type_descr, const std::string &type_name)
 {
 	if(type_descr.isValid())
@@ -561,20 +568,24 @@ ShvLogTypeInfo &ShvLogTypeInfo::setTypeDescription(const ShvLogTypeDescr &type_d
 	return *this;
 }
 
-ShvLogNodeDescr ShvLogTypeInfo::nodeDescriptionForDevice(const std::string &device_type, const string &property_path) const
+ShvLogNodeDescr ShvLogTypeInfo::nodeDescriptionForDevice(const std::string &device_type, const string &property_path, string *p_field_name) const
 {
 	string property = property_path.empty()? device_type: device_type + '/' + property_path;
-	if(auto it_node_descr = m_nodeDescriptions.find(property); it_node_descr == m_nodeDescriptions.cend()) {
+	if(auto it = find_longest_prefix(m_nodeDescriptions, property); it == m_nodeDescriptions.cend()) {
 		return {};
 	}
 	else {
-		return it_node_descr->second;
+		string prefix = it->first;
+		const ShvLogNodeDescr &node_descr = it->second;
+		if(p_field_name)
+			*p_field_name = String(property).mid(prefix.size() + 1);
+		return node_descr;
 	}
 }
 
-ShvLogNodeDescr ShvLogTypeInfo::nodeDescriptionForPath(const std::string &shv_path) const
+ShvLogNodeDescr ShvLogTypeInfo::nodeDescriptionForPath(const std::string &shv_path, string *p_field_name) const
 {
-	if (auto it_node_descr = m_nodeDescriptions.find(shv_path); it_node_descr == m_nodeDescriptions.cend()) {
+	if(auto it_node_descr = find_longest_prefix(m_nodeDescriptions, shv_path); it_node_descr == m_nodeDescriptions.cend()) {
 		if(auto it = find_longest_prefix(m_devicePaths, shv_path); it == m_devicePaths.cend()) {
 			return {};
 		}
@@ -582,10 +593,13 @@ ShvLogNodeDescr ShvLogTypeInfo::nodeDescriptionForPath(const std::string &shv_pa
 			string prefix = it->first;
 			string device_type = it->second;
 			string property_path = String(shv_path).mid(prefix.size() + 1);
-			return nodeDescriptionForDevice(device_type, property_path);
+			return nodeDescriptionForDevice(device_type, property_path, p_field_name);
 		}
 	}
 	else {
+		string prefix = it_node_descr->first;
+		if(p_field_name)
+			*p_field_name = String(shv_path).mid(prefix.size() + 1);
 		return it_node_descr->second;
 	}
 }
