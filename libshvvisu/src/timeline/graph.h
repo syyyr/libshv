@@ -30,7 +30,7 @@ class SHVVISU_DECL_EXPORT Graph : public QObject
 {
 	Q_OBJECT
 public:
-	using TypeId = shv::core::utils::ShvLogTypeDescr::Type;
+	using TypeId = shv::core::utils::ShvTypeDescr::Type;
 	struct SHVVISU_DECL_EXPORT DataRect
 	{
 		XRange xRange;
@@ -120,7 +120,7 @@ public:
 	GraphChannel* appendChannel(int model_index = -1);
 	GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw);
 	const GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw) const;
-	core::utils::ShvLogTypeDescr::Type channelTypeId(int ix) const;
+	core::utils::ShvTypeDescr::Type channelTypeId(int ix) const;
 	void moveChannel(int channel, int new_pos);
 
 	void showAllChannels();
@@ -150,9 +150,9 @@ public:
 	QPoint dataToPos(int ch_ix, const Sample &s) const;
 
 	QMap<QString, QString> yValuesToMap(int channel_ix, const Sample &s) const;
-	QString prettyBitFieldValue(const QVariant &value, const shv::core::utils::ShvLogTypeDescr &type_descr) const;
-	QMap<QString, QString> prettyMapValue(const QVariant &value, const shv::core::utils::ShvLogTypeDescr &type_descr) const;
-	QMap<QString, QString> prettyIMapValue(const QVariant &value, const shv::core::utils::ShvLogTypeDescr &type_descr) const;
+	QString prettyBitFieldValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const;
+	QMap<QString, QString> prettyMapValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const;
+	QMap<QString, QString> prettyIMapValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const;
 
 	const QRect& rect() const { return  m_layout.rect; }
 	const QRect& miniMapRect() const { return  m_layout.miniMapRect; }

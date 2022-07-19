@@ -18,12 +18,12 @@ public:
 
 	void setSince(const shv::chainpack::RpcValue &since) { m_logHeader.setSince(since); }
 	void setUntil(const shv::chainpack::RpcValue &until) { m_logHeader.setUntil(until); }
-	void setTypeInfo(const ShvLogTypeInfo &ti, const std::string &path_prefix = ShvLogHeader::EMPTY_PREFIX_KEY) {setTypeInfo(ShvLogTypeInfo(ti), path_prefix);}
-	void setTypeInfo(ShvLogTypeInfo &&ti, const std::string &path_prefix = ShvLogHeader::EMPTY_PREFIX_KEY) {m_logHeader.setTypeInfo(std::move(ti), path_prefix);}
+	void setTypeInfo(const ShvTypeInfo &ti, const std::string &path_prefix = ShvLogHeader::EMPTY_PREFIX_KEY) {setTypeInfo(ShvTypeInfo(ti), path_prefix);}
+	void setTypeInfo(ShvTypeInfo &&ti, const std::string &path_prefix = ShvLogHeader::EMPTY_PREFIX_KEY) {m_logHeader.setTypeInfo(std::move(ti), path_prefix);}
 	void setDeviceId(std::string id) { m_logHeader.setDeviceId(std::move(id)); }
 	void setDeviceType(std::string type) { m_logHeader.setDeviceType(std::move(type)); }
 
-	const ShvLogTypeInfo &typeInfo(const std::string &path_prefix = ShvLogHeader::EMPTY_PREFIX_KEY) const { return m_logHeader.typeInfo(path_prefix); }
+	const ShvTypeInfo &typeInfo(const std::string &path_prefix = ShvLogHeader::EMPTY_PREFIX_KEY) const { return m_logHeader.typeInfo(path_prefix); }
 
 	bool isShortTimeCorrection() const { return m_isShortTimeCorrection; }
 	void setShortTimeCorrection(bool b) { m_isShortTimeCorrection = b; }

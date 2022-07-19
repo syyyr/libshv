@@ -78,9 +78,9 @@ YRange GraphModel::yRange(int channel_ix) const
 	return ret;
 }
 
-static shv::core::utils::ShvLogTypeDescr::Type qt_to_shv_type(int meta_type_id)
+static shv::core::utils::ShvTypeDescr::Type qt_to_shv_type(int meta_type_id)
 {
-	using Type = shv::core::utils::ShvLogTypeDescr::Type;
+	using Type = shv::core::utils::ShvTypeDescr::Type;
 	switch (meta_type_id) {
 	case QVariant::Map:
 		return Type::Map;
@@ -99,9 +99,9 @@ static shv::core::utils::ShvLogTypeDescr::Type qt_to_shv_type(int meta_type_id)
 	return Type::Invalid;
 }
 
-double GraphModel::valueToDouble(const QVariant v, shv::core::utils::ShvLogTypeDescr::Type type_id, bool *ok)
+double GraphModel::valueToDouble(const QVariant v, shv::core::utils::ShvTypeDescr::Type type_id, bool *ok)
 {
-	using Type = shv::core::utils::ShvLogTypeDescr::Type;
+	using Type = shv::core::utils::ShvTypeDescr::Type;
 	if(ok)
 		*ok = true;
 	if(type_id == Type::Invalid)
@@ -229,7 +229,7 @@ void GraphModel::appendValue(int channel, Sample &&sample)
 		return;
 	}
 	if (!dat.isEmpty() &&
-		channelInfo(channel).typeDescr.sampleType() == shv::core::utils::ShvLogTypeDescr::SampleType::Continuous &&
+		channelInfo(channel).typeDescr.sampleType() == shv::core::utils::ShvTypeDescr::SampleType::Continuous &&
 		dat.last().value == sample.value) {
 		return;
 	}
@@ -270,7 +270,7 @@ int GraphModel::pathToChannelIndex(const std::string &path) const
 	return it->second;
 }
 
-void GraphModel::appendChannel(const std::string &shv_path, const std::string &name, const shv::core::utils::ShvLogTypeDescr &type_descr)
+void GraphModel::appendChannel(const std::string &shv_path, const std::string &name, const shv::core::utils::ShvTypeDescr &type_descr)
 {
 	m_pathToChannelCache.clear();
 	m_channelsInfo.append(ChannelInfo());
@@ -284,7 +284,7 @@ void GraphModel::appendChannel(const std::string &shv_path, const std::string &n
 	emit channelCountChanged(channelCount());
 }
 
-QString GraphModel::typeDescrFieldName(const shv::core::utils::ShvLogTypeDescr &type_descr, int field_index)
+QString GraphModel::typeDescrFieldName(const shv::core::utils::ShvTypeDescr &type_descr, int field_index)
 {
 	for (const auto &field : type_descr.fields()) {
 		if (field_index == field.value().toInt()) {

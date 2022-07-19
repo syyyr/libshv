@@ -10,8 +10,8 @@ HEADERS += \
     $$PWD/shvlogfilereader.h \
     $$PWD/shvlogheader.h \
     $$PWD/shvlogrpcvaluereader.h \
-    $$PWD/shvlogtypeinfo.h \
     $$PWD/shvmemoryjournal.h \
+    $$PWD/shvtypeinfo.h \
     $$PWD/shvurl.h \
     $$PWD/versioninfo.h \
     $$PWD/clioptions.h \
@@ -31,8 +31,8 @@ SOURCES += \
     $$PWD/shvlogfilereader.cpp \
     $$PWD/shvlogheader.cpp \
     $$PWD/shvlogrpcvaluereader.cpp \
-    $$PWD/shvlogtypeinfo.cpp \
     $$PWD/shvmemoryjournal.cpp \
+    $$PWD/shvtypeinfo.cpp \
     $$PWD/shvurl.cpp \
     $$PWD/versioninfo.cpp \
     $$PWD/clioptions.cpp \

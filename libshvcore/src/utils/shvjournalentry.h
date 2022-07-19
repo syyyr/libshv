@@ -3,7 +3,7 @@
 
 #include "../shvcoreglobal.h"
 
-#include "shvlogtypeinfo.h"
+#include "shvtypeinfo.h"
 
 #include <shv/chainpack/datachange.h>
 #include <shv/chainpack/rpc.h>

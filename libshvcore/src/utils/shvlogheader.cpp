@@ -45,11 +45,11 @@ ShvLogHeader ShvLogHeader::fromMetaData(const chainpack::RpcValue::MetaData &md)
 	{
 		const chainpack::RpcValue::Map &m = md.value("typeInfos").toMap();
 		for(const auto &kv : m) {
-			ret.m_typeInfos[kv.first] = ShvLogTypeInfo::fromRpcValue(kv.second);
+			ret.m_typeInfos[kv.first] = ShvTypeInfo::fromRpcValue(kv.second);
 		}
 		chainpack::RpcValue ti = md.value("typeInfo");
 		if(ti.isMap())
-			ret.m_typeInfos[EMPTY_PREFIX_KEY] = ShvLogTypeInfo::fromRpcValue(ti);
+			ret.m_typeInfos[EMPTY_PREFIX_KEY] = ShvTypeInfo::fromRpcValue(ti);
 	}
 	ret.setDateTime(md.value("dateTime"));
 	ret.setSince(md.value("since"));
@@ -95,22 +95,22 @@ chainpack::RpcValue::MetaData ShvLogHeader::toMetaData() const
 	return md;
 }
 
-const ShvLogTypeInfo &ShvLogHeader::typeInfo(const std::string &path_prefix) const
+const ShvTypeInfo &ShvLogHeader::typeInfo(const std::string &path_prefix) const
 {
 	auto it = m_typeInfos.find(path_prefix);
 	if(it == m_typeInfos.end()) {
-		static const ShvLogTypeInfo ti;
+		static const ShvTypeInfo ti;
 		return ti;
 	}
 	return m_typeInfos.at(path_prefix);
 }
 
-void ShvLogHeader::setTypeInfo(ShvLogTypeInfo &&ti, const std::string &path_prefix)
+void ShvLogHeader::setTypeInfo(ShvTypeInfo &&ti, const std::string &path_prefix)
 {
 	m_typeInfos[path_prefix] = std::move(ti);
 }
 
-void ShvLogHeader::setTypeInfo(const ShvLogTypeInfo &ti, const std::string &path_prefix)
+void ShvLogHeader::setTypeInfo(const ShvTypeInfo &ti, const std::string &path_prefix)
 {
 	m_typeInfos[path_prefix] = ti;
 }

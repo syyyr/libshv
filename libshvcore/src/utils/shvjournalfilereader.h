@@ -3,7 +3,7 @@
 
 #include "../shvcoreglobal.h"
 #include "shvjournalentry.h"
-#include "shvlogtypeinfo.h"
+#include "shvtypeinfo.h"
 #include "../exception.h"
 
 #include <string>

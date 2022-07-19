@@ -1,5 +1,5 @@
 #include "shvalarm.h"
-#include "shvlogtypeinfo.h"
+#include "shvtypeinfo.h"
 
 #include <shv/chainpack/rpcvalue.h>
 #include <necrolog.h>
@@ -83,19 +83,19 @@ ShvAlarm ShvAlarm::fromRpcValue(const chainpack::RpcValue &rv)
 	return a;
 }
 
-vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvLogTypeInfo &type_info, const std::string &shv_path, const chainpack::RpcValue &value)
+vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const std::string &shv_path, const chainpack::RpcValue &value)
 {
-	if(ShvLogNodeDescr node_descr = type_info.nodeDescriptionForPath(shv_path); node_descr.isValid()) {
+	if(ShvNodeDescr node_descr = type_info.nodeDescriptionForPath(shv_path); node_descr.isValid()) {
 		nDebug() << shv_path << node_descr.toRpcValue().toCpon();
 		return checkAlarms(type_info, shv_path, node_descr.typeName(), value);
 	}
 	return {};
 }
 
-std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvLogTypeInfo &type_info, const std::string &shv_path, const std::string &type_name, const chainpack::RpcValue &value)
+std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const std::string &shv_path, const std::string &type_name, const chainpack::RpcValue &value)
 {
-	if(ShvLogTypeDescr type_descr = type_info.typeDescriptionForName(type_name); type_descr.isValid()) {
-		if (type_descr.type() == ShvLogTypeDescr::Type::Bool) {
+	if(ShvTypeDescr type_descr = type_info.typeDescriptionForName(type_name); type_descr.isValid()) {
+		if (type_descr.type() == ShvTypeDescr::Type::Bool) {
 			if(string alarm = type_descr.alarm(); !alarm.empty()) {
 				return {ShvAlarm(shv_path,
 						value.toBool(),
@@ -105,11 +105,11 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvLogTypeInfo &type_info, con
 					)};
 			}
 		}
-		else if (type_descr.type() == ShvLogTypeDescr::Type::BitField) {
+		else if (type_descr.type() == ShvTypeDescr::Type::BitField) {
 			vector<ShvAlarm> alarms;
 			auto flds = type_descr.fields();
 			for (size_t i = 0; i < flds.size(); ++i) {
-				const ShvLogFieldDescr &fld_descr = flds[i];
+				const ShvFieldDescr &fld_descr = flds[i];
 				if(string alarm = fld_descr.alarm(); !alarm.empty()) {
 					bool is_alarm = fld_descr.bitfieldValue(value.toUInt64()).toBool();
 					alarms.push_back(ShvAlarm(shv_path + '/' + fld_descr.name(),
@@ -126,18 +126,18 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvLogTypeInfo &type_info, con
 			}
 			return alarms;
 		}
-		else if (type_descr.type() == ShvLogTypeDescr::Type::Enum) {
+		else if (type_descr.type() == ShvTypeDescr::Type::Enum) {
 			auto flds = type_descr.fields();
 			size_t active_alarm_ix = flds.size();
 			for (size_t i = 0; i < flds.size(); ++i) {
-				const ShvLogFieldDescr &fld_descr = flds[i];
+				const ShvFieldDescr &fld_descr = flds[i];
 				if(string alarm = fld_descr.alarm(); !alarm.empty()) {
 					if(value == fld_descr.value())
 						active_alarm_ix = i;
 				}
 			}
 			if(active_alarm_ix < flds.size()) {
-				const ShvLogFieldDescr &fld_descr = flds[active_alarm_ix];
+				const ShvFieldDescr &fld_descr = flds[active_alarm_ix];
 				return {ShvAlarm(shv_path,
 						active_alarm_ix < flds.size(),
 						ShvAlarm::severityFromString(fld_descr.alarm()),

@@ -14,7 +14,7 @@ namespace shv {
 namespace core {
 namespace utils {
 
-class ShvLogTypeInfo;
+class ShvTypeInfo;
 
 class SHVCORE_DECL_EXPORT ShvAlarm {
 public:
@@ -39,8 +39,8 @@ public:
 
 	shv::chainpack::RpcValue toRpcValue(bool all_fields_if_not_active = false) const;
 	static ShvAlarm fromRpcValue(const shv::chainpack::RpcValue &rv);
-	static std::vector<ShvAlarm> checkAlarms(const ShvLogTypeInfo &type_info, const std::string &shv_path, const shv::chainpack::RpcValue &value);
-	static std::vector<ShvAlarm> checkAlarms(const ShvLogTypeInfo &type_info, const std::string &shv_path, const std::string &type_name, const shv::chainpack::RpcValue &value);
+	static std::vector<ShvAlarm> checkAlarms(const ShvTypeInfo &type_info, const std::string &shv_path, const shv::chainpack::RpcValue &value);
+	static std::vector<ShvAlarm> checkAlarms(const ShvTypeInfo &type_info, const std::string &shv_path, const std::string &type_name, const shv::chainpack::RpcValue &value);
 protected:
 	std::string m_path;
 	bool m_isActive = false;

@@ -3,7 +3,7 @@
 
 #include "../shvcoreglobal.h"
 
-#include "shvlogtypeinfo.h"
+#include "shvtypeinfo.h"
 #include "shvgetlogparams.h"
 #include "../utils.h"
 
@@ -63,13 +63,13 @@ public:
 	//void setSources(std::map<std::string, ShvLogTypeInfo> &&ss) {m_typeInfos = std::move(ss);}
 	//void setSources(const std::map<std::string, ShvLogTypeInfo> &ss) {m_typeInfos = ss;}
 
-	const ShvLogTypeInfo& typeInfo(const std::string &path_prefix = EMPTY_PREFIX_KEY) const;
+	const ShvTypeInfo& typeInfo(const std::string &path_prefix = EMPTY_PREFIX_KEY) const;
 
-	void setTypeInfo(ShvLogTypeInfo &&ti, const std::string &path_prefix = EMPTY_PREFIX_KEY);
-	void setTypeInfo(const ShvLogTypeInfo &ti, const std::string &path_prefix = EMPTY_PREFIX_KEY);
+	void setTypeInfo(ShvTypeInfo &&ti, const std::string &path_prefix = EMPTY_PREFIX_KEY);
+	void setTypeInfo(const ShvTypeInfo &ti, const std::string &path_prefix = EMPTY_PREFIX_KEY);
 	//void clearTypeInfo();
 private:
-	std::map<std::string, ShvLogTypeInfo> m_typeInfos;
+	std::map<std::string, ShvTypeInfo> m_typeInfos;
 };
 
 } // namespace utils

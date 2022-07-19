@@ -1,6 +1,6 @@
 #include "shvjournalentry.h"
 #include "shvlogheader.h"
-#include "shvlogtypeinfo.h"
+#include "shvtypeinfo.h"
 
 namespace shv {
 namespace core {

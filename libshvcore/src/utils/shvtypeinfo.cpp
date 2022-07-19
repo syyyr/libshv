@@ -1,4 +1,4 @@
-#include "shvlogtypeinfo.h"
+#include "shvtypeinfo.h"
 #include "shvpath.h"
 #include "../string.h"
 #include "../utils.h"
@@ -15,18 +15,18 @@ namespace shv {
 namespace core {
 namespace utils {
 
+static const char* KEY_DEVICE_TYPE = "deviceType";
+static const char* KEY_TYPE_NAME = "typeName";
 static const char* KEY_LABEL = "label";
 static const char* KEY_DESCRIPTION = "description";
 static const char* KEY_UNIT = "unit";
 static const char* KEY_NAME = "name";
-static const char* KEY_TYPE_NAME = "typeName";
 static const char* KEY_TYPE = "type";
 static const char* KEY_VALUE = "value";
 static const char* KEY_FIELDS = "fields";
 static const char* KEY_SAMPLE_TYPE = "sampleType";
 static const char* KEY_TAGS = "tags";
 static const char* KEY_METHODS = "methods";
-//static const char* KEY_MIN_VAL = "minVal";
 //static const char* KEY_MAX_VAL = "maxVal";
 static const char* KEY_DEC_PLACES = "decPlaces";
 static const char* KEY_VISUAL_STYLE = "visualStyle";
@@ -34,14 +34,14 @@ static const char* KEY_ALARM = "alarm";
 static const char* KEY_ALARM_LEVEL = "alarmLevel";
 
 //=====================================================================
-// ShvLogDescrBase
+// ShvTypeDescrBase
 //=====================================================================
-RpcValue ShvLogDescrBase::dataValue(const std::string &key, const chainpack::RpcValue &default_val) const
+RpcValue ShvTypeDescrBase::dataValue(const std::string &key, const chainpack::RpcValue &default_val) const
 {
 	return m_data.asMap().value(key, default_val);
 }
 
-void ShvLogDescrBase::setDataValue(const std::string &key, const chainpack::RpcValue &val)
+void ShvTypeDescrBase::setDataValue(const std::string &key, const chainpack::RpcValue &val)
 {
 	if(!m_data.isMap()) {
 		m_data = RpcValue::Map();
@@ -49,7 +49,7 @@ void ShvLogDescrBase::setDataValue(const std::string &key, const chainpack::RpcV
 	m_data.set(key, val);
 }
 
-void ShvLogDescrBase::setData(const chainpack::RpcValue &data)
+void ShvTypeDescrBase::setData(const chainpack::RpcValue &data)
 {
 	if(data.isMap()) {
 		RpcValue::Map map = data.asMap();
@@ -58,7 +58,7 @@ void ShvLogDescrBase::setData(const chainpack::RpcValue &data)
 	}
 }
 
-void ShvLogDescrBase::mergeTags(chainpack::RpcValue::Map &map)
+void ShvTypeDescrBase::mergeTags(chainpack::RpcValue::Map &map)
 {
 	auto nh = map.extract(KEY_TAGS);
 	if(!nh.empty()) {
@@ -69,49 +69,49 @@ void ShvLogDescrBase::mergeTags(chainpack::RpcValue::Map &map)
 //=====================================================================
 // ShvLogTypeDescrField
 //=====================================================================
-ShvLogFieldDescr::ShvLogFieldDescr(const std::string &name, const std::string &type_name, const chainpack::RpcValue &value)
+ShvFieldDescr::ShvFieldDescr(const std::string &name, const std::string &type_name, const chainpack::RpcValue &value)
 {
 	setDataValue(KEY_NAME, name);
 	setDataValue(KEY_TYPE_NAME, type_name);
 	setDataValue(KEY_VALUE, value);
 }
 
-string ShvLogFieldDescr::name() const
+string ShvFieldDescr::name() const
 {
 	return dataValue(KEY_NAME).asString();
 }
 
-string ShvLogFieldDescr::typeName() const
+string ShvFieldDescr::typeName() const
 {
 	return dataValue(KEY_TYPE_NAME).asString();
 }
 
-string ShvLogFieldDescr::label() const
+string ShvFieldDescr::label() const
 {
 	return dataValue(KEY_LABEL).asString();
 }
 
-string ShvLogFieldDescr::description() const
+string ShvFieldDescr::description() const
 {
 	return dataValue(KEY_DESCRIPTION).asString();
 }
 
-RpcValue ShvLogFieldDescr::value() const
+RpcValue ShvFieldDescr::value() const
 {
 	return dataValue(KEY_VALUE);
 }
 
-string ShvLogFieldDescr::alarm() const
+string ShvFieldDescr::alarm() const
 {
 	return dataValue(KEY_ALARM).asString();
 }
 
-int ShvLogFieldDescr::alarmLevel() const
+int ShvFieldDescr::alarmLevel() const
 {
 	return dataValue(KEY_ALARM_LEVEL).toInt();
 }
 
-RpcValue ShvLogFieldDescr::toRpcValue() const
+RpcValue ShvFieldDescr::toRpcValue() const
 {
 	RpcValue ret = m_data;
 	if(description().empty())
@@ -119,14 +119,14 @@ RpcValue ShvLogFieldDescr::toRpcValue() const
 	return ret;
 }
 
-ShvLogFieldDescr ShvLogFieldDescr::fromRpcValue(const RpcValue &v)
+ShvFieldDescr ShvFieldDescr::fromRpcValue(const RpcValue &v)
 {
-	ShvLogFieldDescr ret;
+	ShvFieldDescr ret;
 	ret.setData(v);
 	return ret;
 }
 
-std::pair<unsigned, unsigned> ShvLogFieldDescr::bitRange() const
+std::pair<unsigned, unsigned> ShvFieldDescr::bitRange() const
 {
 	unsigned bit_no1 = 0;
 	unsigned bit_no2 = 0;
@@ -145,7 +145,7 @@ std::pair<unsigned, unsigned> ShvLogFieldDescr::bitRange() const
 	return std::pair<unsigned, unsigned>(bit_no1, bit_no2);
 }
 
-RpcValue ShvLogFieldDescr::bitfieldValue(uint64_t uval) const
+RpcValue ShvFieldDescr::bitfieldValue(uint64_t uval) const
 {
 	auto [bit_no1, bit_no2] = bitRange();
 	uint64_t mask = ~((~static_cast<uint64_t>(0)) << (bit_no2 + 1));
@@ -160,7 +160,7 @@ RpcValue ShvLogFieldDescr::bitfieldValue(uint64_t uval) const
 	return result;
 }
 
-uint64_t ShvLogFieldDescr::setBitfieldValue(uint64_t bitfield, uint64_t uval) const
+uint64_t ShvFieldDescr::setBitfieldValue(uint64_t bitfield, uint64_t uval) const
 {
 	auto [bit_no1, bit_no2] = bitRange();
 	uint64_t mask = ~((~static_cast<uint64_t>(0)) << (bit_no2 - bit_no1 + 1));
@@ -186,19 +186,19 @@ ShvLogTypeDescr &ShvLogTypeDescr::setType(Type t)
 	return *this;
 }
 
-std::vector<ShvLogFieldDescr> ShvLogTypeDescr::fields() const
+std::vector<ShvFieldDescr> ShvLogTypeDescr::fields() const
 {
-	std::vector<ShvLogFieldDescr> ret;
+	std::vector<ShvFieldDescr> ret;
 	auto flds = dataValue(KEY_FIELDS);
 	for(const RpcValue &rv : flds.asList())
-		ret.push_back(ShvLogFieldDescr::fromRpcValue(rv));
+		ret.push_back(ShvFieldDescr::fromRpcValue(rv));
 	return ret;
 }
 
-ShvLogTypeDescr &ShvLogTypeDescr::setFields(const std::vector<ShvLogFieldDescr> &fields)
+ShvLogTypeDescr &ShvLogTypeDescr::setFields(const std::vector<ShvFieldDescr> &fields)
 {
 	RpcValue::List cp_fields;
-	for (const ShvLogFieldDescr &field : fields) {
+	for (const ShvFieldDescr &field : fields) {
 		cp_fields.push_back(field.toRpcValue());
 	}
 	setDataValue(KEY_FIELDS, cp_fields);
@@ -216,11 +216,11 @@ ShvLogTypeDescr &ShvLogTypeDescr::setSampleType(ShvLogTypeDescr::SampleType st)
 	return *this;
 }
 
-ShvLogFieldDescr ShvLogTypeDescr::field(const std::string &field_name) const
+ShvFieldDescr ShvLogTypeDescr::field(const std::string &field_name) const
 {
 	auto flds = dataValue(KEY_FIELDS);
 	for(const RpcValue &rv : flds.asList()) {
-		auto fld_descr = ShvLogFieldDescr::fromRpcValue(rv);
+		auto fld_descr = ShvFieldDescr::fromRpcValue(rv);
 		if(fld_descr.name() == field_name) {
 			return fld_descr;
 		}
@@ -504,8 +504,23 @@ RpcValue ShvLogNodeDescr::toRpcValue() const
 	return m_data;
 }
 
-ShvLogNodeDescr ShvLogNodeDescr::fromRpcValue(const RpcValue &v)
+ShvLogNodeDescr ShvLogNodeDescr::fromRpcValue(const RpcValue &v, RpcValue::Map *extra_tags)
 {
+	static const vector<string> known_tags{
+		KEY_DEVICE_TYPE,
+		KEY_TYPE_NAME,
+		KEY_LABEL,
+		KEY_DESCRIPTION,
+		KEY_UNIT,
+		KEY_METHODS,
+	};
+	RpcValue::Map m = v.asMap();
+	for(const auto &key : known_tags)
+		if(auto it = m.find(key); it != m.cend()) {
+			auto nh = m.extract(key);
+			if(extra_tags && key != KEY_METHODS)
+				extra_tags->insert(move(nh));
+		}
 	ShvLogNodeDescr ret;
 	ret.setData(v);
 	return ret;
@@ -537,13 +552,13 @@ typename map<string, T>::const_iterator find_longest_prefix(const map<string, T>
 	return map.cend();
 }
 
-ShvLogTypeInfo &ShvLogTypeInfo::setDevicePath(const std::string &device_path, const std::string &device_type)
+ShvTypeInfo &ShvTypeInfo::setDevicePath(const std::string &device_path, const std::string &device_type)
 {
 	m_devicePaths[device_path] = device_type;
 	return *this;
 }
 
-ShvLogTypeInfo &ShvLogTypeInfo::setNodeDescription(const ShvLogNodeDescr &node_descr, const std::string &node_path, const std::string &device_type)
+ShvTypeInfo &ShvTypeInfo::setNodeDescription(const ShvLogNodeDescr &node_descr, const std::string &node_path, const std::string &device_type)
 {
 	string path = node_path;
 	if(!device_type.empty()) {
@@ -553,13 +568,26 @@ ShvLogTypeInfo &ShvLogTypeInfo::setNodeDescription(const ShvLogNodeDescr &node_d
 	return *this;
 }
 
-ShvLogTypeInfo &ShvLogTypeInfo::setNodeTags(const std::string &node_path, const chainpack::RpcValue &tags)
+ShvTypeInfo &ShvTypeInfo::setNodeTags(const std::string &node_path, const chainpack::RpcValue &tags)
 {
-	m_nodeTags[node_path] = tags;
+	if(tags.isMap())
+		m_nodeTags[node_path] = tags;
+	else
+		m_nodeTags.erase(node_path);
 	return *this;
 }
 
-ShvLogTypeInfo &ShvLogTypeInfo::setTypeDescription(const ShvLogTypeDescr &type_descr, const std::string &type_name)
+RpcValue ShvTypeInfo::nodeTags(const std::string &node_path) const
+{
+	if(auto it = m_nodeTags.find(node_path); it == m_nodeTags.cend()) {
+		return {};
+	}
+	else {
+		return it->second;
+	}
+}
+
+ShvTypeInfo &ShvTypeInfo::setTypeDescription(const ShvLogTypeDescr &type_descr, const std::string &type_name)
 {
 	if(type_descr.isValid())
 		m_types[type_name] = type_descr;
@@ -568,7 +596,7 @@ ShvLogTypeInfo &ShvLogTypeInfo::setTypeDescription(const ShvLogTypeDescr &type_d
 	return *this;
 }
 
-ShvLogNodeDescr ShvLogTypeInfo::nodeDescriptionForDevice(const std::string &device_type, const string &property_path, string *p_field_name) const
+ShvLogNodeDescr ShvTypeInfo::nodeDescriptionForDevice(const std::string &device_type, const string &property_path, string *p_field_name) const
 {
 	string property = property_path.empty()? device_type: device_type + '/' + property_path;
 	if(auto it = find_longest_prefix(m_nodeDescriptions, property); it == m_nodeDescriptions.cend()) {
@@ -583,7 +611,7 @@ ShvLogNodeDescr ShvLogTypeInfo::nodeDescriptionForDevice(const std::string &devi
 	}
 }
 
-ShvLogNodeDescr ShvLogTypeInfo::nodeDescriptionForPath(const std::string &shv_path, string *p_field_name) const
+ShvLogNodeDescr ShvTypeInfo::nodeDescriptionForPath(const std::string &shv_path, string *p_field_name) const
 {
 	if(auto it_node_descr = find_longest_prefix(m_nodeDescriptions, shv_path); it_node_descr == m_nodeDescriptions.cend()) {
 		if(auto it = find_longest_prefix(m_devicePaths, shv_path); it == m_devicePaths.cend()) {
@@ -610,7 +638,7 @@ ShvLogTypeDescr ShvLogTypeInfo::typeDescriptionForPath(const std::string &shv_pa
 	return typeDescriptionForName(node_descr.typeName());
 }
 */
-ShvLogTypeDescr ShvLogTypeInfo::typeDescriptionForName(const std::string &type_name) const
+ShvLogTypeDescr ShvTypeInfo::typeDescriptionForName(const std::string &type_name) const
 {
 	if(auto it = m_types.find(type_name); it == m_types.end())
 		return {};
@@ -618,12 +646,12 @@ ShvLogTypeDescr ShvLogTypeInfo::typeDescriptionForName(const std::string &type_n
 		return it->second;
 }
 
-ShvLogTypeDescr ShvLogTypeInfo::typeDescriptionForPath(const std::string &shv_path) const
+ShvLogTypeDescr ShvTypeInfo::typeDescriptionForPath(const std::string &shv_path) const
 {
 	return typeDescriptionForName(nodeDescriptionForPath(shv_path).typeName());
 }
 
-std::string ShvLogTypeInfo::findSystemPath(const std::string &shv_path) const
+std::string ShvTypeInfo::findSystemPath(const std::string &shv_path) const
 {
 	string current_root;
 	string ret;
@@ -641,7 +669,7 @@ std::string ShvLogTypeInfo::findSystemPath(const std::string &shv_path) const
 	return ret;
 }
 
-RpcValue ShvLogTypeInfo::typesAsRpcValue() const
+RpcValue ShvTypeInfo::typesAsRpcValue() const
 {
 	RpcValue::Map m;
 	for(const auto &kv : m_types) {
@@ -650,7 +678,7 @@ RpcValue ShvLogTypeInfo::typesAsRpcValue() const
 	return m;
 }
 
-RpcValue ShvLogTypeInfo::toRpcValue() const
+RpcValue ShvTypeInfo::toRpcValue() const
 {
 	RpcValue::Map map;
 	map["types"] = typesAsRpcValue();
@@ -668,19 +696,20 @@ RpcValue ShvLogTypeInfo::toRpcValue() const
 		}
 		map["nodes"] = std::move(m);
 	}
+	map["nodeTags"] = std::move(m_nodeTags);
 	RpcValue ret = map;
 	ret.setMetaValue("version", 3);
 	return ret;
 }
 
-ShvLogTypeInfo ShvLogTypeInfo::fromRpcValue(const RpcValue &v)
+ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 {
 	int version = v.metaValue("version").toInt();
 	if(version != 3) {
 		//shvError() << "Type info version:" << version << "is not supported.";
 		return fromNodesTree(v);
 	}
-	ShvLogTypeInfo ret;
+	ShvTypeInfo ret;
 	const RpcValue::Map &map = v.asMap();
 	{
 		const RpcValue::Map &m = map.value("types").asMap();
@@ -700,10 +729,11 @@ ShvLogTypeInfo ShvLogTypeInfo::fromRpcValue(const RpcValue &v)
 			ret.m_nodeDescriptions[kv.first] = ShvLogNodeDescr::fromRpcValue(kv.second);
 		}
 	}
+	ret.m_nodeTags = map.value("nodeTags").asMap();
 	return ret;
 }
 
-RpcValue ShvLogTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums) const
+RpcValue ShvTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums) const
 {
 	ShvLogTypeDescr td = typeDescriptionForName(type_name);
 	//shvWarning() << type_name << "--->" << td.toRpcValue().toCpon();
@@ -712,7 +742,7 @@ RpcValue ShvLogTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &va
 		return val;
 	case ShvLogTypeDescr::Type::BitField: {
 		RpcValue::Map map;
-		for(const ShvLogFieldDescr &fld : td.fields()) {
+		for(const ShvFieldDescr &fld : td.fields()) {
 			RpcValue result = fld.bitfieldValue(val.toUInt64());
 			result = applyTypeDescription(result, fld.typeName());
 			map[fld.name()] = result;
@@ -722,7 +752,7 @@ RpcValue ShvLogTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &va
 	case ShvLogTypeDescr::Type::Enum: {
 		int ival = val.toInt();
 		if(translate_enums) {
-			for(const ShvLogFieldDescr &fld : td.fields()) {
+			for(const ShvFieldDescr &fld : td.fields()) {
 				if(fld.value().toInt() == ival)
 					return fld.name();
 			}
@@ -767,7 +797,7 @@ RpcValue ShvLogTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &va
 	return val;
 }
 
-void ShvLogTypeInfo::forEachNodeDescription(const std::string &node_descr_root, std::function<void (const std::string &, const ShvLogNodeDescr &)> fn) const
+void ShvTypeInfo::forEachNodeDescription(const std::string &node_descr_root, std::function<void (const std::string &, const ShvLogNodeDescr &)> fn) const
 {
 	ShvPath::forEachDirAndSubdirs(nodeDescriptions(), node_descr_root, [=](auto it) {
 		string property_path = it->first;
@@ -780,7 +810,7 @@ void ShvLogTypeInfo::forEachNodeDescription(const std::string &node_descr_root, 
 	});
 }
 
-void ShvLogTypeInfo::forEachNode(std::function<void (const std::string &shv_path, const ShvLogNodeDescr &node_descr)> fn) const
+void ShvTypeInfo::forEachNode(std::function<void (const std::string &shv_path, const ShvLogNodeDescr &node_descr)> fn) const
 {
 	map<string, vector<string>> device_id_to_path;
 	for(const auto& [path, device_id] : m_devicePaths)
@@ -803,7 +833,7 @@ void ShvLogTypeInfo::forEachNode(std::function<void (const std::string &shv_path
 	}
 }
 
-static void fromNodesTree_helper(shv::core::utils::ShvLogTypeInfo &type_info,
+static void fromNodesTree_helper(shv::core::utils::ShvTypeInfo &type_info,
 								const RpcValue &node,
 								const std::string &_shv_path,
 								const std::string &recent_device_type,
@@ -838,9 +868,9 @@ static void fromNodesTree_helper(shv::core::utils::ShvLogTypeInfo &type_info,
 			continue;
 		property_methods.push_back(mm.toRpcValue());
 	}
-	if(auto tags = node.metaValue("tags"); tags.isMap()) {
+	if(auto tags = node.metaValue(KEY_TAGS); tags.isMap()) {
 		RpcValue::Map tags_map = tags.asMap();
-		const string &dtype = tags_map.value("deviceType").asString();
+		const string &dtype = tags_map.value(KEY_DEVICE_TYPE).asString();
 		if(!dtype.empty()) {
 			device_type = dtype;
 			device_path = shv_path;
@@ -848,11 +878,14 @@ static void fromNodesTree_helper(shv::core::utils::ShvLogTypeInfo &type_info,
 		property_descr.merge(tags_map);
 	}
 	if(!property_methods.empty())
-		property_descr["methods"] = property_methods;
+		property_descr[KEY_METHODS] = property_methods;
 	if(!property_descr.empty()) {
-		auto pd = shv::core::utils::ShvLogNodeDescr::fromRpcValue(property_descr);
+		RpcValue::Map extra_tags;
+		auto pd = shv::core::utils::ShvLogNodeDescr::fromRpcValue(property_descr, &extra_tags);
 		string node_path = device_path.empty()? shv_path: shv_path.mid(device_path.size() + 1);
 		type_info.setNodeDescription(pd, node_path, device_type);
+		if(!extra_tags.empty())
+			type_info.setNodeTags(shv_path, extra_tags);
 	}
 	if(device_type != recent_device_type)
 		type_info.setDevicePath(device_path, device_type);
@@ -865,9 +898,9 @@ static void fromNodesTree_helper(shv::core::utils::ShvLogTypeInfo &type_info,
 	}
 }
 
-ShvLogTypeInfo ShvLogTypeInfo::fromNodesTree(const chainpack::RpcValue &v)
+ShvTypeInfo ShvTypeInfo::fromNodesTree(const chainpack::RpcValue &v)
 {
-	ShvLogTypeInfo ret;
+	ShvTypeInfo ret;
 	{
 		const RpcValue types = v.metaValue("typeInfo").asMap().value("types");
 		const RpcValue::Map &m = types.asMap();
