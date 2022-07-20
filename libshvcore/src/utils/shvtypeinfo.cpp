@@ -515,14 +515,16 @@ ShvLogNodeDescr ShvLogNodeDescr::fromRpcValue(const RpcValue &v, RpcValue::Map *
 		KEY_METHODS,
 	};
 	RpcValue::Map m = v.asMap();
+	RpcValue::Map node_map = v.asMap();
 	for(const auto &key : known_tags)
 		if(auto it = m.find(key); it != m.cend()) {
 			auto nh = m.extract(key);
-			if(extra_tags && key != KEY_METHODS)
-				extra_tags->insert(move(nh));
+			node_map.insert(move(nh));
 		}
+	if(extra_tags)
+		*extra_tags = move(m);
 	ShvLogNodeDescr ret;
-	ret.setData(v);
+	ret.setData(node_map);
 	return ret;
 }
 
