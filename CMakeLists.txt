@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.18.4)
 project(libshv LANGUAGES C CXX)
 include(CTest)
 
