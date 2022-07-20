@@ -180,8 +180,8 @@ public:
 
 	ShvTypeInfo& setDevicePath(const std::string &device_path, const std::string &device_type);
 	ShvTypeInfo& setNodeDescription(const ShvNodeDescr &node_descr, const std::string &node_path, const std::string &device_type = {} );
-	ShvTypeInfo& setNodeTags(const std::string &node_path, const shv::chainpack::RpcValue &tags);
-	shv::chainpack::RpcValue nodeTags(const std::string &node_path) const;
+	ShvTypeInfo& setExtraTags(const std::string &node_path, const shv::chainpack::RpcValue &tags);
+	shv::chainpack::RpcValue extraTags(const std::string &node_path) const;
 	ShvTypeInfo& setTypeDescription(const ShvTypeDescr &type_descr, const std::string &type_name);
 	ShvNodeDescr nodeDescriptionForPath(const std::string &shv_path, std::string *p_field_name = nullptr) const;
 	ShvNodeDescr nodeDescriptionForDevice(const std::string &device_type, const std::string &property_path, std::string *p_field_name = nullptr) const;
@@ -204,7 +204,7 @@ private:
 	std::map<std::string, ShvTypeDescr> m_types; // type_name -> type_description
 	std::map<std::string, std::string> m_devicePaths; // path -> deviceType
 	std::map<std::string, ShvNodeDescr> m_nodeDescriptions; // device-type/device-property-path -> node_descr or shv-path -> node-descr
-	std::map<std::string, shv::chainpack::RpcValue> m_nodeTags; // shv-path -> tags
+	std::map<std::string, shv::chainpack::RpcValue> m_extraTags; // shv-path -> tags
 	std::map<std::string, std::string> m_systemPathsRoots; // shv-path-root -> system-path
 };
 

@@ -513,6 +513,12 @@ ShvLogNodeDescr ShvLogNodeDescr::fromRpcValue(const RpcValue &v, RpcValue::Map *
 		KEY_DESCRIPTION,
 		KEY_UNIT,
 		KEY_METHODS,
+		"autoload",
+		"monitored",
+		"monitorOptions",
+		"sampleType",
+		"alarm",
+		"alarmLevel",
 	};
 	RpcValue::Map m = v.asMap();
 	RpcValue::Map node_map = v.asMap();
@@ -570,18 +576,18 @@ ShvTypeInfo &ShvTypeInfo::setNodeDescription(const ShvLogNodeDescr &node_descr, 
 	return *this;
 }
 
-ShvTypeInfo &ShvTypeInfo::setNodeTags(const std::string &node_path, const chainpack::RpcValue &tags)
+ShvTypeInfo &ShvTypeInfo::setExtraTags(const std::string &node_path, const chainpack::RpcValue &tags)
 {
 	if(tags.isMap())
-		m_nodeTags[node_path] = tags;
+		m_extraTags[node_path] = tags;
 	else
-		m_nodeTags.erase(node_path);
+		m_extraTags.erase(node_path);
 	return *this;
 }
 
-RpcValue ShvTypeInfo::nodeTags(const std::string &node_path) const
+RpcValue ShvTypeInfo::extraTags(const std::string &node_path) const
 {
-	if(auto it = m_nodeTags.find(node_path); it == m_nodeTags.cend()) {
+	if(auto it = m_extraTags.find(node_path); it == m_extraTags.cend()) {
 		return {};
 	}
 	else {
@@ -680,33 +686,39 @@ RpcValue ShvTypeInfo::typesAsRpcValue() const
 	return m;
 }
 
+static const char *VERSION = "version";
+static const char *TYPES = "types";
+static const char *DEVICES = "devices";
+static const char *NODES = "nodes";
+static const char *EXTRA_TAGS = "extraTags";
+
 RpcValue ShvTypeInfo::toRpcValue() const
 {
 	RpcValue::Map map;
-	map["types"] = typesAsRpcValue();
+	map[TYPES] = typesAsRpcValue();
 	{
 		RpcValue::Map m;
 		for(const auto &kv : m_devicePaths) {
 			m[kv.first] = kv.second;
 		}
-		map["devices"] = std::move(m);
+		map[DEVICES] = std::move(m);
 	}
 	{
 		RpcValue::Map m;
 		for(const auto &kv : m_nodeDescriptions) {
 			m[kv.first] = kv.second.toRpcValue();
 		}
-		map["nodes"] = std::move(m);
+		map[NODES] = std::move(m);
 	}
-	map["nodeTags"] = std::move(m_nodeTags);
+	map[EXTRA_TAGS] = std::move(m_extraTags);
 	RpcValue ret = map;
-	ret.setMetaValue("version", 3);
+	ret.setMetaValue(VERSION, 3);
 	return ret;
 }
 
 ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 {
-	int version = v.metaValue("version").toInt();
+	int version = v.metaValue(VERSION).toInt();
 	if(version != 3) {
 		//shvError() << "Type info version:" << version << "is not supported.";
 		return fromNodesTree(v);
@@ -714,24 +726,24 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 	ShvTypeInfo ret;
 	const RpcValue::Map &map = v.asMap();
 	{
-		const RpcValue::Map &m = map.value("types").asMap();
+		const RpcValue::Map &m = map.value(TYPES).asMap();
 		for(const auto &kv : m) {
 			ret.m_types[kv.first] = ShvLogTypeDescr::fromRpcValue(kv.second);
 		}
 	}
 	{
-		const RpcValue::Map &m = map.value("devices").asMap();
+		const RpcValue::Map &m = map.value(DEVICES).asMap();
 		for(const auto &kv : m) {
 			ret.m_devicePaths[kv.first] = kv.second.asString();
 		}
 	}
 	{
-		const RpcValue::Map &m = map.value("nodes").asMap();
+		const RpcValue::Map &m = map.value(NODES).asMap();
 		for(const auto &kv : m) {
 			ret.m_nodeDescriptions[kv.first] = ShvLogNodeDescr::fromRpcValue(kv.second);
 		}
 	}
-	ret.m_nodeTags = map.value("nodeTags").asMap();
+	ret.m_extraTags = map.value(EXTRA_TAGS).asMap();
 	return ret;
 }
 
@@ -887,7 +899,7 @@ static void fromNodesTree_helper(shv::core::utils::ShvTypeInfo &type_info,
 		string node_path = device_path.empty()? shv_path: shv_path.mid(device_path.size() + 1);
 		type_info.setNodeDescription(pd, node_path, device_type);
 		if(!extra_tags.empty())
-			type_info.setNodeTags(shv_path, extra_tags);
+			type_info.setExtraTags(shv_path, extra_tags);
 	}
 	if(device_type != recent_device_type)
 		type_info.setDevicePath(device_path, device_type);
