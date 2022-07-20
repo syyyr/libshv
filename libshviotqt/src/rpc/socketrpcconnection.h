@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../shviotqtglobal.h"
+#include "rpc.h"
 
 #include <shv/chainpack/irpcconnection.h>
 #include <shv/chainpack/rpcdriver.h>

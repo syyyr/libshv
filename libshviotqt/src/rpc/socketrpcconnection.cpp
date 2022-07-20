@@ -1,5 +1,4 @@
 #include "socketrpcconnection.h"
-#include "rpc.h"
 #include "socket.h"
 
 #include <shv/coreqt/log.h>
