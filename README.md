@@ -41,3 +41,12 @@ QtCreator qmake additional arguments
 ```
 SHV_PROJECT_TOP_SRCDIR=%{sourceDir} SHV_PROJECT_TOP_BUILDDIR=%{buildDir}
 ```
+
+### CMake
+*libshv* also supports CMake. The standard build procedure looks like this:
+```sh
+mkdir build
+cd build
+cmake ..
+make
+```
