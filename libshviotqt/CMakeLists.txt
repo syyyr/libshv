@@ -31,3 +31,5 @@ if(WITH_SHV_WEBSOCKETS)
     target_compile_definitions(libshviotqt PUBLIC WITH_SHV_WEBSOCKETS)
     target_link_libraries(libshviotqt PUBLIC Qt::WebSockets)
 endif()
+
+install(TARGETS libshviotqt)

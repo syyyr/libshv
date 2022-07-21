@@ -26,3 +26,5 @@ endif()
 
 target_link_libraries(libshvbroker PUBLIC Qt::Sql libshviotqt)
 target_include_directories(libshvbroker PUBLIC include)
+
+install(TARGETS libshvbroker)

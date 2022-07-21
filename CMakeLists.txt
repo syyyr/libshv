@@ -58,6 +58,8 @@ target_link_libraries(ccp2cp libshvchainpack-c)
 add_executable(cp2cp utils/cp2cp/main.cpp)
 target_link_libraries(cp2cp libshvchainpack-cpp)
 
-# cp2cp
+# cpmerge
 add_executable(cpmerge utils/cpmerge/main.cpp)
 target_link_libraries(cpmerge libshvchainpack-cpp)
+
+install(TARGETS ccp2cp cp2cp cpmerge)
