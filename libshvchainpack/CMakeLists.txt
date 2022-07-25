@@ -18,10 +18,14 @@ add_library(libshvchainpack-cpp SHARED
     src/chainpack/rpcdriver.cpp
     src/chainpack/rpcmessage.cpp
     src/chainpack/rpcvalue.cpp
-    src/chainpack/socketrpcdriver.cpp
     src/chainpack/tunnelctl.cpp
     src/chainpack/utils.cpp
     )
+
+if (NOT WIN32)
+    target_sources(libshvchainpack-cpp PRIVATE src/chainpack/socketrpcdriver.cpp)
+endif()
+
 
 target_link_libraries(libshvchainpack-cpp libnecrolog libshvchainpack-c)
 target_include_directories(libshvchainpack-cpp PUBLIC include)
