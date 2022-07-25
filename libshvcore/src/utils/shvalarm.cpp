@@ -87,7 +87,17 @@ vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const std::
 {
 	if(ShvNodeDescr node_descr = type_info.nodeDescriptionForPath(shv_path); node_descr.isValid()) {
 		nDebug() << shv_path << node_descr.toRpcValue().toCpon();
-		return checkAlarms(type_info, shv_path, node_descr.typeName(), value);
+		if(string alarm = node_descr.alarm(); !alarm.empty()) {
+			return {ShvAlarm(shv_path,
+					value.toBool(), // is active
+					ShvAlarm::severityFromString(alarm),
+					node_descr.alarmLevel(),
+					node_descr.alarmDescription()
+				)};
+		}
+		else {
+			return checkAlarms(type_info, shv_path, node_descr.typeName(), value);
+		}
 	}
 	return {};
 }
@@ -95,17 +105,7 @@ vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const std::
 std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const std::string &shv_path, const std::string &type_name, const chainpack::RpcValue &value)
 {
 	if(ShvTypeDescr type_descr = type_info.typeDescriptionForName(type_name); type_descr.isValid()) {
-		if (type_descr.type() == ShvTypeDescr::Type::Bool) {
-			if(string alarm = type_descr.alarm(); !alarm.empty()) {
-				return {ShvAlarm(shv_path,
-						value.toBool(),
-						ShvAlarm::severityFromString(alarm),
-						type_descr.alarmLevel(),
-						type_descr.alarmDescription()
-					)};
-			}
-		}
-		else if (type_descr.type() == ShvTypeDescr::Type::BitField) {
+		if (type_descr.type() == ShvTypeDescr::Type::BitField) {
 			vector<ShvAlarm> alarms;
 			auto flds = type_descr.fields();
 			for (size_t i = 0; i < flds.size(); ++i) {

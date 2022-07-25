@@ -327,27 +327,6 @@ RpcValue ShvLogTypeDescr::defaultRpcValue() const
 	return RpcValue::fromType(RpcValue::Type::Null);
 }
 
-std::string ShvLogTypeDescr::alarm() const
-{
-	return dataValue(KEY_ALARM).asString();
-}
-
-ShvLogTypeDescr &ShvLogTypeDescr::setAlarm(const std::string &alarm)
-{
-	setDataValue(KEY_ALARM, alarm);
-	return *this;
-}
-
-int ShvLogTypeDescr::alarmLevel() const
-{
-	return dataValue(KEY_ALARM_LEVEL).toInt();
-}
-
-string ShvLogTypeDescr::alarmDescription() const
-{
-	return dataValue(KEY_DESCRIPTION).asString();
-}
-
 int ShvLogTypeDescr::decimalPlaces() const
 {
 	return dataValue(KEY_DEC_PLACES).toInt();
@@ -466,6 +445,16 @@ ShvLogNodeDescr &ShvLogNodeDescr::setAlarm(const string &alarm)
 {
 	setDataValue(KEY_ALARM, alarm);
 	return *this;
+}
+
+int ShvLogNodeDescr::alarmLevel() const
+{
+	return dataValue(KEY_ALARM_LEVEL).toInt();
+}
+
+string ShvLogNodeDescr::alarmDescription() const
+{
+	return description();
 }
 
 std::vector<ShvLogMethodDescr> ShvLogNodeDescr::methods() const
