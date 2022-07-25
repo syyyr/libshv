@@ -32,5 +32,6 @@ add_library(libshvvisu SHARED
 target_link_libraries(libshvvisu PUBLIC Qt::Widgets libshviotqt)
 target_include_directories(libshvvisu PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(libshvvisu PUBLIC include)
+target_compile_definitions(libshvvisu PRIVATE SHVVISU_BUILD_DLL)
 
 install(TARGETS libshvvisu)

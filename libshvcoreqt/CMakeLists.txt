@@ -8,5 +8,6 @@ add_library(libshvcoreqt SHARED
     )
 target_link_libraries(libshvcoreqt PUBLIC Qt::Core libshvcore)
 target_include_directories(libshvcoreqt PUBLIC include)
+target_compile_definitions(libshvcoreqt PRIVATE SHVCOREQT_BUILD_DLL)
 
 install(TARGETS libshvcoreqt)

@@ -27,5 +27,6 @@ add_library(libshvcore SHARED
 
 target_link_libraries(libshvcore libshvchainpack-cpp)
 target_include_directories(libshvcore PUBLIC include)
+target_compile_definitions(libshvcore PRIVATE SHVCORE_BUILD_DLL)
 
 install(TARGETS libshvcore)

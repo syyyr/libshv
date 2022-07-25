@@ -23,6 +23,7 @@ add_library(libshviotqt SHARED
     )
 target_link_libraries(libshviotqt PUBLIC Qt::Network libshvcoreqt)
 target_include_directories(libshviotqt PUBLIC include)
+target_compile_definitions(libshviotqt PRIVATE SHVIOTQT_BUILD_DLL)
 
 if(WITH_SHV_WEBSOCKETS)
     target_sources(libshviotqt PRIVATE

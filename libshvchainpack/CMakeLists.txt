@@ -25,5 +25,6 @@ add_library(libshvchainpack-cpp SHARED
 
 target_link_libraries(libshvchainpack-cpp libnecrolog libshvchainpack-c)
 target_include_directories(libshvchainpack-cpp PUBLIC include)
+target_compile_definitions(libshvchainpack-cpp PRIVATE SHVCHAINPACK_BUILD_DLL)
 
 install(TARGETS libshvchainpack-cpp)
