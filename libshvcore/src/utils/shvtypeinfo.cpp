@@ -152,6 +152,8 @@ std::pair<unsigned, unsigned> ShvFieldDescr::bitRange() const
 
 RpcValue ShvFieldDescr::bitfieldValue(uint64_t uval) const
 {
+	if(!isValid())
+		return {};
 	auto [bit_no1, bit_no2] = bitRange();
 	uint64_t mask = ~((~static_cast<uint64_t>(0)) << (bit_no2 + 1));
 	shvDebug() << "bits:" << bit_no1 << bit_no2 << (bit_no1 == bit_no2) << "uval:" << uval << "mask:" << mask;
@@ -167,6 +169,8 @@ RpcValue ShvFieldDescr::bitfieldValue(uint64_t uval) const
 
 uint64_t ShvFieldDescr::setBitfieldValue(uint64_t bitfield, uint64_t uval) const
 {
+	if(!isValid())
+		return uval;
 	auto [bit_no1, bit_no2] = bitRange();
 	uint64_t mask = ~((~static_cast<uint64_t>(0)) << (bit_no2 - bit_no1 + 1));
 	uval &= mask;
