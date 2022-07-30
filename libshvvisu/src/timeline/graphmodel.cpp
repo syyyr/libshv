@@ -176,7 +176,6 @@ int GraphModel::lessOrEqualTimeIndex(int channel, timemsec_t time) const
 int GraphModel::greaterTimeIndex(int channel, timemsec_t time) const
 {
 	int ix = lessOrEqualTimeIndex(channel, time);
-	Sample s = sampleValue(channel, ix);
 	return ix + 1;
 }
 

@@ -72,15 +72,18 @@ void MainWindow::generateSampleData()
 	for (int n=0; n<sample_cnt+2; ++n)
 		times.push_back(time_distrib(gen));
 	sort(times.begin(), times.end());
+	// discrete
 	m_graphModel->appendValue(0, tl::Sample{times[0], val_distrib(gen)});
 	for(size_t j=1; j<times.size()-1; ++j) {
+		auto val = val_distrib(gen);
 		for (int i=0; i<m_graphModel->channelCount() - 1; i++) {
 			if(j == 3) {
+				// generate multiple same pixel values
 				for(int k=0; k<5; k++)
 					m_graphModel->appendValue(i, tl::Sample{times[j]+k, val_distrib(gen)});
 			}
 			else {
-				m_graphModel->appendValue(i, tl::Sample{times[j], val_distrib(gen)});
+				m_graphModel->appendValue(i, tl::Sample{times[j], val});
 			}
 		}
 	}
@@ -89,7 +92,7 @@ void MainWindow::generateSampleData()
 		// generate data with not available part in center third
 		bool na_added = false;
 		for(size_t j=1; j<times.size()-1; ++j) {
-			if(j > times.size()/3 && j < times.size()/3*2) {
+			if(j > times.size()/3 && j < times.size()*2/3) {
 				if(!na_added) {
 					na_added = true;
 					m_graphModel->appendValue(m_graphModel->channelCount() - 1, tl::Sample{times[j], QVariant()});

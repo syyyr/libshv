@@ -1666,8 +1666,6 @@ std::function<QPoint (const Sample &s, Graph::TypeId meta_type_id)> Graph::dataT
 	double ky = (to - bo) / (d2 - d1);
 
 	return  [le, bo, kx, t1, d1, ky](const Sample &s, TypeId meta_type_id) -> QPoint {
-		if(!s.isValid())
-			return QPoint();
 		const timemsec_t t = s.time;
 		double x = le + (t - t1) * kx;
 		// too big or too small pixel sizes can make painting problems
@@ -1805,8 +1803,8 @@ QString Graph::rectToString(const QRect &r)
 
 void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_rect, const QRect &dest_rect, const GraphChannel::Style &channel_style)
 {
-	shvLogFuncFrame() << "channel:" << channel_ix;
 	const GraphChannel *ch = channelAt(channel_ix);
+	shvLogFuncFrame() << "channel:" << channel_ix << ch->shvPath();
 	int model_ix = ch->modelIndex();
 	QRect effective_dest_rect = dest_rect.isEmpty()? ch->graphDataGridRect(): dest_rect;
 	GraphChannel::Style ch_style = channel_style.isEmpty()? ch->m_effectiveStyle: channel_style;
@@ -1836,156 +1834,167 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 
 	int interpolation = ch_style.interpolation();
 
-	QPen pen;
+	QPen line_pen;
 	QColor line_color = ch_style.color();
-	pen.setColor(line_color);
+	line_pen.setColor(line_color);
 	{
 		double d = ch_style.lineWidth();
-		pen.setWidthF(u2pxf(d));
+		line_pen.setWidthF(u2pxf(d));
 	}
-	pen.setCapStyle(Qt::FlatCap);
-	QPen steps_join_pen = pen;
-	steps_join_pen.setWidthF(pen.widthF() / 4);
+	line_pen.setCapStyle(Qt::FlatCap);
+	QPen steps_join_pen = line_pen;
 	{
-		auto c = pen.color();
-		c.setAlphaF(0.3);
+		steps_join_pen.setWidthF(line_pen.widthF() / 2);
+		auto c = line_pen.color();
+		c.setAlphaF(0.6);
 		steps_join_pen.setColor(c);
 	}
 	painter->save();
-	QRect clip_rect = effective_dest_rect.adjusted(0, -pen.width(), 0, pen.width());
+	QRect clip_rect = effective_dest_rect.adjusted(0, -line_pen.width(), 0, line_pen.width());
 	painter->setClipRect(clip_rect);
-	painter->setPen(pen);
+	painter->setPen(line_pen);
 	QColor line_area_color;
 	if(ch_style.lineAreaStyle() == GraphChannel::Style::LineAreaStyle::Filled) {
 		line_area_color = line_color;
 		line_area_color.setAlphaF(0.4);
 	}
 
-	const int sample_point_size = u2px(0.5);
+	int sample_point_size = u2px(0.5);
+	if(sample_point_size % 2 == 0)
+		sample_point_size++; // make sample point size odd to have it center-able
 	Graph::TypeId channel_meta_type_id = channelTypeId(channel_ix);
 	GraphModel *graph_model = model();
 	int ix1 = graph_model->lessTimeIndex(model_ix, xrange.min);
 	int ix2 = graph_model->greaterTimeIndex(model_ix, xrange.max);
 	int samples_cnt = graph_model->count(model_ix);
-	while(ix1 < 0)
-		ix1++;
-	while(ix2 >= samples_cnt)
-		ix2--;
-	const bool draw_last_stepped_point_contunuation = interpolation == GraphChannel::Style::Interpolation::Stepped
-			&& model()->channelInfo(ch->modelIndex()).typeDescr.sampleType() != shv::core::utils::ShvTypeDescr::SampleType::Discrete;
-	if(draw_last_stepped_point_contunuation) {
-		if(ix1 >= 0 && ix2 >= 0 && ix2 == samples_cnt - 1) {
-			// add fake point to paint continuation of last value until the end of graph
-			ix2++;
-		}
-	}
-	shvDebug() << ch->shvPath() << "range:" << xrange.min << xrange.max;
-	shvDebug() << "\t channel" << channel_ix
-			   << "from:" << ix1 << "to:" << ix2 << "cnt:" << (ix2 - ix1 + 1) << "of:" << samples_cnt;
+	shvDebug() << "ix1:" << ix1 << "ix2:" << ix2 << "samples cnt:" << samples_cnt;
+	//const bool draw_last_stepped_point_continuation = interpolation == GraphChannel::Style::Interpolation::Stepped
+	//		&& model()->channelInfo(ch->modelIndex()).typeDescr.sampleType() != shv::core::utils::ShvTypeDescr::SampleType::Discrete;
 	static constexpr int NO_X = std::numeric_limits<int>::min();
-	struct OnePixelValue {
+	struct SamePixelValue {
 		int x = NO_X;
 		int y1 = 0;
 		int y2 = 0;
-		int minY = 0;//std::numeric_limits<int>::max();
-		int maxY = 0;//std::numeric_limits<int>::min();
+		int minY = 0;
+		int maxY = 0;
 
-		OnePixelValue() {}
-		OnePixelValue(int x, int y) : x(x), y1(y), y2(y), minY(y), maxY(y) {}
-		OnePixelValue(const QPoint &p) : x(p.x()), y1(p.y()), y2(p.y()), minY(p.y()), maxY(p.y()) {}
+		SamePixelValue() {}
+		SamePixelValue(int x, int y) : x(x), y1(y), y2(y), minY(y), maxY(y) {}
+		SamePixelValue(const QPoint &p) : x(p.x()), y1(p.y()), y2(p.y()), minY(p.y()), maxY(p.y()) {}
 		bool isValid() const { return x != NO_X; }
 		bool isValueNotAvailable() const { return y1 == VALUE_NOT_AVILABLE_Y; }
 	};
-	OnePixelValue current_px;
-	OnePixelValue prev_px;
+	SamePixelValue prev_point;
+	if(ix1 < 0) {
+		ix1 = 0;
+	}
+	else {
+		prev_point = sample2point(graph_model->sampleAt(model_ix, ix1), channel_meta_type_id);
+		ix1++;
+	}
+	shvDebug() << "iterating samples from:" << ix1 << "to:" << ix2 << "cnt:" << (ix2 - ix1 + 1);
 	int x_axis_y = sample2point(Sample{xrange.min, 0}, channel_meta_type_id).y();
+	// we need one more point, because the previous one is painted
+	// when current is going to be active
+	// we cannot paint current point unless we know y-range for more same-pixel values
+	// this is why the sample paint is one step delayed
 	for (int i = ix1; i <= ix2; ++i) {
-		OnePixelValue p;
-		if(draw_last_stepped_point_contunuation && i == samples_cnt) {
-			// add fake point to paint continuation of last value until the end of graph
-			p = OnePixelValue{effective_dest_rect.right(), current_px.y2};
+		shvDebug() << "processing sample on index:" << i;
+		Q_ASSERT(i <= samples_cnt);
+		QPoint current_point;
+		if(i == samples_cnt) {
+			// create fake point, move it one pixel right do be sure
+			// that fake point x is greater then prev_point.x
+			// in other case prev point will not be painted but just updated
+			current_point = QPoint{effective_dest_rect.right() + 1, prev_point.y2};
 		}
 		else {
-			p = sample2point(graph_model->sampleAt(model_ix, i), channel_meta_type_id);
-			shvDebug() << "i:" << i << "point:" << p.x << p.y1 << p.y2;
+			Sample s = graph_model->sampleAt(model_ix, i);
+			current_point = sample2point(s, channel_meta_type_id);
 		}
-		if(p.x == current_px.x) {
-			current_px.y2 = p.y1;
-			current_px.minY = qMin(current_px.minY, current_px.y2);
-			current_px.maxY = qMax(current_px.maxY, current_px.y2);
+		if(current_point.x() == prev_point.x) {
+			prev_point.y2 = current_point.y();
+			prev_point.minY = std::min(prev_point.minY, current_point.y());
+			prev_point.maxY = std::max(prev_point.maxY, current_point.y());
 		}
 		else {
-			prev_px = current_px;
-			current_px = p;
-			if(prev_px.isValid()) {
-				if(prev_px.isValueNotAvailable()) {
+			if(prev_point.isValid()) {
+				if(prev_point.isValueNotAvailable()) {
 					// draw hashed area from prev to current x
 					QRect rect = effective_dest_rect;
-					rect.setLeft(prev_px.x);
-					rect.setRight(current_px.x);
-					QBrush brush(pen.color().lighter(), Qt::BDiagPattern);
+					rect.setLeft(prev_point.x);
+					rect.setRight(current_point.x());
+					QBrush brush(line_pen.color().lighter(), Qt::BDiagPattern);
 					painter->fillRect(rect, brush);
 				}
 				else {
 					// paint prev sample ymin-ymax area
-					if(prev_px.isValid() && prev_px.maxY != prev_px.minY) {
-						painter->drawLine(prev_px.x, prev_px.minY, prev_px.x, prev_px.maxY);
+					if(prev_point.isValid() && prev_point.maxY != prev_point.minY) {
+						painter->drawLine(prev_point.x, prev_point.minY, prev_point.x, prev_point.maxY);
 					}
-				}
-			}
-			if (model()->channelInfo(ch->modelIndex()).typeDescr.sampleType() == shv::core::utils::ShvTypeDescr::SampleType::Discrete) {
-				QPoint sample_point{current_px.x, 0};
-				int arrow_width = u2px(1);
-				painter->drawLine(sample_point.x(), clip_rect.y() + clip_rect.height() / 2, sample_point.x(), clip_rect.y() + clip_rect.height());
-				QPainterPath path;
-				path.moveTo(sample_point.x() - arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
-				path.lineTo(sample_point.x() + arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
-				path.lineTo(sample_point.x(), clip_rect.y() + clip_rect.height());
-				path.lineTo(sample_point.x() - arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
-				path.closeSubpath();
-				painter->fillPath(path, painter->pen().color());
-			}
-			else if(interpolation == GraphChannel::Style::Interpolation::None) {
-					if(line_area_color.isValid()) {
-						QPoint p0{current_px.x, x_axis_y};
+					if (model()->channelInfo(ch->modelIndex()).typeDescr.sampleType() == shv::core::utils::ShvTypeDescr::SampleType::Discrete) {
+						// draw arrow for discrete value
+						QPoint arrow_heel{prev_point.x, 0};
+						int arrow_width = u2px(1);
+						painter->drawLine(arrow_heel.x(), clip_rect.y() + clip_rect.height() / 2, arrow_heel.x(), clip_rect.y() + clip_rect.height());
+						QPainterPath path;
+						path.moveTo(arrow_heel.x() - arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
+						path.lineTo(arrow_heel.x() + arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
+						path.lineTo(arrow_heel.x(), clip_rect.y() + clip_rect.height());
+						path.lineTo(arrow_heel.x() - arrow_width / 2, clip_rect.y() + clip_rect.height() - arrow_width / 2);
+						path.closeSubpath();
+						painter->fillPath(path, painter->pen().color());
+					}
+					else if(interpolation == GraphChannel::Style::Interpolation::None) {
+						if(line_area_color.isValid()) {
+							// draw line from x axis to point
+							QPoint p0{prev_point.x, x_axis_y};
+							QPoint p1{prev_point.x, prev_point.maxY};
+							painter->setPen(steps_join_pen);
+							painter->drawLine(p0, p1);
+						}
+						painter->setBrush(line_pen.color());
+						QRect r0{QPoint(), QSize{sample_point_size, sample_point_size}};
+						r0.moveCenter(QPoint{prev_point.x, prev_point.y1});
+						//shvInfo() << current_px.x << "rect:" << r0.center().x();
+						painter->drawEllipse(r0);
+						if(prev_point.y1 != prev_point.y2) {
+							r0.moveCenter(QPoint{prev_point.x, prev_point.y2});
+							painter->drawEllipse(r0);
+						}
+					}
+					else if(interpolation == GraphChannel::Style::Interpolation::Stepped) {
+						// paint prev point and connection line to current one
+						if(line_area_color.isValid()) {
+							QPoint top_left{prev_point.x + 1, prev_point.y2};
+							QPoint bottom_right{current_point.x(), x_axis_y};
+							painter->fillRect(QRect{top_left, bottom_right}, line_area_color);
+						}
 						// draw vertical line lighter
 						painter->setPen(steps_join_pen);
-						painter->drawLine(p0, QPoint{current_px.x, current_px.y1});
+						painter->drawLine(QPoint{current_point.x(), prev_point.y2}, current_point);
+						// draw horizontal line from prev point
+						painter->setPen(line_pen);
+						painter->drawLine(QPoint{prev_point.x, prev_point.y2}, QPoint{current_point.x(), prev_point.y2});
 					}
-					QRect r0{QPoint(), QSize{sample_point_size, sample_point_size}};
-					r0.moveCenter(QPoint{current_px.x, current_px.y1});
-					painter->fillRect(r0, line_color);
-				}
-			else if(interpolation == GraphChannel::Style::Interpolation::Stepped) {
-				// paint connections to recent sample y2
-				if(prev_px.isValid() && !prev_px.isValueNotAvailable()) {
-					if(line_area_color.isValid()) {
-						QPoint top_left{prev_px.x + 1, prev_px.y2};
-						QPoint bottom_right{current_px.x, x_axis_y};
-						painter->fillRect(QRect{top_left, bottom_right}, line_area_color);
+					else if(interpolation == GraphChannel::Style::Interpolation::Line) {
+						if(i < samples_cnt) {
+							// connect real points only, not the fake one
+							if(line_area_color.isValid()) {
+								QPainterPath pp;
+								pp.moveTo(QPoint{prev_point.x, prev_point.y2});
+								pp.lineTo(current_point);
+								pp.lineTo(QPoint{current_point.x(), x_axis_y});
+								pp.lineTo(QPoint{prev_point.x, x_axis_y});
+								pp.closeSubpath();
+								painter->fillPath(pp, line_area_color);
+							}
+							painter->drawLine(QPoint{prev_point.x, prev_point.y2}, current_point);
+						}
 					}
-					// draw vertical line lighter
-					painter->setPen(steps_join_pen);
-					painter->drawLine(QPoint{current_px.x, prev_px.y2}, QPoint{current_px.x, current_px.y1});
-					// draw horizontal line
-					painter->setPen(pen);
-					painter->drawLine(QPoint{prev_px.x, prev_px.y2}, QPoint{current_px.x, prev_px.y2});
-				}
-			}
-			else if(interpolation == GraphChannel::Style::Interpolation::Line) {
-				if(prev_px.isValid() && !prev_px.isValueNotAvailable()) {
-					if(line_area_color.isValid()) {
-						QPainterPath pp;
-						pp.moveTo(QPoint{prev_px.x, prev_px.y2});
-						pp.lineTo(QPoint{current_px.x, current_px.y1});
-						pp.lineTo(QPoint{current_px.x, x_axis_y});
-						pp.lineTo(QPoint{prev_px.x, x_axis_y});
-						pp.closeSubpath();
-						painter->fillPath(pp, line_area_color);
-					}
-					painter->drawLine(QPoint{prev_px.x, prev_px.y2}, QPoint{current_px.x, current_px.y1});
 				}
 			}
+			prev_point = current_point;
 		}
 	}
 	painter->restore();
