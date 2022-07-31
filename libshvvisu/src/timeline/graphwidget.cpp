@@ -210,6 +210,13 @@ void GraphWidget::mouseDoubleClickEvent(QMouseEvent *event)
 			return;
 		}
 	}
+	if(isMouseAboveMiniMap(pos)) {
+		Graph *gr = graph();
+		gr->resetXZoom();
+		update();
+		event->accept();
+		return;
+	}
 	Super::mouseDoubleClickEvent(event);
 }
 
@@ -829,21 +836,27 @@ void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos
 	});
 	menu.addAction(tr("Reset X-zoom"), [this]() {
 		//shvInfo() << "settings";
+		/*
 		timeline::GraphModel *m = m_graph->model();
 		if(!m)
 			return;
 		timeline::XRange rng = m->xRange();
 		m_graph->setXRange(rng);
+		*/
+		m_graph->resetXZoom();
 		this->update();
 	});
-	menu.addAction(tr("Reset Y-zoom"), [this, channel_ix, ch]() {
+	menu.addAction(tr("Reset Y-zoom"), this, [this, channel_ix]() {
 		//shvInfo() << "settings";
+		/*
 		timeline::GraphModel *m = m_graph->model();
 		if(!m)
 			return;
 		int chix = ch->modelIndex();
 		timeline::YRange rng = m->yRange(chix);
 		m_graph->setYRange(channel_ix, rng);
+		*/
+		m_graph->resetYZoom(channel_ix);
 		this->update();
 	});
 	menu.addAction(tr("Set probe (Ctrl + Left mouse)"), [this, channel_ix, mouse_pos]() {

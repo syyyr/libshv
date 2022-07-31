@@ -699,11 +699,16 @@ void Graph::setXRangeZoom(const XRange &r)
 	makeXAxis();
 }
 
+void Graph::resetXZoom()
+{
+	setXRangeZoom(xRange());
+}
+
 void Graph::setYRange(int channel_ix, const YRange &r)
 {
 	GraphChannel *ch = channelAt(channel_ix);
 	ch->m_state.yRange = r;
-	resetZoom(channel_ix);
+	resetYZoom(channel_ix);
 }
 
 void Graph::enlargeYRange(int channel_ix, double step)
@@ -726,7 +731,7 @@ void Graph::setYRangeZoom(int channel_ix, const YRange &r)
 	makeYAxis(channel_ix);
 }
 
-void Graph::resetZoom(int channel_ix)
+void Graph::resetYZoom(int channel_ix)
 {
 	GraphChannel *ch = channelAt(channel_ix);
 	setYRangeZoom(channel_ix, ch->yRange());

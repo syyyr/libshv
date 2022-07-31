@@ -182,6 +182,7 @@ public:
 	XRange xRangeZoom() const { return m_state.xRangeZoom; }
 	void setXRange(const XRange &r, bool keep_zoom = false);
 	void setXRangeZoom(const XRange &r);
+	void resetXZoom();
 
 	void setYAxisVisible(bool is_visible);
 	bool isYAxisVisible();
@@ -189,7 +190,7 @@ public:
 	void setYRange(int channel_ix, const YRange &r);
 	void enlargeYRange(int channel_ix, double step);
 	void setYRangeZoom(int channel_ix, const YRange &r);
-	void resetZoom(int channel_ix);
+	void resetYZoom(int channel_ix);
 	void zoomToSelection(bool zoom_vertically);
 
 	const Style& style() const { return m_style; }
