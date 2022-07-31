@@ -122,6 +122,7 @@ public:
 	const GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw) const;
 	core::utils::ShvTypeDescr::Type channelTypeId(int ix) const;
 	void moveChannel(int channel, int new_pos);
+	QString channelName(int channel) const;
 
 	void showAllChannels();
 	QSet<QString> channelPaths();
@@ -149,6 +150,7 @@ public:
 	//QVariant posToValue(const QPoint &pos) const;
 	QPoint dataToPos(int ch_ix, const Sample &s) const;
 
+	QString timeToStringTZ(timemsec_t time) const;
 	QMap<QString, QString> yValuesToMap(int channel_ix, const Sample &s) const;
 	QString prettyBitFieldValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const;
 	QMap<QString, QString> prettyMapValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const;
@@ -177,6 +179,7 @@ public:
 	timemsec_t currentTime() const { return m_state.currentTime; }
 
 	void setSelectionRect(const QRect &rect);
+	QRect selectionRect() const;
 
 	XRange xRange() const { return m_state.xRange; }
 	XRange xRangeZoom() const { return m_state.xRangeZoom; }
@@ -241,6 +244,7 @@ protected:
 
 	void drawRectText(QPainter *painter, const QRect &rect, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
 	void drawCenteredRectText(QPainter *painter, const QPoint &top_center, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
+	void drawLeftRectText(QPainter *painter, const QPoint &left_center, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
 
 	QVector<int> visibleChannels() const;
 	int maximizedChannelIndex() const;

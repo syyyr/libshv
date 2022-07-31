@@ -56,6 +56,7 @@ protected:
 
 	void hideCrossHair();
 
+	virtual void showGraphSelectionMenu(const QPoint &mouse_pos);
 	virtual void showGraphContextMenu(const QPoint &mouse_pos);
 	virtual void showChannelContextMenu(int channel_ix, const QPoint &mouse_pos);
 protected:
@@ -72,12 +73,25 @@ protected:
 	void scrollToCurrentMousePosOnDrag();
 	bool scrollByMouseOuterOverlap(const QPoint &mouse_pos);
 	void moveDropMarker(const QPoint &mouse_pos);
-	int targetChannel(const QPoint &mouse_pos) const;
+	int moveChannelTragetIndex(const QPoint &mouse_pos) const;
 
 protected:
 	Graph *m_graph = nullptr;
 	QSize m_graphPreferredSize;
-	enum class MouseOperation { None = 0, MiniMapLeftResize, MiniMapRightResize, ChannelHeaderResize, MiniMapScrollZoom, ChannelHeaderMove, GraphDataAreaLeftPress, GraphDataAreaLeftCtrlPress, GraphDataAreaLeftCtrlShiftPress, GraphAreaMove, GraphAreaSelection, GraphDataAreaRightPress };
+	enum class MouseOperation {
+		None = 0,
+		MiniMapLeftResize,
+		MiniMapRightResize,
+		ChannelHeaderResize,
+		MiniMapScrollZoom,
+		ChannelHeaderMove,
+		GraphDataAreaLeftPress,
+		GraphDataAreaLeftCtrlPress,
+		GraphDataAreaLeftCtrlShiftPress,
+		GraphAreaMove,
+		GraphAreaSelection,
+		GraphDataAreaRightPress,
+	};
 	MouseOperation m_mouseOperation = MouseOperation::None;
 	QPoint m_recentMousePos;
 	int m_resizeChannelIx = -1;

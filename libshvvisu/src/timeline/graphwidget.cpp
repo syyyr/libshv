@@ -22,6 +22,7 @@
 #include <QMimeData>
 #include <cmath>
 #include <QDesktopWidget>
+#include <QMessageBox>
 
 #define logMouseSelection() nCDebug("MouseSelection")
 
@@ -292,7 +293,13 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 	auto old_mouse_op = m_mouseOperation;
 	m_mouseOperation = MouseOperation::None;
 	if(event->button() == Qt::LeftButton) {
-		if(old_mouse_op == MouseOperation::GraphDataAreaLeftCtrlPress) {
+		if(old_mouse_op == MouseOperation::GraphDataAreaLeftPress) {
+			graph()->setSelectionRect(QRect());
+			update();
+			event->accept();
+			return;
+		}
+		else if(old_mouse_op == MouseOperation::GraphDataAreaLeftCtrlPress) {
 			if(event->modifiers() == Qt::ControlModifier) {
 				int channel_ix = posToChannel(event->pos());
 				if(channel_ix >= 0) {
@@ -333,10 +340,14 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 			}
 		}
 		else if(old_mouse_op == MouseOperation::GraphAreaSelection) {
-			bool zoom_vertically = event->modifiers() == Qt::ShiftModifier;
-			graph()->zoomToSelection(zoom_vertically);
-			graph()->setSelectionRect(QRect());
+			if(event->modifiers() == Qt::NoModifier) {
+				showGraphSelectionMenu(event->pos());
+			}
+			else if(event->modifiers() == Qt::ShiftModifier) {
+				m_graph->zoomToSelection(false);
+			}
 			event->accept();
+			graph()->setSelectionRect(QRect());
 			update();
 			return;
 		}
@@ -591,7 +602,7 @@ void GraphWidget::moveDropMarker(const QPoint &mouse_pos)
 {
 	Q_ASSERT(m_channelHeaderMoveContext);
 	Graph *gr = graph();
-	int ix = targetChannel(mouse_pos);
+	int ix = moveChannelTragetIndex(mouse_pos);
 	if (ix < gr->channelCount()) {
 		QRect ch_rect = gr->channelAt(ix)->verticalHeaderRect();
 		m_channelHeaderMoveContext->channelDropMarker->move(ch_rect.left(), ch_rect.bottom() - m_channelHeaderMoveContext->channelDropMarker->height() / 2);
@@ -602,7 +613,7 @@ void GraphWidget::moveDropMarker(const QPoint &mouse_pos)
 	}
 }
 
-int GraphWidget::targetChannel(const QPoint &mouse_pos) const
+int GraphWidget::moveChannelTragetIndex(const QPoint &mouse_pos) const
 {
 	const Graph *gr = graph();
 	for (int i = 0; i < gr->channelCount(); ++i) {
@@ -741,6 +752,10 @@ void GraphWidget::contextMenuEvent(QContextMenuEvent *event)
 		showGraphContextMenu(pos);
 		return;
 	}
+	//if(m_graph->selectionRect().contains(pos)) {
+	//	showGraphSelectionMenu(pos);
+	//	return;
+	//}
 	for (int i = 0; i < m_graph->channelCount(); ++i) {
 		const GraphChannel *ch = m_graph->channelAt(i);
 		if(ch->verticalHeaderRect().contains(pos)) {
@@ -777,11 +792,44 @@ void GraphWidget::dragMoveEvent(QDragMoveEvent *event)
 void GraphWidget::dropEvent(QDropEvent *event)
 {
 	Q_ASSERT(m_channelHeaderMoveContext);
-	int target_channel = targetChannel(event->pos());
+	int target_channel = moveChannelTragetIndex(event->pos());
 	if (target_channel != m_channelHeaderMoveContext->draggedChannel) {
 		graph()->moveChannel(m_channelHeaderMoveContext->draggedChannel, target_channel);
 	}
 	event->accept();
+}
+
+void GraphWidget::showGraphSelectionMenu(const QPoint &mouse_pos)
+{
+	QMenu menu(this);
+	menu.addAction(tr("Zoom X axis to selection"), this, [this]() {
+		m_graph->zoomToSelection(false);
+		update();
+	});
+	menu.addAction(tr("Zoom channel to selection"), this, [this]() {
+		m_graph->zoomToSelection(true);
+		update();
+	});
+	menu.addAction(tr("Show selection info"), this, [this]() {
+		auto sel_rect = m_graph->selectionRect();
+		auto ch1_ix = m_graph->posToChannel(sel_rect.bottomLeft());
+		auto ch2_ix = m_graph->posToChannel(sel_rect.topLeft());
+		auto *ch1 = m_graph->channelAt(ch1_ix);
+		auto *ch2 = m_graph->channelAt(ch2_ix);
+		auto t1 = m_graph->posToTime(sel_rect.left());
+		auto t2 = m_graph->posToTime(sel_rect.right());
+		auto y1 = ch1->posToValue(sel_rect.bottom());
+		auto y2 = ch2->posToValue(sel_rect.top());
+		//auto msec_to_str = [](timemsec_t msec) {
+		//	return cp::RpcValue::DateTime::from
+		//}
+		QString st = tr("t1: %1, t2: %2, diff: %3 msec").arg(m_graph->timeToStringTZ(t1))
+				.arg(m_graph->timeToStringTZ(t2))
+				.arg(t2 - t1);
+		QString sy = tr("y1: %1, y2: %2, diff: %3").arg(y1).arg(y2).arg(y2 - y1);
+		QMessageBox::information(this, tr("Selection info"), st + '\n' + sy);
+	});
+	menu.exec(mapToGlobal(mouse_pos));
 }
 
 void GraphWidget::showGraphContextMenu(const QPoint &mouse_pos)

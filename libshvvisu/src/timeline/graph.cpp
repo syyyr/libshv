@@ -630,6 +630,11 @@ void Graph::setSelectionRect(const QRect &rect)
 	m_state.selectionRect = rect;
 }
 
+QRect Graph::selectionRect() const
+{
+	return m_state.selectionRect;
+}
+
 int Graph::posToChannel(const QPoint &pos) const
 {
 	for (int i = 0; i < channelCount(); ++i) {
@@ -741,18 +746,18 @@ void Graph::zoomToSelection(bool zoom_vertically)
 {
 	shvLogFuncFrame();
 	XRange xrange;
-	xrange.min = posToTime(m_state.selectionRect.left());
-	xrange.max = posToTime(m_state.selectionRect.right());
+	xrange.min = posToTime(selectionRect().left());
+	xrange.max = posToTime(selectionRect().right());
 	xrange.normalize();
 	if(zoom_vertically) {
-		int ch1 = posToChannel(m_state.selectionRect.topLeft());
-		int ch2 = posToChannel(m_state.selectionRect.bottomRight());
+		int ch1 = posToChannel(selectionRect().topLeft());
+		int ch2 = posToChannel(selectionRect().bottomRight());
 		if(ch1 == ch2 && ch1 >= 0) {
 			const GraphChannel *ch = channelAt(ch1);
 			if(ch) {
 				YRange yrange;
-				yrange.min = ch->posToValue(m_state.selectionRect.top());
-				yrange.max = ch->posToValue(m_state.selectionRect.bottom());
+				yrange.min = ch->posToValue(selectionRect().top());
+				yrange.max = ch->posToValue(selectionRect().bottom());
 				yrange.normalize();
 				setYRangeZoom(ch1, yrange);
 			}
@@ -1142,6 +1147,27 @@ void Graph::drawCenteredRectText(QPainter *painter, const QPoint &top_center, co
 	painter->restore();
 }
 
+void Graph::drawLeftRectText(QPainter *painter, const QPoint &left_center, const QString &text, const QFont &font, const QColor &color, const QColor &background)
+{
+	painter->save();
+	QFontMetrics fm(font);
+	QRect br = fm.boundingRect(text);
+	int inset = u2px(0.2)*2;
+	br.adjust(-inset, 0, inset, 0);
+	br.moveCenter(left_center);
+	br.moveLeft(left_center.x());
+	if(background.isValid())
+		painter->fillRect(br, background);
+	QPen pen;
+	pen.setColor(color);
+	painter->setPen(pen);
+	painter->drawRect(br);
+	painter->setFont(font);
+	br.adjust(inset/2, 0, 0, 0);
+	painter->drawText(br, text);
+	painter->restore();
+}
+
 QVector<int> Graph::visibleChannels() const
 {
 	//shvLogFuncFrame() << "chanel cnt:" << m_channels.count() << "filter valid:" << m_channelFilter.isValid() << "maximized channel:" << maximizedChannelIndex();
@@ -1333,6 +1359,19 @@ void Graph::drawMiniMap(QPainter *painter)
 	painter->restore();
 }
 
+QString Graph::channelName(int channel) const
+{
+	const GraphChannel *ch = channelAt(channel);
+	const GraphModel::ChannelInfo& chi = model()->channelInfo(ch->modelIndex());
+	QString name = chi.name;
+	QString shv_path = chi.shvPath;
+	if(name.isEmpty())
+		name = shv_path;
+	if(name.isEmpty())
+		name = tr("<no name>");
+	return name;
+}
+
 void Graph::drawVerticalHeader(QPainter *painter, int channel)
 {
 	int header_inset = u2px(m_style.headerInset());
@@ -1344,13 +1383,7 @@ void Graph::drawVerticalHeader(QPainter *painter, int channel)
 	pen.setColor(c);
 	painter->setPen(pen);
 
-	const GraphModel::ChannelInfo& chi = model()->channelInfo(ch->modelIndex());
-	QString name = chi.name;
-	QString shv_path = chi.shvPath;
-	if(name.isEmpty())
-		name = shv_path;
-	if(name.isEmpty())
-		name = tr("<no name>");
+	QString name = channelName(channel);
 	//shvInfo() << channel << shv_path << name;
 	QFont font = m_style.font();
 	//drawRectText(painter, ch->m_layout.verticalHeaderRect, name, font, c, bc);
@@ -2020,31 +2053,6 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 	//shvDebug() << "drawCrossHair:" << ch->shvPath();
 	painter->save();
 	QColor color = m_style.colorCrossBar();
-	if(channel_ix == crossHairPos().channelIndex) {
-		/// draw point on current value graph
-		timemsec_t time = posToTime(crossbar_pos.x());
-		Sample s = timeToSample(channel_ix, time);
-		if(s.value.isValid()) {
-			QPoint p = dataToPos(channel_ix, s);
-			if(DEBUG) {
-				QDateTime dt = QDateTime::fromMSecsSinceEpoch(time);
-				dt = dt.toTimeZone(m_timeZone);
-				shvDebug() << "sample point" << dt.toString(Qt::ISODateWithMs) << m_timeZone.id()
-						   << s.value.toString() << "--->" << p.x() << p.y();
-				GraphModel *m = model();
-				const GraphChannel *ch = channelAt(channel_ix);
-				int model_ix = ch->modelIndex();
-				shvDebug() << "samples cnt:" << m->count(model_ix);
-			}
-			int d = u2px(0.3);
-			QRect rect(0, 0, d, d);
-			rect.moveCenter(p);
-			//painter->fillRect(rect, c->effectiveStyle.color());
-			painter->fillRect(rect, color);
-			rect.adjust(2, 2, -2, -2);
-			painter->fillRect(rect, ch->m_effectiveStyle.colorBackground());
-		}
-	}
 	int d = u2px(0.4);
 	QRect bull_eye_rect;
 	if(ch->graphDataGridRect().top() < crossbar_pos.y() && ch->graphDataGridRect().bottom() > crossbar_pos.y()) {
@@ -2078,15 +2086,48 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 		painter->setPen(pen_solid);
 		painter->fillRect(bull_eye_rect, ch->m_effectiveStyle.colorBackground());
 		painter->drawRect(bull_eye_rect);
-
-		if(DEBUG) {
-			//timemsec_t t = posToTime(crossbar_pos.x());
-			Sample s = posToData(crossbar_pos);
-			cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromMSecsSinceEpoch(s.time);
-			QString str = QStringLiteral("%1, %2").arg(QString::fromStdString(dt.toIsoString())).arg(s.value.toDouble());
-			shvDebug() << "bull eye:" << str;
-			//painter->setClipRect(m_layout.rect);
-			//painter->drawText(crossbar_pos + QPoint{focus_rect.width(), -focus_rect.height()}, str);
+		{
+			int tick_len = u2px(m_state.xAxis.tickLen)*2;
+			{
+				QRect r{0, 0, tick_len, 2 * tick_len};
+				r.moveCenter(p1);
+				r.moveLeft(p1.x());
+				//painter->fillRect(r, Qt::green);
+				QPainterPath pp;
+				pp.moveTo(r.bottomRight());
+				pp.lineTo(r.topRight());
+				pp.lineTo(r.left(), r.center().y());
+				pp.lineTo(r.bottomRight());
+				painter->fillPath(pp, color);
+			}
+			/// draw value
+			auto val = ch->posToValue(p1.y());
+			drawLeftRectText(painter, p1 + QPoint{tick_len, 0}, QString::number(val), m_style.font(), color.darker(400), color);
+		}
+	}
+	if(channel_ix == crossHairPos().channelIndex) {
+		/// draw point on current value graph
+		timemsec_t time = posToTime(crossbar_pos.x());
+		Sample s = timeToSample(channel_ix, time);
+		if(s.value.isValid()) {
+			QPoint p = dataToPos(channel_ix, s);
+			if(DEBUG) {
+				QDateTime dt = QDateTime::fromMSecsSinceEpoch(time);
+				dt = dt.toTimeZone(m_timeZone);
+				shvDebug() << "sample point" << dt.toString(Qt::ISODateWithMs) << m_timeZone.id()
+						   << s.value.toString() << "--->" << p.x() << p.y();
+				GraphModel *m = model();
+				const GraphChannel *ch = channelAt(channel_ix);
+				int model_ix = ch->modelIndex();
+				shvDebug() << "samples cnt:" << m->count(model_ix);
+			}
+			int d = u2px(0.3);
+			QRect rect(0, 0, d, d);
+			rect.moveCenter(p);
+			//painter->fillRect(rect, c->effectiveStyle.color());
+			painter->fillRect(rect, color);
+			rect.adjust(2, 2, -2, -2);
+			painter->fillRect(rect, ch->m_effectiveStyle.colorBackground());
 		}
 	}
 	painter->restore();
@@ -2166,13 +2207,19 @@ void Graph::drawXAxisTimeMark(QPainter *painter, time_t time, const QColor &colo
 		pp.lineTo(r.bottomLeft());
 		painter->fillPath(pp, color);
 	}
+	QString text = timeToStringTZ(time);
+	//shvInfo() << text;
+	p1.setY(p1.y() + tick_len);
+	drawCenteredRectText(painter, p1, text, m_style.font(), color.darker(400), color);
+}
+
+QString Graph::timeToStringTZ(timemsec_t time) const
+{
 	QDateTime dt = QDateTime::fromMSecsSinceEpoch(time);
 	if(m_timeZone.isValid())
 		dt = dt.toTimeZone(m_timeZone);
 	QString text = dt.toString(Qt::ISODate);
-	//shvInfo() << text;
-	p1.setY(p1.y() + tick_len);
-	drawCenteredRectText(painter, p1, text, m_style.font(), color.darker(400), color);
+	return text;
 }
 
 void Graph::onButtonBoxClicked(int button_id)
