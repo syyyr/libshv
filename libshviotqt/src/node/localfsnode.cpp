@@ -17,10 +17,12 @@ static const char M_DELETE[] = "delete";
 static const char M_MKFILE[] = "mkfile";
 static const char M_MKDIR[] = "mkdir";
 static const char M_RMDIR[] = "rmdir";
+static const char M_LS_FILES[] = "lsfiles";
 
 static const std::vector<MetaMethod> meta_methods_dir {
 	{Rpc::METH_DIR, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_BROWSE},
 	{Rpc::METH_LS, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_BROWSE},
+	{M_LS_FILES, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_READ},
 	{M_MKFILE, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_WRITE},
 	{M_MKDIR, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_WRITE},
 	{M_RMDIR, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_SERVICE}
@@ -76,11 +78,8 @@ chainpack::RpcValue LocalFSNode::callMethod(const ShvNode::StringViewList &shv_p
 		bool recursively = (params.isBool()) ? params.toBool() : false;
 		return ndRmdir(QString::fromStdString(shv_path.join('/')), recursively);
 	}
-	else if(method == Rpc::METH_LS) {
-		if(params.isMap()) {
-			// override SHV method `ls` id parameter `long` is defined
-			return ndLsDir(QString::fromStdString(shv_path.join('/')), params);
-		}
+	else if(method == M_LS_FILES) {
+		return ndLsDir(QString::fromStdString(shv_path.join('/')), params);
 	}
 
 	return Super::callMethod(shv_path, method, params, user_id);
@@ -92,7 +91,7 @@ ShvNode::StringList LocalFSNode::childNames(const ShvNode::StringViewList &shv_p
 	ShvNode::StringList ret;
 	RpcValue dirs = ndLsDir(qpath, {});
 	for(const auto &rv : dirs.asList()) {
-		ret.push_back(rv.asString());
+		ret.push_back(rv.asList().value(0).asString());
 	}
 	return ret;
 }
@@ -345,24 +344,19 @@ RpcValue LocalFSNode::ndLsDir(const QString &path, const chainpack::RpcValue &me
 			filters |= QDir::Files;
 		for(const QFileInfo &fi : d2.entryInfoList(filters, QDir::Name | QDir::IgnoreCase | QDir::DirsFirst)) {
 			//shvInfo() << fi.fileName();
-			if(with_size || with_ctime) {
-				RpcValue::List lst2;
-				lst2.push_back(fi.fileName().toStdString());
-				lst2.push_back(fi.isDir()? "d": "f");
-				if(with_size) {
-					if(fi.isDir())
-						lst2.push_back(0);
-					else
-						lst2.push_back((int64_t)fi.size());
-				}
-				if(with_ctime)
-					lst2.push_back(RpcValue::DateTime::fromMSecsSinceEpoch(fi.birthTime().toMSecsSinceEpoch()));
+			RpcValue::List lst2;
+			lst2.push_back(fi.fileName().toStdString());
+			lst2.push_back(fi.isDir()? "d": "f");
+			if(with_size) {
+				if(fi.isDir())
+					lst2.push_back(0);
+				else
+					lst2.push_back((int64_t)fi.size());
+			}
+			if(with_ctime)
+				lst2.push_back(RpcValue::DateTime::fromMSecsSinceEpoch(fi.birthTime().toMSecsSinceEpoch()));
 
-				lst.push_back(lst2);
-			}
-			else {
-				lst.push_back(fi.fileName().toStdString());
-			}
+			lst.push_back(lst2);
 		}
 		return lst;
 	}
