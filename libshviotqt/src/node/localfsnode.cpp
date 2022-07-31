@@ -326,7 +326,7 @@ chainpack::RpcValue LocalFSNode::ndRmdir(const QString &path, bool recursively)
 
 RpcValue LocalFSNode::ndLsDir(const QString &path, const chainpack::RpcValue &methods_params)
 {
-	bool with_size = methods_params.asMap().value("size").toBool();
+	bool with_size = methods_params.asMap().value("size", true).toBool();
 	bool with_ctime = methods_params.asMap().value("ctime").toBool();
 	bool with_dirs = methods_params.asMap().value("dirs", true).toBool();
 	bool with_files = methods_params.asMap().value("files", true).toBool();
