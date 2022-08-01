@@ -26,16 +26,16 @@ class SHVVISU_DECL_EXPORT DlgLogInspector : public QDialog
 {
 	Q_OBJECT
 public:
-	explicit DlgLogInspector(QWidget *parent = nullptr);
+	explicit DlgLogInspector(const QString &shv_path, QWidget *parent = nullptr);
 	~DlgLogInspector();
 
 	shv::iotqt::rpc::ClientConnection* rpcConnection();
 	void setRpcConnection(shv::iotqt::rpc::ClientConnection *c);
 
 	QString shvPath() const;
-	void setShvPath(const QString &s);
 
 private:
+	void setShvPath(const QString &s);
 	void downloadLog();
 	void loadSettings();
 	void saveSettings();
@@ -52,7 +52,7 @@ private:
 	void onChannelsFilterClicked();
 	void onGraphChannelFilterChanged();
 
-	void initVisualSettingSelector();
+	void initVisualSettingSelector(const QString &shv_path);
 	void onSaveViewClicked();
 	void onDeleteViewClicked();
 	void onViewSelected(int index);

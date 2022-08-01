@@ -42,11 +42,12 @@ enum { TabGraph = 0, TabData, TabInfo };
 
 static const int VIEW_SELECTOR_NO_VIEW_INDEX = 0;
 
-DlgLogInspector::DlgLogInspector(QWidget *parent) :
+DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 	QDialog(parent),
 	ui(new Ui::DlgLogInspector)
 {
 	ui->setupUi(this);
+	setShvPath(shv_path);
 	{
 		QMenu *m = new QMenu(this);
 		{
@@ -206,7 +207,7 @@ DlgLogInspector::DlgLogInspector(QWidget *parent) :
 
 	loadSettings();
 
-	initVisualSettingSelector();
+	initVisualSettingSelector(shv_path);
 	ui->cbViews->setCurrentIndex(VIEW_SELECTOR_NO_VIEW_INDEX);
 
 	connect(ui->cbViews, QOverload<int>::of(&QComboBox::activated), this, &DlgLogInspector::onViewSelected);
@@ -229,12 +230,12 @@ void DlgLogInspector::loadSettings()
 	restoreGeometry(ba);
 }
 
-void DlgLogInspector::initVisualSettingSelector()
+void DlgLogInspector::initVisualSettingSelector(const QString &shv_path)
 {
 	ui->cbViews->clear();
 
 	ui->cbViews->addItem(tr("Initial view"));
-	for (const QString &view_name : m_graph->savedVisualSettingsNames(shvPath())) {
+	for (const QString &view_name : m_graph->savedVisualSettingsNames(shv_path)) {
 		ui->cbViews->addItem(view_name);
 	}
 }

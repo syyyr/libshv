@@ -64,7 +64,7 @@
         <string>Clear</string>
        </property>
        <property name="icon">
-        <iconset resource="../../libshvvisu.qrc">
+        <iconset resource="../../images/images.qrc">
          <normaloff>:/shv/visu/images/delete.svg</normaloff>:/shv/visu/images/delete.svg</iconset>
        </property>
        <property name="autoRaise">
@@ -78,7 +78,7 @@
         <string>Resize columns to fit content</string>
        </property>
        <property name="icon">
-        <iconset resource="../../libshvvisu.qrc">
+        <iconset resource="../../images/images.qrc">
          <normaloff>:/shv/visu/images/zoom-fitwidth.svg</normaloff>:/shv/visu/images/zoom-fitwidth.svg</iconset>
        </property>
        <property name="autoRaise">
@@ -95,7 +95,7 @@
         <string>...</string>
        </property>
        <property name="icon">
-        <iconset resource="../../libshvvisu.qrc">
+        <iconset resource="../../images/images.qrc">
          <normaloff>:/shv/visu/images/settings.svg</normaloff>:/shv/visu/images/settings.svg</iconset>
        </property>
        <property name="popupMode">
@@ -134,7 +134,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../../libshvvisu.qrc"/>
+  <include location="../../images/images.qrc"/>
  </resources>
  <connections/>
 </ui>
