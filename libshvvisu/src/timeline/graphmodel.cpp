@@ -199,12 +199,13 @@ void GraphModel::endAppendValues()
 	if(xr.max > m_begginAppendXRange.max)
 		emit xRangeChanged(xr);
 	m_begginAppendXRange = XRange();
-	//for (int i = 0; i < channelCount(); ++i) {
-	//	ChannelInfo &chi = channelInfo(i);
-	//	if(chi.metaTypeId == QMetaType::UnknownType) {
-	//		chi.metaTypeId = guessMetaType(i);
-	//	}
-	//}
+	for (int i = 0; i < channelCount(); ++i) {
+		ChannelInfo &chi = channelInfo(i);
+		if(!chi.typeDescr.isValid()) {
+			QString type_name = guessTypeName(i);
+			chi.typeDescr = shv::core::utils::ShvTypeDescr(type_name.toStdString());
+		}
+	}
 }
 
 void GraphModel::appendValue(int channel, Sample &&sample)
@@ -242,7 +243,9 @@ void GraphModel::appendValueShvPath(const std::string &shv_path, Sample &&sample
 	int ch_ix = pathToChannelIndex(shv_path);
 	if(ch_ix < 0) {
 		if(isAutoCreateChannels()) {
-			appendChannel(shv_path, std::string(), m_typeInfo.typeDescriptionForPath(shv_path));
+			core::utils::ShvTypeDescr td = m_typeInfo.typeDescriptionForPath(shv_path);
+			shvMessage() << "Auto append channel:" << shv_path << "type:" << td.toRpcValue().toCpon();
+			appendChannel(shv_path, std::string(), td);
 			ch_ix = channelCount() - 1;
 		}
 		else {
@@ -293,10 +296,31 @@ QString GraphModel::typeDescrFieldName(const shv::core::utils::ShvTypeDescr &typ
 	return QString();
 }
 
-//int GraphModel::guessMetaType(int channel_ix)
-//{
-//	Sample s = sampleValue(channel_ix, 0);
-//	return s.value.userType();
-//}
+QString GraphModel::guessTypeName(int channel_ix)
+{
+	for(int i = 0; i < count(channel_ix); i++) {
+		Sample s = sampleValue(channel_ix, i);
+		if(s.value.userType() != QMetaType::UnknownType) {
+			switch (s.value.userType()) {
+			case QMetaType::Bool: return QStringLiteral("Bool");
+			case QMetaType::Double: return QStringLiteral("Double");
+			case QMetaType::QString: return QStringLiteral("String");
+			case QMetaType::Short:
+			case QMetaType::Int:
+				return QStringLiteral("Int");
+			case QMetaType::LongLong:
+				return QStringLiteral("Int64");
+			case QMetaType::UShort:
+			case QMetaType::UInt:
+				return QStringLiteral("UInt");
+			case QMetaType::ULongLong:
+				return QStringLiteral("UInt64");
+			default:
+				return s.value.typeName();
+			}
+		}
+	}
+	return {};
+}
 
 }}}

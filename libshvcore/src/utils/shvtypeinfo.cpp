@@ -638,7 +638,7 @@ ShvLogTypeDescr ShvLogTypeInfo::typeDescriptionForPath(const std::string &shv_pa
 ShvLogTypeDescr ShvTypeInfo::typeDescriptionForName(const std::string &type_name) const
 {
 	if(auto it = m_types.find(type_name); it == m_types.end())
-		return {};
+		return ShvLogTypeDescr(type_name);
 	else
 		return it->second;
 }
@@ -679,6 +679,7 @@ static const char *VERSION = "version";
 static const char *TYPES = "types";
 static const char *DEVICES = "devices";
 static const char *NODES = "nodes";
+static const char *PATHS = "paths";
 static const char *EXTRA_TAGS = "extraTags";
 
 RpcValue ShvTypeInfo::toRpcValue() const
@@ -708,32 +709,52 @@ RpcValue ShvTypeInfo::toRpcValue() const
 ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 {
 	int version = v.metaValue(VERSION).toInt();
-	if(version != 3) {
-		//shvError() << "Type info version:" << version << "is not supported.";
+	const RpcValue::Map &map = v.asMap();
+	if(version == 3) {
+		ShvTypeInfo ret;
+		{
+			const RpcValue::Map &m = map.value(TYPES).asMap();
+			for(const auto &kv : m) {
+				ret.m_types[kv.first] = ShvLogTypeDescr::fromRpcValue(kv.second);
+			}
+		}
+		{
+			const RpcValue::Map &m = map.value(DEVICES).asMap();
+			for(const auto &kv : m) {
+				ret.m_devicePaths[kv.first] = kv.second.asString();
+			}
+		}
+		{
+			const RpcValue::Map &m = map.value(NODES).asMap();
+			for(const auto &kv : m) {
+				ret.m_nodeDescriptions[kv.first] = ShvLogNodeDescr::fromRpcValue(kv.second);
+			}
+		}
+		ret.m_extraTags = map.value(EXTRA_TAGS).asMap();
+		return ret;
+	}
+	else if(map.hasKey(PATHS) && map.hasKey(TYPES)) {
+		// version 2
+		ShvTypeInfo ret;
+		{
+			const RpcValue::Map &m = map.value(TYPES).asMap();
+			for(const auto &kv : m) {
+				ret.m_types[kv.first] = ShvLogTypeDescr::fromRpcValue(kv.second);
+			}
+		}
+		{
+			const RpcValue::Map &m = map.value(PATHS).asMap();
+			for(const auto &[path, val] : m) {
+				auto nd = ShvLogNodeDescr::fromRpcValue(val);
+				nd.setTypeName(val.asMap().value("type").asString());
+				ret.m_nodeDescriptions[path] = nd;
+			}
+		}
+		return ret;
+	}
+	else {
 		return fromNodesTree(v);
 	}
-	ShvTypeInfo ret;
-	const RpcValue::Map &map = v.asMap();
-	{
-		const RpcValue::Map &m = map.value(TYPES).asMap();
-		for(const auto &kv : m) {
-			ret.m_types[kv.first] = ShvLogTypeDescr::fromRpcValue(kv.second);
-		}
-	}
-	{
-		const RpcValue::Map &m = map.value(DEVICES).asMap();
-		for(const auto &kv : m) {
-			ret.m_devicePaths[kv.first] = kv.second.asString();
-		}
-	}
-	{
-		const RpcValue::Map &m = map.value(NODES).asMap();
-		for(const auto &kv : m) {
-			ret.m_nodeDescriptions[kv.first] = ShvLogNodeDescr::fromRpcValue(kv.second);
-		}
-	}
-	ret.m_extraTags = map.value(EXTRA_TAGS).asMap();
-	return ret;
 }
 
 RpcValue ShvTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums) const

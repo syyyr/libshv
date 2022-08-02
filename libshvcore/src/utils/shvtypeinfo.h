@@ -83,7 +83,7 @@ public:
 	enum class SampleType {Invalid = 0, Continuous , Discrete};
 
 	ShvTypeDescr() {}
-	ShvTypeDescr(const std::string &type_name) { setType(typeFromString(type_name)); }
+	ShvTypeDescr(const std::string &type_name) : ShvTypeDescr(typeFromString(type_name)) {}
 	ShvTypeDescr(Type t, SampleType st = SampleType::Continuous)
 		: ShvTypeDescr(t, std::vector<ShvFieldDescr>(), st) {}
 	ShvTypeDescr(Type t, std::vector<ShvFieldDescr> &&flds, SampleType st = SampleType::Continuous)

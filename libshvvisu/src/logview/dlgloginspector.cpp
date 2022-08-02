@@ -406,10 +406,14 @@ void DlgLogInspector::parseLog(shv::chainpack::RpcValue log)
 		m_graphModel->clear();
 		m_graphModel->beginAppendValues();
 		m_graphModel->setTypeInfo(rd.logHeader().typeInfo());
-
+		shvDebug() << "typeinfo:" << m_graphModel->typeInfo().toRpcValue().toCpon("  ");
 		ShortTime anca_hook_short_time;
 		while(rd.next()) {
 			const core::utils::ShvJournalEntry &entry = rd.entry();
+			if(!(entry.domain.empty()
+				 || entry.domain == cp::Rpc::SIG_VAL_CHANGED
+				 || entry.domain == cp::Rpc::SIG_VAL_FASTCHANGED))
+				continue;
 			int64_t msec = entry.epochMsec;
 			if(entry.shortTime != core::utils::ShvJournalEntry::NO_SHORT_TIME) {
 				uint16_t short_msec = static_cast<uint16_t>(entry.shortTime);

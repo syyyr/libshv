@@ -517,7 +517,8 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		timemsec_t t = gr->posToTime(pos.x());
 		const GraphChannel *ch = gr->channelAt(ch_ix);
 		//update(ch->graphAreaRect());
-		GraphModel::ChannelInfo &channel_info = gr->model()->channelInfo(ch->modelIndex());
+		const GraphModel::ChannelInfo channel_info = gr->model()->channelInfo(ch->modelIndex());
+		shvDebug() << channel_info.shvPath << channel_info.typeDescr.toRpcValue().toCpon();
 		auto channel_type = channel_info.typeDescr.type();
 		auto channel_sample_type = channel_info.typeDescr.sampleType();
 		Sample s;
@@ -531,8 +532,9 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		QString text;
 
 		if (s.isValid()) {
-			if (channel_sample_type == shv::core::utils::ShvTypeDescr::SampleType::Continuous ||
-				(channel_sample_type == shv::core::utils::ShvTypeDescr::SampleType::Discrete && qAbs(pos.x() - gr->timeToPos(s.time)) < gr->u2px(1.1))) {
+			//shvDebug() << "sample:" << s.value.toString() << "type:" << channel_sample_type;
+			if (channel_sample_type == shv::core::utils::ShvTypeDescr::SampleType::Continuous
+					|| (channel_sample_type == shv::core::utils::ShvTypeDescr::SampleType::Discrete && qAbs(pos.x() - gr->timeToPos(s.time)) < gr->u2px(1.1))) {
 				point = mapToGlobal(pos + QPoint{gr->u2px(0.8), 0});
 				QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
 				dt = dt.toTimeZone(graph()->timeZone());
