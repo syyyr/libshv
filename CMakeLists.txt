@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.18.4)
 
-set(WITH_SAMPLES OFF)
+set(WITH_SAMPLES OFF CACHE BOOL "Enable build of GUI samples")
 
 project(libshv LANGUAGES C CXX)
 include(CTest)
