@@ -19,7 +19,7 @@ add_subdirectory(libshvchainpack/c)
 add_subdirectory(libshvchainpack)
 add_subdirectory(libshvcore)
 
-find_package(Qt5 QUIET COMPONENTS Core Network Sql OPTIONAL_COMPONENTS WebSockets Widgets)
+find_package(Qt5 QUIET COMPONENTS Core Network Sql SerialPort OPTIONAL_COMPONENTS WebSockets Widgets)
 
 # We'll error out if the user has explicitly enabled websocket support, but Qt5 WebSockets aren't available.
 if(WITH_SHV_WEBSOCKETS AND NOT Qt5WebSockets_FOUND)

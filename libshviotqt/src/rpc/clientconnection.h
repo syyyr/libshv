@@ -113,6 +113,7 @@ protected:
 private:
 	bool isAutoConnect() const { return m_checkBrokerConnectedInterval > 0; }
 	void restartIfAutoConnect();
+	bool isBrokerBypass() const;
 private:
 	QTimer *m_checkBrokerConnectedTimer;
 	int m_checkBrokerConnectedInterval = 0;

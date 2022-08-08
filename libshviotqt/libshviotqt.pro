@@ -1,7 +1,7 @@
 message("========== project: $$PWD")
 include( ../subproject_integration.pri )
 
-QT += network
+QT += network serialport
 QT -= gui
 
 with-shvwebsockets {

@@ -8,6 +8,8 @@
 #include <QSslError>
 
 class QTcpSocket;
+class QLocalSocket;
+class QSerialPort;
 
 namespace shv {
 namespace iotqt {
@@ -74,6 +76,59 @@ public:
 
 protected:
 	QTcpSocket *m_socket = nullptr;
+};
+
+class SHVIOTQT_DECL_EXPORT LocalSocket : public Socket
+{
+	Q_OBJECT
+
+	using Super = Socket;
+public:
+	LocalSocket(QLocalSocket *socket, QObject *parent = nullptr);
+
+	void connectToHost(const QString &host_name, quint16 port, const QString &scheme = {}) override;
+	void close() override;
+	void abort() override;
+	QAbstractSocket::SocketState state() const override;
+	QString errorString() const override;
+	QHostAddress peerAddress() const override;
+	quint16 peerPort() const override;
+	QByteArray readAll() override;
+	qint64 write(const char *data, qint64 max_size) override;
+	//bool flush() override;
+	void writeMessageBegin() override {}
+	void writeMessageEnd() override {}
+	void ignoreSslErrors() override {}
+protected:
+	QLocalSocket *m_socket = nullptr;
+};
+
+class SHVIOTQT_DECL_EXPORT SerialPortSocket : public Socket
+{
+	Q_OBJECT
+
+	using Super = Socket;
+public:
+	SerialPortSocket(QSerialPort *port, QObject *parent = nullptr);
+
+	void connectToHost(const QString &host_name, quint16 port, const QString &scheme = {}) override;
+	void close() override;
+	void abort() override;
+	QAbstractSocket::SocketState state() const override { return m_state; }
+	QString errorString() const override;
+	QHostAddress peerAddress() const override;
+	quint16 peerPort() const override;
+	QByteArray readAll() override;
+	qint64 write(const char *data, qint64 max_size) override;
+	//bool flush() override;
+	void writeMessageBegin() override {}
+	void writeMessageEnd() override;
+	void ignoreSslErrors() override {}
+private:
+	void setState(QAbstractSocket::SocketState state);
+private:
+	QSerialPort *m_port = nullptr;
+	QAbstractSocket::SocketState m_state = QAbstractSocket::UnconnectedState;
 };
 
 #ifndef QT_NO_SSL

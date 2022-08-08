@@ -16,10 +16,12 @@
 
 #include <QTcpSocket>
 #include <QSslSocket>
+#include <QLocalSocket>
 #include <QHostAddress>
 #include <QTimer>
 #include <QCryptographicHash>
 #include <QThread>
+#include <QSerialPort>
 
 #ifdef WITH_SHV_WEBSOCKETS
 #include <QWebSocket>
@@ -167,6 +169,12 @@ void ClientConnection::open()
 #else
 			SHV_EXCEPTION("Web socket support is not part of this build.");
 #endif
+		}
+		else if(scheme() == "localsocket") {
+			socket = new LocalSocket(new QLocalSocket());
+		}
+		else if(scheme() == "serialport") {
+			socket = new SerialPortSocket(new QSerialPort());
 		}
 		else {
 	#ifndef QT_NO_SSL
@@ -327,7 +335,13 @@ void ClientConnection::onSocketConnectedChanged(bool is_connected)
 		shvInfo() << "peer:" << peerAddress() << "port:" << peerPort();
 		setState(State::SocketConnected);
 		clearBuffers();
-		sendHello();
+		if(isBrokerBypass()) {
+			shvInfo() << "Connection scheme:" << scheme() << " is skipping authentication phase.";
+			setState(State::BrokerConnected);
+		}
+		else {
+			sendHello();
+		}
 	}
 	else {
 		shvInfo() << objectName() << connectionId() << "Socket disconnected from RPC server";
@@ -403,6 +417,11 @@ void ClientConnection::restartIfAutoConnect()
 		setState(State::ConnectionError);
 	else
 		close();
+}
+
+bool ClientConnection::isBrokerBypass() const
+{
+	return scheme() == "localsocket" || scheme() == "serialport";
 }
 
 int ClientConnection::brokerClientId() const
