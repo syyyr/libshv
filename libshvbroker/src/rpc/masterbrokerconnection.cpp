@@ -133,7 +133,7 @@ void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 				<< "protocol_type:" << (int)protocol_type << shv::chainpack::Rpc::protocolTypeToString(protocol_type)
 				<< RpcDriver::dataToPrettyCpon(protocol_type, md, msg_data, 0, msg_data.size());
 	try {
-		if(isInitPhase()) {
+		if(isLoginPhase()) {
 			Super::onRpcDataReceived(protocol_type, std::move(md), std::move(msg_data));
 			return;
 		}

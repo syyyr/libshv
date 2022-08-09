@@ -22,7 +22,7 @@ public:
 	/// because it is connected in oposite direction than client connections
 	std::string loggedUserName() override {return std::string();}
 
-	bool isConnectedAndLoggedIn() const override {return isSocketConnected() && !isInitPhase();}
+	bool isConnectedAndLoggedIn() const override {return isSocketConnected() && !isLoginPhase();}
 	bool isSlaveBrokerConnection() const override {return false;}
 	bool isMasterBrokerConnection() const override {return true;}
 
