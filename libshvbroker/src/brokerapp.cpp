@@ -287,7 +287,7 @@ void BrokerApp::registerLogTopics()
 void BrokerApp::installUnixSignalHandlers()
 {
 	shvInfo() << "installing Unix signals handlers";
-	for(int sig_num : {SIGTERM, SIGHUP}) {
+	for(int sig_num : {SIGTERM, SIGHUP, SIGUSR1}) {
 		struct sigaction sa;
 
 		sa.sa_handler = BrokerApp::nativeSigHandler;
@@ -318,10 +318,10 @@ void BrokerApp::handlePosixSignals()
 	::read(m_sigTermFd[1], &sig_num, sizeof(sig_num));
 
 	shvInfo() << "SIG" << sig_num << "catched.";
-	if(sig_num == SIGTERM) {
+	if(sig_num == SIGTERM || sig_num == SIGHUP) {
 		QTimer::singleShot(0, this, &BrokerApp::quit);
 	}
-	else if(sig_num == SIGHUP) {
+	else if(sig_num == SIGUSR1) {
 		//QMetaObject::invokeMethod(this, &BrokerApp::reloadConfig, Qt::QueuedConnection); since Qt 5.10
 		QTimer::singleShot(0, this, &BrokerApp::reloadConfigRemountDevices);
 	}

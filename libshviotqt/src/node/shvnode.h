@@ -7,6 +7,7 @@
 #include <shv/chainpack/rpcmessage.h>
 #include <shv/core/stringview.h>
 #include <shv/core/utils.h>
+#include <shv/core/utils/shvpath.h>
 
 #include <QObject>
 #include <QMetaProperty>
@@ -15,7 +16,7 @@
 
 //namespace shv { namespace chainpack { class MetaMethod; }}
 //namespace shv { namespace chainpack { class MetaMethod; class RpcValue; class RpcMessage; class RpcRequest; }}
-namespace shv { namespace core { namespace utils { class ShvPath; class ShvJournalEntry; }}}
+namespace shv { namespace core { namespace utils { class ShvJournalEntry; }}}
 
 
 namespace shv {

@@ -19,6 +19,11 @@ TARGET = shvbroker
 unix:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/lib
 win32:DESTDIR = $$SHV_PROJECT_TOP_BUILDDIR/bin
 
+unix {
+	LIBS += \
+		-Wl,-rpath,\'\$\$ORIGIN\'
+}
+
 message ( DESTDIR: $$DESTDIR )
 
 android {
