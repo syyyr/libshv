@@ -29,7 +29,8 @@ class SHVIOTQT_DECL_EXPORT ClientConnection : public SocketRpcConnection
 	SHV_FIELD_IMPL(std::string, u, U, ser)
 	SHV_FIELD_IMPL(std::string, h, H, ost)
 	SHV_FIELD_IMPL2(int, p, P, ort, shv::chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT_NONSECURED)
-	SHV_FIELD_IMPL2(bool, p, P, eerVerify, true)
+	SHV_FIELD_BOOL_IMPL2(p, P, eerVerify, true)
+	SHV_FIELD_BOOL_IMPL(s, S, kipLoginPhase)
 	SHV_FIELD_IMPL(std::string, p, P, assword)
 	SHV_FIELD_IMPL(shv::chainpack::IRpcConnection::LoginType, l, L, oginType)
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, c, C, onnectionOptions)
@@ -95,8 +96,8 @@ protected:
 	void onSocketConnectedChanged(bool is_connected);
 	void onRpcValueReceived(const shv::chainpack::RpcValue &rpc_val) override;
 
-	bool isInitPhase() const {return state() == State::SocketConnected;}
-	void processInitPhase(const chainpack::RpcMessage &msg);
+	bool isLoginPhase() const {return state() == State::SocketConnected;}
+	void processLoginPhase(const chainpack::RpcMessage &msg);
 	shv::chainpack::RpcValue createLoginParams(const shv::chainpack::RpcValue &server_hello);
 
 	struct ConnectionState
@@ -113,7 +114,6 @@ protected:
 private:
 	bool isAutoConnect() const { return m_checkBrokerConnectedInterval > 0; }
 	void restartIfAutoConnect();
-	bool isBrokerBypass() const;
 private:
 	QTimer *m_checkBrokerConnectedTimer;
 	int m_checkBrokerConnectedInterval = 0;

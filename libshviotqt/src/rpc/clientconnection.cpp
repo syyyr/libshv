@@ -178,7 +178,7 @@ void ClientConnection::open()
 		}
 		else {
 	#ifndef QT_NO_SSL
-			QSslSocket::PeerVerifyMode peer_verify_mode = m_peerVerify ? QSslSocket::AutoVerifyPeer : QSslSocket::VerifyNone;
+			QSslSocket::PeerVerifyMode peer_verify_mode = isPeerVerify() ? QSslSocket::AutoVerifyPeer : QSslSocket::VerifyNone;
 			socket = m_securityType == None ? new TcpSocket(new QTcpSocket()) : new SslSocket(new QSslSocket(), peer_verify_mode);
 	#else
 			socket = new TcpSocket(new QTcpSocket());
@@ -236,8 +236,8 @@ void ClientConnection::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 					<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
 					<< msg.toPrettyString();
 	}
-	if(isInitPhase()) {
-		processInitPhase(msg);
+	if(isLoginPhase()) {
+		processLoginPhase(msg);
 		return;
 	}
 	if(msg.isResponse()) {
@@ -335,8 +335,8 @@ void ClientConnection::onSocketConnectedChanged(bool is_connected)
 		shvInfo() << "peer:" << peerAddress() << "port:" << peerPort();
 		setState(State::SocketConnected);
 		clearBuffers();
-		if(isBrokerBypass()) {
-			shvInfo() << "Connection scheme:" << scheme() << " is skipping authentication phase.";
+		if(isSkipLoginPhase()) {
+			shvInfo() << "Connection scheme:" << scheme() << " is skipping login phase.";
 			setState(State::BrokerConnected);
 		}
 		else {
@@ -419,11 +419,6 @@ void ClientConnection::restartIfAutoConnect()
 		close();
 }
 
-bool ClientConnection::isBrokerBypass() const
-{
-	return scheme() == "localsocket" || scheme() == "serialport";
-}
-
 int ClientConnection::brokerClientId() const
 {
 	return m_connectionState.loginResult.toMap().value(cp::Rpc::KEY_CLIENT_ID).toInt();
@@ -434,7 +429,7 @@ void ClientConnection::muteShvPathInLog(std::string shv_path)
 	m_mutedShvPathsInLog.push_back(std::move(shv_path));
 }
 
-void ClientConnection::processInitPhase(const chainpack::RpcMessage &msg)
+void ClientConnection::processLoginPhase(const chainpack::RpcMessage &msg)
 {
 	do {
 		if(!msg.isResponse())
