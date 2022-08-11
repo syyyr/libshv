@@ -68,7 +68,7 @@ public:
 		//SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorGrid, QColor(Qt::darkGreen))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorAxis, QColor(Qt::gray))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCurrentTime, QColor(QStringLiteral("#cced5515")))
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCrossBar, QColor(QStringLiteral("white")))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCrossHair, QColor(QStringLiteral("white")))
 		//SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCrossBar2, QColor(QStringLiteral("salmon")))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorSelection, QColor(QStringLiteral("deepskyblue")))
 
@@ -143,7 +143,8 @@ public:
 	timemsec_t posToTime(int pos) const;
 	int timeToPos(timemsec_t time) const;
 	Sample timeToSample(int channel_ix, timemsec_t time) const;
-	Sample nearestTimeSample(int channel_ix, timemsec_t time) const;
+	std::pair<Sample, int> posToSample(const QPoint &pos) const;
+	Sample timeToNearestSample(int channel_ix, timemsec_t time) const;
 	int posToChannel(const QPoint &pos) const;
 	int posToChannelHeader(const QPoint &pos) const;
 	Sample posToData(const QPoint &pos) const;
@@ -151,7 +152,7 @@ public:
 	QPoint dataToPos(int ch_ix, const Sample &s) const;
 
 	QString timeToStringTZ(timemsec_t time) const;
-	QMap<QString, QString> yValuesToMap(int channel_ix, const Sample &s) const;
+	QVariantMap sampleValues(int channel_ix, const Sample &s) const;
 	/*
 	QString prettyBitFieldValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const;
 	QMap<QString, QString> prettyMapValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const;
@@ -208,6 +209,8 @@ public:
 	int u2px(double u) const;
 	double u2pxf(double u) const;
 	double px2u(int px) const;
+
+	static QString durationToString(timemsec_t duration);
 
 	static std::function<QPoint (const Sample &s, TypeId meta_type_id)> dataToPointFn(const DataRect &src, const QRect &dest);
 	static std::function<Sample (const QPoint &)> pointToDataFn(const QRect &src, const DataRect &dest);

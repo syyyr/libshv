@@ -411,7 +411,7 @@ Sample Graph::timeToSample(int channel_ix, timemsec_t time) const
 	return Sample();
 }
 
-Sample Graph::nearestTimeSample(int channel_ix, timemsec_t time) const
+Sample Graph::timeToNearestSample(int channel_ix, timemsec_t time) const
 {
 	GraphModel *m = model();
 	const GraphChannel *ch = channelAt(channel_ix);
@@ -450,51 +450,6 @@ QPoint Graph::dataToPos(int ch_ix, const Sample &s) const
 	const GraphChannel *ch = channelAt(ch_ix);
 	auto data2point = dataToPointFn(DataRect{xRangeZoom(), ch->yRangeZoom()}, ch->graphDataGridRect());
 	return data2point? data2point(s, channelTypeId(ch_ix)): QPoint();
-}
-
-QMap<QString, QString> Graph::yValuesToMap(int channel_ix, const shv::visu::timeline::Sample &s) const
-{
-	QMap<QString, QString> ret;
-
-	if (s.isValid()) {
-		bool ok;
-		auto rv = shv::coreqt::Utils::qVariantToRpcValue(s.value, &ok);
-		if(ok) {
-			const auto &type_info = model()->typeInfo();
-			const GraphModel::ChannelInfo &channel_info = model()->channelInfo(m_channels[channel_ix]->modelIndex());
-			type_info.applyTypeDescription(rv, channel_info.typeName.toStdString());
-		}
-		/*
-		if (channel_info.typeDescr.sampleType() != shv::core::utils::ShvTypeDescr::SampleType::Invalid) {
-			if (channel_info.typeDescr.type() == shv::core::utils::ShvTypeDescr::Type::Map) {
-				ret = prettyMapValue(s.value, channel_info.typeDescr);
-			}
-			else if (channel_info.typeDescr.type() == shv::core::utils::ShvTypeDescr::Type::IMap) {
-				ret = prettyIMapValue(s.value, channel_info.typeDescr);
-			}
-			else {
-				QStringList p = channel_info.shvPath.split("/");
-				if (p.isEmpty()) {
-					shvError() << "Failed to split shvPath:" << channel_info.shvPath;
-				}
-
-				QString key = (p.isEmpty()) ? "y" : p.last();
-
-				if (channel_info.typeDescr.type() == shv::core::utils::ShvTypeDescr::Type::BitField) {
-					ret[key] = prettyBitFieldValue(s.value, channel_info.typeDescr);
-				}
-				else if (channel_info.typeDescr.type() == shv::core::utils::ShvTypeDescr::Type::Enum) {
-					ret[key] = model()->typeDescrFieldName(channel_info.typeDescr, s.value.toInt());
-				}
-				else {
-					ret[key] = s.value.toString();
-				}
-			}
-		}
-		*/
-	}
-
-	return ret;
 }
 /*
 QString Graph::prettyBitFieldValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const
@@ -955,35 +910,47 @@ void Graph::moveSouthFloatingBarBottom(int bottom)
 	}
 }
 
-QVariantMap Graph::toolTipValues(const QPoint &pos) const
+std::pair<Sample, int> Graph::posToSample(const QPoint &pos) const
 {
-	QVariantMap ret;
 	int ch_ix = posToChannel(pos);
-	timemsec_t t = posToTime(pos.x());
+	timemsec_t time = posToTime(pos.x());
 	const GraphChannel *ch = channelAt(ch_ix);
 	//update(ch->graphAreaRect());
 	const GraphModel::ChannelInfo channel_info = model()->channelInfo(ch->modelIndex());
 	shvDebug() << channel_info.shvPath << channel_info.typeDescr.toRpcValue().toCpon();
-	auto channel_type = channel_info.typeDescr.type();
+	//auto channel_type_descr = channel_info.typeDescr.type();
 	auto channel_sample_type = channel_info.typeDescr.sampleType();
 	Sample s;
 	if (channel_sample_type == shv::core::utils::ShvTypeDescr::SampleType::Discrete) {
-		s = nearestTimeSample(ch_ix, t);
+		s = timeToNearestSample(ch_ix, time);
 	}
 	else {
-		s = timeToSample(ch_ix, t);
+		s = timeToSample(ch_ix, time);
 	}
-	ret["sampleTime"] = QVariant::fromValue(s.time);
-	ret["sampleValue"] = s.value;
-	QString text;
+	return {s, ch_ix};
+}
 
+QVariantMap Graph::sampleValues(int channel_ix, const shv::visu::timeline::Sample &s) const
+{
+	QVariantMap ret;
+	const GraphChannel *ch = channelAt(channel_ix);
+	//update(ch->graphAreaRect());
+	const GraphModel::ChannelInfo channel_info = model()->channelInfo(ch->modelIndex());
+	shvDebug() << channel_info.shvPath << channel_info.typeDescr.toRpcValue().toCpon();
+
+	QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
+	dt = dt.toTimeZone(timeZone());
+	ret["sampleTime"] = dt;
+	ret["sampleValue"] = s.value;
+	auto rv = shv::coreqt::Utils::qVariantToRpcValue(s.value);
+	auto qv = shv::coreqt::Utils::rpcValueToQVariant(rv);
+	ret["samplePrettyValue"] = qv;
+	/*
 	if (s.isValid()) {
 		//shvDebug() << "sample:" << s.value.toString() << "type:" << channel_sample_type;
 		if (channel_sample_type == shv::core::utils::ShvTypeDescr::SampleType::Continuous
 				|| (channel_sample_type == shv::core::utils::ShvTypeDescr::SampleType::Discrete
 					&& qAbs(pos.x() - timeToPos(s.time)) < u2px(1.1))) {
-			QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
-			dt = dt.toTimeZone(timeZone());
 
 			if (channel_type == shv::core::utils::ShvTypeDescr::Type::Map) {
 				text = QStringLiteral("%1\nx: %2\n")
@@ -1031,7 +998,14 @@ QVariantMap Graph::toolTipValues(const QPoint &pos) const
 			}
 		}
 	}
+	*/
 	return ret;
+}
+
+QVariantMap Graph::toolTipValues(const QPoint &pos) const
+{
+	const auto[sample, channel_ix] = posToSample(pos);
+	return sampleValues(channel_ix, sample);
 }
 
 QRect Graph::southFloatingBarRect() const
@@ -1056,6 +1030,37 @@ double Graph::px2u(int px) const
 {
 	double sz = m_style.unitSize();
 	return (px / sz);
+}
+
+QString Graph::durationToString(timemsec_t duration)
+{
+	static constexpr timemsec_t SEC = 1000;
+	static constexpr timemsec_t MIN = 60 * SEC;
+	static constexpr timemsec_t HOUR = 60 * MIN;
+	static constexpr timemsec_t DAY = 24 * HOUR;
+	if(duration < MIN) {
+		return tr("%1.%2 sec").arg(duration / SEC).arg(duration % SEC, 3, 10, QChar('0'));
+	}
+	if(duration < HOUR) {
+		const auto min = duration / MIN;
+		const auto sec = (duration % MIN) / SEC;
+		const auto msec = duration % SEC;
+		auto ret = tr("%1:%2.%3 min").arg(min).arg(sec, 2, 10, QChar('0')).arg(msec, 3, 10, QChar('0'));
+		return ret;
+	}
+	if(duration < DAY) {
+		const auto hour = duration / HOUR;
+		const auto min = (duration % HOUR) / MIN;
+		const auto sec = (duration % MIN) / SEC;
+		return tr("%1:%2:%3", "time").arg(hour).arg(min, 2, 10, QChar('0')).arg(sec, 2, 10, QChar('0'));
+	}
+	{
+		const auto day = duration / DAY;
+		const auto hour = (duration % DAY) / HOUR;
+		const auto min = (duration % HOUR) / MIN;
+		const auto sec = (duration % MIN) / SEC;
+		return tr("%1 day %1:%2:%3").arg(day).arg(hour).arg(min, 2, 10, QChar('0')).arg(sec, 2, 10, QChar('0'));
+	}
 }
 
 void Graph::makeLayout(const QRect &pref_rect)
@@ -1699,7 +1704,7 @@ void Graph::drawXAxis(QPainter *painter)
 	}
 	if(crossHairPos().isValid()) {
 		timemsec_t time = posToTime(crossHairPos().possition.x());
-		QColor color = m_style.colorCrossBar();
+		QColor color = m_style.colorCrossHair();
 		drawXAxisTimeMark(painter, time, color);
 	}
 	painter->restore();
@@ -2126,7 +2131,6 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 
 void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 {
-	enum {DEBUG = 0};
 	if(!crossHairPos().isValid())
 		return;
 	auto crossbar_pos = crossHairPos().possition;
@@ -2138,12 +2142,12 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 	}
 	//shvDebug() << "drawCrossHair:" << ch->shvPath();
 	painter->save();
-	QColor color = m_style.colorCrossBar();
+	QColor color = m_style.colorCrossHair();
 	int d = u2px(0.4);
-	QRect bull_eye_rect;
+	QRect bulls_eye_rect;
 	if(ch->graphDataGridRect().top() < crossbar_pos.y() && ch->graphDataGridRect().bottom() > crossbar_pos.y()) {
-		bull_eye_rect = QRect(0, 0, d, d);
-		bull_eye_rect.moveCenter(crossbar_pos);
+		bulls_eye_rect = QRect(0, 0, d, d);
+		bulls_eye_rect.moveCenter(crossbar_pos);
 	}
 	QPen pen_solid;
 	pen_solid.setColor(color);
@@ -2159,7 +2163,7 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 		QPoint p2{crossbar_pos.x(), ch->graphDataGridRect().bottom()};
 		painter->drawLine(p1, p2);
 	}
-	if(!bull_eye_rect.isNull()) {
+	if(!bulls_eye_rect.isNull()) {
 		//painter->setClipRect(c->dataAreaRect());
 		/// draw horizontal line
 		QPoint p1{ch->graphDataGridRect().left(), crossbar_pos.y()};
@@ -2168,14 +2172,38 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 		//painter->drawLine(p3, p4);
 		painter->drawLine(p1, p2);
 
-		/// draw point
+		/// draw bulls-eye
 		painter->setPen(pen_solid);
 		//painter->fillRect(bull_eye_rect, ch->m_effectiveStyle.colorBackground());
-		painter->drawRect(bull_eye_rect);
-		bull_eye_rect.moveLeft(bull_eye_rect.left() + 20);
-		bull_eye_rect.moveTop(bull_eye_rect.top() + 20);
-		bull_eye_rect.setSize({150, 74});
-		painter->fillRect(bull_eye_rect, c50);
+		painter->drawRect(bulls_eye_rect);
+		{
+			/// draw info
+			QVariant qv = toolTipValues(crossbar_pos).value("samplePrettyValue");
+			QStringList lines;
+			if(qv.type() == QVariant::Map) {
+				auto m = qv.toMap();
+				for(auto it = m.begin(); it != m.end(); ++it) {
+					lines << it.key() + ": " + it.value().toString();
+				}
+			}
+			else {
+				lines << qv.toString();
+			}
+			QString text = lines.join('\n');
+			if(!text.isEmpty()) {
+				auto rv = shv::coreqt::Utils::qVariantToRpcValue(qv);
+				QFontMetrics fm(m_style.font());
+				QRect info_rect = fm.boundingRect(QRect(), Qt::AlignLeft, text);
+				info_rect.moveTopLeft(bulls_eye_rect.topLeft() + QPoint{20, 20});
+				int offset = 5;
+				auto r2 = info_rect.adjusted(-offset, 0, offset, 0);
+				auto c = effectiveStyle().colorBackground();
+				c.setAlphaF(0.5);
+				painter->fillRect(r2, c);
+				painter->drawText(info_rect, text);
+				painter->drawRect(r2);
+			}
+		}
 		{
 			/// draw Y-marker
 			int tick_len = u2px(m_state.xAxis.tickLen)*2;
@@ -2202,16 +2230,6 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 		Sample s = timeToSample(channel_ix, time);
 		if(s.value.isValid()) {
 			QPoint p = dataToPos(channel_ix, s);
-			if(DEBUG) {
-				QDateTime dt = QDateTime::fromMSecsSinceEpoch(time);
-				dt = dt.toTimeZone(m_timeZone);
-				shvDebug() << "sample point" << dt.toString(Qt::ISODateWithMs) << m_timeZone.id()
-						   << s.value.toString() << "--->" << p.x() << p.y();
-				GraphModel *m = model();
-				const GraphChannel *ch = channelAt(channel_ix);
-				int model_ix = ch->modelIndex();
-				shvDebug() << "samples cnt:" << m->count(model_ix);
-			}
 			int d = u2px(0.3);
 			QRect rect(0, 0, d, d);
 			rect.moveCenter(p);

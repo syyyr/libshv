@@ -69,10 +69,10 @@ void ChannelProbe::prevSample()
 	}
 }
 
-QMap<QString, QString> ChannelProbe::yValues() const
+QVariantMap ChannelProbe::sampleValues() const
 {
 	Sample s = m_graph->timeToSample(m_channelIndex, m_currentTime);
-	return m_graph->yValuesToMap(m_channelIndex, s);
+	return m_graph->sampleValues(m_channelIndex, s);
 }
 
 QString ChannelProbe::shvPath() const

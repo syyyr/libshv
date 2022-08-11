@@ -140,8 +140,8 @@ void ChannelProbeWidget::loadValues()
 	ui->twData->clearContents();
 	ui->twData->setRowCount(0);
 
-	QMap<QString, QString> values = m_probe->yValues();
-	QMapIterator<QString, QString> i(values);
+	QVariantMap values = m_probe->sampleValues();
+	QMapIterator<QString, QVariant> i(values.value("samplePrettyValue").toMap());
 
 	while (i.hasNext()) {
 		i.next();
@@ -152,7 +152,7 @@ void ChannelProbeWidget::loadValues()
 		item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 		ui->twData->setItem(ix, DataTableColumn::ColProperty, item);
 
-		item = new QTableWidgetItem(i.value());
+		item = new QTableWidgetItem(i.value().toString());
 		item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 		ui->twData->setItem(ix, DataTableColumn::ColValue, item);
 	}

@@ -760,13 +760,18 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 RpcValue ShvTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums) const
 {
 	ShvTypeDescr td = typeDescriptionForName(type_name);
+	return applyTypeDescription(val, td, translate_enums);
+}
+
+RpcValue ShvTypeInfo::applyTypeDescription(const chainpack::RpcValue &val, const ShvTypeDescr &type_descr, bool translate_enums) const
+{
 	//shvWarning() << type_name << "--->" << td.toRpcValue().toCpon();
-	switch(td.type()) {
+	switch(type_descr.type()) {
 	case ShvTypeDescr::Type::Invalid:
 		return val;
 	case ShvTypeDescr::Type::BitField: {
 		RpcValue::Map map;
-		for(const ShvFieldDescr &fld : td.fields()) {
+		for(const ShvFieldDescr &fld : type_descr.fields()) {
 			RpcValue result = fld.bitfieldValue(val.toUInt64());
 			result = applyTypeDescription(result, fld.typeName());
 			map[fld.name()] = result;
@@ -776,7 +781,7 @@ RpcValue ShvTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &val, 
 	case ShvTypeDescr::Type::Enum: {
 		int ival = val.toInt();
 		if(translate_enums) {
-			for(const ShvFieldDescr &fld : td.fields()) {
+			for(const ShvFieldDescr &fld : type_descr.fields()) {
 				if(fld.value().toInt() == ival)
 					return fld.name();
 			}
@@ -795,7 +800,7 @@ RpcValue ShvTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &val, 
 	case ShvTypeDescr::Type::Decimal:
 		if(val.isDecimal())
 			return val;
-		return RpcValue::Decimal::fromDouble(val.toDouble(), td.decimalPlaces());
+		return RpcValue::Decimal::fromDouble(val.toDouble(), type_descr.decimalPlaces());
 	case ShvTypeDescr::Type::Double:
 		return val.toDouble();
 	case ShvTypeDescr::Type::String:
@@ -817,7 +822,7 @@ RpcValue ShvTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &val, 
 			return val;
 		return val.asIMap();
 	}
-	shvError() << "Invalid type:" << (int)td.type();
+	shvError() << "Invalid type:" << (int)type_descr.type();
 	return val;
 }
 

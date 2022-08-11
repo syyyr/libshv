@@ -183,6 +183,7 @@ public:
 	static ShvTypeInfo fromRpcValue(const chainpack::RpcValue &v);
 
 	shv::chainpack::RpcValue applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums = true) const;
+	shv::chainpack::RpcValue applyTypeDescription(const shv::chainpack::RpcValue &val, const ShvTypeDescr &type_descr, bool translate_enums = true) const;
 
 	void forEachNodeDescription(const std::string &node_descr_root, std::function<void (const std::string &property_path, const ShvNodeDescr &node_descr)> fn) const;
 	void forEachNode(std::function<void (const std::string &shv_path, const ShvNodeDescr &node_descr)> fn) const;

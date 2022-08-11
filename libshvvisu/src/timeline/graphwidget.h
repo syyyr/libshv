@@ -56,7 +56,7 @@ protected:
 
 	void hideCrossHair();
 
-	virtual void showGraphSelectionMenu(const QPoint &mouse_pos);
+	virtual void showGraphSelectionContextMenu(const QPoint &mouse_pos);
 	virtual void showGraphContextMenu(const QPoint &mouse_pos);
 	virtual void showChannelContextMenu(int channel_ix, const QPoint &mouse_pos);
 protected:

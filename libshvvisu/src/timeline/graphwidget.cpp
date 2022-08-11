@@ -341,7 +341,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 		}
 		else if(old_mouse_op == MouseOperation::GraphAreaSelection) {
 			if(event->modifiers() == Qt::NoModifier) {
-				showGraphSelectionMenu(event->pos());
+				showGraphSelectionContextMenu(event->pos());
 			}
 			else if(event->modifiers() == Qt::ShiftModifier) {
 				m_graph->zoomToSelection(false);
@@ -721,7 +721,7 @@ void GraphWidget::dropEvent(QDropEvent *event)
 	event->accept();
 }
 
-void GraphWidget::showGraphSelectionMenu(const QPoint &mouse_pos)
+void GraphWidget::showGraphSelectionContextMenu(const QPoint &mouse_pos)
 {
 	QMenu menu(this);
 	menu.addAction(tr("Zoom X axis to selection"), this, [this]() {
@@ -742,14 +742,14 @@ void GraphWidget::showGraphSelectionMenu(const QPoint &mouse_pos)
 		auto t2 = m_graph->posToTime(sel_rect.right());
 		auto y1 = ch1->posToValue(sel_rect.bottom());
 		auto y2 = ch2->posToValue(sel_rect.top());
-		//auto msec_to_str = [](timemsec_t msec) {
-		//	return cp::RpcValue::DateTime::from
-		//}
-		QString st = tr("t1: %1, t2: %2, diff: %3 msec").arg(m_graph->timeToStringTZ(t1))
-				.arg(m_graph->timeToStringTZ(t2))
-				.arg(t2 - t1);
-		QString sy = tr("y1: %1, y2: %2, diff: %3").arg(y1).arg(y2).arg(y2 - y1);
-		QMessageBox::information(this, tr("Selection info"), st + '\n' + sy);
+		QString s = tr("t1: %1").arg(m_graph->timeToStringTZ(t1));
+		s += '\n' + tr("t2: %2").arg(m_graph->timeToStringTZ(t2));
+		s += '\n' + tr("duration: %1").arg(m_graph->durationToString(t2 - t1));
+		s += '\n' + tr("y1: %1").arg(y1);
+		s += '\n' + tr("y2: %2").arg(y2);
+		if(ch1 == ch2)
+			s += '\n' + tr("diff: %1").arg(y2 - y1);
+		QMessageBox::information(this, tr("Selection info"), s);
 	});
 	menu.exec(mapToGlobal(mouse_pos));
 }
@@ -848,7 +848,7 @@ void GraphWidget::createProbe(int channel_ix, timemsec_t time)
 	GraphModel::ChannelInfo &channel_info = m_graph->model()->channelInfo(ch->modelIndex());
 
 	if (channel_info.typeDescr.sampleType() == shv::core::utils::ShvTypeDescr::SampleType::Discrete) {
-		Sample s = m_graph->nearestTimeSample(channel_ix, time);
+		Sample s = m_graph->timeToNearestSample(channel_ix, time);
 
 		if (s.isValid())
 			time = s.time;

@@ -24,11 +24,7 @@ public:
 	public:
 		QString shvPath;
 		QString name;
-		QString typeName;
-		//int metaTypeId = QMetaType::UnknownType;
-		//shv::core::utils::ShvTypeDescr typeDescr;
-
-		//QString caption() const { return name.isEmpty()? shvPath: name; }
+		shv::core::utils::ShvTypeDescr typeDescr;
 	};
 
 	SHV_FIELD_BOOL_IMPL2(a, A, utoCreateChannels, true)
@@ -40,9 +36,8 @@ public:
 	XRange xRange(int channel_ix) const;
 	YRange yRange(int channel_ix) const;
 	void clear();
-	void appendChannel() {appendChannel(std::string(), std::string());}
-	void appendChannel(const std::string &shv_path, const std::string &name,
-					   const shv::core::utils::ShvTypeDescr &type_descr = shv::core::utils::ShvTypeDescr());
+	void appendChannel() {appendChannel({}, {}, {});}
+	void appendChannel(const std::string &shv_path, const std::string &name, const shv::core::utils::ShvTypeDescr &type_descr);
 public:
 	virtual int channelCount() const { return qMin(m_channelsInfo.count(), m_samples.count()); }
 	const ChannelInfo& channelInfo(int channel_ix) const { return m_channelsInfo.at(channel_ix); }

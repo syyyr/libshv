@@ -65,11 +65,11 @@ XRange GraphModel::xRange(int channel_ix) const
 YRange GraphModel::yRange(int channel_ix) const
 {
 	YRange ret;
-	auto mtid = channelInfo(channel_ix).typeDescr.type();
+	auto type = channelInfo(channel_ix).typeDescr.type();
 	for (int i = 0; i < count(channel_ix); ++i) {
 		QVariant v = sampleAt(channel_ix, i).value;
 		bool ok;
-		double d = valueToDouble(v, mtid, &ok);
+		double d = valueToDouble(v, type, &ok);
 		if(ok) {
 			ret.min = qMin(ret.min, d);
 			ret.max = qMax(ret.max, d);
@@ -202,8 +202,8 @@ void GraphModel::endAppendValues()
 	for (int i = 0; i < channelCount(); ++i) {
 		ChannelInfo &chi = channelInfo(i);
 		if(!chi.typeDescr.isValid()) {
-			QString type_name = guessTypeName(i);
-			chi.typeDescr = shv::core::utils::ShvTypeDescr(type_name.toStdString());
+			auto type_name = guessTypeName(i);
+			chi.typeDescr = typeInfo().typeDescriptionForName(type_name.toStdString());
 		}
 	}
 }
@@ -219,23 +219,23 @@ void GraphModel::appendValue(int channel, Sample &&sample)
 		shvWarning() << "ignoring value with timestamp <= 0, timestamp:" << sample.time;
 		return;
 	}
-	ChannelSamples &dat = m_samples[channel];
-	if(!dat.isEmpty() && dat.last().time > sample.time) {
+	ChannelSamples &samples = m_samples[channel];
+	if(!samples.isEmpty() && samples.last().time > sample.time) {
 		shvWarning() << channelInfo(channel).shvPath << "channel:" << channel
 					 << "ignoring value with lower timestamp than last value (check possibly wrong short-time correction):"
-					 << dat.last().time << shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(dat.last().time).toIsoString()
+					 << samples.last().time << shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(samples.last().time).toIsoString()
 					 << "val:"
 					 << sample.time << shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(sample.time).toIsoString();
 		return;
 	}
-	if (!dat.isEmpty() &&
+	if (!samples.isEmpty() &&
 		channelInfo(channel).typeDescr.sampleType() == shv::core::utils::ShvTypeDescr::SampleType::Continuous &&
-		dat.last().value == sample.value) {
+		samples.last().value == sample.value) {
 		return;
 	}
 	//m_appendSince = qMin(sampleAt.time, m_appendSince);
 	//m_appendUntil = qMax(sampleAt.time, m_appendUntil);
-	dat.push_back(std::move(sample));
+	samples.push_back(std::move(sample));
 }
 
 void GraphModel::appendValueShvPath(const std::string &shv_path, Sample &&sample)
@@ -243,9 +243,9 @@ void GraphModel::appendValueShvPath(const std::string &shv_path, Sample &&sample
 	int ch_ix = pathToChannelIndex(shv_path);
 	if(ch_ix < 0) {
 		if(isAutoCreateChannels()) {
-			core::utils::ShvTypeDescr td = m_typeInfo.typeDescriptionForPath(shv_path);
-			shvMessage() << "Auto append channel:" << shv_path << "type:" << td.toRpcValue().toCpon();
-			appendChannel(shv_path, std::string(), td);
+			auto type_name = m_typeInfo.nodeDescriptionForPath(shv_path).typeName();
+			shvMessage() << "Auto append channel:" << shv_path << "type:" << type_name;
+			appendChannel(shv_path, std::string(), type_name);
 			ch_ix = channelCount() - 1;
 		}
 		else {
@@ -272,7 +272,7 @@ int GraphModel::pathToChannelIndex(const std::string &path) const
 	return it->second;
 }
 
-void GraphModel::appendChannel(const std::string &shv_path, const std::string &name, const shv::core::utils::ShvTypeDescr &type_descr)
+void GraphModel::appendChannel(const std::string &shv_path, const std::string &name, const core::utils::ShvTypeDescr &type_descr)
 {
 	m_pathToChannelCache.clear();
 	m_channelsInfo.append(ChannelInfo());

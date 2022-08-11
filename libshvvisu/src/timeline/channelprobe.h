@@ -29,7 +29,7 @@ public:
 
 	void nextSample();
 	void prevSample();
-	QMap<QString, QString> yValues() const;
+	QVariantMap sampleValues() const;
 
 	Q_SIGNAL void currentTimeChanged(timemsec_t time);
 
