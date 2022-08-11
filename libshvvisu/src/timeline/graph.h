@@ -143,7 +143,7 @@ public:
 	timemsec_t posToTime(int pos) const;
 	int timeToPos(timemsec_t time) const;
 	Sample timeToSample(int channel_ix, timemsec_t time) const;
-	Sample nearestSample(int channel_ix, timemsec_t time) const;
+	Sample nearestTimeSample(int channel_ix, timemsec_t time) const;
 	int posToChannel(const QPoint &pos) const;
 	int posToChannelHeader(const QPoint &pos) const;
 	Sample posToData(const QPoint &pos) const;
@@ -152,10 +152,11 @@ public:
 
 	QString timeToStringTZ(timemsec_t time) const;
 	QMap<QString, QString> yValuesToMap(int channel_ix, const Sample &s) const;
+	/*
 	QString prettyBitFieldValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const;
 	QMap<QString, QString> prettyMapValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const;
 	QMap<QString, QString> prettyIMapValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const;
-
+	*/
 	const QRect& rect() const { return  m_layout.rect; }
 	const QRect& miniMapRect() const { return  m_layout.miniMapRect; }
 	const QRect& cornerCellRect() const { return  m_layout.cornerCellRect; }
@@ -276,6 +277,7 @@ protected:
 
 	void moveSouthFloatingBarBottom(int bottom);
 protected:
+	QVariantMap toolTipValues(const QPoint &pos) const;
 	void onButtonBoxClicked(int button_id);
 protected:
 	GraphModel *m_model = nullptr;

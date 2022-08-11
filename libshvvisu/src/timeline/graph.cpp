@@ -411,7 +411,7 @@ Sample Graph::timeToSample(int channel_ix, timemsec_t time) const
 	return Sample();
 }
 
-Sample Graph::nearestSample(int channel_ix, timemsec_t time) const
+Sample Graph::nearestTimeSample(int channel_ix, timemsec_t time) const
 {
 	GraphModel *m = model();
 	const GraphChannel *ch = channelAt(channel_ix);
@@ -457,8 +457,14 @@ QMap<QString, QString> Graph::yValuesToMap(int channel_ix, const shv::visu::time
 	QMap<QString, QString> ret;
 
 	if (s.isValid()) {
-		GraphModel::ChannelInfo &channel_info = model()->channelInfo(m_channels[channel_ix]->modelIndex());
-
+		bool ok;
+		auto rv = shv::coreqt::Utils::qVariantToRpcValue(s.value, &ok);
+		if(ok) {
+			const auto &type_info = model()->typeInfo();
+			const GraphModel::ChannelInfo &channel_info = model()->channelInfo(m_channels[channel_ix]->modelIndex());
+			type_info.applyTypeDescription(rv, channel_info.typeName.toStdString());
+		}
+		/*
 		if (channel_info.typeDescr.sampleType() != shv::core::utils::ShvTypeDescr::SampleType::Invalid) {
 			if (channel_info.typeDescr.type() == shv::core::utils::ShvTypeDescr::Type::Map) {
 				ret = prettyMapValue(s.value, channel_info.typeDescr);
@@ -485,11 +491,12 @@ QMap<QString, QString> Graph::yValuesToMap(int channel_ix, const shv::visu::time
 				}
 			}
 		}
+		*/
 	}
 
 	return ret;
 }
-
+/*
 QString Graph::prettyBitFieldValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const
 {
 	QString text;
@@ -581,7 +588,7 @@ QMap<QString, QString> Graph::prettyIMapValue(const QVariant &value, const shv::
 
 	return ret;
 }
-
+*/
 void Graph::setCrossHairPos(const Graph::CrossHairPos &pos)
 {
 	//{
@@ -946,6 +953,85 @@ void Graph::moveSouthFloatingBarBottom(int bottom)
 		int inset = m_cornerCellButtonBox->buttonSpace();
 		m_cornerCellButtonBox->moveTopRight(m_layout.cornerCellRect.topRight() + QPoint(-inset, inset));
 	}
+}
+
+QVariantMap Graph::toolTipValues(const QPoint &pos) const
+{
+	QVariantMap ret;
+	int ch_ix = posToChannel(pos);
+	timemsec_t t = posToTime(pos.x());
+	const GraphChannel *ch = channelAt(ch_ix);
+	//update(ch->graphAreaRect());
+	const GraphModel::ChannelInfo channel_info = model()->channelInfo(ch->modelIndex());
+	shvDebug() << channel_info.shvPath << channel_info.typeDescr.toRpcValue().toCpon();
+	auto channel_type = channel_info.typeDescr.type();
+	auto channel_sample_type = channel_info.typeDescr.sampleType();
+	Sample s;
+	if (channel_sample_type == shv::core::utils::ShvTypeDescr::SampleType::Discrete) {
+		s = nearestTimeSample(ch_ix, t);
+	}
+	else {
+		s = timeToSample(ch_ix, t);
+	}
+	ret["sampleTime"] = QVariant::fromValue(s.time);
+	ret["sampleValue"] = s.value;
+	QString text;
+
+	if (s.isValid()) {
+		//shvDebug() << "sample:" << s.value.toString() << "type:" << channel_sample_type;
+		if (channel_sample_type == shv::core::utils::ShvTypeDescr::SampleType::Continuous
+				|| (channel_sample_type == shv::core::utils::ShvTypeDescr::SampleType::Discrete
+					&& qAbs(pos.x() - timeToPos(s.time)) < u2px(1.1))) {
+			QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
+			dt = dt.toTimeZone(timeZone());
+
+			if (channel_type == shv::core::utils::ShvTypeDescr::Type::Map) {
+				text = QStringLiteral("%1\nx: %2\n")
+					   .arg(ch->shvPath())
+					   .arg(dt.toString(Qt::ISODateWithMs));
+				QMap<QString, QString> value_map = prettyMapValue(s.value, channel_info.typeDescr);
+				for (auto it = value_map.begin(); it != value_map.end(); ++it) {
+					text += it.key() + ": " + it.value() + "\n";
+				}
+				text.chop(1);
+			}
+			else if (channel_type == shv::core::utils::ShvTypeDescr::Type::BitField) {
+				text = QStringLiteral("%1\nx: %2\n")
+					   .arg(ch->shvPath())
+					   .arg(dt.toString(Qt::ISODateWithMs));
+				if (s.value.type() == QVariant::Int) {
+					text += prettyBitFieldValue(s.value, channel_info.typeDescr);
+				}
+				else {
+					text += "value: " + s.value.toString();
+				}
+			}
+			else if (channel_type == shv::core::utils::ShvTypeDescr::Type::IMap) {
+				text = QStringLiteral("%1\nx: %2\n")
+					   .arg(ch->shvPath())
+					   .arg(dt.toString(Qt::ISODateWithMs));
+				QMap<QString, QString> value_map = prettyIMapValue(s.value, channel_info.typeDescr);
+				for (auto it = value_map.begin(); it != value_map.end(); ++it) {
+					text += it.key() + ": " + it.value() + "\n";
+				}
+				text.chop(1);
+			}
+			else if (channel_type == shv::core::utils::ShvTypeDescr::Type::Enum) {
+				text = QStringLiteral("%1\nx: %2\nvalue: %3")
+					   .arg(ch->shvPath())
+					   .arg(dt.toString(Qt::ISODateWithMs))
+					   .arg(model()->typeDescrFieldName(channel_info.typeDescr, s.value.toInt()));
+			}
+			else {
+				text = QStringLiteral("%1\nx: %2\ny: %3\nvalue: %4")
+					   .arg(ch->shvPath())
+					   .arg(dt.toString(Qt::ISODateWithMs))
+					   .arg(ch->posToValue(pos.y()))
+					   .arg(s.value.toString());
+			}
+		}
+	}
+	return ret;
 }
 
 QRect Graph::southFloatingBarRect() const
@@ -2084,9 +2170,14 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 
 		/// draw point
 		painter->setPen(pen_solid);
-		painter->fillRect(bull_eye_rect, ch->m_effectiveStyle.colorBackground());
+		//painter->fillRect(bull_eye_rect, ch->m_effectiveStyle.colorBackground());
 		painter->drawRect(bull_eye_rect);
+		bull_eye_rect.moveLeft(bull_eye_rect.left() + 20);
+		bull_eye_rect.moveTop(bull_eye_rect.top() + 20);
+		bull_eye_rect.setSize({150, 74});
+		painter->fillRect(bull_eye_rect, c50);
 		{
+			/// draw Y-marker
 			int tick_len = u2px(m_state.xAxis.tickLen)*2;
 			{
 				QRect r{0, 0, tick_len, 2 * tick_len};
@@ -2100,7 +2191,7 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 				pp.lineTo(r.bottomRight());
 				painter->fillPath(pp, color);
 			}
-			/// draw value
+			/// draw Y value
 			auto val = ch->posToValue(p1.y());
 			drawLeftRectText(painter, p1 + QPoint{tick_len, 0}, QString::number(val), m_style.font(), color.darker(400), color);
 		}

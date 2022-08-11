@@ -12,7 +12,7 @@
 #include <QFontMetrics>
 #include <QLabel>
 #include <QMouseEvent>
-#include <QToolTip>
+//#include <QToolTip>
 #include <QDateTime>
 #include <QMenu>
 #include <QScreen>
@@ -514,89 +514,9 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 	if(ch_ix >= 0 && !isMouseAboveMiniMap(pos)) {
 		setCursor(Qt::BlankCursor);
 		gr->setCrossHairPos({ch_ix, pos});
-		timemsec_t t = gr->posToTime(pos.x());
-		const GraphChannel *ch = gr->channelAt(ch_ix);
-		//update(ch->graphAreaRect());
-		const GraphModel::ChannelInfo channel_info = gr->model()->channelInfo(ch->modelIndex());
-		shvDebug() << channel_info.shvPath << channel_info.typeDescr.toRpcValue().toCpon();
-		auto channel_type = channel_info.typeDescr.type();
-		auto channel_sample_type = channel_info.typeDescr.sampleType();
-		Sample s;
-		if (channel_sample_type == shv::core::utils::ShvTypeDescr::SampleType::Discrete) {
-			s = gr->nearestSample(ch_ix, t);
-		}
-		else {
-			s = gr->timeToSample(ch_ix, t);
-		}
-		QPoint point;
-		QString text;
-
-		if (s.isValid()) {
-			//shvDebug() << "sample:" << s.value.toString() << "type:" << channel_sample_type;
-			if (channel_sample_type == shv::core::utils::ShvTypeDescr::SampleType::Continuous
-					|| (channel_sample_type == shv::core::utils::ShvTypeDescr::SampleType::Discrete && qAbs(pos.x() - gr->timeToPos(s.time)) < gr->u2px(1.1))) {
-				point = mapToGlobal(pos + QPoint{gr->u2px(0.8), 0});
-				QDateTime dt = QDateTime::fromMSecsSinceEpoch(s.time);
-				dt = dt.toTimeZone(graph()->timeZone());
-
-				if (channel_type == shv::core::utils::ShvTypeDescr::Type::Map) {
-					text = QStringLiteral("%1\nx: %2\n")
-						   .arg(ch->shvPath())
-						   .arg(dt.toString(Qt::ISODateWithMs));
-					QMap<QString, QString> value_map = m_graph->prettyMapValue(s.value, channel_info.typeDescr);
-					for (auto it = value_map.begin(); it != value_map.end(); ++it) {
-						text += it.key() + ": " + it.value() + "\n";
-					}
-					text.chop(1);
-				}
-				else if (channel_type == shv::core::utils::ShvTypeDescr::Type::BitField) {
-					text = QStringLiteral("%1\nx: %2\n")
-						   .arg(ch->shvPath())
-						   .arg(dt.toString(Qt::ISODateWithMs));
-					if (s.value.type() == QVariant::Int) {
-						text += graph()->prettyBitFieldValue(s.value, channel_info.typeDescr);
-					}
-					else {
-						text += "value: " + s.value.toString();
-					}
-				}
-				else if (channel_type == shv::core::utils::ShvTypeDescr::Type::IMap) {
-					text = QStringLiteral("%1\nx: %2\n")
-						   .arg(ch->shvPath())
-						   .arg(dt.toString(Qt::ISODateWithMs));
-					QMap<QString, QString> value_map = m_graph->prettyIMapValue(s.value, channel_info.typeDescr);
-					for (auto it = value_map.begin(); it != value_map.end(); ++it) {
-						text += it.key() + ": " + it.value() + "\n";
-					}
-					text.chop(1);
-				}
-				else if (channel_type == shv::core::utils::ShvTypeDescr::Type::Enum) {
-					text = QStringLiteral("%1\nx: %2\nvalue: %3")
-						   .arg(ch->shvPath())
-						   .arg(dt.toString(Qt::ISODateWithMs))
-						   .arg(m_graph->model()->typeDescrFieldName(channel_info.typeDescr, s.value.toInt()));
-				}
-				else {
-					text = QStringLiteral("%1\nx: %2\ny: %3\nvalue: %4")
-						   .arg(ch->shvPath())
-						   .arg(dt.toString(Qt::ISODateWithMs))
-						   .arg(ch->posToValue(pos.y()))
-						   .arg(s.value.toString());
-				}
-			}
-		}
-
-		QToolTip::showText(point, text);
 	}
 	else {
 		hideCrossHair();
-	}
-
-	ch_ix = posToChannelVerticalHeader(pos);
-	if(ch_ix > -1) {
-		const GraphChannel *ch = gr->channelAt(ch_ix);
-		QString text = tr("Channel:") + " " + ch->shvPath();
-		QToolTip::showText(mapToGlobal(pos + QPoint{gr->u2px(0.2), 0}), text, this);
 	}
 }
 
@@ -688,7 +608,7 @@ void GraphWidget::hideCrossHair()
 	if(gr->crossHairPos().isValid()) {
 		gr->setCrossHairPos({});
 		setCursor(Qt::ArrowCursor);
-		QToolTip::showText(QPoint(), QString());
+		//QToolTip::showText(QPoint(), QString());
 		update();
 	}
 }
@@ -928,7 +848,7 @@ void GraphWidget::createProbe(int channel_ix, timemsec_t time)
 	GraphModel::ChannelInfo &channel_info = m_graph->model()->channelInfo(ch->modelIndex());
 
 	if (channel_info.typeDescr.sampleType() == shv::core::utils::ShvTypeDescr::SampleType::Discrete) {
-		Sample s = m_graph->nearestSample(channel_ix, time);
+		Sample s = m_graph->nearestTimeSample(channel_ix, time);
 
 		if (s.isValid())
 			time = s.time;

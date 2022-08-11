@@ -67,7 +67,7 @@ void ShvTypeDescrBase::mergeTags(chainpack::RpcValue::Map &map)
 	}
 }
 //=====================================================================
-// ShvLogTypeDescrField
+// ShvTypeDescrField
 //=====================================================================
 ShvFieldDescr::ShvFieldDescr(const std::string &name, const std::string &type_name, const chainpack::RpcValue &value)
 {
@@ -182,20 +182,20 @@ uint64_t ShvFieldDescr::setBitfieldValue(uint64_t bitfield, uint64_t uval) const
 }
 
 //=====================================================================
-// ShvLogTypeDescr
+// ShvTypeDescr
 //=====================================================================
-ShvLogTypeDescr::Type ShvLogTypeDescr::type() const
+ShvTypeDescr::Type ShvTypeDescr::type() const
 {
 	return static_cast<Type>(dataValue(KEY_TYPE).toInt());
 }
 
-ShvLogTypeDescr &ShvLogTypeDescr::setType(Type t)
+ShvTypeDescr &ShvTypeDescr::setType(Type t)
 {
 	setDataValue(KEY_TYPE, (int)t);
 	return *this;
 }
 
-std::vector<ShvFieldDescr> ShvLogTypeDescr::fields() const
+std::vector<ShvFieldDescr> ShvTypeDescr::fields() const
 {
 	std::vector<ShvFieldDescr> ret;
 	auto flds = dataValue(KEY_FIELDS);
@@ -204,7 +204,7 @@ std::vector<ShvFieldDescr> ShvLogTypeDescr::fields() const
 	return ret;
 }
 
-ShvLogTypeDescr &ShvLogTypeDescr::setFields(const std::vector<ShvFieldDescr> &fields)
+ShvTypeDescr &ShvTypeDescr::setFields(const std::vector<ShvFieldDescr> &fields)
 {
 	RpcValue::List cp_fields;
 	for (const ShvFieldDescr &field : fields) {
@@ -214,18 +214,18 @@ ShvLogTypeDescr &ShvLogTypeDescr::setFields(const std::vector<ShvFieldDescr> &fi
 	return *this;
 }
 
-ShvLogTypeDescr::SampleType ShvLogTypeDescr::sampleType() const
+ShvTypeDescr::SampleType ShvTypeDescr::sampleType() const
 {
 	return static_cast<SampleType>(dataValue(KEY_SAMPLE_TYPE).toInt());
 }
 
-ShvLogTypeDescr &ShvLogTypeDescr::setSampleType(ShvLogTypeDescr::SampleType st)
+ShvTypeDescr &ShvTypeDescr::setSampleType(ShvTypeDescr::SampleType st)
 {
 	setDataValue(KEY_SAMPLE_TYPE, (int)st);
 	return *this;
 }
 
-ShvFieldDescr ShvLogTypeDescr::field(const std::string &field_name) const
+ShvFieldDescr ShvTypeDescr::field(const std::string &field_name) const
 {
 	auto flds = dataValue(KEY_FIELDS);
 	for(const RpcValue &rv : flds.asList()) {
@@ -237,7 +237,7 @@ ShvFieldDescr ShvLogTypeDescr::field(const std::string &field_name) const
 	return {};
 }
 
-RpcValue ShvLogTypeDescr::fieldValue(const chainpack::RpcValue &val, const std::string &field_name) const
+RpcValue ShvTypeDescr::fieldValue(const chainpack::RpcValue &val, const std::string &field_name) const
 {
 	switch (type()) {
 	case Type::BitField:
@@ -252,7 +252,7 @@ RpcValue ShvLogTypeDescr::fieldValue(const chainpack::RpcValue &val, const std::
 	return {};
 }
 
-const std::string ShvLogTypeDescr::typeToString(ShvLogTypeDescr::Type t)
+const std::string ShvTypeDescr::typeToString(ShvTypeDescr::Type t)
 {
 	switch (t) {
 	case Type::Invalid: break;
@@ -272,7 +272,7 @@ const std::string ShvLogTypeDescr::typeToString(ShvLogTypeDescr::Type t)
 	return "Invalid";
 }
 
-ShvLogTypeDescr::Type ShvLogTypeDescr::typeFromString(const std::string &s)
+ShvTypeDescr::Type ShvTypeDescr::typeFromString(const std::string &s)
 {
 	if(s == "BitField") return Type::BitField;
 	if(s == "Enum") return Type::Enum;
@@ -289,7 +289,7 @@ ShvLogTypeDescr::Type ShvLogTypeDescr::typeFromString(const std::string &s)
 	return Type::Invalid;
 }
 
-const std::string ShvLogTypeDescr::sampleTypeToString(ShvLogTypeDescr::SampleType t)
+const std::string ShvTypeDescr::sampleTypeToString(ShvTypeDescr::SampleType t)
 {
 	switch (t) {
 	case SampleType::Discrete: return "Discrete";
@@ -299,7 +299,7 @@ const std::string ShvLogTypeDescr::sampleTypeToString(ShvLogTypeDescr::SampleTyp
 	return std::string();
 }
 
-ShvLogTypeDescr::SampleType ShvLogTypeDescr::sampleTypeFromString(const std::string &s)
+ShvTypeDescr::SampleType ShvTypeDescr::sampleTypeFromString(const std::string &s)
 {
 	if(s == "2" || s == "D" || s == "Discrete" || s == "discrete")
 		return SampleType::Discrete;
@@ -308,7 +308,7 @@ ShvLogTypeDescr::SampleType ShvLogTypeDescr::sampleTypeFromString(const std::str
 	return SampleType::Invalid;
 }
 
-RpcValue ShvLogTypeDescr::defaultRpcValue() const
+RpcValue ShvTypeDescr::defaultRpcValue() const
 {
 	using namespace chainpack;
 
@@ -331,31 +331,31 @@ RpcValue ShvLogTypeDescr::defaultRpcValue() const
 	return RpcValue::fromType(RpcValue::Type::Null);
 }
 
-int ShvLogTypeDescr::decimalPlaces() const
+int ShvTypeDescr::decimalPlaces() const
 {
 	return dataValue(KEY_DEC_PLACES).toInt();
 }
 
-ShvLogTypeDescr &ShvLogTypeDescr::setDecimalPlaces(int n)
+ShvTypeDescr &ShvTypeDescr::setDecimalPlaces(int n)
 {
 	setDataValue(KEY_DEC_PLACES, n);
 	return *this;
 }
 
-RpcValue ShvLogTypeDescr::toRpcValue() const
+RpcValue ShvTypeDescr::toRpcValue() const
 {
 	RpcValue::Map map = m_data.asMap();
 	map.setValue(KEY_TYPE, typeToString(type()));
-	if(sampleType() != ShvLogTypeDescr::SampleType::Invalid)
+	if(sampleType() != ShvTypeDescr::SampleType::Invalid)
 		map.setValue(KEY_SAMPLE_TYPE, sampleTypeToString(sampleType()));
 	else
 		map.setValue(KEY_SAMPLE_TYPE, {});
 	return map;
 }
 
-ShvLogTypeDescr ShvLogTypeDescr::fromRpcValue(const RpcValue &v)
+ShvTypeDescr ShvTypeDescr::fromRpcValue(const RpcValue &v)
 {
-	ShvLogTypeDescr ret;
+	ShvTypeDescr ret;
 	{
 		RpcValue::Map map = v.asMap();
 		RpcValue src_fields = map.take("fields");
@@ -584,7 +584,7 @@ RpcValue ShvTypeInfo::extraTags(const std::string &node_path) const
 	}
 }
 
-ShvTypeInfo &ShvTypeInfo::setTypeDescription(const ShvLogTypeDescr &type_descr, const std::string &type_name)
+ShvTypeInfo &ShvTypeInfo::setTypeDescription(const ShvTypeDescr &type_descr, const std::string &type_name)
 {
 	if(type_descr.isValid())
 		m_types[type_name] = type_descr;
@@ -629,21 +629,21 @@ ShvLogNodeDescr ShvTypeInfo::nodeDescriptionForPath(const std::string &shv_path,
 	}
 }
 /*
-ShvLogTypeDescr ShvLogTypeInfo::typeDescriptionForPath(const std::string &shv_path) const
+ShvTypeDescr ShvLogTypeInfo::typeDescriptionForPath(const std::string &shv_path) const
 {
 	ShvLogNodeDescr node_descr = nodeDescriptionForPath(shv_path);
 	return typeDescriptionForName(node_descr.typeName());
 }
 */
-ShvLogTypeDescr ShvTypeInfo::typeDescriptionForName(const std::string &type_name) const
+ShvTypeDescr ShvTypeInfo::typeDescriptionForName(const std::string &type_name) const
 {
 	if(auto it = m_types.find(type_name); it == m_types.end())
-		return ShvLogTypeDescr(type_name);
+		return ShvTypeDescr(type_name);
 	else
 		return it->second;
 }
 
-ShvLogTypeDescr ShvTypeInfo::typeDescriptionForPath(const std::string &shv_path) const
+ShvTypeDescr ShvTypeInfo::typeDescriptionForPath(const std::string &shv_path) const
 {
 	return typeDescriptionForName(nodeDescriptionForPath(shv_path).typeName());
 }
@@ -715,7 +715,7 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 		{
 			const RpcValue::Map &m = map.value(TYPES).asMap();
 			for(const auto &kv : m) {
-				ret.m_types[kv.first] = ShvLogTypeDescr::fromRpcValue(kv.second);
+				ret.m_types[kv.first] = ShvTypeDescr::fromRpcValue(kv.second);
 			}
 		}
 		{
@@ -739,7 +739,7 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 		{
 			const RpcValue::Map &m = map.value(TYPES).asMap();
 			for(const auto &kv : m) {
-				ret.m_types[kv.first] = ShvLogTypeDescr::fromRpcValue(kv.second);
+				ret.m_types[kv.first] = ShvTypeDescr::fromRpcValue(kv.second);
 			}
 		}
 		{
@@ -759,12 +759,12 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 
 RpcValue ShvTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums) const
 {
-	ShvLogTypeDescr td = typeDescriptionForName(type_name);
+	ShvTypeDescr td = typeDescriptionForName(type_name);
 	//shvWarning() << type_name << "--->" << td.toRpcValue().toCpon();
 	switch(td.type()) {
-	case ShvLogTypeDescr::Type::Invalid:
+	case ShvTypeDescr::Type::Invalid:
 		return val;
-	case ShvLogTypeDescr::Type::BitField: {
+	case ShvTypeDescr::Type::BitField: {
 		RpcValue::Map map;
 		for(const ShvFieldDescr &fld : td.fields()) {
 			RpcValue result = fld.bitfieldValue(val.toUInt64());
@@ -773,7 +773,7 @@ RpcValue ShvTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &val, 
 		}
 		return map;
 	}
-	case ShvLogTypeDescr::Type::Enum: {
+	case ShvTypeDescr::Type::Enum: {
 		int ival = val.toInt();
 		if(translate_enums) {
 			for(const ShvFieldDescr &fld : td.fields()) {
@@ -786,33 +786,33 @@ RpcValue ShvTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &val, 
 			return ival;
 		}
 	}
-	case ShvLogTypeDescr::Type::Bool:
+	case ShvTypeDescr::Type::Bool:
 		return val.toBool();
-	case ShvLogTypeDescr::Type::UInt:
+	case ShvTypeDescr::Type::UInt:
 		return val.toUInt();
-	case ShvLogTypeDescr::Type::Int:
+	case ShvTypeDescr::Type::Int:
 		return val.toInt();
-	case ShvLogTypeDescr::Type::Decimal:
+	case ShvTypeDescr::Type::Decimal:
 		if(val.isDecimal())
 			return val;
 		return RpcValue::Decimal::fromDouble(val.toDouble(), td.decimalPlaces());
-	case ShvLogTypeDescr::Type::Double:
+	case ShvTypeDescr::Type::Double:
 		return val.toDouble();
-	case ShvLogTypeDescr::Type::String:
+	case ShvTypeDescr::Type::String:
 		if(val.isString())
 			return val;
 		return val.asString();
-	case ShvLogTypeDescr::Type::DateTime:
+	case ShvTypeDescr::Type::DateTime:
 		return val.toDateTime();
-	case ShvLogTypeDescr::Type::List:
+	case ShvTypeDescr::Type::List:
 		if(val.isList())
 			return val;
 		return val.asList();
-	case ShvLogTypeDescr::Type::Map:
+	case ShvTypeDescr::Type::Map:
 		if(val.isMap())
 			return val;
 		return val.asMap();
-	case ShvLogTypeDescr::Type::IMap:
+	case ShvTypeDescr::Type::IMap:
 		if(val.isIMap())
 			return val;
 		return val.asIMap();
@@ -931,7 +931,7 @@ ShvTypeInfo ShvTypeInfo::fromNodesTree(const chainpack::RpcValue &v)
 		const RpcValue types = v.metaValue("typeInfo").asMap().value("types");
 		const RpcValue::Map &m = types.asMap();
 		for(const auto &kv : m) {
-			ret.m_types[kv.first] = ShvLogTypeDescr::fromRpcValue(kv.second);
+			ret.m_types[kv.first] = ShvTypeDescr::fromRpcValue(kv.second);
 		}
 	}
 	const RpcValue node_types = v.metaValue("nodeTypes");

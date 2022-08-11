@@ -24,8 +24,9 @@ public:
 	public:
 		QString shvPath;
 		QString name;
+		QString typeName;
 		//int metaTypeId = QMetaType::UnknownType;
-		shv::core::utils::ShvTypeDescr typeDescr;
+		//shv::core::utils::ShvTypeDescr typeDescr;
 
 		//QString caption() const { return name.isEmpty()? shvPath: name; }
 	};
