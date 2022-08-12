@@ -246,9 +246,10 @@ protected:
 
 	void clearMiniMapCache();
 
-	void drawRectText(QPainter *painter, const QRect &rect, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
-	void drawCenteredRectText(QPainter *painter, const QPoint &top_center, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
-	void drawLeftRectText(QPainter *painter, const QPoint &left_center, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
+	void drawRectText(QPainter *painter, const QRect &rect, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor(), int inset = 0);
+	void drawCenterTopText(QPainter *painter, const QPoint &top_center, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
+	void drawCenterBottomText(QPainter *painter, const QPoint &top_center, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
+	void drawLeftCenterText(QPainter *painter, const QPoint &left_center, const QString &text, const QFont &font, const QColor &color, const QColor &background = QColor());
 
 	QVector<int> visibleChannels() const;
 	int maximizedChannelIndex() const;
@@ -268,11 +269,12 @@ protected:
 			, const DataRect &src_rect = DataRect()
 			, const QRect &dest_rect = QRect()
 			, const GraphChannel::Style &channel_style = GraphChannel::Style());
+	void drawCrossHairTimeMarker(QPainter *painter);
 	virtual void drawCrossHair(QPainter *painter, int channel_ix);
 	virtual void drawProbes(QPainter *painter, int channel_ix);
 	virtual void drawSelection(QPainter *painter);
 	virtual void drawCurrentTime(QPainter *painter, int channel_ix);
-	void drawXAxisTimeMark(QPainter *painter, time_t time, const QColor &color);
+	void drawCurrentTimeMarker(QPainter *painter, time_t time);
 
 	QVariantMap mergeMaps(const QVariantMap &base, const QVariantMap &overlay) const;
 	void makeXAxis();

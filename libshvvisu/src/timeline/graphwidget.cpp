@@ -662,6 +662,9 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
 	}
 
 	Super::wheelEvent(event);
+	// hide cross-hair, because its position is invalid after graph scroll
+	// it will be updated on next moude move event
+	hideCrossHair();
 }
 
 void GraphWidget::contextMenuEvent(QContextMenuEvent *event)

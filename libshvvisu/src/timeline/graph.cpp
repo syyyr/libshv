@@ -1198,7 +1198,7 @@ void Graph::makeLayout(const QRect &pref_rect)
 		makeYAxis(i);
 }
 
-void Graph::drawRectText(QPainter *painter, const QRect &rect, const QString &text, const QFont &font, const QColor &color, const QColor &background)
+void Graph::drawRectText(QPainter *painter, const QRect &rect, const QString &text, const QFont &font, const QColor &color, const QColor &background, int inset)
 {
 	painter->save();
 	if(background.isValid())
@@ -1208,55 +1208,41 @@ void Graph::drawRectText(QPainter *painter, const QRect &rect, const QString &te
 	painter->setPen(pen);
 	painter->drawRect(rect);
 	painter->setFont(font);
-	QFontMetrics fm(font);
-#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
-	painter->drawText(rect.left() + fm.horizontalAdvance('i'), rect.top() + fm.leading() + fm.ascent(), text);
-#else
-	painter->drawText(rect.left() + fm.width('i'), rect.top() + fm.leading() + fm.ascent(), text);
-#endif
+	painter->drawText(rect.adjusted(inset/2, 0, 0, 0), text);
 	painter->restore();
 }
 
-void Graph::drawCenteredRectText(QPainter *painter, const QPoint &top_center, const QString &text, const QFont &font, const QColor &color, const QColor &background)
+void Graph::drawCenterTopText(QPainter *painter, const QPoint &top_center, const QString &text, const QFont &font, const QColor &color, const QColor &background)
 {
-	painter->save();
 	QFontMetrics fm(font);
 	QRect br = fm.boundingRect(text);
 	int inset = u2px(0.2)*2;
 	br.adjust(-inset, 0, inset, 0);
 	br.moveCenter(top_center);
 	br.moveTop(top_center.y());
-	if(background.isValid())
-		painter->fillRect(br, background);
-	QPen pen;
-	pen.setColor(color);
-	painter->setPen(pen);
-	painter->drawRect(br);
-	painter->setFont(font);
-	br.adjust(inset/2, 0, 0, 0);
-	painter->drawText(br, text);
-	painter->restore();
+	drawRectText(painter, br, text, font, color, background, inset);
 }
 
-void Graph::drawLeftRectText(QPainter *painter, const QPoint &left_center, const QString &text, const QFont &font, const QColor &color, const QColor &background)
+void Graph::drawCenterBottomText(QPainter *painter, const QPoint &top_center, const QString &text, const QFont &font, const QColor &color, const QColor &background)
 {
-	painter->save();
+	QFontMetrics fm(font);
+	QRect br = fm.boundingRect(text);
+	int inset = u2px(0.2)*2;
+	br.adjust(-inset, 0, inset, 0);
+	br.moveCenter(top_center);
+	br.moveBottom(top_center.y());
+	drawRectText(painter, br, text, font, color, background, inset);
+}
+
+void Graph::drawLeftCenterText(QPainter *painter, const QPoint &left_center, const QString &text, const QFont &font, const QColor &color, const QColor &background)
+{
 	QFontMetrics fm(font);
 	QRect br = fm.boundingRect(text);
 	int inset = u2px(0.2)*2;
 	br.adjust(-inset, 0, inset, 0);
 	br.moveCenter(left_center);
 	br.moveLeft(left_center.x());
-	if(background.isValid())
-		painter->fillRect(br, background);
-	QPen pen;
-	pen.setColor(color);
-	painter->setPen(pen);
-	painter->drawRect(br);
-	painter->setFont(font);
-	br.adjust(inset/2, 0, 0, 0);
-	painter->drawText(br, text);
-	painter->restore();
+	drawRectText(painter, br, text, font, color, background, inset);
 }
 
 QVector<int> Graph::visibleChannels() const
@@ -1356,6 +1342,7 @@ int Graph::maximizedChannelIndex() const
 void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_rect)
 {
 	drawBackground(painter, dirty_rect);
+	bool draw_cross_hair_time_marker = false;
 	for (int i : visibleChannels()) {
 		const GraphChannel *ch = channelAt(i);
 		if(dirty_rect.intersects(ch->graphAreaRect())) {
@@ -1364,6 +1351,7 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 			drawSamples(painter, i);
 			drawProbes(painter, i);
 			drawCrossHair(painter, i);
+			draw_cross_hair_time_marker = true;
 			drawCurrentTime(painter, i);
 		}
 		if(dirty_rect.intersects(ch->verticalHeaderRect()))
@@ -1371,6 +1359,8 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 		if(dirty_rect.intersects(ch->yAxisRect()))
 			drawYAxis(painter, i);
 	}
+	if(draw_cross_hair_time_marker)
+		drawCrossHairTimeMarker(painter);
 	int minimap_bottom = view_rect.height() + view_rect.y();
 	moveSouthFloatingBarBottom(minimap_bottom);
 	if(dirty_rect.intersects(m_layout.cornerCellRect))
@@ -1381,6 +1371,10 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 		drawXAxis(painter);
 	if(dirty_rect.intersects(m_state.selectionRect))
 		drawSelection(painter);
+	/*
+	shvInfo() << "dirty rect:" << dirty_rect.x() << "," << dirty_rect.y()
+			  << " " << dirty_rect.width() << "x" << dirty_rect.height();
+	*/
 }
 
 void Graph::drawBackground(QPainter *painter, const QRect &dirty_rect)
@@ -1510,6 +1504,7 @@ void Graph::drawBackground(QPainter *painter, int channel)
 {
 	const GraphChannel *ch = channelAt(channel);
 	painter->fillRect(ch->m_layout.graphAreaRect, ch->m_effectiveStyle.colorBackground());
+	//painter->fillRect(ch->m_layout.graphAreaRect, Qt::green);
 }
 
 void Graph::drawGrid(QPainter *painter, int channel)
@@ -1698,14 +1693,8 @@ void Graph::drawXAxis(QPainter *painter)
 		int x = timeToPos(current_time);
 		if(x > m_layout.xAxisRect.left() + 10) {
 			// draw marker + time string only if current time is slightly greater than graph leftmost time
-			QColor color = m_style.colorCurrentTime();
-			drawXAxisTimeMark(painter, current_time, color);
+			drawCurrentTimeMarker(painter, current_time);
 		}
-	}
-	if(crossHairPos().isValid()) {
-		timemsec_t time = posToTime(crossHairPos().possition.x());
-		QColor color = m_style.colorCrossHair();
-		drawXAxisTimeMark(painter, time, color);
 	}
 	painter->restore();
 }
@@ -2129,6 +2118,41 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	painter->restore();
 }
 
+void Graph::drawCrossHairTimeMarker(QPainter *painter)
+{
+	if(!crossHairPos().isValid())
+		return;
+	auto crossbar_pos = crossHairPos().possition;
+	//if(channel_ix != crossBarPos().channelIndex)
+	//	return;
+	if(m_layout.xAxisRect.left() >= crossbar_pos.x() || m_layout.xAxisRect.right() <= crossbar_pos.x()) {
+		return;
+	}
+	QColor color = m_style.colorCrossHair();
+	timemsec_t time = posToTime(crossHairPos().possition.x());
+	int x = timeToPos(time);
+	QPoint p1{x, m_layout.xAxisRect.top()};
+	int tick_len = u2px(m_state.xAxis.tickLen)*2;
+	{
+		QRect r{0, 0, 2 * tick_len, tick_len};
+		r.moveCenter(p1);
+		r.moveBottom(p1.y());
+		//painter->fillRect(r, Qt::green);
+		QPainterPath pp;
+		pp.moveTo(r.topLeft());
+		pp.lineTo(r.topRight());
+		pp.lineTo(r.center().x(), r.bottom());
+		pp.lineTo(r.topLeft());
+		painter->fillPath(pp, color);
+	}
+	QString text = timeToStringTZ(time);
+	//shvInfo() << text;
+	p1.setY(p1.y() - tick_len);
+	auto c_text = color;
+	auto c_background = effectiveStyle().colorBackground();
+	drawCenterBottomText(painter, p1 - QPoint{0, tick_len / 2}, text, m_style.font(), c_text, c_background);
+}
+
 void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 {
 	if(!crossHairPos().isValid())
@@ -2143,12 +2167,6 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 	//shvDebug() << "drawCrossHair:" << ch->shvPath();
 	painter->save();
 	QColor color = m_style.colorCrossHair();
-	int d = u2px(0.4);
-	QRect bulls_eye_rect;
-	if(ch->graphDataGridRect().top() < crossbar_pos.y() && ch->graphDataGridRect().bottom() > crossbar_pos.y()) {
-		bulls_eye_rect = QRect(0, 0, d, d);
-		bulls_eye_rect.moveCenter(crossbar_pos);
-	}
 	QPen pen_solid;
 	pen_solid.setColor(color);
 	QPen pen_dash = pen_solid;
@@ -2163,7 +2181,10 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 		QPoint p2{crossbar_pos.x(), ch->graphDataGridRect().bottom()};
 		painter->drawLine(p1, p2);
 	}
-	if(!bulls_eye_rect.isNull()) {
+	if(channel_ix == crossHairPos().channelIndex) {
+		int d = u2px(0.4);
+		QRect bulls_eye_rect(0, 0, d, d);
+		bulls_eye_rect.moveCenter(crossbar_pos);
 		//painter->setClipRect(c->dataAreaRect());
 		/// draw horizontal line
 		QPoint p1{ch->graphDataGridRect().left(), crossbar_pos.y()};
@@ -2178,29 +2199,50 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 		painter->drawRect(bulls_eye_rect);
 		{
 			/// draw info
-			QVariant qv = toolTipValues(crossbar_pos).value("samplePrettyValue");
-			QStringList lines;
-			if(qv.type() == QVariant::Map) {
-				auto m = qv.toMap();
-				for(auto it = m.begin(); it != m.end(); ++it) {
-					lines << it.key() + ": " + it.value().toString();
+			QString info_text;
+			if(selectionRect().isValid()) {
+				/// show selection info
+				auto sel_rect = selectionRect();
+				auto ch1_ix = posToChannel(sel_rect.bottomLeft());
+				auto ch2_ix = posToChannel(sel_rect.topLeft());
+				auto *ch1 = channelAt(ch1_ix);
+				auto *ch2 = channelAt(ch2_ix);
+				auto t1 = posToTime(sel_rect.left());
+				auto t2 = posToTime(sel_rect.right());
+				auto y1 = ch1->posToValue(sel_rect.bottom());
+				auto y2 = ch2->posToValue(sel_rect.top());
+				info_text = tr("t1: %1").arg(timeToStringTZ(t1));
+				info_text += '\n' + tr("duration: %1").arg(durationToString(t2 - t1));
+				if(ch1 == ch2) {
+					info_text += '\n' + tr("y1: %1").arg(y1);
+					info_text += '\n' + tr("diff: %1").arg(y2 - y1);
 				}
 			}
 			else {
-				lines << qv.toString();
+				/// show sample value
+				QVariant qv = toolTipValues(crossbar_pos).value("samplePrettyValue");
+				QStringList lines;
+				if(qv.type() == QVariant::Map) {
+					auto m = qv.toMap();
+					for(auto it = m.begin(); it != m.end(); ++it) {
+						lines << it.key() + ": " + it.value().toString();
+					}
+				}
+				else {
+					lines << qv.toString();
+				}
+				info_text = lines.join('\n');
 			}
-			QString text = lines.join('\n');
-			if(!text.isEmpty()) {
-				auto rv = shv::coreqt::Utils::qVariantToRpcValue(qv);
+			if(!info_text.isEmpty()) {
 				QFontMetrics fm(m_style.font());
-				QRect info_rect = fm.boundingRect(QRect(), Qt::AlignLeft, text);
+				QRect info_rect = fm.boundingRect(QRect(), Qt::AlignLeft, info_text);
 				info_rect.moveTopLeft(bulls_eye_rect.topLeft() + QPoint{20, 20});
 				int offset = 5;
 				auto r2 = info_rect.adjusted(-offset, 0, offset, 0);
 				auto c = effectiveStyle().colorBackground();
 				c.setAlphaF(0.5);
 				painter->fillRect(r2, c);
-				painter->drawText(info_rect, text);
+				painter->drawText(info_rect, info_text);
 				painter->drawRect(r2);
 			}
 		}
@@ -2221,22 +2263,25 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 			}
 			/// draw Y value
 			auto val = ch->posToValue(p1.y());
-			drawLeftRectText(painter, p1 + QPoint{tick_len, 0}, QString::number(val), m_style.font(), color.darker(400), color);
+			auto c_text = color;
+			auto c_background = effectiveStyle().colorBackground();
+			c_background.setAlphaF(0.5);
+			drawLeftCenterText(painter, p1 + QPoint{tick_len, 0}, QString::number(val), m_style.font(), c_text, c_background);
 		}
-	}
-	if(channel_ix == crossHairPos().channelIndex) {
-		/// draw point on current value graph
-		timemsec_t time = posToTime(crossbar_pos.x());
-		Sample s = timeToSample(channel_ix, time);
-		if(s.value.isValid()) {
-			QPoint p = dataToPos(channel_ix, s);
-			int d = u2px(0.3);
-			QRect rect(0, 0, d, d);
-			rect.moveCenter(p);
-			//painter->fillRect(rect, c->effectiveStyle.color());
-			painter->fillRect(rect, color);
-			rect.adjust(2, 2, -2, -2);
-			painter->fillRect(rect, ch->m_effectiveStyle.colorBackground());
+		{
+			/// draw point on current value graph
+			timemsec_t time = posToTime(crossbar_pos.x());
+			Sample s = timeToSample(channel_ix, time);
+			if(s.value.isValid()) {
+				QPoint p = dataToPos(channel_ix, s);
+				int d = u2px(0.3);
+				QRect rect(0, 0, d, d);
+				rect.moveCenter(p);
+				//painter->fillRect(rect, c->effectiveStyle.color());
+				painter->fillRect(rect, color);
+				rect.adjust(2, 2, -2, -2);
+				painter->fillRect(rect, ch->m_effectiveStyle.colorBackground());
+			}
 		}
 	}
 	painter->restore();
@@ -2297,10 +2342,11 @@ void Graph::drawCurrentTime(QPainter *painter, int channel_ix)
 	painter->restore();
 }
 
-void Graph::drawXAxisTimeMark(QPainter *painter, time_t time, const QColor &color)
+void Graph::drawCurrentTimeMarker(QPainter *painter, time_t time)
 {
 	if(time <= 0)
 		return;
+	QColor color = m_style.colorCurrentTime();
 	int x = timeToPos(time);
 	QPoint p1{x, m_layout.xAxisRect.top()};
 	int tick_len = u2px(m_state.xAxis.tickLen)*2;
@@ -2319,7 +2365,7 @@ void Graph::drawXAxisTimeMark(QPainter *painter, time_t time, const QColor &colo
 	QString text = timeToStringTZ(time);
 	//shvInfo() << text;
 	p1.setY(p1.y() + tick_len);
-	drawCenteredRectText(painter, p1, text, m_style.font(), color.darker(400), color);
+	drawCenterTopText(painter, p1, text, m_style.font(), color.darker(400), color);
 }
 
 QString Graph::timeToStringTZ(timemsec_t time) const
