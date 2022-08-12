@@ -943,62 +943,12 @@ QVariantMap Graph::sampleValues(int channel_ix, const shv::visu::timeline::Sampl
 	ret["sampleTime"] = dt;
 	ret["sampleValue"] = s.value;
 	auto rv = shv::coreqt::Utils::qVariantToRpcValue(s.value);
+	const auto &type_info = model()->typeInfo();
+	shvDebug() << "1:" << rv.toCpon();
+	rv = type_info.applyTypeDescription(rv, channel_info.typeDescr);
+	shvDebug() << "2:" << rv.toCpon();
 	auto qv = shv::coreqt::Utils::rpcValueToQVariant(rv);
 	ret["samplePrettyValue"] = qv;
-	/*
-	if (s.isValid()) {
-		//shvDebug() << "sample:" << s.value.toString() << "type:" << channel_sample_type;
-		if (channel_sample_type == shv::core::utils::ShvTypeDescr::SampleType::Continuous
-				|| (channel_sample_type == shv::core::utils::ShvTypeDescr::SampleType::Discrete
-					&& qAbs(pos.x() - timeToPos(s.time)) < u2px(1.1))) {
-
-			if (channel_type == shv::core::utils::ShvTypeDescr::Type::Map) {
-				text = QStringLiteral("%1\nx: %2\n")
-					   .arg(ch->shvPath())
-					   .arg(dt.toString(Qt::ISODateWithMs));
-				QMap<QString, QString> value_map = prettyMapValue(s.value, channel_info.typeDescr);
-				for (auto it = value_map.begin(); it != value_map.end(); ++it) {
-					text += it.key() + ": " + it.value() + "\n";
-				}
-				text.chop(1);
-			}
-			else if (channel_type == shv::core::utils::ShvTypeDescr::Type::BitField) {
-				text = QStringLiteral("%1\nx: %2\n")
-					   .arg(ch->shvPath())
-					   .arg(dt.toString(Qt::ISODateWithMs));
-				if (s.value.type() == QVariant::Int) {
-					text += prettyBitFieldValue(s.value, channel_info.typeDescr);
-				}
-				else {
-					text += "value: " + s.value.toString();
-				}
-			}
-			else if (channel_type == shv::core::utils::ShvTypeDescr::Type::IMap) {
-				text = QStringLiteral("%1\nx: %2\n")
-					   .arg(ch->shvPath())
-					   .arg(dt.toString(Qt::ISODateWithMs));
-				QMap<QString, QString> value_map = prettyIMapValue(s.value, channel_info.typeDescr);
-				for (auto it = value_map.begin(); it != value_map.end(); ++it) {
-					text += it.key() + ": " + it.value() + "\n";
-				}
-				text.chop(1);
-			}
-			else if (channel_type == shv::core::utils::ShvTypeDescr::Type::Enum) {
-				text = QStringLiteral("%1\nx: %2\nvalue: %3")
-					   .arg(ch->shvPath())
-					   .arg(dt.toString(Qt::ISODateWithMs))
-					   .arg(model()->typeDescrFieldName(channel_info.typeDescr, s.value.toInt()));
-			}
-			else {
-				text = QStringLiteral("%1\nx: %2\ny: %3\nvalue: %4")
-					   .arg(ch->shvPath())
-					   .arg(dt.toString(Qt::ISODateWithMs))
-					   .arg(ch->posToValue(pos.y()))
-					   .arg(s.value.toString());
-			}
-		}
-	}
-	*/
 	return ret;
 }
 
