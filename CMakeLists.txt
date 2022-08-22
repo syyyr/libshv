@@ -4,6 +4,8 @@ set(WITH_SAMPLES OFF CACHE BOOL "Enable build of GUI samples")
 
 project(libshv LANGUAGES C CXX)
 include(CTest)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_SHARED_LIBRARY_PREFIX "") # we don't want CMake to prepend "lib" to our libraries, we prefer adding that ourselves
 
@@ -19,16 +21,28 @@ add_subdirectory(libshvchainpack/c)
 add_subdirectory(libshvchainpack)
 add_subdirectory(libshvcore)
 
-find_package(Qt5 QUIET COMPONENTS Core Network Sql SerialPort OPTIONAL_COMPONENTS WebSockets Widgets)
+if(USE_QT6)
+	message(STATUS "Enabling Qt6 support")
+	find_package(Qt6 QUIET COMPONENTS Core Network Sql SerialPort OPTIONAL_COMPONENTS WebSockets Widgets Core5Compat)
+	set(QtWebSockets_FOUND ${Qt6WebSockets_FOUND})
+	set(Qt_FOUND ${Qt6_FOUND})
+	set(QtWidgets_FOUND ${Qt6Widgets_FOUND})
+else()
+	find_package(Qt5 QUIET COMPONENTS Core Network Sql SerialPort OPTIONAL_COMPONENTS WebSockets Widgets)
+	set(QtWebSockets_FOUND ${Qt5WebSockets_FOUND})
+	set(Qt_FOUND ${Qt5_FOUND})
+	set(QtWidgets_FOUND ${Qt5Widgets_FOUND})
 
-# We'll error out if the user has explicitly enabled websocket support, but Qt5 WebSockets aren't available.
-if(WITH_SHV_WEBSOCKETS AND NOT Qt5WebSockets_FOUND)
-	message(FATAL_ERROR "SHV websocket support explicitly enabled, but Qt5 WebSockets weren't found!")
 endif()
 
-# Otherwise enable websocket support based on whether we found Qt5 WebSockets.
+# We'll error out if the user has explicitly enabled websocket support, but Qt WebSockets aren't available.
+if(WITH_SHV_WEBSOCKETS AND NOT QtWebSockets_FOUND)
+	message(FATAL_ERROR "SHV websocket support explicitly enabled, but Qt WebSockets weren't found!")
+endif()
+
+# Otherwise enable websocket support based on whether we found Qt6 WebSockets.
 if (NOT DEFINED WITH_SHV_WEBSOCKETS)
-	set(WITH_SHV_WEBSOCKETS ${Qt5WebSockets_FOUND})
+	set(WITH_SHV_WEBSOCKETS ${QtWebSockets_FOUND})
 endif()
 
 if (WITH_SHV_WEBSOCKETS)
@@ -37,14 +51,14 @@ else()
 	message(STATUS "SHV websocket support disabled")
 endif()
 
-if(Qt5_FOUND)
+if(Qt_FOUND)
 	set(CMAKE_AUTOMOC ON)
 
 	add_subdirectory(libshvcoreqt)
 	add_subdirectory(libshviotqt)
 	add_subdirectory(libshvbroker)
 
-	if(Qt5Widgets_FOUND)
+	if(QtWidgets_FOUND AND (NOT USE_QT6 OR Qt6Core5Compat_FOUND))
 		set(CMAKE_AUTORCC ON)
 		set(CMAKE_AUTOUIC ON)
 		add_subdirectory(libshvvisu)
@@ -53,11 +67,11 @@ if(Qt5_FOUND)
 			add_subdirectory(samples/gui/samplegraph)
 		endif()
 	else()
-		message(STATUS "Qt5 Widgets not found, libshvvisu won't be built")
+		message(STATUS "Qt Widgets not found, libshvvisu won't be built")
 	endif()
 
 else()
-	message(STATUS "Qt5 not found, Qt-based libs won't be built")
+	message(STATUS "Qt not found, Qt-based libs won't be built")
 endif()
 
 # Utils
