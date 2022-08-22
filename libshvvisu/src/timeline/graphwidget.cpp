@@ -204,19 +204,19 @@ int GraphWidget::posToChannel(const QPoint &pos) const
 void GraphWidget::mouseDoubleClickEvent(QMouseEvent *event)
 {
 	QPoint pos = event->pos();
-	if(posToChannel(pos) >= 0) {
-		if(event->modifiers() == Qt::NoModifier) {
-			emit graphChannelDoubleClicked(pos);
-			event->accept();
-			return;
-		}
-	}
 	if(isMouseAboveMiniMap(pos)) {
 		Graph *gr = graph();
 		gr->resetXZoom();
 		update();
 		event->accept();
 		return;
+	}
+	if(posToChannel(pos) >= 0) {
+		if(event->modifiers() == Qt::NoModifier) {
+			emit graphChannelDoubleClicked(pos);
+			event->accept();
+			return;
+		}
 	}
 	Super::mouseDoubleClickEvent(event);
 }
