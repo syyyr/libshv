@@ -1,5 +1,4 @@
 #include "rpcmessage.h"
-#include "chainpack.h"
 #include "metatypes.h"
 #include "tunnelctl.h"
 #include "datachange.h"
@@ -18,8 +17,6 @@ RpcMessage::MetaType::MetaType()
 		{(int)Key::Params, {(int)Key::Params, Rpc::PAR_PARAMS}},
 		{(int)Key::Result, {(int)Key::Result, Rpc::JSONRPC_RESULT}},
 		{(int)Key::Error, {(int)Key::Error, Rpc::JSONRPC_ERROR}},
-		{(int)Key::ErrorCode, {(int)Key::ErrorCode, Rpc::JSONRPC_ERROR_CODE}},
-		{(int)Key::ErrorMessage, {(int)Key::ErrorMessage, Rpc::JSONRPC_ERROR_MESSAGE}},
 	};
 	m_tags = {
 		{(int)Tag::RequestId, {(int)Tag::RequestId, Rpc::JSONRPC_REQUEST_ID}},

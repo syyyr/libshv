@@ -32,7 +32,7 @@ public:
 								TunnelCtl,
 								UserId,
 								MAX};};
-		struct Key { enum Enum {Params = 1, Result, Error, ErrorCode, ErrorMessage, MAX};};
+		struct Key { enum Enum {Params = 1, Result, Error, MAX};};
 
 		MetaType();
 
