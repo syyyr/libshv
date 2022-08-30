@@ -1,7 +1,6 @@
 #include "clientconnection.h"
 
 #include "clientappclioptions.h"
-#include "rpc.h"
 #include "socket.h"
 #include "socketrpcconnection.h"
 #include "websocket.h"
@@ -54,6 +53,31 @@ ClientConnection::~ClientConnection()
 	shvDebug() << __FUNCTION__;
 }
 
+QUrl ClientConnection::connectionUrl() const
+{
+	return connectionUrlFromString(host());
+}
+
+QUrl ClientConnection::connectionUrlFromString(const std::string &url_str)
+{
+	QString qurl_str = QString::fromStdString(url_str);
+	QUrl url(qurl_str);
+	if(!url.scheme().isEmpty() && url.host().isEmpty()) {
+		bool ok;
+		url.path().toInt(&ok);
+		if(ok) {
+			// fix special case like localhost:3755
+			// where url prarses localhost as scheme
+			// and port as path
+			// if path is number, then scheme is actually host
+			// add scheme "shv"
+			url = QUrl("shv://" + qurl_str);
+		}
+	}
+	return url;
+}
+
+/*
 ClientConnection::SecurityType ClientConnection::securityTypeFromString(const std::string &val)
 {
 	return val == "ssl" ? SecurityType::Ssl : SecurityType::None;
@@ -84,16 +108,7 @@ void ClientConnection::setSecurityType(const std::string &val)
 {
 	m_securityType = securityTypeFromString(val);
 }
-
-QUrl ClientConnection::connectionUrl() const
-{
-	QUrl url;
-	url.setScheme(QString::fromStdString(scheme()));
-	url.setHost(QString::fromStdString(host()));
-	url.setPort(port());
-	return url;
-}
-
+*/
 void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 {
 	if(!cli_opts)
@@ -116,10 +131,10 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 	else
 		setProtocolType(shv::chainpack::Rpc::ProtocolType::ChainPack);
 
-	setScheme(cli_opts->serverScheme());
+	//setScheme(schemeFromString(cli_opts->serverScheme()));
 	setHost(cli_opts->serverHost());
-	setPort(cli_opts->serverPort());
-	setSecurityType(cli_opts->serverSecurityType());
+	//setPort(cli_opts->serverPort());
+	//setSecurityType(cli_opts->serverSecurityType());
 	setPeerVerify(cli_opts->serverPeerVerify());
 	setUser(cli_opts->user());
 	setPassword(cli_opts->password());
@@ -155,31 +170,33 @@ void ClientConnection::setTunnelOptions(const chainpack::RpcValue &opts)
 void ClientConnection::open()
 {
 	if(!hasSocket()) {
+		QUrl url(QString::fromStdString(host()));
+		auto scheme = Socket::schemeFromString(url.scheme().toStdString());
 		Socket *socket;
-		if(scheme() == "ws") {
+		if(scheme == Socket::Scheme::WebSocket) {
 #ifdef WITH_SHV_WEBSOCKETS
 			socket = new WebSocket(new QWebSocket());
 #else
 			SHV_EXCEPTION("Web socket support is not part of this build.");
 #endif
 		}
-		else if(scheme() == "wss") {
+		else if(scheme == Socket::Scheme::WebSocketSecure) {
 #ifdef WITH_SHV_WEBSOCKETS
 			socket = new WebSocket(new QWebSocket());
 #else
 			SHV_EXCEPTION("Web socket support is not part of this build.");
 #endif
 		}
-		else if(scheme() == "localsocket") {
+		else if(scheme == Socket::Scheme::LocalSocket) {
 			socket = new LocalSocket(new QLocalSocket());
 		}
-		else if(scheme() == "serialport") {
+		else if(scheme == Socket::Scheme::SerialPort) {
 			socket = new SerialPortSocket(new QSerialPort());
 		}
 		else {
 	#ifndef QT_NO_SSL
 			QSslSocket::PeerVerifyMode peer_verify_mode = isPeerVerify() ? QSslSocket::AutoVerifyPeer : QSslSocket::VerifyNone;
-			socket = m_securityType == None ? new TcpSocket(new QTcpSocket()) : new SslSocket(new QSslSocket(), peer_verify_mode);
+			socket = scheme == Socket::Scheme::ShvSecure ? new SslSocket(new QSslSocket(), peer_verify_mode): new TcpSocket(new QTcpSocket());
 	#else
 			socket = new TcpSocket(new QTcpSocket());
 	#endif
@@ -284,10 +301,11 @@ void ClientConnection::checkBrokerConnected()
 	shvDebug() << "check broker connected: " << isSocketConnected();
 	if(!isBrokerConnected()) {
 		abortSocket();
-		shvInfo().nospace() << "connecting to: " << host() << ":" << port() << " security: " << securityTypeToString(securityType());
 		m_connectionState = ConnectionState();
+		auto url = connectionUrl();
+		shvInfo().nospace() << "connecting to: " << url.toString();
 		setState(State::Connecting);
-		connectToHost(QString::fromStdString(host()), port(), QString::fromStdString(scheme()));
+		connectToHost(url);
 	}
 }
 
@@ -336,7 +354,7 @@ void ClientConnection::onSocketConnectedChanged(bool is_connected)
 		setState(State::SocketConnected);
 		clearBuffers();
 		if(isSkipLoginPhase()) {
-			shvInfo() << "Connection scheme:" << scheme() << " is skipping login phase.";
+			shvInfo() << "Connection scheme:" << host() << " is skipping login phase.";
 			setState(State::BrokerConnected);
 		}
 		else {

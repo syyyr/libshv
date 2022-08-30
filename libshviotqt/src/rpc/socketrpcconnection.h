@@ -32,7 +32,7 @@ public:
 	bool hasSocket() const {return m_socket != nullptr;}
 	void setProtocolTypeAsInt(int v) {shv::chainpack::RpcDriver::setProtocolType((shv::chainpack::Rpc::ProtocolType)v);}
 
-	void connectToHost(const QString &host_name, quint16 port, const QString &scheme = {});
+	void connectToHost(const QUrl &url);
 
 	Q_SIGNAL void rpcValueReceived(shv::chainpack::RpcValue rpc_val);
 	Q_SLOT void sendRpcValue(const shv::chainpack::RpcValue &rpc_val) {shv::chainpack::RpcDriver::sendRpcValue(rpc_val);}

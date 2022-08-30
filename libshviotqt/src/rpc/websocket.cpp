@@ -26,12 +26,8 @@ WebSocket::WebSocket(QWebSocket *socket, QObject *parent)
 #endif
 }
 
-void WebSocket::connectToHost(const QString &host_name, quint16 port, const QString &scheme)
+void WebSocket::connectToHost(const QUrl &url)
 {
-	QUrl url;
-	url.setScheme(scheme);
-	url.setHost(host_name);
-	url.setPort(port);
 	shvInfo() << "connecting to:" << url.toString();
 	m_socket->open(url);
 }

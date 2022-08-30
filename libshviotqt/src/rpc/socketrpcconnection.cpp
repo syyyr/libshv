@@ -102,9 +102,9 @@ void SocketRpcConnection::ignoreSslErrors()
 	m_socket->ignoreSslErrors();
 }
 
-void SocketRpcConnection::connectToHost(const QString &host_name, quint16 port, const QString &scheme)
+void SocketRpcConnection::connectToHost(const QUrl &url)
 {
-	socket()->connectToHost(host_name, port, scheme);
+	socket()->connectToHost(url);
 }
 
 void SocketRpcConnection::onReadyRead()

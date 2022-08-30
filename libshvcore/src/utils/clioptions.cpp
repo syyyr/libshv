@@ -4,11 +4,11 @@
 
 #include <shv/chainpack/cponreader.h>
 #include <shv/chainpack/rpcvalue.h>
+#include <shv/core/exception.h>
 /*
 #include <shv/core/log.h>
 #include <shv/core/utils.h>
 #include <shv/core/assert.h>
-#include <shv/core/exception.h>
 
 #include <std::stringBuilder>
 #include <StringList>

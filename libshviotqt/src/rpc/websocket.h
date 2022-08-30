@@ -17,7 +17,7 @@ class SHVIOTQT_DECL_EXPORT WebSocket : public Socket
 public:
 	WebSocket(QWebSocket *socket, QObject *parent = nullptr);
 
-	void connectToHost(const QString &host_name, quint16 port, const QString &scheme = {}) override;
+	void connectToHost(const QUrl &url) override;
 	void close() override;
 	void abort() override;
 	QAbstractSocket::SocketState state() const override;

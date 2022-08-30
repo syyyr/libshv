@@ -21,9 +21,14 @@ class SHVIOTQT_DECL_EXPORT Socket : public QObject
 {
 	Q_OBJECT
 public:
+	enum class Scheme { Shv = 0, ShvSecure, WebSocket, WebSocketSecure, SerialPort, LocalSocket };
+public:
 	explicit Socket(QObject *parent = nullptr);
 
-	virtual void connectToHost(const QString &host_name, quint16 port, const QString &scheme = {}) = 0;
+	static const char* schemeToString(Scheme schema);
+	static Scheme schemeFromString(const std::string &schema);
+
+	virtual void connectToHost(const QUrl &host_url) = 0;
 
 	virtual void close() = 0;
 	virtual void abort() = 0;
@@ -60,7 +65,7 @@ class SHVIOTQT_DECL_EXPORT TcpSocket : public Socket
 public:
 	TcpSocket(QTcpSocket *socket, QObject *parent = nullptr);
 
-	void connectToHost(const QString &host_name, quint16 port, const QString &scheme = {}) override;
+	void connectToHost(const QUrl &url) override;
 	void close() override;
 	void abort() override;
 	QAbstractSocket::SocketState state() const override;
@@ -86,7 +91,7 @@ class SHVIOTQT_DECL_EXPORT LocalSocket : public Socket
 public:
 	LocalSocket(QLocalSocket *socket, QObject *parent = nullptr);
 
-	void connectToHost(const QString &host_name, quint16 port, const QString &scheme = {}) override;
+	void connectToHost(const QUrl &url) override;
 	void close() override;
 	void abort() override;
 	QAbstractSocket::SocketState state() const override;
@@ -111,7 +116,7 @@ class SHVIOTQT_DECL_EXPORT SerialPortSocket : public Socket
 public:
 	SerialPortSocket(QSerialPort *port, QObject *parent = nullptr);
 
-	void connectToHost(const QString &host_name, quint16 port, const QString &scheme = {}) override;
+	void connectToHost(const QUrl &url) override;
 	void close() override;
 	void abort() override;
 	QAbstractSocket::SocketState state() const override { return m_state; }
@@ -140,7 +145,7 @@ class SHVIOTQT_DECL_EXPORT SslSocket : public TcpSocket
 public:
 	SslSocket(QSslSocket *socket, QSslSocket::PeerVerifyMode peer_verify_mode = QSslSocket::AutoVerifyPeer, QObject *parent = nullptr);
 
-	void connectToHost(const QString &host_name, quint16 port, const QString &scheme = {}) override;
+	void connectToHost(const QUrl &url) override;
 	void ignoreSslErrors() override;
 
 protected:

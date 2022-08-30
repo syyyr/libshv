@@ -25,33 +25,38 @@ class SHVIOTQT_DECL_EXPORT ClientConnection : public SocketRpcConnection
 	Q_OBJECT
 	using Super = SocketRpcConnection;
 
-	SHV_FIELD_IMPL(std::string, s, S, cheme)
+public:
+	//enum class SecurityType { None = 0, Ssl };
+	enum class State {NotConnected = 0, Connecting, SocketConnected, BrokerConnected, ConnectionError};
+
+	//SHV_FIELD_IMPL(Scheme, s, S, cheme)
+	//SHV_FIELD_IMPL(std::string, s, S, cheme)
 	SHV_FIELD_IMPL(std::string, u, U, ser)
 	SHV_FIELD_IMPL(std::string, h, H, ost)
-	SHV_FIELD_IMPL2(int, p, P, ort, shv::chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT_NONSECURED)
+	//SHV_FIELD_IMPL2(int, p, P, ort, shv::chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT_NONSECURED)
+	//SHV_FIELD_IMPL2(SecurityType, s, S, ecurityType, SecurityType::None)
 	SHV_FIELD_BOOL_IMPL2(p, P, eerVerify, true)
 	SHV_FIELD_BOOL_IMPL(s, S, kipLoginPhase)
 	SHV_FIELD_IMPL(std::string, p, P, assword)
 	SHV_FIELD_IMPL(shv::chainpack::IRpcConnection::LoginType, l, L, oginType)
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, c, C, onnectionOptions)
 	SHV_FIELD_IMPL2(int, h, H, eartBeatInterval, 60)
-public:
-	enum SecurityType { None = 0, Ssl = 1 };
 
-	static SecurityType securityTypeFromString(const std::string &val);
-	static std::string securityTypeToString(const SecurityType &security_type);
-
-	SecurityType securityType() const;
-	void setSecurityType(SecurityType type);
-	void setSecurityType(const std::string &val);
-	QUrl connectionUrl() const;
-public:
-	enum class State {NotConnected = 0, Connecting, SocketConnected, BrokerConnected, ConnectionError};
-	static const char* stateToString(State state);
 public:
 	explicit ClientConnection(QObject *parent = nullptr);
 	~ClientConnection() Q_DECL_OVERRIDE;
 
+	QUrl connectionUrl() const;
+	static QUrl connectionUrlFromString(const std::string &url_str);
+
+	//static SecurityType securityTypeFromString(const std::string &val);
+	//static std::string securityTypeToString(const SecurityType &security_type);
+
+	static const char* stateToString(State state);
+
+	//SecurityType securityType() const;
+	//void setSecurityType(SecurityType type);
+	//void setSecurityType(const std::string &val);
 	virtual void open();
 	void close() override { closeOrAbort(false); }
 	void abort() override { closeOrAbort(true); }
@@ -75,8 +80,6 @@ public:
 	const shv::chainpack::RpcValue::Map &loginResult() const { return m_connectionState.loginResult.toMap(); }
 
 	int brokerClientId() const;
-	//std::string brokerClientPath() const {return brokerClientPath(brokerClientId());}
-	//std::string brokerMountPoint() const;
 	void muteShvPathInLog(std::string shv_path);
 public:
 	/// AbstractRpcConnection interface implementation
@@ -118,7 +121,6 @@ private:
 	QTimer *m_checkBrokerConnectedTimer;
 	int m_checkBrokerConnectedInterval = 0;
 	QTimer *m_heartBeatTimer = nullptr;
-	SecurityType m_securityType = None;
 	std::vector<std::string> m_mutedShvPathsInLog;
 };
 

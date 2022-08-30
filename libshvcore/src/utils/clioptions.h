@@ -2,8 +2,6 @@
 
 #include "../shvcoreglobal.h"
 
-#include "../exception.h"
-
 #include <shv/chainpack/rpcvalue.h>
 
 #define CLIOPTION_QUOTE_ME(x) #x

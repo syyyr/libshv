@@ -23,6 +23,30 @@ Socket::Socket(QObject *parent)
 
 }
 
+const char * Socket::schemeToString(Scheme schema)
+{
+	switch (schema) {
+	case Scheme::Shv: return "shv";
+	case Scheme::ShvSecure: return "shvs";
+	case Scheme::WebSocket: return "ws";
+	case Scheme::WebSocketSecure: return "wss";
+	case Scheme::SerialPort: return "serialport";
+	case Scheme::LocalSocket: return "localsocket";
+	}
+	return "";
+}
+
+Socket::Scheme Socket::schemeFromString(const std::string &schema)
+{
+	if(schema == "shv") return Scheme::Shv;
+	if(schema == "shvs") return Scheme::ShvSecure;
+	if(schema == "ws") return Scheme::WebSocket;
+	if(schema == "wss") return Scheme::WebSocketSecure;
+	if(schema == "serialport") return Scheme::SerialPort;
+	if(schema == "localsocket") return Scheme::LocalSocket;
+	return Scheme::Shv;
+}
+
 //======================================================
 // TcpSocket
 //======================================================
@@ -44,9 +68,9 @@ TcpSocket::TcpSocket(QTcpSocket *socket, QObject *parent)
 #endif
 }
 
-void TcpSocket::connectToHost(const QString &host_name, quint16 port, const QString &)
+void TcpSocket::connectToHost(const QUrl &url)
 {
-	m_socket->connectToHost(host_name, port);
+	m_socket->connectToHost(url.host(), url.port());
 }
 
 void TcpSocket::close()
@@ -168,9 +192,10 @@ LocalSocket::LocalSocket(QLocalSocket *socket, QObject *parent)
 	});
 }
 
-void LocalSocket::connectToHost(const QString &host_name, quint16 , const QString &)
+void LocalSocket::connectToHost(const QUrl &url)
 {
-	m_socket->connectToServer(host_name);
+	//shvInfo() << "path:" << url.path();
+	m_socket->connectToServer(url.path());
 }
 
 void LocalSocket::close()
@@ -270,11 +295,11 @@ SerialPortSocket::SerialPortSocket(QSerialPort *port, QObject *parent)
 	});
 }
 
-void SerialPortSocket::connectToHost(const QString &host_name, quint16 , const QString &)
+void SerialPortSocket::connectToHost(const QUrl &url)
 {
 	abort();
 	setState(QAbstractSocket::ConnectingState);
-	m_port->setPortName(host_name);
+	m_port->setPortName(url.path());
 	if(m_port->open(QIODevice::ReadWrite)) {
 		setState(QAbstractSocket::ConnectedState);
 	}
@@ -357,12 +382,12 @@ SslSocket::SslSocket(QSslSocket *socket, QSslSocket::PeerVerifyMode peer_verify_
 	connect(socket, QOverload<const QList<QSslError> &>::of(&QSslSocket::sslErrors), this, &Socket::sslErrors);
 }
 
-void SslSocket::connectToHost(const QString &host_name, quint16 port, const QString &)
+void SslSocket::connectToHost(const QUrl &url)
 {
 	QSslSocket *ssl_socket = qobject_cast<QSslSocket *>(m_socket);
 	ssl_socket->setPeerVerifyMode(m_peerVerifyMode);
-	shvDebug() << "connectToHostEncrypted" << "host:" << host_name << "port:" << port;
-	ssl_socket->connectToHostEncrypted(host_name, port);
+	shvDebug() << "connectToHostEncrypted" << "host:" << url.toString();
+	ssl_socket->connectToHostEncrypted(url.host(), url.port());
 }
 
 void SslSocket::ignoreSslErrors()

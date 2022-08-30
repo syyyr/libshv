@@ -30,8 +30,8 @@ void MasterBrokerConnection::setOptions(const shv::chainpack::RpcValue &slave_br
 
 		const cp::RpcValue::Map &server = m.value("server").toMap();
 		device_opts.setServerHost(server.value("host", "localhost").asString());
-		device_opts.setServerPort(server.value("port", shv::chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT_NONSECURED).toInt());
-		device_opts.setServerSecurityType(server.value("securityType", "none").asString());
+		//device_opts.setServerPort(server.value("port", shv::chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT_NONSECURED).toInt());
+		//device_opts.setServerSecurityType(server.value("securityType", "none").asString());
 		device_opts.setServerPeerVerify(server.value("peerVerify", true).toBool());
 
 		const cp::RpcValue::Map &login = m.value(cp::Rpc::KEY_LOGIN).toMap();
