@@ -1,10 +1,10 @@
 #include "clioptions.h"
 #include "../log.h"
 #include "../string.h"
+#include "../exception.h"
 
 #include <shv/chainpack/cponreader.h>
 #include <shv/chainpack/rpcvalue.h>
-#include <shv/core/exception.h>
 /*
 #include <shv/core/log.h>
 #include <shv/core/utils.h>
