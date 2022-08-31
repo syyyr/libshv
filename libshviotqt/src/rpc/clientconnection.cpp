@@ -196,7 +196,7 @@ void ClientConnection::open()
 		else {
 	#ifndef QT_NO_SSL
 			QSslSocket::PeerVerifyMode peer_verify_mode = isPeerVerify() ? QSslSocket::AutoVerifyPeer : QSslSocket::VerifyNone;
-			socket = scheme == Socket::Scheme::ShvSecure ? new SslSocket(new QSslSocket(), peer_verify_mode): new TcpSocket(new QTcpSocket());
+			socket = scheme == Socket::Scheme::Ssl ? new SslSocket(new QSslSocket(), peer_verify_mode): new TcpSocket(new QTcpSocket());
 	#else
 			socket = new TcpSocket(new QTcpSocket());
 	#endif

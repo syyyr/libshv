@@ -26,8 +26,8 @@ Socket::Socket(QObject *parent)
 const char * Socket::schemeToString(Scheme schema)
 {
 	switch (schema) {
-	case Scheme::Shv: return "shv";
-	case Scheme::ShvSecure: return "shvs";
+	case Scheme::Tcp: return "tcp";
+	case Scheme::Ssl: return "ssl";
 	case Scheme::WebSocket: return "ws";
 	case Scheme::WebSocketSecure: return "wss";
 	case Scheme::SerialPort: return "serialport";
@@ -38,13 +38,13 @@ const char * Socket::schemeToString(Scheme schema)
 
 Socket::Scheme Socket::schemeFromString(const std::string &schema)
 {
-	if(schema == "shv") return Scheme::Shv;
-	if(schema == "shvs") return Scheme::ShvSecure;
+	if(schema == "tcp") return Scheme::Tcp;
+	if(schema == "ssl") return Scheme::Ssl;
 	if(schema == "ws") return Scheme::WebSocket;
 	if(schema == "wss") return Scheme::WebSocketSecure;
 	if(schema == "serialport") return Scheme::SerialPort;
 	if(schema == "localsocket") return Scheme::LocalSocket;
-	return Scheme::Shv;
+	return Scheme::Tcp;
 }
 
 //======================================================

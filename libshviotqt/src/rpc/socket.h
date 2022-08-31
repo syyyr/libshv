@@ -21,7 +21,7 @@ class SHVIOTQT_DECL_EXPORT Socket : public QObject
 {
 	Q_OBJECT
 public:
-	enum class Scheme { Shv = 0, ShvSecure, WebSocket, WebSocketSecure, SerialPort, LocalSocket };
+	enum class Scheme { Tcp = 0, Ssl, WebSocket, WebSocketSecure, SerialPort, LocalSocket };
 public:
 	explicit Socket(QObject *parent = nullptr);
 
