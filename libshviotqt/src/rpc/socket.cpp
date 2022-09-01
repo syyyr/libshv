@@ -299,11 +299,14 @@ void SerialPortSocket::connectToHost(const QUrl &url)
 {
 	abort();
 	setState(QAbstractSocket::ConnectingState);
-	m_port->setPortName(url.path());
+	m_port->setPortName(url.path().section(':', 0, 0));
+	shvInfo() << "opening serial port:" << m_port->portName();
 	if(m_port->open(QIODevice::ReadWrite)) {
+		shvInfo() << "Ok";
 		setState(QAbstractSocket::ConnectedState);
 	}
 	else {
+		shvWarning() << "Error open serial port:" << m_port->portName() << m_port->errorString();
 		setState(QAbstractSocket::UnconnectedState);
 	}
 }
@@ -358,6 +361,10 @@ void SerialPortSocket::setState(QAbstractSocket::SocketState state)
 		return;
 	m_state = state;
 	emit stateChanged(m_state);
+	if(m_state == QAbstractSocket::SocketState::ConnectedState)
+		emit connected();
+	else if(m_state == QAbstractSocket::SocketState::UnconnectedState)
+		emit disconnected();
 }
 
 //======================================================
