@@ -343,7 +343,7 @@ void ClientConnection::whenBrokerConnectedChanged(bool b)
 
 void ClientConnection::emitInitPhaseError(const std::string &err)
 {
-	Q_EMIT brokerLoginError(err);
+	Q_EMIT brokerLoginError(QString::fromStdString(err));
 }
 
 void ClientConnection::onSocketConnectedChanged(bool is_connected)
