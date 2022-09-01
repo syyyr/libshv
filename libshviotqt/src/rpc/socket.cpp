@@ -303,6 +303,8 @@ void SerialPortSocket::connectToHost(const QUrl &url)
 	shvInfo() << "opening serial port:" << m_port->portName();
 	if(m_port->open(QIODevice::ReadWrite)) {
 		shvInfo() << "Ok";
+		// clear read buffer
+		m_port->readAll();
 		setState(QAbstractSocket::ConnectedState);
 	}
 	else {
