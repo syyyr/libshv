@@ -11,6 +11,7 @@ class QXmlStreamAttributes;
 class QGraphicsScene;
 class QGraphicsItem;
 class QGraphicsSimpleTextItem;
+class QGraphicsRectItem;
 class QGraphicsTextItem;
 class QAbstractGraphicsShapeItem;
 
@@ -43,6 +44,7 @@ public:
 	static QString point2str(QPointF r);
 	static QString rect2str(QRectF r);
 protected:
+	virtual QGraphicsRectItem *createRectItem(const SvgElement &el);
 	virtual QGraphicsItem *createGroupItem(const SvgElement &el);
 	virtual void installVisuController(QGraphicsItem *it, const SvgElement &el);
 	virtual void setXmlAttributes(QGraphicsItem *git, const SvgElement &el);

@@ -1021,7 +1021,7 @@ bool SaxHandler::startElement()
 	const SvgElement &el = m_elementStack.last();
 	if (!m_topLevelItem) {
 		if (el.name == QLatin1String("svg")) {
-			m_topLevelItem = new QGraphicsRectItem();
+			m_topLevelItem = createRectItem(el);
 			m_scene->addItem(m_topLevelItem);
 			return true;
 		}
@@ -1057,7 +1057,7 @@ bool SaxHandler::startElement()
 				return false;
 			}
 			else {
-				QGraphicsRectItem *item = new QGraphicsRectItem();
+				QGraphicsRectItem *item = createRectItem(el);
 				setXmlAttributes(item, el);
 				item->setRect(QRectF(x, y, w, h));
 				setStyle(item, el.styleAttributes);
@@ -1174,10 +1174,17 @@ bool SaxHandler::startElement()
 	}
 }
 
+QGraphicsRectItem *SaxHandler::createRectItem(const SvgElement &el)
+{
+	Q_UNUSED(el)
+	auto *item = new QGraphicsRectItem();
+	return item;
+}
+
 QGraphicsItem *SaxHandler::createGroupItem(const SaxHandler::SvgElement &el)
 {
 	Q_UNUSED(el)
-	QGraphicsItem *item = new GroupItem();
+	auto *item = new GroupItem();
 	return item;
 }
 
@@ -1444,9 +1451,12 @@ void SaxHandler::addItem(QGraphicsItem *it)
 			  << "pos:" << point2str(it->pos())
 			  << "bounding rect:" << rect2str(it->boundingRect());
 	if(QGraphicsItemGroup *grp = dynamic_cast<QGraphicsItemGroup*>(m_topLevelItem)) {
+		logSvgD() << "adding to group:" << typeid (*grp).name();
 		grp->addToGroup(it);
 	}
 	else {
+		if(m_topLevelItem)
+			logSvgD() << "adding to parent:" << typeid (*m_topLevelItem).name();
 		it->setParentItem(m_topLevelItem);
 	}
 	m_topLevelItem = it;
