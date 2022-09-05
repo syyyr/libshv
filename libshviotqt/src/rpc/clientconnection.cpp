@@ -60,55 +60,25 @@ QUrl ClientConnection::connectionUrl() const
 
 QUrl ClientConnection::connectionUrlFromString(const std::string &url_str)
 {
+	//{
+	//	QUrl url("127.0.0.1:80");
+	//	shvInfo() << "------------ url:" << url.toString();
+	//	shvInfo() << "url scheme:" << url.scheme();
+	//	shvInfo() << "url host:" << url.host();
+	//	shvInfo() << "url port:" << url.port();
+	//	shvInfo() << "url path:" << url.path();
+	//	shvInfo() << "url query:" << url.query();
+	//}
 	QString qurl_str = QString::fromStdString(url_str);
 	QUrl url(qurl_str);
-	if(!url.scheme().isEmpty() && url.host().isEmpty()) {
-		bool ok;
-		url.path().toInt(&ok);
-		if(ok) {
-			// fix special case like localhost:3755
-			// where url prarses localhost as scheme
-			// and port as path
-			// if path is number, then scheme is actually host
-			// add scheme "shv"
-			url = QUrl("shv://" + qurl_str);
-		}
+	if(!url.scheme().isEmpty() && url.host().isEmpty() && !url.path().isEmpty()) {
+		// fix special case like 127.0.0.1 or localhost:3755 which are from the URL point of view
+		// considered to be paths
+		url = QUrl(Socket::schemeToString(Socket::Scheme::Tcp) + QStringLiteral("://") + qurl_str);
 	}
 	return url;
 }
 
-/*
-ClientConnection::SecurityType ClientConnection::securityTypeFromString(const std::string &val)
-{
-	return val == "ssl" ? SecurityType::Ssl : SecurityType::None;
-}
-
-std::string ClientConnection::securityTypeToString(const SecurityType &security_type)
-{
-	switch (security_type) {
-	case SecurityType::None:
-		return "none";
-	case SecurityType::Ssl:
-		return "ssl";
-	}
-	return std::string();
-}
-
-ClientConnection::SecurityType ClientConnection::securityType() const
-{
-	return m_securityType;
-}
-
-void ClientConnection::setSecurityType(SecurityType type)
-{
-	m_securityType = type;
-}
-
-void ClientConnection::setSecurityType(const std::string &val)
-{
-	m_securityType = securityTypeFromString(val);
-}
-*/
 void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 {
 	if(!cli_opts)
