@@ -71,7 +71,7 @@ QUrl ClientConnection::connectionUrlFromString(const std::string &url_str)
 	//}
 	QString qurl_str = QString::fromStdString(url_str);
 	QUrl url(qurl_str);
-	if(!url.scheme().isEmpty() && url.host().isEmpty() && !url.path().isEmpty()) {
+	if(url.scheme().isEmpty() && url.host().isEmpty() && !url.path().isEmpty()) {
 		// fix special case like 127.0.0.1 or localhost:3755 which are from the URL point of view
 		// considered to be paths
 		url = QUrl(Socket::schemeToString(Socket::Scheme::Tcp) + QStringLiteral("://") + qurl_str);
