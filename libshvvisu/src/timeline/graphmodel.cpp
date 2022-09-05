@@ -228,9 +228,9 @@ void GraphModel::appendValue(int channel, Sample &&sample)
 					 << sample.time << shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(sample.time).toIsoString();
 		return;
 	}
-	if (!samples.isEmpty() &&
-		channelInfo(channel).typeDescr.sampleType() == shv::core::utils::ShvTypeDescr::SampleType::Continuous &&
-		samples.last().value == sample.value) {
+	if (!samples.isEmpty()
+			&& channelInfo(channel).typeDescr.sampleType() == shv::core::utils::ShvTypeDescr::SampleType::Continuous
+			&& samples.last().value == sample.value) {
 		return;
 	}
 	//m_appendSince = qMin(sampleAt.time, m_appendSince);
@@ -254,6 +254,19 @@ void GraphModel::appendValueShvPath(const std::string &shv_path, Sample &&sample
 		}
 	}
 	appendValue(ch_ix, std::move(sample));
+}
+
+void GraphModel::forgetValuesBefore(timemsec_t time)
+{
+	for (int i = 0; i < m_samples.count(); ++i) {
+		auto &samples = m_samples[i];
+		while(!samples.isEmpty()) {
+			if(samples[0].time < time)
+				samples.takeFirst();
+			else
+				break;
+		}
+	}
 }
 
 int GraphModel::pathToChannelIndex(const std::string &path) const

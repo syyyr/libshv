@@ -1013,9 +1013,14 @@ QString Graph::durationToString(timemsec_t duration)
 	}
 }
 
+static QString rstr(const QRect &r)
+{
+	return QStringLiteral("[%1, %2](%3, %4)").arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
+}
+
 void Graph::makeLayout(const QRect &pref_rect)
 {
-	shvLogFuncFrame();
+	shvLogFuncFrame() << rstr(pref_rect);
 	clearMiniMapCache();
 
 	QSize graph_size;
@@ -1123,7 +1128,7 @@ void Graph::makeLayout(const QRect &pref_rect)
 		GraphChannel *ch = channelAt(i);
 		int line_width = u2px(ch->m_effectiveStyle.lineWidth());
 		ch->m_layout.graphDataGridRect = ch->m_layout.graphAreaRect.adjusted(0, line_width, 0, -line_width);
-
+		shvDebug() << "channel:" << i << "graphDataGridRect:" << rstr(ch->m_layout.graphDataGridRect);
 		// place buttons
 		GraphButtonBox *bbx = ch->buttonBox();
 		if(bbx) {
@@ -1142,6 +1147,7 @@ void Graph::makeLayout(const QRect &pref_rect)
 	shvDebug() << "\tw:" << graph_size.width() << "h:" << graph_size.height();
 	m_layout.rect = pref_rect;
 	m_layout.rect.setSize(graph_size);
+	shvDebug() << "m_layout.rect:" << rstr(m_layout.rect);
 
 	makeXAxis();
 	for (int i = visible_channels.count() - 1; i >= 0; --i)
@@ -1295,6 +1301,8 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 	bool draw_cross_hair_time_marker = false;
 	for (int i : visibleChannels()) {
 		const GraphChannel *ch = channelAt(i);
+		//shvInfo() << "dirty rect:" << rstr(dirty_rect);
+		//shvInfo() << "chann rect:" << rstr(ch->graphAreaRect());
 		if(dirty_rect.intersects(ch->graphAreaRect())) {
 			drawBackground(painter, i);
 			drawGrid(painter, i);

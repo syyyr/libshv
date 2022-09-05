@@ -64,6 +64,7 @@ public:
 	virtual void endAppendValues();
 	virtual void appendValue(int channel, Sample &&sample);
 	void appendValueShvPath(const std::string &shv_path, Sample &&sample);
+	void forgetValuesBefore(timemsec_t time);
 
 	int pathToChannelIndex(const std::string &path) const;
 	QString channelShvPath(int channel) const { return channelInfo(channel).shvPath; }
