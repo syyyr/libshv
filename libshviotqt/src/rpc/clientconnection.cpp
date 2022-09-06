@@ -60,23 +60,47 @@ QUrl ClientConnection::connectionUrl() const
 
 QUrl ClientConnection::connectionUrlFromString(const std::string &url_str)
 {
-	//{
-	//	QUrl url("127.0.0.1:80");
-	//	shvInfo() << "------------ url:" << url.toString();
-	//	shvInfo() << "url scheme:" << url.scheme();
-	//	shvInfo() << "url host:" << url.host();
-	//	shvInfo() << "url port:" << url.port();
-	//	shvInfo() << "url path:" << url.path();
-	//	shvInfo() << "url query:" << url.query();
-	//}
+	static QVector<QString> known_schemes {
+		Socket::schemeToString(Socket::Scheme::Tcp),
+				Socket::schemeToString(Socket::Scheme::Ssl),
+				Socket::schemeToString(Socket::Scheme::WebSocket),
+				Socket::schemeToString(Socket::Scheme::WebSocketSecure),
+				Socket::schemeToString(Socket::Scheme::SerialPort),
+				Socket::schemeToString(Socket::Scheme::LocalSocket),
+	};
 	QString qurl_str = QString::fromStdString(url_str);
 	QUrl url(qurl_str);
-	if(url.scheme().isEmpty() && url.host().isEmpty() && !url.path().isEmpty()) {
-		// fix special case like 127.0.0.1 or localhost:3755 which are from the URL point of view
-		// considered to be paths
+	if(!known_schemes.contains(url.scheme())) {
 		url = QUrl(Socket::schemeToString(Socket::Scheme::Tcp) + QStringLiteral("://") + qurl_str);
 	}
 	return url;
+}
+
+void ClientConnection::tst_connectionUrlFromString()
+{
+	for(const auto &[u1, u2] : {
+		std::tuple<string, string>("localhost"s, "tcp://localhost"s),
+		std::tuple<string, string>("localhost:80"s, "tcp://localhost:80"s),
+		std::tuple<string, string>("127.0.0.1"s, "tcp://127.0.0.1"s),
+		std::tuple<string, string>("127.0.0.1:80"s, "tcp://127.0.0.1:80"s),
+		std::tuple<string, string>("jessie.elektroline.cz"s, "tcp://jessie.elektroline.cz"s),
+		std::tuple<string, string>("jessie.elektroline.cz:80"s, "tcp://jessie.elektroline.cz:80"s),
+	}) {
+		QUrl url1 = connectionUrlFromString(u1);
+		QUrl url2(QString::fromStdString(u2));
+		shvInfo() << url1.toString() << "vs" << url2.toString() << "host:" << url1.host() << "port:" << url1.port();
+		shvInfo() << "url scheme:" << url1.scheme();
+		shvInfo() << "url host:" << url1.host();
+		shvInfo() << "url port:" << url1.port();
+		shvInfo() << "url path:" << url1.path();
+		shvInfo() << "url query:" << url1.query();
+		if(url1 == url2) {
+			shvInfo() << "OK";
+		}
+		else {
+			shvError() << "FAIL";
+		}
+	}
 }
 
 void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
