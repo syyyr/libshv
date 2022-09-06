@@ -256,15 +256,17 @@ void GraphModel::appendValueShvPath(const std::string &shv_path, Sample &&sample
 	appendValue(ch_ix, std::move(sample));
 }
 
-void GraphModel::forgetValuesBefore(timemsec_t time)
+void GraphModel::forgetValuesBefore(timemsec_t time, int min_samples_count)
 {
 	for (int i = 0; i < m_samples.count(); ++i) {
 		auto &samples = m_samples[i];
-		while(!samples.isEmpty()) {
-			if(samples[0].time < time)
-				samples.takeFirst();
-			else
+		int j;
+		for (j = 0; j < samples.count(); ++j) {
+			if(samples[j].time >= time)
 				break;
+		}
+		if(j >= min_samples_count) {
+			samples = samples.mid(j);
 		}
 	}
 }
