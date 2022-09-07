@@ -57,7 +57,7 @@ void MainWindow::generateSampleData()
 	m_graphModel->clear();
 	const vector<string>paths{"discrete", "stepped", "line", "withMissingData"};
 	for (const auto &ch : paths) {
-		m_graphModel->appendChannel(ch, std::string());
+		m_graphModel->appendChannel(ch, {}, {});
 	}
 	//m_graphModel->appendChannel("Discrete", std::string());
 
