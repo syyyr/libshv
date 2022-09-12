@@ -12,6 +12,7 @@
 
 #include <shv/chainpack/cponreader.h>
 #include <shv/chainpack/rpcmessage.h>
+#include <shv/chainpack/irpcconnection.h>
 
 #include <QTcpSocket>
 #include <QSslSocket>
@@ -73,17 +74,27 @@ QUrl ClientConnection::connectionUrlFromString(const std::string &url_str)
 	if(!known_schemes.contains(url.scheme())) {
 		url = QUrl(Socket::schemeToString(Socket::Scheme::Tcp) + QStringLiteral("://") + qurl_str);
 	}
+	if(url.port(0) == 0) {
+		auto scheme = Socket::schemeFromString(url.scheme().toStdString());
+		switch (scheme) {
+		case Socket::Scheme::Tcp: url.setPort(chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT_NONSECURED); break;
+		case Socket::Scheme::Ssl: url.setPort(chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT_SECURED); break;
+		case Socket::Scheme::WebSocket: url.setPort(chainpack::IRpcConnection::DEFAULT_RPC_BROKER_WEB_SOCKET_PORT_NONSECURED); break;
+		case Socket::Scheme::WebSocketSecure: url.setPort(chainpack::IRpcConnection::DEFAULT_RPC_BROKER_WEB_SOCKET_PORT_SECURED); break;
+		default: break;
+		}
+	}
 	return url;
 }
 
 void ClientConnection::tst_connectionUrlFromString()
 {
 	for(const auto &[u1, u2] : {
-		std::tuple<string, string>("localhost"s, "tcp://localhost"s),
+		std::tuple<string, string>("localhost"s, "tcp://localhost:3755"s),
 		std::tuple<string, string>("localhost:80"s, "tcp://localhost:80"s),
-		std::tuple<string, string>("127.0.0.1"s, "tcp://127.0.0.1"s),
+		std::tuple<string, string>("127.0.0.1"s, "tcp://127.0.0.1:3755"s),
 		std::tuple<string, string>("127.0.0.1:80"s, "tcp://127.0.0.1:80"s),
-		std::tuple<string, string>("jessie.elektroline.cz"s, "tcp://jessie.elektroline.cz"s),
+		std::tuple<string, string>("jessie.elektroline.cz"s, "tcp://jessie.elektroline.cz:3755"s),
 		std::tuple<string, string>("jessie.elektroline.cz:80"s, "tcp://jessie.elektroline.cz:80"s),
 	}) {
 		QUrl url1 = connectionUrlFromString(u1);

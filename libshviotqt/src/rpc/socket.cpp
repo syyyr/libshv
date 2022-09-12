@@ -1,6 +1,7 @@
 #include "socket.h"
 
 #include <shv/coreqt/log.h>
+#include <shv/chainpack/irpcconnection.h>
 
 #include <QHostAddress>
 #include <QSslConfiguration>
@@ -70,7 +71,8 @@ TcpSocket::TcpSocket(QTcpSocket *socket, QObject *parent)
 
 void TcpSocket::connectToHost(const QUrl &url)
 {
-	m_socket->connectToHost(url.host(), url.port());
+	auto port = url.port(chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT_NONSECURED);
+	m_socket->connectToHost(url.host(), port);
 }
 
 void TcpSocket::close()
@@ -396,7 +398,8 @@ void SslSocket::connectToHost(const QUrl &url)
 	QSslSocket *ssl_socket = qobject_cast<QSslSocket *>(m_socket);
 	ssl_socket->setPeerVerifyMode(m_peerVerifyMode);
 	shvDebug() << "connectToHostEncrypted" << "host:" << url.toString();
-	ssl_socket->connectToHostEncrypted(url.host(), url.port());
+	auto port = url.port(chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT_SECURED);
+	ssl_socket->connectToHostEncrypted(url.host(), port);
 }
 
 void SslSocket::ignoreSslErrors()
