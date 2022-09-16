@@ -38,6 +38,7 @@ UserLogin UserLoginContext::userLogin() const
 const char* UserLogin::loginTypeToString(UserLogin::LoginType t)
 {
 	switch(t) {
+	case LoginType::None: return "NONE";
 	case LoginType::Plain: return "PLAIN";
 	case LoginType::Sha1: return "SHA1";
 	case LoginType::RsaOaep: return "RSAOAEP";
@@ -47,6 +48,8 @@ const char* UserLogin::loginTypeToString(UserLogin::LoginType t)
 
 UserLogin::LoginType UserLogin::loginTypeFromString(const std::string &s)
 {
+	if(str_eq(s, loginTypeToString(LoginType::None)))
+		return LoginType::None;
 	if(str_eq(s, loginTypeToString(LoginType::Plain)))
 		return LoginType::Plain;
 	if(str_eq(s, loginTypeToString(LoginType::Sha1)))

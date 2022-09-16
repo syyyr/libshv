@@ -358,7 +358,7 @@ void ClientConnection::onSocketConnectedChanged(bool is_connected)
 		shvInfo() << "peer:" << peerAddress() << "port:" << peerPort();
 		setState(State::SocketConnected);
 		clearBuffers();
-		if(isSkipLoginPhase()) {
+		if(loginType() == LoginType::None) {
 			shvInfo() << "Connection scheme:" << host() << " is skipping login phase.";
 			setState(State::BrokerConnected);
 		}

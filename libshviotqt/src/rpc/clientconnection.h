@@ -31,7 +31,7 @@ public:
 	SHV_FIELD_IMPL(std::string, u, U, ser)
 	SHV_FIELD_IMPL(std::string, h, H, ost)
 	SHV_FIELD_BOOL_IMPL2(p, P, eerVerify, true)
-	SHV_FIELD_BOOL_IMPL(s, S, kipLoginPhase)
+	//SHV_FIELD_BOOL_IMPL(s, S, kipLoginPhase)
 	SHV_FIELD_IMPL(std::string, p, P, assword)
 	SHV_FIELD_IMPL(shv::chainpack::IRpcConnection::LoginType, l, L, oginType)
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, c, C, onnectionOptions)

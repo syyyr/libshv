@@ -43,7 +43,7 @@ struct SHVCHAINPACK_DECL_EXPORT UserLoginResult
 struct SHVCHAINPACK_DECL_EXPORT UserLogin
 {
 public:
-	enum class LoginType {Invalid = 0, Plain, Sha1, RsaOaep};
+	enum class LoginType {Invalid = 0, Plain, Sha1, RsaOaep, None};
 
 	std::string user;
 	std::string password;

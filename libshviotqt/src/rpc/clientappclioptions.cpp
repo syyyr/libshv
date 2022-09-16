@@ -15,7 +15,7 @@ ClientAppCliOptions::ClientAppCliOptions()
 	addOption("login.user").setType(cp::RpcValue::Type::String).setNames("-u", "--user").setComment("Login user");
 	addOption("login.password").setType(cp::RpcValue::Type::String).setNames("--password").setComment("Login password");
 	addOption("login.passwordFile").setType(cp::RpcValue::Type::String).setNames("--password-file").setComment("Login password file");
-	addOption("login.type").setType(cp::RpcValue::Type::String).setNames("--lt", "--login-type").setComment("Login type [PLAIN | SHA1 | RSAOAEP]").setDefaultValue("SHA1");
+	addOption("login.type").setType(cp::RpcValue::Type::String).setNames("--lt", "--login-type").setComment("Login type [NONE | PLAIN | SHA1 | RSAOAEP]").setDefaultValue("SHA1");
 	//addOption("server.scheme").setType(cp::RpcValue::Type::String).setNames("-c", "--server-schema").setComment("server scheme").setDefaultValue("shv")
 	//		.setComment("Schemes supported currently: shv, shvs, ws, wss, serialport, localsocket");
 	addOption("server.host").setType(cp::RpcValue::Type::String).setNames("-s", "--server-host").setComment("server host").setDefaultValue("localhost");
