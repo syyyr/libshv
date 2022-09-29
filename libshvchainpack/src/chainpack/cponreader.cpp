@@ -198,9 +198,13 @@ RpcValue CponReader::readFile(const std::string &file_name, std::string *error)
 		CponReader rd(ifs);
 		return rd.read(error);
 	}
-	std::string err_msg = "Cannot open file " + file_name + " for reading";
-	if(error)
-		*error = err_msg;
+	else {
+		std::string err_msg = "Cannot open file " + file_name + " for reading";
+		if(error)
+			*error = err_msg;
+		else
+			throw shv::chainpack::Exception(err_msg);
+	}
 	return {};
 }
 
