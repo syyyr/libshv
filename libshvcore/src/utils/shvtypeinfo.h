@@ -37,7 +37,10 @@ class SHVCORE_DECL_EXPORT ShvFieldDescr : public ShvTypeDescrBase
 	using Super = ShvTypeDescrBase;
 public:
 	ShvFieldDescr() {}
-	ShvFieldDescr(const std::string &n, const std::string &type_name = std::string(), const chainpack::RpcValue &v = chainpack::RpcValue());
+	ShvFieldDescr(const std::string &n,
+				  const std::string &type_name = {},
+				  const chainpack::RpcValue &value = {},
+				  chainpack::RpcValue::Map &&tags = {});
 
 	std::string name() const;
 	std::string typeName() const;
@@ -84,14 +87,9 @@ public:
 
 	ShvTypeDescr() {}
 	ShvTypeDescr(const std::string &type_name) : ShvTypeDescr(typeFromString(type_name)) {}
-	ShvTypeDescr(Type t, SampleType st = SampleType::Continuous)
-		: ShvTypeDescr(t, std::vector<ShvFieldDescr>(), st) {}
-	ShvTypeDescr(Type t, std::vector<ShvFieldDescr> &&flds, SampleType st = SampleType::Continuous)
-	{
-		setType(t);
-		setFields(flds);
-		setSampleType(st);
-	}
+	ShvTypeDescr(Type t, SampleType st = SampleType::Continuous, chainpack::RpcValue::Map &&tags = {})
+		: ShvTypeDescr(t, std::vector<ShvFieldDescr>(), st, std::move(tags)) {}
+	ShvTypeDescr(Type t, std::vector<ShvFieldDescr> &&flds, SampleType st = SampleType::Continuous, chainpack::RpcValue::Map &&tags = {});
 
 	Type type() const;
 	ShvTypeDescr& setType(Type t);
@@ -127,6 +125,7 @@ class SHVCORE_DECL_EXPORT ShvNodeDescr : public ShvTypeDescrBase
 	using Super = ShvTypeDescrBase;
 public:
 	ShvNodeDescr() {}
+	ShvNodeDescr(const std::string &type_name) { setTypeName(type_name); }
 
 	std::string typeName() const;
 	ShvNodeDescr &setTypeName(const std::string &type_name);

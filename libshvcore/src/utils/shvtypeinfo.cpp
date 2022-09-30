@@ -69,8 +69,9 @@ void ShvTypeDescrBase::mergeTags(chainpack::RpcValue::Map &map)
 //=====================================================================
 // ShvTypeDescrField
 //=====================================================================
-ShvFieldDescr::ShvFieldDescr(const std::string &name, const std::string &type_name, const chainpack::RpcValue &value)
+ShvFieldDescr::ShvFieldDescr(const std::string &name, const std::string &type_name, const chainpack::RpcValue &value, chainpack::RpcValue::Map &&tags)
 {
+	setData(std::move(tags));
 	setDataValue(KEY_NAME, name);
 	setDataValue(KEY_TYPE_NAME, type_name);
 	setDataValue(KEY_VALUE, value);
@@ -184,6 +185,14 @@ uint64_t ShvFieldDescr::setBitfieldValue(uint64_t bitfield, uint64_t uval) const
 //=====================================================================
 // ShvTypeDescr
 //=====================================================================
+ShvTypeDescr::ShvTypeDescr(Type t, std::vector<ShvFieldDescr> &&flds, SampleType st, chainpack::RpcValue::Map &&tags)
+{
+	m_data = RpcValue(move(tags));
+	setType(t);
+	setFields(flds);
+	setSampleType(st);
+}
+
 ShvTypeDescr::Type ShvTypeDescr::type() const
 {
 	return static_cast<Type>(dataValue(KEY_TYPE).toInt());

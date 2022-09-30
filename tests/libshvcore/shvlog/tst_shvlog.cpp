@@ -46,7 +46,7 @@ const string JOURNAL_DIR = TEST_DIR + "/journal";
 
 struct Channel
 {
-	ShvLogTypeInfo typeInfo;
+	ShvTypeInfo typeInfo;
 	string domain;
 	DataChange::ValueFlags valueFlags = 0;
 	int minVal = 0;
@@ -70,7 +70,7 @@ void snapshot_fn(std::vector<ShvJournalEntry> &ev)
 	}
 }
 */
-ShvLogTypeInfo typeInfo
+ShvTypeInfo typeInfo
 {
 	// types
 	{
@@ -79,10 +79,6 @@ ShvLogTypeInfo typeInfo
 			{
 				ShvLogTypeDescr::Type::Decimal,
 				ShvLogTypeDescr::SampleType::Continuous,
-				{
-					{ShvLogTypeDescr::OPT_MIN_VAL, RpcValue::Decimal(0, -2)},
-					{ShvLogTypeDescr::OPT_MIN_VAL, RpcValue::Decimal(10000, -2)},
-				},
 			}
 		},
 		{
@@ -91,8 +87,8 @@ ShvLogTypeInfo typeInfo
 				ShvLogTypeDescr::Type::Int,
 				ShvLogTypeDescr::SampleType::Continuous,
 				{
-					{ShvLogTypeDescr::OPT_MIN_VAL, RpcValue{0}},
-					{ShvLogTypeDescr::OPT_MIN_VAL, RpcValue{100}},
+					{"minVal", 0},
+					{"maxVal", 100},
 				},
 			}
 		},
@@ -101,9 +97,9 @@ ShvLogTypeInfo typeInfo
 			{
 				ShvLogTypeDescr::Type::BitField,
 				{
-					{"Active", 0},
-					{"LastDir", "UInt", RpcValue::List{1,2}, "N,L,R,S"},
-					{"CommError", 3},
+					{"Active", "Bool", 0},
+					{"LastDir", "UInt", RpcValue::List{1,2}, {{"description", "N,L,R,S"}}},
+					{"CommError", "Bool", 3},
 				},
 			}
 		},
@@ -113,7 +109,7 @@ ShvLogTypeInfo typeInfo
 				ShvLogTypeDescr::Type::Map,
 				{
 					{"vehicleId", "UInt"},
-					{"dir", "String", RpcValue::List{"", "L", "R", "S"}},
+					{"dir", "String", {}, {{"description", "N,L,R,S"}}},
 					{"CommError", "Bool"},
 				},
 				ShvLogTypeDescr::SampleType::Discrete
@@ -152,7 +148,6 @@ private:
 			qDebug() << "------------- Generating log files";
 			auto msec = RpcValue::DateTime::now().msecsSinceEpoch();
 			int64_t msec_start = msec;
-			int64_t msec_middle;
 			std::random_device randev;
 			std::mt19937 mt(randev());
 			std::uniform_int_distribution<int> rndmsec(0, 2000);
@@ -160,7 +155,6 @@ private:
 			bool some_error = false;
 			constexpr int CNT = 30000;
 			for(int j=0; j<2; ++j) {
-				msec_middle = msec;
 				file_journal.clearSnapshot();
 				file_journal.createNewLogFile(msec);
 				for (int i = 0; i < CNT; ++i) {
@@ -225,40 +219,21 @@ private:
 					write_cpon_file(fn2, log1);
 				}
 				int cnt = 0;
+				ShvJournalEntry first_entry;
+				ShvJournalEntry last_entry;
 				ShvLogFileReader rd(fn);
 				while(rd.next()) {
-					//rd.entry();
+					last_entry = rd.entry();
+					if(cnt == 0)
+						first_entry = last_entry;
 					cnt++;
 				}
+				QVERIFY(rd.logHeader().since().toDateTime().msecsSinceEpoch() == first_entry.epochMsec);
+				QVERIFY(rd.logHeader().until().toDateTime().msecsSinceEpoch() == last_entry.epochMsec);
 				QVERIFY(cnt == rd.logHeader().recordCount());
 				QVERIFY(cnt == (int)log1.toList().size());
 			}
-			qDebug() << "------------- testing getlog() file merge snapshot erasure";
-			{
-				ShvGetLogParams params;
-				params.withSnapshot = true;
-				params.withPathsDict = false;
-				params.since = RpcValue::DateTime::fromMSecsSinceEpoch(msec_middle - 100);
-				params.until = RpcValue::DateTime::fromMSecsSinceEpoch(msec_middle + 100);
-				qDebug() << "\t params:" << params.toRpcValue().toCpon();
-				RpcValue log1 = file_journal.getLog(params);
-				{
-					string fn2 = TEST_DIR + "/log-merged.cpon";
-					qDebug() << "\t file:" << fn2;
-					write_cpon_file(fn2, log1);
-				}
-				std::vector<bool> some_errors;
-				ShvLogRpcValueReader rd(log1);
-				while(rd.next()) {
-					const ShvJournalEntry &e = rd.entry();
-					if(e.path == "someError") {
-						qDebug() << "\t e:" << e.toRpcValue().toCpon();
-						some_errors.push_back(e.value.toBool());
-					}
-				}
-				std::vector<bool> v = {true, false};
-				QCOMPARE(some_errors, v);
-			}
+
 			qDebug() << "------------- testing getlog() filtered";
 			{
 				ShvGetLogParams params;
@@ -292,6 +267,8 @@ private:
 					//shvWarning() << "entry:" << e.toRpcValueMap().toCpon();
 					QVERIFY(e.isSnapshotValue());
 					QVERIFY(!e.isSpontaneous());
+					QVERIFY(rd.logHeader().since().toDateTime().msecsSinceEpoch() == e.epochMsec);
+					QVERIFY(rd.logHeader().until().toDateTime().msecsSinceEpoch() == e.epochMsec);
 				}
 			}
 			qDebug() << "------------- testing SINCE_LAST filtered";
@@ -304,28 +281,6 @@ private:
 				RpcValue log1 = file_journal.getLog(params);
 				//someError is false in last log file, so it should not be in snapshot
 				QVERIFY(log1.asList().empty());
-			}
-			qDebug() << "------------- testing since middle msec";
-			NecroLog::setTopicsLogTresholds("ShvJournal:D");
-			{
-				ShvGetLogParams params;
-				params.withSnapshot = true;
-				params.withPathsDict = false;
-				params.since = RpcValue::DateTime::fromMSecsSinceEpoch(msec_middle - 1);
-				params.pathPattern = "someError";
-				RpcValue log1 = file_journal.getLog(params);
-				write_cpon_file(TEST_DIR + "/log1-since-middle.cpon", log1);
-				int cnt = 0;
-				ShvLogRpcValueReader rd(log1);
-				while(rd.next()) {
-					const ShvJournalEntry &e = rd.entry();
-					//shvWarning() << "entry:" << e.toRpcValueMap().toCpon();
-					QVERIFY(!e.isSpontaneous());
-					QVERIFY(e.path == "someError");
-					QVERIFY(e.value == (cnt == 0)? true: false);
-					cnt++;
-				}
-				QVERIFY(cnt == 2);
 			}
 
 			qDebug() << "------------- Generating dirty log + memory log";
@@ -419,7 +374,7 @@ private:
 						mmj.append(e1);
 					}
 				}
-				for(auto e : mmj.entries()) {
+				for(const auto &e : mmj.entries()) {
 					QVERIFY(e.path.find("vetra") != string::npos);
 				}
 			}
