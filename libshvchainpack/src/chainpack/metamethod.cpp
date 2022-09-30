@@ -21,6 +21,8 @@ MetaMethod MetaMethod::fromRpcValue(const RpcValue &rv)
 {
 	MetaMethod ret;
 	RpcValue::Map map = rv.asMap();
+	RpcValue::Map tags = map.take("tags").asMap();
+	map.merge(tags);
 	ret.m_name = map.take("name").asString();
 	ret.m_signature = (Signature)map.take("signature").toInt();
 	ret.m_flags = map.take("flags").toUInt();

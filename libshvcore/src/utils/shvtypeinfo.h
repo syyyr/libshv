@@ -22,8 +22,10 @@ public:
 	ShvTypeDescrBase(const chainpack::RpcValue &v) : m_data(v) {}
 
 	bool isValid() const { return m_data.isMap(); }
-protected:
 	chainpack::RpcValue dataValue(const std::string &key, const chainpack::RpcValue &default_val = {}) const;
+
+	bool operator==(const ShvTypeDescrBase &o) const { return m_data == o.m_data; }
+protected:
 	void setDataValue(const std::string &key, const chainpack::RpcValue &val);
 
 	void setData(const chainpack::RpcValue &data);
