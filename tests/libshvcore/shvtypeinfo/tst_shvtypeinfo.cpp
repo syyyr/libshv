@@ -76,10 +76,14 @@ private:
 		QVERIFY(type_info.nodeDescriptionForDevice("TC_G3", "").dataValue("deviceType") == "TC_G3");
 		QVERIFY(type_info.nodeDescriptionForDevice("Zone_G3", "").dataValue("deviceType") == "Zone_G3");
 		QVERIFY(type_info.nodeDescriptionForDevice("TC_G3", "status").typeName() == "StatusTC");
+		QVERIFY(type_info.nodeDescriptionForDevice("Route_G3", "status").typeName() == "StatusRoute");
+		QVERIFY(type_info.nodeDescriptionForPath("devices/zone/langevelden/route/AB/status").typeName() == "StatusRoute");
+		QVERIFY(type_info.nodeDescriptionForPath("devices/zone/langevelden/route/DC/status").typeName() == "StatusRoute");
 		QVERIFY(type_info.nodeDescriptionForDevice("SignalSymbol_G3", "status").typeName() == "StatusSignalSymbol");
-		QVERIFY(type_info.nodeDescriptionForDevice("SignalSymbol_G3@1", "status").typeName() == "StatusSignalSymbolWhite");
-		QVERIFY(type_info.nodeDescriptionForDevice("SignalSymbol_G3@2", "status").typeName() == "StatusSignalSymbolP80Y");
-		QVERIFY(type_info.nodeDescriptionForDevice("SignalSymbol_G3@3", "status").typeName() == "");
+		QVERIFY(type_info.nodeDescriptionForPath("devices/signal/SA04/symbol/WHITE/status").typeName() == "StatusSignalSymbolWhite");
+		QVERIFY(type_info.nodeDescriptionForPath("devices/signal/SG01/symbol/P80Y/status").typeName() == "StatusSignalSymbolP80Y");
+		auto et = type_info.extraTagsForPath("devices/tc/TC04");
+		QVERIFY(et.asMap().value("brclab").asMap().value("url").asString() == "brclab://192.168.1.10:4000/4");
 	}
 private slots:
 	void initTestCase()

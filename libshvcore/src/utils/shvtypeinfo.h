@@ -177,6 +177,7 @@ public:
 	ShvNodeDescr nodeDescriptionForDevice(const std::string &device_type, const std::string &property_path, std::string *p_field_name = nullptr) const;
 	ShvTypeDescr typeDescriptionForName(const std::string &type_name) const;
 	ShvTypeDescr typeDescriptionForPath(const std::string &shv_path) const;
+	shv::chainpack::RpcValue extraTagsForPath(const std::string &shv_path) const;
 	std::string findSystemPath(const std::string &shv_path) const;
 
 	chainpack::RpcValue typesAsRpcValue() const;
@@ -186,7 +187,8 @@ public:
 	shv::chainpack::RpcValue applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums = true) const;
 	shv::chainpack::RpcValue applyTypeDescription(const shv::chainpack::RpcValue &val, const ShvTypeDescr &type_descr, bool translate_enums = true) const;
 
-	void forEachNodeDescription(const std::string &node_descr_root, std::function<void (const std::string &property_path, const ShvNodeDescr &node_descr)> fn) const;
+	// removed because it is not implemented correctly
+	//void forEachNodeDescription(const std::string &node_descr_root, std::function<void (const std::string &property_path, const ShvNodeDescr &node_descr)> fn) const;
 	void forEachNode(std::function<void (const std::string &shv_path, const ShvNodeDescr &node_descr)> fn) const;
 private:
 	static ShvTypeInfo fromNodesTree(const chainpack::RpcValue &v);
