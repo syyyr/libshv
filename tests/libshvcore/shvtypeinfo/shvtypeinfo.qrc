@@ -1,6 +1,0 @@
-<RCC>
-	<qresource prefix="/test/libshvcore/shvtypeinfo">
-
-		<file>files/nodesTree.cpon</file>
-	</qresource>
-</RCC>

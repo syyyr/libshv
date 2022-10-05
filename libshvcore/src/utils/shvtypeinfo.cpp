@@ -842,20 +842,34 @@ RpcValue ShvTypeInfo::applyTypeDescription(const chainpack::RpcValue &val, const
 	shvError() << "Invalid type:" << (int)type_descr.type();
 	return val;
 }
-/*
-void ShvTypeInfo::forEachNodeDescription(const std::string &node_descr_root, std::function<void (const std::string &, const ShvLogNodeDescr &)> fn) const
+
+void ShvTypeInfo::forEachDeviceProperty(const std::string &device_path, std::function<void (const std::string &, const ShvLogNodeDescr &)> fn) const
 {
-	ShvPath::forEachDirAndSubdirs(nodeDescriptions(), node_descr_root, [=](auto it) {
-		string property_path = it->first;
-		assert(property_path.size() >= node_descr_root.size());
-		property_path = property_path.substr(node_descr_root.size());
-		if(property_path.size() > 0 && property_path[0] == '/')
-			property_path = property_path.substr(1);
-		const ShvLogNodeDescr &node_descr = it->second;
-		fn(property_path, node_descr);
-	});
+	if(auto it = m_devicePaths.find(device_path); it == m_devicePaths.end()) {
+		// device path invalid
+		return;
+	}
+	else {
+		auto device_type = it->second;
+		ShvPath::forEachDirAndSubdirs(nodeDescriptions(), device_type, [=](auto it_nd) {
+			string property_path = it->first;
+			property_path = property_path.substr(device_type.size());
+			if(property_path.size() > 0 && property_path[0] == '/')
+				property_path = property_path.substr(1);
+			string full_path = shv::core::Utils::joinPath(device_path, property_path);
+			if(auto it2 = m_nodeDescriptions.find(full_path); it2 == m_nodeDescriptions.end()) {
+				// overlay does not exist
+				const ShvLogNodeDescr &node_descr = it_nd->second;
+				fn(property_path, node_descr);
+			}
+			else {
+				const ShvLogNodeDescr &node_descr = it2->second;
+				fn(property_path, node_descr);
+			}
+		});
+	}
 }
-*/
+
 void ShvTypeInfo::forEachNode(std::function<void (const std::string &shv_path, const ShvLogNodeDescr &node_descr)> fn) const
 {
 	map<string, vector<string>> device_type_to_path;
@@ -932,25 +946,27 @@ void fromNodesTree_helper(shv::core::utils::ShvTypeInfo &type_info,
 	if(!property_descr.empty()) {
 		RpcValue::Map extra_tags;
 		auto node_descr = shv::core::utils::ShvLogNodeDescr::fromRpcValue(property_descr, &extra_tags);
-		if(current_device_type.empty()) {
-			type_info.setNodeDescription(node_descr, shv_path, {});
-		}
-		else {
-			string node_path = String(shv_path).mid(current_device_path.size() + 1);
-			string path_rest;
-			auto existing_node_descr = type_info.nodeDescriptionForDevice(current_device_type, node_path, &path_rest);
-			if(existing_node_descr.isValid() && path_rest.empty()) {
-				if(existing_node_descr == node_descr) {
-					// node descriptions are the same, no action is needed
-				}
-				else {
-					// node descriptions are different, we must create overlay node descr
-					type_info.setNodeDescription(node_descr, shv_path, {});
-				}
+		if(node_descr.isValid()) {
+			if(current_device_type.empty()) {
+				type_info.setNodeDescription(node_descr, shv_path, {});
 			}
 			else {
-				// node description does not exist, create new one
-				type_info.setNodeDescription(node_descr, node_path, current_device_type);
+				string node_path = String(shv_path).mid(current_device_path.size() + 1);
+				string path_rest;
+				auto existing_node_descr = type_info.nodeDescriptionForDevice(current_device_type, node_path, &path_rest);
+				if(existing_node_descr.isValid() && path_rest.empty()) {
+					if(existing_node_descr == node_descr) {
+						// node descriptions are the same, no action is needed
+					}
+					else {
+						// node descriptions are different, we must create overlay node descr
+						type_info.setNodeDescription(node_descr, shv_path, {});
+					}
+				}
+				else {
+					// node description does not exist, create new one
+					type_info.setNodeDescription(node_descr, node_path, current_device_type);
+				}
 			}
 		}
 		if(!extra_tags.empty())

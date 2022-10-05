@@ -21,7 +21,7 @@ public:
 	ShvTypeDescrBase() {}
 	ShvTypeDescrBase(const chainpack::RpcValue &v) : m_data(v) {}
 
-	bool isValid() const { return m_data.isMap(); }
+	bool isValid() const { return !m_data.asMap().empty(); }
 	chainpack::RpcValue dataValue(const std::string &key, const chainpack::RpcValue &default_val = {}) const;
 
 	bool operator==(const ShvTypeDescrBase &o) const { return m_data == o.m_data; }
@@ -187,8 +187,7 @@ public:
 	shv::chainpack::RpcValue applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums = true) const;
 	shv::chainpack::RpcValue applyTypeDescription(const shv::chainpack::RpcValue &val, const ShvTypeDescr &type_descr, bool translate_enums = true) const;
 
-	// removed because it is not implemented correctly
-	//void forEachNodeDescription(const std::string &node_descr_root, std::function<void (const std::string &property_path, const ShvNodeDescr &node_descr)> fn) const;
+	void forEachDeviceProperty(const std::string &device_path, std::function<void (const std::string &property_path, const ShvNodeDescr &node_descr)> fn) const;
 	void forEachNode(std::function<void (const std::string &shv_path, const ShvNodeDescr &node_descr)> fn) const;
 private:
 	static ShvTypeInfo fromNodesTree(const chainpack::RpcValue &v);
