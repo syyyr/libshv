@@ -56,17 +56,23 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 		auto rv = read_cpon_file(FILES_DIR + "/nodesTree.cpon");
 		auto type_info = ShvTypeInfo::fromRpcValue(rv);
 		write_cpon_file(TEST_DIR + "/typeInfo.cpon", type_info.toRpcValue());
-		REQUIRE(type_info.nodeDescriptionForDevice("TC_G3", "").dataValue("deviceType") == "TC_G3");
-		REQUIRE(type_info.nodeDescriptionForDevice("Zone_G3", "").dataValue("deviceType") == "Zone_G3");
-		REQUIRE(type_info.nodeDescriptionForDevice("TC_G3", "status").typeName() == "StatusTC");
-		REQUIRE(type_info.nodeDescriptionForDevice("Route_G3", "status").typeName() == "StatusRoute");
-		REQUIRE(type_info.nodeDescriptionForPath("devices/zone/langevelden/route/AB/status").typeName() == "StatusRoute");
-		REQUIRE(type_info.nodeDescriptionForPath("devices/zone/langevelden/route/DC/status").typeName() == "StatusRoute");
-		REQUIRE(type_info.nodeDescriptionForDevice("SignalSymbol_G3", "status").typeName() == "StatusSignalSymbol");
-		REQUIRE(type_info.nodeDescriptionForPath("devices/signal/SA04/symbol/WHITE/status").typeName() == "StatusSignalSymbolWhite");
-		REQUIRE(type_info.nodeDescriptionForPath("devices/signal/SG01/symbol/P80Y/status").typeName() == "StatusSignalSymbolP80Y");
-		auto et = type_info.extraTagsForPath("devices/tc/TC04");
-		REQUIRE(et.asMap().value("brclab").asMap().value("url").asString() == "brclab://192.168.1.10:4000/4");
+		DOCTEST_SUBCASE("Node descriptions")
+		{
+			REQUIRE(type_info.nodeDescriptionForDevice("TC_G3", "").dataValue("deviceType") == "TC_G3");
+			REQUIRE(type_info.nodeDescriptionForDevice("Zone_G3", "").dataValue("deviceType") == "Zone_G3");
+			REQUIRE(type_info.nodeDescriptionForDevice("TC_G3", "status").typeName() == "StatusTC");
+			REQUIRE(type_info.nodeDescriptionForDevice("Route_G3", "status").typeName() == "StatusRoute");
+			REQUIRE(type_info.nodeDescriptionForPath("devices/zone/langevelden/route/AB/status").typeName() == "StatusRoute");
+			REQUIRE(type_info.nodeDescriptionForPath("devices/zone/langevelden/route/DC/status").typeName() == "StatusRoute");
+			REQUIRE(type_info.nodeDescriptionForDevice("SignalSymbol_G3", "status").typeName() == "StatusSignalSymbol");
+			REQUIRE(type_info.nodeDescriptionForPath("devices/signal/SA04/symbol/WHITE/status").typeName() == "StatusSignalSymbolWhite");
+			REQUIRE(type_info.nodeDescriptionForPath("devices/signal/SG01/symbol/P80Y/status").typeName() == "StatusSignalSymbolP80Y");
+		}
+		DOCTEST_SUBCASE("Extra tags")
+		{
+			auto et = type_info.extraTagsForPath("devices/tc/TC04");
+			REQUIRE(et.asMap().value("brclab").asMap().value("url").asString() == "brclab://192.168.1.10:4000/4");
+		}
 	}
 
 	DOCTEST_SUBCASE("Invalid result for nodeDescriptionForPath(...) function")
@@ -75,6 +81,8 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 		auto type_info = ShvTypeInfo::fromRpcValue(rv);
 		write_cpon_file(TEST_DIR + "/hel002_typeInfo.cpon", type_info.toRpcValue());
 		string field_name;
+
+		DOCTEST_SUBCASE("Node descriptions")
 		{
 			auto nd = type_info.nodeDescriptionForPath("heating/group/ESHS_Z1/status/errorAutomaticControl", &field_name);
 			INFO("nodeDescriptionForPath: ", nd.toRpcValue().toCpon());
@@ -82,6 +90,13 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 			REQUIRE(nd.isValid() == true);
 			REQUIRE(nd.typeName() == "StatusHeatingGroupNew");
 			REQUIRE(field_name == "errorAutomaticControl");
+		}
+		DOCTEST_SUBCASE("System paths")
+		{
+			REQUIRE(type_info.systemPathsRoots().empty() == false);
+			REQUIRE(type_info.findSystemPath("a/b/c") == "system/sig");
+			REQUIRE(type_info.findSystemPath("elbox/VL1-1") == "system/eshs");
+			REQUIRE(type_info.findSystemPath("elbox/VL1-1/status") == "system/eshs");
 		}
 	}
 }
