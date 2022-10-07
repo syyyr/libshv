@@ -41,6 +41,8 @@ endfunction(add_shv_test)
 
 if(BUILD_TESTING)
 	add_shv_test(shvtypeinfo)
+	add_shv_test(stringview)
+	add_shv_test(shvpath)
 endif()
 
 install(TARGETS libshvcore)

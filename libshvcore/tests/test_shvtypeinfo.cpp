@@ -49,8 +49,6 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 	fs::remove_all(TEST_DIR);
 	fs::create_directory(TEST_DIR);
 
-	std::string input;
-
 	DOCTEST_SUBCASE("nodesTree to typeInfo conversion")
 	{
 		auto rv = read_cpon_file(FILES_DIR + "/nodesTree.cpon");
