@@ -3,11 +3,7 @@ cmake_minimum_required(VERSION 3.18.4)
 set(WITH_SAMPLES OFF CACHE BOOL "Enable build of GUI samples")
 
 project(libshv LANGUAGES C CXX)
-
-if(UNIX)
-	include(CTest)
-endif()
-
+include(CTest)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -16,6 +12,14 @@ set(CMAKE_STATIC_LIBRARY_PREFIX "")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic ${CMAKE_CXX_FLAGS}")
+endif()
+
+if(BUILD_TESTING)
+	find_package(doctest QUIET)
+	if(NOT doctest_FOUND)
+		message(STATUS "doctest library NOT found, disabling tests")
+		set(BUILD_TESTING OFF)
+	endif()
 endif()
 
 if (NOT TARGET libnecrolog)
