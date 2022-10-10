@@ -27,7 +27,7 @@ static const char* KEY_FIELDS = "fields";
 static const char* KEY_SAMPLE_TYPE = "sampleType";
 static const char* KEY_TAGS = "tags";
 static const char* KEY_METHODS = "methods";
-//static const char* KEY_MAX_VAL = "maxVal";
+static const char* KEY_BLACKLIST = "blacklist";
 static const char* KEY_DEC_PLACES = "decPlaces";
 static const char* KEY_VISUAL_STYLE = "visualStyle";
 static const char* KEY_ALARM = "alarm";
@@ -449,6 +449,18 @@ ShvLogNodeDescr &ShvLogNodeDescr::setVisualStyleName(const string &visual_style_
 	return *this;
 }
 
+RpcValue ShvNodeDescr::blacklist() const
+{
+	return dataValue(KEY_BLACKLIST);
+}
+
+ShvNodeDescr &ShvNodeDescr::setBlacklist(chainpack::RpcValue::Map &&black_list)
+{
+	RpcValue rv = black_list.empty()? RpcValue(): RpcValue(move(black_list));
+	setDataValue(KEY_BLACKLIST, rv);
+	return *this;
+}
+
 string ShvLogNodeDescr::alarm() const
 {
 	return dataValue(KEY_ALARM, std::string()).asString();
@@ -510,13 +522,14 @@ ShvLogNodeDescr ShvLogNodeDescr::fromRpcValue(const RpcValue &v, RpcValue::Map *
 		KEY_LABEL,
 		KEY_DESCRIPTION,
 		KEY_UNIT,
+		KEY_BLACKLIST,
 		KEY_METHODS,
 		"autoload",
 		"monitored",
 		"monitorOptions",
 		"sampleType",
-		"alarm",
-		"alarmLevel",
+		KEY_ALARM,
+		KEY_ALARM_LEVEL,
 	};
 	RpcValue::Map m = v.asMap();
 	RpcValue::Map node_map;

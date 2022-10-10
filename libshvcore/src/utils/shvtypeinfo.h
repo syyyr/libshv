@@ -137,8 +137,12 @@ public:
 	ShvNodeDescr &setDescription(const std::string &description);
 	std::string unit() const;
 	ShvNodeDescr &setUnit(const std::string &unit);
+
 	std::string visualStyleName() const;
 	ShvNodeDescr &setVisualStyleName(const std::string &visual_style_name);
+
+	chainpack::RpcValue blacklist() const;
+	ShvNodeDescr &setBlacklist(chainpack::RpcValue::Map &&black_list);
 
 	std::string alarm() const;
 	ShvNodeDescr &setAlarm(const std::string &alarm);
