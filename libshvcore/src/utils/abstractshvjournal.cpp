@@ -50,7 +50,7 @@ void AbstractShvJournal::addToSnapshot(ShvSnapshot &snapshot, const ShvJournalEn
 	else {
 		snapshot.keyvals[entry.path] = entry;
 	}
-};
+}
 
 } // namespace utils
 } // namespace core
