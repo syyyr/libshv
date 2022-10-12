@@ -147,7 +147,6 @@ void ChannelFilterModel::createNodesForPath(const QString &path)
 	QStandardItem *parent_item = invisibleRootItem();
 
 	for(int i = 0; i < path_list.size(); i++) {
-		QString delim = (sub_path.isEmpty()) ? "" : "/";
 		QString sub_path = path_list.mid(0, i+1).join("/");
 		QStandardItem *it = shvPathToItem(sub_path, invisibleRootItem());
 
