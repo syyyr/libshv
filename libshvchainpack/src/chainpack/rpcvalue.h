@@ -4,6 +4,7 @@
 #include "exception.h"
 #include "metatypes.h"
 
+#include <cmath>
 #include <string>
 #include <vector>
 #include <map>
@@ -139,13 +140,7 @@ public:
 		}
 		double toDouble() const
 		{
-			double ret = mantisa();
-			int exp = exponent();
-			if(exp > 0)
-				for(; exp > 0; exp--) ret *= Base;
-			else
-				for(; exp < 0; exp++) ret /= Base;
-			return ret;
+			return static_cast<double>(mantisa()) * std::pow(Base, exponent());
 		}
 		//bool isValid() const {return !(mantisa() == 0 && exponent() != 0);}
 		std::string toString() const;
