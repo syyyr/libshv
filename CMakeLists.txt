@@ -83,17 +83,24 @@ else()
 	message(STATUS "Qt not found, Qt-based libs won't be built")
 endif()
 
+option(BUILD_SHV_UTILS "Whether to build ccp2cp, cp2cp, and cpmerge" ON)
+
 # Utils
-# ccp2cp
-add_executable(ccp2cp utils/ccp2cp/main.c)
-target_link_libraries(ccp2cp libshvchainpack-c)
+if(BUILD_SHV_UTILS)
+	message(STATUS "SHV utils will be built")
+	# ccp2cp
+	add_executable(ccp2cp utils/ccp2cp/main.c)
+	target_link_libraries(ccp2cp libshvchainpack-c)
 
-# cp2cp
-add_executable(cp2cp utils/cp2cp/main.cpp)
-target_link_libraries(cp2cp libshvchainpack-cpp)
+	# cp2cp
+	add_executable(cp2cp utils/cp2cp/main.cpp)
+	target_link_libraries(cp2cp libshvchainpack-cpp)
 
-# cpmerge
-add_executable(cpmerge utils/cpmerge/main.cpp)
-target_link_libraries(cpmerge libshvchainpack-cpp)
+	# cpmerge
+	add_executable(cpmerge utils/cpmerge/main.cpp)
+	target_link_libraries(cpmerge libshvchainpack-cpp)
 
-install(TARGETS ccp2cp cp2cp cpmerge)
+	install(TARGETS ccp2cp cp2cp cpmerge)
+else()
+	message(STATUS "SHV utils WON'T be built")
+endif()
