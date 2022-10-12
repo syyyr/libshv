@@ -99,14 +99,14 @@ RpcValue::String readData_CString(std::istream &data)
 			case '\\': ret += '\\'; break;
 			case '0' : ret +=  '\0'; break;
 			default:
-				ret += (char)i;
+				ret += static_cast<char>(i);
 				break;
 			}
 			is_esc = false;
 		}
 		else {
 			if(i)
-				ret += (char)i;
+				ret += static_cast<char>(i);
 			else
 				break;
 		}
@@ -197,7 +197,7 @@ void ChainPackReader1::read(RpcValue &val)
 	if(!val.isValid()) {
 		bool is_array = type & ChainPack::ARRAY_FLAG_MASK;
 		type = type & ~ChainPack::ARRAY_FLAG_MASK;
-		val = readData((ChainPack::PackingSchema::Enum)type, is_array);
+		val = readData(static_cast<ChainPack::PackingSchema::Enum>(type), is_array);
 	}
 	if(!meta_data.isEmpty())
 		val.setMetaData(std::move(meta_data));

@@ -49,11 +49,11 @@ Graph *GraphChannel::graph() const
 void GraphChannel::onButtonBoxClicked(int button_id)
 {
 	shvLogFuncFrame();
-	if(button_id == (int)GraphButtonBox::ButtonId::Menu) {
-		QPoint pos = buttonBox()->buttonRect((GraphButtonBox::ButtonId)button_id).center();
+	if(button_id == static_cast<int>(GraphButtonBox::ButtonId::Menu)) {
+		QPoint pos = buttonBox()->buttonRect(static_cast<GraphButtonBox::ButtonId>(button_id)).center();
 		graph()->emitChannelContextMenuRequest(graphChannelIndex(), pos);
 	}
-	else if(button_id == (int)GraphButtonBox::ButtonId::Hide) {
+	else if(button_id == static_cast<int>(GraphButtonBox::ButtonId::Hide)) {
 		graph()->setChannelVisible(graphChannelIndex(), false);
 	}
 }

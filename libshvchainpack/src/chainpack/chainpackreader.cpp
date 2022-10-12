@@ -67,7 +67,7 @@ ChainPackReader::ItemType ChainPackReader::peekNext()
 	const char *p = ccpcp_unpack_peek_byte(&m_inCtx);
 	if(!p)
 		PARSE_EXCEPTION("Parse error: " + std::string(m_inCtx.err_msg) + " at: " + std::to_string(m_inCtx.err_no));
-	cchainpack_pack_packing_schema sch = (cchainpack_pack_packing_schema)(uint8_t)(*p);
+	auto sch = static_cast<cchainpack_pack_packing_schema>(static_cast<uint8_t>(*p));
 	switch(sch) {
 	case CP_Null: return CCPCP_ITEM_NULL;
 	case CP_UInt: return CCPCP_ITEM_UINT;
@@ -269,7 +269,7 @@ void ChainPackReader::parseIMap(RpcValue &val)
 
 void ChainPackReader::read(RpcValue::MetaData &meta_data)
 {
-	const uint8_t *b = (const uint8_t*)ccpcp_unpack_take_byte(&m_inCtx);
+	auto b = reinterpret_cast<const uint8_t*>(ccpcp_unpack_take_byte(&m_inCtx));
 	m_inCtx.current--;
 	if(b && *b == CP_MetaMap) {
 		cchainpack_unpack_next(&m_inCtx);

@@ -163,7 +163,7 @@ void ClientConnectionOnBroker::sendMessage(const shv::chainpack::RpcMessage &rpc
 {
 	logRpcMsg() << SND_LOG_ARROW
 				<< "client id:" << connectionId()
-				<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
+				<< "protocol_type:" << static_cast<int>(protocolType()) << shv::chainpack::Rpc::protocolTypeToString(protocolType())
 				<< rpc_msg.toPrettyString();
 	Super::sendMessage(rpc_msg);
 }
@@ -172,7 +172,7 @@ void ClientConnectionOnBroker::sendRawData(const shv::chainpack::RpcValue::MetaD
 {
 	logRpcMsg() << SND_LOG_ARROW
 				<< "client id:" << connectionId()
-				<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
+				<< "protocol_type:" << static_cast<int>(protocolType()) << shv::chainpack::Rpc::protocolTypeToString(protocolType())
 				<< RpcDriver::dataToPrettyCpon(shv::chainpack::RpcMessage::protocolType(meta_data), meta_data, data);
 	Super::sendRawData(meta_data, std::move(data));
 }
@@ -269,7 +269,7 @@ void ClientConnectionOnBroker::onRpcDataReceived(shv::chainpack::Rpc::ProtocolTy
 {
 	logRpcMsg() << RCV_LOG_ARROW
 				<< "client id:" << connectionId()
-				<< "protocol_type:" << (int)protocol_type << shv::chainpack::Rpc::protocolTypeToString(protocol_type)
+				<< "protocol_type:" << static_cast<int>(protocol_type) << shv::chainpack::Rpc::protocolTypeToString(protocol_type)
 				<< RpcDriver::dataToPrettyCpon(protocol_type, md, msg_data, 0, msg_data.size());
 	try {
 		if(isLoginPhase()) {

@@ -180,7 +180,7 @@ QFileInfo LocalFSNode::ndFileInfo(const QString &path) const
 
 RpcValue LocalFSNode::ndSize(const QString &path) const
 {
-	return (unsigned)ndFileInfo(path).size();
+	return static_cast<unsigned>(ndFileInfo(path).size());
 }
 
 chainpack::RpcValue LocalFSNode::ndRead(const QString &path, qint64 offset, qint64 size) const
@@ -197,7 +197,7 @@ chainpack::RpcValue LocalFSNode::ndRead(const QString &path, qint64 offset, qint
 		f.seek(offset);
 		RpcValue::Blob blob;
 		blob.resize(sz);
-		f.read((char*)blob.data(), sz);
+		f.read(reinterpret_cast<char*>(blob.data()), sz);
 		return RpcValue(std::move(blob));
 	}
 	SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for reading.");
@@ -351,7 +351,7 @@ RpcValue LocalFSNode::ndLsDir(const QString &path, const chainpack::RpcValue &me
 				if(fi.isDir())
 					lst2.push_back(0);
 				else
-					lst2.push_back((int64_t)fi.size());
+					lst2.push_back(static_cast<int64_t>(fi.size()));
 			}
 			if(with_ctime)
 				lst2.push_back(RpcValue::DateTime::fromMSecsSinceEpoch(fi.birthTime().toMSecsSinceEpoch()));

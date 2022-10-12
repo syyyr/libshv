@@ -70,7 +70,7 @@ NecroLogLevel ErrorLogModel::level(int row) const
 void ErrorLogModel::addLogRow(NecroLogLevel level, const std::string &msg, const QVariant &user_data)
 {
 	LogTableModelRow row(Cols::Count);
-	row[Cols::Level] = (int)level;
+	row[Cols::Level] = static_cast<int>(level);
 	row[Cols::Message] = QString::fromStdString(msg);
 	row[Cols::TimeStamp] = QDateTime::currentDateTime();
 	row[Cols::UserData] = user_data;

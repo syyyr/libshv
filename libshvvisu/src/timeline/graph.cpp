@@ -2342,8 +2342,8 @@ QString Graph::timeToStringTZ(timemsec_t time) const
 void Graph::onButtonBoxClicked(int button_id)
 {
 	shvLogFuncFrame();
-	if(button_id == (int)GraphButtonBox::ButtonId::Menu) {
-		QPoint pos = m_cornerCellButtonBox->buttonRect((GraphButtonBox::ButtonId)button_id).center();
+	if(button_id == static_cast<int>(GraphButtonBox::ButtonId::Menu)) {
+		QPoint pos = m_cornerCellButtonBox->buttonRect(static_cast<GraphButtonBox::ButtonId>(button_id)).center();
 		emit graphContextMenuRequest(pos);
 	}
 }

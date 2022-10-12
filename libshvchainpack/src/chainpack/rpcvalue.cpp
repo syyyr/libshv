@@ -267,7 +267,7 @@ class ChainPackUInt final : public ValueData<RpcValue::Type::UInt, uint64_t>
 	ChainPackUInt* create() override { return new ChainPackUInt(0); }
 	std::string toStdString() const override { return Utils::toString(m_value); }
 
-	double toDouble() const override { return m_value; }
+	double toDouble() const override { return static_cast<double>(m_value); }
 	bool toBool() const override { return !(m_value == 0); }
 	RpcValue::Int toInt() const override { return static_cast<RpcValue::Int>(m_value); }
 	RpcValue::UInt toUInt() const override { return static_cast<RpcValue::UInt>(m_value); }
@@ -354,7 +354,7 @@ RpcValue ChainPackList::at(RpcValue::Int ix) const
 {
 	if(ix < 0)
 		ix = static_cast<RpcValue::Int>(m_value.size()) + ix;
-	if (ix < 0 || ix >= (int)m_value.size())
+	if (ix < 0 || ix >= static_cast<int>(m_value.size()))
 		return RpcValue();
 	else
 		return m_value[static_cast<size_t>(ix)];
@@ -365,7 +365,7 @@ void ChainPackList::set(RpcValue::Int ix, const RpcValue &val)
 	if(ix < 0)
 		ix = static_cast<RpcValue::Int>(m_value.size()) + ix;
 	if(ix > 0) {
-		if (ix == (int)m_value.size())
+		if (ix == static_cast<int>(m_value.size()))
 			m_value.resize(static_cast<size_t>(ix) + 1);
 		m_value[static_cast<size_t>(ix)] = val;
 	}
@@ -620,7 +620,7 @@ std::pair<const uint8_t *, size_t> RpcValue::asBytes() const
 		return Ret(blob.data(), blob.size());
 	}
 	const String &s = asString();
-	return Ret((const uint8_t*)s.data(), s.size());
+	return Ret(reinterpret_cast<const uint8_t*>(s.data()), s.size());
 }
 
 std::pair<const char *, size_t> RpcValue::asData() const
@@ -628,7 +628,7 @@ std::pair<const char *, size_t> RpcValue::asData() const
 	using Ret = std::pair<const char *, size_t>;
 	if(type() == Type::Blob) {
 		const Blob &blob = asBlob();
-		return Ret((const char*)blob.data(), blob.size());
+		return Ret(reinterpret_cast<const char*>(blob.data()), blob.size());
 	}
 	const String &s = asString();
 	return Ret(s.data(), s.size());
@@ -846,17 +846,17 @@ RpcValue::Type RpcValue::typeForName(const std::string &type_name, int len)
 	static const char str_DateTime[] = "DateTime";
 	static const char str_Decimal[] = "Decimal";
 
-	if(type_name.compare(0, (len < 0)? sizeof(str_Null)-1: (unsigned)len, str_Null) == 0) return Type::Null;
-	if(type_name.compare(0, (len < 0)? sizeof(str_UInt)-1: (unsigned)len, str_UInt) == 0) return Type::UInt;
-	if(type_name.compare(0, (len < 0)? sizeof(str_Int)-1: (unsigned)len, str_Int) == 0) return Type::Int;
-	if(type_name.compare(0, (len < 0)? sizeof(str_Double)-1: (unsigned)len, str_Double) == 0) return Type::Double;
-	if(type_name.compare(0, (len < 0)? sizeof(str_Bool)-1: (unsigned)len, str_Bool) == 0) return Type::Bool;
-	if(type_name.compare(0, (len < 0)? sizeof(str_String)-1: (unsigned)len, str_String) == 0) return Type::String;
-	if(type_name.compare(0, (len < 0)? sizeof(str_List)-1: (unsigned)len, str_List) == 0) return Type::List;
-	if(type_name.compare(0, (len < 0)? sizeof(str_Map)-1: (unsigned)len, str_Map) == 0) return Type::Map;
-	if(type_name.compare(0, (len < 0)? sizeof(str_IMap)-1: (unsigned)len, str_IMap) == 0) return Type::IMap;
-	if(type_name.compare(0, (len < 0)? sizeof(str_DateTime)-1: (unsigned)len, str_DateTime) == 0) return Type::DateTime;
-	if(type_name.compare(0, (len < 0)? sizeof(str_Decimal)-1: (unsigned)len, str_Decimal) == 0) return Type::Decimal;
+	if(type_name.compare(0, (len < 0)? sizeof(str_Null)-1: static_cast<unsigned>(len), str_Null) == 0) return Type::Null;
+	if(type_name.compare(0, (len < 0)? sizeof(str_UInt)-1: static_cast<unsigned>(len), str_UInt) == 0) return Type::UInt;
+	if(type_name.compare(0, (len < 0)? sizeof(str_Int)-1: static_cast<unsigned>(len), str_Int) == 0) return Type::Int;
+	if(type_name.compare(0, (len < 0)? sizeof(str_Double)-1: static_cast<unsigned>(len), str_Double) == 0) return Type::Double;
+	if(type_name.compare(0, (len < 0)? sizeof(str_Bool)-1: static_cast<unsigned>(len), str_Bool) == 0) return Type::Bool;
+	if(type_name.compare(0, (len < 0)? sizeof(str_String)-1: static_cast<unsigned>(len), str_String) == 0) return Type::String;
+	if(type_name.compare(0, (len < 0)? sizeof(str_List)-1: static_cast<unsigned>(len), str_List) == 0) return Type::List;
+	if(type_name.compare(0, (len < 0)? sizeof(str_Map)-1: static_cast<unsigned>(len), str_Map) == 0) return Type::Map;
+	if(type_name.compare(0, (len < 0)? sizeof(str_IMap)-1: static_cast<unsigned>(len), str_IMap) == 0) return Type::IMap;
+	if(type_name.compare(0, (len < 0)? sizeof(str_DateTime)-1: static_cast<unsigned>(len), str_DateTime) == 0) return Type::DateTime;
+	if(type_name.compare(0, (len < 0)? sizeof(str_Decimal)-1: static_cast<unsigned>(len), str_Decimal) == 0) return Type::Decimal;
 
 	return Type::Invalid;
 }
@@ -1013,7 +1013,7 @@ std::string RpcValue::DateTime::toIsoString(RpcValue::DateTime::MsecPolicy msec_
 	ccpcp_pack_context ctx;
 	char buff[32];
 	ccpcp_pack_context_init(&ctx, buff, sizeof(buff), nullptr);
-	ccpon_pack_date_time_str(&ctx, msecsSinceEpoch(), minutesFromUtc(), (ccpon_msec_policy)msec_policy, include_tz);
+	ccpon_pack_date_time_str(&ctx, msecsSinceEpoch(), minutesFromUtc(), static_cast<ccpon_msec_policy>(msec_policy), include_tz);
 	return std::string(buff, ctx.current);
 #if 0
 	std::time_t tim = m_dtm.msec / 1000 + m_dtm.tz * 15 * 60;

@@ -71,8 +71,8 @@ public:
 	RpcValue attributes(unsigned mask) const
 	{
 		RpcValue::List lst;
-		if(mask & (unsigned)DirAttribute::Signature)
-			lst.push_back((unsigned)m_signature);
+		if(mask & static_cast<unsigned>(DirAttribute::Signature))
+			lst.push_back(static_cast<unsigned>(m_signature));
 		if(mask & DirAttribute::Flags)
 			lst.push_back(m_flags);
 		if(mask & DirAttribute::AccessGrant)

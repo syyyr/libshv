@@ -98,7 +98,7 @@ bool GraphButtonBox::processEvent(QEvent *ev)
 		m_mousePressButtonIndex = -1;
 		invalidate_bb();
 		shvDebug() << "emit button clicked";
-		emit buttonClicked((int)m_buttonIds.value(ix));
+		emit buttonClicked(static_cast<int>(m_buttonIds.value(ix)));
 		ev->accept();
 		return true;
 	}

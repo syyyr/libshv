@@ -29,7 +29,7 @@ QVariant Utils::rpcValueToQVariant(const chainpack::RpcValue &v, bool *ok)
 	}
 	case chainpack::RpcValue::Type::Blob: {
 		const auto &blob = v.asBlob();
-		return QVariant(QByteArray((char*)blob.data(), blob.size()));
+		return QVariant(QByteArray(reinterpret_cast<const char*>(blob.data()), blob.size()));
 	}
 	case chainpack::RpcValue::Type::DateTime: {
 		chainpack::RpcValue::DateTime cdt = v.toDateTime();
@@ -87,7 +87,7 @@ chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v, bool *ok)
 	case QMetaType::QString: return v.toString().toStdString();
 	case QMetaType::QByteArray: {
 		auto ba = v.toByteArray();
-		auto *array = (const uint8_t*)ba.constData();
+		auto *array = reinterpret_cast<const uint8_t*>(ba.constData());
 		return chainpack::RpcValue::Blob(array, array + ba.size());
 	}
 	case QMetaType::QDateTime: {

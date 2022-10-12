@@ -74,7 +74,7 @@ void MasterBrokerConnection::sendRawData(const shv::chainpack::RpcValue::MetaDat
 {
 	logRpcMsg() << SND_LOG_ARROW
 				<< "client id:" << connectionId()
-				<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
+				<< "protocol_type:" << static_cast<int>(protocolType()) << shv::chainpack::Rpc::protocolTypeToString(protocolType())
 				<< RpcDriver::dataToPrettyCpon(shv::chainpack::RpcMessage::protocolType(meta_data), meta_data, data, 0);
 	Super::sendRawData(meta_data, std::move(data));
 }
@@ -130,7 +130,7 @@ void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 {
 	logRpcMsg() << RpcDriver::RCV_LOG_ARROW
 				<< "client id:" << connectionId()
-				<< "protocol_type:" << (int)protocol_type << shv::chainpack::Rpc::protocolTypeToString(protocol_type)
+				<< "protocol_type:" << static_cast<int>(protocol_type) << shv::chainpack::Rpc::protocolTypeToString(protocol_type)
 				<< RpcDriver::dataToPrettyCpon(protocol_type, md, msg_data, 0, msg_data.size());
 	try {
 		if(isLoginPhase()) {

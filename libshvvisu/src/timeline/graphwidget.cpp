@@ -288,7 +288,7 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 
 void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-	logMouseSelection() << "mouseReleaseEvent, button:" << event->button() << "op:" << (int)m_mouseOperation;
+	logMouseSelection() << "mouseReleaseEvent, button:" << event->button() << "op:" << static_cast<int>(m_mouseOperation);
 	auto old_mouse_op = m_mouseOperation;
 	m_mouseOperation = MouseOperation::None;
 	if(event->button() == Qt::LeftButton) {

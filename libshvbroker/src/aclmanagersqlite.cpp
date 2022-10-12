@@ -360,7 +360,7 @@ void AclManagerSqlite::aclSetAccessRoleRules(const std::string &role_name, const
 				break;
 			}
 			default:
-				SHV_EXCEPTION("Invalid PathAccessGrant type: " + std::to_string((int)rule.grant.type));
+				SHV_EXCEPTION("Invalid PathAccessGrant type: " + std::to_string(static_cast<int>(rule.grant.type)));
 			}
 			qs = drv->sqlStatement(QSqlDriver::InsertStatement, TBL_ACL_ACCESS, rec, false);
 			logAclManagerM() << qs;

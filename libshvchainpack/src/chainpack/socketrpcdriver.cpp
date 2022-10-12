@@ -91,14 +91,14 @@ bool SocketRpcDriver::connectToHost(const std::string &host, int port)
 			return false;
 		}
 
-		bzero((char *) &serv_addr, sizeof(serv_addr));
+		bzero(reinterpret_cast<char *> (&serv_addr), sizeof(serv_addr));
 		serv_addr.sin_family = AF_INET;
-		bcopy(server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
+		bcopy(server->h_addr, reinterpret_cast<char *>(&serv_addr.sin_addr.s_addr), server->h_length);
 		serv_addr.sin_port = htons(port);
 
 		/* Now connect to the server */
 		nInfo().nospace() << "connecting to " << host << ":" << port;
-		if (::connect(m_socket, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+		if (::connect(m_socket, reinterpret_cast<struct sockaddr*>(&serv_addr), sizeof(serv_addr)) < 0) {
 			nError() << "ERROR, connecting host" << host;
 			return false;
 		}
@@ -144,7 +144,7 @@ void SocketRpcDriver::exec()
 		//FD_SET(STDIN_FILENO, &read_flags);
 		//FD_SET(STDIN_FILENO, &write_flags);
 
-		int sel = select(FD_SETSIZE, &read_flags, &write_flags, (fd_set*)0, &waitd);
+		int sel = select(FD_SETSIZE, &read_flags, &write_flags, static_cast<fd_set*>(0), &waitd);
 
 		//ESP_LOGI(__FILE__, "select returned, number of active file descriptors: %d", sel);
 		//if an error with select

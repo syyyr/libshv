@@ -29,7 +29,7 @@ std::string Utils::binaryDump(const std::string &bytes)
 		if(i > 0)
 			ret += '|';
 		for (size_t j = 0; j < 8*sizeof(u); ++j) {
-			ret += (u & (((uint8_t)128) >> j))? '1': '0';
+			ret += (u & ((static_cast<uint8_t>(128)) >> j))? '1': '0';
 		}
 	}
 	return ret;
@@ -119,7 +119,7 @@ std::string Utils::fromHex(const std::string &bytes)
 std::string Utils::hexDump(const std::string &bytes)
 {
 	std::string ret;
-	std::string hex_l, str_l, num_l = int_to_hex((size_t)0);
+	std::string hex_l, str_l, num_l = int_to_hex(static_cast<size_t>(0));
 	for (size_t i = 0; i < bytes.length(); ++i) {
 		auto c = bytes[i];
 		std::string s = byte_to_hex(c);

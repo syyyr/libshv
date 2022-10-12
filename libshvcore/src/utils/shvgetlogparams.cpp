@@ -61,8 +61,8 @@ chainpack::RpcValue ShvGetLogParams::toRpcValue( bool fill_legacy_fields ) const
 	if(fill_legacy_fields) {
 		//for compatibility with legacy devices (don't remove ! :-))
 		unsigned flags = HeaderOptions::BasicInfo | HeaderOptions::FieldInfo
-				| (withTypeInfo? (unsigned)HeaderOptions::TypeInfo: 0)
-				| (withPathsDict? (unsigned)HeaderOptions::PathsDict: 0) ;
+				| (withTypeInfo? static_cast<unsigned>(HeaderOptions::TypeInfo): 0)
+				| (withPathsDict? static_cast<unsigned>(HeaderOptions::PathsDict): 0) ;
 		m[KEY_HEADER_OPTIONS_DEPRECATED] = flags;
 		m[KEY_MAX_RECORD_COUNT_DEPRECATED] = recordCountLimit;
 	}

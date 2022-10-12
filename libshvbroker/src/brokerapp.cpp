@@ -1217,7 +1217,7 @@ bool BrokerApp::sendNotifyToSubscribers(const shv::chainpack::RpcValue::MetaData
 			int subs_ix = conn->isSubscribed(shv_path.toString(), method.asString());
 			if(subs_ix >= 0) {
 				//shvDebug() << "\t broadcasting to connection id:" << id;
-				const rpc::ClientConnectionOnBroker::Subscription &subs = conn->subscriptionAt((size_t)subs_ix);
+				const rpc::ClientConnectionOnBroker::Subscription &subs = conn->subscriptionAt(static_cast<size_t>(subs_ix));
 				std::string new_path = conn->toSubscribedPath(subs, shv_path.asString());
 				if(new_path == shv_path.asString()) {
 					conn->sendRawData(meta_data, std::string(data));
@@ -1247,7 +1247,7 @@ void BrokerApp::sendNotifyToSubscribers(const std::string &shv_path, const std::
 			int subs_ix = conn->isSubscribed(shv_path, method);
 			if(subs_ix >= 0) {
 				//shvDebug() << "\t broadcasting to connection id:" << id;
-				const rpc::ClientConnectionOnBroker::Subscription &subs = conn->subscriptionAt((size_t)subs_ix);
+				const rpc::ClientConnectionOnBroker::Subscription &subs = conn->subscriptionAt(static_cast<size_t>(subs_ix));
 				std::string new_path = conn->toSubscribedPath(subs, shv_path);
 				if(new_path != shv_path)
 					sig.setShvPath(new_path);

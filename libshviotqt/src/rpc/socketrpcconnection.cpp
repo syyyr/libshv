@@ -77,7 +77,7 @@ void SocketRpcConnection::setSocket(Socket *socket)
 		emit socketConnectedChanged(true);
 	});
 	connect(socket, &Socket::stateChanged, this, [this](QAbstractSocket::SocketState state) {
-		shvDebug() << this << "Socket state changed" << (int)state;
+		shvDebug() << this << "Socket state changed" << static_cast<int>(state);
 	});
 	connect(socket, &Socket::disconnected, this, [this]() {
 		shvDebug() << this << "Socket disconnected!!!";

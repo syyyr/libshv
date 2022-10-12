@@ -149,7 +149,7 @@ void RpcDriver::writeQueue()
 		std::string protocol_type_data;
 		{
 			std::ostringstream os;
-			{ ChainPackWriter wr(os); wr.writeUIntData((unsigned)protocolType());}
+			{ ChainPackWriter wr(os); wr.writeUIntData(static_cast<unsigned>(protocolType()));}
 			protocol_type_data = os.str();
 		}
 		{
@@ -159,7 +159,7 @@ void RpcDriver::writeQueue()
 			auto len = writeBytes(packet_len_data.data(), packet_len_data.length());
 			if(len < 0)
 				SHVCHP_EXCEPTION("Write socket error!");
-			if(len < (int)packet_len_data.length())
+			if(len < static_cast<int>(packet_len_data.length()))
 				SHVCHP_EXCEPTION("Design error! Chunk length shall be always written at once to the socket");
 		}
 		{
@@ -256,8 +256,8 @@ void RpcDriver::processReadData()
 				throw ParseException(err_code, "Read RPC message length error.", -1);
 			}
 
-			message_len = (size_t)in.tellg() + chunk_len;
-			protocol_type = (Rpc::ProtocolType)ChainPackReader::readUIntData(in, &err_code);
+			message_len = static_cast<size_t>(in.tellg()) + chunk_len;
+			protocol_type = static_cast<Rpc::ProtocolType>(ChainPackReader::readUIntData(in, &err_code));
 			if(err_code == CCPCP_RC_BUFFER_UNDERFLOW) {
 				// not enough data
 				logRpcData() << "protocol_type not complete";
@@ -272,7 +272,7 @@ void RpcDriver::processReadData()
 				return;
 			}
 
-			logRpcData() << "\t protocol_type:" << (int)protocol_type << Rpc::protocolTypeToString(protocol_type);
+			logRpcData() << "\t protocol_type:" << static_cast<int>(protocol_type) << Rpc::protocolTypeToString(protocol_type);
 			logRpcData() << "\t expected message data length:" << message_len << "length available:" << read_data.size();
 			if(isSkipCorruptedHeaders()) {
 				if(message_len > MSG_LEN_MAX)
@@ -376,7 +376,7 @@ size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolTyp
 	case Rpc::ProtocolType::Cpon: {
 		CponReader rd(in);
 		rd.read(meta_data);
-		meta_data_end_pos = (in.tellg() < 0)? data.size(): (size_t)in.tellg();
+		meta_data_end_pos = (in.tellg() < 0)? data.size(): static_cast<size_t>(in.tellg());
 		if(meta_data_end_pos == start_pos)
 			throw ParseException(CCPCP_RC_MALFORMED_INPUT, "Metadata missing", -1);
 		break;
@@ -384,13 +384,13 @@ size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolTyp
 	case Rpc::ProtocolType::ChainPack: {
 		ChainPackReader rd(in);
 		rd.read(meta_data);
-		meta_data_end_pos = (in.tellg() < 0)? data.size(): (size_t)in.tellg();
+		meta_data_end_pos = (in.tellg() < 0)? data.size(): static_cast<size_t>(in.tellg());
 		if(meta_data_end_pos == start_pos)
 			throw ParseException(CCPCP_RC_MALFORMED_INPUT, "Metadata missing", -1);
 		break;
 	}
 	default:
-		throw ParseException(CCPCP_RC_MALFORMED_INPUT, "Unknown protocol type: " + Utils::toString((int)protocol_type), -1);
+		throw ParseException(CCPCP_RC_MALFORMED_INPUT, "Unknown protocol type: " + Utils::toString(static_cast<int>(protocol_type)), -1);
 	}
 
 	return meta_data_end_pos;
@@ -437,7 +437,7 @@ RpcValue RpcDriver::decodeData(Rpc::ProtocolType protocol_type, const std::strin
 			break;
 		}
 		default:
-			nError() << "Don't know how to decode message with unknown protocol version:" << (unsigned)protocol_type;
+			nError() << "Don't know how to decode message with unknown protocol version:" << static_cast<unsigned>(protocol_type);
 			break;
 		}
 	}
@@ -516,7 +516,7 @@ void RpcDriver::onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::Met
 		onRpcValueReceived(msg);
 	}
 	else {
-		nError() << "Throwing away message with unknown protocol version:" << (unsigned)protocol_type;
+		nError() << "Throwing away message with unknown protocol version:" << static_cast<unsigned>(protocol_type);
 	}
 }
 

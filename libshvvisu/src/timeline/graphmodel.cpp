@@ -277,7 +277,7 @@ int GraphModel::pathToChannelIndex(const std::string &path) const
 	if(it == m_pathToChannelCache.end()) {
 		for (int i = 0; i < channelCount(); ++i) {
 			const ChannelInfo &chi = channelInfo(i);
-			if(chi.shvPath == QLatin1String(path.data(), (int)path.size())) {
+			if(chi.shvPath == QLatin1String(path.data(), static_cast<int>(path.size()))) {
 				m_pathToChannelCache[path] = i;
 				return i;
 			}

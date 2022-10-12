@@ -11,7 +11,7 @@ size_t unpack_underflow_handler(ccpcp_unpack_context *ctx)
 		// id directory is open then c == -1 but eof() == false, strange
 		return 0;
 	}
-	rd->m_unpackBuff[0] = (char)c;
+	rd->m_unpackBuff[0] = static_cast<char>(c);
 	ctx->start = rd->m_unpackBuff;
 	ctx->current = ctx->start;
 	ctx->end = ctx->start + 1;

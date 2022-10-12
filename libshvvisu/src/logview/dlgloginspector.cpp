@@ -126,7 +126,7 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 	m_logSortFilterProxy->setSourceModel(m_logModel);
 	ui->tblData->setModel(m_logSortFilterProxy);
 	ui->tblData->setSortingEnabled(false);
-	ui->tblData->verticalHeader()->setDefaultSectionSize((int)(fontMetrics().lineSpacing() * 1.3));
+	ui->tblData->verticalHeader()->setDefaultSectionSize(static_cast<int>(fontMetrics().lineSpacing() * 1.3));
 
 	ui->tblData->setContextMenuPolicy(Qt::ActionsContextMenu);
 	{
@@ -482,7 +482,7 @@ void DlgLogInspector::saveData(const std::string &data, QString ext)
 		fn = fn + ext;
 	QFile f(fn);
 	if(f.open(QFile::WriteOnly)) {
-		f.write(data.data(), (qint64)data.size());
+		f.write(data.data(), static_cast<qint64>(data.size()));
 	}
 	else {
 		QMessageBox::warning(this, tr("Warning"), tr("Cannot open file '%1' for write.").arg(fn));

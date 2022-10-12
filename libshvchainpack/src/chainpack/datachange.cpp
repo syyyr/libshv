@@ -63,7 +63,7 @@ std::string DataChange::valueFlagsToString(ValueFlags st)
 	for (int flag = 0; flag < ValueFlagCount; ++flag) {
 		unsigned mask = 1 << flag;
 		if(st & mask)
-			append_str(valueFlagToString((ValueFlag)flag));
+			append_str(valueFlagToString(static_cast<ValueFlag>(flag)));
 	}
 	return ret;
 }
@@ -76,7 +76,7 @@ DataChange::DataChange(const RpcValue &val, const RpcValue::DateTime &date_time,
 }
 
 DataChange::DataChange(const RpcValue &val, unsigned short_time)
-	: m_shortTime((int)short_time)
+	: m_shortTime(static_cast<int>(short_time))
 {
 	setValue(val);
 }
@@ -150,11 +150,11 @@ RpcValue DataChange::toRpcValue() const
 	if(hasDateTime())
 		ret.setMetaValue(MetaType::Tag::DateTime, m_dateTime);
 	if(hasShortTime())
-		ret.setMetaValue(MetaType::Tag::ShortTime, (unsigned)m_shortTime);
+		ret.setMetaValue(MetaType::Tag::ShortTime, static_cast<unsigned>(m_shortTime));
 	//if(hasDomain())
 	//	ret.setMetaValue(MetaType::Tag::Domain, m_domain);
 	if(valueFlags() != 0)
-		ret.setMetaValue(MetaType::Tag::ValueFlags, (int)valueFlags());
+		ret.setMetaValue(MetaType::Tag::ValueFlags, static_cast<int>(valueFlags()));
 	return ret;
 }
 

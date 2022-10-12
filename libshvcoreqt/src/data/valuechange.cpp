@@ -86,7 +86,7 @@ SerieData::iterator SerieData::insertValueChange(const_iterator position, const 
 void SerieData::updateValueChange(const_iterator position, const ValueChange &new_value)
 {
 	Q_ASSERT(position >= cbegin());
-	unsigned long index = (unsigned long)(position - cbegin());
+	unsigned long index = static_cast<unsigned long>(position - cbegin());
 	ValueChange &old_value = at(index);
 	if (!compareValueX(old_value, new_value, m_xType)) {
 		if ((index > 0 && (compareValueX(new_value, at(index - 1), m_xType) || lessThenValueX(new_value, at(index - 1), m_xType)))

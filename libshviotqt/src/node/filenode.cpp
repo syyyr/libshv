@@ -77,14 +77,14 @@ cp::RpcValue FileNode::callMethod(const shv::iotqt::node::ShvNode::StringViewLis
 	if(method == M_HASH) {
 		shv::chainpack::RpcValue::Blob bytes = read(shv_path, params).asBlob();
 		QCryptographicHash h(QCryptographicHash::Sha1);
-		h.addData((const char*)bytes.data(), bytes.size());
+		h.addData(reinterpret_cast<const char*>(bytes.data()), bytes.size());
 		return h.result().toHex().toStdString();
 	}
 	if(method == M_SIZE) {
 		return size(shv_path);
 	}
 	if(method == M_SIZE_COMPRESSED) {
-		return (unsigned)readFileCompressed(shv_path, params).asBlob().size();
+		return static_cast<unsigned>(readFileCompressed(shv_path, params).asBlob().size());
 	}
 
 	return Super::callMethod(shv_path, method, params, user_id);

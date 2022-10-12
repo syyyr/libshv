@@ -80,7 +80,7 @@ std::string Utils::binaryDump(const std::string &bytes)
 		if(i > 0)
 			ret += '|';
 		for (size_t j = 0; j < 8*sizeof(u); ++j) {
-			ret += (u & (((uint8_t)128) >> j))? '1': '0';
+			ret += (u & ((static_cast<uint8_t>(128)) >> j))? '1': '0';
 		}
 	}
 	return ret;

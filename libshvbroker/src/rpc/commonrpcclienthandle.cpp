@@ -188,7 +188,7 @@ int CommonRpcClientHandle::isSubscribed(const std::string &shv_path, const std::
 		logSigResolveD() << "\tchecking local path:" << subs.localPath << "subscribed as:" << subs.subscribedPath << "method:" << subs.method;
 		if(subs.match(shv_path, method)) {
 			logSigResolveD() << "\t\tHIT";
-			return (int)i;
+			return static_cast<int>(i);
 		}
 	}
 	return -1;

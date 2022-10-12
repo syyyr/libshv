@@ -30,7 +30,7 @@ public:
 
 	void setSocket(Socket *socket);
 	bool hasSocket() const {return m_socket != nullptr;}
-	void setProtocolTypeAsInt(int v) {shv::chainpack::RpcDriver::setProtocolType((shv::chainpack::Rpc::ProtocolType)v);}
+	void setProtocolTypeAsInt(int v) {shv::chainpack::RpcDriver::setProtocolType(static_cast<shv::chainpack::Rpc::ProtocolType>(v));}
 
 	void connectToHost(const QUrl &url);
 
