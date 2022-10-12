@@ -439,7 +439,7 @@ RpcValue RpcValue::fromType(RpcValue::Type t) noexcept
 	case Type::Invalid: return RpcValue{};
 	case Type::Null: return RpcValue{nullptr};
 	case Type::UInt: return RpcValue{static_cast<UInt>(0)};
-	case Type::Int: return RpcValue{static_cast<Int>(0)};
+	case Type::Int: return RpcValue{0};
 	case Type::Double: return RpcValue{static_cast<double>(0)};
 	case Type::Bool: return RpcValue{false};
 	case Type::String: return RpcValue{String()};
@@ -940,7 +940,7 @@ RpcValue::DateTime RpcValue::DateTime::fromLocalString(const std::string &local_
 		return ret;
 	}
 	utc_offset = (tim - utc_tim) / 60;
-	epoch_msec = static_cast<int64_t>(utc_tim) * 60 * 1000 + msec;
+	epoch_msec = utc_tim * 60 * 1000 + msec;
 	ret.m_dtm.msec = epoch_msec;
 	ret.m_dtm.tz = utc_offset;
 

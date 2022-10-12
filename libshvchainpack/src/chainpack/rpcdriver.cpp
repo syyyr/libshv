@@ -211,7 +211,7 @@ int64_t RpcDriver::writeBytes_helper(const std::string &str, size_t from, size_t
 void RpcDriver::onBytesRead(std::string &&bytes)
 {
 	logRpcData().nospace() << __FUNCTION__ << " " << bytes.length() << " bytes of data read:\n" << shv::chainpack::Utils::hexDump(bytes);
-	m_readData += std::string(std::move(bytes));
+	m_readData += std::move(bytes);
 	while(true) {
 		auto old_len = m_readData.size();
 		processReadData();

@@ -1833,7 +1833,7 @@ std::function<int (double)> Graph::valueToPosFn(const YRange &src, const Graph::
 	int y1 = dest.min;
 	int y2 = dest.max;
 	return [d1, d2, y1, y2](double val) {
-		return static_cast<int>(y1 + static_cast<double>(val - d1) * (y2 - y1) / (d2 - d1));
+		return static_cast<int>(y1 + val - d1 * (y2 - y1) / (d2 - d1));
 	};
 }
 

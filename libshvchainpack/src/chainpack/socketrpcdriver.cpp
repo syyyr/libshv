@@ -93,7 +93,7 @@ bool SocketRpcDriver::connectToHost(const std::string &host, int port)
 
 		bzero((char *) &serv_addr, sizeof(serv_addr));
 		serv_addr.sin_family = AF_INET;
-		bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
+		bcopy(server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
 		serv_addr.sin_port = htons(port);
 
 		/* Now connect to the server */

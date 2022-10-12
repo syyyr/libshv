@@ -162,7 +162,7 @@ RpcValue ShvFieldDescr::bitfieldValue(uint64_t uval) const
 	shvDebug() << "uval masked and rotated right by:" << bit_no1 << "bits, uval:" << uval;
 	RpcValue result;
 	if(bit_no1 == bit_no2)
-		result = static_cast<bool>(uval != 0);
+		result = uval != 0;
 	else
 		result = uval;
 	return result;

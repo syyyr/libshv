@@ -224,7 +224,7 @@ public:
 		RpcValue::Map toJson() const
 		{
 			return RpcValue::Map {
-				{Rpc::JSONRPC_ERROR_CODE, (int)code()},
+				{Rpc::JSONRPC_ERROR_CODE, code()},
 				{Rpc::JSONRPC_ERROR_MESSAGE, message()},
 			};
 		}
