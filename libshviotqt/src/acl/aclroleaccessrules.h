@@ -23,10 +23,10 @@ public:
 	static const char *ALL_SERVICES;
 
 	AclAccessRule() {}
-	AclAccessRule(const std::string &path_pattern, const std::string &method = std::string())
-		: pathPattern(path_pattern), method(method) {}
-	AclAccessRule(const std::string &path_pattern, const std::string &method, const shv::chainpack::AccessGrant &grant)
-		: pathPattern(path_pattern), method(method), grant(grant) {}
+	AclAccessRule(const std::string &path_pattern_, const std::string &method_ = std::string())
+		: pathPattern(path_pattern_), method(method_) {}
+	AclAccessRule(const std::string &path_pattern_, const std::string &method_, const shv::chainpack::AccessGrant &grant_)
+		: pathPattern(path_pattern_), method(method_), grant(grant_) {}
 
 	chainpack::RpcValue toRpcValue() const;
 	static AclAccessRule fromRpcValue(const chainpack::RpcValue &rpcval);

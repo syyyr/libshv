@@ -356,9 +356,9 @@ void ShvFileJournal::convertLog1JournalDir()
 						static constexpr size_t DT_LEN = 30;
 						char buff[DT_LEN];
 						in.read(buff, sizeof (buff));
-						auto n = in.gcount();
-						if(n > 0) {
-							std::string s(buff, static_cast<unsigned>(n));
+						auto char_count = in.gcount();
+						if(char_count > 0) {
+							std::string s(buff, static_cast<unsigned>(char_count));
 							int64_t file_msec = chainpack::RpcValue::DateTime::fromUtcString(s).msecsSinceEpoch();
 							if(file_msec == 0) {
 								shvWarning() << "cannot read date time from first line of file:" << fn << "line:" << s;

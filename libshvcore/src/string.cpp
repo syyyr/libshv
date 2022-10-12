@@ -64,8 +64,8 @@ bool String::equal(std::string const& a, std::string const& b, String::CaseSensi
 					b.begin(), b.end(),
 					a.begin(),
 					(case_sensitivity == CaseInsensitive) ?
-						[](char a, char b) { return std::tolower(a) == std::tolower(b); }:
-		[](char a, char b) { return a == b;}
+						[](char x, char y) { return std::tolower(x) == std::tolower(y); }:
+		[](char x, char y) { return x == y;}
 		);
 	}
 	else {

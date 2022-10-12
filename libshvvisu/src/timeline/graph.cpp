@@ -570,7 +570,7 @@ void Graph::setCrossHairPos(const Graph::CrossHairPos &pos)
 	emit presentationDirty(dirty_rect);
 }
 
-void Graph::setCurrentTime(timemsec_t time)
+void Graph::setCurrentTime(timemsec_t new_time)
 {
 	auto dirty_rect = [this](timemsec_t time) {
 		QRect r;
@@ -582,7 +582,7 @@ void Graph::setCurrentTime(timemsec_t time)
 		return r;
 	};
 	emit presentationDirty(dirty_rect(m_state.currentTime));
-	m_state.currentTime = time;
+	m_state.currentTime = new_time;
 	emit presentationDirty(dirty_rect(m_state.currentTime));
 	emit presentationDirty(m_layout.xAxisRect);
 }
@@ -1955,7 +1955,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		int maxY = 0;
 
 		SamePixelValue() {}
-		SamePixelValue(int x, int y) : x(x), y1(y), y2(y), minY(y), maxY(y) {}
+		SamePixelValue(int x_, int y_) : x(x_), y1(y_), y2(y_), minY(y_), maxY(y_) {}
 		SamePixelValue(const QPoint &p) : x(p.x()), y1(p.y()), y2(p.y()), minY(p.y()), maxY(p.y()) {}
 		bool isValid() const { return x != NO_X; }
 		bool isValueNotAvailable() const { return y1 == VALUE_NOT_AVILABLE_Y; }
@@ -2236,8 +2236,8 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 			Sample s = timeToSample(channel_ix, time);
 			if(s.value.isValid()) {
 				QPoint p = dataToPos(channel_ix, s);
-				int d = u2px(0.3);
-				QRect rect(0, 0, d, d);
+				int dd = u2px(0.3);
+				QRect rect(0, 0, dd, dd);
 				rect.moveCenter(p);
 				//painter->fillRect(rect, c->effectiveStyle.color());
 				painter->fillRect(rect, color);

@@ -78,8 +78,8 @@ public:
 	};
 public:
 	AccessGrant() {}
-	AccessGrant(const std::string &role)
-		: type(Type::Role), role(role) {}
+	AccessGrant(const std::string &role_)
+		: type(Type::Role), role(role_) {}
 
 	bool isValid() const;
 	bool isUserLogin() const;

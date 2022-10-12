@@ -57,21 +57,21 @@ public:
 	std::string userId;
 
 	ShvJournalEntry() {}
-	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, std::string domain, int short_time, ValueFlags flags, int64_t epoch_msec = 0)
+	ShvJournalEntry(std::string path_, shv::chainpack::RpcValue value_, std::string domain_, int short_time, ValueFlags flags, int64_t epoch_msec = 0)
 		: epochMsec(epoch_msec)
-		, path(std::move(path))
-		, value{value}
+		, path(std::move(path_))
+		, value{value_}
 		, shortTime(short_time)
-		, domain(std::move(domain))
+		, domain(std::move(domain_))
 		, valueFlags(flags)
 	{
 	}
-	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value)
-		: ShvJournalEntry(path, value, DOMAIN_VAL_CHANGE, NO_SHORT_TIME, NO_VALUE_FLAGS) {}
-	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, int short_time)
-		: ShvJournalEntry(path, value, DOMAIN_VAL_FASTCHANGE, short_time, NO_VALUE_FLAGS) {}
-	ShvJournalEntry(std::string path, shv::chainpack::RpcValue value, std::string domain)
-		: ShvJournalEntry(path, value, std::move(domain), NO_SHORT_TIME, NO_VALUE_FLAGS) {}
+	ShvJournalEntry(std::string path_, shv::chainpack::RpcValue value_)
+		: ShvJournalEntry(path_, value_, DOMAIN_VAL_CHANGE, NO_SHORT_TIME, NO_VALUE_FLAGS) {}
+	ShvJournalEntry(std::string path_, shv::chainpack::RpcValue value_, int short_time)
+		: ShvJournalEntry(path_, value_, DOMAIN_VAL_FASTCHANGE, short_time, NO_VALUE_FLAGS) {}
+	ShvJournalEntry(std::string path_, shv::chainpack::RpcValue value_, std::string domain_)
+		: ShvJournalEntry(path_, value_, std::move(domain_), NO_SHORT_TIME, NO_VALUE_FLAGS) {}
 
 	bool isValid() const {return !path.empty() && epochMsec > 0;}
 	bool isSpontaneous() const { return shv::chainpack::DataChange::testBit(valueFlags, ValueFlag::Spontaneous); }

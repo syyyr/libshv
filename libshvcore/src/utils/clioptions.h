@@ -43,7 +43,7 @@ public:
 			std::string comment;
 			bool mandatory = false;
 
-			Data(chainpack::RpcValue::Type type = chainpack::RpcValue::Type::Invalid) : type(type), mandatory(false) {}
+			Data(chainpack::RpcValue::Type type_ = chainpack::RpcValue::Type::Invalid) : type(type_), mandatory(false) {}
 		};
 		Data m_data;
 	public:

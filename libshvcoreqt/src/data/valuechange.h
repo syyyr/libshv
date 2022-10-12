@@ -103,11 +103,11 @@ struct SHVCOREQT_DECL_EXPORT ValueChange
 struct SHVCOREQT_DECL_EXPORT ValueXInterval
 {
 	ValueXInterval() = default;
-	inline ValueXInterval(ValueChange min, ValueChange max, ValueType type) : min(min.valueX), max(max.valueX), type(type) {}
-	inline ValueXInterval(ValueChange::ValueX min, ValueChange::ValueX max, ValueType type) : min(min), max(max), type(type) {}
-	inline ValueXInterval(int min, int max) : min(min), max(max), type(ValueType::Int) {}
-	inline ValueXInterval(ValueChange::TimeStamp min, ValueChange::TimeStamp max) : min(min), max(max), type(ValueType::TimeStamp) {}
-	inline ValueXInterval(double min, double max) : min(min), max(max), type(ValueType::Double) {}
+	inline ValueXInterval(ValueChange min_, ValueChange max_, ValueType type_) : min(min_.valueX), max(max_.valueX), type(type_) {}
+	inline ValueXInterval(ValueChange::ValueX min_, ValueChange::ValueX max_, ValueType type_) : min(min_), max(max_), type(type_) {}
+	inline ValueXInterval(int min_, int max_) : min(min_), max(max_), type(ValueType::Int) {}
+	inline ValueXInterval(ValueChange::TimeStamp min_, ValueChange::TimeStamp max_) : min(min_), max(max_), type(ValueType::TimeStamp) {}
+	inline ValueXInterval(double min_, double max_) : min(min_), max(max_), type(ValueType::Double) {}
 
 	bool operator==(const ValueXInterval &interval) const;
 

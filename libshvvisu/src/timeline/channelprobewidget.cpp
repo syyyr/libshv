@@ -81,9 +81,9 @@ bool ChannelProbeWidget::eventFilter(QObject *o, QEvent *e)
 		setCursor(QCursor(Qt::ArrowCursor));
 	}
 	else if (e->type() == QEvent::MouseMove) {
-		QPoint pos = static_cast<QMouseEvent*>(e)->pos();
 
 		if (m_mouseOperation == MouseOperation::MoveWidget) {
+			QPoint pos = static_cast<QMouseEvent*>(e)->pos();
 			QPoint dist = pos - m_recentMousePos;
 			move(geometry().topLeft() + dist);
 			m_recentMousePos = pos - dist;

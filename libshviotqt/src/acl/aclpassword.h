@@ -18,9 +18,9 @@ struct SHVIOTQT_DECL_EXPORT AclPassword
 	Format format = Format::Invalid;
 
 	AclPassword() {}
-	AclPassword(std::string password, Format format)
-		: password(std::move(password))
-		, format(format)
+	AclPassword(std::string password_, Format format_)
+		: password(std::move(password_))
+		, format(format_)
 	{}
 
 	bool isValid() const {return format != Format::Invalid;}

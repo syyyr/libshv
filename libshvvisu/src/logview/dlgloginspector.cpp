@@ -54,8 +54,8 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 			QAction *a = new QAction(tr("ChainPack"), m);
 			connect(a, &QAction::triggered, [this]() {
 				auto log = m_logModel->log();
-				std::string data = log.toChainPack();
-				saveData(data, ".chpk");
+				std::string log_data = log.toChainPack();
+				saveData(log_data, ".chpk");
 			});
 			m->addAction(a);
 		}
@@ -63,15 +63,15 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 			QAction *a = new QAction(tr("Cpon"), m);
 			connect(a, &QAction::triggered, [this]() {
 				auto log = m_logModel->log();
-				std::string data = log.toCpon("\t");
-				saveData(data, ".cpon");
+				std::string log_data = log.toCpon("\t");
+				saveData(log_data, ".cpon");
 			});
 			m->addAction(a);
 		}
 		{
 			QAction *a = new QAction(tr("CSV"), m);
 			connect(a, &QAction::triggered, [this]() {
-				std::string data;
+				std::string log_data;
 				for(int row=0; row<m_logModel->rowCount(); row++) {
 					std::string row_data;
 					for(int col=0; col<m_logModel->columnCount(); col++) {
@@ -81,10 +81,10 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 						row_data += ix.data(Qt::DisplayRole).toString().toStdString();
 					}
 					if(row > 0)
-						data += '\n';
-					data += row_data;
+						log_data += '\n';
+					log_data += row_data;
 				}
-				saveData(data, ".csv");
+				saveData(log_data, ".csv");
 			});
 			m->addAction(a);
 		}
@@ -473,7 +473,7 @@ void DlgLogInspector::showInfo(const QString &msg, bool is_error)
 	}
 }
 
-void DlgLogInspector::saveData(const std::string &data, QString ext)
+void DlgLogInspector::saveData(const std::string &data_to_be_saved, QString ext)
 {
 	QString fn = QFileDialog::getSaveFileName(this, tr("Savefile"), QString(), "*" + ext);
 	if(fn.isEmpty())
@@ -482,7 +482,7 @@ void DlgLogInspector::saveData(const std::string &data, QString ext)
 		fn = fn + ext;
 	QFile f(fn);
 	if(f.open(QFile::WriteOnly)) {
-		f.write(data.data(), static_cast<qint64>(data.size()));
+		f.write(data_to_be_saved.data(), static_cast<qint64>(data_to_be_saved.size()));
 	}
 	else {
 		QMessageBox::warning(this, tr("Warning"), tr("Cannot open file '%1' for write.").arg(fn));

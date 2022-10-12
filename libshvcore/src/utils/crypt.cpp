@@ -24,12 +24,12 @@ Crypt::Crypt(Crypt::Generator gen)
 Crypt::Generator Crypt::createGenerator(uint32_t a, uint32_t b, uint32_t max_rand)
 {
 	auto ret = [a, b, max_rand](uint32_t val) -> uint32_t {
-		uint64_t ret = val;
-		ret *= a;
-		ret += b;
-		ret %= max_rand;
+		uint64_t val_64bit = val;
+		val_64bit *= a;
+		val_64bit += b;
+		val_64bit %= max_rand;
 		//qfWarning() << '(' << a << '*' << val << '+' << b << ") %" << max_rand << "---->" << ret;
-		return static_cast<uint32_t>(ret);
+		return static_cast<uint32_t>(val_64bit);
 	};
 	return ret;
 }

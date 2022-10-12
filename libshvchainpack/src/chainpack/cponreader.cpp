@@ -268,7 +268,7 @@ void CponReader::parseMetaData(RpcValue::MetaData &meta_data)
 	}
 }
 
-void CponReader::parseMap(RpcValue &val)
+void CponReader::parseMap(RpcValue &out_val)
 {
 	RpcValue::Map map;
 	while (true) {
@@ -282,10 +282,10 @@ void CponReader::parseMap(RpcValue &val)
 		read(val);
 		map[key.asString()] = val;
 	}
-	val = map;
+	out_val = map;
 }
 
-void CponReader::parseIMap(RpcValue &val)
+void CponReader::parseIMap(RpcValue &out_val)
 {
 	RpcValue::IMap map;
 	while (true) {
@@ -299,7 +299,7 @@ void CponReader::parseIMap(RpcValue &val)
 		read(val);
 		map[key.toInt()] = val;
 	}
-	val = map;
+	out_val = map;
 }
 
 void CponReader::read(RpcValue::MetaData &meta_data)

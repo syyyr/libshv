@@ -23,7 +23,7 @@ struct SHVIOTQT_DECL_EXPORT AclRole
 	//AclRole(std::string n, int w = 0) : name(std::move(n)), weight(w) {}
 	//AclRole(std::string n, int w, std::vector<std::string> roles) : name(std::move(n)), weight(w), roles(std::move(roles)) {}
 	AclRole(int w) : weight(w) {}
-	AclRole(int w, std::vector<std::string> roles) : weight(w), roles(std::move(roles)) {}
+	AclRole(int w, std::vector<std::string> roles_) : weight(w), roles(std::move(roles_)) {}
 
 	bool isValid() const {return weight != INVALID_WEIGHT;}
 	shv::chainpack::RpcValue toRpcValue() const;

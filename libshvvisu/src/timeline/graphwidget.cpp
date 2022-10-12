@@ -859,14 +859,14 @@ void GraphWidget::createProbe(int channel_ix, timemsec_t time)
 	ChannelProbe *probe = m_graph->addChannelProbe(channel_ix, time);
 	Q_ASSERT(probe);
 
-	connect(probe, &ChannelProbe::currentTimeChanged, probe, [this](int64_t time) {
-		bool is_time_visible = m_graph->xRangeZoom().contains(time);
+	connect(probe, &ChannelProbe::currentTimeChanged, probe, [this](int64_t new_time) {
+		bool is_time_visible = m_graph->xRangeZoom().contains(new_time);
 
 		if (!is_time_visible) {
 			XRange x_range;
 			timemsec_t half_interval = m_graph->xRangeZoom().interval() / 2;
-			x_range.min = time - half_interval;
-			x_range.max = time + half_interval;
+			x_range.min = new_time - half_interval;
+			x_range.max = new_time + half_interval;
 
 			m_graph->setXRangeZoom(x_range);
 		}

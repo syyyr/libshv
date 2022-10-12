@@ -143,7 +143,6 @@ QStandardItem *ChannelFilterModel::shvPathToItem(const QString &shv_path, QStand
 void ChannelFilterModel::createNodesForPath(const QString &path)
 {
 	QStringList path_list = path.split("/");
-	QString sub_path;
 	QStandardItem *parent_item = invisibleRootItem();
 
 	for(int i = 0; i < path_list.size(); i++) {

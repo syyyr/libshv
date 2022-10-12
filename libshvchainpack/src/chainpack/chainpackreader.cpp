@@ -233,7 +233,7 @@ void ChainPackReader::parseMetaData(RpcValue::MetaData &meta_data)
 	}
 }
 
-void ChainPackReader::parseMap(RpcValue &val)
+void ChainPackReader::parseMap(RpcValue &out_val)
 {
 	RpcValue::Map map;
 	while (true) {
@@ -247,10 +247,10 @@ void ChainPackReader::parseMap(RpcValue &val)
 		read(val);
 		map[key.asString()] = val;
 	}
-	val = map;
+	out_val = map;
 }
 
-void ChainPackReader::parseIMap(RpcValue &val)
+void ChainPackReader::parseIMap(RpcValue &out_val)
 {
 	RpcValue::IMap map;
 	while (true) {
@@ -264,7 +264,7 @@ void ChainPackReader::parseIMap(RpcValue &val)
 		read(val);
 		map[key.toInt()] = val;
 	}
-	val = map;
+	out_val = map;
 }
 
 void ChainPackReader::read(RpcValue::MetaData &meta_data)

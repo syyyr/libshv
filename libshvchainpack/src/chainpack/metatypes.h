@@ -31,7 +31,7 @@ public:
 	const char *name = nullptr;
 
 	MetaInfo() : id(0), name(nullptr) {}
-	MetaInfo(int id, const char *name) : id(id), name(name) {}
+	MetaInfo(int id_, const char *name_) : id(id_), name(name_) {}
 
 	bool isValid() const {return (name && name[0]);}
 };

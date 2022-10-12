@@ -107,26 +107,26 @@ chainpack::RpcValue BrokerAppNode::callMethodRq(const chainpack::RpcRequest &rq)
 			const shv::chainpack::RpcValue parms = rq.params();
 			const shv::chainpack::RpcValue::Map &pm = parms.toMap();
 			std::string path = pm.value(cp::Rpc::PAR_PATH).toString();
-			std::string method = pm.value(cp::Rpc::PAR_METHOD).toString();
+			std::string method_param = pm.value(cp::Rpc::PAR_METHOD).toString();
 			int client_id = rq.peekCallerId();
-			BrokerApp::instance()->addSubscription(client_id, path, method);
+			BrokerApp::instance()->addSubscription(client_id, path, method_param);
 			return true;
 		}
 		if(method == cp::Rpc::METH_UNSUBSCRIBE) {
 			const shv::chainpack::RpcValue parms = rq.params();
 			const shv::chainpack::RpcValue::Map &pm = parms.toMap();
 			std::string path = pm.value(cp::Rpc::PAR_PATH).toString();
-			std::string method = pm.value(cp::Rpc::PAR_METHOD).toString();
+			std::string method_param = pm.value(cp::Rpc::PAR_METHOD).toString();
 			int client_id = rq.peekCallerId();
-			return BrokerApp::instance()->removeSubscription(client_id, path, method);
+			return BrokerApp::instance()->removeSubscription(client_id, path, method_param);
 		}
 		if(method == cp::Rpc::METH_REJECT_NOT_SUBSCRIBED) {
 			const shv::chainpack::RpcValue parms = rq.params();
 			const shv::chainpack::RpcValue::Map &pm = parms.toMap();
 			std::string path = pm.value(cp::Rpc::PAR_PATH).toString();
-			std::string method = pm.value(cp::Rpc::PAR_METHOD).toString();
+			std::string method_param = pm.value(cp::Rpc::PAR_METHOD).toString();
 			int client_id = rq.peekCallerId();
-			return BrokerApp::instance()->rejectNotSubscribedSignal(client_id, path, method);
+			return BrokerApp::instance()->rejectNotSubscribedSignal(client_id, path, method_param);
 		}
 		if (method == M_MASTER_BROKER_ID) {
 			int client_id = rq.peekCallerId();

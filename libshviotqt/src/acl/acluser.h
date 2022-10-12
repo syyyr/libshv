@@ -18,9 +18,9 @@ struct SHVIOTQT_DECL_EXPORT AclUser
 	std::vector<std::string> roles;
 
 	AclUser() {}
-	AclUser(AclPassword p, std::vector<std::string> roles)
+	AclUser(AclPassword p, std::vector<std::string> roles_)
 		: password(std::move(p))
-		, roles(std::move(roles))
+		, roles(std::move(roles_))
 	{}
 	//const std::string userName() const {return login.user;}
 	bool isValid() const {return password.isValid();}
