@@ -141,8 +141,8 @@ public:
 	std::string visualStyleName() const;
 	ShvNodeDescr &setVisualStyleName(const std::string &visual_style_name);
 
-	chainpack::RpcValue blacklist() const;
-	ShvNodeDescr &setBlacklist(chainpack::RpcValue::Map &&black_list);
+	//chainpack::RpcValue blacklist() const;
+	//ShvNodeDescr &setBlacklist(chainpack::RpcValue::Map &&black_list);
 
 	std::string alarm() const;
 	ShvNodeDescr &setAlarm(const std::string &alarm);
@@ -171,6 +171,7 @@ public:
 	const std::map<std::string, ShvTypeDescr>& types() const { return m_types; }
 	const std::map<std::string, ShvNodeDescr>& nodeDescriptions() const { return m_nodeDescriptions; }
 	const std::map<std::string, std::string>& systemPathsRoots() const { return m_systemPathsRoots; }
+	const std::map<std::string, shv::chainpack::RpcValue>& extraTags() const { return m_extraTags; }
 
 	ShvTypeInfo& setDevicePath(const std::string &device_path, const std::string &device_type);
 	ShvTypeInfo& setNodeDescription(const ShvNodeDescr &node_descr, const std::string &node_path, const std::string &device_type = {} );

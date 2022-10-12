@@ -27,7 +27,7 @@ static const char* KEY_FIELDS = "fields";
 static const char* KEY_SAMPLE_TYPE = "sampleType";
 static const char* KEY_TAGS = "tags";
 static const char* KEY_METHODS = "methods";
-static const char* KEY_BLACKLIST = "blacklist";
+//static const char* KEY_BLACKLIST = "blacklist";
 static const char* KEY_DEC_PLACES = "decPlaces";
 static const char* KEY_VISUAL_STYLE = "visualStyle";
 static const char* KEY_ALARM = "alarm";
@@ -448,7 +448,7 @@ ShvLogNodeDescr &ShvLogNodeDescr::setVisualStyleName(const string &visual_style_
 	setDataValue(KEY_VISUAL_STYLE, visual_style_name);
 	return *this;
 }
-
+/*
 RpcValue ShvNodeDescr::blacklist() const
 {
 	return dataValue(KEY_BLACKLIST);
@@ -460,7 +460,7 @@ ShvNodeDescr &ShvNodeDescr::setBlacklist(chainpack::RpcValue::Map &&black_list)
 	setDataValue(KEY_BLACKLIST, rv);
 	return *this;
 }
-
+*/
 string ShvLogNodeDescr::alarm() const
 {
 	return dataValue(KEY_ALARM, std::string()).asString();
@@ -522,9 +522,10 @@ ShvLogNodeDescr ShvLogNodeDescr::fromRpcValue(const RpcValue &v, RpcValue::Map *
 		KEY_LABEL,
 		KEY_DESCRIPTION,
 		KEY_UNIT,
-		KEY_BLACKLIST,
+		//KEY_BLACKLIST,
 		KEY_METHODS,
 		"autoload",
+		"autorefresh",
 		"monitored",
 		"monitorOptions",
 		"sampleType",
@@ -996,11 +997,11 @@ void ShvTypeInfo::fromNodesTree_helper(const shv::chainpack::RpcValue &node,
 				}
 			}
 		}
+		auto system_path = extra_tags.take(SYSTEM_PATH).asString();
+		if(!system_path.empty()) {
+			m_systemPathsRoots[shv_path] = system_path;
+		}
 		if(!extra_tags.empty()) {
-			auto system_path = extra_tags.take(SYSTEM_PATH).asString();
-			if(!system_path.empty()) {
-				m_systemPathsRoots[shv_path] = system_path;
-			}
 			setExtraTags(shv_path, extra_tags);
 		}
 	}

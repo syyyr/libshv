@@ -37,7 +37,7 @@
 				{"access":"cmd", "description":"Command to close the door.", "name":"close", "signature":"VoidVoid"},
 				{"access":"cmd", "description":"Command to open the door.", "name":"open", "signature":"VoidVoid"}
 			],
-			"tags":{"deviceType":"Door"}
+			"tags":{"deviceType":"Door", "blacklist": ["status/doorInhibit"]}
 		>{
 			"mode":<
 				"methods":[
@@ -77,7 +77,7 @@
 			}
 		},
 		"ElboxFuse@0":<
-			"tags":{"deviceType":"ElboxFuse"}
+			"tags":{"deviceType":"ElboxFuse", "blacklist": {"statusError": null}}
 		>{
 			"status":<
 				"methods":[

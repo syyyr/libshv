@@ -1,0 +1,4040 @@
+<
+	"nodeTypes":{
+		"CabinetUps_G3@0":<
+			"tags":{
+				"blacklist":{"degradationTime":null, "setDegradationTime":null},
+				"deviceType":"CabinetUps_G3"
+			}
+		>{
+			"degradationTime":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"},
+					{"access":"srv", "name":"set", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Delay to set zone to AB or EI when the cabinet is powered from UPS", "label":"Degradation timeout", "monitored":true, "unit":"s"}
+			>{},
+			"setDegradationTime":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"},
+					{"access":"srv", "name":"set", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Set delay (in seconds) to set zone to AB or EI when system is powered from UPS", "monitored":false, "typeName":"Int", "unit":"s"}
+			>{},
+			"status":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusCabinetUps"}
+			>{
+				"buffering":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":1, "description":"UPS battery is connected to the system and is being used to deliver power to the system", "label":"UPS buffering", "monitored":true, "typeName":"Bool"}
+				>{},
+				"ready":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":0, "description":"UPS unit is connected and ready", "label":"UPS ready", "monitored":true, "typeName":"Bool"}
+				>{},
+				"replaceBattery":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"warning",
+						"bitRange":2,
+						"description":"UPS battery needs to be replaced",
+						"label":"Battery replacement warning",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"warningPoweredFromUPS":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"warning",
+						"bitRange":17,
+						"description":"UPS is currently powering the cabinet from battery",
+						"label":"Cabinet powered from UPS",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{}
+			}
+		},
+		"Gate_G3@0":<
+			"methods":[
+				{
+					"access":"cmd",
+					"name":"changeRoute",
+					"signature":"VoidParam",
+					"tags":{"description":"Change route request at position rowNumber in request memory, if rowNumber == 0 then send cancel command to all currently created routes. If record == null then the specified rowNumber is deleted", "label":"Change route"}
+				},
+				{
+					"access":"cmd",
+					"name":"insertRoute",
+					"signature":"VoidParam",
+					"tags":{"description":"Insert route request to position rowNumber in request memory, if rowNumber == 0 then send cancel command to all currently created routes", "label":"Insert route"}
+				},
+				{
+					"access":"cmd",
+					"name":"resetGate",
+					"signature":"VoidVoid",
+					"tags":{"description":"Command to reset gate memory and currently active route", "label":"Reset gate"}
+				},
+				{
+					"access":"cmd",
+					"name":"resetRouteRequestInhibit",
+					"signature":"VoidVoid",
+					"tags":{"description":"Command to reset request inhibit", "label":"Reset request inhibit"}
+				},
+				{
+					"access":"cmd",
+					"name":"setRouteRequestInhibit",
+					"signature":"VoidVoid",
+					"tags":{"description":"Command to set request inhibit - all requests will be logged to the tram memory but not processed by the gate", "label":"Set request inhibit"}
+				}
+			],
+			"tags":{
+				"blacklist":{"resetRouteRequestInhibit":null, "setRouteRequestInhibit":null, "status/errorAtGate":null, "status/routeRequestInhibited":null},
+				"deviceType":"Gate_G3"
+			}
+		>{
+			"requestMemory":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"All requests on the gate waiting to be processed", "label":"Request memory", "monitored":true, "typeName":"String"}
+			>{},
+			"status":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusGate"}
+			>{
+				"SPAD":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"warning",
+						"bitRange":24,
+						"description":"Tram passed the gate without route in READY state (driver ignored the STOP signal - driver passed the red signal)",
+						"label":"Signal passed at danger (SPAD)",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"errorAtGate":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":30,
+						"description":"Any route starting at the gate is in ERROR state or SPAD has been detected and not solved",
+						"label":"Any route error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"routeRequestInhibited":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":8, "description":"All requests from gate are inhibited (trams can log in the request memory but no request will be processed by the gate)", "label":"Route request inhibited", "monitored":true, "typeName":"Bool"}
+				>{}
+			}
+		},
+		"RequestorDigital@0":<
+			"tags":{
+				"blacklist":{"status/errorInputCompl":null},
+				"deviceType":"RequestorDigital"
+			}
+		>{
+			"buttonsStatus":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusButtons"}
+			>{
+				"aanvraag":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":0, "description":"Route request command", "label":"Aanvraag", "monitored":true, "typeName":"Bool"}
+				>{}
+			},
+			"status":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusRequestorDigital"}
+			>{
+				"errorInput":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":29,
+						"description":"Hardware input error",
+						"label":"Input(-s) error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"errorInputCompl":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":30,
+						"description":"Both complementary inputs return the same signal (both true or both false)",
+						"label":"Complementarity error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"resetPressed":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":24, "description":"Reset of the gate has been triggered", "label":"Reset input activated", "monitored":true, "typeName":"Bool"}
+				>{}
+			}
+		},
+		"Route_G3@0":<
+			"methods":[
+				{
+					"access":"cmd",
+					"name":"disableAutoRequest",
+					"signature":"VoidVoid",
+					"tags":{"description":"Command to disable autorequesting of this route", "label":"Disable autorequest"}
+				},
+				{
+					"access":"cmd",
+					"name":"enableAutoRequest",
+					"signature":"VoidVoid",
+					"tags":{"description":"Command to enable autorequesting of this route", "label":"Enable autorequest"}
+				},
+				{
+					"access":"cmd",
+					"name":"request",
+					"signature":"VoidVoid",
+					"tags":{"description":"Command to request route (dispatcher request)", "label":"Request"}
+				}
+			],
+			"tags":{
+				"blacklist":{"disableAutoRequest":null, "enableAutoRequest":null, "tramID":null},
+				"deviceType":"Route_G3",
+				"startGate":"A"
+			}
+		>{
+			"status":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusRoute"}
+			>{
+				"SPAD":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":24, "description":"SPAD on the route detected, it will pass to gate for handling all routes with SPAD", "label":"Signal passed at danger (SPAD)", "monitored":true, "typeName":"Bool"}
+				>{},
+				"autoRequestEnabled":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":10, "description":"Route will be automatically requested if it can be requested and gate memory is free", "label":"Autorequest enabled", "monitored":true, "typeName":"Bool"}
+				>{},
+				"blocked":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":9, "description":"Route is externally blocked", "label":"Route blocked", "monitored":true, "typeName":"Bool"}
+				>{},
+				"canBeRequested":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":8, "description":"Route is FREE, all elements are unclaimed and not occupied, route is not blocked externally", "label":"Route can be requested", "monitored":true, "typeName":"Bool"}
+				>{},
+				"rejectionCode":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[16, 23],
+						"description":"Reason for rejecting the route request",
+						"label":"Route rejection code",
+						"monitored":true,
+						"typeName":"EnumRouteRejection"
+					}
+				>{},
+				"routeState":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[0, 3],
+						"description":"Current status of the route",
+						"label":"Route state",
+						"monitored":true,
+						"typeName":"EnumRouteState"
+					}
+				>{}
+			},
+			"tramID":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Identification of vehicle on a currently occupied route", "label":"Vehicle ID on route", "monitored":true, "typeName":"Int"}
+			>{}
+		},
+		"Route_G3@1":<
+			"methods":[
+				{
+					"access":"cmd",
+					"name":"disableAutoRequest",
+					"signature":"VoidVoid",
+					"tags":{"description":"Command to disable autorequesting of this route", "label":"Disable autorequest"}
+				},
+				{
+					"access":"cmd",
+					"name":"enableAutoRequest",
+					"signature":"VoidVoid",
+					"tags":{"description":"Command to enable autorequesting of this route", "label":"Enable autorequest"}
+				},
+				{
+					"access":"cmd",
+					"name":"request",
+					"signature":"VoidVoid",
+					"tags":{"description":"Command to request route (dispatcher request)", "label":"Request"}
+				}
+			],
+			"tags":{
+				"blacklist":{"disableAutoRequest":null, "enableAutoRequest":null, "tramID":null},
+				"deviceType":"Route_G3",
+				"startGate":"D"
+			}
+		>{
+			"status":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusRoute"}
+			>{
+				"SPAD":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":24, "description":"SPAD on the route detected, it will pass to gate for handling all routes with SPAD", "label":"Signal passed at danger (SPAD)", "monitored":true, "typeName":"Bool"}
+				>{},
+				"autoRequestEnabled":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":10, "description":"Route will be automatically requested if it can be requested and gate memory is free", "label":"Autorequest enabled", "monitored":true, "typeName":"Bool"}
+				>{},
+				"blocked":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":9, "description":"Route is externally blocked", "label":"Route blocked", "monitored":true, "typeName":"Bool"}
+				>{},
+				"canBeRequested":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":8, "description":"Route is FREE, all elements are unclaimed and not occupied, route is not blocked externally", "label":"Route can be requested", "monitored":true, "typeName":"Bool"}
+				>{},
+				"rejectionCode":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[16, 23],
+						"description":"Reason for rejecting the route request",
+						"label":"Route rejection code",
+						"monitored":true,
+						"typeName":"EnumRouteRejection"
+					}
+				>{},
+				"routeState":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[0, 3],
+						"description":"Current status of the route",
+						"label":"Route state",
+						"monitored":true,
+						"typeName":"EnumRouteState"
+					}
+				>{}
+			},
+			"tramID":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Identification of vehicle on a currently occupied route", "label":"Vehicle ID on route", "monitored":true, "typeName":"Int"}
+			>{}
+		},
+		"SPIELoop_G3@0":<
+			"tags":{"deviceType":"SPIELoop_G3"}
+		>{
+			"status":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusSPIELoop"}
+			>{
+				"activeTramCommunication":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":1, "description":"Communication between SPIE loop and vehicle is currently active", "label":"Vehicle communication active", "monitored":true, "typeName":"Bool"}
+				>{}
+			},
+			"vehicleDetected":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{
+					"autoload":true,
+					"description":"Detailed data from detected vehicle",
+					"label":"Detected vehicle",
+					"monitored":true,
+					"sampleType":"Discrete",
+					"typeName":"VehicleData"
+				}
+			>{}
+		},
+		"SignalSymbol_G3@0":<
+			"tags":{"deviceType":"SignalSymbol_G3"}
+		>{
+			"config":{
+				"currentLimitError":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"},
+						{"access":"srv", "name":"set", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"description":"Limit from calibrated current for current error",
+						"label":"Current limit error",
+						"monitored":false,
+						"typeName":"Int",
+						"unit":"%"
+					}
+				>{},
+				"currentLimitWarning":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"},
+						{"access":"srv", "name":"set", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"description":"Limit from calibrated current for current warning",
+						"label":"Current limit warning",
+						"monitored":false,
+						"typeName":"Int",
+						"unit":"%"
+					}
+				>{}
+			},
+			"currentActual":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{
+					"autoload":true,
+					"description":"Actual measured current",
+					"label":"Actual current",
+					"monitorOptions":{
+						"dataChangeFilter":{"deadbandValue":2}
+					},
+					"monitored":true,
+					"typeName":"Decimal(2)",
+					"unit":"mA"
+				}
+			>{},
+			"currentCalibrated":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{
+					"autoload":true,
+					"description":"Actual calibrated current (day/night)",
+					"label":"Calibrated current",
+					"monitored":true,
+					"typeName":"Decimal(2)",
+					"unit":"mA"
+				}
+			>{},
+			"status":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusSignalSymbol"}
+			>{
+				"errorCurrent":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":30,
+						"description":"Current is out of error bounds (out of error limit) or lower than minimum current limit",
+						"label":"Current error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"errorOutput":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":29,
+						"description":"Hardware output error",
+						"label":"Output(-s) error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"symbolState":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[0, 1],
+						"description":"Current status of the symbol",
+						"label":"Symbol state",
+						"monitored":true,
+						"typeName":"EnumSignalSymbolState",
+						"visualStyle":"symbolState"
+					}
+				>{},
+				"warningCurrent":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"warning",
+						"bitRange":24,
+						"description":"Current is out of warning bounds (out of warning limit)",
+						"label":"Current warning",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{}
+			}
+		},
+		"SignalSymbol_G3@1":<
+			"tags":{
+				"blacklist":{"config/currentLimitError":null, "status/errorCurrent":null},
+				"deviceType":"SignalSymbol_G3"
+			}
+		>{
+			"config":{
+				"currentLimitError":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"},
+						{"access":"srv", "name":"set", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"description":"Limit from calibrated current for current error",
+						"label":"Current limit error",
+						"monitored":false,
+						"typeName":"Int",
+						"unit":"%"
+					}
+				>{},
+				"currentLimitWarning":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"},
+						{"access":"srv", "name":"set", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"description":"Limit from calibrated current for current warning",
+						"label":"Current limit warning",
+						"monitored":false,
+						"typeName":"Int",
+						"unit":"%"
+					}
+				>{}
+			},
+			"currentActual":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{
+					"autoload":true,
+					"description":"Actual measured current",
+					"label":"Actual current",
+					"monitorOptions":{
+						"dataChangeFilter":{"deadbandValue":2}
+					},
+					"monitored":true,
+					"typeName":"Decimal(2)",
+					"unit":"mA"
+				}
+			>{},
+			"currentCalibrated":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{
+					"autoload":true,
+					"description":"Actual calibrated current (day/night)",
+					"label":"Calibrated current",
+					"monitored":true,
+					"typeName":"Decimal(2)",
+					"unit":"mA"
+				}
+			>{},
+			"status":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusSignalSymbol"}
+			>{
+				"errorCurrent":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":30,
+						"description":"Current is out of error bounds (out of error limit) or lower than minimum current limit",
+						"label":"Current error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"errorOutput":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":29,
+						"description":"Hardware output error",
+						"label":"Output(-s) error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"symbolState":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[0, 1],
+						"description":"Current status of the symbol",
+						"label":"Symbol state",
+						"monitored":true,
+						"typeName":"EnumSignalSymbolState",
+						"visualStyle":"symbolState"
+					}
+				>{},
+				"warningCurrent":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"warning",
+						"bitRange":24,
+						"description":"Current is out of warning bounds (out of warning limit)",
+						"label":"Current warning",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{}
+			}
+		},
+		"SignalSymbol_G3@2":<
+			"tags":{
+				"blacklist":{"config/currentLimitWarning":null, "status/warningCurrent":null},
+				"deviceType":"SignalSymbol_G3"
+			}
+		>{
+			"config":{
+				"currentLimitError":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"},
+						{"access":"srv", "name":"set", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"description":"Limit from calibrated current for current error",
+						"label":"Current limit error",
+						"monitored":false,
+						"typeName":"Int",
+						"unit":"%"
+					}
+				>{},
+				"currentLimitWarning":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"},
+						{"access":"srv", "name":"set", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"description":"Limit from calibrated current for current warning",
+						"label":"Current limit warning",
+						"monitored":false,
+						"typeName":"Int",
+						"unit":"%"
+					}
+				>{}
+			},
+			"currentActual":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{
+					"autoload":true,
+					"description":"Actual measured current",
+					"label":"Actual current",
+					"monitorOptions":{
+						"dataChangeFilter":{"deadbandValue":2}
+					},
+					"monitored":true,
+					"typeName":"Decimal(2)",
+					"unit":"mA"
+				}
+			>{},
+			"currentCalibrated":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{
+					"autoload":true,
+					"description":"Actual calibrated current (day/night)",
+					"label":"Calibrated current",
+					"monitored":true,
+					"typeName":"Decimal(2)",
+					"unit":"mA"
+				}
+			>{},
+			"status":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusSignalSymbol"}
+			>{
+				"errorCurrent":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":30,
+						"description":"Current is out of error bounds (out of error limit) or lower than minimum current limit",
+						"label":"Current error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"errorOutput":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":29,
+						"description":"Hardware output error",
+						"label":"Output(-s) error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"symbolState":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[0, 1],
+						"description":"Current status of the symbol",
+						"label":"Symbol state",
+						"monitored":true,
+						"typeName":"EnumSignalSymbolState",
+						"visualStyle":"symbolState"
+					}
+				>{},
+				"warningCurrent":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"warning",
+						"bitRange":24,
+						"description":"Current is out of warning bounds (out of warning limit)",
+						"label":"Current warning",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{}
+			}
+		},
+		"SystemSafety_G3@0":<
+			"methods":[
+				{
+					"access":"srv",
+					"name":"cmdAcknowledge",
+					"signature":"VoidParam",
+					"tags":{"description":"Command to acknowledge non-operational safety state", "label":"Acknowledge"}
+				},
+				{
+					"access":"srv",
+					"name":"cmdDownloadSW",
+					"signature":"VoidParam",
+					"tags":{"description":"Command to download new safety software", "label":"Download software"}
+				},
+				{
+					"access":"srv",
+					"name":"cmdGetInfo",
+					"signature":"VoidParam",
+					"tags":{"description":"Command to get current information about safety SW", "label":"Get current info"}
+				},
+				{
+					"access":"srv",
+					"name":"cmdReboot",
+					"signature":"VoidParam",
+					"tags":{"description":"Command to reboot safety PLC system", "label":"Reboot safety system"}
+				}
+			],
+			"tags":{"deviceType":"SystemSafety_G3"}
+		>{
+			"authorization":{
+				"authKeyGenerated":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Authorization PIN key generated from safety PLC to OPC", "label":"Generated PIN key", "monitored":true}
+				>{},
+				"authKeyInserted":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"},
+						{"access":"wr", "name":"set", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Inserted authorization PIN key from OPC to safety PLC", "label":"Inserted PIN key", "monitored":true, "typeName":"Int"}
+				>{}
+			},
+			"buildDateTime":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Build date and time of the PLC safety software", "label":"Build date and time", "monitored":false}
+			>{},
+			"projectCRC":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Control checksum of PLC safety software", "label":"Safety system CRC", "monitored":false}
+			>{},
+			"projectName":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Name of the safety zone project", "label":"Safety system name", "monitored":false}
+			>{},
+			"status":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusSystemSafety"}
+			>{
+				"SWdownloadInProgress":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":9, "description":"Safety system is currently downloading new software", "label":"Software download in progress", "monitored":true, "typeName":"Bool"}
+				>{},
+				"acknowledgeInProgress":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":10, "description":"Acknowledge command is being processed", "label":"Acknowledge command in progress", "monitored":true, "typeName":"Bool"}
+				>{},
+				"connectionActive":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":8, "description":"Non-safety system is connected to safety PLC and getting or setting data", "label":"Connection to safety PLC active", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorCommunication":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":11,
+						"description":"Safety CPU is not responding to diagnostics queries",
+						"label":"Communication error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"modulesChangedFW":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[16, 23],
+						"description":"Number of modules that have been replaced or are missing",
+						"label":"Number of replaced modules",
+						"monitored":true,
+						"typeName":"UInt"
+					}
+				>{},
+				"modulesReplaced":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[24, 31],
+						"description":"Number of modules with changed firmware",
+						"label":"Number of modules with changed FW",
+						"monitored":true,
+						"typeName":"UInt"
+					}
+				>{},
+				"safetyState":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[0, 7],
+						"description":"Current status of safety PLC",
+						"label":"Safety system state",
+						"monitored":true,
+						"typeName":"EnumSafetyState"
+					}
+				>{}
+			}
+		},
+		"System_G3@0":<
+			"methods":[
+				{
+					"access":"srv",
+					"name":"cmdRebootSystem",
+					"signature":"VoidParam",
+					"tags":{"description":"Command to reboot non-safety PLC system", "label":"Reboot system"}
+				}
+			],
+			"tags":{
+				"blacklist":{
+					"status/errorNetworkRing":null,
+					"status/errorPowerlinkRing":null,
+					"superiorSystem/setSlaveModeOff":null,
+					"superiorSystem/setSlaveModeOn":null,
+					"superiorSystem/slaveMode":null,
+					"superiorSystem/status/modeReason":null,
+					"superiorSystem/wdtCounterPC":null,
+					"superiorSystem/wdtCounterPLC":null
+				},
+				"deviceType":"System_G3"
+			}
+		>{
+			"PLCmodules":{
+				"errorPLCModule":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"autoload":true,
+						"description":"Error of PLC hardware module (B&R module)",
+						"label":"PLC module error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"errorPLCModuleAddress":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Identification (address) of PLC hardware module in error", "label":"PLC module error - identification", "monitored":true, "typeName":"String"}
+				>{}
+			},
+			"datetime":<
+				"methods":[
+					{
+						"access":"cfg",
+						"name":"activateNTPclient",
+						"signature":"VoidParam",
+						"tags":{"description":"Command to activate NTP client", "label":"Activate NTP client"}
+					},
+					{
+						"access":"cfg",
+						"name":"deactivateNTPclient",
+						"signature":"VoidParam",
+						"tags":{"description":"Command to deactivate NTP client", "label":"Deactivate NTP client"}
+					},
+					{"access":"cfg", "name":"setDateTime", "signature":"VoidParam"}
+				]
+			>{
+				"NTPclientActive":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Active time sync from NTP server", "label":"NTP client active", "monitored":false, "typeName":"Bool"}
+				>{},
+				"dateTime":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Current UTC date and time (seconds from 1970-01-01-00:00:00)", "label":"Current date and time", "monitored":false, "typeName":"DateTime"}
+				>{}
+			},
+			"deviceID":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Unique device identification", "label":"Device ID", "monitored":false, "typeName":"String"}
+			>{},
+			"ethernet":{
+				"IP":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"PLC IP address", "label":"IP address", "monitored":false, "typeName":"String"}
+				>{},
+				"MAC":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"MAC address of PLC", "label":"MAC address", "monitored":false, "typeName":"String"}
+				>{},
+				"gatewayIP":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Local cabinet network gateway IP address", "label":"Gateway IP address", "monitored":false, "typeName":"String"}
+				>{},
+				"hostName":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Local host name", "label":"Host name", "monitored":false, "typeName":"String"}
+				>{},
+				"subnetMask":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Local cabinet network subnet mask", "label":"Subnet mask", "monitored":false, "typeName":"String"}
+				>{}
+			},
+			"info":{
+				"memoryDRAMFree":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"description":"Available PLC DRAM memory",
+						"label":"Free DRAM memory",
+						"monitored":false,
+						"typeName":"Int",
+						"unit":"MB"
+					}
+				>{},
+				"memoryUserFree":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"description":"Available size of user partition on the memory card",
+						"label":"Free user memory",
+						"monitored":false,
+						"typeName":"Int",
+						"unit":"MB"
+					}
+				>{},
+				"memoryUserSize":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"description":"Size of user partition on the memory card",
+						"label":"User memory size",
+						"monitored":false,
+						"typeName":"Int",
+						"unit":"MB"
+					}
+				>{},
+				"tempCPU":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"description":"Temperature of PLC CPU",
+						"label":"CPU temperature",
+						"monitored":false,
+						"typeName":"Int",
+						"unit":"°C"
+					}
+				>{},
+				"tempPLC":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"description":"Temperature of PLC IO board (motherboard)",
+						"label":"PLC bus (IO board) temperature",
+						"monitored":false,
+						"typeName":"Int",
+						"unit":"°C"
+					}
+				>{}
+			},
+			"name":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Name of the system", "label":"System name", "monitored":false, "typeName":"String"}
+			>{},
+			"plcDisconnected":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{
+					"alarm":"error",
+					"autoload":true,
+					"description":"PLC is not connected to local SHV gate",
+					"label":"PLC disconnected from SHV",
+					"monitored":false,
+					"typeName":"Bool"
+				}
+			>{},
+			"status":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusSystem"}
+			>{
+				"errorInternalBattery":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":24,
+						"description":"PLC internal battery is depleted or unavailable",
+						"label":"Internal PLC battery error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"errorLoadingConfiguration":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":27,
+						"description":"Error occured while loading PLC configuration, default settings loaded",
+						"label":"Configuration loading error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"errorNetworkRing":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":28,
+						"description":"Network ring connection problem",
+						"label":"Error on network ring",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"errorPowerlinkRing":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":26,
+						"description":"Powerlink ring connection problem",
+						"label":"Error on Powerlink ring",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"errorUserDiskSpaceFull":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":25,
+						"description":"PLC memory for logs and configuration files is full",
+						"label":"PLC memory full",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"systemStarted":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":0, "description":"System is started up and running", "label":"System started", "monitored":true, "typeName":"Bool"}
+				>{}
+			},
+			"superiorSystem":<
+				"methods":[
+					{
+						"access":"srv",
+						"name":"setSlaveModeOff",
+						"signature":"VoidParam",
+						"tags":{"description":"Set the slave mode to off (FALSE) - PLC standalone, superior system not controlling the zone", "label":"Set Standalone mode"}
+					},
+					{
+						"access":"srv",
+						"name":"setSlaveModeOn",
+						"signature":"VoidParam",
+						"tags":{"description":"Set the slave mode to on (TRUE) - PLC is being controlled from superior system (PLC in in SLAVE mode)", "label":"Set Slave mode"}
+					}
+				]
+			>{
+				"slaveMode":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"PLC is acting as SLAVE to superior system", "label":"Superior system control", "monitored":false, "typeName":"UInt"}
+				>{},
+				"status":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusSuperiorSystem"}
+				>{
+					"modeReason":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":[0, 7],
+							"description":"PLC state in relation to superior system",
+							"label":"Superior system state",
+							"monitored":true,
+							"typeName":"EnumSuperiorSystem"
+						}
+					>{}
+				},
+				"wdtCounterPC":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Unix timestamp from EYAS, PLC time sync (detection of connected superior system - heartbeat)", "label":"Server heartbeat", "monitored":false, "typeName":"UInt"}
+				>{},
+				"wdtCounterPLC":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Second counter from PLC, every second increments, overflows at 0xFFFF to 0x0000", "label":"PLC heartbeat", "monitored":false, "typeName":"UInt"}
+				>{}
+			},
+			"version":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"PLC software version", "label":"System version", "monitored":false, "typeName":"String"}
+			>{}
+		},
+		"TC_G3@0":<
+			"tags":{
+				"blacklist":{"status/claimed":null},
+				"brclab":{"url":"brclab://192.168.1.10:4000/1"},
+				"deviceType":"TC_G3"
+			}
+		>{
+			"status":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusTC"}
+			>{
+				"claimed":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":1, "description":"Track circuit is claimed (reserved) for any route", "label":"Claimed for route", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorInput":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":29,
+						"description":"Hardware input error",
+						"label":"Input(-s) error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"errorInputCompl":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":30,
+						"description":"Both complementary inputs return the same signal (both true or both false)",
+						"label":"Complementarity error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"occupied":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":0, "description":"Detector is currently occupied", "label":"Occupied", "monitored":true, "typeName":"Bool"}
+				>{}
+			}
+		},
+		"TC_G3@1":<
+			"tags":{
+				"blacklist":{"status/claimed":null},
+				"brclab":{"url":"brclab://192.168.1.10:4000/2"},
+				"deviceType":"TC_G3"
+			}
+		>{
+			"status":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusTC"}
+			>{
+				"claimed":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":1, "description":"Track circuit is claimed (reserved) for any route", "label":"Claimed for route", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorInput":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":29,
+						"description":"Hardware input error",
+						"label":"Input(-s) error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"errorInputCompl":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":30,
+						"description":"Both complementary inputs return the same signal (both true or both false)",
+						"label":"Complementarity error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"occupied":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":0, "description":"Detector is currently occupied", "label":"Occupied", "monitored":true, "typeName":"Bool"}
+				>{}
+			}
+		},
+		"TC_G3@2":<
+			"tags":{
+				"blacklist":{"status/claimed":null},
+				"brclab":{"url":"brclab://192.168.1.10:4000/3"},
+				"deviceType":"TC_G3"
+			}
+		>{
+			"status":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusTC"}
+			>{
+				"claimed":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":1, "description":"Track circuit is claimed (reserved) for any route", "label":"Claimed for route", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorInput":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":29,
+						"description":"Hardware input error",
+						"label":"Input(-s) error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"errorInputCompl":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":30,
+						"description":"Both complementary inputs return the same signal (both true or both false)",
+						"label":"Complementarity error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"occupied":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":0, "description":"Detector is currently occupied", "label":"Occupied", "monitored":true, "typeName":"Bool"}
+				>{}
+			}
+		},
+		"TC_G3@3":<
+			"tags":{
+				"blacklist":{"status/claimed":null},
+				"brclab":{"url":"brclab://192.168.1.10:4000/4"},
+				"deviceType":"TC_G3"
+			}
+		>{
+			"status":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusTC"}
+			>{
+				"claimed":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":1, "description":"Track circuit is claimed (reserved) for any route", "label":"Claimed for route", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorInput":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":29,
+						"description":"Hardware input error",
+						"label":"Input(-s) error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"errorInputCompl":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":30,
+						"description":"Both complementary inputs return the same signal (both true or both false)",
+						"label":"Complementarity error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"occupied":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":0, "description":"Detector is currently occupied", "label":"Occupied", "monitored":true, "typeName":"Bool"}
+				>{}
+			}
+		},
+		"TC_G3@4":<
+			"tags":{
+				"blacklist":{"status/claimed":null},
+				"brclab":{"url":"brclab://192.168.1.10:4000/5"},
+				"deviceType":"TC_G3"
+			}
+		>{
+			"status":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusTC"}
+			>{
+				"claimed":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":1, "description":"Track circuit is claimed (reserved) for any route", "label":"Claimed for route", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorInput":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":29,
+						"description":"Hardware input error",
+						"label":"Input(-s) error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"errorInputCompl":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":30,
+						"description":"Both complementary inputs return the same signal (both true or both false)",
+						"label":"Complementarity error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"occupied":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":0, "description":"Detector is currently occupied", "label":"Occupied", "monitored":true, "typeName":"Bool"}
+				>{}
+			}
+		},
+		"TC_G3@5":<
+			"tags":{
+				"blacklist":{"status/claimed":null},
+				"brclab":{"url":"brclab://192.168.1.10:4000/6"},
+				"deviceType":"TC_G3"
+			}
+		>{
+			"status":<
+				"methods":[
+					{"access":"rd", "name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusTC"}
+			>{
+				"claimed":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":1, "description":"Track circuit is claimed (reserved) for any route", "label":"Claimed for route", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorInput":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":29,
+						"description":"Hardware input error",
+						"label":"Input(-s) error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"errorInputCompl":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"bitRange":30,
+						"description":"Both complementary inputs return the same signal (both true or both false)",
+						"label":"Complementarity error",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"occupied":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":0, "description":"Detector is currently occupied", "label":"Occupied", "monitored":true, "typeName":"Bool"}
+				>{}
+			}
+		}
+	},
+	"tags":{},
+	"typeInfo":{
+		"types":{
+			"Bool":{},
+			"DateTime":{},
+			"Decimal(1)":{
+				"tags":{"decPlaces":1},
+				"type":"Decimal"
+			},
+			"Decimal(2)":{
+				"tags":{"decPlaces":2},
+				"type":"Decimal"
+			},
+			"EnumRouteRejection":{
+				"fields":[
+					{"description":"Route is successfully requested", "label":"None", "name":"None", "value":0},
+					{"description":"Any PME cannot reach position in BUILD (after lost position timeout)", "label":"PME position", "name":"PMEPosition", "value":1},
+					{"description":"Route is blocked externally or by command from OPC", "label":"Blocked", "name":"Blocked", "value":20},
+					{"description":"Gate is CLOSED, zone is not in NORM state", "label":"Gate closed", "name":"GateClosed", "value":21},
+					{"description":"One or more elements of the route cannot be claimed (are claimed for another route)", "label":"Element(s) cannot be claimed", "name":"ElementCannotBeClaimed", "value":22}
+				],
+				"type":"Enum"
+			},
+			"EnumRouteState":{
+				"fields":[
+					{"description":"Route is FREE and waiting for request", "label":"Free", "name":"Free", "value":0},
+					{"description":"Route is being requested, all elements are being claimed, all poin machines are being set to correct position", "label":"Build", "name":"Build", "value":1},
+					{"description":"Route is ready for tram", "label":"Ready", "name":"Ready", "value":3},
+					{"description":"Route has been soft-resetted from RELEASE (by gate), after RELEASE timeout delay it will pass to FREE, if a tram passes the stopline, the route becomes OCCUPIED", "label":"Release", "name":"Release", "value":5},
+					{"description":"Route is occupied, any tram is present on the route", "label":"Occupied", "name":"Occupied", "value":7},
+					{"description":"Any illegal pass on route occured (on unclaimed detector, on claimed detector but not in correct order), or PM has lost its position on OCCUPIED route", "label":"Error", "name":"Error", "value":15}
+				],
+				"type":"Enum"
+			},
+			"EnumSafetyState":{
+				"fields":[
+					{"description":"SafeLogic controller is not responding (communication error)", "label":"Unknown", "name":"Unknown", "value":0},
+					{"description":"SafeLogic controller replaced (UDID mismatch) - cmdAcknowledge required", "label":"Safelogic replaced", "name":"SafelogicReplaced", "value":1},
+					{"description":"Diagnostics service not yet activated on the SafeLogic controller (may be due to new SW being uploaded)", "label":"Preoperational", "name":"Preoperational", "value":2},
+					{"description":"Safety software not yet initialized, SafeLogic controller starting up", "label":"Startup", "name":"Startup", "value":3},
+					{"description":"Initializing safety software", "label":"Init", "name":"Init", "value":4},
+					{"description":"Invalid state - SafeKey blank or startup still in progress", "label":"Invalid", "name":"Invalid", "value":5},
+					{"description":"No execution of safety software - no software uploaded or software corrupted", "label":"No execution", "name":"NoExecution", "value":6},
+					{"description":"SafeKey has been replaced or otherwise changed - cmdAcknowledge required", "label":"Safe key changed", "name":"SafeKeyChanged", "value":7},
+					{"description":"Firmware of at least one SafeNode (safety module) has been changed - cmdAcknowledge required", "label":"Module fw changed", "name":"ModuleFwChanged", "value":8},
+					{"description":"At least one SafeNode (safety module) has been replaced (UDID of the module does not match) - cmdAcknowledge required", "label":"Module replaced", "name":"ModuleReplaced", "value":9},
+					{"description":"At least one SafeNode (safety module) is missing - replace module", "label":"Module missing", "name":"ModuleMissing", "value":10},
+					{"description":"Not specified failsafe state (not specified by states above)", "label":"failsafe", "name":"Failsafe", "value":11},
+					{"description":"SafeLogic halted from SafeDesigner", "label":"Debug halt", "name":"DebugHalt", "value":12},
+					{"description":"SafeLogic controller stopped in DEBUG mode (will be exited after 10 minutes)", "label":"Debug stop", "name":"DebugStop", "value":13},
+					{"description":"SafeLogic controller running in DEBUG mode (will be exited after 10 minutes)", "label":"Debug run", "name":"DebugRun", "value":14},
+					{"description":"SafeLogic controller not running (stopped)", "label":"Stop", "name":"Stop", "value":15},
+					{"description":"SafeLogic controller running, everything OK", "label":"Run", "name":"Run", "value":16}
+				],
+				"type":"Enum"
+			},
+			"EnumSignalMode":{
+				"fields":[
+					{"description":"Luminance sensor from cabinet gives signal NIGHT, signal is powered from net", "label":"Night", "name":"Night", "value":0},
+					{"description":"Luminance sensor from cabinet gives signal DAY, signal is powered from net", "label":"Day", "name":"Day", "value":1},
+					{"description":"Luminance sensor from cabinet gives signal NIGHT, signal is powered from UPS battery", "label":"Night UPS", "name":"NightUPS", "value":2},
+					{"description":"Luminance sensor from cabinet gives signal DAY, signal is powered from UPS battery", "label":"Day UPS", "name":"DayUPS", "value":3}
+				],
+				"type":"Enum"
+			},
+			"EnumSignalSymbolState":{
+				"fields":[
+					{"description":"Symbol switched off (black face)", "label":"OFF", "name":"Off", "value":0},
+					{"description":"Symbol shining permanently", "label":"Shining", "name":"Shining", "value":1},
+					{"description":"Symbol blinking with 500ms period (500ms shining, 500ms off, repeat)", "label":"Blinking", "name":"Blinking", "value":2},
+					{"description":"Symbol is in error state, both current (safety and non-safety) or IO error (only for safety)", "label":"Error", "name":"Error", "value":3}
+				],
+				"type":"Enum"
+			},
+			"EnumSuperiorSystem":{
+				"fields":[
+					{"description":"slave mode is switched on (system is controlled from superior system)", "label":"Slave", "name":"Slave", "value":0},
+					{"description":"communication error with superior system (heartbeat error) - system is in autonomous mode (slave mode off)", "label":"Standalone - communication error", "name":"StandaloneCommunicationError", "value":1},
+					{"description":"superior system switched the slave mode off", "label":"Standalone - forced", "name":"StandaloneForced", "value":2},
+					{"description":"no superior system is present, default state", "label":"Standalone - no superior system", "name":"StandaloneNoSuperiorSystem", "value":99}
+				],
+				"type":"Enum"
+			},
+			"EnumZoneState":{
+				"fields":[
+					{"description":"temporary state after startup", "label":"Unknown", "name":"Unknown", "value":0},
+					{"description":"normal operation", "label":"Normal", "name":"Normal", "value":1},
+					{"description":"all-blocked state", "label":"All blocked", "name":"AllBlocked", "value":2},
+					{"description":"emergency inhibit", "label":"Emergency inhibit", "name":"EmergencyInhibit", "value":3}
+				],
+				"type":"Enum"
+			},
+			"Int":{},
+			"StatusButtons":{
+				"fields":[
+					{"description":"Route request command", "label":"Aanvraag", "name":"aanvraag", "value":0}
+				],
+				"type":"BitField"
+			},
+			"StatusCabinet":{
+				"fields":[
+					{"description":"Signal calibration procedure is enabled by pressing the button in cabinet", "label":"Signal calibration enabled", "name":"calibrationEnabled", "value":0},
+					{"description":"Luminance sensor - night = yes day = no", "label":"Night mode active", "name":"activeTwilightSensor", "value":1},
+					{"description":"Internal cabinet fan activated", "label":"Cabinet fan active", "name":"activeFan", "value":2},
+					{"description":"Catenary voltage is not present", "label":"Catenary voltage missing", "name":"voltageCatenaryNotPresent", "value":3},
+					{"description":"230VAC power supply is not present", "label":"230VAC power supply missing", "name":"voltage230VNotPresent", "value":4},
+					{
+						"description":"Cabinet door currently open",
+						"label":"Cabinet door open",
+						"name":"warningDoorOpened",
+						"tags":{"alarm":"warning"},
+						"value":17
+					},
+					{
+						"description":"Main external power supply for 24V bus is not active (error, disconnected...)",
+						"label":"External 24V power supply inactive",
+						"name":"warningPowerInactive",
+						"tags":{"alarm":"warning"},
+						"value":18
+					},
+					{
+						"description":"Catenary (OCL) voltage out of limits (10% band) or measurement error",
+						"label":"Catenary voltage out of limits",
+						"name":"errorVoltage600V",
+						"tags":{"alarm":"error"},
+						"value":24
+					},
+					{
+						"description":"Voltage 24V out of limits (10% band) or measurement error",
+						"label":"Voltage 24V out of limits",
+						"name":"errorUnderOverVoltage24",
+						"tags":{"alarm":"error"},
+						"value":25
+					},
+					{
+						"description":"Upper or bottom temperature out of limits or measurement error",
+						"label":"Temperature out of limits",
+						"name":"errorOverTemperature",
+						"tags":{"alarm":"error"},
+						"value":26
+					},
+					{
+						"description":"Complementarity error or hardware input error",
+						"label":"NORM button error",
+						"name":"errorNormButton",
+						"tags":{"alarm":"error"},
+						"value":27
+					},
+					{
+						"description":"Complementarity error or hardware input error",
+						"label":"AB button error",
+						"name":"errorABButton",
+						"tags":{"alarm":"error"},
+						"value":28
+					},
+					{
+						"description":"Complementarity error or hardware input error",
+						"label":"EI button error",
+						"name":"errorEIButton",
+						"tags":{"alarm":"error"},
+						"value":29
+					},
+					{
+						"description":"Complementarity error or hardware input error",
+						"label":"Calibration button error",
+						"name":"errorCalibrationButton",
+						"tags":{"alarm":"error"},
+						"value":30
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusCabinetUps":{
+				"fields":[
+					{"description":"UPS unit is connected and ready", "label":"UPS ready", "name":"ready", "value":0},
+					{"description":"UPS battery is connected to the system and is being used to deliver power to the system", "label":"UPS buffering", "name":"buffering", "value":1},
+					{
+						"description":"UPS battery needs to be replaced",
+						"label":"Battery replacement warning",
+						"name":"replaceBattery",
+						"tags":{"alarm":"warning"},
+						"value":2
+					},
+					{
+						"description":"UPS is currently powering the cabinet from battery",
+						"label":"Cabinet powered from UPS",
+						"name":"warningPoweredFromUPS",
+						"tags":{"alarm":"warning"},
+						"value":17
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusGate":{
+				"fields":[
+					{"description":"All requests from gate are inhibited (trams can log in the request memory but no request will be processed by the gate)", "label":"Route request inhibited", "name":"routeRequestInhibited", "value":8},
+					{
+						"description":"Tram passed the gate without route in READY state (driver ignored the STOP signal - driver passed the red signal)",
+						"label":"Signal passed at danger (SPAD)",
+						"name":"SPAD",
+						"tags":{"alarm":"warning"},
+						"value":24
+					},
+					{
+						"description":"Any route starting at the gate is in ERROR state or SPAD has been detected and not solved",
+						"label":"Any route error",
+						"name":"errorAtGate",
+						"tags":{"alarm":"error"},
+						"value":30
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusRequestorDigital":{
+				"fields":[
+					{"description":"Reset of the gate has been triggered", "label":"Reset input activated", "name":"resetPressed", "value":24},
+					{
+						"description":"Hardware input error",
+						"label":"Input(-s) error",
+						"name":"errorInput",
+						"tags":{"alarm":"error"},
+						"value":29
+					},
+					{
+						"description":"Both complementary inputs return the same signal (both true or both false)",
+						"label":"Complementarity error",
+						"name":"errorInputCompl",
+						"tags":{"alarm":"error"},
+						"value":30
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusRoute":{
+				"fields":[
+					{
+						"description":"Current status of the route",
+						"label":"Route state",
+						"name":"routeState",
+						"typeName":"EnumRouteState",
+						"value":[0, 3]
+					},
+					{"description":"Route is FREE, all elements are unclaimed and not occupied, route is not blocked externally", "label":"Route can be requested", "name":"canBeRequested", "value":8},
+					{"description":"Route is externally blocked", "label":"Route blocked", "name":"blocked", "value":9},
+					{"description":"Route will be automatically requested if it can be requested and gate memory is free", "label":"Autorequest enabled", "name":"autoRequestEnabled", "value":10},
+					{
+						"description":"Reason for rejecting the route request",
+						"label":"Route rejection code",
+						"name":"rejectionCode",
+						"typeName":"EnumRouteRejection",
+						"value":[16, 23]
+					},
+					{"description":"SPAD on the route detected, it will pass to gate for handling all routes with SPAD", "label":"Signal passed at danger (SPAD)", "name":"SPAD", "value":24}
+				],
+				"type":"BitField"
+			},
+			"StatusSPIELoop":{
+				"fields":[
+					{"description":"Communication between SPIE loop and vehicle is currently active", "label":"Vehicle communication active", "name":"activeTramCommunication", "value":1}
+				],
+				"type":"BitField"
+			},
+			"StatusSignal":{
+				"fields":[
+					{
+						"description":"Current status of the signal",
+						"label":"Signal state",
+						"name":"lampMode",
+						"tags":{"visualStyle":"signalLampMode"},
+						"typeName":"EnumSignalMode",
+						"value":[0, 1]
+					},
+					{
+						"description":"Signal calibration procedure is enabled by pressing the button in cabinet",
+						"label":"Calibration enabled",
+						"name":"calibrationEnabled",
+						"tags":{"visualStyle":"errorLed"},
+						"value":8
+					},
+					{
+						"description":"Signal is currently being calibrated",
+						"label":"Calibration in progress",
+						"name":"calibrationInProcess",
+						"tags":{"visualStyle":"activityLed"},
+						"value":9
+					},
+					{
+						"description":"Signal test is running, it will be switched off by button or after 30 seconds",
+						"label":"Signal test in progress",
+						"name":"turnedOnManually",
+						"tags":{"visualStyle":"errorLed"},
+						"value":10
+					},
+					{
+						"description":"Current on any symbol is out of warning bounds",
+						"label":"Any symbol current warning",
+						"name":"warningCurrentGeneral",
+						"tags":{"alarm":"warning"},
+						"value":24
+					},
+					{
+						"description":"Hardware error of any symbol of the signal",
+						"label":"Any symbol hardware error",
+						"name":"errorIOGeneral",
+						"tags":{"alarm":"error"},
+						"value":29
+					},
+					{
+						"description":"Current on any symbol is out of error bounds",
+						"label":"Any symbol current error",
+						"name":"errorCurrentGeneral",
+						"tags":{"alarm":"error"},
+						"value":30
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusSignalSymbol":{
+				"fields":[
+					{
+						"description":"Current status of the symbol",
+						"label":"Symbol state",
+						"name":"symbolState",
+						"tags":{"visualStyle":"symbolState"},
+						"typeName":"EnumSignalSymbolState",
+						"value":[0, 1]
+					},
+					{
+						"description":"Current is out of warning bounds (out of warning limit)",
+						"label":"Current warning",
+						"name":"warningCurrent",
+						"tags":{"alarm":"warning"},
+						"value":24
+					},
+					{
+						"description":"Hardware output error",
+						"label":"Output(-s) error",
+						"name":"errorOutput",
+						"tags":{"alarm":"error"},
+						"value":29
+					},
+					{
+						"description":"Current is out of error bounds (out of error limit) or lower than minimum current limit",
+						"label":"Current error",
+						"name":"errorCurrent",
+						"tags":{"alarm":"error"},
+						"value":30
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusSuperiorSystem":{
+				"fields":[
+					{
+						"description":"PLC state in relation to superior system",
+						"label":"Superior system state",
+						"name":"modeReason",
+						"typeName":"EnumSuperiorSystem",
+						"value":[0, 7]
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusSystem":{
+				"fields":[
+					{"description":"System is started up and running", "label":"System started", "name":"systemStarted", "value":0},
+					{
+						"description":"PLC internal battery is depleted or unavailable",
+						"label":"Internal PLC battery error",
+						"name":"errorInternalBattery",
+						"tags":{"alarm":"error"},
+						"value":24
+					},
+					{
+						"description":"PLC memory for logs and configuration files is full",
+						"label":"PLC memory full",
+						"name":"errorUserDiskSpaceFull",
+						"tags":{"alarm":"error"},
+						"value":25
+					},
+					{
+						"description":"Powerlink ring connection problem",
+						"label":"Error on Powerlink ring",
+						"name":"errorPowerlinkRing",
+						"tags":{"alarm":"error"},
+						"value":26
+					},
+					{
+						"description":"Error occured while loading PLC configuration, default settings loaded",
+						"label":"Configuration loading error",
+						"name":"errorLoadingConfiguration",
+						"tags":{"alarm":"error"},
+						"value":27
+					},
+					{
+						"description":"Network ring connection problem",
+						"label":"Error on network ring",
+						"name":"errorNetworkRing",
+						"tags":{"alarm":"error"},
+						"value":28
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusSystemSafety":{
+				"fields":[
+					{
+						"description":"Current status of safety PLC",
+						"label":"Safety system state",
+						"name":"safetyState",
+						"typeName":"EnumSafetyState",
+						"value":[0, 7]
+					},
+					{"description":"Non-safety system is connected to safety PLC and getting or setting data", "label":"Connection to safety PLC active", "name":"connectionActive", "value":8},
+					{"description":"Safety system is currently downloading new software", "label":"Software download in progress", "name":"SWdownloadInProgress", "value":9},
+					{"description":"Acknowledge command is being processed", "label":"Acknowledge command in progress", "name":"acknowledgeInProgress", "value":10},
+					{
+						"description":"Safety CPU is not responding to diagnostics queries",
+						"label":"Communication error",
+						"name":"errorCommunication",
+						"tags":{"alarm":"error"},
+						"value":11
+					},
+					{
+						"description":"Number of modules that have been replaced or are missing",
+						"label":"Number of replaced modules",
+						"name":"modulesChangedFW",
+						"value":[16, 23]
+					},
+					{
+						"description":"Number of modules with changed firmware",
+						"label":"Number of modules with changed FW",
+						"name":"modulesReplaced",
+						"value":[24, 31]
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusTC":{
+				"fields":[
+					{"description":"Detector is currently occupied", "label":"Occupied", "name":"occupied", "value":0},
+					{"description":"Track circuit is claimed (reserved) for any route", "label":"Claimed for route", "name":"claimed", "value":1},
+					{
+						"description":"Hardware input error",
+						"label":"Input(-s) error",
+						"name":"errorInput",
+						"tags":{"alarm":"error"},
+						"value":29
+					},
+					{
+						"description":"Both complementary inputs return the same signal (both true or both false)",
+						"label":"Complementarity error",
+						"name":"errorInputCompl",
+						"tags":{"alarm":"error"},
+						"value":30
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusZone":{
+				"fields":[
+					{
+						"description":"Current status of the zone",
+						"label":"Zone state",
+						"name":"zoneState",
+						"typeName":"EnumZoneState",
+						"value":[0, 1]
+					},
+					{"description":"System auto recovery function by delay is currently running", "label":"System auto recovery running", "name":"sarRunning", "value":8},
+					{"description":"Activate vizualization", "label":"Activate vizualization", "name":"activateVisu", "value":9}
+				],
+				"type":"BitField"
+			},
+			"String":{},
+			"UInt":{},
+			"VehicleData":{
+				"fields":[
+					{"description":"Vehicle ID", "label":"Vehicle ID", "name":"vehicleId", "typeName":"Int"},
+					{"description":"Line number", "label":"Line number", "name":"lineNumber", "typeName":"Int"},
+					{"description":"Route code", "label":"Route code", "name":"routeCode", "typeName":"Int"},
+					{"description":"Service number", "label":"Service number", "name":"serviceNumber", "typeName":"Int"},
+					{"description":"Vehicle type", "label":"Vehicle type", "name":"vehicleType", "typeName":"Int"},
+					{"description":"Direction", "label":"Direction", "name":"direction", "typeName":"Int"},
+					{"description":"Category", "label":"Category", "name":"category", "typeName":"Int"},
+					{"description":"Stand number", "label":"Stand number", "name":"stand", "typeName":"Int"},
+					{"description":"Transponder position", "label":"Transponder position", "name":"side", "typeName":"Int"},
+					{"description":"Remote command", "label":"Remote command", "name":"remoteCommand", "typeName":"Int"},
+					{"description":"RTS button pressed (yes/no)", "label":"RTS button pressed (yes/no)", "name":"readyToStart", "typeName":"Int"}
+				],
+				"sampleType":"Discrete",
+				"type":"Map"
+			},
+			"ZoneReasonBitsAB":{
+				"fields":[
+					{
+						"description":"State has been set on system initialization",
+						"label":"Initialization",
+						"name":"initialization",
+						"tags":{"alarm":"warning"},
+						"value":0
+					},
+					{
+						"description":"State has been set from safety system (error of any safety module or safety CPU)",
+						"label":"Safety system",
+						"name":"safetySystem",
+						"tags":{"alarm":"warning"},
+						"value":1
+					},
+					{
+						"description":"State has been set with HW button in cabinet",
+						"label":"Button",
+						"name":"button",
+						"tags":{"alarm":"warning"},
+						"value":2
+					},
+					{
+						"description":"State has been set from OPC command",
+						"label":"Command",
+						"name":"command",
+						"tags":{"alarm":"warning"},
+						"value":3
+					},
+					{
+						"description":"State has been set by any detector (on track circuit or pantograph detector error)",
+						"label":"Detector",
+						"name":"detector",
+						"tags":{"alarm":"warning"},
+						"value":4
+					},
+					{
+						"description":"State has been set by point machine (on point machine error)",
+						"label":"Point machine",
+						"name":"pointMachine",
+						"tags":{"alarm":"warning"},
+						"value":5
+					},
+					{
+						"description":"State has been set by any signal (lamp) (on signal error)",
+						"label":"Signal",
+						"name":"signal",
+						"tags":{"alarm":"warning"},
+						"value":6
+					},
+					{
+						"description":"State has been set by any gate in zone (on SPAD, route error...)",
+						"label":"Gate",
+						"name":"gate",
+						"tags":{"alarm":"warning"},
+						"value":8
+					},
+					{
+						"description":"State has been set by PLC module error",
+						"label":"PLC module",
+						"name":"PLCModule",
+						"tags":{"alarm":"warning"},
+						"value":16
+					},
+					{
+						"description":"State has been set because loading configuration failed",
+						"label":"Loading configuration",
+						"name":"loadingConfiguration",
+						"tags":{"alarm":"warning"},
+						"value":17
+					},
+					{
+						"description":"State has been set because the system is running from UPS battery - AB",
+						"label":"UPS",
+						"name":"UPS",
+						"tags":{"alarm":"warning"},
+						"value":18
+					},
+					{
+						"description":"State has been set by System Auto Recovery function (SAR), only NORM state",
+						"label":"System auto recovery",
+						"name":"systemAutoRecovery",
+						"tags":{"alarm":"warning"},
+						"value":31
+					}
+				],
+				"type":"BitField"
+			},
+			"ZoneReasonBitsEI":{
+				"fields":[
+					{
+						"description":"State has been set on system initialization",
+						"label":"Initialization",
+						"name":"initialization",
+						"tags":{"alarm":"error"},
+						"value":0
+					},
+					{
+						"description":"State has been set from safety system (error of any safety module or safety CPU)",
+						"label":"Safety system",
+						"name":"safetySystem",
+						"tags":{"alarm":"error"},
+						"value":1
+					},
+					{
+						"description":"State has been set with HW button in cabinet",
+						"label":"Button",
+						"name":"button",
+						"tags":{"alarm":"error"},
+						"value":2
+					},
+					{
+						"description":"State has been set from OPC command",
+						"label":"Command",
+						"name":"command",
+						"tags":{"alarm":"error"},
+						"value":3
+					},
+					{
+						"description":"State has been set by any detector (on track circuit or pantograph detector error)",
+						"label":"Detector",
+						"name":"detector",
+						"tags":{"alarm":"error"},
+						"value":4
+					},
+					{
+						"description":"State has been set by point machine (on point machine error)",
+						"label":"Point machine",
+						"name":"pointMachine",
+						"tags":{"alarm":"error"},
+						"value":5
+					},
+					{
+						"description":"State has been set by any signal (lamp) (on signal error)",
+						"label":"Signal",
+						"name":"signal",
+						"tags":{"alarm":"error"},
+						"value":6
+					},
+					{
+						"description":"State has been set by any gate in zone (on SPAD, route error...)",
+						"label":"Gate",
+						"name":"gate",
+						"tags":{"alarm":"error"},
+						"value":8
+					},
+					{
+						"description":"State has been set by PLC module error",
+						"label":"PLC module",
+						"name":"PLCModule",
+						"tags":{"alarm":"error"},
+						"value":16
+					},
+					{
+						"description":"State has been set because loading configuration failed",
+						"label":"Loading configuration",
+						"name":"loadingConfiguration",
+						"tags":{"alarm":"error"},
+						"value":17
+					},
+					{
+						"description":"State has been set because the system is running from UPS battery - AB",
+						"label":"UPS",
+						"name":"UPS",
+						"tags":{"alarm":"error"},
+						"value":18
+					},
+					{
+						"description":"State has been set by System Auto Recovery function (SAR), only NORM state",
+						"label":"System auto recovery",
+						"name":"systemAutoRecovery",
+						"tags":{"alarm":"error"},
+						"value":31
+					}
+				],
+				"type":"BitField"
+			}
+		}
+	}
+>{
+	"devices":{
+		"cabinet":{
+			"SIG01":<
+				"tags":{
+					"blacklist":{"status/errorCalibrationButton":null, "status/errorVoltage600V":null, "temperatureBottom":null, "voltage600V":null},
+					"deviceType":"Cabinet_G3"
+				}
+			>{
+				"monitoringModule":<
+					"methods":[
+						{
+							"access":"srv",
+							"name":"clearValues",
+							"signature":"VoidVoid",
+							"tags":{"description":"Command to clear all saved values (all values except for humidity and temperature)", "label":"Clear saved values"}
+						}
+					]
+				>{
+					"acceleration01Max":<
+						"methods":[
+							{"access":"rd", "name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"autoload":true, "description":"Maximum acceleration value (direction 01 - X, Y or Z axis, depending on installation position)", "label":"Maximum acceleration value dir.01", "monitored":false, "typeName":"Int"}
+					>{},
+					"acceleration01Min":<
+						"methods":[
+							{"access":"rd", "name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"autoload":true, "description":"Minimum acceleration value (direction 01 - X, Y or Z axis, depending on installation position)", "label":"Minimum acceleration value dir.01", "monitored":false, "typeName":"Int"}
+					>{},
+					"acceleration02Max":<
+						"methods":[
+							{"access":"rd", "name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"autoload":true, "description":"Maximum acceleration value (direction 02 - X, Y or Z axis, depending on installation position)", "label":"Maximum acceleration value dir.02", "monitored":false, "typeName":"Int"}
+					>{},
+					"acceleration02Min":<
+						"methods":[
+							{"access":"rd", "name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"autoload":true, "description":"Minimum acceleration value (direction 02 - X, Y or Z axis, depending on installation position)", "label":"Minimum acceleration value dir.02", "monitored":false, "typeName":"Int"}
+					>{},
+					"acceleration03Max":<
+						"methods":[
+							{"access":"rd", "name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"autoload":true, "description":"Maximum acceleration value (direction 03 - X, Y or Z axis, depending on installation position)", "label":"Maximum acceleration value dir.03", "monitored":false, "typeName":"Int"}
+					>{},
+					"acceleration03Min":<
+						"methods":[
+							{"access":"rd", "name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"autoload":true, "description":"Minimum acceleration value (direction 03 - X, Y or Z axis, depending on installation position)", "label":"Minimum acceleration value dir.03", "monitored":false, "typeName":"Int"}
+					>{},
+					"humidity":<
+						"methods":[
+							{"access":"rd", "name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"autoload":true,
+							"description":"Humidity inside cabinet measured by monitoring module",
+							"label":"Humidity",
+							"monitored":false,
+							"typeName":"Int",
+							"unit":"%"
+						}
+					>{},
+					"operationTime":<
+						"methods":[
+							{"access":"rd", "name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"autoload":true,
+							"description":"Total operating time of the monitoring module",
+							"label":"Total operation time",
+							"monitored":false,
+							"typeName":"Int",
+							"unit":"s"
+						}
+					>{},
+					"powerOnCycles":<
+						"methods":[
+							{"access":"rd", "name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"autoload":true, "description":"Number of power-on cycles (how many times the cabinet has been powered on)", "label":"Number of power-on cycles", "monitored":false, "typeName":"Int"}
+					>{},
+					"temperature":<
+						"methods":[
+							{"access":"rd", "name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"autoload":true,
+							"description":"Temperature inside cabinet measured by monitoring module",
+							"label":"Temperature",
+							"monitored":false,
+							"typeName":"Int",
+							"unit":"°C"
+						}
+					>{}
+				},
+				"status":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusCabinet"}
+				>{
+					"activeFan":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"bitRange":2, "description":"Internal cabinet fan activated", "label":"Cabinet fan active", "monitored":true, "typeName":"Bool"}
+					>{},
+					"activeTwilightSensor":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"bitRange":1, "description":"Luminance sensor - night = yes day = no", "label":"Night mode active", "monitored":true, "typeName":"Bool"}
+					>{},
+					"calibrationEnabled":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"bitRange":0, "description":"Signal calibration procedure is enabled by pressing the button in cabinet", "label":"Signal calibration enabled", "monitored":true, "typeName":"Bool"}
+					>{},
+					"errorABButton":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":28,
+							"description":"Complementarity error or hardware input error",
+							"label":"AB button error",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"errorCalibrationButton":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":30,
+							"description":"Complementarity error or hardware input error",
+							"label":"Calibration button error",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"errorEIButton":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":29,
+							"description":"Complementarity error or hardware input error",
+							"label":"EI button error",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"errorNormButton":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":27,
+							"description":"Complementarity error or hardware input error",
+							"label":"NORM button error",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"errorOverTemperature":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":26,
+							"description":"Upper or bottom temperature out of limits or measurement error",
+							"label":"Temperature out of limits",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"errorUnderOverVoltage24":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":25,
+							"description":"Voltage 24V out of limits (10% band) or measurement error",
+							"label":"Voltage 24V out of limits",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"errorVoltage600V":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":24,
+							"description":"Catenary (OCL) voltage out of limits (10% band) or measurement error",
+							"label":"Catenary voltage out of limits",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"voltage230VNotPresent":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"bitRange":4, "description":"230VAC power supply is not present", "label":"230VAC power supply missing", "monitored":true, "typeName":"Bool"}
+					>{},
+					"voltageCatenaryNotPresent":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"bitRange":3, "description":"Catenary voltage is not present", "label":"Catenary voltage missing", "monitored":true, "typeName":"Bool"}
+					>{},
+					"warningDoorOpened":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":17,
+							"description":"Cabinet door currently open",
+							"label":"Cabinet door open",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"warningPowerInactive":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":18,
+							"description":"Main external power supply for 24V bus is not active (error, disconnected...)",
+							"label":"External 24V power supply inactive",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{}
+				},
+				"temperature":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"description":"Actual temperature in upper part of the cabinet",
+						"label":"Temperature",
+						"monitorOptions":{
+							"dataChangeFilter":{"deadbandValue":0.5}
+						},
+						"monitored":true,
+						"typeName":"Decimal(1)",
+						"unit":"°C"
+					}
+				>{},
+				"temperatureBottom":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"description":"Actual temperature in bottom part of the cabinet",
+						"label":"Bottom temperature",
+						"monitorOptions":{
+							"dataChangeFilter":{"deadbandValue":0.5}
+						},
+						"monitored":true,
+						"typeName":"Decimal(1)",
+						"unit":"°C"
+					}
+				>{},
+				"ups":{
+					"UPS":<"nodeTypeRef":"CabinetUps_G3@0">{}
+				},
+				"voltage24V":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"description":"Actual voltage at 24V bus",
+						"label":"Voltage 24V",
+						"monitorOptions":{
+							"dataChangeFilter":{"deadbandValue":1}
+						},
+						"monitored":true,
+						"typeName":"Decimal(2)",
+						"unit":"V"
+					}
+				>{},
+				"voltage600V":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"description":"Actual catenary (OCL) voltage",
+						"label":"Catenary voltage",
+						"monitorOptions":{
+							"dataChangeFilter":{"deadbandValue":3}
+						},
+						"monitored":true,
+						"typeName":"Int",
+						"unit":"V"
+					}
+				>{}
+			}
+		},
+		"gate":{
+			"A":<"nodeTypeRef":"Gate_G3@0">{},
+			"D":<"nodeTypeRef":"Gate_G3@0">{}
+		},
+		"requestorDigital":{
+			"KSW01":<"nodeTypeRef":"RequestorDigital@0">{},
+			"KSW02":<"nodeTypeRef":"RequestorDigital@0">{}
+		},
+		"signal":{
+			"SA01":<
+				"methods":[
+					{
+						"access":"srv",
+						"name":"calibrate",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to calibrate the signal - calibration button has to be pressed in cabinet", "label":"Calibrate"}
+					},
+					{
+						"access":"srv",
+						"name":"turnOff",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to switch off the test of the signal", "label":"Test OFF"}
+					},
+					{
+						"access":"srv",
+						"name":"turnOn",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to switch on the test of the signal", "label":"Test ON"}
+					}
+				],
+				"tags":{"deviceType":"Signal_G3"}
+			>{
+				"status":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusSignal"}
+				>{
+					"calibrationEnabled":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":8,
+							"description":"Signal calibration procedure is enabled by pressing the button in cabinet",
+							"label":"Calibration enabled",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"errorLed"
+						}
+					>{},
+					"calibrationInProcess":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":9,
+							"description":"Signal is currently being calibrated",
+							"label":"Calibration in progress",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"activityLed"
+						}
+					>{},
+					"errorCurrentGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":30,
+							"description":"Current on any symbol is out of error bounds",
+							"label":"Any symbol current error",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"errorIOGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":29,
+							"description":"Hardware error of any symbol of the signal",
+							"label":"Any symbol hardware error",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"lampMode":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":[0, 1],
+							"description":"Current status of the signal",
+							"label":"Signal state",
+							"monitored":true,
+							"typeName":"EnumSignalMode",
+							"visualStyle":"signalLampMode"
+						}
+					>{},
+					"turnedOnManually":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":10,
+							"description":"Signal test is running, it will be switched off by button or after 30 seconds",
+							"label":"Signal test in progress",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"errorLed"
+						}
+					>{},
+					"warningCurrentGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":24,
+							"description":"Current on any symbol is out of warning bounds",
+							"label":"Any symbol current warning",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{}
+				},
+				"symbol":{
+					"RED_LEFT":<"nodeTypeRef":"SignalSymbol_G3@0">{},
+					"RED_RIGHT":<"nodeTypeRef":"SignalSymbol_G3@0">{},
+					"WHITE":<"nodeTypeRef":"SignalSymbol_G3@1">{}
+				}
+			},
+			"SA02":<
+				"methods":[
+					{
+						"access":"srv",
+						"name":"calibrate",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to calibrate the signal - calibration button has to be pressed in cabinet", "label":"Calibrate"}
+					},
+					{
+						"access":"srv",
+						"name":"turnOff",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to switch off the test of the signal", "label":"Test OFF"}
+					},
+					{
+						"access":"srv",
+						"name":"turnOn",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to switch on the test of the signal", "label":"Test ON"}
+					}
+				],
+				"tags":{"deviceType":"Signal_G3"}
+			>{
+				"status":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusSignal"}
+				>{
+					"calibrationEnabled":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":8,
+							"description":"Signal calibration procedure is enabled by pressing the button in cabinet",
+							"label":"Calibration enabled",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"errorLed"
+						}
+					>{},
+					"calibrationInProcess":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":9,
+							"description":"Signal is currently being calibrated",
+							"label":"Calibration in progress",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"activityLed"
+						}
+					>{},
+					"errorCurrentGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":30,
+							"description":"Current on any symbol is out of error bounds",
+							"label":"Any symbol current error",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"errorIOGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":29,
+							"description":"Hardware error of any symbol of the signal",
+							"label":"Any symbol hardware error",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"lampMode":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":[0, 1],
+							"description":"Current status of the signal",
+							"label":"Signal state",
+							"monitored":true,
+							"typeName":"EnumSignalMode",
+							"visualStyle":"signalLampMode"
+						}
+					>{},
+					"turnedOnManually":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":10,
+							"description":"Signal test is running, it will be switched off by button or after 30 seconds",
+							"label":"Signal test in progress",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"errorLed"
+						}
+					>{},
+					"warningCurrentGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":24,
+							"description":"Current on any symbol is out of warning bounds",
+							"label":"Any symbol current warning",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{}
+				},
+				"symbol":{
+					"RED_LEFT":<"nodeTypeRef":"SignalSymbol_G3@0">{},
+					"RED_RIGHT":<"nodeTypeRef":"SignalSymbol_G3@0">{},
+					"WHITE":<"nodeTypeRef":"SignalSymbol_G3@1">{}
+				}
+			},
+			"SA03":<
+				"methods":[
+					{
+						"access":"srv",
+						"name":"calibrate",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to calibrate the signal - calibration button has to be pressed in cabinet", "label":"Calibrate"}
+					},
+					{
+						"access":"srv",
+						"name":"turnOff",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to switch off the test of the signal", "label":"Test OFF"}
+					},
+					{
+						"access":"srv",
+						"name":"turnOn",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to switch on the test of the signal", "label":"Test ON"}
+					}
+				],
+				"tags":{"deviceType":"Signal_G3"}
+			>{
+				"status":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusSignal"}
+				>{
+					"calibrationEnabled":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":8,
+							"description":"Signal calibration procedure is enabled by pressing the button in cabinet",
+							"label":"Calibration enabled",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"errorLed"
+						}
+					>{},
+					"calibrationInProcess":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":9,
+							"description":"Signal is currently being calibrated",
+							"label":"Calibration in progress",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"activityLed"
+						}
+					>{},
+					"errorCurrentGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":30,
+							"description":"Current on any symbol is out of error bounds",
+							"label":"Any symbol current error",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"errorIOGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":29,
+							"description":"Hardware error of any symbol of the signal",
+							"label":"Any symbol hardware error",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"lampMode":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":[0, 1],
+							"description":"Current status of the signal",
+							"label":"Signal state",
+							"monitored":true,
+							"typeName":"EnumSignalMode",
+							"visualStyle":"signalLampMode"
+						}
+					>{},
+					"turnedOnManually":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":10,
+							"description":"Signal test is running, it will be switched off by button or after 30 seconds",
+							"label":"Signal test in progress",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"errorLed"
+						}
+					>{},
+					"warningCurrentGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":24,
+							"description":"Current on any symbol is out of warning bounds",
+							"label":"Any symbol current warning",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{}
+				},
+				"symbol":{
+					"RED_LEFT":<"nodeTypeRef":"SignalSymbol_G3@0">{},
+					"RED_RIGHT":<"nodeTypeRef":"SignalSymbol_G3@0">{},
+					"WHITE":<"nodeTypeRef":"SignalSymbol_G3@1">{}
+				}
+			},
+			"SA04":<
+				"methods":[
+					{
+						"access":"srv",
+						"name":"calibrate",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to calibrate the signal - calibration button has to be pressed in cabinet", "label":"Calibrate"}
+					},
+					{
+						"access":"srv",
+						"name":"turnOff",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to switch off the test of the signal", "label":"Test OFF"}
+					},
+					{
+						"access":"srv",
+						"name":"turnOn",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to switch on the test of the signal", "label":"Test ON"}
+					}
+				],
+				"tags":{"deviceType":"Signal_G3"}
+			>{
+				"status":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusSignal"}
+				>{
+					"calibrationEnabled":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":8,
+							"description":"Signal calibration procedure is enabled by pressing the button in cabinet",
+							"label":"Calibration enabled",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"errorLed"
+						}
+					>{},
+					"calibrationInProcess":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":9,
+							"description":"Signal is currently being calibrated",
+							"label":"Calibration in progress",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"activityLed"
+						}
+					>{},
+					"errorCurrentGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":30,
+							"description":"Current on any symbol is out of error bounds",
+							"label":"Any symbol current error",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"errorIOGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":29,
+							"description":"Hardware error of any symbol of the signal",
+							"label":"Any symbol hardware error",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"lampMode":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":[0, 1],
+							"description":"Current status of the signal",
+							"label":"Signal state",
+							"monitored":true,
+							"typeName":"EnumSignalMode",
+							"visualStyle":"signalLampMode"
+						}
+					>{},
+					"turnedOnManually":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":10,
+							"description":"Signal test is running, it will be switched off by button or after 30 seconds",
+							"label":"Signal test in progress",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"errorLed"
+						}
+					>{},
+					"warningCurrentGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":24,
+							"description":"Current on any symbol is out of warning bounds",
+							"label":"Any symbol current warning",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{}
+				},
+				"symbol":{
+					"RED_LEFT":<"nodeTypeRef":"SignalSymbol_G3@0">{},
+					"RED_RIGHT":<"nodeTypeRef":"SignalSymbol_G3@0">{},
+					"WHITE":<"nodeTypeRef":"SignalSymbol_G3@1">{}
+				}
+			},
+			"SG01":<
+				"methods":[
+					{
+						"access":"srv",
+						"name":"calibrate",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to calibrate the signal - calibration button has to be pressed in cabinet", "label":"Calibrate"}
+					},
+					{
+						"access":"srv",
+						"name":"turnOff",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to switch off the test of the signal", "label":"Test OFF"}
+					},
+					{
+						"access":"srv",
+						"name":"turnOn",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to switch on the test of the signal", "label":"Test ON"}
+					}
+				],
+				"tags":{"deviceType":"Signal_G3"}
+			>{
+				"status":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusSignal"}
+				>{
+					"calibrationEnabled":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":8,
+							"description":"Signal calibration procedure is enabled by pressing the button in cabinet",
+							"label":"Calibration enabled",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"errorLed"
+						}
+					>{},
+					"calibrationInProcess":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":9,
+							"description":"Signal is currently being calibrated",
+							"label":"Calibration in progress",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"activityLed"
+						}
+					>{},
+					"errorCurrentGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":30,
+							"description":"Current on any symbol is out of error bounds",
+							"label":"Any symbol current error",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"errorIOGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":29,
+							"description":"Hardware error of any symbol of the signal",
+							"label":"Any symbol hardware error",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"lampMode":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":[0, 1],
+							"description":"Current status of the signal",
+							"label":"Signal state",
+							"monitored":true,
+							"typeName":"EnumSignalMode",
+							"visualStyle":"signalLampMode"
+						}
+					>{},
+					"turnedOnManually":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":10,
+							"description":"Signal test is running, it will be switched off by button or after 30 seconds",
+							"label":"Signal test in progress",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"errorLed"
+						}
+					>{},
+					"warningCurrentGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":24,
+							"description":"Current on any symbol is out of warning bounds",
+							"label":"Any symbol current warning",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{}
+				},
+				"symbol":{
+					"F0_STOP":<"nodeTypeRef":"SignalSymbol_G3@0">{},
+					"F1_GO":<"nodeTypeRef":"SignalSymbol_G3@0">{},
+					"P40R":<"nodeTypeRef":"SignalSymbol_G3@0">{},
+					"P80Y":<"nodeTypeRef":"SignalSymbol_G3@2">{}
+				}
+			},
+			"SG02":<
+				"methods":[
+					{
+						"access":"srv",
+						"name":"calibrate",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to calibrate the signal - calibration button has to be pressed in cabinet", "label":"Calibrate"}
+					},
+					{
+						"access":"srv",
+						"name":"turnOff",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to switch off the test of the signal", "label":"Test OFF"}
+					},
+					{
+						"access":"srv",
+						"name":"turnOn",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to switch on the test of the signal", "label":"Test ON"}
+					}
+				],
+				"tags":{"deviceType":"Signal_G3"}
+			>{
+				"status":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusSignal"}
+				>{
+					"calibrationEnabled":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":8,
+							"description":"Signal calibration procedure is enabled by pressing the button in cabinet",
+							"label":"Calibration enabled",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"errorLed"
+						}
+					>{},
+					"calibrationInProcess":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":9,
+							"description":"Signal is currently being calibrated",
+							"label":"Calibration in progress",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"activityLed"
+						}
+					>{},
+					"errorCurrentGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":30,
+							"description":"Current on any symbol is out of error bounds",
+							"label":"Any symbol current error",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"errorIOGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":29,
+							"description":"Hardware error of any symbol of the signal",
+							"label":"Any symbol hardware error",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"lampMode":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":[0, 1],
+							"description":"Current status of the signal",
+							"label":"Signal state",
+							"monitored":true,
+							"typeName":"EnumSignalMode",
+							"visualStyle":"signalLampMode"
+						}
+					>{},
+					"turnedOnManually":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":10,
+							"description":"Signal test is running, it will be switched off by button or after 30 seconds",
+							"label":"Signal test in progress",
+							"monitored":true,
+							"typeName":"Bool",
+							"visualStyle":"errorLed"
+						}
+					>{},
+					"warningCurrentGeneral":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":24,
+							"description":"Current on any symbol is out of warning bounds",
+							"label":"Any symbol current warning",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{}
+				},
+				"symbol":{
+					"F0_STOP":<"nodeTypeRef":"SignalSymbol_G3@0">{},
+					"F1_GO":<"nodeTypeRef":"SignalSymbol_G3@0">{},
+					"P40R":<"nodeTypeRef":"SignalSymbol_G3@0">{},
+					"P80Y":<"nodeTypeRef":"SignalSymbol_G3@2">{}
+				}
+			}
+		},
+		"spie":{
+			"TDI":<
+				"tags":{
+					"blacklist":{"status/errorCommunication":null},
+					"deviceType":"SPIEController_G3"
+				}
+			>{
+				"loop":{
+					"TDI01":<"nodeTypeRef":"SPIELoop_G3@0">{},
+					"TDI02":<"nodeTypeRef":"SPIELoop_G3@0">{},
+					"TDI03":<"nodeTypeRef":"SPIELoop_G3@0">{},
+					"TDI04":<"nodeTypeRef":"SPIELoop_G3@0">{}
+				}
+			}
+		},
+		"tc":{
+			"TC01":<"nodeTypeRef":"TC_G3@0">{},
+			"TC02":<"nodeTypeRef":"TC_G3@1">{},
+			"TC03":<"nodeTypeRef":"TC_G3@2">{},
+			"TC04":<"nodeTypeRef":"TC_G3@3">{},
+			"TC05":<"nodeTypeRef":"TC_G3@4">{},
+			"TC06":<"nodeTypeRef":"TC_G3@5">{}
+		},
+		"zone":{
+			"langevelden":<
+				"methods":[
+					{
+						"access":"cmd",
+						"name":"setAllBlocked",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to set All blocked state", "label":"Set AB"}
+					},
+					{
+						"access":"cmd",
+						"name":"setEmergencyInhibit",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to set Emergency inhibit state", "label":"Set EI"}
+					},
+					{
+						"access":"cmd",
+						"name":"setNormal",
+						"signature":"VoidVoid",
+						"tags":{"description":"Command to set Normal state", "label":"Set NORM", "safetyManager":"systemSafety"}
+					}
+				],
+				"tags":{"deviceType":"Zone_G3", "label":"Zone Langevelden"}
+			>{
+				"reasonAB":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"createFromTypeName":true,
+						"description":"Reason for all blocked state",
+						"label":"Reason AB",
+						"monitored":true,
+						"typeName":"ZoneReasonBitsAB"
+					}
+				>{
+					"PLCModule":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":16,
+							"description":"State has been set by PLC module error",
+							"label":"PLC module",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"UPS":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":18,
+							"description":"State has been set because the system is running from UPS battery - AB",
+							"label":"UPS",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"button":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":2,
+							"description":"State has been set with HW button in cabinet",
+							"label":"Button",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"command":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":3,
+							"description":"State has been set from OPC command",
+							"label":"Command",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"detector":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":4,
+							"description":"State has been set by any detector (on track circuit or pantograph detector error)",
+							"label":"Detector",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"gate":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":8,
+							"description":"State has been set by any gate in zone (on SPAD, route error...)",
+							"label":"Gate",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"initialization":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":0,
+							"description":"State has been set on system initialization",
+							"label":"Initialization",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"loadingConfiguration":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":17,
+							"description":"State has been set because loading configuration failed",
+							"label":"Loading configuration",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"pointMachine":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":5,
+							"description":"State has been set by point machine (on point machine error)",
+							"label":"Point machine",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"safetySystem":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":1,
+							"description":"State has been set from safety system (error of any safety module or safety CPU)",
+							"label":"Safety system",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"signal":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":6,
+							"description":"State has been set by any signal (lamp) (on signal error)",
+							"label":"Signal",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"systemAutoRecovery":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"warning",
+							"bitRange":31,
+							"description":"State has been set by System Auto Recovery function (SAR), only NORM state",
+							"label":"System auto recovery",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{}
+				},
+				"reasonEI":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"createFromTypeName":true,
+						"description":"Reason for emergency inhibit state",
+						"label":"Reason EI",
+						"monitored":true,
+						"typeName":"ZoneReasonBitsEI"
+					}
+				>{
+					"PLCModule":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":16,
+							"description":"State has been set by PLC module error",
+							"label":"PLC module",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"UPS":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":18,
+							"description":"State has been set because the system is running from UPS battery - AB",
+							"label":"UPS",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"button":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":2,
+							"description":"State has been set with HW button in cabinet",
+							"label":"Button",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"command":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":3,
+							"description":"State has been set from OPC command",
+							"label":"Command",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"detector":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":4,
+							"description":"State has been set by any detector (on track circuit or pantograph detector error)",
+							"label":"Detector",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"gate":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":8,
+							"description":"State has been set by any gate in zone (on SPAD, route error...)",
+							"label":"Gate",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"initialization":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":0,
+							"description":"State has been set on system initialization",
+							"label":"Initialization",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"loadingConfiguration":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":17,
+							"description":"State has been set because loading configuration failed",
+							"label":"Loading configuration",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"pointMachine":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":5,
+							"description":"State has been set by point machine (on point machine error)",
+							"label":"Point machine",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"safetySystem":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":1,
+							"description":"State has been set from safety system (error of any safety module or safety CPU)",
+							"label":"Safety system",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"signal":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":6,
+							"description":"State has been set by any signal (lamp) (on signal error)",
+							"label":"Signal",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{},
+					"systemAutoRecovery":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"alarm":"error",
+							"bitRange":31,
+							"description":"State has been set by System Auto Recovery function (SAR), only NORM state",
+							"label":"System auto recovery",
+							"monitored":true,
+							"typeName":"Bool"
+						}
+					>{}
+				},
+				"route":{
+					"AB":<"nodeTypeRef":"Route_G3@0">{},
+					"DC":<"nodeTypeRef":"Route_G3@1">{}
+				},
+				"status":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "createFromTypeName":true, "monitored":true, "typeName":"StatusZone"}
+				>{
+					"activateVisu":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"bitRange":9, "description":"Activate vizualization", "label":"Activate vizualization", "monitored":true, "typeName":"Bool"}
+					>{},
+					"sarRunning":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"bitRange":8, "description":"System auto recovery function by delay is currently running", "label":"System auto recovery running", "monitored":true, "typeName":"Bool"}
+					>{},
+					"zoneState":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{
+							"bitRange":[0, 1],
+							"description":"Current status of the zone",
+							"label":"Zone state",
+							"monitored":true,
+							"typeName":"EnumZoneState"
+						}
+					>{}
+				},
+				"zoneDisconnected":<
+					"methods":[
+						{"access":"rd", "name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"autoload":true,
+						"description":"Zone PLC is disconnected",
+						"label":"Zone disconnected",
+						"monitored":false,
+						"typeName":"Bool"
+					}
+				>{}
+			}
+		}
+	},
+	"system":<"nodeTypeRef":"System_G3@0">{},
+	"systemSafety":<"nodeTypeRef":"SystemSafety_G3@0">{}
+}
