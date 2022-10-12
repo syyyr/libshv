@@ -198,7 +198,7 @@ void GraphButtonBox::drawButton(QPainter *painter, const QRect &rect, int button
 		QRect r = r1;
 		int start_angle = 25;
 		const double pi = std::acos(-1);
-		int offset = std::sin(start_angle * pi / 180) * r.height() / 2;
+		int offset = static_cast<int>(std::sin(start_angle * pi / 180) * r.height() / 2);
 		int span_angle = 180 - 2*start_angle;
 		r.moveTop(r.top() + offset);
 		painter->drawArc(r, start_angle * 16, span_angle * 16);

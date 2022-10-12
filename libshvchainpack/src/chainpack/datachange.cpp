@@ -118,7 +118,7 @@ set_meta_data:
 		ret.setShortTime(val.metaValue(MetaType::Tag::ShortTime));
 		//ret.setDomain(val.metaValue(MetaType::Tag::Domain).asString());
 		int st = val.metaValue(MetaType::Tag::ValueFlags).toInt();
-		ret.setValueFlags(st);
+		ret.setValueFlags(static_cast<shv::chainpack::DataChange::ValueFlags>(st));
 		return ret;
 	}
 	return DataChange(val, RpcValue::DateTime());

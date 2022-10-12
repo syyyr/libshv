@@ -84,8 +84,7 @@ QVariant LogModel::data(const QModelIndex &index, int role) const
 				return QString::fromStdString(val.asString());
 			}
 			else if(index.column() == ColValueFlags) {
-				int t = val.toUInt();
-				return QString::fromStdString(cp::DataChange::valueFlagsToString(t));
+				return QString::fromStdString(cp::DataChange::valueFlagsToString(val.toUInt()));
 			}
 			return QString::fromStdString(val.toCpon());
 		}

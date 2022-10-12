@@ -76,7 +76,7 @@ std::string Utils::binaryDump(const std::string &bytes)
 {
 	std::string ret;
 	for (size_t i = 0; i < bytes.size(); ++i) {
-		uint8_t u = bytes[i];
+		uint8_t u = static_cast<uint8_t>(bytes[i]);
 		if(i > 0)
 			ret += '|';
 		for (size_t j = 0; j < 8*sizeof(u); ++j) {
@@ -97,8 +97,8 @@ std::string Utils::toHex(const std::string &bytes)
 {
 	std::string ret;
 	for (size_t i = 0; i < bytes.size(); ++i) {
-		unsigned char b = bytes[i];
-		char h = b / 16;
+		unsigned char b = static_cast<unsigned char>(bytes[i]);
+		char h = static_cast<char>(b / 16);
 		char l = b % 16;
 		ret += hex_nibble(h);
 		ret += hex_nibble(l);
@@ -111,7 +111,7 @@ std::string Utils::toHex(const std::basic_string<uint8_t> &bytes)
 	std::string ret;
 	for (size_t i = 0; i < bytes.size(); ++i) {
 		unsigned char b = bytes[i];
-		char h = b / 16;
+		char h = static_cast<char>(b / 16);
 		char l = b % 16;
 		ret += hex_nibble(h);
 		ret += hex_nibble(l);
@@ -134,11 +134,11 @@ std::string Utils::fromHex(const std::string &bytes)
 {
 	std::string ret;
 	for (size_t i = 0; i < bytes.size(); ) {
-		unsigned char u = unhex_char(bytes[i++]);
+		unsigned char u = static_cast<unsigned char>(unhex_char(bytes[i++]));
 		u = 16 * u;
 		if(i < bytes.size())
-			u += unhex_char(bytes[i++]);
-		ret.push_back(u);
+			u += static_cast<unsigned char>(unhex_char(bytes[i++]));
+		ret.push_back(static_cast<char>(u));
 	}
 	return ret;
 }
@@ -148,7 +148,7 @@ static void create_key_val(RpcValue &map, const StringViewList &path, const RpcV
 	if(path.empty())
 		return;
 	if(path.size() == 1) {
-		map.set(path[path.length() - 1].toString(), val);
+		map.set(path[static_cast<size_t>(path.length() - 1)].toString(), val);
 	}
 	else {
 		string key = path[0].toString();

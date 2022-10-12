@@ -23,8 +23,8 @@ ShvUrl::ShvUrl(const std::string &shv_path)
 		m_service = StringView(shv_path, 0, ix);
 		ssize_t bid_ix = m_service.lastIndexOf('@');
 		if(bid_ix > 0) {
-			m_fullBrokerId = m_service.mid(bid_ix);
-			m_service = m_service.mid(0, bid_ix);
+			m_fullBrokerId = m_service.mid(static_cast<size_t>(bid_ix));
+			m_service = m_service.mid(0, static_cast<size_t>(bid_ix));
 		}
 		m_pathPart = StringView(shv_path, ix + typeMark(m_type).size() + 1);
 	}

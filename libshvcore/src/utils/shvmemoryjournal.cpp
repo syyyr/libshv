@@ -88,7 +88,7 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 			else {
 				if(st.epochTime == 0) {
 					st.epochTime = epoch_msec;
-					st.recentShortTime = entry.shortTime;
+					st.recentShortTime = static_cast<uint16_t>(entry.shortTime);
 				}
 				else {
 					int64_t new_epoch_msec = st.toEpochTime(short_msec);
@@ -99,7 +99,7 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 						// short time is too late
 						// pin it to date time from log entry
 						st.epochTime = epoch_msec - MAX_SKEW;
-						st.recentShortTime = entry.shortTime;
+						st.recentShortTime = static_cast<uint16_t>(entry.shortTime);
 						epoch_msec = st.epochTime;
 					}
 					else if(dt_diff > MAX_SKEW) {
@@ -107,7 +107,7 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 						// short time is too ahead
 						// pin it to greater of recent short-time and epoch-time
 						st.epochTime = epoch_msec + MAX_SKEW;
-						st.recentShortTime = entry.shortTime;
+						st.recentShortTime = static_cast<uint16_t>(entry.shortTime);
 						epoch_msec = st.epochTime;
 					}
 					else {
@@ -119,7 +119,7 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 	}
 
 	if (m_pathDictionary.find(entry.path) == m_pathDictionary.end()) {
-		m_pathDictionary[entry.path] = m_pathDictionary.size() + 1;
+		m_pathDictionary[entry.path] = static_cast<int>(m_pathDictionary.size() + 1);
 	}
 
 	Entry e(entry);

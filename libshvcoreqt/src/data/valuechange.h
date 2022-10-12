@@ -32,7 +32,7 @@ struct SHVCOREQT_DECL_EXPORT ValueChange
 			switch (stored_type) {
 				case ValueType::Int: return intValue;
 				case ValueType::Double: return doubleValue;
-				case ValueType::TimeStamp: return timeStamp;
+				case ValueType::TimeStamp: return static_cast<double>(timeStamp);
 				default: Q_ASSERT_X(false,"valueX", "Unsupported conversion"); return 0;
 			}
 		}
@@ -41,7 +41,7 @@ struct SHVCOREQT_DECL_EXPORT ValueChange
 			switch (stored_type) {
 				case ValueType::Int: return intValue;
 				case ValueType::Double: return qRound(doubleValue);
-				case ValueType::TimeStamp: return timeStamp;
+				case ValueType::TimeStamp: return static_cast<int>(timeStamp);
 				default: Q_ASSERT_X(false,"valueX", "Unsupported conversion"); return 0;
 			}
 		}

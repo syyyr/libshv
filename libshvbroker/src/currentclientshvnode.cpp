@@ -14,7 +14,7 @@ using namespace std;
 static string sha1_hex(const std::string &s)
 {
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-	hash.addData(s.data(), s.length());
+	hash.addData(s.data(), static_cast<int>(s.length()));
 	return std::string(hash.result().toHex().constData());
 }
 

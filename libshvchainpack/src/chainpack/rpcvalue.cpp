@@ -250,7 +250,7 @@ class ChainPackInt final : public ValueData<RpcValue::Type::Int, int64_t>
 	ChainPackInt* create() override { return new ChainPackInt(0); }
 	std::string toStdString() const override { return Utils::toString(m_value); }
 
-	double toDouble() const override { return m_value; }
+	double toDouble() const override { return static_cast<double>(m_value); }
 	bool toBool() const override { return !(m_value == 0); }
 	RpcValue::Int toInt() const override { return static_cast<RpcValue::Int>(m_value); }
 	RpcValue::UInt toUInt() const override { return static_cast<RpcValue::UInt>(m_value); }
@@ -301,7 +301,7 @@ class ChainPackDateTime final : public ValueData<RpcValue::Type::DateTime, RpcVa
 
 	bool toBool() const override { return m_value.msecsSinceEpoch() != 0; }
 	int64_t toInt64() const override { return m_value.msecsSinceEpoch(); }
-	uint64_t toUInt64() const override { return m_value.msecsSinceEpoch(); }
+	uint64_t toUInt64() const override { return static_cast<uint64_t>(m_value.msecsSinceEpoch()); }
 	RpcValue::DateTime toDateTime() const override { return m_value; }
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value.msecsSinceEpoch() == other->toDateTime().msecsSinceEpoch(); }
 public:
@@ -939,7 +939,7 @@ RpcValue::DateTime RpcValue::DateTime::fromLocalString(const std::string &local_
 		nError() << "Invalid date time string:" << local_date_time_str;
 		return ret;
 	}
-	utc_offset = (tim - utc_tim) / 60;
+	utc_offset = static_cast<int>((tim - utc_tim) / 60);
 	epoch_msec = utc_tim * 60 * 1000 + msec;
 	ret.m_dtm.msec = epoch_msec;
 	ret.m_dtm.tz = utc_offset;
@@ -1002,7 +1002,7 @@ std::string RpcValue::DateTime::toLocalString() const
 	char buffer[80];
 	std::strftime(buffer, sizeof(buffer),"%Y-%m-%dT%H:%M:%S",tm);
 	std::string ret(buffer);
-	int msecs = m_dtm.msec % 1000;
+	int msecs = static_cast<int>(m_dtm.msec % 1000);
 	if(msecs > 0)
 		ret += '.' + Utils::toString(msecs % 1000);
 	return ret;

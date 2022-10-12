@@ -216,7 +216,7 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 {
 	//shvInfo() << "creating SHV BROKER application object ver." << versionString();
 	m_brokerId = m_cliOptions->brokerId();
-	std::srand(std::time(nullptr));
+	std::srand(static_cast<unsigned int>(std::time(nullptr)));
 #ifdef Q_OS_UNIX
 	//syslog (LOG_INFO, "Server started");
 	installUnixSignalHandlers();
@@ -233,7 +233,7 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 
 	if (m_cliOptions->discoveryPort() > 0) {
 		QUdpSocket *udp_socket = new QUdpSocket(this);
-		udp_socket->bind(m_cliOptions->discoveryPort(), QUdpSocket::ShareAddress);
+		udp_socket->bind(static_cast<quint16>(m_cliOptions->discoveryPort()), QUdpSocket::ShareAddress);
 		logBrokerDiscoveryM() << "shvbrokerDiscovery listen on UDP port:" << m_cliOptions->discoveryPort();
 		connect(udp_socket, &QUdpSocket::readyRead, this, [this, udp_socket]() {
 			QByteArray datagram;
@@ -243,7 +243,7 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 				datagram.resize(int(udp_socket->pendingDatagramSize()));
 				udp_socket->readDatagram(datagram.data(), datagram.size(), &address, &port);
 
-				std::string rq_cpon(datagram.constData(), datagram.length());
+				std::string rq_cpon(datagram.constData(), static_cast<size_t>(datagram.length()));
 				shv::chainpack::RpcValue rv = shv::chainpack::RpcValue::fromCpon(rq_cpon);
 				shv::chainpack::RpcRequest rq(rv);
 				if (rq.method() == "shvbrokerDiscovery") {
@@ -252,7 +252,7 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 					QString ipv4 = shv::iotqt::utils::Network::primaryIPv4Address().toString();
 					shv::chainpack::RpcValue response = shv::chainpack::RpcValue::Map { {"brokerId", m_brokerId}, {"brokerIPv4", ipv4.toStdString()}, {"brokerPort", m_cliOptions->serverPort() } };
 					resp.setResult(response);
-					QByteArray response_datagram(resp.toCpon().c_str(), resp.toCpon().length());
+					QByteArray response_datagram(resp.toCpon().c_str(), static_cast<int>(resp.toCpon().length()));
 					udp_socket->writeDatagram(response_datagram, address, port);
 					logBrokerDiscoveryM() << "Send response on broadcast shvbrokerDiscovery:" << resp.toPrettyString();
 				}

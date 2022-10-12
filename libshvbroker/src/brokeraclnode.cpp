@@ -496,7 +496,7 @@ iotqt::node::ShvNode::StringList AccessAclNode::childNames(const iotqt::node::Sh
 		iotqt::node::ShvNode::StringList ret;
 		unsigned ix = 0;
 		for(auto rule : role_rules) {
-			ret.push_back('\'' + ruleKey(ix++, role_rules.size(), rule) + '\'');
+			ret.push_back('\'' + ruleKey(ix++, static_cast<unsigned int>(role_rules.size()), rule) + '\'');
 		}
 		return ret;
 	}
@@ -608,7 +608,7 @@ unsigned AccessAclNode::keyToRuleIndex(const std::string &key)
 		//std::cout << "Prefix: '" << color_match.prefix() << "'\n";
 		if (color_match.size() > 1) {
 			bool ok;
-			unsigned ix = shv::core::String::toInt(color_match[1], &ok);
+			unsigned ix = static_cast<unsigned>(shv::core::String::toInt(color_match[1], &ok));
 			if(ok)
 				return ix;
 			//std::cout << i << ": " << color_match[i] << '\n';

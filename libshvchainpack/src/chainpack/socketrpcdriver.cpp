@@ -51,7 +51,7 @@ int64_t SocketRpcDriver::writeBytes(const char *bytes, size_t length)
 		return 0;
 	}
 	flush();
-	ssize_t bytes_to_write_len = (m_writeBuffer.size() + length > m_maxWriteBufferLength)? m_maxWriteBufferLength - m_writeBuffer.size(): length;
+	ssize_t bytes_to_write_len = static_cast<ssize_t>((m_writeBuffer.size() + length > m_maxWriteBufferLength)? m_maxWriteBufferLength - m_writeBuffer.size(): length);
 	if(bytes_to_write_len > 0)
 		m_writeBuffer += std::string(bytes, static_cast<size_t>(bytes_to_write_len));
 	flush();
@@ -69,7 +69,7 @@ bool SocketRpcDriver::flush()
 	int64_t n = ::write(m_socket, m_writeBuffer.data(), m_writeBuffer.length());
 	nDebug() << "\t" << n << "bytes written";
 	if(n > 0)
-		m_writeBuffer = m_writeBuffer.substr(n);
+		m_writeBuffer = m_writeBuffer.substr(static_cast<size_t>(n));
 	return (n > 0);
 }
 
@@ -93,8 +93,8 @@ bool SocketRpcDriver::connectToHost(const std::string &host, int port)
 
 		bzero(reinterpret_cast<char *> (&serv_addr), sizeof(serv_addr));
 		serv_addr.sin_family = AF_INET;
-		bcopy(server->h_addr, reinterpret_cast<char *>(&serv_addr.sin_addr.s_addr), server->h_length);
-		serv_addr.sin_port = htons(port);
+		bcopy(server->h_addr, reinterpret_cast<char *>(&serv_addr.sin_addr.s_addr), static_cast<size_t>(server->h_length));
+		serv_addr.sin_port = htons(static_cast<uint16_t>(port));
 
 		/* Now connect to the server */
 		nInfo().nospace() << "connecting to " << host << ":" << port;
@@ -173,7 +173,7 @@ void SocketRpcDriver::exec()
 				closeConnection();
 				return;
 			}
-			onBytesRead(std::string(in, n));
+			onBytesRead(std::string(in, static_cast<size_t>(n)));
 		}
 
 		//socket ready for writing

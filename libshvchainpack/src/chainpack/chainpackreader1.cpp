@@ -12,7 +12,7 @@ T readData_UInt(std::istream &data, int *pbitlen = nullptr)
 	do {
 		if(data.eof())
 			break;
-		uint8_t head = data.get();
+		uint8_t head = static_cast<uint8_t>(data.get());
 
 		int bytes_to_read_cnt;
 		if     ((head & 128) == 0) {bytes_to_read_cnt = 0; num = head & 127; bitlen = 7;}
@@ -29,7 +29,7 @@ T readData_UInt(std::istream &data, int *pbitlen = nullptr)
 				bitlen = 0;
 				break;
 			}
-			uint8_t r = data.get();
+			uint8_t r = static_cast<uint8_t>(data.get());
 			num = (num << 8) + r;
 		};
 	} while(false);
@@ -46,7 +46,7 @@ T readData_Int(std::istream &data)
 	UT num = readData_UInt<UT>(data, &bitlen);
 	UT sign_bit_mask = UT{1} << (bitlen - 1);
 	bool neg = num & sign_bit_mask;
-	T snum = num;
+	T snum = static_cast<T>(num);
 	if(neg) {
 		snum &= ~sign_bit_mask;
 		snum = -snum;
@@ -60,7 +60,7 @@ double readData_Double(std::istream &data)
 	u.n = 0;
 	int shift = 0;
 	for (size_t i = 0; i < sizeof(u.n); ++i) {
-		uint8_t r = data.get();
+		uint8_t r = static_cast<uint8_t>(data.get());
 		uint64_t n1 = r;
 		n1 <<= shift;
 		shift += 8;
@@ -84,7 +84,7 @@ T readData_Blob(std::istream &data)
 	T ret;
 	//ret.reserve(len);
 	for (S i = 0; i < len; ++i)
-		ret += data.get();
+		ret += static_cast<char>(data.get());
 	return ret;
 }
 
@@ -146,7 +146,7 @@ void ChainPackReader1::read(RpcValue::MetaData &meta_data)
 {
 	RpcValue::IMap imap;
 	RpcValue::Map smap;
-	uint8_t type_info = m_in.peek();
+	uint8_t type_info = static_cast<uint8_t>(m_in.peek());
 	if(type_info == ChainPack::PackingSchema::MetaMap) {
 		m_in.get();
 		while(true) {
@@ -164,7 +164,7 @@ void ChainPackReader1::read(RpcValue::MetaData &meta_data)
 			else {
 				RpcValue::UInt key = readData_UInt<RpcValue::UInt>(m_in);
 				RpcValue cp = read();
-				imap[key] = cp;
+				imap[static_cast<int>(key)] = cp;
 			}
 		}
 	}
@@ -175,7 +175,7 @@ void ChainPackReader1::read(RpcValue &val)
 {
 	RpcValue::MetaData meta_data;
 	read(meta_data);
-	uint8_t type = m_in.get();
+	uint8_t type = static_cast<uint8_t>(m_in.get());
 	if(type < 128) {
 		if(type & 64) {
 			// tiny Int
@@ -236,7 +236,7 @@ RpcValue ChainPackReader1::readData(ChainPack::PackingSchema::Enum type_info, bo
 		case ChainPack::PackingSchema::List: { RpcValue::List val = readData_List(); ret = RpcValue(val); break; }
 		case ChainPack::PackingSchema::Map: { RpcValue::Map val = readData_Map(); ret = RpcValue(val); break; }
 		case ChainPack::PackingSchema::IMap: { RpcValue::IMap val = readData_IMap(); ret = RpcValue(val); break; }
-		case ChainPack::PackingSchema::Bool: { uint8_t t = m_in.get(); ret = RpcValue(t != 0); break; }
+		case ChainPack::PackingSchema::Bool: { uint8_t t = static_cast<uint8_t>(m_in.get()); ret = RpcValue(t != 0); break; }
 		default:
 			SHVCHP_EXCEPTION("Internal error: attempt to read helper type directly. type: " + Utils::toString(type_info) + " " + ChainPack::PackingSchema::name(type_info));
 		}
@@ -290,7 +290,7 @@ RpcValue::IMap ChainPackReader1::readData_IMap()
 		}
 		RpcValue::UInt key = readData_UInt<RpcValue::UInt>(m_in);
 		RpcValue cp = read();
-		ret[key] = cp;
+		ret[static_cast<int>(key)] = cp;
 	}
 	return ret;
 }

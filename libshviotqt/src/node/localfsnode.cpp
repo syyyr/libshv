@@ -196,7 +196,7 @@ chainpack::RpcValue LocalFSNode::ndRead(const QString &path, qint64 offset, qint
 		sz = std::min(sz, size);
 		f.seek(offset);
 		RpcValue::Blob blob;
-		blob.resize(sz);
+		blob.resize(static_cast<size_t>(sz));
 		f.read(reinterpret_cast<char*>(blob.data()), sz);
 		return RpcValue(std::move(blob));
 	}
@@ -210,7 +210,7 @@ chainpack::RpcValue LocalFSNode::ndWrite(const QString &path, const chainpack::R
 	if (methods_params.isString()){
 		if(f.open(QFile::WriteOnly)) {
 			const chainpack::RpcValue::String &content = methods_params.asString();
-			f.write(content.data(), content.size());
+			f.write(content.data(), static_cast<qint64>(content.size()));
 			return true;
 		}
 		SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for writing.");
@@ -226,7 +226,7 @@ chainpack::RpcValue LocalFSNode::ndWrite(const QString &path, const chainpack::R
 
 		if(f.open(open_mode)) {
 			const chainpack::RpcValue::String &content = params[0].toString();
-			f.write(content.data(), content.size());
+			f.write(content.data(), static_cast<qint64>(content.size()));
 			return true;
 		}
 		SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for writing.");
@@ -283,7 +283,7 @@ chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::
 
 		if(f.open(QFile::WriteOnly)) {
 			const std::string &data = param_lst[1].asString();
-			f.write(data.data(), data.size());
+			f.write(data.data(), static_cast<qint64>(data.size()));
 			return true;
 		}
 		SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for writing.");

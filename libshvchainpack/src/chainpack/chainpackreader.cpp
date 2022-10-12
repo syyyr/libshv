@@ -9,7 +9,7 @@ namespace chainpack {
 
 #define PARSE_EXCEPTION(msg) {\
 	char buff[40]; \
-	int l = m_in.readsome(buff, sizeof(buff) - 1); \
+	auto l = m_in.readsome(buff, sizeof(buff) - 1); \
 	buff[l] = 0; \
 	if(exception_aborts) { \
 		std::clog << __FILE__ << ':' << __LINE__;  \

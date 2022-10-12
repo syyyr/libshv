@@ -113,9 +113,9 @@ double GraphModel::valueToDouble(const QVariant v, shv::core::utils::ShvTypeDesc
 	case Type::Double:
 		return v.toDouble();
 	case Type::Int:
-		return v.toLongLong();
+		return static_cast<double>(v.toLongLong());
 	case Type::UInt:
-		return v.toULongLong();
+		return static_cast<double>(v.toULongLong());
 	case Type::Decimal:
 		return v.toDouble();
 	case Type::Bool:

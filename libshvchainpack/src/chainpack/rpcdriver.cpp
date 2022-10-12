@@ -175,14 +175,14 @@ void RpcDriver::writeQueue()
 	if(m_topMessageDataBytesWrittenSoFar < chunk.metaData.size()) {
 		auto len = writeBytes_helper(chunk.metaData, m_topMessageDataBytesWrittenSoFar, chunk.metaData.size() - m_topMessageDataBytesWrittenSoFar);
 		logWriteQueue() << "\twrite metadata len:" << len;
-		m_topMessageDataBytesWrittenSoFar += len;
+		m_topMessageDataBytesWrittenSoFar += static_cast<size_t>(len);
 	}
 	if(m_topMessageDataBytesWrittenSoFar >= chunk.metaData.size()) {
 		auto len = writeBytes_helper(chunk.data
 									 , m_topMessageDataBytesWrittenSoFar - chunk.metaData.size()
 									 , chunk.data.size() - (m_topMessageDataBytesWrittenSoFar - chunk.metaData.size()));
 		logWriteQueue() << "\twrite data len:" << len;
-		m_topMessageDataBytesWrittenSoFar += len;
+		m_topMessageDataBytesWrittenSoFar += static_cast<size_t>(len);
 	}
 	logWriteQueue() << "----- bytes written so far:" << m_topMessageDataBytesWrittenSoFar
 					<< "remaining:" << (chunk.size() - m_topMessageDataBytesWrittenSoFar)
@@ -284,7 +284,7 @@ void RpcDriver::processReadData()
 					return;
 			}
 
-			meta_data_end_pos = decodeMetaData(meta_data, protocol_type, read_data, in.tellg());
+			meta_data_end_pos = decodeMetaData(meta_data, protocol_type, read_data, static_cast<size_t>(in.tellg()));
 			logRpcData() << "\t meta_data_end_pos:" << meta_data_end_pos << meta_data.toPrettyString();
 			if(meta_data_end_pos > message_len)
 				throw ParseException(CCPCP_RC_MALFORMED_INPUT, "Metadata length mismatch", -1);
@@ -346,7 +346,7 @@ size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolTyp
 {
 	size_t meta_data_end_pos = start_pos;
 	std::istringstream in(data);
-	in.seekg(start_pos);
+	in.seekg(static_cast<long>(start_pos));
 
 	switch (protocol_type) {
 	case Rpc::ProtocolType::JsonRpc: {
@@ -400,7 +400,7 @@ RpcValue RpcDriver::decodeData(Rpc::ProtocolType protocol_type, const std::strin
 {
 	RpcValue ret;
 	std::istringstream in(data);
-	in.seekg(start_pos);
+	in.seekg(static_cast<long>(start_pos));
 	try {
 		switch (protocol_type) {
 		case Rpc::ProtocolType::JsonRpc: {
@@ -443,7 +443,7 @@ RpcValue RpcDriver::decodeData(Rpc::ProtocolType protocol_type, const std::strin
 	}
 	catch(ParseException &e) {
 		nError() << Rpc::protocolTypeToString(protocol_type) << "Decode data error:" << e.msg();
-		std::string data_piece = data.substr(e.pos() - 10*16, 20*16);
+		std::string data_piece = data.substr(static_cast<size_t>(e.pos() - 10*16), 20*16);
 		nError().nospace() << "Start offset: " << start_pos << " Data: from pos:" << (e.pos() - 10*16) << "\n" << shv::chainpack::Utils::hexDump(data_piece);
 	}
 	return ret;

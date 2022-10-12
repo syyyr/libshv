@@ -87,7 +87,7 @@ bool ShvJournalFileReader::next()
 		int short_time = short_time_sv.toInt(&ok);
 		m_currentEntry.shortTime = ok && short_time >= 0? short_time: ShvJournalEntry::NO_SHORT_TIME;
 		m_currentEntry.domain = std::move(domain);
-		m_currentEntry.valueFlags = value_flags;
+		m_currentEntry.valueFlags = static_cast<unsigned int>(value_flags);
 		m_currentEntry.userId = line_record.value(Column::UserId).toString();
 		std::string err;
 		m_currentEntry.value = cp::RpcValue::fromCpon(line_record.value(Column::Value).toString(), &err);

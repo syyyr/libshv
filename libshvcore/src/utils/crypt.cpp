@@ -29,7 +29,7 @@ Crypt::Generator Crypt::createGenerator(uint32_t a, uint32_t b, uint32_t max_ran
 		ret += b;
 		ret %= max_rand;
 		//qfWarning() << '(' << a << '*' << val << '+' << b << ") %" << max_rand << "---->" << ret;
-		return ret;
+		return static_cast<uint32_t>(ret);
 	};
 	return ret;
 }
@@ -39,13 +39,13 @@ static std::string code_byte(uint8_t b)
 	std::string ret;
 	char buff[] = {0,0,0};
 	if((b>='A' && b<='Z') || (b>='a' && b<='z')) {
-		ret.push_back(b);
+		ret.push_back(static_cast<char>(b));
 	}
 	else {
 		uint8_t b1 = b%10;
 		b /= 10;
-		buff[0] = b1 + '0';
-		buff[1] = (b1 % 2)? b + 'A': b + 'a';
+		buff[0] = static_cast<char>(b1 + '0');
+		buff[1] = static_cast<char>((b1 % 2)? b + 'A': b + 'a');
 		ret.append(buff);
 	}
 	return ret;
@@ -96,9 +96,9 @@ static uint8_t take_byte(const std::string &ba, size_t &i)
 		uint8_t b1 = b;
 		b1 = b1 - '0';
 		if(i < ba.size()) {
-			b = ba[i++];
+			b = static_cast<uint8_t>(ba[i++]);
 			b = (b1 % 2)? (b - 'A'): (b - 'a');
-			b = 10 * b + b1;
+			b = static_cast<uint8_t>(10 * b + b1);
 		}
 		else {
 			shvError() << __FUNCTION__ << ": byte array corupted:" << ba;
@@ -121,7 +121,7 @@ std::string Crypt::decodeArray(const std::string &ba) const
 		seed = m_generator(seed);
 		uint8_t b = take_byte(ba, i);
 		b = b ^ static_cast<uint8_t>(seed);
-		ret.push_back(b);
+		ret.push_back(static_cast<char>(b));
 	}
 	return ret;
 }

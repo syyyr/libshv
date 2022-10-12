@@ -145,7 +145,7 @@ bool SocketRpcConnection::isOpen()
 int64_t SocketRpcConnection::writeBytes(const char *bytes, size_t length)
 {
 	//shvLogFuncFrame();
-	return socket()->write(bytes, length);
+	return socket()->write(bytes, static_cast<qint64>(length));
 }
 
 void SocketRpcConnection::writeMessageBegin()

@@ -63,13 +63,13 @@ ValueXInterval SerieData::range() const
 
 bool SerieData::addValueChange(const ValueChange &value)
 {
-	int sz = size();
+	int sz = static_cast<int>(size());
 	if (sz == 0) {
 		push_back(value);
 		return true;
 	}
 	else {
-		const ValueChange &last = at(sz - 1);
+		const ValueChange &last = at(static_cast<size_t>(sz - 1));
 		if (!compareValueX(last, value, xType()) && !compareValueY(last, value, yType())) {
 			push_back(value);
 			return true;
