@@ -179,11 +179,21 @@ public:
 	shv::chainpack::RpcValue extraTags(const std::string &node_path) const;
 	ShvTypeInfo& setTypeDescription(const ShvTypeDescr &type_descr, const std::string &type_name);
 	ShvNodeDescr nodeDescriptionForPath(const std::string &shv_path, std::string *p_field_name = nullptr) const;
-	ShvNodeDescr nodeDescriptionForDevice(const std::string &device_type, const std::string &property_path, std::string *p_field_name = nullptr) const;
 	ShvTypeDescr typeDescriptionForName(const std::string &type_name) const;
 	ShvTypeDescr typeDescriptionForPath(const std::string &shv_path) const;
 	shv::chainpack::RpcValue extraTagsForPath(const std::string &shv_path) const;
 	std::string findSystemPath(const std::string &shv_path) const;
+	bool isPathBlacklisted(const std::string &shv_path) const;
+
+	struct SHVCORE_DECL_EXPORT PathInfo
+	{
+		std::string devicePath;
+		std::string propertyPath;
+		std::string fieldPath;
+		std::string deviceType;
+		ShvNodeDescr nodeDescription;
+	};
+	PathInfo pathInfo(const std::string &shv_path) const;
 
 	chainpack::RpcValue typesAsRpcValue() const;
 	chainpack::RpcValue toRpcValue() const;
@@ -195,6 +205,9 @@ public:
 	void forEachDeviceProperty(const std::string &device_path, std::function<void (const std::string &property_path, const ShvNodeDescr &node_descr)> fn) const;
 	void forEachNode(std::function<void (const std::string &shv_path, const ShvNodeDescr &node_descr)> fn) const;
 private:
+	std::string findDeviceType(const std::string &shv_path, std::string *p_property_path = nullptr) const;
+	ShvNodeDescr findNodeDescription(const std::string &path, std::string *p_field_name = nullptr) const;
+	//ShvNodeDescr nodeDescriptionForDevice(const std::string &device_type, const std::string &property_path, std::string *p_field_name = nullptr) const;
 	static ShvTypeInfo fromNodesTree(const chainpack::RpcValue &v);
 	void fromNodesTree_helper(const shv::chainpack::RpcValue &node, const std::string &shv_path, const std::string &recent_device_type, const std::string &recent_device_path, const shv::chainpack::RpcValue::Map &node_types);
 private:

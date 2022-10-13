@@ -1,7 +1,7 @@
 #include "shvpath.h"
 #include "../utils.h"
 
-#include "../log.h"
+//#include "../log.h"
 #include "../stringview.h"
 
 namespace shv {

@@ -572,6 +572,36 @@ typename map<string, T>::const_iterator find_longest_prefix(const map<string, T>
 	return map.cend();
 }
 
+bool ShvTypeInfo::isPathBlacklisted(const std::string &shv_path) const
+{
+	auto pi = pathInfo(shv_path);
+	if(pi.devicePath.empty()) {
+		return false;
+	}
+	if(auto it = m_extraTags.find(pi.devicePath); it == m_extraTags.cend()) {
+		return false;
+	}
+	else {
+		auto prop_path = shv::core::Utils::joinPath(pi.propertyPath, pi.fieldPath);
+		auto black_list = it->second.asMap().value("blacklist");
+		if(black_list.isList()) {
+			for(const auto &path : black_list.asList()) {
+				if(shv::core::utils::ShvPath::startsWithPath(prop_path, path.asString())) {
+					return true;
+				}
+			}
+		}
+		else if(black_list.isMap()) {
+			for(const auto &[path, val] : black_list.asMap()) {
+				if(shv::core::utils::ShvPath::startsWithPath(prop_path, path)) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 ShvTypeInfo &ShvTypeInfo::setDevicePath(const std::string &device_path, const std::string &device_type)
 {
 	m_devicePaths[device_path] = device_type;
@@ -616,6 +646,52 @@ ShvTypeInfo &ShvTypeInfo::setTypeDescription(const ShvTypeDescr &type_descr, con
 	return *this;
 }
 
+ShvTypeInfo::PathInfo ShvTypeInfo::pathInfo(const std::string &shv_path) const
+{
+	auto cut_field_path = [](const string &property_path, const string &field_path) {
+		if(!field_path.empty()) {
+			auto property_path_len = property_path.size() - field_path.size();
+			if(property_path_len > 0)
+				property_path_len--; // remove also slash
+			return property_path.substr(0, property_path_len);
+		}
+		return property_path;
+	};
+	PathInfo ret;
+	ret.nodeDescription = findNodeDescription(shv_path, &ret.fieldPath);
+	if(ret.nodeDescription.isValid()) {
+		// path found in nodes directly
+		ret.deviceType = findDeviceType(shv_path, &ret.propertyPath);
+		if(ret.deviceType.empty()) {
+			// not device node
+			ret.propertyPath = cut_field_path(shv_path, ret.fieldPath);
+		}
+		else {
+			// device path override
+			ret.devicePath = cut_field_path(shv_path, ret.propertyPath);
+			ret.propertyPath = cut_field_path(ret.propertyPath, ret.fieldPath);
+		}
+	}
+	else {
+		// try find tath in devices
+		ret.deviceType = findDeviceType(shv_path, &ret.propertyPath);
+		if(ret.deviceType.empty()) {
+			// not device node
+			ret = {};
+		}
+		else {
+			// device path found
+			ret.devicePath = cut_field_path(shv_path, ret.propertyPath);
+			auto nodes_path = shv::core::Utils::joinPath(ret.deviceType, ret.propertyPath);
+			ret.nodeDescription = findNodeDescription(nodes_path, &ret.fieldPath);
+			if(ret.nodeDescription.isValid()) {
+				ret.propertyPath = cut_field_path(ret.propertyPath, ret.fieldPath);
+			}
+		}
+	}
+	return ret;
+}
+/*
 ShvLogNodeDescr ShvTypeInfo::nodeDescriptionForDevice(const std::string &device_type, const string &property_path, string *p_field_name) const
 {
 	string property = property_path.empty()? device_type: device_type + '/' + property_path;
@@ -630,34 +706,29 @@ ShvLogNodeDescr ShvTypeInfo::nodeDescriptionForDevice(const std::string &device_
 		return node_descr;
 	}
 }
-
+*/
 ShvLogNodeDescr ShvTypeInfo::nodeDescriptionForPath(const std::string &shv_path, string *p_field_name) const
 {
-	if(auto it_node_descr = find_longest_prefix(m_nodeDescriptions, shv_path); it_node_descr == m_nodeDescriptions.cend()) {
-		if(auto it = find_longest_prefix(m_devicePaths, shv_path); it == m_devicePaths.cend()) {
-			return {};
-		}
-		else {
-			string prefix = it->first;
-			string device_type = it->second;
-			string property_path = String(shv_path).mid(prefix.size() + 1);
-			return nodeDescriptionForDevice(device_type, property_path, p_field_name);
-		}
+	auto info = pathInfo(shv_path);
+	if(p_field_name)
+		*p_field_name = info.fieldPath;
+	return info.nodeDescription;
+}
+
+string ShvTypeInfo::findDeviceType(const std::string &shv_path, std::string *p_property_path) const
+{
+	if(auto it = find_longest_prefix(m_devicePaths, shv_path); it == m_devicePaths.cend()) {
+		return {};
 	}
 	else {
-		string prefix = it_node_descr->first;
-		if(p_field_name)
-			*p_field_name = String(shv_path).mid(prefix.size() + 1);
-		return it_node_descr->second;
+		string prefix = it->first;
+		string device_type = it->second;
+		if(p_property_path)
+			*p_property_path = String(shv_path).mid(prefix.size() + 1);
+		return device_type;
 	}
 }
-/*
-ShvTypeDescr ShvLogTypeInfo::typeDescriptionForPath(const std::string &shv_path) const
-{
-	ShvLogNodeDescr node_descr = nodeDescriptionForPath(shv_path);
-	return typeDescriptionForName(node_descr.typeName());
-}
-*/
+
 ShvTypeDescr ShvTypeInfo::typeDescriptionForName(const std::string &type_name) const
 {
 	if(auto it = m_types.find(type_name); it == m_types.end())
@@ -926,6 +997,21 @@ void ShvTypeInfo::forEachNode(std::function<void (const std::string &shv_path, c
 	}
 }
 
+ShvNodeDescr ShvTypeInfo::findNodeDescription(const std::string &path, std::string *p_field_name) const
+{
+	//string property = property_path.empty()? device_type: device_type + '/' + property_path;
+	if(auto it = find_longest_prefix(m_nodeDescriptions, path); it == m_nodeDescriptions.cend()) {
+		return {};
+	}
+	else {
+		string prefix = it->first;
+		const ShvLogNodeDescr &node_descr = it->second;
+		if(p_field_name)
+			*p_field_name = String(path).mid(prefix.size() + 1);
+		return node_descr;
+	}
+}
+
 void ShvTypeInfo::fromNodesTree_helper(const shv::chainpack::RpcValue &node,
 						  const std::string &shv_path,
 						  const std::string &recent_device_type,
@@ -981,7 +1067,7 @@ void ShvTypeInfo::fromNodesTree_helper(const shv::chainpack::RpcValue &node,
 			else {
 				string node_path = String(shv_path).mid(current_device_path.size() + 1);
 				string path_rest;
-				auto existing_node_descr = nodeDescriptionForDevice(current_device_type, node_path, &path_rest);
+				auto existing_node_descr = findNodeDescription(shv::core::Utils::joinPath(current_device_type, node_path), &path_rest);
 				if(existing_node_descr.isValid() && path_rest.empty()) {
 					if(existing_node_descr == node_descr) {
 						// node descriptions are the same, no action is needed

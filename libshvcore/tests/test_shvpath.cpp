@@ -10,6 +10,31 @@ using namespace std;
 
 DOCTEST_TEST_CASE("ShvPath")
 {
+	DOCTEST_SUBCASE("ShvPath::startsWithPath()")
+	{
+		{
+			string path = "status/errorCommunication";
+			string paths[] = {
+				"status/errorCommunication",
+				"status/errorCommunication/",
+				"status/errorCommunication/foo",
+				"status/errorCommunication/foo/",
+			};
+			for(const auto &p : paths) {
+				REQUIRE(ShvPath::startsWithPath(p, path));
+			}
+		}
+		{
+			string path = "foo/bar";
+			string paths[] = {
+				"bar/baz",
+				"foo/barbaz",
+			};
+			for(const auto &p : paths) {
+				REQUIRE(!ShvPath::startsWithPath(p, path));
+			}
+		}
+	}
 	DOCTEST_SUBCASE("ShvPath::firstDir()")
 	{
 		string dir = "'a/b/c'/d";

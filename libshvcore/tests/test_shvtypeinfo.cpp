@@ -66,15 +66,87 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 		auto type_info = ShvTypeInfo::fromRpcValue(rv);
 		write_cpon_file(out_path + "/typeInfo.cpon", type_info.toRpcValue());
 
-		REQUIRE(type_info.nodeDescriptionForDevice("TC_G3", "").dataValue("deviceType") == "TC_G3");
-		REQUIRE(type_info.nodeDescriptionForDevice("Zone_G3", "").dataValue("deviceType") == "Zone_G3");
-		REQUIRE(type_info.nodeDescriptionForDevice("TC_G3", "status").typeName() == "StatusTC");
-		REQUIRE(type_info.nodeDescriptionForDevice("Route_G3", "status").typeName() == "StatusRoute");
-		REQUIRE(type_info.nodeDescriptionForPath("devices/zone/langevelden/route/AB/status").typeName() == "StatusRoute");
-		REQUIRE(type_info.nodeDescriptionForPath("devices/zone/langevelden/route/DC/status").typeName() == "StatusRoute");
-		REQUIRE(type_info.nodeDescriptionForDevice("SignalSymbol_G3", "status").typeName() == "StatusSignalSymbol");
-		REQUIRE(type_info.nodeDescriptionForPath("devices/signal/SA04/symbol/WHITE/status").typeName() == "StatusSignalSymbolWhite");
-		REQUIRE(type_info.nodeDescriptionForPath("devices/signal/SG01/symbol/P80Y/status").typeName() == "StatusSignalSymbolP80Y");
+		{
+			auto pi = type_info.pathInfo("devices/tc/TC01");
+			REQUIRE(pi.deviceType == "TC_G3");
+			REQUIRE(pi.devicePath == "devices/tc/TC01");
+			REQUIRE(pi.nodeDescription.isValid());
+			REQUIRE(pi.propertyPath.empty());
+			REQUIRE(pi.fieldPath.empty());
+		}
+		{
+			auto pi = type_info.pathInfo("devices/tc/TC01/status");
+			REQUIRE(pi.deviceType == "TC_G3");
+			REQUIRE(pi.devicePath == "devices/tc/TC01");
+			REQUIRE(pi.nodeDescription.typeName() == "StatusTC");
+			REQUIRE(pi.propertyPath == "status");
+			REQUIRE(pi.fieldPath.empty());
+		}
+		{
+			auto pi = type_info.pathInfo("devices/tc/TC01/status/occupied");
+			REQUIRE(pi.deviceType == "TC_G3");
+			REQUIRE(pi.devicePath == "devices/tc/TC01");
+			REQUIRE(pi.nodeDescription.typeName() == "StatusTC");
+			REQUIRE(pi.propertyPath == "status");
+			REQUIRE(pi.fieldPath == "occupied");
+		}
+		{
+			// nested device
+			auto pi = type_info.pathInfo("devices/zone/langevelden/route/AB/status");
+			REQUIRE(pi.deviceType == "Route_G3");
+			REQUIRE(pi.devicePath == "devices/zone/langevelden/route/AB");
+			REQUIRE(pi.nodeDescription.typeName() == "StatusRoute");
+			REQUIRE(pi.propertyPath == "status");
+			REQUIRE(pi.fieldPath.empty());
+		}
+		{
+			// nested device
+			auto pi = type_info.pathInfo("devices/zone/langevelden/route/AB/status/routeState");
+			REQUIRE(pi.deviceType == "Route_G3");
+			REQUIRE(pi.devicePath == "devices/zone/langevelden/route/AB");
+			REQUIRE(pi.nodeDescription.typeName() == "StatusRoute");
+			REQUIRE(pi.propertyPath == "status");
+			REQUIRE(pi.fieldPath == "routeState");
+
+			auto td = type_info.typeDescriptionForName(pi.nodeDescription.typeName());
+			REQUIRE(td.type() == ShvTypeDescr::Type::BitField);
+			auto fd = td.field(pi.fieldPath);
+			REQUIRE(fd.typeName() == "EnumRouteState");
+
+			auto td2 = type_info.typeDescriptionForName(fd.typeName());
+			REQUIRE(td2.type() == ShvTypeDescr::Type::Enum);
+			auto fd2 = td2.field("Ready");
+			REQUIRE(fd2.value() == 3);
+			REQUIRE(fd2.label() == "Ready");
+		}
+		{
+			// node description override
+			{
+				auto pi = type_info.pathInfo("devices/signal/SA04/symbol/RED_LEFT/status");
+				REQUIRE(pi.deviceType == "SignalSymbol_G3");
+				REQUIRE(pi.devicePath == "devices/signal/SA04/symbol/RED_LEFT");
+				REQUIRE(pi.nodeDescription.typeName() == "StatusSignalSymbol");
+				REQUIRE(pi.propertyPath == "status");
+				REQUIRE(pi.fieldPath.empty());
+			}
+			{
+				auto pi = type_info.pathInfo("devices/signal/SA04/symbol/WHITE/status");
+				REQUIRE(pi.deviceType == "SignalSymbol_G3");
+				REQUIRE(pi.devicePath == "devices/signal/SA04/symbol/WHITE");
+				REQUIRE(pi.nodeDescription.typeName() == "StatusSignalSymbolWhite");
+				REQUIRE(pi.propertyPath == "status");
+				REQUIRE(pi.fieldPath.empty());
+			}
+			{
+				auto pi = type_info.pathInfo("devices/signal/SG01/symbol/P80Y");
+				REQUIRE(pi.deviceType == "SignalSymbol_G3");
+				REQUIRE(pi.devicePath == "devices/signal/SG01/symbol/P80Y");
+				REQUIRE(pi.nodeDescription.typeName().empty());
+				REQUIRE(pi.propertyPath.empty());
+				REQUIRE(pi.fieldPath.empty());
+			}
+			REQUIRE(type_info.nodeDescriptionForPath("devices/signal/SG01/symbol/P80Y/status").typeName() == "StatusSignalSymbolP80Y");
+		}
 		{
 			// extra tags
 			auto et = type_info.extraTagsForPath("devices/tc/TC04");
@@ -87,10 +159,10 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 		auto rv = read_cpon_file(FILES_DIR + "/hel002_nodesTree.cpon");
 		auto type_info = ShvTypeInfo::fromRpcValue(rv);
 		write_cpon_file(out_path + "/hel002_typeInfo.cpon", type_info.toRpcValue());
-		string field_name;
 
 		//DOCTEST_SUBCASE("Node descriptions")
 		{
+			string field_name;
 			auto nd = type_info.nodeDescriptionForPath("heating/group/ESHS_Z1/status/errorAutomaticControl", &field_name);
 			INFO("nodeDescriptionForPath: ", nd.toRpcValue().toCpon());
 			//CAPTURE(nd.toRpcValue().toCpon());
@@ -118,7 +190,6 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 		auto rv = read_cpon_file(FILES_DIR + "/ghe022_nodesTree.cpon");
 		auto type_info = ShvTypeInfo::fromRpcValue(rv);
 		write_cpon_file(out_path + "/ghe022_typeInfo.cpon", type_info.toRpcValue());
-		string field_name;
 
 		{
 			// extra tags shall contain 'blacklist' key
@@ -130,8 +201,23 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 				}
 			}
 			REQUIRE(blacklist_found);
+			CAPTURE(type_info.extraTagsForPath("devices/spie/TDI").toCpon());
+			REQUIRE(type_info.extraTagsForPath("devices/spie/TDI").asMap().value("blacklist").asMap() == RpcValue::Map{{"status/errorCommunication", nullptr}});
 		}
-		CAPTURE(type_info.extraTagsForPath("devices/spie/TDI").toCpon());
-		REQUIRE(type_info.extraTagsForPath("devices/spie/TDI").asMap().value("blacklist").asMap() == RpcValue::Map{{"status/errorCommunication", nullptr}});
+		{
+			REQUIRE(type_info.isPathBlacklisted("foo/bar") == false);
+
+			auto pi = type_info.pathInfo("devices/tc/TC01/status/claimed");
+			REQUIRE(pi.devicePath == "devices/tc/TC01");
+			REQUIRE(pi.propertyPath == "status");
+			REQUIRE(pi.fieldPath == "claimed");
+
+			REQUIRE(type_info.isPathBlacklisted("devices/tc/TC01/status") == false);
+			REQUIRE(type_info.isPathBlacklisted("devices/tc/TC01/status/") == false);
+			REQUIRE(type_info.isPathBlacklisted("devices/tc/TC01/status/claimed") == true);
+			REQUIRE(type_info.isPathBlacklisted("devices/tc/TC01/status/claimed/") == true);
+			REQUIRE(type_info.isPathBlacklisted("devices/tc/TC01/status/claimed/foo") == true);
+			REQUIRE(type_info.isPathBlacklisted("devices/tc/TC01/status/claimed/foo/") == true);
+		}
 	}
 }
