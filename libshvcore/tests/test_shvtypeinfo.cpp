@@ -201,8 +201,8 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 				}
 			}
 			REQUIRE(blacklist_found);
-			CAPTURE(type_info.extraTagsForPath("devices/spie/TDI").toCpon());
-			REQUIRE(type_info.extraTagsForPath("devices/spie/TDI").asMap().value("blacklist").asMap() == RpcValue::Map{{"status/errorCommunication", nullptr}});
+			CAPTURE(type_info.extraTagsForPath("devices/signal/SA03/symbol/WHITE").toCpon());
+			REQUIRE(type_info.extraTagsForPath("devices/signal/SA03/symbol/WHITE").asMap().value("blacklist").asMap() == RpcValue::Map{{"config/currentLimitError", nullptr}, {"status/errorCurrent", nullptr}});
 		}
 		{
 			REQUIRE(type_info.isPathBlacklisted("foo/bar") == false);

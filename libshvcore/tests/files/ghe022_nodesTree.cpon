@@ -107,7 +107,7 @@
 				}
 			],
 			"tags":{
-				"blacklist":{"resetRouteRequestInhibit":null, "setRouteRequestInhibit":null, "status/errorAtGate":null, "status/routeRequestInhibited":null},
+				"blacklist":{" method/setRouteRequestInhibit":null, "method/resetRouteRequestInhibit":null, "status/errorAtGate":null, "status/routeRequestInhibited":null},
 				"deviceType":"Gate_G3"
 			}
 		>{
@@ -249,7 +249,7 @@
 				}
 			],
 			"tags":{
-				"blacklist":{"disableAutoRequest":null, "enableAutoRequest":null, "tramID":null},
+				"blacklist":{"method/disableAutoRequest":null, "method/enableAutoRequest":null, "tramID":null},
 				"deviceType":"Route_G3",
 				"startGate":"A"
 			}
@@ -346,7 +346,7 @@
 				}
 			],
 			"tags":{
-				"blacklist":{"disableAutoRequest":null, "enableAutoRequest":null, "tramID":null},
+				"blacklist":{"method/disableAutoRequest":null, "method/enableAutoRequest":null, "tramID":null},
 				"deviceType":"Route_G3",
 				"startGate":"D"
 			}
@@ -1016,8 +1016,8 @@
 				"blacklist":{
 					"status/errorNetworkRing":null,
 					"status/errorPowerlinkRing":null,
-					"superiorSystem/setSlaveModeOff":null,
-					"superiorSystem/setSlaveModeOn":null,
+					"superiorSystem/method/setSlaveModeOff":null,
+					"superiorSystem/method/setSlaveModeOn":null,
 					"superiorSystem/slaveMode":null,
 					"superiorSystem/status/modeReason":null,
 					"superiorSystem/wdtCounterPC":null,
@@ -2744,10 +2744,6 @@
 				>{}
 			}
 		},
-		"gate":{
-			"A":<"nodeTypeRef":"Gate_G3@0">{},
-			"D":<"nodeTypeRef":"Gate_G3@0">{}
-		},
 		"requestorDigital":{
 			"KSW01":<"nodeTypeRef":"RequestorDigital@0">{},
 			"KSW02":<"nodeTypeRef":"RequestorDigital@0">{}
@@ -3568,10 +3564,7 @@
 		},
 		"spie":{
 			"TDI":<
-				"tags":{
-					"blacklist":{"status/errorCommunication":null},
-					"deviceType":"SPIEController_G3"
-				}
+				"tags":{"deviceType":"SPIEController_G3"}
 			>{
 				"loop":{
 					"TDI01":<"nodeTypeRef":"SPIELoop_G3@0">{},
@@ -3613,6 +3606,10 @@
 				],
 				"tags":{"deviceType":"Zone_G3", "label":"Zone Langevelden"}
 			>{
+				"gate":{
+					"A":<"nodeTypeRef":"Gate_G3@0">{},
+					"D":<"nodeTypeRef":"Gate_G3@0">{}
+				},
 				"reasonAB":<
 					"methods":[
 						{"access":"rd", "name":"chng", "signature":"VoidParam"},
