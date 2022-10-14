@@ -164,7 +164,7 @@ public:
 		static DateTime fromMSecsSinceEpoch(int64_t msecs, int utc_offset_min = 0);
 
 		void setMsecsSinceEpoch(int64_t msecs) { m_dtm.msec = msecs; }
-		void setUtcOffsetMin(int utc_offset_min) {m_dtm.tz = utc_offset_min / 15;}
+		void setUtcOffsetMin(int utc_offset_min) { m_dtm.tz = (utc_offset_min / 15) & 0x7F; }
 		/// @deprecated
 		void setTimeZone(int utc_offset_min) {setUtcOffsetMin(utc_offset_min);}
 
