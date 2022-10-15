@@ -1,10 +1,10 @@
 #pragma once
 
 #include "../shvchainpackglobal.h"
-#include "exception.h"
+//#include "exception.h"
 #include "metatypes.h"
 
-#include <cmath>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <map>
@@ -140,9 +140,14 @@ public:
 		}
 		double toDouble() const
 		{
-			return static_cast<double>(mantisa()) * std::pow(Base, exponent());
+			double ret = static_cast<double>(mantisa());
+				int exp = exponent();
+				if(exp > 0)
+					for(; exp > 0; exp--) ret *= Base;
+				else
+					for(; exp < 0; exp++) ret /= Base;
+				return ret;;
 		}
-		//bool isValid() const {return !(mantisa() == 0 && exponent() != 0);}
 		std::string toString() const;
 	};
 	class SHVCHAINPACK_DECL_EXPORT DateTime
