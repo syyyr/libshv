@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <limits>
 
 namespace shv {
 namespace iotqt {

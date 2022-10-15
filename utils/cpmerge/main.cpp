@@ -1,6 +1,8 @@
 #include <shv/chainpack/rpcvalue.h>
 #include <shv/chainpack/cponreader.h>
 #include <shv/chainpack/cponwriter.h>
+#include <shv/chainpack/utils.h>
+
 #include <iostream>
 #include <fstream>
 #include <string.h>

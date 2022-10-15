@@ -1,5 +1,5 @@
 #include "cponreader.h"
-//#include "cpon.h"
+#include "exception.h"
 #include "../../c/ccpon.h"
 
 #include <iostream>

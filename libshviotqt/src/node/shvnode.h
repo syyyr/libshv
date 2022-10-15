@@ -89,7 +89,7 @@ private:
 public:
 	virtual size_t methodCount(const StringViewList &shv_path);
 	virtual const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix);
-	virtual const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, const std::string &name);
+	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, const std::string &name);
 
 	virtual StringList childNames(const StringViewList &shv_path);
 	StringList childNames() {return childNames(StringViewList());}
