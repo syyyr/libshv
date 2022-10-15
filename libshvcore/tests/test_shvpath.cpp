@@ -58,4 +58,50 @@ DOCTEST_TEST_CASE("ShvPath")
 			REQUIRE(ShvPath::startsWithPath(it->first, string("a/b")));
 		});
 	}
+	DOCTEST_SUBCASE("pattern match")
+	{
+		struct Test {
+			std::string path;
+			std::string pattern;
+			bool result;
+		};
+		Test cases[] {
+			{"", "aa", false},
+			{"aa", "", false},
+			{"", "", true},
+			{"", "**", true},
+			{"aa/bb/cc/dd", "aa/*/cc/dd", true},
+			{"aa/bb/cc/dd", "aa/bb/**/cc/dd", true},
+			{"aa/bb/cc/dd", "aa/bb/*/**/dd", true},
+			{"aa/bb/cc/dd", "*/*/cc/dd", true},
+			{"aa/bb/cc/dd", "*/cc/dd/**", false},
+			{"aa/bb/cc/dd", "*/*/*/*", true},
+			{"aa/bb/cc/dd", "aa/*/**", true},
+			{"aa/bb/cc/dd", "aa/**/dd", true},
+			{"aa/bb/cc/dd", "**", true},
+			{"aa/bb/cc/dd", "**/dd", true},
+			{"aa/bb/cc/dd", "**/*/**", false},
+			{"aa/bb/cc/dd", "**/**", false},
+			{"aa/bb/cc/dd", "**/ddd", false},
+			{"aa/bb/cc/dd", "aa1/bb/cc/dd", false},
+			{"aa/bb/cc/dd", "aa/bb/cc/dd1", false},
+			{"aa/bb/cc/dd", "aa/bb/cc1/dd", false},
+			{"aa/bb/cc/dd", "bb/cc/dd", false},
+			{"aa/bb/cc/dd", "aa/bb/cc", false},
+			{"aa/bb/cc/dd", "aa/*/bb/cc", false},
+			{"aa/bb/cc/dd", "aa/bb/cc/dd/*", false},
+			{"aa/bb/cc/dd", "*/aa/bb/cc/dd", false},
+			{"aa/bb/cc/dd", "*/aa/bb/cc/dd/*", false},
+			{"aa/bb/cc/dd", "aa/bb/cc/dd/ee", false},
+			{"aa/bb/cc/dd", "aa/bb/cc", false},
+			{"aa/bb/cc/dd", "*/*/*", false},
+			{"aa/bb/cc/dd", "*/*/*/*/*", false},
+			{"aa/bb/cc/dd", "*/**/*/*/*", false},
+		};
+		for(const Test &t : cases) {
+			//nDebug() << t.path << "vs. pattern" << t.pattern << "should be:" << t.result;
+			REQUIRE(shv::core::utils::ShvPath(t.path).matchWild(t.pattern) == t.result);
+		}
+	}
+
 }
