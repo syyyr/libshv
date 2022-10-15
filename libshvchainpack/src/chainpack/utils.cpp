@@ -86,7 +86,7 @@ std::string Utils::toHexElided(const std::string &bytes, size_t start_pos, size_
 	std::string hex = toHex(bytes, start_pos, max_len + 1);
 	if(hex.size() > 3 && hex.size() > max_len) {
 		hex.resize(hex.size() - 1);
-		for (int i = 0; i < 3; ++i)
+		for (size_t i = 0; i < 3; ++i)
 			hex[hex.size() - 1 - i] = '.';
 	}
 	return hex;

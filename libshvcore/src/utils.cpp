@@ -241,7 +241,7 @@ std::vector<char> Utils::readAllFd(int fd)
 			}
 		}
 		if(n < CHUNK_SIZE) {
-			ret.resize(prev_size + n);
+			ret.resize(prev_size + static_cast<size_t>(n));
 			break;
 		}
 #ifdef USE_IOCTL_FIONREAD
