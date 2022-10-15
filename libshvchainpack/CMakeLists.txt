@@ -4,7 +4,7 @@ add_library(libshvchainpack-cpp SHARED
     src/chainpack/accessgrant.cpp
     src/chainpack/chainpack.cpp
     src/chainpack/chainpackreader.cpp
-    src/chainpack/chainpackreader1.cpp
+	#src/chainpack/chainpackreader1.cpp
     src/chainpack/chainpackwriter.cpp
     src/chainpack/cpon.cpp
     src/chainpack/cponreader.cpp
@@ -39,7 +39,10 @@ function(add_shv_test test_name)
 endfunction(add_shv_test)
 
 if(BUILD_TESTING)
+	add_shv_test(chainpack)
+	add_shv_test(cpon)
 	add_shv_test(rpcvalue)
+	add_shv_test(rpcmessage)
 endif()
 
 install(TARGETS libshvchainpack-cpp)
