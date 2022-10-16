@@ -126,10 +126,12 @@ static int64_t str_to_size(const std::string &str)
 
 const std::string ShvFileJournal::FILE_EXT = ".log2";
 
-ShvFileJournal::ShvFileJournal(std::string device_id)
-	//, m_appendLogTSNowFn([]() {return RpcValue::DateTime::now().msecsSinceEpoch();})
+ShvFileJournal::ShvFileJournal()
 {
-	//setDefaultAppendLogTSNowFn();
+}
+
+ShvFileJournal::ShvFileJournal(std::string device_id)
+{
 	setDeviceId(device_id);
 }
 
