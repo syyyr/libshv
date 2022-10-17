@@ -85,7 +85,7 @@ public:
 	std::string join(const std::string &delim) const { return StringView::join(begin(), end(), delim); }
 
 	bool startsWith(const StringViewList &lst) const;
-	ssize_t length() const {return (ssize_t)size();}
+	ssize_t length() const {return static_cast<ssize_t>(size());}
 };
 
 } // namespace core

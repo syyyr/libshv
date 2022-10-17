@@ -113,9 +113,9 @@ double GraphModel::valueToDouble(const QVariant v, shv::core::utils::ShvTypeDesc
 	case Type::Double:
 		return v.toDouble();
 	case Type::Int:
-		return v.toLongLong();
+		return static_cast<double>(v.toLongLong());
 	case Type::UInt:
-		return v.toULongLong();
+		return static_cast<double>(v.toULongLong());
 	case Type::Decimal:
 		return v.toDouble();
 	case Type::Bool:
@@ -277,7 +277,7 @@ int GraphModel::pathToChannelIndex(const std::string &path) const
 	if(it == m_pathToChannelCache.end()) {
 		for (int i = 0; i < channelCount(); ++i) {
 			const ChannelInfo &chi = channelInfo(i);
-			if(chi.shvPath == QLatin1String(path.data(), (int)path.size())) {
+			if(chi.shvPath == QLatin1String(path.data(), static_cast<int>(path.size()))) {
 				m_pathToChannelCache[path] = i;
 				return i;
 			}

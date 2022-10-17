@@ -158,7 +158,7 @@ RpcValue AccessGrant::toRpcValue() const
 	RpcValue ret(RpcValue::IMap{});
 	MetaType::registerMetaType();
 	ret.setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
-	ret.set(MetaType::Key::Type, (int)type);
+	ret.set(MetaType::Key::Type, static_cast<int>(type));
 	switch (type) {
 	case Type::AccessLevel:
 		ret.set(MetaType::Key::AccessLevel, accessLevel);
@@ -169,7 +169,7 @@ RpcValue AccessGrant::toRpcValue() const
 	case Type::UserLogin:
 		ret.set(MetaType::Key::User, login.user);
 		ret.set(MetaType::Key::Password, login.password);
-		ret.set(MetaType::Key::LoginType, (int)login.loginType);
+		ret.set(MetaType::Key::LoginType, static_cast<int>(login.loginType));
 		break;
 	case Type::Invalid:
 		break;

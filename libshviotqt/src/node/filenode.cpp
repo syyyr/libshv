@@ -77,14 +77,14 @@ cp::RpcValue FileNode::callMethod(const shv::iotqt::node::ShvNode::StringViewLis
 	if(method == M_HASH) {
 		shv::chainpack::RpcValue::Blob bytes = read(shv_path, params).asBlob();
 		QCryptographicHash h(QCryptographicHash::Sha1);
-		h.addData((const char*)bytes.data(), bytes.size());
+		h.addData(reinterpret_cast<const char*>(bytes.data()), static_cast<int>(bytes.size()));
 		return h.result().toHex().toStdString();
 	}
 	if(method == M_SIZE) {
 		return size(shv_path);
 	}
 	if(method == M_SIZE_COMPRESSED) {
-		return (unsigned)readFileCompressed(shv_path, params).asBlob().size();
+		return static_cast<unsigned>(readFileCompressed(shv_path, params).asBlob().size());
 	}
 
 	return Super::callMethod(shv_path, method, params, user_id);
@@ -141,7 +141,7 @@ chainpack::RpcValue FileNode::readFileCompressed(const ShvNode::StringViewList &
 	int64_t size = params.asMap().value("size", std::numeric_limits<int64_t>::max()).toInt64();
 	const cp::RpcValue::Blob blob = readContent(shv_path, offset, size).asBlob();
 	if (compression_type == CompressionType::QCompress) {
-		const auto compressed_blob = qCompress(blob.data(), blob.size());
+		const auto compressed_blob = qCompress(blob.data(), static_cast<int>(blob.size()));
 		result = shv::chainpack::RpcValue::Blob(compressed_blob.cbegin(), compressed_blob.cend());
 
 		result.setMetaValue("compressionType", "qcompress");

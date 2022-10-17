@@ -3,7 +3,8 @@
 #include "rpcvalue.h"
 #include "rpc.h"
 
-#include "utils.h"
+//#include "utils.h"
+#include "exception.h"
 #include "../shvchainpackglobal.h"
 
 #include <functional>
@@ -126,7 +127,7 @@ public:
 	RpcValue metaValue(const RpcValue::String &key) const;
 	void setMetaValue(const RpcValue::String &key, const RpcValue &val);
 
-	virtual void write(AbstractStreamWriter &wr) const;
+	void write(AbstractStreamWriter &wr) const;
 
 	//std::string callerFingerprint() const;
 
@@ -224,7 +225,7 @@ public:
 		RpcValue::Map toJson() const
 		{
 			return RpcValue::Map {
-				{Rpc::JSONRPC_ERROR_CODE, (int)code()},
+				{Rpc::JSONRPC_ERROR_CODE, code()},
 				{Rpc::JSONRPC_ERROR_MESSAGE, message()},
 			};
 		}

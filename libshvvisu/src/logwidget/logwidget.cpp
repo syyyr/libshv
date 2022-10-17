@@ -159,7 +159,7 @@ LogWidget::LogWidget(QWidget *parent)
 
 	//ui->tableView->horizontalHeader()->setSectionHidden(0, true);
 	ui->tableView->horizontalHeader()->setSectionsMovable(true);
-	ui->tableView->verticalHeader()->setDefaultSectionSize((int)(fontMetrics().lineSpacing() * 1.3));
+	ui->tableView->verticalHeader()->setDefaultSectionSize(static_cast<int>(fontMetrics().lineSpacing() * 1.3));
 	m_filterModel = new LogFilterProxyModel(this);
 	m_filterModel->setDynamicSortFilter(false);
 	ui->tableView->setModel(m_filterModel);

@@ -1,9 +1,10 @@
 #pragma once
 
 #include "../shvchainpackglobal.h"
-#include "exception.h"
+//#include "exception.h"
 #include "metatypes.h"
 
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <map>
@@ -139,15 +140,14 @@ public:
 		}
 		double toDouble() const
 		{
-			double ret = mantisa();
-			int exp = exponent();
-			if(exp > 0)
-				for(; exp > 0; exp--) ret *= Base;
-			else
-				for(; exp < 0; exp++) ret /= Base;
-			return ret;
+			double ret = static_cast<double>(mantisa());
+				int exp = exponent();
+				if(exp > 0)
+					for(; exp > 0; exp--) ret *= Base;
+				else
+					for(; exp < 0; exp++) ret /= Base;
+				return ret;;
 		}
-		//bool isValid() const {return !(mantisa() == 0 && exponent() != 0);}
 		std::string toString() const;
 	};
 	class SHVCHAINPACK_DECL_EXPORT DateTime
@@ -168,8 +168,11 @@ public:
 		static DateTime fromUtcString(const std::string &utc_date_time_str, size_t *plen = nullptr);
 		static DateTime fromMSecsSinceEpoch(int64_t msecs, int utc_offset_min = 0);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
 		void setMsecsSinceEpoch(int64_t msecs) { m_dtm.msec = msecs; }
-		void setUtcOffsetMin(int utc_offset_min) {m_dtm.tz = utc_offset_min / 15;}
+		void setUtcOffsetMin(int utc_offset_min) { m_dtm.tz = (utc_offset_min / 15) & 0x7F; }
+#pragma GCC diagnostic pop
 		/// @deprecated
 		void setTimeZone(int utc_offset_min) {setUtcOffsetMin(utc_offset_min);}
 

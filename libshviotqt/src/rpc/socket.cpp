@@ -72,7 +72,7 @@ TcpSocket::TcpSocket(QTcpSocket *socket, QObject *parent)
 void TcpSocket::connectToHost(const QUrl &url)
 {
 	auto port = url.port(chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT_NONSECURED);
-	m_socket->connectToHost(url.host(), port);
+	m_socket->connectToHost(url.host(), static_cast<quint16>(port));
 }
 
 void TcpSocket::close()
@@ -404,7 +404,7 @@ void SslSocket::connectToHost(const QUrl &url)
 	ssl_socket->setPeerVerifyMode(m_peerVerifyMode);
 	shvDebug() << "connectToHostEncrypted" << "host:" << url.toString();
 	auto port = url.port(chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT_SECURED);
-	ssl_socket->connectToHostEncrypted(url.host(), port);
+	ssl_socket->connectToHostEncrypted(url.host(), static_cast<quint16>(port));
 }
 
 void SslSocket::ignoreSslErrors()

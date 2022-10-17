@@ -31,7 +31,7 @@ ChannelProbeWidget::ChannelProbeWidget(ChannelProbe *probe, QWidget *parent) :
 	ui->twData->setColumnCount(DataTableColumn::ColCount);
 	ui->twData->setHorizontalHeaderItem(DataTableColumn::ColProperty, new QTableWidgetItem("Property"));
 	ui->twData->setHorizontalHeaderItem(DataTableColumn::ColValue, new QTableWidgetItem("Value"));
-	ui->twData->verticalHeader()->setDefaultSectionSize((int)(fontMetrics().lineSpacing() * 1.3));
+	ui->twData->verticalHeader()->setDefaultSectionSize(static_cast<int>(fontMetrics().lineSpacing() * 1.3));
 
 	installEventFilter(this);
 	ui->fHeader->installEventFilter(this);
@@ -81,9 +81,9 @@ bool ChannelProbeWidget::eventFilter(QObject *o, QEvent *e)
 		setCursor(QCursor(Qt::ArrowCursor));
 	}
 	else if (e->type() == QEvent::MouseMove) {
-		QPoint pos = static_cast<QMouseEvent*>(e)->pos();
 
 		if (m_mouseOperation == MouseOperation::MoveWidget) {
+			QPoint pos = static_cast<QMouseEvent*>(e)->pos();
 			QPoint dist = pos - m_recentMousePos;
 			move(geometry().topLeft() + dist);
 			m_recentMousePos = pos - dist;

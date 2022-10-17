@@ -25,11 +25,11 @@ std::string Utils::binaryDump(const std::string &bytes)
 {
 	std::string ret;
 	for (size_t i = 0; i < bytes.size(); ++i) {
-		uint8_t u = bytes[i];
+		uint8_t u = static_cast<uint8_t>(bytes[i]);
 		if(i > 0)
 			ret += '|';
 		for (size_t j = 0; j < 8*sizeof(u); ++j) {
-			ret += (u & (((uint8_t)128) >> j))? '1': '0';
+			ret += (u & ((static_cast<uint8_t>(128)) >> j))? '1': '0';
 		}
 	}
 	return ret;
@@ -45,7 +45,7 @@ static inline char hex_nibble(char i)
 static std::string byte_to_hex( uint8_t i )
 {
 	std::string ret;
-	char h = i / 16;
+	char h = static_cast<char>(i / 16);
 	char l = i % 16;
 	ret += hex_nibble(h);
 	ret += hex_nibble(l);
@@ -65,7 +65,7 @@ std::string Utils::toHex(const std::string &bytes, size_t start_pos, size_t leng
 	std::string ret;
 	const size_t max_pos = std::min(bytes.size(), start_pos + length);
 	for (size_t i = start_pos; i < max_pos; ++i) {
-		unsigned char b = bytes[i];
+		unsigned char b = static_cast<unsigned char>(bytes[i]);
 		ret += byte_to_hex(b);
 	}
 	return ret;
@@ -86,7 +86,7 @@ std::string Utils::toHexElided(const std::string &bytes, size_t start_pos, size_
 	std::string hex = toHex(bytes, start_pos, max_len + 1);
 	if(hex.size() > 3 && hex.size() > max_len) {
 		hex.resize(hex.size() - 1);
-		for (int i = 0; i < 3; ++i)
+		for (size_t i = 0; i < 3; ++i)
 			hex[hex.size() - 1 - i] = '.';
 	}
 	return hex;
@@ -107,11 +107,11 @@ std::string Utils::fromHex(const std::string &bytes)
 {
 	std::string ret;
 	for (size_t i = 0; i < bytes.size(); ) {
-		unsigned char u = fromHex(bytes[i++]);
+		unsigned char u = static_cast<unsigned char>(fromHex(bytes[i++]));
 		u = 16 * u;
 		if(i < bytes.size())
-			u += fromHex(bytes[i++]);
-		ret.push_back(u);
+			u += static_cast<unsigned char>(fromHex(bytes[i++]));
+		ret.push_back(static_cast<char>(u));
 	}
 	return ret;
 }
@@ -119,10 +119,10 @@ std::string Utils::fromHex(const std::string &bytes)
 std::string Utils::hexDump(const std::string &bytes)
 {
 	std::string ret;
-	std::string hex_l, str_l, num_l = int_to_hex((size_t)0);
+	std::string hex_l, str_l, num_l = int_to_hex(static_cast<size_t>(0));
 	for (size_t i = 0; i < bytes.length(); ++i) {
 		auto c = bytes[i];
-		std::string s = byte_to_hex(c);
+		std::string s = byte_to_hex(static_cast<uint8_t>(c));
 		hex_l += s;
 		str_l.push_back((c >= ' ' && c < 127)? c: '.');
 		if(( i + 1 ) % 16 == 0) {

@@ -57,9 +57,9 @@ protected:
 	void onRpcValueReceived(const shv::chainpack::RpcValue &msg) override;
 
 	bool isLoginPhase() const {return !m_loginOk;}
-	virtual void processLoginPhase(const chainpack::RpcMessage &msg);
+	void processLoginPhase(const chainpack::RpcMessage &msg);
 
-	virtual void processLoginPhase() = 0;
+	virtual void processLoginPhase();
 	virtual void setLoginResult(const shv::chainpack::UserLoginResult &result);
 
 	//bool isDestroyPhase() const {return m_isDestroyPhase;}

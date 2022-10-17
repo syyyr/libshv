@@ -88,7 +88,7 @@ bool AclAccessRule::isMoreSpecificThan(const AclAccessRule &other) const
 	return patt_len > other_patt_len;
 }
 
-bool AclAccessRule::isPathMethodMatch(const shv::core::utils::ShvUrl &shv_url, const string &method) const
+bool AclAccessRule::isPathMethodMatch(const shv::core::utils::ShvUrl &shv_url, const string &method_arg) const
 {
 	const bool any_service = this->service == ALL_SERVICES;
 	const bool some_service = !this->service.empty() && !any_service;
@@ -111,7 +111,7 @@ bool AclAccessRule::isPathMethodMatch(const shv::core::utils::ShvUrl &shv_url, c
 		if(shv_url.pathPart() == pathPattern) {
 			if(this->method.empty())
 				return true;
-			return this->method == method;
+			return this->method == method_arg;
 		}
 		return false;
 	}
@@ -124,7 +124,7 @@ bool AclAccessRule::isPathMethodMatch(const shv::core::utils::ShvUrl &shv_url, c
 		//shvInfo() << "starts with OK";
 		if(this->method.empty())
 			return true;
-		return this->method == method;
+		return this->method == method_arg;
 	}
 	return false;
 }

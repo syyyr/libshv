@@ -133,8 +133,7 @@ public:
 	{
 		using uT = typename std::make_unsigned<T>::type;
 		uT val = 0;
-		unsigned i;
-		for (i = len; i > 0; --i) {
+		for (unsigned i = len; i > 0; --i) {
 			val = val * 256 + static_cast<unsigned char>(buff[i - 1]);
 		}
 		if(std::is_signed<T>::value && len < sizeof(T)) {

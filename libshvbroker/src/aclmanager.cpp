@@ -20,7 +20,7 @@ namespace {
 static std::string sha1_hex(const std::string &s)
 {
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-	hash.addData(s.data(), (int)s.length());
+	hash.addData(s.data(), static_cast<int>(s.length()));
 	return std::string(hash.result().toHex().constData());
 }
 }
@@ -194,7 +194,7 @@ chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginC
 		std::string nonce = login_context.serverNounce + acl_pwd.password;
 		//shvWarning() << "correct:" << login_context.serverNounce << "+" << acl_pwd.password;
 		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-		hash.addData(nonce.data(), nonce.length());
+		hash.addData(nonce.data(), static_cast<int>(nonce.length()));
 		std::string correct_sha1 = std::string(hash.result().toHex().constData());
 		//shvWarning() << "correct:" << correct_sha1;
 		//shvWarning() << "user   :" << correct_sha1;

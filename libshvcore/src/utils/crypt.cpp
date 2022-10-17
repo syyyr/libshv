@@ -24,12 +24,12 @@ Crypt::Crypt(Crypt::Generator gen)
 Crypt::Generator Crypt::createGenerator(uint32_t a, uint32_t b, uint32_t max_rand)
 {
 	auto ret = [a, b, max_rand](uint32_t val) -> uint32_t {
-		uint64_t ret = val;
-		ret *= a;
-		ret += b;
-		ret %= max_rand;
+		uint64_t val_64bit = val;
+		val_64bit *= a;
+		val_64bit += b;
+		val_64bit %= max_rand;
 		//qfWarning() << '(' << a << '*' << val << '+' << b << ") %" << max_rand << "---->" << ret;
-		return ret;
+		return static_cast<uint32_t>(val_64bit);
 	};
 	return ret;
 }
@@ -39,13 +39,13 @@ static std::string code_byte(uint8_t b)
 	std::string ret;
 	char buff[] = {0,0,0};
 	if((b>='A' && b<='Z') || (b>='a' && b<='z')) {
-		ret.push_back(b);
+		ret.push_back(static_cast<char>(b));
 	}
 	else {
 		uint8_t b1 = b%10;
 		b /= 10;
-		buff[0] = b1 + '0';
-		buff[1] = (b1 % 2)? b + 'A': b + 'a';
+		buff[0] = static_cast<char>(b1 + '0');
+		buff[1] = static_cast<char>((b1 % 2)? b + 'A': b + 'a');
 		ret.append(buff);
 	}
 	return ret;
@@ -60,7 +60,7 @@ std::string Crypt::encrypt(const std::string &data, size_t min_length) const
 	{
 		using namespace std::chrono;
 		nanoseconds ns = duration_cast< nanoseconds >( system_clock::now().time_since_epoch() );
-		b = (uint8_t)ns.count();
+		b = static_cast<uint8_t>(ns.count());
 		if(b == 0)
 			b++;
 
@@ -70,35 +70,35 @@ std::string Crypt::encrypt(const std::string &data, size_t min_length) const
 
 	/// a tou se to zaxoruje
 	for(size_t i=0; i<data.length(); i++) {
-		b = ((uint8_t)data[i]);
+		b = (static_cast<uint8_t>(data[i]));
 		if(b == 0)
 			break;
 		seed = m_generator(seed);
-		b = b ^ (uint8_t)seed;
+		b = b ^ static_cast<uint8_t>(seed);
 		dest += code_byte(b);
 	}
 	uint8_t bb = 0;
 	while(dest.size() < min_length) {
 		seed = m_generator(seed);
-		b = bb ^ (uint8_t)seed;
+		b = bb ^ static_cast<uint8_t>(seed);
 		dest += code_byte(b);
-		bb = (uint8_t)std::rand();
+		bb = static_cast<uint8_t>(std::rand());
 	}
 	return dest;
 }
 
 static uint8_t take_byte(const std::string &ba, size_t &i)
 {
-	uint8_t b = ((uint8_t)ba[i++]);
+	uint8_t b = (static_cast<uint8_t>(ba[i++]));
 	if((b>='A' && b<='Z') || (b>='a' && b<='z')) {
 	}
 	else {
 		uint8_t b1 = b;
 		b1 = b1 - '0';
 		if(i < ba.size()) {
-			b = ba[i++];
+			b = static_cast<uint8_t>(ba[i++]);
 			b = (b1 % 2)? (b - 'A'): (b - 'a');
-			b = 10 * b + b1;
+			b = static_cast<uint8_t>(10 * b + b1);
 		}
 		else {
 			shvError() << __FUNCTION__ << ": byte array corupted:" << ba;
@@ -120,8 +120,8 @@ std::string Crypt::decodeArray(const std::string &ba) const
 	while(i<ba.length()) {
 		seed = m_generator(seed);
 		uint8_t b = take_byte(ba, i);
-		b = b ^ (uint8_t)seed;
-		ret.push_back(b);
+		b = b ^ static_cast<uint8_t>(seed);
+		ret.push_back(static_cast<char>(b));
 	}
 	return ret;
 }

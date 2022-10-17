@@ -1,5 +1,5 @@
 #include "cponreader.h"
-//#include "cpon.h"
+#include "exception.h"
 #include "../../c/ccpon.h"
 
 #include <iostream>
@@ -11,7 +11,7 @@ namespace chainpack {
 
 #define PARSE_EXCEPTION(msg) {\
 	char buff[40]; \
-	int l = m_in.readsome(buff, sizeof(buff) - 1); \
+	auto l = m_in.readsome(buff, sizeof(buff) - 1); \
 	buff[l] = 0; \
 	if(exception_aborts) { \
 		std::clog << __FILE__ << ':' << __LINE__;  \
@@ -268,7 +268,7 @@ void CponReader::parseMetaData(RpcValue::MetaData &meta_data)
 	}
 }
 
-void CponReader::parseMap(RpcValue &val)
+void CponReader::parseMap(RpcValue &out_val)
 {
 	RpcValue::Map map;
 	while (true) {
@@ -282,10 +282,10 @@ void CponReader::parseMap(RpcValue &val)
 		read(val);
 		map[key.asString()] = val;
 	}
-	val = map;
+	out_val = map;
 }
 
-void CponReader::parseIMap(RpcValue &val)
+void CponReader::parseIMap(RpcValue &out_val)
 {
 	RpcValue::IMap map;
 	while (true) {
@@ -299,7 +299,7 @@ void CponReader::parseIMap(RpcValue &val)
 		read(val);
 		map[key.toInt()] = val;
 	}
-	val = map;
+	out_val = map;
 }
 
 void CponReader::read(RpcValue::MetaData &meta_data)

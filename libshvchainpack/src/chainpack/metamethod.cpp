@@ -7,7 +7,7 @@ RpcValue MetaMethod::toRpcValue() const
 {
 	RpcValue::Map ret;
 	ret["name"] = m_name;
-	ret["signature"] = (int)m_signature;
+	ret["signature"] = static_cast<int>(m_signature);
 	ret["flags"] = m_flags;
 	ret["accessGrant"] = m_accessGrant;
 	if(!m_description.empty())
@@ -24,7 +24,7 @@ MetaMethod MetaMethod::fromRpcValue(const RpcValue &rv)
 	RpcValue::Map tags = map.take("tags").asMap();
 	map.merge(tags);
 	ret.m_name = map.take("name").asString();
-	ret.m_signature = (Signature)map.take("signature").toInt();
+	ret.m_signature = static_cast<Signature>(map.take("signature").toInt());
 	ret.m_flags = map.take("flags").toUInt();
 	ret.m_accessGrant = map.take("accessGrant");
 	ret.m_description = map.take("description").asString();

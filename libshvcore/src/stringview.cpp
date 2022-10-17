@@ -83,10 +83,10 @@ char StringView::at(size_t ix) const
 char StringView::value(int ix) const
 {
 	if(ix < 0)
-		ix = m_length + ix;
+		ix = static_cast<int>(m_length - ix);
 	if(ix < 0)
 		return 0;
-	if((unsigned)ix >= m_length)
+	if(static_cast<unsigned>(ix) >= m_length)
 		return 0;
 	return str()[m_start + ix];
 }
@@ -189,16 +189,16 @@ StringView StringView::slice(int start, int end) const
 	int s = static_cast<int>(this->start()) + start;
 	if(s < 0)
 		s = 0;
-	if(s > (int)m_str->length())
-		s = (int)m_str->length();
+	if(s > static_cast<int>(m_str->length()))
+		s = static_cast<int>(m_str->length());
 	int e = static_cast<int>(this->start() + length()) + end;
 	if(e < 0)
 		e = 0;
-	if(e > (int)m_str->length())
-		e = (int)m_str->length();
+	if(e > static_cast<int>(m_str->length()))
+		e = static_cast<int>(m_str->length());
 	if(e < s)
 		e = s;
-	return StringView(str(), (size_t)s, (size_t)(e - s));
+	return StringView(str(), static_cast<size_t>(s), static_cast<size_t>(e - s));
 }
 
 StringView StringView::getToken(char delim, char quote) const
@@ -297,7 +297,7 @@ ssize_t StringViewList::indexOf(const std::string &str) const
 StringViewList StringViewList::mid(size_t start, size_t len) const
 {
 	auto end = (start + len) > size()? size(): start + len;
-	return StringViewList(begin() + start, begin() + end);
+	return StringViewList(begin() + static_cast<long>(start), begin() + static_cast<long>(end));
 }
 
 bool StringViewList::startsWith(const StringViewList &lst) const

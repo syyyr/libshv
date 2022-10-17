@@ -288,7 +288,7 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 
 void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-	logMouseSelection() << "mouseReleaseEvent, button:" << event->button() << "op:" << (int)m_mouseOperation;
+	logMouseSelection() << "mouseReleaseEvent, button:" << event->button() << "op:" << static_cast<int>(m_mouseOperation);
 	auto old_mouse_op = m_mouseOperation;
 	m_mouseOperation = MouseOperation::None;
 	if(event->button() == Qt::LeftButton) {
@@ -627,7 +627,7 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
 		double deg = event->angleDelta().y();
 		//deg /= 120;
 		// 120 deg ~ 1/20 of range
-		timemsec_t dt = static_cast<timemsec_t>(deg * gr->xRangeZoom().interval() / 120 / ZOOM_STEP);
+		timemsec_t dt = static_cast<timemsec_t>(deg * static_cast<double>(gr->xRangeZoom().interval()) / 120 / ZOOM_STEP);
 		XRange r = gr->xRangeZoom();
 		r.min += dt;
 		r.max -= dt;
@@ -643,14 +643,14 @@ void GraphWidget::wheelEvent(QWheelEvent *event)
 		double deg = event->angleDelta().y();
 		//deg /= 120;
 		// 120 deg ~ 1/20 of range
-		timemsec_t dt = static_cast<timemsec_t>(deg * gr->xRangeZoom().interval() / 120 / ZOOM_STEP);
+		timemsec_t dt = static_cast<timemsec_t>(deg * static_cast<double>(gr->xRangeZoom().interval()) / 120 / ZOOM_STEP);
 		XRange r = gr->xRangeZoom();
 		double ratio = 0.5;
 		// shift new zoom to center it horizontally on the mouse position
 		timemsec_t t_mouse = gr->posToTime(pos.x());
-		ratio = static_cast<double>(t_mouse - r.min) / r.interval();
-		r.min += ratio * dt;
-		r.max -= (1 - ratio) * dt;
+		ratio = static_cast<double>(t_mouse - r.min) / static_cast<double>(r.interval());
+		r.min += static_cast<timemsec_t>(ratio * static_cast<double>(dt));
+		r.max -= static_cast<timemsec_t>((1 - ratio) * static_cast<double>(dt));
 		if(r.interval() > 1) {
 			gr->setXRangeZoom(r);
 			//r = gr->xRangeZoom();
@@ -859,14 +859,14 @@ void GraphWidget::createProbe(int channel_ix, timemsec_t time)
 	ChannelProbe *probe = m_graph->addChannelProbe(channel_ix, time);
 	Q_ASSERT(probe);
 
-	connect(probe, &ChannelProbe::currentTimeChanged, probe, [this](int64_t time) {
-		bool is_time_visible = m_graph->xRangeZoom().contains(time);
+	connect(probe, &ChannelProbe::currentTimeChanged, probe, [this](int64_t new_time) {
+		bool is_time_visible = m_graph->xRangeZoom().contains(new_time);
 
 		if (!is_time_visible) {
 			XRange x_range;
 			timemsec_t half_interval = m_graph->xRangeZoom().interval() / 2;
-			x_range.min = time - half_interval;
-			x_range.max = time + half_interval;
+			x_range.min = new_time - half_interval;
+			x_range.max = new_time + half_interval;
 
 			m_graph->setXRangeZoom(x_range);
 		}

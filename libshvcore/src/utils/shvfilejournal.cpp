@@ -126,10 +126,12 @@ static int64_t str_to_size(const std::string &str)
 
 const std::string ShvFileJournal::FILE_EXT = ".log2";
 
-ShvFileJournal::ShvFileJournal(std::string device_id)
-	//, m_appendLogTSNowFn([]() {return RpcValue::DateTime::now().msecsSinceEpoch();})
+ShvFileJournal::ShvFileJournal()
 {
-	//setDefaultAppendLogTSNowFn();
+}
+
+ShvFileJournal::ShvFileJournal(std::string device_id)
+{
 	setDeviceId(device_id);
 }
 
@@ -356,9 +358,9 @@ void ShvFileJournal::convertLog1JournalDir()
 						static constexpr size_t DT_LEN = 30;
 						char buff[DT_LEN];
 						in.read(buff, sizeof (buff));
-						auto n = in.gcount();
-						if(n > 0) {
-							std::string s(buff, (unsigned)n);
+						auto char_count = in.gcount();
+						if(char_count > 0) {
+							std::string s(buff, static_cast<unsigned>(char_count));
 							int64_t file_msec = chainpack::RpcValue::DateTime::fromUtcString(s).msecsSinceEpoch();
 							if(file_msec == 0) {
 								shvWarning() << "cannot read date time from first line of file:" << fn << "line:" << s;
@@ -538,7 +540,7 @@ int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, int64_t jou
 				size_t len;
 				chainpack::RpcValue::DateTime dt = chainpack::RpcValue::DateTime::fromUtcString(s, &len);
 				if(len > 0) {
-					date_time_fpos = fpos + (ssize_t)line_start_pos;
+					date_time_fpos = fpos + static_cast<ssize_t>(line_start_pos);
 					dt_msec = dt.msecsSinceEpoch();
 				}
 				else {
@@ -635,7 +637,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		return ret;
 	};
 	auto append_log_entry = [make_path_shared, rec_cnt_limit, &rec_cnt_limit_hit, &first_record_msec, &last_record_msec, &log](const ShvJournalEntry &e) {
-		if((int)log.size() >= rec_cnt_limit) {
+		if(static_cast<int>(log.size()) >= rec_cnt_limit) {
 			rec_cnt_limit_hit = true;
 			return false;
 		}
@@ -813,7 +815,7 @@ log_finish:
 		log_header.setLogParams(params);
 		log_header.setSince((log_since_msec > 0)? RpcValue(RpcValue::DateTime::fromMSecsSinceEpoch(log_since_msec)): RpcValue(nullptr));
 		log_header.setUntil((log_until_msec > 0)? RpcValue(RpcValue::DateTime::fromMSecsSinceEpoch(log_until_msec)): RpcValue(nullptr));
-		log_header.setRecordCount((int)log.size());
+		log_header.setRecordCount(static_cast<int>(log.size()));
 		log_header.setRecordCountLimit(rec_cnt_limit);
 		log_header.setRecordCountLimitHit(rec_cnt_limit_hit);
 		log_header.setWithSnapShot(params.withSnapshot);

@@ -32,7 +32,6 @@ target_compile_definitions(libshvcore PRIVATE SHVCORE_BUILD_DLL)
 function(add_shv_test test_name)
 	add_executable(test_${test_name}
 		tests/test_${test_name}.cpp
-		#tests/${test_name}.qrc
 		)
 	target_compile_definitions(test_${test_name} PRIVATE DEF_FILES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/files")
 	target_link_libraries(test_${test_name} libshvcore)
@@ -43,6 +42,8 @@ if(BUILD_TESTING)
 	add_shv_test(shvtypeinfo)
 	add_shv_test(stringview)
 	add_shv_test(shvpath)
+	add_shv_test(crypt)
+	add_shv_test(shvlog)
 endif()
 
 install(TARGETS libshvcore)

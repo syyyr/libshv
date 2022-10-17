@@ -29,7 +29,7 @@ QVariant Utils::rpcValueToQVariant(const chainpack::RpcValue &v, bool *ok)
 	}
 	case chainpack::RpcValue::Type::Blob: {
 		const auto &blob = v.asBlob();
-		return QVariant(QByteArray((char*)blob.data(), blob.size()));
+		return QVariant(QByteArray(reinterpret_cast<const char*>(blob.data()), static_cast<int>(blob.size())));
 	}
 	case chainpack::RpcValue::Type::DateTime: {
 		chainpack::RpcValue::DateTime cdt = v.toDateTime();
@@ -87,7 +87,7 @@ chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v, bool *ok)
 	case QMetaType::QString: return v.toString().toStdString();
 	case QMetaType::QByteArray: {
 		auto ba = v.toByteArray();
-		auto *array = (const uint8_t*)ba.constData();
+		auto *array = reinterpret_cast<const uint8_t*>(ba.constData());
 		return chainpack::RpcValue::Blob(array, array + ba.size());
 	}
 	case QMetaType::QDateTime: {
@@ -207,7 +207,7 @@ static uint32_t crc32_checksum(const uint8_t *data, int size)
 
 std::vector<uint8_t> Utils::compressGZip(const std::vector<uint8_t> &data)
 {
-	QByteArray compressed_data = qCompress(QByteArray::fromRawData(reinterpret_cast<const char *>(data.data()), data.size()));
+	QByteArray compressed_data = qCompress(QByteArray::fromRawData(reinterpret_cast<const char *>(data.data()), static_cast<int>(data.size())));
 
 	// Remove 4 bytes of length added by Qt a 2 bytes of zlib header from the beginning
 	compressed_data = compressed_data.mid(6);
@@ -219,17 +219,17 @@ std::vector<uint8_t> Utils::compressGZip(const std::vector<uint8_t> &data)
 	static const char gzip_header[] = {'\x1f', '\x8b', '\x08', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x03'};
 	compressed_data.prepend(gzip_header, sizeof(gzip_header));
 
-	const uint32_t crc32 = crc32_checksum(data.data(), data.size());
-	compressed_data.append(crc32 & 0xff);
-	compressed_data.append((crc32 >> 8) & 0xff);
-	compressed_data.append((crc32 >> 16) & 0xff);
-	compressed_data.append((crc32 >> 24) & 0xff);
+	const uint32_t crc32 = crc32_checksum(data.data(), static_cast<int>(data.size()));
+	compressed_data.append(static_cast<char>(crc32 & 0xff));
+	compressed_data.append(static_cast<char>((crc32 >> 8) & 0xff));
+	compressed_data.append(static_cast<char>((crc32 >> 16) & 0xff));
+	compressed_data.append(static_cast<char>((crc32 >> 24) & 0xff));
 
-	const uint32_t data_size = data.size();
-	compressed_data.append(data_size & 0xff);
-	compressed_data.append((data_size >> 8) & 0xff);
-	compressed_data.append((data_size >> 16) & 0xff);
-	compressed_data.append((data_size >> 24) & 0xff);
+	const uint32_t data_size = static_cast<uint32_t>(data.size());
+	compressed_data.append(static_cast<char>(data_size & 0xff));
+	compressed_data.append(static_cast<char>((data_size >> 8) & 0xff));
+	compressed_data.append(static_cast<char>((data_size >> 16) & 0xff));
+	compressed_data.append(static_cast<char>((data_size >> 24) & 0xff));
 
 	return shv::chainpack::RpcValue::Blob(compressed_data.cbegin(), compressed_data.cend());
 }

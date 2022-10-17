@@ -5,8 +5,8 @@
 #include <cstddef>
 #include <map>
 
-#define RPC_META_TAG_DEF(tag_name) {(int)Tag::tag_name, {(int)Tag::tag_name, #tag_name }}
-#define RPC_META_KEY_DEF(key_name) {(int)Key::key_name, {(int)Key::key_name, #key_name }}
+#define RPC_META_TAG_DEF(tag_name) {static_cast<int>(Tag::tag_name), {static_cast<int>(Tag::tag_name), #tag_name }}
+#define RPC_META_KEY_DEF(key_name) {static_cast<int>(Key::key_name), {static_cast<int>(Key::key_name), #key_name }}
 
 namespace shv {
 namespace chainpack {
@@ -31,7 +31,7 @@ public:
 	const char *name = nullptr;
 
 	MetaInfo() : id(0), name(nullptr) {}
-	MetaInfo(int id, const char *name) : id(id), name(name) {}
+	MetaInfo(int id_, const char *name_) : id(id_), name(name_) {}
 
 	bool isValid() const {return (name && name[0]);}
 };
@@ -81,7 +81,7 @@ class GlobalNS : public meta::MetaNameSpace
 {
 	using Super = meta::MetaNameSpace;
 public:
-	enum {ID = (int)NameSpaceID::Global};
+	enum {ID = static_cast<int>(NameSpaceID::Global)};
 	GlobalNS();
 
 	struct MetaTypeId
@@ -105,7 +105,7 @@ class ElesysNS : public meta::MetaNameSpace
 {
 	using Super = meta::MetaNameSpace;
 public:
-	enum {ID = (int)NameSpaceID::Elesys};
+	enum {ID = static_cast<int>(NameSpaceID::Elesys)};
 	ElesysNS();
 
 	struct MetaTypeId

@@ -11,7 +11,20 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "") # we don't want CMake to prepend "lib" to ou
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic ${CMAKE_CXX_FLAGS}")
+	set(SHV_WARNING_FLAGS "-Wall -Wextra -pedantic -Wshadow -Wcast-align -Wunused -Wpedantic -Wconversion -Wmisleading-indentation -Wdouble-promotion -Wformat=2 -Wimplicit-fallthrough")
+	set(SHV_WARNING_FLAGS "-Wno-sign-conversion ${SHV_WARNING_FLAGS}")
+	set(SHV_WARNING_FLAGS_CXX "-Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual")
+
+	if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+		set(SHV_WARNING_FLAGS "-Wduplicated-cond -Wduplicated-branches -Wlogical-op ${SHV_WARNING_FLAGS}")
+		set(SHV_WARNING_FLAGS_CXX "-Wuseless-cast ${SHV_WARNING_FLAGS_CXX}")
+
+	endif()
+
+	set(SHV_WARNING_FLAGS_CXX "${SHV_WARNING_FLAGS} ${SHV_WARNING_FLAGS_CXX}")
+
+	set(CMAKE_C_FLAGS "${SHV_WARNING_FLAGS} ${CMAKE_C_FLAGS}")
+	set(CMAKE_CXX_FLAGS "${SHV_WARNING_FLAGS_CXX} ${CMAKE_CXX_FLAGS}")
 endif()
 
 if(BUILD_TESTING)
@@ -62,6 +75,9 @@ endif()
 
 if(Qt_FOUND)
 	set(CMAKE_AUTOMOC ON)
+	if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+		set(CMAKE_AUTOMOC_MOC_OPTIONS "-b${CMAKE_CURRENT_SOURCE_DIR}/cmake/qt_moc_disable_warnings.h")
+	endif()
 
 	add_subdirectory(libshvcoreqt)
 	add_subdirectory(libshviotqt)
@@ -83,17 +99,24 @@ else()
 	message(STATUS "Qt not found, Qt-based libs won't be built")
 endif()
 
+option(BUILD_SHV_UTILS "Whether to build ccp2cp, cp2cp, and cpmerge" ON)
+
 # Utils
-# ccp2cp
-add_executable(ccp2cp utils/ccp2cp/main.c)
-target_link_libraries(ccp2cp libshvchainpack-c)
+if(BUILD_SHV_UTILS)
+	message(STATUS "SHV utils will be built")
+	# ccp2cp
+	add_executable(ccp2cp utils/ccp2cp/main.c)
+	target_link_libraries(ccp2cp libshvchainpack-c)
 
-# cp2cp
-add_executable(cp2cp utils/cp2cp/main.cpp)
-target_link_libraries(cp2cp libshvchainpack-cpp)
+	# cp2cp
+	add_executable(cp2cp utils/cp2cp/main.cpp)
+	target_link_libraries(cp2cp libshvchainpack-cpp)
 
-# cpmerge
-add_executable(cpmerge utils/cpmerge/main.cpp)
-target_link_libraries(cpmerge libshvchainpack-cpp)
+	# cpmerge
+	add_executable(cpmerge utils/cpmerge/main.cpp)
+	target_link_libraries(cpmerge libshvchainpack-cpp)
 
-install(TARGETS ccp2cp cp2cp cpmerge)
+	install(TARGETS ccp2cp cp2cp cpmerge)
+else()
+	message(STATUS "SHV utils WON'T be built")
+endif()

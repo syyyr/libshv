@@ -162,7 +162,7 @@ RpcValue ShvFieldDescr::bitfieldValue(uint64_t uval) const
 	shvDebug() << "uval masked and rotated right by:" << bit_no1 << "bits, uval:" << uval;
 	RpcValue result;
 	if(bit_no1 == bit_no2)
-		result = static_cast<bool>(uval != 0);
+		result = uval != 0;
 	else
 		result = uval;
 	return result;
@@ -200,7 +200,7 @@ ShvTypeDescr::Type ShvTypeDescr::type() const
 
 ShvTypeDescr &ShvTypeDescr::setType(Type t)
 {
-	setDataValue(KEY_TYPE, (int)t);
+	setDataValue(KEY_TYPE, static_cast<int>(t));
 	return *this;
 }
 
@@ -230,7 +230,7 @@ ShvTypeDescr::SampleType ShvTypeDescr::sampleType() const
 
 ShvTypeDescr &ShvTypeDescr::setSampleType(ShvTypeDescr::SampleType st)
 {
-	setDataValue(KEY_SAMPLE_TYPE, (int)st);
+	setDataValue(KEY_SAMPLE_TYPE, static_cast<int>(st));
 	return *this;
 }
 
@@ -381,12 +381,12 @@ ShvTypeDescr ShvTypeDescr::fromRpcValue(const RpcValue &v)
 	{
 		auto rv = ret.dataValue(KEY_TYPE);
 		if(rv.isString())
-			ret.setDataValue(KEY_TYPE, (int)typeFromString(rv.asString()));
+			ret.setDataValue(KEY_TYPE, static_cast<int>(typeFromString(rv.asString())));
 	}
 	{
 		auto rv = ret.dataValue(KEY_SAMPLE_TYPE);
 		if(rv.isString())
-			ret.setDataValue(KEY_SAMPLE_TYPE, (int)sampleTypeFromString(rv.asString()));
+			ret.setDataValue(KEY_SAMPLE_TYPE, static_cast<int>(sampleTypeFromString(rv.asString())));
 	}
 	return ret;
 }
@@ -938,7 +938,7 @@ RpcValue ShvTypeInfo::applyTypeDescription(const chainpack::RpcValue &val, const
 			return val;
 		return val.asIMap();
 	}
-	shvError() << "Invalid type:" << (int)type_descr.type();
+	shvError() << "Invalid type:" << static_cast<int>(type_descr.type());
 	return val;
 }
 

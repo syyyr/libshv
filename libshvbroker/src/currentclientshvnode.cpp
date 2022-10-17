@@ -14,7 +14,7 @@ using namespace std;
 static string sha1_hex(const std::string &s)
 {
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-	hash.addData(s.data(), s.length());
+	hash.addData(s.data(), static_cast<int>(s.length()));
 	return std::string(hash.result().toHex().constData());
 }
 
@@ -96,13 +96,13 @@ shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack
 			auto *cli = app->clientById(client_id);
 			if(cli) {
 				const shv::chainpack::RpcValue::List &plist = rq.params().asList();
-				const string &shv_path = plist.value(0).asString();
-				if(shv_path.empty())
+				const string &shv_path_param = plist.value(0).asString();
+				if(shv_path_param.empty())
 					SHV_EXCEPTION("Shv path not specified in params.");
-				const string &method = plist.value(1).asString();
-				if(method.empty())
+				const string &method_param = plist.value(1).asString();
+				if(method_param.empty())
 					SHV_EXCEPTION("Method not specified in params.");
-				shv::chainpack::AccessGrant acg = app->accessGrantForRequest(cli, shv::core::utils::ShvUrl(shv_path), method, rq.accessGrant());
+				shv::chainpack::AccessGrant acg = app->accessGrantForRequest(cli, shv::core::utils::ShvUrl(shv_path_param), method_param, rq.accessGrant());
 				return acg.isValid()? acg.toRpcValue(): nullptr;
 			}
 			return nullptr;

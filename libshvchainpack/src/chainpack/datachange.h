@@ -58,7 +58,7 @@ public:
 	int64_t epochMSec() const { return m_dateTime.msecsSinceEpoch(); }
 
 	bool hasShortTime() const { return m_shortTime > NO_SHORT_TIME; }
-	RpcValue shortTime() const { return hasShortTime()? RpcValue((unsigned)m_shortTime): RpcValue(); }
+	RpcValue shortTime() const { return hasShortTime()? RpcValue(static_cast<unsigned>(m_shortTime)): RpcValue(); }
 	void setShortTime(const RpcValue &st) { m_shortTime = (st.isUInt() || (st.isInt() && st.toInt() >= 0))? st.toInt(): NO_SHORT_TIME; }
 
 	//bool hasDomain() const { return !m_domain.empty(); }

@@ -405,7 +405,7 @@ Sample Graph::timeToSample(int channel_ix, timemsec_t time) const
 		Sample s2 = m->sampleAt(model_ix, ix2);
 		if(s1.time == s2.time)
 			return Sample();
-		double d = s1.value.toDouble() + (time - s1.time) * (s2.value.toDouble() - s1.value.toDouble()) / (s2.time - s1.time);
+		double d = s1.value.toDouble() + static_cast<double>(time - s1.time) * (s2.value.toDouble() - s1.value.toDouble()) / static_cast<double>(s2.time - s1.time);
 		return Sample(time, d);
 	}
 	return Sample();
@@ -570,7 +570,7 @@ void Graph::setCrossHairPos(const Graph::CrossHairPos &pos)
 	emit presentationDirty(dirty_rect);
 }
 
-void Graph::setCurrentTime(timemsec_t time)
+void Graph::setCurrentTime(timemsec_t new_time)
 {
 	auto dirty_rect = [this](timemsec_t time) {
 		QRect r;
@@ -582,7 +582,7 @@ void Graph::setCurrentTime(timemsec_t time)
 		return r;
 	};
 	emit presentationDirty(dirty_rect(m_state.currentTime));
-	m_state.currentTime = time;
+	m_state.currentTime = new_time;
 	emit presentationDirty(dirty_rect(m_state.currentTime));
 	emit presentationDirty(m_layout.xAxisRect);
 }
@@ -1735,7 +1735,7 @@ std::function<QPoint (const Sample &s, Graph::TypeId meta_type_id)> Graph::dataT
 
 	if(t2 - t1 == 0)
 		return nullptr;
-	double kx = static_cast<double>(ri - le) / (t2 - t1);
+	double kx = static_cast<double>(ri - le) / static_cast<double>(t2 - t1);
 	//shvInfo() << "t1:" << t1 << "t2:" << t2 << "le:" << le << "ri:" << ri << "kx:" << kx;
 	if(std::abs(d2 - d1) < 1e-6)
 		return nullptr;
@@ -1743,7 +1743,7 @@ std::function<QPoint (const Sample &s, Graph::TypeId meta_type_id)> Graph::dataT
 
 	return  [le, bo, kx, t1, d1, ky](const Sample &s, TypeId meta_type_id) -> QPoint {
 		const timemsec_t t = s.time;
-		double x = le + (t - t1) * kx;
+		double x = le + static_cast<double>(t - t1) * kx;
 		// too big or too small pixel sizes can make painting problems
 		static constexpr int MIN_INT2 = std::numeric_limits<int>::min() / 2;
 		static constexpr int MAX_INT2 = std::numeric_limits<int>::max() / 2;
@@ -1791,7 +1791,7 @@ std::function<Sample (const QPoint &)> Graph::pointToDataFn(const QRect &src, co
 	return  [t1, le, kx, d1, bo, ky](const QPoint &p) -> Sample {
 		const int x = p.x();
 		const int y = p.y();
-		timemsec_t t = static_cast<timemsec_t>(t1 + (x - le) * kx);
+		timemsec_t t = static_cast<timemsec_t>(static_cast<double>(t1) + (x - le) * kx);
 		double d = d1 + (y - bo) * ky;
 		return Sample{t, d};
 	};
@@ -1806,7 +1806,7 @@ std::function<timemsec_t (int)> Graph::posToTimeFn(const QPoint &src, const XRan
 	timemsec_t t1 = dest.min;
 	timemsec_t t2 = dest.max;
 	return [t1, t2, le, ri](int x) {
-		return static_cast<timemsec_t>(t1 + static_cast<double>(x - le) * (t2 - t1) / (ri - le));
+		return static_cast<timemsec_t>(static_cast<double>(t1) + static_cast<double>(x - le) * static_cast<double>(t2 - t1) / (ri - le));
 	};
 }
 
@@ -1819,7 +1819,7 @@ std::function<int (timemsec_t)> Graph::timeToPosFn(const XRange &src, const time
 	int le = dest.min;
 	int ri = dest.max;
 	return [t1, t2, le, ri](timemsec_t t) {
-		return static_cast<timemsec_t>(le + static_cast<double>(t - t1) * (ri - le) / (t2 - t1));
+		return static_cast<timemsec_t>(le + static_cast<double>(t - t1) * (ri - le) / static_cast<double>(t2 - t1));
 	};
 }
 
@@ -1833,7 +1833,7 @@ std::function<int (double)> Graph::valueToPosFn(const YRange &src, const Graph::
 	int y1 = dest.min;
 	int y2 = dest.max;
 	return [d1, d2, y1, y2](double val) {
-		return static_cast<int>(y1 + static_cast<double>(val - d1) * (y2 - y1) / (d2 - d1));
+		return static_cast<int>(y1 + val - d1 * (y2 - y1) / (d2 - d1));
 	};
 }
 
@@ -1955,7 +1955,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		int maxY = 0;
 
 		SamePixelValue() {}
-		SamePixelValue(int x, int y) : x(x), y1(y), y2(y), minY(y), maxY(y) {}
+		SamePixelValue(int x_, int y_) : x(x_), y1(y_), y2(y_), minY(y_), maxY(y_) {}
 		SamePixelValue(const QPoint &p) : x(p.x()), y1(p.y()), y2(p.y()), minY(p.y()), maxY(p.y()) {}
 		bool isValid() const { return x != NO_X; }
 		bool isValueNotAvailable() const { return y1 == VALUE_NOT_AVILABLE_Y; }
@@ -2236,8 +2236,8 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 			Sample s = timeToSample(channel_ix, time);
 			if(s.value.isValid()) {
 				QPoint p = dataToPos(channel_ix, s);
-				int d = u2px(0.3);
-				QRect rect(0, 0, d, d);
+				int dd = u2px(0.3);
+				QRect rect(0, 0, dd, dd);
 				rect.moveCenter(p);
 				//painter->fillRect(rect, c->effectiveStyle.color());
 				painter->fillRect(rect, color);
@@ -2342,8 +2342,8 @@ QString Graph::timeToStringTZ(timemsec_t time) const
 void Graph::onButtonBoxClicked(int button_id)
 {
 	shvLogFuncFrame();
-	if(button_id == (int)GraphButtonBox::ButtonId::Menu) {
-		QPoint pos = m_cornerCellButtonBox->buttonRect((GraphButtonBox::ButtonId)button_id).center();
+	if(button_id == static_cast<int>(GraphButtonBox::ButtonId::Menu)) {
+		QPoint pos = m_cornerCellButtonBox->buttonRect(static_cast<GraphButtonBox::ButtonId>(button_id)).center();
 		emit graphContextMenuRequest(pos);
 	}
 }

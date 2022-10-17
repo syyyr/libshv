@@ -53,8 +53,8 @@ protected:
 		std::string data;
 
 		MessageData() {}
-		MessageData(std::string &&meta_data, std::string &&data) : metaData(std::move(meta_data)), data(std::move(data)) {}
-		MessageData(std::string &&data) : data(std::move(data)) {}
+		MessageData(std::string &&meta_data_, std::string &&data_) : metaData(std::move(meta_data_)), data(std::move(data_)) {}
+		MessageData(std::string &&data_) : data(std::move(data_)) {}
 		MessageData(MessageData &&) = default;
 
 		bool empty() const {return metaData.empty() && data.empty();}

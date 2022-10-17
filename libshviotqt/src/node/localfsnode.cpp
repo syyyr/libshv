@@ -180,7 +180,7 @@ QFileInfo LocalFSNode::ndFileInfo(const QString &path) const
 
 RpcValue LocalFSNode::ndSize(const QString &path) const
 {
-	return (unsigned)ndFileInfo(path).size();
+	return static_cast<unsigned>(ndFileInfo(path).size());
 }
 
 chainpack::RpcValue LocalFSNode::ndRead(const QString &path, qint64 offset, qint64 size) const
@@ -196,8 +196,8 @@ chainpack::RpcValue LocalFSNode::ndRead(const QString &path, qint64 offset, qint
 		sz = std::min(sz, size);
 		f.seek(offset);
 		RpcValue::Blob blob;
-		blob.resize(sz);
-		f.read((char*)blob.data(), sz);
+		blob.resize(static_cast<size_t>(sz));
+		f.read(reinterpret_cast<char*>(blob.data()), sz);
 		return RpcValue(std::move(blob));
 	}
 	SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for reading.");
@@ -210,7 +210,7 @@ chainpack::RpcValue LocalFSNode::ndWrite(const QString &path, const chainpack::R
 	if (methods_params.isString()){
 		if(f.open(QFile::WriteOnly)) {
 			const chainpack::RpcValue::String &content = methods_params.asString();
-			f.write(content.data(), content.size());
+			f.write(content.data(), static_cast<qint64>(content.size()));
 			return true;
 		}
 		SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for writing.");
@@ -226,7 +226,7 @@ chainpack::RpcValue LocalFSNode::ndWrite(const QString &path, const chainpack::R
 
 		if(f.open(open_mode)) {
 			const chainpack::RpcValue::String &content = params[0].toString();
-			f.write(content.data(), content.size());
+			f.write(content.data(), static_cast<qint64>(content.size()));
 			return true;
 		}
 		SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for writing.");
@@ -283,7 +283,7 @@ chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::
 
 		if(f.open(QFile::WriteOnly)) {
 			const std::string &data = param_lst[1].asString();
-			f.write(data.data(), data.size());
+			f.write(data.data(), static_cast<qint64>(data.size()));
 			return true;
 		}
 		SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for writing.");
@@ -351,7 +351,7 @@ RpcValue LocalFSNode::ndLsDir(const QString &path, const chainpack::RpcValue &me
 				if(fi.isDir())
 					lst2.push_back(0);
 				else
-					lst2.push_back((int64_t)fi.size());
+					lst2.push_back(static_cast<int64_t>(fi.size()));
 			}
 			if(with_ctime)
 				lst2.push_back(RpcValue::DateTime::fromMSecsSinceEpoch(fi.birthTime().toMSecsSinceEpoch()));

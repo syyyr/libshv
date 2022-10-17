@@ -14,20 +14,20 @@ RpcMessage::MetaType::MetaType()
 	: Super("RpcMessage")
 {
 	m_keys = {
-		{(int)Key::Params, {(int)Key::Params, Rpc::PAR_PARAMS}},
-		{(int)Key::Result, {(int)Key::Result, Rpc::JSONRPC_RESULT}},
-		{(int)Key::Error, {(int)Key::Error, Rpc::JSONRPC_ERROR}},
+		{static_cast<int>(Key::Params), {static_cast<int>(Key::Params), Rpc::PAR_PARAMS}},
+		{static_cast<int>(Key::Result), {static_cast<int>(Key::Result), Rpc::JSONRPC_RESULT}},
+		{static_cast<int>(Key::Error), {static_cast<int>(Key::Error), Rpc::JSONRPC_ERROR}},
 	};
 	m_tags = {
-		{(int)Tag::RequestId, {(int)Tag::RequestId, Rpc::JSONRPC_REQUEST_ID}},
-		{(int)Tag::ShvPath, {(int)Tag::ShvPath, Rpc::PAR_PATH}},
-		{(int)Tag::Method, {(int)Tag::Method, Rpc::PAR_METHOD}},
-		{(int)Tag::CallerIds, {(int)Tag::CallerIds, "cid"}},
-		{(int)Tag::ProtocolType, {(int)Tag::ProtocolType, "protocol"}},
-		{(int)Tag::RevCallerIds, {(int)Tag::RevCallerIds, "rcid"}},
-		{(int)Tag::AccessGrant, {(int)Tag::AccessGrant, "grant"}},
-		{(int)Tag::TunnelCtl, {(int)Tag::TunnelCtl, "tctl"}},
-		{(int)Tag::UserId, {(int)Tag::UserId, "userId"}},
+		{static_cast<int>(Tag::RequestId), {static_cast<int>(Tag::RequestId), Rpc::JSONRPC_REQUEST_ID}},
+		{static_cast<int>(Tag::ShvPath), {static_cast<int>(Tag::ShvPath), Rpc::PAR_PATH}},
+		{static_cast<int>(Tag::Method), {static_cast<int>(Tag::Method), Rpc::PAR_METHOD}},
+		{static_cast<int>(Tag::CallerIds), {static_cast<int>(Tag::CallerIds), "cid"}},
+		{static_cast<int>(Tag::ProtocolType), {static_cast<int>(Tag::ProtocolType), "protocol"}},
+		{static_cast<int>(Tag::RevCallerIds), {static_cast<int>(Tag::RevCallerIds), "rcid"}},
+		{static_cast<int>(Tag::AccessGrant), {static_cast<int>(Tag::AccessGrant), "grant"}},
+		{static_cast<int>(Tag::TunnelCtl), {static_cast<int>(Tag::TunnelCtl), "tctl"}},
+		{static_cast<int>(Tag::UserId), {static_cast<int>(Tag::UserId), "userId"}},
 	};
 }
 
@@ -450,22 +450,22 @@ void RpcMessage::setUserId(RpcValue::MetaData &meta, const RpcValue &user_id)
 
 Rpc::ProtocolType RpcMessage::protocolType(const RpcValue::MetaData &meta)
 {
-	return (Rpc::ProtocolType)meta.value(RpcMessage::MetaType::Tag::ProtocolType).toUInt();
+	return static_cast<Rpc::ProtocolType>(meta.value(RpcMessage::MetaType::Tag::ProtocolType).toUInt());
 }
 
 void RpcMessage::setProtocolType(RpcValue::MetaData &meta, Rpc::ProtocolType ver)
 {
-	meta.setValue(RpcMessage::MetaType::Tag::ProtocolType, ver == Rpc::ProtocolType::Invalid? RpcValue(): RpcValue((unsigned)ver));
+	meta.setValue(RpcMessage::MetaType::Tag::ProtocolType, ver == Rpc::ProtocolType::Invalid? RpcValue(): RpcValue(static_cast<unsigned>(ver)));
 }
 
 Rpc::ProtocolType RpcMessage::protocolType() const
 {
-	return (Rpc::ProtocolType)metaValue(RpcMessage::MetaType::Tag::ProtocolType).toUInt();
+	return static_cast<Rpc::ProtocolType>(metaValue(RpcMessage::MetaType::Tag::ProtocolType).toUInt());
 }
 
 void RpcMessage::setProtocolType(Rpc::ProtocolType ver)
 {
-	setMetaValue(RpcMessage::MetaType::Tag::ProtocolType, ver == Rpc::ProtocolType::Invalid? RpcValue(): RpcValue((unsigned)ver));
+	setMetaValue(RpcMessage::MetaType::Tag::ProtocolType, ver == Rpc::ProtocolType::Invalid? RpcValue(): RpcValue(static_cast<unsigned>(ver)));
 }
 
 void RpcMessage::write(AbstractStreamWriter &wr) const
@@ -646,7 +646,7 @@ RpcResponse& RpcResponse::setResult(const RpcValue& res)
 int RpcResponse::Error::code() const
 {
 	auto iter = find(KeyCode);
-	return (iter == end()) ? NoError : (ErrorCode)(iter->second.toInt());
+	return (iter == end()) ? NoError : static_cast<ErrorCode>(iter->second.toInt());
 }
 
 RpcResponse::Error& RpcResponse::Error::setCode(int c)

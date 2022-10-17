@@ -12,15 +12,15 @@ namespace meta {
 const MetaInfo &MetaType::tagById(int id) const
 {
 	static std::map<int, MetaInfo> embeded_mi = {
-		{(int)Tag::Invalid, {(int)Tag::Invalid, ""}},
-		{(int)Tag::MetaTypeId, {(int)Tag::MetaTypeId, "T"}},
-		{(int)Tag::MetaTypeNameSpaceId, {(int)Tag::MetaTypeNameSpaceId, "NS"}},
+		{static_cast<int>(Tag::Invalid), {static_cast<int>(Tag::Invalid), ""}},
+		{static_cast<int>(Tag::MetaTypeId), {static_cast<int>(Tag::MetaTypeId), "T"}},
+		{static_cast<int>(Tag::MetaTypeNameSpaceId), {static_cast<int>(Tag::MetaTypeNameSpaceId), "NS"}},
 	};
-	if(id <= (int)Tag::MetaTypeNameSpaceId)
+	if(id <= static_cast<int>(Tag::MetaTypeNameSpaceId))
 		return embeded_mi[id];
 	auto it = m_tags.find(id);
 	if(it == m_tags.end())
-		return embeded_mi[(int)Tag::Invalid];
+		return embeded_mi[static_cast<int>(Tag::Invalid)];
 	return m_tags.at(id);
 }
 

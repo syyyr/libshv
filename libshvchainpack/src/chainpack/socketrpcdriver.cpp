@@ -51,7 +51,7 @@ int64_t SocketRpcDriver::writeBytes(const char *bytes, size_t length)
 		return 0;
 	}
 	flush();
-	ssize_t bytes_to_write_len = (m_writeBuffer.size() + length > m_maxWriteBufferLength)? m_maxWriteBufferLength - m_writeBuffer.size(): length;
+	ssize_t bytes_to_write_len = static_cast<ssize_t>((m_writeBuffer.size() + length > m_maxWriteBufferLength)? m_maxWriteBufferLength - m_writeBuffer.size(): length);
 	if(bytes_to_write_len > 0)
 		m_writeBuffer += std::string(bytes, static_cast<size_t>(bytes_to_write_len));
 	flush();
@@ -69,7 +69,7 @@ bool SocketRpcDriver::flush()
 	int64_t n = ::write(m_socket, m_writeBuffer.data(), m_writeBuffer.length());
 	nDebug() << "\t" << n << "bytes written";
 	if(n > 0)
-		m_writeBuffer = m_writeBuffer.substr(n);
+		m_writeBuffer = m_writeBuffer.substr(static_cast<size_t>(n));
 	return (n > 0);
 }
 
@@ -91,14 +91,14 @@ bool SocketRpcDriver::connectToHost(const std::string &host, int port)
 			return false;
 		}
 
-		bzero((char *) &serv_addr, sizeof(serv_addr));
+		bzero(reinterpret_cast<char *> (&serv_addr), sizeof(serv_addr));
 		serv_addr.sin_family = AF_INET;
-		bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
-		serv_addr.sin_port = htons(port);
+		bcopy(server->h_addr, reinterpret_cast<char *>(&serv_addr.sin_addr.s_addr), static_cast<size_t>(server->h_length));
+		serv_addr.sin_port = htons(static_cast<uint16_t>(port));
 
 		/* Now connect to the server */
 		nInfo().nospace() << "connecting to " << host << ":" << port;
-		if (::connect(m_socket, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+		if (::connect(m_socket, reinterpret_cast<struct sockaddr*>(&serv_addr), sizeof(serv_addr)) < 0) {
 			nError() << "ERROR, connecting host" << host;
 			return false;
 		}
@@ -144,7 +144,7 @@ void SocketRpcDriver::exec()
 		//FD_SET(STDIN_FILENO, &read_flags);
 		//FD_SET(STDIN_FILENO, &write_flags);
 
-		int sel = select(FD_SETSIZE, &read_flags, &write_flags, (fd_set*)0, &waitd);
+		int sel = select(FD_SETSIZE, &read_flags, &write_flags, static_cast<fd_set*>(0), &waitd);
 
 		//ESP_LOGI(__FILE__, "select returned, number of active file descriptors: %d", sel);
 		//if an error with select
@@ -173,7 +173,7 @@ void SocketRpcDriver::exec()
 				closeConnection();
 				return;
 			}
-			onBytesRead(std::string(in, n));
+			onBytesRead(std::string(in, static_cast<size_t>(n)));
 		}
 
 		//socket ready for writing

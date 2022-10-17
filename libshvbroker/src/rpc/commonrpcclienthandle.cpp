@@ -128,12 +128,12 @@ unsigned CommonRpcClientHandle::addSubscription(const CommonRpcClientHandle::Sub
 		logSubscriptionsD() << "new subscription";
 		m_subscriptions.push_back(subs);
 		//std::sort(m_subscriptions.begin(), m_subscriptions.end());
-		return m_subscriptions.size() - 1;
+		return static_cast<unsigned>(m_subscriptions.size() - 1);
 	}
 	else {
 		logSubscriptionsD() << "subscription exists:" << "subscribed path:" << it->subscribedPath << "method:" << it->method;
 		*it = subs;
-		return (it - m_subscriptions.begin());
+		return static_cast<unsigned>(it - m_subscriptions.begin());
 	}
 }
 
@@ -188,7 +188,7 @@ int CommonRpcClientHandle::isSubscribed(const std::string &shv_path, const std::
 		logSigResolveD() << "\tchecking local path:" << subs.localPath << "subscribed as:" << subs.subscribedPath << "method:" << subs.method;
 		if(subs.match(shv_path, method)) {
 			logSigResolveD() << "\t\tHIT";
-			return (int)i;
+			return static_cast<int>(i);
 		}
 	}
 	return -1;
@@ -204,17 +204,17 @@ bool CommonRpcClientHandle::rejectNotSubscribedSignal(const std::string &path, c
 		const Subscription &subs = subscriptionAt(i);
 		if(subs.match(shv_path, method)) {
 			if(subs.method.empty()) {
-				most_explicit_subs_ix = i;
+				most_explicit_subs_ix = static_cast<int>(i);
 				break;
 			}
 			if(subs.localPath.size() > max_path_len) {
 				max_path_len = subs.localPath.size();
-				most_explicit_subs_ix = i;
+				most_explicit_subs_ix = static_cast<int>(i);
 			}
 		}
 	}
 	if(most_explicit_subs_ix >= 0) {
-		logSubscriptionsD() << "\t found subscription:" << m_subscriptions.at(most_explicit_subs_ix).toString();
+		logSubscriptionsD() << "\t found subscription:" << m_subscriptions.at(static_cast<size_t>(most_explicit_subs_ix)).toString();
 		m_subscriptions.erase(m_subscriptions.begin() + most_explicit_subs_ix);
 		return true;
 	}

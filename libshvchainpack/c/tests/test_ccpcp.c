@@ -1,15 +1,17 @@
+#define _GNU_SOURCE
 #include <ccpcp.h>
 #include <ccpon.h>
 #include <cchainpack.h>
 #include <ccpcp_convert.h>
 
-#define _XOPEN_SOURCE
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
 #include <float.h>
 #include <math.h>
+#include <sys/types.h>
+
 static bool o_silent = true;
 
 static void binary_dump(const char *buff, ssize_t len)
@@ -297,7 +299,7 @@ static void test_cpon_helper(const char *cpon, const char *ref_cpon, bool compar
 	assert(in_ctx.err_no == CCPCP_RC_OK && out_ctx.err_no == CCPCP_RC_OK);
 	if(compare_chainpack) {
 		assert(in_ctx.current - in_ctx.start == out_ctx.current - out_ctx.start);
-		assert(!memcmp(in_ctx.start, out_ctx.start, out_ctx.current - out_ctx.start));
+		assert(!memcmp(in_ctx.start, out_ctx.start, (size_t)(out_ctx.current - out_ctx.start)));
 	}
 
 	ccpcp_container_stack_init(&stack, states, STATE_CNT, NULL);
@@ -538,8 +540,8 @@ void test_cpons()
 		"-0.00012", "-12e-5",
 		"-1234567890.", "-1234567890.",
 		"\"abc\"", NULL,
-		"x\"abcd\"", "b\"\\xab\\xcd\"",
-		"b\"ab\\xcd\"", NULL,
+		"x\"abcd\"", "b\"\\ab\\cd\"",
+		"b\"ab\\cd\\t\"", NULL,
 		"[]", NULL,
 		"[1]", NULL,
 		"[1,]", "[1]",

@@ -64,8 +64,8 @@ bool String::equal(std::string const& a, std::string const& b, String::CaseSensi
 					b.begin(), b.end(),
 					a.begin(),
 					(case_sensitivity == CaseInsensitive) ?
-						[](char a, char b) { return std::tolower(a) == std::tolower(b); }:
-		[](char a, char b) { return a == b;}
+						[](char x, char y) { return std::tolower(x) == std::tolower(y); }:
+		[](char x, char y) { return x == y;}
 		);
 	}
 	else {
@@ -153,14 +153,14 @@ int String::replace(std::string& str, const char from, const char to)
 std::string &String::upper(std::string &s)
 {
 	for (size_t i = 0; i < s.size(); ++i)
-		s[i] = std::toupper(s[i]);
+		s[i] = static_cast<char>(std::toupper(s[i]));
 	return s;
 }
 
 std::string &String::lower(std::string &s)
 {
 	for (size_t i = 0; i < s.size(); ++i)
-		s[i] = std::tolower(s[i]);
+		s[i] = static_cast<char>(std::tolower(s[i]));
 	return s;
 }
 

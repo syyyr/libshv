@@ -81,7 +81,7 @@ ShvNode *ShvNodeTree::mdcd(const ShvNode::StringViewList &path, bool create_dirs
 		}
 	}
 	if(path_rest) {
-		auto path2 = ShvNode::StringViewList(path.begin() + ix, path.end());
+		auto path2 = ShvNode::StringViewList(path.begin() + static_cast<long>(ix), path.end());
 		*path_rest = shv::core::String::join(path2, '/');
 	}
 	return ret;
@@ -118,7 +118,7 @@ static std::string dump_node(ShvNode *parent, int indent)
 	std::string ret;
 	for(const std::string &pn : parent->childNames()) {
 		ShvNode *chnd = parent->childNode(pn);
-		ret += '\n' + std::string(indent, '\t') + pn;// + ": " + parent->propertyValue(pn).toPrettyString();
+		ret += '\n' + std::string(static_cast<size_t>(indent), '\t') + pn;// + ": " + parent->propertyValue(pn).toPrettyString();
 		if(chnd) {
 			ret += dump_node(chnd, ++indent);
 		}

@@ -426,7 +426,7 @@ bool ConfigCLIOptions::loadConfigFile()
 	if(f.open(QFile::ReadOnly)) {
 		shvInfo() << "Reading config file:" << f.fileName();
 		QByteArray ba = f.readAll();
-		std::string cpon(ba.constData(), ba.size());
+		std::string cpon(ba.constData(), static_cast<size_t>(ba.size()));
 		std::string str = shv::core::Utils::removeJsonComments(std::string(ba.constData()));
 		//shvDebug() << str;
 		std::string err;

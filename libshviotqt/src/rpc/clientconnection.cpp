@@ -154,7 +154,7 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 			shvError() << "Cannot open password file";
 		}
 	}
-	shvDebug() << cli_opts->loginType() << "-->" << (int)shv::chainpack::UserLogin::loginTypeFromString(cli_opts->loginType());
+	shvDebug() << cli_opts->loginType() << "-->" << static_cast<int>(shv::chainpack::UserLogin::loginTypeFromString(cli_opts->loginType()));
 	setLoginType(shv::chainpack::UserLogin::loginTypeFromString(cli_opts->loginType()));
 
 	setHeartBeatInterval(cli_opts->heartBeatInterval());
@@ -245,7 +245,7 @@ void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
 	if(!isShvPathMutedInLog(rpc_msg.shvPath().asString())) {
 		logRpcMsg() << SND_LOG_ARROW
 					<< "client id:" << connectionId()
-					<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
+					<< "protocol_type:" << static_cast<int>(protocolType()) << shv::chainpack::Rpc::protocolTypeToString(protocolType())
 					<< rpc_msg.toPrettyString();
 	}
 	sendRpcValue(rpc_msg.value());
@@ -256,7 +256,7 @@ void ClientConnection::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 	if(!isShvPathMutedInLog(msg.shvPath().asString())) {
 		logRpcMsg() << cp::RpcDriver::RCV_LOG_ARROW
 					<< "client id:" << connectionId()
-					<< "protocol_type:" << (int)protocolType() << shv::chainpack::Rpc::protocolTypeToString(protocolType())
+					<< "protocol_type:" << static_cast<int>(protocolType()) << shv::chainpack::Rpc::protocolTypeToString(protocolType())
 					<< msg.toPrettyString();
 	}
 	if(isLoginPhase()) {
@@ -376,13 +376,13 @@ void ClientConnection::onSocketConnectedChanged(bool is_connected)
 static std::string sha1_hex(const std::string &s)
 {
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-	hash.addData(s.data(), s.length());
+	hash.addData(s.data(), static_cast<int>(s.length()));
 	return std::string(hash.result().toHex().constData());
 }
 
 chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValue &server_hello)
 {
-	shvDebug() << server_hello.toCpon() << "login type:" << (int)loginType();
+	shvDebug() << server_hello.toCpon() << "login type:" << static_cast<int>(loginType());
 	std::string pass;
 	if(loginType() == chainpack::IRpcConnection::LoginType::Sha1) {
 		std::string server_nonce = server_hello.toMap().value("nonce").toString();
@@ -393,9 +393,9 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 			pwd = sha1_hex(pwd); /// SHA1 password must be 40 chars long, it is considered to be plain if shorter
 		std::string pn = server_nonce + pwd;
 		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-		hash.addData(pn.data(), pn.length());
+		hash.addData(pn.data(), static_cast<int>(pn.length()));
 		QByteArray sha1 = hash.result().toHex();
-		pass = std::string(sha1.constData(), sha1.size());
+		pass = std::string(sha1.constData(), static_cast<size_t>(sha1.size()));
 	}
 	else if(loginType() == chainpack::IRpcConnection::LoginType::Plain) {
 		pass = password();

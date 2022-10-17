@@ -56,7 +56,7 @@ public:
 			QString comment;
 			bool mandatory;
 
-			Data(QMetaType::Type type = QMetaType::Type::UnknownType) : type(type), mandatory(false) {}
+			Data(QMetaType::Type type_ = QMetaType::Type::UnknownType) : type(type_), mandatory(false) {}
 		};
 		QSharedDataPointer<Data> d;
 

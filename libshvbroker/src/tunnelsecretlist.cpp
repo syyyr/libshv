@@ -52,7 +52,7 @@ std::string TunnelSecretList::createSecret()
 		data[i] = std::rand();
 #endif
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-	hash.addData((const char*)data, DATA_LEN * sizeof(data[0]));
+	hash.addData(reinterpret_cast<const char*>(data), DATA_LEN * sizeof(data[0]));
 	Secret sc;
 	sc.createdMsec = now;
 	sc.secret = hash.result().toHex().constData();

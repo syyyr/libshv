@@ -1,8 +1,7 @@
-#ifndef SHV_CORE_UTILS_FILESHVJOURNAL2_H
-#define SHV_CORE_UTILS_FILESHVJOURNAL2_H
+#ifndef SHV_CORE_UTILS_FILESHVJOURNAL_H
+#define SHV_CORE_UTILS_FILESHVJOURNAL_H
 
 #include "../shvcoreglobal.h"
-#include "../utils.h"
 #include "abstractshvjournal.h"
 #include "shvjournalentry.h"
 #include "shvgetlogparams.h"
@@ -22,9 +21,7 @@ public:
 	static constexpr char RECORD_SEPARATOR = '\n';
 	static const std::string FILE_EXT;
 public:
-	//using SnapShot = std::vector<ShvJournalEntry>;
-	//using TSNowFn = std::function<int64_t ()>;
-
+	ShvFileJournal();
 	ShvFileJournal(std::string device_id);
 
 	void setJournalDir(std::string s);
@@ -118,4 +115,4 @@ private:
 } // namespace core
 } // namespace shv
 
-#endif // SHV_CORE_UTILS_FILESHVJOURNAL2_H
+#endif // SHV_CORE_UTILS_FILESHVJOURNAL_H

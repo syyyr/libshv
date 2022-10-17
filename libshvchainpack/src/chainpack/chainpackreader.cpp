@@ -9,7 +9,7 @@ namespace chainpack {
 
 #define PARSE_EXCEPTION(msg) {\
 	char buff[40]; \
-	int l = m_in.readsome(buff, sizeof(buff) - 1); \
+	auto l = m_in.readsome(buff, sizeof(buff) - 1); \
 	buff[l] = 0; \
 	if(exception_aborts) { \
 		std::clog << __FILE__ << ':' << __LINE__;  \
@@ -67,7 +67,7 @@ ChainPackReader::ItemType ChainPackReader::peekNext()
 	const char *p = ccpcp_unpack_peek_byte(&m_inCtx);
 	if(!p)
 		PARSE_EXCEPTION("Parse error: " + std::string(m_inCtx.err_msg) + " at: " + std::to_string(m_inCtx.err_no));
-	cchainpack_pack_packing_schema sch = (cchainpack_pack_packing_schema)(uint8_t)(*p);
+	auto sch = static_cast<cchainpack_pack_packing_schema>(static_cast<uint8_t>(*p));
 	switch(sch) {
 	case CP_Null: return CCPCP_ITEM_NULL;
 	case CP_UInt: return CCPCP_ITEM_UINT;
@@ -233,7 +233,7 @@ void ChainPackReader::parseMetaData(RpcValue::MetaData &meta_data)
 	}
 }
 
-void ChainPackReader::parseMap(RpcValue &val)
+void ChainPackReader::parseMap(RpcValue &out_val)
 {
 	RpcValue::Map map;
 	while (true) {
@@ -247,10 +247,10 @@ void ChainPackReader::parseMap(RpcValue &val)
 		read(val);
 		map[key.asString()] = val;
 	}
-	val = map;
+	out_val = map;
 }
 
-void ChainPackReader::parseIMap(RpcValue &val)
+void ChainPackReader::parseIMap(RpcValue &out_val)
 {
 	RpcValue::IMap map;
 	while (true) {
@@ -264,12 +264,12 @@ void ChainPackReader::parseIMap(RpcValue &val)
 		read(val);
 		map[key.toInt()] = val;
 	}
-	val = map;
+	out_val = map;
 }
 
 void ChainPackReader::read(RpcValue::MetaData &meta_data)
 {
-	const uint8_t *b = (const uint8_t*)ccpcp_unpack_take_byte(&m_inCtx);
+	auto b = reinterpret_cast<const uint8_t*>(ccpcp_unpack_take_byte(&m_inCtx));
 	m_inCtx.current--;
 	if(b && *b == CP_MetaMap) {
 		cchainpack_unpack_next(&m_inCtx);
