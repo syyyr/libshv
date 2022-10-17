@@ -52,48 +52,88 @@ bool ShvJournalFileReader::next()
 			return false;
 
 		std::string line = getLine(m_ifstream, ShvFileJournal::RECORD_SEPARATOR);
-		shv::core::StringView sv(line);
-		shv::core::StringViewList line_record = sv.split(ShvFileJournal::FIELD_SEPARATOR, shv::core::StringView::KeepEmptyParts);
-		if(line_record.empty()) {
+		if(line.empty()) {
 			logDShvJournal() << "skipping empty line";
 			continue; // skip empty line
 		}
-		std::string dtstr = line_record[Column::Timestamp].toString();
-		size_t len;
-		cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr, &len);
-		//logDShvJournal() << dtstr << "-->" << dt.toIsoString();
-		if(len == 0) {
-			logWShvJournal() << "invalid date time string:" << dtstr << "line will be ignored";
-			continue;
+		std::string::size_type ix1 = 0;
+		for(int column = 0; column < ShvFileJournal::TxtColumnCount && ix1 != std::string::npos; ++column) {
+			auto ix2 = line.find(ShvFileJournal::FIELD_SEPARATOR, ix1);
+			StringView fld;
+			if(ix2 == std::string::npos) {
+				fld = StringView(line, ix1);
+				ix1 = ix2;
+			}
+			else {
+				fld = StringView(line, ix1, ix2 - ix1);
+				ix1 = ix2 + 1;
+			}
+			switch(column) {
+			case Column::Timestamp: {
+				std::string dtstr = fld.toString();
+				size_t len;
+				cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr, &len);
+				//logDShvJournal() << dtstr << "-->" << dt.toIsoString();
+				if(len == 0) {
+					logWShvJournal() << "invalid date time string:" << dtstr << "line will be ignored";
+					goto next_line;
+				}
+				if(len >= line.size() || line[len] != ShvFileJournal::FIELD_SEPARATOR) {
+					logWShvJournal() << "invalid date time string:" << dtstr << "correct date time should end with field separator on position:" << len << ", line will be ignored";
+					goto next_line;
+				}
+				m_currentEntry.epochMsec = dt.msecsSinceEpoch();
+				break;
+			}
+			case Column::Path: {
+				if(fld.empty()) {
+					logWShvJournal() << "skipping invalid line with empy path, line:" << line;
+					goto next_line;
+				}
+				m_currentEntry.path = fld.toString();
+				break;
+			}
+			case Column::Value: {
+				std::string err;
+				m_currentEntry.value = cp::RpcValue::fromCpon(fld.toString(), &err);
+				if(!err.empty()) {
+					logWShvJournal() << "Invalid CPON value:" << fld.toString();
+					goto next_line;
+				}
+				break;
+			}
+			case Column::Domain: {
+				if(fld.empty())
+					m_currentEntry.domain = ShvJournalEntry::DOMAIN_VAL_CHANGE;
+				else
+					m_currentEntry.domain = fld.toString();
+				break;
+			}
+			case Column::ShortTime: {
+				if(fld.empty()) {
+					m_currentEntry.shortTime = ShvJournalEntry::NO_SHORT_TIME;
+				}
+				else {
+					bool ok;
+					int short_time = fld.toInt(&ok);
+					m_currentEntry.shortTime = ok && short_time >= 0? short_time: ShvJournalEntry::NO_SHORT_TIME;
+				}
+				break;
+			}
+			case Column::ValueFlags: {
+				auto value_flags = fld.empty()? 0: fld.toInt();
+				m_currentEntry.valueFlags = static_cast<unsigned int>(value_flags);
+				break;
+			}
+			case Column::UserId: {
+				m_currentEntry.userId = fld.toString();
+				break;
+			}
+			}
 		}
-		if(len >= line.size() || line[len] != ShvFileJournal::FIELD_SEPARATOR) {
-			logWShvJournal() << "invalid date time string:" << dtstr << "correct date time should end with field separator on position:" << len << ", line will be ignored";
-			continue;
-		}
-		std::string path = line_record.value(Column::Path).toString();
-		if(path.empty()) {
-			logWShvJournal() << "skipping invalid line with empy path, line:" << line;
-			continue;
-		}
-		std::string domain = line_record.value(Column::Domain).toString();
-		if(domain.empty())
-			domain = ShvJournalEntry::DOMAIN_VAL_CHANGE;
-		StringView short_time_sv = line_record.value(Column::ShortTime);
-		auto value_flags = shv::core::String::toInt(line_record.value(Column::ValueFlags).toString());
-
-		m_currentEntry.path = std::move(path);
-		m_currentEntry.epochMsec = dt.msecsSinceEpoch();
-		bool ok;
-		int short_time = short_time_sv.toInt(&ok);
-		m_currentEntry.shortTime = ok && short_time >= 0? short_time: ShvJournalEntry::NO_SHORT_TIME;
-		m_currentEntry.domain = std::move(domain);
-		m_currentEntry.valueFlags = static_cast<unsigned int>(value_flags);
-		m_currentEntry.userId = line_record.value(Column::UserId).toString();
-		std::string err;
-		m_currentEntry.value = cp::RpcValue::fromCpon(line_record.value(Column::Value).toString(), &err);
-		if(!err.empty())
-			logWShvJournal() << "Invalid CPON value:" << line_record.value(Column::Value).toString();
 		return true;
+next_line:
+		m_currentEntry = {};
 	}
 }
 

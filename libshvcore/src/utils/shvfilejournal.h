@@ -66,6 +66,7 @@ public:
 		};
 		static const char* name(Enum e);
 	};
+	static constexpr int TxtColumnCount = TxtColumn::UserId + 1;
 	struct JournalContext
 	{
 		bool journalDirExists = false;
