@@ -81,7 +81,7 @@ ShvNode *ShvNodeTree::mdcd(const ShvNode::StringViewList &path, bool create_dirs
 		}
 	}
 	if(path_rest) {
-		auto path2 = ShvNode::StringViewList(path.begin() + ix, path.end());
+		auto path2 = ShvNode::StringViewList(path.begin() + static_cast<long>(ix), path.end());
 		*path_rest = shv::core::String::join(path2, '/');
 	}
 	return ret;
