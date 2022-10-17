@@ -11,7 +11,7 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "") # we don't want CMake to prepend "lib" to ou
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	set(SHV_WARNING_FLAGS "-Wall -Wextra -pedantic -Wshadow -Wcast-align -Wunused -Wpedantic -Wconversion -Wsign-conversion -Wmisleading-indentation -Wdouble-promotion -Wformat=2 -Wimplicit-fallthrough")
+	set(SHV_WARNING_FLAGS "-Wall -Wextra -pedantic -Wshadow -Wcast-align -Wunused -Wpedantic -Wconversion -Wmisleading-indentation -Wdouble-promotion -Wformat=2 -Wimplicit-fallthrough")
 	set(SHV_WARNING_FLAGS_CXX "-Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual")
 
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
