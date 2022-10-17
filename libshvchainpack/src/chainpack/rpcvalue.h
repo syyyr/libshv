@@ -168,8 +168,11 @@ public:
 		static DateTime fromUtcString(const std::string &utc_date_time_str, size_t *plen = nullptr);
 		static DateTime fromMSecsSinceEpoch(int64_t msecs, int utc_offset_min = 0);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
 		void setMsecsSinceEpoch(int64_t msecs) { m_dtm.msec = msecs; }
 		void setUtcOffsetMin(int utc_offset_min) { m_dtm.tz = (utc_offset_min / 15) & 0x7F; }
+#pragma GCC diagnostic pop
 		/// @deprecated
 		void setTimeZone(int utc_offset_min) {setUtcOffsetMin(utc_offset_min);}
 

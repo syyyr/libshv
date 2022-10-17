@@ -941,8 +941,8 @@ RpcValue::DateTime RpcValue::DateTime::fromLocalString(const std::string &local_
 	}
 	utc_offset = static_cast<int>((tim - utc_tim) / 60);
 	epoch_msec = utc_tim * 60 * 1000 + msec;
-	ret.m_dtm.msec = epoch_msec;
-	ret.m_dtm.tz = utc_offset;
+	ret.setMsecsSinceEpoch(epoch_msec);
+	ret.setUtcOffsetMin(utc_offset);
 
 	return ret;
 }
@@ -966,8 +966,8 @@ RpcValue::DateTime RpcValue::DateTime::fromUtcString(const std::string &utc_date
 			*plen = 0;
 		return ret;
 	}
-	ret.m_dtm.msec = epoch_msec;
-	ret.m_dtm.tz = utc_offset;
+	ret.setMsecsSinceEpoch(epoch_msec);
+	ret.setUtcOffsetMin(utc_offset);
 
 	if(plen)
 		*plen = static_cast<size_t>(len);
@@ -978,8 +978,8 @@ RpcValue::DateTime RpcValue::DateTime::fromUtcString(const std::string &utc_date
 RpcValue::DateTime RpcValue::DateTime::fromMSecsSinceEpoch(int64_t msecs, int utc_offset_min)
 {
 	DateTime ret;
-	ret.m_dtm.msec = msecs;
-	ret.m_dtm.tz = utc_offset_min / 15;
+	ret.setMsecsSinceEpoch(msecs);
+	ret.setUtcOffsetMin(utc_offset_min);
 	return ret;
 }
 /*
