@@ -97,12 +97,12 @@ public:
 	virtual const RpcValue::IMap &asIMap() const;
 	virtual size_t count() const {return 0;}
 
-	virtual bool has(RpcValue::Int i) const { (void)i; return false; }
-	virtual bool has(const RpcValue::String &key) const { (void)key; return false; }
-	virtual RpcValue at(RpcValue::Int i) const { (void)i; return RpcValue(); }
-	virtual RpcValue at(const RpcValue::String &key) const { (void)key; return RpcValue(); }
-	virtual void set(RpcValue::Int ix, const RpcValue &val);
-	virtual void set(const RpcValue::String &key, const RpcValue &val);
+	virtual bool hasI(RpcValue::Int i) const { (void)i; return false; }
+	virtual bool hasS(const RpcValue::String &key) const { (void)key; return false; }
+	virtual RpcValue atI(RpcValue::Int i) const { (void)i; return RpcValue(); }
+	virtual RpcValue atS(const RpcValue::String &key) const { (void)key; return RpcValue(); }
+	virtual void setI(RpcValue::Int ix, const RpcValue &val);
+	virtual void setS(const RpcValue::String &key, const RpcValue &val);
 	virtual void append(const RpcValue &);
 
 	virtual std::string toStdString() const = 0;
@@ -339,8 +339,8 @@ class ChainPackList final : public ValueData<RpcValue::Type::List, RpcValue::Lis
 	std::string toStdString() const override { return std::string(); }
 
 	size_t count() const override {return m_value.size();}
-	RpcValue at(RpcValue::Int i) const override;
-	void set(RpcValue::Int i, const RpcValue &val) override;
+	RpcValue atI(RpcValue::Int i) const override;
+	void setI(RpcValue::Int i, const RpcValue &val) override;
 	void append(const RpcValue &v) override;
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asList(); }
 public:
@@ -350,7 +350,7 @@ public:
 	const RpcValue::List &asList() const override { return m_value; }
 };
 
-RpcValue ChainPackList::at(RpcValue::Int ix) const
+RpcValue ChainPackList::atI(RpcValue::Int ix) const
 {
 	if(ix < 0)
 		ix = static_cast<RpcValue::Int>(m_value.size()) + ix;
@@ -360,7 +360,7 @@ RpcValue ChainPackList::at(RpcValue::Int ix) const
 		return m_value[static_cast<size_t>(ix)];
 }
 
-void ChainPackList::set(RpcValue::Int ix, const RpcValue &val)
+void ChainPackList::setI(RpcValue::Int ix, const RpcValue &val)
 {
 	if(ix < 0)
 		ix = static_cast<RpcValue::Int>(m_value.size()) + ix;
@@ -382,9 +382,9 @@ class ChainPackMap final : public ValueData<RpcValue::Type::Map, RpcValue::Map>
 	std::string toStdString() const override { return std::string(); }
 
 	size_t count() const override {return m_value.size();}
-	bool has(const RpcValue::String &key) const override;
-	RpcValue at(const RpcValue::String &key) const override;
-	void set(const RpcValue::String &key, const RpcValue &val) override;
+	bool hasS(const RpcValue::String &key) const override;
+	RpcValue atS(const RpcValue::String &key) const override;
+	void setS(const RpcValue::String &key, const RpcValue &val) override;
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asMap(); }
 public:
 	explicit ChainPackMap(const RpcValue::Map &value) : ValueData(value) {}
@@ -399,9 +399,9 @@ class ChainPackIMap final : public ValueData<RpcValue::Type::IMap, RpcValue::IMa
 	std::string toStdString() const override { return std::string(); }
 	//const ChainPack::Map &toMap() const override { return m_value; }
 	size_t count() const override {return m_value.size();}
-	bool has(RpcValue::Int key) const override;
-	RpcValue at(RpcValue::Int key) const override;
-	void set(RpcValue::Int key, const RpcValue &val) override;
+	bool hasI(RpcValue::Int key) const override;
+	RpcValue atI(RpcValue::Int key) const override;
+	void setI(RpcValue::Int key, const RpcValue &val) override;
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asIMap(); }
 public:
 	explicit ChainPackIMap(const RpcValue::IMap &value) : ValueData(value) {}
@@ -639,10 +639,10 @@ const RpcValue::Map & RpcValue::asMap() const { return !m_ptr.isNull()? m_ptr->a
 const RpcValue::IMap &RpcValue::asIMap() const { return !m_ptr.isNull()? m_ptr->asIMap(): static_empty_imap(); }
 
 size_t RpcValue::count() const { return !m_ptr.isNull()? m_ptr->count(): 0; }
-RpcValue RpcValue::at (RpcValue::Int i) const { return !m_ptr.isNull()? m_ptr->at(i): RpcValue(); }
-RpcValue RpcValue::at (const RpcValue::String &key) const { return !m_ptr.isNull()? m_ptr->at(key): RpcValue(); }
-bool RpcValue::has (RpcValue::Int i) const { return !m_ptr.isNull()? m_ptr->has(i): false; }
-bool RpcValue::has (const RpcValue::String &key) const { return !m_ptr.isNull()? m_ptr->has(key): false; }
+RpcValue RpcValue::at(RpcValue::Int i) const { return !m_ptr.isNull()? m_ptr->atI(i): RpcValue(); }
+RpcValue RpcValue::at(const RpcValue::String &key) const { return !m_ptr.isNull()? m_ptr->atS(key): RpcValue(); }
+bool RpcValue::has(RpcValue::Int i) const { return !m_ptr.isNull()? m_ptr->hasI(i): false; }
+bool RpcValue::has(const RpcValue::String &key) const { return !m_ptr.isNull()? m_ptr->hasS(key): false; }
 
 std::string RpcValue::toStdString() const { return !m_ptr.isNull()? m_ptr->toStdString(): std::string(); }
 
@@ -651,7 +651,7 @@ void RpcValue::set(RpcValue::Int ix, const RpcValue &val)
 	if(m_ptr.isNull())
 		nError() << " Cannot set value to invalid ChainPack value! Index: " << ix;
 	else
-		m_ptr->set(ix, val);
+		m_ptr->setI(ix, val);
 }
 
 void RpcValue::set(const RpcValue::String &key, const RpcValue &val)
@@ -659,7 +659,7 @@ void RpcValue::set(const RpcValue::String &key, const RpcValue &val)
 	if(m_ptr.isNull())
 		nError() << " Cannot set value to invalid ChainPack value! Key: " << key;
 	else
-		m_ptr->set(key, val);
+		m_ptr->setS(key, val);
 }
 
 void RpcValue::append(const RpcValue &val)
@@ -710,12 +710,12 @@ const RpcValue::List & RpcValue::AbstractValueData::asList() const { return stat
 const RpcValue::Map & RpcValue::AbstractValueData::asMap() const { return static_empty_map(); }
 const RpcValue::IMap & RpcValue::AbstractValueData::asIMap() const { return static_empty_imap(); }
 
-void RpcValue::AbstractValueData::set(RpcValue::Int ix, const RpcValue &)
+void RpcValue::AbstractValueData::setI(RpcValue::Int ix, const RpcValue &)
 {
 	nError() << "RpcValue::AbstractValueData::set: trivial implementation called! Key: " << ix;
 }
 
-void RpcValue::AbstractValueData::set(const RpcValue::String &key, const RpcValue &)
+void RpcValue::AbstractValueData::setS(const RpcValue::String &key, const RpcValue &)
 {
 	nError() << "RpcValue::AbstractValueData::set: trivial implementation called! Key: " << key;
 }
@@ -861,19 +861,19 @@ RpcValue::Type RpcValue::typeForName(const std::string &type_name, int len)
 	return Type::Invalid;
 }
 
-bool ChainPackMap::has(const RpcValue::String &key) const
+bool ChainPackMap::hasS(const RpcValue::String &key) const
 {
 	auto iter = m_value.find(key);
 	return (iter != m_value.end());
 }
 
-RpcValue ChainPackMap::at(const RpcValue::String &key) const
+RpcValue ChainPackMap::atS(const RpcValue::String &key) const
 {
 	auto iter = m_value.find(key);
 	return (iter == m_value.end()) ? RpcValue() : iter->second;
 }
 
-void ChainPackMap::set(const RpcValue::String &key, const RpcValue &val)
+void ChainPackMap::setS(const RpcValue::String &key, const RpcValue &val)
 {
 	if(val.isValid())
 		m_value[key] = val;
@@ -881,19 +881,19 @@ void ChainPackMap::set(const RpcValue::String &key, const RpcValue &val)
 		m_value.erase(key);
 }
 
-bool ChainPackIMap::has(RpcValue::Int key) const
+bool ChainPackIMap::hasI(RpcValue::Int key) const
 {
 	auto iter = m_value.find(key);
 	return (iter != m_value.end());
 }
 
-RpcValue ChainPackIMap::at(RpcValue::Int key) const
+RpcValue ChainPackIMap::atI(RpcValue::Int key) const
 {
 	auto iter = m_value.find(key);
 	return (iter == m_value.end()) ? RpcValue() : iter->second;
 }
 
-void ChainPackIMap::set(RpcValue::Int key, const RpcValue &val)
+void ChainPackIMap::setI(RpcValue::Int key, const RpcValue &val)
 {
 	if(val.isValid())
 		m_value[key] = val;

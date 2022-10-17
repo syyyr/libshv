@@ -242,7 +242,7 @@ DOCTEST_TEST_CASE("ShvLog")
 							e.value = RpcValue::Decimal(e.value.toInt(), -2);
 						}
 						else if(e.path == "voltage") {
-							e.shortTime = msec % 0x100;
+							e.shortTime = static_cast<int>(msec % 0x100);
 						}
 						else if(e.path == "doorOpen") {
 							e.value = (rndval(mt) > 500);
@@ -415,7 +415,7 @@ DOCTEST_TEST_CASE("ShvLog")
 					}
 					e.domain = c.domain;
 					e.valueFlags = c.valueFlags;
-					e.shortTime = msec % 0x100;
+					e.shortTime = static_cast<int>(msec % 0x100);
 					dirty_log.append(e);
 					memory_jurnal.append(e);
 					dirty_cnt++;
