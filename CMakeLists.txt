@@ -12,6 +12,7 @@ set(CMAKE_STATIC_LIBRARY_PREFIX "")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	set(SHV_WARNING_FLAGS "-Wall -Wextra -pedantic -Wshadow -Wcast-align -Wunused -Wpedantic -Wconversion -Wmisleading-indentation -Wdouble-promotion -Wformat=2 -Wimplicit-fallthrough")
+	set(SHV_WARNING_FLAGS "-Wno-sign-conversion ${SHV_WARNING_FLAGS}")
 	set(SHV_WARNING_FLAGS_CXX "-Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual")
 
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
