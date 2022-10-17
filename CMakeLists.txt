@@ -75,7 +75,9 @@ endif()
 
 if(Qt_FOUND)
 	set(CMAKE_AUTOMOC ON)
-	set(CMAKE_AUTOMOC_MOC_OPTIONS "-b${CMAKE_CURRENT_SOURCE_DIR}/cmake/qt_moc_disable_warnings.h")
+	if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+		set(CMAKE_AUTOMOC_MOC_OPTIONS "-b${CMAKE_CURRENT_SOURCE_DIR}/cmake/qt_moc_disable_warnings.h")
+	endif()
 
 	add_subdirectory(libshvcoreqt)
 	add_subdirectory(libshviotqt)
