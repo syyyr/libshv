@@ -190,10 +190,26 @@ int64_t device_stop1_msec = 0;
 int64_t device_start2_msec = 0;
 int64_t device_stop2_msec = 0;
 
+class TimeScope
+{
+public:
+	TimeScope(const string &msg)
+		: m_start(std::chrono::steady_clock::now())
+		, m_message(msg) {  }
+	~TimeScope()
+	{
+		nInfo() << m_message << "time elapsed:" << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_start).count() << "msec";
+	}
+private:
+	std::chrono::time_point<std::chrono::steady_clock> m_start;
+	string m_message;
+};
+
 }
 
 int main(int argc, char** argv)
 {
+	//NecroLog::setFileLogTresholds("test_shvlog:D");
 	init_channels();
 	init_journal_dir();
 
@@ -207,7 +223,7 @@ DOCTEST_TEST_CASE("ShvLog")
 		nDebug() << "------------- Journal init:" << JOURNAL_DIR;
 		//if(!QDir().mkpath(QString::fromStdString(JOURNAL_DIR)))
 		//	qWarning() << "Cannot create journal dir:" << JOURNAL_DIR;
-		nDebug() << "------------- Generating log files";
+		auto ts = TimeScope("Generating log files");
 		auto msec = RpcValue::DateTime::now().msecsSinceEpoch();
 		device_start1_msec = msec;
 		std::random_device randev;
@@ -274,6 +290,7 @@ DOCTEST_TEST_CASE("ShvLog")
 	{
 		DOCTEST_SUBCASE("simple")
 		{
+			auto ts = TimeScope("getLog simple");
 			ShvFileJournal file_journal;
 			init_file_journal(file_journal);
 
@@ -282,6 +299,7 @@ DOCTEST_TEST_CASE("ShvLog")
 			params.withPathsDict = false;
 			params.since = RpcValue::DateTime::fromMSecsSinceEpoch(device_start1_msec + (device_stop2_msec - device_start1_msec) / 4);
 			params.until = RpcValue::DateTime::fromMSecsSinceEpoch(device_stop2_msec - (device_stop2_msec - device_start1_msec) / 4);
+			params.recordCountLimit = 10000;
 			nDebug() << "\t params:" << params.toRpcValue().toCpon();
 			RpcValue log1 = file_journal.getLog(params);
 			string fn = TEST_DIR + "/log1.chpk";
@@ -309,9 +327,11 @@ DOCTEST_TEST_CASE("ShvLog")
 			REQUIRE(rd.logHeader().until().toDateTime().msecsSinceEpoch() == last_entry.epochMsec);
 			REQUIRE(cnt == rd.logHeader().recordCount());
 			REQUIRE(cnt == log1.toList().size());
+			shvInfo() << cnt << "records read";
 		}
 		DOCTEST_SUBCASE("filtered")
 		{
+			auto ts = TimeScope("getLog filtered");
 			ShvFileJournal file_journal;
 			init_file_journal(file_journal);
 
