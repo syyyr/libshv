@@ -1,8 +1,6 @@
 #include "abstractshvjournal.h"
 #include "shvjournalentry.h"
-#include "shvgetlogparams.h"
 #include "shvpath.h"
-#include "../stringview.h"
 
 #include "../log.h"
 #include "../exception.h"

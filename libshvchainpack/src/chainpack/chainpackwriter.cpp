@@ -1,5 +1,4 @@
 #include "chainpackwriter.h"
-#include "cpon.h"
 #include "exception.h"
 
 #include "../../c/cchainpack.h"

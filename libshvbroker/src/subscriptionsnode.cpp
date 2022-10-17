@@ -1,6 +1,5 @@
 #include "subscriptionsnode.h"
 
-#include "brokerapp.h"
 #include "rpc/clientconnectiononbroker.h"
 
 #include <shv/chainpack/rpcmessage.h>

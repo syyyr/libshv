@@ -1,5 +1,4 @@
 #include "ssl_common.h"
-#include "../brokerapp.h"
 
 #include <shv/coreqt/log.h>
 

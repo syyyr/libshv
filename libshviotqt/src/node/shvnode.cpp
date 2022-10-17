@@ -1,5 +1,4 @@
 #include "shvnode.h"
-#include "../utils.h"
 
 #include <shv/core/utils/shvfilejournal.h>
 #include <shv/coreqt/log.h>

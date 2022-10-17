@@ -1,6 +1,5 @@
 #include "utils.h"
 #include "rpcvalue.h"
-//#include "necrolog.h"
 
 #include <regex>
 #include <iomanip>

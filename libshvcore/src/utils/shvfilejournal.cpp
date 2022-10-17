@@ -4,12 +4,10 @@
 #include "shvjournalfilewriter.h"
 #include "shvjournalfilereader.h"
 #include "shvlogheader.h"
-#include "shvpath.h"
 
 #include "../log.h"
 #include "../exception.h"
 #include "../string.h"
-#include "../stringview.h"
 
 #include <shv/chainpack/rpc.h>
 

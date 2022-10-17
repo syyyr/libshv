@@ -1,8 +1,6 @@
 #include "clientshvnode.h"
-#include "brokerapp.h"
 
 #include "rpc/clientconnectiononbroker.h"
-#include "rpc/masterbrokerconnection.h"
 
 #include <shv/coreqt/log.h>
 
@@ -30,7 +28,7 @@ void ClientShvNode::addConnection(rpc::ClientConnectionOnBroker *conn)
 {
 	// prefere new connections, old one might not work
 	m_connections.insert(0, conn);
-	connect(conn, &rpc::ClientConnectionOnBroker::destroyed, [this, conn]() {removeConnection(conn);});
+	connect(conn, &rpc::ClientConnectionOnBroker::destroyed, this, [this, conn]() {removeConnection(conn);});
 }
 
 void ClientShvNode::removeConnection(rpc::ClientConnectionOnBroker *conn)

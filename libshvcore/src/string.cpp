@@ -1,5 +1,4 @@
 #include "string.h"
-#include "log.h"
 #include "stringview.h"
 
 #include <algorithm>

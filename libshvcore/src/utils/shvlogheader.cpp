@@ -1,6 +1,5 @@
 #include "shvlogheader.h"
 
-#include "../stringview.h"
 #include "../exception.h"
 
 #include <algorithm>

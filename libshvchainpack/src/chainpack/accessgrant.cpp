@@ -1,5 +1,4 @@
 #include "accessgrant.h"
-#include "irpcconnection.h"
 
 #include <necrolog.h>
 

@@ -23,10 +23,10 @@ AclUser AclUser::fromRpcValue(const shv::chainpack::RpcValue &v)
 		//ret.name = m.value("name").toString();
 		ret.password = AclPassword::fromRpcValue(m.value("password"));
 		std::vector<std::string> roles;
-		for(auto lst : m.value("roles").toList())
+		for(const auto &lst : m.value("roles").toList())
 			roles.push_back(lst.toString());
 		// legacy key for 'roles' was 'grants'
-		for(auto lst : m.value("grants").toList())
+		for(const auto &lst : m.value("grants").toList())
 			roles.push_back(lst.toString());
 		ret.roles = roles;
 	}

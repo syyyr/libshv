@@ -1,7 +1,5 @@
 #include "shvmemoryjournal.h"
 #include "shvlogheader.h"
-#include "shvpath.h"
-#include "shvfilejournal.h"
 #include "shvlogrpcvaluereader.h"
 #include "patternmatcher.h"
 

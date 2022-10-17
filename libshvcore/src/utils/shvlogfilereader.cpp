@@ -1,11 +1,8 @@
 #include "shvlogfilereader.h"
 #include "shvjournalentry.h"
-#include "shvfilejournal.h"
 
 #include "../exception.h"
-#include "../string.h"
 #include "../log.h"
-#include "../stringview.h"
 
 #define logWShvJournal() shvCWarning("ShvJournal")
 #define logIShvJournal() shvCInfo("ShvJournal")

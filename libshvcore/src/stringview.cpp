@@ -1,8 +1,6 @@
 #include "stringview.h"
 #include "string.h"
 
-#include "log.h"
-
 namespace shv {
 namespace core {
 

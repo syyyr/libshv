@@ -1,7 +1,6 @@
 #include "brokerappnode.h"
 
 #include "brokerapp.h"
-#include "rpc/clientconnectiononbroker.h"
 #include "rpc/masterbrokerconnection.h"
 
 #include <shv/chainpack/metamethod.h>
@@ -135,7 +134,7 @@ chainpack::RpcValue BrokerAppNode::callMethodRq(const chainpack::RpcRequest &rq)
 				return std::string();
 			}
 			QMetaObject::Connection *connection = new QMetaObject::Connection;
-			*connection = connect(conn, &rpc::MasterBrokerConnection::masterBrokerIdReceived, [this, rq, connection](const cp::RpcResponse &master_resp) {
+			*connection = connect(conn, &rpc::MasterBrokerConnection::masterBrokerIdReceived, this, [this, rq, connection](const cp::RpcResponse &master_resp) {
 				disconnect(*connection);
 				delete connection;
 				cp::RpcResponse resp = cp::RpcResponse::forRequest(rq);

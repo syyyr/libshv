@@ -1,5 +1,4 @@
 #include "brokerrootnode.h"
-#include "rpc/masterbrokerconnection.h"
 
 #include <shv/coreqt/log.h>
 

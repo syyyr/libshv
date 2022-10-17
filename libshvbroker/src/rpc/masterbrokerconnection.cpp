@@ -35,7 +35,8 @@ void MasterBrokerConnection::setOptions(const shv::chainpack::RpcValue &slave_br
 		device_opts.setServerPeerVerify(server.value("peerVerify", true).toBool());
 
 		const cp::RpcValue::Map &login = m.value(cp::Rpc::KEY_LOGIN).toMap();
-		for(const std::string key : {"user", "password", "passwordFile", "type"}) {
+		static const std::vector<std::string> keys {"user", "password", "passwordFile", "type"};
+		for(const std::string &key : keys) {
 			if(login.hasKey(key))
 				device_opts.setValue("login." + key, login.value(key).asString());
 		}

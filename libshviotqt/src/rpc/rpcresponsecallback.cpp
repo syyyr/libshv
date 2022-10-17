@@ -1,6 +1,5 @@
 #include "rpcresponsecallback.h"
 #include "clientconnection.h"
-#include "rpc.h"
 
 #include <shv/chainpack/rpcmessage.h>
 #include <shv/coreqt/log.h>

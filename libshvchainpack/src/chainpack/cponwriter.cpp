@@ -1,5 +1,4 @@
 #include "cponwriter.h"
-#include "cpon.h"
 #include "exception.h"
 
 #include "../../c/ccpon.h"

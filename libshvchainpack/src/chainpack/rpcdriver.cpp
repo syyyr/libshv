@@ -1,6 +1,4 @@
 #include "rpcdriver.h"
-//#include "metatypes.h"
-//#include "chainpack.h"
 #include "exception.h"
 #include "cponwriter.h"
 #include "cponreader.h"
@@ -9,7 +7,6 @@
 
 #include <necrolog.h>
 
-//#include <cstdlib>
 #include <sstream>
 #include <iostream>
 
