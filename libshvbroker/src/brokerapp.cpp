@@ -1034,7 +1034,16 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 				else {
 					acg = accessGrantForRequest(connection_handle, resolved_shv_url, method, cp::RpcMessage::accessGrant(meta));
 				}
-				if(!acg.isValid()) {
+				if(acg.isValid()) {
+					auto level = iotqt::node::ShvNode::basicGrantToAccessLevel(acg);
+					if(level != shv::chainpack::MetaMethod::AccessLevel::None) {
+						if(level < shv::chainpack::MetaMethod::AccessLevel::Write) {
+							// remove iser id for read operations
+							cp::RpcMessage::setUserId(meta, {});
+						}
+					}
+				}
+				else {
 					if(master_broker_connection)
 						shvWarning() << "Acces to shv path '" + resolved_shv_path + "' not granted for master broker";
 					ACCESS_EXCEPTION("Acces to shv path '" + resolved_shv_path + "' not granted for user '" + connection_handle->loggedUserName() + "'");

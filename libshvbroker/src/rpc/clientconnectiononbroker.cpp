@@ -213,7 +213,7 @@ ClientConnectionOnBroker::Subscription ClientConnectionOnBroker::createSubscript
 		}
 		if(!shv_path_to_acl_check.empty()) {
 			cp::AccessGrant acg = BrokerApp::instance()->accessGrantForRequest(this, shv_path_to_acl_check, method, cp::RpcValue());
-			int acc_level = shv::iotqt::node::ShvNode::basicGrantToAccessLevel(acg.toRpcValue());
+			int acc_level = shv::iotqt::node::ShvNode::basicGrantToAccessLevel(acg);
 			if(acc_level < cp::MetaMethod::AccessLevel::Read)
 				ACCESS_EXCEPTION("Acces to shv signal '" + shv_path + '/' + method + "()' not granted for user '" + loggedUserName() + "'");
 		}

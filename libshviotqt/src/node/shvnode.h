@@ -14,9 +14,8 @@
 
 #include <cstddef>
 
-//namespace shv { namespace chainpack { class MetaMethod; }}
-//namespace shv { namespace chainpack { class MetaMethod; class RpcValue; class RpcMessage; class RpcRequest; }}
-namespace shv { namespace core { namespace utils { class ShvJournalEntry; }}}
+namespace shv::chainpack { class AccessGrant; }
+namespace shv::core { namespace utils { class ShvJournalEntry; }}
 
 
 namespace shv {
@@ -80,8 +79,8 @@ public:
 	virtual chainpack::RpcValue hasChildren(const StringViewList &shv_path);
 	virtual shv::chainpack::RpcValue lsAttributes(const StringViewList &shv_path, unsigned attributes);
 
-	static int basicGrantToAccessLevel(const shv::chainpack::RpcValue &acces_grant);
-	virtual int grantToAccessLevel(const shv::chainpack::RpcValue &acces_grant) const;
+	static int basicGrantToAccessLevel(const shv::chainpack::AccessGrant &acces_grant);
+	virtual int grantToAccessLevel(const chainpack::AccessGrant &acces_grant) const;
 
 	void treeWalk(std::function<void (ShvNode *parent_nd, const StringViewList &shv_path)> callback) { treeWalk_helper(callback, this, {}); }
 private:

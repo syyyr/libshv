@@ -272,8 +272,8 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 		SHV_EXCEPTION(std::string("Method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' doesn't exist.");
 	const chainpack::RpcValue &rq_grant = rq.accessGrant();
 	const RpcValue &mm_grant = mm->accessGrant();
-	int rq_access_level = grantToAccessLevel(rq_grant);
-	int mm_access_level = grantToAccessLevel(mm_grant);
+	int rq_access_level = grantToAccessLevel(AccessGrant::fromRpcValue(rq_grant));
+	int mm_access_level = grantToAccessLevel(AccessGrant::fromRpcValue(mm_grant));
 	if(mm_access_level > rq_access_level)
 		SHV_EXCEPTION(std::string("Call method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' permission denied, grant: " + rq_grant.toCpon() + " required: " + mm_grant.toCpon());
 
@@ -362,11 +362,10 @@ chainpack::RpcValue ShvNode::lsAttributes(const StringViewList &shv_path, unsign
 	return ret;
 }
 
-int ShvNode::basicGrantToAccessLevel(const chainpack::RpcValue &acces_grant)
+int ShvNode::basicGrantToAccessLevel(const shv::chainpack::AccessGrant &acces_grant)
 {
-	AccessGrant grant = AccessGrant::fromRpcValue(acces_grant);
-	if(grant.isRole()) {
-		const char *acces_level = grant.role.data();
+	if(acces_grant.isRole()) {
+		const char *acces_level = acces_grant.role.data();
 		if(std::strcmp(acces_level, Rpc::ROLE_BROWSE) == 0) return MetaMethod::AccessLevel::Browse;
 		if(std::strcmp(acces_level, Rpc::ROLE_READ) == 0) return MetaMethod::AccessLevel::Read;
 		if(std::strcmp(acces_level, Rpc::ROLE_WRITE) == 0) return MetaMethod::AccessLevel::Write;
@@ -378,13 +377,13 @@ int ShvNode::basicGrantToAccessLevel(const chainpack::RpcValue &acces_grant)
 		if(std::strcmp(acces_level, Rpc::ROLE_ADMIN) == 0) return MetaMethod::AccessLevel::Admin;
 		return shv::chainpack::MetaMethod::AccessLevel::None;
 	}
-	else if(grant.isAccessLevel()) {
-		return grant.accessLevel;
+	else if(acces_grant.isAccessLevel()) {
+		return acces_grant.accessLevel;
 	}
 	return shv::chainpack::MetaMethod::AccessLevel::None;
 }
 
-int ShvNode::grantToAccessLevel(const chainpack::RpcValue &acces_grant) const
+int ShvNode::grantToAccessLevel(const shv::chainpack::AccessGrant &acces_grant) const
 {
 	return basicGrantToAccessLevel(acces_grant);
 }
