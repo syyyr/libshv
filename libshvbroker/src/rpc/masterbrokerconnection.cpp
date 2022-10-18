@@ -171,10 +171,12 @@ void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 			else if (rq_id == m_masterBrokerIdRqId) {
 				m_masterBrokerIdRqId = 0;
 				cp::RpcValue rpc_val = decodeData(protocol_type, msg_data, 0);
+#if defined __GNUC__ && !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wuseless-cast"
 				rpc_val.setMetaData(cp::RpcValue::MetaData(md));
 #pragma GCC diagnostic pop
+#endif
 
 				Q_EMIT masterBrokerIdReceived(cp::RpcResponse(cp::RpcMessage(rpc_val)));
 			}
