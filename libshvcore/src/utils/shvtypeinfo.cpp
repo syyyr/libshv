@@ -622,8 +622,9 @@ ShvTypeInfo &ShvTypeInfo::setDevicePath(const std::string &device_path, const st
 	return *this;
 }
 
-ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device_type, const std::string &property_path, const ShvPropertyDescr &node_descr)
+ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device_path, const std::string &device_type, const std::string &property_path, const ShvPropertyDescr &node_descr)
 {
+	setDevicePath(device_path, device_type);
 	m_deviceProperties[device_type][property_path] = node_descr;
 	return *this;
 }
@@ -1036,7 +1037,7 @@ void ShvTypeInfo::fromNodesTree_helper(const shv::chainpack::RpcValue &node,
 		auto node_descr = shv::core::utils::ShvPropertyDescr::fromRpcValue(property_descr, &extra_tags);
 		if(node_descr.isValid()) {
 			if(current_device_type.empty()) {
-				setDevicePropertyDescription("", shv_path, node_descr);
+				setDevicePropertyDescription("", "", shv_path, node_descr);
 			}
 			else {
 				string property_path = String(shv_path).mid(current_device_path.size() + 1);
@@ -1054,7 +1055,7 @@ void ShvTypeInfo::fromNodesTree_helper(const shv::chainpack::RpcValue &node,
 				}
 				else {
 					// node description does not exist, create new one
-					setDevicePropertyDescription(current_device_type, property_path, node_descr);
+					setDevicePropertyDescription(current_device_path, current_device_type, property_path, node_descr);
 				}
 			}
 		}

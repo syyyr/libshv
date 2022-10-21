@@ -172,7 +172,7 @@ public:
 	const std::map<std::string, shv::chainpack::RpcValue>& extraTags() const { return m_extraTags; }
 
 	ShvTypeInfo& setDevicePath(const std::string &device_path, const std::string &device_type);
-	ShvTypeInfo& setDevicePropertyDescription(const std::string &device_type, const std::string &property_path, const ShvPropertyDescr &node_descr);
+	ShvTypeInfo& setDevicePropertyDescription(const std::string &device_path, const std::string &device_type, const std::string &property_path, const ShvPropertyDescr &node_descr);
 	ShvTypeInfo& setExtraTags(const std::string &node_path, const shv::chainpack::RpcValue &tags);
 	shv::chainpack::RpcValue extraTags(const std::string &node_path) const;
 	ShvTypeInfo& setTypeDescription(const ShvTypeDescr &type_descr, const std::string &type_name);
