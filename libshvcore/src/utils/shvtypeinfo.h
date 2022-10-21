@@ -165,17 +165,30 @@ public:
 
 	bool isValid() const { return !(m_types.empty() && m_devicePaths.empty() && m_deviceProperties.empty()); }
 
+	using DeviceProperties = std::map<std::string, ShvPropertyDescr>;
+	using DevicePropertiesMap = std::map<std::string, DeviceProperties>;
+
 	const std::map<std::string, std::string>& devicePaths() const { return m_devicePaths; }
 	const std::map<std::string, ShvTypeDescr>& types() const { return m_types; }
-	const std::map<std::string, ShvPropertyDescr>& devicePropertyDescriptions(const std::string &device_type) const;
+	const DevicePropertiesMap& deviceProperties() const { return m_deviceProperties; }
+	const DeviceProperties& devicePropertyDescriptions(const std::string &device_type) const;
 	const std::map<std::string, std::string>& systemPathsRoots() const { return m_systemPathsRoots; }
 	const std::map<std::string, shv::chainpack::RpcValue>& extraTags() const { return m_extraTags; }
 
 	ShvTypeInfo& setDevicePath(const std::string &device_path, const std::string &device_type);
-	ShvTypeInfo& setDevicePropertyDescription(const std::string &device_path, const std::string &device_type, const std::string &property_path, const ShvPropertyDescr &node_descr);
+	ShvTypeInfo& setDevicePropertyDescription(const std::string &device_path, const std::string &device_type, const std::string &property_path, const ShvPropertyDescr &property_descr);
+	ShvTypeInfo& setDevicePropertyDescription(const std::string &device_type, const std::string &property_path, const ShvPropertyDescr &property_descr);
 	ShvTypeInfo& setExtraTags(const std::string &node_path, const shv::chainpack::RpcValue &tags);
 	shv::chainpack::RpcValue extraTags(const std::string &node_path) const;
-	ShvTypeInfo& setTypeDescription(const ShvTypeDescr &type_descr, const std::string &type_name);
+
+	// obsolete
+	ShvTypeInfo& setTypeDescription(const ShvTypeDescr &type_descr, const std::string &type_name)
+	{
+		setTypeDescription(type_name, type_descr);
+		return *this;
+	}
+	ShvTypeInfo& setTypeDescription(const std::string &type_name, const ShvTypeDescr &type_descr);
+
 	ShvPropertyDescr propertyDescriptionForPath(const std::string &shv_path, std::string *p_field_name = nullptr) const;
 
 	std::tuple<std::string, std::string, std::string> findDeviceType(const std::string &shv_path) const;
@@ -194,7 +207,7 @@ public:
 		std::string propertyPath;
 		std::string fieldPath;
 		std::string deviceType;
-		ShvPropertyDescr nodeDescription;
+		ShvPropertyDescr propertyDescription;
 	};
 	PathInfo pathInfo(const std::string &shv_path) const;
 
@@ -213,8 +226,6 @@ private:
 private:
 	std::map<std::string, ShvTypeDescr> m_types; // type-name -> type-description
 	std::map<std::string, std::string> m_devicePaths; // path -> device-type
-	using DeviceProperties = std::map<std::string, ShvPropertyDescr>;
-	using DevicePropertiesMap = std::map<std::string, DeviceProperties>;
 	DevicePropertiesMap m_deviceProperties; // device-property -> node_descr
 	std::map<std::string, shv::chainpack::RpcValue> m_extraTags; // shv-path -> tags
 	std::map<std::string, std::string> m_systemPathsRoots; // shv-path-root -> system-path

@@ -496,7 +496,7 @@ QMap<QString, QString> Graph::prettyMapValue(const QVariant &value, const shv::c
 			try {
 				for (auto &field : type_descr.fields()) {
 					if (QString::fromStdString(field.name()) == it.key()) {
-						const shv::core::utils::ShvTypeDescr field_type_descr = model()->typeInfo().typeDescriptionForName(field.typeName());
+						const shv::core::utils::ShvTypeDescr field_type_descr = model()->typeInfo().findTypeDescription(field.typeName());
 						if (field_type_descr.type() == shv::core::utils::ShvTypeDescr::Type::Enum) {
 							value = model()->typeDescrFieldName(field_type_descr, it.value().toInt());
 							break;
@@ -527,7 +527,7 @@ QMap<QString, QString> Graph::prettyIMapValue(const QVariant &value, const shv::
 				else {
 					value = it.value().toString();
 					try {
-						const shv::core::utils::ShvTypeDescr field_type_descr = model()->typeInfo().typeDescriptionForName(field.typeName());
+						const shv::core::utils::ShvTypeDescr field_type_descr = model()->typeInfo().findTypeDescription(field.typeName());
 						if (field_type_descr.type() == shv::core::utils::ShvTypeDescr::Type::Enum) {
 							value = model()->typeDescrFieldName(field_type_descr, it.value().toInt());
 						}

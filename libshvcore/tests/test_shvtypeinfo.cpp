@@ -73,7 +73,7 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 			auto pi = type_info.pathInfo("devices/tc/TC01");
 			REQUIRE(pi.deviceType == "TC_G3");
 			REQUIRE(pi.devicePath == "devices/tc/TC01");
-			REQUIRE(pi.nodeDescription.isValid());
+			REQUIRE(pi.propertyDescription.isValid());
 			REQUIRE(pi.propertyPath.empty());
 			REQUIRE(pi.fieldPath.empty());
 		}
@@ -81,7 +81,7 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 			auto pi = type_info.pathInfo("devices/tc/TC01/status");
 			REQUIRE(pi.deviceType == "TC_G3");
 			REQUIRE(pi.devicePath == "devices/tc/TC01");
-			REQUIRE(pi.nodeDescription.typeName() == "StatusTC");
+			REQUIRE(pi.propertyDescription.typeName() == "StatusTC");
 			REQUIRE(pi.propertyPath == "status");
 			REQUIRE(pi.fieldPath.empty());
 		}
@@ -89,7 +89,7 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 			auto pi = type_info.pathInfo("devices/tc/TC01/status/occupied");
 			REQUIRE(pi.deviceType == "TC_G3");
 			REQUIRE(pi.devicePath == "devices/tc/TC01");
-			REQUIRE(pi.nodeDescription.typeName() == "StatusTC");
+			REQUIRE(pi.propertyDescription.typeName() == "StatusTC");
 			REQUIRE(pi.propertyPath == "status");
 			REQUIRE(pi.fieldPath == "occupied");
 		}
@@ -98,7 +98,7 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 			auto pi = type_info.pathInfo("devices/zone/langevelden/route/AB/status");
 			REQUIRE(pi.deviceType == "Route_G3");
 			REQUIRE(pi.devicePath == "devices/zone/langevelden/route/AB");
-			REQUIRE(pi.nodeDescription.typeName() == "StatusRoute");
+			REQUIRE(pi.propertyDescription.typeName() == "StatusRoute");
 			REQUIRE(pi.propertyPath == "status");
 			REQUIRE(pi.fieldPath.empty());
 		}
@@ -107,11 +107,11 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 			auto pi = type_info.pathInfo("devices/zone/langevelden/route/AB/status/routeState");
 			REQUIRE(pi.deviceType == "Route_G3");
 			REQUIRE(pi.devicePath == "devices/zone/langevelden/route/AB");
-			REQUIRE(pi.nodeDescription.typeName() == "StatusRoute");
+			REQUIRE(pi.propertyDescription.typeName() == "StatusRoute");
 			REQUIRE(pi.propertyPath == "status");
 			REQUIRE(pi.fieldPath == "routeState");
 
-			auto td = type_info.findTypeDescription(pi.nodeDescription.typeName());
+			auto td = type_info.findTypeDescription(pi.propertyDescription.typeName());
 			REQUIRE(td.type() == ShvTypeDescr::Type::BitField);
 			auto fd = td.field(pi.fieldPath);
 			REQUIRE(fd.typeName() == "EnumRouteState");

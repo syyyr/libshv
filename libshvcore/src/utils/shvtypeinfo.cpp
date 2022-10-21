@@ -449,12 +449,12 @@ ShvPropertyDescr &ShvPropertyDescr::setVisualStyleName(const string &visual_styl
 	return *this;
 }
 /*
-RpcValue ShvNodeDescr::blacklist() const
+RpcValue ShvPropertyDescr::blacklist() const
 {
 	return dataValue(KEY_BLACKLIST);
 }
 
-ShvNodeDescr &ShvNodeDescr::setBlacklist(chainpack::RpcValue::Map &&black_list)
+ShvPropertyDescr &ShvPropertyDescr::setBlacklist(chainpack::RpcValue::Map &&black_list)
 {
 	RpcValue rv = black_list.empty()? RpcValue(): RpcValue(move(black_list));
 	setDataValue(KEY_BLACKLIST, rv);
@@ -622,10 +622,15 @@ ShvTypeInfo &ShvTypeInfo::setDevicePath(const std::string &device_path, const st
 	return *this;
 }
 
-ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device_path, const std::string &device_type, const std::string &property_path, const ShvPropertyDescr &node_descr)
+ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device_path, const std::string &device_type, const std::string &property_path, const ShvPropertyDescr &property_descr)
 {
 	setDevicePath(device_path, device_type);
-	m_deviceProperties[device_type][property_path] = node_descr;
+	return setDevicePropertyDescription(device_type, property_path, property_descr);
+}
+
+ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device_type, const std::string &property_path, const ShvPropertyDescr &property_descr)
+{
+	m_deviceProperties[device_type][property_path] = property_descr;
 	return *this;
 }
 
@@ -648,7 +653,7 @@ RpcValue ShvTypeInfo::extraTags(const std::string &node_path) const
 	}
 }
 
-ShvTypeInfo &ShvTypeInfo::setTypeDescription(const ShvTypeDescr &type_descr, const std::string &type_name)
+ShvTypeInfo &ShvTypeInfo::setTypeDescription(const std::string &type_name, const ShvTypeDescr &type_descr)
 {
 	if(type_descr.isValid())
 		m_types[type_name] = type_descr;
@@ -668,7 +673,7 @@ ShvTypeInfo::PathInfo ShvTypeInfo::pathInfo(const std::string &shv_path) const
 		if(node_descr.isValid()) {
 			ret.propertyPath = own_property_path;
 			ret.fieldPath = field_path;
-			ret.nodeDescription = node_descr;
+			ret.propertyDescription = node_descr;
 		}
 	}
 	return ret;
@@ -695,7 +700,7 @@ ShvPropertyDescr ShvTypeInfo::propertyDescriptionForPath(const std::string &shv_
 	auto info = pathInfo(shv_path);
 	if(p_field_name)
 		*p_field_name = info.fieldPath;
-	return info.nodeDescription;
+	return info.propertyDescription;
 }
 
 std::tuple<string, string, string> ShvTypeInfo::findDeviceType(const std::string &shv_path) const
@@ -979,7 +984,7 @@ void ShvTypeInfo::forEachProperty(std::function<void (const std::string &shv_pat
 }
 
 /*
-ShvNodeDescr ShvTypeInfo::findNodeDescription(const std::string &shv_path, std::string *p_field_name) const
+ShvPropertyDescr ShvTypeInfo::findNodeDescription(const std::string &shv_path, std::string *p_field_name) const
 {
 	auto pi = pathInfo(shv_path);
 	if(p_field_name)
