@@ -85,7 +85,7 @@ ShvAlarm ShvAlarm::fromRpcValue(const chainpack::RpcValue &rv)
 
 vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const std::string &shv_path, const chainpack::RpcValue &value)
 {
-	if(ShvNodeDescr node_descr = type_info.nodeDescriptionForPath(shv_path); node_descr.isValid()) {
+	if(ShvPropertyDescr node_descr = type_info.propertyDescriptionForPath(shv_path); node_descr.isValid()) {
 		nDebug() << shv_path << node_descr.toRpcValue().toCpon();
 		if(string alarm = node_descr.alarm(); !alarm.empty()) {
 			return {ShvAlarm(shv_path,

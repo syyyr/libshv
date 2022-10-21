@@ -36,12 +36,12 @@ static const char* KEY_ALARM_LEVEL = "alarmLevel";
 //=====================================================================
 // ShvTypeDescrBase
 //=====================================================================
-RpcValue ShvTypeDescrBase::dataValue(const std::string &key, const chainpack::RpcValue &default_val) const
+RpcValue ShvDescriptionBase::dataValue(const std::string &key, const chainpack::RpcValue &default_val) const
 {
 	return m_data.asMap().value(key, default_val);
 }
 
-void ShvTypeDescrBase::setDataValue(const std::string &key, const chainpack::RpcValue &val)
+void ShvDescriptionBase::setDataValue(const std::string &key, const chainpack::RpcValue &val)
 {
 	if(!m_data.isMap()) {
 		m_data = RpcValue::Map();
@@ -49,7 +49,7 @@ void ShvTypeDescrBase::setDataValue(const std::string &key, const chainpack::Rpc
 	m_data.set(key, val);
 }
 
-void ShvTypeDescrBase::setData(const chainpack::RpcValue &data)
+void ShvDescriptionBase::setData(const chainpack::RpcValue &data)
 {
 	if(data.isMap()) {
 		RpcValue::Map map = data.asMap();
@@ -58,7 +58,7 @@ void ShvTypeDescrBase::setData(const chainpack::RpcValue &data)
 	}
 }
 
-void ShvTypeDescrBase::mergeTags(chainpack::RpcValue::Map &map)
+void ShvDescriptionBase::mergeTags(chainpack::RpcValue::Map &map)
 {
 	auto nh = map.extract(KEY_TAGS);
 	if(!nh.empty()) {
@@ -596,7 +596,7 @@ void ShvTypeInfo::setBlacklist(const std::string &shv_path, const chainpack::Rpc
 	}
 }
 
-ShvTypeInfo ShvTypeInfo::fromVersion2(std::map<std::string, ShvTypeDescr> &&types, std::map<std::string, ShvNodeDescr> &&node_descriptions)
+ShvTypeInfo ShvTypeInfo::fromVersion2(std::map<std::string, ShvTypeDescr> &&types, std::map<std::string, ShvPropertyDescr> &&node_descriptions)
 {
 	ShvTypeInfo ret;
 	ret.m_types = std::move(types);
@@ -605,7 +605,7 @@ ShvTypeInfo ShvTypeInfo::fromVersion2(std::map<std::string, ShvTypeDescr> &&type
 	return ret;
 }
 
-const std::map<string, ShvNodeDescr> &ShvTypeInfo::devicePropertyDescriptions(const std::string &device_type) const
+const std::map<string, ShvPropertyDescr> &ShvTypeInfo::devicePropertyDescriptions(const std::string &device_type) const
 {
 	if(auto it = m_deviceProperties.find(device_type); it == m_deviceProperties.end()) {
 		static DeviceProperties empty;
@@ -622,7 +622,7 @@ ShvTypeInfo &ShvTypeInfo::setDevicePath(const std::string &device_path, const st
 	return *this;
 }
 
-ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device_type, const std::string &property_path, const ShvNodeDescr &node_descr)
+ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device_type, const std::string &property_path, const ShvPropertyDescr &node_descr)
 {
 	m_deviceProperties[device_type][property_path] = node_descr;
 	return *this;
@@ -688,7 +688,8 @@ ShvLogNodeDescr ShvTypeInfo::nodeDescriptionForDevice(const std::string &device_
 	}
 }
 */
-ShvLogNodeDescr ShvTypeInfo::nodeDescriptionForPath(const std::string &shv_path, string *p_field_name) const
+
+ShvLogNodeDescr ShvTypeInfo::propertyDescriptionForPath(const std::string &shv_path, string *p_field_name) const
 {
 	auto info = pathInfo(shv_path);
 	if(p_field_name)
@@ -709,7 +710,7 @@ std::tuple<string, string, string> ShvTypeInfo::findDeviceType(const std::string
 	}
 }
 
-std::tuple<string, string, ShvNodeDescr> ShvTypeInfo::findPropertyDescription(const std::string &device_type, const std::string &property_path) const
+std::tuple<string, string, ShvPropertyDescr> ShvTypeInfo::findPropertyDescription(const std::string &device_type, const std::string &property_path) const
 {
 	auto cut_prefix = [](const string &path, const string &prefix) {
 		if(prefix.size() < path.size()) {
@@ -738,7 +739,7 @@ ShvTypeDescr ShvTypeInfo::findTypeDescription(const std::string &type_name) cons
 
 ShvTypeDescr ShvTypeInfo::typeDescriptionForPath(const std::string &shv_path) const
 {
-	return findTypeDescription(nodeDescriptionForPath(shv_path).typeName());
+	return findTypeDescription(propertyDescriptionForPath(shv_path).typeName());
 }
 
 RpcValue ShvTypeInfo::extraTagsForPath(const std::string &shv_path) const
@@ -777,10 +778,10 @@ RpcValue ShvTypeInfo::typesAsRpcValue() const
 }
 
 static const char *VERSION = "version";
-static const char *TYPES = "types";
-static const char *DEVICES = "devices";
-static const char *NODES = "nodes";
-static const char *PATHS = "paths";
+static const char *PATHS = "paths"; // SHV2
+static const char *TYPES = "types"; // SHV2 + SHV3
+static const char *DEVICE_PATHS = "devicePaths";
+static const char *DEVICE_PROPERTIES = "deviceProperties";
 static const char *EXTRA_TAGS = "extraTags";
 static const char *SYSTEM_PATHS_ROOTS = "systemPathsRoots";
 static const char *BLACKLISTED_PATHS = "blacklistedPaths";
@@ -794,7 +795,7 @@ RpcValue ShvTypeInfo::toRpcValue() const
 		for(const auto &kv : m_devicePaths) {
 			m[kv.first] = kv.second;
 		}
-		map[DEVICES] = std::move(m);
+		map[DEVICE_PATHS] = std::move(m);
 	}
 	{
 		RpcValue::Map m;
@@ -805,7 +806,7 @@ RpcValue ShvTypeInfo::toRpcValue() const
 			}
 			m[device_type] = dev_properties;
 		}
-		map[NODES] = std::move(m);
+		map[DEVICE_PROPERTIES] = std::move(m);
 	}
 	map[EXTRA_TAGS] = m_extraTags;
 	{
@@ -834,13 +835,13 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 			}
 		}
 		{
-			const RpcValue::Map &m = map.value(DEVICES).asMap();
+			const RpcValue::Map &m = map.value(DEVICE_PATHS).asMap();
 			for(const auto &kv : m) {
 				ret.m_devicePaths[kv.first] = kv.second.asString();
 			}
 		}
 		{
-			const RpcValue::Map &m = map.value(NODES).asMap();
+			const RpcValue::Map &m = map.value(DEVICE_PROPERTIES).asMap();
 			for(const auto &[device_type, prop_map] : m) {
 				const RpcValue::Map &pm = prop_map.asMap();
 				for(const auto &[property_path, node_descr] : pm) {

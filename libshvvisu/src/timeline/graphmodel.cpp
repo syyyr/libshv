@@ -243,7 +243,7 @@ void GraphModel::appendValueShvPath(const std::string &shv_path, Sample &&sample
 	int ch_ix = pathToChannelIndex(shv_path);
 	if(ch_ix < 0) {
 		if(isAutoCreateChannels()) {
-			auto type_name = m_typeInfo.nodeDescriptionForPath(shv_path).typeName();
+			auto type_name = m_typeInfo.propertyDescriptionForPath(shv_path).typeName();
 			shvMessage() << "Auto append channel:" << shv_path << "type:" << type_name;
 			appendChannel(shv_path, std::string(), type_name);
 			ch_ix = channelCount() - 1;

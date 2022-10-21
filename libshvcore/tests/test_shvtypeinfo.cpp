@@ -176,7 +176,7 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 		//DOCTEST_SUBCASE("Node descriptions")
 		{
 			string field_name;
-			auto nd = type_info.nodeDescriptionForPath("heating/group/ESHS_Z1/status/errorAutomaticControl", &field_name);
+			auto nd = type_info.propertyDescriptionForPath("heating/group/ESHS_Z1/status/errorAutomaticControl", &field_name);
 			INFO("nodeDescriptionForPath: ", nd.toRpcValue().toCpon());
 			//CAPTURE(nd.toRpcValue().toCpon());
 			REQUIRE(nd.isValid() == true);
