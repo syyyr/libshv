@@ -149,7 +149,7 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 				REQUIRE(pi.propertyPath.empty());
 				REQUIRE(pi.fieldPath.empty());
 			}
-			REQUIRE(type_info.nodeDescriptionForPath("devices/signal/SG01/symbol/P80Y/status").typeName() == "StatusSignalSymbolP80Y");
+			REQUIRE(type_info.propertyDescriptionForPath("devices/signal/SG01/symbol/P80Y/status").typeName() == "StatusSignalSymbolP80Y");
 		}
 #endif
 		{
@@ -167,7 +167,7 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 		}
 	}
 
-	DOCTEST_SUBCASE("Invalid result for nodeDescriptionForPath(...) function")
+	DOCTEST_SUBCASE("Invalid result for propertyDescriptionForPath(...) function")
 	{
 		auto rv = read_cpon_file(FILES_DIR + "/hel002_nodesTree.cpon");
 		auto type_info = ShvTypeInfo::fromRpcValue(rv);
@@ -177,7 +177,7 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 		{
 			string field_name;
 			auto nd = type_info.propertyDescriptionForPath("heating/group/ESHS_Z1/status/errorAutomaticControl", &field_name);
-			INFO("nodeDescriptionForPath: ", nd.toRpcValue().toCpon());
+			INFO("propertyDescriptionForPath: ", nd.toRpcValue().toCpon());
 			//CAPTURE(nd.toRpcValue().toCpon());
 			REQUIRE(nd.isValid() == true);
 			REQUIRE(nd.typeName() == "StatusHeatingGroupNew");
