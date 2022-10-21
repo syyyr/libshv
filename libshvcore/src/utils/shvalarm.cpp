@@ -104,7 +104,7 @@ vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const std::
 
 std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const std::string &shv_path, const std::string &type_name, const chainpack::RpcValue &value)
 {
-	if(ShvTypeDescr type_descr = type_info.typeDescriptionForName(type_name); type_descr.isValid()) {
+	if(ShvTypeDescr type_descr = type_info.findTypeDescription(type_name); type_descr.isValid()) {
 		if (type_descr.type() == ShvTypeDescr::Type::BitField) {
 			vector<ShvAlarm> alarms;
 			auto flds = type_descr.fields();

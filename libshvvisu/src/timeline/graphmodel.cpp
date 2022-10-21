@@ -203,7 +203,7 @@ void GraphModel::endAppendValues()
 		ChannelInfo &chi = channelInfo(i);
 		if(!chi.typeDescr.isValid()) {
 			auto type_name = guessTypeName(i);
-			chi.typeDescr = typeInfo().typeDescriptionForName(type_name.toStdString());
+			chi.typeDescr = typeInfo().findTypeDescription(type_name.toStdString());
 		}
 	}
 }

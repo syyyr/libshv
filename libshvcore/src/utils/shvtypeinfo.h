@@ -160,30 +160,33 @@ class SHVCORE_DECL_EXPORT ShvTypeInfo
 {
 public:
 	ShvTypeInfo() {}
-	ShvTypeInfo(std::map<std::string, ShvTypeDescr> &&types, std::map<std::string, ShvNodeDescr> &&node_descriptions)
-		: m_types(std::move(types))
-		, m_nodeDescriptions(std::move(node_descriptions))
-	{}
 
-	bool isValid() const { return !(m_types.empty() && m_devicePaths.empty() && m_nodeDescriptions.empty()); }
+	static ShvTypeInfo fromVersion2(std::map<std::string, ShvTypeDescr> &&types, std::map<std::string, ShvNodeDescr> &&node_descriptions);
+
+	bool isValid() const { return !(m_types.empty() && m_devicePaths.empty() && m_deviceProperties.empty()); }
 
 	const std::map<std::string, std::string>& devicePaths() const { return m_devicePaths; }
 	const std::map<std::string, ShvTypeDescr>& types() const { return m_types; }
-	const std::map<std::string, ShvNodeDescr>& nodeDescriptions() const { return m_nodeDescriptions; }
+	const std::map<std::string, ShvNodeDescr>& devicePropertyDescriptions(const std::string &device_type) const;
 	const std::map<std::string, std::string>& systemPathsRoots() const { return m_systemPathsRoots; }
 	const std::map<std::string, shv::chainpack::RpcValue>& extraTags() const { return m_extraTags; }
 
 	ShvTypeInfo& setDevicePath(const std::string &device_path, const std::string &device_type);
-	ShvTypeInfo& setNodeDescription(const ShvNodeDescr &node_descr, const std::string &node_path, const std::string &device_type = {} );
+	ShvTypeInfo& setDevicePropertyDescription(const std::string &device_type, const std::string &property_path, const ShvNodeDescr &node_descr);
 	ShvTypeInfo& setExtraTags(const std::string &node_path, const shv::chainpack::RpcValue &tags);
 	shv::chainpack::RpcValue extraTags(const std::string &node_path) const;
 	ShvTypeInfo& setTypeDescription(const ShvTypeDescr &type_descr, const std::string &type_name);
 	ShvNodeDescr nodeDescriptionForPath(const std::string &shv_path, std::string *p_field_name = nullptr) const;
-	ShvTypeDescr typeDescriptionForName(const std::string &type_name) const;
+
+	std::tuple<std::string, std::string, std::string> findDeviceType(const std::string &shv_path) const;
+	std::tuple<std::string, std::string, ShvNodeDescr> findPropertyDescription(const std::string &device_type, const std::string &property_path) const;
+	ShvTypeDescr findTypeDescription(const std::string &type_name) const;
+
 	ShvTypeDescr typeDescriptionForPath(const std::string &shv_path) const;
 	shv::chainpack::RpcValue extraTagsForPath(const std::string &shv_path) const;
 	std::string findSystemPath(const std::string &shv_path) const;
 	bool isPathBlacklisted(const std::string &shv_path) const;
+	void setBlacklist(const std::string &shv_path, const chainpack::RpcValue &blacklist);
 
 	struct SHVCORE_DECL_EXPORT PathInfo
 	{
@@ -202,20 +205,20 @@ public:
 	shv::chainpack::RpcValue applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums = true) const;
 	shv::chainpack::RpcValue applyTypeDescription(const shv::chainpack::RpcValue &val, const ShvTypeDescr &type_descr, bool translate_enums = true) const;
 
-	void forEachDeviceProperty(const std::string &device_path, std::function<void (const std::string &property_path, const ShvNodeDescr &node_descr)> fn) const;
-	void forEachNode(std::function<void (const std::string &shv_path, const ShvNodeDescr &node_descr)> fn) const;
+	void forEachDeviceProperty(const std::string &device_type, std::function<void (const std::string &property_path, const ShvNodeDescr &node_descr)> fn) const;
+	void forEachProperty(std::function<void (const std::string &shv_path, const ShvNodeDescr &node_descr)> fn) const;
 private:
-	std::string findDeviceType(const std::string &shv_path, std::string *p_property_path = nullptr) const;
-	ShvNodeDescr findNodeDescription(const std::string &path, std::string *p_field_name = nullptr) const;
-	//ShvNodeDescr nodeDescriptionForDevice(const std::string &device_type, const std::string &property_path, std::string *p_field_name = nullptr) const;
 	static ShvTypeInfo fromNodesTree(const chainpack::RpcValue &v);
 	void fromNodesTree_helper(const shv::chainpack::RpcValue &node, const std::string &shv_path, const std::string &recent_device_type, const std::string &recent_device_path, const shv::chainpack::RpcValue::Map &node_types);
 private:
-	std::map<std::string, ShvTypeDescr> m_types; // type_name -> type_description
-	std::map<std::string, std::string> m_devicePaths; // path -> deviceType
-	std::map<std::string, ShvNodeDescr> m_nodeDescriptions; // device-type/device-property-path -> node_descr or shv-path -> node-descr
+	std::map<std::string, ShvTypeDescr> m_types; // type-name -> type-description
+	std::map<std::string, std::string> m_devicePaths; // path -> device-type
+	using DeviceProperties = std::map<std::string, ShvNodeDescr>;
+	using DevicePropertiesMap = std::map<std::string, DeviceProperties>;
+	DevicePropertiesMap m_deviceProperties; // device-property -> node_descr
 	std::map<std::string, shv::chainpack::RpcValue> m_extraTags; // shv-path -> tags
 	std::map<std::string, std::string> m_systemPathsRoots; // shv-path-root -> system-path
+	std::map<std::string, chainpack::RpcValue> m_blacklistedPaths; // shv-path -> blacklist
 };
 
 // backward compatibility

@@ -27,7 +27,7 @@ static const char* KEY_FIELDS = "fields";
 static const char* KEY_SAMPLE_TYPE = "sampleType";
 static const char* KEY_TAGS = "tags";
 static const char* KEY_METHODS = "methods";
-//static const char* KEY_BLACKLIST = "blacklist";
+static const char* KEY_BLACKLIST = "blacklist";
 static const char* KEY_DEC_PLACES = "decPlaces";
 static const char* KEY_VISUAL_STYLE = "visualStyle";
 static const char* KEY_ALARM = "alarm";
@@ -574,32 +574,46 @@ typename map<string, T>::const_iterator find_longest_prefix(const map<string, T>
 
 bool ShvTypeInfo::isPathBlacklisted(const std::string &shv_path) const
 {
-	auto pi = pathInfo(shv_path);
-	if(pi.devicePath.empty()) {
-		return false;
-	}
-	if(auto it = m_extraTags.find(pi.devicePath); it == m_extraTags.cend()) {
-		return false;
-	}
-	else {
-		auto prop_path = shv::core::Utils::joinPath(pi.propertyPath, pi.fieldPath);
-		auto black_list = it->second.asMap().value("blacklist");
-		if(black_list.isList()) {
-			for(const auto &path : black_list.asList()) {
-				if(shv::core::utils::ShvPath::startsWithPath(prop_path, path.asString())) {
-					return true;
-				}
-			}
-		}
-		else if(black_list.isMap()) {
-			for(const auto &[path, val] : black_list.asMap()) {
-				if(shv::core::utils::ShvPath::startsWithPath(prop_path, path)) {
-					return true;
-				}
-			}
+	for(const auto &[path, _] : m_blacklistedPaths) {
+		if(shv::core::utils::ShvPath::startsWithPath(shv_path, path)) {
+			return true;
 		}
 	}
 	return false;
+}
+
+void ShvTypeInfo::setBlacklist(const std::string &shv_path, const chainpack::RpcValue &blacklist)
+{
+	if(blacklist.isList()) {
+		for(const auto &path : blacklist.asList()) {
+			m_blacklistedPaths[shv::core::Utils::joinPath(shv_path, path.asString())];
+		}
+	}
+	else if(blacklist.isMap()) {
+		for(const auto &[path, val] : blacklist.asMap()) {
+			m_blacklistedPaths[shv::core::Utils::joinPath(shv_path, path)] = val;
+		}
+	}
+}
+
+ShvTypeInfo ShvTypeInfo::fromVersion2(std::map<std::string, ShvTypeDescr> &&types, std::map<std::string, ShvNodeDescr> &&node_descriptions)
+{
+	ShvTypeInfo ret;
+	ret.m_types = std::move(types);
+	ret.m_devicePaths[""] = "";
+	ret.m_deviceProperties[""] = std::move(node_descriptions);
+	return ret;
+}
+
+const std::map<string, ShvNodeDescr> &ShvTypeInfo::devicePropertyDescriptions(const std::string &device_type) const
+{
+	if(auto it = m_deviceProperties.find(device_type); it == m_deviceProperties.end()) {
+		static DeviceProperties empty;
+		return empty;
+	}
+	else {
+		return it->second;
+	}
 }
 
 ShvTypeInfo &ShvTypeInfo::setDevicePath(const std::string &device_path, const std::string &device_type)
@@ -608,13 +622,9 @@ ShvTypeInfo &ShvTypeInfo::setDevicePath(const std::string &device_path, const st
 	return *this;
 }
 
-ShvTypeInfo &ShvTypeInfo::setNodeDescription(const ShvLogNodeDescr &node_descr, const std::string &node_path, const std::string &device_type)
+ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device_type, const std::string &property_path, const ShvNodeDescr &node_descr)
 {
-	string path = node_path;
-	if(!device_type.empty()) {
-		path = path.empty()? device_type: device_type + '/' + path;
-	}
-	m_nodeDescriptions[path] = node_descr;
+	m_deviceProperties[device_type][property_path] = node_descr;
 	return *this;
 }
 
@@ -648,45 +658,16 @@ ShvTypeInfo &ShvTypeInfo::setTypeDescription(const ShvTypeDescr &type_descr, con
 
 ShvTypeInfo::PathInfo ShvTypeInfo::pathInfo(const std::string &shv_path) const
 {
-	auto cut_field_path = [](const string &property_path, const string &field_path) {
-		if(!field_path.empty()) {
-			auto property_path_len = property_path.size() - field_path.size();
-			if(property_path_len > 0)
-				property_path_len--; // remove also slash
-			return property_path.substr(0, property_path_len);
-		}
-		return property_path;
-	};
 	PathInfo ret;
-	ret.nodeDescription = findNodeDescription(shv_path, &ret.fieldPath);
-	if(ret.nodeDescription.isValid()) {
-		// path found in nodes directly
-		ret.deviceType = findDeviceType(shv_path, &ret.propertyPath);
-		if(ret.deviceType.empty()) {
-			// not device node
-			ret.propertyPath = cut_field_path(shv_path, ret.fieldPath);
-		}
-		else {
-			// device path override
-			ret.devicePath = cut_field_path(shv_path, ret.propertyPath);
-			ret.propertyPath = cut_field_path(ret.propertyPath, ret.fieldPath);
-		}
-	}
-	else {
-		// try find tath in devices
-		ret.deviceType = findDeviceType(shv_path, &ret.propertyPath);
-		if(ret.deviceType.empty()) {
-			// not device node
-			ret = {};
-		}
-		else {
-			// device path found
-			ret.devicePath = cut_field_path(shv_path, ret.propertyPath);
-			auto nodes_path = shv::core::Utils::joinPath(ret.deviceType, ret.propertyPath);
-			ret.nodeDescription = findNodeDescription(nodes_path, &ret.fieldPath);
-			if(ret.nodeDescription.isValid()) {
-				ret.propertyPath = cut_field_path(ret.propertyPath, ret.fieldPath);
-			}
+	const auto &[device_path, device_type, property_path] = findDeviceType(shv_path);
+	if(!device_type.empty()) {
+		ret.devicePath = device_path;
+		ret.deviceType = device_type;
+		const auto &[own_property_path, field_path, node_descr] = findPropertyDescription(device_type, property_path);
+		if(node_descr.isValid()) {
+			ret.propertyPath = own_property_path;
+			ret.fieldPath = field_path;
+			ret.nodeDescription = node_descr;
 		}
 	}
 	return ret;
@@ -715,21 +696,39 @@ ShvLogNodeDescr ShvTypeInfo::nodeDescriptionForPath(const std::string &shv_path,
 	return info.nodeDescription;
 }
 
-string ShvTypeInfo::findDeviceType(const std::string &shv_path, std::string *p_property_path) const
+std::tuple<string, string, string> ShvTypeInfo::findDeviceType(const std::string &shv_path) const
 {
 	if(auto it = find_longest_prefix(m_devicePaths, shv_path); it == m_devicePaths.cend()) {
 		return {};
 	}
 	else {
-		string prefix = it->first;
-		string device_type = it->second;
-		if(p_property_path)
-			*p_property_path = String(shv_path).mid(prefix.size() + 1);
-		return device_type;
+		const string prefix = it->first;
+		const string device_type = it->second;
+		const string property_path = String(shv_path).mid(prefix.size() + 1);
+		return make_tuple(prefix, device_type, property_path);
 	}
 }
 
-ShvTypeDescr ShvTypeInfo::typeDescriptionForName(const std::string &type_name) const
+std::tuple<string, string, ShvNodeDescr> ShvTypeInfo::findPropertyDescription(const std::string &device_type, const std::string &property_path) const
+{
+	auto cut_prefix = [](const string &path, const string &prefix) {
+		if(prefix.size() < path.size()) {
+			return path.substr(prefix.size() + 1);
+		}
+		return string();
+	};
+	if(auto it2 = m_deviceProperties.find(device_type); it2 != m_deviceProperties.end()) {
+		const DeviceProperties &dev_prop = it2->second;
+		if(auto it3 = find_longest_prefix(dev_prop, property_path); it3 != dev_prop.cend()) {
+			const string own_property_path = it3->first;
+			const string field_path = cut_prefix(property_path, own_property_path);
+			return make_tuple(own_property_path, field_path, it3->second);
+		}
+	}
+	return {};
+}
+
+ShvTypeDescr ShvTypeInfo::findTypeDescription(const std::string &type_name) const
 {
 	if(auto it = m_types.find(type_name); it == m_types.end())
 		return ShvTypeDescr(type_name);
@@ -739,7 +738,7 @@ ShvTypeDescr ShvTypeInfo::typeDescriptionForName(const std::string &type_name) c
 
 ShvTypeDescr ShvTypeInfo::typeDescriptionForPath(const std::string &shv_path) const
 {
-	return typeDescriptionForName(nodeDescriptionForPath(shv_path).typeName());
+	return findTypeDescription(nodeDescriptionForPath(shv_path).typeName());
 }
 
 RpcValue ShvTypeInfo::extraTagsForPath(const std::string &shv_path) const
@@ -784,6 +783,7 @@ static const char *NODES = "nodes";
 static const char *PATHS = "paths";
 static const char *EXTRA_TAGS = "extraTags";
 static const char *SYSTEM_PATHS_ROOTS = "systemPathsRoots";
+static const char *BLACKLISTED_PATHS = "blacklistedPaths";
 
 RpcValue ShvTypeInfo::toRpcValue() const
 {
@@ -798,8 +798,12 @@ RpcValue ShvTypeInfo::toRpcValue() const
 	}
 	{
 		RpcValue::Map m;
-		for(const auto &kv : m_nodeDescriptions) {
-			m[kv.first] = kv.second.toRpcValue();
+		for(const auto &[device_type, property_map] : m_deviceProperties) {
+			RpcValue::Map dev_properties;
+			for(const auto &[property_path, node_descr] : property_map) {
+				dev_properties[property_path] = node_descr.toRpcValue();
+			}
+			m[device_type] = dev_properties;
 		}
 		map[NODES] = std::move(m);
 	}
@@ -811,6 +815,7 @@ RpcValue ShvTypeInfo::toRpcValue() const
 		}
 		map[SYSTEM_PATHS_ROOTS] = std::move(m);
 	}
+	map[BLACKLISTED_PATHS] = m_blacklistedPaths;
 	RpcValue ret = map;
 	ret.setMetaValue(VERSION, 3);
 	return ret;
@@ -836,8 +841,11 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 		}
 		{
 			const RpcValue::Map &m = map.value(NODES).asMap();
-			for(const auto &kv : m) {
-				ret.m_nodeDescriptions[kv.first] = ShvLogNodeDescr::fromRpcValue(kv.second);
+			for(const auto &[device_type, prop_map] : m) {
+				const RpcValue::Map &pm = prop_map.asMap();
+				for(const auto &[property_path, node_descr] : pm) {
+					ret.m_deviceProperties[device_type][property_path] = ShvLogNodeDescr::fromRpcValue(node_descr);
+				}
 			}
 		}
 		ret.m_extraTags = map.value(EXTRA_TAGS).asMap();
@@ -847,6 +855,7 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 				ret.m_systemPathsRoots[key] = val.asString();
 			}
 		}
+		ret.m_blacklistedPaths = map.value(BLACKLISTED_PATHS).asMap();
 		return ret;
 	}
 	else if(map.hasKey(PATHS) && map.hasKey(TYPES)) {
@@ -863,7 +872,7 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 			for(const auto &[path, val] : m) {
 				auto nd = ShvLogNodeDescr::fromRpcValue(val);
 				nd.setTypeName(val.asMap().value("type").asString());
-				ret.m_nodeDescriptions[path] = nd;
+				ret.m_deviceProperties[""][path] = nd;
 			}
 		}
 		return ret;
@@ -875,7 +884,7 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 
 RpcValue ShvTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums) const
 {
-	ShvTypeDescr td = typeDescriptionForName(type_name);
+	ShvTypeDescr td = findTypeDescription(type_name);
 	return applyTypeDescription(val, td, translate_enums);
 }
 
@@ -942,76 +951,40 @@ RpcValue ShvTypeInfo::applyTypeDescription(const chainpack::RpcValue &val, const
 	return val;
 }
 
-void ShvTypeInfo::forEachDeviceProperty(const std::string &device_path, std::function<void (const std::string &, const ShvLogNodeDescr &)> fn) const
+void ShvTypeInfo::forEachDeviceProperty(const std::string &device_type, std::function<void (const std::string &, const ShvLogNodeDescr &)> fn) const
 {
-	if(auto it = m_devicePaths.find(device_path); it == m_devicePaths.end()) {
+	if(auto it = m_deviceProperties.find(device_type); it == m_deviceProperties.end()) {
 		// device path invalid
 		return;
 	}
 	else {
-		auto device_type = it->second;
-		ShvPath::forEachDirAndSubdirs(nodeDescriptions(), device_type, [=](auto it_nd) {
-			string property_path = it->first;
-			property_path = property_path.substr(device_type.size());
-			if(property_path.size() > 0 && property_path[0] == '/')
-				property_path = property_path.substr(1);
-			string full_path = shv::core::Utils::joinPath(device_path, property_path);
-			if(auto it2 = m_nodeDescriptions.find(full_path); it2 == m_nodeDescriptions.end()) {
-				// overlay does not exist
-				const ShvLogNodeDescr &node_descr = it_nd->second;
-				fn(property_path, node_descr);
-			}
-			else {
-				const ShvLogNodeDescr &node_descr = it2->second;
-				fn(property_path, node_descr);
-			}
-		});
+		for(const auto &[property_path, node_descr] : it->second) {
+			fn(property_path, node_descr);
+		};
 	}
 }
 
-void ShvTypeInfo::forEachNode(std::function<void (const std::string &shv_path, const ShvLogNodeDescr &node_descr)> fn) const
+void ShvTypeInfo::forEachProperty(std::function<void (const std::string &shv_path, const ShvLogNodeDescr &node_descr)> fn) const
 {
-	map<string, vector<string>> device_type_to_path;
-	for(const auto& [path, device_id] : m_devicePaths)
-		device_type_to_path[device_id].push_back(path);
-	for(const auto& [path, node_descr] : m_nodeDescriptions) {
-		string device_type;
-		if(auto ix = path.find('/'); ix != string::npos) {
-			device_type = path.substr(0, ix);
-			string property_id = path.substr(ix + 1);
-			if(auto it = device_type_to_path.find(device_type); it == device_type_to_path.end()) {
-				device_type = {};
+	for(const auto& [device_path, device_type] : m_devicePaths) {
+		if(auto it = m_deviceProperties.find(device_type); it != m_deviceProperties.end()) {
+			for(const auto& [property_path, node_descr] : it->second) {
+				const auto shv_path = shv::core::Utils::joinPath(device_path, property_path);
+				fn(shv_path, node_descr);
 			}
-			else {
-				// device paths
-				for(const auto &device_path : it->second) {
-					string shv_path = shv::core::Utils::joinPath(device_path, property_id);
-					fn(shv_path, node_descr);
-				}
-			}
-		}
-		if(device_type.empty()) {
-			// direct node path
-			fn(path, node_descr);
 		}
 	}
 }
 
-ShvNodeDescr ShvTypeInfo::findNodeDescription(const std::string &path, std::string *p_field_name) const
+/*
+ShvNodeDescr ShvTypeInfo::findNodeDescription(const std::string &shv_path, std::string *p_field_name) const
 {
-	//string property = property_path.empty()? device_type: device_type + '/' + property_path;
-	if(auto it = find_longest_prefix(m_nodeDescriptions, path); it == m_nodeDescriptions.cend()) {
-		return {};
-	}
-	else {
-		string prefix = it->first;
-		const ShvLogNodeDescr &node_descr = it->second;
-		if(p_field_name)
-			*p_field_name = String(path).mid(prefix.size() + 1);
-		return node_descr;
-	}
+	auto pi = pathInfo(shv_path);
+	if(p_field_name)
+		*p_field_name = pi.fieldPath;
+	return pi.nodeDescription;
 }
-
+*/
 void ShvTypeInfo::fromNodesTree_helper(const shv::chainpack::RpcValue &node,
 						  const std::string &shv_path,
 						  const std::string &recent_device_type,
@@ -1062,30 +1035,35 @@ void ShvTypeInfo::fromNodesTree_helper(const shv::chainpack::RpcValue &node,
 		auto node_descr = shv::core::utils::ShvLogNodeDescr::fromRpcValue(property_descr, &extra_tags);
 		if(node_descr.isValid()) {
 			if(current_device_type.empty()) {
-				setNodeDescription(node_descr, shv_path, {});
+				setDevicePropertyDescription("", shv_path, node_descr);
 			}
 			else {
-				string node_path = String(shv_path).mid(current_device_path.size() + 1);
-				string path_rest;
-				auto existing_node_descr = findNodeDescription(shv::core::Utils::joinPath(current_device_type, node_path), &path_rest);
-				if(existing_node_descr.isValid() && path_rest.empty()) {
+				string property_path = String(shv_path).mid(current_device_path.size() + 1);
+				const auto &[own_property_path, field_path, existing_node_descr] = findPropertyDescription(current_device_type, property_path);
+				if(existing_node_descr.isValid() && field_path.empty()) {
+					assert(property_path == own_property_path);
 					if(existing_node_descr == node_descr) {
 						// node descriptions are the same, no action is needed
 					}
 					else {
 						// node descriptions are different, we must create overlay node descr
-						setNodeDescription(node_descr, shv_path, {});
+						shvError() << "Conflicting declaration for device type:" << current_device_type
+								   << "on path:" << shv_path << "ignored:" << node_descr.toRpcValue().toCpon();
 					}
 				}
 				else {
 					// node description does not exist, create new one
-					setNodeDescription(node_descr, node_path, current_device_type);
+					setDevicePropertyDescription(current_device_type, property_path, node_descr);
 				}
 			}
 		}
 		auto system_path = extra_tags.take(SYSTEM_PATH).asString();
 		if(!system_path.empty()) {
 			m_systemPathsRoots[shv_path] = system_path;
+		}
+		const auto blacklist = extra_tags.take(KEY_BLACKLIST);
+		if(blacklist.isValid()) {
+			setBlacklist(shv_path, blacklist);
 		}
 		if(!extra_tags.empty()) {
 			setExtraTags(shv_path, extra_tags);

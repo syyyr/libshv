@@ -58,8 +58,7 @@ struct Channel
 
 std::map<string, Channel> channels;
 
-ShvTypeInfo typeInfo
-{
+ShvTypeInfo typeInfo = ShvTypeInfo::fromVersion2(
 	// types
 	{
 		{
@@ -112,8 +111,8 @@ ShvTypeInfo typeInfo
 		{ "someError", {"Bool"} },
 		{ "vetra/status", {"VetraStatus"} },
 		{ "vetra/vehicleDetected", {"VehicleData"} },
-	},
-};
+	}
+);
 
 void init_channels()
 {

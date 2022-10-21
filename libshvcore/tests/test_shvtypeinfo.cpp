@@ -65,7 +65,10 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 		auto rv = read_cpon_file(FILES_DIR + "/nodesTree.cpon");
 		auto type_info = ShvTypeInfo::fromRpcValue(rv);
 		write_cpon_file(out_path + "/typeInfo.cpon", type_info.toRpcValue());
-
+		{
+			auto type_info2 = ShvTypeInfo::fromRpcValue(rv);
+			REQUIRE(type_info.toRpcValue() == type_info2.toRpcValue());
+		}
 		{
 			auto pi = type_info.pathInfo("devices/tc/TC01");
 			REQUIRE(pi.deviceType == "TC_G3");
@@ -108,17 +111,18 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 			REQUIRE(pi.propertyPath == "status");
 			REQUIRE(pi.fieldPath == "routeState");
 
-			auto td = type_info.typeDescriptionForName(pi.nodeDescription.typeName());
+			auto td = type_info.findTypeDescription(pi.nodeDescription.typeName());
 			REQUIRE(td.type() == ShvTypeDescr::Type::BitField);
 			auto fd = td.field(pi.fieldPath);
 			REQUIRE(fd.typeName() == "EnumRouteState");
 
-			auto td2 = type_info.typeDescriptionForName(fd.typeName());
+			auto td2 = type_info.findTypeDescription(fd.typeName());
 			REQUIRE(td2.type() == ShvTypeDescr::Type::Enum);
 			auto fd2 = td2.field("Ready");
 			REQUIRE(fd2.value() == 3);
 			REQUIRE(fd2.label() == "Ready");
 		}
+#ifdef PROPERTY_OVERRIDE_IMPLEMENTED
 		{
 			// node description override
 			{
@@ -147,10 +151,19 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 			}
 			REQUIRE(type_info.nodeDescriptionForPath("devices/signal/SG01/symbol/P80Y/status").typeName() == "StatusSignalSymbolP80Y");
 		}
+#endif
 		{
 			// extra tags
 			auto et = type_info.extraTagsForPath("devices/tc/TC04");
 			REQUIRE(et.asMap().value("brclab").asMap().value("url").asString() == "brclab://192.168.1.10:4000/4");
+		}
+		{
+			// forEachNode
+			type_info.forEachProperty([](const std::string &shv_path, const ShvLogNodeDescr &node_descr) {
+				CAPTURE(shv_path  + " --> " + node_descr.typeName());
+				if(!shv_path.empty())
+					REQUIRE(shv_path[0] != std::toupper(shv_path[0]));
+			});
 		}
 	}
 
@@ -192,19 +205,7 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 		write_cpon_file(out_path + "/ghe022_typeInfo.cpon", type_info.toRpcValue());
 
 		{
-			// extra tags shall contain 'blacklist' key
-			bool blacklist_found = false;
-			for(const auto &[key, val] : type_info.extraTags()) {
-				if(val.asMap().hasKey("blacklist")) {
-					blacklist_found = true;
-					break;
-				}
-			}
-			REQUIRE(blacklist_found);
-			CAPTURE(type_info.extraTagsForPath("devices/signal/SA03/symbol/WHITE").toCpon());
-			REQUIRE(type_info.extraTagsForPath("devices/signal/SA03/symbol/WHITE").asMap().value("blacklist").asMap() == RpcValue::Map{{"config/currentLimitError", nullptr}, {"status/errorCurrent", nullptr}});
-		}
-		{
+			REQUIRE(type_info.isPathBlacklisted("devices/signal/SA03/symbol/WHITE/config/currentLimitError") == true);
 			REQUIRE(type_info.isPathBlacklisted("foo/bar") == false);
 
 			auto pi = type_info.pathInfo("devices/tc/TC01/status/claimed");
