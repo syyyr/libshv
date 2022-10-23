@@ -14,7 +14,7 @@
 
 #include <cstddef>
 
-namespace shv::chainpack { class AccessGrant; }
+namespace shv::chainpack { struct AccessGrant; }
 namespace shv::core { namespace utils { class ShvJournalEntry; }}
 
 
