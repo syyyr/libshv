@@ -1,4 +1,5 @@
 #include "serialportsocket.h"
+#include <QHostAddress>
 #include <QSerialPort>
 #include <QUrl>
 
