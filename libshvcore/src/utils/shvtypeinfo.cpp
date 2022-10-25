@@ -630,7 +630,10 @@ ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device
 
 ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device_type, const std::string &property_path, const ShvPropertyDescr &property_descr)
 {
-	m_deviceProperties[device_type][property_path] = property_descr;
+	if(property_descr.isValid())
+		m_deviceProperties[device_type][property_path] = property_descr;
+	else
+		m_deviceProperties[device_type].erase(property_path);
 	return *this;
 }
 
