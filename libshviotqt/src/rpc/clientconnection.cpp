@@ -126,8 +126,8 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 
 	//if(cli_opts->isMetaTypeExplicit_isset())
 	//	cp::RpcMessage::setMetaTypeExplicit(cli_opts->isMetaTypeExplicit());
-	if(cli_opts->defaultRpcTimeout_isset()) {
-		cp::RpcDriver::setDefaultRpcTimeoutMsec(cli_opts->defaultRpcTimeout() * 1000);
+	if(cli_opts->rpcTimeout_isset()) {
+		cp::RpcDriver::setDefaultRpcTimeoutMsec(cli_opts->rpcTimeout() * 1000);
 		shvInfo() << "Default RPC timeout set to:" << cp::RpcDriver::defaultRpcTimeoutMsec() << "msec.";
 	}
 
@@ -219,6 +219,9 @@ void ClientConnection::open()
 	if(m_checkBrokerConnectedInterval > 0) {
 		shvInfo() << "Starting check-connected timer, interval:" << m_checkBrokerConnectedInterval/1000 << "sec.";
 		m_checkBrokerConnectedTimer->start(m_checkBrokerConnectedInterval);
+	}
+	else {
+		shvInfo() << "Check-connected timer DISABLED";
 	}
 }
 
