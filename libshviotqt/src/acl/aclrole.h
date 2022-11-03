@@ -20,7 +20,7 @@ struct SHVIOTQT_DECL_EXPORT AclRole
 	std::vector<std::string> roles;
 	shv::chainpack::RpcValue profile;
 
-	AclRole() {}
+	AclRole() = default;
 	//AclRole(std::string n, int w = 0) : name(std::move(n)), weight(w) {}
 	//AclRole(std::string n, int w, std::vector<std::string> roles) : name(std::move(n)), weight(w), roles(std::move(roles)) {}
 	AclRole(int w) : weight(w) {}

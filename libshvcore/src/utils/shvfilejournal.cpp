@@ -124,9 +124,7 @@ static int64_t str_to_size(const std::string &str)
 
 const std::string ShvFileJournal::FILE_EXT = ".log2";
 
-ShvFileJournal::ShvFileJournal()
-{
-}
+ShvFileJournal::ShvFileJournal() = default;
 
 ShvFileJournal::ShvFileJournal(std::string device_id)
 {

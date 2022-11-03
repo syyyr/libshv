@@ -28,9 +28,7 @@ ShvNodeTree::ShvNodeTree(ShvNode *root, QObject *parent)
 		m_root->setParent(this);
 }
 
-ShvNodeTree::~ShvNodeTree()
-{
-}
+ShvNodeTree::~ShvNodeTree() = default;
 
 ShvNode *ShvNodeTree::mkdir(const ShvNode::String &path)
 {

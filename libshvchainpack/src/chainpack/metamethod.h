@@ -49,7 +49,7 @@ public:
 		};
 	};
 public:
-	MetaMethod() {}
+	MetaMethod() = default;
 	MetaMethod(std::string name, Signature ms, unsigned flags = 0
 				, const RpcValue &access_grant = Rpc::ROLE_BROWSE
 				, const std::string &description = {}

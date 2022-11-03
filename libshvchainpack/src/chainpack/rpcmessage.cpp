@@ -59,9 +59,7 @@ RpcMessage::RpcMessage(const RpcValue &val)
 	m_value = val;
 }
 
-RpcMessage::~RpcMessage()
-{
-}
+RpcMessage::~RpcMessage() = default;
 /*
 void RpcMessage::setMetaTypeExplicit(bool b)
 {
@@ -526,9 +524,7 @@ std::string RpcMessage::toCpon() const
 //==================================================================
 // RpcRequest
 //==================================================================
-RpcRequest::~RpcRequest()
-{
-}
+RpcRequest::~RpcRequest() = default;
 
 RpcRequest &RpcRequest::setMethod(const RpcValue::String &met)
 {
@@ -561,9 +557,7 @@ RpcRequest& RpcRequest::setParams(const RpcValue& p)
 //==================================================================
 // RpcNotify
 //==================================================================
-RpcSignal::~RpcSignal()
-{
-}
+RpcSignal::~RpcSignal() = default;
 
 void RpcSignal::write(AbstractStreamWriter &wr, const std::string &method, std::function<void (AbstractStreamWriter &)> write_params_callback)
 {
@@ -585,16 +579,12 @@ RpcException::RpcException(int err_code, const std::string &_msg, const std::str
 	, m_errorCode(err_code)
 {}
 
-RpcException::~RpcException()
-{
-}
+RpcException::~RpcException() = default;
 
 //==================================================================
 // RpcResponse
 //==================================================================
-RpcResponse::~RpcResponse()
-{
-}
+RpcResponse::~RpcResponse() = default;
 
 RpcResponse RpcResponse::forRequest(const RpcValue::MetaData &meta)
 {

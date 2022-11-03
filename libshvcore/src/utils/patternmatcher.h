@@ -14,7 +14,7 @@ namespace utils {
 class SHVCORE_DECL_EXPORT PatternMatcher
 {
 public:
-	PatternMatcher() {}
+	PatternMatcher() = default;
 	PatternMatcher(const ShvGetLogParams &filter);
 	bool isEmpty() const {return !isRegexError() && !m_usePathPatternRegEx && m_pathPatternWildCard.empty() && !m_useDomainPatternregEx;}
 	bool isRegexError() const {return  m_regexError;}

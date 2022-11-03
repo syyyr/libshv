@@ -56,7 +56,7 @@ public:
 	unsigned valueFlags = 0;
 	std::string userId;
 
-	ShvJournalEntry() {}
+	ShvJournalEntry() = default;
 	ShvJournalEntry(std::string path_, shv::chainpack::RpcValue value_, std::string domain_, int short_time, ValueFlags flags, int64_t epoch_msec = 0)
 		: epochMsec(epoch_msec)
 		, path(std::move(path_))

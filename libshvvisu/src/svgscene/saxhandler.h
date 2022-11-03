@@ -32,7 +32,7 @@ public:
 		CssAttributes styleAttributes;
 		bool itemCreated = false;
 
-		SvgElement() {}
+		SvgElement() = default;
 		SvgElement(const QString &n, bool created = false) : name(n), itemCreated(created) {}
 	};
 public:

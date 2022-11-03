@@ -81,7 +81,7 @@ private:
 		RpcValue::Type containerType = RpcValue::Type::Invalid;
 		int elementCount = 0;
 		bool isOneLiner = false;
-		ContainerState() {}
+		ContainerState() = default;
 		ContainerState(RpcValue::Type t, bool one_liner) : containerType(t), isOneLiner(one_liner) {}
 	};
 	std::vector<ContainerState> m_containerStates;

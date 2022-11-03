@@ -33,9 +33,7 @@ AclManagerSqlite::AclManagerSqlite(BrokerApp *broker_app)
 	checkAclTables();
 }
 
-AclManagerSqlite::~AclManagerSqlite()
-{
-}
+AclManagerSqlite::~AclManagerSqlite() = default;
 
 QSqlQuery AclManagerSqlite::execSql(const QString &query_str, bool throw_exc)
 {

@@ -22,7 +22,7 @@ public:
 
 	static const char *ALL_SERVICES;
 
-	AclAccessRule() {}
+	AclAccessRule() = default;
 	AclAccessRule(const std::string &path_pattern_, const std::string &method_ = std::string())
 		: pathPattern(path_pattern_), method(method_) {}
 	AclAccessRule(const std::string &path_pattern_, const std::string &method_, const shv::chainpack::AccessGrant &grant_)

@@ -92,9 +92,7 @@ CLIOptions::CLIOptions()
 	addOption("help").setType(cp::RpcValue::Type::Bool).setNames("-h", "--help").setComment("Print help");
 }
 
-CLIOptions::~CLIOptions()
-{
-}
+CLIOptions::~CLIOptions() = default;
 
 CLIOptions::Option& CLIOptions::addOption(const std::string &key, const CLIOptions::Option& opt)
 {

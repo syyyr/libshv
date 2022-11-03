@@ -6,9 +6,7 @@ namespace shv {
 namespace visu {
 namespace timeline {
 
-FullTextFilter::FullTextFilter()
-{
-}
+FullTextFilter::FullTextFilter() = default;
 
 const QString &FullTextFilter::pattern() const
 {

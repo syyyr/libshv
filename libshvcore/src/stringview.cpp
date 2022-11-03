@@ -31,13 +31,7 @@ StringView::StringView(const std::string &str, size_t start, size_t len)
 	normalize();
 }
 
-StringView &StringView::operator=(const StringView &o)
-{
-	m_str = o.m_str;
-	m_start = o.m_start;
-	m_length = o.m_length;
-	return *this;
-}
+StringView &StringView::operator=(const StringView &o) = default;
 
 bool StringView::operator==(const std::string &o) const
 {

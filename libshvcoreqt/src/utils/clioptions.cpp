@@ -113,9 +113,7 @@ CLIOptions::CLIOptions(QObject *parent)
 	//addOption("configDir").setType(QVariant::String).setNames("--config-dir").setComment("Directory where server config fiels are searched, default value: {app-dir-path}.");
 }
 
-CLIOptions::~CLIOptions()
-{
-}
+CLIOptions::~CLIOptions() = default;
 
 CLIOptions::Option& CLIOptions::addOption(const QString key, const CLIOptions::Option& opt)
 {

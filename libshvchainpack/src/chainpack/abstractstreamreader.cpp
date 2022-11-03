@@ -33,9 +33,7 @@ AbstractStreamReader::AbstractStreamReader(std::istream &in)
 	m_inCtx.custom_context = this;
 }
 
-AbstractStreamReader::~AbstractStreamReader()
-{
-}
+AbstractStreamReader::~AbstractStreamReader() = default;
 
 RpcValue AbstractStreamReader::read(std::string *error)
 {

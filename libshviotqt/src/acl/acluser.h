@@ -17,7 +17,7 @@ struct SHVIOTQT_DECL_EXPORT AclUser
 	AclPassword password;
 	std::vector<std::string> roles;
 
-	AclUser() {}
+	AclUser() = default;
 	AclUser(AclPassword p, std::vector<std::string> roles_)
 		: password(std::move(p))
 		, roles(std::move(roles_))

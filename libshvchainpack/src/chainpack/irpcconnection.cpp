@@ -12,9 +12,7 @@ IRpcConnection::IRpcConnection()
 {
 }
 
-IRpcConnection::~IRpcConnection()
-{
-}
+IRpcConnection::~IRpcConnection() = default;
 
 void IRpcConnection::sendSignal(std::string method, const RpcValue &params)
 {

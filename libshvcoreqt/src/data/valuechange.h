@@ -97,7 +97,7 @@ struct SHVCOREQT_DECL_EXPORT ValueChange
 	ValueChange(TimeStamp value_x, int value_y) : ValueChange(value_x, ValueY(value_y)) {}
 	ValueChange(TimeStamp value_x, double value_y) : ValueChange(value_x, ValueY(value_y)) {}
 	ValueChange(TimeStamp value_x, CustomData *value_y) : ValueChange(value_x, ValueY(value_y)) {}
-	ValueChange() {}
+	ValueChange() = default;
 };
 
 struct SHVCOREQT_DECL_EXPORT ValueXInterval

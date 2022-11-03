@@ -16,9 +16,7 @@ namespace shv {
 namespace core {
 namespace utils {
 
-ShvMemoryJournal::ShvMemoryJournal()
-{
-}
+ShvMemoryJournal::ShvMemoryJournal() = default;
 
 void ShvMemoryJournal::loadLog(const chainpack::RpcValue &log, bool append_records)
 {

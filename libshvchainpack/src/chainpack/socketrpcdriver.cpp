@@ -23,9 +23,7 @@ namespace cp = shv::chainpack;
 namespace shv {
 namespace chainpack {
 
-SocketRpcDriver::SocketRpcDriver()
-{
-}
+SocketRpcDriver::SocketRpcDriver() = default;
 
 SocketRpcDriver::~SocketRpcDriver()
 {

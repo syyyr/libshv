@@ -1960,7 +1960,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		int minY = 0;
 		int maxY = 0;
 
-		SamePixelValue() {}
+		SamePixelValue() = default;
 		SamePixelValue(int x_, int y_) : x(x_), y1(y_), y2(y_), minY(y_), maxY(y_) {}
 		SamePixelValue(const QPoint &p) : x(p.x()), y1(p.y()), y2(p.y()), minY(p.y()), maxY(p.y()) {}
 		bool isValid() const { return x != NO_X; }

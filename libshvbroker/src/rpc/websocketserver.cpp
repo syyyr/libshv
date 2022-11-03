@@ -29,9 +29,7 @@ WebSocketServer::WebSocketServer(SslMode secureMode, QObject *parent)
 	connect(this, &WebSocketServer::newConnection, this, &WebSocketServer::onNewConnection);
 }
 
-WebSocketServer::~WebSocketServer()
-{
-}
+WebSocketServer::~WebSocketServer() = default;
 
 bool WebSocketServer::start(int port)
 {

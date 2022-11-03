@@ -38,7 +38,7 @@ public:
 	static const char* valueFlagToString(ValueFlag flag);
 	static std::string valueFlagsToString(ValueFlags st);
 
-	DataChange() {}
+	DataChange() = default;
 	// ambiguous constructor for DataChange(const DataChange &) DataChange(const RpcValue &)
 	// better to assign value explicitelly
 	//DataChange(const RpcValue &val);

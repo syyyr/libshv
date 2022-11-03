@@ -69,7 +69,7 @@ namespace chainpack {
 class RpcValue::AbstractValueData
 {
 public:
-	virtual ~AbstractValueData() {}
+	virtual ~AbstractValueData() = default;
 
 	virtual RpcValue::Type type() const {return RpcValue::Type::Invalid;}
 
@@ -1050,12 +1050,14 @@ std::string RpcValue::DateTime::toIsoString(RpcValue::DateTime::MsecPolicy msec_
 #ifdef DEBUG_RPCVAL
 static int cnt = 0;
 #endif
+#ifdef DEBUG_RPCVAL
 RpcValue::MetaData::MetaData()
 {
-#ifdef DEBUG_RPCVAL
 	logDebugRpcVal() << ++cnt << "+++MM default" << this;
-#endif
 }
+#else
+RpcValue::MetaData::MetaData() = default;
+#endif
 
 RpcValue::MetaData::MetaData(const RpcValue::MetaData &o)
 {

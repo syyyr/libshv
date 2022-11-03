@@ -18,7 +18,7 @@ namespace utils {
 class SHVCORE_DECL_EXPORT ShvDescriptionBase
 {
 public:
-	ShvDescriptionBase() {}
+	ShvDescriptionBase() = default;
 	ShvDescriptionBase(const chainpack::RpcValue &v) : m_data(v) {}
 
 	bool isValid() const { return !m_data.asMap().empty(); }
@@ -38,7 +38,7 @@ class SHVCORE_DECL_EXPORT ShvFieldDescr : public ShvDescriptionBase
 {
 	using Super = ShvDescriptionBase;
 public:
-	ShvFieldDescr() {}
+	ShvFieldDescr() = default;
 	ShvFieldDescr(const std::string &n,
 				  const std::string &type_name = {},
 				  const chainpack::RpcValue &value = {},
@@ -87,7 +87,7 @@ public:
 	};
 	enum class SampleType {Invalid = 0, Continuous , Discrete};
 
-	ShvTypeDescr() {}
+	ShvTypeDescr() = default;
 	ShvTypeDescr(const std::string &type_name) : ShvTypeDescr(typeFromString(type_name)) {}
 	ShvTypeDescr(Type t, SampleType st = SampleType::Continuous, chainpack::RpcValue::Map &&tags = {})
 		: ShvTypeDescr(t, std::vector<ShvFieldDescr>(), st, std::move(tags)) {}
@@ -126,7 +126,7 @@ class SHVCORE_DECL_EXPORT ShvPropertyDescr : public ShvDescriptionBase
 {
 	using Super = ShvDescriptionBase;
 public:
-	ShvPropertyDescr() {}
+	ShvPropertyDescr() = default;
 	ShvPropertyDescr(const std::string &type_name) { setTypeName(type_name); }
 
 	std::string typeName() const;
@@ -159,7 +159,7 @@ public:
 class SHVCORE_DECL_EXPORT ShvTypeInfo
 {
 public:
-	ShvTypeInfo() {}
+	ShvTypeInfo() = default;
 
 	static ShvTypeInfo fromVersion2(std::map<std::string, ShvTypeDescr> &&types, std::map<std::string, ShvPropertyDescr> &&node_descriptions);
 

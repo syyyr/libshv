@@ -72,7 +72,7 @@ class SHVCORE_DECL_EXPORT StringViewList : public std::vector<StringView>
 	using Super = std::vector<StringView>;
 public:
 	using Super::Super;
-	StringViewList() {}
+	StringViewList() = default;
 	StringViewList(const std::vector<StringView> &o) : Super(o) {}
 
 	StringView value(ssize_t ix) const;

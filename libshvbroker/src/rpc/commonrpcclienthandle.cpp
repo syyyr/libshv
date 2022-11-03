@@ -92,13 +92,9 @@ bool CommonRpcClientHandle::Subscription::match(const shv::core::StringView &shv
 //=====================================================================
 // CommonRpcClientHandle
 //=====================================================================
-CommonRpcClientHandle::CommonRpcClientHandle()
-{
-}
+CommonRpcClientHandle::CommonRpcClientHandle() = default;
 
-CommonRpcClientHandle::~CommonRpcClientHandle()
-{
-}
+CommonRpcClientHandle::~CommonRpcClientHandle() = default;
 /*
 unsigned CommonRpcClientHandle::addSubscription(const std::string &rel_path, const std::string &method)
 {

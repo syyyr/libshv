@@ -247,7 +247,7 @@ public:
 	{
 		friend class ValueProxyShvNode;
 	public:
-		Handle() {}
+		Handle() = default;
 		virtual ~Handle();
 
 		virtual shv::chainpack::RpcValue shvValue(int value_id) = 0;

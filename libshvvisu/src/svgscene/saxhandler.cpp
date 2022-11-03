@@ -35,7 +35,7 @@ class TextSpansRect : public QGraphicsRectItem
 	using Super = QGraphicsRectItem;
 public:
 	explicit TextSpansRect(QGraphicsItem *parent = nullptr) : Super(parent) {}
-	~TextSpansRect() override {}
+	~TextSpansRect() override = default;
 
 	QPointF svgPosition;
 };
@@ -927,9 +927,7 @@ SaxHandler::SaxHandler(QGraphicsScene *scene)
 {
 }
 
-SaxHandler::~SaxHandler()
-{
-}
+SaxHandler::~SaxHandler() = default;
 
 void SaxHandler::load(QXmlStreamReader *data, bool skip_definitions)
 {

@@ -115,7 +115,7 @@ public:
 		};
 		Num m_num;
 	public:
-		Decimal() {}
+		Decimal() = default;
 		Decimal(int64_t mantisa, int exponent) : m_num{mantisa, exponent} {}
 		Decimal(int dec_places) : Decimal(0, -dec_places) {}
 

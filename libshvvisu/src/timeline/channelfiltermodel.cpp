@@ -19,10 +19,7 @@ ChannelFilterModel::ChannelFilterModel(QObject *parent)
 	setHorizontalHeaderLabels(QStringList{QString()});
 }
 
-ChannelFilterModel::~ChannelFilterModel()
-{
-
-}
+ChannelFilterModel::~ChannelFilterModel() = default;
 
 void ChannelFilterModel::createNodes(const QSet<QString> &channels)
 {

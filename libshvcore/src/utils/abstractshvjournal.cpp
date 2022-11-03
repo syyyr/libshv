@@ -20,9 +20,7 @@ const char *AbstractShvJournal::KEY_NAME = "name";
 const char *AbstractShvJournal::KEY_RECORD_COUNT = "recordCount";
 const char *AbstractShvJournal::KEY_PATHS_DICT = "pathsDict";
 
-AbstractShvJournal::~AbstractShvJournal()
-{
-}
+AbstractShvJournal::~AbstractShvJournal() = default;
 
 chainpack::RpcValue AbstractShvJournal::getSnapShotMap()
 {

@@ -66,7 +66,7 @@ public:
 		bool isMandatory() const {return m_data.mandatory;}
 		bool isSet() const {return value().isValid();}
 	public:
-		Option() {}
+		Option() = default;
 	};
 public:
 	CLIOPTION_GETTER_SETTER2(bool, "abortOnException", is, set, AbortOnException)
@@ -122,7 +122,7 @@ private:
 	typedef CLIOptions Super;
 public:
 	ConfigCLIOptions();
-	~ConfigCLIOptions() override {}
+	~ConfigCLIOptions() override = default;
 
 	CLIOPTION_GETTER_SETTER(std::string, c, setC, onfig)
 	CLIOPTION_GETTER_SETTER(std::string, c, setC, onfigDir)

@@ -24,13 +24,9 @@ const char * RpcDriver::RCV_LOG_ARROW = "R==>";
 
 int RpcDriver::s_defaultRpcTimeoutMsec = 5000;
 
-RpcDriver::RpcDriver()
-{
-}
+RpcDriver::RpcDriver() = default;
 
-RpcDriver::~RpcDriver()
-{
-}
+RpcDriver::~RpcDriver() = default;
 
 void RpcDriver::sendRpcValue(const RpcValue &msg)
 {

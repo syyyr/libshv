@@ -49,16 +49,16 @@ ShvNode::ShvNode(const std::string &node_id, ShvNode *parent)
 	setNodeId(node_id);
 }
 
-ShvNode::~ShvNode()
+ShvNode::~ShvNode() = default;
+/*
 {
-	/*
 	ShvNode *pnd = this->parentNode();
 	if(pnd && !pnd->isRootNode() && pnd->ownChildren().isEmpty()) {
 		pnd->deleteLater();
 	}
 	setParentNode(nullptr);
-	*/
 }
+*/
 
 ShvNode *ShvNode::parentNode() const
 {
@@ -604,9 +604,7 @@ ShvRootNode::ShvRootNode(QObject *parent)
 	m_isRootNode = true;
 }
 
-ShvRootNode::~ShvRootNode()
-{
-}
+ShvRootNode::~ShvRootNode() = default;
 
 //===========================================================
 // MethodsTableNode
@@ -1127,9 +1125,7 @@ shv::chainpack::RpcValue ObjectPropertyProxyShvNode::callMethod(const shv::iotqt
 //===========================================================
 // PropertyShvNode
 //===========================================================
-ValueProxyShvNode::Handle::~Handle()
-{
-}
+ValueProxyShvNode::Handle::~Handle() = default;
 
 ValueProxyShvNode::ValueProxyShvNode(const std::string &node_id, int value_id, ValueProxyShvNode::Type type, ValueProxyShvNode::Handle *handled_obj, ShvNode *parent)
 	: Super(node_id, parent)

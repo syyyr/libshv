@@ -50,7 +50,7 @@ public:
 		static const char* name(Enum e);
 	};
 public:
-	ShvLogHeader() {}
+	ShvLogHeader() = default;
 
 	int64_t sinceMsec() const { return since().toDateTime().msecsSinceEpoch(); }
 	int64_t untilMsec() const { return until().toDateTime().msecsSinceEpoch(); }
