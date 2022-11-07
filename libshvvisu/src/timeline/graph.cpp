@@ -1,7 +1,6 @@
 #include "channelprobe.h"
 #include "graphwidget.h"
 #include "graphmodel.h"
-#include "graphwidget.h"
 
 #include <shv/core/exception.h>
 #include <shv/coreqt/log.h>

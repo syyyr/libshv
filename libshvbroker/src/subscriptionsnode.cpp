@@ -8,7 +8,6 @@
 #include <shv/core/exception.h>
 #include <shv/core/log.h>
 #include <shv/core/stringview.h>
-#include <shv/core/stringview.h>
 #include <shv/core/utils/shvpath.h>
 
 namespace cp = shv::chainpack;

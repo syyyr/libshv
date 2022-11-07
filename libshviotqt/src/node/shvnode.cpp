@@ -10,7 +10,6 @@
 #include <shv/chainpack/cponreader.h>
 #include <shv/chainpack/cponwriter.h>
 #include <shv/chainpack/accessgrant.h>
-#include <shv/core/stringview.h>
 #include <shv/core/exception.h>
 #include <shv/core/stringview.h>
 #include <shv/core/string.h>

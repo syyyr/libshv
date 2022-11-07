@@ -31,7 +31,6 @@
 #if SHVVISU_HAS_TIMEZONE
 #include <QTimeZone>
 #endif
-#include <QMessageBox>
 
 namespace cp = shv::chainpack;
 namespace tl = shv::visu::timeline;
