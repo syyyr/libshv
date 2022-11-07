@@ -110,12 +110,12 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const 
 				const ShvFieldDescr &fld_descr = flds[i];
 				if(string alarm = fld_descr.alarm(); !alarm.empty()) {
 					bool is_alarm = fld_descr.bitfieldValue(value.toUInt64()).toBool();
-					alarms.push_back(ShvAlarm(shv_path + '/' + fld_descr.name(),
+					alarms.emplace_back(shv_path + '/' + fld_descr.name(),
 						is_alarm,
 						ShvAlarm::severityFromString(alarm),
 						fld_descr.alarmLevel(),
 						fld_descr.alarmDescription()
-					));
+					);
 				}
 				else {
 					auto alarms2 = checkAlarms(type_info, fld_descr.typeName(), shv_path + '/' + fld_descr.name(), fld_descr.bitfieldValue(value.toUInt64()));

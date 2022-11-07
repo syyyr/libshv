@@ -187,7 +187,7 @@ void CponWriter::write(const RpcValue::MetaData &meta_data)
 void CponWriter::writeMetaBegin(bool is_oneliner)
 {
 	ccpon_pack_meta_begin(&m_outCtx);
-	m_containerStates.push_back(ContainerState(RpcValue::Type::Invalid, is_oneliner));
+	m_containerStates.emplace_back(RpcValue::Type::Invalid, is_oneliner);
 }
 
 void CponWriter::writeMetaEnd()
@@ -212,7 +212,7 @@ void CponWriter::writeContainerBegin(RpcValue::Type container_type, bool is_onel
 	default:
 		SHVCHP_EXCEPTION(std::string("Cannot write begin of container type: ") + RpcValue::typeToName(container_type));
 	}
-	m_containerStates.push_back(ContainerState(container_type, is_oneliner));
+	m_containerStates.emplace_back(container_type, is_oneliner);
 }
 
 void CponWriter::writeContainerEnd()
