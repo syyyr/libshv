@@ -38,11 +38,11 @@ CurrentClientShvNode::CurrentClientShvNode(shv::iotqt::node::ShvNode *parent)
 		{M_USER_ROLES, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read},
 		{M_USER_PROFILE, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read},
 		{M_ACCESS_LEVEL_FOR_METHOD_CALL, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read,
-		  "params: [\"shv_path\", \"method\"]"},
+		  R"(params: ["shv_path", "method"])"},
 		{M_ACCES_LEVEL_FOR_METHOD_CALL, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read,
 		  "deprecated, use accessLevelForMethodCall instead"},
 		{M_CHANGE_PASSWORD, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Write
-		  , "params: [\"old_password\", \"new_password\"], old and new passwords can be plain or SHA1"},
+		  , R"(params: ["old_password", "new_password"], old and new passwords can be plain or SHA1)"},
 	}
 {
 }

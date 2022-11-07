@@ -263,7 +263,7 @@ chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::
 		const chainpack::RpcValue::List &param_lst = methods_params.toList();
 
 		if (param_lst.size() != 2) {
-			throw shv::core::Exception("Invalid params, [\"name\", \"content\"] expected.");
+			throw shv::core::Exception(R"(Invalid params, ["name", "content"] expected.)");
 		}
 
 		QString file_path = makeAbsolutePath(path + '/' + QString::fromStdString(param_lst[0].asString()));

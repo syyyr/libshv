@@ -64,7 +64,7 @@ std::string Utils::intToVersionString(int ver)
 std::string Utils::removeJsonComments(const std::string &json_str)
 {
 	// http://blog.ostermiller.org/find-comment
-	const std::regex re_block_comment("/\\*(?:.|[\\n])*?\\*/");
+	const std::regex re_block_comment(R"(/\*(?:.|[\n])*?\*/)");
 	const std::regex re_line_comment("//.*[\\n]");
 	std::string result1 = std::regex_replace(json_str, re_block_comment, std::string());
 	std::string ret = std::regex_replace(result1, re_line_comment, std::string());
