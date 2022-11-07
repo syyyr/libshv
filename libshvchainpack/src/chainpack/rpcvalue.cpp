@@ -1069,7 +1069,7 @@ RpcValue::MetaData::MetaData(const RpcValue::MetaData &o)
 		m_smap = new RpcValue::Map(*o.m_smap);
 }
 
-RpcValue::MetaData::MetaData(RpcValue::MetaData &&o)
+RpcValue::MetaData::MetaData(RpcValue::MetaData &&o) noexcept
 	: MetaData()
 {
 #ifdef DEBUG_RPCVAL
@@ -1118,7 +1118,7 @@ RpcValue::MetaData::~MetaData()
 		delete m_smap;
 }
 
-RpcValue::MetaData &RpcValue::MetaData::operator =(RpcValue::MetaData &&o)
+RpcValue::MetaData &RpcValue::MetaData::operator =(RpcValue::MetaData &&o) noexcept
 {
 #ifdef DEBUG_RPCVAL
 	logDebugRpcVal() << "===MM op= move ref" << this;

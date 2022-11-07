@@ -298,13 +298,13 @@ public:
 	public:
 		MetaData();
 		MetaData(const MetaData &o);
-		MetaData(MetaData &&o);
+		MetaData(MetaData &&o) noexcept;
 		MetaData(RpcValue::IMap &&imap);
 		MetaData(RpcValue::Map &&smap);
 		MetaData(RpcValue::IMap &&imap, RpcValue::Map &&smap);
 		~MetaData();
 
-		MetaData& operator =(MetaData &&o);
+		MetaData& operator =(MetaData &&o) noexcept;
 
 		int metaTypeId() const {return value(meta::Tag::MetaTypeId).toInt();}
 		void setMetaTypeId(RpcValue::Int id) {setValue(meta::Tag::MetaTypeId, id);}
