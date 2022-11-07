@@ -20,10 +20,10 @@ namespace cp = shv::chainpack;
 namespace shv::broker {
 
 namespace {
-static const auto M_GET_VERBOSITY = "verbosity";
-static const auto M_SET_VERBOSITY = "setVerbosity";
-static const auto M_GET_SEND_LOG_SIGNAL_ENABLED = "getSendLogAsSignalEnabled";
-static const auto M_SET_SEND_LOG_SIGNAL_ENABLED = "setSendLogAsSignalEnabled";
+const auto M_GET_VERBOSITY = "verbosity";
+const auto M_SET_VERBOSITY = "setVerbosity";
+const auto M_GET_SEND_LOG_SIGNAL_ENABLED = "getSendLogAsSignalEnabled";
+const auto M_SET_SEND_LOG_SIGNAL_ENABLED = "setSendLogAsSignalEnabled";
 class BrokerLogNode : public shv::iotqt::node::MethodsTableNode
 {
 	using Super = shv::iotqt::node::MethodsTableNode;

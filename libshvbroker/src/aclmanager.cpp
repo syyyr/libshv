@@ -16,7 +16,7 @@ namespace cp = shv::chainpack;
 
 namespace shv::broker {
 namespace {
-static std::string sha1_hex(const std::string &s)
+std::string sha1_hex(const std::string &s)
 {
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
 	hash.addData(s.data(), static_cast<int>(s.length()));
