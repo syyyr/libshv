@@ -299,7 +299,7 @@ QPair<QString, QString> CLIOptions::applicationDirAndName() const
 	static QString app_dir;
 	static QString app_name;
 	if(app_name.isEmpty()) {
-		if(m_allArgs.size()) {
+		if(!m_allArgs.empty()) {
 	#ifdef Q_OS_WIN
 			QString app_file_path;
 			wchar_t buffer[MAX_PATH + 2];

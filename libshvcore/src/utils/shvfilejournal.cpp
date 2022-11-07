@@ -422,7 +422,7 @@ void ShvFileJournal::updateJournalStatus()
 		closedir (dir);
 		std::sort(m_journalContext.files.begin(), m_journalContext.files.end());
 		logMShvJournal() << "journal dir contains:" << m_journalContext.files.size() << "files";
-		if(m_journalContext.files.size()) {
+		if(!m_journalContext.files.empty()) {
 			logMShvJournal() << "first file:"
 							 << m_journalContext.files[0]
 							 << RpcValue::DateTime::fromMSecsSinceEpoch(m_journalContext.files[0]).toIsoString();
@@ -674,7 +674,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		}
 		return true;
 	};
-	if(journal_context.files.size()) {
+	if(!journal_context.files.empty()) {
 		auto first_file_it = journal_context.files.begin();
 		journal_start_msec = *first_file_it;
 		if(params_since_msec > 0) {

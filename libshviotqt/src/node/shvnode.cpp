@@ -184,7 +184,7 @@ void ShvNode::handleRawRpcRequest(RpcValue::MetaData &&meta, std::string &&data)
 		if(root) {
 			if (ls_hook && resp.isSuccess()) {
 				chainpack::RpcValue::List res_list = resp.result().asList();
-				if (res_list.size() && !res_list[0].isList())
+				if (!res_list.empty() && !res_list[0].isList())
 					res_list.insert(res_list.begin(), LOCAL_NODE_HACK);
 				else
 					res_list.insert(res_list.begin(), chainpack::RpcValue::List{ LOCAL_NODE_HACK, true });

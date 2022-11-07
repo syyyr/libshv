@@ -590,7 +590,7 @@ std::string BrokerApp::resolveMountPoint(const shv::chainpack::RpcValue::Map &de
 	if(mount_point.empty()) {
 		mount_point = device_opts.value(cp::Rpc::KEY_MOUT_POINT).toString();
 		std::vector<shv::core::StringView> path = shv::core::utils::ShvPath::split(mount_point);
-		if(path.size() && !(path[0] == "test")) {
+		if(!path.empty() && !(path[0] == "test")) {
 			shvWarning() << "Mount point can be explicitly specified to test/ dir only, dev id:" << device_id.toCpon();
 			mount_point.clear();
 		}

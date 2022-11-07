@@ -175,7 +175,7 @@ iotqt::node::ShvNode::StringList MountsAclNode::childNames(const iotqt::node::Sh
 
 chainpack::RpcValue MountsAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params, const chainpack::RpcValue &user_id)
 {
-	if(shv_path.size() == 0) {
+	if(shv_path.empty()) {
 		if(method == M_SET_VALUE) {
 			if(params.isList()) {
 				const auto &lst = params.toList();
@@ -268,7 +268,7 @@ iotqt::node::ShvNode::StringList RolesAclNode::childNames(const iotqt::node::Shv
 
 chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params, const chainpack::RpcValue &user_id)
 {
-	if(shv_path.size() == 0) {
+	if(shv_path.empty()) {
 		if(method == M_SET_VALUE) {
 			if(params.isList()) {
 				const auto &lst = params.toList();
@@ -366,7 +366,7 @@ iotqt::node::ShvNode::StringList UsersAclNode::childNames(const iotqt::node::Shv
 
 chainpack::RpcValue UsersAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params, const chainpack::RpcValue &user_id)
 {
-	if(shv_path.size() == 0) {
+	if(shv_path.empty()) {
 		if(method == M_SET_VALUE) {
 			if(params.isList()) {
 				const auto &lst = params.toList();
@@ -507,7 +507,7 @@ iotqt::node::ShvNode::StringList AccessAclNode::childNames(const iotqt::node::Sh
 
 chainpack::RpcValue AccessAclNode::callMethod(const iotqt::node::ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params, const chainpack::RpcValue &user_id)
 {
-	if(shv_path.size() == 0) {
+	if(shv_path.empty()) {
 		if(method == M_SET_VALUE) {
 			if(params.isList()) {
 				const auto &lst = params.toList();

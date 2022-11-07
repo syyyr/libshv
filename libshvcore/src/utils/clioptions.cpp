@@ -250,7 +250,7 @@ void CLIOptions::parse(const StringList& cmd_line_args)
 						// switch has no value entered
 						arg = std::string();
 					}
-					else if((arg.size() && arg[0] == '-')) {
+					else if((!arg.empty() && arg[0] == '-')) {
 						// might be negative number or next switch
 						if(opt.type() != cp::RpcValue::Type::Int)
 							arg = std::string();
@@ -263,7 +263,7 @@ void CLIOptions::parse(const StringList& cmd_line_args)
 				}
 			}
 			if(!found) {
-				if(arg.size() && arg[0] == '-')
+				if(!arg.empty() && arg[0] == '-')
 					m_unusedArguments.push_back(arg);
 			}
 		}
@@ -285,7 +285,7 @@ std::tuple<std::string, std::string> CLIOptions::applicationDirAndName() const
 	static std::string app_dir;
 	static std::string app_name;
 	if(app_name.empty()) {
-		if(m_allArgs.size()) {
+		if(!m_allArgs.empty()) {
 	#ifdef Q_OS_WIN
 			std::string app_file_path;
 			wchar_t buffer[MAX_PATH + 2];
@@ -445,7 +445,7 @@ std::string ConfigCLIOptions::configFile()
 #ifdef Q_OS_WIN
 	bool is_absolute_path = config_file.size() > 2 && config_file[1] == ':';
 #else
-	bool is_absolute_path = config_file.size() && config_file[0] == '/';
+	bool is_absolute_path = !config_file.empty() && config_file[0] == '/';
 #endif
 	if(!is_absolute_path) {
 		std::string config_dir = configDir();

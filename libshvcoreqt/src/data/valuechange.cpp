@@ -42,7 +42,7 @@ QPair<SerieData::const_iterator, SerieData::const_iterator> SerieData::intersect
 
 ValueXInterval SerieData::range() const
 {
-	if (size()) {
+	if (!empty()) {
 		return ValueXInterval(at(0).valueX, back().valueX, xType());
 	}
 	else {
@@ -98,7 +98,7 @@ void SerieData::updateValueChange(const_iterator position, const ValueChange &ne
 
 void SerieData::extendRange(int &min, int &max) const
 {
-	if (size()) {
+	if (!empty()) {
 		if (at(0).valueX.intValue < min) {
 			min = at(0).valueX.intValue;
 		}
@@ -110,7 +110,7 @@ void SerieData::extendRange(int &min, int &max) const
 
 void SerieData::extendRange(double &min, double &max) const
 {
-	if (size()) {
+	if (!empty()) {
 		if (at(0).valueX.doubleValue < min) {
 			min = at(0).valueX.doubleValue;
 		}
@@ -122,7 +122,7 @@ void SerieData::extendRange(double &min, double &max) const
 
 void SerieData::extendRange(ValueChange::TimeStamp &min, ValueChange::TimeStamp &max) const
 {
-	if (size()) {
+	if (!empty()) {
 		if (at(0).valueX.timeStamp < min) {
 			min = at(0).valueX.timeStamp;
 		}
