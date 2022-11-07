@@ -83,7 +83,7 @@ bool SocketRpcDriver::connectToHost(const std::string &host, int port)
 		struct hostent *server;
 		server = gethostbyname(host.c_str());
 
-		if (server == NULL) {
+		if (server == nullptr) {
 			nError() << "ERROR, no such host" << host;
 			return false;
 		}
@@ -141,7 +141,7 @@ void SocketRpcDriver::exec()
 		//FD_SET(STDIN_FILENO, &read_flags);
 		//FD_SET(STDIN_FILENO, &write_flags);
 
-		int sel = select(FD_SETSIZE, &read_flags, &write_flags, static_cast<fd_set*>(0), &waitd);
+		int sel = select(FD_SETSIZE, &read_flags, &write_flags, static_cast<fd_set*>(nullptr), &waitd);
 
 		//ESP_LOGI(__FILE__, "select returned, number of active file descriptors: %d", sel);
 		//if an error with select
