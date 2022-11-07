@@ -36,9 +36,7 @@ QVariant LogTableModelBase::data(const QModelIndex &index, int role) const
 	}
 	case Qt::EditRole:
 		return m_rows[index.row()].value(index.column());
-	case Qt::ForegroundRole: {
-		break;
-	}
+	case Qt::ForegroundRole:
 	case Qt::BackgroundRole: {
 		break;
 	}

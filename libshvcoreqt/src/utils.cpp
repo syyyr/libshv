@@ -178,7 +178,7 @@ bool Utils::isDefaultQVariantValue(const QVariant &val)
 	case QMetaType::Long:
 	case QMetaType::ULong:
 	case QMetaType::Int:
-	case QMetaType::UInt: return val.toInt() == 0;
+	case QMetaType::UInt:
 	case QMetaType::Char: return val.toInt() == 0;
 	case QMetaType::QString: return val.toString().isEmpty();
 	case QMetaType::QDateTime: return !val.toDateTime().isValid();

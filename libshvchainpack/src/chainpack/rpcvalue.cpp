@@ -561,7 +561,7 @@ bool RpcValue::isDefaultValue() const
 {
 	switch (type()) {
 	case RpcValue::Type::Invalid: return true;
-	case RpcValue::Type::Null: return true;
+	case RpcValue::Type::Null:
 	case RpcValue::Type::Bool: return (toBool() == false);
 	case RpcValue::Type::Int: return (toInt() == 0);
 	case RpcValue::Type::UInt: return (toUInt() == 0);

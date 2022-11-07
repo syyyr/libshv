@@ -82,7 +82,7 @@ ChainPackReader::ItemType ChainPackReader::peekNext()
 	case CP_Decimal: return CCPCP_ITEM_DECIMAL;
 	case CP_DateTime: return CCPCP_ITEM_DATE_TIME;
 	case CP_CString: return CCPCP_ITEM_STRING;
-	case CP_FALSE: return CCPCP_ITEM_BOOLEAN;
+	case CP_FALSE:
 	case CP_TRUE: return CCPCP_ITEM_BOOLEAN;
 	case CP_TERM: return CCPCP_ITEM_CONTAINER_END;
 	default: break;

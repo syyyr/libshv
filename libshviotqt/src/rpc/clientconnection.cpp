@@ -181,14 +181,7 @@ void ClientConnection::open()
 		QUrl url(QString::fromStdString(host()));
 		auto scheme = Socket::schemeFromString(url.scheme().toStdString());
 		Socket *socket;
-		if(scheme == Socket::Scheme::WebSocket) {
-#ifdef WITH_SHV_WEBSOCKETS
-			socket = new WebSocket(new QWebSocket());
-#else
-			SHV_EXCEPTION("Web socket support is not part of this build.");
-#endif
-		}
-		else if(scheme == Socket::Scheme::WebSocketSecure) {
+		if(scheme == Socket::Scheme::WebSocket || scheme == Socket::Scheme::WebSocketSecure) {
 #ifdef WITH_SHV_WEBSOCKETS
 			socket = new WebSocket(new QWebSocket());
 #else
