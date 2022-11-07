@@ -1132,6 +1132,10 @@ RpcValue::MetaData &RpcValue::MetaData::operator=(const RpcValue::MetaData &o)
 #ifdef DEBUG_RPCVAL
 	logDebugRpcVal() << "===MM op= const ref" << this;
 #endif
+	if (this == &o) {
+		return *this;
+	}
+
 	if(o.m_imap && !o.m_imap->empty())
 		m_imap = new RpcValue::IMap(*o.m_imap);
 	if(o.m_smap && !o.m_smap->empty())
