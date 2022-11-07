@@ -209,7 +209,7 @@ void RpcCall::start()
 		return;
 	}
 	int rq_id = m_rpcConnection->nextRequestId();
-	RpcResponseCallBack *cb = new RpcResponseCallBack(m_rpcConnection, rq_id, this);
+	auto *cb = new RpcResponseCallBack(m_rpcConnection, rq_id, this);
 	if (m_timeout) {
 		cb->setTimeout(m_timeout);
 	}

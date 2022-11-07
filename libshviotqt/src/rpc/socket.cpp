@@ -261,7 +261,7 @@ SslSocket::SslSocket(QSslSocket *socket, QSslSocket::PeerVerifyMode peer_verify_
 
 void SslSocket::connectToHost(const QUrl &url)
 {
-	QSslSocket *ssl_socket = qobject_cast<QSslSocket *>(m_socket);
+	auto *ssl_socket = qobject_cast<QSslSocket *>(m_socket);
 	ssl_socket->setPeerVerifyMode(m_peerVerifyMode);
 	shvDebug() << "connectToHostEncrypted" << "host:" << url.toString();
 	auto port = url.port(chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT_SECURED);
@@ -270,7 +270,7 @@ void SslSocket::connectToHost(const QUrl &url)
 
 void SslSocket::ignoreSslErrors()
 {
-	QSslSocket *ssl_socket = qobject_cast<QSslSocket *>(m_socket);
+	auto *ssl_socket = qobject_cast<QSslSocket *>(m_socket);
 	ssl_socket->ignoreSslErrors();
 }
 

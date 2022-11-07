@@ -43,7 +43,7 @@ bool GraphButtonBox::processEvent(QEvent *ev)
 	};
 	switch (ev->type()) {
 	case QEvent::MouseMove: {
-		QMouseEvent *event = static_cast<QMouseEvent*>(ev);
+		auto *event = static_cast<QMouseEvent*>(ev);
 		QPoint pos = event->pos();
 		//shvDebug() << "------------------------";
 		//shvDebug() << pos.x() << pos.y();
@@ -75,7 +75,7 @@ bool GraphButtonBox::processEvent(QEvent *ev)
 	}
 	case QEvent::MouseButtonPress: {
 		//shvDebug() << objectName() << "press";
-		QMouseEvent *event = static_cast<QMouseEvent*>(ev);
+		auto *event = static_cast<QMouseEvent*>(ev);
 		QPoint pos = event->pos();
 		for (int i = 0; i < m_buttonIds.count(); ++i) {
 			if(buttonRect(i).contains(pos)) {

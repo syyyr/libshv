@@ -132,7 +132,7 @@ chainpack::RpcValue BrokerAppNode::callMethodRq(const chainpack::RpcRequest &rq)
 			if (!conn) {
 				return std::string();
 			}
-			QMetaObject::Connection *connection = new QMetaObject::Connection;
+			auto *connection = new QMetaObject::Connection;
 			*connection = connect(conn, &rpc::MasterBrokerConnection::masterBrokerIdReceived, this, [this, rq, connection](const cp::RpcResponse &master_resp) {
 				disconnect(*connection);
 				delete connection;

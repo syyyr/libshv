@@ -675,7 +675,7 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		return true;
 	};
 	if(journal_context.files.size()) {
-		std::vector<int64_t>::const_iterator first_file_it = journal_context.files.begin();
+		auto first_file_it = journal_context.files.begin();
 		journal_start_msec = *first_file_it;
 		if(params_since_msec > 0) {
 			logMShvJournal() << "since:" << params.since.toCpon() << "msec:" << params_since_msec;

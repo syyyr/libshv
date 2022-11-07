@@ -331,7 +331,7 @@ ChannelProbe *Graph::channelProbe(int channel_ix, timemsec_t time)
 
 ChannelProbe *Graph::addChannelProbe(int channel_ix, timemsec_t time)
 {
-	ChannelProbe *probe = new ChannelProbe(this, channel_ix, time);
+	auto *probe = new ChannelProbe(this, channel_ix, time);
 	m_channelProbes.push_back(probe);
 	return probe;
 }
@@ -1795,7 +1795,7 @@ std::function<Sample (const QPoint &)> Graph::pointToDataFn(const QRect &src, co
 	return  [t1, le, kx, d1, bo, ky](const QPoint &p) -> Sample {
 		const int x = p.x();
 		const int y = p.y();
-		timemsec_t t = static_cast<timemsec_t>(static_cast<double>(t1) + (x - le) * kx);
+		auto t = static_cast<timemsec_t>(static_cast<double>(t1) + (x - le) * kx);
 		double d = d1 + (y - bo) * ky;
 		return Sample{t, d};
 	};

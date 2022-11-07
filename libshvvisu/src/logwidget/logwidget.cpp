@@ -139,7 +139,7 @@ LogWidget::LogWidget(QWidget *parent)
 	ui->setupUi(this);
 	//setPersistentSettingsId();
 	{
-		QAction *a = new QAction(tr("Maximal log length"), this);
+		auto *a = new QAction(tr("Maximal log length"), this);
 		connect(a, &QAction::triggered, [this]() {
 			LogTableModelBase *m = this->logTableModel();
 			int max_rows = m->maximumRowCount();
@@ -151,7 +151,7 @@ LogWidget::LogWidget(QWidget *parent)
 		tableMenuButton()->addAction(a);
 	}
 	{
-		QAction *a = new QAction(this);
+		auto *a = new QAction(this);
 		a->setSeparator(true);
 		tableMenuButton()->addAction(a);
 	}

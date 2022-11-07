@@ -35,7 +35,7 @@ void BrokerTcpServer::incomingConnection(qintptr socket_descriptor)
 {
 	shvLogFuncFrame() << socket_descriptor;
 	if (m_sslMode == SecureMode) {
-		QSslSocket *socket = new QSslSocket(this);
+		auto *socket = new QSslSocket(this);
 		{
 			connect(socket, &QSslSocket::connected, [this]() {
 				shvDebug() << this << "Socket connected!!!";
@@ -72,7 +72,7 @@ void BrokerTcpServer::incomingConnection(qintptr socket_descriptor)
 		socket->startServerEncryption();
 		addPendingConnection(socket);
 	} else if (m_sslMode == NonSecureMode) {
-		QTcpSocket *sock = new QTcpSocket(this);
+		auto *sock = new QTcpSocket(this);
 		if (!sock->setSocketDescriptor(socket_descriptor)) {
 			shvError() << "Can't accept connection: setSocketDescriptor error";
 			return;

@@ -48,7 +48,7 @@ int64_t SocketRpcDriver::writeBytes(const char *bytes, size_t length)
 		return 0;
 	}
 	flush();
-	ssize_t bytes_to_write_len = static_cast<ssize_t>((m_writeBuffer.size() + length > m_maxWriteBufferLength)? m_maxWriteBufferLength - m_writeBuffer.size(): length);
+	auto bytes_to_write_len = static_cast<ssize_t>((m_writeBuffer.size() + length > m_maxWriteBufferLength)? m_maxWriteBufferLength - m_writeBuffer.size(): length);
 	if(bytes_to_write_len > 0)
 		m_writeBuffer += std::string(bytes, static_cast<size_t>(bytes_to_write_len));
 	flush();

@@ -142,7 +142,7 @@ static bool need_quotes(const StringView &dir)
 ShvPath ShvPath::joinDirs(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last)
 {
 	ShvPath ret;
-	for(std::vector<StringView>::const_iterator it = first; it != last; ++it) {
+	for(auto it = first; it != last; ++it) {
 		if(it->empty())
 			continue;
 		bool quotes = need_quotes(*it);

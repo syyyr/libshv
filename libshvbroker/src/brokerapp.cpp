@@ -222,7 +222,7 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 #endif
 	m_nodesTree = new shv::iotqt::node::ShvNodeTree(new BrokerRootNode(), this);
 	connect(m_nodesTree->root(), &shv::iotqt::node::ShvRootNode::sendRpcMessage, this, &BrokerApp::onRootNodeSendRpcMesage);
-	BrokerAppNode *bn = new BrokerAppNode();
+	auto *bn = new BrokerAppNode();
 	m_nodesTree->mount(cp::Rpc::DIR_BROKER_APP, bn);
 	m_nodesTree->mount(BROKER_CURRENT_CLIENT_SHV_PATH, new CurrentClientShvNode());
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/clients", new ClientsNode());
@@ -231,7 +231,7 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/etc/acl", new EtcAclRootNode());
 
 	if (m_cliOptions->discoveryPort() > 0) {
-		QUdpSocket *udp_socket = new QUdpSocket(this);
+		auto *udp_socket = new QUdpSocket(this);
 		udp_socket->bind(static_cast<quint16>(m_cliOptions->discoveryPort()), QUdpSocket::ShareAddress);
 		logBrokerDiscoveryM() << "shvbrokerDiscovery listen on UDP port:" << m_cliOptions->discoveryPort();
 		connect(udp_socket, &QUdpSocket::readyRead, this, [this, udp_socket]() {
@@ -306,7 +306,7 @@ void BrokerApp::installUnixSignalHandlers()
 void BrokerApp::nativeSigHandler(int sig_number)
 {
 	shvInfo() << "SIG:" << sig_number;
-	unsigned char a = static_cast<unsigned char>(sig_number);
+	auto a = static_cast<unsigned char>(sig_number);
 	::write(m_sigTermFd[0], &a, sizeof(a));
 }
 
@@ -808,15 +808,15 @@ void BrokerApp::onClientLogin(int connection_id)
 		shv::iotqt::node::ShvNode *clients_nd = m_nodesTree->mkdir(std::string(cp::Rpc::DIR_BROKER) + "/clients/");
 		if(!clients_nd)
 			SHV_EXCEPTION("Cannot create parent for ClientDirNode id: " + std::to_string(connection_id));
-		ClientConnectionNode *client_id_node = new ClientConnectionNode(connection_id, clients_nd);
-		ClientShvNode *client_app_node = new ClientShvNode("app", conn, client_id_node);
+		auto *client_id_node = new ClientConnectionNode(connection_id, clients_nd);
+		auto *client_app_node = new ClientShvNode("app", conn, client_id_node);
 		// delete whole client tree, when client is destroyed
 		connect(conn, &rpc::ClientConnectionOnBroker::destroyed, client_id_node, &ClientShvNode::deleteLater);
 
 		conn->setParent(client_app_node);
 		{
 			std::string mount_point = client_id_node->shvPath() + "/subscriptions";
-			SubscriptionsNode *nd = new SubscriptionsNode(conn);
+			auto *nd = new SubscriptionsNode(conn);
 			if(!m_nodesTree->mount(mount_point, nd))
 				SHV_EXCEPTION("Cannot mount connection subscription list to device tree, connection id: " + std::to_string(connection_id)
 							  + " shv path: " + mount_point);
@@ -828,7 +828,7 @@ void BrokerApp::onClientLogin(int connection_id)
 		std::string mount_point = resolveMountPoint(device_opts);
 		if(!mount_point.empty()) {
 			string path_rest;
-			ClientShvNode *cli_nd = qobject_cast<ClientShvNode*>(m_nodesTree->cd(mount_point, &path_rest));
+			auto *cli_nd = qobject_cast<ClientShvNode*>(m_nodesTree->cd(mount_point, &path_rest));
 			if(cli_nd) {
 				/*
 				shvWarning() << "The mount point" << mount_point << "exists already";
@@ -891,7 +891,7 @@ void BrokerApp::onConnectedToMasterBrokerChanged(int connection_id, bool is_conn
 				node->setParentNode(nullptr);
 				delete node;
 			}
-			MasterBrokerShvNode *mbnd = new MasterBrokerShvNode(masters_nd);
+			auto *mbnd = new MasterBrokerShvNode(masters_nd);
 			mbnd->setNodeId(conn->objectName().toStdString());
 			/*shv::iotqt::node::RpcValueMapNode *config_nd = */
 			new shv::iotqt::node::RpcValueMapNode("config", conn->options(), mbnd);
@@ -1340,7 +1340,7 @@ void BrokerApp::createMasterBrokerConnections()
 			continue;
 
 		shvInfo() << "creating master broker connection:" << kv.first;
-		rpc::MasterBrokerConnection *bc = new rpc::MasterBrokerConnection(this);
+		auto *bc = new rpc::MasterBrokerConnection(this);
 		bc->setObjectName(QString::fromStdString(kv.first));
 		int id = bc->connectionId();
 		connect(bc, &rpc::MasterBrokerConnection::brokerConnectedChanged, this, [id, this](bool is_connected) {

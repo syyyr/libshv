@@ -65,7 +65,7 @@ ShvNode *ShvNode::parentNode() const
 
 ShvNode *ShvNode::childNode(const ShvNode::String &name, bool throw_exc) const
 {
-	ShvNode *nd = findChild<ShvNode*>(QString::fromStdString(name), Qt::FindDirectChildrenOnly);
+	auto *nd = findChild<ShvNode*>(QString::fromStdString(name), Qt::FindDirectChildrenOnly);
 	if(throw_exc && !nd)
 		SHV_EXCEPTION("Child node id: " + name + " doesn't exist, parent node: " + shvPath());
 	return nd;
@@ -1131,7 +1131,7 @@ ValueProxyShvNode::ValueProxyShvNode(const std::string &node_id, int value_id, V
 	, m_type(type)
 	, m_handledObject(handled_obj)
 {
-	QObject *handled_qobj = dynamic_cast<QObject*>(handled_obj);
+	auto *handled_qobj = dynamic_cast<QObject*>(handled_obj);
 	if(handled_qobj) {
 		bool ok = connect(handled_qobj, SIGNAL(shvValueChanged(int, shv::chainpack::RpcValue)), this, SLOT(onShvValueChanged(int, shv::chainpack::RpcValue)), Qt::QueuedConnection);
 		if(!ok)

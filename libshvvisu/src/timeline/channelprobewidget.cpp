@@ -146,7 +146,7 @@ void ChannelProbeWidget::loadValues()
 		int ix = ui->twData->rowCount();
 		ui->twData->insertRow(ix);
 
-		QTableWidgetItem *item = new QTableWidgetItem(i.key());
+		auto *item = new QTableWidgetItem(i.key());
 		item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 		ui->twData->setItem(ix, DataTableColumn::ColProperty, item);
 

@@ -1279,7 +1279,7 @@ std::string RpcValue::MetaData::toString(const std::string &indent) const
 
 RpcValue::MetaData *RpcValue::MetaData::clone() const
 {
-	MetaData *md = new MetaData(*this);
+	auto *md = new MetaData(*this);
 	return md;
 }
 

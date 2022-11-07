@@ -6,7 +6,7 @@ namespace shv::coreqt::data {
 
 SerieData::const_iterator SerieData::lessOrEqualIterator(ValueChange::ValueX value_x) const
 {
-	const_iterator it = lower_bound(value_x);
+	auto it = lower_bound(value_x);
 
 	if (it == cend()) {
 		if (!empty()) {

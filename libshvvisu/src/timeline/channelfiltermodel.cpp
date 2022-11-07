@@ -145,7 +145,7 @@ void ChannelFilterModel::createNodesForPath(const QString &path)
 		QStandardItem *it = shvPathToItem(sub_path, invisibleRootItem());
 
 		if (!it) {
-			QStandardItem *item = new QStandardItem(path_list.at(i));
+			auto *item = new QStandardItem(path_list.at(i));
 			item->setCheckable(true);
 			item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 			bool has_valid_log_entry = (sub_path == path);

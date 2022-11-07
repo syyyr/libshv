@@ -982,14 +982,14 @@ void SaxHandler::parse()
 		case QXmlStreamReader::Characters:
 		{
 			logSvgD() << "characters element:" << m_xml->text();// << typeid (*m_topLevelItem).name();
-			if(SimpleTextItem *simple_text_item = dynamic_cast<SimpleTextItem*>(m_topLevelItem)) {
+			if(auto *simple_text_item = dynamic_cast<SimpleTextItem*>(m_topLevelItem)) {
 				QString text = simple_text_item->text();
 				if(!text.isEmpty())
 					text += '\n';
 				logSvgD() << simple_text_item->text() << "+" << m_xml->text().toString();
 				simple_text_item->setText(text + m_xml->text().toString());
 			}
-			else if(QGraphicsTextItem *qgraphics_text_item = dynamic_cast<QGraphicsTextItem*>(m_topLevelItem)) {
+			else if(auto *qgraphics_text_item = dynamic_cast<QGraphicsTextItem*>(m_topLevelItem)) {
 				QString text = qgraphics_text_item->toPlainText();
 				if(!text.isEmpty())
 					text += '\n';
@@ -1045,7 +1045,7 @@ bool SaxHandler::startElement()
 			qreal y = el.xmlAttributes.value(QStringLiteral("y")).toDouble();
 			qreal w = el.xmlAttributes.value(QStringLiteral("width")).toDouble();
 			qreal h = el.xmlAttributes.value(QStringLiteral("height")).toDouble();
-			if(QGraphicsTextItem *text_item = dynamic_cast<QGraphicsTextItem*>(m_topLevelItem)) {
+			if(auto *text_item = dynamic_cast<QGraphicsTextItem*>(m_topLevelItem)) {
 				QTransform t;
 				t.translate(x, y);
 				text_item->setTransform(t, true);
@@ -1063,7 +1063,7 @@ bool SaxHandler::startElement()
 			}
 		}
 		else if (el.name == QLatin1String("circle")) {
-			QGraphicsEllipseItem *item = new QGraphicsEllipseItem();
+			auto *item = new QGraphicsEllipseItem();
 			setXmlAttributes(item, el);
 			qreal cx = toDouble(el.xmlAttributes.value(QStringLiteral("cx")));
 			qreal cy = toDouble(el.xmlAttributes.value(QStringLiteral("cy")));
@@ -1077,7 +1077,7 @@ bool SaxHandler::startElement()
 			return true;
 		}
 		else if (el.name == QLatin1String("ellipse")) {
-			QGraphicsEllipseItem *item = new QGraphicsEllipseItem();
+			auto *item = new QGraphicsEllipseItem();
 			setXmlAttributes(item, el);
 			qreal cx = toDouble(el.xmlAttributes.value(QStringLiteral("cx")));
 			qreal cy = toDouble(el.xmlAttributes.value(QStringLiteral("cy")));
@@ -1092,7 +1092,7 @@ bool SaxHandler::startElement()
 			return true;
 		}
 		else if (el.name == QLatin1String("path")) {
-			QGraphicsPathItem *item = new QGraphicsPathItem();
+			auto *item = new QGraphicsPathItem();
 			setXmlAttributes(item, el);
 			QString data = el.xmlAttributes.value(QStringLiteral("d"));
 			QPainterPath p;
@@ -1109,7 +1109,7 @@ bool SaxHandler::startElement()
 			return true;
 		}
 		else if (el.name == QLatin1String("text")) {
-			TextSpansRect *item = new TextSpansRect();
+			auto *item = new TextSpansRect();
 			//item->setBrush(Qt::magenta);
 			//item->setRect(0, 0, 100, 100);
 			setXmlAttributes(item, el);
@@ -1127,7 +1127,7 @@ bool SaxHandler::startElement()
 			return true;
 		}
 		else if (el.name == QLatin1String("tspan")) {
-			SimpleTextItem *item = new SimpleTextItem(el.styleAttributes);
+			auto *item = new SimpleTextItem(el.styleAttributes);
 			setXmlAttributes(item, el);
 			setStyle(item, el.styleAttributes);
 			setTextStyle(item, el.styleAttributes);
@@ -1156,7 +1156,7 @@ bool SaxHandler::startElement()
 			return true;
 		}
 		else if (el.name == QLatin1String("flowRoot")) {
-			QGraphicsTextItem *item = new QGraphicsTextItem();
+			auto *item = new QGraphicsTextItem();
 			setXmlAttributes(item, el);
 			setTextStyle(item, el.styleAttributes);
 			setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
@@ -1446,7 +1446,7 @@ void SaxHandler::addItem(QGraphicsItem *it)
 	logSvgD() << "adding item:" << typeid (*it).name()
 			  << "pos:" << point2str(it->pos())
 			  << "bounding rect:" << rect2str(it->boundingRect());
-	if(QGraphicsItemGroup *grp = dynamic_cast<QGraphicsItemGroup*>(m_topLevelItem)) {
+	if(auto *grp = dynamic_cast<QGraphicsItemGroup*>(m_topLevelItem)) {
 		logSvgD() << "adding to group:" << typeid (*grp).name();
 		grp->addToGroup(it);
 	}

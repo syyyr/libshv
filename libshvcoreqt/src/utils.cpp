@@ -224,7 +224,7 @@ std::vector<uint8_t> Utils::compressGZip(const std::vector<uint8_t> &data)
 	compressed_data.append(static_cast<char>((crc32 >> 16) & 0xff));
 	compressed_data.append(static_cast<char>((crc32 >> 24) & 0xff));
 
-	const uint32_t data_size = static_cast<uint32_t>(data.size());
+	const auto data_size = static_cast<uint32_t>(data.size());
 	compressed_data.append(static_cast<char>(data_size & 0xff));
 	compressed_data.append(static_cast<char>((data_size >> 8) & 0xff));
 	compressed_data.append(static_cast<char>((data_size >> 16) & 0xff));

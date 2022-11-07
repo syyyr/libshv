@@ -486,8 +486,8 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 			}
 		}
 		if (dragged_channel != -1) {
-			QDrag *drag = new QDrag(this);
-			QMimeData *mime = new QMimeData;
+			auto *drag = new QDrag(this);
+			auto *mime = new QMimeData;
 			mime->setText(QString());
 			drag->setMimeData(mime);
 			QPoint p = mapToGlobal(header_rect.topLeft());
@@ -874,7 +874,7 @@ void GraphWidget::createProbe(int channel_ix, timemsec_t time)
 		update();
 	});
 
-	ChannelProbeWidget *w = new ChannelProbeWidget(probe, this);
+	auto *w = new ChannelProbeWidget(probe, this);
 
 	connect(w, &ChannelProbeWidget::destroyed, this, [this, probe]() {
 		m_graph->removeChannelProbe(probe);

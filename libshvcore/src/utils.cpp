@@ -75,7 +75,7 @@ std::string Utils::binaryDump(const std::string &bytes)
 {
 	std::string ret;
 	for (size_t i = 0; i < bytes.size(); ++i) {
-		uint8_t u = static_cast<uint8_t>(bytes[i]);
+		auto u = static_cast<uint8_t>(bytes[i]);
 		if(i > 0)
 			ret += '|';
 		for (size_t j = 0; j < 8*sizeof(u); ++j) {
@@ -96,7 +96,7 @@ std::string Utils::toHex(const std::string &bytes)
 {
 	std::string ret;
 	for (size_t i = 0; i < bytes.size(); ++i) {
-		unsigned char b = static_cast<unsigned char>(bytes[i]);
+		auto b = static_cast<unsigned char>(bytes[i]);
 		char h = static_cast<char>(b / 16);
 		char l = b % 16;
 		ret += hex_nibble(h);
@@ -133,7 +133,7 @@ std::string Utils::fromHex(const std::string &bytes)
 {
 	std::string ret;
 	for (size_t i = 0; i < bytes.size(); ) {
-		unsigned char u = static_cast<unsigned char>(unhex_char(bytes[i++]));
+		auto u = static_cast<unsigned char>(unhex_char(bytes[i++]));
 		u = 16 * u;
 		if(i < bytes.size())
 			u += static_cast<unsigned char>(unhex_char(bytes[i++]));
