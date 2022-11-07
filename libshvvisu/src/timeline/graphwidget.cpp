@@ -744,7 +744,7 @@ void GraphWidget::showGraphSelectionContextMenu(const QPoint &mouse_pos)
 		auto y2 = ch2->posToValue(sel_rect.top());
 		QString s = tr("t1: %1").arg(m_graph->timeToStringTZ(t1));
 		s += '\n' + tr("t2: %2").arg(m_graph->timeToStringTZ(t2));
-		s += '\n' + tr("duration: %1").arg(m_graph->durationToString(t2 - t1));
+		s += '\n' + tr("duration: %1").arg(shv::visu::timeline::Graph::durationToString(t2 - t1));
 		s += '\n' + tr("y1: %1").arg(y1);
 		s += '\n' + tr("y2: %2").arg(y2);
 		if(ch1 == ch2)

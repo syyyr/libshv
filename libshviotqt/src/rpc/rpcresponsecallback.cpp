@@ -23,7 +23,7 @@ RpcResponseCallBack::RpcResponseCallBack(ClientConnection *conn, int rq_id, QObj
 	: RpcResponseCallBack(rq_id, parent)
 {
 	connect(conn, &ClientConnection::rpcMessageReceived, this, &RpcResponseCallBack::onRpcMessageReceived);
-	setTimeout(conn->defaultRpcTimeoutMsec());
+	setTimeout(shv::iotqt::rpc::ClientConnection::defaultRpcTimeoutMsec());
 }
 
 void RpcResponseCallBack::start()
