@@ -302,8 +302,8 @@ static QColor parseColor(const QString &color, const QString &opacity)
 				if (compo.size() == 1) {
 					s = color_str.constData() + 4;
 					compo = parsePercentageList(s);
-					for (int i = 0; i < compo.size(); ++i)
-						compo[i] *= 2.55;
+					for (double & i : compo)
+						i *= 2.55;
 				}
 				if (compo.size() == 3) {
 					ret = QColor(int(compo[0]),

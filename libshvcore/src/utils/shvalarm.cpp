@@ -106,8 +106,7 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const 
 		if (type_descr.type() == ShvTypeDescr::Type::BitField) {
 			vector<ShvAlarm> alarms;
 			auto flds = type_descr.fields();
-			for (size_t i = 0; i < flds.size(); ++i) {
-				const ShvFieldDescr &fld_descr = flds[i];
+			for (auto& fld_descr : flds) {
 				if(string alarm = fld_descr.alarm(); !alarm.empty()) {
 					bool is_alarm = fld_descr.bitfieldValue(value.toUInt64()).toBool();
 					alarms.emplace_back(shv_path + '/' + fld_descr.name(),

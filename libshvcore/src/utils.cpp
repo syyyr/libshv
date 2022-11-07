@@ -95,8 +95,8 @@ static inline char hex_nibble(char i)
 std::string Utils::toHex(const std::string &bytes)
 {
 	std::string ret;
-	for (size_t i = 0; i < bytes.size(); ++i) {
-		auto b = static_cast<unsigned char>(bytes[i]);
+	for (char byte : bytes) {
+		auto b = static_cast<unsigned char>(byte);
 		char h = static_cast<char>(b / 16);
 		char l = b % 16;
 		ret += hex_nibble(h);
@@ -108,8 +108,7 @@ std::string Utils::toHex(const std::string &bytes)
 std::string Utils::toHex(const std::basic_string<uint8_t> &bytes)
 {
 	std::string ret;
-	for (size_t i = 0; i < bytes.size(); ++i) {
-		unsigned char b = bytes[i];
+	for (unsigned char b : bytes) {
 		char h = static_cast<char>(b / 16);
 		char l = b % 16;
 		ret += hex_nibble(h);

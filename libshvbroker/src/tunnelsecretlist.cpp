@@ -21,8 +21,7 @@ static constexpr int64_t max_age_msec = 10*1000;
 bool TunnelSecretList::checkSecret(const std::string &s)
 {
 	qint64 now = QDateTime::currentMSecsSinceEpoch();
-	for (size_t i = 0; i < m_secretList.size(); ++i) {
-		Secret &sc = m_secretList[i];
+	for (auto& sc : m_secretList) {
 		int64_t age = now - sc.createdMsec;
 		if(age < 0)
 			continue; // this should never happen

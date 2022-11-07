@@ -46,9 +46,9 @@ inline char hex_nibble(char i)
 std::string hex_dump(const RpcValue::String &out)
 {
 	std::string ret;
-	for (size_t i = 0; i < out.size(); ++i) {
-		char h = out[i] / 16;
-		char l = out[i] % 16;
+	for (char i : out) {
+		char h = i / 16;
+		char l = i % 16;
 		ret += hex_nibble(h);
 		ret += hex_nibble(l);
 	}

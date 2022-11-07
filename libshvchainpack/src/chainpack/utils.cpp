@@ -72,8 +72,7 @@ std::string Utils::toHex(const std::string &bytes, size_t start_pos, size_t leng
 std::string Utils::toHex(const std::basic_string<uint8_t> &bytes)
 {
 	std::string ret;
-	for (size_t i = 0; i < bytes.size(); ++i) {
-		unsigned char b = bytes[i];
+	for (unsigned char b : bytes) {
 		ret += byte_to_hex(b);
 	}
 	return ret;

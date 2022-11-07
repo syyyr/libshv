@@ -67,8 +67,8 @@ std::string Crypt::encrypt(const std::string &data, size_t min_length) const
 	dest += code_byte(b);
 
 	/// a tou se to zaxoruje
-	for(size_t i=0; i<data.length(); i++) {
-		b = (static_cast<uint8_t>(data[i]));
+	for(char i : data) {
+		b = (static_cast<uint8_t>(i));
 		if(b == 0)
 			break;
 		seed = m_generator(seed);
