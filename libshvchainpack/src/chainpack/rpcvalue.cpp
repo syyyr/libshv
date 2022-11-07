@@ -146,8 +146,7 @@ protected:
 #ifdef DEBUG_RPCVAL
 		logDebugRpcVal() << "---" << value_data_cnt-- << RpcValue::typeToName(tag) << this << m_value;
 #endif
-		if(m_metaData)
-			delete m_metaData;
+		delete m_metaData;
 	}
 
 	RpcValue::Type type() const override { return tag; }
@@ -198,8 +197,7 @@ protected:
 
 	void stripMeta() override
 	{
-		if(m_metaData)
-			delete m_metaData;
+		delete m_metaData;
 		m_metaData = nullptr;
 	}
 
@@ -1112,10 +1110,8 @@ RpcValue::MetaData::~MetaData()
 #ifdef DEBUG_RPCVAL
 	logDebugRpcVal() << cnt-- << "---MM cnt:" << size() << this;
 #endif
-	if(m_imap)
-		delete m_imap;
-	if(m_smap)
-		delete m_smap;
+	delete m_imap;
+	delete m_smap;
 }
 
 RpcValue::MetaData &RpcValue::MetaData::operator =(RpcValue::MetaData &&o) noexcept

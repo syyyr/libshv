@@ -118,8 +118,7 @@ void ShvNode::deleteIfEmptyWithParents()
 			lowest_empty_parent_nd = nd;
 			nd = nd->parentNode();
 		}
-		if(lowest_empty_parent_nd)
-			delete lowest_empty_parent_nd;
+		delete lowest_empty_parent_nd;
 	}
 }
 

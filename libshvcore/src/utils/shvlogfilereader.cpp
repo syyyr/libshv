@@ -43,10 +43,8 @@ void ShvLogFileReader::init()
 ShvLogFileReader::~ShvLogFileReader()
 {
 	if(m_readerCreated) {
-		if(m_reader)
-			delete m_reader;
-		if(m_ifstream)
-			delete m_ifstream;
+		delete m_reader;
+		delete m_ifstream;
 	}
 }
 
