@@ -10,12 +10,12 @@ using namespace shv::chainpack;
 
 namespace shv::iotqt::node {
 
-static const char M_WRITE[] = "write";
-static const char M_DELETE[] = "delete";
-static const char M_MKFILE[] = "mkfile";
-static const char M_MKDIR[] = "mkdir";
-static const char M_RMDIR[] = "rmdir";
-static const char M_LS_FILES[] = "lsfiles";
+static const auto M_WRITE = "write";
+static const auto M_DELETE = "delete";
+static const auto M_MKFILE = "mkfile";
+static const auto M_MKDIR = "mkdir";
+static const auto M_RMDIR = "rmdir";
+static const auto M_LS_FILES = "lsfiles";
 
 static const std::vector<MetaMethod> meta_methods_dir {
 	{Rpc::METH_DIR, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_BROWSE},

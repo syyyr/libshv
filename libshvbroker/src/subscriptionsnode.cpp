@@ -16,11 +16,11 @@ namespace cp = shv::chainpack;
 namespace shv::broker {
 
 namespace {
-const char ND_BY_ID[] = "byId";
-const char ND_BY_PATH[] = "byPath";
+const auto ND_BY_ID = "byId";
+const auto ND_BY_PATH = "byPath";
 
-const char METH_PATH[] = "path";
-const char METH_METHOD[] = "method";
+const auto METH_PATH = "path";
+const auto METH_METHOD = "method";
 
 std::vector<cp::MetaMethod> meta_methods1 {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None},

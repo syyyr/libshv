@@ -20,10 +20,10 @@ namespace cp = shv::chainpack;
 namespace shv::broker {
 
 namespace {
-static const char M_GET_VERBOSITY[] = "verbosity";
-static const char M_SET_VERBOSITY[] = "setVerbosity";
-static const char M_GET_SEND_LOG_SIGNAL_ENABLED[] = "getSendLogAsSignalEnabled";
-static const char M_SET_SEND_LOG_SIGNAL_ENABLED[] = "setSendLogAsSignalEnabled";
+static const auto M_GET_VERBOSITY = "verbosity";
+static const auto M_SET_VERBOSITY = "setVerbosity";
+static const auto M_GET_SEND_LOG_SIGNAL_ENABLED = "getSendLogAsSignalEnabled";
+static const auto M_SET_SEND_LOG_SIGNAL_ENABLED = "setSendLogAsSignalEnabled";
 class BrokerLogNode : public shv::iotqt::node::MethodsTableNode
 {
 	using Super = shv::iotqt::node::MethodsTableNode;
@@ -67,13 +67,13 @@ private:
 };
 }
 
-static const char M_RELOAD_CONFIG[] = "reloadConfig";
-static const char M_RESTART[] = "restart";
-//static const char M_MOUNT_POINT_FOR_CLIENT_ID[] = "mountPointForClientId";
-static const char M_APP_VERSION[] = "appVersion";
-static const char M_GIT_COMMIT[] = "gitCommit";
-static const char M_BROKER_ID[] = "brokerId";
-static const char M_MASTER_BROKER_ID[] = "masterBrokerId";
+static const auto M_RELOAD_CONFIG = "reloadConfig";
+static const auto M_RESTART = "restart";
+//static const auto M_MOUNT_POINT_FOR_CLIENT_ID = "mountPointForClientId";
+static const auto M_APP_VERSION = "appVersion";
+static const auto M_GIT_COMMIT = "gitCommit";
+static const auto M_BROKER_ID = "brokerId";
+static const auto M_MASTER_BROKER_ID = "masterBrokerId";
 
 BrokerAppNode::BrokerAppNode(shv::iotqt::node::ShvNode *parent)
 	: Super("", &m_metaMethods, parent)

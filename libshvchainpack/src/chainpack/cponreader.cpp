@@ -9,12 +9,12 @@
 namespace shv::chainpack {
 
 #define PARSE_EXCEPTION(msg) {\
-	char buff[40]; \
-	auto l = m_in.readsome(buff, sizeof(buff) - 1); \
+	std::array<char, 40> buff; \
+	auto l = m_in.readsome(buff.data(), buff.size() - 1); \
 	buff[l] = 0; \
 	if(exception_aborts) { \
 		std::clog << __FILE__ << ':' << __LINE__;  \
-		std::clog << ' ' << (msg) << " at pos: " << m_in.tellg() << " near to: " << buff << std::endl; \
+		std::clog << ' ' << (msg) << " at pos: " << m_in.tellg() << " near to: " << buff.data() << std::endl; \
 		abort(); \
 	} \
 	else { \
@@ -22,7 +22,7 @@ namespace shv::chainpack {
 			+ msg \
 			+ std::string(" at pos: ") + std::to_string(m_in.tellg()) \
 			+ std::string(" line: ") + std::to_string(m_inCtx.parser_line_no) \
-			+ " near to: " + buff, m_in.tellg()); \
+			+ " near to: " + buff.data(), m_in.tellg()); \
 	} \
 }
 

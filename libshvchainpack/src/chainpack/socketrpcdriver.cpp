@@ -124,10 +124,10 @@ void SocketRpcDriver::exec()
 	struct timeval waitd;
 
 	static constexpr size_t BUFF_LEN = 255;
-	char in[BUFF_LEN];
-	char out[BUFF_LEN];
-	memset(&in, 0, BUFF_LEN);
-	memset(&out, 0, BUFF_LEN);
+	std::array<char, BUFF_LEN> in;
+	std::array<char, BUFF_LEN> out;
+	memset(in.data(), 0, BUFF_LEN);
+	memset(out.data(), 0, BUFF_LEN);
 
 	while(1) {
 		waitd.tv_sec = 5;
@@ -163,14 +163,14 @@ void SocketRpcDriver::exec()
 
 			memset(&in, 0, BUFF_LEN);
 
-			auto n = read(m_socket, in, BUFF_LEN);
+			auto n = read(m_socket, in.data(), BUFF_LEN);
 			nInfo() << "\t " << n << "bytes read";
 			if(n <= 0) {
 				nError() << "Closing socket";
 				closeConnection();
 				return;
 			}
-			onBytesRead(std::string(in, static_cast<size_t>(n)));
+			onBytesRead(std::string(in.data(), static_cast<size_t>(n)));
 		}
 
 		//socket ready for writing

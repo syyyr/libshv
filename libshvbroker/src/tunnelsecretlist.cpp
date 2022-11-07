@@ -43,15 +43,15 @@ std::string TunnelSecretList::createSecret()
 	removeOldSecrets(now);
 
 	static constexpr size_t DATA_LEN = 64;
-	uint32_t data[DATA_LEN];
+	std::array<uint32_t, DATA_LEN> data;
 #ifdef HAVE_QT_RANDOM_GENERATOR
-	QRandomGenerator::global()->generate(data, data + DATA_LEN);
+	QRandomGenerator::global()->generate(data.data(), data.data() + DATA_LEN);
 #else
 	for(size_t i=0; i<DATA_LEN; i++)
 		data[i] = std::rand();
 #endif
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-	hash.addData(reinterpret_cast<const char*>(data), DATA_LEN * sizeof(data[0]));
+	hash.addData(reinterpret_cast<const char*>(data.data()), DATA_LEN * sizeof(data[0]));
 	Secret sc;
 	sc.createdMsec = now;
 	sc.secret = hash.result().toHex().constData();

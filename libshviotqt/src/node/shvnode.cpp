@@ -870,8 +870,8 @@ static RpcValue diffMaps(const RpcValue &template_vals, const RpcValue &vals)
 	return vals;
 }
 
-static const char METH_ORIG_VALUE[] = "origValue";
-static const char METH_RESET_TO_ORIG_VALUE[] = "resetValue";
+static const auto METH_ORIG_VALUE = "origValue";
+static const auto METH_RESET_TO_ORIG_VALUE = "resetValue";
 
 static std::vector<MetaMethod> meta_methods_root_node {
 	{Rpc::METH_DIR, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_CONFIG},
@@ -949,7 +949,7 @@ shv::chainpack::RpcValue RpcValueConfigNode::loadConfigTemplate(const std::strin
 		shv::chainpack::RpcValue rv = rd.read(&err);
 		if(err.empty()) {
 			const shv::chainpack::RpcValue::Map &map = rv.toMap();
-			static const char BASED_ON[] = "basedOn";
+			static const auto BASED_ON = "basedOn";
 			const std::string &based_on = map.value(BASED_ON).asString();
 			if(!based_on.empty()) {
 				shvDebug() << "based on:" << based_on;

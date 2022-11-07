@@ -215,8 +215,8 @@ std::vector<uint8_t> Utils::compressGZip(const std::vector<uint8_t> &data)
 	compressed_data.chop(4);
 
 	// GZIP header according to GZIP File Format Specification (RFC 1952)
-	static const char gzip_header[] = {'\x1f', '\x8b', '\x08', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x03'};
-	compressed_data.prepend(gzip_header, sizeof(gzip_header));
+	static const std::array gzip_header = {'\x1f', '\x8b', '\x08', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x03'};
+	compressed_data.prepend(gzip_header.data(), gzip_header.size());
 
 	const uint32_t crc32 = crc32_checksum(data.data(), static_cast<int>(data.size()));
 	compressed_data.append(static_cast<char>(crc32 & 0xff));

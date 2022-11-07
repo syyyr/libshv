@@ -22,7 +22,7 @@ const char *ShvGetLogParams::KEY_DOMAIN_PATTERN = "domainPattern";
 static const char *SINCE_NOW = "now";
 const char *ShvGetLogParams::SINCE_LAST = "last";
 
-static const char REG_EX[] = "regex";
+static const auto REG_EX = "regex";
 
 ShvGetLogParams::ShvGetLogParams(const chainpack::RpcValue &opts)
 	: ShvGetLogParams()

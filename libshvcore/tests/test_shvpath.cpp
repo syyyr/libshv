@@ -14,11 +14,11 @@ DOCTEST_TEST_CASE("ShvPath")
 	{
 		{
 			string path = "status/errorCommunication";
-			string paths[] = {
-				"status/errorCommunication",
-				"status/errorCommunication/",
-				"status/errorCommunication/foo",
-				"status/errorCommunication/foo/",
+			array paths = {
+				"status/errorCommunication"s,
+				"status/errorCommunication/"s,
+				"status/errorCommunication/foo"s,
+				"status/errorCommunication/foo/"s,
 			};
 			for(const auto &p : paths) {
 				REQUIRE(ShvPath::startsWithPath(p, path));
@@ -26,9 +26,9 @@ DOCTEST_TEST_CASE("ShvPath")
 		}
 		{
 			string path = "foo/bar";
-			string paths[] = {
-				"bar/baz",
-				"foo/barbaz",
+			array paths = {
+				"bar/baz"s,
+				"foo/barbaz"s,
 			};
 			for(const auto &p : paths) {
 				REQUIRE(!ShvPath::startsWithPath(p, path));

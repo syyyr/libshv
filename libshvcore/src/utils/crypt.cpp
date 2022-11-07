@@ -35,7 +35,7 @@ Crypt::Generator Crypt::createGenerator(uint32_t a, uint32_t b, uint32_t max_ran
 static std::string code_byte(uint8_t b)
 {
 	std::string ret;
-	char buff[] = {0,0,0};
+	std::array<char, 3> buff{0,0,0};
 	if((b>='A' && b<='Z') || (b>='a' && b<='z')) {
 		ret.push_back(static_cast<char>(b));
 	}
@@ -44,7 +44,7 @@ static std::string code_byte(uint8_t b)
 		b /= 10;
 		buff[0] = static_cast<char>(b1 + '0');
 		buff[1] = static_cast<char>((b1 % 2)? b + 'A': b + 'a');
-		ret.append(buff);
+		ret.append(buff.data());
 	}
 	return ret;
 }

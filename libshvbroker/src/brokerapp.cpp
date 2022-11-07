@@ -74,7 +74,7 @@ using namespace std;
 namespace shv::broker {
 
 #ifdef Q_OS_UNIX
-int BrokerApp::m_sigTermFd[2];
+std::array<int, 2> BrokerApp::m_sigTermFd;
 #endif
 
 static string BROKER_CURRENT_CLIENT_SHV_PATH = string(cp::Rpc::DIR_BROKER) + '/' + CurrentClientShvNode::NodeId;
@@ -296,7 +296,7 @@ void BrokerApp::installUnixSignalHandlers()
 		if(sigaction(sig_num, &sa, nullptr) > 0)
 			qFatal("Couldn't register posix signal handler");
 	}
-	if(::socketpair(AF_UNIX, SOCK_STREAM, 0, m_sigTermFd))
+	if(::socketpair(AF_UNIX, SOCK_STREAM, 0, m_sigTermFd.data()))
 		qFatal("Couldn't create SIG_TERM socketpair");
 	m_snTerm = new QSocketNotifier(m_sigTermFd[1], QSocketNotifier::Read, this);
 	connect(m_snTerm, &QSocketNotifier::activated, this, &BrokerApp::handlePosixSignals);

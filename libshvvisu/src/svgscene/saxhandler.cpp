@@ -50,7 +50,7 @@ static inline bool isDigit(ushort ch)
 static qreal toDouble(const QChar *&str)
 {
 	const int maxLen = 255;//technically doubles can go til 308+ but whatever
-	char temp[maxLen+1];
+	std::array<char, maxLen+1> temp;
 	int pos = 0;
 	if (*str == QLatin1Char('-')) {
 		temp[pos++] = '-';
@@ -88,7 +88,7 @@ static qreal toDouble(const QChar *&str)
 	qreal val;
 	if (!exponent && pos < 10) {
 		int ival = 0;
-		const char *t = temp;
+		const char *t = temp.data();
 		bool neg = false;
 		if(*t == '-') {
 			neg = true;
@@ -115,7 +115,7 @@ static qreal toDouble(const QChar *&str)
 		if (neg)
 			val = -val;
 	} else {
-		val = QByteArray::fromRawData(temp, pos).toDouble();
+		val = QByteArray::fromRawData(temp.data(), pos).toDouble();
 	}
 	return val;
 }
@@ -265,11 +265,11 @@ bool qsvg_get_hex_rgb(const QChar *str, int len, QRgb *rgb)
 {
 	if (len > 13)
 		return false;
-	char tmp[16];
+	std::array<char, 16> tmp;
 	for(int i = 0; i < len; ++i)
 		tmp[i] = str[i].toLatin1();
 	tmp[len] = 0;
-	return qsvg_get_hex_rgb(tmp, rgb);
+	return qsvg_get_hex_rgb(tmp.data(), rgb);
 }
 
 static QColor parseColor(const QString &color, const QString &opacity)

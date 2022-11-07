@@ -998,9 +998,9 @@ std::string RpcValue::DateTime::toLocalString() const
 		nError() << "Invalid date time: " << m_dtm.msec;
 		return std::string();
 	}
-	char buffer[80];
-	std::strftime(buffer, sizeof(buffer),"%Y-%m-%dT%H:%M:%S",tm);
-	std::string ret(buffer);
+	std::array<char, 80> buffer;
+	std::strftime(buffer.data(), buffer.size(),"%Y-%m-%dT%H:%M:%S",tm);
+	std::string ret(buffer.data());
 	int msecs = static_cast<int>(m_dtm.msec % 1000);
 	if(msecs > 0)
 		ret += '.' + Utils::toString(msecs % 1000);
@@ -1010,10 +1010,10 @@ std::string RpcValue::DateTime::toLocalString() const
 std::string RpcValue::DateTime::toIsoString(RpcValue::DateTime::MsecPolicy msec_policy, bool include_tz) const
 {
 	ccpcp_pack_context ctx;
-	char buff[32];
-	ccpcp_pack_context_init(&ctx, buff, sizeof(buff), nullptr);
+	std::array<char, 32> buff;
+	ccpcp_pack_context_init(&ctx, buff.data(), buff.size(), nullptr);
 	ccpon_pack_date_time_str(&ctx, msecsSinceEpoch(), minutesFromUtc(), static_cast<ccpon_msec_policy>(msec_policy), include_tz);
-	return std::string(buff, ctx.current);
+	return std::string(buff.data(), ctx.current);
 #if 0
 	std::time_t tim = m_dtm.msec / 1000 + m_dtm.tz * 15 * 60;
 	std::tm *tm = std::gmtime(&tim);
