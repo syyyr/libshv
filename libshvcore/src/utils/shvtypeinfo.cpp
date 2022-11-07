@@ -259,7 +259,7 @@ RpcValue ShvTypeDescr::fieldValue(const chainpack::RpcValue &val, const std::str
 	return {};
 }
 
-const std::string ShvTypeDescr::typeToString(ShvTypeDescr::Type t)
+std::string ShvTypeDescr::typeToString(ShvTypeDescr::Type t)
 {
 	switch (t) {
 	case Type::Invalid: break;
@@ -296,7 +296,7 @@ ShvTypeDescr::Type ShvTypeDescr::typeFromString(const std::string &s)
 	return Type::Invalid;
 }
 
-const std::string ShvTypeDescr::sampleTypeToString(ShvTypeDescr::SampleType t)
+std::string ShvTypeDescr::sampleTypeToString(ShvTypeDescr::SampleType t)
 {
 	switch (t) {
 	case SampleType::Discrete: return "Discrete";

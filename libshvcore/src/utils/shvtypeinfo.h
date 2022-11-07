@@ -105,10 +105,10 @@ public:
 	ShvFieldDescr field(const std::string &field_name) const;
 	shv::chainpack::RpcValue fieldValue(const shv::chainpack::RpcValue &val, const std::string &field_name) const;
 
-	static const std::string typeToString(Type t);
+	static std::string typeToString(Type t);
 	static Type typeFromString(const std::string &s);
 
-	static const std::string sampleTypeToString(SampleType t);
+	static std::string sampleTypeToString(SampleType t);
 	static SampleType sampleTypeFromString(const std::string &s);
 
 	int decimalPlaces() const;
