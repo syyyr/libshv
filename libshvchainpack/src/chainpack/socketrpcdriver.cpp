@@ -129,7 +129,7 @@ void SocketRpcDriver::exec()
 	memset(in.data(), 0, BUFF_LEN);
 	memset(out.data(), 0, BUFF_LEN);
 
-	while(1) {
+	while (true) {
 		waitd.tv_sec = 5;
 		waitd.tv_usec = 0;
 
