@@ -7,7 +7,7 @@
 #include <cmath>
 #include <sstream>
 
-#include <string.h>
+#include <cstring>
 
 namespace shv::chainpack {
 

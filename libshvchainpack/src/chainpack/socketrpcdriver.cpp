@@ -3,7 +3,7 @@
 #include <necrolog.h>
 
 #include <cassert>
-#include <string.h>
+#include <cstring>
 
 #ifdef FREE_RTOS
 #include "lwip/netdb.h"

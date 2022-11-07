@@ -45,7 +45,7 @@
 #include <fstream>
 
 #ifdef Q_OS_UNIX
-#include <signal.h>
+#include <csignal>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
