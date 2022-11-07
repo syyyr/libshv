@@ -23,8 +23,6 @@ static QString USER_PROFILES_KEY = QStringLiteral("userProfiles");
 static QString SITES_KEY = QStringLiteral("sites");
 static QString VIEWS_KEY = QStringLiteral("channelViews");
 
-namespace cp = shv::chainpack;
-
 namespace shv::visu::timeline {
 
 const QString Graph::DEFAULT_USER_PROFILE = QStringLiteral("default");

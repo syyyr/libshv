@@ -6,8 +6,6 @@
 
 #include <QSet>
 
-namespace cp = shv::chainpack;
-
 namespace shv::visu::timeline {
 
 ChannelFilterModel::ChannelFilterModel(QObject *parent)

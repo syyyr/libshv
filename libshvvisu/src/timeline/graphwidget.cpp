@@ -25,8 +25,6 @@
 
 #define logMouseSelection() nCDebug("MouseSelection")
 
-namespace cp = shv::chainpack;
-
 namespace shv::visu::timeline {
 
 GraphWidget::GraphWidget(QWidget *parent)

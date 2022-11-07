@@ -4,8 +4,6 @@
 
 #include <shv/coreqt/log.h>
 
-namespace cp = shv::chainpack;
-
 namespace shv::broker {
 
 //======================================================================

@@ -21,8 +21,6 @@
 
 #define logRpcData() shvCMessage("RpcData")
 
-namespace cp = shv::chainpack;
-
 namespace shv::iotqt::rpc {
 
 SocketRpcConnection::SocketRpcConnection(QObject *parent)
