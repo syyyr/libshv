@@ -76,7 +76,7 @@ QVariant LogModel::data(const QModelIndex &index, int role) const
 #endif
 				return dt.toString(Qt::ISODateWithMs);
 			}
-			else if(index.column() == ColPath) {
+			if(index.column() == ColPath) {
 				if ((val.type() == cp::RpcValue::Type::UInt) || (val.type() == cp::RpcValue::Type::Int)) {
 					static std::string KEY_PATHS_DICT = shv::core::utils::ShvFileJournal::KEY_PATHS_DICT;
 					const chainpack::RpcValue::IMap &dict = m_log.metaValue(KEY_PATHS_DICT).toIMap();
@@ -87,7 +87,7 @@ QVariant LogModel::data(const QModelIndex &index, int role) const
 				}
 				return QString::fromStdString(val.asString());
 			}
-			else if(index.column() == ColValueFlags) {
+			if(index.column() == ColValueFlags) {
 				return QString::fromStdString(cp::DataChange::valueFlagsToString(val.toUInt()));
 			}
 			return QString::fromStdString(val.toCpon());

@@ -75,9 +75,10 @@ std::string ShvUrl::makeShvUrlString(ShvUrl::Type type, const StringView &servic
 	if(type == Type::Plain) {
 		if(service.empty())
 			return path_rest.toString();
-		else
-			return StringViewList{service, path_rest}.join(ShvPath::SHV_PATH_DELIM);
+
+		return StringViewList{service, path_rest}.join(ShvPath::SHV_PATH_DELIM);
 	}
+
 	string srv = service.toString();
 	if(!full_broker_id.empty())
 		srv += full_broker_id.toString();

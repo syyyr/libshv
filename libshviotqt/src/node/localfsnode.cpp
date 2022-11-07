@@ -63,20 +63,20 @@ chainpack::RpcValue LocalFSNode::callMethod(const ShvNode::StringViewList &shv_p
 	if(method == M_WRITE) {
 		return ndWrite(QString::fromStdString(shv_path.join('/')), params);
 	}
-	else if(method == M_DELETE) {
+	if(method == M_DELETE) {
 		return ndDelete(QString::fromStdString(shv_path.join('/')));
 	}
-	else if(method == M_MKFILE) {
+	if(method == M_MKFILE) {
 		return ndMkfile(QString::fromStdString(shv_path.join('/')), params);
 	}
-	else if(method == M_MKDIR) {
+	if(method == M_MKDIR) {
 		return ndMkdir(QString::fromStdString(shv_path.join('/')), params);
 	}
-	else if(method == M_RMDIR) {
+	if(method == M_RMDIR) {
 		bool recursively = (params.isBool()) ? params.toBool() : false;
 		return ndRmdir(QString::fromStdString(shv_path.join('/')), recursively);
 	}
-	else if(method == M_LS_FILES) {
+	if(method == M_LS_FILES) {
 		return ndLsDir(QString::fromStdString(shv_path.join('/')), params);
 	}
 
@@ -213,7 +213,7 @@ chainpack::RpcValue LocalFSNode::ndWrite(const QString &path, const chainpack::R
 		}
 		SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for writing.");
 	}
-	else if (methods_params.isList()){
+	if (methods_params.isList()){
 		chainpack::RpcValue::List params = methods_params.toList();
 
 		if (params.size() != 2){
@@ -229,10 +229,8 @@ chainpack::RpcValue LocalFSNode::ndWrite(const QString &path, const chainpack::R
 		}
 		SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for writing.");
 	}
-	else{
-		SHV_EXCEPTION("Unsupported param type.");
-	}
 
+	SHV_EXCEPTION("Unsupported param type.");
 	return false;
 }
 
@@ -318,8 +316,8 @@ chainpack::RpcValue LocalFSNode::ndRmdir(const QString &path, bool recursively)
 
 	if (recursively)
 		return d.removeRecursively();
-	else
-		return d.rmdir(makeAbsolutePath(path));
+
+	return d.rmdir(makeAbsolutePath(path));
 }
 
 RpcValue LocalFSNode::ndLsDir(const QString &path, const chainpack::RpcValue &methods_params)
@@ -358,9 +356,8 @@ RpcValue LocalFSNode::ndLsDir(const QString &path, const chainpack::RpcValue &me
 		}
 		return lst;
 	}
-	else {
-		SHV_EXCEPTION("Path " + path.toStdString() + " is not dir.");
-	}
+
+	SHV_EXCEPTION("Path " + path.toStdString() + " is not dir.");
 	return {};
 }
 

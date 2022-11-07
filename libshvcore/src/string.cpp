@@ -66,9 +66,8 @@ bool String::equal(std::string const& a, std::string const& b, String::CaseSensi
 		[](char x, char y) { return x == y;}
 		);
 	}
-	else {
-		return false;
-	}
+
+	return false;
 }
 
 std::vector<std::string> String::split(const std::string &str, char delim, SplitBehavior split_behavior)

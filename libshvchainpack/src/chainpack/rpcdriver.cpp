@@ -100,10 +100,9 @@ RpcMessage RpcDriver::composeRpcMessage(RpcValue::MetaData &&meta_data, const st
 		if(!errmsg) {
 			SHVCHP_EXCEPTION(msg);
 		}
-		else {
-			*errmsg = msg;
-			return RpcMessage();
-		}
+
+		*errmsg = msg;
+		return RpcMessage();
 	}
 	val.setMetaData(std::move(meta_data));
 	return RpcMessage(val);
@@ -295,10 +294,9 @@ void RpcDriver::processReadData()
 				m_readData = m_readData.substr(1);
 				continue;
 			}
-			else {
-				onParseDataException(e);
-				return;
-			}
+
+			onParseDataException(e);
+			return;
 		}
 
 		if(m_protocolType == Rpc::ProtocolType::Invalid && protocol_type != Rpc::ProtocolType::Invalid) {
@@ -348,21 +346,20 @@ size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolTyp
 		if(!msg.isMap()) {
 			throw ParseException(CCPCP_RC_MALFORMED_INPUT, "JSON message cannot be translated to ChainPack", -1);
 		}
-		else {
-			const RpcValue::Map &map = msg.toMap();
-			int id = map.value(Rpc::JSONRPC_REQUEST_ID).toInt();
-			int caller_id = map.value(Rpc::JSONRPC_CALLER_ID).toInt();
-			RpcValue::String method = map.value(Rpc::JSONRPC_METHOD).toString();
-			std::string shv_path = map.value(Rpc::JSONRPC_SHV_PATH).toString();
-			if(id > 0)
-				RpcMessage::setRequestId(meta_data, id);
-			if(!method.empty())
-				RpcMessage::setMethod(meta_data, method);
-			if(!shv_path.empty())
-				RpcMessage::setShvPath(meta_data, shv_path);
-			if(caller_id > 0)
-				RpcMessage::setCallerIds(meta_data, caller_id);
-		}
+
+		const RpcValue::Map &map = msg.toMap();
+		int id = map.value(Rpc::JSONRPC_REQUEST_ID).toInt();
+		int caller_id = map.value(Rpc::JSONRPC_CALLER_ID).toInt();
+		RpcValue::String method = map.value(Rpc::JSONRPC_METHOD).toString();
+		std::string shv_path = map.value(Rpc::JSONRPC_SHV_PATH).toString();
+		if(id > 0)
+			RpcMessage::setRequestId(meta_data, id);
+		if(!method.empty())
+			RpcMessage::setMethod(meta_data, method);
+		if(!shv_path.empty())
+			RpcMessage::setShvPath(meta_data, shv_path);
+		if(caller_id > 0)
+			RpcMessage::setCallerIds(meta_data, caller_id);
 		break;
 	}
 	case Rpc::ProtocolType::Cpon: {

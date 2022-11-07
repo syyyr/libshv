@@ -45,17 +45,16 @@ ValueXInterval SerieData::range() const
 	if (!empty()) {
 		return ValueXInterval(at(0).valueX, back().valueX, xType());
 	}
-	else {
-		switch (xType()) {
-		case ValueType::Double:
-			return ValueXInterval(0.0, 0.0);
-		case ValueType::Int:
-			return ValueXInterval(0, 0);
-		case ValueType::TimeStamp:
-			return ValueXInterval(0LL, 0LL);
-		default:
-			SHV_EXCEPTION("Invalid type on X axis");
-		}
+
+	switch (xType()) {
+	case ValueType::Double:
+		return ValueXInterval(0.0, 0.0);
+	case ValueType::Int:
+		return ValueXInterval(0, 0);
+	case ValueType::TimeStamp:
+		return ValueXInterval(0LL, 0LL);
+	default:
+		SHV_EXCEPTION("Invalid type on X axis");
 	}
 }
 
@@ -66,12 +65,11 @@ bool SerieData::addValueChange(const ValueChange &value)
 		push_back(value);
 		return true;
 	}
-	else {
-		const ValueChange &last = at(static_cast<size_t>(sz - 1));
-		if (!compareValueX(last, value, xType()) && !compareValueY(last, value, yType())) {
-			push_back(value);
-			return true;
-		}
+
+	const ValueChange &last = at(static_cast<size_t>(sz - 1));
+	if (!compareValueX(last, value, xType()) && !compareValueY(last, value, yType())) {
+		push_back(value);
+		return true;
 	}
 	return false;
 }
@@ -251,10 +249,10 @@ ValueChange::ValueX ValueXInterval::length() const
 	if (type == ValueType::TimeStamp) {
 		return ValueChange::ValueX(max.timeStamp - min.timeStamp);
 	}
-	else if (type == ValueType::Int) {
+	if (type == ValueType::Int) {
 		return ValueChange::ValueX(max.intValue - min.intValue);
 	}
-	else if (type == ValueType::Double) {
+	if (type == ValueType::Double) {
 		return ValueChange::ValueX(max.doubleValue - min.doubleValue);
 	}
     SHV_EXCEPTION("Invalid interval type");

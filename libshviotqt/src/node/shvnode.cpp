@@ -373,7 +373,7 @@ int ShvNode::basicGrantToAccessLevel(const shv::chainpack::AccessGrant &acces_gr
 		if(std::strcmp(acces_level, Rpc::ROLE_ADMIN) == 0) return MetaMethod::AccessLevel::Admin;
 		return shv::chainpack::MetaMethod::AccessLevel::None;
 	}
-	else if(acces_grant.isAccessLevel()) {
+	if(acces_grant.isAccessLevel()) {
 		return acces_grant.accessLevel;
 	}
 	return shv::chainpack::MetaMethod::AccessLevel::None;
@@ -671,12 +671,11 @@ size_t RpcValueMapNode::methodCount(const shv::iotqt::node::ShvNode::StringViewL
 	if(shv_path.empty()) {
 		return meta_methods_value_map_root_node.size();
 	}
-	else {
-		if(isDir(shv_path))
-			return 2;
-		if(isReadOnly())
-			return meta_methods_value_map_node.size() - 1;
-	}
+	if(isDir(shv_path))
+		return 2;
+	if(isReadOnly())
+		return meta_methods_value_map_node.size() - 1;
+
 	return meta_methods_value_map_node.size();
 }
 
@@ -899,9 +898,8 @@ size_t RpcValueConfigNode::methodCount(const shv::iotqt::node::ShvNode::StringVi
 	if(shv_path.empty()) {
 		return meta_methods_root_node.size();
 	}
-	else {
-		return isDir(shv_path)? 2: meta_methods_node.size();
-	}
+
+	return isDir(shv_path)? 2: meta_methods_node.size();
 }
 
 const shv::chainpack::MetaMethod *RpcValueConfigNode::metaMethod(const shv::iotqt::node::ShvNode::StringViewList &shv_path, size_t ix)
@@ -960,9 +958,7 @@ shv::chainpack::RpcValue RpcValueConfigNode::loadConfigTemplate(const std::strin
 			shvDebug() << "return:" << rv.toCpon("\t");
 			return rv;
 		}
-		else {
-			shvWarning() << "Cpon parsing error:" << err << "file:" << file_name;
-		}
+		shvWarning() << "Cpon parsing error:" << err << "file:" << file_name;
 	}
 	else {
 		shvWarning() << "Cannot open file:" << file_name;
@@ -1093,9 +1089,8 @@ const shv::chainpack::MetaMethod *ObjectPropertyProxyShvNode::metaMethod(const s
 				return &(meta_methods_pn[ix+1]);
 			return &(meta_methods_pn[ix]);
 		}
-		else {
-			SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " on path: " + shv_path.join('/'));
-		}
+
+		SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " on path: " + shv_path.join('/'));
 	}
 	return  Super::metaMethod(shv_path, ix);
 }

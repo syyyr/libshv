@@ -166,11 +166,11 @@ public:
 			std::sort(lst.begin(), lst.end());
 			return lst;
 		}
-		else {
-			if(shv_path.size() == 1) {
-				return StringList();
-			}
+
+		if(shv_path.size() == 1) {
+			return StringList();
 		}
+
 		return Super::childNames(shv_path);
 	}
 
@@ -1179,7 +1179,7 @@ void BrokerApp::onRootNodeSendRpcMesage(const shv::chainpack::RpcMessage &msg)
 			shvError() << "Cannot find connection for ID:" << connection_id;
 		return;
 	}
-	else if(msg.isSignal()) {
+	if(msg.isSignal()) {
 		cp::RpcSignal sig(msg);
 		sendNotifyToSubscribers(sig.shvPath().asString(), sig.method().asString(), sig.params());
 	}

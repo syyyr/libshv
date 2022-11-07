@@ -88,9 +88,8 @@ shv::iotqt::rpc::ServerConnection *BrokerTcpServer::createServerConnection(QTcpS
 		//qobject_cast<QSslSocket *>(socket)->startServerEncryption();
 		return new ClientConnectionOnBroker(new shv::iotqt::rpc::SslSocket(qobject_cast<QSslSocket *>(socket)), parent);
 	}
-	else {
-		return new ClientConnectionOnBroker(new shv::iotqt::rpc::TcpSocket(socket), parent);
-	}
+
+	return new ClientConnectionOnBroker(new shv::iotqt::rpc::TcpSocket(socket), parent);
 }
 
 }

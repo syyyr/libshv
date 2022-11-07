@@ -51,12 +51,12 @@ static CompressionType compression_type_from_string(const std::string &type_str,
 {
 	if (type_str.empty())
 		return default_type;
-	else if (type_str == "gzip")
+	if (type_str == "gzip")
 		return CompressionType::GZip;
-	else if (type_str == "qcompress")
+	if (type_str == "qcompress")
 		return CompressionType::QCompress;
-	else
-		return CompressionType::Invalid;
+
+	return CompressionType::Invalid;
 }
 
 FileNode::FileNode(const std::string &node_id, shv::iotqt::node::FileNode::Super *parent)

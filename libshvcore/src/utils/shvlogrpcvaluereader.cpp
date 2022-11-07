@@ -38,8 +38,8 @@ bool ShvLogRpcValueReader::next()
 		if(!dt.isDateTime()) {
 			if(m_isThrowExceptions)
 				throw shv::core::Exception("Invalid date time, row: " + val.toCpon());
-			else
-				logWShvJournal() << "Skipping invalid date time, row:" << val.toCpon();
+
+			logWShvJournal() << "Skipping invalid date time, row:" << val.toCpon();
 			continue;
 		}
 		int64_t time = dt.toDateTime().msecsSinceEpoch();
@@ -50,8 +50,8 @@ bool ShvLogRpcValueReader::next()
 		if(path.empty()) {
 			if(m_isThrowExceptions)
 				throw shv::core::Exception("Path dictionary corrupted, row: " + val.toCpon());
-			else
-				logWShvJournal() << "Path dictionary corrupted, row:" << val.toCpon();
+
+			logWShvJournal() << "Path dictionary corrupted, row:" << val.toCpon();
 			continue;
 		}
 		//logDShvJournal() << "row:" << val.toCpon();

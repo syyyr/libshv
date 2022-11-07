@@ -232,10 +232,9 @@ std::vector<char> Utils::readAllFd(int fd)
 				ret.resize(prev_size);
 				return ret;
 			}
-			else {
-				shvError() << "error read fd:" << fd << std::strerror(errno);
-				return std::vector<char>();
-			}
+
+			shvError() << "error read fd:" << fd << std::strerror(errno);
+			return std::vector<char>();
 		}
 		if(n < CHUNK_SIZE) {
 			ret.resize(prev_size + static_cast<size_t>(n));

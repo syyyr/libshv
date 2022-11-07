@@ -559,9 +559,8 @@ typename map<string, T>::const_iterator find_longest_prefix(const map<string, T>
 			if(ix == string::npos) {
 				return map.cend();
 			}
-			else {
-				prefix = prefix.mid(0, ix);
-			}
+
+			prefix = prefix.mid(0, ix);
 		}
 		else {
 			return it;
@@ -605,13 +604,13 @@ ShvTypeInfo ShvTypeInfo::fromVersion2(std::map<std::string, ShvTypeDescr> &&type
 
 const std::map<string, ShvPropertyDescr> &ShvTypeInfo::devicePropertyDescriptions(const std::string &device_type) const
 {
-	if(auto it = m_deviceProperties.find(device_type); it == m_deviceProperties.end()) {
+	auto it = m_deviceProperties.find(device_type);
+	if( it == m_deviceProperties.end()) {
 		static DeviceProperties empty;
 		return empty;
 	}
-	else {
-		return it->second;
-	}
+
+	return it->second;
 }
 
 ShvTypeInfo &ShvTypeInfo::setDevicePath(const std::string &device_path, const std::string &device_type)
@@ -646,12 +645,12 @@ ShvTypeInfo &ShvTypeInfo::setExtraTags(const std::string &node_path, const chain
 
 RpcValue ShvTypeInfo::extraTags(const std::string &node_path) const
 {
-	if(auto it = m_extraTags.find(node_path); it == m_extraTags.cend()) {
+	auto it = m_extraTags.find(node_path);
+	if( it == m_extraTags.cend()) {
 		return {};
 	}
-	else {
-		return it->second;
-	}
+
+	return it->second;
 }
 
 ShvTypeInfo &ShvTypeInfo::setTypeDescription(const std::string &type_name, const ShvTypeDescr &type_descr)
@@ -706,15 +705,16 @@ ShvPropertyDescr ShvTypeInfo::propertyDescriptionForPath(const std::string &shv_
 
 std::tuple<string, string, string> ShvTypeInfo::findDeviceType(const std::string &shv_path) const
 {
-	if(auto it = find_longest_prefix(m_devicePaths, shv_path); it == m_devicePaths.cend()) {
+	auto it = find_longest_prefix(m_devicePaths, shv_path);
+	if( it == m_devicePaths.cend()) {
 		return {};
 	}
-	else {
-		const string prefix = it->first;
-		const string device_type = it->second;
-		const string property_path = String(shv_path).mid(prefix.size() + 1);
-		return make_tuple(prefix, device_type, property_path);
-	}
+
+	const string prefix = it->first;
+	const string device_type = it->second;
+	const string property_path = String(shv_path).mid(prefix.size() + 1);
+	return make_tuple(prefix, device_type, property_path);
+
 }
 
 std::tuple<string, string, ShvPropertyDescr> ShvTypeInfo::findPropertyDescription(const std::string &device_type, const std::string &property_path) const
@@ -738,10 +738,11 @@ std::tuple<string, string, ShvPropertyDescr> ShvTypeInfo::findPropertyDescriptio
 
 ShvTypeDescr ShvTypeInfo::findTypeDescription(const std::string &type_name) const
 {
-	if(auto it = m_types.find(type_name); it == m_types.end())
+	auto it = m_types.find(type_name);
+	if( it == m_types.end())
 		return ShvTypeDescr(type_name);
-	else
-		return it->second;
+
+	return it->second;
 }
 
 ShvTypeDescr ShvTypeInfo::typeDescriptionForPath(const std::string &shv_path) const
@@ -751,10 +752,11 @@ ShvTypeDescr ShvTypeInfo::typeDescriptionForPath(const std::string &shv_path) co
 
 RpcValue ShvTypeInfo::extraTagsForPath(const std::string &shv_path) const
 {
-	if(auto it = m_extraTags.find(shv_path); it == m_extraTags.end())
+	auto it = m_extraTags.find(shv_path);
+	if( it == m_extraTags.end())
 		return {};
-	else
-		return it->second;
+
+	return it->second;
 }
 
 std::string ShvTypeInfo::findSystemPath(const std::string &shv_path) const
@@ -866,7 +868,7 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 		ret.m_blacklistedPaths = map.value(BLACKLISTED_PATHS).asMap();
 		return ret;
 	}
-	else if(map.hasKey(PATHS) && map.hasKey(TYPES)) {
+	if(map.hasKey(PATHS) && map.hasKey(TYPES)) {
 		// version 2
 		ShvTypeInfo ret;
 		{
@@ -885,9 +887,8 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 		}
 		return ret;
 	}
-	else {
-		return fromNodesTree(v);
-	}
+
+	return fromNodesTree(v);
 }
 
 RpcValue ShvTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums) const
@@ -920,9 +921,8 @@ RpcValue ShvTypeInfo::applyTypeDescription(const chainpack::RpcValue &val, const
 			}
 			return "UNKNOWN_" + val.toCpon();
 		}
-		else {
-			return ival;
-		}
+
+		return ival;
 	}
 	case ShvTypeDescr::Type::Bool:
 		return val.toBool();
@@ -961,15 +961,15 @@ RpcValue ShvTypeInfo::applyTypeDescription(const chainpack::RpcValue &val, const
 
 void ShvTypeInfo::forEachDeviceProperty(const std::string &device_type, std::function<void (const std::string &, const ShvPropertyDescr &)> fn) const
 {
-	if(auto it = m_deviceProperties.find(device_type); it == m_deviceProperties.end()) {
+	auto it = m_deviceProperties.find(device_type);
+	if( it == m_deviceProperties.end()) {
 		// device path invalid
 		return;
 	}
-	else {
-		for(const auto &[property_path, node_descr] : it->second) {
-			fn(property_path, node_descr);
-		};
-	}
+
+	for(const auto &[property_path, node_descr] : it->second) {
+		fn(property_path, node_descr);
+	};
 }
 
 void ShvTypeInfo::forEachProperty(std::function<void (const std::string &shv_path, const ShvPropertyDescr &node_descr)> fn) const

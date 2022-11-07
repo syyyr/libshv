@@ -307,9 +307,8 @@ RpcValue RpcMessage::popCallerId(const RpcValue &caller_ids, RpcValue::Int &id)
 		}
 		return RpcValue(array);
 	}
-	else {
-		id = caller_ids.toInt();
-	}
+	id = caller_ids.toInt();
+
 	return RpcValue();
 }
 
@@ -335,13 +334,11 @@ RpcValue::Int RpcMessage::peekCallerId(const RpcValue::MetaData &meta)
 		if(array.empty()) {
 			return 0;
 		}
-		else {
-			return array.back().toInt();
-		}
+
+		return array.back().toInt();
 	}
-	else {
-		return  caller_ids.toInt();
-	}
+
+	return  caller_ids.toInt();
 }
 
 RpcValue::Int RpcMessage::peekCallerId() const

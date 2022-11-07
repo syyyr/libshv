@@ -427,9 +427,8 @@ Sample Graph::timeToNearestSample(int channel_ix, timemsec_t time) const
 	if (s1.isValid() && time - s1.time < s2.time - time) {
 		return s1;
 	}
-	else {
-		return s2;
-	}
+
+	return s2;
 }
 
 Sample Graph::posToData(const QPoint &pos) const
@@ -2409,9 +2408,8 @@ QString Graph::VisualSettings::toJson() const
 		}
 		return QJsonDocument(QJsonObject{{ "channels", settings }}).toJson(QJsonDocument::Compact);
 	}
-	else {
-		return QString();
-	}
+
+	return QString();
 }
 
 Graph::VisualSettings Graph::VisualSettings::fromJson(const QString &json)

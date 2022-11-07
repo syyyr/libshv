@@ -161,7 +161,7 @@ RpcValue Utils::mergeMaps(const RpcValue &value_base, const RpcValue &value_over
 		}
 		return merged;
 	}
-	else if(value_over.isValid()) {
+	if(value_over.isValid()) {
 		return value_over;
 	}
 	return value_base;

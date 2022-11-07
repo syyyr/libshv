@@ -61,16 +61,16 @@ bool GraphButtonBox::processEvent(QEvent *ev)
 			ev->accept();
 			return true;
 		}
-		else {
-			if(m_mouseOver) {
-				m_mouseOver = false;
-				m_mouseOverButtonIndex = -1;
-				m_mousePressButtonIndex = -1;
-				invalidate_bb();
-				ev->accept();
-				return true;
-			}
+
+		if(m_mouseOver) {
+			m_mouseOver = false;
+			m_mouseOverButtonIndex = -1;
+			m_mousePressButtonIndex = -1;
+			invalidate_bb();
+			ev->accept();
+			return true;
 		}
+
 		break;
 	}
 	case QEvent::MouseButtonPress: {

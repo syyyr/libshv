@@ -353,8 +353,8 @@ RpcValue ChainPackList::atI(RpcValue::Int ix) const
 		ix = static_cast<RpcValue::Int>(m_value.size()) + ix;
 	if (ix < 0 || ix >= static_cast<int>(m_value.size()))
 		return RpcValue();
-	else
-		return m_value[static_cast<size_t>(ix)];
+
+	return m_value[static_cast<size_t>(ix)];
 }
 
 void ChainPackList::setI(RpcValue::Int ix, const RpcValue &val)

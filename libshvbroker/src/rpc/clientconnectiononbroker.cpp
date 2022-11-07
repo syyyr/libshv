@@ -240,7 +240,7 @@ string ClientConnectionOnBroker::toSubscribedPath(const CommonRpcClientHandle::S
 		auto b = StringView(signal_path).mid(subs.localPath.size());
 		return ShvPath(a.toString()).appendPath(b);
 	}
-	else if(spp_signal.isPlain()) {
+	if(spp_signal.isPlain()) {
 		if(spp_subs.isUpTreeMountPointRelative()) {
 			/// a/b/c/d --> a:/b/c/d
 			// cut service and slash
@@ -253,7 +253,7 @@ string ClientConnectionOnBroker::toSubscribedPath(const CommonRpcClientHandle::S
 			auto ret = ServiceProviderPath::makeShvUrlString(spp_subs.type(), spp_subs.service(), spp_subs.fullBrokerId(), sv);
 			return ret;
 		}
-		else if(spp_subs.isUpTreeAbsolute()) {
+		if(spp_subs.isUpTreeAbsolute()) {
 			/// a/b/c/d --> a|/b/c/d
 			// cut service and slash
 			auto sv = StringView(signal_path).mid(spp_subs.service().length() + 1);

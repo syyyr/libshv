@@ -66,7 +66,7 @@ bool ChannelProbeWidget::eventFilter(QObject *o, QEvent *e)
 			e->accept();
 			return true;
 		}
-		else if (o == ui->fHeader) {
+		if (o == ui->fHeader) {
 			setCursor(QCursor(Qt::DragMoveCursor));
 			m_recentMousePos = pos;
 			m_mouseOperation = MouseOperation::MoveWidget;
@@ -88,7 +88,7 @@ bool ChannelProbeWidget::eventFilter(QObject *o, QEvent *e)
 			e->accept();
 			return true;
 		}
-		else if (m_mouseOperation == MouseOperation::ResizeWidget) {
+		if (m_mouseOperation == MouseOperation::ResizeWidget) {
 			QPoint pos =  QCursor::pos();
 			QRect g = geometry();
 
@@ -168,22 +168,22 @@ ChannelProbeWidget::FrameSection ChannelProbeWidget::getFrameSection()
 
 	if (top_margin && left_margin)
 		return FrameSection::TopLeft;
-	else if (top_margin && right_margin)
+	if (top_margin && right_margin)
 		return FrameSection::TopRight;
-	else if (bottom_margin && left_margin)
+	if (bottom_margin && left_margin)
 		return FrameSection::BottomLeft;
-	else if (bottom_margin && right_margin)
+	if (bottom_margin && right_margin)
 		return FrameSection::BottomRight;
-	else if (left_margin)
+	if (left_margin)
 		return FrameSection::Left;
-	else if (right_margin)
+	if (right_margin)
 		return FrameSection::Right;
-	else if (top_margin)
+	if (top_margin)
 		return FrameSection::Top;
-	else if (bottom_margin)
+	if (bottom_margin)
 		return FrameSection::Bottom;
-	else
-		return FrameSection::NoSection;
+
+	return FrameSection::NoSection;
 }
 
 QCursor ChannelProbeWidget::frameSectionCursor(ChannelProbeWidget::FrameSection fs)

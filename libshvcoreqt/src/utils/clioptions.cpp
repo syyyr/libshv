@@ -199,14 +199,13 @@ bool CLIOptions::setValue(const QString& name, const QVariant val, bool throw_ex
 		orf.setValue(val);
 		return true;
 	}
-	else {
-		QString msg = "setValue():"%val.toString()%" Key '"%name%"' not found.";
-		shvWarning() << msg.toStdString();
-		if(throw_exc) {
-			SHV_EXCEPTION(msg.toStdString());
-		}
-		return false;
+
+	QString msg = "setValue():"%val.toString()%" Key '"%name%"' not found.";
+	shvWarning() << msg.toStdString();
+	if(throw_exc) {
+		SHV_EXCEPTION(msg.toStdString());
 	}
+	return false;
 }
 
 QString CLIOptions::takeArg(bool &ok)
@@ -253,32 +252,31 @@ void CLIOptions::parse(const QStringList& cmd_line_args)
 			m_isAppBreak = true;
 			return;
 		}
-		else {
-			bool found = false;
-			QMutableMapIterator<QString, Option> it(m_options);
-			while(it.hasNext()) {
-				it.next();
-				Option &opt = it.value();
-				QStringList names = opt.names();
-				if(names.contains(arg)) {
-					found = true;
-					arg = peekArg(ok);
-					if(arg.startsWith('-') || !ok) {
-						// switch has no value entered
-						arg = QString();
-					}
-					else {
-						arg = takeArg(ok);
-					}
-					opt.setValueString(arg);
-					break;
+		bool found = false;
+		QMutableMapIterator<QString, Option> it(m_options);
+		while(it.hasNext()) {
+			it.next();
+			Option &opt = it.value();
+			QStringList names = opt.names();
+			if(names.contains(arg)) {
+				found = true;
+				arg = peekArg(ok);
+				if(arg.startsWith('-') || !ok) {
+					// switch has no value entered
+					arg = QString();
 				}
-			}
-			if(!found) {
-				if(arg.startsWith("-"))
-					m_unusedArguments << arg;
+				else {
+					arg = takeArg(ok);
+				}
+				opt.setValueString(arg);
+				break;
 			}
 		}
+		if(!found) {
+			if(arg.startsWith("-"))
+				m_unusedArguments << arg;
+		}
+
 	}
 	{
 		QMapIterator<QString, Option> it(m_options);

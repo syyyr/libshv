@@ -472,7 +472,7 @@ void ClientConnection::processLoginPhase(const chainpack::RpcMessage &msg)
 			sendLogin(resp.result());
 			return;
 		}
-		else if(m_connectionState.loginRequestId == id) {
+		if(m_connectionState.loginRequestId == id) {
 			m_connectionState.loginResult = resp.result();
 			setState(State::BrokerConnected);
 			return;

@@ -1021,153 +1021,156 @@ bool SaxHandler::startElement()
 			m_scene->addItem(m_topLevelItem);
 			return true;
 		}
-		else {
-			nWarning() << "unsupported root element:" << el.name;
+
+		nWarning() << "unsupported root element:" << el.name;
+		return false;
+	}
+	if (el.name == QLatin1String("g")) {
+		QGraphicsItem *item = createGroupItem(el);
+		if(item) {
+			setXmlAttributes(item, el);
+			if(auto *rect_item = dynamic_cast<QGraphicsRectItem*>(item)) {
+				setStyle(rect_item, el.xmlAttributes);
+			}
+			setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
+			addItem(item);
+			return true;
 		}
 		return false;
 	}
-	else {
-		if (el.name == QLatin1String("g")) {
-			QGraphicsItem *item = createGroupItem(el);
-			if(item) {
-				setXmlAttributes(item, el);
-				if(auto *rect_item = dynamic_cast<QGraphicsRectItem*>(item)) {
-					setStyle(rect_item, el.xmlAttributes);
-				}
-				setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
-				addItem(item);
-				return true;
-			}
-			return false;
-		}
-		else if (el.name == QLatin1String("rect")) {
-			qreal x = el.xmlAttributes.value(QStringLiteral("x")).toDouble();
-			qreal y = el.xmlAttributes.value(QStringLiteral("y")).toDouble();
-			qreal w = el.xmlAttributes.value(QStringLiteral("width")).toDouble();
-			qreal h = el.xmlAttributes.value(QStringLiteral("height")).toDouble();
-			if(auto *text_item = dynamic_cast<QGraphicsTextItem*>(m_topLevelItem)) {
-				QTransform t;
-				t.translate(x, y);
-				text_item->setTransform(t, true);
-				text_item->setTextWidth(w);
-				return false;
-			}
-			else {
-				QGraphicsRectItem *item = createRectItem(el);
-				setXmlAttributes(item, el);
-				item->setRect(QRectF(x, y, w, h));
-				setStyle(item, el.styleAttributes);
-				setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
-				addItem(item);
-				return true;
-			}
-		}
-		else if (el.name == QLatin1String("circle")) {
-			auto *item = new QGraphicsEllipseItem();
-			setXmlAttributes(item, el);
-			qreal cx = toDouble(el.xmlAttributes.value(QStringLiteral("cx")));
-			qreal cy = toDouble(el.xmlAttributes.value(QStringLiteral("cy")));
-			qreal rx = toDouble(el.xmlAttributes.value(QStringLiteral("r")));
-			QRectF r(0, 0, 2*rx, 2*rx);
-			r.translate(cx - rx, cy - rx);
-			item->setRect(r);
-			setStyle(item, el.styleAttributes);
-			setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
-			addItem(item);
-			return true;
-		}
-		else if (el.name == QLatin1String("ellipse")) {
-			auto *item = new QGraphicsEllipseItem();
-			setXmlAttributes(item, el);
-			qreal cx = toDouble(el.xmlAttributes.value(QStringLiteral("cx")));
-			qreal cy = toDouble(el.xmlAttributes.value(QStringLiteral("cy")));
-			qreal rx = toDouble(el.xmlAttributes.value(QStringLiteral("rx")));
-			qreal ry = toDouble(el.xmlAttributes.value(QStringLiteral("ry")));
-			QRectF r(0, 0, 2*rx, 2*ry);
-			r.translate(cx - rx, cy - ry);
-			item->setRect(r);
-			setStyle(item, el.styleAttributes);
-			setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
-			addItem(item);
-			return true;
-		}
-		else if (el.name == QLatin1String("path")) {
-			auto *item = new QGraphicsPathItem();
-			setXmlAttributes(item, el);
-			QString data = el.xmlAttributes.value(QStringLiteral("d"));
-			QPainterPath p;
-			parsePathDataFast(data, p);
-			setStyle(item, el.styleAttributes);
-			static auto FILL_RULE = QStringLiteral("fill-rule");
-			if(el.styleAttributes.value(FILL_RULE) == QLatin1String("evenodd"))
-				p.setFillRule(Qt::OddEvenFill);
-			else
-				p.setFillRule(Qt::WindingFill);
-			item->setPath(p);
-			setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
-			addItem(item);
-			return true;
-		}
-		else if (el.name == QLatin1String("text")) {
-			auto *item = new TextSpansRect();
-			//item->setBrush(Qt::magenta);
-			//item->setRect(0, 0, 100, 100);
-			setXmlAttributes(item, el);
-			setStyle(item, el.styleAttributes);
-			qreal x = toDouble(el.xmlAttributes.value(QStringLiteral("x")));
-			qreal y = toDouble(el.xmlAttributes.value(QStringLiteral("y")));
-			setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
-			//item->setPos(x, y); is not same as translate
-			shvDebug() << "text x:" << x << "y:" << y;
-			item->svgPosition = QPointF(x, y);
+
+	if (el.name == QLatin1String("rect")) {
+		qreal x = el.xmlAttributes.value(QStringLiteral("x")).toDouble();
+		qreal y = el.xmlAttributes.value(QStringLiteral("y")).toDouble();
+		qreal w = el.xmlAttributes.value(QStringLiteral("width")).toDouble();
+		qreal h = el.xmlAttributes.value(QStringLiteral("height")).toDouble();
+		if(auto *text_item = dynamic_cast<QGraphicsTextItem*>(m_topLevelItem)) {
 			QTransform t;
 			t.translate(x, y);
-			item->setTransform(t, true);
-			addItem(item);
-			return true;
+			text_item->setTransform(t, true);
+			text_item->setTextWidth(w);
+			return false;
 		}
-		else if (el.name == QLatin1String("tspan")) {
-			auto *item = new SimpleTextItem(el.styleAttributes);
-			setXmlAttributes(item, el);
-			setStyle(item, el.styleAttributes);
-			setTextStyle(item, el.styleAttributes);
-			//setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
-			QTransform t;
-			qreal x = toDouble(el.xmlAttributes.value(QStringLiteral("x")));
-			qreal y = toDouble(el.xmlAttributes.value(QStringLiteral("y")));
-			shvDebug() << "tspan x:" << x << "y:" << y;
-			if(x != 0 && y != 0 && m_topLevelItem) {
-				// https://www.w3.org/TR/SVG11/text.html#TSpanElement
-				// if tspan sets x,y atributes, then they should be used
-				// tspan's parent container x,y should be used othervise
-				if(auto *txt = dynamic_cast<TextSpansRect*>(m_topLevelItem)) {
-					shvDebug() << transform_to_string(m_topLevelItem->transform());
-					QPointF p = txt->svgPosition;
-					// remove text element translation
-					t.translate(-p.x(), -p.y());
-					// set tspan translation
-					t.translate(x, y);
-				}
-			}
-			QFontMetricsF fm(item->font());
-			t.translate(0, 0 - fm.ascent());
-			item->setTransform(t, true);
-			addItem(item);
-			return true;
-		}
-		else if (el.name == QLatin1String("flowRoot")) {
-			auto *item = new QGraphicsTextItem();
-			setXmlAttributes(item, el);
-			setTextStyle(item, el.styleAttributes);
-			setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
-			addItem(item);
-			return true;
-		}
-		else {
-			logSvgW() << "unsupported element:" << el.name;
-		}
-		return false;
+
+		QGraphicsRectItem *item = createRectItem(el);
+		setXmlAttributes(item, el);
+		item->setRect(QRectF(x, y, w, h));
+		setStyle(item, el.styleAttributes);
+		setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
+		addItem(item);
+		return true;
 	}
+
+	if (el.name == QLatin1String("circle")) {
+		auto *item = new QGraphicsEllipseItem();
+		setXmlAttributes(item, el);
+		qreal cx = toDouble(el.xmlAttributes.value(QStringLiteral("cx")));
+		qreal cy = toDouble(el.xmlAttributes.value(QStringLiteral("cy")));
+		qreal rx = toDouble(el.xmlAttributes.value(QStringLiteral("r")));
+		QRectF r(0, 0, 2*rx, 2*rx);
+		r.translate(cx - rx, cy - rx);
+		item->setRect(r);
+		setStyle(item, el.styleAttributes);
+		setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
+		addItem(item);
+		return true;
+	}
+
+	if (el.name == QLatin1String("ellipse")) {
+		auto *item = new QGraphicsEllipseItem();
+		setXmlAttributes(item, el);
+		qreal cx = toDouble(el.xmlAttributes.value(QStringLiteral("cx")));
+		qreal cy = toDouble(el.xmlAttributes.value(QStringLiteral("cy")));
+		qreal rx = toDouble(el.xmlAttributes.value(QStringLiteral("rx")));
+		qreal ry = toDouble(el.xmlAttributes.value(QStringLiteral("ry")));
+		QRectF r(0, 0, 2*rx, 2*ry);
+		r.translate(cx - rx, cy - ry);
+		item->setRect(r);
+		setStyle(item, el.styleAttributes);
+		setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
+		addItem(item);
+		return true;
+	}
+
+	if (el.name == QLatin1String("path")) {
+		auto *item = new QGraphicsPathItem();
+		setXmlAttributes(item, el);
+		QString data = el.xmlAttributes.value(QStringLiteral("d"));
+		QPainterPath p;
+		parsePathDataFast(data, p);
+		setStyle(item, el.styleAttributes);
+		static auto FILL_RULE = QStringLiteral("fill-rule");
+		if(el.styleAttributes.value(FILL_RULE) == QLatin1String("evenodd"))
+			p.setFillRule(Qt::OddEvenFill);
+		else
+			p.setFillRule(Qt::WindingFill);
+		item->setPath(p);
+		setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
+		addItem(item);
+		return true;
+	}
+
+	if (el.name == QLatin1String("text")) {
+		auto *item = new TextSpansRect();
+		//item->setBrush(Qt::magenta);
+		//item->setRect(0, 0, 100, 100);
+		setXmlAttributes(item, el);
+		setStyle(item, el.styleAttributes);
+		qreal x = toDouble(el.xmlAttributes.value(QStringLiteral("x")));
+		qreal y = toDouble(el.xmlAttributes.value(QStringLiteral("y")));
+		setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
+		//item->setPos(x, y); is not same as translate
+		shvDebug() << "text x:" << x << "y:" << y;
+		item->svgPosition = QPointF(x, y);
+		QTransform t;
+		t.translate(x, y);
+		item->setTransform(t, true);
+		addItem(item);
+		return true;
+	}
+
+	if (el.name == QLatin1String("tspan")) {
+		auto *item = new SimpleTextItem(el.styleAttributes);
+		setXmlAttributes(item, el);
+		setStyle(item, el.styleAttributes);
+		setTextStyle(item, el.styleAttributes);
+		//setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
+		QTransform t;
+		qreal x = toDouble(el.xmlAttributes.value(QStringLiteral("x")));
+		qreal y = toDouble(el.xmlAttributes.value(QStringLiteral("y")));
+		shvDebug() << "tspan x:" << x << "y:" << y;
+		if(x != 0 && y != 0 && m_topLevelItem) {
+			// https://www.w3.org/TR/SVG11/text.html#TSpanElement
+			// if tspan sets x,y atributes, then they should be used
+			// tspan's parent container x,y should be used othervise
+			if(auto *txt = dynamic_cast<TextSpansRect*>(m_topLevelItem)) {
+				shvDebug() << transform_to_string(m_topLevelItem->transform());
+				QPointF p = txt->svgPosition;
+				// remove text element translation
+				t.translate(-p.x(), -p.y());
+				// set tspan translation
+				t.translate(x, y);
+			}
+		}
+		QFontMetricsF fm(item->font());
+		t.translate(0, 0 - fm.ascent());
+		item->setTransform(t, true);
+		addItem(item);
+		return true;
+	}
+
+	if (el.name == QLatin1String("flowRoot")) {
+		auto *item = new QGraphicsTextItem();
+		setXmlAttributes(item, el);
+		setTextStyle(item, el.styleAttributes);
+		setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
+		addItem(item);
+		return true;
+	}
+
+	logSvgW() << "unsupported element:" << el.name;
+	return false;
+
 }
 
 QGraphicsRectItem *SaxHandler::createRectItem(const SvgElement &el)

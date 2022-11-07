@@ -93,9 +93,8 @@ vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const std::
 					path_info.propertyDescription.alarmDescription()
 				)};
 		}
-		else {
-			return checkAlarms(type_info, shv_path, path_info.propertyDescription.typeName(), value);
-		}
+
+		return checkAlarms(type_info, shv_path, path_info.propertyDescription.typeName(), value);
 	}
 	return {};
 }
@@ -123,7 +122,7 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const 
 			}
 			return alarms;
 		}
-		else if (type_descr.type() == ShvTypeDescr::Type::Enum) {
+		if (type_descr.type() == ShvTypeDescr::Type::Enum) {
 			auto flds = type_descr.fields();
 			size_t active_alarm_ix = flds.size();
 			for (size_t i = 0; i < flds.size(); ++i) {
