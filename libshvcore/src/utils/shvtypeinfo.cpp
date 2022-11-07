@@ -571,12 +571,9 @@ typename map<string, T>::const_iterator find_longest_prefix(const map<string, T>
 
 bool ShvTypeInfo::isPathBlacklisted(const std::string &shv_path) const
 {
-	for(const auto &[path, _] : m_blacklistedPaths) {
-		if(shv::core::utils::ShvPath::startsWithPath(shv_path, path)) {
-			return true;
-		}
-	}
-	return false;
+	return std::any_of(m_blacklistedPaths.begin(), m_blacklistedPaths.end(), [&shv_path] (const auto& path) {
+		return shv::core::utils::ShvPath::startsWithPath(shv_path, path.first);
+	});
 }
 
 void ShvTypeInfo::setBlacklist(const std::string &shv_path, const chainpack::RpcValue &blacklist)
