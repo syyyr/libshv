@@ -88,9 +88,9 @@ bool SocketRpcDriver::connectToHost(const std::string &host, int port)
 			return false;
 		}
 
-		bzero(reinterpret_cast<char *> (&serv_addr), sizeof(serv_addr));
+		memset(reinterpret_cast<char *> (&serv_addr), 0, sizeof(serv_addr));
 		serv_addr.sin_family = AF_INET;
-		bcopy(server->h_addr, reinterpret_cast<char *>(&serv_addr.sin_addr.s_addr), static_cast<size_t>(server->h_length));
+		memcpy(reinterpret_cast<char *>(&serv_addr.sin_addr.s_addr), server->h_addr, static_cast<size_t>(server->h_length));
 		serv_addr.sin_port = htons(static_cast<uint16_t>(port));
 
 		/* Now connect to the server */
