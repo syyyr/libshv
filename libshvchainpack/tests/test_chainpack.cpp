@@ -541,7 +541,7 @@ DOCTEST_TEST_CASE("ChainPack")
 			RpcValue::IMap map {
 				{1, "foo"},
 				{2, "bar"},
-				{333, 15u},
+				{333, 15U},
 			};
 			RpcValue cp1{map};
 			std::stringstream out;

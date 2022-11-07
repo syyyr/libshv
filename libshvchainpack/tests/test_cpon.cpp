@@ -87,7 +87,7 @@ DOCTEST_TEST_CASE("Cpon")
 		}
 		DOCTEST_SUBCASE("Numbers")
 		{
-			RpcValue v(static_cast<int64_t>(1526303051038ll));
+			RpcValue v(static_cast<int64_t>(1526303051038LL));
 			auto s = v.toCpon();
 			nDebug() << s;
 			nDebug() << RpcValue::fromCpon("1526303051038").toCpon();
@@ -96,7 +96,7 @@ DOCTEST_TEST_CASE("Cpon")
 			REQUIRE(err.empty());
 			REQUIRE(RpcValue::fromCpon("123", &err) == RpcValue(123));
 			REQUIRE(err.empty());
-			REQUIRE(RpcValue::fromCpon("1526303051038", &err) == RpcValue(static_cast<int64_t>(1526303051038ll)));
+			REQUIRE(RpcValue::fromCpon("1526303051038", &err) == RpcValue(static_cast<int64_t>(1526303051038LL)));
 			REQUIRE(err.empty());
 			REQUIRE(RpcValue::fromCpon("-123", &err) == RpcValue(-123));
 			REQUIRE(err.empty());
