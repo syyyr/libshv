@@ -14,8 +14,7 @@
 
 #include <array>
 
-namespace shv {
-namespace broker {
+namespace shv::broker {
 
 static constexpr int64_t max_age_msec = 10*1000;
 
@@ -73,4 +72,4 @@ void TunnelSecretList::removeOldSecrets(int64_t now)
 	);
 }
 
-}}
+}

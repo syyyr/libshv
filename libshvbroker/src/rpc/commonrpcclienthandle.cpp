@@ -12,9 +12,7 @@
 #define logSubscriptionsD() nCDebug("Subscr").color(NecroLog::Color::Yellow)
 #define logSigResolveD() nCDebug("SigRes").color(NecroLog::Color::Yellow)
 
-namespace shv {
-namespace broker {
-namespace rpc {
+namespace shv::broker::rpc {
 
 //=====================================================================
 // CommonRpcClientHandle::Subscription
@@ -218,4 +216,4 @@ bool CommonRpcClientHandle::rejectNotSubscribedSignal(const std::string &path, c
 	return false;
 }
 
-}}}
+}

@@ -25,9 +25,7 @@ namespace cp = shv::chainpack;
 
 using namespace std;
 
-namespace shv {
-namespace broker {
-namespace rpc {
+namespace shv::broker::rpc {
 
 ClientConnectionOnBroker::ClientConnectionOnBroker(shv::iotqt::rpc::Socket *socket, QObject *parent)
 	: Super(socket, parent)
@@ -376,4 +374,4 @@ int ClientBrokerConnection::callMethodSubscribeMB(const std::string &shv_path, s
 						 , cp::AccessGrant(cp::Rpc::ROLE_MASTER_BROKER, !cp::AccessGrant::IS_RESOLVED).toRpcValue());
 }
 */
-}}}
+}

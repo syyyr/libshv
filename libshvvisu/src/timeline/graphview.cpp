@@ -5,9 +5,7 @@
 
 #include <QTimer>
 
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 GraphView::GraphView(QWidget *parent)
 	: Super(parent)
@@ -53,4 +51,4 @@ void GraphView::scrollContentsBy(int dx, int dy)
 	}
 }
 
-}}}
+}

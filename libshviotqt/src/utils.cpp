@@ -5,8 +5,7 @@
 
 #include <QVariant>
 
-namespace shv {
-namespace iotqt {
+namespace shv::iotqt {
 /*
 QVariant Utils::rpcValueToQVariant(const shv::chainpack::RpcValue &v)
 {
@@ -18,4 +17,4 @@ shv::chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v)
 	return  shv::coreqt::Utils::qVariantToRpcValue(v);
 }
 */
-}}
+}

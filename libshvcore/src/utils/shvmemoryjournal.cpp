@@ -12,9 +12,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 ShvMemoryJournal::ShvMemoryJournal() = default;
 
@@ -323,6 +321,4 @@ size_t ShvMemoryJournal::timeToUpperBoundIndex(int64_t time) const
 	return it - m_entries.begin();
 }
 */
-} // namespace utils
-} // namespace core
 } // namespace shv

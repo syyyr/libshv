@@ -7,9 +7,7 @@
 
 #include <QMouseEvent>
 
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 ChannelProbeWidget::ChannelProbeWidget(ChannelProbe *probe, QWidget *parent) :
 	QWidget(parent),
@@ -209,4 +207,4 @@ QCursor ChannelProbeWidget::frameSectionCursor(ChannelProbeWidget::FrameSection 
 	return QCursor(Qt::ArrowCursor);
 }
 
-}}}
+}

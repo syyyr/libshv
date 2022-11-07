@@ -5,9 +5,7 @@
 #include <QAbstractSocket>
 #include <QNetworkInterface>
 
-namespace shv {
-namespace iotqt {
-namespace utils {
+namespace shv::iotqt::utils {
 
 uint32_t Network::toIntIPv4Address(const std::string &addr)
 {
@@ -97,4 +95,4 @@ QHostAddress Network::primaryIPv4Address()
 #endif
 }
 
-}}}
+}

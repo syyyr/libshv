@@ -12,8 +12,7 @@
 using namespace std;
 using namespace shv::chainpack;
 
-namespace shv {
-namespace core {
+namespace shv::core {
 
 namespace {
 template<typename Out>
@@ -463,4 +462,4 @@ bool Utils::invokeMethod_B_V(QObject *obj, const char *method_name)
 	return ret.toBool();
 }
 #endif
-}}
+}

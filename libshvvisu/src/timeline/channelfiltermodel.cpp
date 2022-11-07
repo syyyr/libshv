@@ -8,9 +8,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 ChannelFilterModel::ChannelFilterModel(QObject *parent)
 	: Super(parent)
@@ -223,6 +221,4 @@ QStandardItem *ChannelFilterModel::topVisibleParentItem(QStandardItem *it)
 	return (it->parent() == nullptr) ? it : topVisibleParentItem(it->parent());
 }
 
-}
-}
 }

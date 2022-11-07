@@ -2,9 +2,7 @@
 
 #include "../exception.h"
 
-namespace shv {
-namespace coreqt {
-namespace data {
+namespace shv::coreqt::data {
 
 SerieData::const_iterator SerieData::lessOrEqualIterator(ValueChange::ValueX value_x) const
 {
@@ -300,6 +298,4 @@ bool greaterThenValueX(const ValueChange::ValueX &value1, const ValueChange::Val
 	}
 }
 
-}
-}
 }

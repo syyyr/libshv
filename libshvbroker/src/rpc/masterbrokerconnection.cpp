@@ -10,9 +10,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace broker {
-namespace rpc {
+namespace shv::broker::rpc {
 
 MasterBrokerConnection::MasterBrokerConnection(QObject *parent)
 	: Super(parent)
@@ -188,4 +186,4 @@ void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 	}
 }
 
-}}}
+}

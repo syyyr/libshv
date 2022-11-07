@@ -20,8 +20,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 SocketRpcDriver::SocketRpcDriver() = default;
 
@@ -201,4 +200,4 @@ void SocketRpcDriver::sendNotify(std::string &&method, const cp::RpcValue &resul
 	sendRpcValue(ntf.value());
 }
 
-}}
+}

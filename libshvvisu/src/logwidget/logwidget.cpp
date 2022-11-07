@@ -16,8 +16,7 @@
 #include <QInputDialog>
 #include <QScrollBar>
 
-namespace shv {
-namespace visu {
+namespace shv::visu {
 
 LogWidgetTableView::LogWidgetTableView(QWidget *parent)
 	: Super(parent)
@@ -275,4 +274,4 @@ void LogWidget::scrollToLastRow()
 	}
 }
 
-}}
+}

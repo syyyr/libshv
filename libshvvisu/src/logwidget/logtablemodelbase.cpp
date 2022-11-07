@@ -5,8 +5,7 @@
 #include <QColor>
 #include <QDateTime>
 
-namespace shv {
-namespace visu {
+namespace shv::visu {
 
 LogTableModelRow::LogTableModelRow(int size)
 {
@@ -90,4 +89,4 @@ void LogTableModelBase::addLogRow(const LogTableModelRow &row)
 	}
 }
 
-}}
+}

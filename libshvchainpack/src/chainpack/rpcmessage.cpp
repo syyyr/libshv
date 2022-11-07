@@ -7,8 +7,7 @@
 
 #include <cassert>
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 RpcMessage::MetaType::MetaType()
 	: Super("RpcMessage")
@@ -681,5 +680,4 @@ RpcResponse::Error RpcResponse::Error::create(int c, RpcValue::String msg)
 	return ret;
 }
 
-} // namespace chainpackrpc
 } // namespace shv

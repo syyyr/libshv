@@ -35,9 +35,7 @@
 namespace cp = shv::chainpack;
 using namespace std;
 
-namespace shv {
-namespace iotqt {
-namespace rpc {
+namespace shv::iotqt::rpc {
 
 ClientConnection::ClientConnection(QObject *parent)
 	: Super(parent)
@@ -496,6 +494,6 @@ const char *ClientConnection::stateToString(ClientConnection::State state)
 	return "this could never happen";
 }
 
-}}}
+}
 
 

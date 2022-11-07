@@ -12,9 +12,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 static std::string getLine(std::istream &in, char sep)
 {
@@ -204,6 +202,4 @@ std::string ShvJournalFileReader::msecToBaseFileName(int64_t msec)
 	return fn;
 }
 
-} // namespace utils
-} // namespace core
 } // namespace shv

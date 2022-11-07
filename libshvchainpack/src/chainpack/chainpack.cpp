@@ -1,7 +1,6 @@
 #include "chainpack.h"
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 const char *ChainPack::PackingSchema::name(ChainPack::PackingSchema::Enum e)
 {
@@ -33,4 +32,4 @@ const char *ChainPack::PackingSchema::name(ChainPack::PackingSchema::Enum e)
 	return "UNKNOWN";
 }
 
-}}
+}

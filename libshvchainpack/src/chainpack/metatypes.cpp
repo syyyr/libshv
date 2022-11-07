@@ -5,9 +5,7 @@
 
 #include <map>
 
-namespace shv {
-namespace chainpack {
-namespace meta {
+namespace shv::chainpack::meta {
 
 const MetaInfo &MetaType::tagById(int id) const
 {
@@ -155,4 +153,4 @@ ElesysNS::ElesysNS()
 {
 }
 
-}}}
+}

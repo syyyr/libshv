@@ -5,8 +5,7 @@
 #include <QDateTime>
 #include <QColor>
 
-namespace shv {
-namespace visu {
+namespace shv::visu {
 
 ErrorLogModel::ErrorLogModel(QObject *parent)
 	: Super(parent)
@@ -77,4 +76,4 @@ void ErrorLogModel::addLogRow(NecroLogLevel level, const std::string &msg, const
 	Super::addLogRow(row);
 }
 
-}}
+}

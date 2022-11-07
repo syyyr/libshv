@@ -8,9 +8,7 @@
 
 using namespace shv::chainpack;
 
-namespace shv {
-namespace iotqt {
-namespace node {
+namespace shv::iotqt::node {
 
 static const char M_WRITE[] = "write";
 static const char M_DELETE[] = "delete";
@@ -366,6 +364,4 @@ RpcValue LocalFSNode::ndLsDir(const QString &path, const chainpack::RpcValue &me
 	return {};
 }
 
-} // namespace node
-} // namespace iotqt
 } // namespace shv

@@ -6,9 +6,7 @@
 
 using namespace std;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 ShvAlarm::ShvAlarm()
 	: m_path("")
@@ -151,6 +149,4 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const 
 }
 
 
-} // namespace utils
-} // namespace core
 } // namespace shv

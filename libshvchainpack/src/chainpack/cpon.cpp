@@ -1,7 +1,6 @@
 #include "cpon.h"
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 const std::string Cpon::STR_NULL("null");
 const std::string Cpon::STR_TRUE("true");
@@ -21,5 +20,4 @@ const char Cpon::C_META_END('>');
 const char Cpon::C_DECIMAL_END('n');
 const char Cpon::C_UNSIGNED_END('u');
 
-} // namespace chainpack
 } // namespace shv

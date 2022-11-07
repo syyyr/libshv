@@ -3,8 +3,7 @@
 
 #include <algorithm>
 
-namespace shv {
-namespace core {
+namespace shv::core {
 
 const char* String::WhiteSpaceChars = " \t\n\r\f\v";
 
@@ -261,4 +260,4 @@ int main()
 	}
 }
 #endif
-}}
+}

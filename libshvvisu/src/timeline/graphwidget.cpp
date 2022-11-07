@@ -27,9 +27,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 GraphWidget::GraphWidget(QWidget *parent)
 	: Super(parent)
@@ -935,5 +933,5 @@ GraphWidget::ChannelHeaderMoveContext::~ChannelHeaderMoveContext()
 	delete channelDropMarker;
 }
 
-}}}
+}
 

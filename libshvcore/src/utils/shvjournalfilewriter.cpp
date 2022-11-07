@@ -9,9 +9,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 /*
 static int uptimeSec()
 {
@@ -125,6 +123,4 @@ void ShvJournalFileWriter::append(int64_t msec, int64_t orig_time, const ShvJour
 	m_recentTimeStamp = msec;
 }
 
-} // namespace utils
-} // namespace core
 } // namespace shv

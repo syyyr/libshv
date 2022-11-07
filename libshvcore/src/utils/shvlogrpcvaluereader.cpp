@@ -9,9 +9,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 ShvLogRpcValueReader::ShvLogRpcValueReader(const shv::chainpack::RpcValue &log, bool throw_exceptions)
 	: m_log(log)
@@ -71,6 +69,4 @@ bool ShvLogRpcValueReader::next()
 	}
 }
 
-} // namespace utils
-} // namespace core
 } // namespace shv

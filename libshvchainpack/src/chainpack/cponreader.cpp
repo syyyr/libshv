@@ -6,8 +6,7 @@
 #include <fstream>
 #include <cmath>
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 #define PARSE_EXCEPTION(msg) {\
 	char buff[40]; \
@@ -312,5 +311,4 @@ void CponReader::read(RpcValue::MetaData &meta_data)
 	}
 }
 
-} // namespace chainpack
 } // namespace shv

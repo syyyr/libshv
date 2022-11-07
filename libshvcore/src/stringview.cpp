@@ -1,8 +1,7 @@
 #include "stringview.h"
 #include "string.h"
 
-namespace shv {
-namespace core {
+namespace shv::core {
 
 static std::string empty_string;
 
@@ -302,5 +301,4 @@ bool StringViewList::startsWith(const StringViewList &lst) const
 	return i == lst.size();
 }
 
-} // namespace core
 } // namespace shv

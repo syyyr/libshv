@@ -17,8 +17,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace broker {
+namespace shv::broker {
 
 namespace {
 static const char M_GET_VERBOSITY[] = "verbosity";
@@ -189,4 +188,4 @@ shv::chainpack::RpcValue BrokerAppNode::callMethod(const StringViewList &shv_pat
 	return Super::callMethod(shv_path, method, params, user_id);
 }
 
-}}
+}

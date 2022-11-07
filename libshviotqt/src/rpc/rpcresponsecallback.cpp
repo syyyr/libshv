@@ -8,9 +8,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace iotqt {
-namespace rpc {
+namespace shv::iotqt::rpc {
 
 //===================================================
 // RpcCall
@@ -226,6 +224,4 @@ void RpcCall::start()
 	m_rpcConnection->callShvMethod(rq_id, m_shvPath, m_method, m_params, m_userId);
 }
 
-} // namespace rpc
-} // namespace iotqt
 } // namespace shv

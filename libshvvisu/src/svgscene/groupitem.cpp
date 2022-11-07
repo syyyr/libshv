@@ -2,9 +2,7 @@
 
 #include <QPainter>
 
-namespace shv {
-namespace visu {
-namespace svgscene {
+namespace shv::visu::svgscene {
 
 GroupItem::GroupItem(QGraphicsItem *parent)
 	: Super(parent)
@@ -21,6 +19,4 @@ void GroupItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 	//painter->drawRect(boundingRect());
 }
 
-} // namespace svgscene
-} // namespace visu
 } // namespace shv

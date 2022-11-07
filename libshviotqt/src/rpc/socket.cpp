@@ -10,9 +10,7 @@
 #include <QLocalSocket>
 #include <QTimer>
 
-namespace shv {
-namespace iotqt {
-namespace rpc {
+namespace shv::iotqt::rpc {
 
 //======================================================
 // Socket
@@ -277,6 +275,4 @@ void SslSocket::ignoreSslErrors()
 }
 
 #endif
-} // namespace rpc
-} // namespace iotqt
 } // namespace shv

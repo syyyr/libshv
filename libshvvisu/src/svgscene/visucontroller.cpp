@@ -5,9 +5,7 @@
 
 #include <QPainter>
 
-namespace shv {
-namespace visu {
-namespace svgscene {
+namespace shv::visu::svgscene {
 /*
 static std::string transform2string(const QTransform &t)
 {
@@ -56,5 +54,5 @@ QString VisuController::graphicsItemCssAttributeValue(const QGraphicsItem *it, c
 }
 
 
-}}}
+}
 

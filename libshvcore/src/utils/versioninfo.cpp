@@ -7,9 +7,7 @@
 #include <cstdlib>
 #endif
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 VersionInfo::VersionInfo(int major, int minor, int patch, const std::string &branch)
 	: m_majorNumber(major)
@@ -77,6 +75,4 @@ int VersionInfo::patchNumber() const
 	return m_patchNumber;
 }
 
-}
-}
 }

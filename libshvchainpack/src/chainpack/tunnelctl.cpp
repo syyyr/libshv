@@ -1,7 +1,6 @@
 #include "tunnelctl.h"
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 //================================================================
 // TunnelCtl
@@ -78,5 +77,4 @@ CreateTunnelReqCtl CreateTunnelReqCtl::fromFindTunnelResponse(const FindTunnelRe
 	return ret;
 }
 
-} // namespace iotqt
 } // namespace shv

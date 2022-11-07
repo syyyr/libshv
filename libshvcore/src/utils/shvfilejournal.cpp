@@ -26,9 +26,7 @@
 
 using namespace shv::chainpack;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 /*
 static uint16_t shortTime()
@@ -860,6 +858,4 @@ const char *ShvFileJournal::TxtColumn::name(ShvFileJournal::TxtColumn::Enum e)
 	return "invalid";
 }
 
-} // namespace utils
-} // namespace core
 } // namespace shv

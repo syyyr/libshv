@@ -11,9 +11,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace iotqt {
-namespace node {
+namespace shv::iotqt::node {
 
 static const char *M_HASH = "hash";
 static const char *M_SIZE = "size";
@@ -158,4 +156,4 @@ chainpack::RpcValue FileNode::readFileCompressed(const ShvNode::StringViewList &
 	return result;
 }
 
-}}}
+}

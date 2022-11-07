@@ -5,9 +5,7 @@
 
 #include <cmath>
 
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 GraphModel::GraphModel(QObject *parent)
 	: Super(parent)
@@ -338,4 +336,4 @@ QString GraphModel::guessTypeName(int channel_ix)
 	return {};
 }
 
-}}}
+}

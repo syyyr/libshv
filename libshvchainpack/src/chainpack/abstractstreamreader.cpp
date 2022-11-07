@@ -1,7 +1,6 @@
 #include "abstractstreamreader.h"
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 size_t unpack_underflow_handler(ccpcp_unpack_context *ctx)
 {
@@ -53,5 +52,4 @@ RpcValue AbstractStreamReader::read(std::string *error)
 	return ret;
 }
 
-} // namespace chainpack
 } // namespace shv

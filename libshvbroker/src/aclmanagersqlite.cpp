@@ -18,8 +18,7 @@
 namespace cp = shv::chainpack;
 namespace acl = shv::iotqt::acl;
 
-namespace shv {
-namespace broker {
+namespace shv::broker {
 
 const auto TBL_ACL_MOUNTS = QStringLiteral("acl_mounts");
 const auto TBL_ACL_USERS = QStringLiteral("acl_users");
@@ -367,5 +366,4 @@ void AclManagerSqlite::aclSetAccessRoleRules(const std::string &role_name, const
 	}
 }
 
-} // namespace broker
 } // namespace shv

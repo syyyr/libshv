@@ -7,9 +7,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace visu {
-namespace logview {
+namespace shv::visu::logview {
 
 //============================================================
 // MemoryJournalLogModel
@@ -98,4 +96,4 @@ QVariant LogModel::data(const QModelIndex &index, int role) const
 	return QVariant();
 }
 
-}}}
+}

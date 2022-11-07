@@ -4,9 +4,7 @@
 //#include "../log.h"
 #include "../stringview.h"
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 //static const std::string DDOT_SLASH("../");
 //static const std::string DDOT("..");
@@ -274,5 +272,5 @@ bool ShvPath::matchWild(const core::StringViewList &path_lst, const core::String
 	}
 }
 
-}}}
+}
 

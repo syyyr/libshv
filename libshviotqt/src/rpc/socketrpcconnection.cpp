@@ -23,9 +23,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace iotqt {
-namespace rpc {
+namespace shv::iotqt::rpc {
 
 SocketRpcConnection::SocketRpcConnection(QObject *parent)
 	: QObject(parent)
@@ -272,4 +270,4 @@ int SocketRpcConnection::peerPort() const
 	return -1;
 }
 
-}}}
+}

@@ -6,9 +6,7 @@
 #include <regex>
 #include <sstream>
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 //===================================================================
 //                                         Crypt
@@ -142,4 +140,4 @@ std::string Crypt::decrypt(const std::string &data) const
 	return ba;
 }
 
-}}}
+}

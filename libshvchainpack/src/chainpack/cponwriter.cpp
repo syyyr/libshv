@@ -9,8 +9,7 @@
 #include <fstream>
 #include <string.h>
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 static bool is_oneline_list(const RpcValue::List &lst)
 {
@@ -390,5 +389,4 @@ CponWriter &CponWriter::write_p(const RpcValue::List &values)
 	return *this;
 }
 
-} // namespace chainpack
 } // namespace shv

@@ -2,9 +2,7 @@
 
 #include <QRegularExpression>
 
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 FullTextFilter::FullTextFilter() = default;
 
@@ -66,6 +64,4 @@ void FullTextFilter::initRegexp()
 	}
 }
 
-}
-}
 }

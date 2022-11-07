@@ -11,9 +11,7 @@
 
 using namespace shv::chainpack;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 const int AbstractShvJournal::DEFAULT_GET_LOG_RECORD_COUNT_LIMIT = 100 * 1000;
 const char *AbstractShvJournal::KEY_NAME = "name";
@@ -48,6 +46,4 @@ void AbstractShvJournal::addToSnapshot(ShvSnapshot &snapshot, const ShvJournalEn
 	}
 }
 
-} // namespace utils
-} // namespace core
 } // namespace shv

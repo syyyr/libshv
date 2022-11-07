@@ -25,9 +25,7 @@ static QString VIEWS_KEY = QStringLiteral("channelViews");
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 const QString Graph::DEFAULT_USER_PROFILE = QStringLiteral("default");
 
@@ -2443,4 +2441,4 @@ Graph::VisualSettings Graph::VisualSettings::fromJson(const QString &json)
 }
 
 
-}}}
+}

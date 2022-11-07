@@ -4,8 +4,7 @@
 
 #include <cstdlib>
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 bool Exception::s_abortOnException = false;
 
@@ -43,5 +42,4 @@ bool Exception::Exception::isAbortOnException()
 	return s_abortOnException;
 }
 
-} // namespace chainpack
 } // namespace shv

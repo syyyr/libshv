@@ -8,9 +8,7 @@
 
 #include <cmath>
 
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 
 //===================================================
@@ -234,6 +232,4 @@ Graph *GraphButtonBox::graph() const
 	return nullptr;
 }
 
-} // namespace timeline
-} // namespace visu
 } // namespace shv

@@ -27,9 +27,7 @@ using namespace shv::chainpack;
 //#define logConfig() shvCDebug("Config").color(NecroLog::Color::Yellow)
 #define logConfig() shvCMessage("Config")
 
-namespace shv {
-namespace iotqt {
-namespace node {
+namespace shv::iotqt::node {
 
 //===========================================================
 // ShvNode
@@ -1230,4 +1228,4 @@ chainpack::RpcValue ValueProxyShvNode::callMethod(const ShvNode::StringViewList 
 	return  Super::callMethod(shv_path, method, params, user_id);
 }
 
-}}}
+}

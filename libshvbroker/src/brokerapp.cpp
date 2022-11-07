@@ -71,8 +71,7 @@ namespace acl = shv::iotqt::acl;
 
 using namespace std;
 
-namespace shv {
-namespace broker {
+namespace shv::broker {
 
 #ifdef Q_OS_UNIX
 int BrokerApp::m_sigTermFd[2];
@@ -1406,4 +1405,4 @@ void BrokerApp::setAclManager(AclManager *mng)
 }
 
 
-}}
+}

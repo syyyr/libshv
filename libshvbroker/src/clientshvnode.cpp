@@ -6,8 +6,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace broker {
+namespace shv::broker {
 
 //======================================================================
 // ClientShvNode
@@ -67,4 +66,4 @@ MasterBrokerShvNode::~MasterBrokerShvNode()
 	shvInfo() << "Destroying master broker connection node:" << this;
 }
 
-}}
+}

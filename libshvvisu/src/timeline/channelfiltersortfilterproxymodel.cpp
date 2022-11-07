@@ -1,8 +1,6 @@
 #include "channelfiltersortfilterproxymodel.h"
 
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 ChannelFilterSortFilterProxyModel::ChannelFilterSortFilterProxyModel(QObject *parent) :
 	Super(parent)
@@ -40,4 +38,4 @@ bool ChannelFilterSortFilterProxyModel::filterAcceptsRow(int source_row, const Q
 	}
 }
 
-}}}
+}

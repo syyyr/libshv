@@ -11,9 +11,7 @@
 using namespace std;
 using namespace shv::chainpack;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 static const char* KEY_DEVICE_TYPE = "deviceType";
 static const char* KEY_TYPE_NAME = "typeName";
@@ -1108,6 +1106,4 @@ ShvTypeInfo ShvTypeInfo::fromNodesTree(const chainpack::RpcValue &v)
 	return ret;
 }
 
-} // namespace utils
-} // namespace core
 } // namespace shv

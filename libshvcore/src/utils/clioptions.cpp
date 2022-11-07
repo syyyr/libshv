@@ -27,9 +27,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 CLIOptions::Option& CLIOptions::Option::setValueString(const std::string &val_str)
 {
@@ -514,4 +512,4 @@ void ConfigCLIOptions::mergeConfig(const chainpack::RpcValue &config_map)
 	*/
 }
 
-}}}
+}

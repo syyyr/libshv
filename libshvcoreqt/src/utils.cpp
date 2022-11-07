@@ -8,8 +8,7 @@
 #include <QVariant>
 #include <QDateTime>
 
-namespace shv {
-namespace coreqt {
+namespace shv::coreqt {
 
 QVariant Utils::rpcValueToQVariant(const chainpack::RpcValue &v, bool *ok)
 {
@@ -234,5 +233,4 @@ std::vector<uint8_t> Utils::compressGZip(const std::vector<uint8_t> &data)
 	return shv::chainpack::RpcValue::Blob(compressed_data.cbegin(), compressed_data.cend());
 }
 
-} // namespace coreqt
 } // namespace shv

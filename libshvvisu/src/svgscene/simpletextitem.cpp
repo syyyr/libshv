@@ -2,9 +2,7 @@
 
 #include <QPainter>
 
-namespace shv {
-namespace visu {
-namespace svgscene {
+namespace shv::visu::svgscene {
 
 SimpleTextItem::SimpleTextItem(const CssAttributes &css, QGraphicsItem *parent)
 	: Super(parent)
@@ -43,4 +41,4 @@ void SimpleTextItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
 	//painter->drawRect(boundingRect());
 }
 
-}}}
+}

@@ -4,9 +4,7 @@
 
 #include <algorithm>
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 const std::string ShvLogHeader::EMPTY_PREFIX_KEY = "";
 
@@ -229,6 +227,4 @@ void ShvLogHeader::setDeviceType(const std::string &device_type)
 
 
 
-} // namespace utils
-} // namespace core
 } // namespace shv

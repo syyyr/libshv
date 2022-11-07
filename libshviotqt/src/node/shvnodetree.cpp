@@ -7,9 +7,7 @@
 #include <shv/coreqt/log.h>
 #include <shv/core/utils/shvpath.h>
 
-namespace shv {
-namespace iotqt {
-namespace node {
+namespace shv::iotqt::node {
 
 ShvNodeTree::ShvNodeTree(QObject *parent)
 	: QObject(parent)
@@ -129,4 +127,4 @@ std::string ShvNodeTree::dumpTree()
 	return dump_node(m_root, 0);
 }
 
-}}}
+}

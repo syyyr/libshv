@@ -63,8 +63,7 @@ time_t timegm(struct tm *tm)
 #endif
 } // namespace
 */
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 class RpcValue::AbstractValueData
 {
@@ -1303,6 +1302,6 @@ RpcValue::Blob RpcValue::stringToBlob(const RpcValue::String &s)
 	return Blob(s.begin(), s.end());
 }
 
-}}
+}
 
 

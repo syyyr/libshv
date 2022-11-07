@@ -10,9 +10,7 @@
 #include <QFile>
 #include <QDir>
 
-namespace shv {
-namespace broker {
-namespace rpc {
+namespace shv::broker::rpc {
 
 BrokerTcpServer::BrokerTcpServer(SslMode ssl_mode, QObject *parent)
 	: Super(parent)
@@ -95,4 +93,4 @@ shv::iotqt::rpc::ServerConnection *BrokerTcpServer::createServerConnection(QTcpS
 	}
 }
 
-}}}
+}

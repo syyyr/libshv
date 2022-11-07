@@ -2,8 +2,7 @@
 
 #include <shv/coreqt/log.h>
 
-namespace shv {
-namespace broker {
+namespace shv::broker {
 
 BrokerRootNode::BrokerRootNode(shv::iotqt::node::ShvNode *parent)
 	: Super(parent)
@@ -28,6 +27,5 @@ chainpack::RpcValue BrokerRootNode::callMethodRq(const chainpack::RpcRequest &rq
 	return res;
 }
 */
-}
 }
 

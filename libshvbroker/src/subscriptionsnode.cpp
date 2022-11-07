@@ -13,8 +13,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace broker {
+namespace shv::broker {
 
 namespace {
 const char ND_BY_ID[] = "byId";
@@ -134,4 +133,4 @@ shv::chainpack::RpcValue SubscriptionsNode::processRpcRequest(const shv::chainpa
 }
 */
 
-}}
+}

@@ -2,9 +2,7 @@
 
 #include <shv/chainpack/rpcvalue.h>
 
-namespace shv {
-namespace iotqt {
-namespace acl {
+namespace shv::iotqt::acl {
 
 shv::chainpack::RpcValue AclRole::toRpcValue() const
 {
@@ -40,6 +38,4 @@ AclRole AclRole::fromRpcValue(const shv::chainpack::RpcValue &v)
 	return ret;
 }
 
-} // namespace acl
-} // namespace iotqt
 } // namespace shv

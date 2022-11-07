@@ -3,9 +3,7 @@
 
 #include <QMouseEvent>
 
-namespace shv {
-namespace visu {
-namespace svgscene {
+namespace shv::visu::svgscene {
 
 GraphicsView::GraphicsView(QWidget *parent)
 	: Super(parent)
@@ -104,4 +102,4 @@ void GraphicsView::mouseMoveEvent(QMouseEvent* ev)
 	Super::mouseMoveEvent(ev);
 }
 
-}}}
+}

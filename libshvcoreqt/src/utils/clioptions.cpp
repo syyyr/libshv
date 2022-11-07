@@ -22,9 +22,7 @@
 #include <limits>
 #include <iostream>
 
-namespace shv {
-namespace coreqt {
-namespace utils {
+namespace shv::coreqt::utils {
 
 const CLIOptions::Option & CLIOptions::Option::sharedNull()
 {
@@ -503,4 +501,4 @@ void ConfigCLIOptions::mergeConfig_helper(const QString &key_prefix, const shv::
 	}
 }
 
-}}}
+}

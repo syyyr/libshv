@@ -16,8 +16,7 @@
 #define logWriteQueue() nCMessage("WriteQueue")
 #define logWriteQueueW() nCWarning("WriteQueue")
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 const char * RpcDriver::SND_LOG_ARROW = "<==S";
 const char * RpcDriver::RCV_LOG_ARROW = "R==>";
@@ -554,5 +553,4 @@ std::string RpcDriver::dataToPrettyCpon(Rpc::ProtocolType protocol_type, const R
 	return rpc_val.toPrettyString();
 }
 
-} // namespace chainpack
 } // namespace shv

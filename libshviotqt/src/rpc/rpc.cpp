@@ -2,9 +2,7 @@
 
 #include <shv/coreqt/log.h>
 
-namespace shv {
-namespace iotqt {
-namespace rpc {
+namespace shv::iotqt::rpc {
 
 void Rpc::registerQtMetaTypes()
 {
@@ -17,8 +15,6 @@ void Rpc::registerQtMetaTypes()
 	}
 }
 
-} // namespace chainpack
-} // namespace iotqt
 } // namespace shv
 
 

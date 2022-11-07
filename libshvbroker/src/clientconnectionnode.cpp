@@ -7,8 +7,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace broker {
+namespace shv::broker {
 
 static const char M_MOUNT_POINT[] = "mountPoint";
 static const char M_DROP_CLIENT[] = "dropClient";
@@ -101,4 +100,4 @@ shv::chainpack::RpcValue ClientConnectionNode::callMethod(const shv::iotqt::node
 	return Super::callMethod(shv_path, method, params, user_id);
 }
 
-}}
+}

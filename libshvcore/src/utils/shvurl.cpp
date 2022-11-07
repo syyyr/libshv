@@ -4,9 +4,7 @@
 
 using namespace std;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 ShvUrl::ShvUrl(const std::string &shv_path)
 	: m_shvPath(shv_path)
@@ -98,6 +96,4 @@ size_t ShvUrl::serviceProviderMarkIndex(const std::string &path)
 	return 0;
 }
 
-} // namespace utils
-} // namespace core
 } // namespace shv

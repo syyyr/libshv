@@ -5,9 +5,7 @@
 
 #include <QTcpSocket>
 
-namespace shv {
-namespace iotqt {
-namespace rpc {
+namespace shv::iotqt::rpc {
 
 TcpServer::TcpServer(QObject *parent)
 	: Super(parent)
@@ -65,4 +63,4 @@ void TcpServer::unregisterConnection(int connection_id)
 	m_connections.erase(connection_id);
 }
 
-}}}
+}

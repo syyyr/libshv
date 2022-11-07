@@ -16,8 +16,7 @@
 namespace cp = shv::chainpack;
 namespace acl = shv::iotqt::acl;
 
-namespace shv {
-namespace broker {
+namespace shv::broker {
 
 //========================================================
 // EtcAclNode
@@ -618,4 +617,4 @@ unsigned AccessAclNode::keyToRuleIndex(const std::string &key)
 	return  InvalidIndex;
 }
 
-}}
+}

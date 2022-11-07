@@ -14,8 +14,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace broker {
+namespace shv::broker {
 namespace {
 static std::string sha1_hex(const std::string &s)
 {
@@ -478,5 +477,4 @@ shv::iotqt::acl::AclRoleAccessRules AclManagerConfigFiles::aclAccessRoleRules(co
 	return shv::iotqt::acl::AclRoleAccessRules::fromRpcValue(v);
 }
 
-} // namespace broker
 } // namespace shv

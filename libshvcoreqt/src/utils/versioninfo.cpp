@@ -1,8 +1,6 @@
 #include "versioninfo.h"
 
-namespace shv {
-namespace coreqt {
-namespace utils {
+namespace shv::coreqt::utils {
 
 VersionInfo::VersionInfo(int major, int minor, int patch, const QString &branch)
 	: Super(major, minor, patch, branch.toStdString())
@@ -24,6 +22,4 @@ QString VersionInfo::toString() const
 	return QString::fromStdString(Super::toString());
 }
 
-}
-}
 }

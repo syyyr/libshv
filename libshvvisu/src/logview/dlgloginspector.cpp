@@ -36,9 +36,7 @@
 namespace cp = shv::chainpack;
 namespace tl = shv::visu::timeline;
 
-namespace shv {
-namespace visu {
-namespace logview {
+namespace shv::visu::logview {
 
 enum { TabGraph = 0, TabData, TabInfo };
 
@@ -530,4 +528,4 @@ void DlgLogInspector::onGraphChannelFilterChanged()
 	m_logSortFilterProxy->setChannelFilter(m_graph->channelFilter());
 }
 
-}}}
+}

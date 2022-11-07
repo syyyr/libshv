@@ -7,8 +7,7 @@
 
 using namespace std;
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 std::string Utils::removeJsonComments(const std::string &json_str)
 {
@@ -169,5 +168,4 @@ RpcValue Utils::mergeMaps(const RpcValue &value_base, const RpcValue &value_over
 	return value_base;
 }
 
-} // namespace chainpack
 } // namespace shv

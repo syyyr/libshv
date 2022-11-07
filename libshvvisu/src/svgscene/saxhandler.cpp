@@ -18,9 +18,7 @@
 #define logSvgM() shvCMessage("svg")
 #define logSvgD() shvCDebug("svg")
 
-namespace shv {
-namespace visu {
-namespace svgscene {
+namespace shv::visu::svgscene {
 
 static QString transform_to_string(const QTransform &t)
 {
@@ -1460,4 +1458,4 @@ void SaxHandler::addItem(QGraphicsItem *it)
 	m_topLevelItem = it;
 }
 
-}}}
+}
