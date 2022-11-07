@@ -9,9 +9,7 @@ using namespace std;
 namespace shv::core::utils {
 
 ShvAlarm::ShvAlarm()
-	: m_path("")
-	, m_isActive(false)
-	, m_description("")
+	: m_isActive(false)
 	, m_severity(Severity::Invalid)
 {}
 

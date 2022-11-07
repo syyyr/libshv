@@ -6,7 +6,7 @@
 
 namespace shv::core::utils {
 
-const std::string ShvLogHeader::EMPTY_PREFIX_KEY = "";
+const std::string ShvLogHeader::EMPTY_PREFIX_KEY;
 
 const char *ShvLogHeader::Column::name(ShvLogHeader::Column::Enum e)
 {
