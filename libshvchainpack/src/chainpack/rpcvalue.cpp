@@ -316,7 +316,7 @@ class ChainPackString : public ValueData<RpcValue::Type::String, RpcValue::Strin
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asString(); }
 public:
 	explicit ChainPackString(const RpcValue::String &value) : ValueData(value) {}
-	explicit ChainPackString(RpcValue::String &&value) : ValueData(std::move(value)) {}
+	explicit ChainPackString(RpcValue::String &&value) : ValueData(value) {}
 };
 
 class ChainPackBlob final : public ValueData<RpcValue::Type::Blob, RpcValue::Blob>
@@ -328,7 +328,7 @@ class ChainPackBlob final : public ValueData<RpcValue::Type::Blob, RpcValue::Blo
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asBlob(); }
 public:
 	explicit ChainPackBlob(const RpcValue::Blob &value) : ValueData(value) {}
-	explicit ChainPackBlob(RpcValue::Blob &&value) : ValueData(std::move(value)) {}
+	explicit ChainPackBlob(RpcValue::Blob &&value) : ValueData(value) {}
 	explicit ChainPackBlob(const uint8_t *bytes, size_t size) : ValueData(RpcValue::Blob(bytes, bytes + size)) {}
 };
 
@@ -344,7 +344,7 @@ class ChainPackList final : public ValueData<RpcValue::Type::List, RpcValue::Lis
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asList(); }
 public:
 	explicit ChainPackList(const RpcValue::List &value) : ValueData(value) {}
-	explicit ChainPackList(RpcValue::List &&value) : ValueData(move(value)) {}
+	explicit ChainPackList(RpcValue::List &&value) : ValueData(value) {}
 
 	const RpcValue::List &asList() const override { return m_value; }
 };
@@ -387,7 +387,7 @@ class ChainPackMap final : public ValueData<RpcValue::Type::Map, RpcValue::Map>
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asMap(); }
 public:
 	explicit ChainPackMap(const RpcValue::Map &value) : ValueData(value) {}
-	explicit ChainPackMap(RpcValue::Map &&value) : ValueData(move(value)) {}
+	explicit ChainPackMap(RpcValue::Map &&value) : ValueData(value) {}
 
 	const RpcValue::Map &asMap() const override { return m_value; }
 };
@@ -404,7 +404,7 @@ class ChainPackIMap final : public ValueData<RpcValue::Type::IMap, RpcValue::IMa
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asIMap(); }
 public:
 	explicit ChainPackIMap(const RpcValue::IMap &value) : ValueData(value) {}
-	explicit ChainPackIMap(RpcValue::IMap &&value) : ValueData(std::move(value)) {}
+	explicit ChainPackIMap(RpcValue::IMap &&value) : ValueData(value) {}
 
 	const RpcValue::IMap &asIMap() const override { return m_value; }
 };

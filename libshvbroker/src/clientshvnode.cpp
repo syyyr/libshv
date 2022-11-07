@@ -42,7 +42,7 @@ void ClientShvNode::handleRawRpcRequest(shv::chainpack::RpcValue::MetaData &&met
 {
 	rpc::ClientConnectionOnBroker *conn = connection();
 	if(conn)
-		conn->sendRawData(std::move(meta), std::move(data));
+		conn->sendRawData(meta, std::move(data));
 }
 
 shv::chainpack::RpcValue ClientShvNode::hasChildren(const StringViewList &shv_path)

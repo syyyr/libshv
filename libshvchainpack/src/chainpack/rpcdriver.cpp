@@ -101,7 +101,7 @@ RpcMessage RpcDriver::composeRpcMessage(RpcValue::MetaData &&meta_data, const st
 			SHVCHP_EXCEPTION(msg);
 		}
 		else {
-			*errmsg = std::move(msg);
+			*errmsg = msg;
 			return RpcMessage();
 		}
 	}
@@ -203,7 +203,7 @@ int64_t RpcDriver::writeBytes_helper(const std::string &str, size_t from, size_t
 void RpcDriver::onBytesRead(std::string &&bytes)
 {
 	logRpcData().nospace() << __FUNCTION__ << " " << bytes.length() << " bytes of data read:\n" << shv::chainpack::Utils::hexDump(bytes);
-	m_readData += std::move(bytes);
+	m_readData += bytes;
 	while(true) {
 		auto old_len = m_readData.size();
 		processReadData();

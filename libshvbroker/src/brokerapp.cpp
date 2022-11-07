@@ -976,7 +976,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 							logServiceProvidersM() << "forwarded shv path:" << resolved_local_path;
 							cp::RpcRequest::setShvPath(meta, resolved_local_path);
 							cp::RpcMessage::pushCallerId(meta, connection_id);
-							master_broker->sendRawData(std::move(meta), std::move(data));
+							master_broker->sendRawData(meta, std::move(data));
 							return;
 						}
 					}
@@ -1115,7 +1115,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 			}
 			rpc::CommonRpcClientHandle *cch = commonClientConnectionById(caller_id);
 			if(cch) {
-				cch->sendRawData(std::move(meta), std::move(data));
+				cch->sendRawData(meta, std::move(data));
 			}
 			else {
 				shvWarning() << "Got RPC response for not-exists connection, may be it was closed meanwhile. Connection id:" << caller_id;
