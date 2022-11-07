@@ -74,7 +74,7 @@ public:
 public:
 	static double valueToDouble(const QVariant v, core::utils::ShvTypeDescr::Type type_id = core::utils::ShvTypeDescr::Type::Invalid, bool *ok = nullptr);
 protected:
-	QString guessTypeName(int channel_ix);
+	QString guessTypeName(int channel_ix) const;
 protected:
 	using ChannelSamples = QVector<Sample>;
 	QVector<ChannelSamples> m_samples;

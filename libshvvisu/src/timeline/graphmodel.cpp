@@ -309,7 +309,7 @@ QString GraphModel::typeDescrFieldName(const shv::core::utils::ShvTypeDescr &typ
 	return QString();
 }
 
-QString GraphModel::guessTypeName(int channel_ix)
+QString GraphModel::guessTypeName(int channel_ix) const
 {
 	for(int i = 0; i < count(channel_ix); i++) {
 		Sample s = sampleValue(channel_ix, i);

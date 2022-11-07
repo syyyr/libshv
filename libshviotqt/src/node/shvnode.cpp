@@ -966,14 +966,14 @@ shv::chainpack::RpcValue RpcValueConfigNode::loadConfigTemplate(const std::strin
 	return shv::chainpack::RpcValue();
 }
 
-std::string RpcValueConfigNode::resolvedUserConfigName()
+std::string RpcValueConfigNode::resolvedUserConfigName() const
 {
 	if(userConfigName().empty())
 		return "user." + configName();
 	return userConfigName();
 }
 
-std::string RpcValueConfigNode::resolvedUserConfigDir()
+std::string RpcValueConfigNode::resolvedUserConfigDir() const
 {
 	if(userConfigDir().empty())
 		return configDir();

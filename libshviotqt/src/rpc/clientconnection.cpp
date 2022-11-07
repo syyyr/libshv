@@ -380,7 +380,7 @@ static std::string sha1_hex(const std::string &s)
 	return std::string(hash.result().toHex().constData());
 }
 
-chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValue &server_hello)
+chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValue &server_hello) const
 {
 	shvDebug() << server_hello.toCpon() << "login type:" << static_cast<int>(loginType());
 	std::string pass;

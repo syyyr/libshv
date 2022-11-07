@@ -86,7 +86,7 @@ int ClientConnectionOnBroker::idleTimeMax() const
 	return  m_idleWatchDogTimer->interval();
 }
 
-std::string ClientConnectionOnBroker::resolveLocalPath(const shv::core::utils::ShvUrl &spp, iotqt::node::ShvNode **pnd)
+std::string ClientConnectionOnBroker::resolveLocalPath(const shv::core::utils::ShvUrl &spp, iotqt::node::ShvNode **pnd) const
 {
 	BrokerApp *app = BrokerApp::instance();
 	string local_path;
