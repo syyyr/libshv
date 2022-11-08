@@ -428,7 +428,9 @@ static const RpcValue::IMap & static_empty_imap() { static const RpcValue::IMap 
  * Constructors
  */
 
-RpcValue::RpcValue() noexcept : m_ptr(nullptr) {}
+static CowPtr<RpcValue::AbstractValueData> static_null(nullptr);
+
+RpcValue::RpcValue() noexcept : m_ptr(static_null) {}
 
 RpcValue RpcValue::fromType(RpcValue::Type t) noexcept
 {
@@ -741,6 +743,7 @@ bool RpcValue::operator== (const RpcValue &other) const
 	}
 	return (!isValid() && !other.isValid());
 }
+
 /*
 bool ChainPack::operator< (const ChainPack &other) const
 {
