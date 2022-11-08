@@ -31,12 +31,12 @@ SocketRpcDriver::~SocketRpcDriver()
 
 void SocketRpcDriver::closeConnection()
 {
-	if(isOpen())
+	if(isOpenImpl())
 		::close(m_socket);
 	m_socket = -1;
 }
 
-bool SocketRpcDriver::isOpen()
+bool SocketRpcDriver::isOpenImpl()
 {
 	return m_socket >= 0;
 }

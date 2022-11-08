@@ -133,7 +133,7 @@ bool AclAccessRule::isPathMethodMatch(const shv::core::utils::ShvUrl &shv_url, c
 shv::chainpack::RpcValue AclRoleAccessRules::toRpcValue() const
 {
 	shv::chainpack::RpcValue::List ret;
-	for(auto kv : *this) {
+	for(const auto &kv : *this) {
 		ret.push_back(kv.toRpcValue());
 	}
 	return shv::chainpack::RpcValue(std::move(ret));
@@ -142,7 +142,7 @@ shv::chainpack::RpcValue AclRoleAccessRules::toRpcValue() const
 RpcValue AclRoleAccessRules::toRpcValue_legacy() const
 {
 	shv::chainpack::RpcValue::Map ret;
-	for(auto kv : *this) {
+	for(const auto &kv : *this) {
 		std::string key = kv.pathPattern;
 		if(!kv.method.empty())
 			key += shv::core::utils::ShvPath::SHV_PATH_METHOD_DELIM + kv.method;
@@ -164,7 +164,7 @@ AclRoleAccessRules AclRoleAccessRules::fromRpcValue(const shv::chainpack::RpcVal
 	AclRoleAccessRules ret;
 	if(v.isMap()) {
 		const auto &m = v.toMap();
-		for(auto kv : m) {
+		for(const auto &kv : m) {
 			auto g = AclAccessRule::fromRpcValue(kv.second);
 			auto i = kv.first.find_last_of(shv::core::utils::ShvPath::SHV_PATH_METHOD_DELIM);
 			if(i == std::string::npos) {
@@ -180,7 +180,7 @@ AclRoleAccessRules AclRoleAccessRules::fromRpcValue(const shv::chainpack::RpcVal
 	}
 	else if(v.isList()) {
 		const auto &l = v.toList();
-		for(auto kv : l) {
+		for(const auto &kv : l) {
 			auto g = AclAccessRule::fromRpcValue(kv);
 			if(g.isValid())
 				ret.push_back(std::move(g));

@@ -132,10 +132,9 @@ chainpack::RpcValue BrokerAppNode::callMethodRq(const chainpack::RpcRequest &rq)
 			if (!conn) {
 				return std::string();
 			}
-			auto *connection = new QMetaObject::Connection;
-			*connection = connect(conn, &rpc::MasterBrokerConnection::masterBrokerIdReceived, this, [this, rq, connection](const cp::RpcResponse &master_resp) {
-				disconnect(*connection);
-				delete connection;
+			auto *guard = new QObject(this);
+			connect(conn, &rpc::MasterBrokerConnection::masterBrokerIdReceived, guard, [this, rq, guard](const cp::RpcResponse &master_resp) {
+				guard->deleteLater();
 				cp::RpcResponse resp = cp::RpcResponse::forRequest(rq);
 				if (master_resp.isSuccess()) {
 					resp.setResult(master_resp.result());

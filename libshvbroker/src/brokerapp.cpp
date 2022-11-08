@@ -550,7 +550,9 @@ AclManager *BrokerApp::createAclManager()
 {
 	auto *opts = cliOptions();
 	if(opts->isSqlConfigEnabled()) {
-		return new AclManagerSqlite(this);
+		auto *ret = new AclManagerSqlite(this);
+		ret->init(); // we cannot call virtual functions from constructor
+		return ret;
 	}
 	return new AclManagerConfigFiles(this);
 }

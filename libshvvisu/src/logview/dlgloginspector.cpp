@@ -51,7 +51,7 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 		auto *m = new QMenu(this);
 		{
 			auto *a = new QAction(tr("ChainPack"), m);
-			connect(a, &QAction::triggered, [this]() {
+			connect(a, &QAction::triggered, this, [this]() {
 				auto log = m_logModel->log();
 				std::string log_data = log.toChainPack();
 				saveData(log_data, ".chpk");
@@ -60,7 +60,7 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 		}
 		{
 			auto *a = new QAction(tr("Cpon"), m);
-			connect(a, &QAction::triggered, [this]() {
+			connect(a, &QAction::triggered, this, [this]() {
 				auto log = m_logModel->log();
 				std::string log_data = log.toCpon("\t");
 				saveData(log_data, ".cpon");
@@ -69,7 +69,7 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 		}
 		{
 			auto *a = new QAction(tr("CSV"), m);
-			connect(a, &QAction::triggered, [this]() {
+			connect(a, &QAction::triggered, this, [this]() {
 				std::string log_data;
 				for(int row=0; row<m_logModel->rowCount(); row++) {
 					std::string row_data;
@@ -98,22 +98,22 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 	dt2 = dt2.addSecs(60 * 60);
 	ui->edSince->setDateTime(dt1);
 	ui->edUntil->setDateTime(dt2);
-	connect(ui->btClearSince, &QPushButton::clicked, [this]() {
+	connect(ui->btClearSince, &QPushButton::clicked, this, [this]() {
 		ui->edSince->setDateTime(ui->edSince->minimumDateTime());
 	});
-	connect(ui->btClearUntil, &QPushButton::clicked, [this]() {
+	connect(ui->btClearUntil, &QPushButton::clicked, this, [this]() {
 		ui->edUntil->setDateTime(ui->edUntil->minimumDateTime());
 	});
 
-	connect(ui->btTabGraph, &QAbstractButton::toggled, [this](bool is_checked) {
+	connect(ui->btTabGraph, &QAbstractButton::toggled, this, [this](bool is_checked) {
 		if(is_checked)
 			ui->stackedWidget->setCurrentIndex(TabGraph);
 	});
-	connect(ui->btTabData, &QAbstractButton::toggled, [this](bool is_checked) {
+	connect(ui->btTabData, &QAbstractButton::toggled, this, [this](bool is_checked) {
 		if(is_checked)
 			ui->stackedWidget->setCurrentIndex(TabData);
 	});
-	connect(ui->btTabInfo, &QAbstractButton::toggled, [this](bool is_checked) {
+	connect(ui->btTabInfo, &QAbstractButton::toggled, this, [this](bool is_checked) {
 		if(is_checked)
 			ui->stackedWidget->setCurrentIndex(TabInfo);
 	});
@@ -132,7 +132,7 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 		auto *copy = new QAction(tr("&Copy"));
 		copy->setShortcut(QKeySequence::Copy);
 		ui->tblData->addAction(copy);
-		connect(copy, &QAction::triggered, [this]() {
+		connect(copy, &QAction::triggered, this, [this]() {
 			auto table_view = ui->tblData;
 			auto *m = table_view->model();
 			if(!m)
@@ -190,7 +190,7 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 	m_channelFilterDialog = new shv::visu::timeline::ChannelFilterDialog(this);
 
 #if SHVVISU_HAS_TIMEZONE
-	connect(ui->cbxTimeZone, &QComboBox::currentTextChanged, [this](const QString &) {
+	connect(ui->cbxTimeZone, &QComboBox::currentTextChanged, this, [this](const QString &) {
 		auto tz = ui->cbxTimeZone->currentTimeZone();
 		setTimeZone(tz);
 	});
@@ -204,7 +204,7 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 	connect(m_graph, &shv::visu::timeline::Graph::channelFilterChanged, this, &DlgLogInspector::onGraphChannelFilterChanged);
 	connect(ui->pbChannelsFilter, &QPushButton::clicked, this, &DlgLogInspector::onChannelsFilterClicked);
 
-	connect(ui->btResizeColumnsToFitWidth, &QAbstractButton::clicked, [this]() {
+	connect(ui->btResizeColumnsToFitWidth, &QAbstractButton::clicked, this, [this]() {
 		ui->tblData->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
 	});
 

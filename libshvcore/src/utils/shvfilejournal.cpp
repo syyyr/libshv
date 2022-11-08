@@ -829,7 +829,7 @@ log_finish:
 	if(params.withPathsDict) {
 		logMShvJournal() << "Generating paths dict size:" << path_cache.size();
 		RpcValue::IMap path_dict;
-		for(auto kv : path_cache) {
+		for(const auto &kv : path_cache) {
 			//logIShvJournal() << "Adding record to paths dict:" << kv.second.toInt() << "-->" << kv.first;
 			path_dict[kv.second.toInt()] = kv.first;
 		}

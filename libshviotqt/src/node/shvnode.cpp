@@ -890,7 +890,7 @@ static std::vector<MetaMethod> meta_methods_node {
 RpcValueConfigNode::RpcValueConfigNode(const std::string &node_id, ShvNode *parent)
 	: Super(node_id, parent)
 {
-	shvDebug() << "creating:" << metaObject()->className() << nodeId();
+	shvDebug() << "creating: RpcValueConfigNode" << nodeId();
 }
 
 size_t RpcValueConfigNode::methodCount(const shv::iotqt::node::ShvNode::StringViewList &shv_path)
@@ -1126,7 +1126,7 @@ ValueProxyShvNode::ValueProxyShvNode(const std::string &node_id, int value_id, V
 {
 	auto *handled_qobj = dynamic_cast<QObject*>(handled_obj);
 	if(handled_qobj) {
-		bool ok = connect(handled_qobj, SIGNAL(shvValueChanged(int, shv::chainpack::RpcValue)), this, SLOT(onShvValueChanged(int, shv::chainpack::RpcValue)), Qt::QueuedConnection);
+		bool ok = connect(handled_qobj, SIGNAL(shvValueChanged(int,shv::chainpack::RpcValue)), this, SLOT(onShvValueChanged(int,shv::chainpack::RpcValue)), Qt::QueuedConnection);
 		if(!ok)
 			shvWarning() << nodeId() << "cannot connect shvValueChanged signal";
 	}

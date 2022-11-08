@@ -81,7 +81,7 @@ chainpack::RpcValue::MetaData ShvLogHeader::toMetaData() const
 	else {
 		if(!m_typeInfos.empty()) {
 			chainpack::RpcValue::Map m;
-			for(auto kv : m_typeInfos)
+			for(const auto &kv : m_typeInfos)
 				m[kv.first] = kv.second.toRpcValue();
 			md.setValue("typeInfos", m);
 		}

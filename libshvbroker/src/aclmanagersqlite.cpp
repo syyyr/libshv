@@ -29,7 +29,6 @@ AclManagerSqlite::AclManagerSqlite(BrokerApp *broker_app)
 	: Super(broker_app)
 {
 	shvInfo() << "Creating Sqlite ACL Manager";
-	checkAclTables();
 }
 
 AclManagerSqlite::~AclManagerSqlite() = default;
@@ -159,7 +158,7 @@ void AclManagerSqlite::importAclConfigFiles()
 {
 	AclManagerConfigFiles facl(m_brokerApp);
 	shvInfo() << "Importing ACL config files from:" << facl.configDir();
-	for(std::string id : facl.mountDeviceIds()) {
+	for(const std::string &id : facl.mountDeviceIds()) {
 		acl::AclMountDef md = facl.mountDef(id);
 		//logAclManagerD() << id << md.toRpcValueMap().toCpon();
 		if(!md.isValid())
@@ -167,16 +166,16 @@ void AclManagerSqlite::importAclConfigFiles()
 		else
 			aclSetMountDef(id, md);
 	}
-	for(std::string user : facl.users()) {
+	for(const std::string &user : facl.users()) {
 		acl::AclUser u = facl.user(user);
 		//shvWarning() << user << u.toRpcValue().toCpon();
 		aclSetUser(user, u);
 	}
-	for(std::string role : facl.roles()) {
+	for(const std::string &role : facl.roles()) {
 		acl::AclRole r = facl.role(role);
 		aclSetRole(role, r);
 	}
-	for(std::string role : facl.accessRoles()) {
+	for(const std::string &role : facl.accessRoles()) {
 		acl::AclRoleAccessRules rpt = facl.accessRoleRules(role);
 		aclSetAccessRoleRules(role, rpt);
 	}

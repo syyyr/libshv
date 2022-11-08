@@ -14,9 +14,8 @@
 #include <StringList>
 #include <QDir>
 #include <QJsonParseError>
-#include <QTextStream>
 */
-#ifdef Q_OS_WIN
+#ifdef _WIN32
 #include <qt_windows.h> // needed by CLIOptions::applicationDirAndName()
 #endif
 
@@ -284,7 +283,7 @@ std::tuple<std::string, std::string> CLIOptions::applicationDirAndName() const
 	static std::string app_name;
 	if(app_name.empty()) {
 		if(!m_allArgs.empty()) {
-	#ifdef Q_OS_WIN
+	#ifdef _WIN32
 			std::string app_file_path;
 			wchar_t buffer[MAX_PATH + 2];
 			DWORD v = GetModuleFileName(0, buffer, MAX_PATH + 1);
@@ -305,7 +304,7 @@ std::tuple<std::string, std::string> CLIOptions::applicationDirAndName() const
 				app_dir = app_file_path.substr(0, sep_pos);
 			}
 			//shvInfo() << "app dir:" << app_dir << "name:" << app_name;
-	#ifdef Q_OS_WIN
+	#ifdef _WIN32
 			std::string ext = ".exe";
 	#else
 			std::string ext = ".so";
@@ -440,7 +439,7 @@ std::string ConfigCLIOptions::configFile()
 	else {
 		config_file = applicationName() + conf_ext;
 	}
-#ifdef Q_OS_WIN
+#ifdef _WIN32
 	bool is_absolute_path = config_file.size() > 2 && config_file[1] == ':';
 #else
 	bool is_absolute_path = !config_file.empty() && config_file[0] == '/';

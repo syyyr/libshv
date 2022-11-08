@@ -37,13 +37,13 @@ void BrokerTcpServer::incomingConnection(qintptr socket_descriptor)
 	if (m_sslMode == SecureMode) {
 		auto *socket = new QSslSocket(this);
 		{
-			connect(socket, &QSslSocket::connected, [this]() {
+			connect(socket, &QSslSocket::connected, this, [this]() {
 				shvDebug() << this << "Socket connected!!!";
 			});
-			connect(socket, &QSslSocket::disconnected, [this]() {
+			connect(socket, &QSslSocket::disconnected, this, [this]() {
 				shvDebug() << this << "Socket disconnected!!!";
 			});
-			connect(socket, &QSslSocket::stateChanged, [this](QAbstractSocket::SocketState state) {
+			connect(socket, &QSslSocket::stateChanged, this, [this](QAbstractSocket::SocketState state) {
 				shvDebug() << this << "Socket state changed:" << state;
 			});
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)

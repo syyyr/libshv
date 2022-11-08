@@ -140,9 +140,11 @@ void Graph::createChannelsFromModel()
 		QString shv_path = m_model->channelShvPath(i);
 		path_to_model_index[shv_path] = i;
 	}
-	for(const auto &shv_path : path_to_model_index.keys()) {
-		int model_ix = path_to_model_index[shv_path];
-		shvDebug() << "adding channel:" << shv_path;
+	QMapIterator<QString, int> it(path_to_model_index);
+	while(it.hasNext()) {
+		it.next();
+		int model_ix = path_to_model_index[it.key()];
+		shvDebug() << "adding channel:" << it.key();
 		//shvInfo() << "new channel:" << model_ix;
 		GraphChannel *ch = appendChannel(model_ix);
 		//ch->buttonBox()->setObjectName(QString::fromStdString(shv_path));
@@ -1440,7 +1442,6 @@ void Graph::drawVerticalHeader(QPainter *painter, int channel)
 	}
 
 	font.setBold(true);
-	QFontMetrics fm(font);
 	painter->setFont(font);
 	QRect text_rect = ch->m_layout.verticalHeaderRect.adjusted(2*header_inset, header_inset, -header_inset, -header_inset);
 	painter->drawText(text_rect, name);

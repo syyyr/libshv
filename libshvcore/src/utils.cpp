@@ -36,7 +36,7 @@ std::vector<std::string> split(const std::string &s, char delim)
 int Utils::versionStringToInt(const std::string &version_string)
 {
 	int ret = 0;
-	for(auto s : split(version_string, '.')) {
+	for(const auto &s : split(version_string, '.')) {
 		int i = ::atoi(s.c_str());
 		ret = 100 * ret + i;
 	}
@@ -171,7 +171,7 @@ RpcValue Utils::foldMap(const chainpack::RpcValue::Map &plain_map, char key_deli
 std::string Utils::joinPath(const StringViewList &p)
 {
 	string ret;
-	for(StringView path : p) {
+	for(const StringView &path : p) {
 		ret = joinPath(ret, path);
 	}
 	return ret;

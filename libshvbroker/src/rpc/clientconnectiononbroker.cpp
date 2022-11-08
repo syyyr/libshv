@@ -146,7 +146,7 @@ void ClientConnectionOnBroker::setIdleWatchDogTimeOut(int sec)
 	}
 	if(!m_idleWatchDogTimer) {
 		m_idleWatchDogTimer = new QTimer(this);
-		connect(m_idleWatchDogTimer, &QTimer::timeout, [this]() {
+		connect(m_idleWatchDogTimer, &QTimer::timeout, this, [this]() {
 			std::string mount_point = mountPoint();
 			shvError() << "Connection id:" << connectionId() << "device id:" << deviceId().toCpon() << "mount point:" << mount_point
 					   << "was idle for more than" << m_idleWatchDogTimer->interval()/1000 << "sec. It will be aborted.";

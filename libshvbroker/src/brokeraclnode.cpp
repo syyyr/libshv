@@ -494,7 +494,7 @@ iotqt::node::ShvNode::StringList AccessAclNode::childNames(const iotqt::node::Sh
 		const acl::AclRoleAccessRules role_rules = mng->accessRoleRules(shv_path.value(0).toString());
 		iotqt::node::ShvNode::StringList ret;
 		unsigned ix = 0;
-		for(auto rule : role_rules) {
+		for(const auto &rule : role_rules) {
 			ret.push_back('\'' + ruleKey(ix++, static_cast<unsigned int>(role_rules.size()), rule) + '\'');
 		}
 		return ret;

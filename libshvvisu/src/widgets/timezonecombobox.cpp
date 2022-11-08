@@ -17,7 +17,7 @@ TimeZoneComboBox::TimeZoneComboBox(QWidget *parent)
 #if SHVVISU_HAS_TIMEZONE
 	setEditable(true);
 	//addItem(LOCAL_TZ_ID);
-	for(auto tzn : QTimeZone::availableTimeZoneIds()) {
+	for(const auto &tzn : QTimeZone::availableTimeZoneIds()) {
 		addItem(tzn);
 	}
 	setCurrentIndex(findText(QTimeZone::systemTimeZoneId()));

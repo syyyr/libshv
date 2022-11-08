@@ -16,6 +16,8 @@ public:
 	AclManagerSqlite(BrokerApp *broker_app);
 	~AclManagerSqlite() override;
 
+	void init() { checkAclTables(); }
+
 	// AclManager interface
 protected:
 	std::vector<std::string> aclMountDeviceIds() override;

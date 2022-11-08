@@ -19,9 +19,9 @@ Exception::Exception(const std::string &_msg, const std::string &_where, const c
 {
 	if(!_where.empty() || (_log_topic && *_log_topic)) {
 		if(_log_topic && *_log_topic)
-			nCError(_log_topic) << "SHV_EXCEPTION:" << where() << message();
+			nCError(_log_topic) << "SHV_EXCEPTION:" << _where << _msg;
 		else
-			nError() << "SHV_EXCEPTION:" << where() << message();
+			nError() << "SHV_EXCEPTION:" << _where << _msg;
 	}
 	if(isAbortOnException())
 		std::abort();

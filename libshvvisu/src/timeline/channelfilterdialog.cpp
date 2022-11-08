@@ -74,16 +74,16 @@ void ChannelFilterDialog::onCustomContextMenuRequested(QPoint pos)
 	if (ix.isValid()) {
 		QMenu menu(this);
 
-		menu.addAction(tr("Expand"), [this, ix]() {
+		menu.addAction(tr("Expand"), this, [this, ix]() {
 			ui->tvChannelsFilter->expandRecursively(ix);
 		});
-		menu.addAction(tr("Collapse"), [this, ix]() {
+		menu.addAction(tr("Collapse"), this, [this, ix]() {
 			ui->tvChannelsFilter->collapse(ix);
 		});
 
 		menu.addSeparator();
 
-		menu.addAction(tr("Expand all nodes"), [this]() {
+		menu.addAction(tr("Expand all nodes"), this, [this]() {
 			ui->tvChannelsFilter->expandAll();
 		});
 

@@ -757,25 +757,25 @@ void GraphWidget::showGraphSelectionContextMenu(const QPoint &mouse_pos)
 void GraphWidget::showGraphContextMenu(const QPoint &mouse_pos)
 {
 	QMenu menu(this);
-	menu.addAction(tr("Show all channels"), [this]() {
+	menu.addAction(tr("Show all channels"), this, [this]() {
 		m_graph->showAllChannels();
 	});
-	menu.addAction(tr("Hide channels without changes"), [this]() {
+	menu.addAction(tr("Hide channels without changes"), this, [this]() {
 		m_graph->hideFlatChannels();
 	});
-	menu.addAction(tr("Reset channel headers"), [this]() {
+	menu.addAction(tr("Reset channel headers"), this, [this]() {
 		m_graph->createChannelsFromModel();
 		auto graph_filter = m_graph->channelFilter();
 		graph_filter.setMatchingPaths(m_graph->channelPaths());
 		m_graph->setChannelFilter(graph_filter);
 	});
 	if (m_graph->isYAxisVisible()) {
-		menu.addAction(tr("Hide Y axis"), [this]() {
+		menu.addAction(tr("Hide Y axis"), this, [this]() {
 			m_graph->setYAxisVisible(false);
 		});
 	}
 	else {
-		menu.addAction(tr("Show Y axis"), [this]() {
+		menu.addAction(tr("Show Y axis"), this, [this]() {
 			m_graph->setYAxisVisible(true);
 		});
 	}
@@ -792,19 +792,19 @@ void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos
 		return;
 	QMenu menu(this);
 	if(ch->isMaximized()) {
-		menu.addAction(tr("Normal size"), [this, channel_ix]() {
+		menu.addAction(tr("Normal size"), this, [this, channel_ix]() {
 			m_graph->setChannelMaximized(channel_ix, false);
 		});
 	}
 	else {
-		menu.addAction(tr("Maximize"), [this, channel_ix]() {
+		menu.addAction(tr("Maximize"), this, [this, channel_ix]() {
 			m_graph->setChannelMaximized(channel_ix, true);
 		});
 	}
-	menu.addAction(tr("Hide"), [this, channel_ix]() {
+	menu.addAction(tr("Hide"), this, [this, channel_ix]() {
 		m_graph->setChannelVisible(channel_ix, false);
 	});
-	menu.addAction(tr("Reset X-zoom"), [this]() {
+	menu.addAction(tr("Reset X-zoom"), this, [this]() {
 		//shvInfo() << "settings";
 		/*
 		timeline::GraphModel *m = m_graph->model();
@@ -829,12 +829,12 @@ void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos
 		m_graph->resetYZoom(channel_ix);
 		this->update();
 	});
-	menu.addAction(tr("Set probe (Ctrl + Left mouse)"), [this, channel_ix, mouse_pos]() {
+	menu.addAction(tr("Set probe (Ctrl + Left mouse)"), this, [this, channel_ix, mouse_pos]() {
 		removeProbes(channel_ix);
 		timemsec_t time = m_graph->posToTime(mouse_pos.x());
 		createProbe(channel_ix, time);
 	});
-	menu.addAction(tr("Add probe (Ctrl + Shift + Left mouse)"), [this, channel_ix, mouse_pos]() {
+	menu.addAction(tr("Add probe (Ctrl + Shift + Left mouse)"), this, [this, channel_ix, mouse_pos]() {
 			timemsec_t time = m_graph->posToTime(mouse_pos.x());
 			createProbe(channel_ix, time);
 		});

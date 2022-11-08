@@ -14,13 +14,13 @@ public:
 	SocketRpcDriver();
 	~SocketRpcDriver() override;
 	virtual bool connectToHost(const std::string & host, int port);
-	virtual void closeConnection();
+	void closeConnection();
 	void exec();
 
 	void sendResponse(int request_id, const RpcValue &result);
 	void sendNotify(std::string &&method, const RpcValue &result);
 protected:
-	bool isOpen() override;
+	bool isOpen() override { return isOpenImpl(); }
 	void writeMessageBegin() override {}
 	void writeMessageEnd() override {flush();}
 	int64_t writeBytes(const char *bytes, size_t length) override;
@@ -30,6 +30,7 @@ protected:
 	//virtual void connectedToHost(bool ) {}
 	//virtual void connectionClosed() {}
 private:
+	bool isOpenImpl();
 	bool flush();
 private:
 	int m_socket = -1;

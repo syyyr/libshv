@@ -410,7 +410,7 @@ DOCTEST_TEST_CASE("ChainPack")
 		REQUIRE(RpcValue::DateTime::fromMSecsSinceEpoch(0) == RpcValue::DateTime::fromUtcString("1970-01-01T00:00:00"));
 		//RpcValue::DateTime ts;// = RpcValue::DateTime::now();
 		//nDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~ " << RpcValue(ts).toCpon();
-		for(std::string str : {
+		for(const std::string &str : {
 			"2018-02-02 0:00:00.001",
 			"2018-02-02 01:00:00.001+01",
 			"2018-12-02 0:00:00",
@@ -446,7 +446,7 @@ DOCTEST_TEST_CASE("ChainPack")
 	DOCTEST_SUBCASE("List")
 	{
 		{
-			for(const std::string s : {"[]", "[[]]", R"(["a",123,true,[1,2,3],null])"}) {
+			for(const std::string &s : {"[]", "[[]]", R"(["a",123,true,[1,2,3],null])"}) {
 				string err;
 				RpcValue cp1 = RpcValue::fromCpon(s, &err);
 				std::stringstream out;
@@ -514,17 +514,17 @@ DOCTEST_TEST_CASE("ChainPack")
 			{
 				ChainPackWriter wr(out);
 				wr.writeContainerBegin(RpcValue::Type::Map);
-				for(auto it : m)
+				for(const auto &it : m)
 					wr.writeMapElement(it.first, it.second);
 				wr.writeContainerEnd();
 			}
 			ChainPackReader rd(out);
 			RpcValue::Map m2 = rd.read().toMap();
-			for(auto it : m2) {
+			for(const auto &it : m2) {
 				REQUIRE(it.second == m[it.first]);
 			}
 		}
-		for(const std::string s : {"{}", R"({"a":{}})", R"({"foo":{"bar":"baz"}})"}) {
+		for(const std::string &s : {"{}", R"({"a":{}})", R"({"foo":{"bar":"baz"}})"}) {
 			string err;
 			RpcValue cp1 = RpcValue::fromCpon(s, &err);
 			std::stringstream out;

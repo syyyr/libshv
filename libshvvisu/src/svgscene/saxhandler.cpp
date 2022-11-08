@@ -207,7 +207,7 @@ static QVector<qreal> parsePercentageList(const QChar *&str)
 	return points;
 }
 
-static inline int qsvg_h2i(char hex)
+static inline unsigned int qsvg_h2i(char hex)
 {
 	if (hex >= '0' && hex <= '9')
 		return hex - '0';
@@ -217,13 +217,13 @@ static inline int qsvg_h2i(char hex)
 		return hex - 'A' + 10;
 	return -1;
 }
-static inline int qsvg_hex2int(const char *s)
+static inline unsigned qsvg_hex2int(const char *s)
 {
 	return (qsvg_h2i(s[0]) << 4) | qsvg_h2i(s[1]);
 }
-static inline int qsvg_hex2int(char s)
+static inline unsigned qsvg_hex2int(char s)
 {
-	int h = qsvg_h2i(s);
+	auto h = qsvg_h2i(s);
 	return (h << 4) | h;
 }
 
@@ -1254,7 +1254,7 @@ void SaxHandler::mergeCSSAttributes(CssAttributes &css_attributes, const QString
 #else
 	QStringList css = xml_attributes.value(attr_name).split(';', Qt::SkipEmptyParts);
 #endif
-	for(QString ss : css) {
+	for(const QString &ss : css) {
 		int ix = ss.indexOf(':');
 		if(ix > 0) {
 			css_attributes[ss.mid(0, ix).trimmed()] = ss.mid(ix + 1).trimmed();

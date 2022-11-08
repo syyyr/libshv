@@ -35,7 +35,7 @@ shv::broker::AclManager::AclManager(shv::broker::BrokerApp *broker_app)
 std::vector<std::string> AclManager::mountDeviceIds()
 {
 	if(m_cache.aclMountDefs.empty()) {
-		for(auto id : aclMountDeviceIds())
+		for(const auto &id : aclMountDeviceIds())
 			m_cache.aclMountDefs[id];
 	}
 	return cp::Utils::mapKeys(m_cache.aclMountDefs);
@@ -63,7 +63,7 @@ void AclManager::setMountDef(const std::string &device_id, const shv::iotqt::acl
 std::vector<std::string> AclManager::users()
 {
 	if(m_cache.aclUsers.empty()) {
-		for(auto id : aclUsers())
+		for(const auto &id : aclUsers())
 			m_cache.aclUsers[id];
 	}
 	return cp::Utils::mapKeys(m_cache.aclUsers);
@@ -92,7 +92,7 @@ void AclManager::setUser(const std::string &user_name, const shv::iotqt::acl::Ac
 std::vector<std::string> AclManager::roles()
 {
 	if(m_cache.aclRoles.empty()) {
-		for(auto id : aclRoles())
+		for(const auto &id : aclRoles())
 			m_cache.aclRoles[id];
 	}
 	return cp::Utils::mapKeys(m_cache.aclRoles);
@@ -121,7 +121,7 @@ void AclManager::setRole(const std::string &role_name, const shv::iotqt::acl::Ac
 std::vector<std::string> AclManager::accessRoles()
 {
 	if(m_cache.aclAccessRules.empty()) {
-		for(auto id : aclAccessRoles())
+		for(const auto &id : aclAccessRoles())
 			m_cache.aclAccessRules[id];
 	}
 	return cp::Utils::mapKeys(m_cache.aclAccessRules);
@@ -252,7 +252,7 @@ std::map<std::string, AclManager::FlattenRole> AclManager::flattenRole_helper(co
 	if(ar.isValid()) {
 		FlattenRole fr{role_name, ar.weight, nest_level};
 		ret[role_name] = std::move(fr);
-		for(auto rl : ar.roles) {
+		for(const auto &rl : ar.roles) {
 			//shvInfo() << "\t child role:" << rl;
 			auto it = ret.find(rl);
 			if(it != ret.end()) {
@@ -280,7 +280,7 @@ std::vector<AclManager::FlattenRole> AclManager::userFlattenRoles(const std::str
 			return std::vector<FlattenRole>();
 
 		std::map<std::string, AclManager::FlattenRole> unique_roles;
-		for(auto role : user_def.roles) {
+		for(const auto &role : user_def.roles) {
 			auto gg = flattenRole_helper(role, 1);
 			unique_roles.insert(gg.begin(), gg.end());
 		}
