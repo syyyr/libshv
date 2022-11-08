@@ -12,9 +12,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 static std::string getLine(std::istream &in, char sep)
 {
@@ -144,10 +142,9 @@ bool ShvJournalFileReader::last()
 		m_ifstream.seekg(fpos, std::ios::beg);
 		return next();
 	}
-	else {
-		m_currentEntry = ShvJournalEntry();
-		return false;
-	}
+
+	m_currentEntry = ShvJournalEntry();
+	return false;
 }
 
 const ShvJournalEntry &ShvJournalFileReader::entry()
@@ -178,8 +175,8 @@ int64_t ShvJournalFileReader::fileNameToFileMsec(const std::string &fn, bool thr
 	if(MSEC_SEP_POS >= utc_str.size()) {
 		if(throw_exc)
 			SHV_EXCEPTION("fileNameToFileMsec(): File name: '" + fn + "' too short.");
-		else
-			return -1;
+
+		return -1;
 	}
 	utc_str[MIN_SEP_POS] = ':';
 	utc_str[SEC_SEP_POS] = ':';
@@ -189,8 +186,8 @@ int64_t ShvJournalFileReader::fileNameToFileMsec(const std::string &fn, bool thr
 	if(msec == 0 || len == 0) {
 		if(throw_exc)
 			SHV_EXCEPTION("fileNameToFileMsec(): Invalid file name: '" + fn + "' cannot be converted to date time");
-		else
-			return -1;
+
+		return -1;
 	}
 	return msec;
 }
@@ -204,6 +201,4 @@ std::string ShvJournalFileReader::msecToBaseFileName(int64_t msec)
 	return fn;
 }
 
-} // namespace utils
-} // namespace core
 } // namespace shv

@@ -8,9 +8,7 @@
 
 #include <cmath>
 
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 
 //===================================================
@@ -45,7 +43,7 @@ bool GraphButtonBox::processEvent(QEvent *ev)
 	};
 	switch (ev->type()) {
 	case QEvent::MouseMove: {
-		QMouseEvent *event = static_cast<QMouseEvent*>(ev);
+		auto *event = static_cast<QMouseEvent*>(ev);
 		QPoint pos = event->pos();
 		//shvDebug() << "------------------------";
 		//shvDebug() << pos.x() << pos.y();
@@ -63,21 +61,21 @@ bool GraphButtonBox::processEvent(QEvent *ev)
 			ev->accept();
 			return true;
 		}
-		else {
-			if(m_mouseOver) {
-				m_mouseOver = false;
-				m_mouseOverButtonIndex = -1;
-				m_mousePressButtonIndex = -1;
-				invalidate_bb();
-				ev->accept();
-				return true;
-			}
+
+		if(m_mouseOver) {
+			m_mouseOver = false;
+			m_mouseOverButtonIndex = -1;
+			m_mousePressButtonIndex = -1;
+			invalidate_bb();
+			ev->accept();
+			return true;
 		}
+
 		break;
 	}
 	case QEvent::MouseButtonPress: {
 		//shvDebug() << objectName() << "press";
-		QMouseEvent *event = static_cast<QMouseEvent*>(ev);
+		auto *event = static_cast<QMouseEvent*>(ev);
 		QPoint pos = event->pos();
 		for (int i = 0; i < m_buttonIds.count(); ++i) {
 			if(buttonRect(i).contains(pos)) {
@@ -234,6 +232,4 @@ Graph *GraphButtonBox::graph() const
 	return nullptr;
 }
 
-} // namespace timeline
-} // namespace visu
 } // namespace shv

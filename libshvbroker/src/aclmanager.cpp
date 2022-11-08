@@ -14,10 +14,9 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace broker {
+namespace shv::broker {
 namespace {
-static std::string sha1_hex(const std::string &s)
+std::string sha1_hex(const std::string &s)
 {
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
 	hash.addData(s.data(), static_cast<int>(s.length()));
@@ -386,8 +385,8 @@ chainpack::RpcValue AclManagerConfigFiles::aclConfig(const std::string &config_n
 		if(!config.isValid()) {
 			if(throw_exc)
 				throw std::runtime_error("Config " + config_name + " does not exist.");
-			else
-				return chainpack::RpcValue();
+
+			return chainpack::RpcValue();
 		}
 	}
 	return config;
@@ -419,8 +418,8 @@ shv::chainpack::RpcValue AclManagerConfigFiles::loadAclConfig(const std::string 
 									 + std::accumulate(files.begin(), files.end(), std::string(), [this](std::string a, std::string b) {
 											return std::move(a) + (a.empty()? std::string(): std::string(", ")) + configDir() + '/' + std::move(b);
 									}));
-		else
-			return cp::RpcValue();
+
+		return cp::RpcValue();
 	}
 	shv::chainpack::CponReader rd(fis);
 	shv::chainpack::RpcValue rv;
@@ -478,5 +477,4 @@ shv::iotqt::acl::AclRoleAccessRules AclManagerConfigFiles::aclAccessRoleRules(co
 	return shv::iotqt::acl::AclRoleAccessRules::fromRpcValue(v);
 }
 
-} // namespace broker
 } // namespace shv

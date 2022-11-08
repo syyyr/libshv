@@ -6,9 +6,7 @@
 
 #define logWShvJournal() shvCWarning("ShvJournal")
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 PatternMatcher::PatternMatcher(const ShvGetLogParams &filter)
 {
@@ -78,7 +76,5 @@ bool PatternMatcher::match(const std::string &path, const std::string &domain) c
 	return true;
 }
 
-}
-}
 }
 

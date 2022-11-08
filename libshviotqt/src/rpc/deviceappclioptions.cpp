@@ -4,9 +4,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace iotqt {
-namespace rpc {
+namespace shv::iotqt::rpc {
 
 DeviceAppCliOptions::DeviceAppCliOptions()
 {
@@ -22,6 +20,4 @@ DeviceAppCliOptions::DeviceAppCliOptions()
 			.setDefaultValue(std::to_string(core::utils::ShvFileJournal::DEFAULT_JOURNAL_SIZE_LIMIT));
 }
 
-} // namespace rpc
-} // namespace iotqt
 } // namespace shv

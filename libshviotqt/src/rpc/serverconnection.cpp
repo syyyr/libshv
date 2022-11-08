@@ -17,9 +17,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace iotqt {
-namespace rpc {
+namespace shv::iotqt::rpc {
 
 static int s_initPhaseTimeout = 10000;
 
@@ -178,6 +176,6 @@ void ServerConnection::setLoginResult(const chainpack::UserLoginResult &result)
 	sendMessage(resp);
 }
 
-}}}
+}
 
 

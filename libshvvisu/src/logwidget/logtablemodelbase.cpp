@@ -5,8 +5,7 @@
 #include <QColor>
 #include <QDateTime>
 
-namespace shv {
-namespace visu {
+namespace shv::visu {
 
 LogTableModelRow::LogTableModelRow(int size)
 {
@@ -36,9 +35,7 @@ QVariant LogTableModelBase::data(const QModelIndex &index, int role) const
 	}
 	case Qt::EditRole:
 		return m_rows[index.row()].value(index.column());
-	case Qt::ForegroundRole: {
-		break;
-	}
+	case Qt::ForegroundRole:
 	case Qt::BackgroundRole: {
 		break;
 	}
@@ -92,4 +89,4 @@ void LogTableModelBase::addLogRow(const LogTableModelRow &row)
 	}
 }
 
-}}
+}

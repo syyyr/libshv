@@ -7,10 +7,9 @@
 #include <cmath>
 #include <sstream>
 
-#include <string.h>
+#include <cstring>
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 void ChainPackWriter::writeUIntData(uint64_t n)
 {
@@ -210,5 +209,4 @@ ChainPackWriter &ChainPackWriter::write_p(const RpcValue::List &values)
 	return *this;
 }
 
-} // namespace chainpack
 } // namespace shv

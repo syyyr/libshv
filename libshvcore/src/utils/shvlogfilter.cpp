@@ -1,8 +1,6 @@
 #include "shvlogfilter.h"
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 ShvLogFilter::ShvLogFilter(const ShvGetLogParams &input_params)
 	: m_patternMatcher(input_params)
@@ -24,7 +22,5 @@ bool ShvLogFilter::match(const ShvJournalEntry &entry) const
 	return m_patternMatcher.match(entry);
 }
 
-}
-}
 }
 

@@ -8,9 +8,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace iotqt {
-namespace rpc {
+namespace shv::iotqt::rpc {
 
 //===================================================
 // RpcCall
@@ -25,7 +23,7 @@ RpcResponseCallBack::RpcResponseCallBack(ClientConnection *conn, int rq_id, QObj
 	: RpcResponseCallBack(rq_id, parent)
 {
 	connect(conn, &ClientConnection::rpcMessageReceived, this, &RpcResponseCallBack::onRpcMessageReceived);
-	setTimeout(conn->defaultRpcTimeoutMsec());
+	setTimeout(shv::iotqt::rpc::ClientConnection::defaultRpcTimeoutMsec());
 }
 
 void RpcResponseCallBack::start()
@@ -211,7 +209,7 @@ void RpcCall::start()
 		return;
 	}
 	int rq_id = m_rpcConnection->nextRequestId();
-	RpcResponseCallBack *cb = new RpcResponseCallBack(m_rpcConnection, rq_id, this);
+	auto *cb = new RpcResponseCallBack(m_rpcConnection, rq_id, this);
 	if (m_timeout) {
 		cb->setTimeout(m_timeout);
 	}
@@ -226,6 +224,4 @@ void RpcCall::start()
 	m_rpcConnection->callShvMethod(rq_id, m_shvPath, m_method, m_params, m_userId);
 }
 
-} // namespace rpc
-} // namespace iotqt
 } // namespace shv

@@ -52,7 +52,7 @@ protected:
 		std::string metaData;
 		std::string data;
 
-		MessageData() {}
+		MessageData() = default;
 		MessageData(std::string &&meta_data_, std::string &&data_) : metaData(std::move(meta_data_)), data(std::move(data_)) {}
 		MessageData(std::string &&data_) : data(std::move(data_)) {}
 		MessageData(MessageData &&) = default;

@@ -18,7 +18,7 @@ public:
 		std::string method;
 		//bool isRelative = false;
 
-		Subscription() {}
+		Subscription() = default;
 		Subscription(const std::string &local_path, const std::string &subscribed_path, const std::string &m);
 
 		bool cmpSubscribed(const CommonRpcClientHandle::Subscription &o) const;

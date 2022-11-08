@@ -6,14 +6,10 @@
 
 using namespace std;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 ShvAlarm::ShvAlarm()
-	: m_path("")
-	, m_isActive(false)
-	, m_description("")
+	: m_isActive(false)
 	, m_severity(Severity::Invalid)
 {}
 
@@ -95,9 +91,8 @@ vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const std::
 					path_info.propertyDescription.alarmDescription()
 				)};
 		}
-		else {
-			return checkAlarms(type_info, shv_path, path_info.propertyDescription.typeName(), value);
-		}
+
+		return checkAlarms(type_info, shv_path, path_info.propertyDescription.typeName(), value);
 	}
 	return {};
 }
@@ -108,16 +103,15 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const 
 		if (type_descr.type() == ShvTypeDescr::Type::BitField) {
 			vector<ShvAlarm> alarms;
 			auto flds = type_descr.fields();
-			for (size_t i = 0; i < flds.size(); ++i) {
-				const ShvFieldDescr &fld_descr = flds[i];
+			for (auto& fld_descr : flds) {
 				if(string alarm = fld_descr.alarm(); !alarm.empty()) {
 					bool is_alarm = fld_descr.bitfieldValue(value.toUInt64()).toBool();
-					alarms.push_back(ShvAlarm(shv_path + '/' + fld_descr.name(),
+					alarms.emplace_back(shv_path + '/' + fld_descr.name(),
 						is_alarm,
 						ShvAlarm::severityFromString(alarm),
 						fld_descr.alarmLevel(),
 						fld_descr.alarmDescription()
-					));
+					);
 				}
 				else {
 					auto alarms2 = checkAlarms(type_info, fld_descr.typeName(), shv_path + '/' + fld_descr.name(), fld_descr.bitfieldValue(value.toUInt64()));
@@ -126,7 +120,7 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const 
 			}
 			return alarms;
 		}
-		else if (type_descr.type() == ShvTypeDescr::Type::Enum) {
+		if (type_descr.type() == ShvTypeDescr::Type::Enum) {
 			auto flds = type_descr.fields();
 			size_t active_alarm_ix = flds.size();
 			for (size_t i = 0; i < flds.size(); ++i) {
@@ -151,6 +145,4 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const 
 }
 
 
-} // namespace utils
-} // namespace core
 } // namespace shv

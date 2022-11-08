@@ -1,9 +1,7 @@
 #include "shvjournalentry.h"
 #include "shvlogheader.h"
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 ShvJournalEntry::MetaType::MetaType()
 	: Super("ShvJournalEntry")
@@ -107,6 +105,4 @@ chainpack::DataChange ShvJournalEntry::toDataChange() const
 	return {};
 }
 
-} // namespace utils
-} // namespace core
 } // namespace shv

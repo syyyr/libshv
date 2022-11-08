@@ -2,8 +2,7 @@
 
 #include <necrolog.h>
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 static bool str_eq(const std::string &s1, const char *s2)
 {
@@ -311,5 +310,4 @@ AccessGrant::Type AccessGrant::typeFromString(const std::string &s)
 	return Type::Invalid;
 }
 
-} // namespace chainpack
 } // namespace shv

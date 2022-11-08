@@ -16,7 +16,7 @@ private:
 	using Super = shv::core::utils::ConfigCLIOptions;
 public:
 	AppCliOptions();
-	~AppCliOptions() override {}
+	~AppCliOptions() override = default;
 
 	CLIOPTION_GETTER_SETTER(std::string, l, setL, ocale)
 	CLIOPTION_GETTER_SETTER2(std::string, "app.brokerId", b, setB, rokerId)

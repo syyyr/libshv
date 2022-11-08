@@ -10,9 +10,7 @@
 #include <QFile>
 #include <QDir>
 
-namespace shv {
-namespace broker {
-namespace rpc {
+namespace shv::broker::rpc {
 
 BrokerTcpServer::BrokerTcpServer(SslMode ssl_mode, QObject *parent)
 	: Super(parent)
@@ -37,7 +35,7 @@ void BrokerTcpServer::incomingConnection(qintptr socket_descriptor)
 {
 	shvLogFuncFrame() << socket_descriptor;
 	if (m_sslMode == SecureMode) {
-		QSslSocket *socket = new QSslSocket(this);
+		auto *socket = new QSslSocket(this);
 		{
 			connect(socket, &QSslSocket::connected, [this]() {
 				shvDebug() << this << "Socket connected!!!";
@@ -74,7 +72,7 @@ void BrokerTcpServer::incomingConnection(qintptr socket_descriptor)
 		socket->startServerEncryption();
 		addPendingConnection(socket);
 	} else if (m_sslMode == NonSecureMode) {
-		QTcpSocket *sock = new QTcpSocket(this);
+		auto *sock = new QTcpSocket(this);
 		if (!sock->setSocketDescriptor(socket_descriptor)) {
 			shvError() << "Can't accept connection: setSocketDescriptor error";
 			return;
@@ -90,9 +88,8 @@ shv::iotqt::rpc::ServerConnection *BrokerTcpServer::createServerConnection(QTcpS
 		//qobject_cast<QSslSocket *>(socket)->startServerEncryption();
 		return new ClientConnectionOnBroker(new shv::iotqt::rpc::SslSocket(qobject_cast<QSslSocket *>(socket)), parent);
 	}
-	else {
-		return new ClientConnectionOnBroker(new shv::iotqt::rpc::TcpSocket(socket), parent);
-	}
+
+	return new ClientConnectionOnBroker(new shv::iotqt::rpc::TcpSocket(socket), parent);
 }
 
-}}}
+}

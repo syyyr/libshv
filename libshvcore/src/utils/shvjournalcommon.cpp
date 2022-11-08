@@ -1,8 +1,6 @@
 #include "shvjournalcommon.h"
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 const char *ShvJournalCommon::KEY_NAME = "name";
 const char *ShvJournalCommon::KEY_RECORD_COUNT = "recordCount";
@@ -22,6 +20,4 @@ const char *ShvJournalCommon::Column::name(ShvJournalCommon::Column::Enum e)
 	return "invalid";
 }
 
-} // namespace utils
-} // namespace core
 } // namespace shv

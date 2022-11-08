@@ -4,9 +4,7 @@
 
 #include <QWebSocket>
 
-namespace shv {
-namespace iotqt {
-namespace rpc {
+namespace shv::iotqt::rpc {
 
 WebSocket::WebSocket(QWebSocket *socket, QObject *parent)
 	: Super(parent)
@@ -112,6 +110,4 @@ void WebSocket::onBinaryMessageReceived(const QByteArray &message)
 	emit readyRead();
 }
 
-} // namespace rpc
-} // namespace iotqt
 } // namespace shv

@@ -6,11 +6,7 @@
 
 #include <QSet>
 
-namespace cp = shv::chainpack;
-
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 ChannelFilterModel::ChannelFilterModel(QObject *parent)
 	: Super(parent)
@@ -19,10 +15,7 @@ ChannelFilterModel::ChannelFilterModel(QObject *parent)
 	setHorizontalHeaderLabels(QStringList{QString()});
 }
 
-ChannelFilterModel::~ChannelFilterModel()
-{
-
-}
+ChannelFilterModel::~ChannelFilterModel() = default;
 
 void ChannelFilterModel::createNodes(const QSet<QString> &channels)
 {
@@ -150,7 +143,7 @@ void ChannelFilterModel::createNodesForPath(const QString &path)
 		QStandardItem *it = shvPathToItem(sub_path, invisibleRootItem());
 
 		if (!it) {
-			QStandardItem *item = new QStandardItem(path_list.at(i));
+			auto *item = new QStandardItem(path_list.at(i));
 			item->setCheckable(true);
 			item->setFlags(item->flags() & ~Qt::ItemIsEditable);
 			bool has_valid_log_entry = (sub_path == path);
@@ -226,6 +219,4 @@ QStandardItem *ChannelFilterModel::topVisibleParentItem(QStandardItem *it)
 	return (it->parent() == nullptr) ? it : topVisibleParentItem(it->parent());
 }
 
-}
-}
 }

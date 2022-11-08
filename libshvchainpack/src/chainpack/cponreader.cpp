@@ -6,16 +6,15 @@
 #include <fstream>
 #include <cmath>
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 #define PARSE_EXCEPTION(msg) {\
-	char buff[40]; \
-	auto l = m_in.readsome(buff, sizeof(buff) - 1); \
+	std::array<char, 40> buff; \
+	auto l = m_in.readsome(buff.data(), buff.size() - 1); \
 	buff[l] = 0; \
 	if(exception_aborts) { \
 		std::clog << __FILE__ << ':' << __LINE__;  \
-		std::clog << ' ' << (msg) << " at pos: " << m_in.tellg() << " near to: " << buff << std::endl; \
+		std::clog << ' ' << (msg) << " at pos: " << m_in.tellg() << " near to: " << buff.data() << std::endl; \
 		abort(); \
 	} \
 	else { \
@@ -23,7 +22,7 @@ namespace chainpack {
 			+ msg \
 			+ std::string(" at pos: ") + std::to_string(m_in.tellg()) \
 			+ std::string(" line: ") + std::to_string(m_inCtx.parser_line_no) \
-			+ " near to: " + buff, m_in.tellg()); \
+			+ " near to: " + buff.data(), m_in.tellg()); \
 	} \
 }
 
@@ -198,13 +197,12 @@ RpcValue CponReader::readFile(const std::string &file_name, std::string *error)
 		CponReader rd(ifs);
 		return rd.read(error);
 	}
-	else {
-		std::string err_msg = "Cannot open file " + file_name + " for reading";
-		if(error)
-			*error = err_msg;
-		else
-			throw shv::chainpack::Exception(err_msg);
-	}
+
+	std::string err_msg = "Cannot open file " + file_name + " for reading";
+	if(error)
+		*error = err_msg;
+	else
+		throw shv::chainpack::Exception(err_msg);
 	return {};
 }
 
@@ -312,5 +310,4 @@ void CponReader::read(RpcValue::MetaData &meta_data)
 	}
 }
 
-} // namespace chainpack
 } // namespace shv

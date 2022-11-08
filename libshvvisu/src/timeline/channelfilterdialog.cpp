@@ -9,9 +9,7 @@
 #include <QLineEdit>
 #include <QMenu>
 
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 ChannelFilterDialog::ChannelFilterDialog(QWidget *parent) :
 	QDialog(parent),
@@ -142,6 +140,4 @@ void ChannelFilterDialog::setVisibleItemsCheckState_helper(const QModelIndex &mi
 	}
 }
 
-}
-}
 }

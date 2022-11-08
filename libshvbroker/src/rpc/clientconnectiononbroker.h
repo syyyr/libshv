@@ -43,7 +43,7 @@ public:
 	int idleTime() const;
 	int idleTimeMax() const;
 
-	std::string resolveLocalPath(const shv::core::utils::ShvUrl &spp, shv::iotqt::node::ShvNode **pnd = nullptr);
+	std::string resolveLocalPath(const shv::core::utils::ShvUrl &spp, shv::iotqt::node::ShvNode **pnd = nullptr) const;
 
 	void setIdleWatchDogTimeOut(int sec);
 

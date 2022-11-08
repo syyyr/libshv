@@ -38,7 +38,7 @@ public:
 		XRange xRange;
 		YRange yRange;
 
-		DataRect() {}
+		DataRect() = default;
 		DataRect(const XRange &xr, const YRange &yr) : xRange(xr), yRange(yr) {}
 
 		bool isValid() const { return xRange.isValid() && yRange.isValid(); }
@@ -172,7 +172,7 @@ public:
 		int channelIndex = -1;
 		QPoint possition;
 
-		CrossHairPos() {}
+		CrossHairPos() = default;
 		CrossHairPos(int ch_ix, const QPoint &pos) : channelIndex(ch_ix), possition(pos) {}
 
 		bool isValid() const { return channelIndex >= 0 && !possition.isNull(); }
@@ -310,7 +310,7 @@ protected:
 		double tickLen = 0.15;
 		LabelScale labelScale = LabelScale::MSec;
 
-		XAxis() {}
+		XAxis() = default;
 		XAxis(timemsec_t t, int se, LabelScale f)
 			: tickInterval(t)
 			, subtickEvery(se)

@@ -26,9 +26,7 @@
 
 using namespace shv::chainpack;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 /*
 static uint16_t shortTime()
@@ -124,9 +122,7 @@ static int64_t str_to_size(const std::string &str)
 
 const std::string ShvFileJournal::FILE_EXT = ".log2";
 
-ShvFileJournal::ShvFileJournal()
-{
-}
+ShvFileJournal::ShvFileJournal() = default;
 
 ShvFileJournal::ShvFileJournal(std::string device_id)
 {
@@ -354,11 +350,11 @@ void ShvFileJournal::convertLog1JournalDir()
 					}
 					else {
 						static constexpr size_t DT_LEN = 30;
-						char buff[DT_LEN];
-						in.read(buff, sizeof (buff));
+						std::array<char, DT_LEN> buff;
+						in.read(buff.data(), buff.size());
 						auto char_count = in.gcount();
 						if(char_count > 0) {
-							std::string s(buff, static_cast<unsigned>(char_count));
+							std::string s(buff.data(), static_cast<unsigned>(char_count));
 							int64_t file_msec = chainpack::RpcValue::DateTime::fromUtcString(s).msecsSinceEpoch();
 							if(file_msec == 0) {
 								shvWarning() << "cannot read date time from first line of file:" << fn << "line:" << s;
@@ -426,7 +422,7 @@ void ShvFileJournal::updateJournalStatus()
 		closedir (dir);
 		std::sort(m_journalContext.files.begin(), m_journalContext.files.end());
 		logMShvJournal() << "journal dir contains:" << m_journalContext.files.size() << "files";
-		if(m_journalContext.files.size()) {
+		if(!m_journalContext.files.empty()) {
 			logMShvJournal() << "first file:"
 							 << m_journalContext.files[0]
 							 << RpcValue::DateTime::fromMSecsSinceEpoch(m_journalContext.files[0]).toIsoString();
@@ -491,7 +487,7 @@ int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, int64_t jou
 	}
 	static constexpr int TS_LEN = 30;
 	static constexpr int CHUNK_LEN = 512;
-	char buff[CHUNK_LEN + TS_LEN];
+	std::array<char, CHUNK_LEN + TS_LEN> buff;
 	logDShvJournal() << "------------------findLastEntryDateTime-----------------------------" << fn;
 	while(fpos > 0) {
 		in.seekg(-CHUNK_LEN, std::ios::cur);
@@ -504,7 +500,7 @@ int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, int64_t jou
 		// date time string can be partialy on end of this chunk and at beggining of next,
 		// read little bit more data to cover this
 		// serialized date-time should never exceed 28 bytes see: 2018-01-10T12:03:56.123+0130
-		in.read(buff, sizeof (buff));
+		in.read(buff.data(), buff.size());
 		auto n = in.gcount();
 		if(in.eof()) {
 			in.clear();
@@ -517,7 +513,7 @@ int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, int64_t jou
 		if(n == 0)
 			break;
 
-		std::string chunk(buff, static_cast<size_t>(n));
+		std::string chunk(buff.data(), static_cast<size_t>(n));
 		logDShvJournal() << "fpos:" << fpos << "chunk:" << chunk;
 		size_t line_start_pos = 0;
 
@@ -678,8 +674,8 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		}
 		return true;
 	};
-	if(journal_context.files.size()) {
-		std::vector<int64_t>::const_iterator first_file_it = journal_context.files.begin();
+	if(!journal_context.files.empty()) {
+		auto first_file_it = journal_context.files.begin();
 		journal_start_msec = *first_file_it;
 		if(params_since_msec > 0) {
 			logMShvJournal() << "since:" << params.since.toCpon() << "msec:" << params_since_msec;
@@ -862,6 +858,4 @@ const char *ShvFileJournal::TxtColumn::name(ShvFileJournal::TxtColumn::Enum e)
 	return "invalid";
 }
 
-} // namespace utils
-} // namespace core
 } // namespace shv

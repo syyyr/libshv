@@ -4,9 +4,7 @@
 
 using namespace std;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 ShvUrl::ShvUrl(const std::string &shv_path)
 	: m_shvPath(shv_path)
@@ -77,9 +75,10 @@ std::string ShvUrl::makeShvUrlString(ShvUrl::Type type, const StringView &servic
 	if(type == Type::Plain) {
 		if(service.empty())
 			return path_rest.toString();
-		else
-			return StringViewList{service, path_rest}.join(ShvPath::SHV_PATH_DELIM);
+
+		return StringViewList{service, path_rest}.join(ShvPath::SHV_PATH_DELIM);
 	}
+
 	string srv = service.toString();
 	if(!full_broker_id.empty())
 		srv += full_broker_id.toString();
@@ -98,6 +97,4 @@ size_t ShvUrl::serviceProviderMarkIndex(const std::string &path)
 	return 0;
 }
 
-} // namespace utils
-} // namespace core
 } // namespace shv

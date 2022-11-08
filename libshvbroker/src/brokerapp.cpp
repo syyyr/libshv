@@ -45,7 +45,7 @@
 #include <fstream>
 
 #ifdef Q_OS_UNIX
-#include <signal.h>
+#include <csignal>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -71,11 +71,10 @@ namespace acl = shv::iotqt::acl;
 
 using namespace std;
 
-namespace shv {
-namespace broker {
+namespace shv::broker {
 
 #ifdef Q_OS_UNIX
-int BrokerApp::m_sigTermFd[2];
+std::array<int, 2> BrokerApp::m_sigTermFd;
 #endif
 
 static string BROKER_CURRENT_CLIENT_SHV_PATH = string(cp::Rpc::DIR_BROKER) + '/' + CurrentClientShvNode::NodeId;
@@ -167,11 +166,11 @@ public:
 			std::sort(lst.begin(), lst.end());
 			return lst;
 		}
-		else {
-			if(shv_path.size() == 1) {
-				return StringList();
-			}
+
+		if(shv_path.size() == 1) {
+			return StringList();
 		}
+
 		return Super::childNames(shv_path);
 	}
 
@@ -223,7 +222,7 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 #endif
 	m_nodesTree = new shv::iotqt::node::ShvNodeTree(new BrokerRootNode(), this);
 	connect(m_nodesTree->root(), &shv::iotqt::node::ShvRootNode::sendRpcMessage, this, &BrokerApp::onRootNodeSendRpcMesage);
-	BrokerAppNode *bn = new BrokerAppNode();
+	auto *bn = new BrokerAppNode();
 	m_nodesTree->mount(cp::Rpc::DIR_BROKER_APP, bn);
 	m_nodesTree->mount(BROKER_CURRENT_CLIENT_SHV_PATH, new CurrentClientShvNode());
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/clients", new ClientsNode());
@@ -232,7 +231,7 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/etc/acl", new EtcAclRootNode());
 
 	if (m_cliOptions->discoveryPort() > 0) {
-		QUdpSocket *udp_socket = new QUdpSocket(this);
+		auto *udp_socket = new QUdpSocket(this);
 		udp_socket->bind(static_cast<quint16>(m_cliOptions->discoveryPort()), QUdpSocket::ShareAddress);
 		logBrokerDiscoveryM() << "shvbrokerDiscovery listen on UDP port:" << m_cliOptions->discoveryPort();
 		connect(udp_socket, &QUdpSocket::readyRead, this, [this, udp_socket]() {
@@ -297,7 +296,7 @@ void BrokerApp::installUnixSignalHandlers()
 		if(sigaction(sig_num, &sa, nullptr) > 0)
 			qFatal("Couldn't register posix signal handler");
 	}
-	if(::socketpair(AF_UNIX, SOCK_STREAM, 0, m_sigTermFd))
+	if(::socketpair(AF_UNIX, SOCK_STREAM, 0, m_sigTermFd.data()))
 		qFatal("Couldn't create SIG_TERM socketpair");
 	m_snTerm = new QSocketNotifier(m_sigTermFd[1], QSocketNotifier::Read, this);
 	connect(m_snTerm, &QSocketNotifier::activated, this, &BrokerApp::handlePosixSignals);
@@ -307,7 +306,7 @@ void BrokerApp::installUnixSignalHandlers()
 void BrokerApp::nativeSigHandler(int sig_number)
 {
 	shvInfo() << "SIG:" << sig_number;
-	unsigned char a = static_cast<unsigned char>(sig_number);
+	auto a = static_cast<unsigned char>(sig_number);
 	::write(m_sigTermFd[0], &a, sizeof(a));
 }
 
@@ -591,7 +590,7 @@ std::string BrokerApp::resolveMountPoint(const shv::chainpack::RpcValue::Map &de
 	if(mount_point.empty()) {
 		mount_point = device_opts.value(cp::Rpc::KEY_MOUT_POINT).toString();
 		std::vector<shv::core::StringView> path = shv::core::utils::ShvPath::split(mount_point);
-		if(path.size() && !(path[0] == "test")) {
+		if(!path.empty() && !(path[0] == "test")) {
 			shvWarning() << "Mount point can be explicitly specified to test/ dir only, dev id:" << device_id.toCpon();
 			mount_point.clear();
 		}
@@ -809,15 +808,15 @@ void BrokerApp::onClientLogin(int connection_id)
 		shv::iotqt::node::ShvNode *clients_nd = m_nodesTree->mkdir(std::string(cp::Rpc::DIR_BROKER) + "/clients/");
 		if(!clients_nd)
 			SHV_EXCEPTION("Cannot create parent for ClientDirNode id: " + std::to_string(connection_id));
-		ClientConnectionNode *client_id_node = new ClientConnectionNode(connection_id, clients_nd);
-		ClientShvNode *client_app_node = new ClientShvNode("app", conn, client_id_node);
+		auto *client_id_node = new ClientConnectionNode(connection_id, clients_nd);
+		auto *client_app_node = new ClientShvNode("app", conn, client_id_node);
 		// delete whole client tree, when client is destroyed
 		connect(conn, &rpc::ClientConnectionOnBroker::destroyed, client_id_node, &ClientShvNode::deleteLater);
 
 		conn->setParent(client_app_node);
 		{
 			std::string mount_point = client_id_node->shvPath() + "/subscriptions";
-			SubscriptionsNode *nd = new SubscriptionsNode(conn);
+			auto *nd = new SubscriptionsNode(conn);
 			if(!m_nodesTree->mount(mount_point, nd))
 				SHV_EXCEPTION("Cannot mount connection subscription list to device tree, connection id: " + std::to_string(connection_id)
 							  + " shv path: " + mount_point);
@@ -829,7 +828,7 @@ void BrokerApp::onClientLogin(int connection_id)
 		std::string mount_point = resolveMountPoint(device_opts);
 		if(!mount_point.empty()) {
 			string path_rest;
-			ClientShvNode *cli_nd = qobject_cast<ClientShvNode*>(m_nodesTree->cd(mount_point, &path_rest));
+			auto *cli_nd = qobject_cast<ClientShvNode*>(m_nodesTree->cd(mount_point, &path_rest));
 			if(cli_nd) {
 				/*
 				shvWarning() << "The mount point" << mount_point << "exists already";
@@ -892,7 +891,7 @@ void BrokerApp::onConnectedToMasterBrokerChanged(int connection_id, bool is_conn
 				node->setParentNode(nullptr);
 				delete node;
 			}
-			MasterBrokerShvNode *mbnd = new MasterBrokerShvNode(masters_nd);
+			auto *mbnd = new MasterBrokerShvNode(masters_nd);
 			mbnd->setNodeId(conn->objectName().toStdString());
 			/*shv::iotqt::node::RpcValueMapNode *config_nd = */
 			new shv::iotqt::node::RpcValueMapNode("config", conn->options(), mbnd);
@@ -977,7 +976,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 							logServiceProvidersM() << "forwarded shv path:" << resolved_local_path;
 							cp::RpcRequest::setShvPath(meta, resolved_local_path);
 							cp::RpcMessage::pushCallerId(meta, connection_id);
-							master_broker->sendRawData(std::move(meta), std::move(data));
+							master_broker->sendRawData(meta, std::move(data));
 							return;
 						}
 					}
@@ -1116,7 +1115,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 			}
 			rpc::CommonRpcClientHandle *cch = commonClientConnectionById(caller_id);
 			if(cch) {
-				cch->sendRawData(std::move(meta), std::move(data));
+				cch->sendRawData(meta, std::move(data));
 			}
 			else {
 				shvWarning() << "Got RPC response for not-exists connection, may be it was closed meanwhile. Connection id:" << caller_id;
@@ -1180,7 +1179,7 @@ void BrokerApp::onRootNodeSendRpcMesage(const shv::chainpack::RpcMessage &msg)
 			shvError() << "Cannot find connection for ID:" << connection_id;
 		return;
 	}
-	else if(msg.isSignal()) {
+	if(msg.isSignal()) {
 		cp::RpcSignal sig(msg);
 		sendNotifyToSubscribers(sig.shvPath().asString(), sig.method().asString(), sig.params());
 	}
@@ -1341,7 +1340,7 @@ void BrokerApp::createMasterBrokerConnections()
 			continue;
 
 		shvInfo() << "creating master broker connection:" << kv.first;
-		rpc::MasterBrokerConnection *bc = new rpc::MasterBrokerConnection(this);
+		auto *bc = new rpc::MasterBrokerConnection(this);
 		bc->setObjectName(QString::fromStdString(kv.first));
 		int id = bc->connectionId();
 		connect(bc, &rpc::MasterBrokerConnection::brokerConnectedChanged, this, [id, this](bool is_connected) {
@@ -1406,4 +1405,4 @@ void BrokerApp::setAclManager(AclManager *mng)
 }
 
 
-}}
+}

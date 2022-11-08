@@ -2,13 +2,9 @@
 
 #include <QRegularExpression>
 
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
-FullTextFilter::FullTextFilter()
-{
-}
+FullTextFilter::FullTextFilter() = default;
 
 const QString &FullTextFilter::pattern() const
 {
@@ -52,9 +48,8 @@ bool FullTextFilter::matches(const QString &value) const
 		QRegularExpressionMatch match = m_regexp.match(value, 0, QRegularExpression::PartialPreferFirstMatch);
 		return match.hasMatch();
 	}
-	else {
-		return value.contains(m_pattern, m_isCaseSensitive? Qt::CaseSensitive: Qt::CaseInsensitive);
-	}
+
+	return value.contains(m_pattern, m_isCaseSensitive? Qt::CaseSensitive: Qt::CaseInsensitive);
 }
 
 void FullTextFilter::initRegexp()
@@ -68,6 +63,4 @@ void FullTextFilter::initRegexp()
 	}
 }
 
-}
-}
 }

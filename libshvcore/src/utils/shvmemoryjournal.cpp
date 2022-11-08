@@ -12,13 +12,9 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
-ShvMemoryJournal::ShvMemoryJournal()
-{
-}
+ShvMemoryJournal::ShvMemoryJournal() = default;
 
 void ShvMemoryJournal::loadLog(const chainpack::RpcValue &log, bool append_records)
 {
@@ -75,7 +71,7 @@ void ShvMemoryJournal::append(const ShvJournalEntry &entry)
 	}
 	else if(isShortTimeCorrection()) {
 		if(!entry.isSpontaneous() && entry.shortTime != shv::core::utils::ShvJournalEntry::NO_SHORT_TIME) {
-			uint16_t short_msec = static_cast<uint16_t>(entry.shortTime);
+			auto short_msec = static_cast<uint16_t>(entry.shortTime);
 			ShortTime &st = m_recentShortTimes[entry.path];
 			if(entry.shortTime == st.recentShortTime) {
 				// the same short times in the row, this can happen only when
@@ -325,6 +321,4 @@ size_t ShvMemoryJournal::timeToUpperBoundIndex(int64_t time) const
 	return it - m_entries.begin();
 }
 */
-} // namespace utils
-} // namespace core
 } // namespace shv

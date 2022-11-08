@@ -40,7 +40,7 @@ public:
 	SHV_IMAP_FIELD_IMPL2(int, MetaType::Key::State, s, setS, tate, State::Invalid)
 public:
 	//using Super::Super;
-	TunnelCtl() {}
+	TunnelCtl() = default;
 	TunnelCtl(State::Enum st);
 	//TunnelCtl(const RpcValue::IMap &o);
 	TunnelCtl(const RpcValue &o);

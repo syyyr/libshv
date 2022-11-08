@@ -4,9 +4,7 @@
 //#include "../log.h"
 #include "../stringview.h"
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 //static const std::string DDOT_SLASH("../");
 //static const std::string DDOT("..");
@@ -144,7 +142,7 @@ static bool need_quotes(const StringView &dir)
 ShvPath ShvPath::joinDirs(std::vector<StringView>::const_iterator first, std::vector<StringView>::const_iterator last)
 {
 	ShvPath ret;
-	for(std::vector<StringView>::const_iterator it = first; it != last; ++it) {
+	for(auto it = first; it != last; ++it) {
 		if(it->empty())
 			continue;
 		bool quotes = need_quotes(*it);
@@ -274,5 +272,5 @@ bool ShvPath::matchWild(const core::StringViewList &path_lst, const core::String
 	}
 }
 
-}}}
+}
 

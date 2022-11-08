@@ -10,9 +10,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace broker {
-namespace rpc {
+namespace shv::broker::rpc {
 
 MasterBrokerConnection::MasterBrokerConnection(QObject *parent)
 	: Super(parent)
@@ -168,7 +166,7 @@ void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 				m_connectionState.pingRqId = 0;
 				return;
 			}
-			else if (rq_id == m_masterBrokerIdRqId) {
+			if (rq_id == m_masterBrokerIdRqId) {
 				m_masterBrokerIdRqId = 0;
 				cp::RpcValue rpc_val = decodeData(protocol_type, msg_data, 0);
 #if defined __GNUC__ && !defined(__clang__)
@@ -188,4 +186,4 @@ void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 	}
 }
 
-}}}
+}

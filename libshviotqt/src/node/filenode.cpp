@@ -11,9 +11,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace iotqt {
-namespace node {
+namespace shv::iotqt::node {
 
 static const char *M_HASH = "hash";
 static const char *M_SIZE = "size";
@@ -53,12 +51,12 @@ static CompressionType compression_type_from_string(const std::string &type_str,
 {
 	if (type_str.empty())
 		return default_type;
-	else if (type_str == "gzip")
+	if (type_str == "gzip")
 		return CompressionType::GZip;
-	else if (type_str == "qcompress")
+	if (type_str == "qcompress")
 		return CompressionType::QCompress;
-	else
-		return CompressionType::Invalid;
+
+	return CompressionType::Invalid;
 }
 
 FileNode::FileNode(const std::string &node_id, shv::iotqt::node::FileNode::Super *parent)
@@ -158,4 +156,4 @@ chainpack::RpcValue FileNode::readFileCompressed(const ShvNode::StringViewList &
 	return result;
 }
 
-}}}
+}

@@ -63,13 +63,12 @@ time_t timegm(struct tm *tm)
 #endif
 } // namespace
 */
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 class RpcValue::AbstractValueData
 {
 public:
-	virtual ~AbstractValueData() {}
+	virtual ~AbstractValueData() = default;
 
 	virtual RpcValue::Type type() const {return RpcValue::Type::Invalid;}
 
@@ -147,8 +146,7 @@ protected:
 #ifdef DEBUG_RPCVAL
 		logDebugRpcVal() << "---" << value_data_cnt-- << RpcValue::typeToName(tag) << this << m_value;
 #endif
-		if(m_metaData)
-			delete m_metaData;
+		delete m_metaData;
 	}
 
 	RpcValue::Type type() const override { return tag; }
@@ -199,8 +197,7 @@ protected:
 
 	void stripMeta() override
 	{
-		if(m_metaData)
-			delete m_metaData;
+		delete m_metaData;
 		m_metaData = nullptr;
 	}
 
@@ -317,7 +314,7 @@ class ChainPackString : public ValueData<RpcValue::Type::String, RpcValue::Strin
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asString(); }
 public:
 	explicit ChainPackString(const RpcValue::String &value) : ValueData(value) {}
-	explicit ChainPackString(RpcValue::String &&value) : ValueData(std::move(value)) {}
+	explicit ChainPackString(RpcValue::String &&value) : ValueData(value) {}
 };
 
 class ChainPackBlob final : public ValueData<RpcValue::Type::Blob, RpcValue::Blob>
@@ -329,7 +326,7 @@ class ChainPackBlob final : public ValueData<RpcValue::Type::Blob, RpcValue::Blo
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asBlob(); }
 public:
 	explicit ChainPackBlob(const RpcValue::Blob &value) : ValueData(value) {}
-	explicit ChainPackBlob(RpcValue::Blob &&value) : ValueData(std::move(value)) {}
+	explicit ChainPackBlob(RpcValue::Blob &&value) : ValueData(value) {}
 	explicit ChainPackBlob(const uint8_t *bytes, size_t size) : ValueData(RpcValue::Blob(bytes, bytes + size)) {}
 };
 
@@ -345,7 +342,7 @@ class ChainPackList final : public ValueData<RpcValue::Type::List, RpcValue::Lis
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asList(); }
 public:
 	explicit ChainPackList(const RpcValue::List &value) : ValueData(value) {}
-	explicit ChainPackList(RpcValue::List &&value) : ValueData(move(value)) {}
+	explicit ChainPackList(RpcValue::List &&value) : ValueData(value) {}
 
 	const RpcValue::List &asList() const override { return m_value; }
 };
@@ -356,8 +353,8 @@ RpcValue ChainPackList::atI(RpcValue::Int ix) const
 		ix = static_cast<RpcValue::Int>(m_value.size()) + ix;
 	if (ix < 0 || ix >= static_cast<int>(m_value.size()))
 		return RpcValue();
-	else
-		return m_value[static_cast<size_t>(ix)];
+
+	return m_value[static_cast<size_t>(ix)];
 }
 
 void ChainPackList::setI(RpcValue::Int ix, const RpcValue &val)
@@ -388,7 +385,7 @@ class ChainPackMap final : public ValueData<RpcValue::Type::Map, RpcValue::Map>
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asMap(); }
 public:
 	explicit ChainPackMap(const RpcValue::Map &value) : ValueData(value) {}
-	explicit ChainPackMap(RpcValue::Map &&value) : ValueData(move(value)) {}
+	explicit ChainPackMap(RpcValue::Map &&value) : ValueData(value) {}
 
 	const RpcValue::Map &asMap() const override { return m_value; }
 };
@@ -405,7 +402,7 @@ class ChainPackIMap final : public ValueData<RpcValue::Type::IMap, RpcValue::IMa
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asIMap(); }
 public:
 	explicit ChainPackIMap(const RpcValue::IMap &value) : ValueData(value) {}
-	explicit ChainPackIMap(RpcValue::IMap &&value) : ValueData(std::move(value)) {}
+	explicit ChainPackIMap(RpcValue::IMap &&value) : ValueData(value) {}
 
 	const RpcValue::IMap &asIMap() const override { return m_value; }
 };
@@ -561,7 +558,7 @@ bool RpcValue::isDefaultValue() const
 {
 	switch (type()) {
 	case RpcValue::Type::Invalid: return true;
-	case RpcValue::Type::Null: return true;
+	case RpcValue::Type::Null:
 	case RpcValue::Type::Bool: return (toBool() == false);
 	case RpcValue::Type::Int: return (toInt() == 0);
 	case RpcValue::Type::UInt: return (toUInt() == 0);
@@ -999,9 +996,9 @@ std::string RpcValue::DateTime::toLocalString() const
 		nError() << "Invalid date time: " << m_dtm.msec;
 		return std::string();
 	}
-	char buffer[80];
-	std::strftime(buffer, sizeof(buffer),"%Y-%m-%dT%H:%M:%S",tm);
-	std::string ret(buffer);
+	std::array<char, 80> buffer;
+	std::strftime(buffer.data(), buffer.size(),"%Y-%m-%dT%H:%M:%S",tm);
+	std::string ret(buffer.data());
 	int msecs = static_cast<int>(m_dtm.msec % 1000);
 	if(msecs > 0)
 		ret += '.' + Utils::toString(msecs % 1000);
@@ -1011,10 +1008,10 @@ std::string RpcValue::DateTime::toLocalString() const
 std::string RpcValue::DateTime::toIsoString(RpcValue::DateTime::MsecPolicy msec_policy, bool include_tz) const
 {
 	ccpcp_pack_context ctx;
-	char buff[32];
-	ccpcp_pack_context_init(&ctx, buff, sizeof(buff), nullptr);
+	std::array<char, 32> buff;
+	ccpcp_pack_context_init(&ctx, buff.data(), buff.size(), nullptr);
 	ccpon_pack_date_time_str(&ctx, msecsSinceEpoch(), minutesFromUtc(), static_cast<ccpon_msec_policy>(msec_policy), include_tz);
-	return std::string(buff, ctx.current);
+	return std::string(buff.data(), ctx.current);
 #if 0
 	std::time_t tim = m_dtm.msec / 1000 + m_dtm.tz * 15 * 60;
 	std::tm *tm = std::gmtime(&tim);
@@ -1050,12 +1047,14 @@ std::string RpcValue::DateTime::toIsoString(RpcValue::DateTime::MsecPolicy msec_
 #ifdef DEBUG_RPCVAL
 static int cnt = 0;
 #endif
+#ifdef DEBUG_RPCVAL
 RpcValue::MetaData::MetaData()
 {
-#ifdef DEBUG_RPCVAL
 	logDebugRpcVal() << ++cnt << "+++MM default" << this;
-#endif
 }
+#else
+RpcValue::MetaData::MetaData() = default;
+#endif
 
 RpcValue::MetaData::MetaData(const RpcValue::MetaData &o)
 {
@@ -1068,7 +1067,7 @@ RpcValue::MetaData::MetaData(const RpcValue::MetaData &o)
 		m_smap = new RpcValue::Map(*o.m_smap);
 }
 
-RpcValue::MetaData::MetaData(RpcValue::MetaData &&o)
+RpcValue::MetaData::MetaData(RpcValue::MetaData &&o) noexcept
 	: MetaData()
 {
 #ifdef DEBUG_RPCVAL
@@ -1111,13 +1110,11 @@ RpcValue::MetaData::~MetaData()
 #ifdef DEBUG_RPCVAL
 	logDebugRpcVal() << cnt-- << "---MM cnt:" << size() << this;
 #endif
-	if(m_imap)
-		delete m_imap;
-	if(m_smap)
-		delete m_smap;
+	delete m_imap;
+	delete m_smap;
 }
 
-RpcValue::MetaData &RpcValue::MetaData::operator =(RpcValue::MetaData &&o)
+RpcValue::MetaData &RpcValue::MetaData::operator =(RpcValue::MetaData &&o) noexcept
 {
 #ifdef DEBUG_RPCVAL
 	logDebugRpcVal() << "===MM op= move ref" << this;
@@ -1131,6 +1128,10 @@ RpcValue::MetaData &RpcValue::MetaData::operator=(const RpcValue::MetaData &o)
 #ifdef DEBUG_RPCVAL
 	logDebugRpcVal() << "===MM op= const ref" << this;
 #endif
+	if (this == &o) {
+		return *this;
+	}
+
 	if(o.m_imap && !o.m_imap->empty())
 		m_imap = new RpcValue::IMap(*o.m_imap);
 	if(o.m_smap && !o.m_smap->empty())
@@ -1274,7 +1275,7 @@ std::string RpcValue::MetaData::toString(const std::string &indent) const
 
 RpcValue::MetaData *RpcValue::MetaData::clone() const
 {
-	MetaData *md = new MetaData(*this);
+	auto *md = new MetaData(*this);
 	return md;
 }
 
@@ -1301,6 +1302,6 @@ RpcValue::Blob RpcValue::stringToBlob(const RpcValue::String &s)
 	return Blob(s.begin(), s.end());
 }
 
-}}
+}
 
 

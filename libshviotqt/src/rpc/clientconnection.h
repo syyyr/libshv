@@ -91,7 +91,7 @@ protected:
 
 	bool isLoginPhase() const {return state() == State::SocketConnected;}
 	void processLoginPhase(const chainpack::RpcMessage &msg);
-	shv::chainpack::RpcValue createLoginParams(const shv::chainpack::RpcValue &server_hello);
+	shv::chainpack::RpcValue createLoginParams(const shv::chainpack::RpcValue &server_hello) const;
 
 	struct ConnectionState
 	{

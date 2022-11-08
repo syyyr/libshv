@@ -29,7 +29,7 @@ struct SHVCHAINPACK_DECL_EXPORT UserLoginResult
 	int clientId = 0;
 	std::string brokerId;
 
-	UserLoginResult() {}
+	UserLoginResult() = default;
 	UserLoginResult(bool password_ok) : UserLoginResult(password_ok, std::string()) {}
 	UserLoginResult(bool password_ok, std::string login_error)
 		: passwordOk(password_ok)
@@ -77,7 +77,7 @@ public:
 		static void registerMetaType();
 	};
 public:
-	AccessGrant() {}
+	AccessGrant() = default;
 	AccessGrant(const std::string &role_)
 		: type(Type::Role), role(role_) {}
 

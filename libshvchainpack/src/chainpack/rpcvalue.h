@@ -115,7 +115,7 @@ public:
 		};
 		Num m_num;
 	public:
-		Decimal() {}
+		Decimal() = default;
 		Decimal(int64_t mantisa, int exponent) : m_num{mantisa, exponent} {}
 		Decimal(int dec_places) : Decimal(0, -dec_places) {}
 
@@ -298,13 +298,13 @@ public:
 	public:
 		MetaData();
 		MetaData(const MetaData &o);
-		MetaData(MetaData &&o);
+		MetaData(MetaData &&o) noexcept;
 		MetaData(RpcValue::IMap &&imap);
 		MetaData(RpcValue::Map &&smap);
 		MetaData(RpcValue::IMap &&imap, RpcValue::Map &&smap);
 		~MetaData();
 
-		MetaData& operator =(MetaData &&o);
+		MetaData& operator =(MetaData &&o) noexcept;
 
 		int metaTypeId() const {return value(meta::Tag::MetaTypeId).toInt();}
 		void setMetaTypeId(RpcValue::Int id) {setValue(meta::Tag::MetaTypeId, id);}

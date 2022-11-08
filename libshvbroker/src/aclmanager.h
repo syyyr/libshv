@@ -49,7 +49,7 @@ public:
 		int weight = 0;
 		int nestLevel = 0;
 
-		FlattenRole() {}
+		FlattenRole() = default;
 		FlattenRole(const std::string &n, int w = 0, int nl = 0) : name(n), weight(w), nestLevel(nl) {}
 	};
 	// all roles sorted by weight DESC, nest_level ASC

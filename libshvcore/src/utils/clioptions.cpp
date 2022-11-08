@@ -27,9 +27,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 CLIOptions::Option& CLIOptions::Option::setValueString(const std::string &val_str)
 {
@@ -92,9 +90,7 @@ CLIOptions::CLIOptions()
 	addOption("help").setType(cp::RpcValue::Type::Bool).setNames("-h", "--help").setComment("Print help");
 }
 
-CLIOptions::~CLIOptions()
-{
-}
+CLIOptions::~CLIOptions() = default;
 
 CLIOptions::Option& CLIOptions::addOption(const std::string &key, const CLIOptions::Option& opt)
 {
@@ -186,14 +182,14 @@ bool CLIOptions::setValue(const std::string& name, const cp::RpcValue val, bool 
 		orf.setValue(val);
 		return true;
 	}
-	else {
-		std::string msg = "setValue():" + val.toCpon() + " Key '" + name + "' not found.";
-		shvWarning() << msg;
-		if(throw_exc) {
-			SHV_EXCEPTION(msg);
-		}
-		return false;
+
+	std::string msg = "setValue():" + val.toCpon() + " Key '" + name + "' not found.";
+	shvWarning() << msg;
+	if(throw_exc) {
+		SHV_EXCEPTION(msg);
 	}
+	return false;
+
 }
 
 std::string CLIOptions::takeArg(bool &ok)
@@ -242,34 +238,32 @@ void CLIOptions::parse(const StringList& cmd_line_args)
 			m_isAppBreak = true;
 			return;
 		}
-		else {
-			bool found = false;
-			for(auto &kv : m_options) {
-				Option &opt = kv.second;
-				StringList names = opt.names();
-				if(std::find(names.begin(), names.end(), arg) != names.end()) {
-					found = true;
-					arg = peekArg(ok);
-					if(!ok) {
-						// switch has no value entered
-						arg = std::string();
-					}
-					else if((arg.size() && arg[0] == '-')) {
-						// might be negative number or next switch
-						if(opt.type() != cp::RpcValue::Type::Int)
-							arg = std::string();
-					}
-					else {
-						arg = takeArg(ok);
-					}
-					opt.setValueString(arg);
-					break;
+		bool found = false;
+		for(auto &kv : m_options) {
+			Option &opt = kv.second;
+			StringList names = opt.names();
+			if(std::find(names.begin(), names.end(), arg) != names.end()) {
+				found = true;
+				arg = peekArg(ok);
+				if(!ok) {
+					// switch has no value entered
+					arg = std::string();
 				}
+				else if((!arg.empty() && arg[0] == '-')) {
+					// might be negative number or next switch
+					if(opt.type() != cp::RpcValue::Type::Int)
+						arg = std::string();
+				}
+				else {
+					arg = takeArg(ok);
+				}
+				opt.setValueString(arg);
+				break;
 			}
-			if(!found) {
-				if(arg.size() && arg[0] == '-')
-					m_unusedArguments.push_back(arg);
-			}
+		}
+		if(!found) {
+			if(!arg.empty() && arg[0] == '-')
+				m_unusedArguments.push_back(arg);
 		}
 	}
 	{
@@ -289,7 +283,7 @@ std::tuple<std::string, std::string> CLIOptions::applicationDirAndName() const
 	static std::string app_dir;
 	static std::string app_name;
 	if(app_name.empty()) {
-		if(m_allArgs.size()) {
+		if(!m_allArgs.empty()) {
 	#ifdef Q_OS_WIN
 			std::string app_file_path;
 			wchar_t buffer[MAX_PATH + 2];
@@ -449,7 +443,7 @@ std::string ConfigCLIOptions::configFile()
 #ifdef Q_OS_WIN
 	bool is_absolute_path = config_file.size() > 2 && config_file[1] == ':';
 #else
-	bool is_absolute_path = config_file.size() && config_file[0] == '/';
+	bool is_absolute_path = !config_file.empty() && config_file[0] == '/';
 #endif
 	if(!is_absolute_path) {
 		std::string config_dir = configDir();
@@ -516,4 +510,4 @@ void ConfigCLIOptions::mergeConfig(const chainpack::RpcValue &config_map)
 	*/
 }
 
-}}}
+}

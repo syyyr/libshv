@@ -4,10 +4,7 @@
 
 #include <shv/coreqt/log.h>
 
-namespace cp = shv::chainpack;
-
-namespace shv {
-namespace broker {
+namespace shv::broker {
 
 //======================================================================
 // ClientShvNode
@@ -43,7 +40,7 @@ void ClientShvNode::handleRawRpcRequest(shv::chainpack::RpcValue::MetaData &&met
 {
 	rpc::ClientConnectionOnBroker *conn = connection();
 	if(conn)
-		conn->sendRawData(std::move(meta), std::move(data));
+		conn->sendRawData(meta, std::move(data));
 }
 
 shv::chainpack::RpcValue ClientShvNode::hasChildren(const StringViewList &shv_path)
@@ -67,4 +64,4 @@ MasterBrokerShvNode::~MasterBrokerShvNode()
 	shvInfo() << "Destroying master broker connection node:" << this;
 }
 
-}}
+}

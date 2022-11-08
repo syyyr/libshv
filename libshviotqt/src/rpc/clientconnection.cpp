@@ -35,9 +35,7 @@
 namespace cp = shv::chainpack;
 using namespace std;
 
-namespace shv {
-namespace iotqt {
-namespace rpc {
+namespace shv::iotqt::rpc {
 
 ClientConnection::ClientConnection(QObject *parent)
 	: Super(parent)
@@ -181,14 +179,7 @@ void ClientConnection::open()
 		QUrl url(QString::fromStdString(host()));
 		auto scheme = Socket::schemeFromString(url.scheme().toStdString());
 		Socket *socket;
-		if(scheme == Socket::Scheme::WebSocket) {
-#ifdef WITH_SHV_WEBSOCKETS
-			socket = new WebSocket(new QWebSocket());
-#else
-			SHV_EXCEPTION("Web socket support is not part of this build.");
-#endif
-		}
-		else if(scheme == Socket::Scheme::WebSocketSecure) {
+		if(scheme == Socket::Scheme::WebSocket || scheme == Socket::Scheme::WebSocketSecure) {
 #ifdef WITH_SHV_WEBSOCKETS
 			socket = new WebSocket(new QWebSocket());
 #else
@@ -389,7 +380,7 @@ static std::string sha1_hex(const std::string &s)
 	return std::string(hash.result().toHex().constData());
 }
 
-chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValue &server_hello)
+chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValue &server_hello) const
 {
 	shvDebug() << server_hello.toCpon() << "login type:" << static_cast<int>(loginType());
 	std::string pass;
@@ -481,7 +472,7 @@ void ClientConnection::processLoginPhase(const chainpack::RpcMessage &msg)
 			sendLogin(resp.result());
 			return;
 		}
-		else if(m_connectionState.loginRequestId == id) {
+		if(m_connectionState.loginRequestId == id) {
 			m_connectionState.loginResult = resp.result();
 			setState(State::BrokerConnected);
 			return;
@@ -503,6 +494,6 @@ const char *ClientConnection::stateToString(ClientConnection::State state)
 	return "this could never happen";
 }
 
-}}}
+}
 
 

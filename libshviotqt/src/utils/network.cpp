@@ -5,18 +5,16 @@
 #include <QAbstractSocket>
 #include <QNetworkInterface>
 
-namespace shv {
-namespace iotqt {
-namespace utils {
+namespace shv::iotqt::utils {
 
 uint32_t Network::toIntIPv4Address(const std::string &addr)
 {
 	uint32_t ret = 0;
 	std::istringstream is(addr);
 	while(is) {
-		char s[32];
-		is.getline(s, sizeof(s), '.');
-		int i = std::atoi(s);
+		std::array<char, 32> s;
+		is.getline(s.data(), s.size(), '.');
+		int i = std::atoi(s.data());
 		ret = (ret << 8) + static_cast<uint8_t>(i);
 	}
 	return ret;
@@ -97,4 +95,4 @@ QHostAddress Network::primaryIPv4Address()
 #endif
 }
 
-}}}
+}

@@ -5,9 +5,7 @@
 
 #include <QTimer>
 
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 GraphView::GraphView(QWidget *parent)
 	: Super(parent)
@@ -16,7 +14,7 @@ GraphView::GraphView(QWidget *parent)
 
 void GraphView::makeLayout()
 {
-	if(GraphWidget *w = qobject_cast<GraphWidget*>(widget())) {
+	if(auto *w = qobject_cast<GraphWidget*>(widget())) {
 		w->makeLayout(geometry().size() - QSize(30, 0)); // space for scroll bar
 	}
 }
@@ -36,7 +34,7 @@ void GraphView::resizeEvent(QResizeEvent *event)
 
 void GraphView::scrollContentsBy(int dx, int dy)
 {
-	if(GraphWidget *gw = qobject_cast<GraphWidget*>(widget())) {
+	if(auto *gw = qobject_cast<GraphWidget*>(widget())) {
 		const Graph *g = gw->graph();
 		QRect r1 = g->southFloatingBarRect();
 		Super::scrollContentsBy(dx, dy);
@@ -53,4 +51,4 @@ void GraphView::scrollContentsBy(int dx, int dy)
 	}
 }
 
-}}}
+}

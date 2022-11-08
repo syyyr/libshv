@@ -1,7 +1,6 @@
 #include "channelprobe.h"
 #include "graphwidget.h"
 #include "graphmodel.h"
-#include "graphwidget.h"
 
 #include <shv/core/exception.h>
 #include <shv/coreqt/log.h>
@@ -23,11 +22,7 @@ static QString USER_PROFILES_KEY = QStringLiteral("userProfiles");
 static QString SITES_KEY = QStringLiteral("sites");
 static QString VIEWS_KEY = QStringLiteral("channelViews");
 
-namespace cp = shv::chainpack;
-
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 const QString Graph::DEFAULT_USER_PROFILE = QStringLiteral("default");
 
@@ -333,7 +328,7 @@ ChannelProbe *Graph::channelProbe(int channel_ix, timemsec_t time)
 
 ChannelProbe *Graph::addChannelProbe(int channel_ix, timemsec_t time)
 {
-	ChannelProbe *probe = new ChannelProbe(this, channel_ix, time);
+	auto *probe = new ChannelProbe(this, channel_ix, time);
 	m_channelProbes.push_back(probe);
 	return probe;
 }
@@ -432,9 +427,8 @@ Sample Graph::timeToNearestSample(int channel_ix, timemsec_t time) const
 	if (s1.isValid() && time - s1.time < s2.time - time) {
 		return s1;
 	}
-	else {
-		return s2;
-	}
+
+	return s2;
 }
 
 Sample Graph::posToData(const QPoint &pos) const
@@ -1797,7 +1791,7 @@ std::function<Sample (const QPoint &)> Graph::pointToDataFn(const QRect &src, co
 	return  [t1, le, kx, d1, bo, ky](const QPoint &p) -> Sample {
 		const int x = p.x();
 		const int y = p.y();
-		timemsec_t t = static_cast<timemsec_t>(static_cast<double>(t1) + (x - le) * kx);
+		auto t = static_cast<timemsec_t>(static_cast<double>(t1) + (x - le) * kx);
 		double d = d1 + (y - bo) * ky;
 		return Sample{t, d};
 	};
@@ -1960,7 +1954,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		int minY = 0;
 		int maxY = 0;
 
-		SamePixelValue() {}
+		SamePixelValue() = default;
 		SamePixelValue(int x_, int y_) : x(x_), y1(y_), y2(y_), minY(y_), maxY(y_) {}
 		SamePixelValue(const QPoint &p) : x(p.x()), y1(p.y()), y2(p.y()), minY(p.y()), maxY(p.y()) {}
 		bool isValid() const { return x != NO_X; }
@@ -2414,9 +2408,8 @@ QString Graph::VisualSettings::toJson() const
 		}
 		return QJsonDocument(QJsonObject{{ "channels", settings }}).toJson(QJsonDocument::Compact);
 	}
-	else {
-		return QString();
-	}
+
+	return QString();
 }
 
 Graph::VisualSettings Graph::VisualSettings::fromJson(const QString &json)
@@ -2443,4 +2436,4 @@ Graph::VisualSettings Graph::VisualSettings::fromJson(const QString &json)
 }
 
 
-}}}
+}

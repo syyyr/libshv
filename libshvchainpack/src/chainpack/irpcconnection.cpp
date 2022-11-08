@@ -4,17 +4,14 @@
 
 #define logSubscriptionsD() nCDebug("Subscr").color(NecroLog::Color::Yellow)
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 IRpcConnection::IRpcConnection()
 	: m_connectionId(nextConnectionId())
 {
 }
 
-IRpcConnection::~IRpcConnection()
-{
-}
+IRpcConnection::~IRpcConnection() = default;
 
 void IRpcConnection::sendSignal(std::string method, const RpcValue &params)
 {
@@ -143,5 +140,4 @@ int IRpcConnection::callMethodUnsubscribe(int rq_id, const std::string &shv_path
 						 });
 }
 
-} // namespace chainpack
 } // namespace shv

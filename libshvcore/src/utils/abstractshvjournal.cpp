@@ -11,18 +11,14 @@
 
 using namespace shv::chainpack;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 const int AbstractShvJournal::DEFAULT_GET_LOG_RECORD_COUNT_LIMIT = 100 * 1000;
 const char *AbstractShvJournal::KEY_NAME = "name";
 const char *AbstractShvJournal::KEY_RECORD_COUNT = "recordCount";
 const char *AbstractShvJournal::KEY_PATHS_DICT = "pathsDict";
 
-AbstractShvJournal::~AbstractShvJournal()
-{
-}
+AbstractShvJournal::~AbstractShvJournal() = default;
 
 chainpack::RpcValue AbstractShvJournal::getSnapShotMap()
 {
@@ -50,6 +46,4 @@ void AbstractShvJournal::addToSnapshot(ShvSnapshot &snapshot, const ShvJournalEn
 	}
 }
 
-} // namespace utils
-} // namespace core
 } // namespace shv

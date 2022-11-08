@@ -25,11 +25,7 @@
 
 #define logMouseSelection() nCDebug("MouseSelection")
 
-namespace cp = shv::chainpack;
-
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 GraphWidget::GraphWidget(QWidget *parent)
 	: Super(parent)
@@ -232,25 +228,25 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 			event->accept();
 			return;
 		}
-		else if(isMouseAboveRightMiniMapHandle(pos)) {
+		if(isMouseAboveRightMiniMapHandle(pos)) {
 			m_mouseOperation = MouseOperation::MiniMapRightResize;
 			event->accept();
 			return;
 		}
-		else if(isMouseAboveMiniMapSlider(pos)) {
+		if(isMouseAboveMiniMapSlider(pos)) {
 			m_mouseOperation = MouseOperation::MiniMapScrollZoom;
 			m_recentMousePos = pos;
 			event->accept();
 			return;
 		}
-		else if (isMouseAboveChannelResizeHandle(pos)) {
+		if (isMouseAboveChannelResizeHandle(pos)) {
 			m_mouseOperation = MouseOperation::ChannelHeaderResize;
 			m_resizeChannelIx = graph()->posToChannelHeader(pos);
 			m_recentMousePos = pos;
 			event->accept();
 			return;
 		}
-		else if(posToChannel(pos) >= 0) {
+		if(posToChannel(pos) >= 0) {
 			if(event->modifiers() == Qt::ControlModifier) {
 				m_mouseOperation = MouseOperation::GraphDataAreaLeftCtrlPress;
 			}
@@ -265,7 +261,7 @@ void GraphWidget::mousePressEvent(QMouseEvent *event)
 			event->accept();
 			return;
 		}
-		else if (posToChannelVerticalHeader(pos) > -1) {
+		if (posToChannelVerticalHeader(pos) > -1) {
 			if (event->modifiers() == Qt::NoModifier) {
 				m_mouseOperation = MouseOperation::ChannelHeaderMove;
 			}
@@ -300,7 +296,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 			event->accept();
 			return;
 		}
-		else if(old_mouse_op == MouseOperation::GraphDataAreaLeftCtrlPress) {
+		if(old_mouse_op == MouseOperation::GraphDataAreaLeftCtrlPress) {
 			if(event->modifiers() == Qt::ControlModifier) {
 				int channel_ix = posToChannel(event->pos());
 				if(channel_ix >= 0) {
@@ -488,8 +484,8 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 			}
 		}
 		if (dragged_channel != -1) {
-			QDrag *drag = new QDrag(this);
-			QMimeData *mime = new QMimeData;
+			auto *drag = new QDrag(this);
+			auto *mime = new QMimeData;
 			mime->setText(QString());
 			drag->setMimeData(mime);
 			QPoint p = mapToGlobal(header_rect.topLeft());
@@ -546,18 +542,18 @@ int GraphWidget::moveChannelTragetIndex(const QPoint &mouse_pos) const
 			if (mouse_pos.y() - ch_rect.top() > ch_rect.bottom() - mouse_pos.y()) {
 				return i;
 			}
-			else {
-				int j = i;
-				while (true) {
-					++j;
-					if (j >= gr->channelCount()) {
-						return i + 1;
-					}
-					if (gr->channelAt(j)->verticalHeaderRect().height()) {
-						return j;
-					}
+			int j = i;
+
+			while (true) {
+				++j;
+				if (j >= gr->channelCount()) {
+					return i + 1;
+				}
+				if (gr->channelAt(j)->verticalHeaderRect().height()) {
+					return j;
 				}
 			}
+
 		}
 	}
 	return 0;
@@ -586,7 +582,7 @@ bool GraphWidget::scrollByMouseOuterOverlap(const QPoint &mouse_pos)
 		moveDropMarker(mapFromGlobal(mouse_pos));
 		return true;
 	}
-	else if (mouse_pos.y() + 5 > view_port_bottom) {
+	if (mouse_pos.y() + 5 > view_port_bottom) {
 		int diff = mouse_pos.y() - view_port_bottom;
 		if (diff < 5) {
 			diff = 5;
@@ -748,7 +744,7 @@ void GraphWidget::showGraphSelectionContextMenu(const QPoint &mouse_pos)
 		auto y2 = ch2->posToValue(sel_rect.top());
 		QString s = tr("t1: %1").arg(m_graph->timeToStringTZ(t1));
 		s += '\n' + tr("t2: %2").arg(m_graph->timeToStringTZ(t2));
-		s += '\n' + tr("duration: %1").arg(m_graph->durationToString(t2 - t1));
+		s += '\n' + tr("duration: %1").arg(shv::visu::timeline::Graph::durationToString(t2 - t1));
 		s += '\n' + tr("y1: %1").arg(y1);
 		s += '\n' + tr("y2: %2").arg(y2);
 		if(ch1 == ch2)
@@ -876,7 +872,7 @@ void GraphWidget::createProbe(int channel_ix, timemsec_t time)
 		update();
 	});
 
-	ChannelProbeWidget *w = new ChannelProbeWidget(probe, this);
+	auto *w = new ChannelProbeWidget(probe, this);
 
 	connect(w, &ChannelProbeWidget::destroyed, this, [this, probe]() {
 		m_graph->removeChannelProbe(probe);
@@ -935,5 +931,5 @@ GraphWidget::ChannelHeaderMoveContext::~ChannelHeaderMoveContext()
 	delete channelDropMarker;
 }
 
-}}}
+}
 

@@ -7,8 +7,7 @@
 #endif
 #include <QDebug>
 
-namespace shv {
-namespace visu {
+namespace shv::visu {
 
 //const char *LOCAL_TZ_ID = "Local";
 
@@ -79,4 +78,4 @@ void TimeZoneComboBox::keyPressEvent(QKeyEvent *event)
 }
 #endif
 
-}}
+}

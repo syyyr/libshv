@@ -10,9 +10,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 ShvLogFileReader::ShvLogFileReader(chainpack::ChainPackReader *reader)
 	: m_reader(reader)
@@ -45,10 +43,8 @@ void ShvLogFileReader::init()
 ShvLogFileReader::~ShvLogFileReader()
 {
 	if(m_readerCreated) {
-		if(m_reader)
-			delete m_reader;
-		if(m_ifstream)
-			delete m_ifstream;
+		delete m_reader;
+		delete m_ifstream;
 	}
 }
 
@@ -102,6 +98,4 @@ const ShvJournalEntry &ShvLogFileReader::entry()
 	return m_currentEntry;
 }
 
-} // namespace utils
-} // namespace core
 } // namespace shv

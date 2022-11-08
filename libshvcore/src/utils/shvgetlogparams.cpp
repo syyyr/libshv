@@ -2,9 +2,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 const char *ShvGetLogParams::KEY_HEADER_OPTIONS_DEPRECATED = "headerOptions";
 const char *ShvGetLogParams::KEY_MAX_RECORD_COUNT_DEPRECATED = "maxRecordCount";
@@ -24,7 +22,7 @@ const char *ShvGetLogParams::KEY_DOMAIN_PATTERN = "domainPattern";
 static const char *SINCE_NOW = "now";
 const char *ShvGetLogParams::SINCE_LAST = "last";
 
-static const char REG_EX[] = "regex";
+static const auto REG_EX = "regex";
 
 ShvGetLogParams::ShvGetLogParams(const chainpack::RpcValue &opts)
 	: ShvGetLogParams()
@@ -98,6 +96,4 @@ bool ShvGetLogParams::isSinceLast() const
 	return since.asString() == SINCE_NOW || since.asString() == SINCE_LAST;
 }
 
-} // namespace utils
-} // namespace iotqt
 } // namespace shv

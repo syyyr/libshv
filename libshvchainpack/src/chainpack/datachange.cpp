@@ -2,8 +2,7 @@
 
 #include <necrolog.h>
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 //================================================================
 // ValueChange
@@ -172,5 +171,4 @@ void DataChange::setBit(unsigned &n, int pos, bool b)
 		n |= mask;
 }
 
-} // namespace chainpack
 } // namespace shv

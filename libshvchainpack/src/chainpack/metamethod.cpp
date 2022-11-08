@@ -1,7 +1,6 @@
 #include "metamethod.h"
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 RpcValue MetaMethod::toRpcValue() const
 {
@@ -74,5 +73,4 @@ std::string MetaMethod::flagsToString(unsigned flags)
 }
 
 
-} // namespace chainpack
 } // namespace shv

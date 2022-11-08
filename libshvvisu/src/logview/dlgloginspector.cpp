@@ -31,14 +31,11 @@
 #if SHVVISU_HAS_TIMEZONE
 #include <QTimeZone>
 #endif
-#include <QMessageBox>
 
 namespace cp = shv::chainpack;
 namespace tl = shv::visu::timeline;
 
-namespace shv {
-namespace visu {
-namespace logview {
+namespace shv::visu::logview {
 
 enum { TabGraph = 0, TabData, TabInfo };
 
@@ -51,9 +48,9 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 	ui->setupUi(this);
 	setShvPath(shv_path);
 	{
-		QMenu *m = new QMenu(this);
+		auto *m = new QMenu(this);
 		{
-			QAction *a = new QAction(tr("ChainPack"), m);
+			auto *a = new QAction(tr("ChainPack"), m);
 			connect(a, &QAction::triggered, [this]() {
 				auto log = m_logModel->log();
 				std::string log_data = log.toChainPack();
@@ -62,7 +59,7 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 			m->addAction(a);
 		}
 		{
-			QAction *a = new QAction(tr("Cpon"), m);
+			auto *a = new QAction(tr("Cpon"), m);
 			connect(a, &QAction::triggered, [this]() {
 				auto log = m_logModel->log();
 				std::string log_data = log.toCpon("\t");
@@ -71,7 +68,7 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 			m->addAction(a);
 		}
 		{
-			QAction *a = new QAction(tr("CSV"), m);
+			auto *a = new QAction(tr("CSV"), m);
 			connect(a, &QAction::triggered, [this]() {
 				std::string log_data;
 				for(int row=0; row<m_logModel->rowCount(); row++) {
@@ -132,7 +129,7 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 
 	ui->tblData->setContextMenuPolicy(Qt::ActionsContextMenu);
 	{
-		QAction *copy = new QAction(tr("&Copy"));
+		auto *copy = new QAction(tr("&Copy"));
 		copy->setShortcut(QKeySequence::Copy);
 		ui->tblData->addAction(copy);
 		connect(copy, &QAction::triggered, [this]() {
@@ -370,7 +367,7 @@ void DlgLogInspector::downloadLog()
 	cp::RpcValue params = getLogParams();
 	shv::iotqt::rpc::ClientConnection *conn = rpcConnection();
 	int rq_id = conn->nextRequestId();
-	shv::iotqt::rpc::RpcResponseCallBack *cb = new shv::iotqt::rpc::RpcResponseCallBack(conn, rq_id, this);
+	auto *cb = new shv::iotqt::rpc::RpcResponseCallBack(conn, rq_id, this);
 	cb->setTimeout(ui->edTimeout->value() * 1000);
 	cb->start(this, [this, shv_path](const cp::RpcResponse &resp) {
 		if(resp.isValid()) {
@@ -426,7 +423,7 @@ void DlgLogInspector::parseLog(shv::chainpack::RpcValue log)
 				continue;
 			int64_t msec = entry.epochMsec;
 			if(entry.shortTime != core::utils::ShvJournalEntry::NO_SHORT_TIME) {
-				uint16_t short_msec = static_cast<uint16_t>(entry.shortTime);
+				auto short_msec = static_cast<uint16_t>(entry.shortTime);
 				ShortTime &st = short_times[entry.path];
 				if(st.msec_sum == 0)
 					st.msec_sum = msec;
@@ -530,4 +527,4 @@ void DlgLogInspector::onGraphChannelFilterChanged()
 	m_logSortFilterProxy->setChannelFilter(m_graph->channelFilter());
 }
 
-}}}
+}

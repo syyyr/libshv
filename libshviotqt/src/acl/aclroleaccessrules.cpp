@@ -9,9 +9,7 @@
 using namespace shv::chainpack;
 using namespace std;
 
-namespace shv {
-namespace iotqt {
-namespace acl {
+namespace shv::iotqt::acl {
 
 //================================================================
 // PathAccessGrant
@@ -73,10 +71,10 @@ bool AclAccessRule::isMoreSpecificThan(const AclAccessRule &other) const
 	if(is_exact_path && other_is_exact_path) {
 		return has_method && !other_has_method;
 	}
-	else if(is_exact_path && !other_is_exact_path) {
+	if(is_exact_path && !other_is_exact_path) {
 		return true;
 	}
-	else if(!is_exact_path && other_is_exact_path) {
+	if(!is_exact_path && other_is_exact_path) {
 		return false;
 	}
 	// both path patterns with wild-card
@@ -191,6 +189,4 @@ AclRoleAccessRules AclRoleAccessRules::fromRpcValue(const shv::chainpack::RpcVal
 	return ret;
 }
 
-} // namespace acl
-} // namespace iotqt
 } // namespace shv

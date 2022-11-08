@@ -25,9 +25,7 @@ namespace cp = shv::chainpack;
 
 using namespace std;
 
-namespace shv {
-namespace broker {
-namespace rpc {
+namespace shv::broker::rpc {
 
 ClientConnectionOnBroker::ClientConnectionOnBroker(shv::iotqt::rpc::Socket *socket, QObject *parent)
 	: Super(socket, parent)
@@ -88,7 +86,7 @@ int ClientConnectionOnBroker::idleTimeMax() const
 	return  m_idleWatchDogTimer->interval();
 }
 
-std::string ClientConnectionOnBroker::resolveLocalPath(const shv::core::utils::ShvUrl &spp, iotqt::node::ShvNode **pnd)
+std::string ClientConnectionOnBroker::resolveLocalPath(const shv::core::utils::ShvUrl &spp, iotqt::node::ShvNode **pnd) const
 {
 	BrokerApp *app = BrokerApp::instance();
 	string local_path;
@@ -242,7 +240,7 @@ string ClientConnectionOnBroker::toSubscribedPath(const CommonRpcClientHandle::S
 		auto b = StringView(signal_path).mid(subs.localPath.size());
 		return ShvPath(a.toString()).appendPath(b);
 	}
-	else if(spp_signal.isPlain()) {
+	if(spp_signal.isPlain()) {
 		if(spp_subs.isUpTreeMountPointRelative()) {
 			/// a/b/c/d --> a:/b/c/d
 			// cut service and slash
@@ -255,7 +253,7 @@ string ClientConnectionOnBroker::toSubscribedPath(const CommonRpcClientHandle::S
 			auto ret = ServiceProviderPath::makeShvUrlString(spp_subs.type(), spp_subs.service(), spp_subs.fullBrokerId(), sv);
 			return ret;
 		}
-		else if(spp_subs.isUpTreeAbsolute()) {
+		if(spp_subs.isUpTreeAbsolute()) {
 			/// a/b/c/d --> a|/b/c/d
 			// cut service and slash
 			auto sv = StringView(signal_path).mid(spp_subs.service().length() + 1);
@@ -376,4 +374,4 @@ int ClientBrokerConnection::callMethodSubscribeMB(const std::string &shv_path, s
 						 , cp::AccessGrant(cp::Rpc::ROLE_MASTER_BROKER, !cp::AccessGrant::IS_RESOLVED).toRpcValue());
 }
 */
-}}}
+}

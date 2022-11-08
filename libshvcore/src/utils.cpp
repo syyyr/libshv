@@ -5,15 +5,13 @@
 #include <cstring>
 #include <regex>
 #include <sstream>
-#include <cstring>
 
 #include <unistd.h>
 
 using namespace std;
 using namespace shv::chainpack;
 
-namespace shv {
-namespace core {
+namespace shv::core {
 
 namespace {
 template<typename Out>
@@ -65,7 +63,7 @@ std::string Utils::intToVersionString(int ver)
 std::string Utils::removeJsonComments(const std::string &json_str)
 {
 	// http://blog.ostermiller.org/find-comment
-	const std::regex re_block_comment("/\\*(?:.|[\\n])*?\\*/");
+	const std::regex re_block_comment(R"(/\*(?:.|[\n])*?\*/)");
 	const std::regex re_line_comment("//.*[\\n]");
 	std::string result1 = std::regex_replace(json_str, re_block_comment, std::string());
 	std::string ret = std::regex_replace(result1, re_line_comment, std::string());
@@ -76,7 +74,7 @@ std::string Utils::binaryDump(const std::string &bytes)
 {
 	std::string ret;
 	for (size_t i = 0; i < bytes.size(); ++i) {
-		uint8_t u = static_cast<uint8_t>(bytes[i]);
+		auto u = static_cast<uint8_t>(bytes[i]);
 		if(i > 0)
 			ret += '|';
 		for (size_t j = 0; j < 8*sizeof(u); ++j) {
@@ -96,8 +94,8 @@ static inline char hex_nibble(char i)
 std::string Utils::toHex(const std::string &bytes)
 {
 	std::string ret;
-	for (size_t i = 0; i < bytes.size(); ++i) {
-		unsigned char b = static_cast<unsigned char>(bytes[i]);
+	for (char byte : bytes) {
+		auto b = static_cast<unsigned char>(byte);
 		char h = static_cast<char>(b / 16);
 		char l = b % 16;
 		ret += hex_nibble(h);
@@ -109,8 +107,7 @@ std::string Utils::toHex(const std::string &bytes)
 std::string Utils::toHex(const std::basic_string<uint8_t> &bytes)
 {
 	std::string ret;
-	for (size_t i = 0; i < bytes.size(); ++i) {
-		unsigned char b = bytes[i];
+	for (unsigned char b : bytes) {
 		char h = static_cast<char>(b / 16);
 		char l = b % 16;
 		ret += hex_nibble(h);
@@ -134,7 +131,7 @@ std::string Utils::fromHex(const std::string &bytes)
 {
 	std::string ret;
 	for (size_t i = 0; i < bytes.size(); ) {
-		unsigned char u = static_cast<unsigned char>(unhex_char(bytes[i++]));
+		auto u = static_cast<unsigned char>(unhex_char(bytes[i++]));
 		u = 16 * u;
 		if(i < bytes.size())
 			u += static_cast<unsigned char>(unhex_char(bytes[i++]));
@@ -235,10 +232,9 @@ std::vector<char> Utils::readAllFd(int fd)
 				ret.resize(prev_size);
 				return ret;
 			}
-			else {
-				shvError() << "error read fd:" << fd << std::strerror(errno);
-				return std::vector<char>();
-			}
+
+			shvError() << "error read fd:" << fd << std::strerror(errno);
+			return std::vector<char>();
 		}
 		if(n < CHUNK_SIZE) {
 			ret.resize(prev_size + static_cast<size_t>(n));
@@ -463,4 +459,4 @@ bool Utils::invokeMethod_B_V(QObject *obj, const char *method_name)
 	return ret.toBool();
 }
 #endif
-}}
+}

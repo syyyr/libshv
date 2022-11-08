@@ -1,7 +1,6 @@
 #include "rpc.h"
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 const char* Rpc::OPT_IDLE_WD_TIMEOUT = "idleWatchDogTimeOut";
 
@@ -93,5 +92,4 @@ const char *Rpc::protocolTypeToString(Rpc::ProtocolType pv)
 	return "???";
 }
 
-} // namespace chainpack
 } // namespace shv

@@ -3,7 +3,7 @@
 #include <necrolog.h>
 
 #include <cassert>
-#include <string.h>
+#include <cstring>
 
 #ifdef FREE_RTOS
 #include "lwip/netdb.h"
@@ -20,12 +20,9 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
-SocketRpcDriver::SocketRpcDriver()
-{
-}
+SocketRpcDriver::SocketRpcDriver() = default;
 
 SocketRpcDriver::~SocketRpcDriver()
 {
@@ -51,7 +48,7 @@ int64_t SocketRpcDriver::writeBytes(const char *bytes, size_t length)
 		return 0;
 	}
 	flush();
-	ssize_t bytes_to_write_len = static_cast<ssize_t>((m_writeBuffer.size() + length > m_maxWriteBufferLength)? m_maxWriteBufferLength - m_writeBuffer.size(): length);
+	auto bytes_to_write_len = static_cast<ssize_t>((m_writeBuffer.size() + length > m_maxWriteBufferLength)? m_maxWriteBufferLength - m_writeBuffer.size(): length);
 	if(bytes_to_write_len > 0)
 		m_writeBuffer += std::string(bytes, static_cast<size_t>(bytes_to_write_len));
 	flush();
@@ -86,14 +83,14 @@ bool SocketRpcDriver::connectToHost(const std::string &host, int port)
 		struct hostent *server;
 		server = gethostbyname(host.c_str());
 
-		if (server == NULL) {
+		if (server == nullptr) {
 			nError() << "ERROR, no such host" << host;
 			return false;
 		}
 
-		bzero(reinterpret_cast<char *> (&serv_addr), sizeof(serv_addr));
+		memset(reinterpret_cast<char *> (&serv_addr), 0, sizeof(serv_addr));
 		serv_addr.sin_family = AF_INET;
-		bcopy(server->h_addr, reinterpret_cast<char *>(&serv_addr.sin_addr.s_addr), static_cast<size_t>(server->h_length));
+		memcpy(reinterpret_cast<char *>(&serv_addr.sin_addr.s_addr), server->h_addr, static_cast<size_t>(server->h_length));
 		serv_addr.sin_port = htons(static_cast<uint16_t>(port));
 
 		/* Now connect to the server */
@@ -127,12 +124,12 @@ void SocketRpcDriver::exec()
 	struct timeval waitd;
 
 	static constexpr size_t BUFF_LEN = 255;
-	char in[BUFF_LEN];
-	char out[BUFF_LEN];
-	memset(&in, 0, BUFF_LEN);
-	memset(&out, 0, BUFF_LEN);
+	std::array<char, BUFF_LEN> in;
+	std::array<char, BUFF_LEN> out;
+	memset(in.data(), 0, BUFF_LEN);
+	memset(out.data(), 0, BUFF_LEN);
 
-	while(1) {
+	while (true) {
 		waitd.tv_sec = 5;
 		waitd.tv_usec = 0;
 
@@ -144,7 +141,7 @@ void SocketRpcDriver::exec()
 		//FD_SET(STDIN_FILENO, &read_flags);
 		//FD_SET(STDIN_FILENO, &write_flags);
 
-		int sel = select(FD_SETSIZE, &read_flags, &write_flags, static_cast<fd_set*>(0), &waitd);
+		int sel = select(FD_SETSIZE, &read_flags, &write_flags, static_cast<fd_set*>(nullptr), &waitd);
 
 		//ESP_LOGI(__FILE__, "select returned, number of active file descriptors: %d", sel);
 		//if an error with select
@@ -166,14 +163,14 @@ void SocketRpcDriver::exec()
 
 			memset(&in, 0, BUFF_LEN);
 
-			auto n = read(m_socket, in, BUFF_LEN);
+			auto n = read(m_socket, in.data(), BUFF_LEN);
 			nInfo() << "\t " << n << "bytes read";
 			if(n <= 0) {
 				nError() << "Closing socket";
 				closeConnection();
 				return;
 			}
-			onBytesRead(std::string(in, static_cast<size_t>(n)));
+			onBytesRead(std::string(in.data(), static_cast<size_t>(n)));
 		}
 
 		//socket ready for writing
@@ -203,4 +200,4 @@ void SocketRpcDriver::sendNotify(std::string &&method, const cp::RpcValue &resul
 	sendRpcValue(ntf.value());
 }
 
-}}
+}

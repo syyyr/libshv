@@ -1,8 +1,6 @@
 #include "channelfiltersortfilterproxymodel.h"
 
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 ChannelFilterSortFilterProxyModel::ChannelFilterSortFilterProxyModel(QObject *parent) :
 	Super(parent)
@@ -24,9 +22,8 @@ bool ChannelFilterSortFilterProxyModel::isFilterAcceptedByParent(const QModelInd
 	if (sourceModel()->data(ix).toString().contains(m_filterString, filterCaseSensitivity())) {
 		return true;
 	}
-	else{
-		return isFilterAcceptedByParent(ix.parent());
-	}
+
+	return isFilterAcceptedByParent(ix.parent());
 }
 
 bool ChannelFilterSortFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
@@ -35,9 +32,8 @@ bool ChannelFilterSortFilterProxyModel::filterAcceptsRow(int source_row, const Q
 	if (sourceModel()->data(ix).toString().contains(m_filterString, filterCaseSensitivity())) {
 		return true;
 	}
-	else{
-		return isFilterAcceptedByParent(ix.parent());
-	}
+
+	return isFilterAcceptedByParent(ix.parent());
 }
 
-}}}
+}

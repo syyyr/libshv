@@ -46,9 +46,9 @@ inline char hex_nibble(char i)
 std::string hex_dump(const RpcValue::String &out)
 {
 	std::string ret;
-	for (size_t i = 0; i < out.size(); ++i) {
-		char h = out[i] / 16;
-		char l = out[i] % 16;
+	for (char i : out) {
+		char h = i / 16;
+		char l = i % 16;
 		ret += hex_nibble(h);
 		ret += hex_nibble(l);
 	}
@@ -59,7 +59,7 @@ std::string binary_dump(const RpcValue::String &out)
 {
 	std::string ret;
 	for (size_t i = 0; i < out.size(); ++i) {
-		uint8_t u = static_cast<uint8_t>(out[i]);
+		auto u = static_cast<uint8_t>(out[i]);
 		//ret += std::to_string(u);
 		if(i > 0)
 			ret += '|';
@@ -198,7 +198,7 @@ DOCTEST_TEST_CASE("ChainPack")
 		for (int i = ChainPack::PackingSchema::Null; i <= ChainPack::PackingSchema::CString; ++i) {
 			RpcValue::String out;
 			out += static_cast<char>(i);
-			ChainPack::PackingSchema::Enum e = static_cast<ChainPack::PackingSchema::Enum>(i);
+			auto e = static_cast<ChainPack::PackingSchema::Enum>(i);
 			std::ostringstream str;
 			str << std::setw(3) << i << " " << std::hex << i << " " << binary_dump(out).c_str() << " "  << ChainPack::PackingSchema::name(e);
 			nInfo() << str.str();
@@ -206,7 +206,7 @@ DOCTEST_TEST_CASE("ChainPack")
 		for (int i = ChainPack::PackingSchema::FALSE; i <= ChainPack::PackingSchema::TERM; ++i) {
 			RpcValue::String out;
 			out += static_cast<char>(i);
-			ChainPack::PackingSchema::Enum e = static_cast<ChainPack::PackingSchema::Enum>(i);
+			auto e = static_cast<ChainPack::PackingSchema::Enum>(i);
 			std::ostringstream str;
 			str << std::setw(3) << i << " " << std::hex << i << " " << binary_dump(out).c_str() << " "  << ChainPack::PackingSchema::name(e);
 			nInfo() << str.str();
@@ -541,7 +541,7 @@ DOCTEST_TEST_CASE("ChainPack")
 			RpcValue::IMap map {
 				{1, "foo"},
 				{2, "bar"},
-				{333, 15u},
+				{333, 15U},
 			};
 			RpcValue cp1{map};
 			std::stringstream out;

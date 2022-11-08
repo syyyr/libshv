@@ -4,9 +4,7 @@
 
 #include <regex>
 
-namespace shv {
-namespace iotqt {
-namespace acl {
+namespace shv::iotqt::acl {
 
 static bool str_eq(const std::string &s1, const char *s2)
 {
@@ -66,6 +64,4 @@ AclPassword::Format AclPassword::formatFromString(const std::string &s)
 	return Format::Invalid;
 }
 
-} // namespace acl
-} // namespace iotqt
 } // namespace shv

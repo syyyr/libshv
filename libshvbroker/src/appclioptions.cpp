@@ -4,8 +4,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace broker {
+namespace shv::broker {
 
 AppCliOptions::AppCliOptions()
 {
@@ -44,4 +43,4 @@ AppCliOptions::AppCliOptions()
 	//addOption("master.broker.device.id").setType(shv::chainpack::RpcValue::Type::String).setNames("--master-broker-device-id").setComment("Master broker device ID");
 }
 
-}}
+}

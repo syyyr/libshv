@@ -7,9 +7,7 @@
 #include <shv/coreqt/log.h>
 #include <shv/core/utils/shvpath.h>
 
-namespace shv {
-namespace iotqt {
-namespace node {
+namespace shv::iotqt::node {
 
 ShvNodeTree::ShvNodeTree(QObject *parent)
 	: QObject(parent)
@@ -28,9 +26,7 @@ ShvNodeTree::ShvNodeTree(ShvNode *root, QObject *parent)
 		m_root->setParent(this);
 }
 
-ShvNodeTree::~ShvNodeTree()
-{
-}
+ShvNodeTree::~ShvNodeTree() = default;
 
 ShvNode *ShvNodeTree::mkdir(const ShvNode::String &path)
 {
@@ -131,4 +127,4 @@ std::string ShvNodeTree::dumpTree()
 	return dump_node(m_root, 0);
 }
 
-}}}
+}

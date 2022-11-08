@@ -7,13 +7,12 @@
 
 using namespace std;
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 std::string Utils::removeJsonComments(const std::string &json_str)
 {
 	// http://blog.ostermiller.org/find-comment
-	const std::regex re_block_comment("/\\*(?:.|[\\n])*?\\*/");
+	const std::regex re_block_comment(R"(/\*(?:.|[\n])*?\*/)");
 	const std::regex re_line_comment("//.*[\\n]");
 	std::string result1 = std::regex_replace(json_str, re_block_comment, std::string());
 	std::string ret = std::regex_replace(result1, re_line_comment, std::string());
@@ -24,7 +23,7 @@ std::string Utils::binaryDump(const std::string &bytes)
 {
 	std::string ret;
 	for (size_t i = 0; i < bytes.size(); ++i) {
-		uint8_t u = static_cast<uint8_t>(bytes[i]);
+		auto u = static_cast<uint8_t>(bytes[i]);
 		if(i > 0)
 			ret += '|';
 		for (size_t j = 0; j < 8*sizeof(u); ++j) {
@@ -64,7 +63,7 @@ std::string Utils::toHex(const std::string &bytes, size_t start_pos, size_t leng
 	std::string ret;
 	const size_t max_pos = std::min(bytes.size(), start_pos + length);
 	for (size_t i = start_pos; i < max_pos; ++i) {
-		unsigned char b = static_cast<unsigned char>(bytes[i]);
+		auto b = static_cast<unsigned char>(bytes[i]);
 		ret += byte_to_hex(b);
 	}
 	return ret;
@@ -73,8 +72,7 @@ std::string Utils::toHex(const std::string &bytes, size_t start_pos, size_t leng
 std::string Utils::toHex(const std::basic_string<uint8_t> &bytes)
 {
 	std::string ret;
-	for (size_t i = 0; i < bytes.size(); ++i) {
-		unsigned char b = bytes[i];
+	for (unsigned char b : bytes) {
 		ret += byte_to_hex(b);
 	}
 	return ret;
@@ -106,7 +104,7 @@ std::string Utils::fromHex(const std::string &bytes)
 {
 	std::string ret;
 	for (size_t i = 0; i < bytes.size(); ) {
-		unsigned char u = static_cast<unsigned char>(fromHex(bytes[i++]));
+		auto u = static_cast<unsigned char>(fromHex(bytes[i++]));
 		u = 16 * u;
 		if(i < bytes.size())
 			u += static_cast<unsigned char>(fromHex(bytes[i++]));
@@ -163,11 +161,10 @@ RpcValue Utils::mergeMaps(const RpcValue &value_base, const RpcValue &value_over
 		}
 		return merged;
 	}
-	else if(value_over.isValid()) {
+	if(value_over.isValid()) {
 		return value_over;
 	}
 	return value_base;
 }
 
-} // namespace chainpack
 } // namespace shv

@@ -10,9 +10,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace iotqt {
-namespace rpc {
+namespace shv::iotqt::rpc {
 
 DeviceConnection::DeviceConnection(QObject *parent)
 	: Super(parent)
@@ -66,6 +64,4 @@ void DeviceConnection::setCliOptions(const DeviceAppCliOptions *cli_opts)
 	}
 }
 
-} // namespace rpc
-} // namespace iotqt
 } // namespace shv

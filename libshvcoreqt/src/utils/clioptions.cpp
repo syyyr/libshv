@@ -22,9 +22,7 @@
 #include <limits>
 #include <iostream>
 
-namespace shv {
-namespace coreqt {
-namespace utils {
+namespace shv::coreqt::utils {
 
 const CLIOptions::Option & CLIOptions::Option::sharedNull()
 {
@@ -113,9 +111,7 @@ CLIOptions::CLIOptions(QObject *parent)
 	//addOption("configDir").setType(QVariant::String).setNames("--config-dir").setComment("Directory where server config fiels are searched, default value: {app-dir-path}.");
 }
 
-CLIOptions::~CLIOptions()
-{
-}
+CLIOptions::~CLIOptions() = default;
 
 CLIOptions::Option& CLIOptions::addOption(const QString key, const CLIOptions::Option& opt)
 {
@@ -203,14 +199,13 @@ bool CLIOptions::setValue(const QString& name, const QVariant val, bool throw_ex
 		orf.setValue(val);
 		return true;
 	}
-	else {
-		QString msg = "setValue():"%val.toString()%" Key '"%name%"' not found.";
-		shvWarning() << msg.toStdString();
-		if(throw_exc) {
-			SHV_EXCEPTION(msg.toStdString());
-		}
-		return false;
+
+	QString msg = "setValue():"%val.toString()%" Key '"%name%"' not found.";
+	shvWarning() << msg.toStdString();
+	if(throw_exc) {
+		SHV_EXCEPTION(msg.toStdString());
 	}
+	return false;
 }
 
 QString CLIOptions::takeArg(bool &ok)
@@ -257,32 +252,31 @@ void CLIOptions::parse(const QStringList& cmd_line_args)
 			m_isAppBreak = true;
 			return;
 		}
-		else {
-			bool found = false;
-			QMutableMapIterator<QString, Option> it(m_options);
-			while(it.hasNext()) {
-				it.next();
-				Option &opt = it.value();
-				QStringList names = opt.names();
-				if(names.contains(arg)) {
-					found = true;
-					arg = peekArg(ok);
-					if(arg.startsWith('-') || !ok) {
-						// switch has no value entered
-						arg = QString();
-					}
-					else {
-						arg = takeArg(ok);
-					}
-					opt.setValueString(arg);
-					break;
+		bool found = false;
+		QMutableMapIterator<QString, Option> it(m_options);
+		while(it.hasNext()) {
+			it.next();
+			Option &opt = it.value();
+			QStringList names = opt.names();
+			if(names.contains(arg)) {
+				found = true;
+				arg = peekArg(ok);
+				if(arg.startsWith('-') || !ok) {
+					// switch has no value entered
+					arg = QString();
 				}
-			}
-			if(!found) {
-				if(arg.startsWith("-"))
-					m_unusedArguments << arg;
+				else {
+					arg = takeArg(ok);
+				}
+				opt.setValueString(arg);
+				break;
 			}
 		}
+		if(!found) {
+			if(arg.startsWith("-"))
+				m_unusedArguments << arg;
+		}
+
 	}
 	{
 		QMapIterator<QString, Option> it(m_options);
@@ -303,7 +297,7 @@ QPair<QString, QString> CLIOptions::applicationDirAndName() const
 	static QString app_dir;
 	static QString app_name;
 	if(app_name.isEmpty()) {
-		if(m_allArgs.size()) {
+		if(!m_allArgs.empty()) {
 	#ifdef Q_OS_WIN
 			QString app_file_path;
 			wchar_t buffer[MAX_PATH + 2];
@@ -505,4 +499,4 @@ void ConfigCLIOptions::mergeConfig_helper(const QString &key_prefix, const shv::
 	}
 }
 
-}}}
+}

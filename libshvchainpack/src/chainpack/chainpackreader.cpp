@@ -3,21 +3,21 @@
 
 #include <iostream>
 #include <cmath>
+#include <array>
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 #define PARSE_EXCEPTION(msg) {\
-	char buff[40]; \
-	auto l = m_in.readsome(buff, sizeof(buff) - 1); \
+	std::array<char, 40> buff; \
+	auto l = m_in.readsome(buff.data(), buff.size() - 1); \
 	buff[l] = 0; \
 	if(exception_aborts) { \
 		std::clog << __FILE__ << ':' << __LINE__;  \
-		std::clog << ' ' << (msg) << " at pos: " << m_in.tellg() << " near to: " << buff << std::endl; \
+		std::clog << ' ' << (msg) << " at pos: " << m_in.tellg() << " near to: " << buff.data() << std::endl; \
 		abort(); \
 	} \
 	else { \
-		throw ParseException(m_inCtx.err_no, std::string("ChainPack ") + msg + std::string(" at pos: ") + std::to_string(m_in.tellg()) + " near to: " + buff, m_in.tellg()); \
+		throw ParseException(m_inCtx.err_no, std::string("ChainPack ") + msg + std::string(" at pos: ") + std::to_string(m_in.tellg()) + " near to: " + buff.data(), m_in.tellg()); \
 	} \
 }
 
@@ -82,7 +82,7 @@ ChainPackReader::ItemType ChainPackReader::peekNext()
 	case CP_Decimal: return CCPCP_ITEM_DECIMAL;
 	case CP_DateTime: return CCPCP_ITEM_DATE_TIME;
 	case CP_CString: return CCPCP_ITEM_STRING;
-	case CP_FALSE: return CCPCP_ITEM_BOOLEAN;
+	case CP_FALSE:
 	case CP_TRUE: return CCPCP_ITEM_BOOLEAN;
 	case CP_TERM: return CCPCP_ITEM_CONTAINER_END;
 	default: break;
@@ -277,5 +277,4 @@ void ChainPackReader::read(RpcValue::MetaData &meta_data)
 	}
 }
 
-} // namespace chainpack
 } // namespace shv

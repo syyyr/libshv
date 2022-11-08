@@ -141,7 +141,7 @@ private:
 	typedef CLIOptions Super;
 public:
 	ConfigCLIOptions(QObject *parent = NULL);
-	~ConfigCLIOptions() Q_DECL_OVERRIDE {}
+	~ConfigCLIOptions() Q_DECL_OVERRIDE = default;
 
 	CLIOPTION_GETTER_SETTER(QString, c, setC, onfig)
 	CLIOPTION_GETTER_SETTER(QString, c, setC, onfigDir)

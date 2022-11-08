@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
 		shv::chainpack::CponWriterOptions opts;
 		opts.setIndent(o_indent);
 		opts.setTranslateIds(o_translate_meta_ids);
-		cp::CponWriter *wr = new cp::CponWriter(std::cout, opts);
+		auto *wr = new cp::CponWriter(std::cout, opts);
 		pwr = wr;
 	}
 

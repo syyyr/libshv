@@ -8,16 +8,14 @@
 
 using namespace shv::chainpack;
 
-namespace shv {
-namespace iotqt {
-namespace node {
+namespace shv::iotqt::node {
 
-static const char M_WRITE[] = "write";
-static const char M_DELETE[] = "delete";
-static const char M_MKFILE[] = "mkfile";
-static const char M_MKDIR[] = "mkdir";
-static const char M_RMDIR[] = "rmdir";
-static const char M_LS_FILES[] = "lsfiles";
+static const auto M_WRITE = "write";
+static const auto M_DELETE = "delete";
+static const auto M_MKFILE = "mkfile";
+static const auto M_MKDIR = "mkdir";
+static const auto M_RMDIR = "rmdir";
+static const auto M_LS_FILES = "lsfiles";
 
 static const std::vector<MetaMethod> meta_methods_dir {
 	{Rpc::METH_DIR, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_BROWSE},
@@ -65,20 +63,20 @@ chainpack::RpcValue LocalFSNode::callMethod(const ShvNode::StringViewList &shv_p
 	if(method == M_WRITE) {
 		return ndWrite(QString::fromStdString(shv_path.join('/')), params);
 	}
-	else if(method == M_DELETE) {
+	if(method == M_DELETE) {
 		return ndDelete(QString::fromStdString(shv_path.join('/')));
 	}
-	else if(method == M_MKFILE) {
+	if(method == M_MKFILE) {
 		return ndMkfile(QString::fromStdString(shv_path.join('/')), params);
 	}
-	else if(method == M_MKDIR) {
+	if(method == M_MKDIR) {
 		return ndMkdir(QString::fromStdString(shv_path.join('/')), params);
 	}
-	else if(method == M_RMDIR) {
+	if(method == M_RMDIR) {
 		bool recursively = (params.isBool()) ? params.toBool() : false;
 		return ndRmdir(QString::fromStdString(shv_path.join('/')), recursively);
 	}
-	else if(method == M_LS_FILES) {
+	if(method == M_LS_FILES) {
 		return ndLsDir(QString::fromStdString(shv_path.join('/')), params);
 	}
 
@@ -142,7 +140,7 @@ QString LocalFSNode::makeAbsolutePath(const QString &relative_path) const
 
 std::string LocalFSNode::fileName(const ShvNode::StringViewList &shv_path) const
 {
-	return shv_path.size() > 0 ? shv_path.back().toString() : "";
+	return !shv_path.empty() ? shv_path.back().toString() : "";
 }
 
 chainpack::RpcValue LocalFSNode::readContent(const ShvNode::StringViewList &shv_path, int64_t offset, int64_t size) const
@@ -215,7 +213,7 @@ chainpack::RpcValue LocalFSNode::ndWrite(const QString &path, const chainpack::R
 		}
 		SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for writing.");
 	}
-	else if (methods_params.isList()){
+	if (methods_params.isList()){
 		chainpack::RpcValue::List params = methods_params.toList();
 
 		if (params.size() != 2){
@@ -231,10 +229,8 @@ chainpack::RpcValue LocalFSNode::ndWrite(const QString &path, const chainpack::R
 		}
 		SHV_EXCEPTION("Cannot open file " + f.fileName().toStdString() + " for writing.");
 	}
-	else{
-		SHV_EXCEPTION("Unsupported param type.");
-	}
 
+	SHV_EXCEPTION("Unsupported param type.");
 	return false;
 }
 
@@ -265,7 +261,7 @@ chainpack::RpcValue LocalFSNode::ndMkfile(const QString &path, const chainpack::
 		const chainpack::RpcValue::List &param_lst = methods_params.toList();
 
 		if (param_lst.size() != 2) {
-			throw shv::core::Exception("Invalid params, [\"name\", \"content\"] expected.");
+			throw shv::core::Exception(R"(Invalid params, ["name", "content"] expected.)");
 		}
 
 		QString file_path = makeAbsolutePath(path + '/' + QString::fromStdString(param_lst[0].asString()));
@@ -320,8 +316,8 @@ chainpack::RpcValue LocalFSNode::ndRmdir(const QString &path, bool recursively)
 
 	if (recursively)
 		return d.removeRecursively();
-	else
-		return d.rmdir(makeAbsolutePath(path));
+
+	return d.rmdir(makeAbsolutePath(path));
 }
 
 RpcValue LocalFSNode::ndLsDir(const QString &path, const chainpack::RpcValue &methods_params)
@@ -360,12 +356,9 @@ RpcValue LocalFSNode::ndLsDir(const QString &path, const chainpack::RpcValue &me
 		}
 		return lst;
 	}
-	else {
-		SHV_EXCEPTION("Path " + path.toStdString() + " is not dir.");
-	}
+
+	SHV_EXCEPTION("Path " + path.toStdString() + " is not dir.");
 	return {};
 }
 
-} // namespace node
-} // namespace iotqt
 } // namespace shv

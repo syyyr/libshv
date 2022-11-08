@@ -1,12 +1,11 @@
 #include "abstractstreamwriter.h"
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 void pack_overflow_handler(ccpcp_pack_context *ctx, size_t size_hint)
 {
 	(void)size_hint;
-	AbstractStreamWriter *wr = reinterpret_cast<AbstractStreamWriter*>(ctx->custom_context);
+	auto *wr = reinterpret_cast<AbstractStreamWriter*>(ctx->custom_context);
 	while(ctx->start < ctx->current) {
 		wr->m_out << *ctx->start++;
 	}
@@ -32,5 +31,4 @@ void AbstractStreamWriter::flush()
 		m_outCtx.handle_pack_overflow(&m_outCtx, 0);
 }
 
-} // namespace chainpack
 } // namespace shv

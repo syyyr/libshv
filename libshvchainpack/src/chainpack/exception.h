@@ -16,7 +16,7 @@ public:
 public:
 	Exception(const std::string& _msg, const std::string& _where = std::string());
 	Exception(const std::string& _msg, const std::string& _where, const char *_log_topic);
-	~Exception() override {}
+	~Exception() override = default;
 public:
 	//virtual void log();
 	virtual std::string message() const {return m_msg;}

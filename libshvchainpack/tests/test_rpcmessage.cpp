@@ -63,7 +63,7 @@ DOCTEST_TEST_CASE("RpcMessage")
 	DOCTEST_SUBCASE("RpcResponse result")
 	{
 		RpcResponse rs;
-		rs.setRequestId(123).setResult(42u);
+		rs.setRequestId(123).setResult(42U);
 		std::stringstream out;
 		RpcValue cp1 = rs.value();
 		{ ChainPackWriter wr(out); rs.write(wr); }

@@ -2,9 +2,7 @@
 
 #include <shv/core/log.h>
 
-namespace shv {
-namespace visu {
-namespace logview {
+namespace shv::visu::logview {
 
 LogSortFilterProxyModel::LogSortFilterProxyModel(QObject *parent) :
 	Super(parent)
@@ -56,4 +54,4 @@ bool LogSortFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex
 	return row_accepted;
 }
 
-}}}
+}

@@ -4,9 +4,7 @@
 
 #include <QDateTime>
 
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 ChannelProbe::ChannelProbe(Graph *graph, int channel_ix, timemsec_t time)
 	: QObject(graph)
@@ -90,6 +88,4 @@ int ChannelProbe::channelIndex() const
 	return m_channelIndex;
 }
 
-}
-}
 }

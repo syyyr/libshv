@@ -5,9 +5,7 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace iotqt {
-namespace rpc {
+namespace shv::iotqt::rpc {
 
 ClientAppCliOptions::ClientAppCliOptions()
 {
@@ -31,6 +29,4 @@ ClientAppCliOptions::ClientAppCliOptions()
 	addOption("rpc.heartbeatInterval").setType(cp::RpcValue::Type::Int).setNames("--hbi", "--rpc-heartbeat-interval").setComment("Send heart beat to broker every n sec. Disabled when set to 0").setDefaultValue(60);
 }
 
-} // namespace client
-} // namespace iot
 } // namespace shv

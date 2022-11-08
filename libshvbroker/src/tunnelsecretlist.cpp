@@ -14,16 +14,14 @@
 
 #include <array>
 
-namespace shv {
-namespace broker {
+namespace shv::broker {
 
 static constexpr int64_t max_age_msec = 10*1000;
 
 bool TunnelSecretList::checkSecret(const std::string &s)
 {
 	qint64 now = QDateTime::currentMSecsSinceEpoch();
-	for (size_t i = 0; i < m_secretList.size(); ++i) {
-		Secret &sc = m_secretList[i];
+	for (auto& sc : m_secretList) {
 		int64_t age = now - sc.createdMsec;
 		if(age < 0)
 			continue; // this should never happen
@@ -44,15 +42,15 @@ std::string TunnelSecretList::createSecret()
 	removeOldSecrets(now);
 
 	static constexpr size_t DATA_LEN = 64;
-	uint32_t data[DATA_LEN];
+	std::array<uint32_t, DATA_LEN> data;
 #ifdef HAVE_QT_RANDOM_GENERATOR
-	QRandomGenerator::global()->generate(data, data + DATA_LEN);
+	QRandomGenerator::global()->generate(data.data(), data.data() + DATA_LEN);
 #else
 	for(size_t i=0; i<DATA_LEN; i++)
 		data[i] = std::rand();
 #endif
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-	hash.addData(reinterpret_cast<const char*>(data), DATA_LEN * sizeof(data[0]));
+	hash.addData(reinterpret_cast<const char*>(data.data()), DATA_LEN * sizeof(data[0]));
 	Secret sc;
 	sc.createdMsec = now;
 	sc.secret = hash.result().toHex().constData();
@@ -73,4 +71,4 @@ void TunnelSecretList::removeOldSecrets(int64_t now)
 	);
 }
 
-}}
+}

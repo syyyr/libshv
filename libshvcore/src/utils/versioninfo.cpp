@@ -7,9 +7,7 @@
 #include <cstdlib>
 #endif
 
-namespace shv {
-namespace core {
-namespace utils {
+namespace shv::core::utils {
 
 VersionInfo::VersionInfo(int major, int minor, int patch, const std::string &branch)
 	: m_majorNumber(major)
@@ -24,7 +22,7 @@ VersionInfo::VersionInfo(const std::string &version, const std::string &branch)
 {
 	std::vector<std::string> parts = String::split(version, '.');
 	while (parts.size() < 3) {
-		parts.push_back("0");
+		parts.emplace_back("0");
 	}
 #if defined LIBC_NEWLIB || defined SHV_ANDROID_BUILD
 	m_majorNumber = std::atoi(parts[0].c_str());
@@ -77,6 +75,4 @@ int VersionInfo::patchNumber() const
 	return m_patchNumber;
 }
 
-}
-}
 }

@@ -7,16 +7,15 @@
 
 namespace cp = shv::chainpack;
 
-namespace shv {
-namespace broker {
+namespace shv::broker {
 
-static const char M_MOUNT_POINT[] = "mountPoint";
-static const char M_DROP_CLIENT[] = "dropClient";
-static const char M_USER_NAME[] = "userName";
-static const char M_USER_ROLES[] = "userRoles";
-static const char M_USER_PROFILE[] = "userProfile";
-static const char M_IDLE_TIME[] = "idleTime";
-static const char M_IDLE_TIME_MAX[] = "idleTimeMax";
+static const auto M_MOUNT_POINT = "mountPoint";
+static const auto M_DROP_CLIENT = "dropClient";
+static const auto M_USER_NAME = "userName";
+static const auto M_USER_ROLES = "userRoles";
+static const auto M_USER_PROFILE = "userProfile";
+static const auto M_IDLE_TIME = "idleTime";
+static const auto M_IDLE_TIME_MAX = "idleTimeMax";
 
 //=================================================================================
 // MasterBrokerConnectionNode
@@ -101,4 +100,4 @@ shv::chainpack::RpcValue ClientConnectionNode::callMethod(const shv::iotqt::node
 	return Super::callMethod(shv_path, method, params, user_id);
 }
 
-}}
+}

@@ -16,21 +16,16 @@
 #define logWriteQueue() nCMessage("WriteQueue")
 #define logWriteQueueW() nCWarning("WriteQueue")
 
-namespace shv {
-namespace chainpack {
+namespace shv::chainpack {
 
 const char * RpcDriver::SND_LOG_ARROW = "<==S";
 const char * RpcDriver::RCV_LOG_ARROW = "R==>";
 
 int RpcDriver::s_defaultRpcTimeoutMsec = 5000;
 
-RpcDriver::RpcDriver()
-{
-}
+RpcDriver::RpcDriver() = default;
 
-RpcDriver::~RpcDriver()
-{
-}
+RpcDriver::~RpcDriver() = default;
 
 void RpcDriver::sendRpcValue(const RpcValue &msg)
 {
@@ -105,10 +100,9 @@ RpcMessage RpcDriver::composeRpcMessage(RpcValue::MetaData &&meta_data, const st
 		if(!errmsg) {
 			SHVCHP_EXCEPTION(msg);
 		}
-		else {
-			*errmsg = std::move(msg);
-			return RpcMessage();
-		}
+
+		*errmsg = msg;
+		return RpcMessage();
 	}
 	val.setMetaData(std::move(meta_data));
 	return RpcMessage(val);
@@ -208,7 +202,7 @@ int64_t RpcDriver::writeBytes_helper(const std::string &str, size_t from, size_t
 void RpcDriver::onBytesRead(std::string &&bytes)
 {
 	logRpcData().nospace() << __FUNCTION__ << " " << bytes.length() << " bytes of data read:\n" << shv::chainpack::Utils::hexDump(bytes);
-	m_readData += std::move(bytes);
+	m_readData += bytes;
 	while(true) {
 		auto old_len = m_readData.size();
 		processReadData();
@@ -300,10 +294,9 @@ void RpcDriver::processReadData()
 				m_readData = m_readData.substr(1);
 				continue;
 			}
-			else {
-				onParseDataException(e);
-				return;
-			}
+
+			onParseDataException(e);
+			return;
 		}
 
 		if(m_protocolType == Rpc::ProtocolType::Invalid && protocol_type != Rpc::ProtocolType::Invalid) {
@@ -353,21 +346,20 @@ size_t RpcDriver::decodeMetaData(RpcValue::MetaData &meta_data, Rpc::ProtocolTyp
 		if(!msg.isMap()) {
 			throw ParseException(CCPCP_RC_MALFORMED_INPUT, "JSON message cannot be translated to ChainPack", -1);
 		}
-		else {
-			const RpcValue::Map &map = msg.toMap();
-			int id = map.value(Rpc::JSONRPC_REQUEST_ID).toInt();
-			int caller_id = map.value(Rpc::JSONRPC_CALLER_ID).toInt();
-			RpcValue::String method = map.value(Rpc::JSONRPC_METHOD).toString();
-			std::string shv_path = map.value(Rpc::JSONRPC_SHV_PATH).toString();
-			if(id > 0)
-				RpcMessage::setRequestId(meta_data, id);
-			if(!method.empty())
-				RpcMessage::setMethod(meta_data, method);
-			if(!shv_path.empty())
-				RpcMessage::setShvPath(meta_data, shv_path);
-			if(caller_id > 0)
-				RpcMessage::setCallerIds(meta_data, caller_id);
-		}
+
+		const RpcValue::Map &map = msg.toMap();
+		int id = map.value(Rpc::JSONRPC_REQUEST_ID).toInt();
+		int caller_id = map.value(Rpc::JSONRPC_CALLER_ID).toInt();
+		RpcValue::String method = map.value(Rpc::JSONRPC_METHOD).toString();
+		std::string shv_path = map.value(Rpc::JSONRPC_SHV_PATH).toString();
+		if(id > 0)
+			RpcMessage::setRequestId(meta_data, id);
+		if(!method.empty())
+			RpcMessage::setMethod(meta_data, method);
+		if(!shv_path.empty())
+			RpcMessage::setShvPath(meta_data, shv_path);
+		if(caller_id > 0)
+			RpcMessage::setCallerIds(meta_data, caller_id);
 		break;
 	}
 	case Rpc::ProtocolType::Cpon: {
@@ -558,5 +550,4 @@ std::string RpcDriver::dataToPrettyCpon(Rpc::ProtocolType protocol_type, const R
 	return rpc_val.toPrettyString();
 }
 
-} // namespace chainpack
 } // namespace shv

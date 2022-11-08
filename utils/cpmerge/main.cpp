@@ -5,7 +5,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <string.h>
+#include <cstring>
 
 static const char *cpmerge_help =
 "\n"

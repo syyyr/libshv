@@ -46,7 +46,7 @@ public:
 		SHV_VARIANTMAP_FIELD2(double, l, setL, ineWidth, 0.2)
 
 	public:
-		Style() : QVariantMap() {}
+		Style() = default;
 		Style(const QVariantMap &o) : QVariantMap(o) {}
 
 		static constexpr double HEIGHT_HUGE = 10e3;
@@ -61,7 +61,7 @@ public:
 	};
 public:
 	GraphChannel(Graph *graph);
-	~GraphChannel() {}
+	~GraphChannel() = default;
 
 	inline int modelIndex() const {return m_modelIndex;}
 	void setModelIndex(int ix) {m_modelIndex = ix;}

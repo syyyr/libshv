@@ -2,13 +2,11 @@
 
 #include "../exception.h"
 
-namespace shv {
-namespace coreqt {
-namespace data {
+namespace shv::coreqt::data {
 
 SerieData::const_iterator SerieData::lessOrEqualIterator(ValueChange::ValueX value_x) const
 {
-	const_iterator it = lower_bound(value_x);
+	auto it = lower_bound(value_x);
 
 	if (it == cend()) {
 		if (!empty()) {
@@ -44,20 +42,19 @@ QPair<SerieData::const_iterator, SerieData::const_iterator> SerieData::intersect
 
 ValueXInterval SerieData::range() const
 {
-	if (size()) {
+	if (!empty()) {
 		return ValueXInterval(at(0).valueX, back().valueX, xType());
 	}
-	else {
-		switch (xType()) {
-		case ValueType::Double:
-			return ValueXInterval(0.0, 0.0);
-		case ValueType::Int:
-			return ValueXInterval(0, 0);
-		case ValueType::TimeStamp:
-			return ValueXInterval(0LL, 0LL);
-		default:
-			SHV_EXCEPTION("Invalid type on X axis");
-		}
+
+	switch (xType()) {
+	case ValueType::Double:
+		return ValueXInterval(0.0, 0.0);
+	case ValueType::Int:
+		return ValueXInterval(0, 0);
+	case ValueType::TimeStamp:
+		return ValueXInterval(0LL, 0LL);
+	default:
+		SHV_EXCEPTION("Invalid type on X axis");
 	}
 }
 
@@ -68,12 +65,11 @@ bool SerieData::addValueChange(const ValueChange &value)
 		push_back(value);
 		return true;
 	}
-	else {
-		const ValueChange &last = at(static_cast<size_t>(sz - 1));
-		if (!compareValueX(last, value, xType()) && !compareValueY(last, value, yType())) {
-			push_back(value);
-			return true;
-		}
+
+	const ValueChange &last = at(static_cast<size_t>(sz - 1));
+	if (!compareValueX(last, value, xType()) && !compareValueY(last, value, yType())) {
+		push_back(value);
+		return true;
 	}
 	return false;
 }
@@ -100,7 +96,7 @@ void SerieData::updateValueChange(const_iterator position, const ValueChange &ne
 
 void SerieData::extendRange(int &min, int &max) const
 {
-	if (size()) {
+	if (!empty()) {
 		if (at(0).valueX.intValue < min) {
 			min = at(0).valueX.intValue;
 		}
@@ -112,7 +108,7 @@ void SerieData::extendRange(int &min, int &max) const
 
 void SerieData::extendRange(double &min, double &max) const
 {
-	if (size()) {
+	if (!empty()) {
 		if (at(0).valueX.doubleValue < min) {
 			min = at(0).valueX.doubleValue;
 		}
@@ -124,7 +120,7 @@ void SerieData::extendRange(double &min, double &max) const
 
 void SerieData::extendRange(ValueChange::TimeStamp &min, ValueChange::TimeStamp &max) const
 {
-	if (size()) {
+	if (!empty()) {
 		if (at(0).valueX.timeStamp < min) {
 			min = at(0).valueX.timeStamp;
 		}
@@ -253,10 +249,10 @@ ValueChange::ValueX ValueXInterval::length() const
 	if (type == ValueType::TimeStamp) {
 		return ValueChange::ValueX(max.timeStamp - min.timeStamp);
 	}
-	else if (type == ValueType::Int) {
+	if (type == ValueType::Int) {
 		return ValueChange::ValueX(max.intValue - min.intValue);
 	}
-	else if (type == ValueType::Double) {
+	if (type == ValueType::Double) {
 		return ValueChange::ValueX(max.doubleValue - min.doubleValue);
 	}
     SHV_EXCEPTION("Invalid interval type");
@@ -300,6 +296,4 @@ bool greaterThenValueX(const ValueChange::ValueX &value1, const ValueChange::Val
 	}
 }
 
-}
-}
 }

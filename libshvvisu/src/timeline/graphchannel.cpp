@@ -4,9 +4,7 @@
 
 #include <shv/coreqt/log.h>
 
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 //==========================================
 // Graph::Channel
@@ -69,6 +67,4 @@ int GraphChannel::graphChannelIndex() const
 	return -1;
 }
 
-} // namespace timeline
-} // namespace visu
 } // namespace shv

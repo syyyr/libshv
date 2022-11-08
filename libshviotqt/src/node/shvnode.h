@@ -195,8 +195,8 @@ protected:
 	//HNode* parentHNode();
 
 	shv::chainpack::RpcValue loadConfigTemplate(const std::string &file_name);
-	std::string resolvedUserConfigName();
-	std::string resolvedUserConfigDir();
+	std::string resolvedUserConfigName() const;
+	std::string resolvedUserConfigDir() const;
 
 	void loadValues() override;
 	void saveValues() override;
@@ -247,7 +247,7 @@ public:
 	{
 		friend class ValueProxyShvNode;
 	public:
-		Handle() {}
+		Handle() = default;
 		virtual ~Handle();
 
 		virtual shv::chainpack::RpcValue shvValue(int value_id) = 0;

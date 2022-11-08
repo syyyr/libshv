@@ -12,9 +12,7 @@
 #include <QSslKey>
 #include <QWebSocket>
 
-namespace shv {
-namespace broker {
-namespace rpc {
+namespace shv::broker::rpc {
 
 WebSocketServer::WebSocketServer(SslMode secureMode, QObject *parent)
 	: Super("shvbroker", secureMode, parent)
@@ -29,9 +27,7 @@ WebSocketServer::WebSocketServer(SslMode secureMode, QObject *parent)
 	connect(this, &WebSocketServer::newConnection, this, &WebSocketServer::onNewConnection);
 }
 
-WebSocketServer::~WebSocketServer()
-{
-}
+WebSocketServer::~WebSocketServer() = default;
 
 bool WebSocketServer::start(int port)
 {
@@ -89,4 +85,4 @@ void WebSocketServer::unregisterConnection(int connection_id)
 	m_connections.erase(connection_id);
 }
 
-}}}
+}

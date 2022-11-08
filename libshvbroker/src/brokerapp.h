@@ -161,7 +161,7 @@ private:
 	Q_SLOT void handlePosixSignals();
 	static void nativeSigHandler(int sig_number);
 
-	static int m_sigTermFd[2];
+	static std::array<int, 2> m_sigTermFd;
 	QSocketNotifier *m_snTerm = nullptr;
 #endif
 };

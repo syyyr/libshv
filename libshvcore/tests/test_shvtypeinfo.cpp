@@ -22,9 +22,8 @@ RpcValue read_cpon_file(const string &fn)
 		CponReader rd(in);
 		return rd.read();
 	}
-	else {
-		throw runtime_error("cannot open file: " + fn + " for reading");
-	}
+
+	throw runtime_error("cannot open file: " + fn + " for reading");
 }
 
 void write_cpon_file(const string &fn, const RpcValue &log)

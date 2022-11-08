@@ -12,9 +12,7 @@
 #define logSubscriptionsD() nCDebug("Subscr").color(NecroLog::Color::Yellow)
 #define logSigResolveD() nCDebug("SigRes").color(NecroLog::Color::Yellow)
 
-namespace shv {
-namespace broker {
-namespace rpc {
+namespace shv::broker::rpc {
 
 //=====================================================================
 // CommonRpcClientHandle::Subscription
@@ -92,13 +90,9 @@ bool CommonRpcClientHandle::Subscription::match(const shv::core::StringView &shv
 //=====================================================================
 // CommonRpcClientHandle
 //=====================================================================
-CommonRpcClientHandle::CommonRpcClientHandle()
-{
-}
+CommonRpcClientHandle::CommonRpcClientHandle() = default;
 
-CommonRpcClientHandle::~CommonRpcClientHandle()
-{
-}
+CommonRpcClientHandle::~CommonRpcClientHandle() = default;
 /*
 unsigned CommonRpcClientHandle::addSubscription(const std::string &rel_path, const std::string &method)
 {
@@ -130,11 +124,10 @@ unsigned CommonRpcClientHandle::addSubscription(const CommonRpcClientHandle::Sub
 		//std::sort(m_subscriptions.begin(), m_subscriptions.end());
 		return static_cast<unsigned>(m_subscriptions.size() - 1);
 	}
-	else {
-		logSubscriptionsD() << "subscription exists:" << "subscribed path:" << it->subscribedPath << "method:" << it->method;
-		*it = subs;
-		return static_cast<unsigned>(it - m_subscriptions.begin());
-	}
+
+	logSubscriptionsD() << "subscription exists:" << "subscribed path:" << it->subscribedPath << "method:" << it->method;
+	*it = subs;
+	return static_cast<unsigned>(it - m_subscriptions.begin());
 }
 
 bool CommonRpcClientHandle::removeSubscription(const CommonRpcClientHandle::Subscription &subs)
@@ -149,12 +142,12 @@ bool CommonRpcClientHandle::removeSubscription(const CommonRpcClientHandle::Subs
 		logSubscriptionsD() << "subscription not found";
 		return false;
 	}
-	else {
-		logSubscriptionsD() << "removed subscription local path:" << it->localPath
-							<< "subscribed path:" << it->subscribedPath << "method:" << it->method;
-		m_subscriptions.erase(it);
-		return true;
-	}
+
+	logSubscriptionsD() << "removed subscription local path:" << it->localPath
+		<< "subscribed path:" << it->subscribedPath << "method:" << it->method;
+	m_subscriptions.erase(it);
+	return true;
+
 }
 /*
 bool CommonRpcClientHandle::removeSubscription(const std::string &rel_path, const std::string &method)
@@ -222,4 +215,4 @@ bool CommonRpcClientHandle::rejectNotSubscribedSignal(const std::string &path, c
 	return false;
 }
 
-}}}
+}

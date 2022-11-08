@@ -2,9 +2,7 @@
 
 #include <shv/core/log.h>
 
-namespace shv {
-namespace visu {
-namespace timeline {
+namespace shv::visu::timeline {
 
 ChannelFilter::ChannelFilter()
 	: m_isValid(false)
@@ -45,6 +43,4 @@ bool ChannelFilter::isPathMatch(const QString &path) const
 	return m_matchingPaths.contains(path);
 }
 
-}
-}
 }

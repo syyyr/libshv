@@ -3,8 +3,7 @@
 
 #include <algorithm>
 
-namespace shv {
-namespace core {
+namespace shv::core {
 
 const char* String::WhiteSpaceChars = " \t\n\r\f\v";
 
@@ -67,9 +66,8 @@ bool String::equal(std::string const& a, std::string const& b, String::CaseSensi
 		[](char x, char y) { return x == y;}
 		);
 	}
-	else {
-		return false;
-	}
+
+	return false;
 }
 
 std::vector<std::string> String::split(const std::string &str, char delim, SplitBehavior split_behavior)
@@ -140,9 +138,9 @@ int String::replace(std::string &str, const std::string &from, const std::string
 int String::replace(std::string& str, const char from, const char to)
 {
 	int n = 0;
-	for (size_t i = 0; i < str.length(); ++i) {
-		if(str[i] == from) {
-			str[i] = to;
+	for (char& i : str) {
+		if(i == from) {
+			i = to;
 			n++;
 		}
 	}
@@ -151,15 +149,15 @@ int String::replace(std::string& str, const char from, const char to)
 
 std::string &String::upper(std::string &s)
 {
-	for (size_t i = 0; i < s.size(); ++i)
-		s[i] = static_cast<char>(std::toupper(s[i]));
+	for (char& i : s)
+		i = static_cast<char>(std::toupper(i));
 	return s;
 }
 
 std::string &String::lower(std::string &s)
 {
-	for (size_t i = 0; i < s.size(); ++i)
-		s[i] = static_cast<char>(std::tolower(s[i]));
+	for (char& i : s)
+		i = static_cast<char>(std::tolower(i));
 	return s;
 }
 
@@ -261,4 +259,4 @@ int main()
 	}
 }
 #endif
-}}
+}

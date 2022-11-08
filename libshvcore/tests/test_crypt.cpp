@@ -43,7 +43,7 @@ DOCTEST_TEST_CASE("Crypt")
 	}
 	{
 		shv::core::utils::Crypt crypt;
-		std::string s1 = "";
+		std::string s1;
 		std::string s2 = crypt.encrypt(s1);
 		std::string s3 = crypt.decrypt(s2);
 		nDebug() << s1 << "->" << s2 << "->" << s3;
