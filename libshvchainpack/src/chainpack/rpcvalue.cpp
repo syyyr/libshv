@@ -431,6 +431,7 @@ static const RpcValue::IMap & static_empty_imap() { static const RpcValue::IMap 
 static CowPtr<RpcValue::AbstractValueData> static_null(nullptr);
 
 RpcValue::RpcValue() noexcept : m_ptr(static_null) {}
+//RpcValue::RpcValue() noexcept : m_ptr(nullptr) {}
 
 RpcValue RpcValue::fromType(RpcValue::Type t) noexcept
 {

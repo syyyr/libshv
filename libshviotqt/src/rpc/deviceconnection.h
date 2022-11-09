@@ -1,6 +1,5 @@
 #pragma once
 
-#include "clientappclioptions.h"
 #include "clientconnection.h"
 
 namespace shv {

@@ -132,20 +132,20 @@ chainpack::RpcValue BrokerAppNode::callMethodRq(const chainpack::RpcRequest &rq)
 			if (!conn) {
 				return std::string();
 			}
-			auto *guard = new QObject(this);
-			connect(conn, &rpc::MasterBrokerConnection::masterBrokerIdReceived, guard, [this, rq, guard](const cp::RpcResponse &master_resp) {
-				guard->deleteLater();
+			auto *rpc_call = iotqt::rpc::RpcCall::create(conn)->setShvPath(".broker/app")->setMethod("brokerId");
+			connect(rpc_call, &iotqt::rpc::RpcCall::maybeResult, this, [this, rq](const ::shv::chainpack::RpcValue &result, const QString &error) {
 				cp::RpcResponse resp = cp::RpcResponse::forRequest(rq);
-				if (master_resp.isSuccess()) {
-					resp.setResult(master_resp.result());
+				if (error.isEmpty()) {
+					resp.setResult(result);
 				}
 				else {
-					shvError() << master_resp.errorString();
-					resp.setError(master_resp.error());
+					resp.setError(cp::RpcResponse::Error::create(
+									  cp::RpcResponse::Error::MethodCallException
+									  , error.toStdString()));
 				}
 				rootNode()->emitSendRpcMessage(resp);
 			});
-			conn->sendMasterBrokerIdRequest();
+			rpc_call->start();
 			return cp::RpcValue();
 		}
 	}

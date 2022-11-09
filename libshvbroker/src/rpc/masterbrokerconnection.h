@@ -38,16 +38,11 @@ public:
 
 	void setOptions(const shv::chainpack::RpcValue &slave_broker_options);
 	shv::chainpack::RpcValue options() {return m_options;}
-
-	void sendMasterBrokerIdRequest();
-	Q_SIGNAL void masterBrokerIdReceived(const shv::chainpack::RpcResponse &);
-
 protected:
 	void onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, std::string &&msg_data) override;
 protected:
 	std::string m_exportedShvPath;
 	shv::chainpack::RpcValue m_options;
-	int m_masterBrokerIdRqId = 0;
 };
 
 }}}

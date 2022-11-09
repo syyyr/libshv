@@ -63,12 +63,6 @@ void MasterBrokerConnection::setOptions(const shv::chainpack::RpcValue &slave_br
 	m_exportedShvPath = slave_broker_options.toMap().value("exportedShvPath").asString();
 }
 
-void MasterBrokerConnection::sendMasterBrokerIdRequest()
-{
-	m_masterBrokerIdRqId = nextRequestId();
-	callShvMethod(m_masterBrokerIdRqId, ".broker/app", "brokerId", cp::RpcValue());
-}
-
 void MasterBrokerConnection::sendRawData(const shv::chainpack::RpcValue::MetaData &meta_data, std::string &&data)
 {
 	logRpcMsg() << SND_LOG_ARROW
@@ -165,18 +159,6 @@ void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 			if(rq_id == m_connectionState.pingRqId) {
 				m_connectionState.pingRqId = 0;
 				return;
-			}
-			if (rq_id == m_masterBrokerIdRqId) {
-				m_masterBrokerIdRqId = 0;
-				cp::RpcValue rpc_val = decodeData(protocol_type, msg_data, 0);
-#pragma GCC diagnostic push
-#if defined __GNUC__ && !defined(__clang__)
-#pragma GCC diagnostic ignored "-Wuseless-cast"
-#endif
-				rpc_val.setMetaData(cp::RpcValue::MetaData(md));
-#pragma GCC diagnostic pop
-
-				Q_EMIT masterBrokerIdReceived(cp::RpcResponse(cp::RpcMessage(rpc_val)));
 			}
 		}
 		BrokerApp::instance()->onRpcDataReceived(connectionId(), protocol_type, std::move(md), std::move(msg_data));
