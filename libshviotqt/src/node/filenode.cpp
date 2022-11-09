@@ -112,7 +112,12 @@ std::string FileNode::fileName(const ShvNode::StringViewList &shv_path) const
 
 chainpack::RpcValue FileNode::size(const StringViewList &shv_path) const
 {
+#pragma GCC diagnostic push
+#if defined __GNUC__ && !defined(__clang__)
+#pragma GCC diagnostic ignored "-Wuseless-cast"
+#endif
 	return static_cast<uint64_t>(readContent(shv_path, 0, std::numeric_limits<int64_t>::max()).asBlob().size());
+#pragma GCC diagnostic pop
 }
 
 chainpack::RpcValue FileNode::read(const ShvNode::StringViewList &shv_path, const chainpack::RpcValue &params) const
@@ -122,7 +127,12 @@ chainpack::RpcValue FileNode::read(const ShvNode::StringViewList &shv_path, cons
 	cp::RpcValue ret_value = readContent(shv_path, offset, size);
 	ret_value.setMetaValue("fileName", fileName(shv_path));
 	ret_value.setMetaValue("offset", offset);
+#pragma GCC diagnostic push
+#if defined __GNUC__ && !defined(__clang__)
+#pragma GCC diagnostic ignored "-Wuseless-cast"
+#endif
 	ret_value.setMetaValue("size", static_cast<uint64_t>(ret_value.asBlob().size()));
+#pragma GCC diagnostic pop
 	return ret_value;
 }
 
@@ -151,7 +161,12 @@ chainpack::RpcValue FileNode::readFileCompressed(const ShvNode::StringViewList &
 		result.setMetaValue("fileName", fileName(shv_path) + ".gz");
 	}
 	result.setMetaValue("offset", offset);
+#pragma GCC diagnostic push
+#if defined __GNUC__ && !defined(__clang__)
+#pragma GCC diagnostic ignored "-Wuseless-cast"
+#endif
 	result.setMetaValue("size", static_cast<uint64_t>(result.asBlob().size()));
+#pragma GCC diagnostic pop
 
 	return result;
 }
