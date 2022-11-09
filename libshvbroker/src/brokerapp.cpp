@@ -307,14 +307,19 @@ void BrokerApp::nativeSigHandler(int sig_number)
 {
 	shvInfo() << "SIG:" << sig_number;
 	auto a = static_cast<unsigned char>(sig_number);
-	::write(m_sigTermFd[0], &a, sizeof(a));
+	if (auto err = ::write(m_sigTermFd[0], &a, sizeof(a)); err == -1) {
+		shvWarning() << "Unable to write into the signal handler pipe:" << strerror(errno);
+	}
 }
 
 void BrokerApp::handlePosixSignals()
 {
 	m_snTerm->setEnabled(false);
 	unsigned char sig_num;
-	::read(m_sigTermFd[1], &sig_num, sizeof(sig_num));
+	if (auto err = ::read(m_sigTermFd[1], &sig_num, sizeof(sig_num)); err == -1) {
+		shvWarning() << "Unable to read from the signal handler pipe:" << strerror(errno);
+		return;
+	}
 
 	shvInfo() << "SIG" << sig_num << "catched.";
 	if(sig_num == SIGTERM || sig_num == SIGHUP) {
