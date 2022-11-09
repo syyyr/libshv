@@ -29,7 +29,7 @@ jobs:
           install-deps: false
 
       - name: Configure CMake
-        run: cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        run: CFLAGS="-Werror" CXXFLAGS="-Werror" cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build --parallel $(nproc)
