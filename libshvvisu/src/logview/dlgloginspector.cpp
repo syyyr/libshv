@@ -419,7 +419,9 @@ void DlgLogInspector::parseLog(shv::chainpack::RpcValue log)
 			const core::utils::ShvJournalEntry &entry = rd.entry();
 			if(!(entry.domain.empty()
 				 || entry.domain == cp::Rpc::SIG_VAL_CHANGED
-				 || entry.domain == cp::Rpc::SIG_VAL_FASTCHANGED))
+				 || entry.domain == cp::Rpc::SIG_VAL_FASTCHANGED
+				 || entry.domain == "F"     //obsolete values
+				 || entry.domain == "C"))
 				continue;
 			int64_t msec = entry.epochMsec;
 			if(entry.shortTime != core::utils::ShvJournalEntry::NO_SHORT_TIME) {
