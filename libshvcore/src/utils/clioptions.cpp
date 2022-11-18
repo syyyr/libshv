@@ -270,12 +270,8 @@ std::tuple<std::string, std::string> CLIOptions::applicationDirAndName() const
 	static std::string app_name;
 	if(app_name.empty()) {
 		if(!m_allArgs.empty()) {
-	#ifdef _WIN32
-#warning CLIOptions::applicationDirAndName() NIY
-	#else
 			std::string app_file_path = m_allArgs[0];
 			char sep = '/';
-	#endif
 			size_t sep_pos = app_file_path.find_last_of(sep);
 			if(sep_pos == std::string::npos) {
 				app_name = app_file_path;
