@@ -5,19 +5,6 @@
 
 #include <shv/chainpack/cponreader.h>
 #include <shv/chainpack/rpcvalue.h>
-/*
-#include <shv/core/log.h>
-#include <shv/core/utils.h>
-#include <shv/core/assert.h>
-
-#include <std::stringBuilder>
-#include <StringList>
-#include <QDir>
-#include <QJsonParseError>
-*/
-#ifdef _WIN32
-#include <qt_windows.h> // needed by CLIOptions::applicationDirAndName()
-#endif
 
 #include <limits>
 #include <algorithm>
@@ -284,13 +271,7 @@ std::tuple<std::string, std::string> CLIOptions::applicationDirAndName() const
 	if(app_name.empty()) {
 		if(!m_allArgs.empty()) {
 	#ifdef _WIN32
-			std::string app_file_path;
-			wchar_t buffer[MAX_PATH + 2];
-			DWORD v = GetModuleFileName(0, buffer, MAX_PATH + 1);
-			buffer[MAX_PATH + 1] = 0;
-			if (v <= MAX_PATH)
-				app_file_path = std::string::fromWCharArray(buffer);
-			QChar sep = '\\';
+#warning CLIOptions::applicationDirAndName() NIY
 	#else
 			std::string app_file_path = m_allArgs[0];
 			char sep = '/';
