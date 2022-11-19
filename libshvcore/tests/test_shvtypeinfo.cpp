@@ -157,6 +157,11 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 			REQUIRE(et.asMap().value("brclab").asMap().value("url").asString() == "brclab://192.168.1.10:4000/4");
 		}
 		{
+			// extra tags
+			auto et = type_info.extraTagsForPath("devices/zone/langevelden/method/setNormal");
+			REQUIRE(et.asMap().value("safetyManager").asString() == "systemSafety");
+		}
+		{
 			// forEachNode
 			type_info.forEachProperty([](const std::string &shv_path, const ShvLogNodeDescr &node_descr) {
 				CAPTURE(shv_path  + " --> " + node_descr.typeName());
@@ -190,9 +195,9 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 			REQUIRE(type_info.findSystemPath("elbox/VL1-1/status") == "system/eshs");
 		}
 		{
-			// extra tags should not be empty
+			// extra tags should not be valid
 			for(const auto &[key, val] : type_info.extraTags()) {
-				REQUIRE(!val.asMap().empty());
+				REQUIRE(val.isValid());
 			}
 		}
 	}

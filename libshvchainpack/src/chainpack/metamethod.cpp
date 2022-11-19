@@ -2,6 +2,26 @@
 
 namespace shv::chainpack {
 
+MetaMethod::MetaMethod(std::string name, Signature ms, unsigned flags, const RpcValue &access_grant
+					   , const std::string &description, const RpcValue::Map &tags)
+	: m_name(std::move(name))
+	, m_signature(ms)
+	, m_flags(flags)
+	, m_accessGrant(access_grant)
+	, m_description(description)
+	, m_tags(tags)
+{
+	auto descr = m_tags.take("description").toString();
+	if(m_description.empty())
+		m_description = descr;
+	auto lbl = m_tags.take("label").toString();
+	if(m_label.empty())
+		m_label = lbl;
+	auto access = m_tags.take("access");
+	if(!m_accessGrant.isValid())
+		m_accessGrant = access;
+}
+
 RpcValue MetaMethod::toRpcValue() const
 {
 	RpcValue::Map ret;
@@ -9,6 +29,8 @@ RpcValue MetaMethod::toRpcValue() const
 	ret["signature"] = static_cast<int>(m_signature);
 	ret["flags"] = m_flags;
 	ret["accessGrant"] = m_accessGrant;
+	if(!m_label.empty())
+		ret["label"] = m_label;
 	if(!m_description.empty())
 		ret["description"] = m_description;
 	RpcValue::Map tags = m_tags;
@@ -26,6 +48,10 @@ MetaMethod MetaMethod::fromRpcValue(const RpcValue &rv)
 	ret.m_signature = static_cast<Signature>(map.take("signature").toInt());
 	ret.m_flags = map.take("flags").toUInt();
 	ret.m_accessGrant = map.take("accessGrant");
+	auto access = map.take("access");
+	if(!ret.m_accessGrant.isValid())
+		ret.m_accessGrant = access;
+	ret.m_label = map.take("label").asString();
 	ret.m_description = map.take("description").asString();
 	ret.m_tags = map;
 	return ret;

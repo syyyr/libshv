@@ -633,7 +633,7 @@ ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device
 
 ShvTypeInfo &ShvTypeInfo::setExtraTags(const std::string &node_path, const chainpack::RpcValue &tags)
 {
-	if(tags.isMap())
+	if(tags.isValid())
 		m_extraTags[node_path] = tags;
 	else
 		m_extraTags.erase(node_path);
@@ -1008,7 +1008,7 @@ void ShvTypeInfo::fromNodesTree_helper(const shv::chainpack::RpcValue &node,
 
 	string current_device_type = recent_device_type;
 	string current_device_path = recent_device_path;
-	RpcValue::Map property_descr;
+	RpcValue::Map property_descr_map;
 	RpcValue::List property_methods;
 	static const string CREATE_FROM_TYPE_NAME = "createFromTypeName";
 	static const string STATUS = "status";
@@ -1021,6 +1021,11 @@ void ShvTypeInfo::fromNodesTree_helper(const shv::chainpack::RpcValue &node,
 		if(method_name == Rpc::METH_LS || method_name == Rpc::METH_DIR)
 			continue;
 		property_methods.push_back(mm.toRpcValue());
+		if(!mm.tags().empty()) {
+			string key = shv::core::Utils::joinPath(shv_path, "method"s);
+			key = shv::core::Utils::joinPath(key, mm.name());
+			setExtraTags(key, mm.tags());
+		}
 	}
 	const RpcValue::Map &node_tags = node.metaValue(KEY_TAGS).asMap();
 	if(!node_tags.empty()) {
@@ -1030,35 +1035,44 @@ void ShvTypeInfo::fromNodesTree_helper(const shv::chainpack::RpcValue &node,
 			current_device_type = dtype;
 			current_device_path = shv_path;
 		}
-		property_descr.merge(tags_map);
+		property_descr_map.merge(tags_map);
 	}
-	property_descr.erase(CREATE_FROM_TYPE_NAME); // erase shvgate obsolete tag
+	property_descr_map.erase(CREATE_FROM_TYPE_NAME); // erase shvgate obsolete tag
 	if(!property_methods.empty())
-		property_descr[KEY_METHODS] = property_methods;
-	if(!property_descr.empty()) {
+		property_descr_map[KEY_METHODS] = property_methods;
+	if(!property_descr_map.empty()) {
 		RpcValue::Map extra_tags;
-		auto node_descr = shv::core::utils::ShvPropertyDescr::fromRpcValue(property_descr, &extra_tags);
-		if(node_descr.isValid()) {
+		auto property_descr = shv::core::utils::ShvPropertyDescr::fromRpcValue(property_descr_map, &extra_tags);
+		if(property_descr.isValid()) {
 			if(current_device_type.empty()) {
-				setDevicePropertyDescription("", "", shv_path, node_descr);
+				setDevicePropertyDescription("", "", shv_path, property_descr);
 			}
 			else {
 				string property_path = String(shv_path).mid(current_device_path.size() + 1);
 				const auto &[own_property_path, field_path, existing_node_descr] = findPropertyDescription(current_device_type, property_path);
 				if(existing_node_descr.isValid() && field_path.empty()) {
 					assert(property_path == own_property_path);
-					if(existing_node_descr == node_descr) {
+					if(existing_node_descr == property_descr) {
 						// node descriptions are the same, no action is needed
 					}
 					else {
-						// node descriptions are different, we must create overlay node descr
-						shvError() << "Conflicting declaration for device type:" << current_device_type
-								   << "on path:" << shv_path << "ignored:" << node_descr.toRpcValue().toCpon();
+						// node descriptions are different, try to create extra-tags from known keys
+						if(existing_node_descr.typeName() != property_descr.typeName()) {
+							string key = shv::core::Utils::joinPath(shv_path, "typeName"s);
+							setExtraTags(key, property_descr.typeName());
+							property_descr.setTypeName(existing_node_descr.typeName());
+						}
+						if(!(existing_node_descr == property_descr)) {
+							shvError() << "Conflicting declaration for device type:" << current_device_type
+									   << "on path:" << shv_path << "ignored.";
+							shvError() << "new:" << property_descr.toRpcValue().toCpon();
+							shvInfo() << "old:" << existing_node_descr.toRpcValue().toCpon();
+						}
 					}
 				}
 				else {
 					// node description does not exist, create new one
-					setDevicePropertyDescription(current_device_path, current_device_type, property_path, node_descr);
+					setDevicePropertyDescription(current_device_path, current_device_type, property_path, property_descr);
 				}
 			}
 		}

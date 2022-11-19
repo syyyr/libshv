@@ -53,17 +53,13 @@ public:
 	MetaMethod(std::string name, Signature ms, unsigned flags = 0
 				, const RpcValue &access_grant = Rpc::ROLE_BROWSE
 				, const std::string &description = {}
-				, const RpcValue::Map &tags = {})
-		: m_name(std::move(name))
-		, m_signature(ms)
-		, m_flags(flags)
-		, m_accessGrant(access_grant)
-		, m_description(description)
-		, m_tags(tags)
-	{}
+				, const RpcValue::Map &tags = {});
+
 
 	bool isValid() const { return !name().empty(); }
 	const std::string& name() const {return m_name;}
+	const std::string& label() const {return m_label;}
+	MetaMethod& setLabel(const std::string &label) { m_label = label; return *this; }
 	const std::string& description() const {return m_description;}
 	Signature signature() const {return m_signature;}
 	unsigned flags() const {return m_flags;}
@@ -101,6 +97,7 @@ private:
 	Signature m_signature = Signature::VoidVoid;
 	unsigned m_flags = 0;
 	RpcValue m_accessGrant;
+	std::string m_label;
 	std::string m_description;
 	RpcValue::Map m_tags;
 };
