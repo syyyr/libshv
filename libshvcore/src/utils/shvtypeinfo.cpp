@@ -501,6 +501,29 @@ ShvLogMethodDescr ShvPropertyDescr::method(const std::string &name) const
 	return {};
 }
 
+ShvPropertyDescr &ShvPropertyDescr::setMethod(const ShvMethodDescr &method_descr)
+{
+	auto name = method_descr.name();
+	auto method_list = methods();
+	bool method_found = false;
+	for(auto &mm : method_list) {
+		if(mm.name() == name) {
+			mm = method_descr;
+			method_found = true;
+			break;
+		}
+	}
+	if(!method_found) {
+		method_list.push_back(method_descr);
+	}
+	RpcValue::List new_methods;
+	for(const auto &mm : method_list) {
+		new_methods.push_back(mm.toRpcValue());
+	}
+	setDataValue(KEY_METHODS, new_methods);
+	return *this;
+}
+
 RpcValue ShvPropertyDescr::toRpcValue() const
 {
 	//RpcValue::Map m;

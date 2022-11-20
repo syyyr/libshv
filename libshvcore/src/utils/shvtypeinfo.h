@@ -151,6 +151,7 @@ public:
 
 	std::vector<ShvMethodDescr> methods() const;
 	ShvMethodDescr method(const std::string &name) const;
+	ShvPropertyDescr& setMethod(const ShvMethodDescr &method_descr);
 
 	chainpack::RpcValue toRpcValue() const;
 	static ShvPropertyDescr fromRpcValue(const chainpack::RpcValue &v, chainpack::RpcValue::Map *extra_tags = nullptr);
