@@ -88,6 +88,7 @@ public:
 
 	RpcValue toRpcValue() const;
 	static MetaMethod fromRpcValue(const RpcValue &rv);
+	void applyAttributesMap(const RpcValue::Map &attr_map);
 
 	static Signature signatureFromString(const std::string &sigstr);
 	static const char* signatureToString(Signature sig);

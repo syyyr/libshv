@@ -501,6 +501,14 @@ ShvLogMethodDescr ShvPropertyDescr::method(const std::string &name) const
 	return {};
 }
 
+ShvPropertyDescr &ShvPropertyDescr::addMethod(const ShvMethodDescr &method_descr)
+{
+	RpcValue::List new_methods = dataValue(KEY_METHODS).asList();
+	new_methods.push_back(method_descr.toRpcValue());
+	setDataValue(KEY_METHODS, new_methods);
+	return *this;
+}
+
 ShvPropertyDescr &ShvPropertyDescr::setMethod(const ShvMethodDescr &method_descr)
 {
 	auto name = method_descr.name();

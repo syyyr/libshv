@@ -151,6 +151,7 @@ public:
 
 	std::vector<ShvMethodDescr> methods() const;
 	ShvMethodDescr method(const std::string &name) const;
+	ShvPropertyDescr& addMethod(const ShvMethodDescr &method_descr);
 	ShvPropertyDescr& setMethod(const ShvMethodDescr &method_descr);
 
 	chainpack::RpcValue toRpcValue() const;
@@ -192,7 +193,9 @@ public:
 
 	ShvPropertyDescr propertyDescriptionForPath(const std::string &shv_path, std::string *p_field_name = nullptr) const;
 
+	/// return auto [device_path, device_type, property_path]
 	std::tuple<std::string, std::string, std::string> findDeviceType(const std::string &shv_path) const;
+	/// return auto [own_property_path, field_path, property_descr]
 	std::tuple<std::string, std::string, ShvPropertyDescr> findPropertyDescription(const std::string &device_type, const std::string &property_path) const;
 	ShvTypeDescr findTypeDescription(const std::string &type_name) const;
 

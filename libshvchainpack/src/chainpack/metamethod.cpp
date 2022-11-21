@@ -41,20 +41,30 @@ RpcValue MetaMethod::toRpcValue() const
 MetaMethod MetaMethod::fromRpcValue(const RpcValue &rv)
 {
 	MetaMethod ret;
-	RpcValue::Map map = rv.asMap();
+	ret.applyAttributesMap(rv.asMap());
+	return ret;
+}
+
+void MetaMethod::applyAttributesMap(const RpcValue::Map &attr_map)
+{
+	RpcValue::Map map = attr_map;
 	RpcValue::Map tags = map.take("tags").asMap();
 	map.merge(tags);
-	ret.m_name = map.take("name").asString();
-	ret.m_signature = static_cast<Signature>(map.take("signature").toInt());
-	ret.m_flags = map.take("flags").toUInt();
-	ret.m_accessGrant = map.take("accessGrant");
-	auto access = map.take("access");
-	if(!ret.m_accessGrant.isValid())
-		ret.m_accessGrant = access;
-	ret.m_label = map.take("label").asString();
-	ret.m_description = map.take("description").asString();
-	ret.m_tags = map;
-	return ret;
+	if(auto rv = map.take("name"); rv.isValid())
+		m_name = rv.asString();
+	if(auto rv = map.take("signature"); rv.isValid())
+		m_signature = static_cast<Signature>(rv.toInt());
+	if(auto rv = map.take("flags"); rv.isValid())
+		m_flags = rv.toInt();
+	if(auto rv = map.take("access"); rv.isValid())
+		m_accessGrant = rv.asString();
+	if(auto rv = map.take("accessGrant"); rv.isValid())
+		m_accessGrant = rv.asString();
+	if(auto rv = map.take("label"); rv.isValid())
+		m_label = rv.asString();
+	if(auto rv = map.take("description"); rv.isValid())
+		m_description = rv.asString();
+	m_tags = map;
 }
 
 MetaMethod::Signature MetaMethod::signatureFromString(const std::string &sigstr)
