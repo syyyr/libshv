@@ -204,6 +204,7 @@ public:
 	std::string findSystemPath(const std::string &shv_path) const;
 	bool isPathBlacklisted(const std::string &shv_path) const;
 	void setBlacklist(const std::string &shv_path, const chainpack::RpcValue &blacklist);
+	void setPropertyDeviation(const std::string &shv_path, const ShvPropertyDescr &property_descr);
 
 	struct SHVCORE_DECL_EXPORT PathInfo
 	{
@@ -234,6 +235,7 @@ private:
 	std::map<std::string, shv::chainpack::RpcValue> m_extraTags; // shv-path -> tags
 	std::map<std::string, std::string> m_systemPathsRoots; // shv-path-root -> system-path
 	std::map<std::string, chainpack::RpcValue> m_blacklistedPaths; // shv-path -> blacklist
+	std::map<std::string, ShvPropertyDescr> m_propertyDeviations; // should be empty, devices should not have different property descriptions for same device-type
 };
 
 // backward compatibility

@@ -64,71 +64,100 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 		auto rv = read_cpon_file(FILES_DIR + "/nodesTree.cpon");
 		auto type_info = ShvTypeInfo::fromRpcValue(rv);
 		write_cpon_file(out_path + "/typeInfo.cpon", type_info.toRpcValue());
+		DOCTEST_SUBCASE("Path info")
 		{
-			auto type_info2 = ShvTypeInfo::fromRpcValue(rv);
-			REQUIRE(type_info.toRpcValue() == type_info2.toRpcValue());
-		}
-		{
-			auto pi = type_info.pathInfo("devices/tc/TC01");
-			REQUIRE(pi.deviceType == "TC_G3");
-			REQUIRE(pi.devicePath == "devices/tc/TC01");
-			REQUIRE(pi.propertyDescription.isValid());
-			REQUIRE(pi.propertyPath.empty());
-			REQUIRE(pi.fieldPath.empty());
-		}
-		{
-			auto pi = type_info.pathInfo("devices/tc/TC01/status");
-			REQUIRE(pi.deviceType == "TC_G3");
-			REQUIRE(pi.devicePath == "devices/tc/TC01");
-			REQUIRE(pi.propertyDescription.typeName() == "StatusTC");
-			REQUIRE(pi.propertyPath == "status");
-			REQUIRE(pi.fieldPath.empty());
-		}
-		{
-			auto pi = type_info.pathInfo("devices/tc/TC01/status/occupied");
-			REQUIRE(pi.deviceType == "TC_G3");
-			REQUIRE(pi.devicePath == "devices/tc/TC01");
-			REQUIRE(pi.propertyDescription.typeName() == "StatusTC");
-			REQUIRE(pi.propertyPath == "status");
-			REQUIRE(pi.fieldPath == "occupied");
-		}
-		{
-			// nested device
-			auto pi = type_info.pathInfo("devices/zone/langevelden/route/AB/status");
-			REQUIRE(pi.deviceType == "Route_G3");
-			REQUIRE(pi.devicePath == "devices/zone/langevelden/route/AB");
-			REQUIRE(pi.propertyDescription.typeName() == "StatusRoute");
-			REQUIRE(pi.propertyPath == "status");
-			REQUIRE(pi.fieldPath.empty());
-		}
-		{
-			// nested device
-			auto pi = type_info.pathInfo("devices/zone/langevelden/route/AB/status/routeState");
-			REQUIRE(pi.deviceType == "Route_G3");
-			REQUIRE(pi.devicePath == "devices/zone/langevelden/route/AB");
-			REQUIRE(pi.propertyDescription.typeName() == "StatusRoute");
-			REQUIRE(pi.propertyPath == "status");
-			REQUIRE(pi.fieldPath == "routeState");
+			{
+				auto type_info2 = ShvTypeInfo::fromRpcValue(rv);
+				REQUIRE(type_info.toRpcValue() == type_info2.toRpcValue());
+			}
+			{
+				auto pi = type_info.pathInfo("devices/tc/TC01");
+				REQUIRE(pi.deviceType == "TC_G3");
+				REQUIRE(pi.devicePath == "devices/tc/TC01");
+				REQUIRE(pi.propertyDescription.isValid());
+				REQUIRE(pi.propertyPath.empty());
+				REQUIRE(pi.fieldPath.empty());
+			}
+			{
+				auto pi = type_info.pathInfo("devices/tc/TC01/status");
+				REQUIRE(pi.deviceType == "TC_G3");
+				REQUIRE(pi.devicePath == "devices/tc/TC01");
+				REQUIRE(pi.propertyDescription.typeName() == "StatusTC");
+				REQUIRE(pi.propertyPath == "status");
+				REQUIRE(pi.fieldPath.empty());
+			}
+			{
+				auto pi = type_info.pathInfo("devices/tc/TC01/status/occupied");
+				REQUIRE(pi.deviceType == "TC_G3");
+				REQUIRE(pi.devicePath == "devices/tc/TC01");
+				REQUIRE(pi.propertyDescription.typeName() == "StatusTC");
+				REQUIRE(pi.propertyPath == "status");
+				REQUIRE(pi.fieldPath == "occupied");
+			}
+			{
+				// nested device
+				auto pi = type_info.pathInfo("devices/zone/langevelden/route/AB/status");
+				REQUIRE(pi.deviceType == "Route_G3");
+				REQUIRE(pi.devicePath == "devices/zone/langevelden/route/AB");
+				REQUIRE(pi.propertyDescription.typeName() == "StatusRoute");
+				REQUIRE(pi.propertyPath == "status");
+				REQUIRE(pi.fieldPath.empty());
+			}
+			{
+				// nested device
+				auto pi = type_info.pathInfo("devices/zone/langevelden/route/AB/status/routeState");
+				REQUIRE(pi.deviceType == "Route_G3");
+				REQUIRE(pi.devicePath == "devices/zone/langevelden/route/AB");
+				REQUIRE(pi.propertyDescription.typeName() == "StatusRoute");
+				REQUIRE(pi.propertyPath == "status");
+				REQUIRE(pi.fieldPath == "routeState");
 
-			auto td = type_info.findTypeDescription(pi.propertyDescription.typeName());
-			REQUIRE(td.type() == ShvTypeDescr::Type::BitField);
-			auto fd = td.field(pi.fieldPath);
-			REQUIRE(fd.typeName() == "EnumRouteState");
+				auto td = type_info.findTypeDescription(pi.propertyDescription.typeName());
+				REQUIRE(td.type() == ShvTypeDescr::Type::BitField);
+				auto fd = td.field(pi.fieldPath);
+				REQUIRE(fd.typeName() == "EnumRouteState");
 
-			auto td2 = type_info.findTypeDescription(fd.typeName());
-			REQUIRE(td2.type() == ShvTypeDescr::Type::Enum);
-			auto fd2 = td2.field("Ready");
-			REQUIRE(fd2.value() == 3);
-			REQUIRE(fd2.label() == "Ready");
+				auto td2 = type_info.findTypeDescription(fd.typeName());
+				REQUIRE(td2.type() == ShvTypeDescr::Type::Enum);
+				auto fd2 = td2.field("Ready");
+				REQUIRE(fd2.value() == 3);
+				REQUIRE(fd2.label() == "Ready");
+			}
+			{
+				// extra tags
+				auto et = type_info.extraTagsForPath("devices/tc/TC04");
+				REQUIRE(et.asMap().value("brclab").asMap().value("url").asString() == "brclab://192.168.1.10:4000/4");
+			}
+			{
+				// extra tags
+				auto et = type_info.extraTagsForPath("devices/zone/langevelden/method/setNormal");
+				REQUIRE(et.asMap().value("safetyManager").asString() == "systemSafety");
+			}
+			{
+				// forEachNode
+				type_info.forEachProperty([](const std::string &shv_path, const ShvLogNodeDescr &node_descr) {
+					CAPTURE(shv_path  + " --> " + node_descr.typeName());
+					if(!shv_path.empty())
+						REQUIRE(shv_path[0] != std::toupper(shv_path[0]));
+				});
+			}
 		}
-#ifdef PROPERTY_OVERRIDE_IMPLEMENTED
+		DOCTEST_SUBCASE("Node description deviations")
 		{
-			// node description override
+			DOCTEST_SUBCASE("Original typeinfo")
+			{
+			}
+			DOCTEST_SUBCASE("Reloaded typeinfo")
+			{
+				auto rv2 = read_cpon_file(out_path + "/typeInfo.cpon");
+				type_info = ShvTypeInfo::fromRpcValue(rv2);
+
+			}
 			{
 				auto pi = type_info.pathInfo("devices/signal/SA04/symbol/RED_LEFT/status");
 				REQUIRE(pi.deviceType == "SignalSymbol_G3");
 				REQUIRE(pi.devicePath == "devices/signal/SA04/symbol/RED_LEFT");
-				REQUIRE(pi.nodeDescription.typeName() == "StatusSignalSymbol");
+				REQUIRE(pi.propertyDescription.typeName() == "StatusSignalSymbol");
 				REQUIRE(pi.propertyPath == "status");
 				REQUIRE(pi.fieldPath.empty());
 			}
@@ -136,7 +165,7 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 				auto pi = type_info.pathInfo("devices/signal/SA04/symbol/WHITE/status");
 				REQUIRE(pi.deviceType == "SignalSymbol_G3");
 				REQUIRE(pi.devicePath == "devices/signal/SA04/symbol/WHITE");
-				REQUIRE(pi.nodeDescription.typeName() == "StatusSignalSymbolWhite");
+				REQUIRE(pi.propertyDescription.typeName() == "StatusSignalSymbolWhite");
 				REQUIRE(pi.propertyPath == "status");
 				REQUIRE(pi.fieldPath.empty());
 			}
@@ -144,30 +173,11 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 				auto pi = type_info.pathInfo("devices/signal/SG01/symbol/P80Y");
 				REQUIRE(pi.deviceType == "SignalSymbol_G3");
 				REQUIRE(pi.devicePath == "devices/signal/SG01/symbol/P80Y");
-				REQUIRE(pi.nodeDescription.typeName().empty());
+				REQUIRE(pi.propertyDescription.typeName().empty());
 				REQUIRE(pi.propertyPath.empty());
 				REQUIRE(pi.fieldPath.empty());
 			}
 			REQUIRE(type_info.propertyDescriptionForPath("devices/signal/SG01/symbol/P80Y/status").typeName() == "StatusSignalSymbolP80Y");
-		}
-#endif
-		{
-			// extra tags
-			auto et = type_info.extraTagsForPath("devices/tc/TC04");
-			REQUIRE(et.asMap().value("brclab").asMap().value("url").asString() == "brclab://192.168.1.10:4000/4");
-		}
-		{
-			// extra tags
-			auto et = type_info.extraTagsForPath("devices/zone/langevelden/method/setNormal");
-			REQUIRE(et.asMap().value("safetyManager").asString() == "systemSafety");
-		}
-		{
-			// forEachNode
-			type_info.forEachProperty([](const std::string &shv_path, const ShvLogNodeDescr &node_descr) {
-				CAPTURE(shv_path  + " --> " + node_descr.typeName());
-				if(!shv_path.empty())
-					REQUIRE(shv_path[0] != std::toupper(shv_path[0]));
-			});
 		}
 	}
 

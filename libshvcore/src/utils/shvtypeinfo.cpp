@@ -621,6 +621,14 @@ void ShvTypeInfo::setBlacklist(const std::string &shv_path, const chainpack::Rpc
 	}
 }
 
+void ShvTypeInfo::setPropertyDeviation(const std::string &shv_path, const ShvPropertyDescr &property_descr)
+{
+	if(property_descr.isValid())
+		m_propertyDeviations[shv_path] = property_descr;
+	else
+		m_propertyDeviations.erase(shv_path);
+}
+
 ShvTypeInfo ShvTypeInfo::fromVersion2(std::map<std::string, ShvTypeDescr> &&types, std::map<std::string, ShvPropertyDescr> &&node_descriptions)
 {
 	ShvTypeInfo ret;
@@ -690,38 +698,55 @@ ShvTypeInfo &ShvTypeInfo::setTypeDescription(const std::string &type_name, const
 	return *this;
 }
 
+namespace {
+string cut_prefix(const string &path, const string &prefix) {
+	if(prefix.size() == 0) {
+		return path;
+	}
+	if(prefix.size() < path.size()) {
+		return path.substr(prefix.size() + 1);
+	}
+	return string();
+};
+string cut_postfix(const string &path, const string &postfix) {
+	if(postfix.size() == 0) {
+		return path;
+	}
+	if(postfix.size() > 0 && postfix.size() < path.size()) {
+		return path.substr(0, path.size() - postfix.size() - 1);
+	}
+	return string();
+};
+}
+
 ShvTypeInfo::PathInfo ShvTypeInfo::pathInfo(const std::string &shv_path) const
 {
 	PathInfo ret;
+	bool deviation_found = false;
+	if(auto it3 = find_longest_prefix(m_propertyDeviations, shv_path); it3 != m_propertyDeviations.cend()) {
+		deviation_found = true;
+		const string own_property_path = it3->first;
+		ret.fieldPath = cut_prefix(shv_path, own_property_path);
+		ret.propertyDescription = it3->second;
+	}
 	const auto &[device_path, device_type, property_path] = findDeviceType(shv_path);
 	if(!device_type.empty()) {
 		ret.devicePath = device_path;
 		ret.deviceType = device_type;
-		const auto &[own_property_path, field_path, node_descr] = findPropertyDescription(device_type, property_path);
-		if(node_descr.isValid()) {
-			ret.propertyPath = own_property_path;
-			ret.fieldPath = field_path;
-			ret.propertyDescription = node_descr;
+		if(deviation_found) {
+			ret.propertyPath = cut_postfix(cut_prefix(shv_path, ret.devicePath), ret.fieldPath);
+		}
+		else {
+			const auto &[own_property_path, field_path, property_descr] = findPropertyDescription(device_type, property_path);
+			if(property_descr.isValid()) {
+				ret.propertyPath = own_property_path;
+				ret.fieldPath = field_path;
+				ret.propertyDescription = property_descr;
+			}
 		}
 	}
 	return ret;
 }
-/*
-ShvPropertyDescr ShvTypeInfo::nodeDescriptionForDevice(const std::string &device_type, const string &property_path, string *p_field_name) const
-{
-	string property = property_path.empty()? device_type: device_type + '/' + property_path;
-	if(auto it = find_longest_prefix(m_nodeDescriptions, property); it == m_nodeDescriptions.cend()) {
-		return {};
-	}
-	else {
-		string prefix = it->first;
-		const ShvPropertyDescr &node_descr = it->second;
-		if(p_field_name)
-			*p_field_name = String(property).mid(prefix.size() + 1);
-		return node_descr;
-	}
-}
-*/
 
 ShvPropertyDescr ShvTypeInfo::propertyDescriptionForPath(const std::string &shv_path, string *p_field_name) const
 {
@@ -747,12 +772,6 @@ std::tuple<string, string, string> ShvTypeInfo::findDeviceType(const std::string
 
 std::tuple<string, string, ShvPropertyDescr> ShvTypeInfo::findPropertyDescription(const std::string &device_type, const std::string &property_path) const
 {
-	auto cut_prefix = [](const string &path, const string &prefix) {
-		if(prefix.size() < path.size()) {
-			return path.substr(prefix.size() + 1);
-		}
-		return string();
-	};
 	if(auto it2 = m_deviceProperties.find(device_type); it2 != m_deviceProperties.end()) {
 		const DeviceProperties &dev_prop = it2->second;
 		if(auto it3 = find_longest_prefix(dev_prop, property_path); it3 != dev_prop.cend()) {
@@ -819,6 +838,7 @@ static const char *PATHS = "paths"; // SHV2
 static const char *TYPES = "types"; // SHV2 + SHV3
 static const char *DEVICE_PATHS = "devicePaths";
 static const char *DEVICE_PROPERTIES = "deviceProperties";
+static const char *PROPERTY_DEVIATIONS = "propertyDeviations";
 static const char *EXTRA_TAGS = "extraTags";
 static const char *SYSTEM_PATHS_ROOTS = "systemPathsRoots";
 static const char *BLACKLISTED_PATHS = "blacklistedPaths";
@@ -854,6 +874,13 @@ RpcValue ShvTypeInfo::toRpcValue() const
 		map[SYSTEM_PATHS_ROOTS] = std::move(m);
 	}
 	map[BLACKLISTED_PATHS] = m_blacklistedPaths;
+	if(!m_propertyDeviations.empty()) {
+		RpcValue::Map m;
+		for(const auto &[key, val] : m_propertyDeviations) {
+			m[key] = val.toRpcValue();
+		}
+		map[PROPERTY_DEVIATIONS] = std::move(m);
+	}
 	RpcValue ret = map;
 	ret.setMetaValue(VERSION, 3);
 	return ret;
@@ -894,6 +921,12 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 			}
 		}
 		ret.m_blacklistedPaths = map.value(BLACKLISTED_PATHS).asMap();
+		{
+			const RpcValue::Map &m = map.value(PROPERTY_DEVIATIONS).asMap();
+			for(const auto &[shv_path, node_descr] : m) {
+				ret.m_propertyDeviations[shv_path] = ShvPropertyDescr::fromRpcValue(node_descr);
+			}
+		}
 		return ret;
 	}
 	if(map.hasKey(PATHS) && map.hasKey(TYPES)) {
@@ -1080,25 +1113,19 @@ void ShvTypeInfo::fromNodesTree_helper(const shv::chainpack::RpcValue &node,
 			}
 			else {
 				string property_path = String(shv_path).mid(current_device_path.size() + 1);
-				const auto &[own_property_path, field_path, existing_node_descr] = findPropertyDescription(current_device_type, property_path);
-				if(existing_node_descr.isValid() && field_path.empty()) {
+				const auto &[own_property_path, field_path, existing_property_descr] = findPropertyDescription(current_device_type, property_path);
+				if(existing_property_descr.isValid() && field_path.empty()) {
 					assert(property_path == own_property_path);
-					if(existing_node_descr == property_descr) {
+					if(existing_property_descr == property_descr) {
 						// node descriptions are the same, no action is needed
 					}
 					else {
-						// node descriptions are different, try to create extra-tags from known keys
-						if(existing_node_descr.typeName() != property_descr.typeName()) {
-							string key = shv::core::Utils::joinPath(shv_path, "typeName"s);
-							setExtraTags(key, property_descr.typeName());
-							property_descr.setTypeName(existing_node_descr.typeName());
-						}
-						if(!(existing_node_descr == property_descr)) {
-							shvError() << "Conflicting declaration for device type:" << current_device_type
-									   << "on path:" << shv_path << "ignored.";
-							shvError() << "new:" << property_descr.toRpcValue().toCpon();
-							shvInfo() << "old:" << existing_node_descr.toRpcValue().toCpon();
-						}
+						// node descriptions are different, create deviation
+						//shvWarning() << "Conflicting declaration for device type:" << current_device_type
+						//		   << "on path:" << shv_path << ", the deviation will be created. This should only when parsing badly formed nodesTree files or when legacy devices are read."
+						//<< "\n  new:" << property_descr.toRpcValue().toCpon()
+						//<< "\n  old:" << existing_property_descr.toRpcValue().toCpon();
+						setPropertyDeviation(shv_path, property_descr);
 					}
 				}
 				else {
