@@ -37,7 +37,6 @@ public:
 	virtual shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) = 0;
 	virtual shv::chainpack::RpcValue getSnapShotMap();
 	void clearSnapshot();
-protected:
 	static void addToSnapshot(ShvSnapshot &snapshot, const ShvJournalEntry &entry);
 protected:
 	ShvSnapshot m_snapshot;
