@@ -61,11 +61,10 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 
 	DOCTEST_SUBCASE("nodesTree to typeInfo conversion")
 	{
-		auto rv = read_cpon_file(FILES_DIR + "/nodesTree.cpon");
-		auto type_info = ShvTypeInfo::fromRpcValue(rv);
-		write_cpon_file(out_path + "/typeInfo.cpon", type_info.toRpcValue());
-		DOCTEST_SUBCASE("Path info")
 		{
+			auto rv = read_cpon_file(FILES_DIR + "/nodesTree.cpon");
+			auto type_info = ShvTypeInfo::fromRpcValue(rv);
+			DOCTEST_SUBCASE("Path info")
 			{
 				auto type_info2 = ShvTypeInfo::fromRpcValue(rv);
 				REQUIRE(type_info.toRpcValue() == type_info2.toRpcValue());
@@ -144,12 +143,17 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 		}
 		DOCTEST_SUBCASE("Node description deviations")
 		{
+			auto typeinfo_file_path = out_path + "/typeInfo.cpon"s;
+			ShvTypeInfo type_info;
 			DOCTEST_SUBCASE("Original typeinfo")
 			{
+				auto rv = read_cpon_file(FILES_DIR + "/nodesTree.cpon");
+				type_info = ShvTypeInfo::fromRpcValue(rv);
+				write_cpon_file(typeinfo_file_path, type_info.toRpcValue());
 			}
 			DOCTEST_SUBCASE("Reloaded typeinfo")
 			{
-				auto rv2 = read_cpon_file(out_path + "/typeInfo.cpon");
+				auto rv2 = read_cpon_file(typeinfo_file_path);
 				type_info = ShvTypeInfo::fromRpcValue(rv2);
 
 			}
@@ -209,6 +213,28 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 			for(const auto &[key, val] : type_info.extraTags()) {
 				REQUIRE(val.isValid());
 			}
+		}
+	}
+
+	DOCTEST_SUBCASE("Extra property in conflicting device type definition")
+	{
+		auto rv = read_cpon_file(FILES_DIR + "/hel002_z2_nodesTree.cpon");
+		auto type_info = ShvTypeInfo::fromRpcValue(rv);
+		write_cpon_file(out_path + "/hel002_z2_typeInfo.cpon", type_info.toRpcValue());
+
+		{
+			auto pi = type_info.pathInfo("elbox/VL2-2/temperature");
+			INFO("propertyDescriptionForPath: ", pi.propertyDescription.toRpcValue().toCpon());
+			//CAPTURE(nd.toRpcValue().toCpon());
+			REQUIRE(pi.deviceType == "ElboxHeating");
+			REQUIRE(pi.propertyDescription.isValid() == true);
+		}
+		{
+			auto pi = type_info.pathInfo("elbox/VL2-3/temperature");
+			INFO("propertyDescriptionForPath: ", pi.propertyDescription.toRpcValue().toCpon());
+			//CAPTURE(nd.toRpcValue().toCpon());
+			REQUIRE(pi.deviceType == "ElboxHeating");
+			REQUIRE(pi.propertyDescription.isValid() == false);
 		}
 	}
 

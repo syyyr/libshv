@@ -227,7 +227,7 @@ public:
 	void forEachProperty(std::function<void (const std::string &shv_path, const ShvPropertyDescr &node_descr)> fn) const;
 private:
 	static ShvTypeInfo fromNodesTree(const chainpack::RpcValue &v);
-	void fromNodesTree_helper(const shv::chainpack::RpcValue &node, const std::string &shv_path, const std::string &recent_device_type, const std::string &recent_device_path, const shv::chainpack::RpcValue::Map &node_types);
+	void fromNodesTree_helper(const shv::chainpack::RpcValue &node, const std::string &shv_path, const std::string &device_type, const std::string &device_path, bool device_type_redefined, const shv::chainpack::RpcValue::Map &node_types);
 private:
 	std::map<std::string, ShvTypeDescr> m_types; // type-name -> type-description
 	std::map<std::string, std::string> m_devicePaths; // path -> device-type
