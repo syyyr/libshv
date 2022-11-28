@@ -17,6 +17,7 @@ using namespace std;
 
 RpcValue read_cpon_file(const string &fn)
 {
+	shvInfo() << "reading file: " << fn;
 	ifstream in(fn, std::ios::binary | std::ios::in);
 	if(in) {
 		CponReader rd(in);
@@ -70,6 +71,7 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 				REQUIRE(type_info.toRpcValue() == type_info2.toRpcValue());
 			}
 			{
+				shvWarning() << __LINE__;
 				auto pi = type_info.pathInfo("devices/tc/TC01");
 				REQUIRE(pi.deviceType == "TC_G3");
 				REQUIRE(pi.devicePath == "devices/tc/TC01");
@@ -231,6 +233,28 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 		}
 		{
 			auto pi = type_info.pathInfo("elbox/VL2-3/temperature");
+			INFO("propertyDescriptionForPath: ", pi.propertyDescription.toRpcValue().toCpon());
+			//CAPTURE(nd.toRpcValue().toCpon());
+			REQUIRE(pi.deviceType == "ElboxHeating");
+			REQUIRE(pi.propertyDescription.isValid() == false);
+		}
+	}
+
+	DOCTEST_SUBCASE("Missing property in conflicting device type definition")
+	{
+		auto rv = read_cpon_file(FILES_DIR + "/hel002_z5_nodesTree.cpon");
+		auto type_info = ShvTypeInfo::fromRpcValue(rv);
+		write_cpon_file(out_path + "/hel002_z5_typeInfo.cpon", type_info.toRpcValue());
+
+		{
+			auto pi = type_info.pathInfo("elbox/VL5-2/temperature");
+			INFO("propertyDescriptionForPath: ", pi.propertyDescription.toRpcValue().toCpon());
+			//CAPTURE(nd.toRpcValue().toCpon());
+			REQUIRE(pi.deviceType == "ElboxHeating");
+			REQUIRE(pi.propertyDescription.isValid() == true);
+		}
+		{
+			auto pi = type_info.pathInfo("elbox/VL5-3/temperature");
 			INFO("propertyDescriptionForPath: ", pi.propertyDescription.toRpcValue().toCpon());
 			//CAPTURE(nd.toRpcValue().toCpon());
 			REQUIRE(pi.deviceType == "ElboxHeating");

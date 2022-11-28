@@ -623,10 +623,7 @@ void ShvTypeInfo::setBlacklist(const std::string &shv_path, const chainpack::Rpc
 
 void ShvTypeInfo::setPropertyDeviation(const std::string &shv_path, const ShvPropertyDescr &property_descr)
 {
-	if(property_descr.isValid())
-		m_propertyDeviations[shv_path] = property_descr;
-	else
-		m_propertyDeviations.erase(shv_path);
+	m_propertyDeviations[shv_path] = property_descr;
 }
 
 ShvTypeInfo ShvTypeInfo::fromVersion2(std::map<std::string, ShvTypeDescr> &&types, std::map<std::string, ShvPropertyDescr> &&node_descriptions)
@@ -1054,12 +1051,23 @@ ShvPropertyDescr ShvTypeInfo::findNodeDescription(const std::string &shv_path, s
 	return pi.nodeDescription;
 }
 */
-void ShvTypeInfo::fromNodesTree_helper(const shv::chainpack::RpcValue &node,
-						  const std::string &shv_path,
-						  const std::string &device_type,
-						  const std::string &device_path,
-						  bool device_type_redefined,
-						  const RpcValue::Map &node_types)
+namespace {
+ShvPropertyDescr take(ShvTypeInfo::DeviceProperties &map, const string &key)
+{
+	auto it = map.find(key);
+	if(it == map.end())
+		return {};
+	auto ret = it->second;
+	map.erase(it);
+	return ret;
+}
+}
+void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
+										const shv::chainpack::RpcValue &node,
+										const std::string &device_type,
+										const std::string &device_path,
+										const std::string &property_path,
+										DeviceProperties *device_properties)
 {
 	using namespace shv::core::utils;
 	using namespace shv::core;
@@ -1067,16 +1075,19 @@ void ShvTypeInfo::fromNodesTree_helper(const shv::chainpack::RpcValue &node,
 		return;
 
 	if(auto ref = node.metaValue("nodeTypeRef").asString(); !ref.empty()) {
-		fromNodesTree_helper(node_types.value(ref), shv_path, device_type, device_path, device_type_redefined, node_types);
+		fromNodesTree_helper(node_types, node_types.value(ref), device_type, device_path, property_path, device_properties);
 		return;
 	}
 
 	string current_device_type = device_type;
 	string current_device_path = device_path;
+	string current_property_path = property_path;
+	DeviceProperties *current_device_properties = device_properties;
+	DeviceProperties new_device_properties;
 	RpcValue::Map property_descr_map;
 	RpcValue::List property_methods;
 	static const string CREATE_FROM_TYPE_NAME = "createFromTypeName";
-	static const string STATUS = "status";
+	//static const string STATUS = "status";
 	static const string SYSTEM_PATH = "systemPath";
 	//shvInfo() << "id:" << node->nodeId() << "node path:" << node_shv_path << "shv path:" << shv_path;
 	//StringViewList node_shv_dir_list = ShvPath::splitPath(node_shv_path);
@@ -1087,7 +1098,7 @@ void ShvTypeInfo::fromNodesTree_helper(const shv::chainpack::RpcValue &node,
 			continue;
 		property_methods.push_back(mm.toRpcValue());
 		if(!mm.tags().empty()) {
-			string key = shv::core::Utils::joinPath(shv_path, "method"s);
+			string key = shv::core::Utils::joinPath(property_path, "method"s);
 			key = shv::core::Utils::joinPath(key, mm.name());
 			setExtraTags(key, mm.tags());
 		}
@@ -1097,9 +1108,10 @@ void ShvTypeInfo::fromNodesTree_helper(const shv::chainpack::RpcValue &node,
 		RpcValue::Map tags_map = node_tags;
 		const string &dtype = tags_map.value(KEY_DEVICE_TYPE).asString();
 		if(!dtype.empty()) {
-			device_type_redefined = m_deviceProperties.find(dtype) != m_deviceProperties.end();
 			current_device_type = dtype;
-			current_device_path = shv_path;
+			current_device_path = Utils::joinPath(device_path, property_path);
+			current_property_path = string();
+			current_device_properties = &new_device_properties;
 		}
 		property_descr_map.merge(tags_map);
 	}
@@ -1110,53 +1122,22 @@ void ShvTypeInfo::fromNodesTree_helper(const shv::chainpack::RpcValue &node,
 		RpcValue::Map extra_tags;
 		auto property_descr = shv::core::utils::ShvPropertyDescr::fromRpcValue(property_descr_map, &extra_tags);
 		if(property_descr.isValid()) {
-			if(current_device_type.empty()) {
-				setDevicePropertyDescription("", "", shv_path, property_descr);
-			}
-			else {
-				string property_path = String(shv_path).mid(current_device_path.size() + 1);
-				const auto &[own_property_path, field_path, existing_property_descr] = findPropertyDescription(current_device_type, property_path);
-				if(existing_property_descr.isValid() && field_path.empty()) {
-					assert(property_path == own_property_path);
-					if(existing_property_descr == property_descr) {
-						/// node descriptions are the same, no action is needed
-					}
-					else {
-						/// node descriptions are different, create deviation
-						setPropertyDeviation(shv_path, property_descr);
-						//shvWarning() << "Conflicting declaration for device type:" << current_device_type
-						//		   << "on path:" << shv_path << ", the deviation will be created. This should only when parsing badly formed nodesTree files or when legacy devices are read."
-						//<< "\n  new:" << property_descr.toRpcValue().toCpon()
-						//<< "\n  old:" << existing_property_descr.toRpcValue().toCpon();
-					}
-				}
-				else {
-					/// property is not defined so far
-					if(device_type_redefined) {
-						/// all the device properties defined already, put every difference into deviations
-						setPropertyDeviation(shv_path, property_descr);
-					}
-					else {
-						/// node description does not exist in firstime device type definition, create new one
-						setDevicePropertyDescription(current_device_path, current_device_type, property_path, property_descr);
-					}
-				}
-			}
+			(*current_device_properties)[current_property_path] = property_descr;
 		}
 		auto system_path = extra_tags.take(SYSTEM_PATH).asString();
 		if(!system_path.empty()) {
+			auto shv_path = Utils::joinPath(current_device_path, current_property_path);
 			m_systemPathsRoots[shv_path] = system_path;
 		}
 		const auto blacklist = extra_tags.take(KEY_BLACKLIST);
 		if(blacklist.isValid()) {
+			auto shv_path = Utils::joinPath(current_device_path, current_property_path);
 			setBlacklist(shv_path, blacklist);
 		}
 		if(!extra_tags.empty()) {
+			auto shv_path = Utils::joinPath(current_device_path, current_property_path);
 			setExtraTags(shv_path, extra_tags);
 		}
-	}
-	if(current_device_type != device_type) {
-		setDevicePath(current_device_path, current_device_type);
 	}
 	for (const auto& [child_name, child_node] : node.asMap()) {
 		if(child_name.empty())
@@ -1164,8 +1145,39 @@ void ShvTypeInfo::fromNodesTree_helper(const shv::chainpack::RpcValue &node,
 		// skip children of nodes created from typeName
 		if(node_tags.hasKey(CREATE_FROM_TYPE_NAME))
 			continue;
-		ShvPath child_shv_path = shv::core::Utils::joinPath(shv_path, child_name);
-		fromNodesTree_helper(child_node, child_shv_path, current_device_type, current_device_path, device_type_redefined, node_types);
+		ShvPath child_property_path = shv::core::Utils::joinPath(current_property_path, child_name);
+		fromNodesTree_helper(node_types, child_node, current_device_type, current_device_path, child_property_path, current_device_properties);
+	}
+	if(current_device_type != device_type) {
+		setDevicePath(current_device_path, current_device_type);
+		if(auto it = m_deviceProperties.find(current_device_type); it == m_deviceProperties.end()) {
+			// device type defined first time
+			m_deviceProperties[current_device_type] = move(new_device_properties);
+		}
+		else {
+			// check deviations
+			for(const auto &[existing_property_path, existing_property_descr] : it->second) {
+				auto new_property_descr = take(new_device_properties, existing_property_path);
+				if(new_property_descr.isValid()) {
+					// defined in both definitions, compare them
+					if(!(new_property_descr == existing_property_descr)) {
+						// they are not the same, create deviation
+						auto shv_path = Utils::joinPath(current_device_path, existing_property_path);
+						setPropertyDeviation(shv_path, new_property_descr);
+					}
+				}
+				else {
+					// property defined only in previous definition, add it as empty to deviations
+					auto shv_path = Utils::joinPath(current_device_path, existing_property_path);
+					setPropertyDeviation(shv_path, {});
+				}
+			}
+			// check remaining property paths in new definition
+			for(const auto &[existing_property_path, new_property_descr] : new_device_properties) {
+				auto shv_path = Utils::joinPath(current_device_path, existing_property_path);
+				setPropertyDeviation(shv_path, new_property_descr);
+			}
+		}
 	}
 }
 
@@ -1180,7 +1192,7 @@ ShvTypeInfo ShvTypeInfo::fromNodesTree(const chainpack::RpcValue &v)
 		}
 	}
 	const RpcValue node_types = v.metaValue("nodeTypes");
-	ret.fromNodesTree_helper(v, {}, {}, {}, false, node_types.asMap());
+	ret.fromNodesTree_helper(node_types.asMap(), v, {}, {}, {}, nullptr);
 	return ret;
 }
 
