@@ -25,7 +25,7 @@ inline NecroLog &operator<<(NecroLog log, const std::vector<std::string> &sl)
 	return log << s;
 }
 */
-static const char *cp2cp_help =
+static const char* const cp2cp_help =
 R"( ChainPack to Cpon converter
 
 USAGE:

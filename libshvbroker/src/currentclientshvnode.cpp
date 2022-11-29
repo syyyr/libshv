@@ -19,13 +19,13 @@ static string sha1_hex(const std::string &s)
 }
 
 namespace {
-string M_CLIENT_ID = "clientId";
-string M_MOUNT_POINT = "mountPoint";
-string M_USER_ROLES = "userRoles";
-string M_USER_PROFILE = "userProfile";
-string M_CHANGE_PASSWORD = "changePassword";
-string M_ACCES_LEVEL_FOR_METHOD_CALL = "accesLevelForMethodCall";
-string M_ACCESS_LEVEL_FOR_METHOD_CALL = "accessLevelForMethodCall";
+const string M_CLIENT_ID = "clientId";
+const string M_MOUNT_POINT = "mountPoint";
+const string M_USER_ROLES = "userRoles";
+const string M_USER_PROFILE = "userProfile";
+const string M_CHANGE_PASSWORD = "changePassword";
+const string M_ACCES_LEVEL_FOR_METHOD_CALL = "accesLevelForMethodCall";
+const string M_ACCESS_LEVEL_FOR_METHOD_CALL = "accessLevelForMethodCall";
 }
 
 CurrentClientShvNode::CurrentClientShvNode(shv::iotqt::node::ShvNode *parent)

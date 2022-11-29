@@ -18,15 +18,15 @@
 
 #include <cmath>
 
-static QString USER_PROFILES_KEY = QStringLiteral("userProfiles");
-static QString SITES_KEY = QStringLiteral("sites");
-static QString VIEWS_KEY = QStringLiteral("channelViews");
+static const QString USER_PROFILES_KEY = QStringLiteral("userProfiles");
+static const QString SITES_KEY = QStringLiteral("sites");
+static const QString VIEWS_KEY = QStringLiteral("channelViews");
 
 namespace shv::visu::timeline {
 
 const QString Graph::DEFAULT_USER_PROFILE = QStringLiteral("default");
 
-static int VALUE_NOT_AVILABLE_Y = std::numeric_limits<int>::max();
+static const int VALUE_NOT_AVILABLE_Y = std::numeric_limits<int>::max();
 
 //==========================================
 // Graph::GraphStyle

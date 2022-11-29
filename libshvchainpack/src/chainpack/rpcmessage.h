@@ -136,7 +136,7 @@ protected:
 	void checkMetaValues();
 protected:
 	RpcValue m_value;
-	static bool m_isMetaTypeExplicit;
+	static const bool m_isMetaTypeExplicit;
 };
 
 class RpcResponse;

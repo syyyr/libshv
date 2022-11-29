@@ -428,7 +428,7 @@ static const RpcValue::IMap & static_empty_imap() { static const RpcValue::IMap 
  * Constructors
  */
 
-static CowPtr<RpcValue::AbstractValueData> static_null(nullptr);
+static const CowPtr<RpcValue::AbstractValueData> static_null(nullptr);
 
 RpcValue::RpcValue() noexcept : m_ptr(static_null) {}
 //RpcValue::RpcValue() noexcept : m_ptr(nullptr) {}

@@ -58,7 +58,7 @@ struct Channel
 
 std::map<string, Channel> channels;
 
-ShvTypeInfo typeInfo = ShvTypeInfo::fromVersion2(
+const ShvTypeInfo typeInfo = ShvTypeInfo::fromVersion2(
 	// types
 	{
 		{

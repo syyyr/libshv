@@ -77,7 +77,7 @@ namespace shv::broker {
 std::array<int, 2> BrokerApp::m_sigTermFd;
 #endif
 
-static string BROKER_CURRENT_CLIENT_SHV_PATH = string(cp::Rpc::DIR_BROKER) + '/' + CurrentClientShvNode::NodeId;
+static const string BROKER_CURRENT_CLIENT_SHV_PATH = string(cp::Rpc::DIR_BROKER) + '/' + CurrentClientShvNode::NodeId;
 
 class ClientsNode : public shv::iotqt::node::MethodsTableNode
 {
@@ -196,10 +196,10 @@ public:
 	}
 private:
 	static constexpr auto METH_CLIENT_IDS = "clientIds";
-	static std::vector<cp::MetaMethod> m_metaMethods;
+	static const std::vector<cp::MetaMethod> m_metaMethods;
 };
 
-std::vector<cp::MetaMethod> MountsNode::m_metaMethods = {
+const std::vector<cp::MetaMethod> MountsNode::m_metaMethods = {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_CONFIG},
 	{METH_CLIENT_IDS, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_CONFIG},

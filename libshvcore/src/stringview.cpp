@@ -3,7 +3,7 @@
 
 namespace shv::core {
 
-static std::string empty_string;
+static const std::string empty_string;
 
 StringView::StringView()
 	: StringView(empty_string)

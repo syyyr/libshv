@@ -31,8 +31,8 @@ namespace shv::iotqt::node {
 //===========================================================
 // ShvNode
 //===========================================================
-std::string ShvNode::LOCAL_NODE_HACK = ".local";
-std::string ShvNode::ADD_LOCAL_TO_LS_RESULT_HACK_META_KEY = "__add_local_to_ls_hack";
+const std::string ShvNode::LOCAL_NODE_HACK = ".local";
+const std::string ShvNode::ADD_LOCAL_TO_LS_RESULT_HACK_META_KEY = "__add_local_to_ls_hack";
 
 ShvNode::ShvNode(ShvNode *parent)
 	: QObject(parent)
@@ -477,7 +477,7 @@ chainpack::RpcValue ShvNode::ls(const StringViewList &shv_path, const chainpack:
 	return chainpack::RpcValue{ret};
 }
 
-static std::vector<MetaMethod> meta_methods {
+static const std::vector<MetaMethod> meta_methods {
 	{Rpc::METH_DIR, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_BROWSE},
 	{Rpc::METH_LS, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_BROWSE},
 };
@@ -631,7 +631,7 @@ const shv::chainpack::MetaMethod *MethodsTableNode::metaMethod(const shv::iotqt:
 //===========================================================
 // RpcValueMapNode
 //===========================================================
-static std::vector<MetaMethod> meta_methods_value_map_root_node {
+static const std::vector<MetaMethod> meta_methods_value_map_root_node {
 	{Rpc::METH_DIR, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_CONFIG},
 	{Rpc::METH_LS, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_CONFIG},
 	/// load, save, commit were exposed in value node, do not know why, they should be in config node
@@ -640,7 +640,7 @@ static std::vector<MetaMethod> meta_methods_value_map_root_node {
 	//{RpcValueMapNode::M_COMMIT, MetaMethod::Signature::RetVoid, 0, Rpc::ROLE_ADMIN},
 };
 
-static std::vector<MetaMethod> meta_methods_value_map_node {
+static const std::vector<MetaMethod> meta_methods_value_map_node {
 	{Rpc::METH_DIR, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_READ},
 	{Rpc::METH_LS, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_READ},
 	{Rpc::METH_GET, MetaMethod::Signature::RetVoid, MetaMethod::Flag::IsGetter, Rpc::ROLE_READ},
@@ -864,7 +864,7 @@ static RpcValue diffMaps(const RpcValue &template_vals, const RpcValue &vals)
 static const auto METH_ORIG_VALUE = "origValue";
 static const auto METH_RESET_TO_ORIG_VALUE = "resetValue";
 
-static std::vector<MetaMethod> meta_methods_root_node {
+static const std::vector<MetaMethod> meta_methods_root_node {
 	{Rpc::METH_DIR, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_CONFIG},
 	{Rpc::METH_LS, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_CONFIG},
 	{shv::iotqt::node::RpcValueMapNode::M_LOAD, MetaMethod::Signature::RetVoid, 0, Rpc::ROLE_SERVICE},
@@ -872,7 +872,7 @@ static std::vector<MetaMethod> meta_methods_root_node {
 	{shv::iotqt::node::RpcValueMapNode::M_COMMIT, MetaMethod::Signature::RetVoid, 0, Rpc::ROLE_ADMIN},
 };
 
-static std::vector<MetaMethod> meta_methods_node {
+static const std::vector<MetaMethod> meta_methods_node {
 	{Rpc::METH_DIR, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_CONFIG},
 	{Rpc::METH_LS, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_CONFIG},
 	{Rpc::METH_GET, MetaMethod::Signature::RetVoid, MetaMethod::Flag::IsGetter, Rpc::ROLE_CONFIG},
@@ -1035,7 +1035,7 @@ void RpcValueConfigNode::saveValues()
 //===========================================================
 // ObjectPropertyProxyShvNode
 //===========================================================
-static std::vector<MetaMethod> meta_methods_pn {
+static const std::vector<MetaMethod> meta_methods_pn {
 	{Rpc::METH_DIR, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_BROWSE},
 	{Rpc::METH_LS, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_BROWSE},
 	{Rpc::METH_GET, MetaMethod::Signature::RetVoid, MetaMethod::Flag::IsGetter, Rpc::ROLE_READ},
@@ -1145,7 +1145,7 @@ void ValueProxyShvNode::addMetaMethod(chainpack::MetaMethod &&mm)
 	m_extraMetaMethods.push_back(std::move(mm));
 }
 
-static std::map<int, std::vector<size_t>> method_indexes = {
+static const std::map<int, std::vector<size_t>> method_indexes = {
 	{static_cast<int>(ValueProxyShvNode::Type::Invalid), {IX_DIR, IX_LS} },
 	{static_cast<int>(ValueProxyShvNode::Type::Read), {IX_DIR, IX_LS, IX_GET} },
 	{static_cast<int>(ValueProxyShvNode::Type::Write), {IX_DIR, IX_LS, IX_SET} },
@@ -1174,7 +1174,7 @@ size_t ValueProxyShvNode::methodCount(const ShvNode::StringViewList &shv_path)
 const chainpack::MetaMethod *ValueProxyShvNode::metaMethod(const ShvNode::StringViewList &shv_path, size_t ix)
 {
 	if(shv_path.empty()) {
-		const std::vector<size_t> &ixs = method_indexes[static_cast<int>(m_type)];
+		const std::vector<size_t> &ixs = method_indexes.at(static_cast<int>(m_type));
 		if(ix < ixs.size()) {
 			return &(meta_methods_pn[ixs[ix]]);
 		}
