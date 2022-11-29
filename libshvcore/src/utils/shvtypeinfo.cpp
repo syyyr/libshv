@@ -1082,10 +1082,11 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 	string current_device_type = device_type;
 	string current_device_path = device_path;
 	string current_property_path = property_path;
-	DeviceProperties *current_device_properties = device_properties;
 	DeviceProperties new_device_properties;
+	DeviceProperties *current_device_properties = device_properties? device_properties: &new_device_properties;
 	RpcValue::Map property_descr_map;
 	RpcValue::List property_methods;
+	bool new_device_type_entered = device_properties == nullptr;
 	static const string CREATE_FROM_TYPE_NAME = "createFromTypeName";
 	//static const string STATUS = "status";
 	static const string SYSTEM_PATH = "systemPath";
@@ -1112,6 +1113,7 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 			current_device_path = Utils::joinPath(device_path, property_path);
 			current_property_path = string();
 			current_device_properties = &new_device_properties;
+			new_device_type_entered = true;
 		}
 		property_descr_map.merge(tags_map);
 	}
@@ -1148,7 +1150,7 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 		ShvPath child_property_path = shv::core::Utils::joinPath(current_property_path, child_name);
 		fromNodesTree_helper(node_types, child_node, current_device_type, current_device_path, child_property_path, current_device_properties);
 	}
-	if(current_device_type != device_type) {
+	if(new_device_type_entered) {
 		setDevicePath(current_device_path, current_device_type);
 		if(auto it = m_deviceProperties.find(current_device_type); it == m_deviceProperties.end()) {
 			// device type defined first time

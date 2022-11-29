@@ -71,7 +71,6 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 				REQUIRE(type_info.toRpcValue() == type_info2.toRpcValue());
 			}
 			{
-				shvWarning() << __LINE__;
 				auto pi = type_info.pathInfo("devices/tc/TC01");
 				REQUIRE(pi.deviceType == "TC_G3");
 				REQUIRE(pi.devicePath == "devices/tc/TC01");
@@ -260,6 +259,14 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 			REQUIRE(pi.deviceType == "ElboxHeating");
 			REQUIRE(pi.propertyDescription.isValid() == false);
 		}
+	}
+
+	DOCTEST_SUBCASE("Crash loading some nodes-tree files")
+	{
+		auto rv = read_cpon_file(FILES_DIR + "/ols007_nodesTree.cpon");
+		auto type_info = ShvTypeInfo::fromRpcValue(rv);
+		write_cpon_file(out_path + "/ols007_typeInfo.cpon", type_info.toRpcValue());
+
 	}
 
 	DOCTEST_SUBCASE("Blacklists")

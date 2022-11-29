@@ -1,0 +1,655 @@
+<
+  "typeInfo":{
+    "paths":{
+      "shv/elbox/1/status":{"type":"TscElboxStatus"},
+      "shv/elbox/1/status/doorOpened":{"type":"Bool"},
+      "shv/elbox/1/userLogin":{"type":"String"},
+      "shv/heating/1/airTemp":{"type":"Double"},
+      "shv/heating/1/heater/1/status":{"type":"HeaterStatus"},
+      "shv/heating/1/heater/1/status/error":{"type":"Bool"},
+      "shv/heating/1/heater/1/status/heating":{"type":"Bool"},
+      "shv/heating/1/heater/2/status":{"type":"HeaterStatus"},
+      "shv/heating/1/heater/2/status/error":{"type":"Bool"},
+      "shv/heating/1/heater/2/status/heating":{"type":"Bool"},
+      "shv/heating/1/heater/3/status":{"type":"HeaterStatus"},
+      "shv/heating/1/heater/3/status/error":{"type":"Bool"},
+      "shv/heating/1/heater/3/status/heating":{"type":"Bool"},
+      "shv/heating/1/heater/4/status":{"type":"HeaterStatus"},
+      "shv/heating/1/heater/4/status/error":{"type":"Bool"},
+      "shv/heating/1/heater/4/status/heating":{"type":"Bool"},
+      "shv/heating/1/railTemp":{"type":"Double"},
+      "shv/heating/1/status":{"type":"HeatingStatus"},
+      "shv/heating/1/status/emergency":{"type":"Bool"},
+      "shv/heating/1/status/errorAirTemp":{"type":"Bool"},
+      "shv/heating/1/status/errorAuto":{"type":"Bool"},
+      "shv/heating/1/status/errorHeating":{"type":"Bool"},
+      "shv/heating/1/status/errorMeteo":{"type":"Bool"},
+      "shv/heating/1/status/errorMeteoTemp":{"type":"Bool"},
+      "shv/heating/1/status/errorRailTemp":{"type":"Bool"},
+      "shv/heating/1/status/heating":{"type":"Bool"},
+      "shv/heating/1/status/state":{"type":"HeatingState"},
+      "shv/heating/correction":{"type":"Int"},
+      "shv/pme/1/status":{"type":"PmeStatus"},
+      "shv/pme/1/status/direction":{"type":"Direction"},
+      "shv/pme/1/status/errorPosition":{"type":"Bool"},
+      "shv/pme/1/status/manual":{"type":"Bool"},
+      "shv/ppi/1/status":{"type":"PpiStatus"},
+      "shv/ppi/1/status/blocked":{"type":"Bool"},
+      "shv/ppi/1/status/direction":{"type":"Direction"},
+      "shv/ppi/1/status/error":{"type":"Bool"},
+      "shv/ppi/1/status/redCross":{"type":"Bool"},
+      "shv/ppi/1/status/stop":{"type":"Bool"},
+      "shv/system/1/boxTemp":{"type":"Double"},
+      "shv/system/1/cpuTemp":{"type":"Double"},
+      "shv/system/1/error":{"type":"String"},
+      "shv/system/1/pcbTemp":{"type":"Double"},
+      "shv/system/1/plcTemp":{"type":"Double"},
+      "shv/system/1/status":{"type":"SystemStatus"},
+      "shv/system/1/status/blocked":{"type":"Bool"},
+      "shv/system/1/status/critical":{"type":"Bool"},
+      "shv/system/1/voltage600":{"type":"Double"},
+      "shv/tc/1/status":{"type":"TcStatus"},
+      "shv/tc/1/status/error":{"type":"Bool"},
+      "shv/tc/1/status/occupied":{"type":"Bool"},
+      "shv/tc/2/status":{"type":"TcStatus"},
+      "shv/tc/2/status/error":{"type":"Bool"},
+      "shv/tc/2/status/occupied":{"type":"Bool"},
+      "shv/vet/1/status":{"type":"VetraStatus"},
+      "shv/vet/1/status/direction":{"type":"Direction"},
+      "shv/vet/1/vehicleDetected":{"type":"VetraData"}
+    },
+    "types":{
+      "Direction":{
+        "fields":[
+          {"name":"Unknown", "value":0},
+          {"name":"Left", "value":1},
+          {"name":"Right", "value":2},
+          {"name":"Straight", "value":3}
+        ],
+        "type":"Enum"
+      },
+      "HeaterStatus":{
+        "fields":[
+          {"name":"Heating", "value":0},
+          {"name":"Disabled", "value":8},
+          {"name":"Error", "value":15}
+        ],
+        "type":"BitField"
+      },
+      "HeatingState":{
+        "fields":[
+          {"name":"Off", "value":0},
+          {"name":"On", "value":1},
+          {"name":"Auto", "value":2}
+        ],
+        "type":"Enum"
+      },
+      "HeatingStatus":{
+        "fields":[
+          {"name":"Off", "value":0},
+          {"name":"Auto", "value":1},
+          {"name":"On", "value":2},
+          {"name":"Test", "value":3},
+          {"name":"Emergency", "value":4},
+          {"name":"Heating", "value":8},
+          {"name":"ErrorAirTemp", "value":9},
+          {"name":"ErrorRailTemp", "value":10},
+          {"name":"ErrorMeteoTemp", "value":11},
+          {"name":"ErrorMeteo", "value":13},
+          {"name":"ErrorAuto", "value":14},
+          {"name":"ErrorHeating", "value":15}
+        ],
+        "type":"BitField"
+      },
+      "PmeStatus":{
+        "fields":[
+          {"name":"PosL", "value":0},
+          {"name":"PosR", "value":1},
+          {"name":"Occupied", "value":2},
+          {"name":"Block", "value":3},
+          {"name":"OutOfOrder", "value":4},
+          {"name":"Manual", "value":5},
+          {"name":"Motor", "value":8},
+          {"name":"WarningPosition", "value":12},
+          {"name":"ErrorRelay", "value":14},
+          {"name":"ErrorPosition", "value":15}
+        ],
+        "type":"BitField"
+      },
+      "Position":{
+        "fields":[
+          {"name":"Front", "value":1},
+          {"name":"Rear", "value":2}
+        ],
+        "type":"Enum"
+      },
+      "PpiStatus":{
+        "fields":[
+          {"name":"Off", "value":0},
+          {"name":"Straight", "value":1},
+          {"name":"Left", "value":2},
+          {"name":"Right", "value":3},
+          {"name":"Cross", "value":4},
+          {"name":"Stop", "value":5},
+          {"name":"RedCross", "value":6},
+          {"name":"Error", "value":15}
+        ],
+        "type":"BitField"
+      },
+      "SystemStatus":{
+        "fields":[
+          {"name":"Critical", "value":0},
+          {"name":"Blocked", "value":1}
+        ],
+        "type":"BitField"
+      },
+      "TcStatus":{
+        "fields":[
+          {"name":"Occupied", "value":0},
+          {"name":"Error", "value":15}
+        ],
+        "type":"BitField"
+      },
+      "TscElboxStatus":{
+        "fields":[
+          {"name":"DoorOpened", "value":0}
+        ],
+        "type":"BitField"
+      },
+      "VetraData":{
+        "fields":[
+          {"name":"vehicleId", "typeName":"Int"},
+          {"name":"routeCode", "typeName":"Int"},
+          {"name":"lineNumber", "typeName":"Int"},
+          {"name":"vehiclePosition", "typeName":"Position"},
+          {"name":"transceiverPosition", "typeName":"Position"},
+          {"name":"direction", "typeName":"Direction"},
+          {"name":"transceiverId", "typeName":"Int"},
+          {"name":"statusTram", "typeName":"Int"},
+          {"name":"readyToStart", "typeName":"Bool"}
+        ],
+        "sampleType":"Discrete",
+        "type":"Map"
+      },
+      "VetraStatus":{
+        "fields":[
+          {"name":"Right", "value":8},
+          {"name":"Left", "value":9}
+        ],
+        "sampleType":"Discrete",
+        "type":"BitField"
+      }
+    }
+  }
+>{
+  "shv":{
+    "elbox":{
+      "1":<
+        "tags":{"deviceType":"TscElbox"}
+      >{
+        "status":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"TscElboxStatus"}
+        >{
+          "doorOpened":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"typeName":"Bool"}
+          >{}
+        },
+        "userLogin":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"String"}
+        >{}
+      }
+    },
+    "heating":{
+      "1":<
+        "tags":{"deviceType":"TscHeating"}
+      >{
+        "airTemp":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"Double"}
+        >{},
+        "heater":{
+          "1":<
+            "tags":{"deviceType":"TscHeater"}
+          >{
+            "status":<
+              "methods":[
+                {"name":"chng", "signature":"VoidParam"},
+                {"access":"rd", "name":"get", "signature":"RetParam"}
+              ],
+              "tags":{"typeName":"HeaterStatus"}
+            >{
+              "error":<
+                "methods":[
+                  {"name":"chng", "signature":"VoidParam"},
+                  {"access":"rd", "name":"get", "signature":"RetParam"}
+                ],
+                "tags":{"typeName":"Bool", "visualStyle":"errorLed"}
+              >{},
+              "heating":<
+                "methods":[
+                  {"name":"chng", "signature":"VoidParam"},
+                  {"access":"rd", "name":"get", "signature":"RetParam"}
+                ],
+                "tags":{"typeName":"Bool", "visualStyle":"activityLed"}
+              >{}
+            }
+          },
+          "2":<
+            "tags":{"deviceType":"TscHeater"}
+          >{
+            "status":<
+              "methods":[
+                {"name":"chng", "signature":"VoidParam"},
+                {"access":"rd", "name":"get", "signature":"RetParam"}
+              ],
+              "tags":{"typeName":"HeaterStatus"}
+            >{
+              "error":<
+                "methods":[
+                  {"name":"chng", "signature":"VoidParam"},
+                  {"access":"rd", "name":"get", "signature":"RetParam"}
+                ],
+                "tags":{"typeName":"Bool", "visualStyle":"errorLed"}
+              >{},
+              "heating":<
+                "methods":[
+                  {"name":"chng", "signature":"VoidParam"},
+                  {"access":"rd", "name":"get", "signature":"RetParam"}
+                ],
+                "tags":{"typeName":"Bool", "visualStyle":"activityLed"}
+              >{}
+            }
+          },
+          "3":<
+            "tags":{"deviceType":"TscHeater"}
+          >{
+            "status":<
+              "methods":[
+                {"name":"chng", "signature":"VoidParam"},
+                {"access":"rd", "name":"get", "signature":"RetParam"}
+              ],
+              "tags":{"typeName":"HeaterStatus"}
+            >{
+              "error":<
+                "methods":[
+                  {"name":"chng", "signature":"VoidParam"},
+                  {"access":"rd", "name":"get", "signature":"RetParam"}
+                ],
+                "tags":{"typeName":"Bool", "visualStyle":"errorLed"}
+              >{},
+              "heating":<
+                "methods":[
+                  {"name":"chng", "signature":"VoidParam"},
+                  {"access":"rd", "name":"get", "signature":"RetParam"}
+                ],
+                "tags":{"typeName":"Bool", "visualStyle":"activityLed"}
+              >{}
+            }
+          },
+          "4":<
+            "tags":{"deviceType":"TscHeater"}
+          >{
+            "status":<
+              "methods":[
+                {"name":"chng", "signature":"VoidParam"},
+                {"access":"rd", "name":"get", "signature":"RetParam"}
+              ],
+              "tags":{"typeName":"HeaterStatus"}
+            >{
+              "error":<
+                "methods":[
+                  {"name":"chng", "signature":"VoidParam"},
+                  {"access":"rd", "name":"get", "signature":"RetParam"}
+                ],
+                "tags":{"typeName":"Bool", "visualStyle":"errorLed"}
+              >{},
+              "heating":<
+                "methods":[
+                  {"name":"chng", "signature":"VoidParam"},
+                  {"access":"rd", "name":"get", "signature":"RetParam"}
+                ],
+                "tags":{"typeName":"Bool", "visualStyle":"activityLed"}
+              >{}
+            }
+          }
+        },
+        "railTemp":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"Double"}
+        >{},
+        "status":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"HeatingStatus"}
+        >{
+          "emergency":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"typeName":"Bool", "visualStyle":"activityLed"}
+          >{},
+          "errorAirTemp":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"alarm":"error", "description":"Error air temperature", "typeName":"Bool", "visualStyle":"errorLed"}
+          >{},
+          "errorAuto":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"alarm":"error", "description":"Error heating auto mode", "typeName":"Bool", "visualStyle":"errorLed"}
+          >{},
+          "errorHeating":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"alarm":"error", "description":"Error heating", "typeName":"Bool", "visualStyle":"errorLed"}
+          >{},
+          "errorMeteo":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"alarm":"error", "description":"Error meteo roof", "typeName":"Bool", "visualStyle":"errorLed"}
+          >{},
+          "errorMeteoTemp":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"alarm":"error", "description":"Error meteo temperature", "typeName":"Bool", "visualStyle":"errorLed"}
+          >{},
+          "errorRailTemp":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"alarm":"error", "description":"Error rail temperature", "typeName":"Bool", "visualStyle":"errorLed"}
+          >{},
+          "heating":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"typeName":"Bool", "visualStyle":"activityLed"}
+          >{},
+          "state":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"typeName":"HeatingState"}
+          >{}
+        }
+      },
+      "correction":<
+        "methods":[
+          {"name":"chng", "signature":"VoidParam"},
+          {"access":"rd", "name":"get", "signature":"RetParam"}
+        ],
+        "tags":{"typeName":"Int"}
+      >{}
+    },
+    "pme":{
+      "1":<
+        "tags":{"deviceType":"TscPme"}
+      >{
+        "status":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"PmeStatus"}
+        >{
+          "direction":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"typeName":"Direction"}
+          >{},
+          "errorPosition":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"alarm":"error", "description":"PME position error", "typeName":"Bool"}
+          >{},
+          "manual":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"typeName":"Bool"}
+          >{}
+        }
+      }
+    },
+    "ppi":{
+      "1":<
+        "tags":{"deviceType":"TscPpi"}
+      >{
+        "status":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"PpiStatus"}
+        >{
+          "blocked":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"typeName":"Bool"}
+          >{},
+          "direction":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"typeName":"Direction"}
+          >{},
+          "error":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"alarm":"error", "description":"PPI error", "typeName":"Bool"}
+          >{},
+          "redCross":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"typeName":"Bool"}
+          >{},
+          "stop":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"typeName":"Bool"}
+          >{}
+        }
+      }
+    },
+    "system":{
+      "1":<
+        "tags":{"deviceType":"TscSystem"}
+      >{
+        "boxTemp":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"Double"}
+        >{},
+        "cpuTemp":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"Double"}
+        >{},
+        "error":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"String"}
+        >{},
+        "pcbTemp":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"Double"}
+        >{},
+        "plcTemp":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"Double"}
+        >{},
+        "status":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"SystemStatus"}
+        >{
+          "blocked":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"typeName":"Bool"}
+          >{},
+          "critical":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"alarm":"error", "description":"System critical error", "typeName":"Bool"}
+          >{}
+        },
+        "voltage600":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"Double"}
+        >{}
+      }
+    },
+    "tc":{
+      "1":<
+        "tags":{"deviceType":"TscTc"}
+      >{
+        "status":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"TcStatus"}
+        >{
+          "error":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"alarm":"error", "description":"TC error", "typeName":"Bool"}
+          >{},
+          "occupied":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"typeName":"Bool"}
+          >{}
+        }
+      },
+      "2":<
+        "tags":{"deviceType":"TscTc"}
+      >{
+        "status":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"TcStatus"}
+        >{
+          "error":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"alarm":"error", "description":"TC error", "typeName":"Bool"}
+          >{},
+          "occupied":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"typeName":"Bool"}
+          >{}
+        }
+      }
+    },
+    "vet":{
+      "1":<
+        "tags":{"deviceType":"TscVetra"}
+      >{
+        "status":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"VetraStatus"}
+        >{
+          "direction":<
+            "methods":[
+              {"name":"chng", "signature":"VoidParam"},
+              {"access":"rd", "name":"get", "signature":"RetParam"}
+            ],
+            "tags":{"typeName":"Direction"}
+          >{}
+        },
+        "vehicleDetected":<
+          "methods":[
+            {"name":"chng", "signature":"VoidParam"},
+            {"access":"rd", "name":"get", "signature":"RetParam"}
+          ],
+          "tags":{"typeName":"VetraData"}
+        >{}
+      }
+    }
+  }
+}
