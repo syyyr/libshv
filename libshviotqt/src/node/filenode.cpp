@@ -13,11 +13,13 @@ namespace cp = shv::chainpack;
 
 namespace shv::iotqt::node {
 
-static const char *M_HASH = "hash";
-static const char *M_SIZE = "size";
-static const char *M_SIZE_COMPRESSED = "sizeCompressed";
-static const char *M_READ = "read";
-static const char *M_READ_COMPRESSED = "readCompressed";
+namespace {
+const auto M_HASH = "hash";
+const auto M_SIZE = "size";
+const auto M_SIZE_COMPRESSED = "sizeCompressed";
+const auto M_READ = "read";
+const auto M_READ_COMPRESSED = "readCompressed";
+}
 
 const std::vector<shv::chainpack::MetaMethod> FileNode::meta_methods_file_base = {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_BROWSE},

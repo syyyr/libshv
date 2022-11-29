@@ -2,10 +2,6 @@
 
 namespace shv::core::utils {
 
-const char *ShvJournalCommon::KEY_NAME = "name";
-const char *ShvJournalCommon::KEY_RECORD_COUNT = "recordCount";
-const char *ShvJournalCommon::KEY_PATHS_DICT = "pathsDict";
-
 const char *ShvJournalCommon::Column::name(ShvJournalCommon::Column::Enum e)
 {
 	switch (e) {

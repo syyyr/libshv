@@ -9,7 +9,9 @@
 
 namespace cp = shv::chainpack;
 
-static const char METH_RESET[] = "reset";
+namespace {
+constexpr auto METH_RESET = "reset";
+}
 
 class TestNode : public shv::iotqt::node::MethodsTableNode
 {

@@ -12,9 +12,9 @@ public:
 	static constexpr long DEFAULT_FILE_SIZE_LIMIT = 100 * 1024;
 	static constexpr int DEFAULT_GET_LOG_RECORD_COUNT_LIMIT = 100 * 1000;
 
-	static const char *KEY_NAME;
-	static const char *KEY_RECORD_COUNT;
-	static const char *KEY_PATHS_DICT;
+	static constexpr auto KEY_NAME = "name";
+	static constexpr auto KEY_RECORD_COUNT = "recordCount";
+	static constexpr auto KEY_PATHS_DICT = "pathsDict";
 
 	struct Column
 	{

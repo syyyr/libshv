@@ -195,11 +195,9 @@ public:
 		return Super::callMethod(shv_path, method, params, user_id);
 	}
 private:
-	static const char *METH_CLIENT_IDS;
+	static constexpr auto METH_CLIENT_IDS = "clientIds";
 	static std::vector<cp::MetaMethod> m_metaMethods;
 };
-
-const char *MountsNode::METH_CLIENT_IDS = "clientIds";
 
 std::vector<cp::MetaMethod> MountsNode::m_metaMethods = {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam},

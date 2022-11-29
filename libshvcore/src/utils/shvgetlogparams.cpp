@@ -3,26 +3,10 @@
 namespace cp = shv::chainpack;
 
 namespace shv::core::utils {
-
-const char *ShvGetLogParams::KEY_HEADER_OPTIONS_DEPRECATED = "headerOptions";
-const char *ShvGetLogParams::KEY_MAX_RECORD_COUNT_DEPRECATED = "maxRecordCount";
-const char *ShvGetLogParams::KEY_RECORD_COUNT_LIMIT = "recordCountLimit";
-const char *ShvGetLogParams::KEY_WITH_SNAPSHOT = "withSnapshot";
-const char *ShvGetLogParams::KEY_WITH_PATHS_DICT = "withPathsDict";
-
-//const char *ShvGetLogParams::KEY_WITH_UPTIME = "withUptime";
-static const char *KEY_WITH_TYPE_INFO = "withTypeInfo";
-
-const char *ShvGetLogParams::KEY_WITH_SINCE = "since";
-const char *ShvGetLogParams::KEY_WITH_UNTIL = "until";
-const char *ShvGetLogParams::KEY_PATH_PATTERN_TYPE = "pathPatternType";
-const char *ShvGetLogParams::KEY_PATH_PATTERN = "pathPattern";
-const char *ShvGetLogParams::KEY_DOMAIN_PATTERN = "domainPattern";
-
-static const char *SINCE_NOW = "now";
-const char *ShvGetLogParams::SINCE_LAST = "last";
-
-static const auto REG_EX = "regex";
+namespace {
+constexpr auto SINCE_NOW = "now";
+constexpr auto REG_EX = "regex";
+}
 
 ShvGetLogParams::ShvGetLogParams(const chainpack::RpcValue &opts)
 	: ShvGetLogParams()

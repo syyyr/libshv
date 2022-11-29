@@ -138,9 +138,9 @@ class SHVIOTQT_DECL_EXPORT RpcValueMapNode : public shv::iotqt::node::ShvNode
 
 	SHV_FIELD_BOOL_IMPL(r, R, eadOnly)
 public:
-	static const char *M_LOAD;
-	static const char *M_SAVE;
-	static const char *M_COMMIT;
+	static constexpr auto M_LOAD = "loadFile";
+	static constexpr auto M_SAVE = "saveFile";
+	static constexpr auto M_COMMIT = "commitChanges";
 public:
 	RpcValueMapNode(const std::string &node_id, shv::iotqt::node::ShvNode *parent = nullptr);
 	RpcValueMapNode(const std::string &node_id, const shv::chainpack::RpcValue &values, shv::iotqt::node::ShvNode *parent = nullptr);

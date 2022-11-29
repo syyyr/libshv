@@ -631,12 +631,6 @@ const shv::chainpack::MetaMethod *MethodsTableNode::metaMethod(const shv::iotqt:
 //===========================================================
 // RpcValueMapNode
 //===========================================================
-//static const char M_SIZE[] = "size";
-const char *RpcValueMapNode::M_LOAD = "loadFile";
-const char *RpcValueMapNode::M_SAVE = "saveFile";
-const char *RpcValueMapNode::M_COMMIT = "commitChanges";
-//static const char M_RELOAD[] = "serverReload";
-
 static std::vector<MetaMethod> meta_methods_value_map_root_node {
 	{Rpc::METH_DIR, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_CONFIG},
 	{Rpc::METH_LS, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_CONFIG},

@@ -9,8 +9,6 @@
 
 namespace shv::visu {
 
-//const char *LOCAL_TZ_ID = "Local";
-
 TimeZoneComboBox::TimeZoneComboBox(QWidget *parent)
 	: Super(parent)
 {

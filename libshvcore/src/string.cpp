@@ -5,8 +5,6 @@
 
 namespace shv::core {
 
-const char* String::WhiteSpaceChars = " \t\n\r\f\v";
-
 std::string::size_type String::indexOf(const std::string & str_haystack, const std::string &str_needle, String::CaseSensitivity case_sensitivity)
 {
 	auto it = std::search(

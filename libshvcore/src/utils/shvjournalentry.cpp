@@ -21,21 +21,6 @@ void ShvJournalEntry::MetaType::registerMetaType()
 //==============================================================
 // ShvJournalEntry
 //==============================================================
-const char *ShvJournalEntry::DOMAIN_VAL_CHANGE = shv::chainpack::Rpc::SIG_VAL_CHANGED;
-const char *ShvJournalEntry::DOMAIN_VAL_FASTCHANGE = shv::chainpack::Rpc::SIG_VAL_FASTCHANGED;
-const char *ShvJournalEntry::DOMAIN_VAL_SERVICECHANGE = shv::chainpack::Rpc::SIG_SERVICE_VAL_CHANGED;
-const char *ShvJournalEntry::DOMAIN_SHV_SYSTEM = "SHV_SYS";
-const char *ShvJournalEntry::DOMAIN_SHV_COMMAND = shv::chainpack::Rpc::SIG_COMMAND_LOGGED;
-
-const char* ShvJournalEntry::PATH_APP_START = "APP_START";
-//const char* ShvJournalEntry::PATH_SNAPSHOT_BEGIN = "SNAPSHOT_BEGIN";
-//const char* ShvJournalEntry::PATH_SNAPSHOT_END = "SNAPSHOT_END";
-const char* ShvJournalEntry::PATH_DATA_MISSING = "DATA_MISSING";
-const char* ShvJournalEntry::PATH_DATA_DIRTY = "DATA_DIRTY";
-
-const char* ShvJournalEntry::DATA_MISSING_UNAVAILABLE = "Unavailable";
-const char* ShvJournalEntry::DATA_MISSING_NOT_EXISTS = "NotExists";
-
 chainpack::RpcValue ShvJournalEntry::toRpcValueMap() const
 {
 	chainpack::RpcValue::Map m;

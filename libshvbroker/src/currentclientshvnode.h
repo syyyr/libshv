@@ -8,7 +8,7 @@ class CurrentClientShvNode : public shv::iotqt::node::MethodsTableNode
 	Q_OBJECT
 	using Super = shv::iotqt::node::MethodsTableNode;
 public:
-	static const char *NodeId;
+	static constexpr auto NodeId = "currentClient";
 
 	CurrentClientShvNode(shv::iotqt::node::ShvNode *parent = nullptr);
 

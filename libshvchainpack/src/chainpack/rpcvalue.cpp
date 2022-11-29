@@ -835,29 +835,29 @@ const char *RpcValue::typeToName(RpcValue::Type t)
 
 RpcValue::Type RpcValue::typeForName(const std::string &type_name, int len)
 {
-	static const char str_Null[] = "Null";
-	static const char str_UInt[] = "UInt";
-	static const char str_Int[] = "Int";
-	static const char str_Double[] = "Double";
-	static const char str_Bool[] = "Bool";
-	static const char str_String[] = "String";
-	static const char str_List[] = "List";
-	static const char str_Map[] = "Map";
-	static const char str_IMap[] = "IMap";
-	static const char str_DateTime[] = "DateTime";
-	static const char str_Decimal[] = "Decimal";
+	static const std::string_view str_Null = "Null";
+	static const std::string_view str_UInt = "UInt";
+	static const std::string_view str_Int = "Int";
+	static const std::string_view str_Double = "Double";
+	static const std::string_view str_Bool = "Bool";
+	static const std::string_view str_String = "String";
+	static const std::string_view str_List = "List";
+	static const std::string_view str_Map = "Map";
+	static const std::string_view str_IMap = "IMap";
+	static const std::string_view str_DateTime = "DateTime";
+	static const std::string_view str_Decimal = "Decimal";
 
-	if(type_name.compare(0, (len < 0)? sizeof(str_Null)-1: static_cast<unsigned>(len), str_Null) == 0) return Type::Null;
-	if(type_name.compare(0, (len < 0)? sizeof(str_UInt)-1: static_cast<unsigned>(len), str_UInt) == 0) return Type::UInt;
-	if(type_name.compare(0, (len < 0)? sizeof(str_Int)-1: static_cast<unsigned>(len), str_Int) == 0) return Type::Int;
-	if(type_name.compare(0, (len < 0)? sizeof(str_Double)-1: static_cast<unsigned>(len), str_Double) == 0) return Type::Double;
-	if(type_name.compare(0, (len < 0)? sizeof(str_Bool)-1: static_cast<unsigned>(len), str_Bool) == 0) return Type::Bool;
-	if(type_name.compare(0, (len < 0)? sizeof(str_String)-1: static_cast<unsigned>(len), str_String) == 0) return Type::String;
-	if(type_name.compare(0, (len < 0)? sizeof(str_List)-1: static_cast<unsigned>(len), str_List) == 0) return Type::List;
-	if(type_name.compare(0, (len < 0)? sizeof(str_Map)-1: static_cast<unsigned>(len), str_Map) == 0) return Type::Map;
-	if(type_name.compare(0, (len < 0)? sizeof(str_IMap)-1: static_cast<unsigned>(len), str_IMap) == 0) return Type::IMap;
-	if(type_name.compare(0, (len < 0)? sizeof(str_DateTime)-1: static_cast<unsigned>(len), str_DateTime) == 0) return Type::DateTime;
-	if(type_name.compare(0, (len < 0)? sizeof(str_Decimal)-1: static_cast<unsigned>(len), str_Decimal) == 0) return Type::Decimal;
+	if(type_name.compare(0, (len < 0)? str_Null.size(): static_cast<unsigned>(len), str_Null) == 0) return Type::Null;
+	if(type_name.compare(0, (len < 0)? str_UInt.size(): static_cast<unsigned>(len), str_UInt) == 0) return Type::UInt;
+	if(type_name.compare(0, (len < 0)? str_Int.size(): static_cast<unsigned>(len), str_Int) == 0) return Type::Int;
+	if(type_name.compare(0, (len < 0)? str_Double.size(): static_cast<unsigned>(len), str_Double) == 0) return Type::Double;
+	if(type_name.compare(0, (len < 0)? str_Bool.size(): static_cast<unsigned>(len), str_Bool) == 0) return Type::Bool;
+	if(type_name.compare(0, (len < 0)? str_String.size(): static_cast<unsigned>(len), str_String) == 0) return Type::String;
+	if(type_name.compare(0, (len < 0)? str_List.size(): static_cast<unsigned>(len), str_List) == 0) return Type::List;
+	if(type_name.compare(0, (len < 0)? str_Map.size(): static_cast<unsigned>(len), str_Map) == 0) return Type::Map;
+	if(type_name.compare(0, (len < 0)? str_IMap.size(): static_cast<unsigned>(len), str_IMap) == 0) return Type::IMap;
+	if(type_name.compare(0, (len < 0)? str_DateTime.size(): static_cast<unsigned>(len), str_DateTime) == 0) return Type::DateTime;
+	if(type_name.compare(0, (len < 0)? str_Decimal.size(): static_cast<unsigned>(len), str_Decimal) == 0) return Type::Decimal;
 
 	return Type::Invalid;
 }
