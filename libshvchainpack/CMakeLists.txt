@@ -42,6 +42,19 @@ if(BUILD_TESTING)
 	add_shv_test(cpon)
 	add_shv_test(rpcvalue)
 	add_shv_test(rpcmessage)
+
+	if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+		function(add_fuzz_test test_name)
+			add_executable(fuzz_${test_name}
+				fuzz/${test_name}.cpp
+				)
+			target_link_libraries(fuzz_${test_name} libshvchainpack-cpp)
+			target_compile_options(fuzz_${test_name} PRIVATE "-fsanitize=fuzzer")
+			target_link_options(fuzz_${test_name} PRIVATE "-fsanitize=fuzzer")
+		endfunction()
+
+		add_fuzz_test(fromCpon)
+	endif()
 endif()
 
 install(TARGETS libshvchainpack-cpp)
