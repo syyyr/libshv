@@ -54,6 +54,7 @@ if(BUILD_TESTING)
 		endfunction()
 
 		add_fuzz_test(fromCpon)
+		add_fuzz_test(fromChainpack)
 	endif()
 endif()
 
