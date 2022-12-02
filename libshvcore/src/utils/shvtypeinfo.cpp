@@ -1120,9 +1120,10 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 	property_descr_map.erase(CREATE_FROM_TYPE_NAME); // erase shvgate obsolete tag
 	if(!property_methods.empty())
 		property_descr_map[KEY_METHODS] = property_methods;
+	shv::core::utils::ShvPropertyDescr property_descr;
 	if(!property_descr_map.empty()) {
 		RpcValue::Map extra_tags;
-		auto property_descr = shv::core::utils::ShvPropertyDescr::fromRpcValue(property_descr_map, &extra_tags);
+		property_descr = shv::core::utils::ShvPropertyDescr::fromRpcValue(property_descr_map, &extra_tags);
 		if(property_descr.isValid()) {
 			(*current_device_properties)[current_property_path] = property_descr;
 		}
@@ -1141,14 +1142,14 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 			setExtraTags(shv_path, extra_tags);
 		}
 	}
-	for (const auto& [child_name, child_node] : node.asMap()) {
-		if(child_name.empty())
-			continue;
-		// skip children of nodes created from typeName
-		if(node_tags.hasKey(CREATE_FROM_TYPE_NAME))
-			continue;
-		ShvPath child_property_path = shv::core::Utils::joinPath(current_property_path, child_name);
-		fromNodesTree_helper(node_types, child_node, current_device_type, current_device_path, child_property_path, current_device_properties);
+	if(property_descr.typeName().empty() || node_tags.hasKey(CREATE_FROM_TYPE_NAME)) {
+		// property with type-name defined cannot have child properties
+		for (const auto& [child_name, child_node] : node.asMap()) {
+			if(child_name.empty())
+				continue;
+			ShvPath child_property_path = shv::core::Utils::joinPath(current_property_path, child_name);
+			fromNodesTree_helper(node_types, child_node, current_device_type, current_device_path, child_property_path, current_device_properties);
+		}
 	}
 	if(new_device_type_entered) {
 		setDevicePath(current_device_path, current_device_type);

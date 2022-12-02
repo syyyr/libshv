@@ -1,0 +1,3000 @@
+
+<
+	"nodeTypes":{
+		"BusController@0":<
+			"tags":{"deviceType":"BusController"}
+		>{
+			"address":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Bus controller address", "monitored":false}
+			>{},
+			"bcMissing":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Bus controller missing or in connection error", "monitored":true}
+			>{},
+			"errorCommon":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Common error from all the modules", "monitored":true}
+			>{},
+			"errorModules":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Array of module errors", "monitored":true}
+			>{}
+		},
+		"DRR@0":<
+			"methods":[
+				{"access":"cmd", "name":"disable", "signature":"VoidVoid"},
+				{"access":"cmd", "name":"enable", "signature":"VoidVoid"}
+			],
+			"tags":{"deviceType":"DRR"}
+		>{
+			"status":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"StatusDRR"}
+			>{
+				"direction":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[4, 7],
+						"monitored":true,
+						"typeName":"UInt"
+					}
+				>{}
+			},
+			"vehicleDetected":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Recently detected vehicle data.", "monitored":true, "sampleType":"Discrete", "typeName":"VehicleData"}
+			>{}
+		},
+		"ElboxFuse@0":<
+			"tags":{"deviceType":"ElboxFuse"}
+		>{
+			"status":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"StatusElboxFuse"}
+			>{
+				"error":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":30, "description":"fuse failure", "monitored":true, "typeName":"Bool"}
+				>{}
+			},
+			"statusError":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"fuse failure", "monitored":false}
+			>{}
+		},
+		"ElboxUps@0":<
+			"tags":{"deviceType":"ElboxUps"}
+		>{
+			"status":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":false, "typeName":"StatusElboxUps"}
+			>{
+				"onUPSBattery":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":2, "description":"Power supply from batteries", "monitored":true, "typeName":"Bool"}
+				>{},
+				"upsBuffering":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":5, "description":"UPS buffering", "monitored":true, "typeName":"Bool"}
+				>{},
+				"upsReady":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":4, "description":"UPS ready", "monitored":true, "typeName":"Bool"}
+				>{},
+				"upsReplaceBattery":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":7, "description":"UPS replace battery", "monitored":true, "typeName":"Bool"}
+				>{}
+			}
+		},
+		"HeatingRod@0":<
+			"methods":[
+				{"access":"cmd", "description":"Disable element in visualization", "name":"disableElement", "signature":"VoidVoid"},
+				{"access":"cmd", "description":"Enable element in visualization", "name":"enableElement", "signature":"VoidVoid"},
+				{"access":"rd", "name":"name", "signature":"RetVoid"},
+				{
+					"access":"rd",
+					"name":"shtcCurrent",
+					"signature":"RetVoid",
+					"tags":{"unit":"A"}
+				},
+				{
+					"access":"rd",
+					"name":"shtcCurrentCalibrated",
+					"signature":"RetVoid",
+					"tags":{"unit":"A"}
+				},
+				{"access":"rd", "name":"shtcPhase", "signature":"RetVoid"},
+				{
+					"access":"rd",
+					"name":"shtcResistance",
+					"signature":"RetVoid",
+					"tags":{"unit":"Ω"}
+				},
+				{
+					"access":"rd",
+					"name":"shtcResistanceCalibrated",
+					"signature":"RetVoid",
+					"tags":{"unit":"Ω"}
+				}
+			],
+			"tags":{"deviceType":"HeatingRod"}
+		>{
+			"status":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"StatusHeatingRod"}
+			>{
+				"errorCommon":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":30, "description":"Heating rod error", "monitored":true, "typeName":"Bool"}
+				>{},
+				"heatingOn":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":0, "description":"Heating ON", "monitored":true, "typeName":"Bool"}
+				>{},
+				"shtcNoLoad":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":15, "description":"SHTC is not detecting load (heating rod not connected)", "monitored":true, "typeName":"Bool"}
+				>{},
+				"shtcRange3A":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":12, "description":"SHTC current measurement range 3A", "monitored":true, "typeName":"Bool"}
+				>{}
+			}
+		},
+		"PME@0":<
+			"methods":[
+				{"access":"cmd", "description":"Clear switch left/right counter.", "name":"clearSwitchCounter", "signature":"VoidVoid"},
+				{"access":"cmd", "name":"disable", "signature":"VoidVoid"},
+				{
+					"access":"cmd",
+					"name":"enable",
+					"signature":"VoidVoid",
+					"tags":{"safetyManager":"system/safetyManager"}
+				},
+				{"access":"rd", "name":"name", "signature":"RetVoid"},
+				{"access":"cmd", "description":"Reset parmanent errors (used only in Oostende)", "name":"resetErrors", "signature":"VoidVoid"},
+				{"access":"cmd", "name":"switchLeft", "signature":"VoidVoid"},
+				{"access":"cmd", "name":"switchRight", "signature":"VoidVoid"}
+			],
+			"tags":{"deviceType":"PME"}
+		>{
+			"sim":<
+				"methods":[
+					{"access":"dev", "name":"resetManual", "signature":"VoidVoid"},
+					{"access":"dev", "name":"setManual", "signature":"VoidVoid"},
+					{"access":"dev", "name":"switchLeft", "signature":"VoidVoid"},
+					{"access":"dev", "name":"switchMiddle", "signature":"VoidVoid"},
+					{"access":"dev", "name":"switchRight", "signature":"VoidVoid"}
+				],
+				"tags":{"typeName":""}
+			>{},
+			"status":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"StatusPME"}
+			>{
+				"blocked":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":4, "description":"blocked", "monitored":true, "typeName":"Bool"}
+				>{},
+				"bsBlock":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":21, "description":"Switch point is blocked externally", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorInputOutput":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":29, "description":"Safety PLC module input/output error", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorPosition":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":30, "description":"Effector error", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorRelay":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":28, "description":"relay error", "monitored":true, "typeName":"Bool"}
+				>{},
+				"floodEl":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"warning", "bitRange":12, "description":"Flood in  electrical part", "monitored":true, "typeName":"Bool"}
+				>{},
+				"floodMech":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"warning", "bitRange":13, "description":"Flood in mechanical part", "monitored":true, "typeName":"Bool"}
+				>{},
+				"forcedTrailing":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":20, "description":"Forced trailing", "monitored":true, "typeName":"Bool"}
+				>{},
+				"leverInSocket":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":3, "description":"Manual bar inserted", "monitored":true, "typeName":"Bool"}
+				>{},
+				"motorMoving":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":5, "description":"Motor moving", "monitored":true, "typeName":"Bool"}
+				>{},
+				"motorProtectionActivated":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":27, "description":"Motor protection activated.", "monitored":true, "typeName":"Bool"}
+				>{},
+				"overallError":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":15, "description":"Point switch overall error.", "monitored":true, "typeName":"Bool"}
+				>{},
+				"posLeft":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":0, "description":"Position left", "monitored":true, "typeName":"Bool"}
+				>{},
+				"posMiddle":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":2, "description":"Middle position", "monitored":true, "typeName":"Bool"}
+				>{},
+				"posRight":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":1, "description":"Position right", "monitored":true, "typeName":"Bool"}
+				>{},
+				"warningPositionNotChanged":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"warning", "bitRange":22, "description":"Position not changed", "monitored":true, "typeName":"Bool"}
+				>{},
+				"warningVehicleDetected":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"warning", "bitRange":23, "description":"Vehicle income warning.", "monitored":true, "typeName":"Bool"}
+				>{}
+			},
+			"switchLeftCounter":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"Int"}
+			>{},
+			"switchLeftCounterPermanent":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"Int"}
+			>{},
+			"switchLeftTime":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"Int", "unit":"msec"}
+			>{},
+			"switchRightCounter":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"Int"}
+			>{},
+			"switchRightCounterPermanent":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"Int"}
+			>{},
+			"switchRightTime":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"Int", "unit":"msec"}
+			>{}
+		},
+		"PPISymbol@0":<
+			"tags":{"deviceType":"PPISymbol"}
+		>{
+			"config":<
+				"methods":[
+					{"access":"cmd", "name":"commit", "signature":"VoidVoid"}
+				]
+			>{
+				"currentLimitErrorToleration":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"},
+						{"access":"wr", "name":"set", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Current range tolerance for warning", "monitored":false, "unit":"%"}
+				>{},
+				"currentLimitWarningToleration":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"},
+						{"access":"wr", "name":"set", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Current range tolerance for warning", "monitored":false, "unit":"%"}
+				>{},
+				"currentLimitZeroToleration":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"},
+						{"access":"wr", "name":"set", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Current range tolerance for warning", "monitored":false, "unit":"%"}
+				>{}
+			},
+			"currentActual":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Actual symbol current.", "monitored":false, "unit":"mA"}
+			>{},
+			"currentLimit":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Calibrated current limt.", "monitored":false, "unit":"mA"}
+			>{},
+			"currentLimitDay":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Calibrated current limt at day.", "monitored":false, "unit":"mA"}
+			>{},
+			"currentLimitNight":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Calibrated current limt at night.", "monitored":false, "unit":"mA"}
+			>{},
+			"status":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"StatusPPISymbol"}
+			>{
+				"digitalCurrentMeasurement":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":16, "description":"Current measurement signal", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorCurrent":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":30, "description":"Symbol current is on error level, current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"symbolActive":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":0, "description":"Symbol is active", "monitored":true, "typeName":"Bool", "visualStyle":"activityLed"}
+				>{},
+				"symbolBlinking":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":1, "description":"Symbol is blinking when active", "monitored":true, "typeName":"Bool"}
+				>{},
+				"warningCurrent":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"warning", "bitRange":29, "description":"Symbol current is on warning level", "monitored":true, "typeName":"Bool"}
+				>{}
+			}
+		},
+		"Route@0":<
+			"methods":[
+				{"access":"cmd", "name":"cancel", "signature":"VoidParam"},
+				{
+					"access":"cmd",
+					"name":"release",
+					"signature":"VoidParam",
+					"tags":{"safetyManager":"system/safetyManager"}
+				},
+				{"access":"cmd", "name":"request", "signature":"VoidParam"},
+				{"access":"cmd", "name":"request_deprecated", "signature":"VoidParam"}
+			],
+			"tags":{"deviceType":"Route", "routeIndex":1}
+		>{
+			"status":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"StatusRoute"}
+			>{
+				"SPAD":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":26, "description":"SPAD on route", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorRoute":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":25, "description":"Route with error", "monitored":true, "typeName":"Bool"}
+				>{},
+				"isInhibited":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":17, "description":"Route cannot be built", "monitored":true, "typeName":"Bool"}
+				>{},
+				"rejectionCode":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[8, 15],
+						"monitored":true,
+						"typeName":"EnumRouteRejectionCode"
+					}
+				>{},
+				"routeState":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[0, 7],
+						"monitored":true,
+						"typeName":"EnumRouteState"
+					}
+				>{},
+				"warningRoute":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"warning", "bitRange":24, "description":"Route with warning", "monitored":true, "typeName":"Bool"}
+				>{}
+			}
+		},
+		"SSSymbol@0":<
+			"tags":{"deviceType":"SSSymbol"}
+		>{
+			"config":<
+				"methods":[
+					{"access":"cmd", "name":"commit", "signature":"VoidVoid"}
+				]
+			>{
+				"currentLimitErrorToleration":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"},
+						{"access":"wr", "name":"set", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Current range tolerance for warning", "monitored":false, "unit":"%"}
+				>{},
+				"currentLimitWarningToleration":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"},
+						{"access":"wr", "name":"set", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Current range tolerance for warning", "monitored":false, "unit":"%"}
+				>{},
+				"currentLimitZeroToleration":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"},
+						{"access":"wr", "name":"set", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Current range tolerance for warning", "monitored":false, "unit":"%"}
+				>{}
+			},
+			"currentActual":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Actual symbol current.", "monitored":false, "unit":"mA"}
+			>{},
+			"currentLimit":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Calibrated current limt.", "monitored":false, "unit":"mA"}
+			>{},
+			"currentLimitDay":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Calibrated current limt at day.", "monitored":false, "unit":"mA"}
+			>{},
+			"currentLimitNight":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Calibrated current limt at night.", "monitored":false, "unit":"mA"}
+			>{},
+			"status":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"StatusSSSymbol"}
+			>{
+				"digitalCurrentMeasurement":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":16, "description":"Current measurement signal", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorCurrent":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":30, "description":"Symbol current is on error level, current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":31, "description":"Symbol error", "monitored":true, "typeName":"Bool"}
+				>{},
+				"symbolActive":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":0, "description":"Symbol is active", "monitored":true, "typeName":"Bool", "visualStyle":"activityLed"}
+				>{},
+				"symbolBlinking":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":1, "description":"Symbol is blinking when active", "monitored":true, "typeName":"Bool"}
+				>{},
+				"warningCurrent":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"warning", "bitRange":29, "description":"Symbol current is on warning level", "monitored":true, "typeName":"Bool"}
+				>{}
+			}
+		},
+		"SafetyCpu@0":<
+			"methods":[
+				{"access":"srv", "description":"Command to download safety application into safeLogic.", "name":"downloadApp", "signature":"VoidParam"},
+				{"access":"srv", "description":"Command to read safeLogic status.", "name":"readStatus", "signature":"VoidParam"},
+				{"access":"srv", "description":"Command to restart safeLogic.", "name":"reset", "signature":"VoidParam"},
+				{"access":"srv", "description":"Command to start LED test on safeLogic.", "name":"test", "signature":"VoidParam"},
+				{"access":"srv", "description":"Command to unlock newly downloaded safety application.", "name":"unlockApp", "signature":"VoidParam"}
+			],
+			"tags":{"deviceType":"SafetyCpu"}
+		>{
+			"bootStatus":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"0x0003 - Startup communication processor OK, no communication to the safety processors\n 0x0008 - SafeKEY check (valid SafeKEY not connected)\n 0x0010 - FAILSAFE. At least one of the safety processors is in the safe state.\n 0x0020 - Internal communication to safety processors started\n 0x0024 - Firmware update of safety processors\n 0x0030 - Startup of safety processors\n 0x0040 - Firmware of safety processors started\n 0x0440 - Firmware of safety processors running\n 0x0840 - Loads the SafeDESIGNER application or valid SafeDESIGNER application not found\n 0x1840 - Waiting for acknowledgments (e.g. module replacement)\n 0x2040 ... 0x2A40 - SCAN\n 0x3040 - Missing modules\n 0x3440 - Configuration of existing safety modules completed. Stabilizing cyclic openSAFETY data exchange.\n 0x4040 - RUN. Final state, startup completed.", "monitored":false}
+			>{},
+			"communicationOk":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "deprecated":true, "description":"Communication with safety PLC is correct", "monitored":false}
+			>{},
+			"maxCycleTime":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "description":"Maximal cycle time", "monitored":false}
+			>{},
+			"osState":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"SafetyCpuOsState"}
+			>{},
+			"project":{
+				"author":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"User who downloaded PLC program", "monitored":false}
+				>{},
+				"compileDateTime":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Date and time when PLC program was compiled", "monitored":false}
+				>{},
+				"crc":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"CRC of FW", "monitored":false}
+				>{},
+				"name":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Project name", "monitored":false}
+				>{},
+				"readyToUnlockCrc":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "description":"Downloaded safety application FW CRC, waiting for unlocking.", "monitored":false}
+				>{}
+			},
+			"status":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"StatusSafetyCpu"}
+			>{
+				"activeCmd1UDIDAckn":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":1, "description":"Command 1_UDID_ACKN can be performed (acknowledges 1 module mismatch)", "monitored":true, "typeName":"Bool"}
+				>{},
+				"activeCmd2UDIDAckn":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":2, "description":"Command 2_UDID_ACKN can be performed (acknowledges 2 modules mismatch)", "monitored":true, "typeName":"Bool"}
+				>{},
+				"activeCmd3UDIDAckn":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":3, "description":"Command 3_UDID_ACKN can be performed (acknowledges 3 modules mismatch)", "monitored":true, "typeName":"Bool"}
+				>{},
+				"activeCmd4UDIDAckn":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":4, "description":"Command 4_UDID_ACKN can be performed (acknowledges 4 modules mismatch)", "monitored":true, "typeName":"Bool"}
+				>{},
+				"activeCmdFWAcknActive":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":7, "description":"Command FW_ACKN can be performed (acknowledges new firmware)", "monitored":true, "typeName":"Bool"}
+				>{},
+				"activeCmdNUDIDAckn":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":5, "description":"Command N_UDID_ACKN can be performed (acknowledges N modules mismatch)", "monitored":true, "typeName":"Bool"}
+				>{},
+				"activeCmdSKXchg":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":6, "description":"Command SK_XCHG can be performed (acknowledges a SafeKEY replacement)", "monitored":true, "typeName":"Bool"}
+				>{},
+				"comOk":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":0, "description":"Communication with safety PLC is correct", "monitored":true, "typeName":"Bool"}
+				>{},
+				"differentFirmware":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":15, "description":"There are modules with different firmware", "monitored":true, "typeName":"Bool"}
+				>{},
+				"downloadAppExecuted":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":9, "description":"Download safety application executed and still running (cmdDownloadApp), cmdUnlockApp command must be executed at the end of this process", "monitored":true, "typeName":"Bool"}
+				>{},
+				"downloadAppUnlockRequired":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":10, "description":"DownloadAppUnlockRequired, downloaded safety application needs to be unlocked (cmdUnlockApp), !!! it is necessary to check the applicationCRC before unlocking !!!, !!! if cmdUnlockApp is not received, the application will be locked after 2min !!!", "monitored":true, "typeName":"Bool"}
+				>{},
+				"failSafe":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":11, "description":"Module status 'FailSafe', valid safe data no longer being generated", "monitored":true, "typeName":"Bool"}
+				>{},
+				"ledTestActive":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":13, "description":"LED test active", "monitored":true, "typeName":"Bool"}
+				>{},
+				"numberOfMissingModules":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[16, 23],
+						"description":"Number of missing modules",
+						"monitored":true,
+						"typeName":"UInt"
+					}
+				>{},
+				"numberOfUDIDMismatches":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[24, 31],
+						"description":"Number of replaced modules",
+						"monitored":true,
+						"typeName":"UInt"
+					}
+				>{},
+				"remoteCommandExecuted":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":8, "description":"Command executed and still running (cmdReadStatus, cmdScan, cmdFWAckn, cmdSKXchg, cmd1UDIDAckn, cmd2UDIDAckn, cmd3UDIDAckn, cmd4UDIDAckn, cmdNUDIDAckn, cmdTest, cmdReset)", "monitored":true, "typeName":"Bool"}
+				>{},
+				"safeKeyChanged":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":12, "description":"SafeKEY replaced, acknowledgment required", "monitored":true, "typeName":"Bool"}
+				>{},
+				"scanningInProgress":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":14, "description":"Module scan in progress", "monitored":true, "typeName":"Bool"}
+				>{}
+			}
+		},
+		"SafetyManager@0":<
+			"methods":[
+				{"access":"cmd", "description":"Call this function with auth_key got by call of 'getSafeCommandAuthKey'.", "name":"commitSafeCommand", "signature":"VoidParam"},
+				{"access":"cmd", "description":"To make safe command run: startSafeCommand(cmd_id) -> auth_key = getSafeCommandAuthKey() -> commitSafeCommand(auth_key)", "name":"getSafeCommandAuthKey", "signature":"RetVoid"},
+				{"access":"cmd", "description":"Each safety commant has ID, set command ID here to get auth key via fn 'getSafeCommandAuthKey' call. Some save commands are started implicitly, for example route.release (no need to call this function then).", "name":"startSafeCommand", "signature":"VoidParam"}
+			],
+			"tags":{"deviceType":"SafetyManager"}
+		>{},
+		"TC@0":<
+			"tags":{"deviceType":"TC"}
+		>{
+			"sim":<
+				"methods":[
+					{"access":"dev", "name":"resetOccupied", "signature":"VoidVoid"},
+					{"access":"dev", "name":"setOccupied", "signature":"VoidVoid"},
+					{"access":"dev", "name":"toggleOccupied", "signature":"VoidVoid"}
+				]
+			>{},
+			"status":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"StatusTC"}
+			>{
+				"errorBRC":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":28, "description":"BRC card error.", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorInput":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":29, "description":"Safety PLC module input error", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorInputCompl":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":30, "description":"Input complementarity error", "monitored":true, "typeName":"Bool"}
+				>{},
+				"longOccupation":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":23, "description":"TC occupied for too long", "monitored":true, "typeName":"Bool"}
+				>{},
+				"occupied":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":0, "description":"TC is occupied", "monitored":true, "typeName":"Bool"}
+				>{},
+				"opState":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[8, 11],
+						"monitored":true,
+						"typeName":"EnumOperationalState"
+					}
+				>{},
+				"overallError":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":15, "description":"TC overall error", "monitored":true, "typeName":"Bool"}
+				>{},
+				"warningBRC":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"warning", "bitRange":22, "description":"BRC card warning", "monitored":true, "typeName":"Bool"}
+				>{}
+			}
+		}
+	},
+	"tags":{},
+	"typeInfo":{
+		"types":{
+			"Bool":{"type":"Bool"},
+			"Decimal1":{
+				"tags":{"decPlaces":1},
+				"type":"Decimal"
+			},
+			"Decimal2":{
+				"tags":{"decPlaces":2},
+				"type":"Decimal"
+			},
+			"EnumOperationalState":{
+				"fields":[
+					{"name":"Operational", "value":0},
+					{"name":"OutOfOrder", "value":1}
+				],
+				"type":"Enum"
+			},
+			"EnumPPISignal":{
+				"fields":[
+					{"name":"OFF", "value":0},
+					{"name":"EI", "value":1},
+					{"name":"AB", "value":2},
+					{"name":"STOP", "value":10},
+					{"name":"MIDPOS_BLOCKED", "value":30},
+					{"name":"STRAIGHT_BLOCKED", "value":31},
+					{"name":"LEFT_BLOCKED", "value":32},
+					{"name":"RIGHT_BLOCKED", "value":33},
+					{"name":"MIDPOS", "value":40},
+					{"name":"STRAIGHT", "value":41},
+					{"name":"LEFT", "value":42},
+					{"name":"RIGHT", "value":43},
+					{"name":"MIDPOS_UNBLOCKED", "value":50},
+					{"name":"STRAIGHT_UNBLOCKED", "value":51},
+					{"name":"LEFT_UNBLOCKED", "value":52},
+					{"name":"RIGHT_UNBLOCKED", "value":53},
+					{"name":"CALIBRATION", "value":60},
+					{"name":"CALIB_MEASURE", "value":61},
+					{"name":"TURNON", "value":62}
+				],
+				"type":"Enum"
+			},
+			"EnumRouteRejectionCode":{
+				"fields":[
+					{"name":"ROUTE_NONE", "value":0},
+					{"name":"ROUTE_NOTEXISTS", "value":1},
+					{"name":"ROUTE_STILLACTIVE", "value":2},
+					{"name":"ROUTE_NOEMPTYSLOT", "value":3},
+					{"name":"ROUTE_SZNOTAVAIL", "value":4},
+					{"name":"ROUTE_DESTTCOCC", "value":5},
+					{"name":"ROUTE_ZONENOTNORM", "value":6},
+					{"name":"ROUTE_BLOCKEDBYROUTE", "value":7},
+					{"name":"ROUTE_PMNOPOSITION", "value":8},
+					{"name":"ROUTE_DISABLED", "value":9},
+					{"name":"ROUTE_SZOCC", "value":10}
+				],
+				"type":"Enum"
+			},
+			"EnumRouteState":{
+				"fields":[
+					{"name":"FREE", "value":1},
+					{"name":"RES0", "value":2},
+					{"name":"READY", "value":3},
+					{"name":"OCC", "value":4},
+					{"name":"RES2", "value":5}
+				],
+				"type":"Enum"
+			},
+			"EnumSSSignal":{
+				"fields":[
+					{"name":"OFF", "value":0},
+					{"name":"EI", "value":1},
+					{"name":"AB", "value":2},
+					{"name":"SPAD", "value":3},
+					{"name":"STOP", "value":10},
+					{"name":"STOP_BLINK", "value":11},
+					{"name":"PREPARE", "value":20},
+					{"name":"PREPARE_BLINK", "value":21},
+					{"name":"GO_OK", "value":40},
+					{"name":"GO_OK_S", "value":41},
+					{"name":"GO_OK_L", "value":42},
+					{"name":"GO_OK_R", "value":43},
+					{"name":"GO_ERR", "value":50},
+					{"name":"GO_ERR_S", "value":51},
+					{"name":"GO_ERR_L", "value":52},
+					{"name":"GO_ERR_R", "value":53},
+					{"name":"CALIBRATION", "value":60},
+					{"name":"CALIB_MEASURE", "value":61},
+					{"name":"TURNON", "value":62}
+				],
+				"type":"Enum"
+			},
+			"Int":{"type":"Int"},
+			"SafetyCpuOsState":{
+				"fields":[
+					{"name":"Invalid", "value":0},
+					{"name":"On", "value":15},
+					{"name":"Loading", "value":51},
+					{"name":"StopSafe", "value":85},
+					{"name":"RunSafe", "value":102},
+					{"name":"HaltDebug", "value":153},
+					{"name":"StopDebug", "value":170},
+					{"name":"RunDebug", "value":204},
+					{"name":"NoExecution", "value":240}
+				],
+				"type":"Enum"
+			},
+			"StatusDRR":{
+				"fields":[
+					{
+						"name":"direction",
+						"value":[4, 7]
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusDebug":{
+				"fields":[
+					{"description":"Simulation mode", "name":"simulationMode", "value":0},
+					{"description":"Simulation route request", "name":"routeRequestSimulation", "value":4}
+				],
+				"type":"BitField"
+			},
+			"StatusElbox":{
+				"fields":[
+					{"description":"Cabinet door open", "name":"doorOpened", "value":0},
+					{
+						"description":"Main power supply missing",
+						"name":"powerInactive",
+						"tags":{"alarm":"error"},
+						"value":1
+					},
+					{"description":"Twilight sensor is active", "name":"twilightSensor", "value":8},
+					{"description":"Backup converter is active", "name":"backupPowerActive", "value":10},
+					{"description":"Fan is active", "name":"fan", "value":11},
+					{"description":"Backup power supply is present", "name":"backupPowerPresent", "value":12},
+					{
+						"description":"PLC BusController in failure.",
+						"name":"errorControlBC",
+						"tags":{"alarm":"error"},
+						"value":27
+					},
+					{
+						"description":"OverTemperature, temperature out of limits",
+						"name":"errorOverTemperature",
+						"tags":{"alarm":"error"},
+						"value":28
+					},
+					{
+						"description":"Under/OverVoltage24, voltage 24V out of limits",
+						"name":"errorUnderOverVoltage24",
+						"tags":{"alarm":"error"},
+						"value":29
+					},
+					{
+						"description":"Under/OverVoltage600, traction voltage out of limits",
+						"name":"errorUnderOverVoltage600",
+						"tags":{"alarm":"error"},
+						"value":30
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusElboxFuse":{
+				"fields":[
+					{
+						"description":"fuse failure",
+						"name":"error",
+						"tags":{"alarm":"error"},
+						"value":30
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusElboxUps":{
+				"fields":[
+					{"description":"Power supply from batteries", "name":"onUPSBattery", "value":2},
+					{"description":"UPS ready", "name":"upsReady", "value":4},
+					{"description":"UPS buffering", "name":"upsBuffering", "value":5},
+					{
+						"description":"UPS replace battery",
+						"name":"upsReplaceBattery",
+						"tags":{"alarm":"error"},
+						"value":7
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusHeatingContactor":{
+				"fields":[
+					{"description":"Contactor is ON", "name":"contactorOn", "value":0}
+				],
+				"type":"BitField"
+			},
+			"StatusHeatingGroup":{
+				"fields":[
+					{"description":"Heating off.", "name":"off", "value":0},
+					{"description":"Active automatic regulation.", "name":"auto", "value":1},
+					{"description":"Active permanent heating.", "name":"on", "value":2},
+					{"description":"Active test of heating rods.", "name":"test", "value":3},
+					{"description":"Heating manually activated from cabinet", "name":"emergency", "value":4},
+					{"description":"Command to turn on contactor(s).", "name":"contactor", "value":8},
+					{"description":"SHTC calibration in progress", "name":"calibrationSHTC", "value":9},
+					{"description":"Meteo unit wet detection", "name":"meteoWet", "value":12},
+					{"description":"Meteo unit heating", "name":"meteoHeating", "value":13},
+					{
+						"description":"Air temperature error / out of range",
+						"name":"errorTempAir",
+						"tags":{"alarm":"error"},
+						"value":24
+					},
+					{
+						"description":"Rail temperature error / out of range",
+						"name":"errorTempRail",
+						"tags":{"alarm":"error"},
+						"value":25
+					},
+					{
+						"description":"Meteo unit temperature error / out of range",
+						"name":"errorTempMeteo",
+						"tags":{"alarm":"error"},
+						"value":26
+					},
+					{
+						"description":"Meteo unit error",
+						"name":"errorMeteo",
+						"tags":{"alarm":"error"},
+						"value":27
+					},
+					{
+						"description":"Automatic regulation error, caused by air temperature error or rail temperature error",
+						"name":"errorAuto",
+						"tags":{"alarm":"error"},
+						"value":28
+					},
+					{
+						"description":"Heating error,  caused by rod or SHTC unit error",
+						"name":"errorHeating",
+						"tags":{"alarm":"error"},
+						"value":29
+					},
+					{
+						"description":"Heating overall error",
+						"name":"commonError",
+						"tags":{"alarm":"error"},
+						"value":30
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusHeatingRod":{
+				"fields":[
+					{"description":"Heating ON", "name":"heatingOn", "value":0},
+					{"description":"SHTC current measurement range 3A", "name":"shtcRange3A", "value":12},
+					{"description":"SHTC is not detecting load (heating rod not connected)", "name":"shtcNoLoad", "value":15},
+					{
+						"description":"Heating rod error",
+						"name":"errorCommon",
+						"tags":{"alarm":"error"},
+						"value":30
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusPME":{
+				"fields":[
+					{"description":"Position left", "name":"posLeft", "value":0},
+					{"description":"Position right", "name":"posRight", "value":1},
+					{"description":"Middle position", "name":"posMiddle", "value":2},
+					{"description":"Manual bar inserted", "name":"leverInSocket", "value":3},
+					{"description":"blocked", "name":"blocked", "value":4},
+					{"description":"Motor moving", "name":"motorMoving", "value":5},
+					{
+						"description":"Flood in  electrical part",
+						"name":"floodEl",
+						"tags":{"alarm":"warning"},
+						"value":12
+					},
+					{
+						"description":"Flood in mechanical part",
+						"name":"floodMech",
+						"tags":{"alarm":"warning"},
+						"value":13
+					},
+					{
+						"description":"Point switch overall error.",
+						"name":"overallError",
+						"tags":{"alarm":"error"},
+						"value":15
+					},
+					{"description":"Forced trailing", "name":"forcedTrailing", "value":20},
+					{"description":"Switch point is blocked externally", "name":"bsBlock", "value":21},
+					{
+						"description":"Position not changed",
+						"name":"warningPositionNotChanged",
+						"tags":{"alarm":"warning"},
+						"value":22
+					},
+					{
+						"description":"Vehicle income warning.",
+						"name":"warningVehicleDetected",
+						"tags":{"alarm":"warning"},
+						"value":23
+					},
+					{"description":"Motor protection activated.", "name":"motorProtectionActivated", "value":27},
+					{
+						"description":"relay error",
+						"name":"errorRelay",
+						"tags":{"alarm":"error"},
+						"value":28
+					},
+					{
+						"description":"Safety PLC module input/output error",
+						"name":"errorInputOutput",
+						"tags":{"alarm":"error"},
+						"value":29
+					},
+					{
+						"description":"Effector error",
+						"name":"errorPosition",
+						"tags":{"alarm":"error"},
+						"value":30
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusPPI":{
+				"fields":[
+					{
+						"name":"currentSignal",
+						"typeName":"EnumPPISignal",
+						"value":[0, 5]
+					},
+					{
+						"name":"calibrationInProcess",
+						"tags":{"visualStyle":"activityLed"},
+						"value":12
+					},
+					{
+						"description":"Manually turned on",
+						"name":"turnedOnManually",
+						"tags":{"visualStyle":"errorLed"},
+						"value":13
+					},
+					{
+						"description":"Calibration enabled, HW button in cabinet pressed",
+						"name":"calibrationEnabled",
+						"tags":{"visualStyle":"errorLed"},
+						"value":14
+					},
+					{
+						"description":"Symbol 0 current out of range",
+						"name":"errorSymbol0Current",
+						"tags":{"alarm":"error"},
+						"value":16
+					},
+					{
+						"description":"Symbol 1 current out of range",
+						"name":"errorSymbol1Current",
+						"tags":{"alarm":"error"},
+						"value":17
+					},
+					{
+						"description":"Symbol 2 current out of range",
+						"name":"errorSymbol2Current",
+						"tags":{"alarm":"error"},
+						"value":18
+					},
+					{
+						"description":"Symbol 3 current out of range",
+						"name":"errorSymbol3Current",
+						"tags":{"alarm":"error"},
+						"value":19
+					},
+					{
+						"description":"Symbol 4 current out of range",
+						"name":"errorSymbol4Current",
+						"tags":{"alarm":"error"},
+						"value":20
+					},
+					{
+						"description":"Symbol 5 current out of range",
+						"name":"errorSymbol5Current",
+						"tags":{"alarm":"error"},
+						"value":21
+					},
+					{
+						"description":"PPI lamp overall warning",
+						"name":"warningCommon",
+						"tags":{"alarm":"warning"},
+						"value":27
+					},
+					{
+						"description":"Safety PLC module input/output error",
+						"name":"errorInputOutput",
+						"tags":{"alarm":"error"},
+						"value":29
+					},
+					{
+						"description":"PPI lamp overall error",
+						"name":"errorCommon",
+						"tags":{"alarm":"error"},
+						"value":30
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusPPISymbol":{
+				"fields":[
+					{
+						"description":"Symbol is active",
+						"name":"symbolActive",
+						"tags":{"visualStyle":"activityLed"},
+						"value":0
+					},
+					{"description":"Symbol is blinking when active", "name":"symbolBlinking", "value":1},
+					{"description":"Current measurement signal", "name":"digitalCurrentMeasurement", "value":16},
+					{
+						"description":"Symbol current is on warning level",
+						"name":"warningCurrent",
+						"tags":{"alarm":"warning"},
+						"value":29
+					},
+					{
+						"description":"Symbol current is on error level, current out of range",
+						"name":"errorCurrent",
+						"tags":{"alarm":"error"},
+						"value":30
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusRoute":{
+				"fields":[
+					{
+						"name":"routeState",
+						"typeName":"EnumRouteState",
+						"value":[0, 7]
+					},
+					{
+						"name":"rejectionCode",
+						"typeName":"EnumRouteRejectionCode",
+						"value":[8, 15]
+					},
+					{"description":"Route cannot be built", "name":"isInhibited", "value":17},
+					{
+						"description":"Route with warning",
+						"name":"warningRoute",
+						"tags":{"alarm":"warning"},
+						"value":24
+					},
+					{
+						"description":"Route with error",
+						"name":"errorRoute",
+						"tags":{"alarm":"error"},
+						"value":25
+					},
+					{"description":"SPAD on route", "name":"SPAD", "value":26}
+				],
+				"type":"BitField"
+			},
+			"StatusSS":{
+				"fields":[
+					{
+						"name":"currentSignal",
+						"typeName":"EnumSSSignal",
+						"value":[0, 5]
+					},
+					{
+						"name":"calibrationInProcess",
+						"tags":{"visualStyle":"errorLed"},
+						"value":12
+					},
+					{
+						"description":"Manually turned on",
+						"name":"turnedOnManually",
+						"tags":{"visualStyle":"errorLed"},
+						"value":13
+					},
+					{
+						"description":"Calibration enabled, HW button in cabinet pressed",
+						"name":"calibrationEnabled",
+						"tags":{"visualStyle":"activityLed"},
+						"value":14
+					},
+					{
+						"description":"Symbol 0 current out of range",
+						"name":"errorSymbol0Current",
+						"tags":{"alarm":"error"},
+						"value":16
+					},
+					{
+						"description":"Symbol 1 current out of range",
+						"name":"errorSymbol1Current",
+						"tags":{"alarm":"error"},
+						"value":17
+					},
+					{
+						"description":"Symbol 2 current out of range",
+						"name":"errorSymbol2Current",
+						"tags":{"alarm":"error"},
+						"value":18
+					},
+					{
+						"description":"Symbol 3 current out of range",
+						"name":"errorSymbol3Current",
+						"tags":{"alarm":"error"},
+						"value":19
+					},
+					{
+						"description":"Symbol 4 current out of range",
+						"name":"errorSymbol4Current",
+						"tags":{"alarm":"error"},
+						"value":20
+					},
+					{
+						"description":"Symbol 5 current out of range",
+						"name":"errorSymbol5Current",
+						"tags":{"alarm":"error"},
+						"value":21
+					},
+					{
+						"description":"Symbol 6 current out of range",
+						"name":"errorSymbol6Current",
+						"tags":{"alarm":"error"},
+						"value":22
+					},
+					{
+						"description":"Symbol 7 current out of range",
+						"name":"errorSymbol7Current",
+						"tags":{"alarm":"error"},
+						"value":23
+					},
+					{
+						"description":"SS lamp overall warning",
+						"name":"warningCommon",
+						"tags":{"alarm":"warning"},
+						"value":27
+					},
+					{
+						"description":"Safety PLC module input/output error",
+						"name":"errorInputOutput",
+						"tags":{"alarm":"error"},
+						"value":29
+					},
+					{
+						"description":"SS lamp overall error",
+						"name":"errorCommon",
+						"tags":{"alarm":"error"},
+						"value":30
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusSSSymbol":{
+				"fields":[
+					{
+						"description":"Symbol is active",
+						"name":"symbolActive",
+						"tags":{"visualStyle":"activityLed"},
+						"value":0
+					},
+					{"description":"Symbol is blinking when active", "name":"symbolBlinking", "value":1},
+					{"description":"Current measurement signal", "name":"digitalCurrentMeasurement", "value":16},
+					{
+						"description":"Symbol current is on warning level",
+						"name":"warningCurrent",
+						"tags":{"alarm":"warning"},
+						"value":29
+					},
+					{
+						"description":"Symbol current is on error level, current out of range",
+						"name":"errorCurrent",
+						"tags":{"alarm":"error"},
+						"value":30
+					},
+					{
+						"description":"Symbol error",
+						"name":"errorSymbol",
+						"tags":{"alarm":"error"},
+						"value":31
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusSafetyCpu":{
+				"fields":[
+					{"description":"Communication with safety PLC is correct", "name":"comOk", "value":0},
+					{"description":"Command 1_UDID_ACKN can be performed (acknowledges 1 module mismatch)", "name":"activeCmd1UDIDAckn", "value":1},
+					{"description":"Command 2_UDID_ACKN can be performed (acknowledges 2 modules mismatch)", "name":"activeCmd2UDIDAckn", "value":2},
+					{"description":"Command 3_UDID_ACKN can be performed (acknowledges 3 modules mismatch)", "name":"activeCmd3UDIDAckn", "value":3},
+					{"description":"Command 4_UDID_ACKN can be performed (acknowledges 4 modules mismatch)", "name":"activeCmd4UDIDAckn", "value":4},
+					{"description":"Command N_UDID_ACKN can be performed (acknowledges N modules mismatch)", "name":"activeCmdNUDIDAckn", "value":5},
+					{"description":"Command SK_XCHG can be performed (acknowledges a SafeKEY replacement)", "name":"activeCmdSKXchg", "value":6},
+					{"description":"Command FW_ACKN can be performed (acknowledges new firmware)", "name":"activeCmdFWAcknActive", "value":7},
+					{"description":"Command executed and still running (cmdReadStatus, cmdScan, cmdFWAckn, cmdSKXchg, cmd1UDIDAckn, cmd2UDIDAckn, cmd3UDIDAckn, cmd4UDIDAckn, cmdNUDIDAckn, cmdTest, cmdReset)", "name":"remoteCommandExecuted", "value":8},
+					{"description":"Download safety application executed and still running (cmdDownloadApp), cmdUnlockApp command must be executed at the end of this process", "name":"downloadAppExecuted", "value":9},
+					{"description":"DownloadAppUnlockRequired, downloaded safety application needs to be unlocked (cmdUnlockApp), !!! it is necessary to check the applicationCRC before unlocking !!!, !!! if cmdUnlockApp is not received, the application will be locked after 2min !!!", "name":"downloadAppUnlockRequired", "value":10},
+					{"description":"Module status 'FailSafe', valid safe data no longer being generated", "name":"failSafe", "value":11},
+					{"description":"SafeKEY replaced, acknowledgment required", "name":"safeKeyChanged", "value":12},
+					{"description":"LED test active", "name":"ledTestActive", "value":13},
+					{"description":"Module scan in progress", "name":"scanningInProgress", "value":14},
+					{"description":"There are modules with different firmware", "name":"differentFirmware", "value":15},
+					{
+						"description":"Number of missing modules",
+						"name":"numberOfMissingModules",
+						"value":[16, 23]
+					},
+					{
+						"description":"Number of replaced modules",
+						"name":"numberOfUDIDMismatches",
+						"value":[24, 31]
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusSystem":{
+				"fields":[
+					{"name":"systemStartedUp", "value":0},
+					{
+						"name":"internalBatteryError",
+						"tags":{"alarm":"error", "description":""},
+						"value":24
+					},
+					{
+						"name":"diskSpaceFull",
+						"tags":{"alarm":"error", "description":""},
+						"value":25
+					},
+					{
+						"name":"ringRedundancyError",
+						"tags":{"alarm":"error", "description":""},
+						"value":26
+					},
+					{
+						"name":"permanentMemoryError",
+						"tags":{"alarm":"error", "description":""},
+						"value":27
+					},
+					{
+						"name":"configurationLoadError",
+						"tags":{"alarm":"error", "description":""},
+						"value":28
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusTC":{
+				"fields":[
+					{"description":"TC is occupied", "name":"occupied", "value":0},
+					{
+						"name":"opState",
+						"typeName":"EnumOperationalState",
+						"value":[8, 11]
+					},
+					{
+						"description":"TC overall error",
+						"name":"overallError",
+						"tags":{"alarm":"error"},
+						"value":15
+					},
+					{
+						"description":"BRC card warning",
+						"name":"warningBRC",
+						"tags":{"alarm":"warning"},
+						"value":22
+					},
+					{"description":"TC occupied for too long", "name":"longOccupation", "value":23},
+					{
+						"description":"BRC card error.",
+						"name":"errorBRC",
+						"tags":{"alarm":"error"},
+						"value":28
+					},
+					{
+						"description":"Safety PLC module input error",
+						"name":"errorInput",
+						"tags":{"alarm":"error"},
+						"value":29
+					},
+					{
+						"description":"Input complementarity error",
+						"name":"errorInputCompl",
+						"tags":{"alarm":"error"},
+						"value":30
+					}
+				],
+				"type":"BitField"
+			},
+			"StatusZone":{
+				"fields":[
+					{
+						"description":"Emergency inhibit",
+						"name":"emergencyInhibit",
+						"tags":{"alarm":"error", "alarmLevel":70},
+						"value":0
+					},
+					{
+						"description":"All blocked",
+						"name":"allBlocked",
+						"tags":{"alarm":"warning", "alarmLevel":70},
+						"value":1
+					},
+					{"description":"Normal operation", "name":"normal", "value":2},
+					{"description":"Eyas disconnected", "name":"degraded", "value":4},
+					{
+						"description":"SPAD flag",
+						"name":"SPAD",
+						"tags":{"visualStyle":"zoneSPAD"},
+						"value":10
+					}
+				],
+				"type":"BitField"
+			},
+			"UInt":{"type":"UInt"},
+			"VehicleData":{
+				"fields":[
+					{"name":"status", "typeName":"Int"},
+					{"name":"direction", "typeName":"Int"},
+					{"name":"vehicleId", "typeName":"Int"},
+					{"description":"Line code", "name":"routeCode", "typeName":"Int"},
+					{"name":"vehicleType", "typeName":"Int"},
+					{"name":"serviceNumber", "typeName":"Int"},
+					{"name":"stand", "typeName":"Int"},
+					{"name":"side", "typeName":"Int"},
+					{"name":"readyToStart", "typeName":"Int"},
+					{"name":"statusTram", "typeName":"Int"},
+					{"name":"category", "typeName":"Int"},
+					{"name":"loopNumber", "typeName":"Int"},
+					{"name":"lineNumber", "typeName":"Int"},
+					{"name":"remoteCommand", "typeName":"Int"}
+				],
+				"sampleType":"Discrete",
+				"type":"Map"
+			}
+		}
+	}
+>{
+	"drr":{
+		"PR":<"nodeTypeRef":"DRR@0">{}
+	},
+	"elbox":{
+		"RSIG":<
+			"tags":{"deviceType":"Elbox"}
+		>{
+			"fuse":{
+				"FU1_PLC":<"nodeTypeRef":"ElboxFuse@0">{},
+				"FU2_IO":<"nodeTypeRef":"ElboxFuse@0">{},
+				"FU3_LCD":<"nodeTypeRef":"ElboxFuse@0">{},
+				"FU4_BRC":<"nodeTypeRef":"ElboxFuse@0">{},
+				"FU5_PRIPAT":<"nodeTypeRef":"ElboxFuse@0">{},
+				"FU6_HEAT":<"nodeTypeRef":"ElboxFuse@0">{},
+				"FU7_LIGHT":<"nodeTypeRef":"ElboxFuse@0">{},
+				"FU8_SF":<"nodeTypeRef":"ElboxFuse@0">{}
+			},
+			"status":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"StatusElbox"}
+			>{
+				"backupPowerActive":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":10, "description":"Backup converter is active", "monitored":true, "typeName":"Bool"}
+				>{},
+				"backupPowerPresent":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":12, "description":"Backup power supply is present", "monitored":true, "typeName":"Bool"}
+				>{},
+				"doorOpened":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":0, "description":"Cabinet door open", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorControlBC":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":27, "description":"PLC BusController in failure.", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorOverTemperature":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":28, "description":"OverTemperature, temperature out of limits", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorUnderOverVoltage24":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":29, "description":"Under/OverVoltage24, voltage 24V out of limits", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorUnderOverVoltage600":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":30, "description":"Under/OverVoltage600, traction voltage out of limits", "monitored":true, "typeName":"Bool"}
+				>{},
+				"fan":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":11, "description":"Fan is active", "monitored":true, "typeName":"Bool"}
+				>{},
+				"powerInactive":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":1, "description":"Main power supply missing", "monitored":true, "typeName":"Bool"}
+				>{},
+				"twilightSensor":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":8, "description":"Twilight sensor is active", "monitored":true, "typeName":"Bool"}
+				>{}
+			},
+			"temperature":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{
+					"autoload":true,
+					"monitorOptions":{
+						"dataChangeFilter":{"deadbandValue":0.5}
+					},
+					"monitored":true,
+					"unit":"°C"
+				}
+			>{},
+			"temperatureBottom":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{
+					"autoload":true,
+					"monitorOptions":{
+						"dataChangeFilter":{"deadbandValue":0.5}
+					},
+					"monitored":true,
+					"unit":"°C"
+				}
+			>{},
+			"ups":{
+				"UPS_RB1":<"nodeTypeRef":"ElboxUps@0">{}
+			},
+			"voltage24":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{
+					"autoload":true,
+					"monitorOptions":{
+						"dataChangeFilter":{"deadbandValue":1}
+					},
+					"monitored":true,
+					"unit":"V"
+				}
+			>{},
+			"voltage600":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":false, "unit":"V"}
+			>{}
+		}
+	},
+	"heating":{
+		"group":{
+			"GR_RSIG":<
+				"methods":[
+					{"access":"cmd", "name":"calibrateSHTC", "signature":"VoidVoid"},
+					{"access":"rd", "name":"elboxIndex", "signature":"RetVoid"},
+					{"access":"cmd", "name":"setAuto", "signature":"VoidVoid"},
+					{"access":"cmd", "name":"setOff", "signature":"VoidVoid"},
+					{"access":"cmd", "name":"setOn", "signature":"VoidVoid"},
+					{"access":"cmd", "name":"toggleTest", "signature":"VoidVoid"}
+				],
+				"tags":{"deviceType":"HeatingGroup"}
+			>{
+				"config":<
+					"methods":[
+						{"access":"cmd", "name":"commit", "signature":"VoidVoid"}
+					]
+				>{
+					"tempCorrectionDry":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"},
+							{"access":"wr", "name":"set", "signature":"RetParam"}
+						],
+						"tags":{"autoload":true, "monitored":false, "unit":"°C"}
+					>{},
+					"tempCorrectionWet":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"},
+							{"access":"wr", "name":"set", "signature":"RetParam"}
+						],
+						"tags":{"autoload":true, "monitored":false, "unit":"°C"}
+					>{},
+					"tempHysteresis":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"},
+							{"access":"wr", "name":"set", "signature":"RetParam"}
+						],
+						"tags":{"autoload":true, "monitored":false, "unit":"°C"}
+					>{},
+					"testTime":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"},
+							{"access":"wr", "name":"set", "signature":"RetParam"}
+						],
+						"tags":{"autoload":true, "monitored":false, "unit":"min"}
+					>{}
+				},
+				"contactor":{
+					"K3":<
+						"methods":[
+							{"access":"cmd", "description":"Disable element in visualization", "name":"disableElement", "signature":"VoidVoid"},
+							{"access":"cmd", "description":"Enable element in visualization", "name":"enableElement", "signature":"VoidVoid"},
+							{"access":"rd", "name":"name", "signature":"RetVoid"}
+						],
+						"tags":{"deviceType":"HeatingContactor"}
+					>{
+						"rod":{
+							"T11_HR_L":<"nodeTypeRef":"HeatingRod@0">{},
+							"T11_HR_R":<"nodeTypeRef":"HeatingRod@0">{},
+							"T12_HR_L":<"nodeTypeRef":"HeatingRod@0">{},
+							"T12_HR_R":<"nodeTypeRef":"HeatingRod@0">{},
+							"T21_HR_L":<"nodeTypeRef":"HeatingRod@0">{},
+							"T21_HR_R":<"nodeTypeRef":"HeatingRod@0">{},
+							"T22_HR_L":<"nodeTypeRef":"HeatingRod@0">{},
+							"T22_HR_R":<"nodeTypeRef":"HeatingRod@0">{}
+						},
+						"status":<
+							"methods":[
+								{"name":"chng", "signature":"VoidParam"},
+								{"access":"rd", "name":"get", "signature":"RetParam"}
+							],
+							"tags":{"autoload":true, "monitored":true, "typeName":"StatusHeatingContactor"}
+						>{
+							"contactorOn":<
+								"methods":[
+									{"name":"chng", "signature":"VoidParam"},
+									{"access":"rd", "name":"get", "signature":"RetParam"}
+								],
+								"tags":{"bitRange":0, "description":"Contactor is ON", "monitored":true, "typeName":"Bool"}
+							>{}
+						}
+					}
+				},
+				"status":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "monitored":true, "typeName":"StatusHeatingGroup"}
+				>{
+					"auto":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"bitRange":1, "description":"Active automatic regulation.", "monitored":true, "typeName":"Bool"}
+					>{},
+					"calibrationSHTC":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"bitRange":9, "description":"SHTC calibration in progress", "monitored":true, "typeName":"Bool"}
+					>{},
+					"commonError":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"alarm":"error", "bitRange":30, "description":"Heating overall error", "monitored":true, "typeName":"Bool"}
+					>{},
+					"contactor":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"bitRange":8, "description":"Command to turn on contactor(s).", "monitored":true, "typeName":"Bool"}
+					>{},
+					"emergency":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"bitRange":4, "description":"Heating manually activated from cabinet", "monitored":true, "typeName":"Bool"}
+					>{},
+					"errorAuto":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"alarm":"error", "bitRange":28, "description":"Automatic regulation error, caused by air temperature error or rail temperature error", "monitored":true, "typeName":"Bool"}
+					>{},
+					"errorHeating":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"alarm":"error", "bitRange":29, "description":"Heating error,  caused by rod or SHTC unit error", "monitored":true, "typeName":"Bool"}
+					>{},
+					"errorMeteo":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"alarm":"error", "bitRange":27, "description":"Meteo unit error", "monitored":true, "typeName":"Bool"}
+					>{},
+					"errorTempAir":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"alarm":"error", "bitRange":24, "description":"Air temperature error / out of range", "monitored":true, "typeName":"Bool"}
+					>{},
+					"errorTempMeteo":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"alarm":"error", "bitRange":26, "description":"Meteo unit temperature error / out of range", "monitored":true, "typeName":"Bool"}
+					>{},
+					"errorTempRail":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"alarm":"error", "bitRange":25, "description":"Rail temperature error / out of range", "monitored":true, "typeName":"Bool"}
+					>{},
+					"meteoHeating":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"bitRange":13, "description":"Meteo unit heating", "monitored":true, "typeName":"Bool"}
+					>{},
+					"meteoWet":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"bitRange":12, "description":"Meteo unit wet detection", "monitored":true, "typeName":"Bool"}
+					>{},
+					"off":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"bitRange":0, "description":"Heating off.", "monitored":true, "typeName":"Bool"}
+					>{},
+					"on":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"bitRange":2, "description":"Active permanent heating.", "monitored":true, "typeName":"Bool"}
+					>{},
+					"test":<
+						"methods":[
+							{"name":"chng", "signature":"VoidParam"},
+							{"access":"rd", "name":"get", "signature":"RetParam"}
+						],
+						"tags":{"bitRange":3, "description":"Active test of heating rods.", "monitored":true, "typeName":"Bool"}
+					>{}
+				},
+				"tempAir":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"monitorOptions":{
+							"dataChangeFilter":{"deadbandValue":0.5}
+						},
+						"monitored":true,
+						"unit":"°C"
+					}
+				>{},
+				"tempCorrectionDry":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "monitored":false, "unit":"°C"}
+				>{},
+				"tempCorrectionWet":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "monitored":false, "unit":"°C"}
+				>{},
+				"tempHysteresis":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "monitored":false, "unit":"°C"}
+				>{},
+				"tempMeteo":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"monitorOptions":{
+							"dataChangeFilter":{"deadbandValue":0.5}
+						},
+						"monitored":true,
+						"unit":"°C"
+					}
+				>{},
+				"tempRail":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"autoload":true,
+						"monitorOptions":{
+							"dataChangeFilter":{"deadbandValue":0.5}
+						},
+						"monitored":true,
+						"unit":"°C"
+					}
+				>{}
+			}
+		}
+	},
+	"pme":{
+		"T11":<"nodeTypeRef":"PME@0">{}
+	},
+	"ppi":{
+		"L1":<
+			"methods":[
+				{"access":"srv", "description":"Calibrate lamp current.", "name":"calibrate", "signature":"VoidVoid"},
+				{"access":"rd", "description":"Number of miliseconds whilst calibrate() call is enabled.", "name":"calibrationEnabledCountDown", "signature":"RetVoid"},
+				{"access":"rd", "name":"name", "signature":"RetVoid"},
+				{"access":"cmd", "description":"Reset permanent errors.", "name":"resetErrors", "signature":"VoidVoid"},
+				{"access":"cmd", "name":"turnOff", "signature":"VoidVoid"},
+				{"access":"cmd", "name":"turnOn", "signature":"VoidVoid"}
+			],
+			"tags":{"deviceType":"PPI"}
+		>{
+			"status":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"StatusPPI"}
+			>{
+				"calibrationEnabled":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":14, "description":"Calibration enabled, HW button in cabinet pressed", "monitored":true, "typeName":"Bool", "visualStyle":"errorLed"}
+				>{},
+				"calibrationInProcess":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":12, "monitored":true, "typeName":"Bool", "visualStyle":"activityLed"}
+				>{},
+				"currentSignal":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[0, 5],
+						"monitored":true,
+						"typeName":"EnumPPISignal"
+					}
+				>{},
+				"errorCommon":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":30, "description":"PPI lamp overall error", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorInputOutput":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":29, "description":"Safety PLC module input/output error", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol0Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":16, "description":"Symbol 0 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol1Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":17, "description":"Symbol 1 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol2Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":18, "description":"Symbol 2 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol3Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":19, "description":"Symbol 3 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol4Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":20, "description":"Symbol 4 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol5Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":21, "description":"Symbol 5 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"turnedOnManually":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":13, "description":"Manually turned on", "monitored":true, "typeName":"Bool", "visualStyle":"errorLed"}
+				>{},
+				"warningCommon":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"warning", "bitRange":27, "description":"PPI lamp overall warning", "monitored":true, "typeName":"Bool"}
+				>{}
+			},
+			"symbol":{
+				"Middle":<"nodeTypeRef":"PPISymbol@0">{},
+				"Right":<"nodeTypeRef":"PPISymbol@0">{},
+				"Straight":<"nodeTypeRef":"PPISymbol@0">{}
+			}
+		}
+	},
+	"ss":{
+		"SG1":<
+			"methods":[
+				{"access":"srv", "description":"Calibrate lamp current.", "name":"calibrate", "signature":"VoidVoid"},
+				{"access":"rd", "description":"Number of miliseconds whilst calibrate() call is enabled.", "name":"calibrationEnabledCountDown", "signature":"RetVoid"},
+				{"access":"rd", "name":"name", "signature":"RetVoid"},
+				{"access":"cmd", "description":"Reset permanent errors.", "name":"resetErrors", "signature":"VoidVoid"},
+				{"access":"cmd", "name":"turnOff", "signature":"VoidVoid"},
+				{"access":"cmd", "name":"turnOn", "signature":"VoidVoid"}
+			],
+			"tags":{"deviceType":"SS"}
+		>{
+			"status":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"StatusSS"}
+			>{
+				"calibrationEnabled":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":14, "description":"Calibration enabled, HW button in cabinet pressed", "monitored":true, "typeName":"Bool", "visualStyle":"activityLed"}
+				>{},
+				"calibrationInProcess":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":12, "monitored":true, "typeName":"Bool", "visualStyle":"errorLed"}
+				>{},
+				"currentSignal":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[0, 5],
+						"monitored":true,
+						"typeName":"EnumSSSignal"
+					}
+				>{},
+				"errorCommon":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":30, "description":"SS lamp overall error", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorInputOutput":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":29, "description":"Safety PLC module input/output error", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol0Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":16, "description":"Symbol 0 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol1Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":17, "description":"Symbol 1 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol2Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":18, "description":"Symbol 2 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol3Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":19, "description":"Symbol 3 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol4Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":20, "description":"Symbol 4 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol5Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":21, "description":"Symbol 5 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol6Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":22, "description":"Symbol 6 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol7Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":23, "description":"Symbol 7 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"turnedOnManually":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":13, "description":"Manually turned on", "monitored":true, "typeName":"Bool", "visualStyle":"errorLed"}
+				>{},
+				"warningCommon":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"warning", "bitRange":27, "description":"SS lamp overall warning", "monitored":true, "typeName":"Bool"}
+				>{}
+			},
+			"symbol":{
+				"Attention":<"nodeTypeRef":"SSSymbol@0">{},
+				"Requested":<"nodeTypeRef":"SSSymbol@0">{},
+				"Stop":<"nodeTypeRef":"SSSymbol@0">{},
+				"Straight":<"nodeTypeRef":"SSSymbol@0">{}
+			}
+		},
+		"SG2":<
+			"methods":[
+				{"access":"srv", "description":"Calibrate lamp current.", "name":"calibrate", "signature":"VoidVoid"},
+				{"access":"rd", "description":"Number of miliseconds whilst calibrate() call is enabled.", "name":"calibrationEnabledCountDown", "signature":"RetVoid"},
+				{"access":"rd", "name":"name", "signature":"RetVoid"},
+				{"access":"cmd", "description":"Reset permanent errors.", "name":"resetErrors", "signature":"VoidVoid"},
+				{"access":"cmd", "name":"turnOff", "signature":"VoidVoid"},
+				{"access":"cmd", "name":"turnOn", "signature":"VoidVoid"}
+			],
+			"tags":{"deviceType":"SS"}
+		>{
+			"status":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"StatusSS"}
+			>{
+				"calibrationEnabled":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":14, "description":"Calibration enabled, HW button in cabinet pressed", "monitored":true, "typeName":"Bool", "visualStyle":"activityLed"}
+				>{},
+				"calibrationInProcess":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":12, "monitored":true, "typeName":"Bool", "visualStyle":"errorLed"}
+				>{},
+				"currentSignal":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[0, 5],
+						"monitored":true,
+						"typeName":"EnumSSSignal"
+					}
+				>{},
+				"errorCommon":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":30, "description":"SS lamp overall error", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorInputOutput":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":29, "description":"Safety PLC module input/output error", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol0Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":16, "description":"Symbol 0 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol1Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":17, "description":"Symbol 1 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol2Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":18, "description":"Symbol 2 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol3Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":19, "description":"Symbol 3 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol4Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":20, "description":"Symbol 4 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol5Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":21, "description":"Symbol 5 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol6Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":22, "description":"Symbol 6 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol7Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":23, "description":"Symbol 7 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"turnedOnManually":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":13, "description":"Manually turned on", "monitored":true, "typeName":"Bool", "visualStyle":"errorLed"}
+				>{},
+				"warningCommon":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"warning", "bitRange":27, "description":"SS lamp overall warning", "monitored":true, "typeName":"Bool"}
+				>{}
+			},
+			"symbol":{
+				"Attention":<"nodeTypeRef":"SSSymbol@0">{},
+				"Requested":<"nodeTypeRef":"SSSymbol@0">{},
+				"Stop":<"nodeTypeRef":"SSSymbol@0">{},
+				"Straight":<"nodeTypeRef":"SSSymbol@0">{}
+			}
+		},
+		"SG3":<
+			"methods":[
+				{"access":"srv", "description":"Calibrate lamp current.", "name":"calibrate", "signature":"VoidVoid"},
+				{"access":"rd", "description":"Number of miliseconds whilst calibrate() call is enabled.", "name":"calibrationEnabledCountDown", "signature":"RetVoid"},
+				{"access":"rd", "name":"name", "signature":"RetVoid"},
+				{"access":"cmd", "description":"Reset permanent errors.", "name":"resetErrors", "signature":"VoidVoid"},
+				{"access":"cmd", "name":"turnOff", "signature":"VoidVoid"},
+				{"access":"cmd", "name":"turnOn", "signature":"VoidVoid"}
+			],
+			"tags":{"deviceType":"SS"}
+		>{
+			"status":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"StatusSS"}
+			>{
+				"calibrationEnabled":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":14, "description":"Calibration enabled, HW button in cabinet pressed", "monitored":true, "typeName":"Bool", "visualStyle":"activityLed"}
+				>{},
+				"calibrationInProcess":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":12, "monitored":true, "typeName":"Bool", "visualStyle":"errorLed"}
+				>{},
+				"currentSignal":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"bitRange":[0, 5],
+						"monitored":true,
+						"typeName":"EnumSSSignal"
+					}
+				>{},
+				"errorCommon":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":30, "description":"SS lamp overall error", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorInputOutput":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":29, "description":"Safety PLC module input/output error", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol0Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":16, "description":"Symbol 0 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol1Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":17, "description":"Symbol 1 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol2Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":18, "description":"Symbol 2 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol3Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":19, "description":"Symbol 3 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol4Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":20, "description":"Symbol 4 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol5Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":21, "description":"Symbol 5 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol6Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":22, "description":"Symbol 6 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"errorSymbol7Current":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"error", "bitRange":23, "description":"Symbol 7 current out of range", "monitored":true, "typeName":"Bool"}
+				>{},
+				"turnedOnManually":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":13, "description":"Manually turned on", "monitored":true, "typeName":"Bool", "visualStyle":"errorLed"}
+				>{},
+				"warningCommon":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"alarm":"warning", "bitRange":27, "description":"SS lamp overall warning", "monitored":true, "typeName":"Bool"}
+				>{}
+			},
+			"symbol":{
+				"Right":<"nodeTypeRef":"SSSymbol@0">{},
+				"Stop":<"nodeTypeRef":"SSSymbol@0">{},
+				"Straight":<"nodeTypeRef":"SSSymbol@0">{}
+			}
+		}
+	},
+	"system":<
+		"methods":[
+			{"access":"cmd", "name":"clearAllErrors", "signature":"VoidParam"},
+			{"access":"rd", "name":"name", "signature":"RetVoid"},
+			{"access":"srv", "name":"resetSystem", "signature":"VoidParam"}
+		],
+		"tags":{"deviceType":"System"}
+	>{
+		"debug":<
+			"methods":[
+				{"access":"cmd", "name":"setRouteRequestSimulationOff", "signature":"VoidVoid"},
+				{"access":"cmd", "name":"setRouteRequestSimulationOn", "signature":"VoidVoid"},
+				{"access":"cmd", "name":"setSimulationModeOff", "signature":"VoidVoid"},
+				{"access":"cmd", "name":"setSimulationModeOn", "signature":"VoidVoid"}
+			]
+		>{
+			"status":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"StatusDebug"}
+			>{
+				"routeRequestSimulation":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":4, "description":"Simulation route request", "monitored":true, "typeName":"Bool"}
+				>{},
+				"simulationMode":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":0, "description":"Simulation mode", "monitored":true, "typeName":"Bool"}
+				>{}
+			}
+		},
+		"diskFreeSpace":<
+			"methods":[
+				{"name":"chng", "signature":"VoidParam"},
+				{"access":"rd", "name":"get", "signature":"RetParam"}
+			],
+			"tags":{"autoload":true, "description":"User partition free space (MB)", "monitored":false}
+		>{},
+		"diskSize":<
+			"methods":[
+				{"name":"chng", "signature":"VoidParam"},
+				{"access":"rd", "name":"get", "signature":"RetParam"}
+			],
+			"tags":{"autoload":true, "description":"User partition size (MB)", "monitored":false}
+		>{},
+		"eyasOpMode":<
+			"methods":[
+				{"name":"chng", "signature":"VoidParam"},
+				{"access":"rd", "name":"get", "signature":"RetParam"},
+				{"access":"wr", "name":"set", "signature":"RetParam"}
+			],
+			"tags":{"autoload":true, "description":"Operational mode of EYAS control system, it is set by EYAS when connected to OpcUa.\n0 - Unknown\n1 - Degraded, // levers & sockets, PLC is not able to create routes\n2 - Manual,  // KSW & Vetra can be used to create routes\n3 - Dispatcher, // Dispatcher is creating routes using Eyas\n4 - SemiAutomatic, // Dispatcher + RunTables\n5 - Automatic, // Runtables are computed automatically, dispatcher has just sepervision", "monitored":false}
+		>{},
+		"memoryFreeSpace":<
+			"methods":[
+				{"name":"chng", "signature":"VoidParam"},
+				{"access":"rd", "name":"get", "signature":"RetParam"}
+			],
+			"tags":{"autoload":true, "description":"DRAM memory free space (MB)", "monitored":false}
+		>{},
+		"network":{
+			"ipv4":{
+				"address":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"},
+						{"access":"wr", "name":"set", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "monitored":false}
+				>{},
+				"gateway":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"},
+						{"access":"wr", "name":"set", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "monitored":false}
+				>{},
+				"hostName":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"},
+						{"access":"wr", "name":"set", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "monitored":false}
+				>{},
+				"netmask":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"},
+						{"access":"wr", "name":"set", "signature":"RetParam"}
+					],
+					"tags":{"autoload":true, "monitored":false}
+				>{}
+			}
+		},
+		"plc":{
+			"busController":{
+				"BC_node32":<"nodeTypeRef":"SafetyCpu@0">{},
+				"MainCPU":<"nodeTypeRef":"BusController@0">{}
+			},
+			"safetyCpu":{
+				"SafeLogic":<"nodeTypeRef":"SafetyCpu@0">{}
+			}
+		},
+		"plcDisconnected":<
+			"methods":[
+				{"name":"chng", "signature":"VoidParam"},
+				{"access":"rd", "name":"get", "signature":"RetParam"}
+			],
+			"tags":{"alarm":"error", "autoload":true, "description":"ShvGate disconnected from PLC", "monitored":false}
+		>{},
+		"safetyManager":<"nodeTypeRef":"SafetyManager@0">{},
+		"shvgateConnected":<
+			"methods":[
+				{"name":"chng", "signature":"VoidParam"},
+				{"access":"rd", "name":"get", "signature":"RetParam"}
+			],
+			"tags":{"autoload":true, "description":"ShvGate connected to PLC (Deprecated, use plcDisconnected instead)", "monitored":false}
+		>{},
+		"status":<
+			"methods":[
+				{"name":"chng", "signature":"VoidParam"},
+				{"access":"rd", "name":"get", "signature":"RetParam"}
+			],
+			"tags":{"autoload":true, "monitored":true, "typeName":"StatusSystem"}
+		>{
+			"configurationLoadError":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"alarm":"error", "bitRange":28, "description":"", "monitored":true, "typeName":"Bool"}
+			>{},
+			"diskSpaceFull":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"alarm":"error", "bitRange":25, "description":"", "monitored":true, "typeName":"Bool"}
+			>{},
+			"internalBatteryError":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"alarm":"error", "bitRange":24, "description":"", "monitored":true, "typeName":"Bool"}
+			>{},
+			"permanentMemoryError":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"alarm":"error", "bitRange":27, "description":"", "monitored":true, "typeName":"Bool"}
+			>{},
+			"ringRedundancyError":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"alarm":"error", "bitRange":26, "description":"", "monitored":true, "typeName":"Bool"}
+			>{},
+			"systemStartedUp":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"bitRange":0, "monitored":true, "typeName":"Bool"}
+			>{}
+		},
+		"swVersion":<
+			"methods":[
+				{"name":"chng", "signature":"VoidParam"},
+				{"access":"rd", "name":"get", "signature":"RetParam"}
+			],
+			"tags":{"autoload":true, "description":"PLC SW version", "monitored":false}
+		>{},
+		"temperatureCPU":<
+			"methods":[
+				{"name":"chng", "signature":"VoidParam"},
+				{"access":"rd", "name":"get", "signature":"RetParam"}
+			],
+			"tags":{"autoload":true, "description":"CPU temperature", "monitored":false}
+		>{},
+		"temperaturePLC":<
+			"methods":[
+				{"name":"chng", "signature":"VoidParam"},
+				{"access":"rd", "name":"get", "signature":"RetParam"}
+			],
+			"tags":{"autoload":true, "description":"PLC temperature", "monitored":false}
+		>{},
+		"wdtCounterPC":<
+			"methods":[
+				{"name":"chng", "signature":"VoidParam"},
+				{"access":"rd", "name":"get", "signature":"RetParam"},
+				{"access":"wr", "name":"set", "signature":"RetParam"}
+			],
+			"tags":{"autoload":true, "description":"Unix time, seconds since epoch, when Eyas stop to send this, dystem is switched to MANUAL op mode. ShvGate is sending this automatically, see command line options", "monitored":false}
+		>{},
+		"wdtCounterPLC":<
+			"methods":[
+				{"name":"chng", "signature":"VoidParam"},
+				{"access":"rd", "name":"get", "signature":"RetParam"},
+				{"access":"wr", "name":"set", "signature":"RetParam"}
+			],
+			"tags":{
+				"autoload":true,
+				"description":"Time in seconds incremented each second by PLC.",
+				"monitorOptions":{
+					"dataChangeFilter":{"deadbandValue":10, "disabled":false}
+				},
+				"monitored":false
+			}
+		>{}
+	},
+	"tc":{
+		"TC03":<"nodeTypeRef":"TC@0">{},
+		"TC04":<"nodeTypeRef":"TC@0">{},
+		"TC06":<"nodeTypeRef":"TC@0">{},
+		"TC07":<"nodeTypeRef":"TC@0">{},
+		"TC08":<"nodeTypeRef":"TC@0">{}
+	},
+	"zone":{
+		"Zone":<
+			"methods":[
+				{"access":"rd", "name":"name", "signature":"RetVoid"},
+				{"access":"cmd", "name":"setAllBlocked", "signature":"VoidVoid"},
+				{"access":"cmd", "name":"setEmergencyInhibit", "signature":"VoidVoid"},
+				{
+					"access":"cmd",
+					"name":"setNormal",
+					"signature":"VoidVoid",
+					"tags":{"safetyManager":"system/safetyManager"}
+				}
+			],
+			"tags":{"deviceType":"Zone"}
+		>{
+			"route":{
+				"R1":<"nodeTypeRef":"Route@0">{}
+			},
+			"status":<
+				"methods":[
+					{"name":"chng", "signature":"VoidParam"},
+					{"access":"rd", "name":"get", "signature":"RetParam"}
+				],
+				"tags":{"autoload":true, "monitored":true, "typeName":"StatusZone"}
+			>{
+				"SPAD":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":10, "description":"SPAD flag", "monitored":true, "typeName":"Bool", "visualStyle":"zoneSPAD"}
+				>{},
+				"allBlocked":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"warning",
+						"alarmLevel":70,
+						"bitRange":1,
+						"description":"All blocked",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"degraded":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":4, "description":"Eyas disconnected", "monitored":true, "typeName":"Bool"}
+				>{},
+				"emergencyInhibit":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{
+						"alarm":"error",
+						"alarmLevel":70,
+						"bitRange":0,
+						"description":"Emergency inhibit",
+						"monitored":true,
+						"typeName":"Bool"
+					}
+				>{},
+				"normal":<
+					"methods":[
+						{"name":"chng", "signature":"VoidParam"},
+						{"access":"rd", "name":"get", "signature":"RetParam"}
+					],
+					"tags":{"bitRange":2, "description":"Normal operation", "monitored":true, "typeName":"Bool"}
+				>{}
+			}
+		}
+	}
+}

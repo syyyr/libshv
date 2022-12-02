@@ -269,6 +269,17 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 
 	}
 
+	DOCTEST_SUBCASE("Cannot resolve TC/status/occupied, if createFromTypeName tag is missing")
+	{
+		auto rv = read_cpon_file(FILES_DIR + "/barrandov-nodestree.cpon");
+		auto type_info = ShvTypeInfo::fromRpcValue(rv);
+		write_cpon_file(out_path + "/barrandov_typeInfo.cpon", type_info.toRpcValue());
+		string fld_name;
+		auto pd = type_info.propertyDescriptionForPath("tc/TC07/status/occupied", &fld_name);
+		REQUIRE(pd.isValid());
+		REQUIRE(fld_name == "occupied");
+	}
+
 	DOCTEST_SUBCASE("Blacklists")
 	{
 		auto rv = read_cpon_file(FILES_DIR + "/ghe022_nodesTree.cpon");
