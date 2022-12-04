@@ -65,6 +65,8 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 		{
 			auto rv = read_cpon_file(FILES_DIR + "/nodesTree.cpon");
 			auto type_info = ShvTypeInfo::fromRpcValue(rv);
+			//auto typeinfo_file_path = out_path + "/typeInfo.cpon"s;
+			//write_cpon_file(typeinfo_file_path, type_info.toRpcValue());
 			DOCTEST_SUBCASE("Path info")
 			{
 				auto type_info2 = ShvTypeInfo::fromRpcValue(rv);

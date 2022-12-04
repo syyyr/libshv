@@ -1142,7 +1142,7 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 			setExtraTags(shv_path, extra_tags);
 		}
 	}
-	if(property_descr.typeName().empty() || node_tags.hasKey(CREATE_FROM_TYPE_NAME)) {
+	if(property_descr.typeName().empty() && !node_tags.hasKey(CREATE_FROM_TYPE_NAME)) {
 		// property with type-name defined cannot have child properties
 		for (const auto& [child_name, child_node] : node.asMap()) {
 			if(child_name.empty())
