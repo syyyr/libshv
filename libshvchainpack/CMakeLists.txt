@@ -6,7 +6,6 @@ add_library(libshvchainpack-cpp SHARED
     src/chainpack/chainpackreader.cpp
 	#src/chainpack/chainpackreader1.cpp
     src/chainpack/chainpackwriter.cpp
-    src/chainpack/cpon.cpp
     src/chainpack/cponreader.cpp
     src/chainpack/cponwriter.cpp
     src/chainpack/datachange.cpp

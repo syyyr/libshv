@@ -18,15 +18,15 @@ static string sha1_hex(const std::string &s)
 	return std::string(hash.result().toHex().constData());
 }
 
-static string M_CLIENT_ID = "clientId";
-static string M_MOUNT_POINT = "mountPoint";
-static string M_USER_ROLES = "userRoles";
-static string M_USER_PROFILE = "userProfile";
-static string M_CHANGE_PASSWORD = "changePassword";
-static string M_ACCES_LEVEL_FOR_METHOD_CALL = "accesLevelForMethodCall";
-static string M_ACCESS_LEVEL_FOR_METHOD_CALL = "accessLevelForMethodCall";
-
-const char *CurrentClientShvNode::NodeId = "currentClient";
+namespace {
+const string M_CLIENT_ID = "clientId";
+const string M_MOUNT_POINT = "mountPoint";
+const string M_USER_ROLES = "userRoles";
+const string M_USER_PROFILE = "userProfile";
+const string M_CHANGE_PASSWORD = "changePassword";
+const string M_ACCES_LEVEL_FOR_METHOD_CALL = "accesLevelForMethodCall";
+const string M_ACCESS_LEVEL_FOR_METHOD_CALL = "accessLevelForMethodCall";
+}
 
 CurrentClientShvNode::CurrentClientShvNode(shv::iotqt::node::ShvNode *parent)
 	: Super(NodeId, &m_metaMethods, parent)

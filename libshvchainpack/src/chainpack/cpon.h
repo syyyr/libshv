@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include <string_view>
 
 namespace shv {
 namespace chainpack {
@@ -8,23 +8,23 @@ namespace chainpack {
 class Cpon
 {
 public:
-	static const std::string STR_NULL;
-	static const std::string STR_TRUE;
-	static const std::string STR_FALSE;
-	static const std::string STR_IMAP_BEGIN;
-	//static const std::string STR_ARRAY_BEGIN;
-	static const std::string STR_ESC_BLOB_BEGIN;
-	static const std::string STR_HEX_BLOB_BEGIN;
-	static const std::string STR_DATETIME_BEGIN;
+	static constexpr auto STR_NULL = "null";
+	static constexpr auto STR_TRUE = "true";
+	static constexpr auto STR_FALSE = "false";
+	static constexpr auto STR_IMAP_BEGIN = "i{";
+	//static constexpr auto STR_ARRAY_BEGIN = "a[";
+	static constexpr auto STR_ESC_BLOB_BEGIN = "b\"";
+	static constexpr auto STR_HEX_BLOB_BEGIN = "x\"";
+	static constexpr auto STR_DATETIME_BEGIN = "d\"";
 
-	static const char C_LIST_BEGIN;
-	static const char C_LIST_END;
-	static const char C_MAP_BEGIN;
-	static const char C_MAP_END;
-	static const char C_META_BEGIN;
-	static const char C_META_END;
-	static const char C_DECIMAL_END;
-	static const char C_UNSIGNED_END;
+	static constexpr auto C_LIST_BEGIN = '[';
+	static constexpr auto C_LIST_END = ']';
+	static constexpr auto C_MAP_BEGIN = '{';
+	static constexpr auto C_MAP_END = '}';
+	static constexpr auto C_META_BEGIN = '<';
+	static constexpr auto C_META_END = '>';
+	static constexpr auto C_DECIMAL_END = 'n';
+	static constexpr auto C_UNSIGNED_END = 'u';
 };
 
 } // namespace chainpack

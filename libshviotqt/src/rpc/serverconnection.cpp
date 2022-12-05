@@ -19,7 +19,7 @@ namespace cp = shv::chainpack;
 
 namespace shv::iotqt::rpc {
 
-static int s_initPhaseTimeout = 10000;
+static const int s_initPhaseTimeout = 10000;
 
 ServerConnection::ServerConnection(Socket *socket, QObject *parent)
 	: Super(parent)

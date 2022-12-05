@@ -43,7 +43,7 @@ void RpcMessage::MetaType::registerMetaType()
 //==================================================================
 // RpcMessage
 //==================================================================
-bool RpcMessage::m_isMetaTypeExplicit = true;
+const bool RpcMessage::m_isMetaTypeExplicit = true;
 
 RpcMessage::RpcMessage()
 {

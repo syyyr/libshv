@@ -7,11 +7,13 @@
 #include <fstream>
 #include <cstring>
 
-static const char *cpmerge_help =
+namespace {
+const auto cpmerge_help =
 "\n"
 "Cpmerge merge stdin with config.file. Merged file put to stdout\n"
 "\n"
 "USAGE: cpmerge config.file\n";
+}
 
 int main(int argc, char *argv[])
 {

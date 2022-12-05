@@ -13,20 +13,20 @@ namespace utils {
 
 struct SHVCORE_DECL_EXPORT ShvGetLogParams
 {
-	static const char *KEY_HEADER_OPTIONS_DEPRECATED;
-	static const char *KEY_MAX_RECORD_COUNT_DEPRECATED;
-	static const char *KEY_RECORD_COUNT_LIMIT;
-	static const char *KEY_WITH_SNAPSHOT;
-	//static const char *KEY_WITH_UPTIME;
-	static const char *KEY_WITH_PATHS_DICT;
-	//static const char *KEY_WITH_TYPE_INFO;
-	static const char *KEY_WITH_SINCE;
-	static const char *KEY_WITH_UNTIL;
-	static const char *KEY_PATH_PATTERN;
-	static const char *KEY_PATH_PATTERN_TYPE;
-	static const char *KEY_DOMAIN_PATTERN;
+	static constexpr auto KEY_HEADER_OPTIONS_DEPRECATED = "headerOptions";
+	static constexpr auto KEY_MAX_RECORD_COUNT_DEPRECATED = "maxRecordCount";
+	static constexpr auto KEY_RECORD_COUNT_LIMIT = "recordCountLimit";
+	static constexpr auto KEY_WITH_SNAPSHOT = "withSnapshot";
+	//static constexpr auto KEY_WITH_UPTIME = "withUptime";
+	static constexpr auto KEY_WITH_PATHS_DICT = "withPathsDict";
+	static constexpr auto KEY_WITH_TYPE_INFO = "withTypeInfo";
+	static constexpr auto KEY_WITH_SINCE = "since";
+	static constexpr auto KEY_WITH_UNTIL = "until";
+	static constexpr auto KEY_PATH_PATTERN = "pathPattern";
+	static constexpr auto KEY_PATH_PATTERN_TYPE = "pathPatternType";
+	static constexpr auto KEY_DOMAIN_PATTERN = "domainPattern";
 
-	static const char *SINCE_LAST;
+	static constexpr auto SINCE_LAST = "last";
 
 	shv::chainpack::RpcValue since;
 	shv::chainpack::RpcValue until;

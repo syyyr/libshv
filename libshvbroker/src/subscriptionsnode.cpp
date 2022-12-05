@@ -21,11 +21,11 @@ const auto ND_BY_PATH = "byPath";
 const auto METH_PATH = "path";
 const auto METH_METHOD = "method";
 
-std::vector<cp::MetaMethod> meta_methods1 {
+const std::vector<cp::MetaMethod> meta_methods1 {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None},
 };
-std::vector<cp::MetaMethod> meta_methods2 {
+const std::vector<cp::MetaMethod> meta_methods2 {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, false},
 	{METH_PATH, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter},
 	{METH_METHOD, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter},

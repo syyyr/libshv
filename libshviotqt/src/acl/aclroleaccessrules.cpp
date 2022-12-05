@@ -14,8 +14,6 @@ namespace shv::iotqt::acl {
 //================================================================
 // PathAccessGrant
 //================================================================
-const char *AclAccessRule::ALL_SERVICES = "*";
-
 RpcValue AclAccessRule::toRpcValue() const
 {
 	RpcValue::Map m = grant.toRpcValueMap().toMap();

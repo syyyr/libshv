@@ -20,7 +20,7 @@ public:
 	std::string method;
 	shv::chainpack::AccessGrant grant;
 
-	static const char *ALL_SERVICES;
+	static constexpr auto ALL_SERVICES = "*";
 
 	AclAccessRule() = default;
 	AclAccessRule(const std::string &path_pattern_, const std::string &method_ = std::string())

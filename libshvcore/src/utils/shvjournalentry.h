@@ -24,23 +24,25 @@ public:
 		static void registerMetaType();
 	};
 public:
-	static const char *DOMAIN_VAL_CHANGE;
-	static const char *DOMAIN_VAL_FASTCHANGE;
-	static const char *DOMAIN_VAL_SERVICECHANGE;
-	static const char *DOMAIN_SHV_SYSTEM;
-	static const char *DOMAIN_SHV_COMMAND;
+	static constexpr auto DOMAIN_VAL_CHANGE = shv::chainpack::Rpc::SIG_VAL_CHANGED;
+	static constexpr auto DOMAIN_VAL_FASTCHANGE = shv::chainpack::Rpc::SIG_VAL_FASTCHANGED;
+	static constexpr auto DOMAIN_VAL_SERVICECHANGE = shv::chainpack::Rpc::SIG_SERVICE_VAL_CHANGED;
+	static constexpr auto DOMAIN_SHV_SYSTEM = "SHV_SYS";
+	static constexpr auto DOMAIN_SHV_COMMAND = shv::chainpack::Rpc::SIG_COMMAND_LOGGED;
 
-	static const char* PATH_APP_START;
+
+	static constexpr auto PATH_APP_START = "APP_START";
 	// snapshot begin-end cannot be implemented in the consistent way
 	// for example: getLog() with since == log-file-beginning, have to parse log file to find snapshot-end
 	// without this feature we can use just log reply even filtered
-	//static const char* PATH_SNAPSHOT_BEGIN;
-	//static const char* PATH_SNAPSHOT_END;
-	static const char* PATH_DATA_MISSING;
-	static const char* PATH_DATA_DIRTY;
+	//static constexpr auto PATH_SNAPSHOT_BEGIN = "SNAPSHOT_BEGIN";
+	//static constexpr auto PATH_SNAPSHOT_END = "SNAPSHOT_END";
+	static constexpr auto PATH_DATA_MISSING = "DATA_MISSING";
+	static constexpr auto PATH_DATA_DIRTY = "DATA_DIRTY";
 
-	static const char* DATA_MISSING_UNAVAILABLE;
-	static const char* DATA_MISSING_NOT_EXISTS;
+	static constexpr auto DATA_MISSING_UNAVAILABLE = "Unavailable";
+	static constexpr auto DATA_MISSING_NOT_EXISTS = "NotExists";
+
 
 	using ValueFlag = shv::chainpack::DataChange::ValueFlag;
 	using ValueFlags = shv::chainpack::DataChange::ValueFlags;

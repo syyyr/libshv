@@ -42,7 +42,7 @@ public:
 	static bool endsWith(const std::string & str, const std::string &with);
 	static bool endsWith(const std::string & str, const char c) { return str.size() > 0 && str[str.size() - 1] == c; }
 
-	static const char * WhiteSpaceChars;
+	static constexpr auto WhiteSpaceChars = " \t\n\r\f\v";
 	static std::string& rtrim(std::string& s, const char* t = WhiteSpaceChars)
 	{
 		s.erase(s.find_last_not_of(t) + 1);

@@ -13,23 +13,25 @@ using namespace shv::chainpack;
 
 namespace shv::core::utils {
 
-static const char* KEY_DEVICE_TYPE = "deviceType";
-static const char* KEY_TYPE_NAME = "typeName";
-static const char* KEY_LABEL = "label";
-static const char* KEY_DESCRIPTION = "description";
-static const char* KEY_UNIT = "unit";
-static const char* KEY_NAME = "name";
-static const char* KEY_TYPE = "type";
-static const char* KEY_VALUE = "value";
-static const char* KEY_FIELDS = "fields";
-static const char* KEY_SAMPLE_TYPE = "sampleType";
-static const char* KEY_TAGS = "tags";
-static const char* KEY_METHODS = "methods";
-static const char* KEY_BLACKLIST = "blacklist";
-static const char* KEY_DEC_PLACES = "decPlaces";
-static const char* KEY_VISUAL_STYLE = "visualStyle";
-static const char* KEY_ALARM = "alarm";
-static const char* KEY_ALARM_LEVEL = "alarmLevel";
+namespace {
+constexpr auto KEY_DEVICE_TYPE = "deviceType";
+constexpr auto KEY_TYPE_NAME = "typeName";
+constexpr auto KEY_LABEL = "label";
+constexpr auto KEY_DESCRIPTION = "description";
+constexpr auto KEY_UNIT = "unit";
+constexpr auto KEY_NAME = "name";
+constexpr auto KEY_TYPE = "type";
+constexpr auto KEY_VALUE = "value";
+constexpr auto KEY_FIELDS = "fields";
+constexpr auto KEY_SAMPLE_TYPE = "sampleType";
+constexpr auto KEY_TAGS = "tags";
+constexpr auto KEY_METHODS = "methods";
+constexpr auto KEY_BLACKLIST = "blacklist";
+constexpr auto KEY_DEC_PLACES = "decPlaces";
+constexpr auto KEY_VISUAL_STYLE = "visualStyle";
+constexpr auto KEY_ALARM = "alarm";
+constexpr auto KEY_ALARM_LEVEL = "alarmLevel";
+}
 
 //=====================================================================
 // ShvTypeDescrBase
@@ -830,15 +832,17 @@ RpcValue ShvTypeInfo::typesAsRpcValue() const
 	return m;
 }
 
-static const char *VERSION = "version";
-static const char *PATHS = "paths"; // SHV2
-static const char *TYPES = "types"; // SHV2 + SHV3
-static const char *DEVICE_PATHS = "devicePaths";
-static const char *DEVICE_PROPERTIES = "deviceProperties";
-static const char *PROPERTY_DEVIATIONS = "propertyDeviations";
-static const char *EXTRA_TAGS = "extraTags";
-static const char *SYSTEM_PATHS_ROOTS = "systemPathsRoots";
-static const char *BLACKLISTED_PATHS = "blacklistedPaths";
+namespace {
+constexpr auto VERSION = "version";
+constexpr auto PATHS = "paths"; // SHV2
+constexpr auto TYPES = "types"; // SHV2 + SHV3
+constexpr auto DEVICE_PATHS = "devicePaths";
+constexpr auto DEVICE_PROPERTIES = "deviceProperties";
+constexpr auto PROPERTY_DEVIATIONS = "propertyDeviations";
+constexpr auto EXTRA_TAGS = "extraTags";
+constexpr auto SYSTEM_PATHS_ROOTS = "systemPathsRoots";
+constexpr auto BLACKLISTED_PATHS = "blacklistedPaths";
+}
 
 RpcValue ShvTypeInfo::toRpcValue() const
 {

@@ -17,9 +17,9 @@ class SHVCORE_DECL_EXPORT ShvPath : public shv::core::String
 {
 	using Super = shv::core::String;
 public:
-	static constexpr char SHV_PATH_QUOTE = '\'';
-	static constexpr char SHV_PATH_DELIM = '/';
-	static const char SHV_PATH_METHOD_DELIM;
+	static constexpr auto SHV_PATH_QUOTE = '\'';
+	static constexpr auto SHV_PATH_DELIM = '/';
+	static constexpr auto SHV_PATH_METHOD_DELIM = ':';
 public:
 	ShvPath() : Super() {}
 	ShvPath(shv::core::String &&o) : Super(std::move(o)) {}

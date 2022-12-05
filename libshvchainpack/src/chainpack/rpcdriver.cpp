@@ -18,9 +18,6 @@
 
 namespace shv::chainpack {
 
-const char * RpcDriver::SND_LOG_ARROW = "<==S";
-const char * RpcDriver::RCV_LOG_ARROW = "R==>";
-
 int RpcDriver::s_defaultRpcTimeoutMsec = 5000;
 
 RpcDriver::RpcDriver() = default;
