@@ -455,10 +455,15 @@ RpcValue RpcValue::fromType(RpcValue::Type t) noexcept
 RpcValue::RpcValue(std::nullptr_t) noexcept : m_ptr(std::make_shared<ChainPackNull>()) {}
 RpcValue::RpcValue(double value) : m_ptr(std::make_shared<ChainPackDouble>(value)) {}
 RpcValue::RpcValue(RpcValue::Decimal value) : m_ptr(std::make_shared<ChainPackDecimal>(std::move(value))) {}
-RpcValue::RpcValue(int32_t value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
-RpcValue::RpcValue(uint32_t value) : m_ptr(std::make_shared<ChainPackUInt>(value)) {}
-RpcValue::RpcValue(int64_t value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
-RpcValue::RpcValue(uint64_t value) : m_ptr(std::make_shared<ChainPackUInt>(value)) {}
+RpcValue::RpcValue(short value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
+RpcValue::RpcValue(int value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
+RpcValue::RpcValue(long value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
+RpcValue::RpcValue(long long value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
+RpcValue::RpcValue(unsigned short value) : m_ptr(std::make_shared<ChainPackUInt>(value)) {}
+RpcValue::RpcValue(unsigned int value) : m_ptr(std::make_shared<ChainPackUInt>(value)) {}
+RpcValue::RpcValue(unsigned long value) : m_ptr(std::make_shared<ChainPackUInt>(value)) {}
+RpcValue::RpcValue(unsigned long long value) : m_ptr(std::make_shared<ChainPackUInt>(value)) {}
+
 RpcValue::RpcValue(bool value) : m_ptr(std::make_shared<ChainPackBoolean>(value)) {}
 RpcValue::RpcValue(const DateTime &value) : m_ptr(std::make_shared<ChainPackDateTime>(value)) {}
 
