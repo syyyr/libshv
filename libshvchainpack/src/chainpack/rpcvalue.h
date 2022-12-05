@@ -344,10 +344,14 @@ public:
 	RpcValue(std::nullptr_t) noexcept;  // Null
 	RpcValue(bool value);               // Bool
 
-	RpcValue(int32_t value);                // Int
-	RpcValue(uint32_t value);                // UInt
-	RpcValue(int64_t value);                // Int
-	RpcValue(uint64_t value);                // UInt
+	RpcValue(short value);              // Int
+	RpcValue(int value);                // Int
+	RpcValue(long value);               // Int
+	RpcValue(long long value);          // Int
+	RpcValue(unsigned short value);     // UInt
+	RpcValue(unsigned int value);       // UInt
+	RpcValue(unsigned long value);      // UInt
+	RpcValue(unsigned long long value); // UInt
 	RpcValue(double value);             // Double
 	RpcValue(Decimal value);             // Decimal
 	RpcValue(const DateTime &value);
