@@ -14,19 +14,9 @@ TimeZoneComboBox::TimeZoneComboBox(QWidget *parent)
 {
 #if SHVVISU_HAS_TIMEZONE
 	setEditable(true);
-	//addItem(LOCAL_TZ_ID);
-	for(const auto &tzn : QTimeZone::availableTimeZoneIds()) {
+	for(const auto &tzn : QTimeZone::availableTimeZoneIds())
 		addItem(tzn);
-	}
 	setCurrentIndex(findText(QTimeZone::systemTimeZoneId()));
-	/*
-	connect(this, &TimeZoneComboBox::editTextChanged, [this](const QString &text) {
-		int ix = findText(text, Qt::MatchContains);
-		if(ix >= 0) {
-			setCurrentIndex(ix);
-		}
-	});
-	*/
 #endif
 }
 
@@ -35,8 +25,6 @@ QTimeZone TimeZoneComboBox::currentTimeZone() const
 {
 	if(currentIndex() < 0)
 		return QTimeZone();
-	if(currentIndex() == 0)
-		return QTimeZone::systemTimeZone();
 	return QTimeZone(currentText().toUtf8());
 }
 
