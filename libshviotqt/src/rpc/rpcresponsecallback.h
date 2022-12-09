@@ -1,7 +1,8 @@
 #pragma once
 
 #include "../shviotqtglobal.h"
-#include "rpc.h"
+
+#include <shv/coreqt/rpc.h>
 
 #include <shv/core/utils.h>
 #include <shv/chainpack/rpc.h>

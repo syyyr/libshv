@@ -1,10 +1,9 @@
 #include "socketrpcconnection.h"
 #include "socket.h"
 
+#include <shv/coreqt/rpc.h>
 #include <shv/coreqt/log.h>
-
 #include <shv/chainpack/rpcmessage.h>
-
 #include <shv/core/exception.h>
 
 #include <QTimer>
@@ -27,7 +26,7 @@ SocketRpcConnection::SocketRpcConnection(QObject *parent)
 	: QObject(parent)
 {
 	//shvDebug() << __FUNCTION__;
-	Rpc::registerQtMetaTypes();
+	shv::coreqt::rpc::registerQtMetaTypes();
 #ifdef DUMP_DATA_FILE
 	QFile *f = new QFile("/tmp/rpc.dat", this);
 	f->setObjectName("DUMP_DATA_FILE");

@@ -1,27 +1,23 @@
 #pragma once
 
-#include "../shviotqtglobal.h"
+#include "shvcoreqtglobal.h"
 
 #include <shv/chainpack/rpcvalue.h>
 
 #include <QDateTime>
 #include <QMetaType>
 
-Q_DECLARE_METATYPE(shv::chainpack::RpcValue)
-
 namespace shv {
-namespace iotqt {
+namespace coreqt {
 namespace rpc {
 
-class SHVIOTQT_DECL_EXPORT Rpc
-{
-public:
-	static void registerQtMetaTypes();
-};
+SHVCOREQT_DECL_EXPORT void registerQtMetaTypes();
+SHVCOREQT_DECL_EXPORT QVariant rpcValueToQVariant(const chainpack::RpcValue &v, bool *ok = nullptr);
+SHVCOREQT_DECL_EXPORT chainpack::RpcValue qVariantToRpcValue(const QVariant &v, bool *ok = nullptr);
+SHVCOREQT_DECL_EXPORT QStringList rpcValueToStringList(const shv::chainpack::RpcValue &rpcval);
+SHVCOREQT_DECL_EXPORT shv::chainpack::RpcValue stringListToRpcValue(const QStringList &sl);
 
-} // namespace chainack
-} // namespace coreqt
-} // namespace shv
+}}}
 
 template<> inline QString rpcvalue_cast<QString>(const shv::chainpack::RpcValue &v) { return QString::fromStdString(v.asString()); }
 template<> inline QDateTime rpcvalue_cast<QDateTime>(const shv::chainpack::RpcValue &v)
@@ -51,3 +47,5 @@ template<> inline shv::chainpack::RpcValue RpcValue::fromValue<QDateTime>(const 
 
 } // namespace chainack
 } // namespace shv
+
+Q_DECLARE_METATYPE(shv::chainpack::RpcValue)

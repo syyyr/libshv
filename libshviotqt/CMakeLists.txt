@@ -12,7 +12,6 @@ qt_add_library(libshviotqt SHARED
     src/rpc/clientconnection.cpp
     src/rpc/deviceappclioptions.cpp
     src/rpc/deviceconnection.cpp
-    src/rpc/rpc.cpp
     src/rpc/rpcresponsecallback.cpp
     src/rpc/serverconnection.cpp
     src/rpc/socket.cpp
