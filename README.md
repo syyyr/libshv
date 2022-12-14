@@ -57,6 +57,10 @@ cmake -DWITH_GUI_EXAMPLES ..
 ```
 ./minimalshvclient 
 ```
+to debug SHV messages
+```
+./minimalshvclient -v rpcmsg
+```
 ## Tools
 ### ShvSpy
 https://github.com/silicon-heaven/shvspy
