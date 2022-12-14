@@ -61,4 +61,4 @@ cmake -DWITH_GUI_EXAMPLES ..
 ### ShvSpy
 https://github.com/silicon-heaven/shvspy
 
-Gui tool to inspect shv tree and to call shv methods.
+Gui tool to inspect shv tree and to call shv methods. Prtable binaries an be downloaded from CI (Actions).
