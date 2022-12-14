@@ -29,9 +29,8 @@ public:
 	enum class State {NotConnected = 0, Connecting, SocketConnected, BrokerConnected, ConnectionError};
 
 	SHV_FIELD_IMPL(std::string, u, U, ser)
-	SHV_FIELD_IMPL(std::string, h, H, ost)
+	//SHV_FIELD_IMPL(std::string, h, H, ost)
 	SHV_FIELD_BOOL_IMPL2(p, P, eerVerify, true)
-	//SHV_FIELD_BOOL_IMPL(s, S, kipLoginPhase)
 	SHV_FIELD_IMPL(std::string, p, P, assword)
 	SHV_FIELD_IMPL(shv::chainpack::IRpcConnection::LoginType, l, L, oginType)
 	SHV_FIELD_IMPL(shv::chainpack::RpcValue, c, C, onnectionOptions)
@@ -41,9 +40,9 @@ public:
 	explicit ClientConnection(QObject *parent = nullptr);
 	~ClientConnection() Q_DECL_OVERRIDE;
 
-	QUrl connectionUrl() const;
-	static QUrl connectionUrlFromString(const std::string &url_str);
-	static void tst_connectionUrlFromString();
+	QUrl connectionUrl() const { return m_connectionUrl; }
+	void setConnectionUrl(const QUrl &url) { m_connectionUrl = url; }
+	void setConnectionString(const QString &connection_string);
 
 	static const char* stateToString(State state);
 
@@ -107,7 +106,11 @@ protected:
 private:
 	bool isAutoConnect() const { return m_checkBrokerConnectedInterval > 0; }
 	void restartIfAutoConnect();
+
+	static QUrl connectionUrlFromString(const QString &url_str);
+	static void tst_connectionUrlFromString();
 private:
+	QUrl m_connectionUrl;
 	QTimer *m_checkBrokerConnectedTimer;
 	int m_checkBrokerConnectedInterval = 0;
 	QTimer *m_heartBeatTimer = nullptr;

@@ -1,0 +1,92 @@
+#include "application.h"
+
+#include <shv/chainpack/rpc.h>
+#include <shv/iotqt/rpc/clientconnection.h>
+#include <shv/iotqt/rpc/rpcresponsecallback.h>
+#include <shv/coreqt/log.h>
+
+#include <QTimer>
+
+using namespace std;
+using namespace shv::chainpack;
+using namespace shv::iotqt;
+using namespace shv::iotqt::rpc;
+
+Application::Application(int &argc, char **argv)
+	: Super(argc, argv)
+{
+	m_rpcConnection = new ClientConnection(this);
+
+	connect(m_rpcConnection, &ClientConnection::brokerConnectedChanged, this, [this](bool is_connected) {
+		if(is_connected) {
+			shvInfo() << "Subscribing INT property changes.";
+			subscribeChanges("test/someInt");
+			shvInfo() << "Changing INT property value, you should get notification.";
+			callShvMethod("test/someInt", "set", 123);
+			callShvMethod("test/someInt", "set", 42);
+		}
+	});
+	connect(m_rpcConnection, &ClientConnection::rpcMessageReceived, this, &Application::onRpcMessageReceived);
+
+	m_rpcConnection->setConnectionString("tcp://admin:admin!123@localhost");
+	m_rpcConnection->open();
+}
+
+void Application::onRpcMessageReceived(const shv::chainpack::RpcMessage &msg)
+{
+	shvLogFuncFrame() << msg.toCpon();
+	if(msg.isRequest()) {
+		RpcRequest rq(msg);
+		shvInfo() << "[RQ ] ===> RPC request received:" << rq.toPrettyString();
+	}
+	else if(msg.isResponse()) {
+		RpcResponse rp(msg);
+		shvInfo() << "[RSP] ===> RPC response received:" << rp.toPrettyString();
+	}
+	else if(msg.isSignal()) {
+		RpcSignal nt(msg);
+		shvInfo() << "[SIG] ===> RPC signal received:" << nt.toPrettyString();
+	}
+}
+
+void Application::subscribeChanges(const string &shv_path)
+{
+	auto params = RpcValue::Map {
+		{Rpc::PAR_PATH, shv_path},
+		{Rpc::PAR_METHOD, Rpc::SIG_VAL_CHANGED},
+	};
+	callShvMethod(Rpc::DIR_BROKER_APP, Rpc::METH_SUBSCRIBE, params);
+}
+
+void Application::unsubscribeChanges(const string &shv_path)
+{
+	auto params = RpcValue::Map {
+		{Rpc::PAR_PATH, shv_path},
+		{Rpc::PAR_METHOD, Rpc::SIG_VAL_CHANGED},
+	};
+	callShvMethod(Rpc::DIR_BROKER_APP, Rpc::METH_UNSUBSCRIBE, params);
+}
+
+void Application::callShvMethod(const std::string &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const QObject *context, std::function<void (const shv::chainpack::RpcValue &)> success_callback, std::function<void (const QString &)> error_callback)
+{
+	auto *rpcc = RpcCall::create(m_rpcConnection)
+			->setShvPath(shv_path)
+			->setMethod(method)
+			->setParams(params);
+	connect(rpcc, &shv::iotqt::rpc::RpcCall::maybeResult, context? context: this, [success_callback, error_callback, shv_path, method](const ::shv::chainpack::RpcValue &result, const QString &error) {
+		if(error.isEmpty()) {
+			if(success_callback)
+				success_callback(result);
+			else
+				shvInfo() << "method:" << method << "on path:" << shv_path << "call success, resut:" << result.toCpon();
+		}
+		else {
+			if(error_callback)
+				error_callback(error);
+			else
+				shvError() << "method:" << method << "on path:" << shv_path << "call error:" << error;
+		}
+	});
+	// rpccc delete itself later, after maybeResult is emited
+	rpcc->start();
+}

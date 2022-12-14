@@ -367,7 +367,7 @@ AclManagerConfigFiles::AclManagerConfigFiles(BrokerApp *broker_app)
 
 std::string AclManagerConfigFiles::configDir() const
 {
-	return m_brokerApp->cliOptions()->configDir();
+	return m_brokerApp->cliOptions()->effectiveConfigDir();
 }
 
 void AclManagerConfigFiles::clearCache()

@@ -15,12 +15,12 @@ TcpServer::TcpServer(QObject *parent)
 
 TcpServer::~TcpServer()
 {
-	shvInfo() << "Destroying SHV TcpServer";
+	shvMessage() << "Destroying SHV TcpServer";
 }
 
 bool TcpServer::start(int port)
 {
-	shvInfo() << "start listenning on port:" << port;
+	shvMessage() << "start listenning on port:" << port;
 	if (!listen(QHostAddress::AnyIPv4, static_cast<quint16>(port))) {
 		shvError() << tr("Unable to start the server: %1.").arg(errorString());
 		close();

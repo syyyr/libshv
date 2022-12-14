@@ -1,5 +1,4 @@
-#include "samplebrokerapp.h"
-#include "aclmanager.h"
+#include "application.h"
 
 #include <shv/iotqt/node/shvnodetree.h>
 #include <shv/coreqt/log.h>
@@ -107,10 +106,10 @@ private:
 	}
 };
 
-SampleBrokerApp::SampleBrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
+Application::Application(int &argc, char **argv, shv::broker::AppCliOptions *cli_opts)
 	: Super(argc, argv, cli_opts)
 {
-	auto *m = new AclManager(this);
+	auto *m = new shv::broker::AclManagerConfigFiles(this);
 	setAclManager(m);
 	auto nd1 = new TestNode();
 	m_nodesTree->mount("test", nd1);
@@ -124,21 +123,6 @@ SampleBrokerApp::SampleBrokerApp(int &argc, char **argv, AppCliOptions *cli_opts
 		nd->setValue(42);
 	}
 
-}
-
-SampleBrokerApp::~SampleBrokerApp()
-{
-	shvInfo() << "Destroying SHV BROKER application object";
-}
-
-QString SampleBrokerApp::versionString() const
-{
-	return QCoreApplication::applicationVersion();
-}
-
-AppCliOptions *SampleBrokerApp::cliOptions()
-{
-	return dynamic_cast<AppCliOptions*>(Super::cliOptions());
 }
 
 

@@ -9,6 +9,7 @@
 
 #include <QFile>
 #include <QDir>
+#include <QSslConfiguration>
 
 namespace shv::broker::rpc {
 
@@ -16,6 +17,12 @@ BrokerTcpServer::BrokerTcpServer(SslMode ssl_mode, QObject *parent)
 	: Super(parent)
 	, m_sslMode(ssl_mode)
 {
+}
+
+BrokerTcpServer::~BrokerTcpServer()
+{
+	if(m_sslConfiguration)
+		delete m_sslConfiguration;
 }
 
 ClientConnectionOnBroker *BrokerTcpServer::connectionById(int connection_id)
@@ -26,9 +33,11 @@ ClientConnectionOnBroker *BrokerTcpServer::connectionById(int connection_id)
 bool BrokerTcpServer::loadSslConfig()
 {
 	if (m_sslMode == SslMode::SecureMode) {
-		m_sslConfiguration = load_ssl_configuration(BrokerApp::instance()->cliOptions());
+		if(!m_sslConfiguration)
+			m_sslConfiguration = new QSslConfiguration();
+		*m_sslConfiguration = load_ssl_configuration(BrokerApp::instance()->cliOptions());
 	}
-	return !m_sslConfiguration.isNull();
+	return m_sslConfiguration && !m_sslConfiguration->isNull();
 }
 
 void BrokerTcpServer::incomingConnection(qintptr socket_descriptor)
@@ -68,7 +77,8 @@ void BrokerTcpServer::incomingConnection(qintptr socket_descriptor)
 			return;
 		}
 		shvDebug() << "startServerEncryption";
-		socket->setSslConfiguration(m_sslConfiguration);
+		if(m_sslConfiguration)
+			socket->setSslConfiguration(*m_sslConfiguration);
 		socket->startServerEncryption();
 		addPendingConnection(socket);
 	} else if (m_sslMode == NonSecureMode) {

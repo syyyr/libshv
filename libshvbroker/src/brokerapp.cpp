@@ -394,7 +394,7 @@ void BrokerApp::startTcpServers()
 			}
 		}
 		else {
-			shvInfo() << "TCP server port is not set, it will not be started.";
+			shvMessage() << "TCP server port is not set, it will not be started.";
 		}
 	}
 
@@ -412,7 +412,7 @@ void BrokerApp::startTcpServers()
 			}
 		}
 		else {
-			shvInfo() << "SSL server port is not set, it will not be started.";
+			shvMessage() << "SSL server port is not set, it will not be started.";
 		}
 	}
 }
@@ -426,26 +426,28 @@ void BrokerApp::startWebSocketServers()
 		int port = opts->serverWebsocketPort();
 		if(port > 0) {
 			m_webSocketServer = new rpc::WebSocketServer(QWebSocketServer::NonSecureMode, this);
+			shvInfo() << "Starting ws server on port" << port;
 			if(!m_webSocketServer->start(port)) {
 				SHV_EXCEPTION("Cannot start WebSocket server!");
 			}
 		}
 	}
 	else {
-		shvInfo() << "Websocket server port is not set, it will not be started.";
+		shvMessage() << "Websocket server port is not set, it will not be started.";
 	}
 	if(opts->serverWebsocketSslPort_isset()) {
 		SHV_SAFE_DELETE(m_webSocketSslServer);
 		int port = opts->serverWebsocketSslPort();
 		if(port > 0) {
 			m_webSocketSslServer = new rpc::WebSocketServer(QWebSocketServer::SecureMode, this);
+			shvInfo() << "Starting wss server on port" << port;
 			if(!m_webSocketSslServer->start(port)) {
 				SHV_EXCEPTION("Cannot start WebSocket SSL server!");
 			}
 		}
 	}
 	else {
-		shvInfo() << "Websocket SSL server port is not set, it will not be started.";
+		shvMessage() << "Websocket SSL server port is not set, it will not be started.";
 	}
 #else
 	shvWarning() << "Websocket server is not included in this build";

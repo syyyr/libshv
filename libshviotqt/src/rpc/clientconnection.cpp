@@ -55,12 +55,18 @@ ClientConnection::~ClientConnection()
 	shvDebug() << __FUNCTION__;
 }
 
-QUrl ClientConnection::connectionUrl() const
+void ClientConnection::setConnectionString(const QString &connection_string)
 {
-	return connectionUrlFromString(host());
+	setConnectionUrl(connectionUrlFromString(connection_string));
+	if(auto user = m_connectionUrl.userName(); !user.isEmpty()) {
+		setUser(user.toStdString());
+	}
+	if(auto password = m_connectionUrl.password(); !password.isEmpty()) {
+		setPassword(password.toStdString());
+	}
 }
 
-QUrl ClientConnection::connectionUrlFromString(const std::string &url_str)
+QUrl ClientConnection::connectionUrlFromString(const QString &url_str)
 {
 	static QVector<QString> known_schemes {
 		Socket::schemeToString(Socket::Scheme::Tcp),
@@ -70,10 +76,9 @@ QUrl ClientConnection::connectionUrlFromString(const std::string &url_str)
 				Socket::schemeToString(Socket::Scheme::SerialPort),
 				Socket::schemeToString(Socket::Scheme::LocalSocket),
 	};
-	QString qurl_str = QString::fromStdString(url_str);
-	QUrl url(qurl_str);
+	QUrl url(url_str);
 	if(!known_schemes.contains(url.scheme())) {
-		url = QUrl(Socket::schemeToString(Socket::Scheme::Tcp) + QStringLiteral("://") + qurl_str);
+		url = QUrl(Socket::schemeToString(Socket::Scheme::Tcp) + QStringLiteral("://") + url_str);
 	}
 	if(url.port(0) == 0) {
 		auto scheme = Socket::schemeFromString(url.scheme().toStdString());
@@ -98,7 +103,7 @@ void ClientConnection::tst_connectionUrlFromString()
 		std::tuple<string, string>("jessie.elektroline.cz"s, "tcp://jessie.elektroline.cz:3755"s),
 		std::tuple<string, string>("jessie.elektroline.cz:80"s, "tcp://jessie.elektroline.cz:80"s),
 	}) {
-		QUrl url1 = connectionUrlFromString(u1);
+		QUrl url1 = connectionUrlFromString(QString::fromStdString(u1));
 		QUrl url2(QString::fromStdString(u2));
 		shvInfo() << url1.toString() << "vs" << url2.toString() << "host:" << url1.host() << "port:" << url1.port();
 		shvInfo() << "url scheme:" << url1.scheme();
@@ -138,15 +143,14 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 		setProtocolType(shv::chainpack::Rpc::ProtocolType::ChainPack);
 
 	//setScheme(schemeFromString(cli_opts->serverScheme()));
-	setHost(cli_opts->serverHost());
+	setConnectionString(QString::fromStdString(cli_opts->serverHost()));
 	//setPort(cli_opts->serverPort());
 	//setSecurityType(cli_opts->serverSecurityType());
 	setPeerVerify(cli_opts->serverPeerVerify());
-	setUser(cli_opts->user());
-	setPassword(cli_opts->password());
-	if(password().empty() && !cli_opts->passwordFile().empty()) {
-		std::ifstream is(cli_opts->passwordFile(), std::ios::binary);
-		if(is) {
+	if(cli_opts->user_isset())
+		setUser(cli_opts->user());
+	if(cli_opts->passwordFile_isset()) {
+		if(std::ifstream is(cli_opts->passwordFile(), std::ios::binary); is) {
 			std::string pwd;
 			is >> pwd;
 			setPassword(pwd);
@@ -155,6 +159,8 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 			shvError() << "Cannot open password file";
 		}
 	}
+	if(cli_opts->password_isset())
+		setPassword(cli_opts->password());
 	shvDebug() << cli_opts->loginType() << "-->" << static_cast<int>(shv::chainpack::UserLogin::loginTypeFromString(cli_opts->loginType()));
 	setLoginType(shv::chainpack::UserLogin::loginTypeFromString(cli_opts->loginType()));
 
@@ -176,7 +182,7 @@ void ClientConnection::setTunnelOptions(const chainpack::RpcValue &opts)
 void ClientConnection::open()
 {
 	if(!hasSocket()) {
-		QUrl url(QString::fromStdString(host()));
+		QUrl url = connectionUrl();
 		auto scheme = Socket::schemeFromString(url.scheme().toStdString());
 		Socket *socket;
 		if(scheme == Socket::Scheme::WebSocket || scheme == Socket::Scheme::WebSocketSecure) {
@@ -360,7 +366,7 @@ void ClientConnection::onSocketConnectedChanged(bool is_connected)
 		setState(State::SocketConnected);
 		clearBuffers();
 		if(loginType() == LoginType::None) {
-			shvInfo() << "Connection scheme:" << host() << " is skipping login phase.";
+			shvInfo() << "Connection scheme:" << connectionUrl().scheme() << " is skipping login phase.";
 			setState(State::BrokerConnected);
 		}
 		else {
