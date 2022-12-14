@@ -40,20 +40,25 @@ cd build
 cmake ..
 cmake --build .
 ```
-with CLI samples:
+with CLI examples:
 ```
-cmake -DWITH_CLI_SAMPLES ..
+cmake -DWITH_CLI_EXAMPLES ..
 ```
 with GUI samples:
 ```
-cmake -DWITH_GUI_SAMPLES ..
+cmake -DWITH_GUI_EXAMPLES ..
 ```
 ## Samples
 ### Minimal SHV Broker
 ```
-./minimalshvbroker --config $SRC_DIR/samples/cli/minimalshvbroker/config/shvbroker.conf
+./minimalshvbroker --config $SRC_DIR/examples/cli/minimalshvbroker/config/shvbroker.conf
 ```
 ### Minimal SHV Client
 ```
 ./minimalshvclient 
 ```
+## Tools
+### ShvSpy
+https://github.com/silicon-heaven/shvspy
+
+Gui tool to inspect shv tree and to call shv methods.
