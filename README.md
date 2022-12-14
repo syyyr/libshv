@@ -33,20 +33,18 @@ CONS:
 More detailed information can be found on wiki.
 
 ## Build
-```sh
-qmake SHV_PROJECT_TOP_SRCDIR=`pwd` SHV_PROJECT_TOP_BUILDDIR=`pwd`
-make
-```
-QtCreator qmake additional arguments
-```
-SHV_PROJECT_TOP_SRCDIR=%{sourceDir} SHV_PROJECT_TOP_BUILDDIR=%{buildDir}
-```
 
-### CMake
-*libshv* also supports CMake. The standard build procedure looks like this:
 ```sh
 mkdir build
 cd build
 cmake ..
-make
+cmake --build .
+```
+with CLI samples:
+```
+cmake -DWITH_CLI_SAMPLES ..
+```
+with GUI samples:
+```
+cmake -DWITH_GUI_SAMPLES ..
 ```
