@@ -2,7 +2,7 @@
 
 #include "shvnode.h"
 #if QT_VERSION_MAJOR >= 6
-#include "../rpc/rpc.h"
+#include <shv/coreqt/rpc.h>
 #endif
 
 namespace shv {
