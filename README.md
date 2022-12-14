@@ -48,3 +48,12 @@ with GUI samples:
 ```
 cmake -DWITH_GUI_SAMPLES ..
 ```
+## Samples
+### Minimal SHV Broker
+```
+./minimalshvbroker --config $SRC_DIR/samples/cli/minimalshvbroker/config/shvbroker.conf
+```
+### Minimal SHV Client
+```
+./minimalshvclient 
+```
