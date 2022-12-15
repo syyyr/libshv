@@ -43,6 +43,7 @@ public:
 	QUrl connectionUrl() const { return m_connectionUrl; }
 	void setConnectionUrl(const QUrl &url);
 	void setConnectionString(const QString &connection_string);
+	void setHost(const std::string &host) { setConnectionString(QString::fromStdString(host)); }
 
 	static const char* stateToString(State state);
 
