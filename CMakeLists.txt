@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 3.18.4)
 
 set(WITH_CLI_EXAMPLES OFF CACHE BOOL "Enable build of CLI examples")
 set(WITH_GUI_EXAMPLES OFF CACHE BOOL "Enable build of GUI examples")
+set(WITH_SANITIZERS OFF CACHE BOOL "Enable ASan/UBsan")
+if(WITH_SANITIZERS)
+	set(CMAKE_C_FLAGS "-fsanitize=address,undefined ${CMAKE_CXX_FLAGS}")
+	set(CMAKE_CXX_FLAGS "-fsanitize=address,undefined ${CMAKE_CXX_FLAGS}")
+	set(CMAKE_EXE_LINKER_FLAGS "-fsanitize=address,undefined ${CMAKE_CXX_FLAGS}")
+endif()
 
 project(libshv LANGUAGES C CXX)
 include(CTest)
