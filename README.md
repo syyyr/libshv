@@ -58,9 +58,9 @@ to connect to minimalshvbroker
 ```
 ./minimalshvclient 
 ```
-to connect to shvbroker
+to connect to other shv broker
 ```
-./minimalshvclient --host HOST
+./minimalshvclient --host HOST:port
 ```
 to debug RPC trafic
 ```
