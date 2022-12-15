@@ -2,8 +2,11 @@
 libshv supports some limited fuzz testing.
 
 ## Building
-Fuzz tests are built by default, when building with Clang. Make sure to supply `-fsanitize=address,undefined` or
-`-fsanitize=memory` to the build flags to catch errors. For example:
+Fuzz tests are built by default, when building with Clang.
+
+**Important:** *Make sure to set the `WITH_SANITIZER` option to `ON`. Fuzzing doesn't do anything if sanitizers aren't enabled.*
+
+Alternatively, you can supply `-fsanitize=address,undefined` or `-fsanitize=memory` to the build flags manually. For example:
 ```bash
 CXXFLAGS=-fsanitize=address,undefined LDFLAGS=-fsanitize=address,undefined cmake ..
 ```
