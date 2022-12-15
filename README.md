@@ -54,8 +54,21 @@ cmake -DWITH_GUI_EXAMPLES ..
 ./minimalshvbroker --config $SRC_DIR/examples/cli/minimalshvbroker/config/shvbroker.conf
 ```
 ### Minimal SHV Client
+to connect to minimalshvbroker
 ```
 ./minimalshvclient 
+```
+to connect to shvbroker
+```
+./minimalshvclient --host HOST
+```
+to debug RPC trafic
+```
+./minimalshvclient -v rpcmsg
+```
+to print help
+```
+./minimalshvclient --help
 ```
 ## Tools
 ### ShvSpy
