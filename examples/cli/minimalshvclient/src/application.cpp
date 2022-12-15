@@ -2,6 +2,7 @@
 
 #include <shv/chainpack/rpc.h>
 #include <shv/iotqt/rpc/clientconnection.h>
+#include <shv/iotqt/rpc/clientappclioptions.h>
 #include <shv/iotqt/rpc/rpcresponsecallback.h>
 #include <shv/coreqt/log.h>
 
@@ -12,7 +13,7 @@ using namespace shv::chainpack;
 using namespace shv::iotqt;
 using namespace shv::iotqt::rpc;
 
-Application::Application(int &argc, char **argv)
+Application::Application(int &argc, char **argv, const shv::iotqt::rpc::ClientAppCliOptions &cli_opts)
 	: Super(argc, argv)
 {
 	m_rpcConnection = new ClientConnection(this);
@@ -23,12 +24,19 @@ Application::Application(int &argc, char **argv)
 			subscribeChanges("test/someInt");
 			shvInfo() << "Changing INT property value, you should get notification.";
 			callShvMethod("test/someInt", "set", 123);
-			callShvMethod("test/someInt", "set", 42);
+			shvInfo() << "Reading INT property new value back.";
+			callShvMethod("test/someInt", "get", {}, this, [this](const RpcValue &result) {
+				shvInfo() << "Value set previously:" << result.toInt();
+				callShvMethod("test/someInt", "set", 42);
+			});
 		}
 	});
 	connect(m_rpcConnection, &ClientConnection::rpcMessageReceived, this, &Application::onRpcMessageReceived);
 
-	m_rpcConnection->setConnectionString("tcp://admin:admin!123@localhost");
+	if(cli_opts.serverHost_isset() || cli_opts.user_isset() || cli_opts.password_isset())
+		m_rpcConnection->setCliOptions(&cli_opts);
+	else
+		m_rpcConnection->setConnectionString("tcp://test:test@localhost");
 	m_rpcConnection->open();
 }
 
@@ -37,15 +45,15 @@ void Application::onRpcMessageReceived(const shv::chainpack::RpcMessage &msg)
 	shvLogFuncFrame() << msg.toCpon();
 	if(msg.isRequest()) {
 		RpcRequest rq(msg);
-		shvInfo() << "[RQ ] ===> RPC request received:" << rq.toPrettyString();
+		shvMessage() << "[RQ ] ===> RPC request received:" << rq.toPrettyString();
 	}
 	else if(msg.isResponse()) {
 		RpcResponse rp(msg);
-		shvInfo() << "[RSP] ===> RPC response received:" << rp.toPrettyString();
+		shvMessage() << "[RSP] ===> RPC response received:" << rp.toPrettyString();
 	}
 	else if(msg.isSignal()) {
 		RpcSignal nt(msg);
-		shvInfo() << "[SIG] ===> RPC signal received:" << nt.toPrettyString();
+		shvMessage() << "[SIG] ===> RPC signal received:" << nt.toPrettyString();
 	}
 }
 

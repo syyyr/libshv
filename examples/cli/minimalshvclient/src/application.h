@@ -3,7 +3,7 @@
 #include <QCoreApplication>
 
 namespace shv::chainpack { class RpcMessage; class RpcValue; }
-namespace shv::iotqt::rpc { class ClientConnection; }
+namespace shv::iotqt::rpc { class ClientConnection; class ClientAppCliOptions; }
 
 class Application : public QCoreApplication
 {
@@ -11,7 +11,7 @@ class Application : public QCoreApplication
 private:
 	using Super = QCoreApplication;
 public:
-	Application(int &argc, char **argv);
+	Application(int &argc, char **argv, const shv::iotqt::rpc::ClientAppCliOptions &cli_opts);
 private:
 	void callShvMethod(const std::string &shv_path, const std::string &method, const shv::chainpack::RpcValue &params,
 						const QObject *context = nullptr,

@@ -397,7 +397,6 @@ bool ConfigCLIOptions::loadConfigFile()
 	}
 	else {
 		shvError() << "Config file:" << config_file << "not found.";
-		return false;
 	}
 	return true;
 }

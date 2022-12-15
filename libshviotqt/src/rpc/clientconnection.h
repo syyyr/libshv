@@ -41,7 +41,7 @@ public:
 	~ClientConnection() Q_DECL_OVERRIDE;
 
 	QUrl connectionUrl() const { return m_connectionUrl; }
-	void setConnectionUrl(const QUrl &url) { m_connectionUrl = url; }
+	void setConnectionUrl(const QUrl &url);
 	void setConnectionString(const QString &connection_string);
 
 	static const char* stateToString(State state);

@@ -55,15 +55,21 @@ ClientConnection::~ClientConnection()
 	shvDebug() << __FUNCTION__;
 }
 
-void ClientConnection::setConnectionString(const QString &connection_string)
+void ClientConnection::setConnectionUrl(const QUrl &url)
 {
-	setConnectionUrl(connectionUrlFromString(connection_string));
+	m_connectionUrl = url;
 	if(auto user = m_connectionUrl.userName(); !user.isEmpty()) {
 		setUser(user.toStdString());
 	}
 	if(auto password = m_connectionUrl.password(); !password.isEmpty()) {
 		setPassword(password.toStdString());
 	}
+	m_connectionUrl.setUserInfo({});
+}
+
+void ClientConnection::setConnectionString(const QString &connection_string)
+{
+	setConnectionUrl(connectionUrlFromString(connection_string));
 }
 
 QUrl ClientConnection::connectionUrlFromString(const QString &url_str)
