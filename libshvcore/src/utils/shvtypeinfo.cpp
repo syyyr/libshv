@@ -706,8 +706,8 @@ string cut_prefix(const string &path, const string &prefix) {
 		return path.substr(prefix.size() + 1);
 	}
 	return string();
-};
-string cut_postfix(const string &path, const string &postfix) {
+}
+string cut_sufix(const string &path, const string &postfix) {
 	if(postfix.size() == 0) {
 		return path;
 	}
@@ -715,7 +715,7 @@ string cut_postfix(const string &path, const string &postfix) {
 		return path.substr(0, path.size() - postfix.size() - 1);
 	}
 	return string();
-};
+}
 }
 
 ShvTypeInfo::PathInfo ShvTypeInfo::pathInfo(const std::string &shv_path) const
@@ -733,7 +733,7 @@ ShvTypeInfo::PathInfo ShvTypeInfo::pathInfo(const std::string &shv_path) const
 		ret.devicePath = device_path;
 		ret.deviceType = device_type;
 		if(deviation_found) {
-			ret.propertyPath = cut_postfix(cut_prefix(shv_path, ret.devicePath), ret.fieldPath);
+			ret.propertyPath = cut_sufix(cut_prefix(shv_path, ret.devicePath), ret.fieldPath);
 		}
 		else {
 			const auto &[own_property_path, field_path, property_descr] = findPropertyDescription(device_type, property_path);
