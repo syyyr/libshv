@@ -2,7 +2,7 @@
 
 #include <shv/iotqt/rpc/tcpserver.h>
 
-class QSslConfiguration;
+#include <QSslConfiguration>
 
 namespace shv {
 namespace broker {
@@ -28,10 +28,7 @@ protected:
 	shv::iotqt::rpc::ServerConnection* createServerConnection(QTcpSocket *socket, QObject *parent) override;
 protected:
 	SslMode m_sslMode;
-	// pointer must be used because QSslConfiguration() prints some errors in qt 5.15.2
-	//qt.network.ssl: QSslSocket: cannot resolve EVP_PKEY_base_id
-	//qt.network.ssl: QSslSocket: cannot resolve SSL_get_peer_certificate
-	QSslConfiguration *m_sslConfiguration = nullptr;
+	QSslConfiguration m_sslConfiguration;
 };
 
 }}}
