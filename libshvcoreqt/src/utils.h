@@ -121,11 +121,11 @@ namespace shv {
 namespace chainpack { class RpcValue; }
 namespace coreqt {
 
-template <typename Type> struct always_false : std::false_type {};
-
 class SHVCOREQT_DECL_EXPORT Utils
 {
 private:
+	template <typename Type> static const auto always_false = false;
+
 	// Need this overload, so that the templated function finds the libshvcore version.
 	static std::string joinPath(const std::string& p1, const std::string& p2);
 	template <typename ReturnType>
@@ -161,7 +161,7 @@ public:
 			// The head type is unknown, but we can construct the return type out of it.
 			return joinPath<ReturnType>(ReturnType(head), joinPath<ReturnType>(rest...));
 		} else {
-			static_assert(always_false<HeadStringType>::value, "joinPath: Can't convert input parameter to the desired return type.");
+			static_assert(always_false<HeadStringType>, "joinPath: Can't convert input parameter to the desired return type.");
 		}
 	}
 
