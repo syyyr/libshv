@@ -153,13 +153,13 @@ public:
 			return joinPath(head, joinPath<ReturnType>(rest...));
 		} else if constexpr (std::is_same<HeadStringType, std::string>()) {
 			// The head type is std::string, so the return type must be QString.
-			return joinPath<ReturnType>(QString::fromStdString(head), joinPath<ReturnType>(rest...));
+			return joinPath(QString::fromStdString(head), joinPath<ReturnType>(rest...));
 		} else if constexpr (std::is_same<HeadStringType, QString>()) {
 			// The head type is QString, so the return type must be std::string.
-			return joinPath<ReturnType>(head.toStdString(), joinPath<ReturnType>(rest...));
+			return joinPath(head.toStdString(), joinPath<ReturnType>(rest...));
 		} else if constexpr (std::is_constructible<ReturnType, HeadStringType>()) {
 			// The head type is unknown, but we can construct the return type out of it.
-			return joinPath<ReturnType>(ReturnType(head), joinPath<ReturnType>(rest...));
+			return joinPath(ReturnType(head), joinPath<ReturnType>(rest...));
 		} else {
 			static_assert(always_false<HeadStringType>, "joinPath: Can't convert input parameter to the desired return type.");
 		}
