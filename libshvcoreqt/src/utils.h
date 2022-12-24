@@ -128,6 +128,11 @@ class SHVCOREQT_DECL_EXPORT Utils
 private:
 	// Need this overload, so that the templated function finds the libshvcore version.
 	static std::string joinPath(const std::string& p1, const std::string& p2);
+	template <typename ReturnType>
+	static ReturnType joinPath()
+	{
+		return {};
+	}
 
 public:
 	static bool isDefaultQVariantValue(const QVariant &val);
@@ -137,11 +142,6 @@ public:
 	static QStringList rpcValueToStringList(const shv::chainpack::RpcValue &rpcval);
 	static shv::chainpack::RpcValue stringListToRpcValue(const QStringList &sl);
 	static QString joinPath(const QString &p1, const QString &p2);
-	template <typename ReturnType>
-	static ReturnType joinPath()
-	{
-		return {};
-	}
 
 	template <typename ReturnType = QString, typename HeadStringType, typename... StringTypes>
 	static ReturnType joinPath(const HeadStringType& head, const StringTypes& ...rest)
