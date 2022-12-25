@@ -1,5 +1,5 @@
 add_executable(minimalshvclient
-    src/main.cpp
+	src/main.cpp
 	src/application.cpp
 	)
 

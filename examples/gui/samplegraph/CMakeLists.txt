@@ -1,7 +1,7 @@
 add_executable(samplegraph
 	main.cpp
 	mainwindow.cpp
-    )
+	)
 
 target_link_libraries(samplegraph PRIVATE libshvvisu)
 
