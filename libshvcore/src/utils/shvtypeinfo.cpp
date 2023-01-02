@@ -613,12 +613,12 @@ void ShvTypeInfo::setBlacklist(const std::string &shv_path, const chainpack::Rpc
 {
 	if(blacklist.isList()) {
 		for(const auto &path : blacklist.asList()) {
-			m_blacklistedPaths[shv::core::Utils::joinPath(shv_path, path.asString())];
+			m_blacklistedPaths[shv::core::utils::joinPath(shv_path, path.asString())];
 		}
 	}
 	else if(blacklist.isMap()) {
 		for(const auto &[path, val] : blacklist.asMap()) {
-			m_blacklistedPaths[shv::core::Utils::joinPath(shv_path, path)] = val;
+			m_blacklistedPaths[shv::core::utils::joinPath(shv_path, path)] = val;
 		}
 	}
 }
@@ -1039,7 +1039,7 @@ void ShvTypeInfo::forEachProperty(std::function<void (const std::string &shv_pat
 	for(const auto& [device_path, device_type] : m_devicePaths) {
 		if(auto it = m_deviceProperties.find(device_type); it != m_deviceProperties.end()) {
 			for(const auto& [property_path, node_descr] : it->second) {
-				const auto shv_path = shv::core::Utils::joinPath(device_path, property_path);
+				const auto shv_path = shv::core::utils::joinPath(device_path, property_path);
 				fn(shv_path, node_descr);
 			}
 		}
@@ -1103,8 +1103,8 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 			continue;
 		property_methods.push_back(mm.toRpcValue());
 		if(!mm.tags().empty()) {
-			string key = shv::core::Utils::joinPath(property_path, "method"s);
-			key = shv::core::Utils::joinPath(key, mm.name());
+			string key = shv::core::utils::joinPath(property_path, "method"s);
+			key = shv::core::utils::joinPath(key, mm.name());
 			setExtraTags(key, mm.tags());
 		}
 	}
@@ -1114,7 +1114,7 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 		const string &dtype = tags_map.value(KEY_DEVICE_TYPE).asString();
 		if(!dtype.empty()) {
 			current_device_type = dtype;
-			current_device_path = Utils::joinPath(device_path, property_path);
+			current_device_path = utils::joinPath(device_path, property_path);
 			current_property_path = string();
 			current_device_properties = &new_device_properties;
 			new_device_type_entered = true;
@@ -1133,16 +1133,16 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 		}
 		auto system_path = extra_tags.take(SYSTEM_PATH).asString();
 		if(!system_path.empty()) {
-			auto shv_path = Utils::joinPath(current_device_path, current_property_path);
+			auto shv_path = utils::joinPath(current_device_path, current_property_path);
 			m_systemPathsRoots[shv_path] = system_path;
 		}
 		const auto blacklist = extra_tags.take(KEY_BLACKLIST);
 		if(blacklist.isValid()) {
-			auto shv_path = Utils::joinPath(current_device_path, current_property_path);
+			auto shv_path = utils::joinPath(current_device_path, current_property_path);
 			setBlacklist(shv_path, blacklist);
 		}
 		if(!extra_tags.empty()) {
-			auto shv_path = Utils::joinPath(current_device_path, current_property_path);
+			auto shv_path = utils::joinPath(current_device_path, current_property_path);
 			setExtraTags(shv_path, extra_tags);
 		}
 	}
@@ -1151,7 +1151,7 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 		for (const auto& [child_name, child_node] : node.asMap()) {
 			if(child_name.empty())
 				continue;
-			ShvPath child_property_path = shv::core::Utils::joinPath(current_property_path, child_name);
+			ShvPath child_property_path = shv::core::utils::joinPath(current_property_path, child_name);
 			fromNodesTree_helper(node_types, child_node, current_device_type, current_device_path, child_property_path, current_device_properties);
 		}
 	}
@@ -1169,19 +1169,19 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 					// defined in both definitions, compare them
 					if(!(new_property_descr == existing_property_descr)) {
 						// they are not the same, create deviation
-						auto shv_path = Utils::joinPath(current_device_path, existing_property_path);
+						auto shv_path = utils::joinPath(current_device_path, existing_property_path);
 						setPropertyDeviation(shv_path, new_property_descr);
 					}
 				}
 				else {
 					// property defined only in previous definition, add it as empty to deviations
-					auto shv_path = Utils::joinPath(current_device_path, existing_property_path);
+					auto shv_path = utils::joinPath(current_device_path, existing_property_path);
 					setPropertyDeviation(shv_path, {});
 				}
 			}
 			// check remaining property paths in new definition
 			for(const auto &[existing_property_path, new_property_descr] : new_device_properties) {
-				auto shv_path = Utils::joinPath(current_device_path, existing_property_path);
+				auto shv_path = utils::joinPath(current_device_path, existing_property_path);
 				setPropertyDeviation(shv_path, new_property_descr);
 			}
 		}

@@ -121,13 +121,8 @@ namespace shv {
 namespace chainpack { class RpcValue; }
 namespace coreqt {
 
-template <typename Type> struct always_false : std::false_type {};
-
 class SHVCOREQT_DECL_EXPORT Utils
 {
-private:
-	// Need this overload, so that the templated function finds the libshvcore version.
-	static std::string joinPath(const std::string& p1, const std::string& p2);
 
 public:
 	static bool isDefaultQVariantValue(const QVariant &val);
@@ -136,34 +131,8 @@ public:
 	static chainpack::RpcValue qVariantToRpcValue(const QVariant &v, bool *ok = nullptr);
 	static QStringList rpcValueToStringList(const shv::chainpack::RpcValue &rpcval);
 	static shv::chainpack::RpcValue stringListToRpcValue(const QStringList &sl);
-	static QString joinPath(const QString &p1, const QString &p2);
-	template <typename ReturnType>
-	static ReturnType joinPath()
-	{
-		return {};
-	}
-
-	template <typename ReturnType = QString, typename HeadStringType, typename... StringTypes>
-	static ReturnType joinPath(const HeadStringType& head, const StringTypes& ...rest)
-	{
-		static_assert(std::is_same<ReturnType, std::string>() || std::is_same<ReturnType, QString>(), "joinPath: Unsupported return type. Only QString and std::string are supported.");
-		if constexpr (std::is_same<HeadStringType, ReturnType>()) {
-			// If the HeadStringType is already the desired return type, then we have nothing to convert. Pass as it
-			// normally.
-			return joinPath(head, joinPath<ReturnType>(rest...));
-		} else if constexpr (std::is_same<HeadStringType, std::string>()) {
-			// The head type is std::string, so the return type must be QString.
-			return joinPath<ReturnType>(QString::fromStdString(head), joinPath<ReturnType>(rest...));
-		} else if constexpr (std::is_same<HeadStringType, QString>()) {
-			// The head type is QString, so the return type must be std::string.
-			return joinPath<ReturnType>(head.toStdString(), joinPath<ReturnType>(rest...));
-		} else if constexpr (std::is_constructible<ReturnType, HeadStringType>()) {
-			// The head type is unknown, but we can construct the return type out of it.
-			return joinPath<ReturnType>(ReturnType(head), joinPath<ReturnType>(rest...));
-		} else {
-			static_assert(always_false<HeadStringType>::value, "joinPath: Can't convert input parameter to the desired return type.");
-		}
-	}
+	[[deprecated("Use shv::coreqt::utils::joinPath")]] static QString joinPath(const QString &p1, const QString &p2);
+	[[deprecated("Use shv::coreqt::utils::joinPath")]] static QString joinPath(const QString &p1, const QString &p2, const QString &p3);
 
 	static std::vector<uint8_t> compressGZip(const std::vector<uint8_t> &data);
 
@@ -186,6 +155,40 @@ public:
 		return t;
 	}
 };
+
+namespace utils {
+QString joinPath(const QString &p1, const QString &p2);
+std::string joinPath(const std::string& p1, const std::string& p2);
+
+template <typename ReturnType>
+ReturnType joinPath()
+{
+	return {};
+}
+
+template <typename Type> const auto always_false = false;
+template <typename ReturnType = QString, typename HeadStringType, typename... StringTypes>
+ReturnType joinPath(const HeadStringType& head, const StringTypes& ...rest)
+{
+	static_assert(std::is_same<ReturnType, std::string>() || std::is_same<ReturnType, QString>(), "joinPath: Unsupported return type. Only QString and std::string are supported.");
+	if constexpr (std::is_same<HeadStringType, ReturnType>()) {
+		// If the HeadStringType is already the desired return type, then we
+		// have nothing to convert. Pass it normally.
+		return joinPath(head, joinPath<ReturnType>(rest...));
+	} else if constexpr (std::is_same<HeadStringType, std::string>()) {
+		// The head type is std::string, so the return type must be QString.
+		return joinPath(QString::fromStdString(head), joinPath<ReturnType>(rest...));
+	} else if constexpr (std::is_same<HeadStringType, QString>()) {
+		// The head type is QString, so the return type must be std::string.
+		return joinPath(head.toStdString(), joinPath<ReturnType>(rest...));
+	} else if constexpr (std::is_constructible<ReturnType, HeadStringType>()) {
+		// The head type is unknown, but we can construct the return type out of it.
+		return joinPath(ReturnType(head), joinPath<ReturnType>(rest...));
+	} else {
+		static_assert(always_false<HeadStringType>, "joinPath: Can't convert input parameter to the desired return type.");
+	}
+}
+}
 
 } // namespace coreqt
 } // namespace shv

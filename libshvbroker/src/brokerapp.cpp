@@ -1011,7 +1011,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 						logServiceProvidersM() << "Down-tree SP call,  path:" << shv_url.toString() << "resolved on local broker:" << (service_node != nullptr);
 						//logServiceProvidersM() << "Resolved local path:" << resolved_local_path << "service node:" << service_node;
 						if(service_node) {
-							string resolved_local_path = shv::core::Utils::joinPath(shv_url.service().toString(), shv_url.pathPart().toString());
+							string resolved_local_path = shv::core::utils::joinPath(shv_url.service().toString(), shv_url.pathPart().toString());
 							//resolved_local_path = shv::core::Utils::joinPath(resolved_local_path, shv_url.pathPart().toString());
 							logServiceProvidersM() << shv_path << "service path resolved on this broker, making path absolute:" << resolved_local_path;
 							cp::RpcRequest::setShvPath(meta, resolved_local_path);
@@ -1020,7 +1020,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 							string exported_path = master_broker_connection->exportedShvPath();
 							//if(shv::core::String::startsWith(exported_path, "shv/"))
 							//	exported_path = exported_path.substr(4);
-							string resolved_path = shv::core::Utils::joinPath(exported_path, shv_url.pathPart().toString());
+							string resolved_path = shv::core::utils::joinPath(exported_path, shv_url.pathPart().toString());
 							resolved_path = shv::core::utils::ShvUrl::makeShvUrlString(shv_url.type(), shv_url.service(), shv_url.fullBrokerId(), resolved_path);
 							logServiceProvidersM() << shv_path << "service path not resolved on this broker, preppending exported path:" << resolved_path;
 							cp::RpcRequest::setShvPath(meta, resolved_path);

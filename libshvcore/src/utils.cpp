@@ -172,12 +172,22 @@ std::string Utils::joinPath(const StringViewList &p)
 {
 	string ret;
 	for(const StringView &path : p) {
-		ret = joinPath(ret, path);
+		ret = utils::joinPath(ret, path);
 	}
 	return ret;
 }
 
-string Utils::joinPath(const StringView &p1, const StringView &p2)
+std::string Utils::joinPath(const StringView &p1, const StringView &p2)
+{
+	return utils::joinPath(p1, p2);
+}
+
+std::string utils::joinPath()
+{
+	return {};
+}
+
+std::string utils::joinPath(const StringView &p1, const StringView &p2)
 {
 	StringView sv1(p1);
 	while(sv1.endsWith('/'))

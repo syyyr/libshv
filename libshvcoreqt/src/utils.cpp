@@ -31,12 +31,12 @@ chainpack::RpcValue Utils::stringListToRpcValue(const QStringList &sl)
 	return rpc::stringListToRpcValue(sl);
 }
 
-std::string Utils::joinPath(const std::string& p1, const std::string& p2)
+std::string utils::joinPath(const std::string& p1, const std::string& p2)
 {
-	return core::Utils::joinPath(core::StringView(p1), core::StringView(p2));
+	return core::utils::joinPath(p1, p2);
 }
 
-QString Utils::joinPath(const QString &p1, const QString &p2)
+QString utils::joinPath(const QString &p1, const QString &p2)
 {
 	QStringView sv1(p1);
 	while(!sv1.isEmpty() && sv1.last() == '/')
@@ -49,6 +49,16 @@ QString Utils::joinPath(const QString &p1, const QString &p2)
 	if(sv1.isEmpty())
 		return sv2.toString();
 	return sv1.toString() + '/' + sv2.toString();
+}
+
+QString Utils::joinPath(const QString &p1, const QString &p2)
+{
+	return utils::joinPath(p1, p2);
+}
+
+QString Utils::joinPath(const QString &p1, const QString &p2, const QString &p3)
+{
+	return utils::joinPath(p1, p2, p3);
 }
 
 bool Utils::isValueNotAvailable(const QVariant &val)
