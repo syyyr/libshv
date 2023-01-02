@@ -44,6 +44,7 @@ if(BUILD_TESTING)
 	add_shvcore_test(shvpath)
 	add_shvcore_test(crypt)
 	add_shvcore_test(shvlog)
+	add_shvcore_test(join_path)
 endif()
 
 install(TARGETS libshvcore)
