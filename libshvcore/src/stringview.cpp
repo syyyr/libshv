@@ -74,7 +74,7 @@ char StringView::at(size_t ix) const
 char StringView::value(int ix) const
 {
 	if(ix < 0)
-		ix = static_cast<int>(m_length - ix);
+		ix = static_cast<int>(m_length + ix);
 	if(ix < 0)
 		return 0;
 	if(static_cast<unsigned>(ix) >= m_length)
