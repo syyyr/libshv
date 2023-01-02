@@ -110,8 +110,8 @@ public:
 
 	static shv::chainpack::RpcValue foldMap(const shv::chainpack::RpcValue::Map &plain_map, char key_delimiter = '.');
 
-	static std::string joinPath(const StringView &p1, const StringView &p2);
-	static std::string joinPath(const StringViewList &p);
+	[[deprecated("use shv::core::utils::joinPath")]] static std::string joinPath(const StringView &p1, const StringView &p2);
+	[[deprecated("use shv::core::utils::joinPath")]] static std::string joinPath(const StringViewList &p);
 	static std::string simplifyPath(const std::string &p);
 
 	static std::vector<char> readAllFd(int fd);
@@ -148,6 +148,22 @@ public:
 	//static shv::chainpack::RpcValue decompressNodesTree(const shv::chainpack::RpcValue &compressed_nodes_tree);
 
 };
+
+namespace utils {
+std::string joinPath(const StringView &p1, const StringView &p2);
+std::string joinPath();
+template <typename StringType>
+StringType joinPath(const StringType& str)
+{
+	return str;
+}
+
+template <typename HeadStringType, typename... StringTypes>
+std::string joinPath(const HeadStringType& head, const StringTypes& ...rest)
+{
+	return joinPath(StringView(head), StringView(joinPath(rest...)));
+}
+}
 
 }}
 

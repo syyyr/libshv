@@ -33,7 +33,7 @@ chainpack::RpcValue Utils::stringListToRpcValue(const QStringList &sl)
 
 std::string utils::joinPath(const std::string& p1, const std::string& p2)
 {
-	return core::Utils::joinPath(p1, p2);
+	return core::utils::joinPath(p1, p2);
 }
 
 QString utils::joinPath(const QString &p1, const QString &p2)
