@@ -15,7 +15,7 @@ IRpcConnection::~IRpcConnection() = default;
 
 void IRpcConnection::sendSignal(std::string method, const RpcValue &params)
 {
-	sendShvNotify(std::string(), std::move(method), params);
+	sendShvSignal(std::string(), std::move(method), params);
 }
 
 void IRpcConnection::sendShvSignal(const std::string &shv_path, std::string method, const RpcValue &params)
