@@ -183,8 +183,7 @@ public:
 	ShvTypeInfo& setExtraTags(const std::string &node_path, const shv::chainpack::RpcValue &tags);
 	shv::chainpack::RpcValue extraTags(const std::string &node_path) const;
 
-	// obsolete
-	ShvTypeInfo& setTypeDescription(const ShvTypeDescr &type_descr, const std::string &type_name)
+	[[deprecated("setTypeDescription(const ShvTypeDescr &type_descr, const std::string &type_name) is deprecated, use setTypeDescription(const std::string &type_name, const ShvTypeDescr &type_descr)")]] ShvTypeInfo& setTypeDescription(const ShvTypeDescr &type_descr, const std::string &type_name)
 	{
 		setTypeDescription(type_name, type_descr);
 		return *this;
