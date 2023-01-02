@@ -162,7 +162,7 @@ void ShvNode::handleRawRpcRequest(RpcValue::MetaData &&meta, std::string &&data)
 			}
 		}
 		else {
-			string path = shv::core::Utils::joinPath(shvPath(), shv_path_str);
+			string path = shv::core::utils::joinPath(shvPath(), shv_path_str);
 			SHV_EXCEPTION("Method: '" + method + "' on path '" + path + "' doesn't exist");
 		}
 	}
@@ -276,7 +276,7 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 	if(mm_access_level >= MetaMethod::AccessLevel::Write) {
 
 
-		shv::core::utils::ShvJournalEntry e(shv::core::Utils::joinPath(shvPath(), rq.shvPath().asString())
+		shv::core::utils::ShvJournalEntry e(shv::core::utils::joinPath(shvPath(), rq.shvPath().asString())
 											, method + '(' + rq.params().toCpon() + ')'
 											, shv::chainpack::Rpc::SIG_COMMAND_LOGGED
 											, shv::core::utils::ShvJournalEntry::NO_SHORT_TIME
