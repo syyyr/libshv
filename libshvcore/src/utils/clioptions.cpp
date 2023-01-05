@@ -6,23 +6,27 @@
 #include <shv/chainpack/cponreader.h>
 #include <shv/chainpack/rpcvalue.h>
 
+#include <cassert>
+#include <filesystem>
 #include <limits>
 #include <algorithm>
 #include <iostream>
 #include <fstream>
 
-namespace cp = shv::chainpack;
+using namespace shv::chainpack;
+using namespace std::string_literals;
+using namespace std;
 
 namespace shv::core::utils {
 
 CLIOptions::Option& CLIOptions::Option::setValueString(const std::string &val_str)
 {
-	cp::RpcValue::Type t = type();
+	RpcValue::Type t = type();
 	switch(t) {
-	case(cp::RpcValue::Type::Invalid):
+	case(RpcValue::Type::Invalid):
 		shvWarning() << "Setting value:" << val_str << "to an invalid type option.";
 		break;
-	case(cp::RpcValue::Type::Bool):
+	case(RpcValue::Type::Bool):
 	{
 		if(val_str.empty()) {
 			setValue(true);
@@ -46,8 +50,8 @@ CLIOptions::Option& CLIOptions::Option::setValueString(const std::string &val_st
 		}
 		break;
 	}
-	case cp::RpcValue::Type::Int:
-	case cp::RpcValue::Type::UInt:
+	case RpcValue::Type::Int:
+	case RpcValue::Type::UInt:
 	{
 		bool ok;
 		setValue(String::toInt(val_str, &ok));
@@ -55,7 +59,7 @@ CLIOptions::Option& CLIOptions::Option::setValueString(const std::string &val_st
 			shvWarning() << "Value:" << val_str << "cannot be converted to Int.";
 		break;
 	}
-	case(cp::RpcValue::Type::Double):
+	case(RpcValue::Type::Double):
 	{
 		bool ok;
 		setValue(String::toDouble(val_str, &ok));
@@ -72,8 +76,8 @@ CLIOptions::Option& CLIOptions::Option::setValueString(const std::string &val_st
 
 CLIOptions::CLIOptions()
 {
-	addOption("abortOnException").setType(cp::RpcValue::Type::Bool).setNames("--abort-on-exception").setComment("Abort application on exception");
-	addOption("help").setType(cp::RpcValue::Type::Bool).setNames("-h", "--help").setComment("Print help");
+	addOption("abortOnException").setType(RpcValue::Type::Bool).setNames("--abort-on-exception").setComment("Abort application on exception");
+	addOption("help").setType(RpcValue::Type::Bool).setNames("-h", "--help").setComment("Print help");
 }
 
 CLIOptions::~CLIOptions() = default;
@@ -115,23 +119,23 @@ CLIOptions::Option& CLIOptions::optionRef(const std::string& name)
 	return m_options[name];
 }
 
-cp::RpcValue::Map CLIOptions::values() const
+RpcValue::Map CLIOptions::values() const
 {
-	cp::RpcValue::Map ret;
+	RpcValue::Map ret;
 	for(const auto &kv : m_options)
 		ret[kv.first] = value(kv.first);
 	return ret;
 }
 
-cp::RpcValue CLIOptions::value(const std::string &name) const
+RpcValue CLIOptions::value(const std::string &name) const
 {
-	cp::RpcValue ret = value_helper(name, shv::core::Exception::Throw);
+	RpcValue ret = value_helper(name, shv::core::Exception::Throw);
 	return ret;
 }
 
-cp::RpcValue CLIOptions::value(const std::string& name, const cp::RpcValue default_value) const
+RpcValue CLIOptions::value(const std::string& name, const RpcValue default_value) const
 {
-	cp::RpcValue ret = value_helper(name, !shv::core::Exception::Throw);
+	RpcValue ret = value_helper(name, !shv::core::Exception::Throw);
 	if(!ret.isValid())
 		ret = default_value;
 	return ret;
@@ -142,16 +146,16 @@ bool CLIOptions::isValueSet(const std::string &name) const
 	return option(name, !shv::core::Exception::Throw).isSet();
 }
 
-cp::RpcValue CLIOptions::value_helper(const std::string &name, bool throw_exception) const
+RpcValue CLIOptions::value_helper(const std::string &name, bool throw_exception) const
 {
 	Option opt = option(name, throw_exception);
 	if(!opt.isValid())
-		return cp::RpcValue();
-	cp::RpcValue ret = opt.value();
+		return RpcValue();
+	RpcValue ret = opt.value();
 	if(!ret.isValid())
 		ret = opt.defaultValue();
 	if(!ret.isValid())
-		ret = cp::RpcValue::fromType(opt.type());
+		ret = RpcValue::fromType(opt.type());
 	return ret;
 }
 
@@ -160,7 +164,7 @@ bool CLIOptions::optionExists(const std::string &name) const
 	return option(name, !shv::core::Exception::Throw).isValid();
 }
 
-bool CLIOptions::setValue(const std::string& name, const cp::RpcValue val, bool throw_exc)
+bool CLIOptions::setValue(const std::string& name, const RpcValue val, bool throw_exc)
 {
 	Option o = option(name, false);
 	if(optionExists(name)) {
@@ -237,7 +241,7 @@ void CLIOptions::parse(const StringList& cmd_line_args)
 				}
 				else if((!arg.empty() && arg[0] == '-')) {
 					// might be negative number or next switch
-					if(opt.type() != cp::RpcValue::Type::Int)
+					if(opt.type() != RpcValue::Type::Int)
 						arg = std::string();
 				}
 				else {
@@ -315,14 +319,14 @@ void CLIOptions::printHelp(std::ostream &os) const
 	for(const auto &kv : m_options) {
 		const Option &opt = kv.second;
 		os << String::join(opt.names(), ", ");
-		if(opt.type() != cp::RpcValue::Type::Bool) {
-			if(opt.type() == cp::RpcValue::Type::Int
-					|| opt.type() == cp::RpcValue::Type::UInt
-					|| opt.type() == cp::RpcValue::Type::Double) os << " " << "number";
+		if(opt.type() != RpcValue::Type::Bool) {
+			if(opt.type() == RpcValue::Type::Int
+					|| opt.type() == RpcValue::Type::UInt
+					|| opt.type() == RpcValue::Type::Double) os << " " << "number";
 			else os << " " << "'string'";
 		}
 		//os << ':';
-		cp::RpcValue def_val = opt.defaultValue();
+		RpcValue def_val = opt.defaultValue();
 		if(def_val.isValid())
 			os << " DEFAULT=" << def_val.toStdString();
 		if(opt.isMandatory())
@@ -367,8 +371,8 @@ void CLIOptions::addParseError(const std::string& err)
 
 ConfigCLIOptions::ConfigCLIOptions()
 {
-	addOption("config").setType(cp::RpcValue::Type::String).setNames("--config").setComment("Application config name, it is loaded from {config}[.conf] if file exists in {config-dir}, deault value is {app-name}.conf");
-	addOption("configDir").setType(cp::RpcValue::Type::String).setNames("--config-dir").setComment("Directory where application config fiels are searched, default value: {app-dir-path}.");
+	addOption("config").setType(RpcValue::Type::String).setNames("--config").setComment("Application config name, it is loaded from {config}[.conf] if file exists in {config-dir}, deault value is {app-name}.conf");
+	addOption("configDir").setType(RpcValue::Type::String).setNames("--config-dir").setComment("Directory where application config fiels are searched, default value: {app-dir-path}.");
 }
 
 void ConfigCLIOptions::parse(const StringList &cmd_line_args)
@@ -400,53 +404,62 @@ bool ConfigCLIOptions::loadConfigFile()
 	}
 	return true;
 }
-
+namespace {
+bool is_absolute_path(const std::string &path)
+{
+#ifdef _WIN32
+	return path.size() > 2 && path[1] == ':';
+#else
+	return !path.empty() && path[0] == '/';
+#endif
+}
+}
 std::string ConfigCLIOptions::configFile()
 {
-	std::string config = "config";
-	std::string conf_ext = ".conf";
-	std::string config_file;
-	if(isValueSet(config)) {
-		config_file = value(config).toString();
-		if(config_file.empty()) {
-			/// explicitly set empty config means DO NOT load config from any file
-			return std::string();
-		}
-	}
-	else {
-		config_file = applicationName() + conf_ext;
-	}
-#ifdef _WIN32
-	bool is_absolute_path = config_file.size() > 2 && config_file[1] == ':';
-#else
-	bool is_absolute_path = !config_file.empty() && config_file[0] == '/';
-#endif
-	if(!is_absolute_path) {
-		std::string config_dir = configDir();
-		if(config_dir.empty())
-			config_dir = applicationDir();
-		config_file = config_dir + '/' + config_file;
-	}
-	if(!String::endsWith(config_file, conf_ext)) {
-		std::ifstream f(config_file);
-		if(!f)
-			config_file += conf_ext;
-	}
-	return config_file;
+	auto [abs_config_dir, abs_config_file] = absoluteConfigPaths(configDir(), config());
+	return abs_config_file;
 }
 
 std::string ConfigCLIOptions::effectiveConfigDir()
 {
-	if(!configDir().empty())
-		return configDir();
-	String cfg = config();
-	if(!cfg.empty() && cfg[0] == '/') {
-		auto ix = cfg.lastIndexOf('/');
-		if(ix != std::string::npos) {
-			return  cfg.mid(0, ix);
-		}
+	auto [abs_config_dir, abs_config_file] = absoluteConfigPaths(configDir(), config());
+	return abs_config_dir;
+}
+
+std::tuple<std::string, std::string> ConfigCLIOptions::absoluteConfigPaths(const std::string &config_dir, const std::string &config_file) const
+{
+	using shv::core::utils::joinPath;
+	static const auto conf_ext = ".conf"s;
+	auto cwd = std::filesystem::current_path().string();
+	auto default_config_name = applicationName() + conf_ext;
+	if(config_file.empty()) {
+		if(config_dir.empty())
+			return make_tuple(cwd, joinPath(cwd, default_config_name));
+		else if(is_absolute_path(config_dir))
+			return make_tuple(config_dir, joinPath(config_dir, default_config_name));
+		else
+			return make_tuple(joinPath(cwd, config_dir), joinPath(cwd, config_dir, default_config_name));
 	}
-	return applicationDir();
+	else if(is_absolute_path(config_file)) {
+		if(config_dir.empty()) {
+			auto sep_pos = config_file.find_last_of('/');
+			// absolute config file must contain '/'
+			assert(sep_pos != std::string::npos);
+			return make_tuple(config_file.substr(0, sep_pos), config_file);
+		}
+		else if(is_absolute_path(config_dir))
+			return make_tuple(config_dir, config_file);
+		else
+			return make_tuple(joinPath(cwd, config_dir), config_file);
+	}
+	else /* relative config_file */ {
+		if(config_dir.empty())
+			return make_tuple(cwd, joinPath(cwd, config_file));
+		else if(is_absolute_path(config_dir))
+			return make_tuple(config_dir, joinPath(config_dir, config_file));
+		else
+			return make_tuple(joinPath(cwd, config_dir), joinPath(cwd, config_dir, config_file));
+	}
 }
 
 void ConfigCLIOptions::mergeConfig_helper(const std::string &key_prefix, const shv::chainpack::RpcValue &config_map)
