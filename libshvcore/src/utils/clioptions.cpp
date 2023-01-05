@@ -444,7 +444,6 @@ std::tuple<std::string, std::string> ConfigCLIOptions::absoluteConfigPaths(const
 		if(config_dir.empty()) {
 			auto sep_pos = config_file.find_last_of('/');
 			// absolute config file must contain '/'
-			assert(sep_pos != std::string::npos);
 			return make_tuple(config_file.substr(0, sep_pos), config_file);
 		}
 		else if(is_absolute_path(config_dir))
