@@ -157,8 +157,8 @@ public:
 };
 
 namespace utils {
-QString joinPath(const QString &p1, const QString &p2);
-std::string joinPath(const std::string& p1, const std::string& p2);
+SHVCOREQT_DECL_EXPORT QString joinPath(const QString &p1, const QString &p2);
+SHVCOREQT_DECL_EXPORT std::string joinPath(const std::string& p1, const std::string& p2);
 
 template <typename ReturnType>
 ReturnType joinPath()
