@@ -150,8 +150,8 @@ public:
 };
 
 namespace utils {
-std::string joinPath(const StringView &p1, const StringView &p2);
-std::string joinPath();
+SHVCORE_DECL_EXPORT std::string joinPath(const StringView &p1, const StringView &p2);
+SHVCORE_DECL_EXPORT std::string joinPath();
 template <typename StringType>
 StringType joinPath(const StringType& str)
 {
