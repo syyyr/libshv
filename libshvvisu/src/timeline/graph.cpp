@@ -1385,7 +1385,7 @@ void Graph::drawMiniMap(QPainter *painter)
 	QPoint p3{x2, m_layout.miniMapRect.bottom()};
 	QPoint p4{x2, m_layout.miniMapRect.top()};
 	QColor bc(Qt::darkGray);
-	bc.setAlphaF(0.8);
+	bc.setAlphaF(0.8F);
 	painter->fillRect(QRect{m_layout.miniMapRect.topLeft(), p2}, bc);
 	painter->fillRect(QRect{p4, m_layout.miniMapRect.bottomRight()}, bc);
 	pen.setColor(Qt::gray);
@@ -1923,7 +1923,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	{
 		steps_join_pen.setWidthF(line_pen.widthF() / 2);
 		auto c = line_pen.color();
-		c.setAlphaF(0.6);
+		c.setAlphaF(0.6F);
 		steps_join_pen.setColor(c);
 	}
 	painter->save();
@@ -1933,7 +1933,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	QColor line_area_color;
 	if(ch_style.lineAreaStyle() == GraphChannel::Style::LineAreaStyle::Filled) {
 		line_area_color = line_color;
-		line_area_color.setAlphaF(0.4);
+		line_area_color.setAlphaF(0.4F);
 	}
 
 	int sample_point_size = u2px(0.5);
@@ -2278,7 +2278,7 @@ void Graph::drawSelection(QPainter *painter)
 	if(m_state.selectionRect.isNull())
 		return;
 	QColor c = m_style.colorSelection();
-	c.setAlphaF(0.3);
+	c.setAlphaF(0.3F);
 	painter->fillRect(m_state.selectionRect, c);
 }
 
