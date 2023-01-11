@@ -699,7 +699,11 @@ void GraphWidget::dragLeaveEvent(QDragLeaveEvent *event)
 void GraphWidget::dragMoveEvent(QDragMoveEvent *event)
 {
 	Q_ASSERT(m_channelHeaderMoveContext);
+#if QT_VERSION_MAJOR >= 6
+	QPoint pos = event->position().toPoint();
+#else
 	QPoint pos = event->pos();
+#endif
 
 	if (scrollByMouseOuterOverlap(mapToGlobal(pos))) {
 		m_channelHeaderMoveContext->mouseMoveScrollTimer->start();
@@ -714,7 +718,11 @@ void GraphWidget::dragMoveEvent(QDragMoveEvent *event)
 void GraphWidget::dropEvent(QDropEvent *event)
 {
 	Q_ASSERT(m_channelHeaderMoveContext);
+#if QT_VERSION_MAJOR >= 6
+	int target_channel = moveChannelTragetIndex(event->position().toPoint());
+#else
 	int target_channel = moveChannelTragetIndex(event->pos());
+#endif
 	if (target_channel != m_channelHeaderMoveContext->draggedChannel) {
 		graph()->moveChannel(m_channelHeaderMoveContext->draggedChannel, target_channel);
 	}
