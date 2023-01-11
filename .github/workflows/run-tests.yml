@@ -37,3 +37,36 @@ jobs:
       - name: Test
         working-directory: ${{github.workspace}}/build
         run: ctest --output-on-failure -j$(nproc)
+
+  # FIXME: get rid of the duplication
+  build6:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Install/cache ninja, doctest, and Qt's dependencies
+        uses: awalsh128/cache-apt-pkgs-action@v1.2.1
+        with:
+          packages: ninja-build doctest-dev libgl1-mesa-dev libpulse-dev libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-util1 libxcb-xinerama0 libxkbcommon-x11-0
+          version: 1.0
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          cache: true
+          install-deps: false
+          version: 6.4.0
+          modules: qtserialport qtwebsockets
+
+      - name: Configure CMake
+        run: CFLAGS="-Werror" CXXFLAGS="-Werror" cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DUSE_QT6=ON
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --parallel $(nproc)
+
+      - name: Test
+        working-directory: ${{github.workspace}}/build
+        run: ctest --output-on-failure -j$(nproc)
