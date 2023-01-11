@@ -56,9 +56,14 @@ void TimeZoneComboBox::keyPressEvent(QKeyEvent *event)
 		setCurrentIndex(ix);
 		auto curr_text = currentText();
 		ed->setText(curr_text);
+#if QT_VERSION_MAJOR >= 6
+		int sel_start = static_cast<int>(curr_text.indexOf(m_searchText, 0, Qt::CaseInsensitive));
+		ed->setSelection(sel_start, static_cast<int>(m_searchText.length()));
+#else
 		int sel_start = curr_text.indexOf(m_searchText, 0, Qt::CaseInsensitive);
-		//qDebug() << "curr:" << curr_text << "search:" << m_searchText << "sel_start:" << sel_start;
 		ed->setSelection(sel_start, m_searchText.length());
+#endif
+		//qDebug() << "curr:" << curr_text << "search:" << m_searchText << "sel_start:" << sel_start;
 		ed->setFocus();
 	}
 }

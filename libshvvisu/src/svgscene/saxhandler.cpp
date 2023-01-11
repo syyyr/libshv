@@ -285,7 +285,11 @@ static QColor parseColor(const QString &color, const QString &opacity)
 			// #rrggbb is very very common, so let's tackle it here
 			// rather than falling back to QColor
 			QRgb rgb;
+#if QT_VERSION_MAJOR >= 6
+			bool ok = qsvg_get_hex_rgb(color_str.unicode(), static_cast<int>(color_str.length()), &rgb);
+#else
 			bool ok = qsvg_get_hex_rgb(color_str.unicode(), color_str.length(), &rgb);
+#endif
 			if (ok)
 				ret.setRgb(rgb);
 			break;
@@ -333,7 +337,7 @@ static QColor parseColor(const QString &color, const QString &opacity)
 		qreal op = qMin(1.0, qMax(0.0, toDouble(opacity, &ok)));
 		if (!ok)
 			op = 1.0;
-		ret.setAlphaF(op);
+		ret.setAlphaF(static_cast<float>(op));
 	}
 	return ret;
 }
@@ -613,7 +617,11 @@ static bool parsePathDataFast(const QString &dataStr, QPainterPath &path)
 		if (pathElem == QLatin1Char('z') || pathElem == QLatin1Char('Z'))
 			arg.append(0);//dummy
 		const qreal *num = arg.constData();
+#if QT_VERSION_MAJOR >= 6
+		int count = static_cast<int>(arg.count());
+#else
 		int count = arg.count();
+#endif
 		while (count > 0) {
 			qreal offsetX = x;        // correction offsets
 			qreal offsetY = y;        // for relative commands
@@ -1255,7 +1263,11 @@ void SaxHandler::mergeCSSAttributes(CssAttributes &css_attributes, const QString
 	QStringList css = xml_attributes.value(attr_name).split(';', Qt::SkipEmptyParts);
 #endif
 	for(const QString &ss : css) {
+#if QT_VERSION_MAJOR >= 6
+		int ix = static_cast<int>(ss.indexOf(':'));
+#else
 		int ix = ss.indexOf(':');
+#endif
 		if(ix > 0) {
 			css_attributes[ss.mid(0, ix).trimmed()] = ss.mid(ix + 1).trimmed();
 		}

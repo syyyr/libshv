@@ -24,7 +24,11 @@ int GraphModel::count(int channel) const
 {
 	if(channel < 0 || channel > channelCount())
 		return 0;
+#if QT_VERSION_MAJOR >= 6
+	return static_cast<int>(m_samples.at(channel).count());
+#else
 	return m_samples.at(channel).count();
+#endif
 }
 
 Sample GraphModel::sampleAt(int channel, int ix) const

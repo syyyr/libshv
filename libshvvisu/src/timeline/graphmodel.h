@@ -39,7 +39,13 @@ public:
 	void appendChannel() {appendChannel({}, {}, {});}
 	void appendChannel(const std::string &shv_path, const std::string &name, const shv::core::utils::ShvTypeDescr &type_descr);
 public:
-	virtual int channelCount() const { return qMin(m_channelsInfo.count(), m_samples.count()); }
+	virtual int channelCount() const {
+#if QT_VERSION_MAJOR >= 6
+		return static_cast<int>(qMin(m_channelsInfo.count(), m_samples.count()));
+#else
+		return qMin(m_channelsInfo.count(), m_samples.count());
+#endif
+	}
 	const ChannelInfo& channelInfo(int channel_ix) const { return m_channelsInfo.at(channel_ix); }
 	ChannelInfo& channelInfo(int channel_ix) { return m_channelsInfo[channel_ix]; }
 	QString typeDescrFieldName( const shv::core::utils::ShvTypeDescr &type_descr, int field_index);
