@@ -14,7 +14,11 @@ using namespace std;
 static string sha1_hex(const std::string &s)
 {
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
+#if QT_VERSION_MAJOR >= 6
+	hash.addData(QByteArrayView(s.data(), static_cast<int>(s.length())));
+#else
 	hash.addData(s.data(), static_cast<int>(s.length()));
+#endif
 	return std::string(hash.result().toHex().constData());
 }
 
