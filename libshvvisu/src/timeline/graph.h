@@ -119,7 +119,13 @@ public:
 	void resetChannelsRanges();
 	bool isInitialView() const;
 
-	int channelCount() const { return  m_channels.count(); }
+	int channelCount() const {
+#if QT_VERSION_MAJOR >= 6
+		return static_cast<int>(m_channels.count());
+#else
+		return m_channels.count();
+#endif
+	}
 	void clearChannels();
 	GraphChannel* appendChannel(int model_index = -1);
 	GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw);

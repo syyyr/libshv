@@ -19,7 +19,11 @@ namespace {
 std::string sha1_hex(const std::string &s)
 {
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
+#if QT_VERSION_MAJOR >= 6
+	hash.addData(QByteArrayView(s.data(), static_cast<int>(s.length())));
+#else
 	hash.addData(s.data(), static_cast<int>(s.length()));
+#endif
 	return std::string(hash.result().toHex().constData());
 }
 }
@@ -193,7 +197,11 @@ chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginC
 		std::string nonce = login_context.serverNounce + acl_pwd.password;
 		//shvWarning() << "correct:" << login_context.serverNounce << "+" << acl_pwd.password;
 		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
+#if QT_VERSION_MAJOR >= 6
+		hash.addData(QByteArrayView(nonce.data(), static_cast<int>(nonce.length())));
+#else
 		hash.addData(nonce.data(), static_cast<int>(nonce.length()));
+#endif
 		std::string correct_sha1 = std::string(hash.result().toHex().constData());
 		//shvWarning() << "correct:" << correct_sha1;
 		//shvWarning() << "user   :" << correct_sha1;

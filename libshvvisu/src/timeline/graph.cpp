@@ -196,7 +196,11 @@ shv::visu::timeline::GraphChannel *Graph::appendChannel(int model_index)
 	}
 	m_channels.append(new GraphChannel(this));
 	GraphChannel *ch = m_channels.last();
+#if QT_VERSION_MAJOR >= 6
+	ch->setModelIndex(model_index < 0? static_cast<int>(m_channels.count() - 1): model_index);
+#else
 	ch->setModelIndex(model_index < 0? m_channels.count() - 1: model_index);
+#endif
 	return ch;
 }
 
@@ -1091,7 +1095,11 @@ void Graph::makeLayout(const QRect &pref_rect)
 			return a.rest < b.rest;
 		});
 		for (int i = 0; i < rests.count(); ++i) {
+#if QT_VERSION_MAJOR >= 6
+			int fair_rest = static_cast<int>(h_rest / (rests.count() - i));
+#else
 			int fair_rest = h_rest / (rests.count() - i);
+#endif
 			const Rest &r = rests[i];
 			GraphChannel *ch = channelAt(r.index);
 			int h = u2px(ch->m_effectiveStyle.heightRange());
@@ -1104,7 +1112,11 @@ void Graph::makeLayout(const QRect &pref_rect)
 	// shift channel rects
 	int widget_height = 0;
 	widget_height += u2px(m_style.topMargin());
+#if QT_VERSION_MAJOR >= 6
+	for (int i = static_cast<int>(visible_channels.count()) - 1; i >= 0; --i) {
+#else
 	for (int i = visible_channels.count() - 1; i >= 0; --i) {
+#endif
 		GraphChannel *ch = channelAt(visible_channels[i]);
 
 		ch->m_layout.graphAreaRect.moveTop(widget_height);
@@ -1150,7 +1162,11 @@ void Graph::makeLayout(const QRect &pref_rect)
 	shvDebug() << "m_layout.rect:" << rstr(m_layout.rect);
 
 	makeXAxis();
+#if QT_VERSION_MAJOR >= 6
+	for (int i = static_cast<int>(visible_channels.count()) - 1; i >= 0; --i)
+#else
 	for (int i = visible_channels.count() - 1; i >= 0; --i)
+#endif
 		makeYAxis(i);
 }
 
@@ -1385,7 +1401,7 @@ void Graph::drawMiniMap(QPainter *painter)
 	QPoint p3{x2, m_layout.miniMapRect.bottom()};
 	QPoint p4{x2, m_layout.miniMapRect.top()};
 	QColor bc(Qt::darkGray);
-	bc.setAlphaF(0.8);
+	bc.setAlphaF(0.8F);
 	painter->fillRect(QRect{m_layout.miniMapRect.topLeft(), p2}, bc);
 	painter->fillRect(QRect{p4, m_layout.miniMapRect.bottomRight()}, bc);
 	pen.setColor(Qt::gray);
@@ -1923,7 +1939,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	{
 		steps_join_pen.setWidthF(line_pen.widthF() / 2);
 		auto c = line_pen.color();
-		c.setAlphaF(0.6);
+		c.setAlphaF(0.6F);
 		steps_join_pen.setColor(c);
 	}
 	painter->save();
@@ -1933,7 +1949,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	QColor line_area_color;
 	if(ch_style.lineAreaStyle() == GraphChannel::Style::LineAreaStyle::Filled) {
 		line_area_color = line_color;
-		line_area_color.setAlphaF(0.4);
+		line_area_color.setAlphaF(0.4F);
 	}
 
 	int sample_point_size = u2px(0.5);
@@ -2278,7 +2294,7 @@ void Graph::drawSelection(QPainter *painter)
 	if(m_state.selectionRect.isNull())
 		return;
 	QColor c = m_style.colorSelection();
-	c.setAlphaF(0.3);
+	c.setAlphaF(0.3F);
 	painter->fillRect(m_state.selectionRect, c);
 }
 

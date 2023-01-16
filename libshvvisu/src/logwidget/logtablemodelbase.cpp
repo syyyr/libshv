@@ -20,7 +20,11 @@ LogTableModelBase::LogTableModelBase(QObject *parent)
 int LogTableModelBase::rowCount(const QModelIndex &parent) const
 {
 	Q_UNUSED(parent)
+#if QT_VERSION_MAJOR >= 6
+	return static_cast<int>(m_rows.count());
+#else
 	return m_rows.count();
+#endif
 }
 
 QVariant LogTableModelBase::data(const QModelIndex &index, int role) const
