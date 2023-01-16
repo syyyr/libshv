@@ -63,8 +63,8 @@ public:
 	GraphChannel(Graph *graph);
 	~GraphChannel() = default;
 
-	inline int modelIndex() const {return m_modelIndex;}
-	void setModelIndex(int ix) {m_modelIndex = ix;}
+	inline qsizetype modelIndex() const {return m_modelIndex;}
+	void setModelIndex(qsizetype ix) {m_modelIndex = ix;}
 
 	QString shvPath() const;
 
@@ -118,7 +118,7 @@ protected:
 
 	Style m_style;
 	Style m_effectiveStyle;
-	int m_modelIndex = 0;
+	qsizetype m_modelIndex = 0;
 };
 
 } // namespace timeline

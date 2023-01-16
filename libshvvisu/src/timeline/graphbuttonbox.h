@@ -48,13 +48,7 @@ public:
 	int buttonSpace() const;
 	QRect buttonRect(ButtonId id) const;
 protected:
-	int buttonCount() const {
-#if QT_VERSION_MAJOR >= 6
-		return static_cast<int>(m_buttonIds.count());
-#else
-		return m_buttonIds.count();
-#endif
-	}
+	qsizetype buttonCount() const { return m_buttonIds.count(); }
 	QRect buttonRect(int ix) const;
 
 	void drawButton(QPainter *painter, const QRect &rect, int button_index);

@@ -17,11 +17,11 @@ class SHVVISU_DECL_EXPORT ChannelProbe: public QObject
 	Q_OBJECT
 
 public:
-	ChannelProbe(Graph *graph, int channel_ix, timemsec_t time);
+	ChannelProbe(Graph *graph, qsizetype channel_ix, timemsec_t time);
 
 	QColor color() const;
 	QString shvPath() const;
-	int channelIndex() const;
+	qsizetype channelIndex() const;
 
 	void setCurrentTime(timemsec_t time);
 	timemsec_t currentTime() const;
@@ -37,7 +37,7 @@ protected:
 	const Graph *m_graph = nullptr;
 private:
 	timemsec_t m_currentTime;
-	int m_channelIndex;
+	qsizetype m_channelIndex;
 };
 
 }

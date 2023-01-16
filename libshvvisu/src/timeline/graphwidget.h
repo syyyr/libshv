@@ -60,10 +60,10 @@ protected:
 
 	virtual void showGraphSelectionContextMenu(const QPoint &mouse_pos);
 	virtual void showGraphContextMenu(const QPoint &mouse_pos);
-	virtual void showChannelContextMenu(int channel_ix, const QPoint &mouse_pos);
+	virtual void showChannelContextMenu(qsizetype channel_ix, const QPoint &mouse_pos);
 protected:
-	void createProbe(int channel_ix, timemsec_t time);
-	void removeProbes(int channel_ix);
+	void createProbe(qsizetype channel_ix, timemsec_t time);
+	void removeProbes(qsizetype channel_ix);
 	bool isMouseAboveChannelResizeHandle(const QPoint &mouse_pos) const;
 	bool isMouseAboveMiniMap(const QPoint &mouse_pos) const;
 	bool isMouseAboveMiniMapHandle(const QPoint &mouse_pos, bool left) const;
@@ -71,7 +71,7 @@ protected:
 	bool isMouseAboveRightMiniMapHandle(const QPoint &pos) const;
 	bool isMouseAboveMiniMapSlider(const QPoint &pos) const;
 	int posToChannelVerticalHeader(const QPoint &pos) const;
-	int posToChannel(const QPoint &pos) const;
+	qsizetype posToChannel(const QPoint &pos) const;
 	void scrollToCurrentMousePosOnDrag();
 	bool scrollByMouseOuterOverlap(const QPoint &mouse_pos);
 	void moveDropMarker(const QPoint &mouse_pos);
@@ -96,7 +96,7 @@ protected:
 	};
 	MouseOperation m_mouseOperation = MouseOperation::None;
 	QPoint m_recentMousePos;
-	int m_resizeChannelIx = -1;
+	qsizetype m_resizeChannelIx = -1;
 
 	struct ChannelHeaderMoveContext
 	{

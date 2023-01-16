@@ -6,7 +6,7 @@
 
 namespace shv::visu::timeline {
 
-ChannelProbe::ChannelProbe(Graph *graph, int channel_ix, timemsec_t time)
+ChannelProbe::ChannelProbe(Graph *graph, qsizetype channel_ix, timemsec_t time)
 	: QObject(graph)
 {
 	m_graph = graph;
@@ -43,8 +43,8 @@ void ChannelProbe::nextSample()
 {
 	GraphModel *m = m_graph->model();
 	const GraphChannel *ch = m_graph->channelAt(m_channelIndex);
-	int model_ix = ch->modelIndex();
-	int ix = m->greaterTimeIndex(model_ix, m_currentTime);
+	auto model_ix = ch->modelIndex();
+	auto ix = m->greaterTimeIndex(model_ix, m_currentTime);
 
 	if(ix >= 0) {
 		Sample s = m->sampleValue(model_ix, ix);
@@ -59,8 +59,8 @@ void ChannelProbe::prevSample()
 {
 	GraphModel *m = m_graph->model();
 	const GraphChannel *ch = m_graph->channelAt(m_channelIndex);
-	int model_ix = ch->modelIndex();
-	int ix = m->lessTimeIndex(model_ix, m_currentTime);
+	auto model_ix = ch->modelIndex();
+	auto ix = m->lessTimeIndex(model_ix, m_currentTime);
 
 	if(ix >= 0) {
 		Sample s = m->sampleValue(model_ix, ix);
@@ -83,7 +83,7 @@ QString ChannelProbe::shvPath() const
 	return m_graph->model()->channelInfo(ch->modelIndex()).shvPath;
 }
 
-int ChannelProbe::channelIndex() const
+qsizetype ChannelProbe::channelIndex() const
 {
 	return m_channelIndex;
 }

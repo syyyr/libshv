@@ -94,8 +94,8 @@ bool Graph::isInitialView() const
 	}
 	GraphChannel::Style default_style;
 
-	QMap<QString, int> path_to_model_index;
-	for (int i = 0; i < m_model->channelCount(); ++i) {
+	QMap<QString, qsizetype> path_to_model_index;
+	for (qsizetype i = 0; i < m_model->channelCount(); ++i) {
 		QString shv_path = m_model->channelShvPath(i);
 		path_to_model_index[shv_path] = i;
 	}
@@ -135,20 +135,20 @@ void Graph::createChannelsFromModel()
 	if(!m_model)
 		return;
 	// sort channels alphabetically
-	QMap<QString, int> path_to_model_index;
-	for (int i = 0; i < m_model->channelCount(); ++i) {
+	QMap<QString, qsizetype> path_to_model_index;
+	for (qsizetype i = 0; i < m_model->channelCount(); ++i) {
 		QString shv_path = m_model->channelShvPath(i);
 		path_to_model_index[shv_path] = i;
 	}
-	QMapIterator<QString, int> it(path_to_model_index);
+	QMapIterator<QString, qsizetype> it(path_to_model_index);
 	while(it.hasNext()) {
 		it.next();
-		int model_ix = path_to_model_index[it.key()];
+		qsizetype model_ix = path_to_model_index[it.key()];
 		shvDebug() << "adding channel:" << it.key();
 		//shvInfo() << "new channel:" << model_ix;
 		GraphChannel *ch = appendChannel(model_ix);
 		//ch->buttonBox()->setObjectName(QString::fromStdString(shv_path));
-		int channel_ix = channelCount() - 1;
+		auto channel_ix = channelCount() - 1;
 		GraphChannel::Style style = ch->style();
 		style.setColor(colors.value(channel_ix % colors.count()));
 		ch->setStyle(style);
@@ -162,9 +162,9 @@ void Graph::resetChannelsRanges()
 	if(!m_model)
 		return;
 	XRange x_range;
-	for (int channel_ix = 0; channel_ix < channelCount(); ++channel_ix) {
+	for (qsizetype channel_ix = 0; channel_ix < channelCount(); ++channel_ix) {
 		GraphChannel *ch = channelAt(channel_ix);
-		int model_ix = ch->modelIndex();
+		auto model_ix = ch->modelIndex();
 		YRange yrange = m_model->yRange(model_ix);
 		if(yrange.isEmpty()) {
 			if(yrange.max > 1)
@@ -188,7 +188,7 @@ void Graph::clearChannels()
 	m_channels.clear();
 }
 
-shv::visu::timeline::GraphChannel *Graph::appendChannel(int model_index)
+shv::visu::timeline::GraphChannel *Graph::appendChannel(qsizetype model_index)
 {
 	if(model_index >= 0) {
 		if(model_index >= m_model->channelCount())
@@ -196,15 +196,11 @@ shv::visu::timeline::GraphChannel *Graph::appendChannel(int model_index)
 	}
 	m_channels.append(new GraphChannel(this));
 	GraphChannel *ch = m_channels.last();
-#if QT_VERSION_MAJOR >= 6
-	ch->setModelIndex(model_index < 0? static_cast<int>(m_channels.count() - 1): model_index);
-#else
 	ch->setModelIndex(model_index < 0? m_channels.count() - 1: model_index);
-#endif
 	return ch;
 }
 
-shv::visu::timeline::GraphChannel *Graph::channelAt(int ix, bool throw_exc)
+shv::visu::timeline::GraphChannel *Graph::channelAt(qsizetype ix, bool throw_exc)
 {
 	if(ix < 0 || ix >= m_channels.count()) {
 		if(throw_exc)
@@ -214,7 +210,7 @@ shv::visu::timeline::GraphChannel *Graph::channelAt(int ix, bool throw_exc)
 	return m_channels[ix];
 }
 
-const GraphChannel *Graph::channelAt(int ix, bool throw_exc) const
+const GraphChannel *Graph::channelAt(qsizetype ix, bool throw_exc) const
 {
 	if(ix < 0 || ix >= m_channels.count()) {
 		if(throw_exc)
@@ -224,7 +220,7 @@ const GraphChannel *Graph::channelAt(int ix, bool throw_exc) const
 	return m_channels[ix];
 }
 
-shv::core::utils::ShvTypeDescr::Type Graph::channelTypeId(int ix) const
+shv::core::utils::ShvTypeDescr::Type Graph::channelTypeId(qsizetype ix) const
 {
 	if(!m_model)
 		SHV_EXCEPTION("Graph model is NULL");
@@ -232,7 +228,7 @@ shv::core::utils::ShvTypeDescr::Type Graph::channelTypeId(int ix) const
 	return m_model->channelInfo(ch->modelIndex()).typeDescr.type();
 }
 
-void Graph::moveChannel(int channel, int new_pos)
+void Graph::moveChannel(qsizetype channel, qsizetype new_pos)
 {
 	if (channel > new_pos) {
 		m_channels.insert(new_pos, m_channels.takeAt(channel));
@@ -267,7 +263,7 @@ void Graph::hideFlatChannels()
 {
 	QSet<QString> matching_paths = m_channelFilter.matchingPaths();
 
-	for (int i = 0; i < m_channels.count(); ++i) {
+	for (qsizetype i = 0; i < m_channels.count(); ++i) {
 		GraphChannel *ch = m_channels[i];
 		if(isChannelFlat(ch)) {
 			matching_paths.remove(ch->shvPath());
@@ -293,7 +289,7 @@ void Graph::setChannelFilter(const ChannelFilter &filter)
 	emit channelFilterChanged();
 }
 
-void Graph::setChannelVisible(int channel_ix, bool is_visible)
+void Graph::setChannelVisible(qsizetype channel_ix, bool is_visible)
 {
 	GraphChannel *ch = channelAt(channel_ix);
 
@@ -311,14 +307,14 @@ void Graph::setChannelVisible(int channel_ix, bool is_visible)
 	emit channelFilterChanged();
 }
 
-void Graph::setChannelMaximized(int channel_ix, bool is_maximized)
+void Graph::setChannelMaximized(qsizetype channel_ix, bool is_maximized)
 {
 	GraphChannel *ch = channelAt(channel_ix);
 	ch->setMaximized(is_maximized);
 	emit layoutChanged();
 }
 
-ChannelProbe *Graph::channelProbe(int channel_ix, timemsec_t time)
+ChannelProbe *Graph::channelProbe(qsizetype channel_ix, timemsec_t time)
 {
 	ChannelProbe *probe = nullptr;
 
@@ -332,7 +328,7 @@ ChannelProbe *Graph::channelProbe(int channel_ix, timemsec_t time)
 	return probe;
 }
 
-ChannelProbe *Graph::addChannelProbe(int channel_ix, timemsec_t time)
+ChannelProbe *Graph::addChannelProbe(qsizetype channel_ix, timemsec_t time)
 {
 	auto *probe = new ChannelProbe(this, channel_ix, time);
 	m_channelProbes.push_back(probe);
@@ -380,12 +376,12 @@ int Graph::timeToPos(timemsec_t time) const
 	return time2pos? time2pos(time): 0;
 }
 
-Sample Graph::timeToSample(int channel_ix, timemsec_t time) const
+Sample Graph::timeToSample(qsizetype channel_ix, timemsec_t time) const
 {
 	GraphModel *m = model();
 	const GraphChannel *ch = channelAt(channel_ix);
-	int model_ix = ch->modelIndex();
-	int ix1 = m->lessOrEqualTimeIndex(model_ix, time);
+	qsizetype model_ix = ch->modelIndex();
+	qsizetype ix1 = m->lessOrEqualTimeIndex(model_ix, time);
 	if(ix1 < 0)
 		return Sample();
 	int interpolation = ch->m_effectiveStyle.interpolation();
@@ -401,7 +397,7 @@ Sample Graph::timeToSample(int channel_ix, timemsec_t time) const
 		return s;
 	}
 	else if(interpolation == GraphChannel::Style::Interpolation::Line) {
-		int ix2 = ix1 + 1;
+		auto ix2 = ix1 + 1;
 		if(ix2 >= m->count(model_ix))
 			return Sample();
 		Sample s1 = m->sampleAt(model_ix, ix1);
@@ -414,12 +410,12 @@ Sample Graph::timeToSample(int channel_ix, timemsec_t time) const
 	return Sample();
 }
 
-Sample Graph::timeToNearestSample(int channel_ix, timemsec_t time) const
+Sample Graph::timeToNearestSample(qsizetype channel_ix, timemsec_t time) const
 {
 	GraphModel *m = model();
 	const GraphChannel *ch = channelAt(channel_ix);
-	int model_ix = ch->modelIndex();
-	int ix1 = m->lessOrEqualTimeIndex(model_ix, time);
+	qsizetype model_ix = ch->modelIndex();
+	qsizetype ix1 = m->lessOrEqualTimeIndex(model_ix, time);
 
 	Sample s1;
 	Sample s2;
@@ -439,7 +435,7 @@ Sample Graph::timeToNearestSample(int channel_ix, timemsec_t time) const
 
 Sample Graph::posToData(const QPoint &pos) const
 {
-	int ch_ix = posToChannel(pos);
+	qsizetype ch_ix = posToChannel(pos);
 	if(ch_ix < 0)
 		return Sample();
 	const GraphChannel *ch = channelAt(ch_ix);
@@ -447,7 +443,7 @@ Sample Graph::posToData(const QPoint &pos) const
 	return point2data? point2data(pos): Sample();
 }
 
-QPoint Graph::dataToPos(int ch_ix, const Sample &s) const
+QPoint Graph::dataToPos(qsizetype ch_ix, const Sample &s) const
 {
 	const GraphChannel *ch = channelAt(ch_ix);
 	auto data2point = dataToPointFn(DataRect{xRangeZoom(), ch->yRangeZoom()}, ch->graphDataGridRect());
@@ -560,7 +556,7 @@ void Graph::setCrossHairPos(const Graph::CrossHairPos &pos)
 	//		emit emitPresentationDirty(ch->graphDataGridRect());
 	//}
 	QRect dirty_rect;
-	for (int i = 0; i < channelCount(); ++i) {
+	for (qsizetype i = 0; i < channelCount(); ++i) {
 		const GraphChannel *ch = channelAt(i, !shv::core::Exception::Throw);
 		if(ch) {
 			const QRect r = ch->graphDataGridRect();
@@ -599,9 +595,9 @@ QRect Graph::selectionRect() const
 	return m_state.selectionRect;
 }
 
-int Graph::posToChannel(const QPoint &pos) const
+qsizetype Graph::posToChannel(const QPoint &pos) const
 {
-	for (int i = 0; i < channelCount(); ++i) {
+	for (qsizetype i = 0; i < channelCount(); ++i) {
 		const GraphChannel *ch = channelAt(i);
 		const QRect r = ch->graphAreaRect();
 		//shvInfo() << ch->shvPath()
@@ -615,9 +611,9 @@ int Graph::posToChannel(const QPoint &pos) const
 	return -1;
 }
 
-int Graph::posToChannelHeader(const QPoint &pos) const
+qsizetype Graph::posToChannelHeader(const QPoint &pos) const
 {
-	for (int i = 0; i < channelCount(); ++i) {
+	for (qsizetype i = 0; i < channelCount(); ++i) {
 		const GraphChannel *ch = channelAt(i);
 
 		if(ch->verticalHeaderRect().contains(pos)) {
@@ -673,14 +669,14 @@ void Graph::resetXZoom()
 	setXRangeZoom(xRange());
 }
 
-void Graph::setYRange(int channel_ix, const YRange &r)
+void Graph::setYRange(qsizetype channel_ix, const YRange &r)
 {
 	GraphChannel *ch = channelAt(channel_ix);
 	ch->m_state.yRange = r;
 	resetYZoom(channel_ix);
 }
 
-void Graph::enlargeYRange(int channel_ix, double step)
+void Graph::enlargeYRange(qsizetype channel_ix, double step)
 {
 	GraphChannel *ch = channelAt(channel_ix);
 	YRange r = ch->m_state.yRange;
@@ -689,7 +685,7 @@ void Graph::enlargeYRange(int channel_ix, double step)
 	setYRange(channel_ix, r);
 }
 
-void Graph::setYRangeZoom(int channel_ix, const YRange &r)
+void Graph::setYRangeZoom(qsizetype channel_ix, const YRange &r)
 {
 	GraphChannel *ch = channelAt(channel_ix);
 	ch->m_state.yRangeZoom = r;
@@ -700,7 +696,7 @@ void Graph::setYRangeZoom(int channel_ix, const YRange &r)
 	makeYAxis(channel_ix);
 }
 
-void Graph::resetYZoom(int channel_ix)
+void Graph::resetYZoom(qsizetype channel_ix)
 {
 	GraphChannel *ch = channelAt(channel_ix);
 	setYRangeZoom(channel_ix, ch->yRange());
@@ -714,8 +710,8 @@ void Graph::zoomToSelection(bool zoom_vertically)
 	xrange.max = posToTime(selectionRect().right());
 	xrange.normalize();
 	if(zoom_vertically) {
-		int ch1 = posToChannel(selectionRect().topLeft());
-		int ch2 = posToChannel(selectionRect().bottomRight());
+		qsizetype ch1 = posToChannel(selectionRect().topLeft());
+		qsizetype ch2 = posToChannel(selectionRect().bottomRight());
 		if(ch1 == ch2 && ch1 >= 0) {
 			const GraphChannel *ch = channelAt(ch1);
 			if(ch) {
@@ -844,7 +840,7 @@ void Graph::makeXAxis()
 	}
 }
 
-void Graph::makeYAxis(int channel)
+void Graph::makeYAxis(qsizetype channel)
 {
 	shvLogFuncFrame();
 	GraphChannel *ch = channelAt(channel);
@@ -914,7 +910,7 @@ void Graph::moveSouthFloatingBarBottom(int bottom)
 
 std::pair<Sample, int> Graph::posToSample(const QPoint &pos) const
 {
-	int ch_ix = posToChannel(pos);
+	auto ch_ix = posToChannel(pos);
 	timemsec_t time = posToTime(pos.x());
 	const GraphChannel *ch = channelAt(ch_ix);
 	//update(ch->graphAreaRect());
@@ -932,7 +928,7 @@ std::pair<Sample, int> Graph::posToSample(const QPoint &pos) const
 	return {s, ch_ix};
 }
 
-QVariantMap Graph::sampleValues(int channel_ix, const shv::visu::timeline::Sample &s) const
+QVariantMap Graph::sampleValues(qsizetype channel_ix, const shv::visu::timeline::Sample &s) const
 {
 	QVariantMap ret;
 	const GraphChannel *ch = channelAt(channel_ix);
@@ -1085,7 +1081,7 @@ void Graph::makeLayout(const QRect &pref_rect)
 	}
 	sum_h_min += u2px(m_style.xAxisHeight());
 	sum_h_min += u2px(m_style.miniMapHeight());
-	int h_rest = pref_rect.height();
+	qsizetype h_rest = pref_rect.height();
 	h_rest -= sum_h_min;
 	h_rest -= u2px(m_style.topMargin());
 	h_rest -= u2px(m_style.bottomMargin());
@@ -1094,29 +1090,21 @@ void Graph::makeLayout(const QRect &pref_rect)
 		std::sort(rests.begin(), rests.end(), [](const Rest &a, const Rest &b) {
 			return a.rest < b.rest;
 		});
-		for (int i = 0; i < rests.count(); ++i) {
-#if QT_VERSION_MAJOR >= 6
-			int fair_rest = static_cast<int>(h_rest / (rests.count() - i));
-#else
-			int fair_rest = h_rest / (rests.count() - i);
-#endif
+		for (qsizetype i = 0; i < rests.count(); ++i) {
+			auto fair_rest = h_rest / (rests.count() - i);
 			const Rest &r = rests[i];
 			GraphChannel *ch = channelAt(r.index);
-			int h = u2px(ch->m_effectiveStyle.heightRange());
+			qsizetype h = u2px(ch->m_effectiveStyle.heightRange());
 			if(h > fair_rest)
 				h = fair_rest;
-			ch->m_layout.graphAreaRect.setHeight(ch->m_layout.graphAreaRect.height() + h);
+			ch->m_layout.graphAreaRect.setHeight(static_cast<int>(ch->m_layout.graphAreaRect.height() + h));
 			h_rest -= h;
 		}
 	}
 	// shift channel rects
 	int widget_height = 0;
 	widget_height += u2px(m_style.topMargin());
-#if QT_VERSION_MAJOR >= 6
-	for (int i = static_cast<int>(visible_channels.count()) - 1; i >= 0; --i) {
-#else
-	for (int i = visible_channels.count() - 1; i >= 0; --i) {
-#endif
+	for (auto i = visible_channels.count() - 1; i >= 0; --i) {
 		GraphChannel *ch = channelAt(visible_channels[i]);
 
 		ch->m_layout.graphAreaRect.moveTop(widget_height);
@@ -1162,11 +1150,7 @@ void Graph::makeLayout(const QRect &pref_rect)
 	shvDebug() << "m_layout.rect:" << rstr(m_layout.rect);
 
 	makeXAxis();
-#if QT_VERSION_MAJOR >= 6
-	for (int i = static_cast<int>(visible_channels.count()) - 1; i >= 0; --i)
-#else
-	for (int i = visible_channels.count() - 1; i >= 0; --i)
-#endif
+	for (auto i = visible_channels.count() - 1; i >= 0; --i)
 		makeYAxis(i);
 }
 
@@ -1269,7 +1253,7 @@ void Graph::setVisualSettings(const VisualSettings &settings)
 	}
 }
 
-void Graph::resizeChannel(int ix, int delta_px)
+void Graph::resizeChannel(qsizetype ix, int delta_px)
 {
 	GraphChannel *ch = channelAt(ix);
 
@@ -1418,7 +1402,7 @@ void Graph::drawMiniMap(QPainter *painter)
 	painter->restore();
 }
 
-QString Graph::channelName(int channel) const
+QString Graph::channelName(qsizetype channel) const
 {
 	const GraphChannel *ch = channelAt(channel);
 	const GraphModel::ChannelInfo& chi = model()->channelInfo(ch->modelIndex());
@@ -1898,7 +1882,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 {
 	const GraphChannel *ch = channelAt(channel_ix);
 	shvLogFuncFrame() << "channel:" << channel_ix << ch->shvPath();
-	int model_ix = ch->modelIndex();
+	auto model_ix = ch->modelIndex();
 	QRect effective_dest_rect = dest_rect.isEmpty()? ch->graphDataGridRect(): dest_rect;
 	GraphChannel::Style ch_style = channel_style.isEmpty()? ch->m_effectiveStyle: channel_style;
 
@@ -1957,9 +1941,9 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 		sample_point_size++; // make sample point size odd to have it center-able
 	Graph::TypeId channel_meta_type_id = channelTypeId(channel_ix);
 	GraphModel *graph_model = model();
-	int ix1 = graph_model->lessTimeIndex(model_ix, xrange.min);
-	int ix2 = graph_model->greaterTimeIndex(model_ix, xrange.max);
-	int samples_cnt = graph_model->count(model_ix);
+	auto ix1 = graph_model->lessTimeIndex(model_ix, xrange.min);
+	auto ix2 = graph_model->greaterTimeIndex(model_ix, xrange.max);
+	auto samples_cnt = graph_model->count(model_ix);
 	shvDebug() << "ix1:" << ix1 << "ix2:" << ix2 << "samples cnt:" << samples_cnt;
 	//const bool draw_last_stepped_point_continuation = interpolation == GraphChannel::Style::Interpolation::Stepped
 	//		&& model()->channelInfo(ch->modelIndex()).typeDescr.sampleType() != shv::core::utils::ShvTypeDescr::SampleType::Discrete;
@@ -1991,7 +1975,7 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	// when current is going to be active
 	// we cannot paint current point unless we know y-range for more same-pixel values
 	// this is why the sample paint is one step delayed
-	for (int i = ix1; i <= ix2; ++i) {
+	for (auto i = ix1; i <= ix2; ++i) {
 		shvDebug() << "processing sample on index:" << i;
 		Q_ASSERT(i <= samples_cnt);
 		QPoint current_point;
