@@ -119,8 +119,8 @@ void GraphButtonBox::draw(QPainter *painter)
 
 QSize GraphButtonBox::size() const
 {
-	int w = buttonCount() * (buttonSpace() + buttonSize());
-	return QSize{w, buttonSize()};
+	auto w = buttonCount() * (buttonSpace() + buttonSize());
+	return QSize{static_cast<int>(w), buttonSize()};
 }
 
 int GraphButtonBox::buttonSize() const

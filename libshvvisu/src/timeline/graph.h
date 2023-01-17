@@ -119,31 +119,25 @@ public:
 	void resetChannelsRanges();
 	bool isInitialView() const;
 
-	int channelCount() const {
-#if QT_VERSION_MAJOR >= 6
-		return static_cast<int>(m_channels.count());
-#else
-		return m_channels.count();
-#endif
-	}
+	qsizetype channelCount() const { return  m_channels.count(); }
 	void clearChannels();
-	GraphChannel* appendChannel(int model_index = -1);
-	GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw);
-	const GraphChannel* channelAt(int ix, bool throw_exc = shv::core::Exception::Throw) const;
-	core::utils::ShvTypeDescr::Type channelTypeId(int ix) const;
-	void moveChannel(int channel, int new_pos);
-	QString channelName(int channel) const;
+	GraphChannel* appendChannel(qsizetype model_index = -1);
+	GraphChannel* channelAt(qsizetype ix, bool throw_exc = shv::core::Exception::Throw);
+	const GraphChannel* channelAt(qsizetype ix, bool throw_exc = shv::core::Exception::Throw) const;
+	core::utils::ShvTypeDescr::Type channelTypeId(qsizetype ix) const;
+	void moveChannel(qsizetype channel, qsizetype new_pos);
+	QString channelName(qsizetype channel) const;
 
 	void showAllChannels();
 	QSet<QString> channelPaths();
 	void hideFlatChannels();
 	const ChannelFilter& channelFilter() const { return m_channelFilter; }
 	void setChannelFilter(const ChannelFilter &filter);
-	void setChannelVisible(int channel_ix, bool is_visible);
-	void setChannelMaximized(int channel_ix, bool is_maximized);
+	void setChannelVisible(qsizetype channel_ix, bool is_visible);
+	void setChannelMaximized(qsizetype channel_ix, bool is_maximized);
 
-	ChannelProbe *channelProbe(int channel_ix, timemsec_t time = 0);
-	ChannelProbe *addChannelProbe(int channel_ix, timemsec_t time);
+	ChannelProbe *channelProbe(qsizetype channel_ix, timemsec_t time = 0);
+	ChannelProbe *addChannelProbe(qsizetype channel_ix, timemsec_t time);
 	void removeChannelProbe(ChannelProbe *probe);
 	//DataRect dataRect(int channel_ix) const;
 
@@ -152,17 +146,17 @@ public:
 
 	timemsec_t posToTime(int pos) const;
 	int timeToPos(timemsec_t time) const;
-	Sample timeToSample(int channel_ix, timemsec_t time) const;
+	Sample timeToSample(qsizetype channel_ix, timemsec_t time) const;
 	std::pair<Sample, int> posToSample(const QPoint &pos) const;
-	Sample timeToNearestSample(int channel_ix, timemsec_t time) const;
-	int posToChannel(const QPoint &pos) const;
-	int posToChannelHeader(const QPoint &pos) const;
+	Sample timeToNearestSample(qsizetype channel_ix, timemsec_t time) const;
+	qsizetype posToChannel(const QPoint &pos) const;
+	qsizetype posToChannelHeader(const QPoint &pos) const;
 	Sample posToData(const QPoint &pos) const;
 	//QVariant posToValue(const QPoint &pos) const;
-	QPoint dataToPos(int ch_ix, const Sample &s) const;
+	QPoint dataToPos(qsizetype ch_ix, const Sample &s) const;
 
 	QString timeToStringTZ(timemsec_t time) const;
-	QVariantMap sampleValues(int channel_ix, const Sample &s) const;
+	QVariantMap sampleValues(qsizetype channel_ix, const Sample &s) const;
 	/*
 	QString prettyBitFieldValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const;
 	QMap<QString, QString> prettyMapValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const;
@@ -175,11 +169,11 @@ public:
 	//bool isCrossBarVisible() const {return !m_state.crossBarPos.isNull() && m_state.crossBarChannel >= 0;}
 	struct SHVVISU_DECL_EXPORT CrossHairPos
 	{
-		int channelIndex = -1;
+		qsizetype channelIndex = -1;
 		QPoint possition;
 
 		CrossHairPos() = default;
-		CrossHairPos(int ch_ix, const QPoint &pos) : channelIndex(ch_ix), possition(pos) {}
+		CrossHairPos(qsizetype ch_ix, const QPoint &pos) : channelIndex(ch_ix), possition(pos) {}
 
 		bool isValid() const { return channelIndex >= 0 && !possition.isNull(); }
 	};
@@ -202,10 +196,10 @@ public:
 	void setYAxisVisible(bool is_visible);
 	bool isYAxisVisible();
 
-	void setYRange(int channel_ix, const YRange &r);
-	void enlargeYRange(int channel_ix, double step);
-	void setYRangeZoom(int channel_ix, const YRange &r);
-	void resetYZoom(int channel_ix);
+	void setYRange(qsizetype channel_ix, const YRange &r);
+	void enlargeYRange(qsizetype channel_ix, double step);
+	void setYRangeZoom(qsizetype channel_ix, const YRange &r);
+	void resetYZoom(qsizetype channel_ix);
 	void zoomToSelection(bool zoom_vertically);
 
 	const Style& style() const { return m_style; }
@@ -243,7 +237,7 @@ public:
 
 	VisualSettings visualSettings() const;
 	void setVisualSettings(const VisualSettings &settings);
-	void resizeChannel(int ix, int delta_px);
+	void resizeChannel(qsizetype ix, int delta_px);
 
 	void saveVisualSettings(const QString &settings_id, const QString &name) const;
 	void deleteVisualSettings(const QString &settings_id, const QString &name) const;
@@ -288,7 +282,7 @@ protected:
 
 	QVariantMap mergeMaps(const QVariantMap &base, const QVariantMap &overlay) const;
 	void makeXAxis();
-	void makeYAxis(int channel);
+	void makeYAxis(qsizetype channel);
 
 	void moveSouthFloatingBarBottom(int bottom);
 protected:

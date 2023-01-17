@@ -191,10 +191,10 @@ int GraphWidget::posToChannelVerticalHeader(const QPoint &pos) const
 	return -1;
 }
 
-int GraphWidget::posToChannel(const QPoint &pos) const
+qsizetype GraphWidget::posToChannel(const QPoint &pos) const
 {
 	const Graph *gr = graph();
-	int ch_ix = gr->posToChannel(pos);
+	auto ch_ix = gr->posToChannel(pos);
 	return ch_ix;
 }
 
@@ -298,7 +298,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 		}
 		if(old_mouse_op == MouseOperation::GraphDataAreaLeftCtrlPress) {
 			if(event->modifiers() == Qt::ControlModifier) {
-				int channel_ix = posToChannel(event->pos());
+				auto channel_ix = posToChannel(event->pos());
 				if(channel_ix >= 0) {
 					removeProbes(channel_ix);
 					timemsec_t time = m_graph->posToTime(event->pos().x());
@@ -328,7 +328,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 			*/
 		}
 		else if(old_mouse_op == MouseOperation::GraphDataAreaLeftCtrlShiftPress) {
-			int channel_ix = posToChannel(event->pos());
+			auto channel_ix = posToChannel(event->pos());
 			if(channel_ix >= 0) {
 				timemsec_t time = m_graph->posToTime(event->pos().x());
 				createProbe(channel_ix, time);
@@ -358,7 +358,7 @@ void GraphWidget::mouseReleaseEvent(QMouseEvent *event)
 	else if(event->button() == Qt::RightButton) {
 		if(old_mouse_op == MouseOperation::GraphDataAreaRightPress) {
 			if(event->modifiers() == Qt::NoModifier) {
-				int ch_ix = posToChannel(event->pos());
+				auto ch_ix = posToChannel(event->pos());
 				if(ch_ix >= 0) {
 					showChannelContextMenu(ch_ix, event->pos());
 					event->accept();
@@ -507,7 +507,7 @@ void GraphWidget::mouseMoveEvent(QMouseEvent *event)
 		return;
 	}
 
-	int ch_ix = posToChannel(pos);
+	auto ch_ix = posToChannel(pos);
 	if(ch_ix >= 0 && !isMouseAboveMiniMap(pos)) {
 		setCursor(Qt::BlankCursor);
 		gr->setCrossHairPos({ch_ix, pos});
@@ -792,7 +792,7 @@ void GraphWidget::showGraphContextMenu(const QPoint &mouse_pos)
 		menu.exec(mapToGlobal(mouse_pos));
 }
 
-void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos)
+void GraphWidget::showChannelContextMenu(qsizetype channel_ix, const QPoint &mouse_pos)
 {
 	shvLogFuncFrame();
 	const GraphChannel *ch = m_graph->channelAt(channel_ix, !shv::core::Exception::Throw);
@@ -850,7 +850,7 @@ void GraphWidget::showChannelContextMenu(int channel_ix, const QPoint &mouse_pos
 		menu.exec(mapToGlobal(mouse_pos));
 }
 
-void GraphWidget::createProbe(int channel_ix, timemsec_t time)
+void GraphWidget::createProbe(qsizetype channel_ix, timemsec_t time)
 {
 	const GraphChannel *ch = m_graph->channelAt(channel_ix);
 	GraphModel::ChannelInfo &channel_info = m_graph->model()->channelInfo(ch->modelIndex());
@@ -893,7 +893,7 @@ void GraphWidget::createProbe(int channel_ix, timemsec_t time)
 	update();
 }
 
-void GraphWidget::removeProbes(int channel_ix)
+void GraphWidget::removeProbes(qsizetype channel_ix)
 {
 	QList<ChannelProbeWidget*> probe_widgets = findChildren<ChannelProbeWidget*>(QString(), Qt::FindDirectChildrenOnly);
 
@@ -908,7 +908,7 @@ bool GraphWidget::isMouseAboveChannelResizeHandle(const QPoint &mouse_pos) const
 	const Graph *gr = graph();
 	const int MARGIN = gr->u2px(0.5);
 
-	int channel_ix = gr->posToChannelHeader(mouse_pos);
+	auto channel_ix = gr->posToChannelHeader(mouse_pos);
 
 	if (channel_ix > -1) {
 		const GraphChannel *ch = gr->channelAt(channel_ix);

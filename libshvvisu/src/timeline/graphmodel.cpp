@@ -20,23 +20,19 @@ void GraphModel::clear()
 	m_channelsInfo.clear();
 }
 
-int GraphModel::count(int channel) const
+qsizetype GraphModel::count(qsizetype channel) const
 {
 	if(channel < 0 || channel > channelCount())
 		return 0;
-#if QT_VERSION_MAJOR >= 6
-	return static_cast<int>(m_samples.at(channel).count());
-#else
 	return m_samples.at(channel).count();
-#endif
 }
 
-Sample GraphModel::sampleAt(int channel, int ix) const
+Sample GraphModel::sampleAt(qsizetype channel, qsizetype ix) const
 {
 	return m_samples.at(channel).at(ix);
 }
 
-Sample GraphModel::sampleValue(int channel, int ix) const
+Sample GraphModel::sampleValue(qsizetype channel, qsizetype ix) const
 {
 	if(channel < 0 || channel >= channelCount())
 		return Sample();
@@ -48,13 +44,13 @@ Sample GraphModel::sampleValue(int channel, int ix) const
 XRange GraphModel::xRange() const
 {
 	XRange ret;
-	for (int i = 0; i < channelCount(); ++i) {
+	for (qsizetype i = 0; i < channelCount(); ++i) {
 		ret = ret.united(xRange(i));
 	}
 	return ret;
 }
 
-XRange GraphModel::xRange(int channel_ix) const
+XRange GraphModel::xRange(qsizetype channel_ix) const
 {
 	XRange ret;
 	if(count(channel_ix) > 0) {
@@ -64,11 +60,11 @@ XRange GraphModel::xRange(int channel_ix) const
 	return ret;
 }
 
-YRange GraphModel::yRange(int channel_ix) const
+YRange GraphModel::yRange(qsizetype channel_ix) const
 {
 	YRange ret;
 	auto type = channelInfo(channel_ix).typeDescr.type();
-	for (int i = 0; i < count(channel_ix); ++i) {
+	for (qsizetype i = 0; i < count(channel_ix); ++i) {
 		QVariant v = sampleAt(channel_ix, i).value;
 		bool ok;
 		double d = valueToDouble(v, type, &ok);
@@ -137,26 +133,26 @@ double GraphModel::valueToDouble(const QVariant v, shv::core::utils::ShvTypeDesc
 	}
 }
 
-int GraphModel::lessTimeIndex(int channel, timemsec_t time) const
+qsizetype GraphModel::lessTimeIndex(qsizetype channel, timemsec_t time) const
 {
-	int ix = lessOrEqualTimeIndex(channel, time);
+	qsizetype ix = lessOrEqualTimeIndex(channel, time);
 	Sample s = sampleValue(channel, ix);
 	if(s.time == time)
 		return ix - 1;
 	return ix;
 }
 
-int GraphModel::lessOrEqualTimeIndex(int channel, timemsec_t time) const
+qsizetype GraphModel::lessOrEqualTimeIndex(qsizetype channel, timemsec_t time) const
 {
 	if(channel < 0 || channel > channelCount())
 		return -1;
 
-	int first = 0;
-	int cnt = count(channel);
+	qsizetype first = 0;
+	auto cnt = count(channel);
 	bool found = false;
 	while (cnt > 0) {
-		int step = cnt / 2;
-		int pivot = first + step;
+		auto step = cnt / 2;
+		auto pivot = first + step;
 		if (sampleAt(channel, pivot).time <= time) {
 			first = pivot;
 			if(step)
@@ -170,20 +166,20 @@ int GraphModel::lessOrEqualTimeIndex(int channel, timemsec_t time) const
 			found = false;
 		}
 	};
-	int ret = found? first: -1;
+	qsizetype ret = found? first: -1;
 	//shvInfo() << time << "-->" << ret;
 	return ret;
 }
 
-int GraphModel::greaterTimeIndex(int channel, timemsec_t time) const
+qsizetype GraphModel::greaterTimeIndex(qsizetype channel, timemsec_t time) const
 {
-	int ix = lessOrEqualTimeIndex(channel, time);
+	qsizetype ix = lessOrEqualTimeIndex(channel, time);
 	return ix + 1;
 }
 
-int GraphModel::greaterOrEqualTimeIndex(int channel, timemsec_t time) const
+qsizetype GraphModel::greaterOrEqualTimeIndex(qsizetype channel, timemsec_t time) const
 {
-	int ix = lessOrEqualTimeIndex(channel, time);
+	qsizetype ix = lessOrEqualTimeIndex(channel, time);
 	Sample s = sampleValue(channel, ix);
 	if(s.time == time)
 		return ix;
@@ -201,7 +197,7 @@ void GraphModel::endAppendValues()
 	if(xr.max > m_begginAppendXRange.max)
 		emit xRangeChanged(xr);
 	m_begginAppendXRange = XRange();
-	for (int i = 0; i < channelCount(); ++i) {
+	for (qsizetype i = 0; i < channelCount(); ++i) {
 		ChannelInfo &chi = channelInfo(i);
 		if(!chi.typeDescr.isValid()) {
 			auto type_name = guessTypeName(i);
@@ -210,7 +206,7 @@ void GraphModel::endAppendValues()
 	}
 }
 
-void GraphModel::appendValue(int channel, Sample &&sample)
+void GraphModel::appendValue(qsizetype channel, Sample &&sample)
 {
 	//shvInfo() << channel << sample.time << sample.value.toString();
 	if(channel < 0 || channel > channelCount()) {
@@ -242,7 +238,7 @@ void GraphModel::appendValue(int channel, Sample &&sample)
 
 void GraphModel::appendValueShvPath(const std::string &shv_path, Sample &&sample)
 {
-	int ch_ix = pathToChannelIndex(shv_path);
+	auto ch_ix = pathToChannelIndex(shv_path);
 	if(ch_ix < 0) {
 		if(isAutoCreateChannels()) {
 			auto type_name = m_typeInfo.propertyDescriptionForPath(shv_path).typeName();
@@ -273,11 +269,11 @@ void GraphModel::forgetValuesBefore(timemsec_t time, int min_samples_count)
 	}
 }
 
-int GraphModel::pathToChannelIndex(const std::string &path) const
+qsizetype GraphModel::pathToChannelIndex(const std::string &path) const
 {
 	auto it = m_pathToChannelCache.find(path);
 	if(it == m_pathToChannelCache.end()) {
-		for (int i = 0; i < channelCount(); ++i) {
+		for (qsizetype i = 0; i < channelCount(); ++i) {
 			const ChannelInfo &chi = channelInfo(i);
 			if(chi.shvPath == QLatin1String(path.data(), static_cast<int>(path.size()))) {
 				m_pathToChannelCache[path] = i;
@@ -313,9 +309,9 @@ QString GraphModel::typeDescrFieldName(const shv::core::utils::ShvTypeDescr &typ
 	return QString();
 }
 
-QString GraphModel::guessTypeName(int channel_ix) const
+QString GraphModel::guessTypeName(qsizetype channel_ix) const
 {
-	for(int i = 0; i < count(channel_ix); i++) {
+	for(qsizetype i = 0; i < count(channel_ix); i++) {
 		Sample s = sampleValue(channel_ix, i);
 		if(s.value.userType() != QMetaType::UnknownType) {
 			switch (s.value.userType()) {
