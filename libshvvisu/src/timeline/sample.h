@@ -29,14 +29,11 @@ struct SHVVISU_DECL_EXPORT Sample
 template<typename T>
 struct Range
 {
-	T min = std::numeric_limits<T>::max();
-	T max = std::numeric_limits<T>::min();
+	T min;
+	T max;
 
-	Range() = default;
+	Range() : min(0), max(0) {}
 	Range(T mn, T mx) : min(mn), max(mx) {}
-	//XRange(const QPair<timemsec_t, timemsec_t> r) : min(r.first), max(r.second) {}
-
-	//bool operator==(const T &o) const { return min == o.min && max == o.max; }
 
 	Range& normalize() {if (min > max)  std::swap(min, max); return *this; }
 	bool isValid() const { return interval() >= 0; }
