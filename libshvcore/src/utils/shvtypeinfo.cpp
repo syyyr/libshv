@@ -187,7 +187,7 @@ uint64_t ShvFieldDescr::setBitfieldValue(uint64_t bitfield, uint64_t uval) const
 //=====================================================================
 ShvTypeDescr::ShvTypeDescr(Type t, std::vector<ShvFieldDescr> &&flds, SampleType st, chainpack::RpcValue::Map &&tags)
 {
-	m_data = RpcValue(move(tags));
+	m_data = RpcValue(std::move(tags));
 	setType(t);
 	setFields(flds);
 	setSampleType(st);
@@ -372,11 +372,11 @@ ShvTypeDescr ShvTypeDescr::fromRpcValue(const RpcValue &v)
 		for(const auto &rv : src_fields.asList()) {
 			RpcValue::Map field = rv.asMap();
 			mergeTags(field);
-			fields.push_back(move(field));
+			fields.push_back(std::move(field));
 		}
 		mergeTags(map);
-		map[KEY_FIELDS] = RpcValue(move(fields));
-		ret.m_data = RpcValue(move(map));
+		map[KEY_FIELDS] = RpcValue(std::move(fields));
+		ret.m_data = RpcValue(std::move(map));
 	}
 	{
 		auto rv = ret.dataValue(KEY_TYPE);
@@ -568,10 +568,10 @@ ShvPropertyDescr ShvPropertyDescr::fromRpcValue(const RpcValue &v, RpcValue::Map
 	for(const auto &key : known_tags)
 		if(auto it = m.find(key); it != m.cend()) {
 			auto nh = m.extract(key);
-			node_map.insert(move(nh));
+			node_map.insert(std::move(nh));
 		}
 	if(extra_tags)
-		*extra_tags = move(m);
+		*extra_tags = std::move(m);
 	ShvPropertyDescr ret;
 	ret.setData(node_map);
 	return ret;
@@ -1159,7 +1159,7 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 		setDevicePath(current_device_path, current_device_type);
 		if(auto it = m_deviceProperties.find(current_device_type); it == m_deviceProperties.end()) {
 			// device type defined first time
-			m_deviceProperties[current_device_type] = move(new_device_properties);
+			m_deviceProperties[current_device_type] = std::move(new_device_properties);
 		}
 		else {
 			// check deviations
