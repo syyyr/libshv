@@ -75,7 +75,8 @@ public:
 	/// AbstractRpcConnection interface implementation
 	void sendMessage(const shv::chainpack::RpcMessage &rpc_msg) override;
 	void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg) override;
-protected:	
+	static QUrl connectionUrlFromString(const QString &url_str);
+protected:
 	void setState(State state);
 	void closeOrAbort(bool is_abort);
 
@@ -108,7 +109,6 @@ private:
 	bool isAutoConnect() const { return m_checkBrokerConnectedInterval > 0; }
 	void restartIfAutoConnect();
 
-	static QUrl connectionUrlFromString(const QString &url_str);
 	static void tst_connectionUrlFromString();
 private:
 	QUrl m_connectionUrl;
