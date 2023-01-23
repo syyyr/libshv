@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../shvchainpackglobal.h"
-//#include "exception.h"
 #include "metatypes.h"
 
 #include <stdexcept>
@@ -179,6 +178,43 @@ public:
 		std::string toLocalString() const;
 		std::string toIsoString() const {return toIsoString(MsecPolicy::Auto, IncludeTimeZone);}
 		std::string toIsoString(MsecPolicy msec_policy, bool include_tz) const;
+
+		struct SHVCHAINPACK_DECL_EXPORT Parts
+		{
+			int year = 0;
+			int month = 0; // 1-12
+			int day = 0; // 1-31
+			int hour = 0; // 0-23
+			int min = 0; // 0-59
+			int sec = 0; // 0-59
+			int msec = 0; // 0-999
+
+			Parts() {}
+			Parts(int y, int m, int d, int h = 0, int mn = 0, int s = 0, int ms = 0) : year(y), month(m), day(d), hour(h), min(mn), sec(s), msec(ms) {}
+
+			bool isValid() const {
+				return
+				year >= 1970
+				&& month >= 1 && month <= 12
+				&& day >= 1 && day <= 31
+				&& hour >= 0 && hour <= 59
+				&& min >= 0 && min <= 59
+				&& sec >= 0 && sec <= 59
+				&& msec >= 0 && msec <= 999;
+			}
+			bool operator==(const Parts &o) const {
+				return
+				year == o.year
+				&& month == o.month
+				&& day == o.day
+				&& hour == o.hour
+				&& min == o.min
+				&& sec == o.sec
+				&& msec == o.msec;
+			}
+		};
+		Parts toParts() const;
+		static DateTime fromParts(const Parts &parts);
 
 		bool operator ==(const DateTime &o) const { return (m_dtm.msec == o.m_dtm.msec); }
 		bool operator <(const DateTime &o) const { return m_dtm.msec < o.m_dtm.msec; }

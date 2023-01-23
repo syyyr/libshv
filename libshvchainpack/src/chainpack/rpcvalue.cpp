@@ -1053,6 +1053,30 @@ std::string RpcValue::DateTime::toIsoString(RpcValue::DateTime::MsecPolicy msec_
 	return ret;
 #endif
 }
+
+RpcValue::DateTime::Parts RpcValue::DateTime::toParts() const
+{
+	struct tm tm;
+	ccpon_gmtime(msecsSinceEpoch() / 1000 + utcOffsetMin() * 60, &tm);
+	return Parts {tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, static_cast<int>(msecsSinceEpoch() % 1000)};
+}
+
+RpcValue::DateTime RpcValue::DateTime::fromParts(const Parts &parts)
+{
+	if (parts.isValid()) {
+		struct tm tm;
+		tm.tm_year = parts.year - 1900;
+		tm.tm_mon = parts.month - 1;
+		tm.tm_mday = parts.day;
+		tm.tm_hour = parts.hour;
+		tm.tm_min = parts.min;
+		tm.tm_sec = parts.sec;
+		auto msec = ccpon_timegm(&tm) * 1000 + parts.msec;
+		return DateTime::fromMSecsSinceEpoch(msec);
+	}
+	return {};
+}
+
 #ifdef DEBUG_RPCVAL
 static int cnt = 0;
 #endif

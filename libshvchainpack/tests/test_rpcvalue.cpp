@@ -9,7 +9,8 @@
 #include <optional>
 
 using namespace shv::chainpack;
-using std::string;
+using namespace std;
+using namespace std::string_literals;
 
 // Check that ChainPack has the properties we want.
 #define CHECK_TRAIT(x) static_assert(std::x::value, #x)
@@ -40,11 +41,11 @@ namespace shv::chainpack {
 doctest::String toString(const RpcValue& value) {
 	return value.toCpon().c_str();
 }
-/*
-doctest::String toString(const RpcValue::List& value) {
-	return RpcValue(value).toCpon().c_str();
-}
 
+doctest::String toString(const RpcValue::DateTime& value) {
+	return value.toIsoString().c_str();
+}
+/*
 doctest::String toString(const RpcValue::Map& value) {
 	return RpcValue(value).toCpon().c_str();
 }
@@ -93,5 +94,30 @@ DOCTEST_TEST_CASE("RpcValue")
 		REQUIRE(rv1.metaData().isEmpty() == false);
 		REQUIRE(rv3.metaData().isEmpty() == true);
 		REQUIRE(rv3.at("18") == rpcval.at("18"));
+	}
+}
+
+DOCTEST_TEST_CASE("RpcValue::DateTime")
+{
+	using Parts = RpcValue::DateTime::Parts;
+	DOCTEST_SUBCASE("RpcValue::DateTime::toParts()")
+	{
+		const auto make_case = [](const string &s, const Parts &p) {
+			return tuple<string, Parts>(s, p);
+		};
+		for(const auto &[dt_str, dt_parts] : {
+			make_case("2022-01-01T00:00:00Z"s, Parts(2022, 1, 1)),
+			make_case("2023-01-23T01:02:03Z"s, Parts(2023, 1, 23, 1, 2, 3)),
+			make_case("2024-02-29T01:02:03Z"s, Parts(2024, 2, 29, 1, 2, 3)),
+		}) {
+			auto dt1 = RpcValue::DateTime::fromUtcString(dt_str);
+			auto dt2 = RpcValue::DateTime::fromParts(dt_parts);
+			CAPTURE(dt1);
+			CAPTURE(dt2);
+			REQUIRE(dt1 == dt2);
+			REQUIRE(dt1.toParts() == dt2.toParts());
+			REQUIRE(dt2.toIsoString() == dt_str);
+			REQUIRE(dt1.toParts() == dt_parts);
+		}
 	}
 }
