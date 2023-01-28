@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 	if(std::find(args.begin(), args.end(), "--help") != args.end()) {
 		help(argv[0]);
 	}
-	nDebug() << NecroLog::tresholdsLogInfo();
+	nDebug() << NecroLog::thresholdsLogInfo();
 
 	std::string o_indent;
 	bool o_translate_meta_ids = false;

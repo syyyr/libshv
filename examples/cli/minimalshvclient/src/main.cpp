@@ -8,7 +8,7 @@
 int main(int argc, char *argv[])
 {
 	// init log system
-	NecroLog::setFileLogTresholds(":M");
+	NecroLog::setTopicsLogThresholds(":M");
 	std::vector<std::string> shv_args = NecroLog::setCLIOptions(argc, argv);
 
 	// check CLI argumnets
