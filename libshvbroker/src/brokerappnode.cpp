@@ -52,11 +52,11 @@ public:
 				return true;
 			}
 			if(method == M_GET_VERBOSITY) {
-				return NecroLog::topicsLogTresholds();
+				return NecroLog::topicsLogThresholds();
 			}
 			if(method == M_SET_VERBOSITY) {
 				const std::string &s = params.asString();
-				NecroLog::setTopicsLogTresholds(s);
+				NecroLog::setTopicsLogThresholds(s);
 				return true;
 			}
 		}
