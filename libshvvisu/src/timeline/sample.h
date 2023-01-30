@@ -32,7 +32,7 @@ struct Range
 	T min;
 	T max;
 
-	Range() : min(0), max(0) {}
+	Range() : min(1), max(0) {} // invalid range
 	Range(T mn, T mx) : min(mn), max(mx) {}
 
 	Range& normalize() {if (min > max)  std::swap(min, max); return *this; }

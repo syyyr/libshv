@@ -49,7 +49,7 @@ void MainWindow::generateSampleData()
 {
 	int sample_cnt = ui->samplesCount->value();
 	static constexpr int64_t YEAR = 1000LL * 60 * 60 * 24 * 365;
-	int64_t min_time = 100;
+	int64_t min_time = RpcValue::DateTime::now().msecsSinceEpoch();
 	int64_t max_time = min_time + YEAR;
 	double min_val = -3;
 	double max_val = 5;
