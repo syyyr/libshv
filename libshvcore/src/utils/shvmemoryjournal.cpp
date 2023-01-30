@@ -204,18 +204,6 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 
 		PatternMatcher pm(params);
 
-		auto entry_to_rpcvalue = [&make_path_shared](int64_t epoch_msec, const Entry &e){
-			cp::RpcValue::List rec;
-			rec.push_back(cp::RpcValue::DateTime::fromMSecsSinceEpoch(epoch_msec));
-			rec.push_back(make_path_shared(e.path));
-			rec.push_back(e.value);
-			rec.push_back(e.shortTime == ShvJournalEntry::NO_SHORT_TIME ? cp::RpcValue(nullptr): cp::RpcValue(e.shortTime));
-			rec.push_back((e.domain.empty() || e.domain == ShvJournalEntry::DOMAIN_VAL_CHANGE) ? cp::RpcValue(nullptr): e.domain);
-			rec.push_back(e.valueFlags);
-			rec.push_back(e.userId.empty()? cp::RpcValue(nullptr): cp::RpcValue(e.userId));
-			return rec;
-		};
-
 		ShvSnapshot snapshot;
 		if(params.withSnapshot) {
 			for(auto it = m_entries.begin(); it != m_entries.end() && it < it1; ++it) {
@@ -239,7 +227,8 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 					if(since_msec == 0)
 						since_msec = entry.epochMsec;
 					last_record_msec = since_msec;
-					log.push_back(entry_to_rpcvalue(since_msec, entry));
+					entry.epochMsec = since_msec;
+					log.push_back(entry.toRpcValueList(make_path_shared));
 					rec_cnt++;
 				}
 			}
@@ -257,7 +246,7 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 						since_msec = it->epochMsec;
 					last_record_msec = it->epochMsec;
 
-					log.push_back(entry_to_rpcvalue(it->epochMsec, *it));
+					log.push_back(it->toRpcValueList(make_path_shared));
 					rec_cnt++;
 				}
 			}

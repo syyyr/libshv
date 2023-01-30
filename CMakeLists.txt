@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.18.4)
 
+set(USE_QT6 ON CACHE BOOL "Qt6 build")
 set(WITH_CLI_EXAMPLES OFF CACHE BOOL "Enable build of CLI examples")
 set(WITH_GUI_EXAMPLES OFF CACHE BOOL "Enable build of GUI examples")
 set(WITH_SANITIZERS OFF CACHE BOOL "Enable ASan/UBsan")
@@ -145,6 +146,10 @@ if(BUILD_SHV_UTILS)
 	# cp2cp
 	add_executable(cp2cp utils/cp2cp/main.cpp)
 	target_link_libraries(cp2cp libshvchainpack-cpp)
+
+	# cp2log
+	add_executable(cp2log utils/cp2log/main.cpp)
+	target_link_libraries(cp2log libshvcore)
 
 	# cpmerge
 	add_executable(cpmerge utils/cpmerge/main.cpp)

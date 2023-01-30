@@ -25,46 +25,28 @@ ShvLogRpcValueReader::ShvLogRpcValueReader(const shv::chainpack::RpcValue &log, 
 
 bool ShvLogRpcValueReader::next()
 {
-	using Column = ShvLogHeader::Column;
+	auto unmap_path = [this](const cp::RpcValue &p) {
+		if(p.isInt())
+			return m_logHeader.pathDictCRef().value(p.toInt()).asString();
+		return p.asString();
+	};
 	while(true) {
-		m_currentEntry = ShvJournalEntry();
+		m_currentEntry = {};
 		const chainpack::RpcValue::List &list = m_log.toList();
 		if(m_currentIndex >= list.size())
 			return false;
 
 		const cp::RpcValue &val = list[m_currentIndex++];
 		const chainpack::RpcValue::List &row = val.toList();
-		cp::RpcValue dt = row.value(Column::Timestamp);
-		if(!dt.isDateTime()) {
+		std::string err;
+		m_currentEntry = ShvJournalEntry::fromRpcValueList(row, unmap_path, &err);
+		if(!err.empty()) {
 			if(m_isThrowExceptions)
-				throw shv::core::Exception("Invalid date time, row: " + val.toCpon());
+				throw shv::core::Exception(err);
 
-			logWShvJournal() << "Skipping invalid date time, row:" << val.toCpon();
+			logWShvJournal() << err;
 			continue;
 		}
-		int64_t time = dt.toDateTime().msecsSinceEpoch();
-		cp::RpcValue p = row.value(Column::Path);
-		if(p.isInt())
-			p = m_logHeader.pathDictCRef().value(p.toInt());
-		const std::string &path = p.asString();
-		if(path.empty()) {
-			if(m_isThrowExceptions)
-				throw shv::core::Exception("Path dictionary corrupted, row: " + val.toCpon());
-
-			logWShvJournal() << "Path dictionary corrupted, row:" << val.toCpon();
-			continue;
-		}
-		//logDShvJournal() << "row:" << val.toCpon();
-		m_currentEntry.epochMsec = time;
-		m_currentEntry.path = path;
-		m_currentEntry.value = row.value(Column::Value);
-		cp::RpcValue st = row.value(Column::ShortTime);
-		m_currentEntry.shortTime = (st.isInt() && st.toInt() >= 0)? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
-		m_currentEntry.domain = row.value(Column::Domain).asString();
-		if(m_currentEntry.domain.empty() || m_currentEntry.domain == "C")
-			m_currentEntry.domain = ShvJournalEntry::DOMAIN_VAL_CHANGE;
-		m_currentEntry.valueFlags = row.value(Column::ValueFlags).toUInt();
-		m_currentEntry.userId = row.value(Column::UserId).asString();
 		return true;
 	}
 }

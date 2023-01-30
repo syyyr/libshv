@@ -17,6 +17,7 @@ class SHVCORE_DECL_EXPORT ShvJournalFileReader
 {
 public:
 	ShvJournalFileReader(const std::string &file_name);
+	ShvJournalFileReader(std::istream &istream);
 
 	bool next();
 	bool last();
@@ -28,9 +29,10 @@ public:
 	static std::string msecToBaseFileName(int64_t msec);
 private:
 	std::string m_fileName;
-	std::ifstream m_ifstream;
+	std::ifstream m_inputFileStream;
+	std::istream *m_istream = nullptr;
 	ShvJournalEntry m_currentEntry;
-	int64_t m_snapshotMsec = -1;
+	int64_t m_snapshotMsec = 0;
 	bool m_inSnapshot = true;
 };
 

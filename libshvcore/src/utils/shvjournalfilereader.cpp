@@ -33,10 +33,16 @@ static std::string getLine(std::istream &in, char sep)
 ShvJournalFileReader::ShvJournalFileReader(const std::string &file_name)
 	: m_fileName(file_name)
 {
-	m_ifstream.open(file_name, std::ios::binary);
-	if(!m_ifstream)
+	m_inputFileStream.open(file_name, std::ios::binary);
+	if(!m_inputFileStream)
 		SHV_EXCEPTION("Cannot open file " + file_name + " for reading.");
 	m_snapshotMsec = fileNameToFileMsec(file_name, !shv::core::Exception::Throw);
+	m_istream = &m_inputFileStream;
+}
+
+ShvJournalFileReader::ShvJournalFileReader(std::istream &istream)
+{
+	m_istream = &istream;
 }
 
 bool ShvJournalFileReader::next()
@@ -44,10 +50,10 @@ bool ShvJournalFileReader::next()
 	using Column = ShvFileJournal::TxtColumn;
 	while(true) {
 		m_currentEntry = ShvJournalEntry();
-		if(!m_ifstream)
+		if(!*m_istream)
 			return false;
 
-		std::string line = getLine(m_ifstream, ShvFileJournal::RECORD_SEPARATOR);
+		std::string line = getLine(*m_istream, ShvFileJournal::RECORD_SEPARATOR);
 		if(line.empty()) {
 			logDShvJournal() << "skipping empty line";
 			continue; // skip empty line
@@ -127,6 +133,8 @@ bool ShvJournalFileReader::next()
 			}
 			}
 		}
+		if(m_snapshotMsec == 0)
+			m_snapshotMsec = m_currentEntry.epochMsec;
 		return true;
 next_line:
 		m_currentEntry = {};
@@ -138,8 +146,8 @@ bool ShvJournalFileReader::last()
 	ssize_t fpos;
 	ShvFileJournal::findLastEntryDateTime(m_fileName, 0, &fpos);
 	if(fpos >= 0) {
-		m_ifstream.clear();
-		m_ifstream.seekg(fpos, std::ios::beg);
+		m_istream->clear();
+		m_istream->seekg(fpos, std::ios::beg);
 		return next();
 	}
 

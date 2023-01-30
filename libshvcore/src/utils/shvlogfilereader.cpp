@@ -50,7 +50,11 @@ ShvLogFileReader::~ShvLogFileReader()
 
 bool ShvLogFileReader::next()
 {
-	using Column = ShvLogHeader::Column;
+	auto unmap_path = [this](const cp::RpcValue &p) {
+		if(p.isInt())
+			return m_logHeader.pathDictCRef().value(p.toInt()).asString();
+		return p.asString();
+	};
 	while(true) {
 		m_currentEntry = ShvJournalEntry();
 		if(!m_ifstream)
@@ -63,32 +67,12 @@ bool ShvLogFileReader::next()
 		cp::RpcValue val;
 		m_reader->read(val);
 		const chainpack::RpcValue::List &row = val.toList();
-		cp::RpcValue dt = row.value(Column::Timestamp);
-		if(!dt.isDateTime()) {
-			logWShvJournal() << "Skipping invalid date time, row:" << val.toCpon();
+		std::string err;
+		m_currentEntry = ShvJournalEntry::fromRpcValueList(row, unmap_path, &err);
+		if(!err.empty()) {
+			logWShvJournal() << err;
 			continue;
 		}
-		int64_t time = dt.toDateTime().msecsSinceEpoch();
-		cp::RpcValue p = row.value(Column::Path);
-		if(p.isInt())
-			p = m_logHeader.pathDictCRef().value(p.toInt());
-		const std::string &path = p.asString();
-		if(path.empty()) {
-			logWShvJournal() << "Path dictionary corrupted, row:" << val.toCpon();
-			continue;
-		}
-		//logDShvJournal() << "row:" << val.toCpon();
-		m_currentEntry.epochMsec = time;
-		m_currentEntry.path = path;
-		m_currentEntry.value = row.value(Column::Value);
-		cp::RpcValue st = row.value(Column::ShortTime);
-		m_currentEntry.shortTime = st.isInt() && st.toInt() >= 0? st.toInt(): ShvJournalEntry::NO_SHORT_TIME;
-		m_currentEntry.domain = row.value(Column::Domain).asString();
-		if (m_currentEntry.domain.empty()) {
-			m_currentEntry.domain = ShvJournalEntry::DOMAIN_VAL_CHANGE;
-		}
-		m_currentEntry.valueFlags = row.value(Column::ValueFlags).toUInt();
-		m_currentEntry.userId = row.value(Column::UserId).asString();
 		return true;
 	}
 }

@@ -18,6 +18,7 @@ class SHVCORE_DECL_EXPORT ShvJournalFileWriter
 public:
 	ShvJournalFileWriter(const std::string &file_name);
 	ShvJournalFileWriter(const std::string &journal_dir, int64_t journal_start_time, int64_t last_entry_ts);
+	ShvJournalFileWriter(std::ostream &out);
 
 	void append(const ShvJournalEntry &entry);
 	void appendMonotonic(const ShvJournalEntry &entry);
@@ -32,7 +33,8 @@ private:
 	void append(int64_t msec, int64_t orig_time, const ShvJournalEntry &entry);
 private:
 	std::string m_fileName;
-	std::ofstream m_out;
+	std::ofstream m_fileOut;
+	std::ostream *m_out = nullptr;
 	int64_t m_recentTimeStamp = 0;
 };
 

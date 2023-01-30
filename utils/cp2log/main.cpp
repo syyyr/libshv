@@ -1,9 +1,12 @@
 #include <necrolog.h>
 
-#include <shv/chainpack/chainpackreader.h>
 #include <shv/chainpack/chainpackwriter.h>
+#include <shv/chainpack/chainpackreader.h>
 #include <shv/chainpack/cponreader.h>
 #include <shv/chainpack/cponwriter.h>
+
+#include <shv/core/utils/shvjournalfilereader.h>
+#include <shv/core/utils/shvjournalfilewriter.h>
 
 #include <numeric>
 #include <vector>
@@ -11,7 +14,9 @@
 #include <iostream>
 #include <fstream>
 
-namespace cp = shv::chainpack;
+using namespace shv::chainpack;
+using namespace shv::core::utils;
+using namespace std;
 /*
 #define nFooInfo() nCInfo("foo")
 #define nBarDebug() nCDebug("bar")
@@ -26,21 +31,23 @@ inline NecroLog &operator<<(NecroLog log, const std::vector<std::string> &sl)
 }
 */
 static const char* const cp2cp_help =
-R"( ChainPack to Cpon converter
+R"( SHV log converter
 
 USAGE:
 -i "indent_string"
 	indent Cpon (default is no-indent "")
--t
-	human readable metatypes in Cpon output
 --ic --input-chainpack
 	input stream is ChainPack [default]
 --ip --input-cpon
 	input stream is Cpon
+--ig --input-shvlog
+	input stream is SHV log
 --op --output-cpon
-	write output in CPon [default]
+	write output in CPon
 --oc --output-chainpack
 	write output in ChainPack
+--og --output-shvlog [default]
+	write output in SHV log
 
 )";
 
@@ -72,11 +79,10 @@ int main(int argc, char *argv[])
 	}
 	nDebug() << NecroLog::thresholdsLogInfo();
 
-	enum class Format {ChainPack, Cpon};
+	enum class Type {ChainPack, Cpon, ShvLog};
 	std::string o_indent;
-	bool o_translate_meta_ids = false;
-	Format o_input = Format::ChainPack;
-	Format o_output = Format::Cpon;
+	Type o_input = Type::ChainPack;
+	Type o_output = Type::ShvLog;
 	std::string file_name;
 
 	for (size_t i = 1; i < args.size(); ++i) {
@@ -88,16 +94,18 @@ int main(int argc, char *argv[])
 			replace_str(s, "\\n", "\n");
 			o_indent = s;
 		}
-		else if(arg == "-t")
-			o_translate_meta_ids = true;
 		else if(arg == "--ic" || arg == "--input-chainpack")
-			o_input = Format::ChainPack;
+			o_input = Type::ChainPack;
 		else if(arg == "--ip" || arg == "--input-cpon")
-			o_input = Format::Cpon;
+			o_input = Type::Cpon;
+		else if(arg == "--ig" || arg == "--input-shvlog")
+			o_input = Type::ShvLog;
 		else if(arg == "--oc" || arg == "--output-chainpack")
-			o_output = Format::ChainPack;
+			o_output = Type::ChainPack;
 		else if(arg == "--op" || arg == "--output-cpon")
-			o_output = Format::Cpon;
+			o_output = Type::Cpon;
+		else if(arg == "--og" || arg == "--output-shvlog")
+			o_output = Type::ShvLog;
 		else if(arg == "-h")
 			help(argv[0]);
 		else
@@ -120,68 +128,57 @@ int main(int argc, char *argv[])
 		pin = &in_file;
 	}
 
-
-	cp::AbstractStreamReader *prd;
-	cp::AbstractStreamWriter *pwr;
-
-	if(o_input == Format::Cpon)
-		prd = new cp::CponReader(*pin);
-	else
-		prd = new cp::ChainPackReader(*pin);
-
-	if(o_output == Format::ChainPack) {
-		pwr = new cp::ChainPackWriter(std::cout);
-	}
-	else {
-		shv::chainpack::CponWriterOptions opts;
-		opts.setIndent(o_indent);
-		opts.setTranslateIds(o_translate_meta_ids);
-		auto *wr = new cp::CponWriter(std::cout, opts);
-		pwr = wr;
-	}
-
 	try {
-		if(o_output == Format::Cpon) {
-			nMessage() << "converting Cpon --> ChainPack";
-			while(true) {
-				// read garbage to discover end of stream
-				while(true) {
-					int c = pin->get();
-					if(c < 0)
-						goto clean_exit;
-					if(c > ' ') {
-						pin->unget();
-						break;
-					}
-				}
-				nMessage() << "read";
-				shv::chainpack::RpcValue val = prd->read();
-				nMessage() << "write";
-				pwr->write(val);
-			}
+		RpcValue log;
+		switch(o_input) {
+		case Type::ChainPack: {
+			ChainPackReader rd(*pin);
+			log = rd.read();
+			break;
 		}
-		else {
-			nMessage() << "converting ChainPack --> Cpon";
-			while(true) {
-				// check end of stream
-				int c = pin->get();
-				if(c < 0)
-					break;
-				pin->unget();
-				nMessage() << "read";
-				shv::chainpack::RpcValue val = prd->read();
-				nMessage() << "write";
-				pwr->write(val);
+		case Type::Cpon: {
+			CponReader rd(*pin);
+			log = rd.read();
+			break;
+		}
+		case Type::ShvLog: {
+			ShvJournalFileReader rd(*pin);
+			RpcValue::List records;
+			while(rd.next()) {
+				auto e = rd.entry();
+				records.push_back(e.toRpcValueList());
 			}
+			log = RpcValue(std::move(records));
+			break;
+		}
+		}
+		switch(o_output) {
+		case Type::ChainPack: {
+			ChainPackWriter wr(std::cout);
+			wr.write(log);
+			break;
+		}
+		case Type::Cpon: {
+			shv::chainpack::CponWriterOptions opts;
+			opts.setIndent(o_indent);
+			CponWriter wr(std::cout, opts);
+			wr.write(log);
+			break;
+		}
+		case Type::ShvLog: {
+			ShvJournalFileWriter wr(std::cout);
+			for(const auto &e : log.asList()) {
+				auto entry = ShvJournalEntry::fromRpcValueList(e.asList());
+				wr.append(entry);
+			}
+			break;
+		}
 		}
 	}
 	catch (std::exception &e) {
 		nError() << e.what();
 		exit(-1);
 	}
-clean_exit:
-	delete prd;
-	delete pwr;
 
 	return 0;
 }

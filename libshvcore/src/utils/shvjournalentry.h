@@ -94,11 +94,13 @@ public:
 	void setShortTime(int short_time) {shortTime = short_time;}
 	shv::chainpack::RpcValue::DateTime dateTime() const { return shv::chainpack::RpcValue::DateTime::fromMSecsSinceEpoch(epochMsec); }
 	shv::chainpack::RpcValue toRpcValueMap() const;
+	shv::chainpack::RpcValue toRpcValueList(std::function< chainpack::RpcValue (const std::string &)> map_path = nullptr) const;
 
 	static bool isShvJournalEntry(const shv::chainpack::RpcValue &rv);
 	shv::chainpack::RpcValue toRpcValue() const;
 	static ShvJournalEntry fromRpcValue(const shv::chainpack::RpcValue &rv);
 	static ShvJournalEntry fromRpcValueMap(const shv::chainpack::RpcValue::Map &m);
+	static ShvJournalEntry fromRpcValueList(const shv::chainpack::RpcValue::List &row, std::function< std::string (const chainpack::RpcValue &)> unmap_path = nullptr, std::string *err = nullptr);
 
 	shv::chainpack::DataChange toDataChange() const;
 };
