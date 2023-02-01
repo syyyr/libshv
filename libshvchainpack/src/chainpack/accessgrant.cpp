@@ -175,13 +175,11 @@ RpcValue AccessGrant::toRpcValue() const
 	return ret;
 }
 
-static const std::string KEY_TYPE = "type";
 static const std::string KEY_ACCESS_LEVEL = "accessLevel";
 static const std::string KEY_ROLE = "role";
 //static const std::string KEY_USER = "user";
 //static const std::string KEY_PASSWORD = "password";
 static const std::string KEY_LOGIN = "login";
-static const std::string KEY_NOT_RESOLVED = "notResolved";
 
 RpcValue AccessGrant::toRpcValueMap() const
 {
