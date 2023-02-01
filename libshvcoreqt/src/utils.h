@@ -192,6 +192,8 @@ ReturnType joinPath(const HeadStringType& head, const StringTypes& ...rest)
 
 QJsonValue rpcValueToJson(const shv::chainpack::RpcValue& v);
 QByteArray jsonValueToByteArray(const QJsonValue& json);
+
+[[noreturn]] void qcoro_unhandled_exception(std::exception& ex);
 }
 
 } // namespace coreqt

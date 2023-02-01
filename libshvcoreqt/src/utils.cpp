@@ -209,5 +209,11 @@ QByteArray utils::jsonValueToByteArray(const QJsonValue& json)
 	__builtin_unreachable();
 }
 
+[[noreturn]] void utils::qcoro_unhandled_exception(std::exception& ex)
+{
+	shvError() << "A coroutine has thrown an unhandled exception. The program will abort now.\n\n"
+		<< "Exception was:" << ex.what();
+	std::terminate();
+}
 
 } // namespace shv
