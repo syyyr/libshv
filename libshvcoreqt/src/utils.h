@@ -6,6 +6,7 @@
 #include <shv/core/utils.h>
 #include <shv/core/exception.h>
 
+#include <QJsonValue>
 #include <QMetaType>
 #include <QObject>
 
@@ -188,6 +189,9 @@ ReturnType joinPath(const HeadStringType& head, const StringTypes& ...rest)
 		static_assert(always_false<HeadStringType>, "joinPath: Can't convert input parameter to the desired return type.");
 	}
 }
+
+QJsonValue rpcValueToJson(const shv::chainpack::RpcValue& v);
+QByteArray jsonValueToByteArray(const QJsonValue& json);
 }
 
 } // namespace coreqt

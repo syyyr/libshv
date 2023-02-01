@@ -5,9 +5,14 @@
 
 #include <shv/core/log.h>
 
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QStringView>
 #include <QVariant>
 #include <QDateTime>
+
+#include <ranges>
 
 namespace shv::coreqt {
 
@@ -135,6 +140,74 @@ std::vector<uint8_t> Utils::compressGZip(const std::vector<uint8_t> &data)
 	return shv::chainpack::RpcValue::Blob(compressed_data.cbegin(), compressed_data.cend());
 }
 
+QJsonValue utils::rpcValueToJson(const shv::chainpack::RpcValue& v)
+{
+	switch (v.type()) {
+	case shv::chainpack::RpcValue::Type::Invalid:
+	case shv::chainpack::RpcValue::Type::Null:
+		return QJsonValue::Null;
+	case shv::chainpack::RpcValue::Type::UInt:
+	case shv::chainpack::RpcValue::Type::Int:
+		return QJsonValue(v.toInt());
+	case shv::chainpack::RpcValue::Type::Double:
+	case shv::chainpack::RpcValue::Type::Decimal:
+		return QJsonValue(v.toDouble());
+	case shv::chainpack::RpcValue::Type::Bool:
+		return QJsonValue(v.toBool());
+	case shv::chainpack::RpcValue::Type::String: {
+		return QJsonValue(QString::fromStdString(v.asString()));
+	}
+	case shv::chainpack::RpcValue::Type::Blob: {
+		const auto &blob = v.asBlob();
+		return QJsonValue(QString::fromLatin1(QByteArray(reinterpret_cast<const char*>(blob.data()), static_cast<qsizetype>(blob.size())).toBase64()));
+	}
+	case shv::chainpack::RpcValue::Type::DateTime: {
+		return QJsonValue(QString::fromStdString(v.toDateTime().toIsoString(shv::chainpack::RpcValue::DateTime::MsecPolicy::Always, true)));
+	}
+	case shv::chainpack::RpcValue::Type::List: {
+		QJsonArray arr;
+		std::ranges::transform(v.asList(), std::back_inserter(arr), [] (const shv::chainpack::RpcValue& elem) { return rpcValueToJson(elem); });
+		return arr;
+	}
+	case shv::chainpack::RpcValue::Type::Map: {
+		QJsonObject object;
+
+		for (const auto& [key, val] : v.asMap()) {
+			object[QString::fromStdString(key)] = rpcValueToJson(val);
+		}
+		return object;
+	}
+	case shv::chainpack::RpcValue::Type::IMap: {
+		QJsonObject object;
+		for (const auto& [key, val] : v.asIMap()) {
+			object[QString::number(key)] = rpcValueToJson(val);
+		}
+		return object;
+	}
+	}
+	__builtin_unreachable();
+}
+
+QByteArray utils::jsonValueToByteArray(const QJsonValue& json)
+{
+	switch (json.type()) {
+	case QJsonValue::Object:
+		return QJsonDocument(json.toObject()).toJson();
+	case QJsonValue::Array:
+		return QJsonDocument(json.toArray()).toJson();
+	case QJsonValue::Null:
+		return QByteArray("null");
+	case QJsonValue::Bool:
+		return QByteArray(json.toBool() ? "true" : "false");
+	case QJsonValue::Double:
+		return QByteArray::number(json.toDouble());
+	case QJsonValue::String:
+		return ('"' + json.toString() + '"').toLatin1();
+	case QJsonValue::Undefined:
+		return QByteArray("undefined");
+	}
+	__builtin_unreachable();
+}
 
 
 } // namespace shv
