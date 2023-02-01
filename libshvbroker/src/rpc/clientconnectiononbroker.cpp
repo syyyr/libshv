@@ -61,7 +61,7 @@ shv::chainpack::RpcValue ClientConnectionOnBroker::deviceOptions() const
 
 shv::chainpack::RpcValue ClientConnectionOnBroker::deviceId() const
 {
-	return deviceOptions().toMap().value(cp::Rpc::KEY_DEVICE_ID);
+	return deviceOptions().asMap().value(cp::Rpc::KEY_DEVICE_ID);
 }
 
 void ClientConnectionOnBroker::setMountPoint(const std::string &mp)
@@ -290,7 +290,7 @@ void ClientConnectionOnBroker::processLoginPhase()
 	auto t = opts.value(cp::Rpc::OPT_IDLE_WD_TIMEOUT, 3 * 60).toInt();
 	setIdleWatchDogTimeOut(t);
 	if(tunnelOptions().isMap()) {
-		const std::string &secret = tunnelOptions().toMap().value(cp::Rpc::KEY_SECRET).asString();
+		const std::string &secret = tunnelOptions().asMap().value(cp::Rpc::KEY_SECRET).asString();
 		cp::UserLoginResult result;
 		result.passwordOk = checkTunnelSecret(secret);
 		setLoginResult(result);

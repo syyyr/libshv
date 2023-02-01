@@ -67,7 +67,7 @@ public:
 	State state() const { return m_connectionState.state; }
 	Q_SIGNAL void stateChanged(State state);
 
-	const shv::chainpack::RpcValue::Map &loginResult() const { return m_connectionState.loginResult.toMap(); }
+	const shv::chainpack::RpcValue::Map &loginResult() const { return m_connectionState.loginResult.asMap(); }
 
 	int brokerClientId() const;
 	void muteShvPathInLog(std::string shv_path);

@@ -113,7 +113,7 @@ shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack
 		}
 		if(method == M_CHANGE_PASSWORD) {
 			shv::chainpack::RpcValue params = rq.params();
-			const shv::chainpack::RpcValue::List &param_lst = params.toList();
+			const shv::chainpack::RpcValue::List &param_lst = params.asList();
 			if(param_lst.size() == 2) {
 				string old_password_sha1 = param_lst[0].toString();
 				string new_password_sha1 = param_lst[1].toString();

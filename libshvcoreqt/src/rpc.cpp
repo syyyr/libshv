@@ -38,13 +38,13 @@ QVariant rpcValueToQVariant(const chainpack::RpcValue &v, bool *ok)
 	}
 	case chainpack::RpcValue::Type::List: {
 		QVariantList lst;
-		for(const auto &rv : v.toList())
+		for(const auto &rv : v.asList())
 			lst.insert(lst.size(), rpcValueToQVariant(rv));
 		return lst;
 	}
 	case chainpack::RpcValue::Type::Map: {
 		QVariantMap map;
-		for(const auto &kv : v.toMap())
+		for(const auto &kv : v.asMap())
 			map[QString::fromStdString(kv.first)] = rpcValueToQVariant(kv.second);
 		return map;
 	}
@@ -136,7 +136,7 @@ chainpack::RpcValue qVariantToRpcValue(const QVariant &v, bool *ok)
 QStringList rpcValueToStringList(const shv::chainpack::RpcValue &rpcval)
 {
 	QStringList ret;
-	for(const chainpack::RpcValue &v : rpcval.toList())
+	for(const chainpack::RpcValue &v : rpcval.asList())
 		ret << QString::fromStdString(v.asString());
 	return ret;
 }

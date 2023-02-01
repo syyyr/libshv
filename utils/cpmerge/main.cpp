@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 		return 3;
 	}
 
-	shv::chainpack::RpcValue rv = shv::chainpack::Utils::mergeMaps(template_config.toMap(), overlay_config.toMap());
+	shv::chainpack::RpcValue rv = shv::chainpack::Utils::mergeMaps(template_config.asMap(), overlay_config.asMap());
 
 	shv::chainpack::CponWriterOptions opts;
 	opts.setIndent("\t");

@@ -454,7 +454,7 @@ DOCTEST_TEST_CASE("ChainPack")
 				ChainPackReader rd(out); RpcValue cp2 = rd.read();
 				nDebug() << s << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str()).c_str();
 				REQUIRE(cp1.type() == cp2.type());
-				REQUIRE(cp1.toList() == cp2.toList());
+				REQUIRE(cp1.asList() == cp2.asList());
 			}
 		}
 		{
@@ -464,7 +464,7 @@ DOCTEST_TEST_CASE("ChainPack")
 			ChainPackReader rd(out); RpcValue cp2 = rd.read();
 			nDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str()).c_str();
 			REQUIRE(cp1.type() == cp2.type());
-			REQUIRE(cp1.toList() == cp2.toList());
+			REQUIRE(cp1.asList() == cp2.asList());
 		}
 		{
 			static constexpr size_t N = 10;
@@ -481,7 +481,7 @@ DOCTEST_TEST_CASE("ChainPack")
 			//out.exceptions(std::iostream::eofbit);
 			ChainPackReader rd(out); RpcValue cp2 = rd.read();
 			nDebug() << cp2.toCpon() << " dump: " << binary_dump(out.str()).c_str();
-			const RpcValue::List list = cp2.toList();
+			const RpcValue::List list = cp2.asList();
 			REQUIRE(list.size() == N);
 			for (size_t i = 0; i < list.size(); ++i) {
 				std::string s("foo-bar");
@@ -502,7 +502,7 @@ DOCTEST_TEST_CASE("ChainPack")
 			ChainPackReader rd(out); RpcValue cp2 = rd.read();
 			nDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
 			REQUIRE(cp1.type() == cp2.type());
-			REQUIRE(cp1.toMap() == cp2.toMap());
+			REQUIRE(cp1.asMap() == cp2.asMap());
 		}
 		{
 			RpcValue::Map m{
@@ -519,7 +519,7 @@ DOCTEST_TEST_CASE("ChainPack")
 				wr.writeContainerEnd();
 			}
 			ChainPackReader rd(out);
-			RpcValue::Map m2 = rd.read().toMap();
+			RpcValue::Map m2 = rd.read().asMap();
 			for(const auto &it : m2) {
 				REQUIRE(it.second == m[it.first]);
 			}
@@ -549,7 +549,7 @@ DOCTEST_TEST_CASE("ChainPack")
 			ChainPackReader rd(out); RpcValue cp2 = rd.read();
 			nDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
 			REQUIRE(cp1.type() == cp2.type());
-			REQUIRE(cp1.toIMap() == cp2.toIMap());
+			REQUIRE(cp1.asIMap() == cp2.asIMap());
 		}
 		{
 			RpcValue cp1{{
@@ -562,7 +562,7 @@ DOCTEST_TEST_CASE("ChainPack")
 			ChainPackReader rd(out); RpcValue cp2 = rd.read();
 			nDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
 			REQUIRE(cp1.type() == cp2.type());
-			REQUIRE(cp1.toIMap() == cp2.toIMap());
+			REQUIRE(cp1.asIMap() == cp2.asIMap());
 		}
 	}
 	DOCTEST_SUBCASE("Meta")

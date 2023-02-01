@@ -56,7 +56,7 @@ void ServerConnection::unregisterAndDeleteLater()
 
 bool ServerConnection::isSlaveBrokerConnection() const
 {
-	return m_connectionOptions.toMap().hasKey(cp::Rpc::KEY_BROKER);
+	return m_connectionOptions.asMap().hasKey(cp::Rpc::KEY_BROKER);
 }
 
 void ServerConnection::sendMessage(const chainpack::RpcMessage &rpc_msg)
@@ -112,7 +112,7 @@ void ServerConnection::processLoginPhase(const chainpack::RpcMessage &msg)
 			m_loginReceived = true;
 			m_userLoginContext.loginRequest = msg;
 			m_userLoginContext.connectionId = connectionId();
-			cp::RpcValue::Map params = rq.params().toMap();
+			cp::RpcValue::Map params = rq.params().asMap();
 			m_connectionOptions = params.value(cp::Rpc::KEY_OPTIONS);
 			/*
 			{

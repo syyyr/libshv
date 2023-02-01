@@ -458,7 +458,7 @@ chainpack::RpcValue ShvNode::ls(const StringViewList &shv_path, const chainpack:
 			//try {
 				StringViewList ch_shv_path = shv_path;
 				ch_shv_path.push_back(shv::core::StringView(child_name));
-				RpcValue::List attrs_result = lsAttributes(ch_shv_path, attrs).toList();
+				RpcValue::List attrs_result = lsAttributes(ch_shv_path, attrs).asList();
 				if(attrs_result.empty()) {
 					ret.push_back(child_name);
 				}
@@ -692,7 +692,7 @@ shv::iotqt::node::ShvNode::StringList RpcValueMapNode::childNames(const shv::iot
 {
 	shv::chainpack::RpcValue val = valueOnPath(shv_path);
 	ShvNode::StringList lst;
-	for(const auto &kv : val.toMap()) {
+	for(const auto &kv : val.asMap()) {
 		lst.push_back(kv.first);
 	}
 	return lst;
@@ -754,7 +754,7 @@ chainpack::RpcValue RpcValueMapNode::valueOnPath(const chainpack::RpcValue &val,
 {
 	shv::chainpack::RpcValue v = val;
 	for(const auto & dir : shv_path) {
-		const shv::chainpack::RpcValue::Map &m = v.toMap();
+		const shv::chainpack::RpcValue::Map &m = v.asMap();
 		v = m.value(dir.toString());
 		if(!v.isValid()) {
 			if(throw_exc)
@@ -790,7 +790,7 @@ void RpcValueMapNode::setValueOnPath(const shv::iotqt::node::ShvNode::StringView
 	shv::chainpack::RpcValue v = values();
 	for (size_t i = 0; i < shv_path.size()-1; ++i) {
 		auto dir = shv_path.at(i);
-		const shv::chainpack::RpcValue::Map &m = v.toMap();
+		const shv::chainpack::RpcValue::Map &m = v.asMap();
 		v = m.value(dir.toString());
 		if(!v.isValid())
 			SHV_EXCEPTION("Invalid path: " + shv_path.join('/'));
@@ -809,8 +809,8 @@ bool RpcValueMapNode::isDir(const shv::iotqt::node::ShvNode::StringViewList &shv
 static RpcValue mergeMaps(const RpcValue &template_val, const RpcValue &user_val)
 {
 	if(template_val.isMap() && user_val.isMap()) {
-		const shv::chainpack::RpcValue::Map &template_map = template_val.toMap();
-		const shv::chainpack::RpcValue::Map &user_map = user_val.toMap();
+		const shv::chainpack::RpcValue::Map &template_map = template_val.asMap();
+		const shv::chainpack::RpcValue::Map &user_map = user_val.asMap();
 		RpcValue::Map map = template_map;
 		//for(const auto &kv : template_map)
 		//	map[kv.first] = kv.second;
@@ -830,8 +830,8 @@ static RpcValue mergeMaps(const RpcValue &template_val, const RpcValue &user_val
 static RpcValue mergeTemplateMaps(const RpcValue &template_base, const RpcValue &template_over)
 {
 	if(template_over.isMap() && template_base.isMap()) {
-		const shv::chainpack::RpcValue::Map &map_base = template_base.toMap();
-		const shv::chainpack::RpcValue::Map &map_over = template_over.toMap();
+		const shv::chainpack::RpcValue::Map &map_base = template_base.asMap();
+		const shv::chainpack::RpcValue::Map &map_over = template_over.asMap();
 		RpcValue::Map map = map_base;
 		//for(const auto &kv : template_map)
 		//	map[kv.first] = kv.second;
@@ -846,8 +846,8 @@ static RpcValue mergeTemplateMaps(const RpcValue &template_base, const RpcValue 
 static RpcValue diffMaps(const RpcValue &template_vals, const RpcValue &vals)
 {
 	if(template_vals.isMap() && vals.isMap()) {
-		const shv::chainpack::RpcValue::Map &templ_map = template_vals.toMap();
-		const shv::chainpack::RpcValue::Map &vals_map = vals.toMap();
+		const shv::chainpack::RpcValue::Map &templ_map = template_vals.asMap();
+		const shv::chainpack::RpcValue::Map &vals_map = vals.asMap();
 		RpcValue::Map map;
 		for(const auto &kv : templ_map) {
 			RpcValue v = diffMaps(kv.second, vals_map.value(kv.first));
@@ -938,7 +938,7 @@ shv::chainpack::RpcValue RpcValueConfigNode::loadConfigTemplate(const std::strin
 		std::string err;
 		shv::chainpack::RpcValue rv = rd.read(&err);
 		if(err.empty()) {
-			const shv::chainpack::RpcValue::Map &map = rv.toMap();
+			const shv::chainpack::RpcValue::Map &map = rv.asMap();
 			static const auto BASED_ON = "basedOn";
 			const std::string &based_on = map.value(BASED_ON).asString();
 			if(!based_on.empty()) {

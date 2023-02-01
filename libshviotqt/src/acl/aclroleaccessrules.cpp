@@ -16,7 +16,7 @@ namespace shv::iotqt::acl {
 //================================================================
 RpcValue AclAccessRule::toRpcValue() const
 {
-	RpcValue::Map m = grant.toRpcValueMap().toMap();
+	RpcValue::Map m = grant.toRpcValueMap().asMap();
 	m["service"] = service;
 	m["method"] = method;
 	m["pathPattern"] = pathPattern;
@@ -161,7 +161,7 @@ AclRoleAccessRules AclRoleAccessRules::fromRpcValue(const shv::chainpack::RpcVal
 {
 	AclRoleAccessRules ret;
 	if(v.isMap()) {
-		const auto &m = v.toMap();
+		const auto &m = v.asMap();
 		for(const auto &kv : m) {
 			auto g = AclAccessRule::fromRpcValue(kv.second);
 			auto i = kv.first.find_last_of(shv::core::utils::ShvPath::SHV_PATH_METHOD_DELIM);
@@ -177,7 +177,7 @@ AclRoleAccessRules AclRoleAccessRules::fromRpcValue(const shv::chainpack::RpcVal
 		}
 	}
 	else if(v.isList()) {
-		const auto &l = v.toList();
+		const auto &l = v.asList();
 		for(const auto &kv : l) {
 			auto g = AclAccessRule::fromRpcValue(kv);
 			if(g.isValid())
