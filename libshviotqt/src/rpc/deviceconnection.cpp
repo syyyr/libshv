@@ -20,7 +20,7 @@ DeviceConnection::DeviceConnection(QObject *parent)
 
 const shv::chainpack::RpcValue::Map& DeviceConnection::deviceOptions() const
 {
-	return connectionOptions().toMap().value(cp::Rpc::KEY_DEVICE).toMap();
+	return connectionOptions().asMap().value(cp::Rpc::KEY_DEVICE).asMap();
 }
 
 shv::chainpack::RpcValue DeviceConnection::deviceId() const
@@ -32,7 +32,7 @@ void DeviceConnection::setCliOptions(const DeviceAppCliOptions *cli_opts)
 {
 	Super::setCliOptions(cli_opts);
 	if(cli_opts) {
-		chainpack::RpcValue::Map opts = connectionOptions().toMap();
+		chainpack::RpcValue::Map opts = connectionOptions().asMap();
 		cp::RpcValue::Map dev;
 		std::string device_id = cli_opts->deviceId();
 		std::string device_id_from_file;

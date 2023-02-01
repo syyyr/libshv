@@ -464,7 +464,7 @@ std::tuple<std::string, std::string> ConfigCLIOptions::absoluteConfigPaths(const
 void ConfigCLIOptions::mergeConfig_helper(const std::string &key_prefix, const shv::chainpack::RpcValue &config_map)
 {
 	//shvLogFuncFrame() << key_prefix;
-	const chainpack::RpcValue::Map &cm = config_map.toMap();
+	const chainpack::RpcValue::Map &cm = config_map.asMap();
 	for(const auto &kv : cm) {
 		std::string key = kv.first;
 		//SHV_ASSERT(!key.empty(), "Empty key!", continue);

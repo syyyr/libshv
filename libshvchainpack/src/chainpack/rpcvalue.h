@@ -480,9 +480,9 @@ public:
 	const IMap &asIMap() const;
 
 	/// deprecated, new applications should us asString, asInt, ...
-	const List &toList() const { return asList(); }
-	const Map &toMap() const { return asMap(); }
-	const IMap &toIMap() const { return asIMap(); }
+	[[deprecated("Use asList instead")]] const List &toList() const { return asList(); }
+	[[deprecated("Use asMap instead")]] const Map &toMap() const { return asMap(); }
+	[[deprecated("Use asIMap instead")]] const IMap &toIMap() const { return asIMap(); }
 
 	size_t count() const;
 	bool has(Int i) const;
@@ -550,7 +550,7 @@ public:
 	RpcValue value(size_t ix) const
 	{
 		if(m_val.isList())
-			return m_val.toList().value(ix);
+			return m_val.asList().value(ix);
 		else if(ix == 0)
 			return m_val;
 		return RpcValue();
@@ -558,14 +558,14 @@ public:
 	bool size() const
 	{
 		if(m_val.isList())
-			return m_val.toList().size();
+			return m_val.asList().size();
 		return m_val.isValid()? 1: 0;
 	}
 	bool empty() const {return size() == 0;}
 	RpcValue::List toList() const
 	{
 		if(m_val.isList())
-			return m_val.toList();
+			return m_val.asList();
 		return m_val.isValid()? RpcValue::List{m_val}: RpcValue::List{};
 	}
 private:

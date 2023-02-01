@@ -831,7 +831,7 @@ void BrokerApp::onClientLogin(int connection_id)
 	}
 
 	if(conn->deviceOptions().isMap()) {
-		const shv::chainpack::RpcValue::Map &device_opts = conn->deviceOptions().toMap();
+		const shv::chainpack::RpcValue::Map &device_opts = conn->deviceOptions().asMap();
 		std::string mount_point = resolveMountPoint(device_opts);
 		if(!mount_point.empty()) {
 			string path_rest;
@@ -1333,8 +1333,8 @@ void BrokerApp::createMasterBrokerConnections()
 	shvInfo() << "Creating master broker connections";
 	shv::chainpack::RpcValue masters = cliOptions()->masterBrokersConnections();
 
-	for(const auto &kv : masters.toMap()) {
-		cp::RpcValue::Map opts = kv.second.toMap();
+	for(const auto &kv : masters.asMap()) {
+		cp::RpcValue::Map opts = kv.second.asMap();
 
 		//if (cliOptions()->masterBrokerDeviceId_isset()) {
 		//	cp::RpcValue::Map dev = opts.value("device").toMap();

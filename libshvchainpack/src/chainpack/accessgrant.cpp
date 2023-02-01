@@ -22,7 +22,7 @@ static bool str_eq(const std::string &s1, const char *s2)
 //================================================================
 const RpcValue::Map& UserLoginContext::loginParams() const
 {
-	return loginRequest.params().toMap();
+	return loginRequest.params().asMap();
 }
 
 UserLogin UserLoginContext::userLogin() const
@@ -70,7 +70,7 @@ UserLogin UserLogin::fromRpcValue(const RpcValue &val)
 {
 	UserLogin ret;
 	if(val.isMap()) {
-		const RpcValue::Map &m = val.toMap();
+		const RpcValue::Map &m = val.asMap();
 		ret.user = m.value("user").toString();
 		ret.password = m.value("password").toString();
 		const RpcValue::String lts = m.value("type").toString();
@@ -218,7 +218,7 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 		ret.role = rpcval.toString();
 		break;
 	case RpcValue::Type::IMap: {
-		const RpcValue::IMap &m = rpcval.toIMap();
+		const RpcValue::IMap &m = rpcval.asIMap();
 		ret.type = static_cast<Type>(m.value(MetaType::Key::Type).toInt());
 		switch (ret.type) {
 		case Type::AccessLevel:
@@ -239,7 +239,7 @@ AccessGrant AccessGrant::fromRpcValue(const RpcValue &rpcval)
 		break;
 	}
 	case RpcValue::Type::Map: {
-		const RpcValue::Map &m = rpcval.toMap();
+		const RpcValue::Map &m = rpcval.asMap();
 		do {
 			{
 				auto access_level = m.value(KEY_ACCESS_LEVEL).toInt();

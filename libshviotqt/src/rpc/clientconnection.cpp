@@ -180,7 +180,7 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 
 void ClientConnection::setTunnelOptions(const chainpack::RpcValue &opts)
 {
-	shv::chainpack::RpcValue::Map conn_opts = connectionOptions().toMap();
+	shv::chainpack::RpcValue::Map conn_opts = connectionOptions().asMap();
 	conn_opts[cp::Rpc::KEY_TUNNEL] = opts;
 	setConnectionOptions(conn_opts);
 }
@@ -402,7 +402,7 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 	shvDebug() << server_hello.toCpon() << "login type:" << static_cast<int>(loginType());
 	std::string pass;
 	if(loginType() == chainpack::IRpcConnection::LoginType::Sha1) {
-		std::string server_nonce = server_hello.toMap().value("nonce").toString();
+		std::string server_nonce = server_hello.asMap().value("nonce").toString();
 		std::string pwd = password();
 		if(pwd.size() == 40)
 			shvWarning() << "Using shadowed password directly by client is unsecure and it will be disabled in future SHV versions";
@@ -466,7 +466,7 @@ void ClientConnection::restartIfAutoConnect()
 
 int ClientConnection::brokerClientId() const
 {
-	return m_connectionState.loginResult.toMap().value(cp::Rpc::KEY_CLIENT_ID).toInt();
+	return m_connectionState.loginResult.asMap().value(cp::Rpc::KEY_CLIENT_ID).toInt();
 }
 
 void ClientConnection::muteShvPathInLog(std::string shv_path)

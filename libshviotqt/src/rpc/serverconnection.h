@@ -39,7 +39,7 @@ public:
 	void unregisterAndDeleteLater();
 	Q_SIGNAL void aboutToBeDeleted(int connection_id);
 
-	const shv::chainpack::RpcValue::Map& connectionOptions() const {return m_connectionOptions.toMap();}
+	const shv::chainpack::RpcValue::Map& connectionOptions() const {return m_connectionOptions.asMap();}
 
 	const std::string& userName() const { return m_userLogin.user; }
 
