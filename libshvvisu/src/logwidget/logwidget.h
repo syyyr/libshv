@@ -47,12 +47,12 @@ public:
 	void clear();
 	virtual void setLogTableModel(LogTableModelBase *m);
 	LogTableModelBase* logTableModel();
+	QTableView* tableView() const;
 
 	//Q_SIGNAL void severityTresholdChanged(qf::core::Log::Level lvl);
 	//void setSeverityTreshold(qf::core::Log::Level lvl);
 protected:
 	QAbstractButton* tableMenuButton();
-	QTableView* tableView() const;
 
 	//void clearCategoryActions();
 	//virtual void addCategoryActions(const QString &caption, const QString &id, qf::core::Log::Level level = qf::core::Log::Level::Invalid);
