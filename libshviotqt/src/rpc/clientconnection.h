@@ -14,9 +14,7 @@
 
 class QTimer;
 
-namespace shv {
-namespace iotqt {
-namespace rpc {
+namespace shv::iotqt::rpc {
 
 class ClientAppCliOptions;
 
@@ -118,7 +116,5 @@ private:
 	std::vector<std::string> m_mutedShvPathsInLog;
 };
 
-} // namespace chainpack
-} // namespace coreqt
 } // namespace shv
 

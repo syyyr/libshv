@@ -8,9 +8,7 @@
 #define RPC_META_TAG_DEF(tag_name) {static_cast<int>(Tag::tag_name), {static_cast<int>(Tag::tag_name), #tag_name }}
 #define RPC_META_KEY_DEF(key_name) {static_cast<int>(Key::key_name), {static_cast<int>(Key::key_name), #key_name }}
 
-namespace shv {
-namespace chainpack {
-namespace meta {
+namespace shv::chainpack::meta {
 
 struct Tag {
 	enum Enum {
@@ -116,4 +114,4 @@ public:
 	};
 };
 
-}}}
+}
