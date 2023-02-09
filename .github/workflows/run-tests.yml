@@ -26,10 +26,11 @@ jobs:
         uses: jurplel/install-qt-action@v3
         with:
           cache: true
+          version: 5.15.2
           install-deps: false
 
       - name: Configure CMake
-        run: CFLAGS="-Werror" CXXFLAGS="-Werror" cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        run: CFLAGS="-Werror" CXXFLAGS="-Werror" cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DUSE_QT6=OFF
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build --parallel $(nproc)
