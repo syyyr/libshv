@@ -1,4 +1,4 @@
-qt_add_library(libshvbroker SHARED
+qt_add_library(libshvbroker
 	src/aclmanager.cpp
 	src/aclmanagersqlite.cpp
 	src/appclioptions.cpp

@@ -1,4 +1,4 @@
-qt_add_library(libshviotqt SHARED
+qt_add_library(libshviotqt
 	src/acl/aclmountdef.cpp
 	src/acl/aclpassword.cpp
 	src/acl/aclrole.cpp
