@@ -1,4 +1,4 @@
-add_library(libshvchainpack-cpp SHARED
+add_library(libshvchainpack-cpp
 	src/chainpack/abstractstreamreader.cpp
 	src/chainpack/abstractstreamwriter.cpp
 	src/chainpack/accessgrant.cpp

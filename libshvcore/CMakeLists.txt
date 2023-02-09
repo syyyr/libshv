@@ -1,4 +1,4 @@
-add_library(libshvcore SHARED
+add_library(libshvcore
 	src/exception.cpp
 	src/string.cpp
 	src/stringview.cpp

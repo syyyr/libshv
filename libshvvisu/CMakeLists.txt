@@ -1,4 +1,4 @@
-add_library(libshvvisu SHARED
+add_library(libshvvisu
 	images/images.qrc
 	src/logview/dlgloginspector.cpp
 	src/logview/logmodel.cpp
