@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.18.4)
 
 set(USE_QT6 ON CACHE BOOL "Qt6 build")
+set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries instead of static")
 set(WITH_CLI_EXAMPLES OFF CACHE BOOL "Enable build of CLI examples")
 set(WITH_GUI_EXAMPLES OFF CACHE BOOL "Enable build of GUI examples")
 set(WITH_SANITIZERS OFF CACHE BOOL "Enable ASan/UBsan")
