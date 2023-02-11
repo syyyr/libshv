@@ -139,8 +139,8 @@ void ChannelProbeWidget::loadValues()
 	ui->twData->setRowCount(0);
 
 	QVariantMap values = m_probe->sampleValues();
-	QMapIterator<QString, QVariant> i(values.value("samplePrettyValue").toMap());
-
+	const auto m = values.value("samplePrettyValue").toMap();
+	QMapIterator<QString, QVariant> i(m);
 	while (i.hasNext()) {
 		i.next();
 		int ix = ui->twData->rowCount();

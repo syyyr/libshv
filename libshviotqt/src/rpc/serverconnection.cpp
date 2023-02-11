@@ -116,7 +116,7 @@ void ServerConnection::processLoginPhase(const chainpack::RpcMessage &msg)
 			m_connectionOptions = params.value(cp::Rpc::KEY_OPTIONS);
 			/*
 			{
-				const chainpack::RpcValue::Map omap = m_connectionOptions.toMap();
+				const chainpack::RpcValue::Map omap = m_connectionOptions.asMap();
 				if(omap.hasKey("broker"))
 					m_connectionType = ConnectionType::Broker;
 				else if(omap.hasKey("device"))

@@ -1337,7 +1337,7 @@ void BrokerApp::createMasterBrokerConnections()
 		cp::RpcValue::Map opts = kv.second.asMap();
 
 		//if (cliOptions()->masterBrokerDeviceId_isset()) {
-		//	cp::RpcValue::Map dev = opts.value("device").toMap();
+		//	cp::RpcValue::Map dev = opts.value("device").asMap();
 		//	dev.setValue("id", cliOptions()->masterBrokerDeviceId());
 		//	opts.setValue("device", dev);
 		//}

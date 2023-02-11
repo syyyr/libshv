@@ -329,8 +329,8 @@ static cp::RpcValue merge_maps(const cp::RpcValue &m_base, const cp::RpcValue &m
 {
 	shvDebug() << "merging:" << m_base << "and:" << m_over;
 	if(m_over.isMap() && m_base.isMap()) {
-		const shv::chainpack::RpcValue::Map &map_base = m_base.toMap();
-		const shv::chainpack::RpcValue::Map &map_over = m_over.toMap();
+		const shv::chainpack::RpcValue::Map &map_base = m_base.asMap();
+		const shv::chainpack::RpcValue::Map &map_over = m_over.asMap();
 		cp::RpcValue::Map map = map_base;
 		for(const auto &kv : map_over) {
 			map[kv.first] = merge_maps(map.value(kv.first), kv.second);

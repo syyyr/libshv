@@ -116,7 +116,8 @@ chainpack::RpcValue qVariantToRpcValue(const QVariant &v, bool *ok)
 	}
 	case QMetaType::QVariantMap: {
 		chainpack::RpcValue::Map map;
-		QMapIterator<QString, QVariant> it(v.toMap());
+		const auto m = v.toMap();
+		QMapIterator<QString, QVariant> it(m);
 		while (it.hasNext()) {
 			it.next();
 			map[it.key().toStdString()] = qVariantToRpcValue(it.value());

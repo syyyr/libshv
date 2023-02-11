@@ -394,7 +394,7 @@ class ChainPackIMap final : public ValueData<RpcValue::Type::IMap, RpcValue::IMa
 {
 	ChainPackIMap* create() override { return new ChainPackIMap(RpcValue::IMap()); }
 	std::string toStdString() const override { return std::string(); }
-	//const ChainPack::Map &toMap() const override { return m_value; }
+	//const ChainPack::Map &asMap() const override { return m_value; }
 	size_t count() const override {return m_value.size();}
 	bool hasI(RpcValue::Int key) const override;
 	RpcValue atI(RpcValue::Int key) const override;
