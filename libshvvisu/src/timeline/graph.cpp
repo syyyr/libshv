@@ -121,7 +121,7 @@ void Graph::reset()
 	Q_EMIT channelFilterChanged();
 }
 
-void Graph::createChannelsFromModel()
+void Graph::createChannelsFromModel(shv::visu::timeline::Graph::SortChannels sorted)
 {
 	static QVector<QColor> colors {
 		Qt::magenta,
@@ -134,17 +134,23 @@ void Graph::createChannelsFromModel()
 	clearChannels();
 	if(!m_model)
 		return;
-	// sort channels alphabetically
-	QMap<QString, qsizetype> path_to_model_index;
-	for (qsizetype i = 0; i < m_model->channelCount(); ++i) {
-		QString shv_path = m_model->channelShvPath(i);
-		path_to_model_index[shv_path] = i;
+	QList<qsizetype> model_ixs;
+	if(sorted == SortChannels::Yes) {
+		// sort channels alphabetically
+		QMap<QString, qsizetype> path_to_model_index;
+		for (qsizetype i = 0; i < m_model->channelCount(); ++i) {
+			QString shv_path = m_model->channelShvPath(i);
+			path_to_model_index[shv_path] = i;
+		}
+		model_ixs = path_to_model_index.values();
 	}
-	QMapIterator<QString, qsizetype> it(path_to_model_index);
-	while(it.hasNext()) {
-		it.next();
-		qsizetype model_ix = path_to_model_index[it.key()];
-		shvDebug() << "adding channel:" << it.key();
+	else {
+		for (qsizetype i = 0; i < m_model->channelCount(); ++i) {
+			model_ixs << i;
+		}
+	}
+	for(auto model_ix : model_ixs) {
+		//shvDebug() << "adding channel:" << it.key();
 		//shvInfo() << "new channel:" << model_ix;
 		GraphChannel *ch = appendChannel(model_ix);
 		//ch->buttonBox()->setObjectName(QString::fromStdString(shv_path));
@@ -1299,10 +1305,10 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 {
 	drawBackground(painter, dirty_rect);
 	bool draw_cross_hair_time_marker = false;
+	//shvInfo() << "draw -----------";
 	for (int i : visibleChannels()) {
 		const GraphChannel *ch = channelAt(i);
-		//shvInfo() << "dirty rect:" << rstr(dirty_rect);
-		//shvInfo() << "chann rect:" << rstr(ch->graphAreaRect());
+		//shvInfo() << "channel:" << channelName(i);
 		if(dirty_rect.intersects(ch->graphAreaRect())) {
 			drawBackground(painter, i);
 			drawGrid(painter, i);

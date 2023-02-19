@@ -115,7 +115,8 @@ public:
 	void setSettingsUserName(const QString &user);
 
 	void reset();
-	void createChannelsFromModel();
+	enum class SortChannels { No = 0, Yes };
+	void createChannelsFromModel(SortChannels sorted = SortChannels::Yes);
 	void resetChannelsRanges();
 	bool isInitialView() const;
 

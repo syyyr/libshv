@@ -83,8 +83,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>1397</width>
-         <height>710</height>
+         <width>1405</width>
+         <height>742</height>
         </rect>
        </property>
       </widget>
@@ -98,7 +98,7 @@
      <x>0</x>
      <y>0</y>
      <width>1425</width>
-     <height>29</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuGraph">
@@ -112,7 +112,7 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionGenerate_sample_data">
    <property name="icon">
-    <iconset resource="../../libshvvisu/images/images.qrc">
+    <iconset resource="../../../libshvvisu/images/images.qrc">
      <normaloff>:/shv/visu/images/media-play.svg</normaloff>:/shv/visu/images/media-play.svg</iconset>
    </property>
    <property name="text">
@@ -129,7 +129,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../../libshvvisu/images/images.qrc"/>
+  <include location="../../../libshvvisu/images/images.qrc"/>
  </resources>
  <connections/>
 </ui>

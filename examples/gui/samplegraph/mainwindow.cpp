@@ -18,6 +18,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
 	ui->setupUi(this);
 
+	connect(ui->samplesCount, &QSpinBox::editingFinished, this, &MainWindow::on_actionGenerate_sample_data_triggered);
+
 	ui->btGenerateSamples->setDefaultAction(ui->actionGenerate_sample_data);
 
 	m_graphModel = new tl::GraphModel(this);
@@ -55,11 +57,22 @@ void MainWindow::generateSampleData()
 	double max_val = 5;
 
 	m_graphModel->clear();
-	const vector<string>paths{"discrete", "stepped", "line", "withMissingData"};
-	for (const auto &ch : paths) {
-		m_graphModel->appendChannel(ch, {}, {});
+	enum Channel {Stepped = 0, Line, Discrete, WithMissinData, SparseData, CHANNEL_COUNT};
+	//const auto CHANNEL_COUNT = Channel::Sparse + 1;
+	auto channel_to_string = [](Channel ch) {
+		switch(ch) {
+		case Discrete: return "Discrete";
+		case Stepped: return "Stepped";
+		case Line: return "Line";
+		case WithMissinData: return "WithMissinData";
+		case SparseData: return "Sparse";
+		case CHANNEL_COUNT: return "CHANNEL_COUNT";
+		}
+		return "???";
+	};
+	for (int i = 0; i < CHANNEL_COUNT; ++i) {
+		m_graphModel->appendChannel(channel_to_string(static_cast<Channel>(i)), {}, {});
 	}
-	//m_graphModel->appendChannel("Discrete", std::string());
 
 	m_graphModel->beginAppendValues();
 
@@ -73,10 +86,10 @@ void MainWindow::generateSampleData()
 		times.push_back(time_distrib(gen));
 	sort(times.begin(), times.end());
 	// discrete
-	m_graphModel->appendValue(0, tl::Sample{times[0], val_distrib(gen)});
+	m_graphModel->appendValue(Channel::Discrete, tl::Sample{times[0], val_distrib(gen)});
 	for(size_t j=1; j<times.size()-1; ++j) {
 		auto val = val_distrib(gen);
-		for (int i=0; i<m_graphModel->channelCount() - 1; i++) {
+		for (int i=Channel::Stepped; i<=Channel::Discrete; i++) {
 			if(j == 3) {
 				// generate multiple same pixel values
 				for(int k=0; k<5; k++)
@@ -87,7 +100,7 @@ void MainWindow::generateSampleData()
 			}
 		}
 	}
-	m_graphModel->appendValue(0, tl::Sample{times[times.size()-1], val_distrib(gen)});
+	m_graphModel->appendValue(Channel::Discrete, tl::Sample{times[times.size()-1], val_distrib(gen)});
 	{
 		// generate data with not available part in center third
 		bool na_added = false;
@@ -95,17 +108,27 @@ void MainWindow::generateSampleData()
 			if(j > times.size()/3 && j < times.size()*2/3) {
 				if(!na_added) {
 					na_added = true;
-					m_graphModel->appendValue(m_graphModel->channelCount() - 1, tl::Sample{times[j], QVariant()});
+					m_graphModel->appendValue(Channel::WithMissinData, tl::Sample{times[j], QVariant()});
 				}
 			}
 			else {
-				m_graphModel->appendValue(m_graphModel->channelCount() - 1, tl::Sample{times[j], val_distrib(gen)});
+				m_graphModel->appendValue(Channel::WithMissinData, tl::Sample{times[j], val_distrib(gen)});
 			}
+		}
+	}
+	{
+		//generate sparse data
+		const auto step = times.size() / 5;
+		for(size_t j=step; j<times.size() - 3; j+=step) {
+			m_graphModel->appendValue(Channel::SparseData, tl::Sample{times[j] + 00, val_distrib(gen)});
+			m_graphModel->appendValue(Channel::SparseData, tl::Sample{times[j] + 10, val_distrib(gen)});
+			m_graphModel->appendValue(Channel::SparseData, tl::Sample{times[j] + 20, val_distrib(gen)});
+			m_graphModel->appendValue(Channel::SparseData, tl::Sample{times[j] + 30, val_distrib(gen)});
 		}
 	}
 	m_graphModel->endAppendValues();
 
-	m_graph->createChannelsFromModel();
+	m_graph->createChannelsFromModel(shv::visu::timeline::Graph::SortChannels::No);
 	for (int i = 0; i < m_graph->channelCount(); ++i) {
 		shv::visu::timeline::GraphChannel *ch = m_graph->channelAt(i);
 		shv::visu::timeline::GraphChannel::Style style = ch->style();
