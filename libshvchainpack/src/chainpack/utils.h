@@ -67,6 +67,14 @@ public:
 	}
 };
 
+namespace utils {
+inline char hexNibble(char i)
+{
+	if(i < 10)
+		return '0' + i;
+	return 'A' + (i - 10);
+}
+}
 
 } // namespace chainpack
 } // namespace shv

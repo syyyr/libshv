@@ -98,8 +98,6 @@ namespace core {
 class SHVCORE_DECL_EXPORT Utils
 {
 public:
-	static std::string removeJsonComments(const std::string &json_str);
-
 	static int versionStringToInt(const std::string &version_string);
 	static std::string intToVersionString(int ver);
 

@@ -33,20 +33,13 @@ std::string Utils::binaryDump(const std::string &bytes)
 	return ret;
 }
 
-static inline char hex_nibble(char i)
-{
-	if(i < 10)
-		return '0' + i;
-	return 'A' + (i - 10);
-}
-
 static std::string byte_to_hex( uint8_t i )
 {
 	std::string ret;
 	char h = static_cast<char>(i / 16);
 	char l = i % 16;
-	ret += hex_nibble(h);
-	ret += hex_nibble(l);
+	ret += utils::hexNibble(h);
+	ret += utils::hexNibble(l);
 	return ret;
 }
 
