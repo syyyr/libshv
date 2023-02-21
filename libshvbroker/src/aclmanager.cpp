@@ -3,6 +3,7 @@
 
 #include <shv/chainpack/cponreader.h>
 #include <shv/coreqt/log.h>
+#include <shv/iotqt/utils.h>
 
 #include <QCryptographicHash>
 
@@ -15,18 +16,6 @@
 namespace cp = shv::chainpack;
 
 namespace shv::broker {
-namespace {
-std::string sha1_hex(const std::string &s)
-{
-	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-#if QT_VERSION_MAJOR >= 6
-	hash.addData(QByteArrayView(s.data(), static_cast<int>(s.length())));
-#else
-	hash.addData(s.data(), static_cast<int>(s.length()));
-#endif
-	return std::string(hash.result().toHex().constData());
-}
-}
 //================================================================
 // AclManagerBase
 //================================================================
@@ -182,7 +171,7 @@ chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginC
 			return cp::UserLoginResult(false, "Invalid password.");
 		}
 		if(acl_pwd.format == shv::iotqt::acl::AclPassword::Format::Sha1) {
-			if(acl_pwd.password == sha1_hex(usr_pwd))
+			if(acl_pwd.password == shv::iotqt::utils::sha1Hex(usr_pwd))
 				return cp::UserLoginResult(true);
 			logAclManagerM() << "\t Invalid password.";
 			return cp::UserLoginResult(false, "Invalid password.");
@@ -192,7 +181,7 @@ chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginC
 		/// login_type == "SHA1" is default
 		logAclManagerM() << "user_login_type: SHA1";
 		if(acl_pwd.format == shv::iotqt::acl::AclPassword::Format::Plain)
-			acl_pwd.password = sha1_hex(acl_pwd.password);
+			acl_pwd.password = shv::iotqt::utils::sha1Hex(acl_pwd.password);
 
 		std::string nonce = login_context.serverNounce + acl_pwd.password;
 		//shvWarning() << "correct:" << login_context.serverNounce << "+" << acl_pwd.password;
