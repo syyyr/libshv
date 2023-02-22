@@ -114,7 +114,7 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const 
 					);
 				}
 				else {
-					auto alarms2 = checkAlarms(type_info, fld_descr.typeName(), shv_path + '/' + fld_descr.name(), fld_descr.bitfieldValue(value.toUInt64()));
+					auto alarms2 = checkAlarms(type_info, shv_path + '/' + fld_descr.name(), fld_descr.typeName(), fld_descr.bitfieldValue(value.toUInt64()));
 					alarms.insert(alarms.end(), alarms2.begin(), alarms2.end());
 				}
 			}
@@ -130,15 +130,13 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const 
 						active_alarm_ix = i;
 				}
 			}
-			if(active_alarm_ix < flds.size()) {
-				const ShvFieldDescr &fld_descr = flds[active_alarm_ix];
-				return {ShvAlarm(shv_path,
-						active_alarm_ix < flds.size(),
-						ShvAlarm::severityFromString(fld_descr.alarm()),
-						fld_descr.alarmLevel(),
-						fld_descr.alarmDescription()
-					)};
-			}
+			const ShvFieldDescr &fld_descr = flds[active_alarm_ix];
+			return {ShvAlarm(shv_path,
+					active_alarm_ix < flds.size(),
+					ShvAlarm::severityFromString(fld_descr.alarm()),
+					fld_descr.alarmLevel(),
+					fld_descr.alarmDescription()
+				)};
 		}
 	}
 	return {};
