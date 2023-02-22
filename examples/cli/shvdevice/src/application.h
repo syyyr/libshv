@@ -25,16 +25,16 @@ public:
 	shv::chainpack::RpcValue processRpcRequest(const shv::chainpack::RpcRequest &rq) override;
 };
 
-class SampleShvClientApp : public QCoreApplication
+class Application : public QCoreApplication
 {
 	Q_OBJECT
 private:
 	using Super = QCoreApplication;
 public:
-	SampleShvClientApp(int &argc, char **argv, AppCliOptions* cli_opts);
-	~SampleShvClientApp() Q_DECL_OVERRIDE;
+	Application(int &argc, char **argv, AppCliOptions* cli_opts);
+	~Application() Q_DECL_OVERRIDE;
 
-	static SampleShvClientApp *instance();
+	static Application *instance();
 	shv::iotqt::rpc::ClientConnection *rpcConnection() const {return m_rpcConnection;}
 
 	AppCliOptions* cliOptions() {return m_cliOptions;}
@@ -50,12 +50,5 @@ private:
 
 	shv::iotqt::node::ShvNodeTree *m_shvTree = nullptr;
 	bool m_isBrokerConnected = false;
-
-#ifdef HANDLE_UNIX_SIGNALS
-	Q_SIGNAL void aboutToTerminate(int sig);
-
-	void installUnixSignalHandlers();
-	Q_SLOT void handleUnixSignal();
-#endif
 };
 
