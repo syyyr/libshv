@@ -134,13 +134,20 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const 
 						active_alarm_ix = i;
 				}
 			}
-			const ShvFieldDescr &fld_descr = flds[active_alarm_ix];
-			return {ShvAlarm(shv_path,
-					active_alarm_ix < flds.size(),
-					ShvAlarm::severityFromString(fld_descr.alarm()),
-					fld_descr.alarmLevel(),
-					fld_descr.alarmDescription()
-				)};
+			if(active_alarm_ix < flds.size()) {
+				const ShvFieldDescr &fld_descr = flds[active_alarm_ix];
+				return {ShvAlarm(shv_path,
+						true,
+						ShvAlarm::severityFromString(fld_descr.alarm()),
+						fld_descr.alarmLevel(),
+						fld_descr.alarmDescription()
+					)};
+			}
+			else {
+				return {ShvAlarm(shv_path,
+						false
+					)};
+			}
 		}
 	}
 	return {};
