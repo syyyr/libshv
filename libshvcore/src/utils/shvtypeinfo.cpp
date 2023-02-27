@@ -590,10 +590,14 @@ typename map<string, T>::const_iterator find_longest_prefix(const map<string, T>
 			// if not found, cut last path part
 			size_t ix = prefix.lastIndexOf('/');
 			if(ix == string::npos) {
-				return map.cend();
+				if(prefix.empty()) {
+					return map.cend();
+				}
+				prefix = "";
 			}
-
-			prefix = prefix.mid(0, ix);
+			else {
+				prefix = prefix.mid(0, ix);
+			}
 		}
 		else {
 			return it;
@@ -729,19 +733,17 @@ ShvTypeInfo::PathInfo ShvTypeInfo::pathInfo(const std::string &shv_path) const
 		ret.propertyDescription = it3->second;
 	}
 	const auto &[device_path, device_type, property_path] = findDeviceType(shv_path);
-	if(!device_type.empty()) {
-		ret.devicePath = device_path;
-		ret.deviceType = device_type;
-		if(deviation_found) {
-			ret.propertyPath = cut_sufix(cut_prefix(shv_path, ret.devicePath), ret.fieldPath);
-		}
-		else {
-			const auto &[own_property_path, field_path, property_descr] = findPropertyDescription(device_type, property_path);
-			if(property_descr.isValid()) {
-				ret.propertyPath = own_property_path;
-				ret.fieldPath = field_path;
-				ret.propertyDescription = property_descr;
-			}
+	ret.devicePath = device_path;
+	ret.deviceType = device_type;
+	if(deviation_found) {
+		ret.propertyPath = cut_sufix(cut_prefix(shv_path, ret.devicePath), ret.fieldPath);
+	}
+	else {
+		const auto &[own_property_path, field_path, property_descr] = findPropertyDescription(device_type, property_path);
+		if(property_descr.isValid()) {
+			ret.propertyPath = own_property_path;
+			ret.fieldPath = field_path;
+			ret.propertyDescription = property_descr;
 		}
 	}
 	return ret;
@@ -758,13 +760,13 @@ ShvPropertyDescr ShvTypeInfo::propertyDescriptionForPath(const std::string &shv_
 std::tuple<string, string, string> ShvTypeInfo::findDeviceType(const std::string &shv_path) const
 {
 	auto it = find_longest_prefix(m_devicePaths, shv_path);
-	if( it == m_devicePaths.cend()) {
+	if(it == m_devicePaths.cend()) {
 		return {};
 	}
 
 	const string prefix = it->first;
 	const string device_type = it->second;
-	const string property_path = String(shv_path).mid(prefix.size() + 1);
+	const string property_path = prefix.empty()? shv_path: String(shv_path).mid(prefix.size() + 1);
 	return make_tuple(prefix, device_type, property_path);
 
 }

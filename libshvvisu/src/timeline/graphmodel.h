@@ -41,7 +41,6 @@ public:
 public:
 	virtual qsizetype channelCount() const { return qMin(m_channelsInfo.count(), m_samples.count()); }
 	const ChannelInfo& channelInfo(qsizetype channel_ix) const { return m_channelsInfo.at(channel_ix); }
-	ChannelInfo& channelInfo(qsizetype channel_ix) { return m_channelsInfo[channel_ix]; }
 	QString typeDescrFieldName( const shv::core::utils::ShvTypeDescr &type_descr, int field_index);
 	const shv::core::utils::ShvTypeInfo &typeInfo() const { return m_typeInfo; }
 	void setTypeInfo(const shv::core::utils::ShvTypeInfo &type_info) { m_typeInfo = type_info; }

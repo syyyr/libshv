@@ -198,7 +198,7 @@ void GraphModel::endAppendValues()
 		emit xRangeChanged(xr);
 	m_begginAppendXRange = XRange();
 	for (qsizetype i = 0; i < channelCount(); ++i) {
-		ChannelInfo &chi = channelInfo(i);
+		ChannelInfo &chi = m_channelsInfo[i];
 		if(!chi.typeDescr.isValid()) {
 			auto type_name = guessTypeName(i);
 			chi.typeDescr = typeInfo().findTypeDescription(type_name.toStdString());
@@ -241,9 +241,9 @@ void GraphModel::appendValueShvPath(const std::string &shv_path, Sample &&sample
 	auto ch_ix = pathToChannelIndex(shv_path);
 	if(ch_ix < 0) {
 		if(isAutoCreateChannels()) {
-			auto type_name = m_typeInfo.propertyDescriptionForPath(shv_path).typeName();
-			shvMessage() << "Auto append channel:" << shv_path << "type:" << type_name;
-			appendChannel(shv_path, std::string(), type_name);
+			auto type_descr = m_typeInfo.typeDescriptionForPath(shv_path);
+			shvMessage() << "Auto append channel:" << shv_path << "type:" << type_descr.toRpcValue().toCpon();
+			appendChannel(shv_path, std::string(), type_descr);
 			ch_ix = channelCount() - 1;
 		}
 		else {

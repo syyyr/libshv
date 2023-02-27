@@ -853,7 +853,7 @@ void GraphWidget::showChannelContextMenu(qsizetype channel_ix, const QPoint &mou
 void GraphWidget::createProbe(qsizetype channel_ix, timemsec_t time)
 {
 	const GraphChannel *ch = m_graph->channelAt(channel_ix);
-	GraphModel::ChannelInfo &channel_info = m_graph->model()->channelInfo(ch->modelIndex());
+	const GraphModel::ChannelInfo &channel_info = m_graph->model()->channelInfo(ch->modelIndex());
 
 	if (channel_info.typeDescr.sampleType() == shv::core::utils::ShvTypeDescr::SampleType::Discrete) {
 		Sample s = m_graph->timeToNearestSample(channel_ix, time);
