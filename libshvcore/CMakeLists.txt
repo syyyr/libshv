@@ -45,7 +45,7 @@ if(BUILD_TESTING)
 	add_shvcore_test(crypt)
 	add_shvcore_test(shvlog)
 	add_shvcore_test(shvjournalfilereader)
-	add_shvcore_test(join_path)
+	add_shvcore_test(utils)
 	add_shvcore_test(clioptions)
 endif()
 

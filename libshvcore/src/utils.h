@@ -163,7 +163,24 @@ std::string joinPath(const HeadStringType& head, const StringTypes& ...rest)
 {
 	return joinPath(StringView(head), StringView(joinPath(rest...)));
 }
-}
 
+template <typename Container>
+auto findLongestPrefix(const Container& cont, std::string value) -> typename std::remove_reference_t<decltype(cont)>::const_iterator
+{
+	while (true) {
+		if (auto it = cont.find(value); it != cont.end()) {
+			return it;
+		}
+
+		auto last_slash_pos = value.rfind('/');
+		if (last_slash_pos == std::string::npos) {
+			break;
+		}
+		value.erase(last_slash_pos);
+	}
+
+	return cont.end();
+}
+}
 }}
 

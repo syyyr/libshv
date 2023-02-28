@@ -28,7 +28,7 @@ endfunction(add_shvcoreqt_test)
 
 if(BUILD_TESTING)
 	add_shvcoreqt_test(rpc_variant)
-	add_shvcoreqt_test(join_path)
+	add_shvcoreqt_test(utils)
 endif()
 
 install(TARGETS libshvcoreqt)
