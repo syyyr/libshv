@@ -76,7 +76,7 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 				auto pi = type_info.pathInfo("devices/tc/TC01");
 				REQUIRE(pi.deviceType == "TC_G3");
 				REQUIRE(pi.devicePath == "devices/tc/TC01");
-				REQUIRE(pi.propertyDescription.isValid());
+				REQUIRE(!pi.propertyDescription.isValid());
 				REQUIRE(pi.propertyPath.empty());
 				REQUIRE(pi.fieldPath.empty());
 			}

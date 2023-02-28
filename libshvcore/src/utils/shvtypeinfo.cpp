@@ -568,7 +568,11 @@ ShvPropertyDescr ShvPropertyDescr::fromRpcValue(const RpcValue &v, RpcValue::Map
 	for(const auto &key : known_tags)
 		if(auto it = m.find(key); it != m.cend()) {
 			auto nh = m.extract(key);
-			node_map.insert(std::move(nh));
+			if(key != KEY_DEVICE_TYPE) {
+				// deviceType might be imported from old typeinfo formats
+				// but should not be part of property descr
+				node_map.insert(std::move(nh));
+			}
 		}
 	if(extra_tags)
 		*extra_tags = std::move(m);
