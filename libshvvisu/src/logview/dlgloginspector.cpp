@@ -95,7 +95,7 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 		{
 			auto *a = new QAction(tr("ChainPack"), m);
 			connect(a, &QAction::triggered, this, [this]() {
-				const std::string &log_data = loadData(".chpk");
+				std::string log_data = loadData(".chpk");
 				std::string err;
 				auto log = shv::chainpack::RpcValue::fromChainPack(log_data, &err);
 				if (err.empty()) {
@@ -111,7 +111,7 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 		{
 			auto *a = new QAction(tr("Cpon"), m);
 			connect(a, &QAction::triggered, this, [this]() {
-				const std::string &log_data = loadData(".cpon");
+				std::string log_data = loadData(".cpon");
 				std::string err;
 				auto log = shv::chainpack::RpcValue::fromCpon(log_data, &err);
 				if (err.empty()) {
@@ -521,7 +521,7 @@ void DlgLogInspector::showInfo(const QString &msg, bool is_error)
 	}
 }
 
-const std::string DlgLogInspector::loadData(const QString &ext)
+std::string DlgLogInspector::loadData(const QString &ext)
 {
 	QString fn = QFileDialog::getOpenFileName(this, tr("Loadfile"), QString(), "*" + ext);
 	if(fn.isEmpty())
