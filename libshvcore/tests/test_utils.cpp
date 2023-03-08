@@ -84,3 +84,27 @@ DOCTEST_TEST_CASE("joinPath - variadic arguments")
 	REQUIRE(joinPath(std::string("a"), "b") == "a/b");
 	REQUIRE(joinPath("a", std::string("b")) == "a/b");
 }
+
+DOCTEST_TEST_CASE("findLongestPrefix")
+{
+	std::map<std::string, int> map = {
+		{"shv/a", 0},
+		{"shv/b", 0},
+		{"shv/bbb", 0},
+		{"shv/bbb/c", 0},
+		{"shv/bbb/cc", 0},
+	};
+
+	for (const auto& it : std::map<std::string, decltype(map)::const_iterator> {
+		{"shv/a/dwada",      map.find("shv/a")},
+		{"shv/a/dwada/ahoj", map.find("shv/a")},
+		{"shv/bbb/c/ahoj",   map.find("shv/bbb/c")},
+		{"shv/bb/c/ahoj",    map.end()},
+		{"notfound",         map.end()},
+		{"shv/bbbb",         map.end()},
+	}) {
+		CAPTURE(it.first);
+		CAPTURE(it.second == map.end() ? "<nothing>" : it.second->first);
+		REQUIRE(findLongestPrefix(map, it.first) == it.second);
+	}
+}
