@@ -13,6 +13,11 @@
 #ifndef CHAINPACK_UINT
 	#define CHAINPACK_UINT unsigned
 #endif
+
+namespace shv::chainpack { class RpcValue; }
+
+template<typename T> inline T rpcvalue_cast(const shv::chainpack::RpcValue &v);
+
 namespace shv {
 namespace chainpack {
 
@@ -483,6 +488,11 @@ public:
 	[[deprecated("Use asList instead")]] const List &toList() const { return asList(); }
 	[[deprecated("Use asMap instead")]] const Map &toMap() const { return asMap(); }
 	[[deprecated("Use asIMap instead")]] const IMap &toIMap() const { return asIMap(); }
+
+	template<typename T> T to() const
+	{
+		return rpcvalue_cast<T>(*this);
+	}
 
 	size_t count() const;
 	bool has(Int i) const;
