@@ -65,7 +65,7 @@
           <date>
            <year>1999</year>
            <month>12</month>
-           <day>22</day>
+           <day>20</day>
           </date>
          </property>
          <property name="displayFormat">
@@ -116,7 +116,7 @@
           <date>
            <year>1999</year>
            <month>12</month>
-           <day>21</day>
+           <day>19</day>
           </date>
          </property>
          <property name="displayFormat">
@@ -505,7 +505,7 @@
             <x>0</x>
             <y>0</y>
             <width>1152</width>
-            <height>289</height>
+            <height>368</height>
            </rect>
           </property>
          </widget>
@@ -550,6 +550,13 @@
            <property name="icon">
             <iconset resource="../../images/images.qrc">
              <normaloff>:/shv/visu/images/zoom-fitwidth.svg</normaloff>:/shv/visu/images/zoom-fitwidth.svg</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btLoadData">
+           <property name="text">
+            <string>Load data</string>
            </property>
           </widget>
          </item>

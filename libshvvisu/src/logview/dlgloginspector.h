@@ -48,6 +48,7 @@ private:
 
 	void showInfo(const QString &msg = QString(), bool is_error = false);
 	void saveData(const std::string &data, QString ext);
+	std::string loadData(const QString &ext);
 
 #if SHVVISU_HAS_TIMEZONE
 	void setTimeZone(const QTimeZone &tz);
