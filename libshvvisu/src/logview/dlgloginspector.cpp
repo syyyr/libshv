@@ -90,45 +90,6 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 		ui->btSaveData->setMenu(m);
 	}
 
-	{
-		auto *m = new QMenu(this);
-		{
-			auto *a = new QAction(tr("ChainPack"), m);
-			connect(a, &QAction::triggered, this, [this]() {
-				std::string log_data = loadData(".chpk");
-				std::string err;
-				auto log = shv::chainpack::RpcValue::fromChainPack(log_data, &err);
-				if (err.empty()) {
-					m_logModel->setLog(log);
-					parseLog(m_logModel->log());
-				}
-				else {
-					QMessageBox::warning(this, tr("Warning"), tr("Invalid ChainPack file: ") + QString::fromStdString(err));
-				}
-			});
-			m->addAction(a);
-		}
-		{
-			auto *a = new QAction(tr("Cpon"), m);
-			connect(a, &QAction::triggered, this, [this]() {
-				std::string log_data = loadData(".cpon");
-				std::string err;
-				auto log = shv::chainpack::RpcValue::fromCpon(log_data, &err);
-				if (err.empty()) {
-					m_logModel->setLog(log);
-					parseLog(m_logModel->log());
-				}
-				else {
-					QMessageBox::warning(this, tr("Warning"), tr("Invalid CPON file: ") + QString::fromStdString(err));
-				}
-			});
-			m->addAction(a);
-		}
-
-		ui->btLoadData->setMenu(m);
-	}
-
-
 	ui->lblInfo->hide();
 	ui->btMoreOptions->setChecked(false);
 
@@ -519,23 +480,6 @@ void DlgLogInspector::showInfo(const QString &msg, bool is_error)
 		ui->lblInfo->setText(msg);
 		ui->lblInfo->show();
 	}
-}
-
-std::string DlgLogInspector::loadData(const QString &ext)
-{
-	QString fn = QFileDialog::getOpenFileName(this, tr("Loadfile"), QString(), "*" + ext);
-	if(fn.isEmpty())
-		return "";
-	if(!fn.endsWith(ext))
-		fn = fn + ext;
-	QFile f(fn);
-	if(f.open(QFile::ReadOnly)) {
-		return f.readAll().toStdString();
-	}
-	else {
-		QMessageBox::warning(this, tr("Warning"), tr("Cannot open file '%1' for read.").arg(fn));
-	}
-	return "";
 }
 
 void DlgLogInspector::saveData(const std::string &data_to_be_saved, QString ext)
