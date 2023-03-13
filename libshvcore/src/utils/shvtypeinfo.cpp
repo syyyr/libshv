@@ -897,8 +897,8 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 {
 	int version = v.metaValue(VERSION).toInt();
 	const RpcValue::Map &map = v.asMap();
+	ShvTypeInfo ret;
 	if(version == 3) {
-		ShvTypeInfo ret;
 		{
 			const RpcValue::Map &m = map.value(TYPES).asMap();
 			for(const auto &kv : m) {
@@ -934,11 +934,9 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 				ret.m_propertyDeviations[shv_path] = ShvPropertyDescr::fromRpcValue(node_descr);
 			}
 		}
-		return ret;
 	}
-	if(map.hasKey(PATHS) && map.hasKey(TYPES)) {
+	else if(map.hasKey(PATHS) && map.hasKey(TYPES)) {
 		// version 2
-		ShvTypeInfo ret;
 		{
 			const RpcValue::Map &m = map.value(TYPES).asMap();
 			for(const auto &kv : m) {
@@ -953,10 +951,14 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 				ret.m_deviceProperties[""][path] = nd;
 			}
 		}
-		return ret;
 	}
-
-	return fromNodesTree(v);
+	else {
+		ret = fromNodesTree(v);
+	}
+	if(ret.m_systemPathsRoots.empty()) {
+		ret.m_systemPathsRoots[""] = "system";
+	}
+	return ret;
 }
 
 RpcValue ShvTypeInfo::applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums) const
