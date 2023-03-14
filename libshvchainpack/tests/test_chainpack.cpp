@@ -600,5 +600,23 @@ DOCTEST_TEST_CASE("ChainPack")
 			REQUIRE(cp1.metaData() == cp2.metaData());
 		}
 	}
+	DOCTEST_SUBCASE("RpcValue::typeForName")
+	{
+		REQUIRE(RpcValue::typeForName("Null") == RpcValue::Type::Null);
+		REQUIRE(RpcValue::typeForName("UInt") == RpcValue::Type::UInt);
+		REQUIRE(RpcValue::typeForName("Int") == RpcValue::Type::Int);
+		REQUIRE(RpcValue::typeForName("Double") == RpcValue::Type::Double);
+		REQUIRE(RpcValue::typeForName("Bool") == RpcValue::Type::Bool);
+		REQUIRE(RpcValue::typeForName("String") == RpcValue::Type::String);
+		REQUIRE(RpcValue::typeForName("List") == RpcValue::Type::List);
+		REQUIRE(RpcValue::typeForName("Map") == RpcValue::Type::Map);
+		REQUIRE(RpcValue::typeForName("IMap") == RpcValue::Type::IMap);
+		REQUIRE(RpcValue::typeForName("DateTime") == RpcValue::Type::DateTime);
+		REQUIRE(RpcValue::typeForName("Decimal") == RpcValue::Type::Decimal);
+
+		REQUIRE(RpcValue::typeForName("Int bla bla", 3) == RpcValue::Type::Int);
+		REQUIRE(RpcValue::typeForName("Int bla bla", 2) == RpcValue::Type::Invalid);
+		REQUIRE(RpcValue::typeForName("Int bla bla", 4) == RpcValue::Type::Invalid);
+	}
 
 }
