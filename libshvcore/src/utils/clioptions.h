@@ -12,7 +12,7 @@
 #define CLIOPTION_GETTER_SETTER2(ptype, pkey, getter_prefix, setter_prefix, name_rest) \
 	public: ptype getter_prefix##name_rest() const { \
 		shv::chainpack::RpcValue val = value(pkey); \
-		return rpcvalue_cast<ptype>(val); \
+		return val.to<ptype>(); \
 	} \
 	protected: shv::core::utils::CLIOptions::Option& getter_prefix##name_rest##_optionRef() {return optionRef(pkey);} \
 	public: bool getter_prefix##name_rest##_isset() const {return isValueSet(pkey);} \
