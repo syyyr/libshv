@@ -141,7 +141,7 @@ protected:
 	ValueData& operator=(const ValueData &o) = delete;
 	//ValueData(ValueData &&o) = delete;
 	//ValueData& operator=(ValueData &&o) = delete;
-	virtual ~ValueData() override
+	~ValueData() override
 	{
 #ifdef DEBUG_RPCVAL
 		logDebugRpcVal() << "---" << value_data_cnt-- << RpcValue::typeToName(tag) << this << m_value;
