@@ -16,8 +16,6 @@
 
 namespace shv::chainpack { class RpcValue; }
 
-template<typename T> inline T rpcvalue_cast(const shv::chainpack::RpcValue &v);
-
 namespace shv {
 namespace chainpack {
 
@@ -491,7 +489,20 @@ public:
 
 	template<typename T> T to() const
 	{
-		return rpcvalue_cast<T>(*this);
+		if constexpr (std::is_same<T, bool>())
+			return toBool();
+		else if constexpr (std::is_same<T, RpcValue>())
+			return *this;
+		else if constexpr (std::is_same<T, Int>())
+			return toInt();
+		else if constexpr (std::is_same<T, UInt>())
+			return toUInt();
+		else if constexpr (std::is_same<T, String>())
+			return asString();
+		else if constexpr (std::is_same<T, DateTime>())
+			return toDateTime();
+		else if constexpr (std::is_same<T, Decimal>())
+			return toDecimal();
 	}
 
 	size_t count() const;
@@ -583,17 +594,7 @@ private:
 };
 
 }}
-
-template<typename T> inline T rpcvalue_cast(const shv::chainpack::RpcValue &v)
+template<typename T> [[deprecated("Use RpcValue::to<>")]] T rpcvalue_cast(const shv::chainpack::RpcValue &v)
 {
-	//static_assert(false, "Cannot cast RpcValue type.");
-	return T{v.toString()};
+	return v.to<T>();
 }
-
-template<> inline shv::chainpack::RpcValue rpcvalue_cast<shv::chainpack::RpcValue>(const shv::chainpack::RpcValue &v) { return v; }
-template<> inline bool rpcvalue_cast<bool>(const shv::chainpack::RpcValue &v) { return v.toBool(); }
-template<> inline shv::chainpack::RpcValue::Int rpcvalue_cast<shv::chainpack::RpcValue::Int>(const shv::chainpack::RpcValue &v) { return v.toInt(); }
-template<> inline shv::chainpack::RpcValue::UInt rpcvalue_cast<shv::chainpack::RpcValue::UInt>(const shv::chainpack::RpcValue &v) { return v.toUInt(); }
-template<> inline shv::chainpack::RpcValue::String rpcvalue_cast<shv::chainpack::RpcValue::String>(const shv::chainpack::RpcValue &v) { return v.asString(); }
-template<> inline shv::chainpack::RpcValue::DateTime rpcvalue_cast<shv::chainpack::RpcValue::DateTime>(const shv::chainpack::RpcValue &v) { return v.toDateTime(); }
-template<> inline shv::chainpack::RpcValue::Decimal rpcvalue_cast<shv::chainpack::RpcValue::Decimal>(const shv::chainpack::RpcValue &v) { return v.toDecimal(); }

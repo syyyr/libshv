@@ -19,14 +19,8 @@ SHVCOREQT_DECL_EXPORT shv::chainpack::RpcValue stringListToRpcValue(const QStrin
 
 }}}
 
-template<> inline QString rpcvalue_cast<QString>(const shv::chainpack::RpcValue &v) { return QString::fromStdString(v.asString()); }
-template<> inline QDateTime rpcvalue_cast<QDateTime>(const shv::chainpack::RpcValue &v)
-{
-	if (!v.isValid() || !v.isDateTime()) {
-		return QDateTime();
-	}
-	return QDateTime::fromMSecsSinceEpoch(v.toDateTime().msecsSinceEpoch(), Qt::TimeSpec::UTC);
-}
+template<> QString shv::chainpack::RpcValue::to<QString>() const;
+template<> QDateTime shv::chainpack::RpcValue::to<QDateTime>() const;
 
 namespace shv {
 namespace chainpack {
