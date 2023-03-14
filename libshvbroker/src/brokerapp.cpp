@@ -991,8 +991,14 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 				else if(master_broker_connection) {
 					//shvInfo() << "request from master broker:" << shv_url.toString() << "is plain:" << shv_url.isPlain();
 					if (shv::core::utils::ShvPath::startsWithPath(shv_path, shv::iotqt::node::ShvNode::LOCAL_NODE_HACK)) {
-						if (cp::RpcMessage::accessGrant(meta).toString() != cp::Rpc::ROLE_ADMIN)
-							ACCESS_EXCEPTION("Insufficient access rights to make call on node: " + shv::iotqt::node::ShvNode::LOCAL_NODE_HACK);
+						auto access_grant = shv::chainpack::AccessGrant::fromRpcValue(cp::RpcMessage::accessGrant(meta));
+						auto access_level = shv::iotqt::node::ShvNode::basicGrantToAccessLevel(access_grant);
+						if (access_level < chainpack::MetaMethod::AccessLevel::SuperService) {
+							auto roles = access_grant.roles();
+							if(std::find(roles.begin(), roles.end(), "dot_local") == roles.end()) {
+								ACCESS_EXCEPTION("Insufficient access rights to make call on node: " + shv::iotqt::node::ShvNode::LOCAL_NODE_HACK);
+							}
+						}
 						shv::core::StringView path(shv_path);
 						shv::core::utils::ShvPath::takeFirsDir(path);
 						cp::RpcMessage::setShvPath(meta, path.toString());

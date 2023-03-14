@@ -145,6 +145,31 @@ bool AccessGrant::isAccessLevel() const
 	return type == Type::AccessLevel;
 }
 
+namespace {
+std::vector<std::string_view> split_string(const std::string &str, const char delimiter = ',')
+{
+	std::vector<std::string_view> ret;
+	size_t token_start = 0;
+	for(size_t i = 0; ; ++i) {
+		if(i == str.size()) {
+			std::string_view token(str.data() + token_start, i - token_start);
+			ret.push_back(token);
+			break;
+		}
+		else if(str[i] == delimiter) {
+			std::string_view token(str.data() + token_start, i - token_start);
+			ret.push_back(token);
+			token_start = i + 1;
+		}
+	}
+	return ret;
+}
+}
+std::vector<std::string_view> AccessGrant::roles() const
+{
+	return split_string(role);
+}
+
 RpcValue AccessGrant::toRpcValue() const
 {
 	if(!isValid())
