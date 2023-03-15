@@ -2,6 +2,7 @@
 #include "log.h"
 #include "stringview.h"
 
+#include <shv/chainpack/utils.h>
 #include <cstring>
 #include <regex>
 #include <sstream>
@@ -60,36 +61,7 @@ std::string Utils::intToVersionString(int ver)
 	return ret;
 }
 
-std::string Utils::removeJsonComments(const std::string &json_str)
-{
-	// http://blog.ostermiller.org/find-comment
-	const std::regex re_block_comment(R"(/\*(?:.|[\n])*?\*/)");
-	const std::regex re_line_comment("//.*[\\n]");
-	std::string result1 = std::regex_replace(json_str, re_block_comment, std::string());
-	std::string ret = std::regex_replace(result1, re_line_comment, std::string());
-	return ret;
-}
-
-std::string Utils::binaryDump(const std::string &bytes)
-{
-	std::string ret;
-	for (size_t i = 0; i < bytes.size(); ++i) {
-		auto u = static_cast<uint8_t>(bytes[i]);
-		if(i > 0)
-			ret += '|';
-		for (size_t j = 0; j < 8*sizeof(u); ++j) {
-			ret += (u & ((static_cast<uint8_t>(128)) >> j))? '1': '0';
-		}
-	}
-	return ret;
-}
-
-static inline char hex_nibble(char i)
-{
-	if(i < 10)
-		return '0' + i;
-	return 'A' + (i - 10);
-}
+using shv::chainpack::utils::hexNibble;
 
 std::string Utils::toHex(const std::string &bytes)
 {
@@ -98,8 +70,8 @@ std::string Utils::toHex(const std::string &bytes)
 		auto b = static_cast<unsigned char>(byte);
 		char h = static_cast<char>(b / 16);
 		char l = b % 16;
-		ret += hex_nibble(h);
-		ret += hex_nibble(l);
+		ret += hexNibble(h);
+		ret += hexNibble(l);
 	}
 	return ret;
 }
@@ -110,8 +82,8 @@ std::string Utils::toHex(const std::basic_string<uint8_t> &bytes)
 	for (unsigned char b : bytes) {
 		char h = static_cast<char>(b / 16);
 		char l = b % 16;
-		ret += hex_nibble(h);
-		ret += hex_nibble(l);
+		ret += hexNibble(h);
+		ret += hexNibble(l);
 	}
 	return ret;
 }

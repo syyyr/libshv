@@ -3,6 +3,7 @@
 #include "clientappclioptions.h"
 #include "socket.h"
 #include "socketrpcconnection.h"
+#include "../utils.h"
 #include "websocket.h"
 
 #include <shv/coreqt/log.h>
@@ -385,18 +386,6 @@ void ClientConnection::onSocketConnectedChanged(bool is_connected)
 	}
 }
 
-static std::string sha1_hex(const std::string &s)
-{
-	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-#if QT_VERSION_MAJOR >= 6
-	hash.addData(QByteArrayView(s.data(), static_cast<int>(s.length())));
-#else
-	hash.addData(s.data(), static_cast<int>(s.length()));
-#endif
-
-	return std::string(hash.result().toHex().constData());
-}
-
 chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValue &server_hello) const
 {
 	shvDebug() << server_hello.toCpon() << "login type:" << static_cast<int>(loginType());
@@ -407,7 +396,7 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 		if(pwd.size() == 40)
 			shvWarning() << "Using shadowed password directly by client is unsecure and it will be disabled in future SHV versions";
 		else
-			pwd = sha1_hex(pwd); /// SHA1 password must be 40 chars long, it is considered to be plain if shorter
+			pwd = utils::sha1Hex(pwd); /// SHA1 password must be 40 chars long, it is considered to be plain if shorter
 		std::string pn = server_nonce + pwd;
 		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
 #if QT_VERSION_MAJOR >= 6

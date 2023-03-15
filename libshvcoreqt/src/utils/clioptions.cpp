@@ -421,7 +421,7 @@ bool ConfigCLIOptions::loadConfigFile()
 		shvInfo() << "Reading config file:" << f.fileName();
 		QByteArray ba = f.readAll();
 		std::string cpon(ba.constData(), static_cast<size_t>(ba.size()));
-		std::string str = shv::core::Utils::removeJsonComments(std::string(ba.constData()));
+		std::string str = shv::chainpack::Utils::removeJsonComments(std::string(ba.constData()));
 		//shvDebug() << str;
 		std::string err;
 		chainpack::RpcValue rv = shv::chainpack::RpcValue::fromCpon(cpon, &err);
