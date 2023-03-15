@@ -139,7 +139,15 @@ void ChannelProbeWidget::loadValues()
 	ui->twData->setRowCount(0);
 
 	QVariantMap values = m_probe->sampleValues();
-	const auto m = values.value("samplePrettyValue").toMap();
+	auto pv = values.value("samplePrettyValue");
+#if QT_VERSION_MAJOR >= 6
+	if(pv.typeId() != QMetaType::QVariantMap) {
+#else
+	if(pv.type() != QVariant::Map) {
+#endif
+		pv = QVariantMap{{ m_probe->shvPath().split('/').last(), pv.toString() }};
+	}
+	auto m = pv.toMap();
 	QMapIterator<QString, QVariant> i(m);
 	while (i.hasNext()) {
 		i.next();
