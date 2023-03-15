@@ -392,7 +392,7 @@ public:
 	RpcValue(unsigned long value);      // UInt
 	RpcValue(unsigned long long value); // UInt
 	RpcValue(double value);             // Double
-	RpcValue(Decimal value);             // Decimal
+	RpcValue(const Decimal& value);     // Decimal
 	RpcValue(const DateTime &value);
 
 	RpcValue(const uint8_t *value, size_t size);

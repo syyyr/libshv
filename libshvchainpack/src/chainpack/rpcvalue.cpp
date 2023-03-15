@@ -141,7 +141,7 @@ protected:
 	ValueData& operator=(const ValueData &o) = delete;
 	//ValueData(ValueData &&o) = delete;
 	//ValueData& operator=(ValueData &&o) = delete;
-	virtual ~ValueData() override
+	~ValueData() override
 	{
 #ifdef DEBUG_RPCVAL
 		logDebugRpcVal() << "---" << value_data_cnt-- << RpcValue::typeToName(tag) << this << m_value;
@@ -239,7 +239,7 @@ class ChainPackDecimal final : public ValueData<RpcValue::Type::Decimal, RpcValu
 	bool equals(const RpcValue::AbstractValueData * other) const override { return toDouble() == other->toDouble(); }
 	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
 public:
-	explicit ChainPackDecimal(RpcValue::Decimal &&value) : ValueData(std::move(value)) {}
+	explicit ChainPackDecimal(const RpcValue::Decimal& value) : ValueData(value) {}
 };
 
 class ChainPackInt final : public ValueData<RpcValue::Type::Int, int64_t>
@@ -454,7 +454,7 @@ RpcValue RpcValue::fromType(RpcValue::Type t) noexcept
 }
 RpcValue::RpcValue(std::nullptr_t) noexcept : m_ptr(std::make_shared<ChainPackNull>()) {}
 RpcValue::RpcValue(double value) : m_ptr(std::make_shared<ChainPackDouble>(value)) {}
-RpcValue::RpcValue(RpcValue::Decimal value) : m_ptr(std::make_shared<ChainPackDecimal>(std::move(value))) {}
+RpcValue::RpcValue(const RpcValue::Decimal& value) : m_ptr(std::make_shared<ChainPackDecimal>(value)) {}
 RpcValue::RpcValue(short value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
 RpcValue::RpcValue(int value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
 RpcValue::RpcValue(long value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
