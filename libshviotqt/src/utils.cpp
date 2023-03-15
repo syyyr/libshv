@@ -6,7 +6,7 @@
 #include <QCryptographicHash>
 #include <QVariant>
 
-namespace shv::iotqt {
+namespace shv::iotqt::utils {
 /*
 QVariant Utils::rpcValueToQVariant(const shv::chainpack::RpcValue &v)
 {
