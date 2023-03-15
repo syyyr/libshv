@@ -148,6 +148,8 @@ bool AccessGrant::isAccessLevel() const
 namespace {
 std::vector<std::string_view> split_string(const std::string &str, const char delimiter = ',')
 {
+	if(str.empty())
+		return {};
 	std::vector<std::string_view> ret;
 	size_t token_start = 0;
 	for(size_t i = 0; ; ++i) {

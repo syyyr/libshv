@@ -42,6 +42,7 @@ if(BUILD_TESTING)
 	add_shv_test(cpon)
 	add_shv_test(rpcvalue)
 	add_shv_test(rpcmessage)
+	add_shv_test(accessgrant)
 
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 		function(add_fuzz_test test_name)
