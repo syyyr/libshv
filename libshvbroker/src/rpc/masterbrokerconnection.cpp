@@ -131,28 +131,6 @@ void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 			return;
 		}
 		if(cp::RpcMessage::isRequest(md)) {
-			/*
-			const std::string &request_shv_path = cp::RpcMessage::shvPath(md).asString();
-			shv::core::utils::ShvUrl request_shv_url(request_shv_path);
-			std::string shv_path;
-			if (shv::core::utils::ShvPath::startsWithPath(request_shv_path, shv::iotqt::node::ShvNode::LOCAL_NODE_HACK)) {
-				if (cp::RpcMessage::accessGrant(md).toString() != cp::Rpc::ROLE_ADMIN) {
-					shv::chainpack::RpcResponse rsp = cp::RpcResponse::forRequest(md);
-					rsp.setError(cp::RpcResponse::Error::create(cp::RpcResponse::Error::MethodCallException, "Insufficient rights for node: " + shv::iotqt::node::ShvNode::LOCAL_NODE_HACK));
-					sendMessage(rsp);
-					return;
-				}
-				shv_path = shv::core::utils::ShvPath::midPath(request_shv_path, 1).toString();
-				cp::RpcMessage::setShvPath(md, shv_path);
-			}
-			else if(request_shv_url.isPlain()) {
-				shv_path = masterExportedToLocalPath(request_shv_path);
-				if (request_shv_path.empty() && cp::RpcMessage::method(md) == cp::Rpc::METH_LS && cp::RpcMessage::accessGrant(md).toString() == cp::Rpc::ROLE_ADMIN) {
-					md.setValue(shv::iotqt::node::ShvNode::ADD_LOCAL_TO_LS_RESULT_HACK_META_KEY, true);
-				}
-				cp::RpcMessage::setShvPath(md, shv_path);
-			}
-			*/
 		}
 		else if(cp::RpcMessage::isResponse(md)) {
 			int rq_id = cp::RpcMessage::requestId(md).toInt();
