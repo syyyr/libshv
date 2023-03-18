@@ -21,8 +21,7 @@ public:
 	using Severity = NecroLogLevel;
 public:
 	ShvAlarm();
-	ShvAlarm(const std::string &path, bool is_active = false, Severity severity = Severity::Invalid, int level = 0, const std::string &description = {});
-
+	explicit ShvAlarm(const std::string &path, bool is_active = false, Severity severity = Severity::Invalid, int level = 0, const std::string &description = {});
 public:
 	static Severity severityFromString(const std::string &lvl);
 	const char *severityName() const;

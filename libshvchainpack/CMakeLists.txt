@@ -19,6 +19,7 @@ add_library(libshvchainpack-cpp
 	src/chainpack/rpcvalue.cpp
 	src/chainpack/tunnelctl.cpp
 	src/chainpack/utils.cpp
+	src/chainpack/crc32.h
 	)
 
 if (NOT WIN32)
@@ -37,11 +38,22 @@ function(add_shv_test test_name)
 	add_test(NAME test_${test_name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_${test_name})
 endfunction(add_shv_test)
 
+function(add_shv_test_zlib test_name)
+	add_executable(test_${test_name}
+		tests/test_${test_name}.cpp
+		)
+	target_link_libraries(test_${test_name} libshvchainpack-cpp z)
+	add_test(NAME test_${test_name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_${test_name})
+endfunction(add_shv_test)
+
 if(BUILD_TESTING)
 	add_shv_test(chainpack)
 	add_shv_test(cpon)
 	add_shv_test(rpcvalue)
 	add_shv_test(rpcmessage)
+	if (UNIX)
+		add_shv_test_zlib(crc32)
+	endif()
 
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 		function(add_fuzz_test test_name)
