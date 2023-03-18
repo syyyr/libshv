@@ -8,14 +8,49 @@
 #include <array>
 #include <algorithm>
 
-#if defined LIBC_NEWLIB || defined SHV_ANDROID_BUILD
-#include <sstream>
-#endif
-
 namespace shv {
 namespace chainpack {
 
 class RpcValue;
+
+namespace utils {
+
+SHVCHAINPACK_DECL_EXPORT std::string hexDump(const char *bytes, size_t n);
+SHVCHAINPACK_DECL_EXPORT std::string byteToHex( uint8_t i );
+
+template <typename I>
+std::string intToHex(I n)
+{
+	if(n == 0)
+		return {};
+	constexpr auto N = sizeof(I) * 2;
+	std::string ret(N, '0');
+	size_t ix = N;
+	while(n > 0) {
+		auto b = static_cast<uint8_t>(n);
+		auto xx = byteToHex(b);
+		ret[--ix] = xx[1];
+		ret[--ix] = xx[0];
+		n >>= 8;
+	}
+	return ret;
+}
+
+template <typename I>
+std::string toString(I n)
+{
+	if(n == 0)
+		return "0";
+	std::string ret;
+	while(n > 0) {
+		auto b = n % 10;
+		ret.push_back(static_cast<char>(b + '0'));
+		n /= 10;
+	}
+	return ret;
+}
+
+}
 
 class SHVCHAINPACK_DECL_EXPORT Utils
 {
@@ -28,23 +63,13 @@ public:
 	static std::string toHex(const std::basic_string<uint8_t> &bytes);
 	static char fromHex(char c);
 	static std::string fromHex(const std::string &bytes);
-	static std::string hexDump(const std::string &bytes);
+	static std::string hexDump(const std::string &bytes) { return utils::hexDump(bytes.data(), bytes.size()); }
 
-	template<typename T>
-	static std::string toString(T i, size_t prepend_0s_to_len = 0)
+	template <typename I>
+	static std::string toString(I n)
 	{
-#if defined LIBC_NEWLIB || defined SHV_ANDROID_BUILD
-		std::ostringstream ss;
-		ss << i;
-		std::string ret = ss.str();
-#else
-		std::string ret = std::to_string(i); //not supported by newlib
-#endif
-		while(ret.size() < prepend_0s_to_len)
-			ret = '0' + ret;
-		return ret;
+		return utils::toString(n);
 	}
-
 
 	template <typename V, typename... T>
 	constexpr static inline auto make_array(T&&... t) -> std::array < V, sizeof...(T) >
