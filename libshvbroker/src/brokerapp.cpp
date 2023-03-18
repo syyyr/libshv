@@ -990,15 +990,27 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 				}
 				else if(master_broker_connection) {
 					//shvInfo() << "request from master broker:" << shv_url.toString() << "is plain:" << shv_url.isPlain();
+					auto has_dot_local_access = [](const cp::RpcValue::MetaData &meta_data) {
+						auto access_grant = shv::chainpack::AccessGrant::fromRpcValue(cp::RpcMessage::accessGrant(meta_data));
+						auto access_level = shv::iotqt::node::ShvNode::basicGrantToAccessLevel(access_grant);
+						if (access_level < chainpack::MetaMethod::AccessLevel::SuperService) {
+							auto roles = access_grant.roles();
+							return std::find(roles.begin(), roles.end(), "dot_local") != roles.end();
+						}
+						return true;
+					};
 					if (shv::core::utils::ShvPath::startsWithPath(shv_path, shv::iotqt::node::ShvNode::LOCAL_NODE_HACK)) {
-						if (cp::RpcMessage::accessGrant(meta).toString() != cp::Rpc::ROLE_ADMIN)
+						if(has_dot_local_access(meta)) {
+							shv::core::StringView path(shv_path);
+							shv::core::utils::ShvPath::takeFirsDir(path);
+							cp::RpcMessage::setShvPath(meta, path.toString());
+						}
+						else {
 							ACCESS_EXCEPTION("Insufficient access rights to make call on node: " + shv::iotqt::node::ShvNode::LOCAL_NODE_HACK);
-						shv::core::StringView path(shv_path);
-						shv::core::utils::ShvPath::takeFirsDir(path);
-						cp::RpcMessage::setShvPath(meta, path.toString());
+						}
 					}
 					else if(shv_url.isPlain()) {
-						if (shv_path.empty() && cp::RpcMessage::method(meta) == cp::Rpc::METH_LS && cp::RpcMessage::accessGrant(meta).toString() == cp::Rpc::ROLE_ADMIN) {
+						if (shv_path.empty() && cp::RpcMessage::method(meta) == cp::Rpc::METH_LS && has_dot_local_access(meta)) {
 							/// if superuser calls 'ls' on broker exported root, then '.local' dir is added to the ls result
 							/// this enables access slave broker root via virtual '.local' directory
 							meta.setValue(shv::iotqt::node::ShvNode::ADD_LOCAL_TO_LS_RESULT_HACK_META_KEY, true);

@@ -113,3 +113,27 @@ DOCTEST_TEST_CASE("joinPath - variadic arguments")
 	// between the string types.
 	REQUIRE(joinPath("a", std::string("b")).toStdString() == "a/b");
 }
+
+DOCTEST_TEST_CASE("findLongestPrefix")
+{
+	QMap<QString, int> map = {
+		{"shv/a", 0},
+		{"shv/b", 0},
+		{"shv/bbb", 0},
+		{"shv/bbb/c", 0},
+		{"shv/bbb/cc", 0},
+	};
+
+	for (const auto& it : std::map<QString, decltype(map)::const_iterator> {
+		{"shv/a/dwada",      map.find("shv/a")},
+		{"shv/a/dwada/ahoj", map.find("shv/a")},
+		{"shv/bbb/c/ahoj",   map.find("shv/bbb/c")},
+		{"shv/bb/c/ahoj",    map.end()},
+		{"notfound",         map.end()},
+		{"shv/bbbb",         map.end()},
+	}) {
+		CAPTURE(it.first);
+		CAPTURE(it.second == map.end() ? "<nothing>" : it.second.key());
+		REQUIRE(findLongestPrefix(map, it.first) == it.second);
+	}
+}

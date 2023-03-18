@@ -108,5 +108,22 @@ std::string MetaMethod::flagsToString(unsigned flags)
 	return ret;
 }
 
+const char *MetaMethod::accessLevelToString(int access_level)
+{
+	switch(access_level) {
+	case AccessLevel::None: return "";
+	case AccessLevel::Browse: return shv::chainpack::Rpc::ROLE_BROWSE;
+	case AccessLevel::Read: return shv::chainpack::Rpc::ROLE_READ;
+	case AccessLevel::Write: return shv::chainpack::Rpc::ROLE_WRITE;
+	case AccessLevel::Command: return shv::chainpack::Rpc::ROLE_COMMAND;
+	case AccessLevel::Config: return shv::chainpack::Rpc::ROLE_CONFIG;
+	case AccessLevel::Service: return shv::chainpack::Rpc::ROLE_SERVICE;
+	case AccessLevel::SuperService: return shv::chainpack::Rpc::ROLE_SUPER_SERVICE;
+	case AccessLevel::Devel: return shv::chainpack::Rpc::ROLE_DEVEL;
+	case AccessLevel::Admin: return shv::chainpack::Rpc::ROLE_ADMIN;
+	}
+	return "";
+}
+
 
 } // namespace shv

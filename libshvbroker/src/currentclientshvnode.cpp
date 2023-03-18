@@ -28,8 +28,9 @@ const string M_MOUNT_POINT = "mountPoint";
 const string M_USER_ROLES = "userRoles";
 const string M_USER_PROFILE = "userProfile";
 const string M_CHANGE_PASSWORD = "changePassword";
-const string M_ACCES_LEVEL_FOR_METHOD_CALL = "accesLevelForMethodCall";
+const string M_ACCES_LEVEL_FOR_METHOD_CALL = "accesLevelForMethodCall"; // deprecated typo
 const string M_ACCESS_LEVEL_FOR_METHOD_CALL = "accessLevelForMethodCall";
+const string M_ACCESS_GRANT_FOR_METHOD_CALL = "accessGrantForMethodCall";
 }
 
 CurrentClientShvNode::CurrentClientShvNode(shv::iotqt::node::ShvNode *parent)
@@ -41,10 +42,12 @@ CurrentClientShvNode::CurrentClientShvNode(shv::iotqt::node::ShvNode *parent)
 		{M_MOUNT_POINT, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read},
 		{M_USER_ROLES, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read},
 		{M_USER_PROFILE, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read},
-		{M_ACCESS_LEVEL_FOR_METHOD_CALL, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read,
+		{M_ACCESS_GRANT_FOR_METHOD_CALL, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read,
 		  R"(params: ["shv_path", "method"])"},
+		{M_ACCESS_LEVEL_FOR_METHOD_CALL, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read,
+		  "deprecated, use accessGrantForMethodCall instead"},
 		{M_ACCES_LEVEL_FOR_METHOD_CALL, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Read,
-		  "deprecated, use accessLevelForMethodCall instead"},
+		  "deprecated, use accessGrantForMethodCall instead"},
 		{M_CHANGE_PASSWORD, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Write
 		  , R"(params: ["old_password", "new_password"], old and new passwords can be plain or SHA1)"},
 	}
@@ -94,7 +97,7 @@ shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack
 			}
 			return nullptr;
 		}
-		if(method == M_ACCESS_LEVEL_FOR_METHOD_CALL || method == M_ACCES_LEVEL_FOR_METHOD_CALL) {
+		if(method == M_ACCESS_GRANT_FOR_METHOD_CALL) {
 			int client_id = rq.peekCallerId();
 			auto *app = shv::broker::BrokerApp::instance();
 			auto *cli = app->clientById(client_id);
@@ -108,6 +111,31 @@ shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack
 					SHV_EXCEPTION("Method not specified in params.");
 				shv::chainpack::AccessGrant acg = app->accessGrantForRequest(cli, shv::core::utils::ShvUrl(shv_path_param), method_param, rq.accessGrant());
 				return acg.isValid()? acg.toRpcValue(): nullptr;
+			}
+			return nullptr;
+		}
+		if(method == M_ACCESS_LEVEL_FOR_METHOD_CALL || method == M_ACCES_LEVEL_FOR_METHOD_CALL) {
+			int client_id = rq.peekCallerId();
+			auto *app = shv::broker::BrokerApp::instance();
+			auto *cli = app->clientById(client_id);
+			if(cli) {
+				const shv::chainpack::RpcValue::List &plist = rq.params().asList();
+				const string &shv_path_param = plist.value(0).asString();
+				if(shv_path_param.empty())
+					SHV_EXCEPTION("Shv path not specified in params.");
+				const string &method_param = plist.value(1).asString();
+				if(method_param.empty())
+					SHV_EXCEPTION("Method not specified in params.");
+				shv::chainpack::AccessGrant acg = app->accessGrantForRequest(cli, shv::core::utils::ShvUrl(shv_path_param), method_param, rq.accessGrant());
+				if(acg.isValid()) {
+					auto level = shv::iotqt::node::ShvNode::basicGrantToAccessLevel(acg);
+					if(level > 0) {
+						std::string role = shv::chainpack::MetaMethod::accessLevelToString(level);
+						if(role.empty())
+							return level;
+						return role;
+					}
+				}
 			}
 			return nullptr;
 		}

@@ -141,7 +141,7 @@ protected:
 	ValueData& operator=(const ValueData &o) = delete;
 	//ValueData(ValueData &&o) = delete;
 	//ValueData& operator=(ValueData &&o) = delete;
-	virtual ~ValueData() override
+	~ValueData() override
 	{
 #ifdef DEBUG_RPCVAL
 		logDebugRpcVal() << "---" << value_data_cnt-- << RpcValue::typeToName(tag) << this << m_value;
@@ -239,7 +239,7 @@ class ChainPackDecimal final : public ValueData<RpcValue::Type::Decimal, RpcValu
 	bool equals(const RpcValue::AbstractValueData * other) const override { return toDouble() == other->toDouble(); }
 	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
 public:
-	explicit ChainPackDecimal(RpcValue::Decimal &&value) : ValueData(std::move(value)) {}
+	explicit ChainPackDecimal(const RpcValue::Decimal& value) : ValueData(value) {}
 };
 
 class ChainPackInt final : public ValueData<RpcValue::Type::Int, int64_t>
@@ -454,7 +454,7 @@ RpcValue RpcValue::fromType(RpcValue::Type t) noexcept
 }
 RpcValue::RpcValue(std::nullptr_t) noexcept : m_ptr(std::make_shared<ChainPackNull>()) {}
 RpcValue::RpcValue(double value) : m_ptr(std::make_shared<ChainPackDouble>(value)) {}
-RpcValue::RpcValue(RpcValue::Decimal value) : m_ptr(std::make_shared<ChainPackDecimal>(std::move(value))) {}
+RpcValue::RpcValue(const RpcValue::Decimal& value) : m_ptr(std::make_shared<ChainPackDecimal>(value)) {}
 RpcValue::RpcValue(short value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
 RpcValue::RpcValue(int value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
 RpcValue::RpcValue(long value) : m_ptr(std::make_shared<ChainPackInt>(value)) {}
@@ -840,29 +840,26 @@ const char *RpcValue::typeToName(RpcValue::Type t)
 
 RpcValue::Type RpcValue::typeForName(const std::string &type_name, int len)
 {
-	static const std::string_view str_Null = "Null";
-	static const std::string_view str_UInt = "UInt";
-	static const std::string_view str_Int = "Int";
-	static const std::string_view str_Double = "Double";
-	static const std::string_view str_Bool = "Bool";
-	static const std::string_view str_String = "String";
-	static const std::string_view str_List = "List";
-	static const std::string_view str_Map = "Map";
-	static const std::string_view str_IMap = "IMap";
-	static const std::string_view str_DateTime = "DateTime";
-	static const std::string_view str_Decimal = "Decimal";
+	using namespace std::string_view_literals;
+	static const std::initializer_list<std::pair<std::string_view, RpcValue::Type>> mapping = {
+		{"Null", Type::Null},
+		{"UInt", Type::UInt},
+		{"Int", Type::Int},
+		{"Double", Type::Double},
+		{"Bool", Type::Bool},
+		{"String", Type::String},
+		{"List", Type::List},
+		{"Map", Type::Map},
+		{"IMap", Type::IMap},
+		{"DateTime", Type::DateTime},
+		{"Decimal", Type::Decimal}
+	};
 
-	if(type_name.compare(0, (len < 0)? str_Null.size(): static_cast<unsigned>(len), str_Null) == 0) return Type::Null;
-	if(type_name.compare(0, (len < 0)? str_UInt.size(): static_cast<unsigned>(len), str_UInt) == 0) return Type::UInt;
-	if(type_name.compare(0, (len < 0)? str_Int.size(): static_cast<unsigned>(len), str_Int) == 0) return Type::Int;
-	if(type_name.compare(0, (len < 0)? str_Double.size(): static_cast<unsigned>(len), str_Double) == 0) return Type::Double;
-	if(type_name.compare(0, (len < 0)? str_Bool.size(): static_cast<unsigned>(len), str_Bool) == 0) return Type::Bool;
-	if(type_name.compare(0, (len < 0)? str_String.size(): static_cast<unsigned>(len), str_String) == 0) return Type::String;
-	if(type_name.compare(0, (len < 0)? str_List.size(): static_cast<unsigned>(len), str_List) == 0) return Type::List;
-	if(type_name.compare(0, (len < 0)? str_Map.size(): static_cast<unsigned>(len), str_Map) == 0) return Type::Map;
-	if(type_name.compare(0, (len < 0)? str_IMap.size(): static_cast<unsigned>(len), str_IMap) == 0) return Type::IMap;
-	if(type_name.compare(0, (len < 0)? str_DateTime.size(): static_cast<unsigned>(len), str_DateTime) == 0) return Type::DateTime;
-	if(type_name.compare(0, (len < 0)? str_Decimal.size(): static_cast<unsigned>(len), str_Decimal) == 0) return Type::Decimal;
+	for (const auto& [strType, type] : mapping) {
+		if (type_name.compare(0, (len < 0) ? strType.size() : static_cast<unsigned>(len), strType) == 0) {
+			return type;
+		}
+	}
 
 	return Type::Invalid;
 }

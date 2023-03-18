@@ -152,4 +152,15 @@ shv::chainpack::RpcValue stringListToRpcValue(const QStringList &sl)
 
 } // namespace shv
 
+template<> QString shv::chainpack::RpcValue::to<QString>() const
+{
+	return QString::fromStdString(asString());
+}
 
+template<> QDateTime shv::chainpack::RpcValue::to<QDateTime>() const
+{
+	if (!isValid() || !isDateTime()) {
+		return QDateTime();
+	}
+	return QDateTime::fromMSecsSinceEpoch(toDateTime().msecsSinceEpoch(), Qt::TimeSpec::UTC);
+}

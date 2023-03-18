@@ -194,6 +194,24 @@ QJsonValue rpcValueToJson(const shv::chainpack::RpcValue& v);
 QByteArray jsonValueToByteArray(const QJsonValue& json);
 
 [[noreturn]] void qcoro_unhandled_exception(std::exception& ex);
+
+template <typename Value>
+auto findLongestPrefix(const QMap<QString, Value>& map, QString value) -> typename std::remove_reference_t<decltype(map)>::const_iterator
+{
+	while (true) {
+		if (auto it = map.find(value); it != map.end()) {
+			return it;
+		}
+
+		auto last_slash_pos = value.lastIndexOf('/');
+		if (last_slash_pos == -1) {
+			break;
+		}
+		value.truncate(last_slash_pos);
+	}
+
+	return map.end();
+}
 }
 
 } // namespace coreqt

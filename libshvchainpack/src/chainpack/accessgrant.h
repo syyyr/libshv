@@ -86,6 +86,8 @@ public:
 	bool isRole() const;
 	bool isAccessLevel() const;
 
+	std::vector<std::string_view> roles() const;
+
 	chainpack::RpcValue toRpcValue() const;
 	chainpack::RpcValue toRpcValueMap() const;
 	static AccessGrant fromRpcValue(const chainpack::RpcValue &rpcval);

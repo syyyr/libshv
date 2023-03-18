@@ -361,17 +361,19 @@ chainpack::RpcValue ShvNode::lsAttributes(const StringViewList &shv_path, unsign
 int ShvNode::basicGrantToAccessLevel(const shv::chainpack::AccessGrant &acces_grant)
 {
 	if(acces_grant.isRole()) {
-		const char *acces_level = acces_grant.role.data();
-		if(std::strcmp(acces_level, Rpc::ROLE_BROWSE) == 0) return MetaMethod::AccessLevel::Browse;
-		if(std::strcmp(acces_level, Rpc::ROLE_READ) == 0) return MetaMethod::AccessLevel::Read;
-		if(std::strcmp(acces_level, Rpc::ROLE_WRITE) == 0) return MetaMethod::AccessLevel::Write;
-		if(std::strcmp(acces_level, Rpc::ROLE_COMMAND) == 0) return MetaMethod::AccessLevel::Command;
-		if(std::strcmp(acces_level, Rpc::ROLE_CONFIG) == 0) return MetaMethod::AccessLevel::Config;
-		if(std::strcmp(acces_level, Rpc::ROLE_SERVICE) == 0) return MetaMethod::AccessLevel::Service;
-		if(std::strcmp(acces_level, Rpc::ROLE_SUPER_SERVICE) == 0) return MetaMethod::AccessLevel::SuperService;
-		if(std::strcmp(acces_level, Rpc::ROLE_DEVEL) == 0) return MetaMethod::AccessLevel::Devel;
-		if(std::strcmp(acces_level, Rpc::ROLE_ADMIN) == 0) return MetaMethod::AccessLevel::Admin;
-		return shv::chainpack::MetaMethod::AccessLevel::None;
+		auto acc_level = shv::chainpack::MetaMethod::AccessLevel::None;
+		for(const auto &role : acces_grant.roles()) {
+			if(role == Rpc::ROLE_BROWSE) acc_level = std::max(acc_level, MetaMethod::AccessLevel::Browse);
+			else if(role == Rpc::ROLE_READ) acc_level = std::max(acc_level, MetaMethod::AccessLevel::Read);
+			else if(role == Rpc::ROLE_WRITE) acc_level = std::max(acc_level, MetaMethod::AccessLevel::Write);
+			else if(role == Rpc::ROLE_COMMAND) acc_level = std::max(acc_level, MetaMethod::AccessLevel::Command);
+			else if(role == Rpc::ROLE_CONFIG) acc_level = std::max(acc_level, MetaMethod::AccessLevel::Config);
+			else if(role == Rpc::ROLE_SERVICE) acc_level = std::max(acc_level, MetaMethod::AccessLevel::Service);
+			else if(role == Rpc::ROLE_SUPER_SERVICE) acc_level = std::max(acc_level, MetaMethod::AccessLevel::SuperService);
+			else if(role == Rpc::ROLE_DEVEL) acc_level = std::max(acc_level, MetaMethod::AccessLevel::Devel);
+			else if(role == Rpc::ROLE_ADMIN) acc_level = std::max(acc_level, MetaMethod::AccessLevel::Admin);
+		}
+		return acc_level;
 	}
 	if(acces_grant.isAccessLevel()) {
 		return acces_grant.accessLevel;
