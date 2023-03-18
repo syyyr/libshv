@@ -7,59 +7,41 @@
 namespace shv::chainpack {
 
 using crc32_t = uint32_t;
-constexpr crc32_t CRC_POSIX_POLY = 0x04C11DB7;
+constexpr crc32_t CRC_POSIX_POLY_REV = 0xEDB88320L;
 
-template<crc32_t POLY>
+template<crc32_t POLY_REV>
 class Crc32
 {
-	static constexpr crc32_t WIDTH = 8 * sizeof(crc32_t);
-	static constexpr crc32_t TOPBIT = 1 << (WIDTH - 1);
 public:
-
 	constexpr Crc32() {
-		crc32_t  remainder;
-		for (int dividend = 0; dividend < 256; ++dividend)
+		auto crc32_for_byte = [](uint8_t b)
 		{
-			// Start with the dividend followed by zeros.
-			remainder = dividend << (WIDTH - 8);
-			//Perform modulo-2 division, a bit at a time.
-			for (uint8_t bit = 8; bit > 0; --bit) {
-				//Try to divide the current data bit.
-				if (remainder & TOPBIT) {
-					remainder = (remainder << 1) ^ POLY;
-				}
-				else {
-					remainder = (remainder << 1);
-				}
-			}
-			//Store the result into the table.
-			m_table[dividend] = static_cast<uint8_t>(remainder);
+			constexpr auto MSB_MASK = static_cast<crc32_t>(0xFF) << ((sizeof(crc32_t) - 1) * 8);
+			auto r = static_cast<crc32_t>(b);
+			for(int j = 0; j < 8; ++j)
+				r = (r & 1? 0: POLY_REV) ^ (r >> 1);
+			return r ^ MSB_MASK;
+		};
+		for(crc32_t i = 0; i < 0x100; ++i) {
+			m_table[i] = crc32_for_byte(static_cast<uint8_t>(i));
 		}
 	}
 
 	void add(uint8_t b) {
-		auto data = b ^ (m_remainder >> (WIDTH - 8));
-		m_remainder = m_table[data] ^ (m_remainder << 8);
-		//m_byteCount++;
+		const auto ix = static_cast<uint8_t>(m_remainder ^ static_cast<crc32_t>(b));
+		m_remainder = m_table[ix] ^ (m_remainder >> 8);
 	}
-	void add(const char *data, size_t n) {
+	void add(const void *data, size_t n) {
 		for (size_t i = 0; i < n; ++i) {
-			add(static_cast<uint8_t>(data[i]));
-		}
-	}
-	void add(const uint8_t *data, size_t n) {
-		for (size_t i = 0; i < n; ++i) {
-			add(data[i]);
+			add(static_cast<const uint8_t*>(data)[i]);
 		}
 	}
 	crc32_t remainder() const { return m_remainder; }
-	//size_t byteCount() const { return m_byteCount; }
 private:
 	crc32_t m_remainder = 0;
-	//size_t m_byteCount = 0;
-	uint8_t m_table[256];
+	crc32_t m_table[256];
 };
 
-using Crc32Posix = Crc32<CRC_POSIX_POLY>;
+using Crc32Posix = Crc32<CRC_POSIX_POLY_REV>;
 
 }
