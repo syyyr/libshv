@@ -40,4 +40,19 @@ if(WITH_SHV_WEBSOCKETS)
 	target_link_libraries(libshviotqt PUBLIC Qt::WebSockets)
 endif()
 
+function(add_shviotqt_serialportsocket_test test_name)
+	add_executable(test_iotqt_${test_name}
+		tests/serialportsocket/test_${test_name}.cpp
+		tests/serialportsocket/mockserialport.cpp
+		tests/serialportsocket/mockrpcconnection.cpp
+	)
+	#target_compile_definitions(test_iotqt_${test_name} PRIVATE DEF_FILES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/files")
+	target_link_libraries(test_iotqt_${test_name} libshviotqt)
+	add_test(NAME test_iotqt_${test_name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_iotqt_${test_name})
+endfunction(add_shviotqt_serialportsocket_test)
+
+if(BUILD_TESTING)
+	add_shviotqt_serialportsocket_test(serialportsocket)
+endif()
+
 install(TARGETS libshviotqt)

@@ -22,14 +22,20 @@ static inline char hex_nibble(char i)
 
 namespace utils {
 
-std::string byteToHex( uint8_t i )
+
+void byteToHex(std::array<char, 2> &arr, uint8_t i)
 {
-	std::string ret;
 	char h = static_cast<char>(i / 16);
 	char l = i % 16;
-	ret += hex_nibble(h);
-	ret += hex_nibble(l);
-	return ret;
+	arr[0] = hex_nibble(h);
+	arr[1] = hex_nibble(l);
+}
+
+std::string byteToHex( uint8_t i )
+{
+	std::array<char, 2> arr;
+	byteToHex(arr, i);
+	return std::string(arr.data(), arr.size());
 }
 
 string hexDump(const char *bytes, size_t n)

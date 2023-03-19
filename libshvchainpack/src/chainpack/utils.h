@@ -17,6 +17,7 @@ namespace utils {
 
 SHVCHAINPACK_DECL_EXPORT std::string hexDump(const char *bytes, size_t n);
 SHVCHAINPACK_DECL_EXPORT std::string byteToHex( uint8_t i );
+SHVCHAINPACK_DECL_EXPORT void byteToHex( std::array<char, 2> &arr, uint8_t i );
 
 template <typename I>
 std::string intToHex(I n)
@@ -26,11 +27,12 @@ std::string intToHex(I n)
 	constexpr auto N = sizeof(I) * 2;
 	std::string ret(N, '0');
 	size_t ix = N;
+	std::array<char, 2> arr;
 	while(n > 0) {
 		auto b = static_cast<uint8_t>(n);
-		auto xx = byteToHex(b);
-		ret[--ix] = xx[1];
-		ret[--ix] = xx[0];
+		byteToHex(arr, b);
+		ret[--ix] = arr[1];
+		ret[--ix] = arr[0];
 		n >>= 8;
 	}
 	return ret;

@@ -79,7 +79,7 @@ void SerialPortSocket::connectToHost(const QUrl &url)
 	if(m_port->open(QIODevice::ReadWrite)) {
 		shvInfo() << "Ok";
 		// clear read buffer
-		m_port->readAll();
+		//m_port->readAll();
 		setState(QAbstractSocket::ConnectedState);
 	}
 	else {
@@ -267,6 +267,7 @@ qint64 SerialPortSocket::writeBytesEscaped(const char *data, qint64 max_size)
 		else {
 			set_byte(b);
 		}
+		m_writeMessageCrc.add(arr[0]);
 		auto n = m_port->write(arr, 1);
 		if(n < 0) {
 			return -1;
