@@ -13,13 +13,14 @@ public:
 	bool open(OpenMode mode) override;
 	void close() override;
 
-	QByteArray writeData() const { return m_writeData; }
+	QByteArray writtenData() const { return m_writtenData; }
+	void setDataToRead(const QByteArray &d);
 protected:
 	qint64 writeData(const char *data, qint64 len) override;
-	//enum class ForAppend {No, Yes};
-	//void openWriteFile(QFile &file, ForAppend for_append);
+	qint64 readData(char *data, qint64 maxlen) override;
 private:
 	QFile m_writeFile;
-	QByteArray m_writeData;
+	QByteArray m_writtenData;
+	QByteArray m_dataToRead;
 };
 

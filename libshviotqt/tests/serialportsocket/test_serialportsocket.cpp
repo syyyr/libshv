@@ -18,6 +18,9 @@ using namespace std;
 DOCTEST_TEST_CASE("Send")
 {
 	MockRpcConnection conn;
+	QObject::connect(&conn, &MockRpcConnection::rpcMessageReceived, [](const shv::chainpack::RpcMessage &msg) {
+		nInfo() << "data read:" << msg.toCpon();
+	});
 	auto *serial = new MockSerialPort("TestSend", &conn);
 	//serial->open(QIODevice::ReadWrite);
 	//nInfo() << "serial is open:" << serial->isOpen();
@@ -31,5 +34,7 @@ DOCTEST_TEST_CASE("Send")
 	rq.setMethod("baz");
 	rq.setParams(RpcValue::List{1, 2,3});
 	conn.sendMessage(rq);
-	nInfo() << "data writen:" << serial->writeData().toHex().toStdString();
+	nInfo() << "data writen:" << serial->writtenData().toHex().toStdString();
+	auto data = serial->writtenData();
+	serial->setDataToRead(data);
 }

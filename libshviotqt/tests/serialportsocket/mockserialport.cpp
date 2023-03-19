@@ -31,13 +31,30 @@ bool MockSerialPort::open(OpenMode mode)
 void MockSerialPort::close()
 {
 	m_writeFile.close();
-	m_writeData.clear();
+	m_writtenData.clear();
 	QIODevice::close();
+}
+
+void MockSerialPort::setDataToRead(const QByteArray &d)
+{
+	m_dataToRead.append(d);
+	if(!d.isEmpty())
+		emit readyRead();
 }
 
 qint64 MockSerialPort::writeData(const char *data, qint64 len)
 {
-	m_writeData.append(data, len);
+	m_writtenData.append(data, len);
 	return m_writeFile.write(data, len);
+}
+
+qint64 MockSerialPort::readData(char *data, qint64 maxlen)
+{
+	auto len = std::min(m_dataToRead.size(), maxlen);
+	for(qint64 i = 0; i < len; ++i) {
+		data[i] = m_dataToRead[i];
+	}
+	m_dataToRead = m_dataToRead.mid(len);
+	return len;
 }
 

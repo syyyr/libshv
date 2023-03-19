@@ -1,5 +1,7 @@
 #include "serialportsocket.h"
 
+#include <shv/chainpack/utils.h>
+
 #include <QHostAddress>
 #include <QSerialPort>
 #include <QUrl>
@@ -168,12 +170,12 @@ void SerialPortSocket::onSerialDataReadyRead()
 		case ReadMessageState::WaitingForEtx: {
 			while (ix < escaped_data.size()) {
 				auto b = try_get_byte();
-				if(b == ETX) {
-					setReadMessageState(ReadMessageState::WaitingForCrc);
-					break;
-				}
-				else if(b.has_value()) {
+				if(b.has_value()) {
 					m_readMessageData.append(b.value());
+					if(b == ETX) {
+						setReadMessageState(ReadMessageState::WaitingForCrc);
+						break;
+					}
 				}
 			}
 			break;
@@ -183,14 +185,17 @@ void SerialPortSocket::onSerialDataReadyRead()
 				auto b = try_get_byte();
 				if(b.has_value()) {
 					m_readMessageCrc.append(b.value());
-					if(m_readMessageCrc.size() == sizeof(uint32_t)) {
+					if(m_readMessageCrc.size() == sizeof(shv::chainpack::crc32_t )) {
 						shv::chainpack::crc32_t msg_crc = 0;
 						for(uint8_t bb : m_readMessageCrc) {
 							msg_crc <<= 8;
 							msg_crc += bb;
 						}
 						shv::chainpack::Crc32Posix crc32;
+						//shvWarning() << "read msg:" << m_readMessageData.toHex().toStdString();
+						//shvWarning() << "crc data:" << m_readMessageCrc.toHex().toStdString();
 						crc32.add(m_readMessageData.constData(), m_readMessageData.size());
+						//shvWarning() << "crc:" << shv::chainpack::utils::intToHex(crc32.remainder());
 						if(crc32.remainder() == msg_crc) {
 							setReadMessageState(ReadMessageState::WaitingForStx);
 							emit readyRead();
@@ -267,6 +272,7 @@ qint64 SerialPortSocket::writeBytesEscaped(const char *data, qint64 max_size)
 		else {
 			set_byte(b);
 		}
+		//shvError() << "write byte:" << shv::chainpack::utils::byteToHex(arr[0]);
 		m_writeMessageCrc.add(arr[0]);
 		auto n = m_port->write(arr, 1);
 		if(n < 0) {
@@ -299,6 +305,7 @@ qint64 SerialPortSocket::write(const char *data, qint64 max_size)
 void SerialPortSocket::writeMessageBegin()
 {
 	m_writeMessageCrc = {};
+	m_writeMessageCrc.add(STX);
 	const char stx[] = {static_cast<char>(STX)};
 	m_port->write(stx, 1);
 }
@@ -307,6 +314,7 @@ void SerialPortSocket::writeMessageEnd()
 {
 	const char etx[] = {static_cast<char>(ETX)};
 	m_port->write(etx, 1);
+	m_writeMessageCrc.add(ETX);
 	auto crc = m_writeMessageCrc.remainder();
 	static constexpr size_t N = sizeof(shv::chainpack::crc32_t);
 	QByteArray crc_ba(N, 0);
