@@ -65,6 +65,7 @@ void SocketRpcConnection::setSocket(Socket *socket)
 	});
 	bool is_test_run = QCoreApplication::instance() == nullptr;
 	connect(socket, &Socket::readyRead, this, &SocketRpcConnection::onReadyRead, is_test_run? Qt::AutoConnection: Qt::QueuedConnection);
+	connect(socket, &Socket::readyRead, this, &SocketRpcConnection::socketDataReadyRead, is_test_run? Qt::AutoConnection: Qt::QueuedConnection);
 	// queued connection here is to write data in next event loop, not directly when previous chunk is written
 	// possibly not needed, its my feeling to do it this way
 	connect(socket, &Socket::bytesWritten, this, &SocketRpcConnection::onBytesWritten, is_test_run? Qt::AutoConnection: Qt::QueuedConnection);

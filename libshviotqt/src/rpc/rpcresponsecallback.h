@@ -34,7 +34,7 @@ public:
 	SHV_FIELD_IMPL2(int, t, T, imeout, 1*60*1000)
 
 public:
-	explicit RpcResponseCallBack(int rq_id, QObject *parent = nullptr);
+	//explicit RpcResponseCallBack(int rq_id, QObject *parent = nullptr);
 	explicit RpcResponseCallBack(shv::iotqt::rpc::ClientConnection *conn, int rq_id, QObject *parent = nullptr);
 
 	Q_SIGNAL void finished(const shv::chainpack::RpcResponse &response);
@@ -47,6 +47,8 @@ public:
 	void start(int time_out_msec, QObject *context, CallBackFunction cb);
 	void abort();
 	virtual void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg);
+private:
+	void onConnectionDataReadyRead();
 private:
 	CallBackFunction m_callBackFunction;
 	QTimer *m_timeoutTimer = nullptr;
