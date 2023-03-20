@@ -36,7 +36,7 @@ function(add_shv_test test_name)
 		)
 	target_link_libraries(test_${test_name} libshvchainpack-cpp)
 	add_test(NAME test_${test_name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_${test_name})
-endfunction(add_shv_test)
+endfunction()
 
 function(add_shv_test_zlib test_name)
 	add_executable(test_${test_name}
@@ -44,7 +44,7 @@ function(add_shv_test_zlib test_name)
 		)
 	target_link_libraries(test_${test_name} libshvchainpack-cpp z)
 	add_test(NAME test_${test_name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_${test_name})
-endfunction(add_shv_test)
+endfunction()
 
 if(BUILD_TESTING)
 	add_shv_test(chainpack)

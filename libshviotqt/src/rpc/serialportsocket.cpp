@@ -7,6 +7,8 @@
 #include <QUrl>
 #include <QTimer>
 
+#include <optional>
+
 namespace shv::iotqt::rpc {
 
 //======================================================
@@ -130,7 +132,11 @@ quint16 SerialPortSocket::peerPort() const
 void SerialPortSocket::onSerialDataReadyRead()
 {
 	auto escaped_data = m_port->readAll();
+#if QT_VERSION_MAJOR < 6
+	int ix = 0;
+#else
 	qsizetype ix = 0;
+#endif
 	auto try_get_byte = [&escaped_data, &ix, this]() -> std::optional<uint8_t> {
 		std::optional<uint8_t> ret;
 		auto b = static_cast<uint8_t>(escaped_data[ix++]);
@@ -319,7 +325,11 @@ void SerialPortSocket::writeMessageEnd()
 	static constexpr size_t N = sizeof(shv::chainpack::crc32_t);
 	QByteArray crc_ba(N, 0);
 	for(size_t i = 0; i < N; i++) {
+#if QT_VERSION_MAJOR < 6
+		crc_ba[static_cast<uint>(N - i - 1)] = static_cast<char>(crc % 256);
+#else
 		crc_ba[N - i - 1] = static_cast<char>(crc % 256);
+#endif
 		crc /= 256;
 	}
 	writeBytesEscaped(crc_ba.constData(), crc_ba.size());
