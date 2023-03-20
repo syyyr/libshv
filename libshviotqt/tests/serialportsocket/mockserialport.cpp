@@ -35,9 +35,9 @@ void MockSerialPort::close()
 	QIODevice::close();
 }
 
-void MockSerialPort::setDataToRead(const QByteArray &d)
+void MockSerialPort::setDataToReceive(const QByteArray &d)
 {
-	m_dataToRead.append(d);
+	m_dataToReceive.append(d);
 	if(!d.isEmpty())
 		emit readyRead();
 }
@@ -55,7 +55,7 @@ qint64 MockSerialPort::readData(char *data, qint64 maxlen)
 	for(int i = 0; i < len; ++i) {
 		data[i] = m_dataToRead[i];
 	}
-	m_dataToRead = m_dataToRead.mid(len);
+	m_dataToReceive = m_dataToReceive.mid(len);
 	return len;
 }
 

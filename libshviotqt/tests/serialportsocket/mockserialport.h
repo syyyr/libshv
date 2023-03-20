@@ -14,13 +14,13 @@ public:
 	void close() override;
 
 	QByteArray writtenData() const { return m_writtenData; }
-	void setDataToRead(const QByteArray &d);
+	void setDataToReceive(const QByteArray &d);
 protected:
 	qint64 writeData(const char *data, qint64 len) override;
 	qint64 readData(char *data, qint64 maxlen) override;
 private:
 	QFile m_writeFile;
 	QByteArray m_writtenData;
-	QByteArray m_dataToRead;
+	QByteArray m_dataToReceive;
 };
 

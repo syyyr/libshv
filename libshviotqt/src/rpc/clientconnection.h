@@ -86,7 +86,7 @@ protected:
 	void emitInitPhaseError(const std::string &err);
 
 	void onSocketConnectedChanged(bool is_connected);
-	void onRpcValueReceived(const shv::chainpack::RpcValue &rpc_val) override;
+	//void onRpcValueReceived(const shv::chainpack::RpcValue &rpc_val) override;
 
 	bool isLoginPhase() const {return state() == State::SocketConnected;}
 	void processLoginPhase(const chainpack::RpcMessage &msg);

@@ -506,12 +506,15 @@ void RpcDriver::onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::Met
 	}
 }
 
-void RpcDriver::onRpcValueReceived(const RpcValue &msg)
+void RpcDriver::onRpcValueReceived(const RpcValue &rpc_val)
 {
-	logRpcData() << "\t message received:" << msg.toCpon();
+	logRpcData() << "\t message received:" << rpc_val.toCpon();
 	//logLongFiles() << "\t emitting message received:" << msg.dumpText();
-	if(m_messageReceivedCallback)
-		m_messageReceivedCallback(msg);
+	//if(m_messageReceivedCallback)
+	//	m_messageReceivedCallback(msg);
+	RpcMessage msg(rpc_val);
+	onRpcMessageReceived(msg);
+
 }
 
 static int lock_cnt = 0;

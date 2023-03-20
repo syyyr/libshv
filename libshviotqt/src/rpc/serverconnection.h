@@ -54,7 +54,7 @@ public:
 	void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg) override;
 protected:
 	void onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, std::string &&msg_data) override;
-	void onRpcValueReceived(const shv::chainpack::RpcValue &msg) override;
+	//void onRpcValueReceived(const shv::chainpack::RpcValue &msg) override;
 
 	bool isLoginPhase() const {return !m_loginOk;}
 	void processLoginPhase(const chainpack::RpcMessage &msg);

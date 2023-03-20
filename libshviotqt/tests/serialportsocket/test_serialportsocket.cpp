@@ -8,12 +8,20 @@
 
 #include <necrolog.h>
 
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
 
 using namespace shv::iotqt::rpc;
 using namespace shv::chainpack;
 using namespace std;
+
+int main(int argc, char** argv)
+{
+	NecroLog::setTopicsLogThresholds("RpcData");
+	//NecroLog::setTopicsLogThresholds("ItineraryDriver:I,DepotRouter:M");
+	Exception::setAbortOnException(true);
+	return doctest::Context(argc, argv).run();
+}
 
 DOCTEST_TEST_CASE("Send")
 {
@@ -36,5 +44,5 @@ DOCTEST_TEST_CASE("Send")
 	conn.sendMessage(rq);
 	nInfo() << "data writen:" << serial->writtenData().toHex().toStdString();
 	auto data = serial->writtenData();
-	serial->setDataToRead(data);
+	serial->setDataToReceive(data);
 }

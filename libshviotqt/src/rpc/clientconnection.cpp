@@ -298,13 +298,13 @@ void ClientConnection::setState(ClientConnection::State state)
 	else if(state == State::BrokerConnected)
 		whenBrokerConnectedChanged(true);
 }
-
+/*
 void ClientConnection::onRpcValueReceived(const chainpack::RpcValue &rpc_val)
 {
 	cp::RpcMessage msg(rpc_val);
 	onRpcMessageReceived(msg);
 }
-
+*/
 void ClientConnection::sendHello()
 {
 	m_connectionState.helloRequestId = callShvMethod({}, cp::Rpc::METH_HELLO);

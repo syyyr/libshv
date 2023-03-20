@@ -30,8 +30,8 @@ public:
 	void sendRpcValue(const RpcValue &msg);
 	void sendRawData(std::string &&data);
 	virtual void sendRawData(const RpcValue::MetaData &meta_data, std::string &&data);
-	using MessageReceivedCallback = std::function< void (const RpcValue &msg)>;
-	void setMessageReceivedCallback(const MessageReceivedCallback &callback) {m_messageReceivedCallback = callback;}
+	//using MessageReceivedCallback = std::function< void (const RpcValue &msg)>;
+	//void setMessageReceivedCallback(const MessageReceivedCallback &callback) {m_messageReceivedCallback = callback;}
 
 	bool isSkipCorruptedHeaders() const { return m_skipCorruptedHeaders; }
 	void setSkipCorruptedHeaders(bool b) { m_skipCorruptedHeaders = b; }
@@ -83,8 +83,9 @@ protected:
 	virtual void enqueueDataToSend(MessageData &&chunk_to_enqueue);
 
 	virtual void onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::MetaData &&md, std::string &&data);
-	virtual void onRpcValueReceived(const RpcValue &msg);
 	virtual void onParseDataException(const shv::chainpack::ParseException &e) = 0;
+	virtual void onRpcValueReceived(const RpcValue &msg);
+	virtual void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg) = 0;
 
 	void lockSendQueueGuard();
 	void unlockSendQueueGuard();
@@ -93,7 +94,7 @@ private:
 	void writeQueue();
 	int64_t writeBytes_helper(const std::string &str, size_t from, size_t length);
 private:
-	MessageReceivedCallback m_messageReceivedCallback = nullptr;
+	//MessageReceivedCallback m_messageReceivedCallback = nullptr;
 	std::deque<MessageData> m_sendQueue;
 	bool m_topMessageDataHeaderWritten = false;
 	size_t m_topMessageDataBytesWrittenSoFar = 0;

@@ -167,6 +167,7 @@ void SerialPortSocket::onSerialDataReadyRead()
 		case ReadMessageState::WaitingForStx: {
 			for (; ix < escaped_data.size(); ++ix) {
 				if(static_cast<uint8_t>(escaped_data[ix]) == STX) {
+					ix++;
 					setReadMessageState(ReadMessageState::WaitingForEtx);
 					break;
 				}
@@ -177,10 +178,12 @@ void SerialPortSocket::onSerialDataReadyRead()
 			while (ix < escaped_data.size()) {
 				auto b = try_get_byte();
 				if(b.has_value()) {
-					m_readMessageData.append(b.value());
 					if(b == ETX) {
 						setReadMessageState(ReadMessageState::WaitingForCrc);
 						break;
+					}
+					else {
+						m_readMessageData.append(b.value());
 					}
 				}
 			}
@@ -198,9 +201,11 @@ void SerialPortSocket::onSerialDataReadyRead()
 							msg_crc += bb;
 						}
 						shv::chainpack::Crc32Posix crc32;
+						crc32.add(STX);
+						crc32.add(m_readMessageData.constData(), m_readMessageData.size());
+						crc32.add(ETX);
 						//shvWarning() << "read msg:" << m_readMessageData.toHex().toStdString();
 						//shvWarning() << "crc data:" << m_readMessageCrc.toHex().toStdString();
-						crc32.add(m_readMessageData.constData(), m_readMessageData.size());
 						//shvWarning() << "crc:" << shv::chainpack::utils::intToHex(crc32.remainder());
 						if(crc32.remainder() == msg_crc) {
 							setReadMessageState(ReadMessageState::WaitingForStx);

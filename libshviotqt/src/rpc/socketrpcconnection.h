@@ -33,7 +33,7 @@ public:
 
 	void connectToHost(const QUrl &url);
 
-	Q_SIGNAL void rpcValueReceived(shv::chainpack::RpcValue rpc_val);
+	//Q_SIGNAL void rpcValueReceived(shv::chainpack::RpcValue rpc_val);
 	Q_SLOT void sendRpcValue(const shv::chainpack::RpcValue &rpc_val) {shv::chainpack::RpcDriver::sendRpcValue(rpc_val);}
 
 	void closeSocket();
@@ -61,7 +61,7 @@ protected:
 	void onReadyRead();
 	void onBytesWritten();
 
-	void onRpcValueReceived(const shv::chainpack::RpcValue &rpc_val) override;
+	//void onRpcValueReceived(const shv::chainpack::RpcValue &rpc_val) override;
 	void onParseDataException(const shv::chainpack::ParseException &e) override;
 protected:
 	Socket *m_socket = nullptr;

@@ -76,13 +76,13 @@ void ServerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType proto
 	}
 	Super::onRpcDataReceived(protocol_type, std::move(md), std::move(msg_data));
 }
-
+/*
 void ServerConnection::onRpcValueReceived(const chainpack::RpcValue &rpc_val)
 {
 	cp::RpcMessage msg(rpc_val);
 	onRpcMessageReceived(msg);
 }
-
+*/
 void ServerConnection::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 {
 	emit rpcMessageReceived(msg);

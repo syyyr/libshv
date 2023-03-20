@@ -11,6 +11,7 @@
 #include <QEventLoop>
 #include <QTcpSocket>
 #include <QHostAddress>
+#include <QCoreApplication>
 
 //#define DUMP_DATA_FILE
 
@@ -62,10 +63,11 @@ void SocketRpcConnection::setSocket(Socket *socket)
 			//m_socket->close();
 		}
 	});
-	connect(socket, &Socket::readyRead, this, &SocketRpcConnection::onReadyRead, Qt::QueuedConnection);
+	bool is_test_run = QCoreApplication::instance() == nullptr;
+	connect(socket, &Socket::readyRead, this, &SocketRpcConnection::onReadyRead, is_test_run? Qt::AutoConnection: Qt::QueuedConnection);
 	// queued connection here is to write data in next event loop, not directly when previous chunk is written
 	// possibly not needed, its my feeling to do it this way
-	connect(socket, &Socket::bytesWritten, this, &SocketRpcConnection::onBytesWritten, Qt::QueuedConnection);
+	connect(socket, &Socket::bytesWritten, this, &SocketRpcConnection::onBytesWritten, is_test_run? Qt::AutoConnection: Qt::QueuedConnection);
 	connect(socket, &Socket::connected, this, [this]() {
 		shvDebug() << this << "Socket connected!!!";
 		//shvWarning() << (peerAddress().toStdString() + ':' + std::to_string(peerPort()));
@@ -120,12 +122,12 @@ void SocketRpcConnection::onBytesWritten()
 	logRpcData() << "onBytesWritten()";
 	enqueueDataToSend(MessageData());
 }
-
+/*
 void SocketRpcConnection::onRpcValueReceived(const shv::chainpack::RpcValue &rpc_val)
 {
 	emit rpcValueReceived(rpc_val);
 }
-
+*/
 void SocketRpcConnection::onParseDataException(const chainpack::ParseException &e)
 {
 	if(m_socket)

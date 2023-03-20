@@ -22,8 +22,6 @@ SHVCHAINPACK_DECL_EXPORT void byteToHex( std::array<char, 2> &arr, uint8_t i );
 template <typename I>
 std::string intToHex(I n)
 {
-	if(n == 0)
-		return {};
 	constexpr auto N = sizeof(I) * 2;
 	std::string ret(N, '0');
 	size_t ix = N;
