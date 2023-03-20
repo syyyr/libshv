@@ -7,6 +7,8 @@
 #include <QUrl>
 #include <QTimer>
 
+#include <optional>
+
 namespace shv::iotqt::rpc {
 
 //======================================================
