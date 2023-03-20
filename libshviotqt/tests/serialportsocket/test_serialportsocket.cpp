@@ -17,8 +17,7 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-	NecroLog::setTopicsLogThresholds("RpcData");
-	//NecroLog::setTopicsLogThresholds("ItineraryDriver:I,DepotRouter:M");
+	//NecroLog::setTopicsLogThresholds("RpcData");
 	Exception::setAbortOnException(true);
 	return doctest::Context(argc, argv).run();
 }
@@ -34,6 +33,7 @@ DOCTEST_TEST_CASE("Send")
 	//nInfo() << "serial is open:" << serial->isOpen();
 	//serial->write("abc", 2);
 	auto *socket = new SerialPortSocket(serial);
+	socket->setReceiveTimeout(0);
 	conn.setSocket(socket);
 	conn.connectToHost(QUrl());
 	RpcRequest rq;

@@ -24,6 +24,8 @@ class SHVIOTQT_DECL_EXPORT SerialPortSocket : public Socket
 public:
 	SerialPortSocket(QSerialPort *port, QObject *parent = nullptr);
 
+	void setReceiveTimeout(int millis);
+
 	void connectToHost(const QUrl &url) override;
 	void close() override;
 	void abort() override;
@@ -37,6 +39,9 @@ public:
 	void writeMessageBegin() override;
 	void writeMessageEnd() override;
 	void ignoreSslErrors() override {}
+protected:
+	void restartReceiveTimeoutTimer();
+	//void stopReceiveTimeoutTimer();
 private:
 	enum EscCodes {
 		STX = 0xA2,

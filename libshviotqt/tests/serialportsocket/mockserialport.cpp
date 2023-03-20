@@ -51,9 +51,9 @@ qint64 MockSerialPort::writeData(const char *data, qint64 len)
 qint64 MockSerialPort::readData(char *data, qint64 maxlen)
 {
 	// FIXME: get rid of the casts here when dropping Qt5 support
-	auto len = std::min(static_cast<int>(m_dataToRead.size()), static_cast<int>(maxlen));
+	auto len = std::min(static_cast<int>(m_dataToReceive.size()), static_cast<int>(maxlen));
 	for(int i = 0; i < len; ++i) {
-		data[i] = m_dataToRead[i];
+		data[i] = m_dataToReceive[i];
 	}
 	m_dataToReceive = m_dataToReceive.mid(len);
 	return len;

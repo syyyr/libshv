@@ -18,12 +18,6 @@ SerialPortSocket::SerialPortSocket(QSerialPort *port, QObject *parent)
 	: Super(parent)
 	, m_port(port)
 {
-	m_readDataTimeout = new QTimer(this);
-	m_readDataTimeout->setSingleShot(true);
-	m_readDataTimeout->setInterval(5000);
-	connect(m_readDataTimeout, &QTimer::timeout, this, [this]() {
-		setReadMessageError(ReadMessageError::ErrorTimeout);
-	});
 	m_port->setParent(this);
 
 	//connect(m_port, &QSerialPort::connected, this, &Socket::connected);
@@ -72,6 +66,30 @@ SerialPortSocket::SerialPortSocket(QSerialPort *port, QObject *parent)
 			break;
 		}
 	});
+
+	setReceiveTimeout(5000);
+}
+
+void SerialPortSocket::setReceiveTimeout(int millis)
+{
+	if(millis <= 0) {
+		if(m_readDataTimeout) {
+			delete m_readDataTimeout;
+			m_readDataTimeout = nullptr;
+		}
+	}
+	else {
+		if(!m_readDataTimeout) {
+			m_readDataTimeout = new QTimer(this);
+			m_readDataTimeout->setSingleShot(true);
+			connect(m_readDataTimeout, &QTimer::timeout, this, [this]() {
+				if(m_readMessageState != ReadMessageState::WaitingForStx) {
+					setReadMessageError(ReadMessageError::ErrorTimeout);
+				}
+			});
+		}
+		m_readDataTimeout->setInterval(millis);
+	}
 }
 
 void SerialPortSocket::connectToHost(const QUrl &url)
@@ -131,6 +149,9 @@ quint16 SerialPortSocket::peerPort() const
 
 void SerialPortSocket::onSerialDataReadyRead()
 {
+	if(m_readMessageState != ReadMessageState::WaitingForStx) {
+		restartReceiveTimeoutTimer();
+	}
 	auto escaped_data = m_port->readAll();
 #if QT_VERSION_MAJOR < 6
 	int ix = 0;
@@ -226,9 +247,9 @@ void SerialPortSocket::onSerialDataReadyRead()
 void SerialPortSocket::setReadMessageState(ReadMessageState st)
 {
 	if(st == ReadMessageState::WaitingForEtx) {
-		m_readDataTimeout->start();
 		m_readMessageData.clear();
 		m_prevByteRead = 0;
+		restartReceiveTimeoutTimer();
 	}
 	else if(st == ReadMessageState::WaitingForCrc) {
 		m_readMessageCrc.clear();
@@ -341,6 +362,19 @@ void SerialPortSocket::writeMessageEnd()
 	m_port->flush();
 }
 
+void SerialPortSocket::restartReceiveTimeoutTimer()
+{
+	// m_readDataTimeout is set to nullptr during unit tests
+	if(m_readDataTimeout)
+		m_readDataTimeout->start();
+}
+/*
+void SerialPortSocket::stopReceiveTimeoutTimer()
+{
+	if(m_readDataTimeout)
+		m_readDataTimeout->stop();
+}
+*/
 void SerialPortSocket::setState(QAbstractSocket::SocketState state)
 {
 	if(state == m_state)
