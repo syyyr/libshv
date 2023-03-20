@@ -30,11 +30,6 @@ public:
 	void sendRpcValue(const RpcValue &msg);
 	void sendRawData(std::string &&data);
 	virtual void sendRawData(const RpcValue::MetaData &meta_data, std::string &&data);
-	//using MessageReceivedCallback = std::function< void (const RpcValue &msg)>;
-	//void setMessageReceivedCallback(const MessageReceivedCallback &callback) {m_messageReceivedCallback = callback;}
-
-	bool isSkipCorruptedHeaders() const { return m_skipCorruptedHeaders; }
-	void setSkipCorruptedHeaders(bool b) { m_skipCorruptedHeaders = b; }
 
 	static int defaultRpcTimeoutMsec() {return s_defaultRpcTimeoutMsec;}
 	static void setDefaultRpcTimeoutMsec(int msec) {s_defaultRpcTimeoutMsec = msec;}

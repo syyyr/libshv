@@ -205,7 +205,6 @@ void ClientConnection::open()
 
 #ifdef QT_SERIALPORT_LIB
 		else if(scheme == Socket::Scheme::SerialPort) {
-			setSkipCorruptedHeaders(true);
 			socket = new SerialPortSocket(new QSerialPort());
 		}
 #endif

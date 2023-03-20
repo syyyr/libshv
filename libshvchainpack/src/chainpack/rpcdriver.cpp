@@ -221,7 +221,6 @@ void RpcDriver::processReadData()
 	logRpcData() << __PRETTY_FUNCTION__ << "+++++++++++++++++++++++++++++++++";
 	using namespace shv::chainpack;
 
-	static constexpr size_t MSG_LEN_MAX = 32 * 1024;
 	size_t message_len;
 	Rpc::ProtocolType protocol_type;
 	RpcValue::MetaData meta_data;
@@ -262,15 +261,9 @@ void RpcDriver::processReadData()
 
 			logRpcData() << "\t protocol_type:" << static_cast<int>(protocol_type) << Rpc::protocolTypeToString(protocol_type);
 			logRpcData() << "\t expected message data length:" << message_len << "length available:" << read_data.size();
-			if(isSkipCorruptedHeaders()) {
-				if(message_len > MSG_LEN_MAX)
-					throw ParseException(CCPCP_RC_MALFORMED_INPUT, "Message too long: " + std::to_string(message_len), -1);
-			}
-			else {
-				// wait for complete message
-				if(message_len > read_data.length())
-					return;
-			}
+			// wait for complete message
+			if(message_len > read_data.length())
+				return;
 
 			meta_data_end_pos = decodeMetaData(meta_data, protocol_type, read_data, static_cast<size_t>(in.tellg()));
 			logRpcData() << "\t meta_data_end_pos:" << meta_data_end_pos << meta_data.toPrettyString();
@@ -283,15 +276,6 @@ void RpcDriver::processReadData()
 				return;
 			}
 			logRpcDataW() << "ERROR - RpcMessage header corrupted:" << e.msg();
-			if(isSkipCorruptedHeaders()) {
-				// TODO: not very effective implementation
-				// reimplement without need to copy m_readData
-				// string_vew cannot be used, until it can be converted into istream
-				logRpcDataW() << "Trying to parse on next byte.";
-				m_readData = m_readData.substr(1);
-				continue;
-			}
-
 			onParseDataException(e);
 			return;
 		}
