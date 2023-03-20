@@ -388,6 +388,10 @@ ShvTypeDescr ShvTypeDescr::fromRpcValue(const RpcValue &v)
 		if(rv.isString())
 			ret.setDataValue(KEY_SAMPLE_TYPE, static_cast<int>(sampleTypeFromString(rv.asString())));
 	}
+
+	if (ret.isValid() && (ret.sampleType() == SampleType::Invalid))
+		ret.setSampleType(SampleType::Continuous);
+
 	return ret;
 }
 
