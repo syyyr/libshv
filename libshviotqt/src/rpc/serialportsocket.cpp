@@ -9,6 +9,10 @@
 
 #include <optional>
 
+#define logSerialPortSocketD() nCDebug("SerialPortSocket")
+#define logSerialPortSocketM() nCMessage("SerialPortSocket")
+#define logSerialPortSocketW() nCWarning("SerialPortSocket")
+
 namespace shv::iotqt::rpc {
 
 //======================================================
@@ -158,83 +162,65 @@ void SerialPortSocket::onSerialDataReadyRead()
 #else
 	qsizetype ix = 0;
 #endif
-	auto try_get_byte = [&escaped_data, &ix, this]() -> std::optional<uint8_t> {
-		std::optional<uint8_t> ret;
-		auto b = static_cast<uint8_t>(escaped_data[ix++]);
-		if(m_prevByteRead == ESC) {
-			if(b == ESTX) {
-				ret = STX;
-			}
-			else if(b == EETX) {
-				ret = ETX;
-			}
-			else if(b == ESC) {
-				ret = ESC;
-			}
-			else {
-				setReadMessageError(ReadMessageError::ErrorEscape);
-			}
-		}
-		else if(b == ESC) {
-		}
-		else {
-			ret = b;
-		}
-		m_prevByteRead = b;
-		return ret;
-	};
+	logSerialPortSocketD().nospace() << "Data received:\n" << shv::chainpack::utils::hexDump(escaped_data.constData(), escaped_data.size());
 	while(ix < escaped_data.size()) {
 		switch(m_readMessageState) {
 		case ReadMessageState::WaitingForStx: {
-			for (; ix < escaped_data.size(); ++ix) {
-				if(static_cast<uint8_t>(escaped_data[ix]) == STX) {
-					ix++;
+			while (ix < escaped_data.size()) {
+				auto b = static_cast<uint8_t>(escaped_data[ix++]);
+				if(b == STX) {
+					logSerialPortSocketD() << "STX received";
+					m_readMessageCrc = {};
+					m_readMessageCrc.add(STX);
 					setReadMessageState(ReadMessageState::WaitingForEtx);
 					break;
+				}
+				else {
+					logSerialPortSocketM() << "Ignoring rubbish:" << shv::chainpack::utils::byteToHex(b) << b << static_cast<int>(b);
 				}
 			}
 			break;
 		}
 		case ReadMessageState::WaitingForEtx: {
 			while (ix < escaped_data.size()) {
-				auto b = try_get_byte();
-				if(b.has_value()) {
-					if(b == ETX) {
-						setReadMessageState(ReadMessageState::WaitingForCrc);
-						break;
-					}
-					else {
-						m_readMessageData.append(b.value());
-					}
+				auto b = static_cast<uint8_t>(escaped_data[ix++]);
+				m_readMessageCrc.add(b);
+				if(!m_readMessageBuffer.inEscape && b == ETX) {
+					logSerialPortSocketD() << "ETX received";
+					logSerialPortSocketD() << "Message data received:" << m_readMessageBuffer.data.toHex().toStdString();
+					setReadMessageState(ReadMessageState::WaitingForCrc);
+					break;
 				}
+				if(auto err = m_readMessageBuffer.append(b); err != ReadMessageError::Ok) {
+					setReadMessageError(err);
+				}
+				//logSerialPortSocketM() << "append data:" << shv::chainpack::utils::byteToHex(b) << b << static_cast<int>(b);
 			}
 			break;
 		}
 		case ReadMessageState::WaitingForCrc: {
 			while (ix < escaped_data.size()) {
-				auto b = try_get_byte();
-				if(b.has_value()) {
-					m_readMessageCrc.append(b.value());
-					if(m_readMessageCrc.size() == sizeof(shv::chainpack::crc32_t )) {
-						shv::chainpack::crc32_t msg_crc = 0;
-						for(uint8_t bb : m_readMessageCrc) {
-							msg_crc <<= 8;
-							msg_crc += bb;
-						}
-						shv::chainpack::Crc32Posix crc32;
-						crc32.add(STX);
-						crc32.add(m_readMessageData.constData(), m_readMessageData.size());
-						crc32.add(ETX);
-						//shvWarning() << "read msg:" << m_readMessageData.toHex().toStdString();
-						//shvWarning() << "crc data:" << m_readMessageCrc.toHex().toStdString();
-						//shvWarning() << "crc:" << shv::chainpack::utils::intToHex(crc32.remainder());
-						if(crc32.remainder() == msg_crc) {
-							setReadMessageState(ReadMessageState::WaitingForStx);
-							emit readyRead();
-						}
-						else {
-							setReadMessageError(ReadMessageError::ErrorCrc);
-						}
+				auto b = static_cast<uint8_t>(escaped_data[ix++]);
+				if(auto err = m_readMessageCrcBuffer.append(b); err != ReadMessageError::Ok) {
+					setReadMessageError(err);
+				}
+				if(!m_readMessageCrcBuffer.inEscape && m_readMessageCrcBuffer.data.size() == sizeof(shv::chainpack::crc32_t)) {
+					shv::chainpack::crc32_t msg_crc = 0;
+					for(uint8_t bb : m_readMessageCrcBuffer.data) {
+						msg_crc <<= 8;
+						msg_crc += bb;
+					}
+					//logSerialPortSocketD() << "read msg:" << m_readMessageData.toHex().toStdString();
+					logSerialPortSocketD() << "crc data:" << m_readMessageCrcBuffer.data.toHex().toStdString();
+					logSerialPortSocketD() << "crc received:" << shv::chainpack::utils::intToHex(msg_crc);
+					logSerialPortSocketD() << "crc computed:" << shv::chainpack::utils::intToHex(m_readMessageCrc.remainder());
+					if(m_readMessageCrc.remainder() == msg_crc) {
+						setReadMessageState(ReadMessageState::WaitingForStx);
+						m_receivedMessages.enqueue(m_readMessageBuffer.data);
+						emit readyRead();
+					}
+					else {
+						setReadMessageError(ReadMessageError::ErrorCrc);
 					}
 				}
 			}
@@ -247,13 +233,11 @@ void SerialPortSocket::onSerialDataReadyRead()
 void SerialPortSocket::setReadMessageState(ReadMessageState st)
 {
 	if(st == ReadMessageState::WaitingForEtx) {
-		m_readMessageData.clear();
-		m_prevByteRead = 0;
+		m_readMessageBuffer.clear();
 		restartReceiveTimeoutTimer();
 	}
 	else if(st == ReadMessageState::WaitingForCrc) {
-		m_readMessageCrc.clear();
-		m_prevByteRead = 0;
+		m_readMessageCrcBuffer.clear();
 	}
 	m_readMessageState = st;
 }
@@ -272,61 +256,66 @@ qint64 SerialPortSocket::writeBytesEscaped(const char *data, qint64 max_size)
 		arr[0] = static_cast<char>(b);
 	};
 	qint64 written_cnt = 0;
-	for(qint64 i = 0; i < max_size; ++i) {
-		auto b = static_cast<uint8_t>(data[i]);
-		if(b == STX) {
-			if(m_prevByteWrite == ESC) {
+	for(written_cnt = 0; written_cnt < max_size; ++written_cnt) {
+		auto b = static_cast<uint8_t>(data[written_cnt]);
+		if(m_escWritten) {
+			//finish escape sequence
+			if(b == STX) {
 				set_byte(ESTX);
 			}
-			else {
-				set_byte(ESC);
-				--i;
-			}
-		}
-		else if(b == ETX) {
-			if(m_prevByteWrite == ESC) {
+			else if(b == ETX) {
 				set_byte(EETX);
 			}
-			else {
-				set_byte(ESC);
-				--i;
-			}
-		}
-		else if(b == ESC) {
-			if(m_prevByteWrite == ESC) {
+			else if(b == ESC) {
 				set_byte(ESC);
 			}
 			else {
-				set_byte(ESC);
-				--i;
+				logSerialPortSocketW() << "ESC followed by:" << shv::chainpack::utils::byteToHex(b) << "internal escaping error, data sent will be probably corrupted.";
+				set_byte(b);
 			}
 		}
 		else {
-			set_byte(b);
+			if(b == STX) {
+				set_byte(ESC);
+				--written_cnt;
+			}
+			else if(b == ETX) {
+				set_byte(ESC);
+				--written_cnt;
+			}
+			else if(b == ESC) {
+				set_byte(ESC);
+				--written_cnt;
+			}
+			else {
+				set_byte(b);
+			}
 		}
 		//shvError() << "write byte:" << shv::chainpack::utils::byteToHex(arr[0]);
 		m_writeMessageCrc.add(arr[0]);
+		//logSerialPortSocketM() << "write serial:" << shv::chainpack::utils::byteToHex(static_cast<uint8_t>(arr[0])) << b << static_cast<int>(b);
 		auto n = m_port->write(arr, 1);
 		if(n < 0) {
 			return -1;
 		}
 		if(n == 0) {
-			return written_cnt;
+			break;
 		}
-		written_cnt += n;
-		m_prevByteWrite = arr[0];
+		if(!m_escWritten && static_cast<uint8_t>(arr[0]) == ESC) {
+			m_escWritten = true;
+		}
+		else {
+			m_escWritten = false;
+		}
 	}
 	return written_cnt;
 }
 
 QByteArray SerialPortSocket::readAll()
 {
-	if(m_readMessageState == ReadMessageState::WaitingForStx) {
-		auto ret = m_readMessageData;
-		m_readMessageData = {};
-		return ret;
-	}
-	return {};
+	if(m_receivedMessages.isEmpty())
+		return {};
+	return m_receivedMessages.dequeue();
 }
 
 qint64 SerialPortSocket::write(const char *data, qint64 max_size)
@@ -336,6 +325,7 @@ qint64 SerialPortSocket::write(const char *data, qint64 max_size)
 
 void SerialPortSocket::writeMessageBegin()
 {
+	logSerialPortSocketD() << "STX sent";
 	m_writeMessageCrc = {};
 	m_writeMessageCrc.add(STX);
 	const char stx[] = {static_cast<char>(STX)};
@@ -344,6 +334,7 @@ void SerialPortSocket::writeMessageBegin()
 
 void SerialPortSocket::writeMessageEnd()
 {
+	logSerialPortSocketD() << "ETX sent";
 	const char etx[] = {static_cast<char>(ETX)};
 	m_port->write(etx, 1);
 	m_writeMessageCrc.add(ETX);
@@ -390,6 +381,32 @@ void SerialPortSocket::setState(QAbstractSocket::SocketState state)
 void SerialPortSocket::onParseDataException(const chainpack::ParseException &)
 {
 	// nothing to do
+}
+
+SerialPortSocket::ReadMessageError SerialPortSocket::UnescapeBuffer::append(uint8_t b)
+{
+	if(inEscape) {
+		if(b == ESTX) {
+			data.append(static_cast<char>(STX));
+		}
+		else if(b == EETX) {
+			data.append(static_cast<char>(ETX));
+		}
+		else if(b == ESC) {
+			data.append(static_cast<char>(ESC));
+		}
+		else {
+			return ReadMessageError::ErrorEscape;
+		}
+		inEscape = false;
+		return ReadMessageError::Ok;
+	}
+	if(b == ESC) {
+		inEscape = true;
+		return ReadMessageError::Ok;
+	}
+	data.append(static_cast<char>(b));
+	return ReadMessageError::Ok;
 }
 
 }

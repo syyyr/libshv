@@ -6,10 +6,7 @@
 #include <shv/chainpack/crc32.h>
 #include <shv/coreqt/log.h>
 
-#include <QObject>
-#include <QAbstractSocket>
-#include <QSslSocket>
-#include <QSslError>
+#include <QQueue>
 
 class QSerialPort;
 class QTimer;
@@ -43,6 +40,7 @@ protected:
 	void restartReceiveTimeoutTimer();
 	//void stopReceiveTimeoutTimer();
 private:
+	enum class ReadMessageError {Ok = 0, ErrorEscape, ErrorCrc, ErrorTimeout};
 	enum EscCodes {
 		STX = 0xA2,
 		ETX = 0xA3,
@@ -50,8 +48,21 @@ private:
 		EETX = 0xA5,
 		ESC = 0xAA,
 	};
+	class UnescapeBuffer
+	{
+	public:
+		//UnescapeBuffer() = default;
+		ReadMessageError append(uint8_t b);
+		void clear() {
+			data.clear();
+			inEscape = false;
+		}
+
+		QByteArray data;
+		bool inEscape = false;
+	};
+
 	enum class ReadMessageState {WaitingForStx, WaitingForEtx, WaitingForCrc};
-	enum class ReadMessageError {Ok = 0, ErrorEscape, ErrorCrc, ErrorTimeout};
 
 	void setState(QAbstractSocket::SocketState state);
 	void onSerialDataReadyRead();
@@ -65,11 +76,13 @@ private:
 	ReadMessageState m_readMessageState = ReadMessageState::WaitingForStx;
 	ReadMessageError m_readMessageError = ReadMessageError::Ok;
 	QTimer *m_readDataTimeout = nullptr;
-	uint8_t m_prevByteRead = 0;
-	QByteArray m_readMessageData;
-	QByteArray m_readMessageCrc;
 
-	uint8_t m_prevByteWrite = 0;
+	shv::chainpack::Crc32Posix m_readMessageCrc;
+	UnescapeBuffer m_readMessageBuffer;
+	UnescapeBuffer m_readMessageCrcBuffer;
+	QQueue<QByteArray> m_receivedMessages;
+
+	bool m_escWritten = false;
 	shv::chainpack::Crc32Posix m_writeMessageCrc;
 };
 }

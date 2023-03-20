@@ -130,8 +130,7 @@ void RpcDriver::writeQueue()
 	}
 	//static int hi_cnt = 0;
 	const MessageData &chunk = m_sendQueue[0];
-	//nInfo() << "M:" << chunk.metaData;
-	//nInfo() << "D:" << chunk.data;
+	logWriteQueue() << "chunk size:" << chunk.size() << "meta:" << chunk.metaData.size() << "data:" << chunk.data.size();
 	if(!m_topMessageDataHeaderWritten) {
 		writeMessageBegin();
 		std::string protocol_type_data;

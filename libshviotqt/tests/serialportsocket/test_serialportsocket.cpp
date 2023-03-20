@@ -17,16 +17,18 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-	//NecroLog::setTopicsLogThresholds("RpcData");
+	//NecroLog::setTopicsLogThresholds("SerialPortSocket,WriteQueue");
 	Exception::setAbortOnException(true);
 	return doctest::Context(argc, argv).run();
 }
 
 DOCTEST_TEST_CASE("Send")
 {
+	RpcMessage rec_msg;
 	MockRpcConnection conn;
-	QObject::connect(&conn, &MockRpcConnection::rpcMessageReceived, [](const shv::chainpack::RpcMessage &msg) {
+	QObject::connect(&conn, &MockRpcConnection::rpcMessageReceived, [&rec_msg](const shv::chainpack::RpcMessage &msg) {
 		nInfo() << "data read:" << msg.toCpon();
+		rec_msg = msg;
 	});
 	auto *serial = new MockSerialPort("TestSend", &conn);
 	//serial->open(QIODevice::ReadWrite);
@@ -40,9 +42,18 @@ DOCTEST_TEST_CASE("Send")
 	rq.setRequestId(1);
 	rq.setShvPath("foo/bar");
 	rq.setMethod("baz");
-	rq.setParams(RpcValue::List{1, 2,3});
+	rq.setParams(RpcValue::List{0xa2, 0xa3, 0xa4, 0xa5, 0xaa, "\xa2\xa3\xa4\xa5\xaa"});
+	//rq.setParams("\xa2\xa3\xa4\xa5\xaa");
+	//rq.setParams("\xaa");
+	nInfo() << "message chainpack:" << QByteArray::fromStdString(rq.value().toChainPack()).toHex().toStdString();
 	conn.sendMessage(rq);
 	nInfo() << "data writen:" << serial->writtenData().toHex().toStdString();
 	auto data = serial->writtenData();
 	serial->setDataToReceive(data);
+	REQUIRE(rec_msg.value() == rq.value());
+
+	// add some rubbish
+	data = QByteArray("rubbish!@#$%^&*") + data;
+	serial->setDataToReceive(data);
+	REQUIRE(rec_msg.value() == rq.value());
 }

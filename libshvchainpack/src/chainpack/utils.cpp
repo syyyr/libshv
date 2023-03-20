@@ -15,7 +15,7 @@ static inline char hex_nibble(char i)
 {
 	if(i < 10)
 		return '0' + i;
-	return 'A' + (i - 10);
+	return 'a' + (i - 10);
 }
 
 }
