@@ -13,10 +13,11 @@ ShvAlarm::ShvAlarm()
 	, m_severity(Severity::Invalid)
 {}
 
-ShvAlarm::ShvAlarm(const std::string &path,  bool is_active, Severity severity, int level, const std::string &description)
+ShvAlarm::ShvAlarm(const std::string &path,  bool is_active, Severity severity, int level, const std::string &description, const std::string &label)
 	: m_path(path)
 	, m_isActive(is_active)
 	, m_description(description)
+	, m_label(label)
 	, m_level(level)
 	, m_severity(severity)
 {}
@@ -62,6 +63,8 @@ shv::chainpack::RpcValue ShvAlarm::toRpcValue(bool all_fields_if_not_active) con
 			ret["alarmLevel"] = level();
 		if(!description().empty())
 			ret["description"] = description();
+		if(!label().empty())
+			ret["label"] = label();
 	}
 	return ret;
 }
@@ -75,6 +78,7 @@ ShvAlarm ShvAlarm::fromRpcValue(const chainpack::RpcValue &rv)
 		static_cast<Severity>(m.value("severity").toInt()),
 		m.value("alarmLevel").toInt(),
 		m.value("description").asString(),
+		m.value("label").asString()
 	};
 	return a;
 }
@@ -92,7 +96,8 @@ vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const std::
 					value.toBool(), // is active
 					ShvAlarm::severityFromString(alarm),
 					path_info.propertyDescription.alarmLevel(),
-					path_info.propertyDescription.alarmDescription()
+					path_info.propertyDescription.description(),
+					path_info.propertyDescription.label()
 				)};
 		}
 
@@ -114,7 +119,8 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const 
 						is_alarm,
 						ShvAlarm::severityFromString(alarm),
 						fld_descr.alarmLevel(),
-						fld_descr.alarmDescription()
+						fld_descr.description(),
+						fld_descr.label()
 					);
 				}
 				else {
@@ -143,7 +149,8 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const 
 							true,
 							ShvAlarm::severityFromString(fld_descr.alarm()),
 							fld_descr.alarmLevel(),
-							fld_descr.alarmDescription()
+							fld_descr.description(),
+							fld_descr.label()
 						)};
 				}
 				else {

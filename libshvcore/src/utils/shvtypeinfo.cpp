@@ -481,11 +481,6 @@ int ShvPropertyDescr::alarmLevel() const
 	return dataValue(KEY_ALARM_LEVEL).toInt();
 }
 
-string ShvPropertyDescr::alarmDescription() const
-{
-	return description();
-}
-
 std::vector<ShvLogMethodDescr> ShvPropertyDescr::methods() const
 {
 	std::vector<ShvLogMethodDescr> ret;
