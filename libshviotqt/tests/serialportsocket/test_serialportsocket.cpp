@@ -18,6 +18,7 @@ using namespace std;
 int main(int argc, char** argv)
 {
 	//NecroLog::setTopicsLogThresholds("SerialPortSocket,WriteQueue");
+	//NecroLog::setTopicsLogThresholds("SerialPortSocket");
 	Exception::setAbortOnException(true);
 	return doctest::Context(argc, argv).run();
 }
@@ -42,18 +43,27 @@ DOCTEST_TEST_CASE("Send")
 	rq.setRequestId(1);
 	rq.setShvPath("foo/bar");
 	rq.setMethod("baz");
-	rq.setParams(RpcValue::List{0xa2, 0xa3, 0xa4, 0xa5, 0xaa, "\xa2\xa3\xa4\xa5\xaa"});
-	//rq.setParams("\xa2\xa3\xa4\xa5\xaa");
-	//rq.setParams("\xaa");
-	nInfo() << "message chainpack:" << QByteArray::fromStdString(rq.value().toChainPack()).toHex().toStdString();
-	conn.sendMessage(rq);
-	nInfo() << "data writen:" << serial->writtenData().toHex().toStdString();
-	auto data = serial->writtenData();
-	serial->setDataToReceive(data);
-	REQUIRE(rec_msg.value() == rq.value());
+	RpcValue::List params = {
+		"hello",
+		"\xaa",
+		"\xa2\xa3\xa4\xa5\xaa",
+		"aa\xaa""aa",
+		RpcValue::List{0xa2, 0xa3, 0xa4, 0xa5, 0xaa, "\xa2\xa3\xa4\xa5\xaa"},
+	};
+	for(const auto &p : params) {
+		rq.setParams(p);
+		nInfo() << "==== message:" << rq.toCpon();
+		nInfo() << "message chainpack:" << QByteArray::fromStdString(rq.value().toChainPack()).toHex().toStdString();
+		serial->clearWrittenData();
+		conn.sendMessage(rq);
+		//nInfo() << "data writen:" << serial->writtenData().toHex().toStdString();
+		auto data = serial->writtenData();
+		serial->setDataToReceive(data);
+		REQUIRE(rec_msg.value() == rq.value());
 
-	// add some rubbish
-	data = QByteArray("rubbish!@#$%^&*") + data;
-	serial->setDataToReceive(data);
-	REQUIRE(rec_msg.value() == rq.value());
+		// add some rubbish
+		data = QByteArray("rubbish!@#$%^&*") + data + QByteArray("*/-++-*/rubbish");
+		serial->setDataToReceive(data);
+		REQUIRE(rec_msg.value() == rq.value());
+	}
 }

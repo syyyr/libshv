@@ -13,6 +13,7 @@ public:
 	bool open(OpenMode mode) override;
 	void close() override;
 
+	void clearWrittenData();
 	QByteArray writtenData() const { return m_writtenData; }
 	void setDataToReceive(const QByteArray &d);
 protected:

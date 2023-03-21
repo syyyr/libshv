@@ -35,6 +35,11 @@ void MockSerialPort::close()
 	QIODevice::close();
 }
 
+void MockSerialPort::clearWrittenData()
+{
+	m_writtenData.clear();
+}
+
 void MockSerialPort::setDataToReceive(const QByteArray &d)
 {
 	m_dataToReceive.append(d);
