@@ -56,7 +56,7 @@ void SocketRpcConnection::setSocket(Socket *socket)
 	m_socket = socket;
 	connect(socket, &Socket::sslErrors, this, &SocketRpcConnection::sslErrors);
 	connect(socket, &Socket::error, this, [this](QAbstractSocket::SocketError socket_error) {
-		shvWarning() << "Socket error:" << socket_error << m_socket->errorString();
+		shvWarning() << "Socket error:" << m_socket->errorString();
 		emit socketError(m_socket->errorString());
 		// we are not closing sockets at socket error, do not know why
 		if(socket_error == QAbstractSocket::HostNotFoundError) {
