@@ -53,7 +53,6 @@ private:
 	class UnescapeBuffer
 	{
 	public:
-		//UnescapeBuffer() = default;
 		ReadMessageError append(uint8_t b);
 		void clear() {
 			data.clear();

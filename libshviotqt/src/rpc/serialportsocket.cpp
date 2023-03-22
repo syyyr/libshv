@@ -176,7 +176,6 @@ void SerialPortSocket::onSerialDataReadyRead()
 				if(b == STX) {
 					logSerialPortSocketD() << "STX received";
 					m_readMessageCrc = {};
-					m_readMessageCrc.add(STX);
 					setReadMessageState(ReadMessageState::WaitingForEtx);
 					break;
 				}
@@ -189,7 +188,6 @@ void SerialPortSocket::onSerialDataReadyRead()
 		case ReadMessageState::WaitingForEtx: {
 			while (ix < escaped_data.size()) {
 				auto b = static_cast<uint8_t>(escaped_data[ix++]);
-				m_readMessageCrc.add(b);
 				if(b == STX) {
 					logSerialPortSocketD() << "STX in middle of message data received, restarting read loop";
 					setReadMessageState(ReadMessageState::WaitingForStx);
@@ -202,6 +200,7 @@ void SerialPortSocket::onSerialDataReadyRead()
 					setReadMessageState(ReadMessageState::WaitingForCrc);
 					break;
 				}
+				m_readMessageCrc.add(b);
 				if(auto err = m_readMessageBuffer.append(b); err != ReadMessageError::Ok) {
 					setReadMessageError(err);
 				}
@@ -357,7 +356,6 @@ void SerialPortSocket::writeMessageBegin()
 {
 	logSerialPortSocketD() << "STX sent";
 	m_writeMessageCrc = {};
-	m_writeMessageCrc.add(STX);
 	const char stx[] = {static_cast<char>(STX)};
 	m_port->write(stx, 1);
 }
@@ -367,7 +365,6 @@ void SerialPortSocket::writeMessageEnd()
 	logSerialPortSocketD() << "ETX sent";
 	const char etx[] = {static_cast<char>(ETX)};
 	m_port->write(etx, 1);
-	m_writeMessageCrc.add(ETX);
 	auto crc = m_writeMessageCrc.remainder();
 	static constexpr size_t N = sizeof(shv::chainpack::crc32_t);
 	QByteArray crc_ba(N, 0);
