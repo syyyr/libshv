@@ -56,6 +56,8 @@ public:
 	//Q_SIGNAL void readyWrite();
 	Q_SIGNAL void  bytesWritten(qint64 bytes);
 
+	Q_SIGNAL void socketReset();
+
 	Q_SIGNAL void  stateChanged(QAbstractSocket::SocketState state);
 	Q_SIGNAL void error(QAbstractSocket::SocketError socket_error);
 	Q_SIGNAL void sslErrors(const QList<QSslError> &errors);

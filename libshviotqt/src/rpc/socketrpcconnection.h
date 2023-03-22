@@ -38,6 +38,7 @@ public:
 
 	void closeSocket();
 	void abortSocket();
+	void clearSendBuffers() override { shv::chainpack::RpcDriver::clearSendBuffers(); }
 
 	bool isSocketConnected() const;
 	Q_SIGNAL void socketConnectedChanged(bool is_connected);

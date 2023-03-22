@@ -81,6 +81,7 @@ void SocketRpcConnection::setSocket(Socket *socket)
 		shvDebug() << this << "Socket disconnected!!!";
 		emit socketConnectedChanged(false);
 	});
+	connect(socket, &Socket::socketReset, this, &SocketRpcConnection::clearSendBuffers);
 }
 
 Socket *SocketRpcConnection::socket()

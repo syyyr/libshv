@@ -31,6 +31,8 @@ public:
 	void sendRawData(std::string &&data);
 	virtual void sendRawData(const RpcValue::MetaData &meta_data, std::string &&data);
 
+	virtual void clearSendBuffers();
+
 	static int defaultRpcTimeoutMsec() {return s_defaultRpcTimeoutMsec;}
 	static void setDefaultRpcTimeoutMsec(int msec) {s_defaultRpcTimeoutMsec = msec;}
 
@@ -71,8 +73,6 @@ protected:
 	/// flush write buffer to socket
 	/// @return true if write buffer length has changed (some data was written to the socket)
 	//virtual bool flush() = 0;
-
-	virtual void clearBuffers();
 
 	/// add data to the output queue, send data from top of the queue
 	virtual void enqueueDataToSend(MessageData &&chunk_to_enqueue);

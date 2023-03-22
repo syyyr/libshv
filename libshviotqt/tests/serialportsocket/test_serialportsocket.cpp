@@ -17,24 +17,32 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-	//NecroLog::setTopicsLogThresholds("SerialPortSocket");
+	NecroLog::setTopicsLogThresholds("SerialPortSocket");
 	Exception::setAbortOnException(true);
 	return doctest::Context(argc, argv).run();
 }
 
-DOCTEST_TEST_CASE("Send")
+std::tuple<SerialPortSocket*, MockSerialPort*> init_connecton(MockRpcConnection &conn)
 {
-	RpcMessage rec_msg;
-	MockRpcConnection conn;
-	QObject::connect(&conn, &MockRpcConnection::rpcMessageReceived, [&rec_msg](const shv::chainpack::RpcMessage &msg) {
-		//nInfo() << "data read:" << msg.toCpon();
-		rec_msg = msg;
-	});
 	auto *serial = new MockSerialPort("TestSend", &conn);
 	auto *socket = new SerialPortSocket(serial);
 	socket->setReceiveTimeout(0);
 	conn.setSocket(socket);
 	conn.connectToHost(QUrl());
+	return make_tuple(socket, serial);
+}
+
+DOCTEST_TEST_CASE("Send")
+{
+	MockRpcConnection conn;
+	auto [socket, serial] = init_connecton(conn);
+
+	RpcMessage rec_msg;
+	QObject::connect(&conn, &MockRpcConnection::rpcMessageReceived, [&rec_msg](const shv::chainpack::RpcMessage &msg) {
+		//nInfo() << "data read:" << msg.toCpon();
+		rec_msg = msg;
+	});
+
 	RpcRequest rq;
 	rq.setRequestId(1);
 	rq.setShvPath("foo/bar");
@@ -88,7 +96,37 @@ DOCTEST_TEST_CASE("Send")
 	}
 }
 
-DOCTEST_TEST_CASE("Send corrupted data")
+DOCTEST_TEST_CASE("Test CRC error")
 {
+	MockRpcConnection conn;
+	auto [socket, serial] = init_connecton(conn);
 
+	RpcRequest rq;
+	rq.setRequestId(1);
+	rq.setShvPath("some/path");
+	rq.setMethod("method");
+	rq.setParams(123);
+
+	serial->clearWrittenData();
+	conn.sendMessage(rq);
+	auto data = serial->writtenData();
+	data[5] = ~data[5];
+
+	serial->setDataToReceive(data);
+	REQUIRE(socket->readMessageError() == SerialPortSocket::ReadMessageError::ErrorCrc);
+}
+
+DOCTEST_TEST_CASE("Test RESET message")
+{
+	MockRpcConnection conn;
+	auto [socket, serial] = init_connecton(conn);
+
+	bool reset_received = false;
+	QObject::connect(socket, &SerialPortSocket::socketReset, [&reset_received]() {
+		reset_received = true;
+	});
+
+	auto data = serial->writtenData();
+	serial->setDataToReceive(data);
+	REQUIRE(reset_received == true);
 }

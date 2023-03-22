@@ -207,7 +207,7 @@ void RpcDriver::onBytesRead(std::string &&bytes)
 	}
 }
 
-void RpcDriver::clearBuffers()
+void RpcDriver::clearSendBuffers()
 {
 	m_sendQueue.clear();
 	m_topMessageDataHeaderWritten = false;

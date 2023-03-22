@@ -20,6 +20,13 @@ class SHVIOTQT_DECL_EXPORT SerialPortSocket : public Socket
 	using Super = Socket;
 public:
 	enum class ReadMessageError {Ok = 0, ErrorUnexpectedStx, ErrorUnexpectedEtx, ErrorEscape, ErrorCrc, ErrorTimeout};
+	enum EscCodes {
+		STX = 0xA2,
+		ETX = 0xA3,
+		ESTX = 0xA4,
+		EETX = 0xA5,
+		ESC = 0xAA,
+	};
 public:
 	SerialPortSocket(QSerialPort *port, QObject *parent = nullptr);
 
@@ -28,6 +35,7 @@ public:
 	void connectToHost(const QUrl &url) override;
 	void close() override;
 	void abort() override;
+	void reset();
 	QAbstractSocket::SocketState state() const override { return m_state; }
 	QString errorString() const override;
 	QString readMessageErrorString() const;
@@ -43,13 +51,7 @@ public:
 protected:
 	void restartReceiveTimeoutTimer();
 private:
-	enum EscCodes {
-		STX = 0xA2,
-		ETX = 0xA3,
-		ESTX = 0xA4,
-		EETX = 0xA5,
-		ESC = 0xAA,
-	};
+
 	class UnescapeBuffer
 	{
 	public:

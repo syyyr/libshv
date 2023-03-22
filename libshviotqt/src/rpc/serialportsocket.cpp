@@ -104,8 +104,7 @@ void SerialPortSocket::connectToHost(const QUrl &url)
 	shvInfo() << "opening serial port:" << m_port->portName();
 	if(m_port->open(QIODevice::ReadWrite)) {
 		shvInfo() << "Ok";
-		// clear read buffer
-		//m_port->readAll();
+		reset();
 		setState(QAbstractSocket::ConnectedState);
 	}
 	else {
@@ -126,6 +125,12 @@ void SerialPortSocket::close()
 void SerialPortSocket::abort()
 {
 	close();
+}
+
+void SerialPortSocket::reset()
+{
+	writeMessageBegin();
+	writeMessageEnd();
 }
 
 QString SerialPortSocket::errorString() const
@@ -233,10 +238,17 @@ void SerialPortSocket::onSerialDataReadyRead()
 					logSerialPortSocketD() << "crc computed:" << shv::chainpack::utils::intToHex(m_readMessageCrc.remainder());
 					if(m_readMessageCrc.remainder() == msg_crc) {
 						logSerialPortSocketD() << "crc OK";
-						setReadMessageState(ReadMessageState::WaitingForStx);
-						m_receivedMessages.enqueue(m_readMessageBuffer.data);
 						setReadMessageError(ReadMessageError::Ok);
-						emit readyRead();
+						auto data = m_readMessageBuffer.data;
+						if(data.isEmpty()) {
+							// RESET message received
+							logSerialPortSocketM() << "RESET message received";
+							emit socketReset();
+						}
+						else {
+							m_receivedMessages.enqueue(m_readMessageBuffer.data);
+							emit readyRead();
+						}
 					}
 					else {
 						logSerialPortSocketD() << "crc ERROR";
