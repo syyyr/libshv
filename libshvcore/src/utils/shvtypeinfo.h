@@ -52,7 +52,6 @@ public:
 	std::string visualStyleName() const;
 	std::string alarm() const;
 	int alarmLevel() const;
-	std::string alarmDescription() const { return description(); }
 
 	chainpack::RpcValue toRpcValue() const;
 	static ShvFieldDescr fromRpcValue(const chainpack::RpcValue &v);
@@ -147,7 +146,6 @@ public:
 	std::string alarm() const;
 	ShvPropertyDescr &setAlarm(const std::string &alarm);
 	int alarmLevel() const;
-	std::string alarmDescription() const;
 
 	std::vector<ShvMethodDescr> methods() const;
 	ShvMethodDescr method(const std::string &name) const;
