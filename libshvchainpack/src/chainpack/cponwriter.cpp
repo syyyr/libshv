@@ -4,7 +4,6 @@
 #include "../../c/ccpon.h"
 
 #include <cmath>
-#include <sstream>
 #include <iostream>
 #include <fstream>
 #include <cstring>
