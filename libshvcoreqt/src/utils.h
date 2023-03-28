@@ -12,10 +12,6 @@
 
 #include <string>
 
-#ifdef LIBC_NEWLIB
-#include <sstream>
-#endif
-
 #define SHV_QUOTE_QSTRINGLITERAL(x) QStringLiteral(#x)
 
 #define SHV_PROPERTY_IMPL2(ptype, lower_letter, upper_letter, name_rest, default_value) \

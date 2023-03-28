@@ -26,7 +26,7 @@
 #endif
 /*
 namespace {
-#if defined _WIN32 || defined LIBC_NEWLIB
+#if defined _WIN32
 // see http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html#tag_04_15
 // see https://stackoverflow.com/questions/16647819/timegm-cross-platform
 int is_leap(unsigned y)

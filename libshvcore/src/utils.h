@@ -8,10 +8,6 @@
 #include <string>
 #include <vector>
 
-#if defined LIBC_NEWLIB || defined SHV_ANDROID_BUILD
-#include <sstream>
-#endif
-
 // do while is to suppress of semicolon warning SHV_SAFE_DELETE(ptr);
 #define SHV_SAFE_DELETE(x) do if(x != nullptr) {delete x; x = nullptr;} while(false)
 
@@ -113,18 +109,6 @@ public:
 	static std::string simplifyPath(const std::string &p);
 
 	static std::vector<char> readAllFd(int fd);
-
-	template<typename T>
-	static std::string toString(T i)
-	{
-#if defined LIBC_NEWLIB || defined SHV_ANDROID_BUILD
-		std::ostringstream ss;
-		ss << i;
-		return ss.str();
-#else
-		return std::to_string(i); //not supported by newlib
-#endif
-	}
 
 	template<typename T>
 	static T getIntLE(const char *buff, unsigned len)

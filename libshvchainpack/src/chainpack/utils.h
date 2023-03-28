@@ -36,20 +36,6 @@ std::string intToHex(I n)
 	return ret;
 }
 
-template <typename I>
-std::string toString(I n)
-{
-	if(n == 0)
-		return "0";
-	std::string ret;
-	while(n > 0) {
-		auto b = n % 10;
-		ret.insert(0, 1, static_cast<char>(b + '0'));
-		n /= 10;
-	}
-	return ret;
-}
-
 }
 
 class SHVCHAINPACK_DECL_EXPORT Utils
@@ -68,7 +54,7 @@ public:
 	template <typename I>
 	static std::string toString(I n)
 	{
-		return utils::toString(n);
+		return std::to_string(n);
 	}
 
 	template <typename V, typename... T>
