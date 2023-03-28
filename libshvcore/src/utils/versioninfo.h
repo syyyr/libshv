@@ -2,6 +2,7 @@
 
 #include "../shvcoreglobal.h"
 
+#include <compare>
 #include <string>
 
 namespace shv {
@@ -22,11 +23,7 @@ public:
 	std::string toString() const;
 
 	bool operator==(const VersionInfo &v) const;
-	bool operator!=(const VersionInfo &v) const;
-	bool operator>(const VersionInfo &v) const;
-	bool operator>=(const VersionInfo &v) const;
-	bool operator<(const VersionInfo &v) const;
-	bool operator<=(const VersionInfo &v) const;
+	std::strong_ordering operator<=>(const VersionInfo &v) const;
 
 private:
 	int m_majorNumber;

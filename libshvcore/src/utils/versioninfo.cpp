@@ -42,34 +42,12 @@ std::string VersionInfo::toString() const
 
 bool VersionInfo::operator==(const VersionInfo &v) const
 {
-	return m_majorNumber == v.m_majorNumber && m_minorNumber == v.m_minorNumber && m_patchNumber == v.m_patchNumber && m_branch == v.m_branch;
+	return std::tie(this->m_majorNumber, this->m_minorNumber, this->m_patchNumber) == std::tie(v.m_majorNumber, v.m_minorNumber, v.m_patchNumber);
 }
 
-bool VersionInfo::operator!=(const VersionInfo &v) const
+std::strong_ordering VersionInfo::operator<=>(const VersionInfo &v) const
 {
-	return !operator==(v);
-}
-
-bool VersionInfo::operator>(const VersionInfo &v) const
-{
-	return m_majorNumber > v.majorNumber() ||
-			(m_majorNumber == v.m_majorNumber && m_minorNumber > v.m_minorNumber) ||
-			(m_majorNumber == v.m_majorNumber && m_minorNumber == v.m_minorNumber && m_patchNumber > v.m_patchNumber);
-}
-
-bool VersionInfo::operator>=(const VersionInfo &v) const
-{
-	return operator>(v) || operator==(v);
-}
-
-bool VersionInfo::operator<(const VersionInfo &v) const
-{
-	return !operator>=(v);
-}
-
-bool VersionInfo::operator<=(const VersionInfo &v) const
-{
-	return !operator>(v);
+	return std::tie(this->m_majorNumber, this->m_minorNumber, this->m_patchNumber) <=> std::tie(v.m_majorNumber, v.m_minorNumber, v.m_patchNumber);
 }
 
 const std::string &VersionInfo::branch() const
