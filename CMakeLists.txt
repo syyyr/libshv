@@ -113,6 +113,8 @@ if(Qt_FOUND)
 	add_subdirectory(libshvcoreqt)
 	add_subdirectory(libshviotqt)
 	if(NOT EMSCRIPTEN)
+		set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+		find_package(OpenLDAP)
 		add_subdirectory(libshvbroker)
 	endif()
 

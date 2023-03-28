@@ -23,6 +23,13 @@ if(WITH_SHV_WEBSOCKETS)
 		src/rpc/websocketserver.cpp
 		)
 endif()
+if(OpenLDAP_FOUND)
+	message(STATUS "OpenLDAP found, enabling broker support for LDAP")
+	target_sources(libshvbroker PRIVATE
+		src/ldap.cpp
+		)
+	target_link_libraries(libshvbroker PUBLIC OpenLDAP::OpenLDAP)
+endif()
 
 target_link_libraries(libshvbroker PUBLIC Qt::Sql libshviotqt)
 target_include_directories(libshvbroker PUBLIC include)
