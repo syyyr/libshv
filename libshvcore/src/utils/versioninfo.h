@@ -20,10 +20,13 @@ public:
 	const std::string &branch() const;
 
 	std::string toString() const;
-	int toInt() const;
 
 	bool operator==(const VersionInfo &v) const;
 	bool operator!=(const VersionInfo &v) const;
+	bool operator>(const VersionInfo &v) const;
+	bool operator>=(const VersionInfo &v) const;
+	bool operator<(const VersionInfo &v) const;
+	bool operator<=(const VersionInfo &v) const;
 
 private:
 	int m_majorNumber;
