@@ -44,7 +44,7 @@ std::string toString(I n)
 	std::string ret;
 	while(n > 0) {
 		auto b = n % 10;
-		ret.push_back(static_cast<char>(b + '0'));
+		ret.insert(0, 1, static_cast<char>(b + '0'));
 		n /= 10;
 	}
 	return ret;
