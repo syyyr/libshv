@@ -51,6 +51,7 @@ Checks:
     -hicpp-use-equals-delete,
     -hicpp-use-override,
     -hicpp-vararg,
+    -misc-const-correctness,
     -misc-no-recursion,
     -misc-non-private-member-variables-in-classes,
     -misc-unused-parameters,
