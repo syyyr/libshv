@@ -294,35 +294,33 @@ qint64 SerialPortSocket::writeBytesEscaped(const char *data, qint64 max_size)
 		auto b = static_cast<uint8_t>(data[written_cnt]);
 		if(m_escWritten) {
 			//finish escape sequence
-			if(b == STX) {
+			switch (b) {
+			case STX:
 				set_byte(ESTX);
-			}
-			else if(b == ETX) {
+				break;
+			case ETX:
 				set_byte(EETX);
-			}
-			else if(b == ESC) {
+				break;
+			case ESC:
 				set_byte(ESC);
-			}
-			else {
+				break;
+			default:
 				logSerialPortSocketW() << "ESC followed by:" << shv::chainpack::utils::byteToHex(b) << "internal escaping error, data sent will be probably corrupted.";
 				set_byte(b);
+				break;
 			}
 		}
 		else {
-			if(b == STX) {
+			switch (b) {
+			case STX:
+			case ETX:
+			case ESC:
 				set_byte(ESC);
 				--written_cnt;
-			}
-			else if(b == ETX) {
-				set_byte(ESC);
-				--written_cnt;
-			}
-			else if(b == ESC) {
-				set_byte(ESC);
-				--written_cnt;
-			}
-			else {
+				break;
+			default:
 				set_byte(b);
+				break;
 			}
 		}
 		m_writeMessageCrc.add(arr[0]);
