@@ -3,10 +3,6 @@
 #include "../string.h"
 #include "../utils.h"
 
-#if defined LIBC_NEWLIB || defined SHV_ANDROID_BUILD
-#include <cstdlib>
-#endif
-
 namespace shv::core::utils {
 
 VersionInfo::VersionInfo(int major, int minor, int patch, const std::string &branch)
@@ -24,20 +20,14 @@ VersionInfo::VersionInfo(const std::string &version, const std::string &branch)
 	while (parts.size() < 3) {
 		parts.emplace_back("0");
 	}
-#if defined LIBC_NEWLIB || defined SHV_ANDROID_BUILD
-	m_majorNumber = std::atoi(parts[0].c_str());
-	m_minorNumber = std::atoi(parts[1].c_str());
-	m_patchNumber = std::atoi(parts[2].c_str());
-#else
 	m_majorNumber = std::stoi(parts[0]);
 	m_minorNumber = std::stoi(parts[1]);
 	m_patchNumber = std::stoi(parts[2]);
-#endif
 }
 
 std::string VersionInfo::toString() const
 {
-	return shv::core::Utils::toString(m_majorNumber) + '.' + shv::core::Utils::toString(m_minorNumber) + '.' + shv::core::Utils::toString(m_patchNumber);
+	return std::to_string(m_majorNumber) + '.' + std::to_string(m_minorNumber) + '.' + std::to_string(m_patchNumber);
 }
 
 bool VersionInfo::operator==(const VersionInfo &v) const

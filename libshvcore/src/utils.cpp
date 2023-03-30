@@ -50,7 +50,7 @@ std::string Utils::intToVersionString(int ver)
 	while(ver) {
 		int i = ver % 100;
 		ver /= 100;
-		std::string s = shv::core::Utils::toString(i);
+		std::string s = std::to_string(i);
 		//if(i < 10 && ver > 0)
 		//	s = '0' + s;
 		if(ret.empty())

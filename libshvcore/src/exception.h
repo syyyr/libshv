@@ -20,5 +20,5 @@ public:
 
 }}
 
-#define SHV_EXCEPTION(msg) throw shv::core::Exception(msg, std::string(__FILE__) + ":" + shv::core::Utils::toString(__LINE__))
-#define SHV_EXCEPTION_V(msg, topic) throw shv::core::Exception(msg, std::string(__FILE__) + ":" + shv::core::Utils::toString(__LINE__), topic)
+#define SHV_EXCEPTION(msg) throw shv::core::Exception(msg, std::string(__FILE__) + ":" + std::to_string(__LINE__))
+#define SHV_EXCEPTION_V(msg, topic) throw shv::core::Exception(msg, std::string(__FILE__) + ":" + std::to_string(__LINE__), topic)
