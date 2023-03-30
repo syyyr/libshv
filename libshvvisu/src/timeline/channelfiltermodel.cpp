@@ -17,7 +17,7 @@ ChannelFilterModel::ChannelFilterModel(QObject *parent)
 
 ChannelFilterModel::~ChannelFilterModel() = default;
 
-void ChannelFilterModel::createNodes(const QSet<QString> &channels)
+void ChannelFilterModel::createNodes(const QStringList &channels)
 {
 	beginResetModel();
 
@@ -31,17 +31,17 @@ void ChannelFilterModel::createNodes(const QSet<QString> &channels)
 	endResetModel();
 }
 
-QSet<QString> ChannelFilterModel::selectedChannels()
+QStringList ChannelFilterModel::selectedChannels()
 {
-	QSet<QString> channels;
+	QStringList channels;
 	selectedChannels_helper(&channels, invisibleRootItem());
 	return channels;
 }
 
-void ChannelFilterModel::selectedChannels_helper(QSet<QString> *channels, QStandardItem *it)
+void ChannelFilterModel::selectedChannels_helper(QStringList *channels, QStandardItem *it)
 {
 	if ((it != invisibleRootItem()) && (it->data(UserData::ValidLogEntry).toBool()) && (it->checkState() == Qt::CheckState::Checked)){
-		channels->insert(shvPathFromItem(it));
+		(*channels) << shvPathFromItem(it);
 	}
 
 	for (int row = 0; row < it->rowCount(); row++) {
@@ -50,7 +50,7 @@ void ChannelFilterModel::selectedChannels_helper(QSet<QString> *channels, QStand
 	}
 }
 
-void ChannelFilterModel::setSelectedChannels(const QSet<QString> &channels)
+void ChannelFilterModel::setSelectedChannels(const QStringList &channels)
 {
 	setChildItemsCheckedState(invisibleRootItem(), Qt::CheckState::Unchecked);
 

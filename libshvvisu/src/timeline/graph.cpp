@@ -254,12 +254,12 @@ void Graph::showAllChannels()
 	emit channelFilterChanged();
 }
 
-QSet<QString> Graph::channelPaths()
+QStringList Graph::channelPaths()
 {
-	QSet<QString> shv_paths;
+	QStringList shv_paths;
 
 	for (int i = 0; i < m_channels.count(); ++i) {
-		shv_paths.insert(m_channels[i]->shvPath());
+		shv_paths << m_channels[i]->shvPath();
 	}
 
 	return shv_paths;
@@ -267,12 +267,12 @@ QSet<QString> Graph::channelPaths()
 
 void Graph::hideFlatChannels()
 {
-	QSet<QString> matching_paths = m_channelFilter.matchingPaths();
+	QStringList matching_paths = m_channelFilter.matchingPaths();
 
 	for (qsizetype i = 0; i < m_channels.count(); ++i) {
 		GraphChannel *ch = m_channels[i];
 		if(isChannelFlat(ch)) {
-			matching_paths.remove(ch->shvPath());
+			matching_paths.removeOne(ch->shvPath());
 		}
 	}
 
@@ -1235,7 +1235,7 @@ QVector<int> Graph::visibleChannels() const
 void Graph::setVisualSettings(const VisualSettings &settings)
 {
 	if (settings.isValid()) {
-		QSet<QString> new_filter;
+		QStringList new_filter;
 		createChannelsFromModel();
 		for (int i = 0; i < settings.channels.count(); ++i) {
 			const VisualSettings::Channel &channel_settings = settings.channels[i];
