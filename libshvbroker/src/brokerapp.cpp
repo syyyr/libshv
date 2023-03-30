@@ -517,9 +517,9 @@ bool BrokerApp::checkTunnelSecret(const std::string &s)
 	return m_tunnelSecretList.checkSecret(s);
 }
 
-chainpack::UserLoginResult BrokerApp::checkLogin(const chainpack::UserLoginContext &ctx)
+void BrokerApp::checkLogin(const chainpack::UserLoginContext &ctx, const std::function<void(chainpack::UserLoginResult)> cb)
 {
-	return aclManager()->checkPassword(ctx);
+	cb(aclManager()->checkPassword(ctx));
 }
 
 void BrokerApp::sendNewLogEntryNotify(const std::string &msg)

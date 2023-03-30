@@ -89,10 +89,7 @@ public:
 
 	chainpack::AccessGrant accessGrantForRequest(rpc::CommonRpcClientHandle *conn, const core::utils::ShvUrl &shv_url, const std::string &method, const chainpack::RpcValue &rq_grant);
 
-	// checkPassword() might return bool
-	// but we are using setCheckPasswordResult() instead to support async password check in ACL manager
-	// for example LDAP ACL Manager
-	chainpack::UserLoginResult checkLogin(const shv::chainpack::UserLoginContext &ctx);
+	void checkLogin(const chainpack::UserLoginContext &ctx, const std::function<void(chainpack::UserLoginResult)> cb);
 
 	void sendNewLogEntryNotify(const std::string &msg);
 
