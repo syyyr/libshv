@@ -9,13 +9,13 @@ ChannelFilter::ChannelFilter()
 {
 }
 
-ChannelFilter::ChannelFilter(const QSet<QString> &matching_paths)
+ChannelFilter::ChannelFilter(const QStringList &matching_paths)
 	: m_isValid(true)
 {
 	setMatchingPaths(matching_paths);
 }
 
-QSet<QString> ChannelFilter::matchingPaths() const
+QStringList ChannelFilter::matchingPaths() const
 {
 	return m_matchingPaths;
 }
@@ -23,16 +23,16 @@ QSet<QString> ChannelFilter::matchingPaths() const
 void ChannelFilter::addMatchingPath(const QString &shv_path)
 {
 	m_isValid = true;
-	m_matchingPaths.insert(shv_path);
+	m_matchingPaths << shv_path;
 }
 
 void ChannelFilter::removeMatchingPath(const QString &shv_path)
 {
 	m_isValid = true;
-	m_matchingPaths.remove(shv_path);
+	m_matchingPaths.removeOne(shv_path);
 }
 
-void ChannelFilter::setMatchingPaths(const QSet<QString> &paths)
+void ChannelFilter::setMatchingPaths(const QStringList &paths)
 {
 	m_isValid = true;
 	m_matchingPaths = paths;

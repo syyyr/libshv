@@ -502,7 +502,7 @@ void DlgLogInspector::parseLog(shv::chainpack::RpcValue log)
 
 	m_graph->createChannelsFromModel();
 
-	QSet<QString> channel_paths = m_graph->channelPaths();
+	QStringList channel_paths = m_graph->channelPaths();
 	m_channelFilterDialog->init(shvPath(), channel_paths);
 	ui->graphView->makeLayout();
 	applyFilters(channel_paths);
@@ -564,7 +564,7 @@ void DlgLogInspector::setTimeZone(const QTimeZone &tz)
 }
 #endif
 
-void DlgLogInspector::applyFilters(const QSet<QString> &channel_paths)
+void DlgLogInspector::applyFilters(const QStringList &channel_paths)
 {
 	auto graph_filter = m_graph->channelFilter();
 	graph_filter.setMatchingPaths(channel_paths);
