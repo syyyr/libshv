@@ -616,11 +616,11 @@ void BrokerApp::checkLogin(const chainpack::UserLoginContext &ctx, const std::fu
 #ifdef WITH_SHV_LDAP
 	if (m_ldapConfig) {
 		auto auth_thread = new LdapAuthThread(ctx, *m_ldapConfig);
-		connect(auth_thread, &LdapAuthThread::resultReady, this, [cb, user_name = ctx.userLogin().user] (const auto& result, const auto& shv_group) {
+		connect(auth_thread, &LdapAuthThread::resultReady, this, [cb, user_name = ctx.userLogin().user] (const auto& ldap_result, const auto& shv_group) {
 			if (shv_group) {
 				BrokerApp::instance()->setGroupForLdapUser(user_name, *shv_group);
 			}
-			cb(result);
+			cb(ldap_result);
 		});
 		connect(auth_thread, &LdapAuthThread::finished, auth_thread, &QObject::deleteLater);
 		auth_thread->start();
