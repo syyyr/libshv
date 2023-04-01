@@ -269,15 +269,11 @@ std::map<std::string, AclManager::FlattenRole> AclManager::flattenRole_helper(co
 	return ret;
 }
 
-std::vector<AclManager::FlattenRole> AclManager::userFlattenRoles(const std::string &user_name)
+std::vector<AclManager::FlattenRole> AclManager::userFlattenRoles(const std::string &user_name, const std::vector<std::string>& roles)
 {
 	if(m_cache.userFlattenRoles.find(user_name) == m_cache.userFlattenRoles.end()) {
-		shv::iotqt::acl::AclUser user_def = aclUser(user_name);
-		if(!user_def.isValid())
-			return std::vector<FlattenRole>();
-
 		std::map<std::string, AclManager::FlattenRole> unique_roles;
-		for(const auto &role : user_def.roles) {
+		for(const auto &role : roles) {
 			auto gg = flattenRole_helper(role, 1);
 			unique_roles.insert(gg.begin(), gg.end());
 		}
@@ -296,22 +292,7 @@ std::vector<AclManager::FlattenRole> AclManager::userFlattenRoles(const std::str
 
 std::vector<AclManager::FlattenRole> AclManager::flattenRole(const std::string &role)
 {
-	std::string key = "_Role#Key:" + role;
-	if(m_cache.userFlattenRoles.find(key) == m_cache.userFlattenRoles.end()) {
-		std::map<std::string, AclManager::FlattenRole> unique_roles;
-		auto gg = flattenRole_helper(role, 1);
-		unique_roles.insert(gg.begin(), gg.end());
-		std::vector<AclManager::FlattenRole> lst;
-		for(const auto &kv : unique_roles)
-			lst.push_back(kv.second);
-		std::sort(lst.begin(), lst.end(), [](const FlattenRole &r1, const FlattenRole &r2) {
-			if(r1.weight == r2.weight)
-				return r1.nestLevel < r2.nestLevel;
-			return r1.weight > r2.weight;
-		});
-		m_cache.userFlattenRoles[key] = lst;
-	}
-	return m_cache.userFlattenRoles[key];
+	return userFlattenRoles("_Role#Key:" + role, {role});
 }
 /*
 static cp::RpcValue merge_maps(const cp::RpcValue &m_base, const cp::RpcValue &m_over)
@@ -334,7 +315,7 @@ static cp::RpcValue merge_maps(const cp::RpcValue &m_base, const cp::RpcValue &m
 chainpack::RpcValue AclManager::userProfile(const std::string &user_name)
 {
 	chainpack::RpcValue ret;
-	for(const auto &rn : userFlattenRoles(user_name)) {
+	for(const auto &rn : userFlattenRoles(user_name, user(user_name).roles)) {
 		shv::iotqt::acl::AclRole r = role(rn.name);
 		//shvDebug() << "--------------------------merging:" << rn.name << r.toRpcValueMap();
 		ret = chainpack::Utils::mergeMaps(ret, r.profile);

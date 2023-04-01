@@ -297,8 +297,9 @@ void ClientConnectionOnBroker::processLoginPhase()
 		return;
 	}
 	Super::processLoginPhase();
-	cp::UserLoginResult result = BrokerApp::instance()->checkLogin(m_userLoginContext);
-	setLoginResult(result);
+	BrokerApp::instance()->checkLogin(m_userLoginContext, [this] (auto result) {
+		setLoginResult(result);
+	});
 }
 
 void ClientConnectionOnBroker::setLoginResult(const chainpack::UserLoginResult &result)
