@@ -12,7 +12,9 @@
 #include <QVariant>
 #include <QDateTime>
 
+#if defined(__cpp_lib_ranges)
 #include <ranges>
+#endif
 
 namespace shv::coreqt {
 
