@@ -624,6 +624,7 @@ void BrokerApp::checkLogin(const chainpack::UserLoginContext &ctx, const std::fu
 		});
 		connect(auth_thread, &LdapAuthThread::finished, auth_thread, &QObject::deleteLater);
 		auth_thread->start();
+		return;
 	}
 #endif
 	cb(result);
