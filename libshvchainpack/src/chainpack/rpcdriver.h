@@ -96,7 +96,6 @@ private:
 	std::string m_readData;
 	Rpc::ProtocolType m_protocolType = Rpc::ProtocolType::Invalid;
 	static int s_defaultRpcTimeoutMsec;
-	bool m_skipCorruptedHeaders = false;
 };
 
 } // namespace chainpack
