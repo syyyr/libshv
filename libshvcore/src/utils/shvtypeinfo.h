@@ -21,11 +21,16 @@ public:
 	ShvDescriptionBase() = default;
 	ShvDescriptionBase(const chainpack::RpcValue &v) : m_data(v) {}
 
-	bool isValid() const { return !m_data.asMap().empty(); }
+	std::string name() const;
+
+	bool isEmpty() const { return m_data.asMap().empty(); }
+	bool isValid() const { return m_data.asMap().size() > 1 && hasName(); }
 	chainpack::RpcValue dataValue(const std::string &key, const chainpack::RpcValue &default_val = {}) const;
 
 	bool operator==(const ShvDescriptionBase &o) const { return m_data == o.m_data; }
 protected:
+	bool hasName() const;
+	void setName(const std::string &n);
 	void setDataValue(const std::string &key, const chainpack::RpcValue &val);
 
 	void setData(const chainpack::RpcValue &data);
@@ -44,7 +49,6 @@ public:
 				  const chainpack::RpcValue &value = {},
 				  chainpack::RpcValue::Map &&tags = {});
 
-	std::string name() const;
 	std::string typeName() const;
 	std::string label() const;
 	std::string description() const;
@@ -94,10 +98,19 @@ public:
 
 	Type type() const;
 	ShvTypeDescr& setType(Type t);
+	std::string typeName() const { return name(); }
+	ShvTypeDescr& setTypeName(const std::string &type_name);
 	std::vector<ShvFieldDescr> fields() const;
 	ShvTypeDescr &setFields(const std::vector<ShvFieldDescr> &fields);
 	SampleType sampleType() const; // = SampleType::Continuous;
 	ShvTypeDescr &setSampleType(SampleType st);
+
+	// name of TypeDescr which is super-set of this one
+	// setting this property effectivelly excudes this type description
+	// from localization tools search path, because all the names were
+	// localized in super-type already
+	std::string superTypeName() const;
+	bool isSiteSpecific() const;
 
 	bool isValid() const { return type() != Type::Invalid; }
 
@@ -126,8 +139,15 @@ class SHVCORE_DECL_EXPORT ShvPropertyDescr : public ShvDescriptionBase
 	using Super = ShvDescriptionBase;
 public:
 	ShvPropertyDescr() = default;
-	ShvPropertyDescr(const std::string &type_name) { setTypeName(type_name); }
+	ShvPropertyDescr(const std::string &name, const std::string &type_name) {
+		setName(name);
+		setTypeName(type_name);
+	}
+	[[deprecated]] ShvPropertyDescr(const std::string &type_name) {
+		setTypeName(type_name);
+	}
 
+	ShvPropertyDescr &setName(const std::string &name);
 	std::string typeName() const;
 	ShvPropertyDescr &setTypeName(const std::string &type_name);
 	std::string label() const;
@@ -156,22 +176,40 @@ public:
 	static ShvPropertyDescr fromRpcValue(const chainpack::RpcValue &v, chainpack::RpcValue::Map *extra_tags = nullptr);
 };
 
+class SHVCORE_DECL_EXPORT ShvDeviceDescription
+{
+public:
+	using Properties = std::vector<ShvPropertyDescr>;
+
+	Properties properties;
+	std::string superDeviceType;
+	bool siteSpecific = false;
+
+	static ShvDeviceDescription fromRpcValue(const chainpack::RpcValue &v);
+	chainpack::RpcValue toRpcValue() const;
+
+	Properties::iterator findProperty(const std::string &name);
+	Properties::const_iterator findProperty(const std::string &name) const;
+	Properties::const_iterator findLongestPropertyPrefix(const std::string &name) const;
+};
+
 class SHVCORE_DECL_EXPORT ShvTypeInfo
 {
 public:
 	ShvTypeInfo() = default;
 
-	static ShvTypeInfo fromVersion2(std::map<std::string, ShvTypeDescr> &&types, std::map<std::string, ShvPropertyDescr> &&node_descriptions);
+	static ShvTypeInfo fromVersion2(std::map<std::string, ShvTypeDescr> &&types, const std::map<std::string, ShvPropertyDescr> &node_descriptions);
+	static ShvTypeInfo fromVersion2(std::map<std::string, ShvTypeDescr> &&types, const std::vector<ShvPropertyDescr> &property_descriptions);
 
-	bool isValid() const { return !(m_types.empty() && m_devicePaths.empty() && m_deviceProperties.empty()); }
+	bool isValid() const { return !(m_types.empty() && m_devicePaths.empty() && m_deviceDescriptions.empty()); }
 
-	using DeviceProperties = std::map<std::string, ShvPropertyDescr>;
+	using DeviceProperties = ShvDeviceDescription::Properties;
 	using DevicePropertiesMap = std::map<std::string, DeviceProperties>;
 
 	const std::map<std::string, std::string>& devicePaths() const { return m_devicePaths; }
 	const std::map<std::string, ShvTypeDescr>& types() const { return m_types; }
-	const DevicePropertiesMap& deviceProperties() const { return m_deviceProperties; }
-	const DeviceProperties& devicePropertyDescriptions(const std::string &device_type) const;
+	const std::map<std::string, ShvDeviceDescription> deviceDescriptions() const { return m_deviceDescriptions; }
+	const ShvDeviceDescription& deviceDescription(const std::string &device_type) const;
 	const std::map<std::string, std::string>& systemPathsRoots() const { return m_systemPathsRoots; }
 	const std::map<std::string, shv::chainpack::RpcValue>& extraTags() const { return m_extraTags; }
 
@@ -193,7 +231,7 @@ public:
 	/// return auto [device_path, device_type, property_path]
 	std::tuple<std::string, std::string, std::string> findDeviceType(const std::string &shv_path) const;
 	/// return auto [own_property_path, field_path, property_descr]
-	std::tuple<std::string, std::string, ShvPropertyDescr> findPropertyDescription(const std::string &device_type, const std::string &property_path) const;
+	std::tuple<ShvPropertyDescr, std::string> findPropertyDescription(const std::string &device_type, const std::string &property_path) const;
 	ShvTypeDescr findTypeDescription(const std::string &type_name) const;
 
 	ShvTypeDescr typeDescriptionForPath(const std::string &shv_path) const;
@@ -206,10 +244,9 @@ public:
 	struct SHVCORE_DECL_EXPORT PathInfo
 	{
 		std::string devicePath;
-		std::string propertyPath;
-		std::string fieldPath;
 		std::string deviceType;
 		ShvPropertyDescr propertyDescription;
+		std::string fieldPath;
 	};
 	PathInfo pathInfo(const std::string &shv_path) const;
 
@@ -220,7 +257,7 @@ public:
 	shv::chainpack::RpcValue applyTypeDescription(const shv::chainpack::RpcValue &val, const std::string &type_name, bool translate_enums = true) const;
 	shv::chainpack::RpcValue applyTypeDescription(const shv::chainpack::RpcValue &val, const ShvTypeDescr &type_descr, bool translate_enums = true) const;
 
-	void forEachDeviceProperty(const std::string &device_type, std::function<void (const std::string &property_path, const ShvPropertyDescr &node_descr)> fn) const;
+	void forEachDeviceProperty(const std::string &device_type, std::function<void (const ShvPropertyDescr &)> fn) const;
 	void forEachProperty(std::function<void (const std::string &shv_path, const ShvPropertyDescr &node_descr)> fn) const;
 private:
 	static ShvTypeInfo fromNodesTree(const chainpack::RpcValue &v);
@@ -229,11 +266,11 @@ private:
 							  const std::string &device_type,
 							  const std::string &device_path,
 							  const std::string &property_path,
-							  DeviceProperties *device_properties);
+							  ShvDeviceDescription *device_description);
 private:
 	std::map<std::string, ShvTypeDescr> m_types; // type-name -> type-description
-	std::map<std::string, std::string> m_devicePaths; // path -> device-type
-	DevicePropertiesMap m_deviceProperties; // device-property -> node_descr
+	std::map<std::string, std::string> m_devicePaths; // path -> device-type-name
+	std::map<std::string, ShvDeviceDescription> m_deviceDescriptions; // device-type-name -> device-descr
 	std::map<std::string, shv::chainpack::RpcValue> m_extraTags; // shv-path -> tags
 	std::map<std::string, std::string> m_systemPathsRoots; // shv-path-root -> system-path
 	std::map<std::string, chainpack::RpcValue> m_blacklistedPaths; // shv-path -> blacklist

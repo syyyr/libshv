@@ -24,6 +24,9 @@ constexpr auto KEY_TYPE = "type";
 constexpr auto KEY_VALUE = "value";
 constexpr auto KEY_FIELDS = "fields";
 constexpr auto KEY_SAMPLE_TYPE = "sampleType";
+constexpr auto KEY_SUPER_TYPE_NAME = "superTypeName";
+constexpr auto KEY_SUPER_DEVICE_TYPE = "superDeviceType";
+constexpr auto KEY_SITE_SPECIFIC = "siteSpecific";
 constexpr auto KEY_TAGS = "tags";
 constexpr auto KEY_METHODS = "methods";
 constexpr auto KEY_BLACKLIST = "blacklist";
@@ -36,9 +39,25 @@ constexpr auto KEY_ALARM_LEVEL = "alarmLevel";
 //=====================================================================
 // ShvTypeDescrBase
 //=====================================================================
+string ShvDescriptionBase::name() const
+{
+	return m_data.asMap().value(KEY_NAME).asString();
+}
+
 RpcValue ShvDescriptionBase::dataValue(const std::string &key, const chainpack::RpcValue &default_val) const
 {
 	return m_data.asMap().value(key, default_val);
+}
+
+bool ShvDescriptionBase::hasName() const
+{
+	const auto name = m_data.asMap().value(KEY_NAME);
+	return !name.asString().empty();
+}
+
+void ShvDescriptionBase::setName(const std::string &n)
+{
+	setDataValue(KEY_NAME, n);
 }
 
 void ShvDescriptionBase::setDataValue(const std::string &key, const chainpack::RpcValue &val)
@@ -72,14 +91,9 @@ void ShvDescriptionBase::mergeTags(chainpack::RpcValue::Map &map)
 ShvFieldDescr::ShvFieldDescr(const std::string &name, const std::string &type_name, const chainpack::RpcValue &value, chainpack::RpcValue::Map &&tags)
 {
 	setData(std::move(tags));
-	setDataValue(KEY_NAME, name);
+	setName(name);
 	setDataValue(KEY_TYPE_NAME, type_name);
 	setDataValue(KEY_VALUE, value);
-}
-
-string ShvFieldDescr::name() const
-{
-	return dataValue(KEY_NAME).asString();
 }
 
 string ShvFieldDescr::typeName() const
@@ -200,7 +214,16 @@ ShvTypeDescr::Type ShvTypeDescr::type() const
 
 ShvTypeDescr &ShvTypeDescr::setType(Type t)
 {
+	auto type_name = typeToString(t);
 	setDataValue(KEY_TYPE, static_cast<int>(t));
+	setName(type_name);
+	return *this;
+}
+
+ShvTypeDescr &ShvTypeDescr::setTypeName(const std::string &type_name)
+{
+	auto t = typeFromString(type_name);
+	setType(t);
 	return *this;
 }
 
@@ -225,6 +248,9 @@ ShvTypeDescr &ShvTypeDescr::setFields(const std::vector<ShvFieldDescr> &fields)
 
 ShvTypeDescr::SampleType ShvTypeDescr::sampleType() const
 {
+	auto i = dataValue(KEY_SAMPLE_TYPE).toInt();
+	if(i == 0)
+		return SampleType::Continuous;
 	return static_cast<SampleType>(dataValue(KEY_SAMPLE_TYPE).toInt());
 }
 
@@ -232,6 +258,16 @@ ShvTypeDescr &ShvTypeDescr::setSampleType(ShvTypeDescr::SampleType st)
 {
 	setDataValue(KEY_SAMPLE_TYPE, static_cast<int>(st));
 	return *this;
+}
+
+string ShvTypeDescr::superTypeName() const
+{
+	return dataValue(KEY_SUPER_TYPE_NAME).asString();
+}
+
+bool ShvTypeDescr::isSiteSpecific() const
+{
+	return dataValue(KEY_SITE_SPECIFIC).toBool();
 }
 
 ShvFieldDescr ShvTypeDescr::field(const std::string &field_name) const
@@ -278,7 +314,7 @@ std::string ShvTypeDescr::typeToString(ShvTypeDescr::Type t)
 	case Type::Map: return "Map";
 	case Type::IMap: return "IMap";
 	}
-	return "Invalid";
+	return "";
 }
 
 ShvTypeDescr::Type ShvTypeDescr::typeFromString(const std::string &s)
@@ -303,7 +339,7 @@ std::string ShvTypeDescr::sampleTypeToString(ShvTypeDescr::SampleType t)
 	switch (t) {
 	case SampleType::Discrete: return "Discrete";
 	case SampleType::Continuous: return "Continuous";
-	case SampleType::Invalid: return "Invalid";
+	case SampleType::Invalid: return "";
 	}
 	return std::string();
 }
@@ -312,9 +348,10 @@ ShvTypeDescr::SampleType ShvTypeDescr::sampleTypeFromString(const std::string &s
 {
 	if(s == "2" || s == "D" || s == "Discrete" || s == "discrete")
 		return SampleType::Discrete;
-	if(s.empty() || s == "C" || s == "Continuous" || s == "continuous")
-		return SampleType::Continuous;
-	return SampleType::Invalid;
+	//if(s.empty() || s == "C" || s == "Continuous" || s == "continuous")
+	//	return SampleType::Continuous;
+	//return SampleType::Invalid;
+	return SampleType::Continuous;
 }
 
 RpcValue ShvTypeDescr::defaultRpcValue() const
@@ -354,11 +391,18 @@ ShvTypeDescr &ShvTypeDescr::setDecimalPlaces(int n)
 RpcValue ShvTypeDescr::toRpcValue() const
 {
 	RpcValue::Map map = m_data.asMap();
-	map.setValue(KEY_TYPE, typeToString(type()));
-	if(sampleType() != ShvTypeDescr::SampleType::Invalid)
-		map.setValue(KEY_SAMPLE_TYPE, sampleTypeToString(sampleType()));
-	else
+	//map.setValue(KEY_TYPE, typeToString(type()));
+	if(sampleType() == ShvTypeDescr::SampleType::Invalid || sampleType() == ShvTypeDescr::SampleType::Continuous)
 		map.setValue(KEY_SAMPLE_TYPE, {});
+	else
+		map.setValue(KEY_SAMPLE_TYPE, sampleTypeToString(sampleType()));
+	auto remove_empty_list = [&map](const string &name) {
+		if(map.hasKey(name) && map.value(name).asList().empty())
+			map.erase(name);
+	};
+	remove_empty_list(KEY_FIELDS);
+	// type is saved as 'name'
+	map.setValue(KEY_TYPE, {});
 	return map;
 }
 
@@ -379,9 +423,15 @@ ShvTypeDescr ShvTypeDescr::fromRpcValue(const RpcValue &v)
 		ret.m_data = RpcValue(std::move(map));
 	}
 	{
+		// obsolete
 		auto rv = ret.dataValue(KEY_TYPE);
 		if(rv.isString())
-			ret.setDataValue(KEY_TYPE, static_cast<int>(typeFromString(rv.asString())));
+			ret.setTypeName(rv.asString());
+	}
+	{
+		auto rv = ret.dataValue(KEY_NAME);
+		if(rv.isString())
+			ret.setTypeName(rv.asString());
 	}
 	{
 		auto rv = ret.dataValue(KEY_SAMPLE_TYPE);
@@ -398,6 +448,12 @@ ShvTypeDescr ShvTypeDescr::fromRpcValue(const RpcValue &v)
 //=====================================================================
 // ShvPropertyDescr
 //=====================================================================
+ShvPropertyDescr &ShvPropertyDescr::setName(const std::string &name)
+{
+	setDataValue(KEY_NAME, name);
+	return *this;
+}
+
 string ShvPropertyDescr::typeName() const
 {
 	return dataValue(KEY_TYPE_NAME).asString();
@@ -548,17 +604,17 @@ ShvPropertyDescr ShvPropertyDescr::fromRpcValue(const RpcValue &v, RpcValue::Map
 {
 	static const vector<string> known_tags{
 		KEY_DEVICE_TYPE,
+		KEY_NAME,
 		KEY_TYPE_NAME,
 		KEY_LABEL,
 		KEY_DESCRIPTION,
 		KEY_UNIT,
-		//KEY_BLACKLIST,
 		KEY_METHODS,
 		"autoload",
 		"autorefresh",
 		"monitored",
 		"monitorOptions",
-		"sampleType",
+		KEY_SAMPLE_TYPE,
 		KEY_ALARM,
 		KEY_ALARM_LEVEL,
 	};
@@ -580,6 +636,81 @@ ShvPropertyDescr ShvPropertyDescr::fromRpcValue(const RpcValue &v, RpcValue::Map
 	return ret;
 }
 
+//=====================================================================
+// ShvDeviceDescription
+//=====================================================================
+
+ShvDeviceDescription::Properties::iterator ShvDeviceDescription::findProperty(const std::string &name)
+{
+	return std::find_if(properties.begin(), properties.end(), [&name](const auto &p) {
+		return p.name() == name;
+	});
+}
+
+ShvDeviceDescription::Properties::const_iterator ShvDeviceDescription::findProperty(const std::string &name) const
+{
+	return std::find_if(properties.begin(), properties.end(), [&name](const auto &p) {
+		return p.name() == name;
+	});
+}
+
+ShvDeviceDescription::Properties::const_iterator ShvDeviceDescription::findLongestPropertyPrefix(const std::string &name) const
+{
+	auto ret = properties.end();
+	size_t max_len = 0;
+	for(auto it = properties.begin(); it != properties.end(); ++it) {
+		const auto property_name = it->name();
+		if(shvpath::startsWithPath(name, property_name)) {
+			if(property_name.size() > max_len) {
+				max_len = property_name.size();
+				ret = it;
+			}
+		}
+	}
+	return ret;
+}
+
+ShvDeviceDescription ShvDeviceDescription::fromRpcValue(const chainpack::RpcValue &v)
+{
+	ShvDeviceDescription ret;
+	const auto &map = v.asMap();
+	ret.superDeviceType = map.value("superDeviceType").asString();
+	ret.siteSpecific = map.value("siteSpecific").toBool();
+	for(const auto &rv : map.value("properties").asList()) {
+		ret.properties.push_back(ShvPropertyDescr::fromRpcValue(rv));
+	}
+	return ret;
+}
+
+RpcValue ShvDeviceDescription::toRpcValue() const
+{
+	RpcValue::Map ret;
+	if(!superDeviceType.empty())
+		ret["superDeviceType"] = superDeviceType;
+	if(siteSpecific)
+		ret["siteSpecific"] = siteSpecific;
+	RpcValue::List props;
+	for(const auto &pd : properties) {
+		props.push_back(pd.toRpcValue());
+	}
+	ret["properties"] = props;
+	return ret;
+}
+
+/*
+ShvPropertyDescr &ShvDeviceDescription::propertyAt(const std::string &name)
+{
+	if(auto it = std::find_if(m_properties.begin(), m_properties.end(), [&name](const auto &p) {
+		return p.name() == name;
+	}); it == m_properties.end()) {
+		m_properties.emplace_back(name, std::string{});
+		return m_properties[m_properties.size() - 1];
+	}
+	else {
+		return *it;
+	}
+}
+*/
 //=====================================================================
 // ShvLogTypeInfo
 //=====================================================================
@@ -635,20 +766,37 @@ void ShvTypeInfo::setPropertyDeviation(const std::string &shv_path, const ShvPro
 	m_propertyDeviations[shv_path] = property_descr;
 }
 
-ShvTypeInfo ShvTypeInfo::fromVersion2(std::map<std::string, ShvTypeDescr> &&types, std::map<std::string, ShvPropertyDescr> &&node_descriptions)
+ShvTypeInfo ShvTypeInfo::fromVersion2(std::map<std::string, ShvTypeDescr> &&types, const std::map<std::string, ShvPropertyDescr> &node_descriptions)
 {
 	ShvTypeInfo ret;
 	ret.m_types = std::move(types);
 	ret.m_devicePaths[""] = "";
-	ret.m_deviceProperties[""] = std::move(node_descriptions);
+	auto &device_descr = ret.m_deviceDescriptions[""];
+	for(const auto &[k, v] : node_descriptions) {
+		ShvPropertyDescr pd = v;
+		pd.setName(k);
+		device_descr.properties.push_back(std::move(pd));
+	}
 	return ret;
 }
 
-const std::map<string, ShvPropertyDescr> &ShvTypeInfo::devicePropertyDescriptions(const std::string &device_type) const
+ShvTypeInfo ShvTypeInfo::fromVersion2(std::map<std::string, ShvTypeDescr> &&types, const std::vector<ShvPropertyDescr> &property_descriptions)
 {
-	auto it = m_deviceProperties.find(device_type);
-	if( it == m_deviceProperties.end()) {
-		static DeviceProperties empty;
+	ShvTypeInfo ret;
+	ret.m_types = std::move(types);
+	ret.m_devicePaths[""] = "";
+	auto &device_descr = ret.m_deviceDescriptions[""];
+	for(const auto &pd : property_descriptions) {
+		device_descr.properties.push_back(std::move(pd));
+	}
+	return ret;
+}
+
+const ShvDeviceDescription &ShvTypeInfo::deviceDescription(const std::string &device_type) const
+{
+	auto it = m_deviceDescriptions.find(device_type);
+	if( it == m_deviceDescriptions.end()) {
+		static ShvDeviceDescription empty;
 		return empty;
 	}
 
@@ -669,10 +817,22 @@ ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device
 
 ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device_type, const std::string &property_path, const ShvPropertyDescr &property_descr)
 {
-	if(property_descr.isValid())
-		m_deviceProperties[device_type][property_path] = property_descr;
-	else
-		m_deviceProperties[device_type].erase(property_path);
+	auto &dev_descr = m_deviceDescriptions[device_type];
+	if(property_descr.isValid()) {
+		auto pd = property_descr;
+		pd.setName(property_path);
+		if(auto it = dev_descr.findProperty(property_path); it != dev_descr.properties.end()) {
+			*it = pd;
+		}
+		else {
+			dev_descr.properties.push_back(std::move(pd));
+		}
+	}
+	else {
+		if(auto it = dev_descr.findProperty(property_path); it != dev_descr.properties.end()) {
+			dev_descr.properties.erase(it);
+		}
+	}
 	return *this;
 }
 
@@ -739,12 +899,11 @@ ShvTypeInfo::PathInfo ShvTypeInfo::pathInfo(const std::string &shv_path) const
 	ret.devicePath = device_path;
 	ret.deviceType = device_type;
 	if(deviation_found) {
-		ret.propertyPath = cut_sufix(cut_prefix(shv_path, ret.devicePath), ret.fieldPath);
+		ret.propertyDescription.setName(cut_sufix(cut_prefix(shv_path, ret.devicePath), ret.fieldPath));
 	}
 	else {
-		const auto &[own_property_path, field_path, property_descr] = findPropertyDescription(device_type, property_path);
+		const auto &[property_descr, field_path] = findPropertyDescription(device_type, property_path);
 		if(property_descr.isValid()) {
-			ret.propertyPath = own_property_path;
 			ret.fieldPath = field_path;
 			ret.propertyDescription = property_descr;
 		}
@@ -771,17 +930,16 @@ std::tuple<string, string, string> ShvTypeInfo::findDeviceType(const std::string
 	const string device_type = it->second;
 	const string property_path = prefix.empty()? shv_path: String(shv_path).mid(prefix.size() + 1);
 	return make_tuple(prefix, device_type, property_path);
-
 }
 
-std::tuple<string, string, ShvPropertyDescr> ShvTypeInfo::findPropertyDescription(const std::string &device_type, const std::string &property_path) const
+std::tuple<ShvPropertyDescr, string> ShvTypeInfo::findPropertyDescription(const std::string &device_type, const std::string &property_path) const
 {
-	if(auto it2 = m_deviceProperties.find(device_type); it2 != m_deviceProperties.end()) {
-		const DeviceProperties &dev_prop = it2->second;
-		if(auto it3 = find_longest_prefix(dev_prop, property_path); it3 != dev_prop.cend()) {
-			const string own_property_path = it3->first;
+	if(auto it2 = m_deviceDescriptions.find(device_type); it2 != m_deviceDescriptions.end()) {
+		const auto &dev_descr = it2->second;
+		if(auto it3 = dev_descr.findLongestPropertyPrefix(property_path); it3 != dev_descr.properties.cend()) {
+			const string own_property_path = it3->name();
 			const string field_path = cut_prefix(property_path, own_property_path);
-			return make_tuple(own_property_path, field_path, it3->second);
+			return make_tuple(*it3, field_path);
 		}
 	}
 	return {};
@@ -843,6 +1001,7 @@ constexpr auto PATHS = "paths"; // SHV2
 constexpr auto TYPES = "types"; // SHV2 + SHV3
 constexpr auto DEVICE_PATHS = "devicePaths";
 constexpr auto DEVICE_PROPERTIES = "deviceProperties";
+constexpr auto DEVICE_DESCRIPTIONS = "deviceDescriptions";
 constexpr auto PROPERTY_DEVIATIONS = "propertyDeviations";
 constexpr auto EXTRA_TAGS = "extraTags";
 constexpr auto SYSTEM_PATHS_ROOTS = "systemPathsRoots";
@@ -862,14 +1021,10 @@ RpcValue ShvTypeInfo::toRpcValue() const
 	}
 	{
 		RpcValue::Map m;
-		for(const auto &[device_type, property_map] : m_deviceProperties) {
-			RpcValue::Map dev_properties;
-			for(const auto &[property_path, node_descr] : property_map) {
-				dev_properties[property_path] = node_descr.toRpcValue();
-			}
-			m[device_type] = dev_properties;
+		for(const auto &[device_type, dev_descr] : m_deviceDescriptions) {
+			m[device_type] = dev_descr.toRpcValue();
 		}
-		map[DEVICE_PROPERTIES] = std::move(m);
+		map[DEVICE_DESCRIPTIONS] = std::move(m);
 	}
 	map[EXTRA_TAGS] = m_extraTags;
 	{
@@ -888,7 +1043,7 @@ RpcValue ShvTypeInfo::toRpcValue() const
 		map[PROPERTY_DEVIATIONS] = std::move(m);
 	}
 	RpcValue ret = map;
-	ret.setMetaValue(VERSION, 3);
+	ret.setMetaValue(VERSION, 4);
 	return ret;
 }
 
@@ -897,7 +1052,7 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 	int version = v.metaValue(VERSION).toInt();
 	const RpcValue::Map &map = v.asMap();
 	ShvTypeInfo ret;
-	if(version == 3) {
+	if(version == 3 || version == 4) {
 		{
 			const RpcValue::Map &m = map.value(TYPES).asMap();
 			for(const auto &kv : m) {
@@ -910,13 +1065,26 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 				ret.m_devicePaths[kv.first] = kv.second.asString();
 			}
 		}
-		{
+		if(version == 3) {
 			const RpcValue::Map &m = map.value(DEVICE_PROPERTIES).asMap();
 			for(const auto &[device_type, prop_map] : m) {
 				const RpcValue::Map &pm = prop_map.asMap();
-				for(const auto &[property_path, node_descr] : pm) {
-					ret.m_deviceProperties[device_type][property_path] = ShvPropertyDescr::fromRpcValue(node_descr);
+				//const auto &dev_descr_rv = pm.value("");
+				auto &dev_descr = ret.m_deviceDescriptions[device_type];
+				//dev_descr = ShvDeviceDescription::fromRpcValue(dev_descr_rv);
+				for(const auto &[property_path, property_descr_rv] : pm) {
+					auto property_descr = ShvPropertyDescr::fromRpcValue(property_descr_rv);
+					property_descr.setName(property_path);
+					dev_descr.properties.push_back(std::move(property_descr));
 				}
+			}
+		}
+		else {
+			const RpcValue::Map &m = map.value(DEVICE_DESCRIPTIONS).asMap();
+			for(const auto &[device_type, rv] : m) {
+				//const auto &dev_descr_rv = pm.value("");
+				auto &dev_descr = ret.m_deviceDescriptions[device_type];
+				dev_descr = ShvDeviceDescription::fromRpcValue(rv);
 			}
 		}
 		ret.m_extraTags = map.value(EXTRA_TAGS).asMap();
@@ -943,11 +1111,13 @@ ShvTypeInfo ShvTypeInfo::fromRpcValue(const RpcValue &v)
 			}
 		}
 		{
+			auto &dev_descr = ret.m_deviceDescriptions[""];
 			const RpcValue::Map &m = map.value(PATHS).asMap();
 			for(const auto &[path, val] : m) {
 				auto nd = ShvPropertyDescr::fromRpcValue(val);
 				nd.setTypeName(val.asMap().value("type").asString());
-				ret.m_deviceProperties[""][path] = nd;
+				nd.setName(path);
+				dev_descr.properties.push_back(std::move(nd));
 			}
 		}
 	}
@@ -1028,59 +1198,37 @@ RpcValue ShvTypeInfo::applyTypeDescription(const chainpack::RpcValue &val, const
 	return val;
 }
 
-void ShvTypeInfo::forEachDeviceProperty(const std::string &device_type, std::function<void (const std::string &, const ShvPropertyDescr &)> fn) const
+void ShvTypeInfo::forEachDeviceProperty(const std::string &device_type, std::function<void (const ShvPropertyDescr &)> fn) const
 {
-	auto it = m_deviceProperties.find(device_type);
-	if( it == m_deviceProperties.end()) {
+	auto it = m_deviceDescriptions.find(device_type);
+	if( it == m_deviceDescriptions.end()) {
 		// device path invalid
 		return;
 	}
 
-	for(const auto &[property_path, node_descr] : it->second) {
-		fn(property_path, node_descr);
+	for(const auto &property_descr : it->second.properties) {
+		fn(property_descr);
 	};
 }
 
 void ShvTypeInfo::forEachProperty(std::function<void (const std::string &shv_path, const ShvPropertyDescr &node_descr)> fn) const
 {
 	for(const auto& [device_path, device_type] : m_devicePaths) {
-		if(auto it = m_deviceProperties.find(device_type); it != m_deviceProperties.end()) {
-			for(const auto& [property_path, node_descr] : it->second) {
-				if (!property_path.empty()) {
-					const auto shv_path = shv::core::utils::joinPath(device_path, property_path);
-					fn(shv_path, node_descr);
-				}
+		if(auto it = m_deviceDescriptions.find(device_type); it != m_deviceDescriptions.end()) {
+			for(const auto &property_descr : it->second.properties) {
+				const auto shv_path = shv::core::utils::joinPath(device_path, property_descr.name());
+				fn(shv_path, property_descr);
 			}
 		}
 	}
 }
 
-/*
-ShvPropertyDescr ShvTypeInfo::findNodeDescription(const std::string &shv_path, std::string *p_field_name) const
-{
-	auto pi = pathInfo(shv_path);
-	if(p_field_name)
-		*p_field_name = pi.fieldPath;
-	return pi.nodeDescription;
-}
-*/
-namespace {
-ShvPropertyDescr take(ShvTypeInfo::DeviceProperties &map, const string &key)
-{
-	auto it = map.find(key);
-	if(it == map.end())
-		return {};
-	auto ret = it->second;
-	map.erase(it);
-	return ret;
-}
-}
 void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 										const shv::chainpack::RpcValue &node,
 										const std::string &device_type,
 										const std::string &device_path,
 										const std::string &property_path,
-										DeviceProperties *device_properties)
+										ShvDeviceDescription *device_description)
 {
 	using namespace shv::core::utils;
 	using namespace shv::core;
@@ -1088,18 +1236,18 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 		return;
 
 	if(auto ref = node.metaValue("nodeTypeRef").asString(); !ref.empty()) {
-		fromNodesTree_helper(node_types, node_types.value(ref), device_type, device_path, property_path, device_properties);
+		fromNodesTree_helper(node_types, node_types.value(ref), device_type, device_path, property_path, device_description);
 		return;
 	}
 
 	string current_device_type = device_type;
 	string current_device_path = device_path;
 	string current_property_path = property_path;
-	DeviceProperties new_device_properties;
-	DeviceProperties *current_device_properties = device_properties? device_properties: &new_device_properties;
+	ShvDeviceDescription new_device_description;
+	ShvDeviceDescription *current_device_description = device_description? device_description: &new_device_description;
 	RpcValue::Map property_descr_map;
 	RpcValue::List property_methods;
-	bool new_device_type_entered = device_properties == nullptr;
+	bool new_device_type_entered = device_description == nullptr;
 	static const string CREATE_FROM_TYPE_NAME = "createFromTypeName";
 	//static const string STATUS = "status";
 	static const string SYSTEM_PATH = "systemPath";
@@ -1125,7 +1273,7 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 			current_device_type = dtype;
 			current_device_path = utils::joinPath(device_path, property_path);
 			current_property_path = string();
-			current_device_properties = &new_device_properties;
+			current_device_description = &new_device_description;
 			new_device_type_entered = true;
 		}
 		property_descr_map.merge(tags_map);
@@ -1137,8 +1285,9 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 	if(!property_descr_map.empty()) {
 		RpcValue::Map extra_tags;
 		property_descr = shv::core::utils::ShvPropertyDescr::fromRpcValue(property_descr_map, &extra_tags);
-		if(property_descr.isValid()) {
-			(*current_device_properties)[current_property_path] = property_descr;
+		if(!property_descr.isEmpty()) {
+			property_descr.setName(current_property_path);
+			current_device_description->properties.push_back(property_descr);
 		}
 		auto system_path = extra_tags.take(SYSTEM_PATH).asString();
 		if(!system_path.empty()) {
@@ -1161,36 +1310,39 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 			if(child_name.empty())
 				continue;
 			ShvPath child_property_path = shv::core::utils::joinPath(current_property_path, child_name);
-			fromNodesTree_helper(node_types, child_node, current_device_type, current_device_path, child_property_path, current_device_properties);
+			fromNodesTree_helper(node_types, child_node, current_device_type, current_device_path, child_property_path, current_device_description);
 		}
 	}
 	if(new_device_type_entered) {
 		setDevicePath(current_device_path, current_device_type);
-		if(auto it = m_deviceProperties.find(current_device_type); it == m_deviceProperties.end()) {
+		if(auto it = m_deviceDescriptions.find(current_device_type); it == m_deviceDescriptions.end()) {
 			// device type defined first time
-			m_deviceProperties[current_device_type] = std::move(new_device_properties);
+			m_deviceDescriptions[current_device_type] = std::move(new_device_description);
 		}
 		else {
 			// check deviations
-			for(const auto &[existing_property_path, existing_property_descr] : it->second) {
-				auto new_property_descr = take(new_device_properties, existing_property_path);
-				if(new_property_descr.isValid()) {
-					// defined in both definitions, compare them
-					if(!(new_property_descr == existing_property_descr)) {
-						// they are not the same, create deviation
-						auto shv_path = utils::joinPath(current_device_path, existing_property_path);
-						setPropertyDeviation(shv_path, new_property_descr);
-					}
+			const auto &existing_device_descr = it->second;
+			for(const auto &existing_property_descr : existing_device_descr.properties) {
+				if(auto it2 = new_device_description.findProperty(existing_property_descr.name()); it2 == new_device_description.properties.end()) {
+					// property defined only in previous definition, add it as empty to deviations
+					auto shv_path = utils::joinPath(current_device_path, existing_property_descr.name());
+					//shvInfo() << "set property deviation to {}, path:" << shv_path;
+					setPropertyDeviation(shv_path, {});
 				}
 				else {
-					// property defined only in previous definition, add it as empty to deviations
-					auto shv_path = utils::joinPath(current_device_path, existing_property_path);
-					setPropertyDeviation(shv_path, {});
+					// defined in both definitions, compare them
+					const auto &new_property_descr = *it2;
+					if(!(new_property_descr == existing_property_descr)) {
+						// they are not the same, create deviation
+						auto shv_path = utils::joinPath(current_device_path, existing_property_descr.name());
+						setPropertyDeviation(shv_path, new_property_descr);
+					}
+					new_device_description.properties.erase(it2);
 				}
 			}
 			// check remaining property paths in new definition
-			for(const auto &[existing_property_path, new_property_descr] : new_device_properties) {
-				auto shv_path = utils::joinPath(current_device_path, existing_property_path);
+			for(const auto &new_property_descr : new_device_description.properties) {
+				auto shv_path = utils::joinPath(current_device_path, new_property_descr.name());
 				setPropertyDeviation(shv_path, new_property_descr);
 			}
 		}
@@ -1204,7 +1356,10 @@ ShvTypeInfo ShvTypeInfo::fromNodesTree(const chainpack::RpcValue &v)
 		const RpcValue types = v.metaValue("typeInfo").asMap().value("types");
 		const RpcValue::Map &m = types.asMap();
 		for(const auto &kv : m) {
-			ret.m_types[kv.first] = ShvTypeDescr::fromRpcValue(kv.second);
+			auto td = ShvTypeDescr::fromRpcValue(kv.second);
+			if(td.typeName().empty())
+				td.setTypeName(kv.first);
+			ret.m_types[kv.first] = td;
 		}
 	}
 	const RpcValue node_types = v.metaValue("nodeTypes");

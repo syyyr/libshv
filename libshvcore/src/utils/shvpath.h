@@ -13,6 +13,12 @@ class StringViewList;
 class StringView;
 namespace utils {
 
+namespace shvpath {
+
+SHVCORE_DECL_EXPORT bool startsWithPath(const std::string_view &str, const std::string_view &path, size_t *pos = nullptr);
+
+}
+
 class SHVCORE_DECL_EXPORT ShvPath : public shv::core::String
 {
 	using Super = shv::core::String;

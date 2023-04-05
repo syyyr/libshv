@@ -105,12 +105,12 @@ const ShvTypeInfo typeInfo = ShvTypeInfo::fromVersion2(
 	},
 	// paths
 	{
-		{ "temperature", {"Temperature"} },
-		{ "voltage", {"Voltage"} },
-		{ "doorOpen", {"Bool"} },
-		{ "someError", {"Bool"} },
-		{ "vetra/status", {"VetraStatus"} },
-		{ "vetra/vehicleDetected", {"VehicleData"} },
+		{ "temperature", "Temperature" },
+		{ "voltage", "Voltage" },
+		{ "doorOpen", "Bool" },
+		{ "someError", "Bool" },
+		{ "vetra/status", "VetraStatus" },
+		{ "vetra/vehicleDetected", "VehicleData" },
 	}
 );
 

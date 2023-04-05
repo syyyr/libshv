@@ -6,6 +6,29 @@
 
 namespace shv::core::utils {
 
+bool shvpath::startsWithPath(const std::string_view &str, const std::string_view &path, size_t *pos)
+{
+	auto set_pos = [pos](size_t val, bool ret_val) -> bool {
+		if(pos)
+			*pos = val;
+		return ret_val;
+	};
+	auto starts_with = [](const std::string_view &str1, const std::string_view &with) {
+		return str1.rfind(with, 0) == 0;
+	};
+	if(path.empty())
+		return set_pos(0, true);
+	if(starts_with(str, path)) {
+		if(str.size() == path.size())
+			return set_pos(str.size(), true);
+		if(str[path.size()] == ShvPath::SHV_PATH_DELIM)
+			return set_pos(path.size() + 1, true);
+		if(path[path.size() - 1] == ShvPath::SHV_PATH_DELIM) // path contains trailing /
+			return set_pos(path.size(), true);
+	}
+	return set_pos(std::string::npos, false);
+}
+
 //static const std::string DDOT_SLASH("../");
 //static const std::string DDOT("..");
 
