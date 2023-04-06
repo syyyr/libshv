@@ -16,10 +16,10 @@ jobs:
         with:
           submodules: true
 
-      - name: Install/cache ninja, doctest, and Qt's dependencies
+      - name: Install/cache ninja, openldap, doctest, and Qt's dependencies
         uses: awalsh128/cache-apt-pkgs-action@v1.2.1
         with:
-          packages: ninja-build doctest-dev libgl1-mesa-dev libpulse-dev libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-util1 libxcb-xinerama0 libxkbcommon-x11-0
+          packages: ninja-build doctest-dev libgl1-mesa-dev libpulse-dev libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-util1 libxcb-xinerama0 libxkbcommon-x11-0 libldap-dev
           version: 1.0
 
       - name: Install Qt
@@ -48,10 +48,10 @@ jobs:
         with:
           submodules: true
 
-      - name: Install/cache ninja, doctest, and Qt's dependencies
+      - name: Install/cache ninja, openldap, doctest, and Qt's dependencies
         uses: awalsh128/cache-apt-pkgs-action@v1.2.1
         with:
-          packages: ninja-build doctest-dev libgl1-mesa-dev libpulse-dev libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-util1 libxcb-xinerama0 libxkbcommon-x11-0
+          packages: ninja-build doctest-dev libgl1-mesa-dev libpulse-dev libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-util1 libxcb-xinerama0 libxkbcommon-x11-0 libldap-dev
           version: 1.0
 
       - name: Install Qt
