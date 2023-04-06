@@ -23,6 +23,9 @@ inline unsigned qHash(const std::string &s) noexcept //Q_DECL_NOEXCEPT_EXPR(noex
 #include <QCoreApplication>
 #include <QDateTime>
 
+#ifdef WITH_SHV_LDAP
+#include <optional>
+#endif
 #include <set>
 
 class QSocketNotifier;
