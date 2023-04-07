@@ -18,7 +18,11 @@ WebSocket::WebSocket(QWebSocket *socket, QObject *parent)
 	connect(m_socket, &QWebSocket::binaryMessageReceived, this, &WebSocket::onBinaryMessageReceived);
 	connect(m_socket, &QWebSocket::bytesWritten, this, &Socket::bytesWritten);
 	connect(m_socket, &QWebSocket::stateChanged, this, &Socket::stateChanged);
+#if QT_VERSION_MAJOR >= 6
+	connect(m_socket, &QWebSocket::errorOccurred, this, &Socket::error);
+#else
 	connect(m_socket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error), this, &Socket::error);
+#endif
 #ifndef QT_NO_SSL
 	connect(m_socket, &QWebSocket::sslErrors, this, &Socket::sslErrors);
 #endif
