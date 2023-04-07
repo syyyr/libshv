@@ -56,7 +56,7 @@ public:
 	BrokerApp(int &argc, char **argv, AppCliOptions* cli_opts);
 	~BrokerApp() Q_DECL_OVERRIDE;
 
-	virtual AppCliOptions* cliOptions() {return m_cliOptions;}
+	AppCliOptions* cliOptions() {return m_cliOptions;}
 	static void registerLogTopics();
 
 	static BrokerApp* instance() {return qobject_cast<BrokerApp*>(Super::instance());}
