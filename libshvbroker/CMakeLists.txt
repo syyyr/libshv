@@ -29,7 +29,7 @@ if(OpenLDAP_FOUND)
 		src/ldap.cpp
 		)
 	target_link_libraries(libshvbroker PUBLIC OpenLDAP::OpenLDAP)
-	target_compile_definitions(libshvbroker PRIVATE WITH_SHV_LDAP)
+	target_compile_definitions(libshvbroker PUBLIC WITH_SHV_LDAP)
 endif()
 
 target_link_libraries(libshvbroker PUBLIC Qt::Sql libshviotqt)

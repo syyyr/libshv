@@ -20,7 +20,7 @@ std::vector<std::string> getGroupsForUser(const std::unique_ptr<shv::ldap::Ldap>
 	}
 
 	return res;
-};
+}
 
 namespace {
 template <typename Type, typename DeleteFunc>

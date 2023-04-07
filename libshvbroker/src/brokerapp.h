@@ -23,6 +23,9 @@ inline unsigned qHash(const std::string &s) noexcept //Q_DECL_NOEXCEPT_EXPR(noex
 #include <QCoreApplication>
 #include <QDateTime>
 
+#ifdef WITH_SHV_LDAP
+#include <optional>
+#endif
 #include <set>
 
 class QSocketNotifier;
@@ -53,7 +56,7 @@ public:
 	BrokerApp(int &argc, char **argv, AppCliOptions* cli_opts);
 	~BrokerApp() Q_DECL_OVERRIDE;
 
-	virtual AppCliOptions* cliOptions() {return m_cliOptions;}
+	AppCliOptions* cliOptions() {return m_cliOptions;}
 	static void registerLogTopics();
 
 	static BrokerApp* instance() {return qobject_cast<BrokerApp*>(Super::instance());}
