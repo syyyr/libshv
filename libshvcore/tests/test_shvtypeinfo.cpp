@@ -137,7 +137,7 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 			}
 			{
 				// forEachNode
-				type_info.forEachProperty([](const std::string &shv_path, const ShvLogNodeDescr &node_descr) {
+				type_info.forEachProperty([](const std::string &shv_path, const ShvPropertyDescr &node_descr) {
 					CAPTURE(shv_path  + " --> " + node_descr.typeName());
 					if(!shv_path.empty())
 						REQUIRE(shv_path[0] != std::toupper(shv_path[0]));

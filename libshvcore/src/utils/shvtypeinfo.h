@@ -24,7 +24,7 @@ public:
 	std::string name() const;
 
 	bool isEmpty() const { return m_data.asMap().empty(); }
-	bool isValid() const { return m_data.asMap().size() > 1 && hasName(); }
+	bool isValid() const;
 	chainpack::RpcValue dataValue(const std::string &key, const chainpack::RpcValue &default_val = {}) const;
 
 	bool operator==(const ShvDescriptionBase &o) const { return m_data == o.m_data; }

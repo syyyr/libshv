@@ -44,15 +44,23 @@ string ShvDescriptionBase::name() const
 	return m_data.asMap().value(KEY_NAME).asString();
 }
 
+bool ShvDescriptionBase::isValid() const
+{
+	const auto has_name = hasName();
+	const auto size = m_data.asMap().size();
+	return size > 1 && has_name;
+}
+
 RpcValue ShvDescriptionBase::dataValue(const std::string &key, const chainpack::RpcValue &default_val) const
 {
-	return m_data.asMap().value(key, default_val);
+	const auto &m = m_data.asMap();
+	return m.value(key, default_val);
 }
 
 bool ShvDescriptionBase::hasName() const
 {
-	const auto name = m_data.asMap().value(KEY_NAME);
-	return !name.asString().empty();
+	const auto &m = m_data.asMap();
+	return m.hasKey(KEY_NAME);
 }
 
 void ShvDescriptionBase::setName(const std::string &n)
@@ -661,7 +669,8 @@ ShvDeviceDescription::Properties::const_iterator ShvDeviceDescription::findLonge
 	for(auto it = properties.begin(); it != properties.end(); ++it) {
 		const auto property_name = it->name();
 		if(shvpath::startsWithPath(name, property_name)) {
-			if(property_name.size() > max_len) {
+			// we need >= operator to support empty property name
+			if(property_name.size() >= max_len) {
 				max_len = property_name.size();
 				ret = it;
 			}
