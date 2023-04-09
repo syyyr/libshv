@@ -139,10 +139,15 @@ int ShvFieldDescr::alarmLevel() const
 	return dataValue(KEY_ALARM_LEVEL).toInt();
 }
 
+string ShvFieldDescr::unit() const
+{
+	return dataValue(KEY_UNIT).asString();
+}
+
 RpcValue ShvFieldDescr::toRpcValue() const
 {
 	RpcValue ret = m_data;
-	if(description().empty())
+	if(description().empty() && ret.isMap())
 		ret.set(KEY_DESCRIPTION, {});
 	return ret;
 }
@@ -462,20 +467,10 @@ ShvPropertyDescr &ShvPropertyDescr::setName(const std::string &name)
 	return *this;
 }
 
-string ShvPropertyDescr::typeName() const
-{
-	return dataValue(KEY_TYPE_NAME).asString();
-}
-
 ShvPropertyDescr &ShvPropertyDescr::setTypeName(const string &type_name)
 {
 	setDataValue(KEY_TYPE_NAME, type_name);
 	return *this;
-}
-
-string ShvPropertyDescr::label() const
-{
-	return dataValue(KEY_LABEL).asString();
 }
 
 ShvPropertyDescr &ShvPropertyDescr::setLabel(const string &label)
@@ -484,31 +479,16 @@ ShvPropertyDescr &ShvPropertyDescr::setLabel(const string &label)
 	return *this;
 }
 
-string ShvPropertyDescr::description() const
-{
-	return dataValue(KEY_DESCRIPTION).asString();
-}
-
 ShvPropertyDescr &ShvPropertyDescr::setDescription(const string &description)
 {
 	setDataValue(KEY_DESCRIPTION, description);
 	return *this;
 }
 
-string ShvPropertyDescr::unit() const
-{
-	return dataValue(KEY_UNIT).asString();
-}
-
 ShvPropertyDescr &ShvPropertyDescr::setUnit(const string &unit)
 {
 	setDataValue(KEY_UNIT, unit);
 	return *this;
-}
-
-string ShvPropertyDescr::visualStyleName() const
-{
-	return dataValue(KEY_VISUAL_STYLE).asString();
 }
 
 ShvPropertyDescr &ShvPropertyDescr::setVisualStyleName(const string &visual_style_name)
@@ -529,20 +509,11 @@ ShvPropertyDescr &ShvPropertyDescr::setBlacklist(chainpack::RpcValue::Map &&blac
 	return *this;
 }
 */
-string ShvPropertyDescr::alarm() const
-{
-	return dataValue(KEY_ALARM, std::string()).asString();
-}
 
 ShvPropertyDescr &ShvPropertyDescr::setAlarm(const string &alarm)
 {
 	setDataValue(KEY_ALARM, alarm);
 	return *this;
-}
-
-int ShvPropertyDescr::alarmLevel() const
-{
-	return dataValue(KEY_ALARM_LEVEL).toInt();
 }
 
 std::vector<ShvLogMethodDescr> ShvPropertyDescr::methods() const
@@ -599,13 +570,7 @@ ShvPropertyDescr &ShvPropertyDescr::setMethod(const ShvMethodDescr &method_descr
 
 RpcValue ShvPropertyDescr::toRpcValue() const
 {
-	//RpcValue::Map m;
-	//m[KEY_TYPE_NAME] = typeName;
-	//if(!description.empty())
-	//	m[KEY_DESCRIPTION] = description;
-	//if(!tags.empty())
-	//	m[KEY_TAGS] = tags;
-	return m_data;
+	return Super::toRpcValue();
 }
 
 ShvPropertyDescr ShvPropertyDescr::fromRpcValue(const RpcValue &v, RpcValue::Map *extra_tags)

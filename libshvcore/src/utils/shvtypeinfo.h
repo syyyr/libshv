@@ -57,6 +57,8 @@ public:
 	std::string alarm() const;
 	int alarmLevel() const;
 
+	std::string unit() const;
+
 	chainpack::RpcValue toRpcValue() const;
 	static ShvFieldDescr fromRpcValue(const chainpack::RpcValue &v);
 
@@ -65,9 +67,6 @@ public:
 private:
 	std::pair<unsigned, unsigned> bitRange() const;
 };
-
-// backward compatibility
-using ShvLogTypeDescrField = ShvFieldDescr;
 
 class SHVCORE_DECL_EXPORT ShvTypeDescr : public ShvDescriptionBase
 {
@@ -134,38 +133,28 @@ public:
 
 using ShvMethodDescr = shv::chainpack::MetaMethod;
 
-class SHVCORE_DECL_EXPORT ShvPropertyDescr : public ShvDescriptionBase
+class SHVCORE_DECL_EXPORT ShvPropertyDescr : public ShvFieldDescr
 {
-	using Super = ShvDescriptionBase;
+	using Super = ShvFieldDescr;
 public:
 	ShvPropertyDescr() = default;
-	ShvPropertyDescr(const std::string &name, const std::string &type_name) {
-		setName(name);
-		setTypeName(type_name);
-	}
+	ShvPropertyDescr(const std::string &name, const std::string &type_name) : Super(name, type_name) {}
 	[[deprecated]] ShvPropertyDescr(const std::string &type_name) {
 		setTypeName(type_name);
 	}
 
 	ShvPropertyDescr &setName(const std::string &name);
-	std::string typeName() const;
 	ShvPropertyDescr &setTypeName(const std::string &type_name);
-	std::string label() const;
 	ShvPropertyDescr &setLabel(const std::string &label);
-	std::string description() const;
 	ShvPropertyDescr &setDescription(const std::string &description);
-	std::string unit() const;
 	ShvPropertyDescr &setUnit(const std::string &unit);
 
-	std::string visualStyleName() const;
 	ShvPropertyDescr &setVisualStyleName(const std::string &visual_style_name);
 
 	//chainpack::RpcValue blacklist() const;
 	//ShvNodeDescr &setBlacklist(chainpack::RpcValue::Map &&black_list);
 
-	std::string alarm() const;
 	ShvPropertyDescr &setAlarm(const std::string &alarm);
-	int alarmLevel() const;
 
 	std::vector<ShvMethodDescr> methods() const;
 	ShvMethodDescr method(const std::string &name) const;
@@ -285,6 +274,8 @@ using ShvLogNodeDescr = ShvPropertyDescr;
 using ShvNodeDescr = ShvPropertyDescr;
 using ShvLogTypeInfo = ShvTypeInfo;
 using ShvLogPathDescr = ShvPropertyDescr;
+using ShvLogTypeDescrField = ShvFieldDescr;
+
 
 } // namespace utils
 } // namespace core
