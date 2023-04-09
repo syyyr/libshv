@@ -783,27 +783,26 @@ ShvTypeInfo &ShvTypeInfo::setDevicePath(const std::string &device_path, const st
 	return *this;
 }
 
-ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device_path, const std::string &device_type, const std::string &property_path, const ShvPropertyDescr &property_descr)
+ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device_path, const std::string &device_type, const ShvPropertyDescr &property_descr)
 {
 	setDevicePath(device_path, device_type);
-	return setDevicePropertyDescription(device_type, property_path, property_descr);
+	return setDevicePropertyDescription(device_type, property_descr);
 }
 
-ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device_type, const std::string &property_path, const ShvPropertyDescr &property_descr)
+ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device_type, const ShvPropertyDescr &property_descr)
 {
 	auto &dev_descr = m_deviceDescriptions[device_type];
+	auto property_name = property_descr.name();
 	if(property_descr.isValid()) {
-		auto pd = property_descr;
-		pd.setName(property_path);
-		if(auto it = dev_descr.findProperty(property_path); it != dev_descr.properties.end()) {
-			*it = pd;
+		if(auto it = dev_descr.findProperty(property_name); it != dev_descr.properties.end()) {
+			*it = property_descr;
 		}
 		else {
-			dev_descr.properties.push_back(std::move(pd));
+			dev_descr.properties.push_back(property_descr);
 		}
 	}
 	else {
-		if(auto it = dev_descr.findProperty(property_path); it != dev_descr.properties.end()) {
+		if(auto it = dev_descr.findProperty(property_name); it != dev_descr.properties.end()) {
 			dev_descr.properties.erase(it);
 		}
 	}
