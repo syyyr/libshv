@@ -783,13 +783,13 @@ ShvTypeInfo &ShvTypeInfo::setDevicePath(const std::string &device_path, const st
 	return *this;
 }
 
-ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device_path, const std::string &device_type, const ShvPropertyDescr &property_descr)
+ShvTypeInfo &ShvTypeInfo::setPropertyDescriptionOnDevicePath(const std::string &device_path, const std::string &device_type, const ShvPropertyDescr &property_descr)
 {
 	setDevicePath(device_path, device_type);
-	return setDevicePropertyDescription(device_type, property_descr);
+	return setPropertyDescription(device_type, property_descr);
 }
 
-ShvTypeInfo &ShvTypeInfo::setDevicePropertyDescription(const std::string &device_type, const ShvPropertyDescr &property_descr)
+ShvTypeInfo &ShvTypeInfo::setPropertyDescription(const std::string &device_type, const ShvPropertyDescr &property_descr)
 {
 	auto &dev_descr = m_deviceDescriptions[device_type];
 	auto property_name = property_descr.name();
