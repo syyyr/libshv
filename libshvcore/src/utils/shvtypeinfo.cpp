@@ -25,7 +25,6 @@ constexpr auto KEY_VALUE = "value";
 constexpr auto KEY_FIELDS = "fields";
 constexpr auto KEY_SAMPLE_TYPE = "sampleType";
 constexpr auto KEY_SUPER_TYPE_NAME = "superTypeName";
-constexpr auto KEY_SUPER_DEVICE_TYPE = "superDeviceType";
 constexpr auto KEY_SITE_SPECIFIC = "siteSpecific";
 constexpr auto KEY_TAGS = "tags";
 constexpr auto KEY_METHODS = "methods";
