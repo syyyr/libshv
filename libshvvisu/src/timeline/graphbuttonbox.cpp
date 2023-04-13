@@ -34,10 +34,6 @@ void GraphButtonBox::hide()
 
 bool GraphButtonBox::processEvent(QEvent *ev)
 {
-	//auto rect_to_string = [](const QRect &r) {
-	//	QString s = "%1,%2 %3x%4";
-	//	return s.arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
-	//};
 	auto invalidate_bb = [this]() {
 		graph()->emitPresentationDirty(m_rect.adjusted(-10, -10, 10, 10));
 	};
@@ -45,9 +41,6 @@ bool GraphButtonBox::processEvent(QEvent *ev)
 	case QEvent::MouseMove: {
 		auto *event = static_cast<QMouseEvent*>(ev);
 		QPoint pos = event->pos();
-		//shvDebug() << "------------------------";
-		//shvDebug() << pos.x() << pos.y();
-		//shvDebug() << rect_to_string(m_rect);
 		if(m_rect.contains(pos)) {
 			m_mouseOver = true;
 			for (int i = 0; i < m_buttonIds.count(); ++i) {
@@ -74,7 +67,6 @@ bool GraphButtonBox::processEvent(QEvent *ev)
 		break;
 	}
 	case QEvent::MouseButtonPress: {
-		//shvDebug() << objectName() << "press";
 		auto *event = static_cast<QMouseEvent*>(ev);
 		QPoint pos = event->pos();
 		for (int i = 0; i < m_buttonIds.count(); ++i) {
@@ -112,7 +104,6 @@ void GraphButtonBox::draw(QPainter *painter)
 		return;
 	painter->fillRect(m_rect, graph()->effectiveStyle().colorPanel());
 	for (int i = 0; i < m_buttonIds.count(); ++i) {
-		//shvDebug() << "name:" << this->objectName() << "DRAW2" << i << (int)m_buttonIds[i];
 		drawButton(painter, buttonRect(i), i);
 	}
 }
@@ -156,7 +147,6 @@ QRect GraphButtonBox::buttonRect(int ix) const
 
 void GraphButtonBox::drawButton(QPainter *painter, const QRect &rect, int button_index)
 {
-	//shvDebug() << __FILE__ << __LINE__ << button_index << "over:" << m_mouseOverButtonIndex;
 	painter->save();
 	int corner_radius = rect.height() / 8;
 	QPen p1(graph()->effectiveStyle().color());
@@ -206,10 +196,7 @@ void GraphButtonBox::drawButton(QPainter *painter, const QRect &rect, int button
 		int w = r1.width() / 3;
 		QRect r2{0, 0, w, w};
 		r2.moveCenter(rect.center());
-		//painter->save();
-		//painter->setBrush(p.color());
 		painter->drawEllipse(r2);
-		//painter->restore();
 		r = r1.adjusted(inset, inset, -inset, -inset);
 		painter->drawLine(r.bottomLeft(), r.topRight());
 		break;

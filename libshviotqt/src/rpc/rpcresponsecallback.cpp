@@ -13,13 +13,6 @@ namespace shv::iotqt::rpc {
 //===================================================
 // RpcCall
 //===================================================
-/*
-RpcResponseCallBack::RpcResponseCallBack(int rq_id, QObject *parent)
-	: QObject(parent)
-{
-	setRequestId(rq_id);
-}
-*/
 RpcResponseCallBack::RpcResponseCallBack(ClientConnection *conn, int rq_id, QObject *parent)
 	: QObject(parent)
 {

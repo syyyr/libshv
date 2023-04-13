@@ -31,7 +31,6 @@ public:
 	std::string decrypt(const std::string &data) const;
 private:
 	std::string decodeArray(const std::string &ba) const;
-	//uint32_t nextRandomValue();
 private:
 	Generator m_generator;
 };

@@ -12,7 +12,6 @@ public:
 	static constexpr auto STR_TRUE = "true";
 	static constexpr auto STR_FALSE = "false";
 	static constexpr auto STR_IMAP_BEGIN = "i{";
-	//static constexpr auto STR_ARRAY_BEGIN = "a[";
 	static constexpr auto STR_ESC_BLOB_BEGIN = "b\"";
 	static constexpr auto STR_HEX_BLOB_BEGIN = "x\"";
 	static constexpr auto STR_DATETIME_BEGIN = "d\"";

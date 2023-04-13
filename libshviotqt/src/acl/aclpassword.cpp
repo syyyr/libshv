@@ -33,7 +33,6 @@ AclPassword AclPassword::fromRpcValue(const shv::chainpack::RpcValue &v)
 	AclPassword ret;
 	if(v.isString()) {
 		ret.password = v.toString();
-		// ffee1086753ca76fe84b7fadd738d76caf2072d0
 		ret.format = std::regex_match(ret.password, sha1_regex)? Format::Sha1: Format::Plain;
 	}
 	else if(v.isMap()) {

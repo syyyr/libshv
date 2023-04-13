@@ -7,7 +7,6 @@ namespace shv::iotqt::acl {
 shv::chainpack::RpcValue AclUser::toRpcValue() const
 {
 	return shv::chainpack::RpcValue::Map {
-		//{"name", name},
 		{"password", password.toRpcValue()},
 		{"roles", shv::chainpack::RpcValue::List::fromStringList(roles)},
 	};
@@ -18,7 +17,6 @@ AclUser AclUser::fromRpcValue(const shv::chainpack::RpcValue &v)
 	AclUser ret;
 	if(v.isMap()) {
 		const auto &m = v.asMap();
-		//ret.name = m.value("name").toString();
 		ret.password = AclPassword::fromRpcValue(m.value("password"));
 		std::vector<std::string> roles;
 		for(const auto &lst : m.value("roles").asList())

@@ -26,8 +26,6 @@ AbstractStreamReader::AbstractStreamReader(std::istream &in)
 	: m_in(in)
 {
 	// C++ implementation does not require container states stack
-	//ccpcp_container_stack_init(&m_containerStack, m_containerStates, CONTAINER_STATE_CNT, NULL);
-	//ccpcp_unpack_context_init(&m_inCtx, m_unpackBuff, 0, unpack_underflow_handler, &m_containerStack);
 	ccpcp_unpack_context_init(&m_inCtx, m_unpackBuff, 0, unpack_underflow_handler, nullptr);
 	m_inCtx.custom_context = this;
 }

@@ -1,8 +1,6 @@
 #pragma once
 
 #include "shvnode.h"
-//#include <shv/core/string.h>
-//#include <shv/core/stringview.h>
 
 #include <QObject>
 
@@ -30,7 +28,6 @@ public:
 protected:
 	ShvNode* mdcd(const ShvNode::StringViewList &path, bool create_dirs, ShvNode::String *path_rest);
 protected:
-	//std::map<std::string, ShvNode*> m_root;
 	ShvNode* m_root = nullptr;
 };
 

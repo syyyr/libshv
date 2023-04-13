@@ -43,7 +43,6 @@ public:
 
 	virtual QByteArray readAll() = 0;
 	virtual qint64 write(const char *data, qint64 max_size) = 0;
-	//virtual bool flush() = 0;
 	virtual void writeMessageBegin() = 0;
 	virtual void writeMessageEnd() = 0;
 	virtual void ignoreSslErrors() = 0;
@@ -53,7 +52,6 @@ public:
 	Q_SIGNAL void connected();
 	Q_SIGNAL void disconnected();
 	Q_SIGNAL void readyRead();
-	//Q_SIGNAL void readyWrite();
 	Q_SIGNAL void  bytesWritten(qint64 bytes);
 
 	Q_SIGNAL void socketReset();
@@ -80,9 +78,8 @@ public:
 	quint16 peerPort() const override;
 	QByteArray readAll() override;
 	qint64 write(const char *data, qint64 max_size) override;
-	//bool flush() override;
 	void writeMessageBegin() override {}
-	void writeMessageEnd() override;
+	void writeMessageEnd() override {};
 	void ignoreSslErrors() override {}
 
 protected:
@@ -106,7 +103,6 @@ public:
 	quint16 peerPort() const override;
 	QByteArray readAll() override;
 	qint64 write(const char *data, qint64 max_size) override;
-	//bool flush() override;
 	void writeMessageBegin() override {}
 	void writeMessageEnd() override {}
 	void ignoreSslErrors() override {}

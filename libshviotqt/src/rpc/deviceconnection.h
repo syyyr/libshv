@@ -19,8 +19,6 @@ public:
 	shv::chainpack::RpcValue deviceId() const;
 
 	void setCliOptions(const DeviceAppCliOptions *cli_opts);
-protected:
-	//shv::chainpack::RpcValue createLoginParams(const shv::chainpack::RpcValue &server_hello) override;
 };
 
 } // namespace rpc

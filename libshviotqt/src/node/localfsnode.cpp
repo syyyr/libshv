@@ -327,7 +327,6 @@ RpcValue LocalFSNode::ndLsDir(const QString &path, const chainpack::RpcValue &me
 	bool with_dirs = methods_params.asMap().value("dirs", true).toBool();
 	bool with_files = methods_params.asMap().value("files", true).toBool();
 	QFileInfo fi_path(makeAbsolutePath(path));
-	//shvInfo() << __FUNCTION__ << fi_path.absoluteFilePath() << "is dir:" << fi_path.isDir();
 	if(fi_path.isDir()) {
 		QDir d2(fi_path.absoluteFilePath());
 		if(!d2.exists())
@@ -339,7 +338,6 @@ RpcValue LocalFSNode::ndLsDir(const QString &path, const chainpack::RpcValue &me
 		if(with_files)
 			filters |= QDir::Files;
 		for(const QFileInfo &fi : d2.entryInfoList(filters, QDir::Name | QDir::IgnoreCase | QDir::DirsFirst)) {
-			//shvInfo() << fi.fileName();
 			RpcValue::List lst2;
 			lst2.push_back(fi.fileName().toStdString());
 			lst2.push_back(fi.isDir()? "d": "f");

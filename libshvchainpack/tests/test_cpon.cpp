@@ -28,7 +28,6 @@ std::string int_to_hex( T i )
 {
 	std::stringstream stream;
 	stream << "0x"
-			  //<< std::setfill ('0') << std::setw(sizeof(T)*2)
 		   << std::hex << i;
 	return stream.str();
 }
@@ -40,15 +39,6 @@ namespace shv::chainpack {
 doctest::String toString(const RpcValue& value) {
 	return value.toCpon().c_str();
 }
-/*
-doctest::String toString(const RpcValue::List& value) {
-	return RpcValue(value).toCpon().c_str();
-}
-
-doctest::String toString(const RpcValue::Map& value) {
-	return RpcValue(value).toCpon().c_str();
-}
-*/
 }
 
 DOCTEST_TEST_CASE("Cpon")
@@ -80,7 +70,6 @@ DOCTEST_TEST_CASE("Cpon")
 					cpon2 = cpon1;
 				const RpcValue cp = RpcValue::fromCpon(cpon1, &err);
 				string cpon = cp.toCpon();
-				//nDebug() << test << "--->" << cpon;
 				REQUIRE(err.empty());
 				REQUIRE(cpon == cpon2);
 			}
@@ -205,8 +194,6 @@ DOCTEST_TEST_CASE("Cpon")
 				}) {
 					const RpcValue cp = RpcValue::fromCpon(test, &err);
 					nDebug() << test << "--->" << cp.toCpon();
-					//if(!(cp.toCpon() == test) || err.empty())
-					//	abort();
 					REQUIRE(err.empty());
 					REQUIRE(cp.toCpon() == test);
 				}
@@ -385,10 +372,6 @@ DOCTEST_TEST_CASE("Cpon")
 					RpcValue toRpcValue() const { return RpcValue::List { x, y }; }
 				};
 
-				//std::vector<Point> points = { { 1, 2 }, { 10, 20 }, { 100, 200 } };
-				//std::string points_json = RpcValue(points).toCpon();
-				//nDebug() << "points_json: " << points_json.c_str();
-				//REQUIRE(points_json == "[[1,2],[10,20],[100,200]]");
 				{
 					string err;
 					auto rpcval = RpcValue::fromCpon(R"(<1:2,2:12,8:"foo",9:[1,2,3],"bar":"baz",>["META",17,18,19])", &err);

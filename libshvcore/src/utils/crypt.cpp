@@ -26,7 +26,6 @@ Crypt::Generator Crypt::createGenerator(uint32_t a, uint32_t b, uint32_t max_ran
 		val_64bit *= a;
 		val_64bit += b;
 		val_64bit %= max_rand;
-		//qfWarning() << '(' << a << '*' << val << '+' << b << ") %" << max_rand << "---->" << ret;
 		return static_cast<uint32_t>(val_64bit);
 	};
 	return ret;

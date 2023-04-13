@@ -18,11 +18,9 @@ class ServerConnection;
 class SHVIOTQT_DECL_EXPORT TcpServer : public QTcpServer
 {
 	Q_OBJECT
-	//Q_PROPERTY(int numConnections READ numConnections)
 
 	using Super = QTcpServer;
 
-	//SHV_FIELD_IMPL(int, p, P, ort)
 public:
 	explicit TcpServer(QObject *parent = nullptr);
 	~TcpServer() override;

@@ -12,7 +12,6 @@ namespace acl {
 
 struct SHVIOTQT_DECL_EXPORT AclMountDef
 {
-	//std::string deviceId;
 	std::string mountPoint;
 	std::string description;
 

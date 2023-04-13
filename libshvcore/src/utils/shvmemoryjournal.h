@@ -34,8 +34,6 @@ public:
 	void loadLog(const shv::chainpack::RpcValue &log, const shv::chainpack::RpcValue::Map &default_snapshot_values);
 	shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) override;
 
-	// we do not expose whole header, since append() does not update field until
-	//const ShvLogHeader &logHeader() const { return m_logHeader; }
 	bool hasSnapshot() const { return m_logHeader.withSnapShot(); }
 
 	const std::vector<ShvJournalEntry>& entries() const {return  m_entries;}
@@ -44,7 +42,6 @@ public:
 	const ShvJournalEntry& at(size_t ix) const { return  m_entries.at(ix); }
 	void clear() { m_entries.clear(); }
 	void removeLastEntry() { if (m_entries.size()) m_entries.pop_back(); }
-	//size_t timeToUpperBoundIndex(int64_t time) const;
 private:
 	using Entry = ShvJournalEntry;
 

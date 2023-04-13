@@ -17,7 +17,6 @@ vector<string> cmdline;
 
 int main(int argc, char** argv)
 {
-	//NecroLog::setFileLogTresholds("test_shvlog:D");
 	cmdline = NecroLog::setCLIOptions(argc, argv);
 
 	return doctest::Context(argc, argv).run();

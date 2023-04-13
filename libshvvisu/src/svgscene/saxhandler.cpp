@@ -129,17 +129,7 @@ static qreal toDouble(const QString &str, bool *ok = nullptr)
 	}
 	return res;
 }
-/*
-static qreal toDouble(const QStringRef &str, bool *ok = nullptr)
-{
-	const QChar *c = str.constData();
-	qreal res = toDouble(c);
-	if (ok) {
-		*ok = (c == (str.constData() + str.length()));
-	}
-	return res;
-}
-*/
+
 static inline void parseNumbersArray(const QChar *&str, QVarLengthArray<qreal, 8> &points)
 {
 	while (str->isSpace())
@@ -934,12 +924,6 @@ void SaxHandler::load(QXmlStreamReader *data, bool skip_definitions)
 	m_defaultPen = QPen(Qt::black, 1, Qt::SolidLine, Qt::FlatCap, Qt::SvgMiterJoin);
 	m_defaultPen.setMiterLimit(4);
 	parse();
-	/*
-	QGraphicsRectItem *it = new QGraphicsRectItem();
-	it->setRect(m_scene->sceneRect());
-	it->setPen(QPen(Qt::blue));
-	m_scene->addItem(it);
-	*/
 }
 
 void SaxHandler::parse()
@@ -973,7 +957,6 @@ void SaxHandler::parse()
 			SvgElement svg_element = m_elementStack.pop();
 			logSvgD() << QString(m_elementStack.count(), '-') << ">" << "- end element:" << m_xml->name() << "item created:" << svg_element.itemCreated;
 			if(svg_element.itemCreated && m_topLevelItem) {
-				//logSvgI() << "m_topLevelItem:" << m_topLevelItem << typeid (*m_topLevelItem).name() << svg_element.name;
 				installVisuController(m_topLevelItem, svg_element);
 				m_topLevelItem = m_topLevelItem->parentItem();
 			}
@@ -994,17 +977,14 @@ void SaxHandler::parse()
 				if(!text.isEmpty())
 					text += '\n';
 				qgraphics_text_item->setPlainText(text.append(m_xml->text()));
-				//nInfo() << text_item->toPlainText();
 			}
 			else {
 				logSvgD() << "characters are not part of text item, will be ignored";
-				//nWarning() << "top:" << m_topLevelItem << (m_topLevelItem? typeid (*m_topLevelItem).name(): "NULL");
 			}
 			break;
 		}
 		case QXmlStreamReader::ProcessingInstruction:
 			logSvgD() << "ProcessingInstruction:" << m_xml->processingInstructionTarget() << m_xml->processingInstructionData();
-			//processingInstruction(xml->processingInstructionTarget().toString(), xml->processingInstructionData().toString());
 			break;
 		default:
 			break;
@@ -1112,14 +1092,11 @@ bool SaxHandler::startElement()
 
 	if (el.name == QLatin1String("text")) {
 		auto *item = new TextSpansRect();
-		//item->setBrush(Qt::magenta);
-		//item->setRect(0, 0, 100, 100);
 		setXmlAttributes(item, el);
 		setStyle(item, el.styleAttributes);
 		qreal x = toDouble(el.xmlAttributes.value(QStringLiteral("x")));
 		qreal y = toDouble(el.xmlAttributes.value(QStringLiteral("y")));
 		setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
-		//item->setPos(x, y); is not same as translate
 		shvDebug() << "text x:" << x << "y:" << y;
 		item->svgPosition = QPointF(x, y);
 		QTransform t;
@@ -1134,7 +1111,6 @@ bool SaxHandler::startElement()
 		setXmlAttributes(item, el);
 		setStyle(item, el.styleAttributes);
 		setTextStyle(item, el.styleAttributes);
-		//setTransform(item, el.xmlAttributes.value(QStringLiteral("transform")));
 		QTransform t;
 		qreal x = toDouble(el.xmlAttributes.value(QStringLiteral("x")));
 		qreal y = toDouble(el.xmlAttributes.value(QStringLiteral("y")));
@@ -1232,7 +1208,6 @@ void SaxHandler::setTransform(QGraphicsItem *it, const QString &str_val)
 	QTransform mx = parseTransformationMatrix(str_val.trimmed());
 	if(!mx.isIdentity()) {
 		QTransform t(mx);
-		//logSvgI() << typeid (*it).name() << "setting matrix:" << t.dx() << t.dy();
 		it->setTransform(t);
 	}
 }
@@ -1333,7 +1308,6 @@ void SaxHandler::setStyle(QAbstractGraphicsShapeItem *it, const CssAttributes &a
 void SaxHandler::setTextStyle(QFont &font, const CssAttributes &attributes)
 {
 	logSvgD() << "orig font" << font.toString();
-	//font.setStyleName(QString());
 	font.setStyleName(QStringLiteral("Normal"));
 	QString font_size = attributes.value(QStringLiteral("font-size"));
 	if(!font_size.isEmpty()) {
@@ -1421,7 +1395,6 @@ void SaxHandler::setTextStyle(QGraphicsTextItem *text, const CssAttributes &attr
 	static auto FILL = QStringLiteral("fill");
 	QString fill = attributes.value(FILL);
 	if(fill.isEmpty() || fill == QLatin1String("none")) {
-		//it->setBrush(Qt::NoBrush);
 	}
 	else {
 		static auto FILL_OPACITY = QStringLiteral("fill-opacity");

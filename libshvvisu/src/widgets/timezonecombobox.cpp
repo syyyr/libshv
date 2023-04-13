@@ -41,7 +41,6 @@ void TimeZoneComboBox::keyPressEvent(QKeyEvent *event)
 		ed->setText(m_searchText);
 	}
 	QString c = event->text();
-	//qDebug() << "pressed:" << event;
 	if (c.isEmpty()) {
 		m_searchText.clear();
 		Super::keyPressEvent(event);
@@ -57,7 +56,6 @@ void TimeZoneComboBox::keyPressEvent(QKeyEvent *event)
 		auto curr_text = currentText();
 		ed->setText(curr_text);
 		auto sel_start = curr_text.indexOf(m_searchText, 0, Qt::CaseInsensitive);
-		//qDebug() << "curr:" << curr_text << "search:" << m_searchText << "sel_start:" << sel_start;
 #if QT_VERSION_MAJOR >= 6
 		ed->setSelection(static_cast<int>(sel_start), static_cast<int>(m_searchText.length()));
 #else

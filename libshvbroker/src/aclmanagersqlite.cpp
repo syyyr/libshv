@@ -160,7 +160,6 @@ void AclManagerSqlite::importAclConfigFiles()
 	shvInfo() << "Importing ACL config files from:" << facl.configDir();
 	for(const std::string &id : facl.mountDeviceIds()) {
 		acl::AclMountDef md = facl.mountDef(id);
-		//logAclManagerD() << id << md.toRpcValueMap().toCpon();
 		if(!md.isValid())
 			shvWarning() << "Cannot import invalid mount definition for device id:" << id;
 		else
@@ -168,7 +167,6 @@ void AclManagerSqlite::importAclConfigFiles()
 	}
 	for(const std::string &user : facl.users()) {
 		acl::AclUser u = facl.user(user);
-		//shvWarning() << user << u.toRpcValue().toCpon();
 		aclSetUser(user, u);
 	}
 	for(const std::string &role : facl.roles()) {
@@ -191,7 +189,6 @@ acl::AclMountDef AclManagerSqlite::aclMountDef(const std::string &device_id)
 	acl::AclMountDef ret;
 	QSqlQuery q = sqlLoadRow(TBL_ACL_MOUNTS, "deviceId", QString::fromStdString(device_id));
 	if(q.next()) {
-		//ret.deviceId = device_id;
 		ret.mountPoint = q.value("mountPoint").toString().toStdString();
 		ret.description = q.value("description").toString().toStdString();
 	}
@@ -225,7 +222,6 @@ acl::AclUser AclManagerSqlite::aclUser(const std::string &user_name)
 	acl::AclUser ret;
 	QSqlQuery q = sqlLoadRow(TBL_ACL_USERS, "name", QString::fromStdString(user_name));
 	if(q.next()) {
-		//ret.name = user_name;
 		ret.password.password = q.value("password").toString().toStdString();
 		ret.password.format = acl::AclPassword::formatFromString(q.value("passwordFormat").toString().toStdString());
 		ret.roles = split_str_vec(q.value("roles").toString());
@@ -311,7 +307,6 @@ acl::AclRoleAccessRules AclManagerSqlite::aclAccessRoleRules(const std::string &
 		ag.service = q.value("service").toString().toStdString();
 		ag.pathPattern = q.value("path").toString().toStdString();
 		ag.method = q.value("method").toString().toStdString();
-		//ag.forwardUserLoginFromRequest = q.value(PathAccessGrant::FORWARD_USER_LOGIN).toBool();
 		std::string grant_type = q.value("grantType").toString().toStdString();
 		ag.grant.type = cp::AccessGrant::typeFromString(grant_type);
 		switch (ag.grant.type) {

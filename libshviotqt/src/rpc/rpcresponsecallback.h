@@ -34,7 +34,6 @@ public:
 	SHV_FIELD_IMPL2(int, t, T, imeout, 1*60*1000)
 
 public:
-	//explicit RpcResponseCallBack(int rq_id, QObject *parent = nullptr);
 	explicit RpcResponseCallBack(shv::iotqt::rpc::ClientConnection *conn, int rq_id, QObject *parent = nullptr);
 
 	Q_SIGNAL void finished(const shv::chainpack::RpcResponse &response);
@@ -71,7 +70,6 @@ public:
 	RpcCall* setMethod(const QString &method);
 	RpcCall* setParams(const ::shv::chainpack::RpcValue &params);
 	RpcCall* setTimeout(int timeout) { m_timeout = timeout; return this; }
-	//RpcCall* setParams(const QVariant &params); not implemented since we do not know how to convert arbitrary QVariant to RpcValue
 	RpcCall* setUserId(const ::shv::chainpack::RpcValue &user_id);
 
 	void start();

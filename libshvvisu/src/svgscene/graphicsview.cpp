@@ -41,12 +41,6 @@ void GraphicsView::zoom(double delta, const QPoint &mouse_pos)
 
 void GraphicsView::paintEvent(QPaintEvent *event)
 {
-	//QPainter p(viewport());
-	//p.fillRect(sceneRect(), QBrush(QColor(0, 0 , 255, 120)));
-	//p.setPen(Qt::blue);
-	//QRectF r = scene()->sceneRect();
-
-	//p.drawRect(r);
 	Super::paintEvent(event);
 }
 

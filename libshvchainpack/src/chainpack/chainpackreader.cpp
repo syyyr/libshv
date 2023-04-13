@@ -23,18 +23,6 @@ namespace shv::chainpack {
 
 namespace {
 enum {exception_aborts = 0};
-/*
-const int MAX_RECURSION_DEPTH = 1000;
-
-class DepthScope
-{
-public:
-	DepthScope(int &depth) : m_depth(depth) {m_depth++;}
-	~DepthScope() {m_depth--;}
-private:
-	int &m_depth;
-};
-*/
 }
 
 ChainPackReader &ChainPackReader::operator >>(RpcValue &value)
@@ -103,10 +91,6 @@ uint64_t ChainPackReader::readUIntData(std::istream &in, int *err_code)
 
 void ChainPackReader::read(RpcValue &val)
 {
-	//if (m_depth > MAX_RECURSION_DEPTH)
-	//	PARSE_EXCEPTION("maximum nesting depth exceeded");
-	//DepthScope{m_depth};
-
 	RpcValue::MetaData md;
 	read(md);
 

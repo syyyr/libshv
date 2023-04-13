@@ -42,8 +42,6 @@ public:
 	shv::chainpack::RpcValue toRpcValue() const;
 	shv::chainpack::RpcValue toRpcValue_legacy() const;
 
-	//void sortMostSpecificFirst();
-
 	static AclRoleAccessRules fromRpcValue(const shv::chainpack::RpcValue &v);
 };
 

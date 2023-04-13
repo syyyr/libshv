@@ -17,10 +17,6 @@ public:
 		using Super = chainpack::meta::MetaType;
 	public:
 		enum {ID = chainpack::meta::GlobalNS::MetaTypeId::TunnelCtl};
-		/*
-		struct Tag { enum Enum {RequestId = chainpack::meta::Tag::USER, // 8
-								MAX};};
-		*/
 		struct Key { enum Enum {State = 1, Host, Port, Secret, RequestId, CallerIds, MAX};};
 
 		MetaType();
@@ -39,13 +35,9 @@ public:
 
 	SHV_IMAP_FIELD_IMPL2(int, MetaType::Key::State, s, setS, tate, State::Invalid)
 public:
-	//using Super::Super;
 	TunnelCtl() = default;
 	TunnelCtl(State::Enum st);
-	//TunnelCtl(const RpcValue::IMap &o);
 	TunnelCtl(const RpcValue &o);
-
-	//static TunnelCtl fromIMap(const shv::chainpack::RpcValue::IMap &m);
 };
 
 class SHVCHAINPACK_DECL_EXPORT FindTunnelReqCtl : public TunnelCtl

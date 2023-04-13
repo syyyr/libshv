@@ -13,7 +13,6 @@
 
 #define SHV_QUOTE(x) #x
 #define SHV_EXPAND_AND_QUOTE(x) SHV_QUOTE(x)
-//#define SHV_QUOTE_QSTRINGLITERAL(x) QStringLiteral(#x)
 
 #define SHV_FIELD_IMPL(ptype, lower_letter, upper_letter, name_rest) \
 	protected: ptype m_##lower_letter##name_rest; \
@@ -30,15 +29,6 @@
 	public: ptype& lower_letter##name_rest##Ref() {return m_##lower_letter##name_rest;} \
 	public: void set##upper_letter##name_rest(const ptype &val) { m_##lower_letter##name_rest = val; } \
 	public: void set##upper_letter##name_rest(ptype &&val) { m_##lower_letter##name_rest = std::move(val); }
-/*
-#define SHV_FIELD_BOOL2(name, default_value) \
-	protected: bool m_is##name = default_value; \
-	public: bool is##name() const {return m_is##name;} \
-	public: void set##name(bool val) { m_is##name = val; }
-
-#define SHV_FIELD_BOOL(name) \
-	SHV_FIELD_BOOL2(name, false)
-*/
 #define SHV_FIELD_BOOL_IMPL2(lower_letter, upper_letter, name_rest, default_value) \
 	protected: bool m_##lower_letter##name_rest = default_value; \
 	public: bool is##upper_letter##name_rest() const {return m_##lower_letter##name_rest;} \
@@ -126,9 +116,6 @@ public:
 		}
 		return static_cast<T>(val);
 	}
-
-	//static shv::chainpack::RpcValue decompressNodesTree(const shv::chainpack::RpcValue &compressed_nodes_tree);
-
 };
 
 namespace utils {

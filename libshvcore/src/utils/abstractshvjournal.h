@@ -19,7 +19,6 @@ struct ShvGetLogParams;
 struct SHVCORE_DECL_EXPORT ShvSnapshot
 {
 	std::map<std::string, ShvJournalEntry> keyvals;
-	//std::set<std::string> liveNodePropertyMaps;
 };
 
 class SHVCORE_DECL_EXPORT AbstractShvJournal

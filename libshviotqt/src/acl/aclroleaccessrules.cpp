@@ -45,7 +45,6 @@ static bool is_wild_card_pattern(const string path)
 
 bool AclAccessRule::isMoreSpecificThan(const AclAccessRule &other) const
 {
-	//shvWarning() << this->toRpcValue().toCpon();
 	if(!isValid())
 		return false;
 	if(!other.isValid())
@@ -53,9 +52,7 @@ bool AclAccessRule::isMoreSpecificThan(const AclAccessRule &other) const
 
 	const bool has_any_service = service == ALL_SERVICES;
 	const bool has_some_service = !service.empty() && !has_any_service;
-	//const bool has_no_service = service.empty();
 	const bool other_has_any_service = other.service == ALL_SERVICES;
-	//const bool other_has_some_service = !other.service.empty() && !other_has_any_service;
 	const bool other_has_no_service = other.service.empty();
 	if(has_some_service && (other_has_any_service || other_has_no_service))
 		return true;
@@ -89,7 +86,6 @@ bool AclAccessRule::isPathMethodMatch(const shv::core::utils::ShvUrl &shv_url, c
 	const bool any_service = this->service == ALL_SERVICES;
 	const bool some_service = !this->service.empty() && !any_service;
 	const bool no_service = this->service.empty();
-	//shvInfo() << shv_url.toShvUrlString();
 	if(shv_url.service().empty()) {
 		if(any_service || some_service)
 			return false;
@@ -101,7 +97,6 @@ bool AclAccessRule::isPathMethodMatch(const shv::core::utils::ShvUrl &shv_url, c
 			return false;
 	}
 	// sevice check OK here
-	//shvInfo() << "service check OK";
 	bool is_exact_pattern_path = !is_wild_card_pattern(pathPattern);
 	if(is_exact_pattern_path) {
 		if(shv_url.pathPart() == pathPattern) {
@@ -117,7 +112,6 @@ bool AclAccessRule::isPathMethodMatch(const shv::core::utils::ShvUrl &shv_url, c
 	if(patt.length() > 0)
 		patt = patt.mid(0, patt.length() - 1); // trim '/'
 	if(shv::core::utils::ShvPath::startsWithPath(shv_url.pathPart(), patt)) {
-		//shvInfo() << "starts with OK";
 		if(this->method.empty())
 			return true;
 		return this->method == method_arg;
@@ -148,15 +142,7 @@ RpcValue AclRoleAccessRules::toRpcValue_legacy() const
 	}
 	return shv::chainpack::RpcValue(std::move(ret));
 }
-/*
-void AclRoleAccessRules::sortMostSpecificFirst()
-{
-	for(auto a : *this) {
-		shvInfo() << a.toRpcValue().toCpon();
-	}
-	std::sort(begin(), end(), [](const AclAccessRule& a, const AclAccessRule& b) { return a.isMoreSpecificThan(b); });
-}
-*/
+
 AclRoleAccessRules AclRoleAccessRules::fromRpcValue(const shv::chainpack::RpcValue &v)
 {
 	AclRoleAccessRules ret;

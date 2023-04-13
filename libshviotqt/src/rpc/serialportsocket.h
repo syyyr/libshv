@@ -44,7 +44,6 @@ public:
 	quint16 peerPort() const override;
 	QByteArray readAll() override;
 	qint64 write(const char *data, qint64 max_size) override;
-	//bool flush() override;
 	void writeMessageBegin() override;
 	void writeMessageEnd() override;
 	void ignoreSslErrors() override {}

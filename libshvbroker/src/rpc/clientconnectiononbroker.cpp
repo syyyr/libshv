@@ -37,8 +37,6 @@ ClientConnectionOnBroker::ClientConnectionOnBroker(shv::iotqt::rpc::Socket *sock
 ClientConnectionOnBroker::~ClientConnectionOnBroker()
 {
 	shvDebug() << __FUNCTION__;
-	//rpc::ServerConnectionshvWarning() << "destroying" << this;
-	//shvWarning() << __FUNCTION__;
 }
 
 void ClientConnectionOnBroker::onSocketConnectedChanged(bool is_connected)
@@ -222,7 +220,6 @@ ClientConnectionOnBroker::Subscription ClientConnectionOnBroker::createSubscript
 string ClientConnectionOnBroker::toSubscribedPath(const CommonRpcClientHandle::Subscription &subs, const string &signal_path) const
 {
 	using ShvPath = shv::core::utils::ShvPath;
-	//using String = shv::core::String;
 	using StringView = shv::core::StringView;
 	using ServiceProviderPath = shv::core::utils::ShvUrl;
 	bool debug = true;
@@ -286,7 +283,6 @@ void ClientConnectionOnBroker::onRpcDataReceived(shv::chainpack::Rpc::ProtocolTy
 void ClientConnectionOnBroker::processLoginPhase()
 {
 	const shv::chainpack::RpcValue::Map &opts = connectionOptions();
-	//shvWarning() << connectionId() << cp::RpcValue(opts).toCpon();
 	auto t = opts.value(cp::Rpc::OPT_IDLE_WD_TIMEOUT, 3 * 60).toInt();
 	setIdleWatchDogTimeOut(t);
 	if(tunnelOptions().isMap()) {
@@ -340,7 +336,6 @@ void ClientConnectionOnBroker::propagateSubscriptionToSlaveBroker(const CommonRp
 {
 	if(!isSlaveBrokerConnection())
 		return;
-	//logSubscriptionsD() << "Try propagating client subscription for local path:" << subs.localPath << "method:" << subs.method;
 	const std::string &mount_point = mountPoint();
 	if(shv::core::utils::ShvPath(subs.localPath).startsWithPath(mount_point)) {
 		std::string slave_path = subs.localPath.substr(mount_point.size());
@@ -361,18 +356,4 @@ void ClientConnectionOnBroker::propagateSubscriptionToSlaveBroker(const CommonRp
 		return;
 	}
 }
-
-/*
-int ClientBrokerConnection::callMethodSubscribeMB(const std::string &shv_path, std::string method)
-{
-	logSubscriptionsD() << "call subscribe for connection id:" << connectionId() << "path:" << shv_path << "method:" << method;
-	return callShvMethod( cp::Rpc::DIR_BROKER_APP
-						 , cp::Rpc::METH_SUBSCRIBE
-						 , cp::RpcValue::Map{
-							 {cp::Rpc::PAR_PATH, shv_path},
-							 {cp::Rpc::PAR_METHOD, std::move(method)},
-						 }
-						 , cp::AccessGrant(cp::Rpc::ROLE_MASTER_BROKER, !cp::AccessGrant::IS_RESOLVED).toRpcValue());
-}
-*/
 }

@@ -5,7 +5,6 @@
 
 #include <shv/chainpack/metamethod.h>
 #include <shv/chainpack/rpcmessage.h>
-//#include <shv/chainpack/rpcdriver.h>
 #include <shv/core/exception.h>
 #include <shv/core/stringview.h>
 #include <shv/core/log.h>
@@ -69,7 +68,6 @@ private:
 
 static const auto M_RELOAD_CONFIG = "reloadConfig";
 static const auto M_RESTART = "restart";
-//static const auto M_MOUNT_POINT_FOR_CLIENT_ID = "mountPointForClientId";
 static const auto M_APP_VERSION = "appVersion";
 static const auto M_GIT_COMMIT = "gitCommit";
 static const auto M_BROKER_ID = "brokerId";

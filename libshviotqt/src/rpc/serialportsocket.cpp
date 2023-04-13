@@ -24,13 +24,8 @@ SerialPortSocket::SerialPortSocket(QSerialPort *port, QObject *parent)
 {
 	m_port->setParent(this);
 
-	//connect(m_port, &QSerialPort::connected, this, &Socket::connected);
-	//connect(m_port, &QSerialPort::disconnected, this, &Socket::disconnected);
 	connect(m_port, &QSerialPort::readyRead, this, &SerialPortSocket::onSerialDataReadyRead);
 	connect(m_port, &QSerialPort::bytesWritten, this, &Socket::bytesWritten);
-	//connect(m_port, &QSerialPort::stateChanged, this, [this](QLocalSocket::LocalSocketState state) {
-	//	emit stateChanged(LocalSocket_convertState(state));
-	//});
 	connect(m_port, &QSerialPort::errorOccurred, this, [this](QSerialPort::SerialPortError port_error) {
 		switch (port_error) {
 		case QSerialPort::NoError:
@@ -209,7 +204,6 @@ void SerialPortSocket::onSerialDataReadyRead()
 				if(auto err = m_readMessageBuffer.append(b); err != ReadMessageError::Ok) {
 					setReadMessageError(err);
 				}
-				//logSerialPortSocketM() << "append data:" << shv::chainpack::utils::byteToHex(b) << b << static_cast<int>(b);
 			}
 			break;
 		}
@@ -232,7 +226,6 @@ void SerialPortSocket::onSerialDataReadyRead()
 						msg_crc <<= 8;
 						msg_crc += bb;
 					}
-					//logSerialPortSocketD() << "read msg:" << m_readMessageData.toHex().toStdString();
 					logSerialPortSocketD() << "crc data:" << m_readMessageCrcBuffer.data.toHex().toStdString();
 					logSerialPortSocketD() << "crc received:" << shv::chainpack::utils::intToHex(msg_crc);
 					logSerialPortSocketD() << "crc computed:" << shv::chainpack::utils::intToHex(m_readMessageCrc.remainder());
@@ -332,9 +325,7 @@ qint64 SerialPortSocket::writeBytesEscaped(const char *data, qint64 max_size)
 				set_byte(b);
 			}
 		}
-		//shvError() << "write byte:" << shv::chainpack::utils::byteToHex(arr[0]);
 		m_writeMessageCrc.add(arr[0]);
-		//logSerialPortSocketM() << "write serial:" << shv::chainpack::utils::byteToHex(static_cast<uint8_t>(arr[0])) << b << static_cast<int>(b);
 		auto n = m_port->write(arr, 1);
 		if(n < 0) {
 			return -1;
@@ -398,13 +389,7 @@ void SerialPortSocket::restartReceiveTimeoutTimer()
 	if(m_readDataTimeout)
 		m_readDataTimeout->start();
 }
-/*
-void SerialPortSocket::stopReceiveTimeoutTimer()
-{
-	if(m_readDataTimeout)
-		m_readDataTimeout->stop();
-}
-*/
+
 void SerialPortSocket::setState(QAbstractSocket::SocketState state)
 {
 	if(state == m_state)

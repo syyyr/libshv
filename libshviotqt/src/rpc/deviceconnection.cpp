@@ -15,7 +15,6 @@ namespace shv::iotqt::rpc {
 DeviceConnection::DeviceConnection(QObject *parent)
 	: Super(parent)
 {
-	//setConnectionType(cp::Rpc::TYPE_DEVICE);
 }
 
 const shv::chainpack::RpcValue::Map& DeviceConnection::deviceOptions() const

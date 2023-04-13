@@ -15,7 +15,6 @@ AppCliOptions::AppCliOptions()
 	addOption("server.port").setType(cp::RpcValue::Type::Int).setNames("-p", "--server-port").setComment("Server TCP port").setDefaultValue(cp::IRpcConnection::DEFAULT_RPC_BROKER_PORT_NONSECURED);
 	addOption("server.sslPort").setType(cp::RpcValue::Type::Int).setNames("--sslp", "--server-ssl-port").setComment("Server SSL port").setDefaultValue(cp::IRpcConnection::DEFAULT_RPC_BROKER_PORT_SECURED);
 	addOption("server.discoveryPort").setType(cp::RpcValue::Type::Int).setNames("--server-discovery-ports").setComment("Server discovery UDP port").setDefaultValue(cp::IRpcConnection::DEFAULT_RPC_BROKER_PORT_NONSECURED);
-	//addOption("server.websocket.enabled").setType(cp::RpcValue::Type::Bool).setNames("--ws", "--server-ws-enabled").setComment("Server web socket enabled").setDefaultValue(3777);
 #ifdef WITH_SHV_WEBSOCKETS
 	addOption("server.websocket.port").setType(cp::RpcValue::Type::Int).setNames("--server-ws-port")
 			.setComment("Web socket server port, set this option to enable websocket server").setDefaultValue(cp::IRpcConnection::DEFAULT_RPC_BROKER_WEB_SOCKET_PORT_NONSECURED);
@@ -46,8 +45,5 @@ AppCliOptions::AppCliOptions()
 	addOption("ldap.searchAttr").setType(cp::RpcValue::Type::String).setNames("--ldap-search-attr").setComment("Set the LDAP attr containing the login name for LDAP user entries");
 	addOption("ldap.groupMapping").setType(cp::RpcValue::Type::List).setComment("Set the mapping of LDAP groups to shv groups as an ordered list of pairs");
 #endif
-
-	//addOption("master.broker.device.id").setType(shv::chainpack::RpcValue::Type::String).setNames("--master-broker-device-id").setComment("Master broker device ID");
 }
-
 }

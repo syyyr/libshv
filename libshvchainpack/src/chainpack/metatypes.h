@@ -15,9 +15,6 @@ struct Tag {
 		Invalid = -1,
 		MetaTypeId = 1,
 		MetaTypeNameSpaceId,
-		//MetaIMap,
-		//MetaTypeName,
-		//MetaTypeNameSpaceName,
 		USER = 8
 	};
 };

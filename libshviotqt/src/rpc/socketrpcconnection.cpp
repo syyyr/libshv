@@ -26,7 +26,6 @@ namespace shv::iotqt::rpc {
 SocketRpcConnection::SocketRpcConnection(QObject *parent)
 	: QObject(parent)
 {
-	//shvDebug() << __FUNCTION__;
 	shv::coreqt::rpc::registerQtMetaTypes();
 #ifdef DUMP_DATA_FILE
 	QFile *f = new QFile("/tmp/rpc.dat", this);
@@ -41,7 +40,6 @@ SocketRpcConnection::SocketRpcConnection(QObject *parent)
 
 SocketRpcConnection::~SocketRpcConnection()
 {
-	//shvDebug() << __FUNCTION__;
 	abortSocket();
 	SHV_SAFE_DELETE(m_socket);
 }
@@ -49,19 +47,11 @@ SocketRpcConnection::~SocketRpcConnection()
 void SocketRpcConnection::setSocket(Socket *socket)
 {
 	socket->setParent(nullptr);
-	//shvDebug() << "setSocket" << socket << "pushing socket from thread:" << socket->thread() << "to:" << this->thread();
-	//connect(socket, &Socket::destroyed, [socket]() {
-	//	shvDebug() << socket << "destroyed";
-	//});
 	m_socket = socket;
 	connect(socket, &Socket::sslErrors, this, &SocketRpcConnection::sslErrors);
-	connect(socket, &Socket::error, this, [this](QAbstractSocket::SocketError socket_error) {
+	connect(socket, &Socket::error, this, [this](QAbstractSocket::SocketError /*socket_error*/) {
 		shvWarning() << "Socket error:" << m_socket->errorString();
 		emit socketError(m_socket->errorString());
-		// we are not closing sockets at socket error, do not know why
-		if(socket_error == QAbstractSocket::HostNotFoundError) {
-			//m_socket->close();
-		}
 	});
 	bool is_test_run = QCoreApplication::instance() == nullptr;
 	connect(socket, &Socket::readyRead, this, &SocketRpcConnection::onReadyRead, is_test_run? Qt::AutoConnection: Qt::QueuedConnection);
@@ -71,7 +61,6 @@ void SocketRpcConnection::setSocket(Socket *socket)
 	connect(socket, &Socket::bytesWritten, this, &SocketRpcConnection::onBytesWritten, is_test_run? Qt::AutoConnection: Qt::QueuedConnection);
 	connect(socket, &Socket::connected, this, [this]() {
 		shvDebug() << this << "Socket connected!!!";
-		//shvWarning() << (peerAddress().toStdString() + ':' + std::to_string(peerPort()));
 		emit socketConnectedChanged(true);
 	});
 	connect(socket, &Socket::stateChanged, this, [this](QAbstractSocket::SocketState state) {
@@ -124,12 +113,7 @@ void SocketRpcConnection::onBytesWritten()
 	logRpcData() << "onBytesWritten()";
 	enqueueDataToSend(MessageData());
 }
-/*
-void SocketRpcConnection::onRpcValueReceived(const shv::chainpack::RpcValue &rpc_val)
-{
-	emit rpcValueReceived(rpc_val);
-}
-*/
+
 void SocketRpcConnection::onParseDataException(const chainpack::ParseException &e)
 {
 	if(m_socket)
@@ -143,105 +127,20 @@ bool SocketRpcConnection::isOpen()
 
 int64_t SocketRpcConnection::writeBytes(const char *bytes, size_t length)
 {
-	//shvLogFuncFrame();
 	return socket()->write(bytes, static_cast<qint64>(length));
 }
 
 void SocketRpcConnection::writeMessageBegin()
 {
-	//shvLogFuncFrame() << "socket:" << m_socket;
 	if(m_socket)
 		m_socket->writeMessageBegin();
 }
 
 void SocketRpcConnection::writeMessageEnd()
 {
-	//shvLogFuncFrame();
 	if(m_socket)
 		m_socket->writeMessageEnd();
 }
-
-#if 0
-namespace {
-class ConnectionScope
-{
-public:
-	explicit ConnectionScope(QMetaObject::Connection &c) : m_connection(c) {}
-	~ConnectionScope() {if(m_connection) QObject::disconnect(m_connection);}
-private:
-	QMetaObject::Connection &m_connection;
-};
-}
-
-void SocketRpcConnection:: sendRpcRequestSync_helper(const shv::chainpack::RpcRequest &request, shv::chainpack::RpcResponse *presponse, int time_out_ms)
-{
-	namespace cp = shv::chainpack;
-	smcDebug() << Q_FUNC_INFO << "timeout ms:" << time_out_ms;
-	if(time_out_ms == 0) {
-		smcDebug() << "sendMessageSync called with invalid timeout:" << time_out_ms << "," << defaultRpcTimeout() << "msec will be used instead.";
-		time_out_ms = defaultRpcTimeout();
-	}
-	shv::chainpack::RpcResponse resp_msg;
-	do {
-		const cp::RpcValue msg_id = request.requestId();
-		if(!msg_id.isValid()) {
-			shvWarning() << "Attempt to send RPC request with ID not set, message will be ignored";
-			break;
-		}
-		smcDebug() << "sending message:" << request.toCpon();
-		logRpcSyncCalls() << SND_LOG_ARROW << "SEND SYNC message id:" << msg_id.toCpon() << "msg:" << request.toCpon();
-		sendRpcValue(request.value());
-		QElapsedTimer tm_elapsed;
-		tm_elapsed.start();
-		QEventLoop eloop;
-		QMetaObject::Connection lambda_connection;
-		lambda_connection = connect(this, &SocketRpcConnection::rpcValueReceived, [&eloop, &resp_msg, &lambda_connection, msg_id](const shv::chainpack::RpcValue &msg_val)
-		{
-			shv::chainpack::RpcMessage msg(msg_val);
-			smcDebug() << &eloop << "New RPC message id:" << msg.requestId();
-			if(msg.requestId() == msg_id) {
-				QObject::disconnect(lambda_connection);
-				lambda_connection = QMetaObject::Connection();
-				resp_msg = msg;
-				smcDebug() << "\tID MATCH stopping event loop ..." << &eloop;
-				eloop.quit();
-			}
-			else if(msg.requestId() == 0) {
-				//logRpcSyncCalls() << "<=== RECEIVE NOTIFY while waiting for SYNC response:" << msg.jsonRpcMessage().toString();
-			}
-			else {
-				logRpcSyncCalls() << "RECV other message while waiting for SYNC response id:" << msg.requestId().toCpon() << "json:" << msg.toCpon();
-			}
-		});
-		ConnectionScope cscp(lambda_connection);
-		if(time_out_ms > 0)
-			QTimer::singleShot(time_out_ms, &eloop, &QEventLoop::quit);
-
-		smcDebug() << "\t entering event loop ..." << &eloop;
-		eloop.exec();
-		smcDebug() << "\t event loop" << &eloop << "exec exit, message received:" << resp_msg.isValid();
-		logRpcSyncCalls() << RCV_LOG_ARROW << "RECV SYNC message id:" << resp_msg.requestId().toCpon() << "msg:" << resp_msg.toCpon();
-		int elapsed = (int)tm_elapsed.elapsed();
-		if(elapsed >= time_out_ms) {
-			cp::RpcValue::String err_msg = "Receive message timeout after: " + shv::chainpack::Utils::toString(elapsed) + " msec!";
-			shvError() << err_msg;
-			auto err = cp::RpcResponse::Error::createInternalError(err_msg);
-			resp_msg.setRequestId(msg_id);
-			resp_msg.setError(err);
-		}
-		if(!resp_msg.isValid()) {
-			cp::RpcValue::String err_msg = "Invalid mesage returned from sync call!";
-			shvError() << err_msg;
-
-			auto err = cp::RpcResponse::Error::createInternalError(err_msg);
-			resp_msg.setRequestId(msg_id);
-			resp_msg.setError(err);
-		}
-	} while(false);
-	if(presponse)
-		*presponse = resp_msg;
-}
-#endif
 
 void SocketRpcConnection::closeSocket()
 {

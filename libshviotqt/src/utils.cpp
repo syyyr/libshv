@@ -7,18 +7,6 @@
 #include <QVariant>
 
 namespace shv::iotqt::utils {
-/*
-QVariant Utils::rpcValueToQVariant(const shv::chainpack::RpcValue &v)
-{
-	return shv::coreqt::Utils::rpcValueToQVariant(v);
-}
-
-shv::chainpack::RpcValue Utils::qVariantToRpcValue(const QVariant &v)
-{
-	return  shv::coreqt::Utils::qVariantToRpcValue(v);
-}
-*/
-
 std::string sha1Hex(const std::string &s)
 {
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);

@@ -69,7 +69,6 @@ CLIOptions::Option& CLIOptions::Option::setValueString(const std::string &val_st
 	}
 	default:
 		setValue(val_str);
-		//shvWarning() << val_str << "->" << names() << "->" << value();
 	}
 	return *this;
 }
@@ -208,7 +207,6 @@ void CLIOptions::parse(int argc, char* argv[])
 
 void CLIOptions::parse(const StringList& cmd_line_args)
 {
-	//shvLogFuncFrame() << cmd_line_args;
 	m_isAppBreak = false;
 	m_parsedArgIndex = 0;
 	m_arguments = StringList(cmd_line_args.begin()+1, cmd_line_args.end());
@@ -220,7 +218,6 @@ void CLIOptions::parse(const StringList& cmd_line_args)
 	while(true) {
 		std::string arg = takeArg(ok);
 		if(!ok) {
-			//addParseError("Unexpected empty argument.");
 			break;
 		}
 		if(arg == "--help" || arg == "-h") {
@@ -259,7 +256,6 @@ void CLIOptions::parse(const StringList& cmd_line_args)
 	{
 		for(const auto &kv : m_options) {
 			const Option &opt = kv.second;
-			//LOGDEB() << "option:" << it.key() << "is mandatory:" << opt.isMandatory() << "is valid:" << opt.value().isValid();
 			if(opt.isMandatory() && !opt.value().isValid() && !opt.names().empty()) {
 				addParseError("Mandatory option '" + opt.names()[0] + "' not set.");
 			}
@@ -284,7 +280,6 @@ std::tuple<std::string, std::string> CLIOptions::applicationDirAndName() const
 				app_name = app_file_path.substr(sep_pos + 1);
 				app_dir = app_file_path.substr(0, sep_pos);
 			}
-			//shvInfo() << "app dir:" << app_dir << "name:" << app_name;
 	#ifdef _WIN32
 			std::string ext = ".exe";
 	#else
@@ -325,7 +320,6 @@ void CLIOptions::printHelp(std::ostream &os) const
 					|| opt.type() == RpcValue::Type::Double) os << " " << "number";
 			else os << " " << "'string'";
 		}
-		//os << ':';
 		RpcValue def_val = opt.defaultValue();
 		if(def_val.isValid())
 			os << " DEFAULT=" << def_val.toStdString();
@@ -336,7 +330,6 @@ void CLIOptions::printHelp(std::ostream &os) const
 		if(!oc.empty())
 			os << "\t" << oc << endl;
 	}
-	//os << shv::core::ShvLog::logCLIHelp() << endl;
 	os << NecroLog::cliHelp() << std::endl;
 	std::string topics = NecroLog::registeredTopicsInfo();
 	if(!topics.empty())
@@ -463,18 +456,15 @@ std::tuple<std::string, std::string> ConfigCLIOptions::absoluteConfigPaths(const
 
 void ConfigCLIOptions::mergeConfig_helper(const std::string &key_prefix, const shv::chainpack::RpcValue &config_map)
 {
-	//shvLogFuncFrame() << key_prefix;
 	const chainpack::RpcValue::Map &cm = config_map.asMap();
 	for(const auto &kv : cm) {
 		std::string key = kv.first;
-		//SHV_ASSERT(!key.empty(), "Empty key!", continue);
 		if(!key_prefix.empty())
 			key = key_prefix + '.' + key;
 		chainpack::RpcValue rv = kv.second;
 		if(options().find(key) != options().end()) {
 			Option &opt = optionRef(key);
 			if(!opt.isSet()) {
-				//shvInfo() << key << "-->" << rv.toCpon();
 				opt.setValue(rv);
 			}
 		}
@@ -490,12 +480,6 @@ void ConfigCLIOptions::mergeConfig_helper(const std::string &key_prefix, const s
 void ConfigCLIOptions::mergeConfig(const chainpack::RpcValue &config_map)
 {
 	mergeConfig_helper(std::string(), config_map);
-	/*
-	for(const auto &kv : options()) {
-		std::string key = kv.first;
-		shvInfo() << key << "-->" << option(key).value().toCpon();
-	}
-	*/
 }
 
 }

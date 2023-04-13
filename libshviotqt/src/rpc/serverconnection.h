@@ -12,9 +12,6 @@
 
 #include <string>
 
-//namespace shv { namespace chainpack { class RpcMessage; class RpcValue; }}
-//namespace shv { namespace coreqt { namespace chainpack { class RpcConnection; }}}
-
 namespace shv {
 namespace iotqt {
 namespace rpc {
@@ -49,12 +46,10 @@ public:
 
 	Q_SIGNAL void rpcMessageReceived(const shv::chainpack::RpcMessage &msg);
 
-	/// AbstractRpcConnection interface implementation
 	void sendMessage(const shv::chainpack::RpcMessage &rpc_msg) override;
 	void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg) override;
 protected:
 	void onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, std::string &&msg_data) override;
-	//void onRpcValueReceived(const shv::chainpack::RpcValue &msg) override;
 
 	bool isLoginPhase() const {return !m_loginOk;}
 	void processLoginPhase(const chainpack::RpcMessage &msg);
@@ -62,7 +57,6 @@ protected:
 	virtual void processLoginPhase();
 	virtual void setLoginResult(const shv::chainpack::UserLoginResult &result);
 
-	//bool isDestroyPhase() const {return m_isDestroyPhase;}
 protected:
 	std::string m_connectionName;
 	shv::chainpack::UserLogin m_userLogin;
@@ -70,7 +64,6 @@ protected:
 	bool m_helloReceived = false;
 	bool m_loginReceived = false;
 	bool m_loginOk = false;
-	//bool m_isDestroyPhase = false;
 
 	shv::chainpack::RpcValue m_connectionOptions;
 };

@@ -37,28 +37,7 @@ CommonRpcClientHandle::Subscription::Subscription(const std::string &local_path,
 			break;
 	}
 	localPath = local_path.substr(ix1, len);
-	//shv::core::utils::ServiceProviderPath spp(subscribedPath);
-	//isRelative = spp.isRelative();
 }
-
-/*
-std::string CommonRpcClientHandle::Subscription::toRelativePath(const std::string &abs_path) const
-{
-	if(relativePath.empty()) {
-		return abs_path;
-	}
-	std::string ret = relativePath + abs_path.substr(absolutePath.size());
-	return ret;
-}
-
-bool CommonRpcClientHandle::Subscription::operator<(const CommonRpcClientHandle::Subscription &o) const
-{
-	int i = absolutePath.compare(o.absolutePath);
-	if(i == 0)
-		return method < o.method;
-	return (i < 0);
-}
-*/
 
 bool CommonRpcClientHandle::Subscription::cmpSubscribed(const CommonRpcClientHandle::Subscription &o) const
 {
@@ -71,18 +50,7 @@ bool CommonRpcClientHandle::Subscription::cmpSubscribed(const CommonRpcClientHan
 
 bool CommonRpcClientHandle::Subscription::match(const shv::core::StringView &shv_path, const shv::core::StringView &shv_method) const
 {
-	//shvInfo() << shv_path << "starts with:" << localPath << "==" << shv_path.startsWith(localPath);// << "==" << true;
 	bool path_match = shv::core::utils::ShvPath::startsWithPath(shv_path, localPath);
-	/*
-	if(localPath.empty()) {
-		path_match = true;
-	}
-	else if(shv_path.startsWith(localPath)) {
-		path_match = (shv_path.length() == localPath.length())
-				|| (shv_path[localPath.length()] == '/') // aa/bb matches aa/bb/cc but does not match aa/bbcc
-				|| (localPath[localPath.length() - 1] == '/'); // aa/bb/ matches aa/bb/cc, localPath should not end with '/' but for case
-	}
-	*/
 	if(path_match)
 		return (method.empty() || shv_method == method);
 	return false;
@@ -93,35 +61,18 @@ bool CommonRpcClientHandle::Subscription::match(const shv::core::StringView &shv
 CommonRpcClientHandle::CommonRpcClientHandle() = default;
 
 CommonRpcClientHandle::~CommonRpcClientHandle() = default;
-/*
-unsigned CommonRpcClientHandle::addSubscription(const std::string &rel_path, const std::string &method)
-{
-	std::string abs_path = rel_path;
-	if(Subscription::isRelativePath(abs_path)) {
-		const std::vector<std::string> &mps = mountPoints();
-		if(mps.empty())
-			SHV_EXCEPTION("Cannot subscribe relative path on unmounted device.");
-		if(mps.size() > 1)
-			SHV_EXCEPTION("Cannot subscribe relative path on device mounted to more than single node.");
-		abs_path = Subscription::toAbsolutePath(mps[0], rel_path);
-	}
-	logSubscriptionsD() << "adding subscription for connection id:" << connectionId() << "path:" << abs_path << "method:" << method;
-	Subscription subs(abs_path, rel_path, method);
-}
-*/
+
 unsigned CommonRpcClientHandle::addSubscription(const CommonRpcClientHandle::Subscription &subs)
 {
 	logSubscriptionsD() << "adding subscription for connection id:" << connectionId()
 						<< "local path:" << subs.localPath
 						<< "subscribed path:" << subs.subscribedPath << "method:" << subs.method;
-	//auto it = std::find(m_subscriptions.begin(), m_subscriptions.end(), subs);
 	auto it = std::find_if(m_subscriptions.begin(), m_subscriptions.end(),
 					 [&subs](const Subscription &s) { return subs.cmpSubscribed(s); });
 
 	if(it == m_subscriptions.end()) {
 		logSubscriptionsD() << "new subscription";
 		m_subscriptions.push_back(subs);
-		//std::sort(m_subscriptions.begin(), m_subscriptions.end());
 		return static_cast<unsigned>(m_subscriptions.size() - 1);
 	}
 
@@ -135,7 +86,6 @@ bool CommonRpcClientHandle::removeSubscription(const CommonRpcClientHandle::Subs
 	logSubscriptionsD() << "request to remove subscription for connection id:" << connectionId()
 						<< "local path:" << subs.localPath
 						<< "subscribed path:" << subs.subscribedPath << "method:" << subs.method;
-	//auto it = std::find(m_subscriptions.begin(), m_subscriptions.end(), subs);
 	auto it = std::find_if(m_subscriptions.begin(), m_subscriptions.end(),
 					 [&subs](const Subscription &s) { return subs.cmpSubscribed(s); });
 	if(it == m_subscriptions.end()) {
@@ -149,30 +99,7 @@ bool CommonRpcClientHandle::removeSubscription(const CommonRpcClientHandle::Subs
 	return true;
 
 }
-/*
-bool CommonRpcClientHandle::removeSubscription(const std::string &rel_path, const std::string &method)
-{
-	std::string abs_path = rel_path;
-	if(Subscription::isRelativePath(abs_path)) {
-		const std::vector<std::string> &mps = mountPoints();
-		if(mps.empty())
-			SHV_EXCEPTION("Cannot unsubscribe relative path on unmounted device.");
-		if(mps.size() > 1)
-			SHV_EXCEPTION("Cannot unsubscribe relative path on device mounted to more than single node.");
-		abs_path = Subscription::toAbsolutePath(mps[0], rel_path);
-	}
-	logSubscriptionsD() << "removing subscription for connection id:" << connectionId() << "path:" << abs_path << "method:" << method;
-	Subscription subs(abs_path, rel_path, method);
-	auto it = std::find(m_subscriptions.begin(), m_subscriptions.end(), subs);
-	if(it == m_subscriptions.end()) {
-		return false;
-	}
-	else {
-		m_subscriptions.erase(it);
-		return true;
-	}
-}
-*/
+
 int CommonRpcClientHandle::isSubscribed(const std::string &shv_path, const std::string &method) const
 {
 	logSigResolveD() << "connection id:" << connectionId() << "checking if signal:" << shv_path << "method:" << method;

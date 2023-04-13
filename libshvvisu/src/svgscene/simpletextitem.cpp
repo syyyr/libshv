@@ -37,8 +37,6 @@ void SimpleTextItem::setText(const QString text)
 void SimpleTextItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
 	Super::paint(painter, option, widget);
-	//painter->setPen(Qt::green);
-	//painter->drawRect(boundingRect());
 }
 
 }

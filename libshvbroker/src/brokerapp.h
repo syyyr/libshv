@@ -33,7 +33,6 @@ class QSqlDatabase;
 
 namespace shv { namespace iotqt { namespace node { class ShvNodeTree; }}}
 namespace shv { namespace core { namespace utils { class ShvUrl; }}}
-//namespace shv { namespace iotqt { namespace rpc { struct Password; }}}
 namespace shv { namespace chainpack { class RpcSignal; }}
 
 namespace shv {

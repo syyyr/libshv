@@ -10,16 +10,6 @@
 namespace cp = shv::chainpack;
 
 namespace shv::core::utils {
-/*
-static int uptimeSec()
-{
-	int uptime;
-	if (std::ifstream("/proc/uptime", std::ios::in) >> uptime) {
-		return uptime;
-	}
-	return 0;
-}
-*/
 ShvJournalFileWriter::ShvJournalFileWriter(const std::string &file_name)
 	: m_fileName(file_name)
 {
@@ -43,8 +33,6 @@ void ShvJournalFileWriter::open()
 	m_fileOut.open(m_fileName, std::ios::binary | std::ios::out | std::ios::app);
 	if(!m_fileOut)
 		SHV_EXCEPTION("Cannot open file " + m_fileName + " for writing");
-	//if(m_recentTimeStamp <= 0)
-	//	SHV_EXCEPTION("Cannot append to file " + m_fileName + ", find recent entry timestamp error.");
 	m_out = &m_fileOut;
 }
 

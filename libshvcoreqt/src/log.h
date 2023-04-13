@@ -19,7 +19,6 @@
 #include <QUrl>
 
 inline NecroLog operator<<(NecroLog log, const QString &s) { return log.operator <<(s.toStdString()); }
-//SHVCOREQT_DECL_EXPORT NecroLog &operator<<(NecroLog &log, const QByteArray &s);
 inline NecroLog operator<<(NecroLog log, const QDateTime &d) { return log.operator<<(d.toString(Qt::ISODateWithMs).toStdString()); }
 inline NecroLog operator<<(NecroLog log, const QDate &d) { return log.operator<<(d.toString(Qt::ISODate).toStdString()); }
 inline NecroLog operator<<(NecroLog log, const QTime &d) {  return log.operator<<(d.toString(Qt::ISODateWithMs).toStdString()); }

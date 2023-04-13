@@ -52,7 +52,6 @@ DOCTEST_TEST_CASE("RpcMessage")
 		{ ChainPackWriter wr(out); rq.write(wr); }
 		ChainPackReader rd(out);
 		RpcValue cp2 = rd.read();
-		//nDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
 		REQUIRE(cp1.type() == cp2.type());
 		RpcRequest rq2(cp2);
 		REQUIRE(rq2.isRequest());
@@ -69,7 +68,6 @@ DOCTEST_TEST_CASE("RpcMessage")
 		{ ChainPackWriter wr(out); rs.write(wr); }
 		ChainPackReader rd(out);
 		RpcValue cp2 = rd.read();
-		//nDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
 		REQUIRE(cp1.type() == cp2.type());
 		RpcResponse rs2(cp2);
 		REQUIRE(rs2.isResponse());
@@ -86,7 +84,6 @@ DOCTEST_TEST_CASE("RpcMessage")
 		{ ChainPackWriter wr(out); rs.write(wr); }
 		ChainPackReader rd(out);
 		RpcValue cp2 = rd.read();
-		//nDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
 		REQUIRE(cp1.type() == cp2.type());
 		RpcResponse rs2(cp2);
 		REQUIRE(rs2.isResponse());
@@ -109,7 +106,6 @@ DOCTEST_TEST_CASE("RpcMessage")
 		{ ChainPackWriter wr(out); rq.write(wr); }
 		ChainPackReader rd(out);
 		RpcValue cp2 = rd.read();
-		//nDebug() << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
 		REQUIRE(cp1.type() == cp2.type());
 		RpcRequest rq2(cp2);
 		REQUIRE(rq2.isSignal());

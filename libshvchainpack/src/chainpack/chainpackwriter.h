@@ -18,7 +18,6 @@ public:
 	void write(const RpcValue::MetaData &meta_data) override;
 
 	void writeUIntData(uint64_t n);
-	//static void writeUIntData(std::ostream &os, uint64_t n);
 
 	void writeContainerBegin(RpcValue::Type container_type, bool /*is_oneliner*/ = false) override;
 	/// ChainPack doesn't need to know container type to close it
@@ -42,7 +41,6 @@ private:
 	ChainPackWriter& write_p(const std::string &value);
 	ChainPackWriter& write_p(const RpcValue::Blob &value);
 	ChainPackWriter& write_p(const RpcValue::List &values);
-	//ChainPackWriter& write_p(const RpcValue::Array &values);
 	ChainPackWriter& write_p(const RpcValue::Map &values);
 	ChainPackWriter& write_p(const RpcValue::IMap &values);
 };

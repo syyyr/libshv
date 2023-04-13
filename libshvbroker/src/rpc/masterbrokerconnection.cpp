@@ -28,8 +28,6 @@ void MasterBrokerConnection::setOptions(const shv::chainpack::RpcValue &slave_br
 
 		const cp::RpcValue::Map &server = m.value("server").asMap();
 		device_opts.setServerHost(server.value("host", "localhost").asString());
-		//device_opts.setServerPort(server.value("port", shv::chainpack::IRpcConnection::DEFAULT_RPC_BROKER_PORT_NONSECURED).toInt());
-		//device_opts.setServerSecurityType(server.value("securityType", "none").asString());
 		device_opts.setServerPeerVerify(server.value("peerVerify", true).toBool());
 
 		const cp::RpcValue::Map &login = m.value(cp::Rpc::KEY_LOGIN).asMap();
@@ -51,7 +49,6 @@ void MasterBrokerConnection::setOptions(const shv::chainpack::RpcValue &slave_br
 			device_opts.setDeviceIdFile(device.value("idFile").asString());
 		if(device.count("mountPoint") == 1)
 			device_opts.setMountPoint(device.value("mountPoint").asString());
-		//device_opts.dump();
 		setCliOptions(&device_opts);
 		{
 			chainpack::RpcValue::Map opts = connectionOptions().asMap();
@@ -88,7 +85,6 @@ CommonRpcClientHandle::Subscription MasterBrokerConnection::createSubscription(c
 
 std::string MasterBrokerConnection::toSubscribedPath(const Subscription &subs, const std::string &signal_path) const
 {
-	//Q_UNUSED(subs)
 	bool debug = true;
 	if(debug) {
 		using ServiceProviderPath = shv::core::utils::ShvUrl;

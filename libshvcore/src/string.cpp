@@ -75,7 +75,6 @@ std::vector<std::string> String::split(const std::string &str, char delim, Split
 	size_t pos = 0;
 	while(true) {
 		size_t pos2 = str.find_first_of(delim, pos);
-		//shvWarning() << pos << str << pos2;
 		string s = (pos2 == string::npos)? str.substr(pos): str.substr(pos, pos2 - pos);
 		if(split_behavior == KeepEmptyParts || !s.empty())
 			ret.push_back(s);
@@ -175,10 +174,8 @@ static size_t find_str(const std::string &haystack, size_t begin_pos, size_t end
 	auto pos1 = begin_pos;
 	auto pos2 = end_pos - needle.size() + 1;
 	while(pos1 < pos2) {
-		//std::cout << "it1: " << *it1 << '\n';
 		unsigned i = 0;
 		for(; i<needle.size(); ++i) {
-			//std::cout << i << " it: " << *(it1 + i) << " str: " << str[i] << '\n';
 			if(haystack[pos1 + i] != needle[i])
 				break;
 		}
@@ -197,18 +194,14 @@ std::pair<size_t, size_t> String::indexOfBrackets(const std::string &haystack, s
 		end_pos = haystack.size();
 	if(end_pos < begin_pos)
 		return std::pair<size_t, size_t>(std::string::npos, std::string::npos);
-	//std::cout << "=====: " << string(str1, str2) << '\n';
 	auto open0 = find_str(haystack, begin_pos, end_pos, open_bracket);
 	auto open1 = open0;
 	auto close1 = find_str(haystack, open1, end_pos, close_bracket);
 	int nest_cnt = 0;
 	while(true) {
-		//std::cout << "open1 : " << string(open1, str2) << '\n';
-		//std::cout << "close1: " << string(close1, str2) << '\n';
 		if(open1 == std::string::npos || close1 == std::string::npos)
 			return std::pair<size_t, size_t>(open0, close1);
 		open1 = find_str(haystack, open1 + open_bracket.size(), close1, open_bracket);
-		//std::cout << "\topen2 : " << string(open1, str2) << '\n';
 		if(open1 == std::string::npos) {
 			// no opening bracket before closing, we have found balaced pair if nest_cnt == 0
 			if(nest_cnt == 0)
@@ -216,7 +209,6 @@ std::pair<size_t, size_t> String::indexOfBrackets(const std::string &haystack, s
 			nest_cnt--;
 			open1 = close1;
 			close1 = find_str(haystack, close1 + close_bracket.size(), end_pos, close_bracket);
-			//std::cout << "\tclose2 : " << string(open1, str2) << '\n';
 		}
 		else {
 			nest_cnt++;

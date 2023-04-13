@@ -13,7 +13,6 @@
 #include <QStringList>
 #include <QDir>
 #include <QJsonParseError>
-//#include <QTextStream>
 
 #ifdef Q_OS_WIN
 #include <qt_windows.h> // needed by CLIOptions::applicationDirAndName()
@@ -94,7 +93,6 @@ CLIOptions::Option& CLIOptions::Option::setValueString(const QString& val_str)
 	}
 	default:
 		setValue(val_str);
-		//shvWarning() << val_str << "->" << names() << "->" << value();
 	}
 	return *this;
 }
@@ -107,8 +105,6 @@ CLIOptions::CLIOptions(QObject *parent)
 #endif
 	addOption("abortOnException").setType(QMetaType::Bool).setNames("--abort-on-exception").setComment(tr("Abort application on exception"));
 	addOption("help").setType(QMetaType::Bool).setNames("-h", "--help").setComment(tr("Print help"));
-	//addOption("config").setType(QVariant::String).setNames("--config").setComment(tr("Config name, it is loaded from {app-name}[.conf] if file exists in {config-path}"));
-	//addOption("configDir").setType(QVariant::String).setNames("--config-dir").setComment("Directory where server config fiels are searched, default value: {app-dir-path}.");
 }
 
 CLIOptions::~CLIOptions() = default;
@@ -232,7 +228,6 @@ void CLIOptions::parse(int argc, char* argv[])
 
 void CLIOptions::parse(const QStringList& cmd_line_args)
 {
-	//shvLogFuncFrame() << cmd_line_args;
 	m_isAppBreak = false;
 	m_parsedArgIndex = 0;
 	m_arguments = cmd_line_args.mid(1);
@@ -244,7 +239,6 @@ void CLIOptions::parse(const QStringList& cmd_line_args)
 	while(true) {
 		QString arg = takeArg(ok);
 		if(!ok) {
-			//addParseError("Unexpected empty argument.");
 			break;
 		}
 		if(arg == QStringLiteral("--help") || arg == QStringLiteral("-h")) {
@@ -283,7 +277,6 @@ void CLIOptions::parse(const QStringList& cmd_line_args)
 		while(it.hasNext()) {
 			it.next();
 			Option opt = it.value();
-			//LOGDEB() << "option:" << it.key() << "is mandatory:" << opt.isMandatory() << "is valid:" << opt.value().isValid();
 			if(opt.isMandatory() && !opt.value().isValid()) {
 				addParseError(QString("Mandatory option '%1' not set.").arg(opt.names().value(0)));
 			}
@@ -312,7 +305,6 @@ QPair<QString, QString> CLIOptions::applicationDirAndName() const
 	#endif
 			app_dir = app_file_path.section(sep, 0, -2);
 			app_name = app_file_path.section(sep, -1);
-			//shvInfo() << "app dir:" << app_dir << "name:" << app_name;
 	#ifdef Q_OS_WIN
 			if(app_name.endsWith(QLatin1String(".exe"), Qt::CaseInsensitive))
 				app_name = app_name.mid(0, app_name.length() - 4);
@@ -351,7 +343,6 @@ void CLIOptions::printHelp(std::ostream &os) const
 			if(opt.type() == QMetaType::Int || opt.type() == QMetaType::Double) os << " " << "number";
 			else os << " " << "'string'";
 		}
-		//os << ':';
 		QVariant def_val = opt.defaultValue();
 		if(def_val.isValid()) os << " [default(" << def_val.toString().toStdString() << ")]";
 		if(opt.isMandatory()) os << " [MANDATORY]";
@@ -359,7 +350,6 @@ void CLIOptions::printHelp(std::ostream &os) const
 		QString oc = opt.comment();
 		if(!oc.isEmpty()) os << "\t" << opt.comment().toStdString() << std::endl;
 	}
-	//os << shv::core::ShvLog::logCLIHelp() << endl;
 	os << NecroLog::cliHelp() << std::endl;
 }
 
@@ -422,7 +412,6 @@ bool ConfigCLIOptions::loadConfigFile()
 		QByteArray ba = f.readAll();
 		std::string cpon(ba.constData(), static_cast<size_t>(ba.size()));
 		std::string str = shv::chainpack::Utils::removeJsonComments(std::string(ba.constData()));
-		//shvDebug() << str;
 		std::string err;
 		chainpack::RpcValue rv = shv::chainpack::RpcValue::fromCpon(cpon, &err);
 		if(err.empty()) {
@@ -474,7 +463,6 @@ void ConfigCLIOptions::mergeConfig(const QVariant &config_map)
 
 void ConfigCLIOptions::mergeConfig_helper(const QString &key_prefix, const shv::chainpack::RpcValue &config_map)
 {
-	//shvLogFuncFrame() << key_prefix;
 	const chainpack::RpcValue::Map &cm = config_map.asMap();
 	for(const auto &kv : cm) {
 		QString key = QString::fromStdString(kv.first);
@@ -486,7 +474,6 @@ void ConfigCLIOptions::mergeConfig_helper(const QString &key_prefix, const shv::
 		if(options().contains(key)) {
 			Option &opt = optionRef(key);
 			if(!opt.isSet()) {
-				//shvInfo() << key << "-->" << v;
 				opt.setValue(rpcValueToQVariant(v));
 			}
 		}

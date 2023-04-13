@@ -36,7 +36,6 @@ public:
 		SHV_VARIANTMAP_FIELD2(double, h, setH, eightMin, DEFAULT_HEIGHT_MIN) // units
 		SHV_VARIANTMAP_FIELD2(double, h, setH, eightMax, 1000) // units
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olor, QColor(Qt::magenta))
-		//SHV_VARIANTMAP_FIELD(QColor, c, setC, olorLineArea)
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorGrid, QColor(Qt::darkGreen))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorAxis, QColor(Qt::gray))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorBackground, QColor("#232323"))

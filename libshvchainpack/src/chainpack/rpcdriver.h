@@ -3,7 +3,6 @@
 #include "../shvchainpackglobal.h"
 #include "rpcmessage.h"
 #include "rpc.h"
-//#include "abstractstreamreader.h"
 
 #include <functional>
 #include <string>
@@ -70,9 +69,6 @@ protected:
 	virtual int64_t writeBytes(const char *bytes, size_t length) = 0;
 	/// call it when new data arrived
 	virtual void onBytesRead(std::string &&bytes);
-	/// flush write buffer to socket
-	/// @return true if write buffer length has changed (some data was written to the socket)
-	//virtual bool flush() = 0;
 
 	/// add data to the output queue, send data from top of the queue
 	virtual void enqueueDataToSend(MessageData &&chunk_to_enqueue);
@@ -89,7 +85,6 @@ private:
 	void writeQueue();
 	int64_t writeBytes_helper(const std::string &str, size_t from, size_t length);
 private:
-	//MessageReceivedCallback m_messageReceivedCallback = nullptr;
 	std::deque<MessageData> m_sendQueue;
 	bool m_topMessageDataHeaderWritten = false;
 	size_t m_topMessageDataBytesWrittenSoFar = 0;

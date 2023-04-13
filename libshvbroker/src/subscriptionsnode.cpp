@@ -74,8 +74,6 @@ shv::iotqt::node::ShvNode::StringList SubscriptionsNode::childNames(const String
 			return ret;
 		}
 	}
-	//if(shv::core::StringView(shv_path).startsWith(ND_BY_ID))
-	//	return
 	return shv::iotqt::node::ShvNode::StringList{};
 }
 
@@ -108,28 +106,4 @@ shv::chainpack::RpcValue SubscriptionsNode::callMethod(const StringViewList &shv
 	}
 	return Super::callMethod(shv_path, method, params, user_id);
 }
-
-/*
-shv::iotqt::node::ShvNode::StringList SubscriptionsNode::childNames(const std::string &shv_path) const
-{
-	shv::iotqt::node::ShvNode::StringList ret;
-	if(shv_path.empty()) {
-		for (size_t i = 0; i < m_client->subscriptionCount(); ++i)
-			ret.push_back(std::to_string(i));
-	}
-	return ret;
-}
-
-shv::chainpack::RpcValue SubscriptionsNode::processRpcRequest(const shv::chainpack::RpcRequest &rq)
-{
-	shv::chainpack::RpcValue shv_path = rq.shvPath();
-	shv::core::StringView sv(shv_path.toString());
-	if(sv.empty())
-		return Super::processRpcRequest(rq);
-	size_t ix = std::stoul(sv.getToken('/').toString());
-	const rpc::ServerConnection::Subscription &su = m_client->subscriptionAt(ix);
-	const std::string method = rq.method().toString();
-}
-*/
-
 }

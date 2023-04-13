@@ -27,7 +27,6 @@ public:
 	enum class State {NotConnected = 0, Connecting, SocketConnected, BrokerConnected, ConnectionError};
 
 	SHV_FIELD_IMPL(std::string, u, U, ser)
-	//SHV_FIELD_IMPL(std::string, h, H, ost)
 	SHV_FIELD_BOOL_IMPL2(p, P, eerVerify, true)
 	SHV_FIELD_IMPL(std::string, p, P, assword)
 	SHV_FIELD_IMPL(shv::chainpack::IRpcConnection::LoginType, l, L, oginType)
@@ -86,7 +85,6 @@ protected:
 	void emitInitPhaseError(const std::string &err);
 
 	void onSocketConnectedChanged(bool is_connected);
-	//void onRpcValueReceived(const shv::chainpack::RpcValue &rpc_val) override;
 
 	bool isLoginPhase() const {return state() == State::SocketConnected;}
 	void processLoginPhase(const chainpack::RpcMessage &msg);

@@ -161,7 +161,6 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 
 				{
 					auto pi = type_info.pathInfo("devices/signal/SA04/symbol/RED_LEFT/status");
-					//shvInfo() << pi.propertyDescription.toRpcValue().toCpon();
 					REQUIRE(pi.deviceType == "SignalSymbol_G3");
 					REQUIRE(pi.devicePath == "devices/signal/SA04/symbol/RED_LEFT");
 					REQUIRE(pi.propertyDescription.typeName() == "StatusSignalSymbol");
@@ -195,7 +194,7 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 		auto type_info = ShvTypeInfo::fromRpcValue(rv);
 		write_cpon_file(out_path + "/hel002_typeInfo.cpon", type_info.toRpcValue());
 
-		//DOCTEST_SUBCASE("Node descriptions")
+		// Node descriptions
 		{
 			string field_name;
 			auto nd = type_info.propertyDescriptionForPath("heating/group/ESHS_Z1/status/errorAutomaticControl", &field_name);
@@ -205,7 +204,7 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 			REQUIRE(nd.typeName() == "StatusHeatingGroupNew");
 			REQUIRE(field_name == "errorAutomaticControl");
 		}
-		//DOCTEST_SUBCASE("System paths")
+		// System paths
 		{
 			REQUIRE(type_info.systemPathsRoots().empty() == false);
 			REQUIRE(type_info.findSystemPath("a/b/c") == "system/sig");
@@ -229,14 +228,12 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 		{
 			auto pi = type_info.pathInfo("elbox/VL2-2/temperature");
 			INFO("propertyDescriptionForPath: ", pi.propertyDescription.toRpcValue().toCpon());
-			//CAPTURE(nd.toRpcValue().toCpon());
 			REQUIRE(pi.deviceType == "ElboxHeating");
 			REQUIRE(pi.propertyDescription.isValid() == true);
 		}
 		{
 			auto pi = type_info.pathInfo("elbox/VL2-3/temperature");
 			INFO("propertyDescriptionForPath: ", pi.propertyDescription.toRpcValue().toCpon());
-			//CAPTURE(nd.toRpcValue().toCpon());
 			REQUIRE(pi.deviceType == "ElboxHeating");
 			REQUIRE(pi.propertyDescription.isValid() == false);
 		}
@@ -251,7 +248,6 @@ DOCTEST_TEST_CASE("ShvTypeInfo")
 		{
 			auto pi = type_info.pathInfo("elbox/VL5-2/temperature");
 			INFO("propertyDescriptionForPath: ", pi.propertyDescription.toRpcValue().toCpon());
-			//CAPTURE(nd.toRpcValue().toCpon());
 			REQUIRE(pi.deviceType == "ElboxHeating");
 			REQUIRE(pi.propertyDescription.isValid() == true);
 		}

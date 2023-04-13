@@ -64,7 +64,6 @@ QHostAddress Network::primaryPublicIPv4Address()
 #ifndef Q_OS_WASM
 	QList<QHostAddress> addrs = QNetworkInterface::allAddresses();
 	for(const QHostAddress &addr : addrs) {
-		//shvDebug() << addr.toString() << "is global:" << addr.isGlobal();
 		if(addr.protocol() == QAbstractSocket::IPv4Protocol) {
 			quint32 a = addr.toIPv4Address();
 			if(isPublicIPv4Address(a)) {
@@ -81,7 +80,6 @@ QHostAddress Network::primaryIPv4Address()
 #ifndef Q_OS_WASM
 	QList<QHostAddress> addrs = QNetworkInterface::allAddresses();
 	for(const QHostAddress &addr : addrs) {
-		//shvDebug() << addr.toString() << "is global:" << addr.isGlobal();
 		if(addr.protocol() == QAbstractSocket::IPv4Protocol) {
 			quint32 a = addr.toIPv4Address();
 			if(isGlobalIPv4Address(a)) {

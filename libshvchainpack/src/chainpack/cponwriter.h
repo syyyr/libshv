@@ -14,8 +14,6 @@ class SHVCHAINPACK_DECL_EXPORT CponWriterOptions
 	std::string m_indent;
 	bool m_jsonFormat = false;
 public:
-	//CponWriterOptions() {}
-
 	bool isTranslateIds() const {return m_translateIds;}
 	CponWriterOptions& setTranslateIds(bool b) {m_translateIds = b; return *this;}
 
@@ -70,7 +68,6 @@ private:
 	CponWriter& write_p(const std::string &value);
 	CponWriter& write_p(const RpcValue::Blob &value);
 	CponWriter& write_p(const RpcValue::List &values);
-	//CponWriter& write(const RpcValue::Array &values);
 	CponWriter& write_p(const RpcValue::Map &values);
 	CponWriter& write_p(const RpcValue::IMap &values, const RpcValue::MetaData *meta_data = nullptr);
 private:

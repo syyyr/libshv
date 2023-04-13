@@ -59,13 +59,7 @@ RpcMessage::RpcMessage(const RpcValue &val)
 }
 
 RpcMessage::~RpcMessage() = default;
-/*
-void RpcMessage::setMetaTypeExplicit(bool b)
-{
-	MetaType::registerMetaType();
-	m_isMetaTypeExplicit = b;
-}
-*/
+
 bool RpcMessage::hasKey(RpcValue::Int key) const
 {
 	return m_value.asIMap().count(key);
@@ -115,7 +109,6 @@ RpcValue RpcMessage::requestId() const
 void RpcMessage::setRequestId(const RpcValue &id)
 {
 	checkMetaValues();
-	//checkRpcTypeMetaValue();
 	setMetaValue(RpcMessage::MetaType::Tag::RequestId, id);
 }
 
@@ -350,18 +343,7 @@ RpcValue RpcMessage::callerIds() const
 {
 	return metaValue(RpcMessage::MetaType::Tag::CallerIds);
 }
-/*
-RpcValue::List RpcMessage::callerIdsList() const
-{
-	RpcValue ids = callerIds();
-	if(ids.isList())
-		return ids.toList();
-	RpcValue::Int id = ids.toInt();
-	if(id == 0)
-		return RpcValue::List{};
-	return RpcValue::List{id};
-}
-*/
+
 void RpcMessage::setCallerIds(const RpcValue &callerId)
 {
 	setMetaValue(RpcMessage::MetaType::Tag::CallerIds, callerId);
@@ -400,18 +382,7 @@ RpcValue RpcMessage::revCallerIds() const
 {
 	return metaValue(RpcMessage::MetaType::Tag::RevCallerIds);
 }
-/*
-RpcValue::List RpcMessage::revCallerIdsList() const
-{
-	RpcValue ids = revCallerIds();
-	if(ids.isList())
-		return ids.toList();
-	RpcValue::Int id = ids.toInt();
-	if(id == 0)
-		return RpcValue::List{};
-	return RpcValue::List{id};
-}
-*/
+
 void RpcMessage::setRegisterRevCallerIds()
 {
 	setMetaValue(RpcMessage::MetaType::Tag::RevCallerIds, nullptr);
@@ -467,26 +438,7 @@ void RpcMessage::write(AbstractStreamWriter &wr) const
 	assert(m_value.isValid());
 	wr.write(m_value);
 }
-/*
-std::string RpcMessage::callerFingerprint() const
-{
-	RpcValue caller_ids = callerIds();
-	std::string ret;
-	if(caller_ids.isList()) {
-		RpcValue::List array = caller_ids.asList();
-		for(const RpcValue &rv : array) {
-			if(!ret.empty())
-				ret += '-';
-			ret += rv.toCpon();
-		}
-	}
-	else {
-		ret = caller_ids.toCpon();
-	}
-	ret += '#' + requestId().toCpon();
-	return ret;
-}
-*/
+
 void RpcMessage::registerMetaTypes()
 {
 	RpcMessage::MetaType::registerMetaType();
@@ -499,8 +451,6 @@ void RpcMessage::checkMetaValues()
 {
 	if(!m_value.isValid()) {
 		m_value = RpcValue::IMap();
-		/// not needed, Global is default name space
-		//setMetaValue(meta::Tag::MetaTypeNameSpaceId, meta::GlobalNS::ID);
 		/// not needed, RpcMessage is only type used so far
 		if(m_isMetaTypeExplicit)
 			setMetaValue(meta::Tag::MetaTypeId, RpcMessage::MetaType::ID);
@@ -530,7 +480,6 @@ RpcRequest &RpcRequest::setMethod(const RpcValue::String &met)
 RpcRequest &RpcRequest::setMethod(RpcValue::String &&met)
 {
 	setMetaValue(RpcMessage::MetaType::Tag::Method, RpcValue{std::move(met)});
-	//checkRpcTypeMetaValue();
 	return *this;
 }
 
@@ -613,7 +562,6 @@ RpcResponse::Error RpcResponse::error() const
 RpcResponse &RpcResponse::setError(RpcResponse::Error err)
 {
 	setValue(RpcMessage::MetaType::Key::Error, std::move(err));
-	//checkRpcTypeMetaValue();
 	return *this;
 }
 
@@ -625,7 +573,6 @@ RpcValue RpcResponse::result() const
 RpcResponse& RpcResponse::setResult(const RpcValue& res)
 {
 	setValue(RpcMessage::MetaType::Key::Result, res);
-	//checkRpcTypeMetaValue();
 	return *this;
 }
 

@@ -39,7 +39,6 @@ DOCTEST_TEST_CASE("Send")
 
 	RpcMessage rec_msg;
 	QObject::connect(&conn, &MockRpcConnection::rpcMessageReceived, [&rec_msg](const shv::chainpack::RpcMessage &msg) {
-		//nInfo() << "data read:" << msg.toCpon();
 		rec_msg = msg;
 	});
 
@@ -56,14 +55,10 @@ DOCTEST_TEST_CASE("Send")
 	};
 	for(const auto &p : params) {
 		rq.setParams(p);
-		//nInfo() << "==== message:" << rq.toCpon();
-		//nInfo() << "message chainpack:" << QByteArray::fromStdString(rq.value().toChainPack()).toHex().toStdString();
 		serial->clearWrittenData();
 		rec_msg = {};
 		conn.sendMessage(rq);
 		auto data = serial->writtenData();
-		//serial->setDataToReceive(data);
-		//REQUIRE(rec_msg.value() == rq.value());
 
 		vector<string> rubbish1 = {
 			"",
@@ -85,8 +80,6 @@ DOCTEST_TEST_CASE("Send")
 			for(const auto &extra_rubbish : rubbish2) {
 				// add some rubbish
 				auto data2 = data1 +  QByteArray::fromStdString(extra_rubbish);
-				//nInfo() << n++ << "data sent:" << data2.toStdString();
-				//nInfo().nospace() << "data sent dump:\n" << shv::chainpack::utils::hexDump(data2.constData(), data2.size());
 				rec_msg = {};
 				serial->setDataToReceive(data2);
 				REQUIRE(socket->readMessageError() == SerialPortSocket::ReadMessageError::Ok);

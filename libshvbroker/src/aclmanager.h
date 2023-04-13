@@ -78,7 +78,6 @@ protected:
 	virtual shv::iotqt::acl::AclRoleAccessRules aclAccessRoleRules(const std::string &role_name) = 0;
 	virtual void aclSetAccessRoleRules(const std::string &role_name, const shv::iotqt::acl::AclRoleAccessRules &rp);
 
-	//virtual AclPassword aclUserPassword(const std::string &user) = 0;
 protected:
 	virtual void clearCache()
 	{

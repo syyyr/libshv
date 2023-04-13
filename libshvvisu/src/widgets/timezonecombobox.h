@@ -20,7 +20,6 @@ public:
 protected:
 	void keyPressEvent(QKeyEvent *event) override;
 private:
-	//static constexpr auto LOCAL_TZ_ID = "Local";
 	QString m_searchText;
 #endif
 };
