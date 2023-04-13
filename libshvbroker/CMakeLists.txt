@@ -28,7 +28,7 @@ if(OpenLDAP_FOUND)
 	target_sources(libshvbroker PRIVATE
 		src/ldap.cpp
 		)
-	target_link_libraries(libshvbroker PUBLIC OpenLDAP::OpenLDAP)
+	target_link_libraries(libshvbroker PUBLIC PkgConfig::OpenLDAP)
 	target_compile_definitions(libshvbroker PUBLIC WITH_SHV_LDAP)
 endif()
 
