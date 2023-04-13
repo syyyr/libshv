@@ -63,7 +63,7 @@ jobs:
           modules: qtserialport qtwebsockets
 
       - name: Configure CMake
-        run: CFLAGS="-Werror" CXXFLAGS="-Werror" cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DUSE_QT6=ON
+        run: CFLAGS="-Werror" CXXFLAGS="-Werror" cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DUSE_QT6=ON -DWITH_LDAP=ON
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build --parallel $(nproc)
