@@ -124,7 +124,6 @@ DOCTEST_TEST_CASE("ShvPath")
 			{"aa/bb/cc/dd", "*/**/*/*/*", false},
 		};
 		for(const Test &t : cases) {
-			//nDebug() << t.path << "vs. pattern" << t.pattern << "should be:" << t.result;
 			REQUIRE(shv::core::utils::ShvPath(t.path).matchWild(t.pattern) == t.result);
 		}
 	}

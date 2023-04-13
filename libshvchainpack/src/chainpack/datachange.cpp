@@ -10,17 +10,9 @@ namespace shv::chainpack {
 DataChange::MetaType::MetaType()
 	: Super("ValueChange")
 {
-	/*
-	m_keys = {
-		RPC_META_KEY_DEF(Value),
-		RPC_META_KEY_DEF(DateTime),
-		RPC_META_KEY_DEF(ShortTime),
-	};
-	*/
 	m_tags = {
 		RPC_META_TAG_DEF(DateTime),
 		RPC_META_TAG_DEF(ShortTime),
-		//RPC_META_TAG_DEF(Domain),
 		RPC_META_TAG_DEF(ValueFlags),
 		RPC_META_TAG_DEF(SpecialListValue),
 	};
@@ -35,12 +27,7 @@ void DataChange::MetaType::registerMetaType()
 		shv::chainpack::meta::registerType(shv::chainpack::meta::GlobalNS::ID, MetaType::ID, &s);
 	}
 }
-/*
-DataChange::DataChange(const RpcValue &val)
-{
-	setValue(val);
-}
-*/
+
 const char *DataChange::valueFlagToString(DataChange::ValueFlag flag)
 {
 	switch (flag) {
@@ -108,14 +95,12 @@ DataChange DataChange::fromRpcValue(const RpcValue &val)
 			}
 		}
 		{
-			//nInfo() << val.toCpon();
 			RpcValue raw_val = val.metaStripped();
 			ret.setValue(raw_val);
 		}
 set_meta_data:
 		ret.setDateTime(val.metaValue(MetaType::Tag::DateTime));
 		ret.setShortTime(val.metaValue(MetaType::Tag::ShortTime));
-		//ret.setDomain(val.metaValue(MetaType::Tag::Domain).asString());
 		int st = val.metaValue(MetaType::Tag::ValueFlags).toInt();
 		ret.setValueFlags(static_cast<shv::chainpack::DataChange::ValueFlags>(st));
 		return ret;
@@ -150,8 +135,6 @@ RpcValue DataChange::toRpcValue() const
 		ret.setMetaValue(MetaType::Tag::DateTime, m_dateTime);
 	if(hasShortTime())
 		ret.setMetaValue(MetaType::Tag::ShortTime, static_cast<unsigned>(m_shortTime));
-	//if(hasDomain())
-	//	ret.setMetaValue(MetaType::Tag::Domain, m_domain);
 	if(valueFlags() != 0)
 		ret.setMetaValue(MetaType::Tag::ValueFlags, static_cast<int>(valueFlags()));
 	return ret;

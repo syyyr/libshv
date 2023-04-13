@@ -150,15 +150,11 @@ void Graph::createChannelsFromModel(shv::visu::timeline::Graph::SortChannels sor
 		}
 	}
 	for(auto model_ix : model_ixs) {
-		//shvDebug() << "adding channel:" << it.key();
-		//shvInfo() << "new channel:" << model_ix;
 		GraphChannel *ch = appendChannel(model_ix);
-		//ch->buttonBox()->setObjectName(QString::fromStdString(shv_path));
 		auto channel_ix = channelCount() - 1;
 		GraphChannel::Style style = ch->style();
 		style.setColor(colors.value(channel_ix % colors.count()));
 		ch->setStyle(style);
-		//ch->setMetaTypeId(m_model->guessMetaType(model_ix));
 	}
 	resetChannelsRanges();
 }
@@ -391,7 +387,6 @@ Sample Graph::timeToSample(qsizetype channel_ix, timemsec_t time) const
 	if(ix1 < 0)
 		return Sample();
 	int interpolation = ch->m_effectiveStyle.interpolation();
-	//shvInfo() << channel_ix << "interpolation:" << interpolation;
 	if(interpolation == GraphChannel::Style::Interpolation::None) {
 		Sample s = m->sampleAt(model_ix, ix1);
 		if(s.time == time)
@@ -455,112 +450,10 @@ QPoint Graph::dataToPos(qsizetype ch_ix, const Sample &s) const
 	auto data2point = dataToPointFn(DataRect{xRangeZoom(), ch->yRangeZoom()}, ch->graphDataGridRect());
 	return data2point? data2point(s, channelTypeId(ch_ix)): QPoint();
 }
-/*
-QString Graph::prettyBitFieldValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const
-{
-	QString text;
-	if (value.type() == QVariant::Int) {
-		int i = value.toInt();
-		if (i) {
-			for (auto &field : type_descr.fields()) {
-				if (field.value().isInt()) {
-					int desc_val = field.value().toInt();
-					if (i & 1 << desc_val) {
-						QString t = QString::fromStdString(field.description());
-						if (t.isEmpty()) {
-							t = QString::fromStdString(field.description());
-						}
-						if (t.isEmpty()) {
-							t = QString::fromStdString(field.name());
-						}
-						if (t.isEmpty()) {
-							t = QString::number(desc_val);
-						}
-						text += t + ", ";
-					}
-				}
-			}
-			text.chop(2);
-		}
-	}
-	return text;
-}
 
-QMap<QString, QString> Graph::prettyMapValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const
-{
-	QMap<QString, QString> ret;
-	const QVariantMap &map = value.toMap();
-	for (auto it = map.cbegin(); it != map.cend(); ++it) {
-		QString value;
-		if (it.value().type() == QVariant::Map) {
-			value = QJsonDocument::fromVariant(it.value()).toJson(QJsonDocument::Compact);
-		}
-		else {
-			value = it.value().toString();
-			try {
-				for (auto &field : type_descr.fields()) {
-					if (QString::fromStdString(field.name()) == it.key()) {
-						const shv::core::utils::ShvTypeDescr field_type_descr = model()->typeInfo().findTypeDescription(field.typeName());
-						if (field_type_descr.type() == shv::core::utils::ShvTypeDescr::Type::Enum) {
-							value = model()->typeDescrFieldName(field_type_descr, it.value().toInt());
-							break;
-						}
-					}
-				}
-			}
-			catch(const std::out_of_range &) {
-			}
-		}
-		ret[it.key()] = value;
-	}
-	return ret;
-}
-
-QMap<QString, QString> Graph::prettyIMapValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const
-{
-	QMap<QString, QString> ret;
-
-	const QVariantMap &map = value.toMap();
-	for (auto it = map.cbegin(); it != map.cend(); ++it) {
-		for (auto &field : type_descr.fields()) {
-			if (it.key().toInt() == field.value().toInt()) {
-				QString value;
-				if (it.value().type() == QVariant::Map) {
-					value = QJsonDocument::fromVariant(it.value()).toJson(QJsonDocument::Compact);
-				}
-				else {
-					value = it.value().toString();
-					try {
-						const shv::core::utils::ShvTypeDescr field_type_descr = model()->typeInfo().findTypeDescription(field.typeName());
-						if (field_type_descr.type() == shv::core::utils::ShvTypeDescr::Type::Enum) {
-							value = model()->typeDescrFieldName(field_type_descr, it.value().toInt());
-						}
-					}
-					catch(const std::out_of_range &) {
-					}
-				}
-				ret[QString::fromStdString(field.name())] = value;
-				break;
-			}
-		}
-	}
-
-	return ret;
-}
-*/
 void Graph::setCrossHairPos(const Graph::CrossHairPos &pos)
 {
-	//{
-	//	const GraphChannel *ch = channelAt(crossBarPos().channelIndex, !shv::core::Exception::Throw);
-	//	if(ch)
-	//		emit emitPresentationDirty(ch->graphDataGridRect());
-	//}
 	m_state.crossHairPos = pos;
-	//{
-	//	const GraphChannel *ch = channelAt(crossBarPos().channelIndex, !shv::core::Exception::Throw);
-	//	if(ch)
-	//		emit emitPresentationDirty(ch->graphDataGridRect());
-	//}
 	QRect dirty_rect;
 	for (qsizetype i = 0; i < channelCount(); ++i) {
 		const GraphChannel *ch = channelAt(i, !shv::core::Exception::Throw);
@@ -606,10 +499,6 @@ qsizetype Graph::posToChannel(const QPoint &pos) const
 	for (qsizetype i = 0; i < channelCount(); ++i) {
 		const GraphChannel *ch = channelAt(i);
 		const QRect r = ch->graphAreaRect();
-		//shvInfo() << ch->shvPath()
-		//		  << QString("[%1, %2]").arg(pos.x()).arg(pos.y())
-		//		  << "in"
-		//		  << QString("[%1, %2](%3 x %4)").arg(r.x()).arg(r.y()).arg(r.width()).arg(r.height());
 		if(r.contains(pos)) {
 			return i;
 		}
@@ -760,10 +649,8 @@ QVariantMap Graph::mergeMaps(const QVariantMap &base, const QVariantMap &overlay
 {
 	QVariantMap ret = base;
 	QMapIterator<QString, QVariant> it(overlay);
-	//shvDebug() << "====================== merge ====================";
 	while(it.hasNext()) {
 		it.next();
-		//shvDebug() << it.key() << "<--" << it.value();
 		ret[it.key()] = it.value();
 	}
 	return ret;
@@ -919,10 +806,8 @@ std::pair<Sample, int> Graph::posToSample(const QPoint &pos) const
 	auto ch_ix = posToChannel(pos);
 	timemsec_t time = posToTime(pos.x());
 	const GraphChannel *ch = channelAt(ch_ix);
-	//update(ch->graphAreaRect());
 	const GraphModel::ChannelInfo channel_info = model()->channelInfo(ch->modelIndex());
 	shvDebug() << channel_info.shvPath << channel_info.typeDescr.toRpcValue().toCpon();
-	//auto channel_type_descr = channel_info.typeDescr.type();
 	auto channel_sample_type = channel_info.typeDescr.sampleType();
 	Sample s;
 	if (channel_sample_type == shv::core::utils::ShvTypeDescr::SampleType::Discrete) {
@@ -938,7 +823,6 @@ QVariantMap Graph::sampleValues(qsizetype channel_ix, const shv::visu::timeline:
 {
 	QVariantMap ret;
 	const GraphChannel *ch = channelAt(channel_ix);
-	//update(ch->graphAreaRect());
 	const GraphModel::ChannelInfo channel_info = model()->channelInfo(ch->modelIndex());
 	shvDebug() << channel_info.shvPath << channel_info.typeDescr.toRpcValue().toCpon();
 
@@ -1114,7 +998,6 @@ void Graph::makeLayout(const QRect &pref_rect)
 		GraphChannel *ch = channelAt(visible_channels[i]);
 
 		ch->m_layout.graphAreaRect.moveTop(widget_height);
-		//ch->layout.graphRect.setWidth(layout.navigationBarRect.width());
 
 		ch->m_layout.verticalHeaderRect = ch->m_layout.graphAreaRect;
 		ch->m_layout.verticalHeaderRect.setX(u2px(m_style.leftMargin()));
@@ -1209,7 +1092,6 @@ void Graph::drawLeftCenterText(QPainter *painter, const QPoint &left_center, con
 
 QVector<int> Graph::visibleChannels() const
 {
-	//shvLogFuncFrame() << "chanel cnt:" << m_channels.count() << "filter valid:" << m_channelFilter.isValid() << "maximized channel:" << maximizedChannelIndex();
 	QVector<int> visible_channels;
 	int maximized_channel = maximizedChannelIndex();
 
@@ -1305,10 +1187,8 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 {
 	drawBackground(painter, dirty_rect);
 	bool draw_cross_hair_time_marker = false;
-	//shvInfo() << "draw -----------";
 	for (int i : visibleChannels()) {
 		const GraphChannel *ch = channelAt(i);
-		//shvInfo() << "channel:" << channelName(i);
 		if(dirty_rect.intersects(ch->graphAreaRect())) {
 			drawBackground(painter, i);
 			drawGrid(painter, i);
@@ -1335,10 +1215,6 @@ void Graph::draw(QPainter *painter, const QRect &dirty_rect, const QRect &view_r
 		drawXAxis(painter);
 	if(dirty_rect.intersects(m_state.selectionRect))
 		drawSelection(painter);
-	/*
-	shvInfo() << "dirty rect:" << dirty_rect.x() << "," << dirty_rect.y()
-			  << " " << dirty_rect.width() << "x" << dirty_rect.height();
-	*/
 }
 
 void Graph::drawBackground(QPainter *painter, const QRect &dirty_rect)
@@ -1375,7 +1251,6 @@ void Graph::drawMiniMap(QPainter *painter)
 		for (int i : visible_channels) {
 			GraphChannel *ch = channelAt(i);
 			GraphChannel::Style ch_st = ch->m_effectiveStyle;
-			//ch_st.setLineAreaStyle(ChannelStyle::LineAreaStyle::Filled);
 			DataRect drect{xRange(), ch->yRange()};
 			drawSamples(painter2, i, drect, mm_rect, ch_st);
 		}
@@ -1427,18 +1302,14 @@ void Graph::drawVerticalHeader(QPainter *painter, int channel)
 	GraphChannel *ch = channelAt(channel);
 	QColor c = m_style.color();
 	QColor bc = m_style.colorPanel();
-	//bc.setAlphaF(0.05);
 	QPen pen;
 	pen.setColor(c);
 	painter->setPen(pen);
 
 	QString name = channelName(channel);
-	//shvInfo() << channel << shv_path << name;
 	QFont font = m_style.font();
-	//drawRectText(painter, ch->m_layout.verticalHeaderRect, name, font, c, bc);
 	painter->save();
 	painter->fillRect(ch->m_layout.verticalHeaderRect, bc);
-	//painter->drawRect(ch->m_layout.verticalHeaderRect);
 
 	painter->setClipRect(ch->m_layout.verticalHeaderRect);
 	{
@@ -1452,11 +1323,6 @@ void Graph::drawVerticalHeader(QPainter *painter, int channel)
 	QRect text_rect = ch->m_layout.verticalHeaderRect.adjusted(2*header_inset, header_inset, -header_inset, -header_inset);
 	painter->drawText(text_rect, name);
 
-	//font.setBold(false);
-	//painter->setFont(font);
-	//text_rect.moveTop(text_rect.top() + fm.lineSpacing());
-	//painter->drawText(text_rect, shv_path);
-
 	painter->restore();
 	GraphButtonBox *bbx = ch->buttonBox();
 	if(bbx)
@@ -1467,7 +1333,6 @@ void Graph::drawBackground(QPainter *painter, int channel)
 {
 	const GraphChannel *ch = channelAt(channel);
 	painter->fillRect(ch->m_layout.graphAreaRect, ch->m_effectiveStyle.colorBackground());
-	//painter->fillRect(ch->m_layout.graphAreaRect, Qt::green);
 }
 
 void Graph::drawGrid(QPainter *painter, int channel)
@@ -1484,7 +1349,6 @@ void Graph::drawGrid(QPainter *painter, int channel)
 	painter->save();
 	QPen pen_solid;
 	pen_solid.setWidth(1);
-	//pen.setWidth(u2px(0.1));
 	pen_solid.setColor(gc);
 	painter->setPen(pen_solid);
 	painter->drawRect(ch->m_layout.graphAreaRect);
@@ -1535,7 +1399,6 @@ void Graph::drawXAxis(QPainter *painter)
 	painter->fillRect(m_layout.xAxisRect, m_style.colorPanel());
 	const XAxis &axis = m_state.xAxis;
 	if(!axis.isValid()) {
-		//drawRectText(painter, m_layout.xAxisRect, "x-axis", m_effectiveStyle.font(), Qt::green);
 		return;
 	}
 	painter->save();
@@ -1616,9 +1479,6 @@ void Graph::drawXAxis(QPainter *painter)
 		r.adjust(-inset, -inset, inset, inset);
 		r.moveTopLeft(p2 + QPoint{-r.width() / 2, 0});
 		painter->drawText(r, text);
-		//shvInfo() << t << cp::RpcValue::DateTime::fromMSecsSinceEpoch(t).toIsoString() << text
-		//		  << QDateTime::fromMSecsSinceEpoch(t).toString(Qt::ISODateWithMs)
-		//		  << "with TZ" << date_time_tz(t).isValid() << date_time_tz(t).toString(Qt::ISODateWithMs);
 	}
 	{
 		QString text;
@@ -1743,7 +1603,6 @@ std::function<QPoint (const Sample &s, Graph::TypeId meta_type_id)> Graph::dataT
 	if(t2 - t1 == 0)
 		return nullptr;
 	double kx = static_cast<double>(ri - le) / static_cast<double>(t2 - t1);
-	//shvInfo() << "t1:" << t1 << "t2:" << t2 << "le:" << le << "ri:" << ri << "kx:" << kx;
 	if(std::abs(d2 - d1) < 1e-6)
 		return nullptr;
 	double ky = (to - bo) / (d2 - d1);
@@ -1762,7 +1621,6 @@ std::function<QPoint (const Sample &s, Graph::TypeId meta_type_id)> Graph::dataT
 		else {
 			bool ok;
 			double d = GraphModel::valueToDouble(s.value, meta_type_id, &ok);
-			//shvInfo() << "Convert qt type:" << s.value.typeName() << "through shv type:" << shv::core::utils::ShvLogTypeDescr::typeToString(meta_type_id) << "to double:" << d;
 			if(!ok) {
 				shvWarning() << "Don't know how to convert qt type:" << s.value.typeName() << "to shv type:" << shv::core::utils::ShvTypeDescr::typeToString(meta_type_id);
 				return QPoint();
@@ -1871,8 +1729,6 @@ void Graph::processEvent(QEvent *ev)
 			if(bbx) {
 				if(bbx->processEvent(ev))
 					break;
-				//if(ev->isAccepted()) cannot accept mouse-move, since it invalidates painting regions
-				//	return true;
 			}
 		}
 	}
@@ -1894,7 +1750,6 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 
 	XRange xrange;
 	YRange yrange;
-	//shvDebug() << "src rect is valid:" << src_rect.isValid() << "interval";
 	if(src_rect.isValid()) {
 		xrange = src_rect.xRange;
 		yrange = src_rect.yRange;
@@ -1951,8 +1806,6 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 	auto ix2 = graph_model->greaterTimeIndex(model_ix, xrange.max);
 	auto samples_cnt = graph_model->count(model_ix);
 	shvDebug() << "ix1:" << ix1 << "ix2:" << ix2 << "samples cnt:" << samples_cnt;
-	//const bool draw_last_stepped_point_continuation = interpolation == GraphChannel::Style::Interpolation::Stepped
-	//		&& model()->channelInfo(ch->modelIndex()).typeDescr.sampleType() != shv::core::utils::ShvTypeDescr::SampleType::Discrete;
 	static constexpr int NO_X = std::numeric_limits<int>::min();
 	struct SamePixelValue {
 		int x = NO_X;
@@ -2039,7 +1892,6 @@ void Graph::drawSamples(QPainter *painter, int channel_ix, const DataRect &src_r
 						painter->setBrush(line_pen.color());
 						QRect r0{QPoint(), QSize{sample_point_size, sample_point_size}};
 						r0.moveCenter(QPoint{prev_point.x, prev_point.y1});
-						//shvInfo() << current_px.x << "rect:" << r0.center().x();
 						painter->drawEllipse(r0);
 						if(prev_point.y1 != prev_point.y2) {
 							r0.moveCenter(QPoint{prev_point.x, prev_point.y2});
@@ -2088,8 +1940,6 @@ void Graph::drawCrossHairTimeMarker(QPainter *painter)
 	if(!crossHairPos().isValid())
 		return;
 	auto crossbar_pos = crossHairPos().possition;
-	//if(channel_ix != crossBarPos().channelIndex)
-	//	return;
 	if(m_layout.xAxisRect.left() >= crossbar_pos.x() || m_layout.xAxisRect.right() <= crossbar_pos.x()) {
 		return;
 	}
@@ -2102,7 +1952,6 @@ void Graph::drawCrossHairTimeMarker(QPainter *painter)
 		QRect r{0, 0, 2 * tick_len, tick_len};
 		r.moveCenter(p1);
 		r.moveBottom(p1.y());
-		//painter->fillRect(r, Qt::green);
 		QPainterPath pp;
 		pp.moveTo(r.topLeft());
 		pp.lineTo(r.topRight());
@@ -2111,7 +1960,6 @@ void Graph::drawCrossHairTimeMarker(QPainter *painter)
 		painter->fillPath(pp, color);
 	}
 	QString text = timeToStringTZ(time);
-	//shvInfo() << text;
 	p1.setY(p1.y() - tick_len);
 	auto c_text = color;
 	auto c_background = effectiveStyle().colorBackground();
@@ -2123,13 +1971,10 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 	if(!crossHairPos().isValid())
 		return;
 	auto crossbar_pos = crossHairPos().possition;
-	//if(channel_ix != crossBarPos().channelIndex)
-	//	return;
 	const GraphChannel *ch = channelAt(channel_ix);
 	if(ch->graphDataGridRect().left() >= crossbar_pos.x() || ch->graphDataGridRect().right() <= crossbar_pos.x()) {
 		return;
 	}
-	//shvDebug() << "drawCrossHair:" << ch->shvPath();
 	painter->save();
 	QColor color = m_style.colorCrossHair();
 	QPen pen_solid;
@@ -2150,17 +1995,13 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 		int d = u2px(0.4);
 		QRect bulls_eye_rect(0, 0, d, d);
 		bulls_eye_rect.moveCenter(crossbar_pos);
-		//painter->setClipRect(c->dataAreaRect());
 		/// draw horizontal line
 		QPoint p1{ch->graphDataGridRect().left(), crossbar_pos.y()};
 		QPoint p2{ch->graphDataGridRect().right(), crossbar_pos.y()};
-		//painter->drawLine(p1, p2);
-		//painter->drawLine(p3, p4);
 		painter->drawLine(p1, p2);
 
 		/// draw bulls-eye
 		painter->setPen(pen_solid);
-		//painter->fillRect(bull_eye_rect, ch->m_effectiveStyle.colorBackground());
 		painter->drawRect(bulls_eye_rect);
 		{
 			/// draw info
@@ -2222,7 +2063,6 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 				QRect r{0, 0, tick_len, 2 * tick_len};
 				r.moveCenter(p1);
 				r.moveLeft(p1.x());
-				//painter->fillRect(r, Qt::green);
 				QPainterPath pp;
 				pp.moveTo(r.bottomRight());
 				pp.lineTo(r.topRight());
@@ -2246,7 +2086,6 @@ void Graph::drawCrossHair(QPainter *painter, int channel_ix)
 				int dd = u2px(0.3);
 				QRect rect(0, 0, dd, dd);
 				rect.moveCenter(p);
-				//painter->fillRect(rect, c->effectiveStyle.color());
 				painter->fillRect(rect, color);
 				rect.adjust(2, 2, -2, -2);
 				painter->fillRect(rect, ch->m_effectiveStyle.colorBackground());
@@ -2323,7 +2162,6 @@ void Graph::drawCurrentTimeMarker(QPainter *painter, time_t time)
 		QRect r{0, 0, 2 * tick_len, tick_len};
 		r.moveCenter(p1);
 		r.moveTop(p1.y());
-		//painter->fillRect(r, Qt::green);
 		QPainterPath pp;
 		pp.moveTo(r.bottomLeft());
 		pp.lineTo(r.bottomRight());
@@ -2332,7 +2170,6 @@ void Graph::drawCurrentTimeMarker(QPainter *painter, time_t time)
 		painter->fillPath(pp, color);
 	}
 	QString text = timeToStringTZ(time);
-	//shvInfo() << text;
 	p1.setY(p1.y() + tick_len);
 	drawCenterTopText(painter, p1, text, m_style.font(), color.darker(400), color);
 }

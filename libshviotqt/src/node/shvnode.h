@@ -43,19 +43,15 @@ public:
 	explicit ShvNode(const std::string &node_id, ShvNode *parent = nullptr);
 	~ShvNode() override;
 
-	//size_t childNodeCount() const {return propertyNames().size();}
 	ShvNode* parentNode() const;
 	QList<ShvNode*> ownChildren() const;
 	virtual ShvNode* childNode(const String &name, bool throw_exc = true) const;
-	//ShvNode* childNode(const core::StringView &name) const;
 	virtual void setParentNode(ShvNode *parent);
 	virtual String nodeId() const {return m_nodeId;}
 	void setNodeId(String &&n);
 	void setNodeId(const String &n);
 
 	shv::core::utils::ShvPath shvPath() const;
-	//static StringViewList splitShvPath(const std::string &shv_path) { return StringView{shv_path}.split(SHV_PATH_DELIM, SHV_PATH_QUOTE); }
-	//static String joinShvPath(const StringViewList &shv_path);
 
 	ShvNode* rootNode();
 	virtual void emitSendRpcMessage(const shv::chainpack::RpcMessage &msg);
@@ -119,8 +115,6 @@ class SHVIOTQT_DECL_EXPORT MethodsTableNode : public shv::iotqt::node::ShvNode
 {
 	using Super = shv::iotqt::node::ShvNode;
 public:
-	//explicit MethodsTableNode(const std::string &node_id, shv::iotqt::node::ShvNode *parent = nullptr)
-	//	: Super(node_id, parent) {}
 	explicit MethodsTableNode(const std::string &node_id, const std::vector<shv::chainpack::MetaMethod> *methods, shv::iotqt::node::ShvNode *parent = nullptr)
 		: Super(node_id, parent), m_methods(methods) {}
 
@@ -144,7 +138,6 @@ public:
 public:
 	RpcValueMapNode(const std::string &node_id, shv::iotqt::node::ShvNode *parent = nullptr);
 	RpcValueMapNode(const std::string &node_id, const shv::chainpack::RpcValue &values, shv::iotqt::node::ShvNode *parent = nullptr);
-	//~RpcValueMapNode() override;
 
 	size_t methodCount(const StringViewList &shv_path) override;
 	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
@@ -190,9 +183,7 @@ class SHVIOTQT_DECL_EXPORT RpcValueConfigNode : public RpcValueMapNode
 public:
 	RpcValueConfigNode(const std::string &node_id, shv::iotqt::node::ShvNode *parent);
 
-	//shv::chainpack::RpcValue valueOnPath(const StringViewList &shv_path, bool throv_exc = true) override;
 protected:
-	//HNode* parentHNode();
 
 	shv::chainpack::RpcValue loadConfigTemplate(const std::string &file_name);
 	std::string resolvedUserConfigName() const;
@@ -213,14 +204,11 @@ class SHVIOTQT_DECL_EXPORT ObjectPropertyProxyShvNode : public shv::iotqt::node:
 {
 	using Super = shv::iotqt::node::ShvNode;
 public:
-	//explicit MethodsTableNode(const std::string &node_id, shv::iotqt::node::ShvNode *parent = nullptr)
-	//	: Super(node_id, parent) {}
 	explicit ObjectPropertyProxyShvNode(const char *property_name, QObject *property_obj, shv::iotqt::node::ShvNode *parent = nullptr);
 
 	size_t methodCount(const StringViewList &shv_path) override;
 	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
 
-	//shv::chainpack::RpcValue callMethod(const shv::chainpack::RpcRequest &rq) override {return  Super::callMethod(rq);}
 	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id) override;
 protected:
 	QMetaProperty m_metaProperty;

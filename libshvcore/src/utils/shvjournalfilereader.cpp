@@ -75,7 +75,6 @@ bool ShvJournalFileReader::next()
 				std::string dtstr = fld.toString();
 				size_t len;
 				cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr, &len);
-				//logDShvJournal() << dtstr << "-->" << dt.toIsoString();
 				if(len == 0) {
 					logWShvJournal() << "invalid date time string:" << dtstr << "line will be ignored";
 					goto next_line;

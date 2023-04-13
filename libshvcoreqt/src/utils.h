@@ -47,23 +47,7 @@
 #define SHV_PROPERTY2(ptype, lower_letter, upper_letter, name_rest, default_value) \
 	Q_PROPERTY(ptype lower_letter##name_rest READ lower_letter##name_rest WRITE set##upper_letter##name_rest NOTIFY lower_letter##name_rest##Changed) \
 	SHV_PROPERTY_IMPL2(ptype, lower_letter, upper_letter, name_rest, default_value)
-/*
-#define SHV_PROPERTY_BOOL2(name, default_value) \
-	private: bool m_is##name = default_value; \
-	public: Q_SIGNAL void lower_letter##name_rest##Changed(const bool &new_val); \
-	public: bool is##name() const {return m_is##name;} \
-	public: Q_SLOT bool set##name(bool val) { \
-		if(m_is##name != val) { \
-			m_is##name = val; \
-			emit is##name##Changed(m_is##name); \
-			return true; \
-		}\
-		return false; \
-	}
 
-#define SHV_PROPERTY_BOOL(name) \
-	SHV_PROPERTY_BOOL2(name, false)
-*/
 #define SHV_PROPERTY_BOOL_IMPL2(lower_letter, upper_letter, name_rest, default_value) \
 	private: bool m_##lower_letter##name_rest = default_value; \
 	public: Q_SIGNAL void lower_letter##name_rest##Changed(const bool &new_val); \

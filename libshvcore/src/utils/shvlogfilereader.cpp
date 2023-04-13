@@ -60,7 +60,6 @@ bool ShvLogFileReader::next()
 		if(!m_ifstream)
 			return false;
 		chainpack::ChainPackReader::ItemType tt = m_reader->peekNext();
-		//logDShvJournal() << "peek next type:" << chainpack::ChainPackReader::itemTypeToString(tt);
 		if(tt == chainpack::ChainPackReader::ItemType::CCPCP_ITEM_CONTAINER_END)
 			return false;
 

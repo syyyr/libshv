@@ -167,7 +167,6 @@ qsizetype GraphModel::lessOrEqualTimeIndex(qsizetype channel, timemsec_t time) c
 		}
 	};
 	qsizetype ret = found? first: -1;
-	//shvInfo() << time << "-->" << ret;
 	return ret;
 }
 
@@ -208,7 +207,6 @@ void GraphModel::endAppendValues()
 
 void GraphModel::appendValue(qsizetype channel, Sample &&sample)
 {
-	//shvInfo() << channel << sample.time << sample.value.toString();
 	if(channel < 0 || channel > channelCount()) {
 		shvError() << "Invalid channel index:" << channel;
 		return;
@@ -231,8 +229,6 @@ void GraphModel::appendValue(qsizetype channel, Sample &&sample)
 			&& samples.last().value == sample.value) {
 		return;
 	}
-	//m_appendSince = qMin(sampleAt.time, m_appendSince);
-	//m_appendUntil = qMax(sampleAt.time, m_appendUntil);
 	samples.push_back(std::move(sample));
 }
 

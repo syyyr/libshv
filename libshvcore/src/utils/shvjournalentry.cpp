@@ -114,7 +114,6 @@ ShvJournalEntry ShvJournalEntry::fromRpcValueList(const chainpack::RpcValue::Lis
 			*err = "Path dictionary corrupted, row: " + p.toCpon();
 		return {};
 	}
-	//logDShvJournal() << "row:" << val.toCpon();
 	ShvJournalEntry entry;
 	entry.epochMsec = time;
 	entry.path = path;

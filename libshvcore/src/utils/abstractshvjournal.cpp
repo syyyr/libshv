@@ -27,7 +27,6 @@ void AbstractShvJournal::clearSnapshot()
 void AbstractShvJournal::addToSnapshot(ShvSnapshot &snapshot, const ShvJournalEntry &entry)
 {
 	if(entry.domain != ShvJournalEntry::DOMAIN_VAL_CHANGE) {
-		//shvDebug() << "remove not CHNG from snapshot:" << RpcValue(entry.toRpcValueMap()).toCpon();
 		return;
 	}
 	if(entry.value.metaTypeNameSpaceId() == shv::chainpack::meta::GlobalNS::ID && entry.value.metaTypeId() == shv::chainpack::meta::GlobalNS::MetaTypeId::NodeDrop) {

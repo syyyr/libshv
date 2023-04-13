@@ -16,9 +16,6 @@ TunnelCtl::MetaType::MetaType()
 		RPC_META_KEY_DEF(RequestId),
 		RPC_META_KEY_DEF(CallerIds),
 	};
-	//m_tags = {
-	//	RPC_META_TAG_DEF(shvPath)
-	//};
 }
 
 void TunnelCtl::MetaType::registerMetaType()
@@ -38,14 +35,6 @@ TunnelCtl::TunnelCtl(State::Enum st)
 	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
 	setState(st);
 }
-/*
-TunnelCtl::TunnelCtl(const RpcValue::IMap &o)
-	: Super(o)
-{
-	MetaType::registerMetaType();
-	setMetaValue(chainpack::meta::Tag::MetaTypeId, MetaType::ID);
-}
-*/
 TunnelCtl::TunnelCtl(const RpcValue &o)
 	: Super(o)
 {

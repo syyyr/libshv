@@ -43,10 +43,6 @@ public:
 	static int64_t findLastEntryDateTime(const std::string &fn, int64_t journal_start_msec, ssize_t *p_date_time_fpos = nullptr);
 	void append(const ShvJournalEntry &entry) override;
 
-	// testing purposes
-	//void setAppendLogTSNowFn(TSNowFn fn) { m_appendLogTSNowFn = fn; }
-	//void setDefaultAppendLogTSNowFn();
-
 	shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) override;
 	shv::chainpack::RpcValue getSnapShotMap() override;
 
@@ -81,7 +77,6 @@ public:
 		ShvTypeInfo typeInfo;
 
 		bool isConsistent() const {return journalDirExists && journalSize >= 0;}
-		//void setNotConsistent() {journalSize = -1;}
 		static int64_t fileNameToFileMsec(const std::string &fn);
 		static std::string msecToBaseFileName(int64_t msec);
 		static std::string fileMsecToFileName(int64_t msec);
@@ -107,9 +102,6 @@ private:
 
 	int64_t m_fileSizeLimit = DEFAULT_FILE_SIZE_LIMIT;
 	int64_t m_journalSizeLimit = DEFAULT_JOURNAL_SIZE_LIMIT;
-
-	// we need custom DateTime::now() fn for testing purposes
-	//TSNowFn m_appendLogTSNowFn;
 };
 
 } // namespace utils

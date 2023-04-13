@@ -17,7 +17,6 @@ struct SHVCORE_DECL_EXPORT ShvGetLogParams
 	static constexpr auto KEY_MAX_RECORD_COUNT_DEPRECATED = "maxRecordCount";
 	static constexpr auto KEY_RECORD_COUNT_LIMIT = "recordCountLimit";
 	static constexpr auto KEY_WITH_SNAPSHOT = "withSnapshot";
-	//static constexpr auto KEY_WITH_UPTIME = "withUptime";
 	static constexpr auto KEY_WITH_PATHS_DICT = "withPathsDict";
 	static constexpr auto KEY_WITH_TYPE_INFO = "withTypeInfo";
 	static constexpr auto KEY_WITH_SINCE = "since";
@@ -37,11 +36,9 @@ struct SHVCORE_DECL_EXPORT ShvGetLogParams
 	std::string pathPattern;
 	enum class PatternType {WildCard, RegEx};
 	PatternType pathPatternType = PatternType::WildCard;
-	//unsigned headerOptions = static_cast<unsigned>(HeaderOptions::BasicInfo);
 	static constexpr int DEFAULT_RECORD_COUNT_LIMIT = 1000;
 	int recordCountLimit = DEFAULT_RECORD_COUNT_LIMIT;
 	bool withSnapshot = false;
-	//bool withUptime = false;
 	std::string domainPattern; /// always regexp
 	bool withTypeInfo = false;
 	bool withPathsDict = true;

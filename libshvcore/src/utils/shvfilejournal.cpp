@@ -28,14 +28,6 @@ using namespace shv::chainpack;
 
 namespace shv::core::utils {
 
-/*
-static uint16_t shortTime()
-{
-	std::chrono::time_point<std::chrono::system_clock> p1 = std::chrono::system_clock::now();
-	int64_t msecs = std::chrono::duration_cast<std::chrono:: milliseconds>(p1.time_since_epoch()).count();
-	return static_cast<uint16_t>(msecs % 65536);
-}
-*/
 #define SHV_STATBUF              struct stat64
 #define SHV_STAT                 ::stat64
 #if defined(__unix) || defined(__APPLE__)
@@ -88,13 +80,7 @@ static int64_t file_size(const std::string &file_name)
 	logWShvJournal() << "Cannot stat file:" << file_name;
 	return -1;
 }
-/*
-static bool file_exists(const std::string &file_name)
-{
-	SHV_STATBUF st;
-	return (SHV_STAT(file_name.data(), &st) == 0);
-}
-*/
+
 static int64_t rm_file(const std::string &file_name)
 {
 	int64_t sz = file_size(file_name);
@@ -289,7 +275,6 @@ void ShvFileJournal::createJournalDirIfNotExist()
 		m_journalContext.journalDirExists = false;
 		SHV_EXCEPTION("Journal dir: " + m_journalContext.journalDir + " do not exists and cannot be created");
 	}
-	//logDShvJournal() << "journal dir:" << m_journalStatus.journalDir << "exists";
 	m_journalContext.journalDirExists = true;
 }
 
@@ -435,15 +420,7 @@ void ShvFileJournal::updateJournalStatus()
 		SHV_EXCEPTION("Cannot read content of dir: " + m_journalContext.journalDir);
 	}
 }
-/*
-int64_t ShvFileJournal::lastEntryTimeStamp()
-{
-	if(m_journalContext.files.empty())
-		return 0;
-	std::string fn = m_journalContext.fileMsecToFilePath(m_journalContext.files[m_journalContext.files.size() - 1]);
-	return findLastEntryDateTime(fn);
-}
-*/
+
 void ShvFileJournal::checkRecentTimeStamp()
 {
 	if(m_journalContext.recentTimeStamp > 0)
@@ -466,7 +443,6 @@ void ShvFileJournal::checkRecentTimeStamp()
 			m_journalContext.recentTimeStamp = 0;
 		}
 	}
-	//logDShvJournal() << "update recent time stamp:" << m_journalContext.recentTimeStamp << RpcValue::DateTime::fromMSecsSinceEpoch(m_journalContext.recentTimeStamp).toIsoString();
 }
 
 int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, int64_t journal_start_msec, ssize_t *p_date_time_fpos)
@@ -509,7 +485,6 @@ int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, int64_t jou
 		else {
 			in.seekg(-n, std::ios::cur);
 		}
-		//shvInfo() << "fpos:" << fpos << "n:" << n << in.tellg();
 		if(n == 0)
 			break;
 
@@ -650,7 +625,6 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		return true;
 	};
 	auto write_snapshot = [append_log_entry, since_last, params_since_msec, &snapshot_ctx]() {
-		//shvWarning() << "write_snapshot, snapshot size:" << snapshot_ctx.snapshot.size();
 		logMShvJournal() << "\t writing snapshot, record count:" << snapshot_ctx.snapshot.keyvals.size();
 		snapshot_ctx.snapshotWritten = true;
 		if(!snapshot_ctx.snapshot.keyvals.empty()) {
@@ -703,10 +677,8 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 		PatternMatcher pattern_matcher(params);
 		auto path_match = [&params, &pattern_matcher](const ShvJournalEntry &e) {
 			if(!params.pathPattern.empty()) {
-				//logDShvJournal() << "\t MATCHING:" << params.pathPattern << "vs:" << e.path;
 				if(!pattern_matcher.match(e.path, e.domain))
 					return false;
-				//logDShvJournal() << "\t\t MATCH";
 			}
 			return true;
 		};
@@ -714,22 +686,9 @@ chainpack::RpcValue ShvFileJournal::getLog(const ShvFileJournal::JournalContext 
 			std::string fn = journal_context.fileMsecToFilePath(*file_it);
 			logMShvJournal() << "-------- opening file:" << fn;
 			try {
-				/*
-				std::set<std::string> snapshot_keys;
-				std::vector<ShvJournalEntry> generated_entries;
-				logMShvJournal() << "Snapshot size:" << snapshot_ctx.snapshot.keyvals.size();
-				for(const auto &kv : snapshot_ctx.snapshot.keyvals) {
-					// note that snapshot contains ND values only
-					if(kv.second.domain == Rpc::SIG_VAL_CHANGED) {
-						logMShvJournal() << "\t adding ND path:" << kv.first;
-						snapshot_keys.insert(kv.first);
-					}
-				}
-				*/
 				ShvJournalFileReader rd(fn);
 				while(rd.next()) {
 					const ShvJournalEntry &entry = rd.entry();
-					//if(entry.path == "someError") logDShvJournal() << "1. snapshot:" << entry.toRpcValue().toCpon();
 					if(rd.inSnapshot()) {
 						logDShvJournal() << "\t snapshot:" << entry.path;
 						if(auto it = snapshot_ctx.snapshot.keyvals.find(entry.path); it != snapshot_ctx.snapshot.keyvals.end()) {
@@ -830,7 +789,6 @@ log_finish:
 		logMShvJournal() << "Generating paths dict size:" << path_cache.size();
 		RpcValue::IMap path_dict;
 		for(const auto &kv : path_cache) {
-			//logIShvJournal() << "Adding record to paths dict:" << kv.second.toInt() << "-->" << kv.first;
 			path_dict[kv.second.toInt()] = kv.first;
 		}
 		log_header.setPathDict(std::move(path_dict));

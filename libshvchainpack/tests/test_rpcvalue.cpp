@@ -29,7 +29,6 @@ std::string int_to_hex( T i )
 {
 	std::stringstream stream;
 	stream << "0x"
-			  //<< std::setfill ('0') << std::setw(sizeof(T)*2)
 		   << std::hex << i;
 	return stream.str();
 }
@@ -37,7 +36,6 @@ std::string int_to_hex( T i )
 }
 
 namespace shv::chainpack {
-
 doctest::String toString(const RpcValue& value) {
 	return value.toCpon().c_str();
 }
@@ -45,11 +43,6 @@ doctest::String toString(const RpcValue& value) {
 doctest::String toString(const RpcValue::DateTime& value) {
 	return value.toIsoString().c_str();
 }
-/*
-doctest::String toString(const RpcValue::Map& value) {
-	return RpcValue(value).toCpon().c_str();
-}
-*/
 }
 
 DOCTEST_TEST_CASE("RpcValue")
@@ -60,7 +53,6 @@ DOCTEST_TEST_CASE("RpcValue")
 		nDebug() << "================================= RefCnt Test =====================================";
 		auto rpcval = RpcValue::fromCpon(R"(<1:2,2:12,8:"foo",9:[1,2,3],"bar":"baz",>{"META":17,"18":19})");
 		auto rv1 = rpcval;
-		//nDebug() << "rv1:" << rv1.toCpon().c_str();
 		REQUIRE(rpcval.refCnt() == 2);
 		{
 			auto rv2 = rpcval;
@@ -71,7 +63,6 @@ DOCTEST_TEST_CASE("RpcValue")
 		rv1.set("foo", "bar");
 		REQUIRE(rv1.refCnt() == 1);
 		REQUIRE(rpcval.refCnt() == 1);
-		//REQUIRE(rpcval.at("foo") == RpcValue(42));
 		REQUIRE(rv1.at("foo") == RpcValue("bar"));
 		rv1 = rpcval;
 		REQUIRE(rpcval.refCnt() == 2);
@@ -88,7 +79,6 @@ DOCTEST_TEST_CASE("RpcValue")
 		auto rv1 = rpcval;
 		auto rv2 = rv1;
 		auto rv3 = rv1.metaStripped();
-		//nDebug() << "rv1:" << rv1.toCpon().c_str();
 		REQUIRE(rpcval.refCnt() == 3);
 		REQUIRE(rv3.refCnt() == 1);
 		REQUIRE(rv1.metaData().isEmpty() == false);

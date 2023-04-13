@@ -31,7 +31,6 @@ std::string int_to_hex( T i )
 {
 	std::stringstream stream;
 	stream << "0x"
-			  //<< std::setfill ('0') << std::setw(sizeof(T)*2)
 		   << std::hex << i;
 	return stream.str();
 }
@@ -60,7 +59,6 @@ std::string binary_dump(const RpcValue::String &out)
 	std::string ret;
 	for (size_t i = 0; i < out.size(); ++i) {
 		auto u = static_cast<uint8_t>(out[i]);
-		//ret += std::to_string(u);
 		if(i > 0)
 			ret += '|';
 		for (size_t j = 0; j < 8*sizeof(u); ++j) {
@@ -69,109 +67,6 @@ std::string binary_dump(const RpcValue::String &out)
 	}
 	return ret;
 }
-/*
-std::string binary_dump_rev(const void *data, size_t len)
-{
-	std::string ret;
-	for (size_t i = len-1; ; --i) {
-		uint8_t u = (reinterpret_cast<const uint8_t*>(data))[i];
-		if(i < len-1)
-			ret += '|';
-		for (size_t j = 0; j < 8*sizeof(u); ++j) {
-			ret += (u & ((static_cast<uint8_t>(128)) >> j))? '1': '0';
-		}
-		if(i == 0)
-			break;
-	}
-	return ret;
-}
-
-void write_double_bits()
-{
-	for (double d : {
-		 0.,
-		// 1.,  2., 3., 4., 5., 6., 7.,
-		// -1., -2., -3.,
-		 static_cast<double>(1 << 0),
-		 static_cast<double>((static_cast<uint64_t>(1) << 2) + 1),
-		 static_cast<double>((static_cast<uint64_t>(1) << 4) + 1),
-		 static_cast<double>((static_cast<uint64_t>(1) << 8) + 1),
-		 static_cast<double>((static_cast<uint64_t>(1) << 16) + 1),
-		 static_cast<double>((static_cast<uint64_t>(1) << 32) + 1),
-		 static_cast<double>((static_cast<uint64_t>(1) << 51) + 0),
-		 static_cast<double>((static_cast<uint64_t>(1) << 52) - 1),
-		 static_cast<double>((static_cast<uint64_t>(1) << 53) - 1),
-		 static_cast<double>((static_cast<uint64_t>(1) << 54) - 1),
-		 -static_cast<double>((static_cast<uint64_t>(1) << 51) + 0),
-		 -static_cast<double>((static_cast<uint64_t>(1) << 52) - 1),
-		 1./3.,
-		 0.1,
-		 0.123,
-		 0.1234,
-		 0.12345,
-		 1.1,
-		 2.123,
-		 3.1234,
-		 4.12345,
-		 std::numeric_limits<double>::quiet_NaN(),
-		 std::numeric_limits<double>::infinity(),
-		}
-		 ) {
-		uint64_t *pn = reinterpret_cast<uint64_t*>(&d);
-		uint64_t mant_mask = ((static_cast<uint64_t>(1) << 52) - 1);
-		uint64_t umant = *pn & mant_mask;
-		uint64_t exp_mask = ((static_cast<uint64_t>(1) << 11) - 1) << 52;
-		uint uexp = static_cast<uint>((*pn & exp_mask) >> 52);
-		uint64_t sgn_mask = ~static_cast<uint64_t>(0x7fffffffffffffff);
-		int sgn = (*pn & sgn_mask)? -1: 1;
-		int exponent;
-		int64_t mantisa;
-		if(uexp == 0 && umant == 0) {
-			exponent = 0;
-			mantisa = 0;
-		}
-		else if(uexp == 0x7ff) {
-			exponent = static_cast<int>(uexp);
-			if(umant == 0) {
-				// infinity;
-				nDebug() << sgn << "* INF";
-				mantisa = 0;
-			}
-			else {
-				// NaN
-				nDebug() << "NaN";
-				mantisa = 1;
-			}
-		}
-		else {
-			if(uexp == 0) {
-				// subnormal
-				mantisa = static_cast<int64_t>(umant);
-			}
-			else {
-				mantisa = static_cast<int64_t>(umant | (static_cast<uint64_t>(1) << 52));
-			}
-			exponent = static_cast<int>(uexp) - 1023;
-			exponent -= 52;
-			for (int i=0; i<52; i--) {
-				if(mantisa & 1)
-					break;
-				mantisa >>= 1;
-				exponent++;
-			}
-			mantisa *= sgn;
-		}
-		nDebug() << d << "----------------------------------";
-		nDebug()<< "mantisa:" << mantisa << "exp:" << exponent;
-		nDebug()<< "neg:" << sgn << "umant:" << umant << "uexp:" << uexp;
-		nDebug() << binary_dump_rev(pn, sizeof (*pn)).c_str();
-		//nDebug() << binary_dump_rev((void*)&exp_mask, sizeof (exp_mask)).c_str();
-		//nDebug() << binary_dump_rev((void*)&mant_mask, sizeof (mant_mask)).c_str();
-		//nDebug() << binary_dump_rev((void*)&uexp, sizeof (uexp)).c_str();
-		//nDebug() << binary_dump_rev((void*)&umant, sizeof (umant)).c_str();
-	}
-}
-*/
 }
 
 namespace shv::chainpack {
@@ -179,15 +74,6 @@ namespace shv::chainpack {
 doctest::String toString(const RpcValue& value) {
 	return value.toCpon().c_str();
 }
-/*
-doctest::String toString(const RpcValue::List& value) {
-	return RpcValue(value).toCpon().c_str();
-}
-
-doctest::String toString(const RpcValue::Map& value) {
-	return RpcValue(value).toCpon().c_str();
-}
-*/
 }
 
 DOCTEST_TEST_CASE("ChainPack")
@@ -245,10 +131,8 @@ DOCTEST_TEST_CASE("ChainPack")
 				RpcValue cp1{n};
 				std::stringstream out;
 				{ ChainPackWriter wr(out);  wr.write(cp1); }
-				//REQUIRE(len > 1);
 				ChainPackReader rd(out);
 				RpcValue cp2 = rd.read();
-				//if(n < 100*step)
 				nDebug() << n << int_to_hex(n) << "..." << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str()).c_str();
 				REQUIRE(cp1.type() == cp2.type());
 				REQUIRE(cp1.toUInt() == cp2.toUInt());
@@ -273,13 +157,10 @@ DOCTEST_TEST_CASE("ChainPack")
 			for (unsigned i = 0; i < sizeof(RpcValue::Int); ++i) {
 				for (unsigned j = 0; j < 3; ++j) {
 					RpcValue::Int n = sig * (RpcValue::Int{1} << (i*8 + j*2+2));
-					//nDebug() << sig << i << j << (i*8 + j*3+1) << n;
 					RpcValue cp1{n};
 					std::stringstream out;
 					{ ChainPackWriter wr(out);  wr.write(cp1); }
-					//REQUIRE(len > 1);
 					ChainPackReader rd(out); RpcValue cp2 = rd.read();
-					//if(n < 100*step)
 					nDebug() << n << int_to_hex(n) << "..." << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str()).c_str();
 					REQUIRE(cp1.type() == cp2.type());
 					REQUIRE(cp1.toUInt() == cp2.toUInt());
@@ -309,7 +190,6 @@ DOCTEST_TEST_CASE("ChainPack")
 			double n_max = std::numeric_limits<double>::max();
 			double n_min = std::numeric_limits<double>::min();
 			double step = -1.23456789e10;
-			//nDebug() << n_min << " - " << n_max << ": " << step << " === " << (n_max / step / 10);
 			for (double n = n_min; n < n_max / -step / 10; n *= step) {
 				RpcValue cp1{n};
 				std::stringstream out;
@@ -366,7 +246,6 @@ DOCTEST_TEST_CASE("ChainPack")
 		}
 		ChainPackReader rd(out);
 		RpcValue cp2 = rd.read();
-		//nDebug() << blob << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str()).c_str();
 		REQUIRE(cp1.type() == cp2.type());
 		REQUIRE(cp1.asBlob() == cp2.asBlob());
 	}
@@ -392,7 +271,6 @@ DOCTEST_TEST_CASE("ChainPack")
 			std::stringstream out;
 			{ ChainPackWriter wr(out);  wr.write(cp1); }
 			ChainPackReader rd(out); RpcValue cp2 = rd.read();
-			//nDebug() << str << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(out.str());
 			REQUIRE(cp1.type() == cp2.type());
 			REQUIRE(cp2.asString().size() == str.size());
 			REQUIRE(cp1 == cp2);
@@ -405,11 +283,8 @@ DOCTEST_TEST_CASE("ChainPack")
 		REQUIRE(RpcValue::DateTime::fromMSecsSinceEpoch(0) == RpcValue::DateTime::fromMSecsSinceEpoch(0));
 		REQUIRE(RpcValue::DateTime::fromMSecsSinceEpoch(1) == RpcValue::DateTime::fromMSecsSinceEpoch(1, 2));
 		REQUIRE(!(RpcValue::DateTime() < RpcValue::DateTime()));
-		//REQUIRE(RpcValue::DateTime() < RpcValue::DateTime::fromMSecsSinceEpoch(0));
 		REQUIRE(RpcValue::DateTime::fromMSecsSinceEpoch(1) < RpcValue::DateTime::fromMSecsSinceEpoch(2));
 		REQUIRE(RpcValue::DateTime::fromMSecsSinceEpoch(0) == RpcValue::DateTime::fromUtcString("1970-01-01T00:00:00"));
-		//RpcValue::DateTime ts;// = RpcValue::DateTime::now();
-		//nDebug() << "~~~~~~~~~~~~~~~~~~~~~~~~~ " << RpcValue(ts).toCpon();
 		for(const auto &str : {
 			"2018-02-02 0:00:00.001",
 			"2018-02-02 01:00:00.001+01",
@@ -437,8 +312,6 @@ DOCTEST_TEST_CASE("ChainPack")
 			std::string pack = out.str();
 			ChainPackReader rd(out); RpcValue cp2 = rd.read();
 			nDebug() << str << " " << dt.toIsoString().c_str() << " " << cp1.toCpon() << " " << cp2.toCpon() << " len: " << out.str().size() << " dump: " << binary_dump(pack);
-			//nDebug() << cp1.toDateTime().msecsSinceEpoch() << cp1.toDateTime().offsetFromUtc();
-			//nDebug() << cp2.toDateTime().msecsSinceEpoch() << cp2.toDateTime().offsetFromUtc();
 			REQUIRE(cp1.type() == cp2.type());
 			REQUIRE(cp1.toDateTime() == cp2.toDateTime());
 		}
@@ -478,7 +351,6 @@ DOCTEST_TEST_CASE("ChainPack")
 				}
 				wr.writeContainerEnd();
 			}
-			//out.exceptions(std::iostream::eofbit);
 			ChainPackReader rd(out); RpcValue cp2 = rd.read();
 			nDebug() << cp2.toCpon() << " dump: " << binary_dump(out.str()).c_str();
 			const RpcValue::List list = cp2.asList();

@@ -24,11 +24,8 @@ protected:
 	void writeMessageBegin() override {}
 	void writeMessageEnd() override {flush();}
 	int64_t writeBytes(const char *bytes, size_t length) override;
-	//void onProcessReadDataException(std::exception &e) override;
 
 	virtual void idleTaskOnSelectTimeout() {}
-	//virtual void connectedToHost(bool ) {}
-	//virtual void connectionClosed() {}
 private:
 	bool isOpenImpl();
 	bool flush();

@@ -134,8 +134,6 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 
 	setCheckBrokerConnectedInterval(cli_opts->reconnectInterval() * 1000);
 
-	//if(cli_opts->isMetaTypeExplicit_isset())
-	//	cp::RpcMessage::setMetaTypeExplicit(cli_opts->isMetaTypeExplicit());
 	if(cli_opts->rpcTimeout_isset()) {
 		cp::RpcDriver::setDefaultRpcTimeoutMsec(cli_opts->rpcTimeout() * 1000);
 		shvInfo() << "Default RPC timeout set to:" << cp::RpcDriver::defaultRpcTimeoutMsec() << "msec.";
@@ -149,10 +147,7 @@ void ClientConnection::setCliOptions(const ClientAppCliOptions *cli_opts)
 	else
 		setProtocolType(shv::chainpack::Rpc::ProtocolType::ChainPack);
 
-	//setScheme(schemeFromString(cli_opts->serverScheme()));
 	setConnectionString(QString::fromStdString(cli_opts->serverHost()));
-	//setPort(cli_opts->serverPort());
-	//setSecurityType(cli_opts->serverSecurityType());
 	setPeerVerify(cli_opts->serverPeerVerify());
 	if(cli_opts->user_isset())
 		setUser(cli_opts->user());
@@ -297,13 +292,7 @@ void ClientConnection::setState(ClientConnection::State state)
 	else if(state == State::BrokerConnected)
 		whenBrokerConnectedChanged(true);
 }
-/*
-void ClientConnection::onRpcValueReceived(const chainpack::RpcValue &rpc_val)
-{
-	cp::RpcMessage msg(rpc_val);
-	onRpcMessageReceived(msg);
-}
-*/
+
 void ClientConnection::sendHello()
 {
 	m_connectionState.helloRequestId = callShvMethod({}, cp::Rpc::METH_HELLO);
@@ -413,12 +402,10 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 	else {
 		shvError() << "Login type:" << chainpack::UserLogin::loginTypeToString(loginType()) << "not supported";
 	}
-	//shvWarning() << password << sha1;
 	return cp::RpcValue::Map {
 		{"login", cp::RpcValue::Map {
 			{"user", user()},
 			{"password", pass},
-			//{"passwordFormat", chainpack::AbstractRpcConnection::passwordFormatToString(password_format)},
 			{"type", chainpack::UserLogin::loginTypeToString(loginType())},
 		 },
 		},
@@ -432,7 +419,6 @@ bool ClientConnection::isShvPathMutedInLog(const std::string &shv_path) const
 		shv::core::StringView sv(pattern);
 		if(sv.value(0) == '*') {
 			sv = sv.mid(1);
-			//shvInfo() << shv_path << "ends with:" << sv.toString() << shv::core::StringView(shv_path).endsWith(sv);
 			if(shv::core::StringView(shv_path).endsWith(sv))
 				return true;
 		}
@@ -468,7 +454,6 @@ void ClientConnection::processLoginPhase(const chainpack::RpcMessage &msg)
 		if(!msg.isResponse())
 			break;
 		cp::RpcResponse resp(msg);
-		//shvInfo() << "Handshake response received:" << resp.toCpon();
 		if(resp.isError()) {
 			setState(State::ConnectionError);
 			emitInitPhaseError(resp.error().message());

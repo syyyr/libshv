@@ -3,8 +3,6 @@
 #include "log.h"
 #include "exception.h"
 
-//#define SHV_ASSERT_STRINGIFY_HELPER(x) #x
-//#define SHV_ASSERT_STRINGIFY(x) SHV_ASSERT_STRINGIFY_HELPER(x)
 #define SHV_EXCEPTION_STRING(cond, message) shvError() << "EXCEPTION:" << "\"" cond"\" -" << message << Q_FUNC_INFO
 #define SHV_ASSERT_STRING(cond, message) shvError() << "\"" cond"\" -" << message << Q_FUNC_INFO
 #define SHV_CHECK_STRING(cond, message) shvError() << "\"" cond"\" -" << message << Q_FUNC_INFO

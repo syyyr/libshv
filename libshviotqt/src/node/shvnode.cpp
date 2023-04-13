@@ -23,7 +23,6 @@
 
 using namespace shv::chainpack;
 
-//#define logConfig() shvCDebug("Config").color(NecroLog::Color::Yellow)
 #define logConfig() shvCMessage("Config")
 
 namespace shv::iotqt::node {
@@ -47,15 +46,6 @@ ShvNode::ShvNode(const std::string &node_id, ShvNode *parent)
 }
 
 ShvNode::~ShvNode() = default;
-/*
-{
-	ShvNode *pnd = this->parentNode();
-	if(pnd && !pnd->isRootNode() && pnd->ownChildren().isEmpty()) {
-		pnd->deleteLater();
-	}
-	setParentNode(nullptr);
-}
-*/
 
 ShvNode *ShvNode::parentNode() const
 {
@@ -239,21 +229,10 @@ chainpack::RpcValue ShvNode::handleRpcRequestImpl(const chainpack::RpcRequest &r
 			shvDebug() << "Child node:" << shv_path.at(0).toString() << "on path:" << ShvPath::joinDirs(shv_path) << "FOUND";
 			std::string new_path = ShvPath::joinDirs(++shv_path.begin(), shv_path.end());
 			chainpack::RpcRequest rq2(rq);
-			//RpcValue::MetaData meta2(meta);
 			rq2.setShvPath(new_path);
 			return nd->handleRpcRequestImpl(rq2);
 		}
 	}
-	/*
-	const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
-	if(!mm) {
-		core::utils::ShvPath path = shvPath();
-		if(!path.empty() && !shv_path_str.empty())
-			path += '/';
-		path += shv_path_str;
-		SHV_EXCEPTION("Method: '" + method + "' on path '" + path + "' doesn't exist");
-	}
-	*/
 	shvDebug() << "Metamethod:" << method << "on path:" << shv_path.join('/');
 	return processRpcRequest(rq);
 }
@@ -298,19 +277,7 @@ chainpack::RpcValue ShvNode::callMethodRq(const chainpack::RpcRequest &rq)
 	chainpack::RpcValue ret_val = callMethod(shv_path, method, rq.params(), rq.userId());
 	return ret_val;
 }
-/*
-static std::string join_str(const ShvNode::StringList &sl, char sep)
-{
-	std::string ret;
-	for(const std::string &s : sl) {
-		if(ret.empty())
-			ret = s;
-		else
-			ret += sep + s;
-	}
-	return ret;
-}
-*/
+
 QList<ShvNode *> ShvNode::ownChildren() const
 {
 	QList<ShvNode*> lst = findChildren<ShvNode*>(QString(), Qt::FindDirectChildrenOnly);
@@ -404,19 +371,7 @@ void ShvNode::treeWalk_helper(std::function<void (ShvNode *, const ShvNode::Stri
 		}
 	}
 }
-/*
-chainpack::RpcValue ShvNode::call(const std::string &method, const chainpack::RpcValue &params)
-{
-	shvLogFuncFrame() << "method:" << method << "params:" << params.toCpon() << "shv path:" << shvPath();
-	if(method == Rpc::METH_LS) {
-		return ls(params);
-	}
-	if(method == Rpc::METH_DIR) {
-		return dir(params);
-	}
-	SHV_EXCEPTION("Invalid method: " + method + " called for node: " + shvPath());
-}
-*/
+
 chainpack::RpcValue ShvNode::dir(const StringViewList &shv_path, const chainpack::RpcValue &methods_params)
 {
 	chainpack::RpcValueGenList params(methods_params);
@@ -449,33 +404,24 @@ chainpack::RpcValue ShvNode::dir(const StringViewList &shv_path, const chainpack
 
 chainpack::RpcValue ShvNode::ls(const StringViewList &shv_path, const chainpack::RpcValue &methods_params)
 {
-	//shvInfo() << __FUNCTION__ << "path:" << shvPath() << "shvPath:" << shv_path.join('/');
 	RpcValue::List ret;
 	chainpack::RpcValueGenList mpl(methods_params);
 	const std::string child_name_pattern = mpl.value(0).toString();
 	unsigned attrs = mpl.value(1).toUInt();
 	for(const std::string &child_name : childNames(shv_path)) {
-		//shvInfo() << "\tchild_name:" << child_name;
 		if(child_name_pattern.empty() || child_name_pattern == child_name) {
-			//try {
-				StringViewList ch_shv_path = shv_path;
-				ch_shv_path.push_back(shv::core::StringView(child_name));
-				RpcValue::List attrs_result = lsAttributes(ch_shv_path, attrs).asList();
-				if(attrs_result.empty()) {
-					ret.push_back(child_name);
-				}
-				else {
-					attrs_result.insert(attrs_result.begin(), child_name);
-					ret.push_back(attrs_result);
-				}
-			//}
-			//catch (std::exception &e) {
-			//	shvError() << "ShvNode::ls exception - " + std::string(e.what());
-			//	ret.push_back(nullptr);
-			//}
+			StringViewList ch_shv_path = shv_path;
+			ch_shv_path.push_back(shv::core::StringView(child_name));
+			RpcValue::List attrs_result = lsAttributes(ch_shv_path, attrs).asList();
+			if(attrs_result.empty()) {
+				ret.push_back(child_name);
+			}
+			else {
+				attrs_result.insert(attrs_result.begin(), child_name);
+				ret.push_back(attrs_result);
+			}
 		}
 	}
-	//shvInfo() << "\t return:" << chainpack::RpcValue{ret}.toCpon();
 	return chainpack::RpcValue{ret};
 }
 
@@ -508,17 +454,6 @@ const chainpack::MetaMethod *ShvNode::metaMethod(const ShvNode::StringViewList &
 	}
 	return nullptr;
 }
-/*
-ShvNode::StringList ShvNode::methodNames(const StringViewList &shv_path)
-{
-	ShvNode::StringList ret;
-	size_t cnt = methodCount();
-	for (size_t ix = 0; ix < cnt; ++ix) {
-		ret.push_back(metaMethod(ix)->name());
-	}
-	return ret;
-}
-*/
 
 chainpack::RpcValue ShvNode::callMethod(const ShvNode::StringViewList &shv_path, const std::string &method, const chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id)
 {
@@ -538,7 +473,6 @@ ShvNode *ShvNode::rootNode()
 			return nd;
 		nd = nd->parentNode();
 	}
-	//SHV_EXCEPTION("Cannot find root node!");
 	return nullptr;
 }
 
@@ -636,10 +570,6 @@ const shv::chainpack::MetaMethod *MethodsTableNode::metaMethod(const shv::iotqt:
 static const std::vector<MetaMethod> meta_methods_value_map_root_node {
 	{Rpc::METH_DIR, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_CONFIG},
 	{Rpc::METH_LS, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_CONFIG},
-	/// load, save, commit were exposed in value node, do not know why, they should be in config node
-	//{RpcValueMapNode::M_LOAD, MetaMethod::Signature::RetVoid, 0, Rpc::ROLE_SERVICE},
-	//{RpcValueMapNode::M_SAVE, MetaMethod::Signature::RetVoid, 0, Rpc::ROLE_ADMIN},
-	//{RpcValueMapNode::M_COMMIT, MetaMethod::Signature::RetVoid, 0, Rpc::ROLE_ADMIN},
 };
 
 static const std::vector<MetaMethod> meta_methods_value_map_node {
@@ -647,7 +577,6 @@ static const std::vector<MetaMethod> meta_methods_value_map_node {
 	{Rpc::METH_LS, MetaMethod::Signature::RetParam, 0, Rpc::ROLE_READ},
 	{Rpc::METH_GET, MetaMethod::Signature::RetVoid, MetaMethod::Flag::IsGetter, Rpc::ROLE_READ},
 	{Rpc::METH_SET, MetaMethod::Signature::RetVoid, MetaMethod::Flag::IsSetter, Rpc::ROLE_CONFIG},
-	//{M_WRITE, MetaMethod::Signature::RetParam, 0, MetaMethod::AccessLevel::Service},
 };
 
 RpcValueMapNode::RpcValueMapNode(const std::string &node_id, ShvNode *parent)
@@ -814,8 +743,6 @@ static RpcValue mergeMaps(const RpcValue &template_val, const RpcValue &user_val
 		const shv::chainpack::RpcValue::Map &template_map = template_val.asMap();
 		const shv::chainpack::RpcValue::Map &user_map = user_val.asMap();
 		RpcValue::Map map = template_map;
-		//for(const auto &kv : template_map)
-		//	map[kv.first] = kv.second;
 		for(const auto &kv : user_map) {
 			if(map.hasKey(kv.first)) {
 				map[kv.first] = mergeMaps(map.value(kv.first), kv.second);
@@ -835,8 +762,6 @@ static RpcValue mergeTemplateMaps(const RpcValue &template_base, const RpcValue 
 		const shv::chainpack::RpcValue::Map &map_base = template_base.asMap();
 		const shv::chainpack::RpcValue::Map &map_over = template_over.asMap();
 		RpcValue::Map map = map_base;
-		//for(const auto &kv : template_map)
-		//	map[kv.first] = kv.second;
 		for(const auto &kv : map_over) {
 			map[kv.first] = mergeTemplateMaps(map.value(kv.first), kv.second);
 		}
@@ -996,7 +921,6 @@ void RpcValueConfigNode::loadValues()
 		else {
 			/// file may not exist
 			m_templateValues = RpcValue::Map();
-			//shvWarning() << "Cannot open template config file" << cfg_file << "for reading!";
 		}
 	}
 	RpcValue new_values = RpcValue();
@@ -1019,7 +943,6 @@ void RpcValueConfigNode::loadValues()
 void RpcValueConfigNode::saveValues()
 {
 	RpcValue new_values = diffMaps(m_templateValues, m_values);
-	//shvWarning() << "diff:" << new_values.toPrettyString();
 	std::string cfg_file = resolvedUserConfigDir() + '/' + resolvedUserConfigName();
 	std::ofstream os(cfg_file);
 	if(os) {

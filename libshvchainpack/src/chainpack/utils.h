@@ -90,8 +90,6 @@ inline char hexNibble(char i)
 } // namespace chainpack
 } // namespace shv
 
-//#define SHV_QUOTE(x) #x
-
 #define SHV_IMAP_FIELD_IMPL(ptype, int_key, getter_prefix, setter_prefix, name_rest) \
 	SHV_IMAP_FIELD_IMPL2(ptype, int_key, getter_prefix, setter_prefix, name_rest, shv::chainpack::RpcValue())
 

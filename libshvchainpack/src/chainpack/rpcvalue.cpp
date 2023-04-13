@@ -23,45 +23,6 @@
 #else
 #define logDebugRpcVal if(0) nWarning
 #endif
-/*
-namespace {
-#if defined _WIN32
-// see http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html#tag_04_15
-// see https://stackoverflow.com/questions/16647819/timegm-cross-platform
-int is_leap(unsigned y)
-{
-	y += 1900;
-	return (y % 4) == 0 && ((y % 100) != 0 || (y % 400) == 0);
-}
-
-time_t timegm(struct tm *tm)
-{
-	static const unsigned ndays[2][12] = {
-		{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
-		{31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
-	};
-	time_t res = 0;
-	int i;
-
-	for (i = 70; i < tm->tm_year; ++i) {
-		res += is_leap(i) ? 366 : 365;
-	}
-
-	for (i = 0; i < tm->tm_mon; ++i) {
-		res += ndays[is_leap(tm->tm_year)][i];
-	}
-	res += tm->tm_mday - 1;
-	res *= 24;
-	res += tm->tm_hour;
-	res *= 60;
-	res += tm->tm_min;
-	res *= 60;
-	res += tm->tm_sec;
-	return res;
-}
-#endif
-} // namespace
-*/
 namespace shv::chainpack {
 
 class RpcValue::AbstractValueData
@@ -77,7 +38,6 @@ public:
 	virtual void setMetaValue(RpcValue::String key, const RpcValue &val) = 0;
 
 	virtual bool equals(const AbstractValueData * other) const = 0;
-	//virtual bool less(const Data * other) const = 0;
 
 	virtual bool isNull() const {return false;}
 	virtual double toDouble() const {return 0;}
@@ -134,12 +94,8 @@ protected:
 		logDebugRpcVal() << "+++" << ++value_data_cnt << RpcValue::typeToName(tag) << this << value;
 #endif
 	}
-	//explicit ValueData(T &&value) : m_value(std::move(value)) {}
-	// disable copy (because of m_metaData)
 	ValueData(const ValueData &o) = delete;
 	ValueData& operator=(const ValueData &o) = delete;
-	//ValueData(ValueData &&o) = delete;
-	//ValueData& operator=(ValueData &&o) = delete;
 	~ValueData() override
 	{
 #ifdef DEBUG_RPCVAL
@@ -218,7 +174,6 @@ class ChainPackDouble final : public ValueData<RpcValue::Type::Double, double>
 	bool equals(const RpcValue::AbstractValueData * other) const override {
 		return m_value == other->toDouble();
 	}
-	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
 public:
 	explicit ChainPackDouble(double value) : ValueData(value) {}
 };
@@ -236,7 +191,6 @@ class ChainPackDecimal final : public ValueData<RpcValue::Type::Decimal, RpcValu
 	uint64_t toUInt64() const override { return static_cast<uint64_t>(m_value.toDouble()); }
 	RpcValue::Decimal toDecimal() const override { return m_value; }
 	bool equals(const RpcValue::AbstractValueData * other) const override { return toDouble() == other->toDouble(); }
-	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
 public:
 	explicit ChainPackDecimal(const RpcValue::Decimal& value) : ValueData(value) {}
 };
@@ -253,7 +207,6 @@ class ChainPackInt final : public ValueData<RpcValue::Type::Int, int64_t>
 	int64_t toInt64() const override { return m_value; }
 	uint64_t toUInt64() const override { return static_cast<uint64_t>(m_value); }
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toInt64(); }
-	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
 public:
 	explicit ChainPackInt(int64_t value) : ValueData(value) {}
 };
@@ -270,7 +223,6 @@ class ChainPackUInt final : public ValueData<RpcValue::Type::UInt, uint64_t>
 	int64_t toInt64() const override { return static_cast<int64_t>(m_value); }
 	uint64_t toUInt64() const override { return m_value; }
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->toUInt64(); }
-	//bool less(const Data * other) const override { return m_value < other->toDouble(); }
 public:
 	explicit ChainPackUInt(uint64_t value) : ValueData(value) {}
 };
@@ -320,7 +272,6 @@ class ChainPackBlob final : public ValueData<RpcValue::Type::Blob, RpcValue::Blo
 {
 	ChainPackBlob* create() override { return new ChainPackBlob(RpcValue::Blob()); }
 	std::string toStdString() const override { return std::string(m_value.begin(), m_value.end()); }
-	//const std::string &toString() const override { return Utils::toHex(m_value); }
 	const RpcValue::Blob &asBlob() const override { return m_value; }
 	bool equals(const RpcValue::AbstractValueData * other) const override { return m_value == other->asBlob(); }
 public:
@@ -393,7 +344,6 @@ class ChainPackIMap final : public ValueData<RpcValue::Type::IMap, RpcValue::IMa
 {
 	ChainPackIMap* create() override { return new ChainPackIMap(RpcValue::IMap()); }
 	std::string toStdString() const override { return std::string(); }
-	//const ChainPack::Map &asMap() const override { return m_value; }
 	size_t count() const override {return m_value.size();}
 	bool hasI(RpcValue::Int key) const override;
 	RpcValue atI(RpcValue::Int key) const override;
@@ -430,7 +380,6 @@ static const RpcValue::IMap & static_empty_imap() { static const RpcValue::IMap 
 static const CowPtr<RpcValue::AbstractValueData> static_null(nullptr);
 
 RpcValue::RpcValue() noexcept : m_ptr(static_null) {}
-//RpcValue::RpcValue() noexcept : m_ptr(nullptr) {}
 
 RpcValue RpcValue::fromType(RpcValue::Type t) noexcept
 {
@@ -486,20 +435,9 @@ RpcValue::RpcValue(RpcValue::IMap &&values) : m_ptr(std::make_shared<ChainPackIM
 #ifdef RPCVALUE_COPY_AND_SWAP
 void RpcValue::swap(RpcValue& other) noexcept
 {
-	/*
-	std::cerr << __FUNCTION__ << " xxxxxxxxxx "
-			  << m_ptr.get() << " ref cnt: " << m_ptr.use_count() << " val: " << toStdString()
-			  << " X "
-			  << other.m_ptr.get() << " ref cnt: " << other.m_ptr.use_count() << " val: " << other.toStdString()
-			  << std::endl;
-	*/
 	std::swap(m_ptr, other.m_ptr);
 }
 #endif
-//Value::Value(const Value::MetaTypeId &value) : m_ptr(std::make_shared<ChainPackMetaTypeId>(value)) {}
-//Value::Value(const Value::MetaTypeNameSpaceId &value) : m_ptr(std::make_shared<ChainPackMetaTypeNameSpaceId>(value)) {}
-//Value::Value(const Value::MetaTypeName &value) : m_ptr(std::make_shared<ChainPackMetaTypeName>(value)) {}
-//Value::Value(const Value::MetaTypeNameSpaceName &value) : m_ptr(std::make_shared<ChainPackMetaTypeNameSpaceName>(value)) {}
 
 /* * * * * * * * * * * * * * * * * * * *
  * Accessors
@@ -509,12 +447,6 @@ RpcValue::Type RpcValue::type() const
 {
 	return !m_ptr.isNull()? m_ptr->type(): Type::Invalid;
 }
-/*
-RpcValue::Type RpcValue::arrayType() const
-{
-	return !m_ptr.isNull()? m_ptr->arrayType(): Type::Invalid;
-}
-*/
 const RpcValue::MetaData &RpcValue::metaData() const
 {
 	static MetaData md;
@@ -749,18 +681,6 @@ bool RpcValue::operator== (const RpcValue &other) const
 	return (!isValid() && !other.isValid());
 }
 
-/*
-bool ChainPack::operator< (const ChainPack &other) const
-{
-	if(isValid() && other.isValid()) {
-		if (m_ptr->type() != other.m_ptr->type())
-			return m_ptr->type() < other.m_ptr->type();
-		return m_ptr->less(other.m_ptr.get());
-	}
-	return (!isValid() && other.isValid());
-}
-*/
-
 RpcValue RpcValue::fromCpon(const std::string &str, std::string *err)
 {
 	RpcValue ret;
@@ -910,7 +830,6 @@ static long parse_ISO_DateTime(const std::string &s, std::tm &tm, int &msec, int
 	ccpon_unpack_date_time(&ctx, &tm, &msec, &minutes_from_utc);
 	if(ctx.err_no == CCPCP_RC_OK) {
 		msec_since_epoch = ctx.item.as.DateTime.msecs_since_epoch;
-		//minutes_from_utc = ctx.item.as.DateTime.minutes_from_utc;
 		return ctx.current - ctx.start;
 	}
 	return 0;
@@ -984,15 +903,6 @@ RpcValue::DateTime RpcValue::DateTime::fromMSecsSinceEpoch(int64_t msecs, int ut
 	ret.setUtcOffsetMin(utc_offset_min);
 	return ret;
 }
-/*
-RpcValue::DateTime RpcValue::DateTime::fromMSecs20180202(int64_t msecs, int utc_offset_min)
-{
-	DateTime ret;
-	ret.m_dtm.msec = msecs + SHV_EPOCH_MSEC;
-	ret.m_dtm.tz = utc_offset_min / 15;
-	return ret;
-}
-*/
 std::string RpcValue::DateTime::toLocalString() const
 {
 	std::time_t tim = m_dtm.msec / 1000 + m_dtm.tz * 15 * 60;
@@ -1017,37 +927,6 @@ std::string RpcValue::DateTime::toIsoString(RpcValue::DateTime::MsecPolicy msec_
 	ccpcp_pack_context_init(&ctx, buff.data(), buff.size(), nullptr);
 	ccpon_pack_date_time_str(&ctx, msecsSinceEpoch(), minutesFromUtc(), static_cast<ccpon_msec_policy>(msec_policy), include_tz);
 	return std::string(buff.data(), ctx.current);
-#if 0
-	std::time_t tim = m_dtm.msec / 1000 + m_dtm.tz * 15 * 60;
-	std::tm *tm = std::gmtime(&tim);
-	if(tm == nullptr) {
-		nError() << "Invalid date time: " << m_dtm.msec;
-		return std::string();
-	}
-	char buffer[80];
-	std::strftime(buffer, sizeof(buffer),"%Y-%m-%dT%H:%M:%S",tm);
-	std::string ret(buffer);
-	int msecs = m_dtm.msec % 1000;
-	if((msec_policy == MsecPolicy::Always) || (msecs > 0 && msec_policy != MsecPolicy::Auto))
-		ret += '.' + Utils::toString(msecs % 1000, 3);
-	if(include_tz) {
-		if(m_dtm.tz == 0) {
-			ret += 'Z';
-		}
-		else {
-			int min = minutesFromUtc();
-			if(min < 0)
-				min = -min;
-			int hour = min / 60;
-			min = min % 60;
-			std::string tz = Utils::toString(hour, 2);
-			if(min != 0)
-				tz += Utils::toString(min, 2);
-			ret += ((m_dtm.tz < 0)? '-': '+') + tz;
-		}
-	}
-	return ret;
-#endif
 }
 
 RpcValue::DateTime::Parts RpcValue::DateTime::toParts() const
@@ -1254,14 +1133,6 @@ bool RpcValue::MetaData::isEmpty() const
 
 bool RpcValue::MetaData::operator==(const RpcValue::MetaData &o) const
 {
-	/*
-	std::cerr << "this" << std::endl;
-	for(const auto &it : m_imap)
-		std::cerr << '\t' << it.first << ": " << it.second.dumpText() << std::endl;
-	std::cerr << "other" << std::endl;
-	for(const auto &it : o.m_imap)
-		std::cerr << '\t' << it.first << ": " << it.second.dumpText() << std::endl;
-	*/
 	return iValues() == o.iValues() && sValues() == o.sValues();
 }
 

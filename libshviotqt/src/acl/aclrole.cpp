@@ -22,7 +22,6 @@ AclRole AclRole::fromRpcValue(const shv::chainpack::RpcValue &v)
 	AclRole ret;
 	if(v.isMap()) {
 		const auto &m = v.asMap();
-		//ret.name = m.value("name").toString();
 		ret.weight = m.value("weight").toInt();
 		std::vector<std::string> roles;
 		for(const auto &lst : m.value("roles").asList())

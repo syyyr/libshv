@@ -22,10 +22,6 @@ void ChannelFilterModel::createNodes(const QStringList &channels)
 	beginResetModel();
 
 	for (const auto &shv_path: channels) {
-//		if (shv_path.section("/", -1) == "status"){
-//			continue;
-//		}
-
 		createNodesForPath(shv_path);
 	}
 	endResetModel();

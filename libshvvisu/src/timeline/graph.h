@@ -42,7 +42,6 @@ public:
 		DataRect(const XRange &xr, const YRange &yr) : xRange(xr), yRange(yr) {}
 
 		bool isValid() const { return xRange.isValid() && yRange.isValid(); }
-		//bool isNull() const { return xRange.isNull() && yRange.isNull(); }
 	};
 
 	using WidgetRange = Range<int>;
@@ -67,18 +66,14 @@ public:
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olor, QColor("#c8c8c8"))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorPanel, QColor("#414343"))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorBackground, QColor(Qt::black))
-		//SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorGrid, QColor(Qt::darkGreen))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorAxis, QColor(Qt::gray))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCurrentTime, QColor(QStringLiteral("#cced5515")))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCrossHair, QColor(QStringLiteral("white")))
-		//SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCrossBar2, QColor(QStringLiteral("salmon")))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorSelection, QColor(QStringLiteral("deepskyblue")))
 
 		SHV_VARIANTMAP_FIELD(QFont, f, setF, ont)
 	public:
 		void init(QWidget *widget);
-
-		//double buttonSpacing() const { return buttonSize() / 5; }
 	};
 public:
 	static const QString DEFAULT_USER_PROFILE;
@@ -140,7 +135,6 @@ public:
 	ChannelProbe *channelProbe(qsizetype channel_ix, timemsec_t time = 0);
 	ChannelProbe *addChannelProbe(qsizetype channel_ix, timemsec_t time);
 	void removeChannelProbe(ChannelProbe *probe);
-	//DataRect dataRect(int channel_ix) const;
 
 	timemsec_t miniMapPosToTime(int pos) const;
 	int miniMapTimeToPos(timemsec_t time) const;
@@ -153,21 +147,14 @@ public:
 	qsizetype posToChannel(const QPoint &pos) const;
 	qsizetype posToChannelHeader(const QPoint &pos) const;
 	Sample posToData(const QPoint &pos) const;
-	//QVariant posToValue(const QPoint &pos) const;
 	QPoint dataToPos(qsizetype ch_ix, const Sample &s) const;
 
 	QString timeToStringTZ(timemsec_t time) const;
 	QVariantMap sampleValues(qsizetype channel_ix, const Sample &s) const;
-	/*
-	QString prettyBitFieldValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const;
-	QMap<QString, QString> prettyMapValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const;
-	QMap<QString, QString> prettyIMapValue(const QVariant &value, const shv::core::utils::ShvTypeDescr &type_descr) const;
-	*/
 	const QRect& rect() const { return  m_layout.rect; }
 	const QRect& miniMapRect() const { return  m_layout.miniMapRect; }
 	const QRect& cornerCellRect() const { return  m_layout.cornerCellRect; }
 	QRect southFloatingBarRect() const;
-	//bool isCrossBarVisible() const {return !m_state.crossBarPos.isNull() && m_state.crossBarChannel >= 0;}
 	struct SHVVISU_DECL_EXPORT CrossHairPos
 	{
 		qsizetype channelIndex = -1;
@@ -180,7 +167,6 @@ public:
 	};
 	CrossHairPos crossHairPos() const {return m_state.crossHairPos;}
 	void setCrossHairPos(const CrossHairPos &pos);
-	//void setCrossBarPos2(const QPoint &pos);
 
 	void setCurrentTime(timemsec_t time);
 	timemsec_t currentTime() const { return m_state.currentTime; }
@@ -247,7 +233,6 @@ public:
 
 protected:
 	void sanityXRangeZoom();
-	//void onModelXRangeChanged(const timeline::XRange &range);
 
 	void clearMiniMapCache();
 

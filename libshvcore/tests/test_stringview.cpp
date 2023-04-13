@@ -65,17 +65,14 @@ DOCTEST_TEST_CASE("StringView")
 		REQUIRE(s1.length() == 10);
 		StringView s11 = s.mid(1, 2);
 		REQUIRE(s11 == "23");
-		//REQUIRE(s11.space() == 7);
 		StringView s2 = s.mid(0, 50);
 		REQUIRE(s2.length() == 10);
 		StringView s3 = s.mid(3, 50);
 		REQUIRE(s3.length() == 7);
 		StringView s31 = s.mid(9, 50);
 		REQUIRE(s31 == "0");
-		//REQUIRE(s31.space() == 0);
 		StringView s32 = s.mid(10);
 		REQUIRE(s32 == "");
-		//REQUIRE(s32.space() == 0);
 		StringView s4 = s.mid(30, 50);
 		REQUIRE(s4.empty());
 	}

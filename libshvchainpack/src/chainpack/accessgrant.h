@@ -35,8 +35,6 @@ struct SHVCHAINPACK_DECL_EXPORT UserLoginResult
 		: passwordOk(password_ok)
 		, loginError(std::move(login_error)) {}
 
-	//const RpcValue::Map &loginParams() const;
-	//shv::chainpack::UserLogin userLogin() const;
 	shv::chainpack::RpcValue toRpcValue() const;
 };
 

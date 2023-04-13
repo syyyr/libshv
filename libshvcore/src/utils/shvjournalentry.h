@@ -32,11 +32,6 @@ public:
 
 
 	static constexpr auto PATH_APP_START = "APP_START";
-	// snapshot begin-end cannot be implemented in the consistent way
-	// for example: getLog() with since == log-file-beginning, have to parse log file to find snapshot-end
-	// without this feature we can use just log reply even filtered
-	//static constexpr auto PATH_SNAPSHOT_BEGIN = "SNAPSHOT_BEGIN";
-	//static constexpr auto PATH_SNAPSHOT_END = "SNAPSHOT_END";
 	static constexpr auto PATH_DATA_MISSING = "DATA_MISSING";
 	static constexpr auto PATH_DATA_DIRTY = "DATA_DIRTY";
 

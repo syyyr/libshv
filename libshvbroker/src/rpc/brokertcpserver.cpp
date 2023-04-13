@@ -88,8 +88,6 @@ void BrokerTcpServer::incomingConnection(qintptr socket_descriptor)
 shv::iotqt::rpc::ServerConnection *BrokerTcpServer::createServerConnection(QTcpSocket *socket, QObject *parent)
 {
 	if (m_sslMode == SecureMode) {
-		//shvDebug() << "startServerEncryption";
-		//qobject_cast<QSslSocket *>(socket)->startServerEncryption();
 		return new ClientConnectionOnBroker(new shv::iotqt::rpc::SslSocket(qobject_cast<QSslSocket *>(socket)), parent);
 	}
 

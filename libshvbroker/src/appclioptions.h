@@ -31,11 +31,6 @@ public:
 	CLIOPTION_GETTER_SETTER2(std::string, "server.ssl.cert", s, setS, erverSslCertFiles)
 	CLIOPTION_GETTER_SETTER2(std::string, "server.publicIP", p, setP, ublicIP)
 
-	//CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.fstab", f, setF, stabFile)
-	//CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.users", u, setU, sersFile)
-	//CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.grants", g, setG, rantsFile)
-	//CLIOPTION_GETTER_SETTER2(std::string, "etc.acl.paths", p, setP, athsFile)
-
 	CLIOPTION_GETTER_SETTER2(bool, "sqlconfig.enabled", is, set, SqlConfigEnabled)
 	CLIOPTION_GETTER_SETTER2(std::string, "sqlconfig.driver", s, setS, qlConfigDriver)
 	CLIOPTION_GETTER_SETTER2(std::string, "sqlconfig.database", s, setS, qlConfigDatabase)
@@ -49,8 +44,6 @@ public:
 	CLIOPTION_GETTER_SETTER2(std::string, "ldap.searchAttr", l, setL, dapSearchAttr)
 	CLIOPTION_GETTER_SETTER2(chainpack::RpcValue::List, "ldap.groupMapping", l, setL, dapGroupMapping)
 #endif
-
-	//CLIOPTION_GETTER_SETTER2(std::string, "master.broker.device.id", m, setM, asterBrokerDeviceId)
 };
 
 }}

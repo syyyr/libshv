@@ -28,18 +28,6 @@ namespace shv::chainpack {
 
 namespace {
 enum {exception_aborts = 0};
-/*
-const int MAX_RECURSION_DEPTH = 1000;
-
-class DepthScope
-{
-public:
-	DepthScope(int &depth) : m_depth(depth) {m_depth++;}
-	~DepthScope() {m_depth--;}
-private:
-	int &m_depth;
-};
-*/
 }
 
 CponReader &CponReader::operator >>(RpcValue &value)
@@ -60,43 +48,9 @@ void CponReader::unpackNext()
 	if(m_inCtx.err_no != CCPCP_RC_OK)
 		PARSE_EXCEPTION("Parse error: " + std::to_string(m_inCtx.err_no) + " " + ccpcp_error_string(m_inCtx.err_no) + " - " + std::string(m_inCtx.err_msg));
 }
-/*
-void CponReader::read(RpcValue &val, std::string &err)
-{
-	err.clear();
-	try {
-		read(val);
-	}
-	catch (ParseException &e) {
-		err = e.what();
-	}
-}
 
-void CponReader::read(RpcValue &val, std::string *err)
-{
-	if(err)
-		read(val, *err);
-	else
-		read(val);
-}
-
-RpcValue::DateTime CponReader::readDateTime()
-{
-	struct tm tm;
-	int msec;
-	int utc_offset;
-	ccpon_unpack_date_time(&m_inCtx, &tm, &msec, &utc_offset);
-	if(m_inCtx.err_no != CCPCP_RC_OK)
-		return RpcValue::DateTime();
-	return RpcValue::DateTime::fromMSecsSinceEpoch(msec, utc_offset);
-}
-*/
 void CponReader::read(RpcValue &val)
 {
-	//if (m_depth > MAX_RECURSION_DEPTH)
-	//	PARSE_EXCEPTION("maximum nesting depth exceeded");
-	//DepthScope{m_depth};
-
 	RpcValue::MetaData md;
 	read(md);
 
@@ -205,33 +159,6 @@ RpcValue CponReader::readFile(const std::string &file_name, std::string *error)
 		throw shv::chainpack::Exception(err_msg);
 	return {};
 }
-
-/*
-void CponReader::decodeUtf8(long pt, std::string &out)
-{
-	if (pt < 0)
-		return;
-
-	if (pt < 0x80) {
-		out += static_cast<char>(pt);
-	}
-	else if (pt < 0x800) {
-		out += static_cast<char>((pt >> 6) | 0xC0);
-		out += static_cast<char>((pt & 0x3F) | 0x80);
-	}
-	else if (pt < 0x10000) {
-		out += static_cast<char>((pt >> 12) | 0xE0);
-		out += static_cast<char>(((pt >> 6) & 0x3F) | 0x80);
-		out += static_cast<char>((pt & 0x3F) | 0x80);
-	}
-	else {
-		out += static_cast<char>((pt >> 18) | 0xF0);
-		out += static_cast<char>(((pt >> 12) & 0x3F) | 0x80);
-		out += static_cast<char>(((pt >> 6) & 0x3F) | 0x80);
-		out += static_cast<char>((pt & 0x3F) | 0x80);
-	}
-}
-*/
 
 void CponReader::parseList(RpcValue &val)
 {

@@ -6,7 +6,6 @@
 
 #include <shv/coreqt/log.h>
 #include <shv/core/exception.h>
-//#include <qf/core/logdevice.h>
 
 #include <QSortFilterProxyModel>
 #include <QDateTime>
@@ -94,28 +93,18 @@ public:
 		: Super(parent) {
 
 	}
-	/*
-	void setThreshold(int level) {
-		m_treshold = level;
-		invalidateFilter();
-	}
-	*/
 	void setFilterString(const QString &filter_string) {
 		m_filterString = filter_string;
 		invalidateFilter();
 	}
 	bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const Q_DECL_OVERRIDE;
 private:
-	//int m_treshold = static_cast<int>(qf::core::Log::Level::Info);
 	QString m_filterString;
 };
 
 bool LogFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
 	auto *log_model = qobject_cast<LogTableModelBase*>(sourceModel());
-	//QModelIndex index = log_model->index(source_row, qfm::LogTableModel::Cols::Severity, source_parent);
-	//bool ok = (log_model->data(index, Qt::EditRole).toInt() <= m_treshold);
-	//shvDebug() << log_model->data(index, Qt::EditRole).toInt() << m_treshold << ok;
 	bool ok = true;
 	if(!m_filterString.isEmpty()) {
 		ok = false;
@@ -137,7 +126,6 @@ LogWidget::LogWidget(QWidget *parent)
 	, ui(new Ui::LogWidget)
 {
 	ui->setupUi(this);
-	//setPersistentSettingsId();
 	{
 		auto *a = new QAction(tr("Maximal log length"), this);
 		connect(a, &QAction::triggered, this, [this]() {
@@ -156,7 +144,6 @@ LogWidget::LogWidget(QWidget *parent)
 		tableMenuButton()->addAction(a);
 	}
 
-	//ui->tableView->horizontalHeader()->setSectionHidden(0, true);
 	ui->tableView->horizontalHeader()->setSectionsMovable(true);
 	ui->tableView->verticalHeader()->setDefaultSectionSize(static_cast<int>(fontMetrics().lineSpacing() * 1.3));
 	m_filterModel = new LogFilterProxyModel(this);
@@ -202,20 +189,7 @@ LogTableModelBase *LogWidget::logTableModel()
 		SHV_EXCEPTION("Table model is NULL!");
 	return m_logTableModel;
 }
-/*
-void LogWidget::setSeverityTreshold(core::Log::Level lvl)
-{
-	int ci = ui->severityTreshold->findData(static_cast<int>(lvl));
-	ui->severityTreshold->setCurrentIndex(ci);
-}
 
-void LogWidget::onSeverityTresholdChanged(int index)
-{
-	Q_UNUSED(index);
-	m_filterModel->setThreshold(ui->severityTreshold->currentData().toInt());
-	emit severityTresholdChanged(static_cast<qf::core::Log::Level>(ui->severityTreshold->currentData().toInt()));
-}
-*/
 void LogWidget::filterStringChanged(const QString &filter_string)
 {
 	m_filterModel->setFilterString(filter_string);
@@ -247,11 +221,9 @@ void LogWidget::onVerticalScrollBarValueChanged()
 	if(sb) {
 		if(logTableModel()->direction() == LogTableModelBase::Direction::AppendToBottom) {
 			m_isAutoScroll = (sb->value() == sb->maximum());
-			//fprintf(stderr, "BOTTOM scrollbar min: %d max: %d value: %d -> %d\n", sb->minimum(), sb->maximum(), sb->value(), m_scrollToLastEntryAfterInsert);
 		}
 		else {
 			m_isAutoScroll = (sb->value() == sb->minimum());
-			//fprintf(stderr, "TOP scrollbar min: %d max: %d value: %d -> %d\n", sb->minimum(), sb->maximum(), sb->value(), m_scrollToLastEntryAfterInsert);
 		}
 	}
 }

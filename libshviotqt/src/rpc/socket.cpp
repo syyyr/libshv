@@ -112,15 +112,6 @@ qint64 TcpSocket::write(const char *data, qint64 max_size)
 	return m_socket->write(data, max_size);
 }
 
-void TcpSocket::writeMessageEnd()
-{
-	/// direct flush in QSslSocket call can cause readyRead() emit
-	/// QSslSocketBackendPrivate::transmit() is badly implemented
-	/// It does not hurt to comment this, since flush() called automatically from event loop anyway
-	//m_socket->flush(); // bacha na to, je to zlo
-	//QTimer::singleShot(0, m_socket, &QTcpSocket::flush);
-}
-
 //======================================================
 // LocalSocket
 //======================================================
@@ -193,7 +184,6 @@ LocalSocket::LocalSocket(QLocalSocket *socket, QObject *parent)
 
 void LocalSocket::connectToHost(const QUrl &url)
 {
-	//shvInfo() << "path:" << url.path();
 	m_socket->connectToServer(url.path());
 }
 
@@ -245,15 +235,6 @@ SslSocket::SslSocket(QSslSocket *socket, QSslSocket::PeerVerifyMode peer_verify_
 	: Super(socket, parent)
 	, m_peerVerifyMode(peer_verify_mode)
 {
-	/*
-	{
-		QSslConfiguration ssl_configuration = socket->sslConfiguration();
-		shvDebug() << "SSL socket config:";
-		shvDebug() << "protocol:" << (int)ssl_configuration.protocol();
-		//ssl_configuration.setProtocol(QSsl::TlsV1SslV3);
-		//socket->setSslConfiguration(ssl_configuration);
-	}
-	*/
 	disconnect(m_socket, &QTcpSocket::connected, this, &Socket::connected);
 	connect(socket, &QSslSocket::encrypted, this, &Socket::connected);
 	connect(socket, QOverload<const QList<QSslError> &>::of(&QSslSocket::sslErrors), this, &Socket::sslErrors);

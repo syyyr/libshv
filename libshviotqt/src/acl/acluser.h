@@ -13,7 +13,6 @@ namespace acl {
 
 struct SHVIOTQT_DECL_EXPORT AclUser
 {
-	//std::string name;
 	AclPassword password;
 	std::vector<std::string> roles;
 
@@ -22,7 +21,6 @@ struct SHVIOTQT_DECL_EXPORT AclUser
 		: password(std::move(p))
 		, roles(std::move(roles_))
 	{}
-	//const std::string userName() const {return login.user;}
 	bool isValid() const {return password.isValid();}
 	shv::chainpack::RpcValue toRpcValue() const;
 	static AclUser fromRpcValue(const shv::chainpack::RpcValue &v);

@@ -52,7 +52,6 @@ ShvNode *ShvNodeTree::cd(const ShvNode::String &path)
 ShvNode *ShvNodeTree::cd(const ShvNode::String &path, ShvNode::String *path_rest)
 {
 	ShvNode::StringViewList lst = core::utils::ShvPath::split(path);
-	//shvWarning() << path << "->" << shv::core::String::join(lst, '-');
 	return mdcd(lst, false, path_rest);
 }
 

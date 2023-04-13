@@ -11,8 +11,6 @@ class QSslError;
 class QTcpSocket;
 class QThread;
 
-//namespace shv { namespace chainpack { class RpcRequest; class RpcResponse; }}
-
 namespace shv {
 namespace iotqt {
 namespace rpc {
@@ -33,7 +31,6 @@ public:
 
 	void connectToHost(const QUrl &url);
 
-	//Q_SIGNAL void rpcValueReceived(shv::chainpack::RpcValue rpc_val);
 	Q_SLOT void sendRpcValue(const shv::chainpack::RpcValue &rpc_val) {shv::chainpack::RpcDriver::sendRpcValue(rpc_val);}
 
 	void closeSocket();
@@ -49,21 +46,17 @@ public:
 
 	std::string peerAddress() const;
 	int peerPort() const;
-public:
-	//Q_SLOT void sendRpcRequestSync_helper(const shv::chainpack::RpcRequest& request, shv::chainpack::RpcResponse *presponse, int time_out_ms);
 protected:
 	// RpcDriver interface
 	bool isOpen() Q_DECL_OVERRIDE;
 	int64_t writeBytes(const char *bytes, size_t length) Q_DECL_OVERRIDE;
 	void writeMessageBegin() override;
 	void writeMessageEnd() override;
-	//bool flush() Q_DECL_OVERRIDE;
 
 	Socket* socket();
 	void onReadyRead();
 	void onBytesWritten();
 
-	//void onRpcValueReceived(const shv::chainpack::RpcValue &rpc_val) override;
 	void onParseDataException(const shv::chainpack::ParseException &e) override;
 protected:
 	Socket *m_socket = nullptr;

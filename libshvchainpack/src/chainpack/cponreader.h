@@ -22,8 +22,6 @@ public:
 	using Super::read;
 	void read(RpcValue::MetaData &meta_data) override;
 	void read(RpcValue &val) override;
-	//void read(RpcValue &val, std::string &err);
-	//void read(RpcValue &val, std::string *err);
 
 	static RpcValue readFile(const std::string &file_name, std::string *error = nullptr);
 private:
@@ -33,8 +31,6 @@ private:
 	void parseMetaData(RpcValue::MetaData &meta_data);
 	void parseMap(RpcValue &val);
 	void parseIMap(RpcValue &val);
-private:
-	//int m_depth = 0;
 };
 
 } // namespace chainpack

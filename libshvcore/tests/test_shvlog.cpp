@@ -208,7 +208,6 @@ private:
 
 int main(int argc, char** argv)
 {
-	//NecroLog::setFileLogTresholds("test_shvlog:D");
 	init_channels();
 	init_journal_dir();
 
@@ -220,8 +219,6 @@ DOCTEST_TEST_CASE("ShvLog")
 	DOCTEST_SUBCASE("Create log files")
 	{
 		nDebug() << "------------- Journal init:" << JOURNAL_DIR;
-		//if(!QDir().mkpath(QString::fromStdString(JOURNAL_DIR)))
-		//	qWarning() << "Cannot create journal dir:" << JOURNAL_DIR;
 		auto ts = TimeScope("Generating log files");
 		auto msec = RpcValue::DateTime::now().msecsSinceEpoch();
 		device_start1_msec = msec;
@@ -282,7 +279,6 @@ DOCTEST_TEST_CASE("ShvLog")
 				}
 			}
 		}
-		//nDebug() << "\t" << CNT << "records written, recent timestamp:" << RpcValue::DateTime::fromMSecsSinceEpoch(file_journal.recentlyWrittenEntryDateTime()).toIsoString();
 		device_stop2_msec = msec;
 	}
 	DOCTEST_SUBCASE("getlog()")
@@ -339,7 +335,6 @@ DOCTEST_TEST_CASE("ShvLog")
 			params.withPathsDict = false;
 			params.pathPattern = "doorOpen";
 			params.since = RpcValue::DateTime::fromMSecsSinceEpoch(device_start1_msec + (device_stop2_msec - device_start2_msec) / 4);
-			//params.until = RpcValue::DateTime::fromMSecsSinceEpoch(msec2 - (msec2 - msec1) / 4);
 			nDebug() << "\t params:" << params.toRpcValue().toCpon();
 			RpcValue log1 = file_journal.getLog(params);
 			string fn = TEST_DIR + "/log1-filtered.cpon";
@@ -365,7 +360,6 @@ DOCTEST_TEST_CASE("ShvLog")
 			ShvLogRpcValueReader rd(log1);
 			while(rd.next()) {
 				const ShvJournalEntry &e = rd.entry();
-				//shvWarning() << "entry:" << e.toRpcValueMap().toCpon();
 				REQUIRE(e.isSnapshotValue());
 				REQUIRE(!e.isSpontaneous());
 				REQUIRE(rd.logHeader().since().toDateTime().msecsSinceEpoch() == e.epochMsec);
@@ -390,7 +384,6 @@ DOCTEST_TEST_CASE("ShvLog")
 			REQUIRE(rd.logHeader().recordCount() == 1);
 			while(rd.next()) {
 				const ShvJournalEntry &e = rd.entry();
-				//shvWarning() << "entry:" << e.toRpcValueMap().toCpon();
 				REQUIRE(e.isSnapshotValue());
 				REQUIRE(!e.isSpontaneous());
 				REQUIRE(rd.logHeader().since().toDateTime().msecsSinceEpoch() == e.epochMsec);
@@ -427,7 +420,6 @@ DOCTEST_TEST_CASE("ShvLog")
 					}
 					else if(e.path == "vetra/vehicleDetected") {
 						e.value = RpcValue::List{rv, i %2? "R": "L"};
-						//e.sampleType = ShvLogTypeDescr::SampleType::Discrete;
 					}
 					else {
 						e.value = rv;
@@ -438,8 +430,6 @@ DOCTEST_TEST_CASE("ShvLog")
 					dirty_log.append(e);
 					memory_jurnal.append(e);
 					dirty_cnt++;
-					//if(dirty_cnt < 10)
-					//	nDebug() << dirty_cnt << "INS:" << e.toRpcValueMap().toCpon();
 				}
 			}
 		}
@@ -450,7 +440,6 @@ DOCTEST_TEST_CASE("ShvLog")
 				const ShvJournalEntry &e1 = rd2.entry();
 				REQUIRE(cnt < dirty_cnt);
 				const ShvJournalEntry &e2 = memory_jurnal.entries()[cnt++];
-				//nDebug() << cnt << e1.toRpcValueMap().toCpon() << "vs" << e2.toRpcValueMap().toCpon();
 				REQUIRE(e1 == e2);
 			}
 			REQUIRE(cnt == dirty_cnt);
@@ -459,7 +448,6 @@ DOCTEST_TEST_CASE("ShvLog")
 				rd2.last();
 				const ShvJournalEntry &e1 = rd2.entry();
 				const ShvJournalEntry &e2 = memory_jurnal.entries()[cnt];
-				//nDebug() << cnt << e1.toRpcValueMap().toCpon() << "vs" << e2.toRpcValueMap().toCpon();
 				REQUIRE(e1 == e2);
 			}
 		}
@@ -482,7 +470,6 @@ DOCTEST_TEST_CASE("ShvLog")
 			const ShvJournalEntry &e1 = rd2.entry();
 			REQUIRE(cnt < memory_jurnal.entries().size());
 			const ShvJournalEntry &e2 = memory_jurnal.entries()[cnt++];
-			//nDebug() << cnt << e1.toRpcValueMap().toCpon() << "vs" << e2.toRpcValueMap().toCpon();
 			REQUIRE(e1 == e2);
 		}
 	}
@@ -529,7 +516,6 @@ DOCTEST_TEST_CASE("ShvLog")
 			}
 		}
 		for(const auto &e : mmj.entries()) {
-			//nDebug() << e.toRpcValueMap().toCpon();
 			REQUIRE((e.path.find("temp") == 0 || e.path.find("volt") == 0) == true);
 			REQUIRE(e.epochMsec >= dt_since);
 			REQUIRE(e.epochMsec < dt_until);

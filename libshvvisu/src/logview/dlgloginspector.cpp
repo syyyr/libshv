@@ -204,7 +204,6 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 				}
 			}
 			if(!rows.isEmpty()) {
-				//qfInfo() << "\tSetting clipboard:" << rows;
 				QClipboard *clipboard = QApplication::clipboard();
 				clipboard->setText(rows);
 			}
@@ -212,8 +211,6 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 	}
 
 	m_graphModel = new tl::GraphModel(this);
-	//connect(m_dataModel, &tl::GraphModel::xRangeChanged, this, &MainWindow::onGraphXRangeChanged);
-	//ui->graphView->viewport()->show();
 	m_graphWidget = new tl::GraphWidget();
 
 	ui->graphView->setBackgroundRole(QPalette::Dark);
@@ -221,7 +218,6 @@ DlgLogInspector::DlgLogInspector(const QString &shv_path, QWidget *parent) :
 	ui->graphView->widget()->setBackgroundRole(QPalette::ToolTipBase);
 	ui->graphView->widget()->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
 
-	//shvInfo() << qobject_cast<QWidget*>(ui->graphView->widget());
 	m_graph = new tl::Graph(this);
 	m_graph->setModel(m_graphModel);
 	m_graphWidget->setGraph(m_graph);
@@ -379,18 +375,6 @@ shv::chainpack::RpcValue DlgLogInspector::getLogParams()
 	params.withPathsDict = ui->chkPathsDict->isChecked();
 	params.withSnapshot = ui->chkWithSnapshot->isChecked();
 	params.withTypeInfo = ui->chkWithTypeInfo->isChecked();
-	/*
-	unsigned header_opts = 0;
-	if(ui->chkBasicInfo->isChecked())
-		header_opts |= static_cast<unsigned>(shv::core::utils::ShvGetLogParams::HeaderOptions::BasicInfo);
-	if(ui->chkFieldInfo->isChecked())
-		header_opts |= static_cast<unsigned>(shv::core::utils::ShvGetLogParams::HeaderOptions::FieldInfo);
-	if(ui->chkTypeInfo->isChecked())
-		header_opts |= static_cast<unsigned>(shv::core::utils::ShvGetLogParams::HeaderOptions::TypeInfo);
-	if(ui->chkPathsDict->isChecked())
-		header_opts |= static_cast<unsigned>(shv::core::utils::ShvGetLogParams::HeaderOptions::PathsDict);
-	params.headerOptions = header_opts;
-	*/
 	shvDebug() << params.toRpcValue().toCpon();
 	return params.toRpcValue();
 }

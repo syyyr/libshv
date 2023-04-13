@@ -60,7 +60,5 @@ DOCTEST_TEST_CASE("AccessGrant")
 		expected_roles = {"rd", "dot_local"};
 	}
 	auto roles = acg.roles();
-	//nInfo() << "roles         :" << list_to_string(roles);
-	//nInfo() << "expected_roles:" << list_to_string(expected_roles);
 	REQUIRE(cmp_stringview_list(expected_roles, roles));
 }

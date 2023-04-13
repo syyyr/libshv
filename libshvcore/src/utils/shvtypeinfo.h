@@ -151,9 +151,6 @@ public:
 
 	ShvPropertyDescr &setVisualStyleName(const std::string &visual_style_name);
 
-	//chainpack::RpcValue blacklist() const;
-	//ShvNodeDescr &setBlacklist(chainpack::RpcValue::Map &&black_list);
-
 	ShvPropertyDescr &setAlarm(const std::string &alarm);
 
 	std::vector<ShvMethodDescr> methods() const;

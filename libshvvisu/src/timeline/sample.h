@@ -17,7 +17,6 @@ struct SHVVISU_DECL_EXPORT Sample
 
 	timemsec_t time = 0;
 	QVariant value;
-	//timemsec_t origtime = 0; // sometimes is needed to show samples in transformed time scale (hide empty areas without samples)
 
 	Sample() = default;
 	Sample(timemsec_t t, const QVariant &v) : time(t), value(v) {}

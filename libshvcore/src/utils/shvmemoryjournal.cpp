@@ -161,7 +161,6 @@ chainpack::RpcValue ShvMemoryJournal::getLog(const ShvGetLogParams &params)
 	int rec_cnt_limit = std::min(params.recordCountLimit, DEFAULT_GET_LOG_RECORD_COUNT_LIMIT);
 	bool rec_cnt_limit_hit = false;
 
-	//int64_t first_record_msec = 0;
 	int64_t last_record_msec = 0;
 
 	if(params_since_msec > 0 && log_until_msec > 0 && params_since_msec >= log_until_msec)
@@ -299,15 +298,4 @@ log_finish:
 	ret.setMetaData(hdr.toMetaData());
 	return ret;
 }
-/*
-size_t ShvMemoryJournal::timeToUpperBoundIndex(int64_t time) const
-{
-	Entry entry;
-	entry.epochMsec = time;
-	auto it = std::upper_bound(m_entries.begin(), m_entries.end(), entry, [](const Entry &e1, const Entry &e2) {
-		return e1.epochMsec < e2.epochMsec;
-	});
-	return it - m_entries.begin();
-}
-*/
 } // namespace shv

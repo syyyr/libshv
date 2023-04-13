@@ -23,12 +23,10 @@ const char *ChainPack::PackingSchema::name(ChainPack::PackingSchema::Enum e)
 	case DateTimeEpoch_depr: return "DateTimeEpoch_depr";
 	case DateTime: return "DateTime";
 	case MetaMap: return "MetaMap";
-	//case MetaSMap: return "MetaSMap";
 	case Decimal: return "Decimal";
 
 	case TERM: return "TERM";
 	}
-	//SHVCHP_EXCEPTION("Unknown TypeInfo: " + Utils::toString((int)e));
 	return "UNKNOWN";
 }
 

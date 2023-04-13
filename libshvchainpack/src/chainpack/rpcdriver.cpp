@@ -27,7 +27,6 @@ RpcDriver::~RpcDriver() = default;
 void RpcDriver::sendRpcValue(const RpcValue &msg)
 {
 	using namespace std;
-	//shvLogFuncFrame() << msg.toStdString();
 	logRpcRawMsg() << SND_LOG_ARROW << msg.toPrettyString();
 	std::string packed_data = codeRpcValue(protocolType(), msg);
 	logRpcData() << "SEND protocol:" << Rpc::protocolTypeToString(protocolType())
@@ -47,7 +46,6 @@ void RpcDriver::sendRawData(const RpcValue::MetaData &meta_data, std::string &&d
 	logRpcRawMsg() << SND_LOG_ARROW << "protocol:" << Rpc::protocolTypeToString(protocolType()) << "send raw meta + data: " << meta_data.toPrettyString()
 				<< Utils::toHex(data, 0, 250);
 	using namespace std;
-	//shvLogFuncFrame() << msg.toStdString();
 	std::ostringstream os_packed_meta_data;
 	switch (protocolType()) {
 	case Rpc::ProtocolType::Cpon: {
@@ -113,7 +111,6 @@ void RpcDriver::enqueueDataToSend(RpcDriver::MessageData &&chunk_to_enqueue)
 		m_sendQueue.push_back(std::move(chunk_to_enqueue));
 		logWriteQueue() << "===========> write chunk added, new queue len:" << m_sendQueue.size();
 	}
-	//flush();
 	writeQueue();
 	/// UNLOCK_FOR_SEND unlock mutex here in the multithreaded environment
 	unlockSendQueueGuard();
@@ -128,7 +125,6 @@ void RpcDriver::writeQueue()
 		nError() << "write data error, socket is not open!";
 		return;
 	}
-	//static int hi_cnt = 0;
 	const MessageData &chunk = m_sendQueue[0];
 	logWriteQueue() << "chunk size:" << chunk.size() << "meta:" << chunk.metaData.size() << "data:" << chunk.data.size();
 	if(!m_topMessageDataHeaderWritten) {
@@ -225,7 +221,6 @@ void RpcDriver::processReadData()
 	RpcValue::MetaData meta_data;
 	size_t meta_data_end_pos;
 	while (!m_readData.empty()) {
-		//logRpcData() << __FUNCTION__ << "data len:" << m_readData.length();
 		logRpcData().nospace() << "READ DATA " << m_readData.length() << " bytes of data read:\n" << shv::chainpack::Utils::hexDump(m_readData);
 		const std::string &read_data = m_readData;
 		try {
@@ -477,7 +472,6 @@ std::string RpcDriver::codeRpcValue(Rpc::ProtocolType protocol_type, const RpcVa
 
 void RpcDriver::onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::MetaData &&md, std::string &&data)
 {
-	//nInfo() << __FILE__ << RCV_LOG_ARROW << md.toStdString() << shv::chainpack::Utils::toHexElided(data, start_pos, 100);
 	RpcValue msg = decodeData(protocol_type, data, 0);
 	if(msg.isValid()) {
 		msg.setMetaData(std::move(md));
@@ -492,9 +486,6 @@ void RpcDriver::onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::Met
 void RpcDriver::onRpcValueReceived(const RpcValue &rpc_val)
 {
 	logRpcData() << "\t message received:" << rpc_val.toCpon();
-	//logLongFiles() << "\t emitting message received:" << msg.dumpText();
-	//if(m_messageReceivedCallback)
-	//	m_messageReceivedCallback(msg);
 	RpcMessage msg(rpc_val);
 	onRpcMessageReceived(msg);
 

@@ -129,7 +129,6 @@ shv::iotqt::acl::AclRoleAccessRules AclManager::accessRoleRules(const std::strin
 		return shv::iotqt::acl::AclRoleAccessRules();
 	if(std::get<1>(it->second) == false) {
 		shv::iotqt::acl::AclRoleAccessRules acl = aclAccessRoleRules(role_name);
-		//acl.sortMostSpecificFirst();
 		it->second = std::pair<shv::iotqt::acl::AclRoleAccessRules, bool>(acl, true);
 	}
 	return std::get<0>(it->second);
@@ -151,8 +150,6 @@ chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginC
 		return cp::UserLoginResult(false, "Invalid user name.");
 	}
 	auto acl_pwd = acl_user.password;
-	//std::string pwdsrv = std::get<0>(pwdt);
-	//PasswordFormat pwdsrvfmt = std::get<1>(pwdt);
 	if(acl_pwd.password.empty()) {
 		shvError() << "Empty password not allowed:" << login.user;
 		return cp::UserLoginResult(false, "Empty password not allowed.");
@@ -184,7 +181,6 @@ chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginC
 			acl_pwd.password = shv::iotqt::utils::sha1Hex(acl_pwd.password);
 
 		std::string nonce = login_context.serverNounce + acl_pwd.password;
-		//shvWarning() << "correct:" << login_context.serverNounce << "+" << acl_pwd.password;
 		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
 #if QT_VERSION_MAJOR >= 6
 		hash.addData(QByteArrayView(nonce.data(), static_cast<int>(nonce.length())));
@@ -192,8 +188,6 @@ chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginC
 		hash.addData(nonce.data(), static_cast<int>(nonce.length()));
 #endif
 		std::string correct_sha1 = std::string(hash.result().toHex().constData());
-		//shvWarning() << "correct:" << correct_sha1;
-		//shvWarning() << "user   :" << correct_sha1;
 		if(usr_pwd == correct_sha1)
 			return cp::UserLoginResult(true);
 		logAclManagerM() << "\t Invalid password.";
@@ -243,14 +237,12 @@ void AclManager::aclSetAccessRoleRules(const std::string &role_name, const shv::
 
 std::map<std::string, AclManager::FlattenRole> AclManager::flattenRole_helper(const std::string &role_name, int nest_level)
 {
-	//shvInfo() << __FUNCTION__ << "role:" << role_name << "nest level:" << nest_level;
 	std::map<std::string, FlattenRole> ret;
 	shv::iotqt::acl::AclRole ar = aclRole(role_name);
 	if(ar.isValid()) {
 		FlattenRole fr{role_name, ar.weight, nest_level};
 		ret[role_name] = std::move(fr);
 		for(const auto &rl : ar.roles) {
-			//shvInfo() << "\t child role:" << rl;
 			auto it = ret.find(rl);
 			if(it != ret.end()) {
 				shvWarning() << "Cyclic reference in roles detected for name:" << rl;
@@ -263,9 +255,6 @@ std::map<std::string, AclManager::FlattenRole> AclManager::flattenRole_helper(co
 	else {
 		shvWarning() << "role:" << role_name << "is not defined";
 	}
-	//shvInfo() << "\t ret:";
-	//for(auto kv : ret)
-	//	shvInfo() << "\t\t" << kv.first << kv.second.name;
 	return ret;
 }
 
@@ -294,30 +283,12 @@ std::vector<AclManager::FlattenRole> AclManager::flattenRole(const std::string &
 {
 	return userFlattenRoles("_Role#Key:" + role, {role});
 }
-/*
-static cp::RpcValue merge_maps(const cp::RpcValue &m_base, const cp::RpcValue &m_over)
-{
-	shvDebug() << "merging:" << m_base << "and:" << m_over;
-	if(m_over.isMap() && m_base.isMap()) {
-		const shv::chainpack::RpcValue::Map &map_base = m_base.asMap();
-		const shv::chainpack::RpcValue::Map &map_over = m_over.asMap();
-		cp::RpcValue::Map map = map_base;
-		for(const auto &kv : map_over) {
-			map[kv.first] = merge_maps(map.value(kv.first), kv.second);
-		}
-		return cp::RpcValue(map);
-	}
-	else if(m_over.isValid())
-		return m_over;
-	return m_base;
-}
-*/
+
 chainpack::RpcValue AclManager::userProfile(const std::string &user_name)
 {
 	chainpack::RpcValue ret;
 	for(const auto &rn : userFlattenRoles(user_name, user(user_name).roles)) {
 		shv::iotqt::acl::AclRole r = role(rn.name);
-		//shvDebug() << "--------------------------merging:" << rn.name << r.toRpcValueMap();
 		ret = chainpack::Utils::mergeMaps(ret, r.profile);
 	}
 	return ret;

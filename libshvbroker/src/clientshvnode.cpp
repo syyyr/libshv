@@ -30,7 +30,6 @@ void ClientShvNode::addConnection(rpc::ClientConnectionOnBroker *conn)
 
 void ClientShvNode::removeConnection(rpc::ClientConnectionOnBroker *conn)
 {
-	//shvWarning() << this << "removing connection:" << conn;
 	m_connections.removeOne(conn);
 	if(m_connections.isEmpty() && ownChildren().isEmpty())
 		deleteLater();
@@ -46,7 +45,6 @@ void ClientShvNode::handleRawRpcRequest(shv::chainpack::RpcValue::MetaData &&met
 shv::chainpack::RpcValue ClientShvNode::hasChildren(const StringViewList &shv_path)
 {
 	Q_UNUSED(shv_path)
-	//shvWarning() << "ShvClientNode::hasChildren path:" << StringView::join(shv_path, '/');// << "ret:" << nullptr;
 	return nullptr;
 }
 

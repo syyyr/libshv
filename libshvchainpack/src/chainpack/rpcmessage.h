@@ -3,7 +3,6 @@
 #include "rpcvalue.h"
 #include "rpc.h"
 
-//#include "utils.h"
 #include "exception.h"
 #include "../shvchainpackglobal.h"
 
@@ -129,8 +128,6 @@ public:
 
 	void write(AbstractStreamWriter &wr) const;
 
-	//std::string callerFingerprint() const;
-
 	static void registerMetaTypes();
 protected:
 	void checkMetaValues();
@@ -152,14 +149,11 @@ public:
 public:
 	RpcRequest& setMethod(const RpcValue::String &met);
 	RpcRequest& setMethod(RpcValue::String &&met);
-	//RpcValue::String method() const;
 	RpcRequest& setParams(const RpcValue &p);
 	RpcValue params() const;
 	RpcRequest& setRequestId(const RpcValue::Int id) {Super::setRequestId(id); return *this;}
 
 	RpcResponse makeResponse() const;
-
-	//size_t write(AbstractStreamWriter &wr) const override;
 };
 
 class SHVCHAINPACK_DECL_EXPORT RpcSignal : public RpcRequest
@@ -218,8 +212,6 @@ public:
 		int code() const;
 		Error& setMessage(RpcValue::String &&m);
 		RpcValue::String message() const;
-		//Error& setData(const Value &data);
-		//Value data() const;
 		static std::string errorCodeToString(int code);
 		RpcValue::String toString() const {return std::string("RPC ERROR ") + errorCodeToString(code()) + ": " + message();}
 		RpcValue::Map toJson() const
@@ -231,12 +223,6 @@ public:
 		}
 		static Error fromJson(const RpcValue::Map &json)
 		{
-			/*
-			Error ret;
-			ret.setCode(json.value(Rpc::JSONRPC_ERROR_CODE).toInt());
-			ret.setMessage(json.value(Rpc::JSONRPC_ERROR_MESSAGE).toString());
-			return ret;
-			*/
 			return RpcValue::IMap {
 				{KeyCode, json.value(Rpc::JSONRPC_ERROR_CODE).toInt()},
 				{KeyMessage, json.value(Rpc::JSONRPC_ERROR_MESSAGE).asString()},
@@ -244,28 +230,6 @@ public:
 		}
 	public:
 		static Error create(int c, RpcValue::String msg);
-		/*
-		static Error createParseError(const Value::String &msg = Value::String(), const Value &data = Value()) {
-			return createError(ParseError,
-							   (msg.isEmpty())? "Parse error": msg,
-							   (data.isValid())? data: "Invalid JSON was received by the server. An error occurred on the server while parsing the JSON text.");
-		}
-		static Error createInvalidRequestError(const Value::String &msg = Value::String(), const Value &data = Value()) {
-			return createError(InvalidRequest,
-							   (msg.isEmpty())? "Invalid Request": msg,
-							   (data.isValid())? data: "The JSON sent is not a valid Request object.");
-		}
-		static Error createMethodNotFoundError(const Value::String &msg = Value::String(), const Value &data = Value()) {
-			return createError(MethodNotFound,
-							   (msg.isEmpty())? "Method not found": msg,
-							   (data.isValid())? data: "The method does not exist / is not available.");
-		}
-		static Error createInvalidParamsError(const Value::String &msg = Value::String(), const Value &data = Value()) {
-			return createError(InvalidParams,
-							   (msg.isEmpty())? "Invalid params": msg,
-							   (data.isValid())? data: "Invalid method parameter(s).");
-		}
-		*/
 		static Error createMethodCallExceptionError(const RpcValue::String &msg = RpcValue::String()) {
 			return create(MethodCallException, (msg.empty())? "Method call exception": msg);
 		}
@@ -277,8 +241,6 @@ public:
 		}
 	};
 public:
-	//RpcResponse(const Json &json = Json()) : Super(json) {}
-	//RpcResponse(const Value &request_id) : Super(Json()) { setId(request_id); }
 	RpcResponse() : Super() {}
 	RpcResponse(const RpcMessage &msg) : Super(msg) {}
 	RpcResponse(const RpcResponse &msg) = default;

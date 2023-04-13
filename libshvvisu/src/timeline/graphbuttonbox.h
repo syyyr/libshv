@@ -13,14 +13,6 @@ namespace timeline {
 
 class Graph;
 
-/*
-class GraphButton : public QObject
-{
-	Q_OBJECT
-public:
-	GraphButton(QObject *parent = nullptr);
-};
-*/
 class GraphButtonBox : public QObject
 {
 	Q_OBJECT
@@ -41,8 +33,6 @@ public:
 
 	virtual void draw(QPainter *painter);
 
-	//QRect rect() const { return m_rect; }
-	//void setRect(const QRect &r) { m_rect = r; }
 	QSize size() const;
 	int buttonSize() const;
 	int buttonSpace() const;
@@ -55,8 +45,6 @@ protected:
 
 	Graph *graph() const;
 private:
-	//QVector<GraphButton*> m_buttons;
-	//Graph *m_graph;
 	QVector<ButtonId> m_buttonIds;
 	QRect m_rect;
 	bool m_mouseOver = false;

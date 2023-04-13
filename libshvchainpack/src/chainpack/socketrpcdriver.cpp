@@ -117,9 +117,6 @@ bool SocketRpcDriver::connectToHost(const std::string &host, int port)
 
 void SocketRpcDriver::exec()
 {
-	//int pfd[2];
-	//if (pipe(pfd) == -1)
-	//		 return;
 	fd_set read_flags,write_flags; // the flag sets to be used
 	struct timeval waitd;
 
@@ -138,12 +135,9 @@ void SocketRpcDriver::exec()
 		FD_SET(m_socket, &read_flags);
 		if(!m_writeBuffer.empty())
 			FD_SET(m_socket, &write_flags);
-		//FD_SET(STDIN_FILENO, &read_flags);
-		//FD_SET(STDIN_FILENO, &write_flags);
 
 		int sel = select(FD_SETSIZE, &read_flags, &write_flags, static_cast<fd_set*>(nullptr), &waitd);
 
-		//ESP_LOGI(__FILE__, "select returned, number of active file descriptors: %d", sel);
 		//if an error with select
 		if(sel < 0) {
 			nError() << "select failed errno:" << errno;

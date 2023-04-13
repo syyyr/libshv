@@ -110,9 +110,6 @@ AccessGrant::MetaType::MetaType()
 		RPC_META_KEY_DEF(Password),
 		RPC_META_KEY_DEF(LoginType),
 	};
-	//m_tags = {
-	//	RPC_META_TAG_DEF(shvPath)
-	//};
 }
 
 void AccessGrant::MetaType::registerMetaType()
@@ -204,8 +201,6 @@ RpcValue AccessGrant::toRpcValue() const
 
 static const std::string KEY_ACCESS_LEVEL = "accessLevel";
 static const std::string KEY_ROLE = "role";
-//static const std::string KEY_USER = "user";
-//static const std::string KEY_PASSWORD = "password";
 static const std::string KEY_LOGIN = "login";
 
 RpcValue AccessGrant::toRpcValueMap() const

@@ -37,7 +37,6 @@ public:
 	bool startsWithPath(const StringView &path, size_t *pos = nullptr) const;
 	static bool startsWithPath(const StringView &str, const StringView &path, size_t *pos = nullptr);
 
-	//static ShvPath joinPaths(const StringView &p1, const StringView &p2);
 	ShvPath appendPath(const StringView &path) const;
 
 	static ShvPath joinDirs(const std::vector<std::string> &dirs);
@@ -46,11 +45,6 @@ public:
 	static ShvPath joinDirs(StringView dir1, StringView dir2);
 	static ShvPath appendDir(StringView path1, StringView dir);
 	ShvPath appendDir(StringView dir) const;
-
-	//static StringView midPath(const std::string &path, size_t start, size_t len = std::numeric_limits<size_t>::max());
-
-	// very dangerous, consider ShvPath("a/b").split() will return dangling references
-	// shv::core::StringViewList split() const;
 
 	// split is deprecated, use splitPath instead
 	static shv::core::StringViewList split(const shv::core::StringView &shv_path);

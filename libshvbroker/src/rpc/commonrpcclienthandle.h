@@ -16,7 +16,6 @@ public:
 		std::string localPath;
 		std::string subscribedPath;
 		std::string method;
-		//bool isRelative = false;
 
 		Subscription() = default;
 		Subscription(const std::string &local_path, const std::string &subscribed_path, const std::string &m);
@@ -34,7 +33,6 @@ public:
 
 	virtual Subscription createSubscription(const std::string &shv_path, const std::string &method) = 0;
 	unsigned addSubscription(const Subscription &subs);
-	//virtual bool removeSubscription(const std::string &shv_path, const std::string &method) = 0;
 	bool removeSubscription(const Subscription &subs);
 	int isSubscribed(const std::string &shv_path, const std::string &method) const;
 	virtual std::string toSubscribedPath(const Subscription &subs, const std::string &abs_path) const = 0;

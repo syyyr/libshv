@@ -21,7 +21,6 @@ class SHVVISU_DECL_EXPORT GraphWidget : public QWidget
 	Q_OBJECT
 
 	using Super = QWidget;
-	//friend class GraphWidget;
 public:
 	GraphWidget(QWidget *parent = nullptr);
 
@@ -40,8 +39,6 @@ public:
 protected:
 	bool event(QEvent *event) override;
 	void paintEvent(QPaintEvent *event) override;
-	//void keyPressEvent(QKeyEvent *event) override;
-	//void keyReleaseEvent(QKeyEvent *event) override;
 
 	void mouseDoubleClickEvent(QMouseEvent *event) override;
 	void mousePressEvent(QMouseEvent *event) override;

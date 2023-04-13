@@ -7,7 +7,6 @@
 #include <shv/core/exception.h>
 #include <shv/core/string.h>
 
-//#include <shv/chainpack/chainpackprotocol.h>
 #include <shv/chainpack/rpcmessage.h>
 
 #include <QTcpSocket>
@@ -24,7 +23,6 @@ static const int s_initPhaseTimeout = 10000;
 ServerConnection::ServerConnection(Socket *socket, QObject *parent)
 	: Super(parent)
 {
-	//socket->setParent(nullptr);
 	setSocket(socket);
 	connect(this, &ServerConnection::socketConnectedChanged, [this](bool is_connected) {
 		if(is_connected) {
@@ -42,7 +40,6 @@ ServerConnection::ServerConnection(Socket *socket, QObject *parent)
 
 ServerConnection::~ServerConnection()
 {
-	//m_isDestroyPhase = true;
 	shvInfo() << "Destroying Connection ID:" << connectionId() << "name:" << connectionName();
 	abortSocket();
 }
@@ -66,7 +63,6 @@ void ServerConnection::sendMessage(const chainpack::RpcMessage &rpc_msg)
 
 void ServerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType protocol_type, shv::chainpack::RpcValue::MetaData &&md, std::string &&msg_data)
 {
-	//shvInfo() << __FILE__ << RCV_LOG_ARROW << md.toStdString() << shv::chainpack::Utils::toHexElided(data, start_pos, 100);
 	if(isLoginPhase()) {
 		shv::chainpack::RpcValue rpc_val = decodeData(protocol_type, msg_data, 0);
 		rpc_val.setMetaData(std::move(md));
@@ -76,13 +72,7 @@ void ServerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType proto
 	}
 	Super::onRpcDataReceived(protocol_type, std::move(md), std::move(msg_data));
 }
-/*
-void ServerConnection::onRpcValueReceived(const chainpack::RpcValue &rpc_val)
-{
-	cp::RpcMessage msg(rpc_val);
-	onRpcMessageReceived(msg);
-}
-*/
+
 void ServerConnection::onRpcMessageReceived(const chainpack::RpcMessage &msg)
 {
 	emit rpcMessageReceived(msg);
@@ -94,7 +84,6 @@ void ServerConnection::processLoginPhase(const chainpack::RpcMessage &msg)
 	try {
 		if(!msg.isRequest())
 			SHV_EXCEPTION("Initial message is not RPC request! Dropping client connection. " + connectionName() + " " + msg.toCpon());
-			//shvInfo() << "RPC request received:" << rq.toStdString();
 
 		if(!m_helloReceived && !m_loginReceived && rq.method() == shv::chainpack::Rpc::METH_HELLO) {
 			shvInfo().nospace() << "Client hello received from: " << socket()->peerAddress().toString().toStdString() << ':' << socket()->peerPort();
@@ -114,24 +103,7 @@ void ServerConnection::processLoginPhase(const chainpack::RpcMessage &msg)
 			m_userLoginContext.connectionId = connectionId();
 			cp::RpcValue::Map params = rq.params().asMap();
 			m_connectionOptions = params.value(cp::Rpc::KEY_OPTIONS);
-			/*
-			{
-				const chainpack::RpcValue::Map omap = m_connectionOptions.asMap();
-				if(omap.hasKey("broker"))
-					m_connectionType = ConnectionType::Broker;
-				else if(omap.hasKey("device"))
-					m_connectionType = ConnectionType::Device;
-				else
-					m_connectionType = ConnectionType::Client;
-			}
-			*/
 			processLoginPhase();
-			/*
-			if(!login_resp.isValid())
-				SHV_EXCEPTION("Invalid authentication for user: " + m_userLogin.user + " at: " + connectionName());
-			shvInfo().nospace() << "Client logged in user: " << m_userLogin.user << " from: " << peerAddress() << ':' << peerPort();
-			sendResponse(rq.requestId(), login_resp);
-			*/
 			return;
 		}
 	}
@@ -146,15 +118,6 @@ void ServerConnection::processLoginPhase()
 {
 	m_userLogin = m_userLoginContext.userLogin();
 	shvInfo() << "login - user:" << userName();// << "password:" << password_hash;
-	//checkPassword();
-	/*
-	if(password_ok) {
-		cp::RpcValue::Map login_resp;
-		//login_resp[cp::Rpc::KEY_CLIENT_ID] = connectionId();
-		return chainpack::RpcValue{login_resp};
-	}
-	return cp::RpcValue();
-	*/
 }
 
 void ServerConnection::setLoginResult(const chainpack::UserLoginResult &result)

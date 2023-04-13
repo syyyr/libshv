@@ -93,11 +93,9 @@ public:
 		String, // UTF8 string
 		DateTime,
 		List,
-		//Array,
 		Map,
 		IMap,
 		Decimal,
-		//MetaMap,
 	};
 	static const char* typeToName(Type t);
 	const char* typeName() const { return typeToName(type()); }
@@ -234,8 +232,6 @@ public:
 	using String = std::string;
 	using Blob = std::vector<uint8_t>;
 
-	// maybe in future I'll find a way how to do this without allocation
-	//static String blobToString(Blob &&s, bool *check_utf8 = nullptr);
 	static String blobToString(const Blob &s, bool *check_utf8 = nullptr);
 	static Blob stringToBlob(const String &s);
 
@@ -409,11 +405,6 @@ public:
 	RpcValue(const IMap &values);     // IMap
 	RpcValue(IMap &&values);          // IMap
 
-	// Implicit constructor: anything with a toRpcValue() function.
-	// dangerous
-	//template <class T, class = decltype(&T::toRpcValue)>
-	//RpcValue(const T & t) : RpcValue(t.toRpcValue()) {}
-
 	// Implicit constructor: map-like objects (std::map, std::unordered_map, etc)
 	template <class M, typename std::enable_if<
 				  std::is_constructible<RpcValue::String, typename M::key_type>::value
@@ -527,8 +518,6 @@ public:
 
 	std::string toChainPack() const;
 	static RpcValue fromChainPack(const std::string & str, std::string *err = nullptr);
-	//static constexpr bool CloneMetaData = true;
-	//RpcValue clone(bool clone_meta_data = CloneMetaData) const;
 
 	bool operator== (const RpcValue &rhs) const;
 	bool operator!= (const RpcValue &rhs) const {return !operator==(rhs);}
@@ -540,13 +529,6 @@ public:
 	}
 	void swap(RpcValue& other) noexcept;
 #endif
-	/*
-	bool operator<  (const ChainPack &rhs) const;
-	bool operator!= (const ChainPack &rhs) const { return !(*this == rhs); }
-	bool operator<= (const ChainPack &rhs) const { return !(rhs < *this); }
-	bool operator>  (const ChainPack &rhs) const { return  (rhs < *this); }
-	bool operator>= (const ChainPack &rhs) const { return !(*this < rhs); }
-	*/
 	template<typename T> static inline Type guessType();
 	template<typename T> static inline RpcValue fromValue(const T &t);
 

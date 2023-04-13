@@ -18,12 +18,9 @@ public:
 		enum {ID = chainpack::meta::GlobalNS::MetaTypeId::DataChange};
 		struct Tag { enum Enum {DateTime = chainpack::meta::Tag::USER,
 								ShortTime,
-								//Domain, domain should not be part of DataChange,
-								// because Domain is name of signal emitted with DataChange
 								ValueFlags,
 								SpecialListValue,
 								MAX};};
-		//struct Key { enum Enum {Value = 1, DateTime, ShortTime, MAX};};
 
 		MetaType();
 
@@ -39,9 +36,6 @@ public:
 	static std::string valueFlagsToString(ValueFlags st);
 
 	DataChange() = default;
-	// ambiguous constructor for DataChange(const DataChange &) DataChange(const RpcValue &)
-	// better to assign value explicitelly
-	//DataChange(const RpcValue &val);
 	DataChange(const RpcValue &val, const RpcValue::DateTime &date_time, int short_time = NO_SHORT_TIME);
 	DataChange(const RpcValue &val, unsigned short_time);
 
@@ -61,10 +55,6 @@ public:
 	RpcValue shortTime() const { return hasShortTime()? RpcValue(static_cast<unsigned>(m_shortTime)): RpcValue(); }
 	void setShortTime(const RpcValue &st) { m_shortTime = (st.isUInt() || (st.isInt() && st.toInt() >= 0))? st.toInt(): NO_SHORT_TIME; }
 
-	//bool hasDomain() const { return !m_domain.empty(); }
-	//void setDomain(const std::string &d) { m_domain = d; }
-	//const std::string& domain() const { return m_domain; }
-
 	bool hasValueflags() const { return m_valueFlags != NO_VALUE_FLAGS; }
 	void setValueFlags(ValueFlags st) { m_valueFlags = st; }
 	ValueFlags valueFlags() const { return m_valueFlags; }
@@ -79,7 +69,6 @@ public:
 	RpcValue toRpcValue() const;
 private:
 	RpcValue m_value;
-	//std::string m_domain;
 	RpcValue::DateTime m_dateTime;
 	int m_shortTime = NO_SHORT_TIME;
 	ValueFlags m_valueFlags = NO_VALUE_FLAGS;

@@ -30,7 +30,6 @@ DOCTEST_TEST_CASE("RpcValue to QVariant conversion and vice versa")
 			{-1, "baz"},
 		};
 		QVariant qv = rpcValueToQVariant(rv1);
-		//shvInfo() << "qv:" << qv.type() << qv.typeName();
 		auto rv2 = qVariantToRpcValue(qv);
 		REQUIRE(rv1 == rv2);
 	}

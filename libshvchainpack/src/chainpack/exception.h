@@ -18,11 +18,9 @@ public:
 	Exception(const std::string& _msg, const std::string& _where, const char *_log_topic);
 	~Exception() override = default;
 public:
-	//virtual void log();
 	virtual std::string message() const {return m_msg;}
 	virtual std::string where() const {return m_where;}
 	const char* what() const noexcept override;
-	//operator const char *() const  throw(){return what();}
 	static void setAbortOnException(bool on);
 	static bool isAbortOnException();
 protected:

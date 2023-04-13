@@ -81,14 +81,7 @@ char StringView::value(int ix) const
 		return 0;
 	return str()[m_start + ix];
 }
-/*
-size_t StringView::space() const
-{
-	if(m_start + m_length >= m_str->length())
-		return 0;
-	return m_str->length() - (m_start + m_length);
-}
-*/
+
 bool StringView::valid() const
 {
 	if(m_length == 0)
@@ -171,7 +164,6 @@ ssize_t StringView::lastIndexOf(char c) const
 
 StringView StringView::mid(size_t start, size_t len) const
 {
-	//shvWarning() << toString() << start << len;
 	return StringView(str(), this->start() + start, len);
 }
 

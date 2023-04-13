@@ -67,7 +67,6 @@ private:
 private:
 	QStack<SvgElement> m_elementStack;
 
-	//QGraphicsItemGroup *m_topLevelGroup = nullptr;
 	QGraphicsItem *m_topLevelItem = nullptr;
 	QXmlStreamReader *m_xml = nullptr;
 	QPen m_defaultPen;

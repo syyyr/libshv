@@ -1,7 +1,5 @@
 #include "logtablemodelbase.h"
 
-//#include "../core/logdevice.h"
-
 #include <QColor>
 #include <QDateTime>
 
@@ -65,7 +63,6 @@ LogTableModelRow LogTableModelBase::rowAt(int row) const
 
 void LogTableModelBase::addLogRow(const LogTableModelRow &row)
 {
-	//printf("%p %s %s:%d -> %d\n", this, qPrintable(msg), qPrintable(file), line, (int)severity);
 	static constexpr int ROWS_OVERLAP = 100;
 	if(rowCount() >= maximumRowCount() + ROWS_OVERLAP) {
 		if(direction() == Direction::AppendToBottom) {
