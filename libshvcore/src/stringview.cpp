@@ -1,4 +1,5 @@
 #include "stringview.h"
+// NOLINTNEXTLINE(modernize-deprecated-headers)
 #include "string.h"
 
 namespace shv::core {
