@@ -179,9 +179,8 @@ void SerialPortSocket::onSerialDataReadyRead()
 					setReadMessageState(ReadMessageState::WaitingForEtx);
 					break;
 				}
-				else {
-					logSerialPortSocketM() << "Ignoring rubbish:" << shv::chainpack::utils::byteToHex(b) << b << static_cast<int>(b);
-				}
+
+				logSerialPortSocketM() << "Ignoring rubbish:" << shv::chainpack::utils::byteToHex(b) << b << static_cast<int>(b);
 			}
 			break;
 		}

@@ -516,9 +516,8 @@ std::string DlgLogInspector::loadData(const QString &ext)
 	if(f.open(QFile::ReadOnly)) {
 		return f.readAll().toStdString();
 	}
-	else {
-		QMessageBox::warning(this, tr("Warning"), tr("Cannot open file '%1' for read.").arg(fn));
-	}
+
+	QMessageBox::warning(this, tr("Warning"), tr("Cannot open file '%1' for read.").arg(fn));
 	return "";
 }
 
