@@ -62,6 +62,9 @@ public:
 	bool isSpontaneous() const { return testBit(m_valueFlags, ValueFlag::Spontaneous); }
 	void setSpontaneous(bool b) { setBit(m_valueFlags, ValueFlag::Spontaneous, b); }
 
+	bool isSnapshotValue() const { return testBit(m_valueFlags, ValueFlag::Snapshot); }
+	void setIsSnaptshotValue(bool b) { setBit(m_valueFlags, ValueFlag::Snapshot, b); }
+
 	static bool testBit(const unsigned &n, int pos);
 	static void setBit(unsigned &n, int pos, bool b);
 
