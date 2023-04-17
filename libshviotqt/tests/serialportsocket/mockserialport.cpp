@@ -21,7 +21,7 @@ bool MockSerialPort::open(OpenMode mode)
 		auto fname = "/tmp/serialportsocket-test-write" + objectName() + ".bin";
 		m_writeFile.setFileName(fname);
 		if(!m_writeFile.open(QFile::WriteOnly)) {
-			throw "Canot open file: " + fname + " for writing";
+			throw std::runtime_error("Canot open file: " + fname.toStdString() + " for writing");
 		}
 	}
 	QIODevice::open(mode);
