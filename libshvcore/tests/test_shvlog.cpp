@@ -56,6 +56,7 @@ struct Channel
 	RpcValue value;
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::map<string, Channel> channels;
 
 const ShvTypeInfo typeInfo = ShvTypeInfo::fromVersion2(
@@ -184,10 +185,12 @@ void init_file_journal(ShvFileJournal &file_journal)
 	file_journal.setJournalSizeLimit(file_journal.fileSizeLimit() * JOURNAL_FILES_CNT);
 }
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 int64_t device_start1_msec = 0;
 int64_t device_stop1_msec = 0;
 int64_t device_start2_msec = 0;
 int64_t device_stop2_msec = 0;
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 class TimeScope
 {

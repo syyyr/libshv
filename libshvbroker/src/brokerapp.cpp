@@ -77,7 +77,15 @@ using namespace std;
 namespace shv::broker {
 
 #ifdef Q_OS_UNIX
-std::array<int, 2> BrokerApp::m_sigTermFd;
+namespace {
+const auto sig_term_fd = [] {
+	std::array<int, 2> fd;
+	if(::socketpair(AF_UNIX, SOCK_STREAM, 0, fd.data())) {
+		qFatal("Couldn't create SIG_TERM socketpair");
+	}
+	return fd;
+}();
+}
 #endif
 
 static const string BROKER_CURRENT_CLIENT_SHV_PATH = string(cp::Rpc::DIR_BROKER) + '/' + CurrentClientShvNode::NodeId;
@@ -330,9 +338,7 @@ void BrokerApp::installUnixSignalHandlers()
 		if(sigaction(sig_num, &sa, nullptr) > 0)
 			qFatal("Couldn't register posix signal handler");
 	}
-	if(::socketpair(AF_UNIX, SOCK_STREAM, 0, m_sigTermFd.data()))
-		qFatal("Couldn't create SIG_TERM socketpair");
-	m_snTerm = new QSocketNotifier(m_sigTermFd[1], QSocketNotifier::Read, this);
+	m_snTerm = new QSocketNotifier(sig_term_fd[1], QSocketNotifier::Read, this);
 	connect(m_snTerm, &QSocketNotifier::activated, this, &BrokerApp::handlePosixSignals);
 	shvInfo() << "SIG_TERM handler installed OK";
 }
@@ -341,7 +347,7 @@ void BrokerApp::nativeSigHandler(int sig_number)
 {
 	shvInfo() << "SIG:" << sig_number;
 	auto a = static_cast<unsigned char>(sig_number);
-	if (auto err = ::write(m_sigTermFd[0], &a, sizeof(a)); err == -1) {
+	if (auto err = ::write(sig_term_fd[0], &a, sizeof(a)); err == -1) {
 		shvWarning() << "Unable to write into the signal handler pipe:" << strerror(errno);
 	}
 }
@@ -350,7 +356,7 @@ void BrokerApp::handlePosixSignals()
 {
 	m_snTerm->setEnabled(false);
 	unsigned char sig_num;
-	if (auto err = ::read(m_sigTermFd[1], &sig_num, sizeof(sig_num)); err == -1) {
+	if (auto err = ::read(sig_term_fd[1], &sig_num, sizeof(sig_num)); err == -1) {
 		shvWarning() << "Unable to read from the signal handler pipe:" << strerror(errno);
 		return;
 	}

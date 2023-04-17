@@ -13,6 +13,7 @@ using namespace shv::core::utils;
 using namespace shv::core;
 using namespace std;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 vector<string> cmdline;
 
 int main(int argc, char** argv)

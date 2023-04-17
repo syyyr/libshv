@@ -21,18 +21,18 @@ namespace shv::broker {
 //========================================================
 // EtcAclNode
 //========================================================
-static std::vector<cp::MetaMethod> meta_methods_dir_ls {
+static const std::vector<cp::MetaMethod> meta_methods_dir_ls {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 };
 
-static std::vector<cp::MetaMethod> meta_methods_property {
+static const std::vector<cp::MetaMethod> meta_methods_property {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 	{cp::Rpc::METH_GET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
 };
 
-static std::vector<cp::MetaMethod> meta_methods_property_rw {
+static const std::vector<cp::MetaMethod> meta_methods_property_rw {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 	{cp::Rpc::METH_GET, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
@@ -43,21 +43,21 @@ static const std::string M_VALUE = "value";
 static const std::string M_SET_VALUE = "setValue";
 static const std::string M_SAVE_TO_CONFIG_FILE = "saveToConfigFile";
 
-static std::vector<cp::MetaMethod> meta_methods_acl_node {
+static const std::vector<cp::MetaMethod> meta_methods_acl_node {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 	{M_SET_VALUE, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_CONFIG},
 	{M_SAVE_TO_CONFIG_FILE, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_CONFIG},
 };
 
-static std::vector<cp::MetaMethod> meta_methods_acl_subnode {
+static const std::vector<cp::MetaMethod> meta_methods_acl_subnode {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 	{M_VALUE, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 };
 
 static const std::string M_SAVE_TO_CONFIG_FILES = "saveToConfigFiles";
-static std::vector<cp::MetaMethod> meta_methods_acl_root {
+static const std::vector<cp::MetaMethod> meta_methods_acl_root {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 	{M_SAVE_TO_CONFIG_FILES, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_CONFIG},
@@ -105,7 +105,7 @@ BrokerAclNode::BrokerAclNode(const std::string &config_name, shv::iotqt::node::S
 {
 }
 
-std::vector<chainpack::MetaMethod> *BrokerAclNode::metaMethodsForPath(const iotqt::node::ShvNode::StringViewList &shv_path)
+const std::vector<chainpack::MetaMethod> *BrokerAclNode::metaMethodsForPath(const iotqt::node::ShvNode::StringViewList &shv_path)
 {
 	if(shv_path.size() == 0)
 		return &meta_methods_acl_node;
@@ -123,7 +123,7 @@ size_t BrokerAclNode::methodCount(const iotqt::node::ShvNode::StringViewList &sh
 
 const chainpack::MetaMethod *BrokerAclNode::metaMethod(const iotqt::node::ShvNode::StringViewList &shv_path, size_t ix)
 {
-	std::vector<cp::MetaMethod> *mm = metaMethodsForPath(shv_path);
+	auto mm = metaMethodsForPath(shv_path);
 	if(ix < mm->size())
 		return &mm->at(ix);
 	SHV_EXCEPTION("Invalid method index: " + std::to_string(ix) + " on shv path: " + shv_path.join('/'));
@@ -440,7 +440,7 @@ static const std::string M_SET_GRANT = "setGrant";
 static const std::string M_SET_PATH_PATTERN = "setPathPattern";
 static const std::string M_SET_METHOD = "setMethod";
 
-static std::vector<cp::MetaMethod> meta_methods_role_access {
+static const std::vector<cp::MetaMethod> meta_methods_role_access {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
 
@@ -459,7 +459,7 @@ AccessAclNode::AccessAclNode(shv::iotqt::node::ShvNode *parent)
 
 }
 
-std::vector<chainpack::MetaMethod> *AccessAclNode::metaMethodsForPath(const iotqt::node::ShvNode::StringViewList &shv_path)
+const std::vector<chainpack::MetaMethod> *AccessAclNode::metaMethodsForPath(const iotqt::node::ShvNode::StringViewList &shv_path)
 {
 	if(shv_path.size() == 0)
 		return &meta_methods_acl_node;

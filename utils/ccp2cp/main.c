@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const char *cp2cp_help =
+static const char* const cp2cp_help =
 "\n"
 "ChainPack to Cpon converter\n"
 "\n"
@@ -39,8 +39,10 @@ void help(const char *app_name)
 	exit(0);
 }
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 static FILE *in_file = NULL;
 static char in_buff[1024];
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 size_t unpack_underflow_handler(struct ccpcp_unpack_context *ctx)
 {
@@ -50,8 +52,10 @@ size_t unpack_underflow_handler(struct ccpcp_unpack_context *ctx)
 	return n;
 }
 
+// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 static FILE *out_file = NULL;
 static char out_buff[1024];
+// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 void pack_overflow_handler(struct ccpcp_pack_context *ctx, size_t size_hint)
 {
