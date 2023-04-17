@@ -95,32 +95,32 @@ DOCTEST_TEST_CASE("StringView")
 		{
 			string str("a:");
 			StringView s(str);
-			vector<StringView> sl = s.split(':', StringView::KeepEmptyParts);
-			REQUIRE(sl.size() == 2);
-			REQUIRE(sl[0] == "a");
-			REQUIRE(sl[1].empty());
+			vector<StringView> string_list = s.split(':', StringView::KeepEmptyParts);
+			REQUIRE(string_list.size() == 2);
+			REQUIRE(string_list[0] == "a");
+			REQUIRE(string_list[1].empty());
 		}
 		DOCTEST_SUBCASE("Quoted string")
 		{
 			string str("a:\"b:b\":c");
 			StringView s(str);
-			vector<StringView> sl = s.split(':', '"', StringView::KeepEmptyParts);
-			REQUIRE(sl.size() == 3);
-			REQUIRE(sl[0] == "a");
-			REQUIRE(sl[1] == "\"b:b\"");
-			REQUIRE(sl[2] == "c");
+			vector<StringView> string_list = s.split(':', '"', StringView::KeepEmptyParts);
+			REQUIRE(string_list.size() == 3);
+			REQUIRE(string_list[0] == "a");
+			REQUIRE(string_list[1] == "\"b:b\"");
+			REQUIRE(string_list[2] == "c");
 		}
 		DOCTEST_SUBCASE("Consequent separators")
 		{
 			string str("///foo/bar//baz//");
 			StringView s(str);
-			vector<StringView> sl1 = s.split('/');
-			REQUIRE(sl1.size() == 3);
-			REQUIRE(sl1[1] == "bar");
-			vector<StringView> sl2 = s.split('/', StringView::KeepEmptyParts);
-			REQUIRE(sl2.size() == 9);
-			REQUIRE(sl2[5].empty());
-			REQUIRE(sl2[6] == "baz");
+			vector<StringView> string_list1 = s.split('/');
+			REQUIRE(string_list1.size() == 3);
+			REQUIRE(string_list1[1] == "bar");
+			vector<StringView> string_list2 = s.split('/', StringView::KeepEmptyParts);
+			REQUIRE(string_list2.size() == 9);
+			REQUIRE(string_list2[5].empty());
+			REQUIRE(string_list2[6] == "baz");
 		}
 	}
 }
