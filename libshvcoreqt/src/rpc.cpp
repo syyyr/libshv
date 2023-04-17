@@ -152,6 +152,9 @@ shv::chainpack::RpcValue stringListToRpcValue(const QStringList &sl)
 
 } // namespace shv
 
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109503
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wattributes"
 template<> QString shv::chainpack::RpcValue::to<QString>() const
 {
 	return QString::fromStdString(asString());
@@ -164,3 +167,4 @@ template<> QDateTime shv::chainpack::RpcValue::to<QDateTime>() const
 	}
 	return QDateTime::fromMSecsSinceEpoch(toDateTime().msecsSinceEpoch(), Qt::TimeSpec::UTC);
 }
+#pragma GCC diagnostic pop
