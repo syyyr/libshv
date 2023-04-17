@@ -10,7 +10,7 @@ namespace shv::chainpack {
 
 namespace {
 
-static inline char hex_nibble(char i)
+inline char hex_nibble(char i)
 {
 	if(i < 10)
 		return '0' + i;
