@@ -407,13 +407,13 @@ bool is_absolute_path(const std::string &path)
 #endif
 }
 }
-std::string ConfigCLIOptions::configFile()
+std::string ConfigCLIOptions::configFile() const
 {
 	auto [abs_config_dir, abs_config_file] = absoluteConfigPaths(configDir(), config());
 	return abs_config_file;
 }
 
-std::string ConfigCLIOptions::effectiveConfigDir()
+std::string ConfigCLIOptions::effectiveConfigDir() const
 {
 	auto [abs_config_dir, abs_config_file] = absoluteConfigPaths(configDir(), config());
 	return abs_config_dir;

@@ -36,7 +36,7 @@ void SocketRpcDriver::closeConnection()
 	m_socket = -1;
 }
 
-bool SocketRpcDriver::isOpenImpl()
+bool SocketRpcDriver::isOpenImpl() const
 {
 	return m_socket >= 0;
 }

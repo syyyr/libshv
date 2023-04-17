@@ -27,7 +27,7 @@ protected:
 
 	virtual void idleTaskOnSelectTimeout() {}
 private:
-	bool isOpenImpl();
+	bool isOpenImpl() const;
 	bool flush();
 private:
 	int m_socket = -1;
