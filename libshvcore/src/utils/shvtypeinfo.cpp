@@ -729,7 +729,7 @@ ShvTypeInfo ShvTypeInfo::fromVersion2(std::map<std::string, ShvTypeDescr> &&type
 	ret.m_devicePaths[""] = "";
 	auto &device_descr = ret.m_deviceDescriptions[""];
 	for(const auto &pd : property_descriptions) {
-		device_descr.properties.push_back(std::move(pd));
+		device_descr.properties.push_back(pd);
 	}
 	return ret;
 }
