@@ -107,12 +107,14 @@ BrokerAclNode::BrokerAclNode(const std::string &config_name, shv::iotqt::node::S
 
 const std::vector<chainpack::MetaMethod> *BrokerAclNode::metaMethodsForPath(const iotqt::node::ShvNode::StringViewList &shv_path)
 {
-	if(shv_path.size() == 0)
+	switch (shv_path.size()) {
+	case 0:
 		return &meta_methods_acl_node;
-	if(shv_path.size() == 1)
+	case 1:
 		return &meta_methods_acl_subnode;
-	if(shv_path.size() == 2)
+	case 2:
 		return &meta_methods_property_rw;
+	}
 	return &meta_methods_dir_ls;
 }
 
@@ -461,12 +463,14 @@ AccessAclNode::AccessAclNode(shv::iotqt::node::ShvNode *parent)
 
 const std::vector<chainpack::MetaMethod> *AccessAclNode::metaMethodsForPath(const iotqt::node::ShvNode::StringViewList &shv_path)
 {
-	if(shv_path.size() == 0)
+	switch (shv_path.size()) {
+	case 0:
 		return &meta_methods_acl_node;
-	if(shv_path.size() == 1)
+	case 1:
 		return &meta_methods_acl_subnode;
-	if(shv_path.size() == 2)
+	case 2:
 		return &meta_methods_role_access;
+	}
 	return &meta_methods_dir_ls;
 }
 

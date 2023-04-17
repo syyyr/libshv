@@ -807,7 +807,7 @@ ShvTypeInfo &ShvTypeInfo::setTypeDescription(const std::string &type_name, const
 
 namespace {
 string cut_prefix(const string &path, const string &prefix) {
-	if(prefix.size() == 0) {
+	if(prefix.empty()) {
 		return path;
 	}
 	if(prefix.size() < path.size()) {
@@ -816,10 +816,10 @@ string cut_prefix(const string &path, const string &prefix) {
 	return string();
 }
 string cut_sufix(const string &path, const string &postfix) {
-	if(postfix.size() == 0) {
+	if(postfix.empty()) {
 		return path;
 	}
-	if(postfix.size() > 0 && postfix.size() < path.size()) {
+	if(!postfix.empty() && postfix.size() < path.size()) {
 		return path.substr(0, path.size() - postfix.size() - 1);
 	}
 	return string();
