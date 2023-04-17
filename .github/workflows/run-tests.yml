@@ -10,64 +10,41 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
 
-      - name: Install/cache ninja, openldap, doctest, and Qt's dependencies
-        uses: awalsh128/cache-apt-pkgs-action@v1.2.1
+      - uses: ./.github/actions/cmake
         with:
-          packages: ninja-build doctest-dev libgl1-mesa-dev libpulse-dev libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-util1 libxcb-xinerama0 libxkbcommon-x11-0 libldap-dev
-          version: 1.0
-
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v3
-        with:
-          cache: true
-          version: 5.15.2
-          install-deps: false
-
-      - name: Configure CMake
-        run: CFLAGS="-Werror" CXXFLAGS="-Werror" cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DUSE_QT6=OFF
+          qt_version: 5.15.2
+          use_qt6: OFF
+          modules: ""
 
       - name: Build
-        run: cmake --build ${{github.workspace}}/build --parallel $(nproc)
+        run: cmake --build ${{github.workspace}}/build --parallel "$(nproc)"
 
       - name: Test
         working-directory: ${{github.workspace}}/build
-        run: ctest --output-on-failure -j$(nproc)
+        run: ctest --output-on-failure -j"$(nproc)"
 
-  # FIXME: get rid of the duplication
   build6:
     runs-on: ubuntu-22.04
-
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
 
-      - name: Install/cache ninja, openldap, doctest, and Qt's dependencies
-        uses: awalsh128/cache-apt-pkgs-action@v1.2.1
+      - uses: ./.github/actions/cmake
         with:
-          packages: ninja-build doctest-dev libgl1-mesa-dev libpulse-dev libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-util1 libxcb-xinerama0 libxkbcommon-x11-0 libldap-dev
-          version: 1.0
-
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v3
-        with:
-          cache: true
-          install-deps: false
-          version: 6.4.0
+          qt_version: 6.5.0
+          use_qt6: ON
           modules: qtserialport qtwebsockets
-
-      - name: Configure CMake
-        run: CFLAGS="-Werror" CXXFLAGS="-Werror" cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DUSE_QT6=ON -DWITH_LDAP=ON
+          additional_cmake_args: -DWITH_LDAP=ON
 
       - name: Build
-        run: cmake --build ${{github.workspace}}/build --parallel $(nproc)
+        run: cmake --build ${{github.workspace}}/build --parallel "$(nproc)"
 
       - name: Test
         working-directory: ${{github.workspace}}/build
-        run: ctest --output-on-failure -j$(nproc)
+        run: ctest --output-on-failure -j"$(nproc)"
