@@ -80,6 +80,10 @@ jobs:
           BASE_REF="${{github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before}}"
           git fetch --depth=1 origin "$BASE_REF"
           readarray -t CHANGED_FILES < <(git diff --name-only "$BASE_REF" | grep 'cpp$')
+          if [[ "${#CHANGED_FILES[@]}" -eq 0 ]]; then
+            echo "No changed cpp files."
+            exit 0
+          fi
           echo "Changed files:"
           printf '%s\n' "${CHANGED_FILES[@]}"
           printf '%s\n' "${CHANGED_FILES[@]}" | parallel --verbose --jobs "$(nproc)" clang-tidy --quiet --warnings-as-errors=*
