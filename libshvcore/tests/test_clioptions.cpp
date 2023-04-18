@@ -101,8 +101,8 @@ DOCTEST_TEST_CASE("CliOptions")
 				req_abs_config_file = config_file;
 			}
 		}
-		auto [abs_config_dir, abs_config_file] = cliopts.absoluteConfigPaths(config_dir, config_file);
-		REQUIRE(abs_config_dir == req_abs_config_dir);
-		REQUIRE(abs_config_file == req_abs_config_file);
+		auto paths = cliopts.absoluteConfigPaths(config_dir, config_file);
+		REQUIRE(std::get<0>(paths) == req_abs_config_dir);
+		REQUIRE(std::get<1>(paths) == req_abs_config_file);
 	}
 }
