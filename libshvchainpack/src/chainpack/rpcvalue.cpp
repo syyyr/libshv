@@ -95,6 +95,9 @@ public:
 		delete m_metaData;
 	}
 
+	ValueData(const ValueData &o) = delete;
+	ValueData& operator=(const ValueData &o) = delete;
+
 protected:
 	explicit ValueData(const T &value)
 		: m_value(value)
@@ -103,8 +106,6 @@ protected:
 		logDebugRpcVal() << "+++" << ++value_data_cnt << RpcValue::typeToName(tag) << this << value;
 #endif
 	}
-	ValueData(const ValueData &o) = delete;
-	ValueData& operator=(const ValueData &o) = delete;
 
 	RpcValue::Type type() const override { return tag; }
 
