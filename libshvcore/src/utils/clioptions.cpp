@@ -197,6 +197,7 @@ std::string CLIOptions::peekArg(bool &ok) const
 	return std::string();
 }
 
+// NOLINTNEXTLINE(modernize-avoid-c-arrays)
 void CLIOptions::parse(int argc, char* argv[])
 {
 	StringList args;
