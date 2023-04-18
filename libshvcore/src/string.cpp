@@ -1,3 +1,4 @@
+// NOLINTNEXTLINE(modernize-deprecated-headers)
 #include "string.h"
 #include "stringview.h"
 

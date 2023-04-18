@@ -86,6 +86,18 @@ static int value_data_cnt = 0;
 template <RpcValue::Type tag, typename T>
 class ValueData : public RpcValue::AbstractValueData
 {
+public:
+	~ValueData() override
+	{
+#ifdef DEBUG_RPCVAL
+		logDebugRpcVal() << "---" << value_data_cnt-- << RpcValue::typeToName(tag) << this << m_value;
+#endif
+		delete m_metaData;
+	}
+
+	ValueData(const ValueData &o) = delete;
+	ValueData& operator=(const ValueData &o) = delete;
+
 protected:
 	explicit ValueData(const T &value)
 		: m_value(value)
@@ -93,15 +105,6 @@ protected:
 #ifdef DEBUG_RPCVAL
 		logDebugRpcVal() << "+++" << ++value_data_cnt << RpcValue::typeToName(tag) << this << value;
 #endif
-	}
-	ValueData(const ValueData &o) = delete;
-	ValueData& operator=(const ValueData &o) = delete;
-	~ValueData() override
-	{
-#ifdef DEBUG_RPCVAL
-		logDebugRpcVal() << "---" << value_data_cnt-- << RpcValue::typeToName(tag) << this << m_value;
-#endif
-		delete m_metaData;
 	}
 
 	RpcValue::Type type() const override { return tag; }

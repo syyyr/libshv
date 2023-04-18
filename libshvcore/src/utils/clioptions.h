@@ -131,8 +131,8 @@ public:
 	bool loadConfigFile();
 
 	void mergeConfig(const shv::chainpack::RpcValue &config_map);
-	std::string configFile();
-	std::string effectiveConfigDir();
+	std::string configFile() const;
+	std::string effectiveConfigDir() const;
 	std::tuple<std::string, std::string>absoluteConfigPaths(const std::string &config_dir, const std::string &config_file) const;
 protected:
 	void mergeConfig_helper(const std::string &key_prefix, const shv::chainpack::RpcValue &config_map);

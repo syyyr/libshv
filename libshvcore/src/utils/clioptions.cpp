@@ -197,6 +197,7 @@ std::string CLIOptions::peekArg(bool &ok) const
 	return std::string();
 }
 
+// NOLINTNEXTLINE(modernize-avoid-c-arrays)
 void CLIOptions::parse(int argc, char* argv[])
 {
 	StringList args;
@@ -407,13 +408,13 @@ bool is_absolute_path(const std::string &path)
 #endif
 }
 }
-std::string ConfigCLIOptions::configFile()
+std::string ConfigCLIOptions::configFile() const
 {
 	auto [abs_config_dir, abs_config_file] = absoluteConfigPaths(configDir(), config());
 	return abs_config_file;
 }
 
-std::string ConfigCLIOptions::effectiveConfigDir()
+std::string ConfigCLIOptions::effectiveConfigDir() const
 {
 	auto [abs_config_dir, abs_config_file] = absoluteConfigPaths(configDir(), config());
 	return abs_config_dir;
@@ -428,30 +429,33 @@ std::tuple<std::string, std::string> ConfigCLIOptions::absoluteConfigPaths(const
 	if(config_file.empty()) {
 		if(config_dir.empty())
 			return make_tuple(cwd, joinPath(cwd, default_config_name));
-		else if(is_absolute_path(config_dir))
+
+		if(is_absolute_path(config_dir))
 			return make_tuple(config_dir, joinPath(config_dir, default_config_name));
-		else
-			return make_tuple(joinPath(cwd, config_dir), joinPath(cwd, config_dir, default_config_name));
+
+		return make_tuple(joinPath(cwd, config_dir), joinPath(cwd, config_dir, default_config_name));
 	}
-	else if(is_absolute_path(config_file)) {
+
+	if(is_absolute_path(config_file)) {
 		if(config_dir.empty()) {
 			auto sep_pos = config_file.find_last_of('/');
 			// absolute config file must contain '/'
 			return make_tuple(config_file.substr(0, sep_pos), config_file);
 		}
-		else if(is_absolute_path(config_dir))
+
+		if(is_absolute_path(config_dir))
 			return make_tuple(config_dir, config_file);
-		else
-			return make_tuple(joinPath(cwd, config_dir), config_file);
+
+		return make_tuple(joinPath(cwd, config_dir), config_file);
 	}
-	else /* relative config_file */ {
-		if(config_dir.empty())
-			return make_tuple(cwd, joinPath(cwd, config_file));
-		else if(is_absolute_path(config_dir))
-			return make_tuple(config_dir, joinPath(config_dir, config_file));
-		else
-			return make_tuple(joinPath(cwd, config_dir), joinPath(cwd, config_dir, config_file));
-	}
+	/* relative config_file */
+	if(config_dir.empty())
+		return make_tuple(cwd, joinPath(cwd, config_file));
+
+	if(is_absolute_path(config_dir))
+		return make_tuple(config_dir, joinPath(config_dir, config_file));
+
+	return make_tuple(joinPath(cwd, config_dir), joinPath(cwd, config_dir, config_file));
 }
 
 void ConfigCLIOptions::mergeConfig_helper(const std::string &key_prefix, const shv::chainpack::RpcValue &config_map)

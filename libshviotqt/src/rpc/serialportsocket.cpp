@@ -7,6 +7,7 @@
 #include <QUrl>
 #include <QTimer>
 
+#include <array>
 #include <optional>
 
 #define logSerialPortSocketD() nCDebug("SerialPortSocket")
@@ -179,9 +180,8 @@ void SerialPortSocket::onSerialDataReadyRead()
 					setReadMessageState(ReadMessageState::WaitingForEtx);
 					break;
 				}
-				else {
-					logSerialPortSocketM() << "Ignoring rubbish:" << shv::chainpack::utils::byteToHex(b) << b << static_cast<int>(b);
-				}
+
+				logSerialPortSocketM() << "Ignoring rubbish:" << shv::chainpack::utils::byteToHex(b) << b << static_cast<int>(b);
 			}
 			break;
 		}
@@ -285,7 +285,7 @@ void SerialPortSocket::setReadMessageError(ReadMessageError err)
 
 qint64 SerialPortSocket::writeBytesEscaped(const char *data, qint64 max_size)
 {
-	char arr[] = {0};
+	std::array arr = {char{0}};
 	auto set_byte = [&arr](uint8_t b) {
 		arr[0] = static_cast<char>(b);
 	};
@@ -294,39 +294,37 @@ qint64 SerialPortSocket::writeBytesEscaped(const char *data, qint64 max_size)
 		auto b = static_cast<uint8_t>(data[written_cnt]);
 		if(m_escWritten) {
 			//finish escape sequence
-			if(b == STX) {
+			switch (b) {
+			case STX:
 				set_byte(ESTX);
-			}
-			else if(b == ETX) {
+				break;
+			case ETX:
 				set_byte(EETX);
-			}
-			else if(b == ESC) {
+				break;
+			case ESC:
 				set_byte(ESC);
-			}
-			else {
+				break;
+			default:
 				logSerialPortSocketW() << "ESC followed by:" << shv::chainpack::utils::byteToHex(b) << "internal escaping error, data sent will be probably corrupted.";
 				set_byte(b);
+				break;
 			}
 		}
 		else {
-			if(b == STX) {
+			switch (b) {
+			case STX:
+			case ETX:
+			case ESC:
 				set_byte(ESC);
 				--written_cnt;
-			}
-			else if(b == ETX) {
-				set_byte(ESC);
-				--written_cnt;
-			}
-			else if(b == ESC) {
-				set_byte(ESC);
-				--written_cnt;
-			}
-			else {
+				break;
+			default:
 				set_byte(b);
+				break;
 			}
 		}
 		m_writeMessageCrc.add(arr[0]);
-		auto n = m_port->write(arr, 1);
+		auto n = m_port->write(arr.data(), 1);
 		if(n < 0) {
 			return -1;
 		}
@@ -359,15 +357,15 @@ void SerialPortSocket::writeMessageBegin()
 {
 	logSerialPortSocketD() << "STX sent";
 	m_writeMessageCrc = {};
-	const char stx[] = {static_cast<char>(STX)};
-	m_port->write(stx, 1);
+	std::array stx = {static_cast<char>(STX)};
+	m_port->write(stx.data(), 1);
 }
 
 void SerialPortSocket::writeMessageEnd()
 {
 	logSerialPortSocketD() << "ETX sent";
-	const char etx[] = {static_cast<char>(ETX)};
-	m_port->write(etx, 1);
+	std::array etx = {static_cast<char>(ETX)};
+	m_port->write(etx.data(), 1);
 	auto crc = m_writeMessageCrc.remainder();
 	static constexpr size_t N = sizeof(shv::chainpack::crc32_t);
 	QByteArray crc_ba(N, 0);

@@ -155,7 +155,8 @@ std::vector<std::string_view> split_string(const std::string &str, const char de
 			ret.push_back(token);
 			break;
 		}
-		else if(str[i] == delimiter) {
+
+		if(str[i] == delimiter) {
 			std::string_view token(str.data() + token_start, i - token_start);
 			ret.push_back(token);
 			token_start = i + 1;

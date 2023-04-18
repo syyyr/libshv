@@ -307,9 +307,8 @@ void ShvFileJournal::rotateJournal()
 void ShvFileJournal::convertLog1JournalDir()
 {
 	const std::string &journal_dir = journalDir();
-	DIR *dir;
 	struct dirent *ent;
-	if ((dir = opendir (journal_dir.c_str())) != nullptr) {
+	if (auto dir = opendir (journal_dir.c_str())) {
 		const std::string ext = ".log";
 		int n_files = 0;
 		while ((ent = readdir (dir)) != nullptr) {
@@ -375,9 +374,8 @@ void ShvFileJournal::updateJournalStatus()
 	m_journalContext.lastFileSize = 0;
 	m_journalContext.files.clear();
 	int64_t max_file_msec = -1;
-	DIR *dir;
 	struct dirent *ent;
-	if ((dir = opendir (m_journalContext.journalDir.c_str())) != nullptr) {
+	if (auto dir = opendir (m_journalContext.journalDir.c_str())) {
 		m_journalContext.journalSize = 0;
 		const std::string &ext = FILE_EXT;
 		while ((ent = readdir (dir)) != nullptr) {

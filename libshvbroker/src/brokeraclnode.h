@@ -23,7 +23,7 @@ public:
 
 	virtual std::string saveConfigFile() = 0;
 protected:
-	virtual std::vector<shv::chainpack::MetaMethod> *metaMethodsForPath(const StringViewList &shv_path);
+	virtual const std::vector<shv::chainpack::MetaMethod> *metaMethodsForPath(const StringViewList &shv_path);
 	size_t methodCount(const StringViewList &shv_path) override;
 	const shv::chainpack::MetaMethod* metaMethod(const StringViewList &shv_path, size_t ix) override;
 
@@ -76,7 +76,7 @@ public:
 
 protected:
 	StringList childNames(const ShvNode::StringViewList &shv_path) override;
-	std::vector<shv::chainpack::MetaMethod> *metaMethodsForPath(const StringViewList &shv_path) override;
+	const std::vector<shv::chainpack::MetaMethod> *metaMethodsForPath(const StringViewList &shv_path) override;
 	shv::chainpack::RpcValue callMethod(const StringViewList &shv_path, const std::string &method, const shv::chainpack::RpcValue &params, const shv::chainpack::RpcValue &user_id) override;
 
 	std::string saveConfigFile() override;

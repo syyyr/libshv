@@ -153,9 +153,8 @@ std::vector<ShvAlarm> ShvAlarm::checkAlarms(const ShvTypeInfo &type_info, const 
 							fld_descr.label()
 						)};
 				}
-				else {
-					return {ShvAlarm(shv_path)};
-				}
+
+				return {ShvAlarm(shv_path)};
 			}
 		}
 	}
