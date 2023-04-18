@@ -867,7 +867,7 @@ shv::chainpack::RpcValue RpcValueConfigNode::loadConfigTemplate(const std::strin
 		if(err.empty()) {
 			const shv::chainpack::RpcValue::Map &map = rv.asMap();
 			static const auto BASED_ON = "basedOn";
-			const std::string &based_on = map.value(BASED_ON).asString();
+			const std::string &based_on = map.valref(BASED_ON).asString();
 			if(!based_on.empty()) {
 				shvDebug() << "based on:" << based_on;
 				std::string base_fn = templateDir() + '/' + based_on;

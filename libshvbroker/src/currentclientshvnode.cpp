@@ -102,10 +102,10 @@ shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack
 			auto *cli = app->clientById(client_id);
 			if(cli) {
 				const shv::chainpack::RpcValue::List &plist = rq.params().asList();
-				const string &shv_path_param = plist.value(0).asString();
+				const string &shv_path_param = plist.valref(0).asString();
 				if(shv_path_param.empty())
 					SHV_EXCEPTION("Shv path not specified in params.");
-				const string &method_param = plist.value(1).asString();
+				const string &method_param = plist.valref(1).asString();
 				if(method_param.empty())
 					SHV_EXCEPTION("Method not specified in params.");
 				auto shv_url = shv::core::utils::ShvUrl(shv_path_param);
@@ -120,10 +120,10 @@ shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack
 			auto *cli = app->clientById(client_id);
 			if(cli) {
 				const shv::chainpack::RpcValue::List &plist = rq.params().asList();
-				const string &shv_path_param = plist.value(0).asString();
+				const string &shv_path_param = plist.valref(0).asString();
 				if(shv_path_param.empty())
 					SHV_EXCEPTION("Shv path not specified in params.");
-				const string &method_param = plist.value(1).asString();
+				const string &method_param = plist.valref(1).asString();
 				if(method_param.empty())
 					SHV_EXCEPTION("Method not specified in params.");
 				auto shv_url = shv::core::utils::ShvUrl(shv_path_param);
