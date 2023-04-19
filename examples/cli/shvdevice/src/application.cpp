@@ -103,7 +103,7 @@ void Application::onBrokerConnectedChanged(bool is_connected)
 {
 	m_isBrokerConnected = is_connected;
 	if(is_connected) {
-		QTimer::singleShot(0, [this]() {
+		QTimer::singleShot(0, this, [this]() {
 			subscribeChanges();
 			testRpcCall();
 		});
