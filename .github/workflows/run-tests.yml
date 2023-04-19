@@ -8,7 +8,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  build-qt5:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -28,7 +28,7 @@ jobs:
         working-directory: ${{github.workspace}}/build
         run: ctest --output-on-failure -j"$(nproc)"
 
-  build6:
+  build-qt6:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
