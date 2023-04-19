@@ -6,6 +6,7 @@
 
 namespace shv::chainpack {
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 bool Exception::s_abortOnException = false;
 
 Exception::Exception(const std::string &_msg, const std::string &_where)

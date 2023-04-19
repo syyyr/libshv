@@ -18,6 +18,7 @@
 
 namespace shv::chainpack {
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int RpcDriver::s_defaultRpcTimeoutMsec = 5000;
 
 RpcDriver::RpcDriver() = default;
@@ -491,7 +492,9 @@ void RpcDriver::onRpcValueReceived(const RpcValue &rpc_val)
 
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static int lock_cnt = 0;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static int logged_lock_cnt = 0;
 void RpcDriver::lockSendQueueGuard()
 {
