@@ -18,9 +18,7 @@ BrokerTcpServer::BrokerTcpServer(SslMode ssl_mode, QObject *parent)
 {
 }
 
-BrokerTcpServer::~BrokerTcpServer()
-{
-}
+BrokerTcpServer::~BrokerTcpServer() = default;
 
 ClientConnectionOnBroker *BrokerTcpServer::connectionById(int connection_id)
 {
