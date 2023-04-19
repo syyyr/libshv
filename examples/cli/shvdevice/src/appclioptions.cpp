@@ -1,7 +1,5 @@
 #include "appclioptions.h"
 
-namespace cp = shv::chainpack;
-
 AppCliOptions::AppCliOptions()
 {
 	//addOption("tester.enabled").setType(cp::RpcValue::Type::Bool).setNames("--tester")
