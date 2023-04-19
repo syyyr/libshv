@@ -2,6 +2,7 @@
     <qresource prefix="shv/visu/images">
 	<file>pencil.svg</file>
 	<file>clock.svg</file>
+	<file>close.svg</file>
 	<file>delete.svg</file>
 	<file>checkbox-blank-outline.svg</file>
 	<file>check-box-outline.svg</file>

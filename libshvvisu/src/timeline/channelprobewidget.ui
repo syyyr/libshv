@@ -87,8 +87,8 @@
          <string>...</string>
         </property>
         <property name="icon">
-         <iconset>
-          <normaloff>:/images/close.svg</normaloff>:/images/close.svg</iconset>
+         <iconset resource="../../images/images.qrc">
+          <normaloff>:/shv/visu/images/close.svg</normaloff>:/shv/visu/images/close.svg</iconset>
         </property>
        </widget>
       </item>
