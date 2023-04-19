@@ -40,6 +40,6 @@ int main(int argc, char *argv[])
 
 	Application a(argc, argv, &cli_opts);
 
-	return a.exec();
+	return Application::exec();
 }
 

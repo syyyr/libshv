@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 	Application a(argc, argv, &cli_opts);
 
 	shvInfo() << "starting main thread event loop";
-	ret = a.exec();
+	ret = Application::exec();
 	shvInfo() << "main event loop exit code:" << ret;
 	shvInfo() << "bye ...";
 
