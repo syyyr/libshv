@@ -24,7 +24,7 @@ ChannelProbeWidget::ChannelProbeWidget(ChannelProbe *probe, QWidget *parent) :
 	ui->lblTitle->setStyleSheet("color:white;");
 
 	setAttribute(Qt::WA_DeleteOnClose, true);
-	setWindowFlags(Qt::FramelessWindowHint | Qt::WindowType::Window | Qt::WindowStaysOnTopHint);
+	setWindowFlags(Qt::FramelessWindowHint | Qt::Tool);
 
 	ui->twData->setColumnCount(DataTableColumn::ColCount);
 	ui->twData->setHorizontalHeaderItem(DataTableColumn::ColProperty, new QTableWidgetItem("Property"));
