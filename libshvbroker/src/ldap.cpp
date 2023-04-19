@@ -88,6 +88,7 @@ void Ldap::bindSasl(const std::string_view& bind_dn, const std::string_view& bin
 std::vector<Entry> Ldap::search(const std::string_view& base_dn, const std::string_view& filter, const std::vector<std::string_view> requested_attr)
 {
 	// I can't think of a better way of doing this while keeping the input arguments the same.
+	// NOLINTNEXTLINE(modernize-avoid-c-arrays) - we have to make an array for the C api
 	auto attr_array = std::make_unique<char*[]>(requested_attr.size() + 1);
 	std::transform(requested_attr.begin(), requested_attr.end(), attr_array.get(), [] (const std::string_view& str) {
 		return strdup(str.data());
