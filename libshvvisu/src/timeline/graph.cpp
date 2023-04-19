@@ -127,9 +127,9 @@ void Graph::createChannelsFromModel(shv::visu::timeline::Graph::SortChannels sor
 		Qt::magenta,
 		Qt::cyan,
 		Qt::blue,
-		QColor("#e63c33"), //red
+		QColor(0xe6, 0x3c, 0x33), //red
 		QColor("orange"),
-		QColor("#6da13a"), // green
+		QColor(0x6d, 0xa1, 0x3a), // green
 	};
 	clearChannels();
 	if(!m_model)
