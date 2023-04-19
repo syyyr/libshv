@@ -28,7 +28,9 @@ runs:
       run: |
         BASE_REF="${{github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before}}"
         git fetch --depth=1 origin "$BASE_REF"
-        readarray -t CHANGED_FILES < <(git diff --name-only "$BASE_REF" | grep 'cpp$')
+        # FIXME: The clang on CI chokes on lambda captures of structured binding variables. Remove the blacklist of
+        # test_serialportsocket after the CI gets updated.
+        readarray -t CHANGED_FILES < <(git diff --name-only "$BASE_REF" | grep 'cpp$' | grep -v "libshviotqt/tests/serialportsocket/test_serialportsocket.cpp")
         if [[ "${#CHANGED_FILES[@]}" -eq 0 ]]; then
           echo "No changed cpp files."
           exit 0
