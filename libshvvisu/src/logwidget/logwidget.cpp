@@ -151,6 +151,8 @@ LogWidget::LogWidget(QWidget *parent)
 	ui->tableView->setModel(m_filterModel);
 
 	connect(ui->edFilter, &QLineEdit::textChanged, this, &LogWidget::filterStringChanged);
+	connect(ui->btResizeColumns, &QToolButton::clicked, this, &LogWidget::btResizeColumns_clicked);
+	connect(ui->btClearLog, &QToolButton::clicked, this, &LogWidget::btClearLog_clicked);
 }
 
 LogWidget::~LogWidget()
@@ -195,12 +197,12 @@ void LogWidget::filterStringChanged(const QString &filter_string)
 	m_filterModel->setFilterString(filter_string);
 }
 
-void LogWidget::on_btClearLog_clicked()
+void LogWidget::btClearLog_clicked()
 {
 	clear();
 }
 
-void LogWidget::on_btResizeColumns_clicked()
+void LogWidget::btResizeColumns_clicked()
 {
 	ui->tableView->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
 }
