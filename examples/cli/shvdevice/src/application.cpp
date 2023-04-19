@@ -132,7 +132,7 @@ void Application::onRpcMessageReceived(const shv::chainpack::RpcMessage &msg)
 
 static constexpr int RPC_CALLBACK_TIMEOUT = 2000;
 
-void Application::testRpcCall()
+void Application::testRpcCall() const
 {
 	using namespace shv::iotqt::rpc;
 	auto *rpc_call = RpcCall::create(rpcConnection())
