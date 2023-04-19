@@ -48,7 +48,7 @@ shv::chainpack::RpcValue AppRootNode::callMethod(const StringViewList &shv_path,
 {
 	if(shv_path.empty()) {
 		if(method == cp::Rpc::METH_APP_NAME) {
-			return QCoreApplication::instance()->applicationName().toStdString();
+			return QCoreApplication::applicationName().toStdString();
 		}
 	}
 	return Super::callMethod(shv_path, method, params, user_id);
