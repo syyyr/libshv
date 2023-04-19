@@ -15,6 +15,7 @@ namespace shv::core::utils {
 
 namespace {
 constexpr auto KEY_DEVICE_TYPE = "deviceType";
+//constexpr auto KEY_SUPER_DEVICE_TYPE = "superDeviceType";
 constexpr auto KEY_TYPE_NAME = "typeName";
 constexpr auto KEY_LABEL = "label";
 constexpr auto KEY_DESCRIPTION = "description";
@@ -559,6 +560,7 @@ ShvPropertyDescr ShvPropertyDescr::fromRpcValue(const RpcValue &v, RpcValue::Map
 {
 	static const vector<string> known_tags{
 		KEY_DEVICE_TYPE,
+		//KEY_SUPER_DEVICE_TYPE,
 		KEY_NAME,
 		KEY_TYPE_NAME,
 		KEY_LABEL,
@@ -751,10 +753,10 @@ ShvTypeInfo &ShvTypeInfo::setDevicePath(const std::string &device_path, const st
 	return *this;
 }
 
-ShvTypeInfo &ShvTypeInfo::setPropertyDescriptionOnDevicePath(const std::string &device_path, const std::string &device_type, const ShvPropertyDescr &property_descr)
+ShvTypeInfo &ShvTypeInfo::setDeviceDescription(const std::string &device_type, const ShvDeviceDescription &device_descr)
 {
-	setDevicePath(device_path, device_type);
-	return setPropertyDescription(device_type, property_descr);
+	m_deviceDescriptions[device_type] = device_descr;
+	return *this;
 }
 
 ShvTypeInfo &ShvTypeInfo::setPropertyDescription(const std::string &device_type, const ShvPropertyDescr &property_descr)
