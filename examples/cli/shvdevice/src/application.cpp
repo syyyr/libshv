@@ -81,7 +81,7 @@ Application::Application(int &argc, char **argv, AppCliOptions* cli_opts)
 	connect(m_rpcConnection, &si::rpc::ClientConnection::brokerConnectedChanged, this, &Application::onBrokerConnectedChanged);
 	connect(m_rpcConnection, &si::rpc::ClientConnection::rpcMessageReceived, this, &Application::onRpcMessageReceived);
 
-	AppRootNode *root = new AppRootNode();
+	auto root = new AppRootNode();
 	m_shvTree = new si::node::ShvNodeTree(root, this);
 	connect(m_shvTree->root(), &si::node::ShvRootNode::sendRpcMessage, m_rpcConnection, &si::rpc::ClientConnection::sendMessage);
 	//m_shvTree->mkdir("sys/rproc");
