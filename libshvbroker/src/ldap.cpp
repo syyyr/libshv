@@ -7,7 +7,7 @@
 namespace shv::ldap {
 std::vector<std::string> getGroupsForUser(const std::unique_ptr<shv::ldap::Ldap>& my_ldap, const std::string_view& base_dn, const std::string_view& field_name, const std::string_view& user_name) {
 	std::vector<std::string> res;
-	auto filter = QStringLiteral(R"(%1=%2)").arg(field_name.data()).arg(user_name.data());
+	auto filter = QStringLiteral(R"(%1=%2)").arg(field_name.data(), user_name.data());
 	auto entries = my_ldap->search(base_dn.data(), qPrintable(filter), {"memberOf"});
 	for (const auto& entry : entries) {
 		for (const auto& [key, values]: entry.keysAndValues) {
