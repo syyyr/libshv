@@ -7,7 +7,7 @@
 namespace shv::ldap {
 std::vector<std::string> getGroupsForUser(const std::unique_ptr<shv::ldap::Ldap>& my_ldap, const std::string_view& base_dn, const std::string_view& field_name, const std::string_view& user_name) {
 	std::vector<std::string> res;
-	auto filter = QStringLiteral(R"(%1=%2)").arg(field_name.data()).arg(user_name.data());
+	auto filter = QStringLiteral(R"(%1=%2)").arg(field_name.data(), user_name.data());
 	auto entries = my_ldap->search(base_dn.data(), qPrintable(filter), {"memberOf"});
 	for (const auto& entry : entries) {
 		for (const auto& [key, values]: entry.keysAndValues) {
@@ -88,6 +88,7 @@ void Ldap::bindSasl(const std::string_view& bind_dn, const std::string_view& bin
 std::vector<Entry> Ldap::search(const std::string_view& base_dn, const std::string_view& filter, const std::vector<std::string_view> requested_attr)
 {
 	// I can't think of a better way of doing this while keeping the input arguments the same.
+	// NOLINTNEXTLINE(modernize-avoid-c-arrays) - we have to make an array for the C api
 	auto attr_array = std::make_unique<char*[]>(requested_attr.size() + 1);
 	std::transform(requested_attr.begin(), requested_attr.end(), attr_array.get(), [] (const std::string_view& str) {
 		return strdup(str.data());

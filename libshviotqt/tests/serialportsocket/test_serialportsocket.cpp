@@ -22,7 +22,7 @@ int main(int argc, char** argv)
 	return doctest::Context(argc, argv).run();
 }
 
-std::tuple<SerialPortSocket*, MockSerialPort*> init_connecton(MockRpcConnection &conn)
+std::tuple<SerialPortSocket*, MockSerialPort*> init_connection(MockRpcConnection &conn)
 {
 	auto *serial = new MockSerialPort("TestSend", &conn);
 	auto *socket = new SerialPortSocket(serial);
@@ -35,7 +35,7 @@ std::tuple<SerialPortSocket*, MockSerialPort*> init_connecton(MockRpcConnection 
 DOCTEST_TEST_CASE("Send")
 {
 	MockRpcConnection conn;
-	auto [socket, serial] = init_connecton(conn);
+	auto [socket, serial] = init_connection(conn);
 
 	RpcMessage rec_msg;
 	QObject::connect(&conn, &MockRpcConnection::rpcMessageReceived, [&rec_msg](const shv::chainpack::RpcMessage &msg) {
@@ -92,7 +92,7 @@ DOCTEST_TEST_CASE("Send")
 DOCTEST_TEST_CASE("Test CRC error")
 {
 	MockRpcConnection conn;
-	auto [socket, serial] = init_connecton(conn);
+	auto [socket, serial] = init_connection(conn);
 
 	RpcRequest rq;
 	rq.setRequestId(1);
@@ -112,10 +112,10 @@ DOCTEST_TEST_CASE("Test CRC error")
 DOCTEST_TEST_CASE("Test RESET message")
 {
 	MockRpcConnection conn;
-	auto [socket, serial] = init_connecton(conn);
+	auto [socket, serial] = init_connection(conn);
 
 	bool reset_received = false;
-	QObject::connect(socket, &SerialPortSocket::socketReset, [&reset_received]() {
+	QObject::connect(socket, &SerialPortSocket::socketReset, [&reset_received]() { // clazy:exclude=lambda-in-connect - the local won't go out of scope here
 		reset_received = true;
 	});
 

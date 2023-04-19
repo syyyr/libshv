@@ -133,7 +133,7 @@ DOCTEST_TEST_CASE("findLongestPrefix")
 		{"shv/bbbb",         map.end()},
 	}) {
 		CAPTURE(it.first);
-		CAPTURE(it.second == map.end() ? "<nothing>" : it.second.key());
+		CAPTURE(it.second == map.cend() ? "<nothing>" : it.second.key());
 		REQUIRE(findLongestPrefix(map, it.first) == it.second);
 	}
 }

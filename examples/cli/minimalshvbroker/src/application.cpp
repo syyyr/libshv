@@ -82,7 +82,7 @@ public:
 	UptimeNode(shv::iotqt::node::ShvNode *parent = nullptr)
 		: Super("uptime", parent)
 	{
-		m_metaMethods.push_back({METH_RESET, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Command});
+		m_metaMethods.emplace_back(METH_RESET, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::MetaMethod::AccessLevel::Command);
 
 		auto *t = new QTimer(this);
 		connect(t, &QTimer::timeout, this, &UptimeNode::incUptime);

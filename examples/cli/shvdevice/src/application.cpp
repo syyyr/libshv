@@ -19,7 +19,7 @@ using namespace std;
 namespace cp = shv::chainpack;
 namespace si = shv::iotqt;
 
-static std::vector<cp::MetaMethod> meta_methods {
+static const std::vector<cp::MetaMethod> meta_methods {
 	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_BROWSE},
 	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, 0, cp::Rpc::ROLE_BROWSE},
 	{cp::Rpc::METH_APP_NAME, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_BROWSE},
@@ -48,7 +48,7 @@ shv::chainpack::RpcValue AppRootNode::callMethod(const StringViewList &shv_path,
 {
 	if(shv_path.empty()) {
 		if(method == cp::Rpc::METH_APP_NAME) {
-			return QCoreApplication::instance()->applicationName().toStdString();
+			return QCoreApplication::applicationName().toStdString();
 		}
 	}
 	return Super::callMethod(shv_path, method, params, user_id);
@@ -81,7 +81,7 @@ Application::Application(int &argc, char **argv, AppCliOptions* cli_opts)
 	connect(m_rpcConnection, &si::rpc::ClientConnection::brokerConnectedChanged, this, &Application::onBrokerConnectedChanged);
 	connect(m_rpcConnection, &si::rpc::ClientConnection::rpcMessageReceived, this, &Application::onRpcMessageReceived);
 
-	AppRootNode *root = new AppRootNode();
+	auto root = new AppRootNode();
 	m_shvTree = new si::node::ShvNodeTree(root, this);
 	connect(m_shvTree->root(), &si::node::ShvRootNode::sendRpcMessage, m_rpcConnection, &si::rpc::ClientConnection::sendMessage);
 	//m_shvTree->mkdir("sys/rproc");
@@ -103,7 +103,7 @@ void Application::onBrokerConnectedChanged(bool is_connected)
 {
 	m_isBrokerConnected = is_connected;
 	if(is_connected) {
-		QTimer::singleShot(0, [this]() {
+		QTimer::singleShot(0, this, [this]() {
 			subscribeChanges();
 			testRpcCall();
 		});
@@ -132,7 +132,7 @@ void Application::onRpcMessageReceived(const shv::chainpack::RpcMessage &msg)
 
 static constexpr int RPC_CALLBACK_TIMEOUT = 2000;
 
-void Application::testRpcCall()
+void Application::testRpcCall() const
 {
 	using namespace shv::iotqt::rpc;
 	auto *rpc_call = RpcCall::create(rpcConnection())

@@ -218,6 +218,7 @@ QString CLIOptions::peekArg(bool &ok) const
 	return ret;
 }
 
+// NOLINTNEXTLINE(modernize-avoid-c-arrays)
 void CLIOptions::parse(int argc, char* argv[])
 {
 	QStringList args;

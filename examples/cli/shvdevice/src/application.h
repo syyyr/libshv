@@ -42,7 +42,7 @@ public:
 private:
 	void onBrokerConnectedChanged(bool is_connected);
 	void onRpcMessageReceived(const shv::chainpack::RpcMessage &msg);
-	void testRpcCall();
+	void testRpcCall() const;
 	void subscribeChanges();
 private:
 	shv::iotqt::rpc::ClientConnection *m_rpcConnection = nullptr;

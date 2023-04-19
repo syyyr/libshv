@@ -17,10 +17,10 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Install/cache ninja, openldap, doctest, and Qt's dependencies
-      uses: awalsh128/cache-apt-pkgs-action@v1.2.1
+    - name: Install/cache clazy, ninja, openldap, doctest, and Qt's dependencies
+      uses: awalsh128/cache-apt-pkgs-action@v1.3.0
       with:
-        packages: ninja-build doctest-dev libgl1-mesa-dev libpulse-dev libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-util1 libxcb-xinerama0 libxkbcommon-x11-0 libldap-dev
+        packages: ninja-build doctest-dev libgl1-mesa-dev libpulse-dev libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-util1 libxcb-xinerama0 libxkbcommon-x11-0 libldap-dev clazy
         version: 1.0
 
     - name: Install Qt
@@ -32,6 +32,6 @@ runs:
         modules: ${{ inputs.modules }}
 
     - name: Configure CMake
-      run: CFLAGS="-Werror" CXXFLAGS="-Werror" cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${{ inputs.additional_cmake_args }} -DUSE_QT6=${{ inputs.use_qt6 }}
+      run: CFLAGS="-Werror" CXXFLAGS="-Werror" cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${{ inputs.additional_cmake_args }} -DUSE_QT6=${{ inputs.use_qt6 }} -DWITH_CLI_EXAMPLES=ON -DWITH_GUI_EXAMPLES=ON
       shell: bash
 

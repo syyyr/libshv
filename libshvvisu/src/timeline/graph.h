@@ -63,8 +63,8 @@ public:
 		SHV_VARIANTMAP_FIELD2(bool, s, setS, eparateChannels, true)
 		SHV_VARIANTMAP_FIELD2(bool, y, setY, AxisVisible, true)
 
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olor, QColor("#c8c8c8"))
-		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorPanel, QColor("#414343"))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olor, QColor(0xc8, 0xc8, 0xc8))
+		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorPanel, QColor(0x41, 0x43, 0x43))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorBackground, QColor(Qt::black))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorAxis, QColor(Qt::gray))
 		SHV_VARIANTMAP_FIELD2(QColor, c, setC, olorCurrentTime, QColor(QStringLiteral("#cced5515")))

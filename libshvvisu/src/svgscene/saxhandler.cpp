@@ -596,9 +596,11 @@ static bool parsePathDataFast(const QString &dataStr, QPainterPath &path)
 		QChar pathElem = *str;
 		++str;
 		QChar endc = *end;
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
 		*const_cast<QChar *>(end) = QChar(0); // parseNumbersArray requires 0-termination that QString cannot guarantee
 		QVarLengthArray<qreal, 8> arg;
 		parseNumbersArray(str, arg);
+		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
 		*const_cast<QChar *>(end) = endc;
 		if (pathElem == QLatin1Char('z') || pathElem == QLatin1Char('Z'))
 			arg.append(0);//dummy

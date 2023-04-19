@@ -33,6 +33,6 @@ int main(int argc, char *argv[])
 	Application a(argc, argv, cli_opts);
 
 	// start event-loop
-	return a.exec();
+	return Application::exec();
 }
 

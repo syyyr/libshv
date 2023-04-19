@@ -55,8 +55,8 @@ protected:
 	void onVerticalScrollBarValueChanged();
 private:
 	Q_SLOT void filterStringChanged(const QString &filter_string);
-	Q_SLOT void on_btClearLog_clicked();
-	Q_SLOT void on_btResizeColumns_clicked();
+	Q_SLOT void btClearLog_clicked();
+	Q_SLOT void btResizeColumns_clicked();
 protected:
 	LogTableModelBase* m_logTableModel = nullptr;
 	LogFilterProxyModel* m_filterModel = nullptr;

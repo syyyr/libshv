@@ -85,7 +85,7 @@ void AclManagerSqlite::checkTableColumn(const QString &table_name, const QString
 		execSql("BEGIN TRANSACTION");
 		execSql(QStringLiteral(R"kkt(
 				ALTER TABLE %1 ADD %2 varchar;
-				)kkt").arg(table_name).arg(column_name));
+				)kkt").arg(table_name, column_name));
 		execSql("COMMIT");
 	}
 }
