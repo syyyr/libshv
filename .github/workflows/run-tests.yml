@@ -63,3 +63,17 @@ jobs:
         with:
           lint_program_with_args: clang-tidy --quiet --warnings-as-errors=*
 
+  clazy:
+    runs-on: ubuntu-22.04
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - uses: ./.github/actions/run-linter
+        with:
+          lint_program_with_args: clazy-standalone --checks=level1,no-fully-qualified-moc-types,no-non-pod-global-static
+
