@@ -115,7 +115,7 @@ DOCTEST_TEST_CASE("Test RESET message")
 	auto [socket, serial] = init_connecton(conn);
 
 	bool reset_received = false;
-	QObject::connect(socket, &SerialPortSocket::socketReset, [&reset_received]() {
+	QObject::connect(socket, &SerialPortSocket::socketReset, [&reset_received]() { // clazy:exclude=lambda-in-connect - the local won't go out of scope here
 		reset_received = true;
 	});
 
