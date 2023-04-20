@@ -40,7 +40,6 @@ jobs:
           qt_version: 6.5.0
           use_qt6: ON
           modules: qtserialport qtwebsockets
-          additional_cmake_args: -DWITH_LDAP=ON
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build --parallel "$(nproc)"
