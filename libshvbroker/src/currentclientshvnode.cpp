@@ -110,7 +110,8 @@ shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack
 				const string &method_param = plist.value(1).asString();
 				if(method_param.empty())
 					SHV_EXCEPTION("Method not specified in params.");
-				shv::chainpack::AccessGrant acg = app->accessGrantForRequest(cli, shv::core::utils::ShvUrl(shv_path_param), method_param, rq.accessGrant());
+				auto shv_url = shv::core::utils::ShvUrl(shv_path_param);
+				shv::chainpack::AccessGrant acg = app->aclManager()->accessGrantForShvPath(cli->loggedUserName(), shv_url, method_param, cli->isMasterBrokerConnection(), shv_url.isUpTreeMountPointRelative(), rq.accessGrant());
 				return acg.isValid()? acg.toRpcValue(): nullptr;
 			}
 			return nullptr;
@@ -127,7 +128,8 @@ shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack
 				const string &method_param = plist.value(1).asString();
 				if(method_param.empty())
 					SHV_EXCEPTION("Method not specified in params.");
-				shv::chainpack::AccessGrant acg = app->accessGrantForRequest(cli, shv::core::utils::ShvUrl(shv_path_param), method_param, rq.accessGrant());
+				auto shv_url = shv::core::utils::ShvUrl(shv_path_param);
+				shv::chainpack::AccessGrant acg = app->aclManager()->accessGrantForShvPath(cli->loggedUserName(), shv_url, method_param, cli->isMasterBrokerConnection(), shv_url.isUpTreeMountPointRelative(), rq.accessGrant());
 				if(acg.isValid()) {
 					auto level = shv::iotqt::node::ShvNode::basicGrantToAccessLevel(acg);
 					if(level > 0) {

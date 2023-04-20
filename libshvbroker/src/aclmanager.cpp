@@ -1,7 +1,9 @@
 #include "aclmanager.h"
 #include "brokerapp.h"
+#include "currentclientshvnode.h"
 
 #include <shv/chainpack/cponreader.h>
+#include <shv/core/utils/shvurl.h>
 #include <shv/coreqt/log.h>
 #include <shv/iotqt/utils.h>
 
@@ -12,6 +14,9 @@
 #define logAclManagerD() nCDebug("AclManager")
 #define logAclManagerM() nCMessage("AclManager")
 #define logAclManagerI() nCInfo("AclManager")
+
+#define logAclResolveW() nCWarning("AclResolve")
+#define logAclResolveM() nCMessage("AclResolve")
 
 namespace cp = shv::chainpack;
 
@@ -292,6 +297,165 @@ chainpack::RpcValue AclManager::userProfile(const std::string &user_name)
 		ret = chainpack::Utils::mergeMaps(ret, r.profile);
 	}
 	return ret;
+}
+
+#ifdef WITH_SHV_LDAP
+void AclManager::setGroupForLdapUser(const std::string_view& user_name, const std::string_view& group_name)
+{
+	m_ldapUserGroups.emplace(user_name, group_name);
+}
+#endif
+
+cp::AccessGrant AclManager::accessGrantForShvPath(const std::string& user_name, const shv::core::utils::ShvUrl &shv_url, const std::string &method, bool is_request_from_master_broker, bool is_service_provider_mount_point_relative_call, const shv::chainpack::RpcValue &rq_grant)
+{
+	logAclResolveM() << "==== accessGrantForShvPath user:" << user_name << "requested path:" << shv_url.toString() << "method:" << method << "request grant:" << rq_grant.toCpon();
+	if(is_service_provider_mount_point_relative_call) {
+		auto ret = cp::AccessGrant(cp::Rpc::ROLE_WRITE);
+		logAclResolveM() << "==== resolved path:" << shv_url.toString() << "grant:" << ret.toRpcValue().toCpon();
+		return ret;
+	}
+#ifdef USE_SHV_PATHS_GRANTS_CACHE
+	PathGrantCache *user_path_grants = m_userPathGrantCache.object(user_name);
+	if(user_path_grants) {
+		cp::Rpc::AccessGrant *pg = user_path_grants->object(shv_path);
+		if(pg) {
+			logAclD() << "\t cache hit:" << pg->grant << "weight:" << pg->weight;
+			return *pg;
+		}
+	}
+#endif
+	auto request_grant = cp::AccessGrant::fromRpcValue(rq_grant);
+	if(is_request_from_master_broker) {
+		if(request_grant.isValid()) {
+			// access resolved by master broker already, forward use this
+			logAclResolveM() << "\t Resolved on master broker already.";
+			return request_grant;
+		}
+	}
+	else {
+		if(request_grant.isValid()) {
+			logAclResolveM() << "Client defined grants in RPC request are not implemented yet and will be ignored.";
+		}
+	}
+	std::vector<AclManager::FlattenRole> flatten_user_roles;
+	if(is_request_from_master_broker) {
+		// set masterBroker role to requests from master broker without access grant specified
+		// This is used mainly for service calls as (un)subscribe propagation to slave brokers etc.
+		if(shv_url.pathPart() == cp::Rpc::DIR_BROKER_APP) {
+			// master broker has always rd grant to .broker/app path
+			return cp::AccessGrant(cp::Rpc::ROLE_WRITE);
+		}
+		flatten_user_roles = flattenRole(cp::Rpc::ROLE_MASTER_BROKER);
+	}
+	else {
+		if (auto user_def = user(user_name); user_def.isValid()) {
+			flatten_user_roles = userFlattenRoles(user_name, user_def.roles);
+		}
+#ifdef WITH_SHV_LDAP
+		// I don't have to check if ldap is enabled - if m_ldapUserGroups is non-empty, it must've been enabled.
+		else if (auto it = m_ldapUserGroups.find(user_name); it != m_ldapUserGroups.end()) {
+			flatten_user_roles = userFlattenRoles(user_name, {it->second});
+		}
+#endif
+
+	}
+	logAclResolveM() << "searched rules:" << [this, &flatten_user_roles]()
+	{
+		auto to_str = [](const QVariant &v, int len) {
+			bool right = false;
+			if(len < 0) {
+				right = true;
+				len = -len;
+			}
+			QString s = v.toString();
+			if(s.length() < len) {
+				QString spaces = QString(len - s.length(), ' ');
+				if(right)
+					s = spaces + s;
+				else
+					s = s + spaces;
+			}
+			return s;
+		};
+		std::vector<int> cols = {15, 10, 10, 20, 15, 1};
+		const int row_len = 80;
+		QString tbl = "\n" + QString(row_len, '-') + '\n';
+		tbl += to_str("role", cols[0]);
+		tbl += to_str("weight", cols[1]);
+		tbl += to_str("service", cols[2]);
+		tbl += to_str("pattern", cols[3]);
+		tbl += to_str("method", cols[4]);
+		tbl += to_str("grant", cols[5]);
+		tbl += "\n" + QString(row_len, '-');
+		for(const AclManager::FlattenRole &role : flatten_user_roles) {
+			const iotqt::acl::AclRoleAccessRules &role_rules = accessRoleRules(role.name);
+			for(const iotqt::acl::AclAccessRule &access_rule : role_rules) {
+				tbl += "\n";
+				tbl += to_str(role.name.c_str(), cols[0]);
+				tbl += to_str(role.weight, cols[1]);
+				tbl += to_str(access_rule.service.c_str(), cols[2]);
+				tbl += to_str(access_rule.pathPattern.c_str(), cols[3]);
+				tbl += to_str(access_rule.method.c_str(), cols[4]);
+				tbl += to_str(access_rule.grant.toRpcValue().toCpon().c_str(), cols[5]);
+			}
+		}
+		tbl += "\n" + QString(row_len, '-');
+		return tbl;
+	}();
+	// find most specific path grant for role with highest weight
+	// user_flattent_grants are sorted by weight DESC
+	iotqt::acl::AclAccessRule most_specific_rule;
+	if(shv_url.pathPart() == BROKER_CURRENT_CLIENT_SHV_PATH) {
+		// client has WR grant on currentClient node
+		most_specific_rule.grant = cp::AccessGrant{cp::Rpc::ROLE_WRITE};
+	}
+	else {
+		// roles are sorted in weight DESC
+		int old_weight = std::numeric_limits<int>::max();
+		for(const AclManager::FlattenRole &flatten_role : flatten_user_roles) {
+			if(flatten_role.weight != old_weight) {
+				if(most_specific_rule.isValid()) {
+					// roles with lower weight have lower priority, skip them
+					break;
+				}
+				old_weight = flatten_role.weight;
+			}
+			logAclResolveM() << "----- checking role:" << flatten_role.name << "with weight:" << flatten_role.weight << "nest level:" << flatten_role.nestLevel;
+			const iotqt::acl::AclRoleAccessRules &role_rules = accessRoleRules(flatten_role.name);
+			if(role_rules.empty()) {
+				logAclResolveM() << "\t no paths defined.";
+			}
+			else for(const iotqt::acl::AclAccessRule &access_rule : role_rules) {
+				// rules are sorted as most specific first
+				logAclResolveM() << "rule:" << access_rule.toRpcValue().toCpon();
+				if(access_rule.isPathMethodMatch(shv_url, method)) {
+					if(access_rule.isMoreSpecificThan(most_specific_rule)) {
+						logAclResolveM() << "\t+++HIT more specific rule than previous:"
+											<< (most_specific_rule.isValid()? most_specific_rule.toRpcValue().toCpon(): "INVALID")
+											<< "found";
+						most_specific_rule = access_rule;
+					}
+					else if(!most_specific_rule.isMoreSpecificThan(access_rule)) {
+						// the same specific rules, this is problem
+						logAclResolveW() << "the same specific rules found!";
+						logAclResolveW() << "\t" << access_rule.toRpcValue().toCpon();
+						logAclResolveW() << "\t" << most_specific_rule.toRpcValue().toCpon();
+					}
+					else {
+						logAclResolveM() << "\t---HIT but rule is not more specific than:" << most_specific_rule.toRpcValue().toCpon();
+					}
+				}
+			}
+		}
+	}
+	if(!most_specific_rule.isValid()) {
+		logAclResolveM() << "no match found, permission denied!";
+	}
+	logAclResolveM() << "access user:" << user_name
+				 << "shv_path:" << shv_url.toString()
+				 << "rq_grant:" << (rq_grant.isValid()? rq_grant.toCpon(): "<none>")
+				 << "==== path:" << most_specific_rule.pathPattern << "method:" << most_specific_rule.method << "grant:" << most_specific_rule.grant.toRpcValue().toCpon();
+	return most_specific_rule.grant;
 }
 
 //================================================================

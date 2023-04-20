@@ -13,6 +13,7 @@ inline unsigned qHash(const std::string &s) noexcept //Q_DECL_NOEXCEPT_EXPR(noex
 
 #include "shvbrokerglobal.h"
 #include "appclioptions.h"
+#include "currentclientshvnode.h"
 #include "tunnelsecretlist.h"
 #include "aclmanager.h"
 
@@ -37,6 +38,8 @@ namespace shv { namespace chainpack { class RpcSignal; }}
 
 namespace shv {
 namespace broker {
+
+const std::string BROKER_CURRENT_CLIENT_SHV_PATH = std::string(shv::chainpack::Rpc::DIR_BROKER) + '/' + CurrentClientShvNode::NodeId;
 
 namespace rpc { class WebSocketServer; class BrokerTcpServer; class ClientConnectionOnBroker;  class MasterBrokerConnection; class CommonRpcClientHandle; }
 
@@ -79,10 +82,6 @@ public:
 	rpc::WebSocketServer* webSocketServer();
 #endif
 
-#ifdef WITH_SHV_LDAP
-	void setGroupForLdapUser(const std::string_view& user_name, const std::string_view& group_name);
-#endif
-
 	rpc::CommonRpcClientHandle* commonClientConnectionById(int connection_id);
 
 	QSqlDatabase sqlConfigConnection();
@@ -92,8 +91,6 @@ public:
 	void reloadConfig();
 	void reloadConfigRemountDevices();
 	bool checkTunnelSecret(const std::string &s);
-
-	chainpack::AccessGrant accessGrantForRequest(rpc::CommonRpcClientHandle *conn, const core::utils::ShvUrl &shv_url, const std::string &method, const chainpack::RpcValue &rq_grant);
 
 	void checkLogin(const chainpack::UserLoginContext &ctx, const std::function<void(chainpack::UserLoginResult)> cb);
 
@@ -164,7 +161,6 @@ protected:
 #endif
 #ifdef WITH_SHV_LDAP
 	// LDAP username -> group
-	std::map<std::string, std::string> m_ldapUserGroups;
 	std::optional<LdapConfig> m_ldapConfig;
 #endif
 
