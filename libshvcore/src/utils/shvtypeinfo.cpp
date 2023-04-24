@@ -1155,8 +1155,10 @@ void ShvTypeInfo::forEachProperty(std::function<void (const std::string &shv_pat
 	for(const auto& [device_path, device_type] : m_devicePaths) {
 		if(auto it = m_deviceDescriptions.find(device_type); it != m_deviceDescriptions.end()) {
 			for(const auto &property_descr : it->second.properties) {
-				const auto shv_path = shv::core::utils::joinPath(device_path, property_descr.name());
-				fn(shv_path, property_descr);
+				if (!property_descr.name().empty()) {
+					const auto shv_path = shv::core::utils::joinPath(device_path, property_descr.name());
+					fn(shv_path, property_descr);
+				}
 			}
 		}
 	}
