@@ -707,6 +707,11 @@ RpcValue RpcValue::fromCpon(const std::string &str, std::string *err)
 	return ret;
 }
 
+RpcValue string_literals::operator""_cpon(const char* data, size_t size)
+{
+	return RpcValue::fromCpon(std::string{data, size});
+}
+
 std::string RpcValue::toChainPack() const
 {
 	std::ostringstream out;
