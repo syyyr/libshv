@@ -54,6 +54,12 @@ if(BUILD_TESTING)
 		message(STATUS "doctest library NOT found, disabling tests")
 		set(BUILD_TESTING OFF)
 	endif()
+
+	find_package(trompeloeil QUIET)
+	if(NOT trompeloeil_FOUND)
+		message(STATUS "trompeloeil library NOT found, disabling tests")
+		set(BUILD_TESTING OFF)
+	endif()
 endif()
 
 if (NOT TARGET libnecrolog)
