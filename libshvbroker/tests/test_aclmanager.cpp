@@ -70,9 +70,9 @@ protected:
 };
 
 #define EXPECT_aclUsers(...) expectations.emplace_back(NAMED_REQUIRE_CALL(*acl, aclUsers()).RETURN(std::vector<std::string>{__VA_ARGS__}))
-#define EXPECT_aclUser(user, ...) expectations.emplace_back(NAMED_REQUIRE_CALL(*acl, aclUser(user)).RETURN(shv::iotqt::acl::AclUser(shv::iotqt::acl::AclPassword("foobar", shv::iotqt::acl::AclPassword::Format::Plain), {__VA_ARGS__})))
+#define EXPECT_aclUser(user, ...) expectations.emplace_back(NAMED_REQUIRE_CALL(*acl, aclUser(user)).RETURN(shv::iotqt::acl::AclUser(shv::iotqt::acl::AclPassword("foobar", shv::iotqt::acl::AclPassword::Format::Plain), __VA_ARGS__)))
 #define EXPECT_aclRole(role, ...) expectations.emplace_back(NAMED_REQUIRE_CALL(*acl, aclRole(role)).RETURN(shv::iotqt::acl::AclRole(std::vector<std::string> __VA_ARGS__)))
-#define EXPECT_aclAccessRoles(...) expectations.emplace_back(NAMED_REQUIRE_CALL(*acl, aclAccessRoles()).RETURN(std::vector<std::string>{__VA_ARGS__}))
+#define EXPECT_aclAccessRoles(...) expectations.emplace_back(NAMED_REQUIRE_CALL(*acl, aclAccessRoles()).RETURN(std::vector<std::string> __VA_ARGS__ ))
 #define EXPECT_aclAccessRoleRules(role, rules_cpon) expectations.emplace_back(NAMED_REQUIRE_CALL(*acl, aclAccessRoleRules(role)).RETURN(shv::iotqt::acl::AclRoleAccessRules::fromRpcValue(rules_cpon)))
 
 using namespace shv::chainpack::string_literals;
@@ -194,4 +194,125 @@ DOCTEST_TEST_CASE("userFlattenRoles")
 
 	REQUIRE(acl->userFlattenRoles("", input_roles) == expected_result);
 
+}
+
+DOCTEST_TEST_CASE("accessGrantForShvPath")
+{
+	NecroLog::setTopicsLogThresholds("AclManager:D,AclResolve:D");
+	auto acl = std::make_unique<MockAclManager>(nullptr);
+	std::string user;
+	std::string shv_path;
+	std::string method;
+	bool is_request_from_master_broker = false;
+	bool is_service_provider_mount_point_relative_call = false;
+
+	bool expected_valid;
+	int expected_access_level;
+
+	std::vector<std::unique_ptr<trompeloeil::expectation>> expectations;
+
+	DOCTEST_SUBCASE("no users")
+	{
+		user = "invalid";
+		shv_path = "shv/test";
+		method = "ls";
+		expected_valid = false;
+
+		EXPECT_aclUsers();
+	}
+
+	DOCTEST_SUBCASE("user exists")
+	{
+		user = "user_name";
+		shv_path = "shv/test";
+		method = "ls";
+		EXPECT_aclUsers(user);
+
+		DOCTEST_SUBCASE("no roles")
+		{
+			expected_valid = false;
+			EXPECT_aclUser(user, {});
+		}
+
+		DOCTEST_SUBCASE("rule matching")
+		{
+			EXPECT_aclUser(user, {"my_role"});
+			EXPECT_aclRole("my_role", {}); // No subroles.
+			EXPECT_aclAccessRoles({"my_role"});
+
+			DOCTEST_SUBCASE("no rules")
+			{
+				expected_valid = false;
+				EXPECT_aclAccessRoleRules("my_role", {});
+			}
+
+			DOCTEST_SUBCASE("one matching rule")
+			{
+				expected_valid = true;
+				expected_access_level = shv::chainpack::MetaMethod::AccessLevel::Admin;
+				EXPECT_aclAccessRoleRules("my_role", R"([
+					{"method":"", "pathPattern":"**", "role":"su"}
+				])"_cpon);
+			}
+
+			DOCTEST_SUBCASE("one non-matching rule")
+			{
+				expected_valid = false;
+				EXPECT_aclAccessRoleRules("my_role", R"([
+					{"method":"", "pathPattern":"shv/test/subpath", "role":"su"}
+				])"_cpon);
+			}
+
+			DOCTEST_SUBCASE("two matching rules, the first takes precedence")
+			{
+				expected_valid = true;
+
+				DOCTEST_SUBCASE("matches with the wildcard")
+				{
+					expected_access_level = shv::chainpack::MetaMethod::AccessLevel::Admin;
+					EXPECT_aclAccessRoleRules("my_role", R"([
+						{"method":"", "pathPattern":"shv/**", "role":"su"},
+						{"method":"", "pathPattern":"shv/test", "role":"rd"}
+					])"_cpon);
+				}
+
+				DOCTEST_SUBCASE("matches with the path")
+				{
+					expected_access_level = shv::chainpack::MetaMethod::AccessLevel::Read;
+					EXPECT_aclAccessRoleRules("my_role", R"([
+						{"method":"", "pathPattern":"shv/test", "role":"rd"}
+						{"method":"", "pathPattern":"shv/**", "role":"su"},
+					])"_cpon);
+				}
+			}
+
+			DOCTEST_SUBCASE("two rules, only one matches")
+			{
+				expected_valid = true;
+
+				DOCTEST_SUBCASE("the first one")
+				{
+					expected_access_level = shv::chainpack::MetaMethod::AccessLevel::Admin;
+					EXPECT_aclAccessRoleRules("my_role", R"([
+						{"method":"", "pathPattern":"shv/**", "role":"su"},
+						{"method":"", "pathPattern":"shv/test/subpath", "role":"rd"}
+					])"_cpon);
+				}
+				DOCTEST_SUBCASE("the second one")
+				{
+					expected_access_level = shv::chainpack::MetaMethod::AccessLevel::Admin;
+					EXPECT_aclAccessRoleRules("my_role", R"([
+						{"method":"", "pathPattern":"shv/test/subpath", "role":"rd"}
+						{"method":"", "pathPattern":"shv/**", "role":"su"},
+					])"_cpon);
+				}
+			}
+		}
+	}
+
+	auto acg = acl->accessGrantForShvPath(user, shv::core::utils::ShvUrl{shv_path}, method, is_request_from_master_broker, is_service_provider_mount_point_relative_call, {});
+	REQUIRE(acg.isValid() == expected_valid);
+	if (expected_valid) {
+		REQUIRE(shv::iotqt::node::ShvNode::basicGrantToAccessLevel(acg) == expected_access_level);
+	}
 }

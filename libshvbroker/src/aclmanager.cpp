@@ -248,12 +248,12 @@ std::vector<std::string> AclManager::userFlattenRoles(const std::string &user_na
 		QQueue<std::string> role_q;
 		auto enqueue = [&role_q, &flattenRoles] (const auto& role) {
 			if (std::ranges::find(flattenRoles, role) != flattenRoles.end() || role_q.contains(role)) {
-				shvWarning() << "Duplicate role detected:" << role;
+				shvDebug() << "Duplicate role detected:" << role;
 				return;
 			}
 			role_q.enqueue(role);
 		};
-		std::ranges::for_each(roles, [&enqueue] (const auto& role) { enqueue(role); });
+		std::ranges::for_each(roles, enqueue);
 		while (!role_q.empty()) {
 			auto cur = role_q.dequeue();
 			flattenRoles.emplace_back(cur);
@@ -382,51 +382,33 @@ cp::AccessGrant AclManager::accessGrantForShvPath(const std::string& user_name, 
 		tbl += "\n" + QString(row_len, '-');
 		return tbl;
 	}();
-	// find most specific path grant for role with highest weight
-	// user_flattent_grants are sorted by weight DESC
-	iotqt::acl::AclAccessRule most_specific_rule;
+
+	// find first matching rule
 	if(shv_url.pathPart() == BROKER_CURRENT_CLIENT_SHV_PATH) {
 		// client has WR grant on currentClient node
-		most_specific_rule.grant = cp::AccessGrant{cp::Rpc::ROLE_WRITE};
+		return cp::AccessGrant{cp::Rpc::ROLE_WRITE};
 	}
-	else {
-		for(const std::string &flatten_role : flatten_user_roles) {
-			logAclResolveM() << "----- checking role:" << flatten_role;
-			const iotqt::acl::AclRoleAccessRules &role_rules = accessRoleRules(flatten_role);
-			if(role_rules.empty()) {
-				logAclResolveM() << "\t no paths defined.";
-			}
-			else for(const iotqt::acl::AclAccessRule &access_rule : role_rules) {
-				// rules are sorted as most specific first
-				logAclResolveM() << "rule:" << access_rule.toRpcValue().toCpon();
-				if(access_rule.isPathMethodMatch(shv_url, method)) {
-					if(access_rule.isMoreSpecificThan(most_specific_rule)) {
-						logAclResolveM() << "\t+++HIT more specific rule than previous:"
-											<< (most_specific_rule.isValid()? most_specific_rule.toRpcValue().toCpon(): "INVALID")
-											<< "found";
-						most_specific_rule = access_rule;
-					}
-					else if(!most_specific_rule.isMoreSpecificThan(access_rule)) {
-						// the same specific rules, this is problem
-						logAclResolveW() << "the same specific rules found!";
-						logAclResolveW() << "\t" << access_rule.toRpcValue().toCpon();
-						logAclResolveW() << "\t" << most_specific_rule.toRpcValue().toCpon();
-					}
-					else {
-						logAclResolveM() << "\t---HIT but rule is not more specific than:" << most_specific_rule.toRpcValue().toCpon();
-					}
-				}
+
+	for (const std::string& flatten_role : flatten_user_roles) {
+		logAclResolveM() << "----- checking role:" << flatten_role;
+		auto role_rules = accessRoleRules(flatten_role);
+		if (role_rules.empty()) {
+			logAclResolveM() << "\t no paths defined.";
+		}
+
+		for (const auto& access_rule : role_rules) {
+			logAclResolveM() << "rule:" << access_rule.toRpcValue().toCpon();
+			if (access_rule.isPathMethodMatch(shv_url, method)) {
+				logAclResolveM() << "access user:" << user_name
+					<< "shv_path:" << shv_url.toString()
+					<< "rq_grant:" << (rq_grant.isValid()? rq_grant.toCpon(): "<none>")
+					<< "==== path:" << access_rule.pathPattern << "method:" << access_rule.method << "grant:" << access_rule.grant.toRpcValue().toCpon();
+				return access_rule.grant;
 			}
 		}
 	}
-	if(!most_specific_rule.isValid()) {
-		logAclResolveM() << "no match found, permission denied!";
-	}
-	logAclResolveM() << "access user:" << user_name
-				 << "shv_path:" << shv_url.toString()
-				 << "rq_grant:" << (rq_grant.isValid()? rq_grant.toCpon(): "<none>")
-				 << "==== path:" << most_specific_rule.pathPattern << "method:" << most_specific_rule.method << "grant:" << most_specific_rule.grant.toRpcValue().toCpon();
-	return most_specific_rule.grant;
+
+	return cp::AccessGrant{};
 }
 
 //================================================================
