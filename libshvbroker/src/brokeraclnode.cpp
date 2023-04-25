@@ -295,18 +295,12 @@ chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringV
 		AclManager *mng = BrokerApp::instance()->aclManager();
 		acl::AclRole role_def = mng->role(role_name);
 		if(method == cp::Rpc::METH_GET) {
-			if(pn == ACL_ROLE_WEIGHT)
-				return role_def.weight;
 			if(pn == ACL_ROLE_ROLES)
 				return shv::chainpack::RpcValue::List::fromStringList(role_def.roles);
 			if(pn == ACL_ROLE_PROFILE)
 				return role_def.profile;
 		}
 		if(method == cp::Rpc::METH_SET) {
-			if(pn == ACL_ROLE_WEIGHT) {
-				role_def.weight = params.toInt();
-				return callMethod(StringViewList{}, M_SET_VALUE, cp::RpcValue::List{role_name, role_def.toRpcValue()}, user_id);
-			}
 			if(pn == ACL_ROLE_ROLES) {
 				role_def.roles.clear();
 				for(const auto &rv : params.asList())

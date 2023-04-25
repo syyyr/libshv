@@ -8,6 +8,7 @@
 #include <shv/iotqt/utils.h>
 
 #include <QCryptographicHash>
+#include <QQueue>
 
 #include <fstream>
 
@@ -103,9 +104,8 @@ shv::iotqt::acl::AclRole AclManager::role(const std::string &role_name)
 	auto it = m_cache.aclRoles.find(role_name);
 	if(it == m_cache.aclRoles.end())
 		return shv::iotqt::acl::AclRole();
-	if(!it->second.isValid()) {
-		it->second = aclRole(role_name);
-	}
+
+	it->second = aclRole(role_name);
 	return it->second;
 }
 
@@ -240,51 +240,32 @@ void AclManager::aclSetAccessRoleRules(const std::string &role_name, const shv::
 	SHV_EXCEPTION("Role paths definition is read only.");
 }
 
-std::map<std::string, AclManager::FlattenRole> AclManager::flattenRole_helper(const std::string &role_name, int nest_level)
-{
-	std::map<std::string, FlattenRole> ret;
-	shv::iotqt::acl::AclRole ar = aclRole(role_name);
-	if(ar.isValid()) {
-		FlattenRole fr{role_name, ar.weight, nest_level};
-		ret[role_name] = std::move(fr);
-		for(const auto &rl : ar.roles) {
-			auto it = ret.find(rl);
-			if(it != ret.end()) {
-				shvWarning() << "Cyclic reference in roles detected for name:" << rl;
-				continue;
-			}
-			auto ret2 = flattenRole_helper(rl, ++nest_level);
-			ret.insert(ret2.begin(), ret2.end());
-		}
-	}
-	else {
-		shvWarning() << "role:" << role_name << "is not defined";
-	}
-	return ret;
-}
-
-std::vector<AclManager::FlattenRole> AclManager::userFlattenRoles(const std::string &user_name, const std::vector<std::string>& roles)
+std::vector<std::string> AclManager::userFlattenRoles(const std::string &user_name, const std::vector<std::string>& roles)
 {
 	if(m_cache.userFlattenRoles.find(user_name) == m_cache.userFlattenRoles.end()) {
-		std::map<std::string, AclManager::FlattenRole> unique_roles;
-		for(const auto &role : roles) {
-			auto gg = flattenRole_helper(role, 1);
-			unique_roles.insert(gg.begin(), gg.end());
+		auto& flattenRoles = m_cache.userFlattenRoles.emplace(user_name, std::vector<std::string>{}).first->second;
+		QQueue<std::string> role_q;
+		auto enqueue = [&role_q, &flattenRoles] (const auto& role) {
+			if (std::ranges::find(flattenRoles, role) != flattenRoles.end() || role_q.contains(role)) {
+				shvWarning() << "Duplicate role detected:" << role;
+				return;
+			}
+			role_q.enqueue(role);
+		};
+		std::ranges::for_each(roles, [&enqueue] (const auto& role) { enqueue(role); });
+		while (!role_q.empty()) {
+			auto cur = role_q.dequeue();
+			flattenRoles.emplace_back(cur);
+			auto subroles = aclRole(cur).roles;
+			for (const auto& subrole : subroles) {
+				enqueue(subrole);
+			}
 		}
-		std::vector<AclManager::FlattenRole> lst;
-		for(const auto &kv : unique_roles)
-			lst.push_back(kv.second);
-		std::sort(lst.begin(), lst.end(), [](const FlattenRole &r1, const FlattenRole &r2) {
-			if(r1.weight == r2.weight)
-				return r1.nestLevel < r2.nestLevel;
-			return r1.weight > r2.weight;
-		});
-		m_cache.userFlattenRoles[user_name] = lst;
 	}
 	return m_cache.userFlattenRoles[user_name];
 }
 
-std::vector<AclManager::FlattenRole> AclManager::flattenRole(const std::string &role)
+std::vector<std::string> AclManager::flattenRole(const std::string &role)
 {
 	return userFlattenRoles("_Role#Key:" + role, {role});
 }
@@ -293,7 +274,7 @@ chainpack::RpcValue AclManager::userProfile(const std::string &user_name)
 {
 	chainpack::RpcValue ret;
 	for(const auto &rn : userFlattenRoles(user_name, user(user_name).roles)) {
-		shv::iotqt::acl::AclRole r = role(rn.name);
+		shv::iotqt::acl::AclRole r = role(rn);
 		ret = chainpack::Utils::mergeMaps(ret, r.profile);
 	}
 	return ret;
@@ -337,7 +318,7 @@ cp::AccessGrant AclManager::accessGrantForShvPath(const std::string& user_name, 
 			logAclResolveM() << "Client defined grants in RPC request are not implemented yet and will be ignored.";
 		}
 	}
-	std::vector<AclManager::FlattenRole> flatten_user_roles;
+	std::vector<std::string> flatten_user_roles;
 	if(is_request_from_master_broker) {
 		// set masterBroker role to requests from master broker without access grant specified
 		// This is used mainly for service calls as (un)subscribe propagation to slave brokers etc.
@@ -377,26 +358,24 @@ cp::AccessGrant AclManager::accessGrantForShvPath(const std::string& user_name, 
 			}
 			return s;
 		};
-		std::vector<int> cols = {15, 10, 10, 20, 15, 1};
-		const int row_len = 80;
+		std::vector<int> cols = {15, 10, 20, 15, 1};
+		const int row_len = 70;
 		QString tbl = "\n" + QString(row_len, '-') + '\n';
 		tbl += to_str("role", cols[0]);
-		tbl += to_str("weight", cols[1]);
-		tbl += to_str("service", cols[2]);
-		tbl += to_str("pattern", cols[3]);
-		tbl += to_str("method", cols[4]);
-		tbl += to_str("grant", cols[5]);
+		tbl += to_str("service", cols[1]);
+		tbl += to_str("pattern", cols[2]);
+		tbl += to_str("method", cols[3]);
+		tbl += to_str("grant", cols[4]);
 		tbl += "\n" + QString(row_len, '-');
-		for(const AclManager::FlattenRole &role : flatten_user_roles) {
-			const iotqt::acl::AclRoleAccessRules &role_rules = accessRoleRules(role.name);
+		for(const std::string &role : flatten_user_roles) {
+			const iotqt::acl::AclRoleAccessRules &role_rules = accessRoleRules(role);
 			for(const iotqt::acl::AclAccessRule &access_rule : role_rules) {
 				tbl += "\n";
-				tbl += to_str(role.name.c_str(), cols[0]);
-				tbl += to_str(role.weight, cols[1]);
-				tbl += to_str(access_rule.service.c_str(), cols[2]);
-				tbl += to_str(access_rule.pathPattern.c_str(), cols[3]);
-				tbl += to_str(access_rule.method.c_str(), cols[4]);
-				tbl += to_str(access_rule.grant.toRpcValue().toCpon().c_str(), cols[5]);
+				tbl += to_str(role.c_str(), cols[0]);
+				tbl += to_str(access_rule.service.c_str(), cols[1]);
+				tbl += to_str(access_rule.pathPattern.c_str(), cols[2]);
+				tbl += to_str(access_rule.method.c_str(), cols[3]);
+				tbl += to_str(access_rule.grant.toRpcValue().toCpon().c_str(), cols[4]);
 			}
 		}
 		tbl += "\n" + QString(row_len, '-');
@@ -410,18 +389,9 @@ cp::AccessGrant AclManager::accessGrantForShvPath(const std::string& user_name, 
 		most_specific_rule.grant = cp::AccessGrant{cp::Rpc::ROLE_WRITE};
 	}
 	else {
-		// roles are sorted in weight DESC
-		int old_weight = std::numeric_limits<int>::max();
-		for(const AclManager::FlattenRole &flatten_role : flatten_user_roles) {
-			if(flatten_role.weight != old_weight) {
-				if(most_specific_rule.isValid()) {
-					// roles with lower weight have lower priority, skip them
-					break;
-				}
-				old_weight = flatten_role.weight;
-			}
-			logAclResolveM() << "----- checking role:" << flatten_role.name << "with weight:" << flatten_role.weight << "nest level:" << flatten_role.nestLevel;
-			const iotqt::acl::AclRoleAccessRules &role_rules = accessRoleRules(flatten_role.name);
+		for(const std::string &flatten_role : flatten_user_roles) {
+			logAclResolveM() << "----- checking role:" << flatten_role;
+			const iotqt::acl::AclRoleAccessRules &role_rules = accessRoleRules(flatten_role);
 			if(role_rules.empty()) {
 				logAclResolveM() << "\t no paths defined.";
 			}

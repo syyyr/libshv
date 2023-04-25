@@ -36,4 +36,15 @@ target_link_libraries(libshvbroker PUBLIC Qt::Sql libshviotqt)
 target_include_directories(libshvbroker PUBLIC include)
 target_compile_definitions(libshvbroker PRIVATE SHVBROKER_BUILD_DLL)
 
+if(BUILD_TESTING)
+	function(add_shvbroker_test test_name)
+		add_executable(test_broker_${test_name}
+			tests/test_${test_name}.cpp
+			)
+		target_link_libraries(test_broker_${test_name} libshvbroker)
+		add_test(NAME test_broker_${test_name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_broker_${test_name})
+	endfunction()
+	add_shvbroker_test(aclmanager)
+endif()
+
 install(TARGETS libshvbroker)
