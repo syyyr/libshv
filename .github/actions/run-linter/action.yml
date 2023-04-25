@@ -37,4 +37,4 @@ runs:
         fi
         echo "Changed files:"
         printf '%s\n' "${CHANGED_FILES[@]}"
-        printf '%s\n' "${CHANGED_FILES[@]}" | parallel --verbose --jobs "$(nproc)" ${{ inputs.lint_program_with_args }}
+        printf '%s\n' "${CHANGED_FILES[@]}" | parallel --verbose --jobs "$(nproc)" --plus _=[{#}/{##}] ${{ inputs.lint_program_with_args }} {}
