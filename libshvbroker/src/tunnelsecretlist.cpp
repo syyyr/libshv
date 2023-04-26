@@ -50,7 +50,7 @@ std::string TunnelSecretList::createSecret()
 		data[i] = std::rand();
 #endif
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-#if QT_VERSION_MAJOR >= 6
+#if QT_VERSION_MAJOR >= 6 && QT_VERSION_MINOR >= 3
 	hash.addData(QByteArrayView(reinterpret_cast<const char*>(data.data()), DATA_LEN * sizeof(data[0])));
 #else
 	hash.addData(reinterpret_cast<const char*>(data.data()), DATA_LEN * sizeof(data[0]));

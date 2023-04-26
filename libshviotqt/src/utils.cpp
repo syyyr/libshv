@@ -10,7 +10,7 @@ namespace shv::iotqt::utils {
 std::string sha1Hex(const std::string &s)
 {
 	QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-#if QT_VERSION_MAJOR >= 6
+#if QT_VERSION_MAJOR >= 6 && QT_VERSION_MINOR >= 3
 	hash.addData(QByteArrayView(s.data(), static_cast<int>(s.length())));
 #else
 	hash.addData(s.data(), static_cast<int>(s.length()));
