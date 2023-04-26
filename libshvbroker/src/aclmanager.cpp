@@ -119,8 +119,9 @@ void AclManager::setRole(const std::string &role_name, const shv::iotqt::acl::Ac
 std::vector<std::string> AclManager::accessRoles()
 {
 	if(m_cache.aclAccessRules.empty()) {
-		for(const auto &id : aclAccessRoles())
-			m_cache.aclAccessRules[id];
+		for(const auto &id : aclAccessRoles()) {
+			m_cache.aclAccessRules.emplace(id, std::pair<shv::iotqt::acl::AclRoleAccessRules, bool>({}, false));
+		}
 	}
 	return cp::Utils::mapKeys(m_cache.aclAccessRules);
 }
