@@ -83,7 +83,7 @@ shv::chainpack::RpcValue SubscriptionsNode::callMethod(const StringViewList &shv
 		if(method == METH_PATH || method == METH_METHOD) {
 			const rpc::ClientConnectionOnBroker::Subscription *subs = nullptr;
 			if(shv_path.at(0) == ND_BY_ID) {
-				subs = &m_client->subscriptionAt(std::stoul(shv_path.at(1).toString()));
+				subs = &m_client->subscriptionAt(std::stoul(std::string{shv_path.at(1)}));
 			}
 			else if(shv_path.at(0) == ND_BY_PATH) {
 				shv::core::StringView path = shv_path.at(1);

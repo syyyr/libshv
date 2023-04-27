@@ -61,11 +61,11 @@ ShvNode *ShvNodeTree::mdcd(const ShvNode::StringViewList &path, bool create_dirs
 	size_t ix;
 	for (ix = 0; ix < path.size(); ++ix) {
 		const shv::core::StringView &s = path[ix];
-		ShvNode *nd2 = ret->childNode(s.toString(), !shv::core::Exception::Throw);
+		ShvNode *nd2 = ret->childNode(std::string{s}, !shv::core::Exception::Throw);
 		if(nd2 == nullptr) {
 			if(create_dirs) {
 				ret = new ShvNode(ret);
-				ret->setNodeId(path[ix].toString());
+				ret->setNodeId(std::string{path[ix]});
 			}
 			else {
 				break;
@@ -98,13 +98,13 @@ bool ShvNodeTree::mount(const ShvNode::String &path, ShvNode *node)
 	else {
 		parent_nd = mkdir(lst);
 	}
-	ShvNode *ch = parent_nd->childNode(last_id.toString(), !shv::core::Exception::Throw);
+	ShvNode *ch = parent_nd->childNode(std::string{last_id}, !shv::core::Exception::Throw);
 	if(ch) {
 		shvError() << "Node exist allready:" << path;
 		return false;
 	}
 	node->setParentNode(parent_nd);
-	node->setNodeId(last_id.toString());
+	node->setNodeId(std::string{last_id});
 	return true;
 }
 

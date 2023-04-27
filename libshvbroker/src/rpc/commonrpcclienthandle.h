@@ -2,8 +2,6 @@
 
 #include <shv/chainpack/rpcmessage.h>
 
-namespace shv { namespace core { class StringView; }}
-
 namespace shv {
 namespace broker {
 namespace rpc {
@@ -21,7 +19,7 @@ public:
 		Subscription(const std::string &local_path, const std::string &subscribed_path, const std::string &m);
 
 		bool cmpSubscribed(const CommonRpcClientHandle::Subscription &o) const;
-		bool match(const shv::core::StringView &shv_path, const shv::core::StringView &shv_method) const;
+		bool match(const std::string_view &shv_path, const std::string_view &shv_method) const;
 		std::string toString() const {return localPath + ':' + method;}
 	};
 public:

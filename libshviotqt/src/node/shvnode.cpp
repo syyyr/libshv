@@ -125,9 +125,9 @@ void ShvNode::handleRawRpcRequest(RpcValue::MetaData &&meta, std::string &&data)
 	RpcResponse resp = RpcResponse::forRequest(meta);
 	try {
 		if(!shv_path.empty()) {
-			ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
+			ShvNode *nd = childNode(std::string{shv_path.at(0)}, !shv::core::Exception::Throw);
 			if(nd) {
-				shvDebug() << "Child node:" << shv_path.at(0).toString() << "on path:" << shv_path.join('/') << "FOUND";
+				shvDebug() << "Child node:" << shv_path.at(0) << "on path:" << shv_path.join('/') << "FOUND";
 				std::string new_path = ShvUrl::makeShvUrlString(shv_url.type(),
 																shv_url.service(),
 																shv_url.fullBrokerId(),
@@ -224,9 +224,9 @@ chainpack::RpcValue ShvNode::handleRpcRequestImpl(const chainpack::RpcRequest &r
 	core::StringViewList shv_path = ShvPath::split(shv_path_str);
 	RpcResponse resp = RpcResponse::forRequest(rq);
 	if(!shv_path.empty()) {
-		ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
+		ShvNode *nd = childNode(std::string{shv_path.at(0)}, !shv::core::Exception::Throw);
 		if(nd) {
-			shvDebug() << "Child node:" << shv_path.at(0).toString() << "on path:" << ShvPath::joinDirs(shv_path) << "FOUND";
+			shvDebug() << "Child node:" << shv_path.at(0) << "on path:" << ShvPath::joinDirs(shv_path) << "FOUND";
 			std::string new_path = ShvPath::joinDirs(++shv_path.begin(), shv_path.end());
 			chainpack::RpcRequest rq2(rq);
 			rq2.setShvPath(new_path);
@@ -296,7 +296,7 @@ ShvNode::StringList ShvNode::childNames(const StringViewList &shv_path)
 		}
 	}
 	else if(shv_path.size() == 1) {
-		ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
+		ShvNode *nd = childNode(std::string{shv_path.at(0)}, !shv::core::Exception::Throw);
 		if(nd)
 			ret = nd->childNames(StringViewList());
 	}
@@ -308,7 +308,7 @@ chainpack::RpcValue ShvNode::hasChildren(const StringViewList &shv_path)
 {
 	shvLogFuncFrame() << "node:" << nodeId() << "shv_path:" << shv_path.join('/');
 	if(shv_path.size() == 1) {
-		ShvNode *nd = childNode(shv_path.at(0).toString(), !shv::core::Exception::Throw);
+		ShvNode *nd = childNode(std::string{shv_path.at(0)}, !shv::core::Exception::Throw);
 		if(nd) {
 			return nd->hasChildren(StringViewList());
 		}
@@ -686,7 +686,7 @@ chainpack::RpcValue RpcValueMapNode::valueOnPath(const chainpack::RpcValue &val,
 	shv::chainpack::RpcValue v = val;
 	for(const auto & dir : shv_path) {
 		const shv::chainpack::RpcValue::Map &m = v.asMap();
-		v = m.value(dir.toString());
+		v = m.value(std::string{dir});
 		if(!v.isValid()) {
 			if(throw_exc)
 				SHV_EXCEPTION("Invalid path: " + shv_path.join('/'));
@@ -722,11 +722,11 @@ void RpcValueMapNode::setValueOnPath(const shv::iotqt::node::ShvNode::StringView
 	for (size_t i = 0; i < shv_path.size()-1; ++i) {
 		auto dir = shv_path.at(i);
 		const shv::chainpack::RpcValue::Map &m = v.asMap();
-		v = m.value(dir.toString());
+		v = m.value(std::string{dir});
 		if(!v.isValid())
 			SHV_EXCEPTION("Invalid path: " + shv_path.join('/'));
 	}
-	v.set(shv_path.at(shv_path.size() - 1).toString(), val);
+	v.set(std::string{shv_path.at(shv_path.size() - 1)}, val);
 }
 
 bool RpcValueMapNode::isDir(const shv::iotqt::node::ShvNode::StringViewList &shv_path)

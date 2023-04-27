@@ -9,8 +9,6 @@
 
 namespace shv {
 namespace core {
-class StringViewList;
-class StringView;
 namespace utils {
 
 namespace shvpath {

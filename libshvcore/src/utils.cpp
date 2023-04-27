@@ -115,10 +115,10 @@ static void create_key_val(RpcValue &map, const StringViewList &path, const RpcV
 	if(path.empty())
 		return;
 	if(path.size() == 1) {
-		map.set(path[static_cast<size_t>(path.length() - 1)].toString(), val);
+		map.set(std::string{path[static_cast<size_t>(path.length() - 1)]}, val);
 	}
 	else {
-		string key = path[0].toString();
+		string key = std::string{path[0]};
 		RpcValue mval = map.at(key);
 		if(!mval.isMap())
 			mval = RpcValue::Map();
@@ -131,8 +131,8 @@ RpcValue Utils::foldMap(const chainpack::RpcValue::Map &plain_map, char key_deli
 {
 	RpcValue ret = RpcValue::Map();
 	for(const auto &kv : plain_map) {
-		const string &key = kv.first;
-		StringViewList lst = StringView(key).split(key_delimiter);
+		string key = kv.first;
+		StringViewList lst = utils::split(std::string{key}, key_delimiter, '\0');
 		create_key_val(ret, lst, kv.second);
 	}
 	return ret;
@@ -160,22 +160,80 @@ std::string utils::joinPath()
 std::string utils::joinPath(const StringView &p1, const StringView &p2)
 {
 	StringView sv1(p1);
-	while(sv1.endsWith('/'))
-		sv1 = sv1.mid(0, sv1.size() - 1);
+	while(sv1.ends_with('/'))
+		sv1 = sv1.substr(0, sv1.size() - 1);
 	StringView sv2(p2);
-	while(sv2.startsWith('/'))
-		sv2 = sv2.mid(1);
+	while(sv2.starts_with('/'))
+		sv2 = sv2.substr(1);
 	if(sv2.empty())
-		return sv1.toString();
+		return std::string{sv1};
 	if(sv1.empty())
-		return sv2.toString();
-	return sv1.toString() + '/' + sv2.toString();
+		return std::string{sv2};
+	return std::string{sv1} + '/' + std::string{sv2};
+}
+
+StringView utils::getToken(StringView strv, char delim, char quote)
+{
+	if(strv.empty())
+		return strv;
+	bool in_quotes = false;
+	for (size_t i = 0; i < strv.length(); ++i) {
+		char c = strv.at(i);
+		if(quote) {
+			if(c == quote) {
+				in_quotes = !in_quotes;
+				continue;
+			}
+		}
+		if(c == delim && !in_quotes)
+			return strv.substr(0, i);
+	}
+	return strv;
+}
+
+StringViewList utils::split(StringView strv, char delim, char quote, SplitBehavior split_behavior, QuoteBehavior quotes_behavior)
+{
+	using namespace std;
+	vector<StringView> ret;
+	if(strv.empty())
+		return ret;
+	while(true) {
+		StringView token = getToken(strv, delim, quote);
+		if(split_behavior == SplitBehavior::KeepEmptyParts || token.length()) {
+			if(quotes_behavior == QuoteBehavior::RemoveQuotes && token.size() >= 2 && token.at(0) == quote && token.at(token.size() - 1) == quote) {
+				ret.push_back(token.substr(1, token.size() - 2));
+			}
+			else {
+				ret.push_back(token);
+			}
+		}
+		if(token.end() >= strv.end())
+			break;
+		strv = strv.substr(token.length() + 1);
+	}
+	return ret;
+}
+
+StringView utils::slice(StringView s, int start, int end)
+{
+	if(start < 0)
+		start = 0;
+	if(start > static_cast<int>(s.size()))
+		start = static_cast<int>(s.size());
+	end = static_cast<int>(s.size()) + end;
+	if(end < 0)
+		end = 0;
+	if(end > static_cast<int>(s.size()))
+		end = static_cast<int>(s.size());
+	if(end < start)
+		end = start;
+	return s.substr(static_cast<size_t>(start), static_cast<size_t>(end - start));
 }
 
 std::string Utils::simplifyPath(const std::string &p)
 {
 	StringViewList ret;
-	StringViewList lst = StringView(p).split('/');
+	StringViewList lst = utils::split(p, '/');
 	for (size_t i = 0; i < lst.size(); ++i) {
 		const StringView &s = lst[i];
 		if(s == ".")

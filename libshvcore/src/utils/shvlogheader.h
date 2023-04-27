@@ -11,7 +11,6 @@
 
 namespace shv {
 namespace core {
-class StringViewList;
 namespace utils {
 
 struct ShvGetLogParams;

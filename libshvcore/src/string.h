@@ -1,6 +1,7 @@
 #pragma once
 
 #include "shvcoreglobal.h"
+#include "stringview.h"
 
 #include <sstream>
 #include <string>
@@ -10,8 +11,6 @@
 
 namespace shv {
 namespace core {
-
-class StringView;
 
 class SHVCORE_DECL_EXPORT String : public std::string
 {

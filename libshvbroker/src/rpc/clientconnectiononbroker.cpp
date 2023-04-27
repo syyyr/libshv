@@ -234,26 +234,26 @@ string ClientConnectionOnBroker::toSubscribedPath(const CommonRpcClientHandle::S
 		if(debug && !spp_subs.isUpTreeMountPointRelative())
 			shvWarning() << "Relative signal must have relative subscription, signal:" << signal_path << "subscription:" << subs.subscribedPath;
 		auto a = StringView(subs.subscribedPath);
-		auto b = StringView(signal_path).mid(subs.localPath.size());
-		return ShvPath(a.toString()).appendPath(b);
+		auto b = StringView(signal_path).substr(subs.localPath.size());
+		return ShvPath(std::string{a}).appendPath(b);
 	}
 	if(spp_signal.isPlain()) {
 		if(spp_subs.isUpTreeMountPointRelative()) {
 			/// a/b/c/d --> a:/b/c/d
 			// cut service and slash
-			auto sv = StringView(signal_path).mid(spp_subs.service().length() + 1);
+			auto sv = StringView(signal_path).substr(spp_subs.service().length() + 1);
 			// cut mount point rest and slash
 			const string mount_point = mountPoint();
 			StringView mount_point_rest(mount_point);
 			ShvPath::takeFirsDir(mount_point_rest);
-			sv = sv.mid(mount_point_rest.length() + 1);
+			sv = sv.substr(mount_point_rest.length() + 1);
 			auto ret = ServiceProviderPath::makeShvUrlString(spp_subs.type(), spp_subs.service(), spp_subs.fullBrokerId(), sv);
 			return ret;
 		}
 		if(spp_subs.isUpTreeAbsolute()) {
 			/// a/b/c/d --> a|/b/c/d
 			// cut service and slash
-			auto sv = StringView(signal_path).mid(spp_subs.service().length() + 1);
+			auto sv = StringView(signal_path).substr(spp_subs.service().length() + 1);
 			return ServiceProviderPath::makeShvUrlString(spp_subs.type(), spp_subs.service(), spp_subs.fullBrokerId(), sv);
 		}
 	}

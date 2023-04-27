@@ -140,7 +140,7 @@ QString LocalFSNode::makeAbsolutePath(const QString &relative_path) const
 
 std::string LocalFSNode::fileName(const ShvNode::StringViewList &shv_path) const
 {
-	return !shv_path.empty() ? shv_path.back().toString() : "";
+	return !shv_path.empty() ? std::string{shv_path.back()} : "";
 }
 
 chainpack::RpcValue LocalFSNode::readContent(const ShvNode::StringViewList &shv_path, int64_t offset, int64_t size) const

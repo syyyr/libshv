@@ -18,13 +18,13 @@ ShvUrl::ShvUrl(const std::string &shv_path)
 			m_type = Type::MountPointRelativeService;
 		else if(type_mark == DOWNTREE_MARK)
 			m_type = Type::DownTreeService;
-		m_service = StringView(shv_path, 0, ix);
-		ssize_t bid_ix = m_service.lastIndexOf('@');
+		m_service = StringView(shv_path).substr(0, ix);
+		ssize_t bid_ix = m_service.rfind('@');
 		if(bid_ix > 0) {
-			m_fullBrokerId = m_service.mid(static_cast<size_t>(bid_ix));
-			m_service = m_service.mid(0, static_cast<size_t>(bid_ix));
+			m_fullBrokerId = m_service.substr(static_cast<size_t>(bid_ix));
+			m_service = m_service.substr(0, static_cast<size_t>(bid_ix));
 		}
-		m_pathPart = StringView(shv_path, ix + typeMark(m_type).size() + 1);
+		m_pathPart = StringView(shv_path).substr(ix + typeMark(m_type).size() + 1);
 	}
 	else {
 		m_type = Type::Plain;
@@ -56,11 +56,15 @@ std::string ShvUrl::typeMark(Type t)
 
 std::string ShvUrl::toPlainPath(const StringView &path_part_prefix) const
 {
-	std::string ret = service().toString();
-	if(!path_part_prefix.empty())
-		ret += ShvPath::SHV_PATH_DELIM + path_part_prefix.toString();
-	if(!pathPart().empty())
-		ret += ShvPath::SHV_PATH_DELIM + pathPart().toString();
+	std::string ret = std::string{service()};
+	if(!path_part_prefix.empty()) {
+		ret += ShvPath::SHV_PATH_DELIM;
+		ret += path_part_prefix;
+	}
+	if(!pathPart().empty()) {
+		ret += ShvPath::SHV_PATH_DELIM;
+		ret	+= pathPart();
+	}
 	return ret;
 }
 
@@ -74,14 +78,14 @@ std::string ShvUrl::makeShvUrlString(ShvUrl::Type type, const StringView &servic
 {
 	if(type == Type::Plain) {
 		if(service.empty())
-			return path_rest.toString();
+			return std::string{path_rest};
 
 		return StringViewList{service, path_rest}.join(ShvPath::SHV_PATH_DELIM);
 	}
 
-	string srv = service.toString();
+	string srv = std::string{service};
 	if(!full_broker_id.empty())
-		srv += full_broker_id.toString();
+		srv += std::string{full_broker_id};
 	srv += typeMark(type);
 	return StringViewList{srv, path_rest}.join(ShvPath::SHV_PATH_DELIM);
 }

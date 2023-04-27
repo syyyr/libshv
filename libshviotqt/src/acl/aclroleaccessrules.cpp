@@ -108,9 +108,9 @@ bool AclAccessRule::isPathMethodMatch(const shv::core::utils::ShvUrl &shv_url, c
 	}
 	shv::core::StringView patt(pathPattern);
 	// trim "**"
-	patt = patt.mid(0, patt.length() - 2);
+	patt = patt.substr(0, patt.length() - 2);
 	if(patt.length() > 0)
-		patt = patt.mid(0, patt.length() - 1); // trim '/'
+		patt = patt.substr(0, patt.length() - 1); // trim '/'
 	if(shv::core::utils::ShvPath::startsWithPath(shv_url.pathPart(), patt)) {
 		if(this->method.empty())
 			return true;
