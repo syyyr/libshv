@@ -281,28 +281,20 @@ void RpcDriver::processReadData()
 			m_protocolType = protocol_type;
 		}
 
+		std::string msg_data;
 		try {
-			std::string msg_data = read_data.substr(meta_data_end_pos, message_len - meta_data_end_pos);
+			msg_data = read_data.substr(meta_data_end_pos, message_len - meta_data_end_pos);
 			logRpcData() << message_len << "bytes of" << m_readData.size() << "processed";
 			m_readData = m_readData.substr(message_len);
-#ifdef TEST_RUBBISH
-			constexpr bool test_rubbish = false;//true;
-			if(test_rubbish) {
-				// append some rubbish before next message
-				std::string rubbish;
-				size_t len = std::rand() % 4 + 1;
-				for(size_t i=0; i<len; ++i) {
-					char c = std::rand() % 256;
-					rubbish.push_back(c);
-				}
-				logRpcData() << "preppending" << len << "bytes of rubbish\n" << shv::chainpack::Utils::hexDump(rubbish);
-				m_readData = rubbish + m_readData;
-			}
-#endif
+		}
+		catch (const std::exception &e) {
+			nError() << "internal exception:" << e.what();
+		}
+		try {
 			onRpcDataReceived(protocol_type, std::move(meta_data), std::move(msg_data));
 		}
 		catch (const std::exception &e) {
-			nError() << "process RPC data error:" << e.what();
+			nError() << "onRpcDataReceived exception:" << e.what();
 		}
 		return;
 	}
