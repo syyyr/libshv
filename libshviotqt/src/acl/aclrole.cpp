@@ -6,15 +6,12 @@ namespace shv::iotqt::acl {
 
 shv::chainpack::RpcValue AclRole::toRpcValue() const
 {
-	if(isValid()) {
-		shv::chainpack::RpcValue::Map m { {"weight", weight}, };
-		if(!roles.empty())
-			m["roles"] = shv::chainpack::RpcValue::List::fromStringList(roles);
-		if(profile.isMap())
-			m["profile"] = profile;
-		return m;
-	}
-	return shv::chainpack::RpcValue();
+	shv::chainpack::RpcValue::Map m;
+	if(!roles.empty())
+		m["roles"] = shv::chainpack::RpcValue::List::fromStringList(roles);
+	if(profile.isMap())
+		m["profile"] = profile;
+	return m;
 }
 
 AclRole AclRole::fromRpcValue(const shv::chainpack::RpcValue &v)
@@ -22,7 +19,6 @@ AclRole AclRole::fromRpcValue(const shv::chainpack::RpcValue &v)
 	AclRole ret;
 	if(v.isMap()) {
 		const auto &m = v.asMap();
-		ret.weight = m.value("weight").toInt();
 		std::vector<std::string> roles;
 		for(const auto &lst : m.value("roles").asList())
 			roles.push_back(lst.toString());

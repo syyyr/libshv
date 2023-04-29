@@ -565,6 +565,10 @@ private:
 	CowPtr<AbstractValueData> m_ptr;
 };
 
+namespace string_literals {
+RpcValue operator""_cpon(const char* data, size_t size);
+}
+
 template<typename T> RpcValue::Type RpcValue::guessType() { throw std::runtime_error("guessing of this type is not implemented"); }
 template<> inline RpcValue::Type RpcValue::guessType<RpcValue::Int>() { return Type::Int; }
 template<> inline RpcValue::Type RpcValue::guessType<RpcValue::UInt>() { return Type::UInt; }

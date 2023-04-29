@@ -1,17 +1,23 @@
 #include "aclmanager.h"
 #include "brokerapp.h"
+#include "currentclientshvnode.h"
 
 #include <shv/chainpack/cponreader.h>
+#include <shv/core/utils/shvurl.h>
 #include <shv/coreqt/log.h>
 #include <shv/iotqt/utils.h>
 
 #include <QCryptographicHash>
+#include <QQueue>
 
 #include <fstream>
 
 #define logAclManagerD() nCDebug("AclManager")
 #define logAclManagerM() nCMessage("AclManager")
 #define logAclManagerI() nCInfo("AclManager")
+
+#define logAclResolveW() nCWarning("AclResolve")
+#define logAclResolveM() nCMessage("AclResolve")
 
 namespace cp = shv::chainpack;
 
@@ -98,9 +104,8 @@ shv::iotqt::acl::AclRole AclManager::role(const std::string &role_name)
 	auto it = m_cache.aclRoles.find(role_name);
 	if(it == m_cache.aclRoles.end())
 		return shv::iotqt::acl::AclRole();
-	if(!it->second.isValid()) {
-		it->second = aclRole(role_name);
-	}
+
+	it->second = aclRole(role_name);
 	return it->second;
 }
 
@@ -114,8 +119,9 @@ void AclManager::setRole(const std::string &role_name, const shv::iotqt::acl::Ac
 std::vector<std::string> AclManager::accessRoles()
 {
 	if(m_cache.aclAccessRules.empty()) {
-		for(const auto &id : aclAccessRoles())
-			m_cache.aclAccessRules[id];
+		for(const auto &id : aclAccessRoles()) {
+			m_cache.aclAccessRules.emplace(id, std::pair<shv::iotqt::acl::AclRoleAccessRules, bool>({}, false));
+		}
 	}
 	return cp::Utils::mapKeys(m_cache.aclAccessRules);
 }
@@ -235,51 +241,32 @@ void AclManager::aclSetAccessRoleRules(const std::string &role_name, const shv::
 	SHV_EXCEPTION("Role paths definition is read only.");
 }
 
-std::map<std::string, AclManager::FlattenRole> AclManager::flattenRole_helper(const std::string &role_name, int nest_level)
-{
-	std::map<std::string, FlattenRole> ret;
-	shv::iotqt::acl::AclRole ar = aclRole(role_name);
-	if(ar.isValid()) {
-		FlattenRole fr{role_name, ar.weight, nest_level};
-		ret[role_name] = std::move(fr);
-		for(const auto &rl : ar.roles) {
-			auto it = ret.find(rl);
-			if(it != ret.end()) {
-				shvWarning() << "Cyclic reference in roles detected for name:" << rl;
-				continue;
-			}
-			auto ret2 = flattenRole_helper(rl, ++nest_level);
-			ret.insert(ret2.begin(), ret2.end());
-		}
-	}
-	else {
-		shvWarning() << "role:" << role_name << "is not defined";
-	}
-	return ret;
-}
-
-std::vector<AclManager::FlattenRole> AclManager::userFlattenRoles(const std::string &user_name, const std::vector<std::string>& roles)
+std::vector<std::string> AclManager::userFlattenRoles(const std::string &user_name, const std::vector<std::string>& roles)
 {
 	if(m_cache.userFlattenRoles.find(user_name) == m_cache.userFlattenRoles.end()) {
-		std::map<std::string, AclManager::FlattenRole> unique_roles;
-		for(const auto &role : roles) {
-			auto gg = flattenRole_helper(role, 1);
-			unique_roles.insert(gg.begin(), gg.end());
+		auto& flattenRoles = m_cache.userFlattenRoles.emplace(user_name, std::vector<std::string>{}).first->second;
+		QQueue<std::string> role_q;
+		auto enqueue = [&role_q, &flattenRoles] (const auto& role) {
+			if (std::ranges::find(flattenRoles, role) != flattenRoles.end() || role_q.contains(role)) {
+				shvDebug() << "Duplicate role detected:" << role;
+				return;
+			}
+			role_q.enqueue(role);
+		};
+		std::ranges::for_each(roles, enqueue);
+		while (!role_q.empty()) {
+			auto cur = role_q.dequeue();
+			flattenRoles.emplace_back(cur);
+			auto subroles = aclRole(cur).roles;
+			for (const auto& subrole : subroles) {
+				enqueue(subrole);
+			}
 		}
-		std::vector<AclManager::FlattenRole> lst;
-		for(const auto &kv : unique_roles)
-			lst.push_back(kv.second);
-		std::sort(lst.begin(), lst.end(), [](const FlattenRole &r1, const FlattenRole &r2) {
-			if(r1.weight == r2.weight)
-				return r1.nestLevel < r2.nestLevel;
-			return r1.weight > r2.weight;
-		});
-		m_cache.userFlattenRoles[user_name] = lst;
 	}
 	return m_cache.userFlattenRoles[user_name];
 }
 
-std::vector<AclManager::FlattenRole> AclManager::flattenRole(const std::string &role)
+std::vector<std::string> AclManager::flattenRole(const std::string &role)
 {
 	return userFlattenRoles("_Role#Key:" + role, {role});
 }
@@ -288,10 +275,140 @@ chainpack::RpcValue AclManager::userProfile(const std::string &user_name)
 {
 	chainpack::RpcValue ret;
 	for(const auto &rn : userFlattenRoles(user_name, user(user_name).roles)) {
-		shv::iotqt::acl::AclRole r = role(rn.name);
+		shv::iotqt::acl::AclRole r = role(rn);
 		ret = chainpack::Utils::mergeMaps(ret, r.profile);
 	}
 	return ret;
+}
+
+#ifdef WITH_SHV_LDAP
+void AclManager::setGroupForLdapUser(const std::string_view& user_name, const std::string_view& group_name)
+{
+	m_ldapUserGroups.emplace(user_name, group_name);
+}
+#endif
+
+cp::AccessGrant AclManager::accessGrantForShvPath(const std::string& user_name, const shv::core::utils::ShvUrl &shv_url, const std::string &method, bool is_request_from_master_broker, bool is_service_provider_mount_point_relative_call, const shv::chainpack::RpcValue &rq_grant)
+{
+	logAclResolveM() << "==== accessGrantForShvPath user:" << user_name << "requested path:" << shv_url.toString() << "method:" << method << "request grant:" << rq_grant.toCpon();
+	if(is_service_provider_mount_point_relative_call) {
+		auto ret = cp::AccessGrant(cp::Rpc::ROLE_WRITE);
+		logAclResolveM() << "==== resolved path:" << shv_url.toString() << "grant:" << ret.toRpcValue().toCpon();
+		return ret;
+	}
+#ifdef USE_SHV_PATHS_GRANTS_CACHE
+	PathGrantCache *user_path_grants = m_userPathGrantCache.object(user_name);
+	if(user_path_grants) {
+		cp::Rpc::AccessGrant *pg = user_path_grants->object(shv_path);
+		if(pg) {
+			logAclD() << "\t cache hit:" << pg->grant << "weight:" << pg->weight;
+			return *pg;
+		}
+	}
+#endif
+	auto request_grant = cp::AccessGrant::fromRpcValue(rq_grant);
+	if(is_request_from_master_broker) {
+		if(request_grant.isValid()) {
+			// access resolved by master broker already, forward use this
+			logAclResolveM() << "\t Resolved on master broker already.";
+			return request_grant;
+		}
+	}
+	else {
+		if(request_grant.isValid()) {
+			logAclResolveM() << "Client defined grants in RPC request are not implemented yet and will be ignored.";
+		}
+	}
+	std::vector<std::string> flatten_user_roles;
+	if(is_request_from_master_broker) {
+		// set masterBroker role to requests from master broker without access grant specified
+		// This is used mainly for service calls as (un)subscribe propagation to slave brokers etc.
+		if(shv_url.pathPart() == cp::Rpc::DIR_BROKER_APP) {
+			// master broker has always rd grant to .broker/app path
+			return cp::AccessGrant(cp::Rpc::ROLE_WRITE);
+		}
+		flatten_user_roles = flattenRole(cp::Rpc::ROLE_MASTER_BROKER);
+	}
+	else {
+		if (auto user_def = user(user_name); user_def.isValid()) {
+			flatten_user_roles = userFlattenRoles(user_name, user_def.roles);
+		}
+#ifdef WITH_SHV_LDAP
+		// I don't have to check if ldap is enabled - if m_ldapUserGroups is non-empty, it must've been enabled.
+		else if (auto it = m_ldapUserGroups.find(user_name); it != m_ldapUserGroups.end()) {
+			flatten_user_roles = userFlattenRoles(user_name, {it->second});
+		}
+#endif
+
+	}
+	logAclResolveM() << "searched rules:" << [this, &flatten_user_roles]()
+	{
+		auto to_str = [](const QVariant &v, int len) {
+			bool right = false;
+			if(len < 0) {
+				right = true;
+				len = -len;
+			}
+			QString s = v.toString();
+			if(s.length() < len) {
+				QString spaces = QString(len - s.length(), ' ');
+				if(right)
+					s = spaces + s;
+				else
+					s = s + spaces;
+			}
+			return s;
+		};
+		std::vector<int> cols = {15, 10, 20, 15, 1};
+		const int row_len = 70;
+		QString tbl = "\n" + QString(row_len, '-') + '\n';
+		tbl += to_str("role", cols[0]);
+		tbl += to_str("service", cols[1]);
+		tbl += to_str("pattern", cols[2]);
+		tbl += to_str("method", cols[3]);
+		tbl += to_str("grant", cols[4]);
+		tbl += "\n" + QString(row_len, '-');
+		for(const std::string &role : flatten_user_roles) {
+			const iotqt::acl::AclRoleAccessRules &role_rules = accessRoleRules(role);
+			for(const iotqt::acl::AclAccessRule &access_rule : role_rules) {
+				tbl += "\n";
+				tbl += to_str(role.c_str(), cols[0]);
+				tbl += to_str(access_rule.service.c_str(), cols[1]);
+				tbl += to_str(access_rule.pathPattern.c_str(), cols[2]);
+				tbl += to_str(access_rule.method.c_str(), cols[3]);
+				tbl += to_str(access_rule.grant.toRpcValue().toCpon().c_str(), cols[4]);
+			}
+		}
+		tbl += "\n" + QString(row_len, '-');
+		return tbl;
+	}();
+
+	// find first matching rule
+	if(shv_url.pathPart() == BROKER_CURRENT_CLIENT_SHV_PATH) {
+		// client has WR grant on currentClient node
+		return cp::AccessGrant{cp::Rpc::ROLE_WRITE};
+	}
+
+	for (const std::string& flatten_role : flatten_user_roles) {
+		logAclResolveM() << "----- checking role:" << flatten_role;
+		auto role_rules = accessRoleRules(flatten_role);
+		if (role_rules.empty()) {
+			logAclResolveM() << "\t no paths defined.";
+		}
+
+		for (const auto& access_rule : role_rules) {
+			logAclResolveM() << "rule:" << access_rule.toRpcValue().toCpon();
+			if (access_rule.isPathMethodMatch(shv_url, method)) {
+				logAclResolveM() << "access user:" << user_name
+					<< "shv_path:" << shv_url.toString()
+					<< "rq_grant:" << (rq_grant.isValid()? rq_grant.toCpon(): "<none>")
+					<< "==== path:" << access_rule.pathPattern << "method:" << access_rule.method << "grant:" << access_rule.grant.toRpcValue().toCpon();
+				return access_rule.grant;
+			}
+		}
+	}
+
+	return cp::AccessGrant{};
 }
 
 //================================================================

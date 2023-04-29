@@ -40,21 +40,12 @@ public:
 	std::vector<std::string> accessRoles();
 	shv::iotqt::acl::AclRoleAccessRules accessRoleRules(const std::string &role_name);
 	void setAccessRoleRules(const std::string &role_name, const shv::iotqt::acl::AclRoleAccessRules &v);
+	shv::chainpack::AccessGrant accessGrantForShvPath(const std::string& user_name, const shv::core::utils::ShvUrl &shv_url, const std::string &method, bool is_request_from_master_broker, bool is_service_provider_mount_point_relative_call, const shv::chainpack::RpcValue &rq_grant);
 
 	std::string mountPointForDevice(const shv::chainpack::RpcValue &device_id);
 
-	struct SHVBROKER_DECL_EXPORT FlattenRole
-	{
-		std::string name;
-		int weight = 0;
-		int nestLevel = 0;
-
-		FlattenRole() = default;
-		FlattenRole(const std::string &n, int w = 0, int nl = 0) : name(n), weight(w), nestLevel(nl) {}
-	};
-	// all roles sorted by weight DESC, nest_level ASC
-	std::vector<FlattenRole> userFlattenRoles(const std::string &user_name, const std::vector<std::string>& roles);
-	std::vector<FlattenRole> flattenRole(const std::string &role);
+	std::vector<std::string> userFlattenRoles(const std::string &user_name, const std::vector<std::string>& roles);
+	std::vector<std::string> flattenRole(const std::string &role);
 
 	chainpack::RpcValue userProfile(const std::string &user_name);
 
@@ -83,7 +74,6 @@ protected:
 	{
 		m_cache = Cache();
 	}
-	std::map<std::string, FlattenRole> flattenRole_helper(const std::string &role_name, int nest_level);
 protected:
 	BrokerApp * m_brokerApp;
 	struct Cache
@@ -93,8 +83,14 @@ protected:
 		std::map<std::string, shv::iotqt::acl::AclRole> aclRoles;
 		std::map<std::string, std::pair<shv::iotqt::acl::AclRoleAccessRules, bool>> aclAccessRules;
 
-		std::map<std::string, std::vector<FlattenRole>> userFlattenRoles;
+		std::map<std::string, std::vector<std::string>> userFlattenRoles;
 	} m_cache;
+
+#ifdef WITH_SHV_LDAP
+	std::map<std::string, std::string> m_ldapUserGroups;
+public:
+	void setGroupForLdapUser(const std::string_view& user_name, const std::string_view& group_name);
+#endif
 };
 
 class SHVBROKER_DECL_EXPORT AclManagerConfigFiles : public AclManager

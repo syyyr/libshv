@@ -53,11 +53,9 @@ shv::chainpack::RpcValue ClientConnectionNode::callMethod(const shv::iotqt::node
 			if(cli) {
 				const std::string user_name = cli->loggedUserName();
 				auto user_def = BrokerApp::instance()->aclManager()->user(user_name);
-				std::vector<shv::broker::AclManager::FlattenRole> roles = BrokerApp::instance()->aclManager()->userFlattenRoles(user_name, user_def.roles);
+				auto roles = BrokerApp::instance()->aclManager()->userFlattenRoles(user_name, user_def.roles);
 				cp::RpcValue::List ret;
-				std::transform(roles.begin(), roles.end(), std::back_inserter(ret), [](const shv::broker::AclManager::FlattenRole &r) -> cp::RpcValue {
-					return r.name;
-				});
+				std::copy(roles.begin(), roles.end(), std::back_inserter(ret));
 				return ret;
 			}
 			return nullptr;

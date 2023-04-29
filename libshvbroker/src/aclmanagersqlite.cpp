@@ -257,7 +257,6 @@ acl::AclRole AclManagerSqlite::aclRole(const std::string &role_name)
 	acl::AclRole ret;
 	QSqlQuery q = sqlLoadRow(TBL_ACL_ROLES, "name", QString::fromStdString(role_name));
 	if(q.next()) {
-		ret.weight = q.value("weight").toInt();
 		ret.roles = split_str_vec(q.value("roles").toString());
 		std::string profile_str = q.value("profile").toString().toStdString();
 		if(!profile_str.empty()) {
@@ -274,18 +273,12 @@ acl::AclRole AclManagerSqlite::aclRole(const std::string &role_name)
 
 void AclManagerSqlite::aclSetRole(const std::string &role_name, const acl::AclRole &r)
 {
-	if(r.isValid()) {
-		QString qs = "INSERT OR REPLACE INTO " + TBL_ACL_ROLES + " (name, weight, roles, profile) VALUES('%1', %2, '%3', '%4')";
-		qs = qs.arg(QString::fromStdString(role_name));
-		qs = qs.arg(r.weight);
-		qs = qs.arg(join_str_vec(r.roles));
-		qs = qs.arg(QString::fromStdString(r.profile.isValid()? r.profile.toCpon(): ""));
-		logAclManagerM() << qs;
-		execSql(qs);
-	}
-	else {
-		execSql("DELETE FROM " + TBL_ACL_ROLES + " WHERE name='" + QString::fromStdString(role_name) + "'");
-	}
+	QString qs = "INSERT OR REPLACE INTO " + TBL_ACL_ROLES + " (name, roles, profile) VALUES('%1', %2, '%3', '%4')";
+	qs = qs.arg(QString::fromStdString(role_name));
+	qs = qs.arg(join_str_vec(r.roles));
+	qs = qs.arg(QString::fromStdString(r.profile.isValid()? r.profile.toCpon(): ""));
+	logAclManagerM() << qs;
+	execSql(qs);
 }
 
 std::vector<std::string> AclManagerSqlite::aclAccessRoles()

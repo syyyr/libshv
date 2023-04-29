@@ -78,11 +78,9 @@ shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack
 			if(cli) {
 				const string user_name = cli->userName();
 				auto user_def = shv::broker::BrokerApp::instance()->aclManager()->user(user_name);
-				std::vector<shv::broker::AclManager::FlattenRole> roles = app->aclManager()->userFlattenRoles(user_name, user_def.roles);
+				auto roles = app->aclManager()->userFlattenRoles(user_name, user_def.roles);
 				cp::RpcValue::List ret;
-				std::transform(roles.begin(), roles.end(), std::back_inserter(ret), [](const shv::broker::AclManager::FlattenRole &r) -> cp::RpcValue {
-					return r.name;
-				});
+				std::copy(roles.begin(), roles.end(), std::back_inserter(ret));
 				return ret;
 			}
 			return nullptr;
@@ -110,7 +108,8 @@ shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack
 				const string &method_param = plist.value(1).asString();
 				if(method_param.empty())
 					SHV_EXCEPTION("Method not specified in params.");
-				shv::chainpack::AccessGrant acg = app->accessGrantForRequest(cli, shv::core::utils::ShvUrl(shv_path_param), method_param, rq.accessGrant());
+				auto shv_url = shv::core::utils::ShvUrl(shv_path_param);
+				shv::chainpack::AccessGrant acg = app->aclManager()->accessGrantForShvPath(cli->loggedUserName(), shv_url, method_param, cli->isMasterBrokerConnection(), shv_url.isUpTreeMountPointRelative(), rq.accessGrant());
 				return acg.isValid()? acg.toRpcValue(): nullptr;
 			}
 			return nullptr;
@@ -127,7 +126,8 @@ shv::chainpack::RpcValue CurrentClientShvNode::callMethodRq(const shv::chainpack
 				const string &method_param = plist.value(1).asString();
 				if(method_param.empty())
 					SHV_EXCEPTION("Method not specified in params.");
-				shv::chainpack::AccessGrant acg = app->accessGrantForRequest(cli, shv::core::utils::ShvUrl(shv_path_param), method_param, rq.accessGrant());
+				auto shv_url = shv::core::utils::ShvUrl(shv_path_param);
+				shv::chainpack::AccessGrant acg = app->aclManager()->accessGrantForShvPath(cli->loggedUserName(), shv_url, method_param, cli->isMasterBrokerConnection(), shv_url.isUpTreeMountPointRelative(), rq.accessGrant());
 				if(acg.isValid()) {
 					auto level = shv::iotqt::node::ShvNode::basicGrantToAccessLevel(acg);
 					if(level > 0) {

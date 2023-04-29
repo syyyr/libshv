@@ -58,9 +58,6 @@
 
 #define logTunnelD() nCDebug("Tunnel")
 
-#define logAclResolveW() nCWarning("AclResolve")
-#define logAclResolveM() nCMessage("AclResolve")
-
 #define logBrokerDiscoveryM() nCMessage("BrokerDiscovery")
 #define logServiceProvidersM() nCMessage("ServiceProviders")
 
@@ -70,7 +67,6 @@
 #define ACCESS_EXCEPTION(msg) SHV_EXCEPTION_V(msg, "Access")
 
 namespace cp = shv::chainpack;
-namespace acl = shv::iotqt::acl;
 
 using namespace std;
 
@@ -87,8 +83,6 @@ const auto sig_term_fd = [] {
 }();
 }
 #endif
-
-static const string BROKER_CURRENT_CLIENT_SHV_PATH = string(cp::Rpc::DIR_BROKER) + '/' + CurrentClientShvNode::NodeId;
 
 class ClientsNode : public shv::iotqt::node::MethodsTableNode
 {
@@ -597,11 +591,6 @@ private:
 	chainpack::UserLoginContext m_ctx;
 	BrokerApp::LdapConfig m_ldapConfig;
 };
-
-void BrokerApp::setGroupForLdapUser(const std::string_view& user_name, const std::string_view& group_name)
-{
-	m_ldapUserGroups.emplace(user_name, group_name);
-}
 #endif
 
 void BrokerApp::checkLogin(const chainpack::UserLoginContext &ctx, const std::function<void(chainpack::UserLoginResult)> cb)
@@ -617,7 +606,7 @@ void BrokerApp::checkLogin(const chainpack::UserLoginContext &ctx, const std::fu
 		auto auth_thread = new LdapAuthThread(ctx, *m_ldapConfig);
 		connect(auth_thread, &LdapAuthThread::resultReady, this, [cb, user_name = ctx.userLogin().user] (const auto& ldap_result, const auto& shv_group) {
 			if (shv_group) {
-				BrokerApp::instance()->setGroupForLdapUser(user_name, *shv_group);
+				BrokerApp::instance()->aclManager()->setGroupForLdapUser(user_name, *shv_group);
 			}
 			cb(ldap_result);
 		});
@@ -745,155 +734,6 @@ void BrokerApp::propagateSubscriptionsToMasterBroker(rpc::MasterBrokerConnection
 			}
 		}
 	}
-}
-
-chainpack::AccessGrant BrokerApp::accessGrantForRequest(rpc::CommonRpcClientHandle *conn, const shv::core::utils::ShvUrl &shv_url, const std::string &method, const shv::chainpack::RpcValue &rq_grant)
-{
-	logAclResolveM() << "==== accessGrantForShvPath user:" << conn->loggedUserName() << "requested path:" << shv_url.toString() << "method:" << method << "request grant:" << rq_grant.toCpon();
-#ifdef USE_SHV_PATHS_GRANTS_CACHE
-	PathGrantCache *user_path_grants = m_userPathGrantCache.object(user_name);
-	if(user_path_grants) {
-		cp::Rpc::AccessGrant *pg = user_path_grants->object(shv_path);
-		if(pg) {
-			logAclD() << "\t cache hit:" << pg->grant << "weight:" << pg->weight;
-			return *pg;
-		}
-	}
-#endif
-	bool is_request_from_master_broker = conn->isMasterBrokerConnection();
-	auto request_grant = cp::AccessGrant::fromRpcValue(rq_grant);
-	if(is_request_from_master_broker) {
-		if(request_grant.isValid()) {
-			// access resolved by master broker already, forward use this
-			logAclResolveM() << "\t Resolved on master broker already.";
-			return request_grant;
-		}
-	}
-	else {
-		if(request_grant.isValid()) {
-			logAclResolveM() << "Client defined grants in RPC request are not implemented yet and will be ignored.";
-		}
-	}
-	std::vector<AclManager::FlattenRole> flatten_user_roles;
-	if(is_request_from_master_broker) {
-		// set masterBroker role to requests from master broker without access grant specified
-		// This is used mainly for service calls as (un)subscribe propagation to slave brokers etc.
-		if(shv_url.pathPart() == cp::Rpc::DIR_BROKER_APP) {
-			// master broker has always rd grant to .broker/app path
-			return cp::AccessGrant(cp::Rpc::ROLE_WRITE);
-		}
-		flatten_user_roles = aclManager()->flattenRole(cp::Rpc::ROLE_MASTER_BROKER);
-	}
-	else {
-		if (auto user_def = aclManager()->user(conn->loggedUserName()); user_def.isValid()) {
-			flatten_user_roles = aclManager()->userFlattenRoles(conn->loggedUserName(), user_def.roles);
-		}
-#ifdef WITH_SHV_LDAP
-		else if (BrokerApp::instance()->cliOptions()->ldapHostname_isset()) {
-			if (auto it = m_ldapUserGroups.find(conn->loggedUserName()); it != m_ldapUserGroups.end()) {
-				flatten_user_roles = aclManager()->userFlattenRoles(conn->loggedUserName(), {it->second});
-			}
-		}
-#endif
-
-	}
-	logAclResolveM() << "searched rules:" << [this, &flatten_user_roles]()
-	{
-		auto to_str = [](const QVariant &v, int len) {
-			bool right = false;
-			if(len < 0) {
-				right = true;
-				len = -len;
-			}
-			QString s = v.toString();
-			if(s.length() < len) {
-				QString spaces = QString(len - s.length(), ' ');
-				if(right)
-					s = spaces + s;
-				else
-					s = s + spaces;
-			}
-			return s;
-		};
-		vector<int> cols = {15, 10, 10, 20, 15, 1};
-		const int row_len = 80;
-		QString tbl = "\n" + QString(row_len, '-') + '\n';
-		tbl += to_str("role", cols[0]);
-		tbl += to_str("weight", cols[1]);
-		tbl += to_str("service", cols[2]);
-		tbl += to_str("pattern", cols[3]);
-		tbl += to_str("method", cols[4]);
-		tbl += to_str("grant", cols[5]);
-		tbl += "\n" + QString(row_len, '-');
-		for(const AclManager::FlattenRole &role : flatten_user_roles) {
-			const acl::AclRoleAccessRules &role_rules = aclManager()->accessRoleRules(role.name);
-			for(const acl::AclAccessRule &access_rule : role_rules) {
-				tbl += "\n";
-				tbl += to_str(role.name.c_str(), cols[0]);
-				tbl += to_str(role.weight, cols[1]);
-				tbl += to_str(access_rule.service.c_str(), cols[2]);
-				tbl += to_str(access_rule.pathPattern.c_str(), cols[3]);
-				tbl += to_str(access_rule.method.c_str(), cols[4]);
-				tbl += to_str(access_rule.grant.toRpcValue().toCpon().c_str(), cols[5]);
-			}
-		}
-		tbl += "\n" + QString(row_len, '-');
-		return tbl;
-	}();
-	// find most specific path grant for role with highest weight
-	// user_flattent_grants are sorted by weight DESC
-	acl::AclAccessRule most_specific_rule;
-	if(shv_url.pathPart() == BROKER_CURRENT_CLIENT_SHV_PATH) {
-		// client has WR grant on currentClient node
-		most_specific_rule.grant = cp::AccessGrant{cp::Rpc::ROLE_WRITE};
-	}
-	else {
-		// roles are sorted in weight DESC
-		int old_weight = std::numeric_limits<int>::max();
-		for(const AclManager::FlattenRole &flatten_role : flatten_user_roles) {
-			if(flatten_role.weight != old_weight) {
-				if(most_specific_rule.isValid()) {
-					// roles with lower weight have lower priority, skip them
-					break;
-				}
-				old_weight = flatten_role.weight;
-			}
-			logAclResolveM() << "----- checking role:" << flatten_role.name << "with weight:" << flatten_role.weight << "nest level:" << flatten_role.nestLevel;
-			const acl::AclRoleAccessRules &role_rules = aclManager()->accessRoleRules(flatten_role.name);
-			if(role_rules.empty()) {
-				logAclResolveM() << "\t no paths defined.";
-			}
-			else for(const acl::AclAccessRule &access_rule : role_rules) {
-				// rules are sorted as most specific first
-				logAclResolveM() << "rule:" << access_rule.toRpcValue().toCpon();
-				if(access_rule.isPathMethodMatch(shv_url, method)) {
-					if(access_rule.isMoreSpecificThan(most_specific_rule)) {
-						logAclResolveM() << "\t+++HIT more specific rule than previous:"
-											<< (most_specific_rule.isValid()? most_specific_rule.toRpcValue().toCpon(): "INVALID")
-											<< "found";
-						most_specific_rule = access_rule;
-					}
-					else if(!most_specific_rule.isMoreSpecificThan(access_rule)) {
-						// the same specific rules, this is problem
-						logAclResolveW() << "the same specific rules found!";
-						logAclResolveW() << "\t" << access_rule.toRpcValue().toCpon();
-						logAclResolveW() << "\t" << most_specific_rule.toRpcValue().toCpon();
-					}
-					else {
-						logAclResolveM() << "\t---HIT but rule is not more specific than:" << most_specific_rule.toRpcValue().toCpon();
-					}
-				}
-			}
-		}
-	}
-	if(!most_specific_rule.isValid()) {
-		logAclResolveM() << "no match found, permission denied!";
-	}
-	logAclResolveM() << "access user:" << conn->loggedUserName()
-				 << "shv_path:" << shv_url.toString()
-				 << "rq_grant:" << (rq_grant.isValid()? rq_grant.toCpon(): "<none>")
-				 << "==== path:" << most_specific_rule.pathPattern << "method:" << most_specific_rule.method << "grant:" << most_specific_rule.grant.toRpcValue().toCpon();
-	return most_specific_rule.grant;
 }
 
 void BrokerApp::onClientLogin(int connection_id)
@@ -1129,14 +969,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 				const std::string &resolved_shv_path = cp::RpcMessage::shvPath(meta).asString();
 				ShvUrl resolved_shv_url(resolved_shv_path);
 				cp::AccessGrant acg;
-				if(is_service_provider_mount_point_relative_call) {
-					logAclResolveM() << "==== access grant for user:" << connection_handle->loggedUserName() << "requested path:" << shv_path << "method:" << method;
-					acg = cp::AccessGrant(cp::Rpc::ROLE_WRITE);
-					logAclResolveM() << "==== resolved path:" << resolved_shv_path << "grant:" << acg.toRpcValue().toCpon();
-				}
-				else {
-					acg = accessGrantForRequest(connection_handle, resolved_shv_url, method, cp::RpcMessage::accessGrant(meta));
-				}
+				acg = aclManager()->accessGrantForShvPath(connection_handle->loggedUserName(), resolved_shv_url, method, connection_handle->isMasterBrokerConnection(), is_service_provider_mount_point_relative_call, cp::RpcMessage::accessGrant(meta));
 				if(acg.isValid()) {
 					auto level = iotqt::node::ShvNode::basicGrantToAccessLevel(acg);
 					if(level != shv::chainpack::MetaMethod::AccessLevel::None) {
