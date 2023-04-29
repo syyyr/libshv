@@ -182,7 +182,7 @@ chainpack::UserLoginResult AclManager::checkPassword(const chainpack::UserLoginC
 
 		std::string nonce = login_context.serverNounce + acl_pwd.password;
 		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-#if QT_VERSION_MAJOR >= 6
+#if QT_VERSION_MAJOR >= 6 && QT_VERSION_MINOR >= 3
 		hash.addData(QByteArrayView(nonce.data(), static_cast<int>(nonce.length())));
 #else
 		hash.addData(nonce.data(), static_cast<int>(nonce.length()));

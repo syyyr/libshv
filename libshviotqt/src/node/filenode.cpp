@@ -77,7 +77,7 @@ cp::RpcValue FileNode::callMethod(const shv::iotqt::node::ShvNode::StringViewLis
 	if(method == M_HASH) {
 		shv::chainpack::RpcValue::Blob bytes = read(shv_path, params).asBlob();
 		QCryptographicHash h(QCryptographicHash::Sha1);
-#if QT_VERSION_MAJOR >= 6
+#if QT_VERSION_MAJOR >= 6 && QT_VERSION_MINOR >= 3
 		h.addData(QByteArrayView(reinterpret_cast<const char*>(bytes.data()), static_cast<int>(bytes.size())));
 #else
 		h.addData(reinterpret_cast<const char*>(bytes.data()), static_cast<int>(bytes.size()));

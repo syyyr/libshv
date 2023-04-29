@@ -387,7 +387,7 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 			pwd = utils::sha1Hex(pwd); /// SHA1 password must be 40 chars long, it is considered to be plain if shorter
 		std::string pn = server_nonce + pwd;
 		QCryptographicHash hash(QCryptographicHash::Algorithm::Sha1);
-#if QT_VERSION_MAJOR >= 6
+#if QT_VERSION_MAJOR >= 6 && QT_VERSION_MINOR >= 3
 		hash.addData(QByteArrayView(pn.data(), static_cast<int>(pn.length())));
 #else
 		hash.addData(pn.data(), static_cast<int>(pn.length()));
