@@ -1,7 +1,7 @@
 #include "patternmatcher.h"
 
 #include "../log.h"
-#include "../stringview.h"
+#include "../utils.h"
 #include "shvpath.h"
 
 #define logWShvJournal() shvCWarning("ShvJournal")
@@ -61,7 +61,7 @@ bool PatternMatcher::match(const std::string &path, const std::string &domain) c
 	}
 	else if(!m_pathPatternWildCard.empty()) {
 		const shv::core::StringViewList path_lst = shv::core::utils::ShvPath::split(path);
-		const shv::core::StringViewList pattern_lst = shv::core::StringView(m_pathPatternWildCard).split('/');
+		const shv::core::StringViewList pattern_lst = shv::core::utils::split(m_pathPatternWildCard, '/');
 		if(!ShvPath::matchWild(path_lst, pattern_lst))
 			return false;
 	}

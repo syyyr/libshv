@@ -119,6 +119,19 @@ public:
 };
 
 namespace utils {
+enum class SplitBehavior {
+	KeepEmptyParts,
+	SkipEmptyParts
+};
+
+enum class QuoteBehavior {
+	KeepQuotes,
+	RemoveQuotes
+};
+SHVCORE_DECL_EXPORT StringViewList split(StringView strv, char delim, char quote = '\0', SplitBehavior split_behavior = SplitBehavior::SkipEmptyParts, QuoteBehavior quotes_behavior = QuoteBehavior::KeepQuotes);
+SHVCORE_DECL_EXPORT StringView getToken(StringView strv, char delim = ' ', char quote = '\0');
+SHVCORE_DECL_EXPORT StringView slice(StringView s, int start, int end);
+
 SHVCORE_DECL_EXPORT std::string joinPath(const StringView &p1, const StringView &p2);
 SHVCORE_DECL_EXPORT std::string joinPath();
 template <typename StringType>

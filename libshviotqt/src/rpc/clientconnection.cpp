@@ -417,9 +417,9 @@ bool ClientConnection::isShvPathMutedInLog(const std::string &shv_path) const
 {
 	for(const string &pattern : m_mutedShvPathsInLog) {
 		shv::core::StringView sv(pattern);
-		if(sv.value(0) == '*') {
-			sv = sv.mid(1);
-			if(shv::core::StringView(shv_path).endsWith(sv))
+		if(!sv.empty() && sv.at(0) == '*') {
+			sv = sv.substr(1);
+			if(shv::core::StringView(shv_path).ends_with(sv))
 				return true;
 		}
 		else {

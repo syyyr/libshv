@@ -3,7 +3,7 @@
 
 #include "../exception.h"
 #include "../log.h"
-#include "../stringview.h"
+#include "../string.h"
 
 #define logWShvJournal() shvCWarning("ShvJournal")
 #define logIShvJournal() shvCInfo("ShvJournal")
@@ -63,16 +63,16 @@ bool ShvJournalFileReader::next()
 			auto ix2 = line.find(ShvFileJournal::FIELD_SEPARATOR, ix1);
 			StringView fld;
 			if(ix2 == std::string::npos) {
-				fld = StringView(line, ix1);
+				fld = StringView(line).substr(ix1);
 				ix1 = ix2;
 			}
 			else {
-				fld = StringView(line, ix1, ix2 - ix1);
+				fld = StringView(line).substr(ix1, ix2 - ix1);
 				ix1 = ix2 + 1;
 			}
 			switch(column) {
 			case Column::Timestamp: {
-				std::string dtstr = fld.toString();
+				std::string dtstr = std::string{fld};
 				size_t len;
 				cp::RpcValue::DateTime dt = cp::RpcValue::DateTime::fromUtcString(dtstr, &len);
 				if(len == 0) {
@@ -91,14 +91,14 @@ bool ShvJournalFileReader::next()
 					logWShvJournal() << "skipping invalid line with empy path, line:" << line;
 					goto next_line;
 				}
-				m_currentEntry.path = fld.toString();
+				m_currentEntry.path = std::string{fld};
 				break;
 			}
 			case Column::Value: {
 				std::string err;
-				m_currentEntry.value = cp::RpcValue::fromCpon(fld.toString(), &err);
+				m_currentEntry.value = cp::RpcValue::fromCpon(std::string{fld}, &err);
 				if(!err.empty()) {
-					logWShvJournal() << "Invalid CPON value:" << fld.toString();
+					logWShvJournal() << "Invalid CPON value:" << fld;
 					goto next_line;
 				}
 				break;
@@ -107,7 +107,7 @@ bool ShvJournalFileReader::next()
 				if(fld.empty())
 					m_currentEntry.domain = ShvJournalEntry::DOMAIN_VAL_CHANGE;
 				else
-					m_currentEntry.domain = fld.toString();
+					m_currentEntry.domain = std::string{fld};
 				break;
 			}
 			case Column::ShortTime: {
@@ -116,18 +116,18 @@ bool ShvJournalFileReader::next()
 				}
 				else {
 					bool ok;
-					int short_time = fld.toInt(&ok);
+					int short_time = shv::core::String::toInt(std::string{fld}, &ok);
 					m_currentEntry.shortTime = ok && short_time >= 0? short_time: ShvJournalEntry::NO_SHORT_TIME;
 				}
 				break;
 			}
 			case Column::ValueFlags: {
-				auto value_flags = fld.empty()? 0: fld.toInt();
+				auto value_flags = fld.empty()? 0: shv::core::String::toInt(std::string{fld});
 				m_currentEntry.valueFlags = static_cast<unsigned int>(value_flags);
 				break;
 			}
 			case Column::UserId: {
-				m_currentEntry.userId = fld.toString();
+				m_currentEntry.userId = std::string{fld};
 				break;
 			}
 			}

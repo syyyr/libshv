@@ -114,7 +114,7 @@ std::string String::join(const std::vector<StringView> &lst, char delim)
 	for(const auto &s : lst) {
 		if(!ret.empty())
 			ret += delim;
-		ret += s.toString();
+		ret += s;
 	}
 	return ret;
 }

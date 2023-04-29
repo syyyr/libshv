@@ -190,7 +190,7 @@ public:
 		if(shv_path.size() == 1) {
 			if(method == METH_CLIENT_IDS) {
 				BrokerApp *app = BrokerApp::instance();
-				std::string path = shv_path.at(0).slice(1, -1).toString();
+				std::string path = std::string{shv::core::utils::slice(shv_path.at(0), 1, -1)};
 				auto *nd1 = app->m_nodesTree->cd(path);
 				if(nd1 == nullptr)
 					SHV_EXCEPTION("Cannot find node on path: " + path);
@@ -672,7 +672,7 @@ AclManager *BrokerApp::createAclManager()
 iotqt::node::ShvNode *BrokerApp::nodeForService(const core::utils::ShvUrl &spp)
 {
 	if(spp.isServicePath()) {
-		iotqt::node::ShvNode *ret = m_nodesTree->cd(spp.service().toString());
+		iotqt::node::ShvNode *ret = m_nodesTree->cd(std::string{spp.service()});
 		if(ret) {
 			core::StringView request_broker_id = spp.brokerId();
 			if(!request_broker_id.empty() && !(request_broker_id == brokerId()))
@@ -1033,9 +1033,9 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 				if(shv_url.isServicePath()) {
 					logServiceProvidersM()  << "broker id:" << brokerId()
 											<< "Service path found:" << shv_path
-											<< "service:" << shv_url.service().toString()
+											<< "service:" << shv_url.service()
 											<< "type:" << shv_url.typeString()
-											<< "path part:" << shv_url.pathPart().toString();
+											<< "path part:" << shv_url.pathPart();
 				}
 				if(client_connection) {
 					if(!client_connection->isSlaveBrokerConnection()) {
@@ -1093,7 +1093,7 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 						if(has_dot_local_access(meta)) {
 							shv::core::StringView path(shv_path);
 							shv::core::utils::ShvPath::takeFirsDir(path);
-							cp::RpcMessage::setShvPath(meta, path.toString());
+							cp::RpcMessage::setShvPath(meta, std::string{path});
 						}
 						else {
 							ACCESS_EXCEPTION("Insufficient access rights to make call on node: " + shv::iotqt::node::ShvNode::LOCAL_NODE_HACK);
@@ -1112,13 +1112,13 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 						iotqt::node::ShvNode *service_node = nodeForService(shv_url);
 						logServiceProvidersM() << "Down-tree SP call,  path:" << shv_url.toString() << "resolved on local broker:" << (service_node != nullptr);
 						if(service_node) {
-							string resolved_local_path = shv::core::utils::joinPath(shv_url.service().toString(), shv_url.pathPart().toString());
+							string resolved_local_path = shv::core::utils::joinPath(std::string{shv_url.service()}, std::string{shv_url.pathPart()});
 							logServiceProvidersM() << shv_path << "service path resolved on this broker, making path absolute:" << resolved_local_path;
 							cp::RpcRequest::setShvPath(meta, resolved_local_path);
 						}
 						else {
 							string exported_path = master_broker_connection->exportedShvPath();
-							string resolved_path = shv::core::utils::joinPath(exported_path, shv_url.pathPart().toString());
+							string resolved_path = shv::core::utils::joinPath(exported_path, std::string{shv_url.pathPart()});
 							resolved_path = shv::core::utils::ShvUrl::makeShvUrlString(shv_url.type(), shv_url.service(), shv_url.fullBrokerId(), resolved_path);
 							logServiceProvidersM() << shv_path << "service path not resolved on this broker, preppending exported path:" << resolved_path;
 							cp::RpcRequest::setShvPath(meta, resolved_path);

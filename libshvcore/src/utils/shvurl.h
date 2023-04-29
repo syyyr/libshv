@@ -25,7 +25,7 @@ public:
 	StringView service() const { return m_service; }
 	/// broker ID including '@' separator
 	StringView fullBrokerId() const { return m_fullBrokerId; }
-	StringView brokerId() const { return m_fullBrokerId.mid(1); }
+	StringView brokerId() const { return m_fullBrokerId.substr(1); }
 	StringView pathPart() const { return m_pathPart; }
 	std::string toPlainPath(const StringView &path_part_prefix = {}) const;
 	std::string toString(const StringView &path_part_prefix = {}) const;

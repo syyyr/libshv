@@ -8,7 +8,6 @@
 
 class QTimer;
 
-namespace shv { namespace core { class StringView; }}
 namespace shv { namespace core { namespace utils { class ShvUrl; }}}
 namespace shv { namespace iotqt { namespace rpc { class Socket; }}}
 namespace shv { namespace iotqt { namespace node { class ShvNode; }}}
