@@ -1325,4 +1325,5 @@ void BrokerApp::setAclManager(AclManager *mng)
 	m_aclManager = mng;
 }
 }
+// For LdapAuthThread.
 #include <brokerapp.moc>
