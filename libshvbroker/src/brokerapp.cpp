@@ -772,8 +772,8 @@ void BrokerApp::onClientLogin(int connection_id)
 	}
 
 	if(conn->deviceOptions().isMap()) {
-		const shv::chainpack::RpcValue::Map &device_opts = conn->deviceOptions().asMap();
-		std::string mount_point = resolveMountPoint(device_opts);
+		const auto device_opts = conn->deviceOptions();
+		std::string mount_point = resolveMountPoint(device_opts.asMap());
 		if(!mount_point.empty()) {
 			string path_rest;
 			auto *cli_nd = qobject_cast<ClientShvNode*>(m_nodesTree->cd(mount_point, &path_rest));
@@ -965,8 +965,8 @@ void BrokerApp::onRpcDataReceived(int connection_id, shv::chainpack::Rpc::Protoc
 						}
 					}
 				}
-				const std::string &method = cp::RpcMessage::method(meta).asString();
-				const std::string &resolved_shv_path = cp::RpcMessage::shvPath(meta).asString();
+				const std::string method = cp::RpcMessage::method(meta).asString();
+				const std::string resolved_shv_path = cp::RpcMessage::shvPath(meta).asString();
 				ShvUrl resolved_shv_url(resolved_shv_path);
 				cp::AccessGrant acg;
 				acg = aclManager()->accessGrantForShvPath(connection_handle->loggedUserName(), resolved_shv_url, method, connection_handle->isMasterBrokerConnection(), is_service_provider_mount_point_relative_call, cp::RpcMessage::accessGrant(meta));

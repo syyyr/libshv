@@ -164,7 +164,8 @@ std::pair<unsigned, unsigned> ShvFieldDescr::bitRange() const
 	unsigned bit_no1 = 0;
 	unsigned bit_no2 = 0;
 	if(value().isList()) {
-		const auto &lst = value().asList();
+		const auto val = value();
+		const auto &lst = val.asList();
 		bit_no1 = lst.value(0).toUInt();
 		bit_no2 = lst.value(1).toUInt();
 		if(bit_no2 < bit_no1) {
@@ -1191,7 +1192,7 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 	bool new_device_type_entered = device_description == nullptr;
 	static const string CREATE_FROM_TYPE_NAME = "createFromTypeName";
 	static const string SYSTEM_PATH = "systemPath";
-	for(const RpcValue &rv : node.metaValue("methods").asList()) {
+	for(const RpcValue &rv : node.metaData().valref("methods").asList()) {
 		const auto mm = MetaMethod::fromRpcValue(rv);
 		const string &method_name = mm.name();
 		if(method_name == Rpc::METH_LS || method_name == Rpc::METH_DIR)
@@ -1203,7 +1204,7 @@ void ShvTypeInfo::fromNodesTree_helper(const RpcValue::Map &node_types,
 			setExtraTags(key, mm.tags());
 		}
 	}
-	const RpcValue::Map &node_tags = node.metaValue(KEY_TAGS).asMap();
+	const RpcValue::Map &node_tags = node.metaData().valref(KEY_TAGS).asMap();
 	if(!node_tags.empty()) {
 		RpcValue::Map tags_map = node_tags;
 		const string &dtype = tags_map.valref(KEY_DEVICE_TYPE).asString();

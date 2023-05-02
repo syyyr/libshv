@@ -188,8 +188,8 @@ void ShvNode::handleRpcRequest(const chainpack::RpcRequest &rq)
 {
 	shvLogFuncFrame() << "node:" << nodeId() << metaObject()->className();
 	using ShvPath = shv::core::utils::ShvPath;
-	const chainpack::RpcValue::String &method = rq.method().asString();
-	const chainpack::RpcValue::String &shv_path_str = rq.shvPath().asString();
+	const chainpack::RpcValue::String method = rq.method().asString();
+	const chainpack::RpcValue::String shv_path_str = rq.shvPath().asString();
 	core::StringViewList shv_path = ShvPath::split(shv_path_str);
 	RpcResponse resp = RpcResponse::forRequest(rq);
 	try {
@@ -219,8 +219,8 @@ chainpack::RpcValue ShvNode::handleRpcRequestImpl(const chainpack::RpcRequest &r
 {
 	shvLogFuncFrame() << "node:" << nodeId() << metaObject()->className();
 	using ShvPath = shv::core::utils::ShvPath;
-	const chainpack::RpcValue::String &method = rq.method().asString();
-	const chainpack::RpcValue::String &shv_path_str = rq.shvPath().asString();
+	const chainpack::RpcValue::String method = rq.method().asString();
+	const chainpack::RpcValue::String shv_path_str = rq.shvPath().asString();
 	core::StringViewList shv_path = ShvPath::split(shv_path_str);
 	RpcResponse resp = RpcResponse::forRequest(rq);
 	if(!shv_path.empty()) {
@@ -241,7 +241,7 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 {
 	shvLogFuncFrame() << rq.shvPath() << rq.method();
 	core::StringViewList shv_path = core::utils::ShvPath::split(rq.shvPath().asString());
-	const chainpack::RpcValue::String &method = rq.method().asString();
+	const chainpack::RpcValue::String method = rq.method().asString();
 	const chainpack::MetaMethod *mm = metaMethod(shv_path, method);
 	if(!mm)
 		SHV_EXCEPTION(std::string("Method: '") + method + "' on path '" + shvPath() + '/' + rq.shvPath().toString() + "' doesn't exist.");
@@ -273,7 +273,7 @@ chainpack::RpcValue ShvNode::processRpcRequest(const chainpack::RpcRequest &rq)
 chainpack::RpcValue ShvNode::callMethodRq(const chainpack::RpcRequest &rq)
 {
 	core::StringViewList shv_path = shv::core::utils::ShvPath::split(rq.shvPath().asString());
-	const chainpack::RpcValue::String &method = rq.method().asString();
+	const chainpack::RpcValue::String method = rq.method().asString();
 	chainpack::RpcValue ret_val = callMethod(shv_path, method, rq.params(), rq.userId());
 	return ret_val;
 }

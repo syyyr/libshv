@@ -267,8 +267,9 @@ chainpack::RpcValue RolesAclNode::callMethod(const iotqt::node::ShvNode::StringV
 	if(shv_path.empty()) {
 		if(method == M_SET_VALUE) {
 			if(params.isList()) {
-				const auto &lst = params.asList();
-				const std::string &role_name = lst.value(0).asString();
+				const auto p = params;
+				const auto &lst = p.asList();
+				const std::string role_name = lst.value(0).asString();
 
 				chainpack::RpcValue rv = lst.value(1);
 				auto v = acl::AclRole::fromRpcValue(rv);
