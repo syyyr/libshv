@@ -28,8 +28,14 @@ using namespace shv::chainpack;
 
 namespace shv::core::utils {
 
+#if defined(__APPLE__)
+#define SHV_STATBUF              struct stat
+#define SHV_STAT                 ::stat
+#else
 #define SHV_STATBUF              struct stat64
 #define SHV_STAT                 ::stat64
+#endif
+
 #if defined(__unix) || defined(__APPLE__)
 #define SHV_MKDIR(dir_name)      ::mkdir(dir_name, 0777)
 #else
