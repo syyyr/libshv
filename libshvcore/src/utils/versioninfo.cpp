@@ -37,7 +37,19 @@ bool VersionInfo::operator==(const VersionInfo &v) const
 
 std::strong_ordering VersionInfo::operator<=>(const VersionInfo &v) const
 {
+#if __ANDROID__
+	if (operator==(v)) {
+		return std::strong_ordering::equal;
+	}
+
+	if (std::tie(this->m_majorNumber, this->m_minorNumber, this->m_patchNumber) < std::tie(v.m_majorNumber, v.m_minorNumber, v.m_patchNumber)) {
+		return std::strong_ordering::less;
+	}
+
+	return std::strong_ordering::greater;
+#else
 	return std::tie(this->m_majorNumber, this->m_minorNumber, this->m_patchNumber) <=> std::tie(v.m_majorNumber, v.m_minorNumber, v.m_patchNumber);
+#endif
 }
 
 const std::string &VersionInfo::branch() const
