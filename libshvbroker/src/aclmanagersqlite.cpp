@@ -273,7 +273,7 @@ acl::AclRole AclManagerSqlite::aclRole(const std::string &role_name)
 
 void AclManagerSqlite::aclSetRole(const std::string &role_name, const acl::AclRole &r)
 {
-	QString qs = "INSERT OR REPLACE INTO " + TBL_ACL_ROLES + " (name, roles, profile) VALUES('%1', %2, '%3', '%4')";
+	QString qs = "INSERT OR REPLACE INTO " + TBL_ACL_ROLES + " (name, roles, profile) VALUES('%1', '%2', '%3')";
 	qs = qs.arg(QString::fromStdString(role_name));
 	qs = qs.arg(join_str_vec(r.roles));
 	qs = qs.arg(QString::fromStdString(r.profile.isValid()? r.profile.toCpon(): ""));
