@@ -128,6 +128,7 @@ void AclManagerSqlite::createAclSqlTables()
 				user character varying,
 				password character varying,
 				loginType character varying,
+				ruleNumber integer varying,
 				PRIMARY KEY (role, path, method)
 			);
 			)kkt").arg(TBL_ACL_ACCESS));
@@ -273,7 +274,7 @@ acl::AclRole AclManagerSqlite::aclRole(const std::string &role_name)
 
 void AclManagerSqlite::aclSetRole(const std::string &role_name, const acl::AclRole &r)
 {
-	QString qs = "INSERT OR REPLACE INTO " + TBL_ACL_ROLES + " (name, roles, profile) VALUES('%1', %2, '%3', '%4')";
+	QString qs = "INSERT OR REPLACE INTO " + TBL_ACL_ROLES + " (name, roles, profile) VALUES('%1', '%2', '%3')";
 	qs = qs.arg(QString::fromStdString(role_name));
 	qs = qs.arg(join_str_vec(r.roles));
 	qs = qs.arg(QString::fromStdString(r.profile.isValid()? r.profile.toCpon(): ""));
@@ -294,7 +295,7 @@ std::vector<std::string> AclManagerSqlite::aclAccessRoles()
 acl::AclRoleAccessRules AclManagerSqlite::aclAccessRoleRules(const std::string &role_name)
 {
 	acl::AclRoleAccessRules ret;
-	QSqlQuery q = execSql("SELECT * FROM " + TBL_ACL_ACCESS + " WHERE role='" + QString::fromStdString(role_name) + "'");
+	QSqlQuery q = execSql("SELECT * FROM " + TBL_ACL_ACCESS + " WHERE role='" + QString::fromStdString(role_name) + "' ORDER BY ruleNumber");
 	while(q.next()) {
 		acl::AclAccessRule ag;
 		ag.service = q.value("service").toString().toStdString();
@@ -328,6 +329,7 @@ void AclManagerSqlite::aclSetAccessRoleRules(const std::string &role_name, const
 		QSqlDatabase db = m_brokerApp->sqlConfigConnection();
 		QSqlDriver *drv = db.driver();
 		QSqlRecord rec = drv->record(TBL_ACL_ACCESS);
+		int rule_number = 0;
 		for(const auto &rule : rules) {
 			rec.setValue("role", QString::fromStdString(role_name));
 			rec.setValue("service", QString::fromStdString(rule.service));
@@ -346,9 +348,11 @@ void AclManagerSqlite::aclSetAccessRoleRules(const std::string &role_name, const
 			default:
 				SHV_EXCEPTION("Invalid PathAccessGrant type: " + std::to_string(static_cast<int>(rule.grant.type)));
 			}
+			rec.setValue("ruleNumber", rule_number);
 			qs = drv->sqlStatement(QSqlDriver::InsertStatement, TBL_ACL_ACCESS, rec, false);
 			logAclManagerM() << qs;
 			execSql(qs);
+			rule_number++;
 		}
 	}
 }
