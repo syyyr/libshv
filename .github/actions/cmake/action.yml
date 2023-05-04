@@ -36,6 +36,6 @@ runs:
         modules: ${{ inputs.modules }}
 
     - name: Configure CMake
-      run: CFLAGS="-Werror" CXXFLAGS="-Werror" cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DUSE_QT6=${{ inputs.use_qt6 }} -DWITH_CLI_EXAMPLES=ON -DWITH_GUI_EXAMPLES=ON -DWITH_LDAP=ON ${{ inputs.additional_cmake_args }}
+      run: CFLAGS="-Werror ${CFLAGS}" CXXFLAGS="-Werror ${CXXFLAGS}" cmake -G Ninja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DUSE_QT6=${{ inputs.use_qt6 }} -DWITH_CLI_EXAMPLES=ON -DWITH_GUI_EXAMPLES=ON -DWITH_LDAP=ON ${{ inputs.additional_cmake_args }}
       shell: bash
 
