@@ -3,6 +3,21 @@
 
 #include <doctest/doctest.h>
 
+namespace shv::chainpack {
+doctest::String toString(const RpcValue& value) {
+	return value.toCpon().c_str();
+}
+
+doctest::String toString(const RpcValue::Map& value) {
+	return RpcValue(value).toCpon().c_str();
+}
+
+doctest::String toString(const RpcValue::DateTime& value) {
+	return value.toIsoString().c_str();
+}
+}
+
+
 using namespace shv::core::utils;
 DOCTEST_TEST_CASE("joinPath")
 {
@@ -107,4 +122,31 @@ DOCTEST_TEST_CASE("findLongestPrefix")
 		CAPTURE(it.second == map.end() ? "<nothing>" : it.second->first);
 		REQUIRE(findLongestPrefix(map, it.first) == it.second);
 	}
+}
+
+DOCTEST_TEST_CASE("Utils::foldMap")
+{
+	using shv::chainpack::RpcValue;
+	RpcValue::Map input = {
+		{"shv.a", 0},
+		{"shv.b", 0},
+		{"shv.bbb", 0},
+		{"shv.bbb.c", 0},
+		{"shv.bbb.cc", 0},
+	};
+
+	REQUIRE(shv::core::Utils::foldMap(input, '.') == shv::chainpack::RpcValue::Map {
+		{
+			"shv", RpcValue::Map {
+				{
+					{"a", 0},
+					{"b", 0},
+					{"bbb", RpcValue::Map {
+						{"c", 0 },
+						{"cc", 0 },
+					}}
+				}
+			}
+		}
+	});
 }

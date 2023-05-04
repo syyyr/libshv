@@ -132,7 +132,7 @@ RpcValue Utils::foldMap(const chainpack::RpcValue::Map &plain_map, char key_deli
 	RpcValue ret = RpcValue::Map();
 	for(const auto &kv : plain_map) {
 		string key = kv.first;
-		StringViewList lst = utils::split(std::string{key}, key_delimiter, '\0');
+		StringViewList lst = utils::split(key, key_delimiter, '\0');
 		create_key_val(ret, lst, kv.second);
 	}
 	return ret;
