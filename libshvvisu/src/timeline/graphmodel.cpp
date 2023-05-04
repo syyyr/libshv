@@ -124,6 +124,8 @@ double GraphModel::valueToDouble(const QVariant v, shv::core::utils::ShvTypeDesc
 	case Type::BitField:
 		// show integer value for now
 		return v.toInt();
+	case Type::DateTime:
+		return static_cast<double>(v.toDateTime().toSecsSinceEpoch());
 	default:
 		if(ok)
 			*ok = false;
