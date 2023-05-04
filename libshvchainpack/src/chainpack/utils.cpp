@@ -8,17 +8,6 @@ using namespace std;
 
 namespace shv::chainpack {
 
-namespace {
-
-inline char hex_nibble(char i)
-{
-	if(i < 10)
-		return '0' + i;
-	return 'a' + (i - 10);
-}
-
-}
-
 namespace utils {
 
 
@@ -26,8 +15,8 @@ void byteToHex(std::array<char, 2> &arr, uint8_t i)
 {
 	char h = static_cast<char>(i / 16);
 	char l = i % 16;
-	arr[0] = hex_nibble(h);
-	arr[1] = hex_nibble(l);
+	arr[0] = utils::hexNibble(h);
+	arr[1] = utils::hexNibble(l);
 }
 
 std::string byteToHex( uint8_t i )
