@@ -35,21 +35,14 @@ std::string int_to_hex( T i )
 	return stream.str();
 }
 
-inline char hex_nibble(char i)
-{
-	if(i < 10)
-		return '0' + i;
-	return 'A' + (i - 10);
-}
-
 std::string hex_dump(const RpcValue::String &out)
 {
 	std::string ret;
 	for (char i : out) {
 		char h = i / 16;
 		char l = i % 16;
-		ret += hex_nibble(h);
-		ret += hex_nibble(l);
+		ret += utils::hexNibble(h);
+		ret += utils::hexNibble(l);
 	}
 	return ret;
 }

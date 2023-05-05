@@ -91,9 +91,9 @@ static inline char unhex_char(char c)
 	if(c >= '0' && c <= '9')
 		return c - '0';
 	if(c >= 'a' && c <= 'f')
-		return c - 'a' + 10;
+		return static_cast<char>(c - 'a' + 10);
 	if(c >= 'A' && c <= 'F')
-		return c - 'A' + 10;
+		return static_cast<char>(c - 'A' + 10);
 	return char(0);
 }
 
@@ -132,7 +132,7 @@ RpcValue Utils::foldMap(const chainpack::RpcValue::Map &plain_map, char key_deli
 	RpcValue ret = RpcValue::Map();
 	for(const auto &kv : plain_map) {
 		string key = kv.first;
-		StringViewList lst = utils::split(std::string{key}, key_delimiter, '\0');
+		StringViewList lst = utils::split(key, key_delimiter, '\0');
 		create_key_val(ret, lst, kv.second);
 	}
 	return ret;
