@@ -11,13 +11,11 @@
 
 #include <shv/chainpack/rpc.h>
 
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <algorithm>
 #include <regex>
-#include <dirent.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 #define logWShvJournal() shvCWarning("ShvJournal")
 #define logIShvJournal() shvCInfo("ShvJournal")
@@ -27,72 +25,48 @@
 using namespace shv::chainpack;
 
 namespace shv::core::utils {
-
-#if defined(__APPLE__)
-#define SHV_STATBUF              struct stat
-#define SHV_STAT                 ::stat
-#else
-#define SHV_STATBUF              struct stat64
-#define SHV_STAT                 ::stat64
-#endif
-
-#if defined(__unix) || defined(__APPLE__)
-#define SHV_MKDIR(dir_name)      ::mkdir(dir_name, 0777)
-#else
-#define SHV_MKDIR(dir_name)      ::mkdir(dir_name)
-#endif
-#define SHV_REMOVE_FILE          ::remove
+namespace {
+void handle_error_code(const std::string_view& func_name, const std::error_code& code)
+{
+	if (code) {
+		logWShvJournal().nospace() << func_name << ": " << code.message() << " (" << std::to_string(code.value()) << ")";
+	}
+}
+}
 
 static bool is_dir(const std::string &dir_name)
 {
-	SHV_STATBUF st;
-	return SHV_STAT(dir_name.data(), &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR;
+	std::error_code code;
+	auto ret = std::filesystem::is_directory(dir_name, code);
+	handle_error_code(__FUNCTION__, code);
+	return ret;
 }
 
 static bool mkpath(const std::string &dir_name)
 {
-	// helper function to check if a given path is a directory, since mkdir can
-	// fail if the dir already exists (it may have been created by another
-	// thread or another process)
-	shvDebug() << dir_name << "exists:" << is_dir(dir_name);
-	if(is_dir(dir_name))
-		return true;
-	logIShvJournal() << "Creating journal dir:" << dir_name;
-	if (SHV_MKDIR(dir_name.data()) == 0)
-		return true;
-	if (errno == EEXIST)
-		return is_dir(dir_name);
-	if (errno != ENOENT)
-		return false;
-	// mkdir failed because the parent dir doesn't exist, so try to create it
-	auto const slash = dir_name.find_last_of('/');
-
-	if (slash == std::string::npos)
-		return false;
-	std::string parent_dir_name = dir_name.substr(0, slash);
-	if (!mkpath(parent_dir_name))
-		return false;
-	// try again
-	if (SHV_MKDIR(dir_name.data()) == 0)
-		return true;
-	return errno == EEXIST && is_dir(dir_name);
+	std::error_code code;
+	auto ret = std::filesystem::create_directories(dir_name, code);
+	handle_error_code(__FUNCTION__, code);
+	return ret;
 }
 
 static int64_t file_size(const std::string &file_name)
 {
-	SHV_STATBUF st;
-	if(SHV_STAT(file_name.data(), &st) == 0)
-		return st.st_size;
-	logWShvJournal() << "Cannot stat file:" << file_name;
-	return -1;
+	std::error_code code;
+	auto ret =  std::filesystem::file_size(file_name, code);
+	handle_error_code(__FUNCTION__, code);
+	return ret;
 }
 
 static int64_t rm_file(const std::string &file_name)
 {
 	int64_t sz = file_size(file_name);
-	if(SHV_REMOVE_FILE(file_name.c_str()) == 0)
+	std::error_code code;
+	auto ret = std::filesystem::remove(file_name, code);
+	handle_error_code(__FUNCTION__, code);
+	if (ret) {
 		return sz;
-	logWShvJournal() << "Cannot delete file:" << file_name;
+	}
 	return 0;
 }
 
@@ -313,60 +287,56 @@ void ShvFileJournal::rotateJournal()
 void ShvFileJournal::convertLog1JournalDir()
 {
 	const std::string &journal_dir = journalDir();
-	struct dirent *ent;
-	if (auto dir = opendir (journal_dir.c_str())) {
-		const std::string ext = ".log";
+	std::error_code code;
+	auto dir_iter = std::filesystem::directory_iterator(journal_dir, code);
+	if (code) {
+		shvError() << "Cannot read content of dir:" << journal_dir << " (" << code.value() << ")";
+		return;
+	}
+	const std::string ext = ".log";
+	for (const auto& entry : dir_iter) {
+		if (!entry.is_regular_file()) {
+			continue;
+		}
 		int n_files = 0;
-		while ((ent = readdir (dir)) != nullptr) {
-#ifdef DIRENT_HAS_TYPE_FIELD
-			if(ent->d_type == DT_REG) {
-#endif
-				std::string fn = ent->d_name;
-				if(!shv::core::String::endsWith(fn, ext))
-					continue;
-				if(n_files++ == 0)
-					shvInfo() << "======= Journal1 format file(s) found, converting to format 2";
-				int n = 0;
-				try {
-					n = std::stoi(fn.substr(0, fn.size() - ext.size()));
-				} catch (std::logic_error &e) {
-					shvWarning() << "Malformed shv journal file name" << fn << e.what();
-				}
-				if(n > 0) {
-					fn = journal_dir + '/' + ent->d_name;
-					std::ifstream in(fn, std::ios::in | std::ios::binary);
-					if (!in) {
-						shvWarning() << "Cannot open file:" << fn << "for reading.";
+		std::string fn = entry.path().filename();
+		if(!shv::core::String::endsWith(fn, ext))
+			continue;
+		if(n_files++ == 0)
+			shvInfo() << "======= Journal1 format file(s) found, converting to format 2";
+		int n = 0;
+		try {
+			n = std::stoi(fn.substr(0, fn.size() - ext.size()));
+		} catch (std::logic_error &e) {
+			shvWarning() << "Malformed shv journal file name" << fn << e.what();
+		}
+		if(n > 0) {
+			fn = journal_dir + '/' + entry.path().filename().string();
+			std::ifstream in(fn, std::ios::in | std::ios::binary);
+			if (!in) {
+				shvWarning() << "Cannot open file:" << fn << "for reading.";
+			}
+			else {
+				static constexpr size_t DT_LEN = 30;
+				std::array<char, DT_LEN> buff;
+				in.read(buff.data(), buff.size());
+				auto char_count = in.gcount();
+				if(char_count > 0) {
+					std::string s(buff.data(), static_cast<unsigned>(char_count));
+					int64_t file_msec = chainpack::RpcValue::DateTime::fromUtcString(s).msecsSinceEpoch();
+					if(file_msec == 0) {
+						shvWarning() << "cannot read date time from first line of file:" << fn << "line:" << s;
 					}
 					else {
-						static constexpr size_t DT_LEN = 30;
-						std::array<char, DT_LEN> buff;
-						in.read(buff.data(), buff.size());
-						auto char_count = in.gcount();
-						if(char_count > 0) {
-							std::string s(buff.data(), static_cast<unsigned>(char_count));
-							int64_t file_msec = chainpack::RpcValue::DateTime::fromUtcString(s).msecsSinceEpoch();
-							if(file_msec == 0) {
-								shvWarning() << "cannot read date time from first line of file:" << fn << "line:" << s;
-							}
-							else {
-								std::string new_fn = journal_dir + '/' + m_journalContext.fileMsecToFileName(file_msec);
-								shvInfo() << "renaming" << fn << "->" << new_fn;
-								if (std::rename(fn.c_str(), new_fn.c_str())) {
-									shvError() << "cannot rename:" << fn << "to:" << new_fn;
-								}
-							}
+						std::string new_fn = journal_dir + '/' + m_journalContext.fileMsecToFileName(file_msec);
+						shvInfo() << "renaming" << fn << "->" << new_fn;
+						if (std::rename(fn.c_str(), new_fn.c_str())) {
+							shvError() << "cannot rename:" << fn << "to:" << new_fn;
 						}
 					}
 				}
-#ifdef DIRENT_HAS_TYPE_FIELD
 			}
-#endif
 		}
-		closedir (dir);
-	}
-	else {
-		shvError() << "Cannot read content of dir:" << journal_dir;
 	}
 }
 
@@ -380,48 +350,44 @@ void ShvFileJournal::updateJournalStatus()
 	m_journalContext.lastFileSize = 0;
 	m_journalContext.files.clear();
 	int64_t max_file_msec = -1;
-	struct dirent *ent;
-	if (auto dir = opendir (m_journalContext.journalDir.c_str())) {
-		m_journalContext.journalSize = 0;
-		const std::string &ext = FILE_EXT;
-		while ((ent = readdir (dir)) != nullptr) {
-#ifdef DIRENT_HAS_TYPE_FIELD
-			if(ent->d_type == DT_REG) {
-#endif
-				std::string fn = ent->d_name;
-				if(!shv::core::String::endsWith(fn, ext))
-					continue;
-				try {
-					int64_t msec = m_journalContext.fileNameToFileMsec(fn);
-					m_journalContext.files.push_back(msec);
-					fn = m_journalContext.journalDir + '/' + fn;
-					int64_t sz = file_size(fn);
-					if(msec > max_file_msec) {
-						max_file_msec = msec;
-						m_journalContext.lastFileSize = sz;
-					}
-					m_journalContext.journalSize += sz;
-				} catch (std::logic_error &e) {
-					shvWarning() << "Mallformated shv journal file name" << fn << e.what();
-				}
-#ifdef DIRENT_HAS_TYPE_FIELD
-			}
-#endif
+	std::error_code code;
+	auto dir_iter = std::filesystem::directory_iterator(m_journalContext.journalDir.c_str(), code);
+	if (code) {
+		SHV_EXCEPTION("Cannot read content of dir: " + m_journalContext.journalDir + " (" + std::to_string(code.value()) + ")");
+		return;
+	}
+	m_journalContext.journalSize = 0;
+	const std::string &ext = FILE_EXT;
+	for (const auto& entry : dir_iter) {
+		if(!entry.is_regular_file()) {
+			continue;
 		}
-		closedir (dir);
-		std::sort(m_journalContext.files.begin(), m_journalContext.files.end());
-		logMShvJournal() << "journal dir contains:" << m_journalContext.files.size() << "files";
-		if(!m_journalContext.files.empty()) {
-			logMShvJournal() << "first file:"
-							 << m_journalContext.files[0]
-							 << RpcValue::DateTime::fromMSecsSinceEpoch(m_journalContext.files[0]).toIsoString();
-			logMShvJournal() << "last file:"
-							 << m_journalContext.files[m_journalContext.files.size()-1]
-							 << RpcValue::DateTime::fromMSecsSinceEpoch(m_journalContext.files[m_journalContext.files.size()-1]).toIsoString();
+		std::string fn = entry.path().filename();
+		if(!shv::core::String::endsWith(fn, ext))
+			continue;
+		try {
+			int64_t msec = m_journalContext.fileNameToFileMsec(fn);
+			m_journalContext.files.push_back(msec);
+			fn = m_journalContext.journalDir + '/' + fn;
+			int64_t sz = file_size(fn);
+			if(msec > max_file_msec) {
+				max_file_msec = msec;
+				m_journalContext.lastFileSize = sz;
+			}
+			m_journalContext.journalSize += sz;
+		} catch (std::logic_error &e) {
+			shvWarning() << "Mallformated shv journal file name" << fn << e.what();
 		}
 	}
-	else {
-		SHV_EXCEPTION("Cannot read content of dir: " + m_journalContext.journalDir);
+	std::sort(m_journalContext.files.begin(), m_journalContext.files.end());
+	logMShvJournal() << "journal dir contains:" << m_journalContext.files.size() << "files";
+	if(!m_journalContext.files.empty()) {
+		logMShvJournal() << "first file:"
+						 << m_journalContext.files[0]
+						 << RpcValue::DateTime::fromMSecsSinceEpoch(m_journalContext.files[0]).toIsoString();
+		logMShvJournal() << "last file:"
+						 << m_journalContext.files[m_journalContext.files.size()-1]
+						 << RpcValue::DateTime::fromMSecsSinceEpoch(m_journalContext.files[m_journalContext.files.size()-1]).toIsoString();
 	}
 }
 
