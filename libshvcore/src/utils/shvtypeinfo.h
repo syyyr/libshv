@@ -22,6 +22,7 @@ public:
 	ShvDescriptionBase(const chainpack::RpcValue &v) : m_data(v) {}
 
 	std::string name() const;
+	void setName(const std::string &n);
 
 	bool isEmpty() const { return m_data.asMap().empty(); }
 	bool isValid() const;
@@ -30,7 +31,6 @@ public:
 	bool operator==(const ShvDescriptionBase &o) const { return m_data == o.m_data; }
 protected:
 	bool hasName() const;
-	void setName(const std::string &n);
 	void setDataValue(const std::string &key, const chainpack::RpcValue &val);
 
 	void setData(const chainpack::RpcValue &data);
@@ -44,7 +44,7 @@ class SHVCORE_DECL_EXPORT ShvFieldDescr : public ShvDescriptionBase
 	using Super = ShvDescriptionBase;
 public:
 	ShvFieldDescr() = default;
-	ShvFieldDescr(const std::string &n,
+	ShvFieldDescr(const std::string &name,
 				  const std::string &type_name = {},
 				  const chainpack::RpcValue &value = {},
 				  chainpack::RpcValue::Map &&tags = {});
@@ -58,6 +58,13 @@ public:
 	int alarmLevel() const;
 
 	std::string unit() const;
+
+	ShvFieldDescr &setTypeName(const std::string &type_name);
+	ShvFieldDescr &setLabel(const std::string &label);
+	ShvFieldDescr &setDescription(const std::string &description);
+	ShvFieldDescr &setUnit(const std::string &unit);
+	ShvFieldDescr &setVisualStyleName(const std::string &visual_style_name);
+	ShvFieldDescr &setAlarm(const std::string &alarm);
 
 	chainpack::RpcValue toRpcValue() const;
 	static ShvFieldDescr fromRpcValue(const chainpack::RpcValue &v);
@@ -142,16 +149,6 @@ public:
 	[[deprecated]] ShvPropertyDescr(const std::string &type_name) {
 		setTypeName(type_name);
 	}
-
-	ShvPropertyDescr &setName(const std::string &name);
-	ShvPropertyDescr &setTypeName(const std::string &type_name);
-	ShvPropertyDescr &setLabel(const std::string &label);
-	ShvPropertyDescr &setDescription(const std::string &description);
-	ShvPropertyDescr &setUnit(const std::string &unit);
-
-	ShvPropertyDescr &setVisualStyleName(const std::string &visual_style_name);
-
-	ShvPropertyDescr &setAlarm(const std::string &alarm);
 
 	std::vector<ShvMethodDescr> methods() const;
 	ShvMethodDescr method(const std::string &name) const;

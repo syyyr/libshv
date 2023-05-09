@@ -144,6 +144,42 @@ string ShvFieldDescr::unit() const
 	return dataValue(KEY_UNIT).asString();
 }
 
+ShvFieldDescr &ShvFieldDescr::setTypeName(const string &type_name)
+{
+	setDataValue(KEY_TYPE_NAME, type_name);
+	return *this;
+}
+
+ShvFieldDescr &ShvFieldDescr::setLabel(const string &label)
+{
+	setDataValue(KEY_LABEL, label);
+	return *this;
+}
+
+ShvFieldDescr &ShvFieldDescr::setDescription(const string &description)
+{
+	setDataValue(KEY_DESCRIPTION, description);
+	return *this;
+}
+
+ShvFieldDescr &ShvFieldDescr::setUnit(const string &unit)
+{
+	setDataValue(KEY_UNIT, unit);
+	return *this;
+}
+
+ShvFieldDescr &ShvFieldDescr::setVisualStyleName(const string &visual_style_name)
+{
+	setDataValue(KEY_VISUAL_STYLE, visual_style_name);
+	return *this;
+}
+
+ShvFieldDescr &ShvFieldDescr::setAlarm(const string &alarm)
+{
+	setDataValue(KEY_ALARM, alarm);
+	return *this;
+}
+
 RpcValue ShvFieldDescr::toRpcValue() const
 {
 	RpcValue ret = m_data;
@@ -458,63 +494,21 @@ ShvTypeDescr ShvTypeDescr::fromRpcValue(const RpcValue &v)
 //=====================================================================
 // ShvPropertyDescr
 //=====================================================================
-ShvPropertyDescr &ShvPropertyDescr::setName(const std::string &name)
+std::vector<ShvMethodDescr> ShvPropertyDescr::methods() const
 {
-	setDataValue(KEY_NAME, name);
-	return *this;
-}
-
-ShvPropertyDescr &ShvPropertyDescr::setTypeName(const string &type_name)
-{
-	setDataValue(KEY_TYPE_NAME, type_name);
-	return *this;
-}
-
-ShvPropertyDescr &ShvPropertyDescr::setLabel(const string &label)
-{
-	setDataValue(KEY_LABEL, label);
-	return *this;
-}
-
-ShvPropertyDescr &ShvPropertyDescr::setDescription(const string &description)
-{
-	setDataValue(KEY_DESCRIPTION, description);
-	return *this;
-}
-
-ShvPropertyDescr &ShvPropertyDescr::setUnit(const string &unit)
-{
-	setDataValue(KEY_UNIT, unit);
-	return *this;
-}
-
-ShvPropertyDescr &ShvPropertyDescr::setVisualStyleName(const string &visual_style_name)
-{
-	setDataValue(KEY_VISUAL_STYLE, visual_style_name);
-	return *this;
-}
-
-ShvPropertyDescr &ShvPropertyDescr::setAlarm(const string &alarm)
-{
-	setDataValue(KEY_ALARM, alarm);
-	return *this;
-}
-
-std::vector<ShvLogMethodDescr> ShvPropertyDescr::methods() const
-{
-	std::vector<ShvLogMethodDescr> ret;
+	std::vector<ShvMethodDescr> ret;
 	RpcValue rv = dataValue(KEY_METHODS);
 	for(const auto &m : rv.asList()) {
-		ret.push_back(ShvLogMethodDescr::fromRpcValue(m));
+		ret.push_back(ShvMethodDescr::fromRpcValue(m));
 	}
 	return ret;
 }
 
-ShvLogMethodDescr ShvPropertyDescr::method(const std::string &name) const
+ShvMethodDescr ShvPropertyDescr::method(const std::string &name) const
 {
 	RpcValue rv = dataValue(KEY_METHODS);
 	for(const auto &m : rv.asList()) {
-		auto mm = ShvLogMethodDescr::fromRpcValue(m);
+		auto mm = ShvMethodDescr::fromRpcValue(m);
 		if(mm.name() == name)
 			return mm;
 	}

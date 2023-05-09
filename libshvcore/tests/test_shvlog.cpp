@@ -65,15 +65,15 @@ const ShvTypeInfo typeInfo = ShvTypeInfo::fromVersion2(
 		{
 			"Temperature",
 			{
-				ShvLogTypeDescr::Type::Decimal,
-				ShvLogTypeDescr::SampleType::Continuous,
+				ShvTypeDescr::Type::Decimal,
+				ShvTypeDescr::SampleType::Continuous,
 			}
 		},
 		{
 			"Voltage",
 			{
-				ShvLogTypeDescr::Type::Int,
-				ShvLogTypeDescr::SampleType::Continuous,
+				ShvTypeDescr::Type::Int,
+				ShvTypeDescr::SampleType::Continuous,
 				{
 					{"minVal", 0},
 					{"maxVal", 100},
@@ -83,7 +83,7 @@ const ShvTypeInfo typeInfo = ShvTypeInfo::fromVersion2(
 		{
 			"VetraStatus",
 			{
-				ShvLogTypeDescr::Type::BitField,
+				ShvTypeDescr::Type::BitField,
 				{
 					{"Active", "Bool", 0},
 					{"LastDir", "UInt", RpcValue::List{1,2}, {{"description", "N,L,R,S"}}},
@@ -94,13 +94,13 @@ const ShvTypeInfo typeInfo = ShvTypeInfo::fromVersion2(
 		{
 			"VehicleData",
 			{
-				ShvLogTypeDescr::Type::Map,
+				ShvTypeDescr::Type::Map,
 				{
 					{"vehicleId", "UInt"},
 					{"dir", "String", {}, {{"description", "N,L,R,S"}}},
 					{"CommError", "Bool"},
 				},
-				ShvLogTypeDescr::SampleType::Discrete
+				ShvTypeDescr::SampleType::Discrete
 			}
 		},
 	},
