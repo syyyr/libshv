@@ -160,6 +160,7 @@ protected:
 	rpc::WebSocketServer *m_webSocketSslServer = nullptr;
 #endif
 #ifdef WITH_SHV_LDAP
+	std::unique_ptr<void, void(*)(void*)> m_ldapLib;
 	// LDAP username -> group
 	std::optional<LdapConfig> m_ldapConfig;
 #endif

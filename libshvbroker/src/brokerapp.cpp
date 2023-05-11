@@ -16,7 +16,9 @@
 #endif
 
 #ifdef WITH_SHV_LDAP
+#include "openldap_dynamic.h"
 #include <shv/broker/ldap/ldap.h>
+#include <dlfcn.h>
 #endif
 
 #include <shv/iotqt/utils/network.h>
@@ -74,6 +76,8 @@ namespace shv::broker {
 
 #ifdef Q_OS_UNIX
 namespace {
+const auto LDAP_LIBNAME = "libldap.so.2";
+
 const auto sig_term_fd = [] {
 	std::array<int, 2> fd;
 	if(::socketpair(AF_UNIX, SOCK_STREAM, 0, fd.data())) {
@@ -210,10 +214,31 @@ const std::vector<cp::MetaMethod> MountsNode::m_metaMethods = {
 	{METH_CLIENT_IDS, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_CONFIG},
 };
 
+#ifdef WITH_SHV_LDAP
+namespace {
+void check_open_success(auto* ptr, auto name)
+{
+	if (!ptr) {
+		throw std::runtime_error(std::string{"LDAP configured, but "} + name + " couldn't be opened: " + dlerror());
+	}
+}
+
+void do_open_function(const auto& ldap_lib, auto fn_name, auto& fn_field)
+{
+	auto fn = dlsym(ldap_lib.get(), fn_name);
+	check_open_success(fn, fn_name);
+	fn_field = reinterpret_cast<decltype(fn_field)>(fn);
+}
+}
+#endif
+
 static const auto SQL_CONFIG_CONN_NAME = QStringLiteral("ShvBrokerDbConfigSqlConnection");
 BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 	: Super(argc, argv)
 	, m_cliOptions(cli_opts)
+#ifdef WITH_SHV_LDAP
+	, m_ldapLib(nullptr, nullptr)
+#endif
 {
 	m_brokerId = m_cliOptions->brokerId();
 	std::srand(static_cast<unsigned int>(std::time(nullptr)));
@@ -261,6 +286,30 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 
 #ifdef WITH_SHV_LDAP
 	if (cli_opts->ldapHostname_isset()) {
+		m_ldapLib = {dlopen(LDAP_LIBNAME, RTLD_LAZY), [] (void* handle) {
+			if (dlclose(handle)) {
+				shvError() << "Couldn't close OpenLDAP library:" << dlerror();
+			}
+		}};
+		check_open_success(m_ldapLib.get(), LDAP_LIBNAME);
+
+#define open_function(FN_NAME) do_open_function(m_ldapLib, #FN_NAME, ldap::OpenLDAP::FN_NAME)
+		open_function(ber_free);
+		open_function(ldap_connect);
+		open_function(ldap_destroy);
+		open_function(ldap_err2string);
+		open_function(ldap_first_attribute);
+		open_function(ldap_first_entry);
+		open_function(ldap_get_values_len);
+		open_function(ldap_initialize);
+		open_function(ldap_msgfree);
+		open_function(ldap_next_attribute);
+		open_function(ldap_next_entry);
+		open_function(ldap_sasl_bind_s);
+		open_function(ldap_search_ext_s);
+		open_function(ldap_set_option);
+		open_function(ldap_value_free_len);
+
 		shvInfo() << "Enabling LDAP authentication";
 
 		if (!cli_opts->ldapSearchBaseDN_isset()) {
