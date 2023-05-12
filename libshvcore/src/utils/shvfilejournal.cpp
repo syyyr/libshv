@@ -299,7 +299,7 @@ void ShvFileJournal::convertLog1JournalDir()
 			continue;
 		}
 		int n_files = 0;
-		std::string fn = entry.path().filename();
+		std::string fn = entry.path().filename().string();
 		if(!shv::core::String::endsWith(fn, ext))
 			continue;
 		if(n_files++ == 0)
@@ -362,7 +362,7 @@ void ShvFileJournal::updateJournalStatus()
 		if(!entry.is_regular_file()) {
 			continue;
 		}
-		std::string fn = entry.path().filename();
+		std::string fn = entry.path().filename().string();
 		if(!shv::core::String::endsWith(fn, ext))
 			continue;
 		try {
@@ -426,7 +426,7 @@ int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, int64_t jou
 		SHV_EXCEPTION("Cannot open file: " + fn + " for reading.");
 	int64_t dt_msec = -1;
 	in.seekg(0, std::ios::end);
-	long fpos = in.tellg();
+	auto fpos = in.tellg();
 	if(fpos == 0) {
 		// empty file
 		return journal_start_msec;
