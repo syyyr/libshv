@@ -27,8 +27,9 @@ if(OpenLDAP_FOUND)
 	message(STATUS "OpenLDAP found, enabling broker support for LDAP")
 	target_sources(libshvbroker PRIVATE
 		src/ldap.cpp
+		src/openldap_dynamic.cpp
 		)
-	target_link_libraries(libshvbroker PUBLIC PkgConfig::OpenLDAP)
+	target_include_directories(libshvbroker PUBLIC "${OpenLDAP_INCLUDE_DIRS}")
 	target_compile_definitions(libshvbroker PUBLIC WITH_SHV_LDAP)
 endif()
 

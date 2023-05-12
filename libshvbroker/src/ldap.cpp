@@ -1,3 +1,5 @@
+#include "openldap_dynamic.h"
+
 #include <shv/broker/ldap/ldap.h>
 
 #include <QScopeGuard>
@@ -32,7 +34,7 @@ auto wrap(Type* ptr, DeleteFunc delete_func)
 void throwIfError(int code, const std::string& err_msg)
 {
 	if (code) {
-		throw LdapError(err_msg + ": " + ldap_err2string(code) + " (" + std::to_string(code) + ")", code);
+		throw LdapError(err_msg + ": " + OpenLDAP::ldap_err2string(code) + " (" + std::to_string(code) + ")", code);
 	}
 }
 }
@@ -49,14 +51,14 @@ int LdapError::code() const
 }
 
 Ldap::Ldap(LDAP* conn)
-	: m_conn(conn, ldap_destroy)
+	: m_conn(conn, OpenLDAP::ldap_destroy)
 {
 }
 
 std::unique_ptr<Ldap> Ldap::create(const std::string_view& hostname)
 {
 	LDAP* conn;
-	auto ret = ldap_initialize(&conn, hostname.data());
+	auto ret = OpenLDAP::ldap_initialize(&conn, hostname.data());
 	throwIfError(ret, "Couldn't initialize LDAP context");
 	return std::unique_ptr<Ldap>(new Ldap(conn));
 }
@@ -64,13 +66,13 @@ std::unique_ptr<Ldap> Ldap::create(const std::string_view& hostname)
 void Ldap::setVersion(Version version)
 {
 	int ver_int = static_cast<int>(version);
-	auto ret = ldap_set_option(m_conn.get(), LDAP_OPT_PROTOCOL_VERSION, &ver_int);
+	auto ret = OpenLDAP::ldap_set_option(m_conn.get(), LDAP_OPT_PROTOCOL_VERSION, &ver_int);
 	throwIfError(ret, "Couldn't set LDAP version");
 }
 
 void Ldap::connect()
 {
-	auto ret = ldap_connect(m_conn.get());
+	auto ret = OpenLDAP::ldap_connect(m_conn.get());
 	throwIfError(ret, "Couldn't connect to the LDAP server");
 }
 
@@ -81,7 +83,7 @@ void Ldap::bindSasl(const std::string_view& bind_dn, const std::string_view& bin
 		.bv_len = bind_pw.size(),
 		.bv_val = pw_copy.get(),
 	};
-	auto ret = ldap_sasl_bind_s(m_conn.get(), bind_dn.data(), LDAP_SASL_SIMPLE, &cred, nullptr, nullptr, nullptr);
+	auto ret = OpenLDAP::ldap_sasl_bind_s(m_conn.get(), bind_dn.data(), LDAP_SASL_SIMPLE, &cred, nullptr, nullptr, nullptr);
 	throwIfError(ret, "Couldn't authenticate to the LDAP server");
 }
 
@@ -98,23 +100,23 @@ std::vector<Entry> Ldap::search(const std::string_view& base_dn, const std::stri
 	});
 
 	LDAPMessage* msg;
-	auto ret = ldap_search_ext_s(m_conn.get(), base_dn.data(), LDAP_SCOPE_SUBTREE, filter.data(), attr_array.get(), 0, nullptr, nullptr, nullptr, 0, &msg);
+	auto ret = OpenLDAP::ldap_search_ext_s(m_conn.get(), base_dn.data(), LDAP_SCOPE_SUBTREE, filter.data(), attr_array.get(), 0, nullptr, nullptr, nullptr, 0, &msg);
 	throwIfError(ret, "Couldn't complete search");
-	auto msg_deleter = wrap(msg, ldap_msgfree);
+	auto msg_deleter = wrap(msg, OpenLDAP::ldap_msgfree);
 
 	std::vector<Entry> res;
-	for (auto entry = ldap_first_entry(m_conn.get(), msg); entry != nullptr; entry = ldap_next_entry(m_conn.get(), entry)) {
+	for (auto entry = OpenLDAP::ldap_first_entry(m_conn.get(), msg); entry != nullptr; entry = OpenLDAP::ldap_next_entry(m_conn.get(), entry)) {
 		auto& res_entry = res.emplace_back();
 		BerElement* ber;
-		for (auto attr = wrap(ldap_first_attribute(m_conn.get(), entry, &ber), std::free); attr != nullptr; attr = wrap(ldap_next_attribute(m_conn.get(), entry, ber), std::free)) {
+		for (auto attr = wrap(OpenLDAP::ldap_first_attribute(m_conn.get(), entry, &ber), std::free); attr != nullptr; attr = wrap(OpenLDAP::ldap_next_attribute(m_conn.get(), entry, ber), std::free)) {
 			auto& res_attr = res_entry.keysAndValues.try_emplace(attr.get(), std::vector<std::string>{}).first->second;
-			auto values = wrap(ldap_get_values_len(m_conn.get(), entry, attr.get()), ldap_value_free_len);
+			auto values = wrap(OpenLDAP::ldap_get_values_len(m_conn.get(), entry, attr.get()), OpenLDAP::ldap_value_free_len);
 			for (auto value = values.get(); *value; value++) {
 				auto value_deref = *value;
 				res_attr.emplace_back(value_deref->bv_val, value_deref->bv_len);
 			}
 		}
-		ber_free(ber, 0);
+		OpenLDAP::ber_free(ber, 0);
 	}
 	return res;
 }
