@@ -76,7 +76,9 @@ namespace shv::broker {
 
 #ifdef Q_OS_UNIX
 namespace {
+#ifdef WITH_SHV_LDAP
 const auto LDAP_LIBNAME = "libldap.so.2";
+#endif
 
 const auto sig_term_fd = [] {
 	std::array<int, 2> fd;
