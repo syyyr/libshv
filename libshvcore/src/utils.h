@@ -129,7 +129,7 @@ enum class QuoteBehavior {
 	RemoveQuotes
 };
 SHVCORE_DECL_EXPORT StringViewList split(StringView strv, char delim, char quote = '\0', SplitBehavior split_behavior = SplitBehavior::SkipEmptyParts, QuoteBehavior quotes_behavior = QuoteBehavior::KeepQuotes);
-SHVCORE_DECL_EXPORT StringViewList split(std::string&& strv, char delim, char quote = '\0', SplitBehavior split_behavior = SplitBehavior::SkipEmptyParts, QuoteBehavior quotes_behavior = QuoteBehavior::KeepQuotes) = delete;
+StringViewList split(std::string&& strv, char delim, char quote = '\0', SplitBehavior split_behavior = SplitBehavior::SkipEmptyParts, QuoteBehavior quotes_behavior = QuoteBehavior::KeepQuotes) = delete;
 SHVCORE_DECL_EXPORT StringView getToken(StringView strv, char delim = ' ', char quote = '\0');
 SHVCORE_DECL_EXPORT StringView slice(StringView s, int start, int end);
 
