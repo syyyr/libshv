@@ -1,5 +1,6 @@
 #include "logsortfilterproxymodel.h"
 
+#include <shv/core/utils/shvpath.h>
 #include <shv/core/log.h>
 
 namespace shv::visu::logview {
@@ -32,6 +33,21 @@ void LogSortFilterProxyModel::setFulltextFilter(const timeline::FullTextFilter &
 	invalidateFilter();
 }
 
+bool startsWithPath(const QStringView &str, const QStringView &path)
+{
+	if (path.empty())
+		return true;
+	if (str.startsWith(path)) {
+		if (str.size() == path.size())
+			return true;
+		if (str[path.size()] == shv::core::utils::ShvPath::SHV_PATH_DELIM)
+			return true;
+		if (path[path.size() - 1] == shv::core::utils::ShvPath::SHV_PATH_DELIM) // path contains trailing /
+			return true;
+	}
+	return false;
+}
+
 bool LogSortFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
 	bool row_accepted = false;
@@ -41,7 +57,7 @@ bool LogSortFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex
 		if (!row_accepted) {
 			for (const QString &selected_path : m_channelFilter.matchingPaths()) {
 				auto row_path = sourceModel()->data(ix).toString();
-				if (selected_path == row_path || selected_path.startsWith(row_path)) {
+				if (selected_path.startsWith(row_path)) {
 					row_accepted = true;
 					break;
 				}
