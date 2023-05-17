@@ -7,15 +7,19 @@
 #include <QStringLiteral>
 
 namespace shv::ldap {
-std::vector<std::string> getGroupsForUser(const std::unique_ptr<shv::ldap::Ldap>& my_ldap, const std::string_view& base_dn, const std::string_view& field_name, const std::string_view& user_name) {
+std::vector<std::string> getGroupsForUser(const std::unique_ptr<shv::ldap::Ldap>& my_ldap, const std::string_view& base_dn, const std::vector<std::string>& field_names, const std::string_view& user_name) {
 	std::vector<std::string> res;
-	auto filter = QStringLiteral(R"(%1=%2)").arg(field_name.data(), user_name.data());
+	auto filter = QStringLiteral("(|");
+	for (const auto& field_name : field_names) {
+		filter += QStringLiteral(R"((%1=%2))").arg(field_name.data(), user_name.data());
+	}
+	filter += ')';
 	auto entries = my_ldap->search(base_dn.data(), qPrintable(filter), {"memberOf"});
 	for (const auto& entry : entries) {
 		for (const auto& [key, values]: entry.keysAndValues) {
 			for (const auto& v : values) {
 				res.emplace_back(v);
-				auto derived_groups = getGroupsForUser(my_ldap, v, "objectClass", "*");
+				auto derived_groups = getGroupsForUser(my_ldap, v, {"objectClass"}, "*");
 				std::copy(derived_groups.begin(), derived_groups.end(), std::back_inserter(res));
 			}
 		}

@@ -39,5 +39,5 @@ private:
 	std::unique_ptr<LDAP, int(*)(LDAP*)> m_conn;
 };
 
-std::vector<std::string> getGroupsForUser(const std::unique_ptr<shv::ldap::Ldap>& my_ldap, const std::string_view& base_dn, const std::string_view& field_name, const std::string_view& user_name);
+std::vector<std::string> getGroupsForUser(const std::unique_ptr<shv::ldap::Ldap>& my_ldap, const std::string_view& base_dn, const std::vector<std::string>& field_names, const std::string_view& user_name);
 }

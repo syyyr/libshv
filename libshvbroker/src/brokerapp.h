@@ -103,7 +103,7 @@ public:
 	struct LdapConfig {
 		std::string hostName;
 		std::string searchBaseDN;
-		std::string searchAttr;
+		std::vector<std::string> searchAttrs;
 		struct GroupMapping {
 			std::string ldapGroup;
 			std::string shvGroup;
