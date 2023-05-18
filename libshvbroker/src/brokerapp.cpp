@@ -318,13 +318,22 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 			SHV_EXCEPTION("LDAP searchBaseDN not set");
 		}
 
-		if (!cli_opts->ldapSearchAttr_isset()) {
-			SHV_EXCEPTION("LDAP searchBaseDN not set");
+		if (!cli_opts->ldapSearchAttrs_isset()) {
+			SHV_EXCEPTION("LDAP searchAttrs not set");
 		}
 
 		if (!cli_opts->ldapGroupMapping_isset()) {
 			SHV_EXCEPTION("LDAP groupMapping not set");
 		}
+
+		auto cli_search_attrs = cli_opts->ldapSearchAttrs();
+		std::vector<std::string> search_attrs;
+		std::transform(cli_search_attrs.begin(),
+					   cli_search_attrs.end(),
+					   std::back_inserter(search_attrs),
+					   [] (const auto& attr) {
+						   return attr.asString();
+					   });
 
 		auto cli_group_mapping = cli_opts->ldapGroupMapping();
 		std::vector<LdapConfig::GroupMapping> group_mapping;
@@ -340,7 +349,7 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 		m_ldapConfig = LdapConfig {
 			.hostName = cli_opts->ldapHostname(),
 			.searchBaseDN = cli_opts->ldapSearchBaseDN(),
-			.searchAttr = cli_opts->ldapSearchAttr(),
+			.searchAttrs = search_attrs,
 			.groupMapping = group_mapping
 		};
 	}
@@ -619,7 +628,7 @@ public:
 			ldap->connect();
 			auto login_details = m_ctx.userLogin();
 			ldap->bindSasl(login_details.user, login_details.password);
-			auto ldap_groups = ldap::getGroupsForUser(ldap, m_ldapConfig.searchBaseDN, m_ldapConfig.searchAttr, login_details.user);
+			auto ldap_groups = ldap::getGroupsForUser(ldap, m_ldapConfig.searchBaseDN, m_ldapConfig.searchAttrs, login_details.user);
 			std::string res_shv_group;
 			if (auto it = std::find_if(m_ldapConfig.groupMapping.begin(), m_ldapConfig.groupMapping.end(), [&ldap_groups] (const auto& mapping) {
 				return std::find_if(ldap_groups.begin(), ldap_groups.end(), [&mapping] (const auto& ldap_group) {
