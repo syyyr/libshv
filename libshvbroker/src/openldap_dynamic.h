@@ -17,4 +17,4 @@ namespace shv::ldap::OpenLDAP {
 	extern decltype(&ldap_set_option) ldap_set_option;
 	extern decltype(&ldap_value_free_len) ldap_value_free_len;
 	// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
-};
+}
