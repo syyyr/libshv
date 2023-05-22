@@ -124,15 +124,21 @@ int main(int argc, char *argv[])
 	cp::AbstractStreamReader *prd;
 	cp::AbstractStreamWriter *pwr;
 
-	if(o_input == Format::Cpon)
+	if(o_input == Format::Cpon) {
+		nMessage() << "from Cpon";
 		prd = new cp::CponReader(*pin);
-	else
+	}
+	else {
+		nMessage() << "from ChainPack";
 		prd = new cp::ChainPackReader(*pin);
+	}
 
 	if(o_output == Format::ChainPack) {
+		nMessage() << "to ChainPack";
 		pwr = new cp::ChainPackWriter(std::cout);
 	}
 	else {
+		nMessage() << "to Cpon";
 		shv::chainpack::CponWriterOptions opts;
 		opts.setIndent(o_indent);
 		opts.setTranslateIds(o_translate_meta_ids);
@@ -141,45 +147,16 @@ int main(int argc, char *argv[])
 	}
 
 	try {
-		if(o_output == Format::Cpon) {
-			nMessage() << "converting Cpon --> ChainPack";
-			while(true) {
-				// read garbage to discover end of stream
-				while(true) {
-					int c = pin->get();
-					if(c < 0)
-						goto clean_exit;
-					if(c > ' ') {
-						pin->unget();
-						break;
-					}
-				}
-				nMessage() << "read";
-				shv::chainpack::RpcValue val = prd->read();
-				nMessage() << "write";
-				pwr->write(val);
-			}
-		}
-		else {
-			nMessage() << "converting ChainPack --> Cpon";
-			while(true) {
-				// check end of stream
-				int c = pin->get();
-				if(c < 0)
-					break;
-				pin->unget();
-				nMessage() << "read";
-				shv::chainpack::RpcValue val = prd->read();
-				nMessage() << "write";
-				pwr->write(val);
-			}
-		}
+		nMessage() << "read";
+		shv::chainpack::RpcValue val = prd->read();
+		nMessage() << "write";
+		pwr->write(val);
 	}
 	catch (std::exception &e) {
 		nError() << e.what();
 		exit(-1);
 	}
-clean_exit:
+
 	delete prd;
 	delete pwr;
 
