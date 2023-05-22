@@ -656,7 +656,8 @@ private:
 void BrokerApp::checkLogin(const chainpack::UserLoginContext &ctx, const std::function<void(chainpack::UserLoginResult)> cb)
 {
 	auto result = BrokerApp::instance()->aclManager()->checkPassword(ctx);
-	if (result.passwordOk) {
+	// If the user exists in the ACL manager, we'll take the result as decisive.
+	if (aclManager()->user(ctx.userLogin().user).isValid()) {
 		cb(result);
 		return;
 	}
