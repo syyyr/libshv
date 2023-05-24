@@ -19,13 +19,15 @@ jobs:
         with:
           submodules: true
 
-      - uses: ./.github/actions/cmake
+      - name: Setup CMake
+        uses: ./.github/actions/cmake
         with:
           qt_version: 5.15.2
           use_qt6: OFF
           modules: ""
 
-      - uses: ./.github/actions/build-and-test
+      - name: Build and test
+        uses: ./.github/actions/build-and-test
 
   ubuntu-qt6:
     name: Run tests / Qt 6.5.0 / Ubuntu 22.04
@@ -38,13 +40,15 @@ jobs:
         with:
           submodules: true
 
-      - uses: ./.github/actions/cmake
+      - name: Setup CMake
+        uses: ./.github/actions/cmake
         with:
           qt_version: 6.5.0
           use_qt6: ON
           modules: qtserialport qtwebsockets
 
-      - uses: ./.github/actions/build-and-test
+      - name: Build and test
+        uses: ./.github/actions/build-and-test
 
   windows:
     name: Run tests / Qt 6.5.0 / Windows
@@ -54,7 +58,8 @@ jobs:
         with:
           submodules: true
 
-      - uses: ./.github/actions/cmake
+      - name: Setup CMake
+        uses: ./.github/actions/cmake
         with:
           qt_version: 6.5.0
           qt_arch: win64_mingw
@@ -62,7 +67,8 @@ jobs:
           modules: qtserialport qtwebsockets
           additional_cmake_args: -DWITH_LDAP=OFF
 
-      - uses: ./.github/actions/build-and-test
+      - name: Build and test
+        uses: ./.github/actions/build-and-test
 
   clang-tidy:
     name: Lint / clang-tidy / Ubuntu 22.04
@@ -75,7 +81,8 @@ jobs:
         with:
           submodules: true
 
-      - uses: ./.github/actions/run-linter
+      - name: Run clang-tidy
+        uses: ./.github/actions/run-linter
         with:
           lint_program_with_args: clang-tidy --quiet --warnings-as-errors=*
 
@@ -90,7 +97,8 @@ jobs:
         with:
           submodules: true
 
-      - uses: ./.github/actions/run-linter
+      - name: Run clazy
+        uses: ./.github/actions/run-linter
         with:
           lint_program_with_args: clazy-standalone --checks=level1,no-fully-qualified-moc-types,no-non-pod-global-static
 
