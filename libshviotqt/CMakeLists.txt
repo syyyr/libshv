@@ -48,7 +48,7 @@ function(add_shviotqt_serialportsocket_test test_name)
 	)
 	#target_compile_definitions(test_iotqt_${test_name} PRIVATE DEF_FILES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/files")
 	target_link_libraries(test_iotqt_${test_name} libshviotqt doctest::doctest)
-	add_test(NAME test_iotqt_${test_name} COMMAND $<TARGET_FILE:test_iotqt_${test_name}>)
+	add_test(NAME test_iotqt_${test_name} COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:test_iotqt_${test_name}>)
 endfunction(add_shviotqt_serialportsocket_test)
 
 if(BUILD_TESTING)

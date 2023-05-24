@@ -43,7 +43,7 @@ if(BUILD_TESTING)
 			tests/test_${test_name}.cpp
 			)
 		target_link_libraries(test_broker_${test_name} libshvbroker doctest::doctest)
-		add_test(NAME test_broker_${test_name} COMMAND $<TARGET_FILE:test_broker_${test_name}>)
+		add_test(NAME test_broker_${test_name} COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:test_broker_${test_name}>)
 	endfunction()
 	add_shvbroker_test(aclmanager)
 endif()

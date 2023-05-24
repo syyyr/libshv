@@ -35,7 +35,7 @@ function(add_shvcore_test test_name)
 		)
 	target_compile_definitions(test_core_${test_name} PRIVATE DEF_FILES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/files")
 	target_link_libraries(test_core_${test_name} libshvcore doctest::doctest)
-	add_test(NAME test_core_${test_name} COMMAND $<TARGET_FILE:test_core_${test_name}>)
+	add_test(NAME test_core_${test_name} COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:test_core_${test_name}>)
 endfunction(add_shvcore_test)
 
 if(BUILD_TESTING)
