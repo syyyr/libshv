@@ -65,7 +65,11 @@ jobs:
           qt_arch: win64_mingw
           use_qt6: ON
           modules: qtserialport qtwebsockets
-          additional_cmake_args: -DWITH_LDAP=OFF
+          # Need to get all binaries in the same directory, otherwise the tests can't find the dlls.
+          additional_cmake_args: |
+            -DWITH_LDAP=OFF \
+            -DCMAKE_RUNTIME_OUTPUT_DIRECTORY='${{github.workspace}}/build/bin' \
+            -DCMAKE_LIBRARY_OUTPUT_DIRECTORY='${{github.workspace}}/build/bin'
 
       - name: Build and test
         uses: ./.github/actions/build-and-test

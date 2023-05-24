@@ -57,6 +57,7 @@ runs:
         CXXFLAGS="-Werror ${CXXFLAGS}" \
         cmake \
         -G Ninja \
+        -S '${{github.workspace}}' \
         -B '${{github.workspace}}/build' \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
