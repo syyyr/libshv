@@ -25,7 +25,7 @@ public:
 	ClientConnectionOnBroker(shv::iotqt::rpc::Socket* socket, QObject *parent = nullptr);
 	~ClientConnectionOnBroker() override;
 
-	int connectionId() const override {return Super::connectionId();}
+	int connectionId() const override;
 	bool isConnectedAndLoggedIn() const override {return Super::isConnectedAndLoggedIn();}
 	bool isSlaveBrokerConnection() const override {return Super::isSlaveBrokerConnection();}
 	bool isMasterBrokerConnection() const override {return false;}

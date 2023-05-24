@@ -16,7 +16,7 @@ class MasterBrokerConnection : public shv::iotqt::rpc::DeviceConnection, public 
 public:
 	MasterBrokerConnection(QObject *parent = nullptr);
 
-	int connectionId() const override {return Super::connectionId();}
+	int connectionId() const override;
 
 	/// master broker connection cannot have userName
 	/// because it is connected in oposite direction than client connections

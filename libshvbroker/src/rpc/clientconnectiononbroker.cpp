@@ -357,4 +357,9 @@ void ClientConnectionOnBroker::propagateSubscriptionToSlaveBroker(const CommonRp
 		return;
 	}
 }
+
+int ClientConnectionOnBroker::connectionId() const
+{
+	return Super::connectionId();
+}
 }
