@@ -34,7 +34,7 @@ function(add_shv_test test_name)
 	add_executable(test_${test_name}
 		tests/test_${test_name}.cpp
 		)
-	target_link_libraries(test_${test_name} libshvchainpack-cpp)
+	target_link_libraries(test_${test_name} libshvchainpack-cpp doctest::doctest)
 	add_test(NAME test_${test_name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_${test_name})
 endfunction()
 

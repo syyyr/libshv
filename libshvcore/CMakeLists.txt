@@ -34,7 +34,7 @@ function(add_shvcore_test test_name)
 		tests/test_${test_name}.cpp
 		)
 	target_compile_definitions(test_core_${test_name} PRIVATE DEF_FILES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/files")
-	target_link_libraries(test_core_${test_name} libshvcore)
+	target_link_libraries(test_core_${test_name} libshvcore doctest::doctest)
 	add_test(NAME test_core_${test_name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_core_${test_name})
 endfunction(add_shvcore_test)
 

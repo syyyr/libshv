@@ -47,7 +47,7 @@ function(add_shviotqt_serialportsocket_test test_name)
 		tests/serialportsocket/mockrpcconnection.cpp
 	)
 	#target_compile_definitions(test_iotqt_${test_name} PRIVATE DEF_FILES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/files")
-	target_link_libraries(test_iotqt_${test_name} libshviotqt)
+	target_link_libraries(test_iotqt_${test_name} libshviotqt doctest::doctest)
 	add_test(NAME test_iotqt_${test_name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_iotqt_${test_name})
 endfunction(add_shviotqt_serialportsocket_test)
 
