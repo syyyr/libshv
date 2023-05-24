@@ -615,7 +615,7 @@ bool BrokerApp::checkTunnelSecret(const std::string &s)
 class LdapAuthThread : public QThread {
 	Q_OBJECT
 public:
-	LdapAuthThread(const chainpack::UserLoginContext& ctx, const BrokerApp::LdapConfig& ldap_config)
+	LdapAuthThread(const chainpack::UserLoginContext& ctx, const LdapConfig& ldap_config)
 		: m_ctx(ctx)
 		, m_ldapConfig(ldap_config)
 	{
@@ -649,7 +649,7 @@ public:
 
 private:
 	chainpack::UserLoginContext m_ctx;
-	BrokerApp::LdapConfig m_ldapConfig;
+	LdapConfig m_ldapConfig;
 };
 #endif
 
