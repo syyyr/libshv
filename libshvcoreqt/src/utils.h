@@ -170,8 +170,8 @@ ReturnType joinPath(const HeadStringType& head, const StringTypes& ...rest)
 	}
 }
 
-QJsonValue rpcValueToJson(const shv::chainpack::RpcValue& v);
-QByteArray jsonValueToByteArray(const QJsonValue& json);
+SHVCOREQT_DECL_EXPORT QJsonValue rpcValueToJson(const shv::chainpack::RpcValue& v);
+SHVCOREQT_DECL_EXPORT QByteArray jsonValueToByteArray(const QJsonValue& json);
 
 [[noreturn]] void qcoro_unhandled_exception(std::exception& ex);
 
