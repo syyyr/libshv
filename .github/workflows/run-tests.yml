@@ -54,6 +54,28 @@ jobs:
         working-directory: ${{github.workspace}}/build
         run: ctest --output-on-failure -j"$(nproc)"
 
+  build-win:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - uses: ./.github/actions/cmake
+        with:
+          qt_version: 6.5.0
+          qt_arch: win64_mingw
+          use_qt6: ON
+          modules: qtserialport qtwebsockets
+          additional_cmake_args: -DWITH_LDAP=OFF
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --parallel "$(nproc)"
+
+      - name: Test
+        working-directory: ${{github.workspace}}/build
+        run: ctest --output-on-failure -j"$(nproc)"
+
   clang-tidy:
     runs-on: ubuntu-22.04
     env:
