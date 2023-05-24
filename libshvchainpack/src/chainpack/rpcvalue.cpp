@@ -831,7 +831,7 @@ void ChainPackIMap::setI(RpcValue::Int key, const RpcValue &val)
 		m_value.erase(key);
 }
 
-static long parse_ISO_DateTime(const std::string &s, std::tm &tm, int &msec, int64_t &msec_since_epoch, int &minutes_from_utc)
+static long long parse_ISO_DateTime(const std::string &s, std::tm &tm, int &msec, int64_t &msec_since_epoch, int &minutes_from_utc)
 {
 	ccpcp_unpack_context ctx;
 	ccpcp_unpack_context_init(&ctx, s.data(), s.size(), nullptr, nullptr);
@@ -888,7 +888,7 @@ RpcValue::DateTime RpcValue::DateTime::fromUtcString(const std::string &utc_date
 	int64_t epoch_msec;
 	int utc_offset;
 	DateTime ret;
-	long len = parse_ISO_DateTime(utc_date_time_str, tm, msec, epoch_msec, utc_offset);
+	auto len = parse_ISO_DateTime(utc_date_time_str, tm, msec, epoch_msec, utc_offset);
 	if(len == 0) {
 		nError() << "Invalid date time string:" << utc_date_time_str;
 		if(plen)

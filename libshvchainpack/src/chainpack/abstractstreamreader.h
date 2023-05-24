@@ -12,17 +12,17 @@ class SHVCHAINPACK_DECL_EXPORT ParseException : public std::exception
 {
 	using Super = std::exception;
 public:
-	ParseException(int err_code, const std::string msg, long pos)
+	ParseException(int err_code, const std::string msg, long long pos)
 		: m_errCode(err_code), m_msg(msg), m_pos(pos) {}
 
 	const char *what() const noexcept override;
 	int errCode() const { return m_errCode; }
-	long pos() const {return m_pos;}
+	long long pos() const {return m_pos;}
 	const std::string& msg() const {return m_msg;}
 private:
 	int m_errCode;
 	std::string m_msg;
-	long m_pos = -1;
+	long long m_pos = -1;
 };
 
 class SHVCHAINPACK_DECL_EXPORT AbstractStreamReader
