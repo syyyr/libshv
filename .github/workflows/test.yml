@@ -1,5 +1,5 @@
 # vim: sw=2
-name: Run tests
+name: Test
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   ubuntu-qt5:
-    name: Run tests / Qt 5.15.2 / Ubuntu 22.04
+    name: Qt 5.15.2 / Ubuntu 22.04
     runs-on: ubuntu-22.04
     env:
       CFLAGS: -fsanitize=address,undefined
@@ -30,7 +30,7 @@ jobs:
         uses: ./.github/actions/build-and-test
 
   ubuntu-qt6:
-    name: Run tests / Qt 6.5.0 / Ubuntu 22.04
+    name: Qt 6.5.0 / Ubuntu 22.04
     runs-on: ubuntu-22.04
     env:
       CFLAGS: -fsanitize=address,undefined
@@ -51,7 +51,7 @@ jobs:
         uses: ./.github/actions/build-and-test
 
   windows:
-    name: Run tests / Qt 6.5.0 / Windows
+    name: Qt 6.5.0 / Windows
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v3
@@ -69,36 +69,3 @@ jobs:
 
       - name: Build and test
         uses: ./.github/actions/build-and-test
-
-  clang-tidy:
-    name: Lint / clang-tidy / Ubuntu 22.04
-    runs-on: ubuntu-22.04
-    env:
-      CC: clang
-      CXX: clang++
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-
-      - name: Run clang-tidy
-        uses: ./.github/actions/run-linter
-        with:
-          lint_program_with_args: clang-tidy --quiet --warnings-as-errors=*
-
-  clazy:
-    name: Lint / clazy / Ubuntu 22.04
-    runs-on: ubuntu-22.04
-    env:
-      CC: clang
-      CXX: clang++
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-
-      - name: Run clazy
-        uses: ./.github/actions/run-linter
-        with:
-          lint_program_with_args: clazy-standalone --checks=level1,no-fully-qualified-moc-types,no-non-pod-global-static
-
