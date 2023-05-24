@@ -8,7 +8,8 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build-qt5:
+  ubuntu-qt5:
+    name: Run tests / Qt 5.15.2 / Ubuntu 22.04
     runs-on: ubuntu-22.04
     env:
       CFLAGS: -fsanitize=address,undefined
@@ -26,7 +27,8 @@ jobs:
 
       - uses: ./.github/actions/build-and-test
 
-  build-qt6:
+  ubuntu-qt6:
+    name: Run tests / Qt 6.5.0 / Ubuntu 22.04
     runs-on: ubuntu-22.04
     env:
       CFLAGS: -fsanitize=address,undefined
@@ -44,7 +46,8 @@ jobs:
 
       - uses: ./.github/actions/build-and-test
 
-  build-win:
+  windows:
+    name: Run tests / Qt 6.5.0 / Windows
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v3
@@ -62,6 +65,7 @@ jobs:
       - uses: ./.github/actions/build-and-test
 
   clang-tidy:
+    name: Lint / clang-tidy / Ubuntu 22.04
     runs-on: ubuntu-22.04
     env:
       CC: clang
@@ -76,6 +80,7 @@ jobs:
           lint_program_with_args: clang-tidy --quiet --warnings-as-errors=*
 
   clazy:
+    name: Lint / clazy / Ubuntu 22.04
     runs-on: ubuntu-22.04
     env:
       CC: clang
