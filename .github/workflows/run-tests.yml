@@ -24,12 +24,7 @@ jobs:
           use_qt6: OFF
           modules: ""
 
-      - name: Build
-        run: cmake --build ${{github.workspace}}/build --parallel "$(nproc)"
-
-      - name: Test
-        working-directory: ${{github.workspace}}/build
-        run: ctest --output-on-failure -j"$(nproc)"
+      - uses: ./.github/actions/build-and-test
 
   build-qt6:
     runs-on: ubuntu-22.04
@@ -47,12 +42,7 @@ jobs:
           use_qt6: ON
           modules: qtserialport qtwebsockets
 
-      - name: Build
-        run: cmake --build ${{github.workspace}}/build --parallel "$(nproc)"
-
-      - name: Test
-        working-directory: ${{github.workspace}}/build
-        run: ctest --output-on-failure -j"$(nproc)"
+      - uses: ./.github/actions/build-and-test
 
   build-win:
     runs-on: windows-2022
@@ -69,12 +59,7 @@ jobs:
           modules: qtserialport qtwebsockets
           additional_cmake_args: -DWITH_LDAP=OFF
 
-      - name: Build
-        run: cmake --build ${{github.workspace}}/build --parallel "$(nproc)"
-
-      - name: Test
-        working-directory: ${{github.workspace}}/build
-        run: ctest --output-on-failure -j"$(nproc)"
+      - uses: ./.github/actions/build-and-test
 
   clang-tidy:
     runs-on: ubuntu-22.04
