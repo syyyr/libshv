@@ -217,6 +217,12 @@ const std::vector<cp::MetaMethod> MountsNode::m_metaMethods = {
 };
 
 #ifdef WITH_SHV_LDAP
+std::optional<LdapConfig> BrokerApp::ldapConfig()
+{
+	return m_ldapConfig;
+}
+
+
 namespace {
 void check_open_success(auto* ptr, auto name)
 {
@@ -255,7 +261,8 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/clients", new ClientsNode());
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/masters", new MasterBrokersNode());
 	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/mounts", new MountsNode());
-	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/etc/acl", new EtcAclRootNode());
+	auto etc_acl_root_node = new EtcAclRootNode();
+	m_nodesTree->mount(std::string(cp::Rpc::DIR_BROKER) + "/etc/acl", etc_acl_root_node);
 
 	if (m_cliOptions->discoveryPort() > 0) {
 		auto *udp_socket = new QUdpSocket(this);
@@ -347,11 +354,14 @@ BrokerApp::BrokerApp(int &argc, char **argv, AppCliOptions *cli_opts)
 						   };
 					   });
 		m_ldapConfig = LdapConfig {
+			.brokerUsername = cli_opts->ldapUsername_isset() ? std::optional(cli_opts->ldapUsername()) : std::nullopt,
+			.brokerPassword = cli_opts->ldapPassword_isset() ? std::optional(cli_opts->ldapPassword()) : std::nullopt,
 			.hostName = cli_opts->ldapHostname(),
 			.searchBaseDN = cli_opts->ldapSearchBaseDN(),
 			.searchAttrs = search_attrs,
 			.groupMapping = group_mapping
 		};
+		new LdapAclNode(*m_ldapConfig, etc_acl_root_node);
 	}
 #endif
 

@@ -88,6 +88,9 @@ public:
 	QSqlDatabase sqlConfigConnection();
 
 	AclManager *aclManager();
+#ifdef WITH_SHV_LDAP
+	std::optional<LdapConfig> ldapConfig();
+#endif
 	void setAclManager(AclManager *mng);
 	void reloadConfig();
 	void reloadConfigRemountDevices();
