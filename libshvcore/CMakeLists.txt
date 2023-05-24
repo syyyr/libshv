@@ -46,7 +46,9 @@ if(BUILD_TESTING)
 	add_shvcore_test(shvlog)
 	add_shvcore_test(shvjournalfilereader)
 	add_shvcore_test(utils)
-	add_shvcore_test(clioptions)
+	if(NOT WIN32) # We do not support Windows paths for now.
+		add_shvcore_test(clioptions)
+	endif()
 endif()
 
 install(TARGETS libshvcore)
