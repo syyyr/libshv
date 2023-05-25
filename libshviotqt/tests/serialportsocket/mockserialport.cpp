@@ -18,7 +18,11 @@ bool MockSerialPort::open(OpenMode mode)
 	Q_UNUSED(mode);
 	close();
 	{
-		auto fname = "/tmp/serialportsocket-test-write" + objectName() + ".bin";
+		const auto tests_dir = getenv("TESTS_DIR");
+		if (!tests_dir) {
+			throw std::runtime_error("TESTS_DIR not set");
+		}
+		auto fname = QString(tests_dir) + "/serialportsocket-test-write" + objectName() + ".bin";
 		m_writeFile.setFileName(fname);
 		if(!m_writeFile.open(QFile::WriteOnly)) {
 			throw std::runtime_error("Canot open file: " + fname.toStdString() + " for writing");
