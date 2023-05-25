@@ -6,8 +6,8 @@ const char *ChainPack::PackingSchema::name(ChainPack::PackingSchema::Enum e)
 {
 	switch (e) {
 	case INVALID: return "INVALID";
-	case FALSE: return "FALSE";
-	case TRUE: return "TRUE";
+	case FALSE_SCHEMA: return "FALSE";
+	case TRUE_SCHEMA: return "TRUE";
 
 	case Null: return "Null";
 	case UInt: return "UInt";

@@ -34,8 +34,8 @@ function(add_shvcore_test test_name)
 		tests/test_${test_name}.cpp
 		)
 	target_compile_definitions(test_core_${test_name} PRIVATE DEF_FILES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/files")
-	target_link_libraries(test_core_${test_name} libshvcore)
-	add_test(NAME test_core_${test_name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_core_${test_name})
+	target_link_libraries(test_core_${test_name} libshvcore doctest::doctest)
+	add_test(NAME test_core_${test_name} COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:test_core_${test_name}>)
 endfunction(add_shvcore_test)
 
 if(BUILD_TESTING)
@@ -46,7 +46,9 @@ if(BUILD_TESTING)
 	add_shvcore_test(shvlog)
 	add_shvcore_test(shvjournalfilereader)
 	add_shvcore_test(utils)
-	add_shvcore_test(clioptions)
+	if(NOT WIN32) # We do not support Windows paths for now.
+		add_shvcore_test(clioptions)
+	endif()
 endif()
 
 install(TARGETS libshvcore)

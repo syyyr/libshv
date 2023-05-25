@@ -1,0 +1,75 @@
+# vim: sw=2
+name: Test
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  ubuntu-qt5:
+    name: Qt 5.15.2 / Ubuntu 22.04
+    runs-on: ubuntu-22.04
+    env:
+      CFLAGS: -fsanitize=address,undefined
+      CXXFLAGS: -fsanitize=address,undefined
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Setup CMake
+        uses: ./.github/actions/cmake
+        with:
+          qt_version: 5.15.2
+          use_qt6: OFF
+          modules: ""
+
+      - name: Build and test
+        uses: ./.github/actions/build-and-test
+
+  ubuntu-qt6:
+    name: Qt 6.5.0 / Ubuntu 22.04
+    runs-on: ubuntu-22.04
+    env:
+      CFLAGS: -fsanitize=address,undefined
+      CXXFLAGS: -fsanitize=address,undefined
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Setup CMake
+        uses: ./.github/actions/cmake
+        with:
+          qt_version: 6.5.0
+          use_qt6: ON
+          modules: qtserialport qtwebsockets
+
+      - name: Build and test
+        uses: ./.github/actions/build-and-test
+
+  windows:
+    name: Qt 6.5.0 / Windows
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Setup CMake
+        uses: ./.github/actions/cmake
+        with:
+          qt_version: 6.5.0
+          qt_arch: win64_mingw
+          use_qt6: ON
+          modules: qtserialport qtwebsockets
+          # Need to get all binaries in the same directory, otherwise the tests can't find the dlls.
+          additional_cmake_args: |
+            -DWITH_LDAP=OFF \
+            -DCMAKE_RUNTIME_OUTPUT_DIRECTORY='${{github.workspace}}/build/bin' \
+            -DCMAKE_LIBRARY_OUTPUT_DIRECTORY='${{github.workspace}}/build/bin'
+
+      - name: Build and test
+        uses: ./.github/actions/build-and-test

@@ -142,4 +142,8 @@ void MasterBrokerConnection::onRpcDataReceived(shv::chainpack::Rpc::ProtocolType
 	}
 }
 
+int MasterBrokerConnection::connectionId() const
+{
+	return Super::connectionId();
+}
 }

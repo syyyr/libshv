@@ -1,0 +1,14 @@
+name: Build and test
+description: "Build the project and run tests via CMake"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Build
+      run: cmake --build '${{github.workspace}}/build' --parallel "$(nproc)"
+      shell: bash
+
+    - name: Test
+      working-directory: '${{github.workspace}}/build'
+      run: ctest --output-on-failure -j"$(nproc)"
+      shell: bash

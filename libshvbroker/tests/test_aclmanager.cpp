@@ -207,7 +207,7 @@ DOCTEST_TEST_CASE("accessGrantForShvPath")
 	bool is_service_provider_mount_point_relative_call = false;
 
 	bool expected_valid;
-	int expected_access_level;
+	int expected_access_level = -1;
 
 	std::vector<std::unique_ptr<trompeloeil::expectation>> expectations;
 

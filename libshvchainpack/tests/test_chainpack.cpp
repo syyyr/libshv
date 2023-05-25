@@ -82,7 +82,7 @@ DOCTEST_TEST_CASE("ChainPack")
 			str << std::setw(3) << i << " " << std::hex << i << " " << binary_dump(out).c_str() << " "  << ChainPack::PackingSchema::name(e);
 			nInfo() << str.str();
 		}
-		for (int i = ChainPack::PackingSchema::FALSE; i <= ChainPack::PackingSchema::TERM; ++i) {
+		for (int i = ChainPack::PackingSchema::FALSE_SCHEMA; i <= ChainPack::PackingSchema::TERM; ++i) {
 			RpcValue::String out;
 			out += static_cast<char>(i);
 			auto e = static_cast<ChainPack::PackingSchema::Enum>(i);

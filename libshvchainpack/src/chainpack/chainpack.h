@@ -35,8 +35,8 @@ public:
 			DateTime = CP_DateTime,
 			CString = CP_CString,
 
-			FALSE = CP_FALSE,
-			TRUE = CP_TRUE,
+			FALSE_SCHEMA = CP_FALSE,
+			TRUE_SCHEMA = CP_TRUE,
 			TERM = CP_TERM,
 		};
 		static const char* name(Enum e);
