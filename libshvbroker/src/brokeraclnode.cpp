@@ -1,6 +1,10 @@
 #include "brokeraclnode.h"
 #include "brokerapp.h"
 
+#ifdef WITH_SHV_LDAP
+#include <shv/broker/ldap/ldap.h>
+#endif
+
 #include <shv/core/utils/shvpath.h>
 #include <shv/chainpack/cponwriter.h>
 #include <shv/chainpack/metamethod.h>
@@ -9,6 +13,8 @@
 #include <shv/core/log.h>
 #include <shv/core/exception.h>
 #include <shv/iotqt/acl/aclroleaccessrules.h>
+
+#include <QThread>
 
 #include <regex>
 #include <fstream>
@@ -593,4 +599,86 @@ unsigned AccessAclNode::keyToRuleIndex(const std::string &key)
 	return  InvalidIndex;
 }
 
+#ifdef WITH_SHV_LDAP
+namespace {
+const auto M_LDAP_USERS = "users";
+const auto LDAP_USERS_DESC = "accepts a login name as a string param";
+const std::vector<cp::MetaMethod> meta_methods_ldap_node {
+	{cp::Rpc::METH_DIR, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
+	{cp::Rpc::METH_LS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
+	{M_LDAP_USERS, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_SERVICE, LDAP_USERS_DESC},
+};
 }
+
+class LdapGetUsersThread : public QThread {
+	Q_OBJECT
+public:
+	LdapGetUsersThread(const LdapConfig& ldap_config, const std::optional<std::string>& user_name)
+		: m_ldapConfig(ldap_config)
+		, m_userName(user_name)
+	{
+	}
+
+	void run() override
+	{
+		try {
+			if (!m_ldapConfig.brokerUsername || !m_ldapConfig.brokerPassword) {
+				emit errorOccured( "LDAP username/password hasn't been configured for the broker.");
+				return;
+			}
+
+			auto ldap = ldap::Ldap::create(m_ldapConfig.hostName);
+			ldap->setVersion(ldap::Version::Version3);
+			ldap->connect();
+			ldap->bindSasl(m_ldapConfig.brokerUsername.value(), m_ldapConfig.brokerPassword.value());
+			// FIXME: The userPrincipalName is hardcoded here, because I don't want to have duplicate results... it'll
+			// work with AD, so I guess it's fine for now.
+			if (m_userName) {
+				emit resultReady({{*m_userName, ldap::getGroupsForUser(ldap, m_ldapConfig.searchBaseDN, m_ldapConfig.searchAttrs, *m_userName)}});
+			} else {
+				emit resultReady(ldap::getAllUsersWithGroups(ldap, m_ldapConfig.searchBaseDN, {"userPrincipalName"}));
+			}
+		} catch(ldap::LdapError& err) {
+			emit errorOccured(err.what());
+		}
+	}
+
+	Q_SIGNAL void resultReady(const std::map<std::string, std::vector<std::string>>& result);
+	Q_SIGNAL void errorOccured(const std::string& err_msg);
+
+private:
+	LdapConfig m_ldapConfig;
+	std::optional<std::string> m_userName;
+};
+
+
+LdapAclNode::LdapAclNode(const LdapConfig& ldap_config, shv::iotqt::node::ShvNode* parent)
+	: Super("ldap", &meta_methods_ldap_node, parent)
+	, m_ldapConfig(ldap_config)
+{
+}
+
+shv::chainpack::RpcValue LdapAclNode::callMethodRq(const shv::chainpack::RpcRequest &rq)
+{
+	if (rq.method() == M_LDAP_USERS) {
+		auto ldap_thread = new LdapGetUsersThread(m_ldapConfig, rq.params().isString() ? std::optional(rq.params().asString()) : std::nullopt);
+		connect(ldap_thread, &LdapGetUsersThread::resultReady, this, [this, rq] (const auto& users) {
+			auto resp = rq.makeResponse();
+			resp.setResult(users);
+			rootNode()->emitSendRpcMessage(resp);
+		});
+		connect(ldap_thread, &LdapGetUsersThread::errorOccured, this, [this, rq] (const auto& err) {
+			auto resp = rq.makeResponse();
+			resp.setError(shv::chainpack::RpcResponse::Error::create(cp::RpcResponse::Error::MethodCallException, err));
+			rootNode()->emitSendRpcMessage(resp);
+		});
+		connect(ldap_thread, &LdapGetUsersThread::finished, ldap_thread, &QObject::deleteLater);
+		ldap_thread->start();
+		return {};
+	}
+
+	return Super::callMethodRq(rq);
+}
+#endif
+}
+#include "brokeraclnode.moc"

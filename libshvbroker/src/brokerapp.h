@@ -26,6 +26,7 @@ inline unsigned qHash(const std::string &s) noexcept //Q_DECL_NOEXCEPT_EXPR(noex
 
 #ifdef WITH_SHV_LDAP
 #include <optional>
+#include "ldapconfig.h"
 #endif
 #include <set>
 
@@ -87,30 +88,20 @@ public:
 	QSqlDatabase sqlConfigConnection();
 
 	AclManager *aclManager();
+#ifdef WITH_SHV_LDAP
+	std::optional<LdapConfig> ldapConfig();
+#endif
 	void setAclManager(AclManager *mng);
 	void reloadConfig();
 	void reloadConfigRemountDevices();
 	bool checkTunnelSecret(const std::string &s);
 
-	void checkLogin(const chainpack::UserLoginContext &ctx, const std::function<void(chainpack::UserLoginResult)> cb);
+	void checkLogin(const chainpack::UserLoginContext &ctx, const QObject* connection_ctx, const std::function<void(chainpack::UserLoginResult)> cb);
 
 	void sendNewLogEntryNotify(const std::string &msg);
 
 	const std::string& brokerId() const { return m_brokerId; }
 	iotqt::node::ShvNode * nodeForService(const shv::core::utils::ShvUrl &spp);
-
-#ifdef WITH_SHV_LDAP
-	struct LdapConfig {
-		std::string hostName;
-		std::string searchBaseDN;
-		std::vector<std::string> searchAttrs;
-		struct GroupMapping {
-			std::string ldapGroup;
-			std::string shvGroup;
-		};
-		std::vector<GroupMapping> groupMapping;
-	};
-#endif
 
 protected:
 	virtual void initDbConfigSqlConnection();

@@ -282,7 +282,7 @@ chainpack::RpcValue AclManager::userProfile(const std::string &user_name)
 }
 
 #ifdef WITH_SHV_LDAP
-void AclManager::setGroupForLdapUser(const std::string_view& user_name, const std::string_view& group_name)
+void AclManager::setGroupForLdapUser(const std::string_view& user_name, const std::vector<std::string>& group_name)
 {
 	m_ldapUserGroups.emplace(user_name, group_name);
 }
@@ -336,7 +336,7 @@ cp::AccessGrant AclManager::accessGrantForShvPath(const std::string& user_name, 
 #ifdef WITH_SHV_LDAP
 		// I don't have to check if ldap is enabled - if m_ldapUserGroups is non-empty, it must've been enabled.
 		else if (auto it = m_ldapUserGroups.find(user_name); it != m_ldapUserGroups.end()) {
-			flatten_user_roles = userFlattenRoles(user_name, {it->second});
+			flatten_user_roles = userFlattenRoles(user_name, it->second);
 		}
 #endif
 

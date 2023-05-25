@@ -87,9 +87,9 @@ protected:
 	} m_cache;
 
 #ifdef WITH_SHV_LDAP
-	std::map<std::string, std::string> m_ldapUserGroups;
+	std::map<std::string, std::vector<std::string>> m_ldapUserGroups;
 public:
-	void setGroupForLdapUser(const std::string_view& user_name, const std::string_view& group_name);
+	void setGroupForLdapUser(const std::string_view& user_name, const std::vector<std::string>& group_name);
 #endif
 };
 

@@ -28,6 +28,20 @@ std::vector<std::string> getGroupsForUser(const std::unique_ptr<shv::ldap::Ldap>
 	return res;
 }
 
+std::map<std::string, std::vector<std::string>> getAllUsersWithGroups(const std::unique_ptr<shv::ldap::Ldap>& my_ldap, const std::string_view& base_dn, const std::vector<std::string>& field_names)
+{
+	std::map<std::string, std::vector<std::string>> res;
+	for (const auto& user : my_ldap->search(base_dn, "objectClass=person", field_names)) {
+		for (const auto& [key, values] : user.keysAndValues) {
+			for (const auto& value : values) {
+				res[value] = getGroupsForUser(my_ldap, base_dn, field_names, value);
+			}
+		}
+	}
+
+	return res;
+}
+
 namespace {
 template <typename Type, typename DeleteFunc>
 auto wrap(Type* ptr, DeleteFunc delete_func)
@@ -91,13 +105,13 @@ void Ldap::bindSasl(const std::string_view& bind_dn, const std::string_view& bin
 	throwIfError(ret, "Couldn't authenticate to the LDAP server");
 }
 
-std::vector<Entry> Ldap::search(const std::string_view& base_dn, const std::string_view& filter, const std::vector<std::string_view> requested_attr)
+std::vector<Entry> Ldap::search(const std::string_view& base_dn, const std::string_view& filter, const std::vector<std::string> requested_attr)
 {
 	// I can't think of a better way of doing this while keeping the input arguments the same.
 	// NOLINTNEXTLINE(modernize-avoid-c-arrays) - we have to make an array for the C api
 	auto attr_array = std::make_unique<char*[]>(requested_attr.size() + 1);
-	std::transform(requested_attr.begin(), requested_attr.end(), attr_array.get(), [] (const std::string_view& str) {
-		return strdup(str.data());
+	std::transform(requested_attr.begin(), requested_attr.end(), attr_array.get(), [] (const std::string& str) {
+		return strdup(str.c_str());
 	});
 	auto attr_array_deleter = qScopeGuard([&] {
 		std::for_each(attr_array.get(), attr_array.get() + requested_attr.size() + 1, std::free);

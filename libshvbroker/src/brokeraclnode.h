@@ -1,4 +1,9 @@
+#include <iostream>
 #pragma once
+
+#ifdef WITH_SHV_LDAP
+#include "ldapconfig.h"
+#endif
 
 #include <shv/iotqt/node/shvnode.h>
 #include <shv/iotqt/acl/aclroleaccessrules.h>
@@ -86,4 +91,21 @@ private:
 	static unsigned keyToRuleIndex(const std::string &key);
 };
 
+#ifdef WITH_SHV_LDAP
+class LdapAclNode : public shv::iotqt::node::MethodsTableNode
+{
+	using Super = shv::iotqt::node::MethodsTableNode;
+public:
+	LdapAclNode(const LdapConfig& ldap_config, shv::iotqt::node::ShvNode *parent = nullptr);
+	~LdapAclNode() {
+
+		std::cerr << "lol?? xdd\n";
+	}
+
+protected:
+	shv::chainpack::RpcValue callMethodRq(const shv::chainpack::RpcRequest &rq) override;
+private:
+	LdapConfig m_ldapConfig;
+};
+#endif
 }}
