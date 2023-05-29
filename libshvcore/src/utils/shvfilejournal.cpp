@@ -479,7 +479,7 @@ int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, int64_t jou
 				size_t len;
 				chainpack::RpcValue::DateTime dt = chainpack::RpcValue::DateTime::fromUtcString(s, &len);
 				if(len > 0) {
-					date_time_fpos = fpos + static_cast<ssize_t>(line_start_pos);
+					date_time_fpos = fpos + static_cast<decltype(fpos)>(line_start_pos);
 					dt_msec = dt.msecsSinceEpoch();
 				}
 				else {
