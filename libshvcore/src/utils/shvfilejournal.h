@@ -6,6 +6,7 @@
 #include "shvjournalentry.h"
 #include "shvgetlogparams.h"
 
+#include <fstream>
 #include <functional>
 
 namespace shv {
@@ -40,7 +41,7 @@ public:
 	void setDeviceType(std::string type) { m_journalContext.deviceType = std::move(type); }
 	int64_t recentlyWrittenEntryDateTime() const { return m_journalContext.recentTimeStamp; }
 
-	static int64_t findLastEntryDateTime(const std::string &fn, int64_t journal_start_msec, ssize_t *p_date_time_fpos = nullptr);
+	static int64_t findLastEntryDateTime(const std::string &fn, int64_t journal_start_msec, std::ifstream::pos_type *p_date_time_fpos = nullptr);
 	void append(const ShvJournalEntry &entry) override;
 
 	shv::chainpack::RpcValue getLog(const ShvGetLogParams &params) override;

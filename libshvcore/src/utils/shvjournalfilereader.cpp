@@ -142,7 +142,7 @@ next_line:
 
 bool ShvJournalFileReader::last()
 {
-	ssize_t fpos;
+	std::ifstream::pos_type fpos;
 	ShvFileJournal::findLastEntryDateTime(m_fileName, 0, &fpos);
 	if(fpos >= 0) {
 		m_istream->clear();

@@ -25,7 +25,7 @@ public:
 	void appendSnapshot(int64_t msec, const std::vector<ShvJournalEntry> &snapshot);
 	void appendSnapshot(int64_t msec, const std::map<std::string, ShvJournalEntry> &snapshot);
 
-	ssize_t fileSize();
+	std::ofstream::pos_type fileSize();
 	const std::string& fileName() const { return m_fileName; }
 	int64_t recentTimeStamp() const { return m_recentTimeStamp; }
 private:
