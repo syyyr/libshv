@@ -663,7 +663,7 @@ private:
 };
 #endif
 
-void BrokerApp::checkLogin(const chainpack::UserLoginContext &ctx, const QObject* connection_ctx, const std::function<void(chainpack::UserLoginResult)> cb)
+void BrokerApp::checkLogin(const chainpack::UserLoginContext &ctx, bool ssl, const QObject* connection_ctx, const std::function<void(chainpack::UserLoginResult)> cb)
 {
 	auto result = BrokerApp::instance()->aclManager()->checkPassword(ctx);
 	// If the user exists in the ACL manager, we'll take the result as decisive.
@@ -674,16 +674,24 @@ void BrokerApp::checkLogin(const chainpack::UserLoginContext &ctx, const QObject
 
 #ifdef WITH_SHV_LDAP
 	if (m_ldapConfig) {
-		auto auth_thread = new LdapAuthThread(ctx, *m_ldapConfig);
-		connect(auth_thread, &LdapAuthThread::resultReady, connection_ctx, [cb, user_name = ctx.userLogin().user] (const auto& ldap_result, const auto& shv_groups) {
-			BrokerApp::instance()->aclManager()->setGroupForLdapUser(user_name, shv_groups);
-			cb(ldap_result);
-		});
-		connect(auth_thread, &LdapAuthThread::finished, auth_thread, &QObject::deleteLater);
-		auth_thread->start();
-		return;
+		if (ssl) {
+			if (ctx.userLogin().loginType == chainpack::IRpcConnection::LoginType::Plain) {
+				auto auth_thread = new LdapAuthThread(ctx, *m_ldapConfig);
+				connect(auth_thread, &LdapAuthThread::resultReady, connection_ctx, [cb, user_name = ctx.userLogin().user] (const auto& ldap_result, const auto& shv_groups) {
+					BrokerApp::instance()->aclManager()->setGroupForLdapUser(user_name, shv_groups);
+					cb(ldap_result);
+				});
+				connect(auth_thread, &LdapAuthThread::finished, auth_thread, &QObject::deleteLater);
+				auth_thread->start();
+				return;
+			}
+			result.loginError += " Authentication over LDAP disabled, because your client probably doesn't support it. Please update your client to enable LDAP authentication.";
+		} else {
+			result.loginError += " To authenticate over LDAP, please enable SSL.";
+		}
 	}
 #else
+	(void)ssl;
 	(void)connection_ctx;
 #endif
 	cb(result);
