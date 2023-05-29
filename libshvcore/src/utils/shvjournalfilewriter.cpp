@@ -36,7 +36,7 @@ void ShvJournalFileWriter::open()
 	m_out = &m_fileOut;
 }
 
-ssize_t ShvJournalFileWriter::fileSize()
+std::ofstream::pos_type ShvJournalFileWriter::fileSize()
 {
 	return m_out->tellp();
 }

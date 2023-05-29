@@ -180,10 +180,10 @@ void ShvFileJournal::appendThrow(const ShvJournalEntry &entry)
 
 	addToSnapshot(m_snapshot, e);
 	ShvJournalFileWriter wr(journalDir(), journal_file_start_msec, m_journalContext.recentTimeStamp);
-	ssize_t orig_fsz = wr.fileSize();
+	auto orig_fsz = wr.fileSize();
 	wr.appendMonotonic(e);
 	m_journalContext.recentTimeStamp = wr.recentTimeStamp();
-	ssize_t new_fsz = wr.fileSize();
+	auto new_fsz = wr.fileSize();
 	m_journalContext.lastFileSize = new_fsz;
 	m_journalContext.journalSize += new_fsz - orig_fsz;
 	if(m_journalContext.journalSize > m_journalSizeLimit) {
@@ -415,10 +415,10 @@ void ShvFileJournal::checkRecentTimeStamp()
 	}
 }
 
-int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, int64_t journal_start_msec, ssize_t *p_date_time_fpos)
+int64_t ShvFileJournal::findLastEntryDateTime(const std::string &fn, int64_t journal_start_msec, std::ifstream::pos_type *p_date_time_fpos)
 {
 	shvLogFuncFrame() << "'" + fn + "'";
-	ssize_t date_time_fpos = -1;
+	std::ifstream::pos_type date_time_fpos = -1;
 	if(p_date_time_fpos)
 		*p_date_time_fpos = date_time_fpos;
 	std::ifstream in(fn, std::ios::in | std::ios::binary);
