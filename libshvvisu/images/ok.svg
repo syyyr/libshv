@@ -5,7 +5,7 @@
    height="128"
    viewBox="0 0 128 128"
    id="svg165"
-   sodipodi:docname="close.svg"
+   sodipodi:docname="ok.svg"
    inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -33,7 +33,7 @@
      inkscape:window-maximized="1"
      inkscape:current-layer="svg165" />
   <path
+     d="M 45.212249,109.42151 6.7137458,70.923012 20.284469,57.256043 45.212249,82.183824 108.63853,18.75754 122.20925,32.424509"
      id="path484"
-     style="stroke-width:1"
-     d="M 12.313247,27.902348 48.312372,63.998964 12.250351,100.06098 27.70101,115.62171 63.846372,79.573845 99.916266,115.74121 115.53989,100.11759 79.443268,64.020979 115.53989,28.021851 99.914696,12.396651 63.866814,48.444524 27.873977,12.451688 Z" />
+     style="stroke-width:1" />
 </svg>
