@@ -294,7 +294,7 @@ void ClientConnectionOnBroker::processLoginPhase()
 		return;
 	}
 	Super::processLoginPhase();
-	BrokerApp::instance()->checkLogin(m_userLoginContext, dynamic_cast<iotqt::rpc::SslSocket*>(m_socket) != nullptr, this, [this] (auto result) {
+	BrokerApp::instance()->checkLogin(m_userLoginContext, this, [this] (auto result) {
 		setLoginResult(result);
 	});
 }
