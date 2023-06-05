@@ -70,6 +70,8 @@ static const auto M_RELOAD_CONFIG = "reloadConfig";
 static const auto M_RESTART = "restart";
 static const auto M_APP_VERSION = "appVersion";
 static const auto M_GIT_COMMIT = "gitCommit";
+static const auto M_SHV_VERSION = "shvVersion";
+static const auto M_SHV_GIT_COMMIT = "shvGitCommit";
 static const auto M_BROKER_ID = "brokerId";
 static const auto M_MASTER_BROKER_ID = "masterBrokerId";
 
@@ -82,6 +84,8 @@ BrokerAppNode::BrokerAppNode(shv::iotqt::node::ShvNode *parent)
 		{cp::Rpc::METH_ECHO, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_BROWSE},
 		{M_APP_VERSION, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_BROWSE},
 		{M_GIT_COMMIT, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
+		{M_SHV_VERSION, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
+		{M_SHV_GIT_COMMIT, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
 		{M_BROKER_ID, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
 		{M_MASTER_BROKER_ID, cp::MetaMethod::Signature::RetVoid, cp::MetaMethod::Flag::IsGetter, cp::Rpc::ROLE_READ},
 		{cp::Rpc::METH_SUBSCRIBE, cp::MetaMethod::Signature::RetParam, cp::MetaMethod::Flag::None, cp::Rpc::ROLE_READ},
@@ -165,6 +169,20 @@ shv::chainpack::RpcValue BrokerAppNode::callMethod(const StringViewList &shv_pat
 		if(method == M_GIT_COMMIT) {
 #ifdef GIT_COMMIT
 			return SHV_EXPAND_AND_QUOTE(GIT_COMMIT);
+#else
+			return "N/A";
+#endif
+		}
+		if(method == M_SHV_VERSION) {
+#ifdef SHV_VERSION
+			return SHV_EXPAND_AND_QUOTE(SHV_VERSION);
+#else
+			return "N/A";
+#endif
+		}
+		if(method == M_SHV_GIT_COMMIT) {
+#ifdef SHV_GIT_COMMIT
+			return SHV_EXPAND_AND_QUOTE(SHV_GIT_COMMIT);
 #else
 			return "N/A";
 #endif
