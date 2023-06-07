@@ -19,10 +19,10 @@ ShvUrl::ShvUrl(const std::string &shv_path)
 		else if(type_mark == DOWNTREE_MARK)
 			m_type = Type::DownTreeService;
 		m_service = StringView(shv_path).substr(0, ix);
-		ssize_t bid_ix = m_service.rfind('@');
-		if(bid_ix > 0) {
-			m_fullBrokerId = m_service.substr(static_cast<size_t>(bid_ix));
-			m_service = m_service.substr(0, static_cast<size_t>(bid_ix));
+		auto bid_ix = m_service.rfind('@');
+		if(bid_ix != std::string_view::npos) {
+			m_fullBrokerId = m_service.substr(bid_ix);
+			m_service = m_service.substr(0, bid_ix);
 		}
 		m_pathPart = StringView(shv_path).substr(ix + typeMark(m_type).size() + 1);
 	}
