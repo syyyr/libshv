@@ -248,7 +248,7 @@ void ClientConnection::setCheckBrokerConnectedInterval(int ms)
 }
 
 static constexpr std::string_view::size_type MAX_LOG_LEN = 1024;
-static const char *TOPIC_RPC_MSG = "RpcMsg";
+static const auto TOPIC_RPC_MSG = "RpcMsg";
 
 void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
 {
