@@ -2,6 +2,7 @@
 #define SHV_CORE_UTILS_SHVURL_H
 
 #include "../stringview.h"
+#include <optional>
 
 namespace shv {
 namespace core {
@@ -24,8 +25,8 @@ public:
 	const char* typeString() const;
 	StringView service() const { return m_service; }
 	/// broker ID including '@' separator
-	StringView fullBrokerId() const { return m_fullBrokerId; }
-	StringView brokerId() const { return m_fullBrokerId.substr(1); }
+	StringView fullBrokerId() const;
+	StringView brokerId() const;
 	StringView pathPart() const { return m_pathPart; }
 	std::string toPlainPath(const StringView &path_part_prefix = {}) const;
 	std::string toString(const StringView &path_part_prefix = {}) const;
@@ -45,7 +46,7 @@ private:
 	const std::string &m_shvPath;
 	Type m_type = Type::Plain;
 	StringView m_service;
-	StringView m_fullBrokerId; // including @, like '@mpk'
+	std::optional<StringView> m_fullBrokerId; // including @, like '@mpk'
 	StringView m_pathPart;
 };
 
