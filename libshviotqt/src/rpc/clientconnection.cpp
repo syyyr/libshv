@@ -489,7 +489,7 @@ int ClientConnection::brokerClientId() const
 void ClientConnection::muteShvPathInLog(const std::string &shv_path, const std::string &method)
 {
 	shvInfo() << "RpcMsg log, mutting shv_path:" << shv_path << "method:" << method;
-	m_mutedShvPathsInLog.emplace_back(shv_path, method);
+	m_mutedShvPathsInLog.emplace_back(MutedPath{.pathPattern = shv_path, .methodPattern = method});
 }
 
 void ClientConnection::processLoginPhase(const chainpack::RpcMessage &msg)
