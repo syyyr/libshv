@@ -9,6 +9,7 @@
 #include <shv/core/utils.h>
 #include <shv/coreqt/utils.h>
 
+#include <QElapsedTimer>
 #include <QObject>
 #include <QUrl>
 
@@ -67,7 +68,9 @@ public:
 	const shv::chainpack::RpcValue::Map &loginResult() const { return m_connectionState.loginResult.asMap(); }
 
 	int brokerClientId() const;
-	void muteShvPathInLog(std::string shv_path);
+	void muteShvPathInLog(const std::string &shv_path, const std::string &method);
+protected:
+	bool isShvPathMutedInLog(const std::string &shv_path, const std::string &method) const;
 public:
 	/// AbstractRpcConnection interface implementation
 	void sendMessage(const shv::chainpack::RpcMessage &rpc_msg) override;
@@ -99,8 +102,6 @@ protected:
 		shv::chainpack::RpcValue loginResult;
 	};
 	ConnectionState m_connectionState;
-
-	bool isShvPathMutedInLog(const std::string &shv_path) const;
 private:
 	bool isAutoConnect() const { return m_checkBrokerConnectedInterval > 0; }
 	void restartIfAutoConnect();
@@ -111,7 +112,12 @@ private:
 	QTimer *m_checkBrokerConnectedTimer;
 	int m_checkBrokerConnectedInterval = 0;
 	QTimer *m_heartBeatTimer = nullptr;
-	std::vector<std::string> m_mutedShvPathsInLog;
+	struct MutedPath {
+		std::string pathPattern;
+		std::string methodPattern;
+	};
+	std::vector<MutedPath> m_mutedShvPathsInLog;
+	std::vector<std::tuple<int64_t, QElapsedTimer>> m_mutedResponses;
 };
 
 } // namespace shv

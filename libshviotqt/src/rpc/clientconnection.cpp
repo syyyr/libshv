@@ -247,37 +247,76 @@ void ClientConnection::setCheckBrokerConnectedInterval(int ms)
 		m_checkBrokerConnectedTimer->setInterval(ms);
 }
 
+static constexpr std::string_view::size_type MAX_LOG_LEN = 1024;
+static const char *TOPIC_RPC_MSG = "RpcMsg";
+
 void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
 {
-	if(!isShvPathMutedInLog(rpc_msg.shvPath().asString())) {
-		logRpcMsg() << SND_LOG_ARROW
-					<< "client id:" << connectionId()
-					<< "protocol_type:" << static_cast<int>(protocolType()) << shv::chainpack::Rpc::protocolTypeToString(protocolType())
-					<< rpc_msg.toPrettyString();
+	if(NecroLog::shouldLog(NecroLog::Level::Message, NecroLog::LogContext(__FILE__, __LINE__, TOPIC_RPC_MSG))) {
+		if(isShvPathMutedInLog(rpc_msg.shvPath().asString(), rpc_msg.method().asString())) {
+			if(rpc_msg.isRequest()) {
+				auto rq_id = rpc_msg.requestId().toInt64();
+				QElapsedTimer tm;
+				tm.start();
+				m_mutedResponses.emplace_back(rq_id, tm);
+			}
+		}
+		else {
+			NecroLog::create(NecroLog::Level::Message, NecroLog::LogContext(__FILE__, __LINE__, TOPIC_RPC_MSG))
+				<< SND_LOG_ARROW
+				<< "client id:" << connectionId()
+				<< "protocol_type:" << static_cast<int>(protocolType()) << shv::chainpack::Rpc::protocolTypeToString(protocolType())
+				<< std::string_view(rpc_msg.toPrettyString()).substr(0, MAX_LOG_LEN);
+		}
 	}
 	sendRpcValue(rpc_msg.value());
 }
 
-void ClientConnection::onRpcMessageReceived(const chainpack::RpcMessage &msg)
+void ClientConnection::onRpcMessageReceived(const chainpack::RpcMessage &rpc_msg)
 {
-	if(!isShvPathMutedInLog(msg.shvPath().asString())) {
-		logRpcMsg() << cp::RpcDriver::RCV_LOG_ARROW
-					<< "client id:" << connectionId()
-					<< "protocol_type:" << static_cast<int>(protocolType()) << shv::chainpack::Rpc::protocolTypeToString(protocolType())
-					<< msg.toPrettyString();
+	if(NecroLog::shouldLog(NecroLog::Level::Message, NecroLog::LogContext(__FILE__, __LINE__, TOPIC_RPC_MSG))) {
+		bool skip_log = false;
+		if(rpc_msg.isResponse()) {
+			QElapsedTimer now;
+			now.start();
+			for (auto iter = m_mutedResponses.begin(); iter != m_mutedResponses.end(); ) {
+				const auto &[rq_id, elapsed_tm] = *iter;
+				//shvError() << rq_id << "vs" << msg.requestId().toInt64();
+				if(rq_id == rpc_msg.requestId().toInt64()) {
+					iter = m_mutedResponses.erase(iter);
+					skip_log = true;
+				}
+				else if(elapsed_tm.msecsTo(now) > 10000) {
+					iter = m_mutedResponses.erase(iter);
+				}
+				else {
+					++iter;
+				}
+			}
+		}
+		else {
+			skip_log = isShvPathMutedInLog(rpc_msg.shvPath().asString(), rpc_msg.method().asString());
+		}
+		if(!skip_log) {
+			NecroLog::create(NecroLog::Level::Message, NecroLog::LogContext(__FILE__, __LINE__, TOPIC_RPC_MSG))
+				<< cp::RpcDriver::RCV_LOG_ARROW
+				<< "client id:" << connectionId()
+				<< "protocol_type:" << static_cast<int>(protocolType()) << shv::chainpack::Rpc::protocolTypeToString(protocolType())
+				<< std::string_view(rpc_msg.toPrettyString()).substr(0, MAX_LOG_LEN);
+		}
 	}
 	if(isLoginPhase()) {
-		processLoginPhase(msg);
+		processLoginPhase(rpc_msg);
 		return;
 	}
-	if(msg.isResponse()) {
-		cp::RpcResponse rp(msg);
+	if(rpc_msg.isResponse()) {
+		cp::RpcResponse rp(rpc_msg);
 		if(rp.requestId() == m_connectionState.pingRqId) {
 			m_connectionState.pingRqId = 0;
 			return;
 		}
 	}
-	emit rpcMessageReceived(msg);
+	emit rpcMessageReceived(rpc_msg);
 }
 
 void ClientConnection::setState(ClientConnection::State state)
@@ -413,18 +452,22 @@ chainpack::RpcValue ClientConnection::createLoginParams(const chainpack::RpcValu
 	};
 }
 
-bool ClientConnection::isShvPathMutedInLog(const std::string &shv_path) const
+bool ClientConnection::isShvPathMutedInLog(const std::string &shv_path, const std::string &method) const
 {
-	for(const string &pattern : m_mutedShvPathsInLog) {
-		shv::core::StringView sv(pattern);
+	if(shv_path.empty())
+		return false;
+	for(const auto &muted_path : m_mutedShvPathsInLog) {
+		shv::core::StringView sv(muted_path.pathPattern);
 		if(!sv.empty() && sv.at(0) == '*') {
 			sv = sv.substr(1);
-			if(shv::core::StringView(shv_path).ends_with(sv))
-				return true;
+			if(shv::core::StringView(shv_path).ends_with(sv)) {
+				return muted_path.methodPattern.empty() || muted_path.methodPattern == method;
+			}
 		}
 		else {
-			if(shv_path == pattern)
-				return true;
+			if(shv_path == muted_path.pathPattern) {
+				return muted_path.methodPattern.empty() || muted_path.methodPattern == method;
+			}
 		}
 	}
 	return false;
@@ -443,9 +486,10 @@ int ClientConnection::brokerClientId() const
 	return m_connectionState.loginResult.asMap().value(cp::Rpc::KEY_CLIENT_ID).toInt();
 }
 
-void ClientConnection::muteShvPathInLog(std::string shv_path)
+void ClientConnection::muteShvPathInLog(const std::string &shv_path, const std::string &method)
 {
-	m_mutedShvPathsInLog.push_back(std::move(shv_path));
+	shvInfo() << "RpcMsg log, mutting shv_path:" << shv_path << "method:" << method;
+	m_mutedShvPathsInLog.emplace_back(shv_path, method);
 }
 
 void ClientConnection::processLoginPhase(const chainpack::RpcMessage &msg)
