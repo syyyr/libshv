@@ -54,6 +54,24 @@ std::string ShvUrl::typeMark(Type t)
 	return std::string();
 }
 
+StringView ShvUrl::fullBrokerId() const
+{
+	if (!m_fullBrokerId) {
+		return "";
+	}
+
+	return m_fullBrokerId.value();
+}
+
+StringView ShvUrl::brokerId() const
+{
+	if (!m_fullBrokerId) {
+		return "";
+	}
+
+	return m_fullBrokerId->substr(1);
+}
+
 std::string ShvUrl::toPlainPath(const StringView &path_part_prefix) const
 {
 	std::string ret = std::string{service()};
