@@ -29,13 +29,24 @@ public:
 	bool operator==(const ShvAlarm &a) const;
 
 	Severity severity() const { return m_severity; }
+	void setSeverity(Severity severity) { m_severity = severity; }
+
 	const std::string& path() const { return m_path; }
+	void setPath(const std::string &path) { m_path = path; }
+
 	const std::string& description() const { return m_description; }
+	void setDescription(const std::string &description) { m_description = description; }
+
 	const std::string& label() const { return m_label; }
-	Severity severityFromString() const { return m_severity; }
+	void setLabel(const std::string &label) { m_label = label; }
+
 	int level() const { return m_level; }
-	bool isValid() const { return !path().empty(); }
+	void setLevel(int level) { m_level = level; }
+
 	bool isActive() const { return m_isActive; }
+	void setIsActive(bool is_active) { m_isActive = is_active; }
+
+	bool isValid() const { return !path().empty(); }
 
 	shv::chainpack::RpcValue toRpcValue(bool all_fields_if_not_active = false) const;
 	static ShvAlarm fromRpcValue(const shv::chainpack::RpcValue &rv);
