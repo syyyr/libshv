@@ -70,6 +70,14 @@ static int64_t rm_file(const std::string &file_name)
 	return 0;
 }
 
+static bool path_exists(const std::string &path)
+{
+	std::error_code code;
+	auto ret =  std::filesystem::exists(path, code);
+	handle_error_code(__FUNCTION__, code);
+	return ret;
+}
+
 static int64_t str_to_size(const std::string &str)
 {
 	std::istringstream is(str);
@@ -260,7 +268,8 @@ void ShvFileJournal::createJournalDirIfNotExist()
 
 bool ShvFileJournal::journalDirExists()
 {
-	return is_dir(journalDir());
+	auto journal_dir = journalDir();
+	return path_exists(journal_dir) && is_dir(journal_dir);
 }
 
 void ShvFileJournal::rotateJournal()
