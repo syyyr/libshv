@@ -69,6 +69,7 @@ public:
 
 	int brokerClientId() const;
 	void muteShvPathInLog(const std::string &shv_path, const std::string &method);
+	void setRawRpcMessageLog(bool b) { m_rawRpcMessageLog = b; }
 protected:
 	bool isShvPathMutedInLog(const std::string &shv_path, const std::string &method) const;
 public:
@@ -117,7 +118,8 @@ private:
 		std::string methodPattern;
 	};
 	std::vector<MutedPath> m_mutedShvPathsInLog;
-	std::vector<std::tuple<int64_t, QElapsedTimer>> m_mutedResponses;
+	std::vector<std::tuple<int64_t, QElapsedTimer>> m_responseIdsMutedInLog;
+	bool m_rawRpcMessageLog = false;
 };
 
 } // namespace shv

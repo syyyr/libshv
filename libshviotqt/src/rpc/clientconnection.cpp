@@ -258,7 +258,7 @@ void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
 				auto rq_id = rpc_msg.requestId().toInt64();
 				QElapsedTimer tm;
 				tm.start();
-				m_mutedResponses.emplace_back(rq_id, tm);
+				m_responseIdsMutedInLog.emplace_back(rq_id, tm);
 			}
 		}
 		else {
@@ -266,7 +266,7 @@ void ClientConnection::sendMessage(const cp::RpcMessage &rpc_msg)
 				<< SND_LOG_ARROW
 				<< "client id:" << connectionId()
 				<< "protocol_type:" << static_cast<int>(protocolType()) << shv::chainpack::Rpc::protocolTypeToString(protocolType())
-				<< std::string_view(rpc_msg.toPrettyString()).substr(0, MAX_LOG_LEN);
+				<< std::string_view(m_rawRpcMessageLog? rpc_msg.toCpon(): rpc_msg.toPrettyString()).substr(0, MAX_LOG_LEN);
 		}
 	}
 	sendRpcValue(rpc_msg.value());
@@ -279,15 +279,15 @@ void ClientConnection::onRpcMessageReceived(const chainpack::RpcMessage &rpc_msg
 		if(rpc_msg.isResponse()) {
 			QElapsedTimer now;
 			now.start();
-			for (auto iter = m_mutedResponses.begin(); iter != m_mutedResponses.end(); ) {
+			for (auto iter = m_responseIdsMutedInLog.begin(); iter != m_responseIdsMutedInLog.end(); ) {
 				const auto &[rq_id, elapsed_tm] = *iter;
 				//shvError() << rq_id << "vs" << msg.requestId().toInt64();
 				if(rq_id == rpc_msg.requestId().toInt64()) {
-					iter = m_mutedResponses.erase(iter);
+					iter = m_responseIdsMutedInLog.erase(iter);
 					skip_log = true;
 				}
 				else if(elapsed_tm.msecsTo(now) > 10000) {
-					iter = m_mutedResponses.erase(iter);
+					iter = m_responseIdsMutedInLog.erase(iter);
 				}
 				else {
 					++iter;
@@ -302,7 +302,7 @@ void ClientConnection::onRpcMessageReceived(const chainpack::RpcMessage &rpc_msg
 				<< cp::RpcDriver::RCV_LOG_ARROW
 				<< "client id:" << connectionId()
 				<< "protocol_type:" << static_cast<int>(protocolType()) << shv::chainpack::Rpc::protocolTypeToString(protocolType())
-				<< std::string_view(rpc_msg.toPrettyString()).substr(0, MAX_LOG_LEN);
+				<< std::string_view(m_rawRpcMessageLog? rpc_msg.toCpon(): rpc_msg.toPrettyString()).substr(0, MAX_LOG_LEN);
 		}
 	}
 	if(isLoginPhase()) {
