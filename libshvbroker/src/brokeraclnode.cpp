@@ -613,7 +613,7 @@ const std::vector<cp::MetaMethod> meta_methods_ldap_node {
 class LdapGetUsersThread : public QThread {
 	Q_OBJECT
 public:
-	LdapGetUsersThread(const LdapConfig& ldap_config, const std::optional<std::string>& user_name)
+	LdapGetUsersThread(const LdapConfig& ldap_config, const std::string& user_name)
 		: m_ldapConfig(ldap_config)
 		, m_userName(user_name)
 	{
@@ -631,13 +631,7 @@ public:
 			ldap->setVersion(ldap::Version::Version3);
 			ldap->connect();
 			ldap->bindSasl(m_ldapConfig.brokerUsername.value(), m_ldapConfig.brokerPassword.value());
-			// FIXME: The userPrincipalName is hardcoded here, because I don't want to have duplicate results... it'll
-			// work with AD, so I guess it's fine for now.
-			if (m_userName) {
-				emit resultReady({{*m_userName, ldap::getGroupsForUser(ldap, m_ldapConfig.searchBaseDN, m_ldapConfig.searchAttrs, *m_userName)}});
-			} else {
-				emit resultReady(ldap::getAllUsersWithGroups(ldap, m_ldapConfig.searchBaseDN, {"userPrincipalName"}));
-			}
+			emit resultReady({{m_userName, ldap::getGroupsForUser(ldap, m_ldapConfig.searchBaseDN, m_ldapConfig.searchAttrs, m_userName)}});
 		} catch(ldap::LdapError& err) {
 			emit errorOccured(err.what());
 		}
@@ -648,7 +642,7 @@ public:
 
 private:
 	LdapConfig m_ldapConfig;
-	std::optional<std::string> m_userName;
+	std::string m_userName;
 };
 
 
@@ -661,7 +655,10 @@ LdapAclNode::LdapAclNode(const LdapConfig& ldap_config, shv::iotqt::node::ShvNod
 shv::chainpack::RpcValue LdapAclNode::callMethodRq(const shv::chainpack::RpcRequest &rq)
 {
 	if (rq.method() == M_LDAP_USERS) {
-		auto ldap_thread = new LdapGetUsersThread(m_ldapConfig, rq.params().isString() ? std::optional(rq.params().asString()) : std::nullopt);
+		if (!rq.params().isString()) {
+			return "Missing username argument.";
+		}
+		auto ldap_thread = new LdapGetUsersThread(m_ldapConfig, rq.params().asString());
 		connect(ldap_thread, &LdapGetUsersThread::resultReady, this, [this, rq] (const auto& users) {
 			auto resp = rq.makeResponse();
 			resp.setResult(users);
