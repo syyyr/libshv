@@ -33,6 +33,7 @@ const char *DataChange::valueFlagToString(DataChange::ValueFlag flag)
 	switch (flag) {
 	case ValueFlag::Snapshot: return "Snapshot";
 	case ValueFlag::Spontaneous: return "Spontaneous";
+	case ValueFlag::DirtyValue: return "DirtyValue";
 	case ValueFlag::ValueFlagCount: return "ValueFlagCount";
 	}
 	return "???";
