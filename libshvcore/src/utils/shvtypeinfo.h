@@ -115,8 +115,8 @@ public:
 	// setting this property effectivelly excudes this type description
 	// from localization tools search path, because all the names were
 	// localized in super-type already
-	std::string superTypeName() const;
-	bool isSiteSpecific() const;
+	std::string restrictionOfType() const;
+	bool isSiteSpecificLocalization() const;
 
 	bool isValid() const { return type() != Type::Invalid; }
 
@@ -165,8 +165,8 @@ public:
 	using Properties = std::vector<ShvPropertyDescr>;
 
 	Properties properties;
-	std::string superDeviceType;
-	bool siteSpecific = false;
+	std::string restrictionOfDevice;
+	bool siteSpecificLocalization = false;
 
 	static ShvDeviceDescription fromRpcValue(const chainpack::RpcValue &v);
 	chainpack::RpcValue toRpcValue() const;

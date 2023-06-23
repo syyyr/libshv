@@ -15,7 +15,6 @@ namespace shv::core::utils {
 
 namespace {
 constexpr auto KEY_DEVICE_TYPE = "deviceType";
-//constexpr auto KEY_SUPER_DEVICE_TYPE = "superDeviceType";
 constexpr auto KEY_TYPE_NAME = "typeName";
 constexpr auto KEY_LABEL = "label";
 constexpr auto KEY_DESCRIPTION = "description";
@@ -25,8 +24,9 @@ constexpr auto KEY_TYPE = "type";
 constexpr auto KEY_VALUE = "value";
 constexpr auto KEY_FIELDS = "fields";
 constexpr auto KEY_SAMPLE_TYPE = "sampleType";
-constexpr auto KEY_SUPER_TYPE_NAME = "superTypeName";
-constexpr auto KEY_SITE_SPECIFIC = "siteSpecific";
+constexpr auto KEY_RESTRICTION_OF_DEVICE = "restrictionOfDevice";
+constexpr auto KEY_RESTRICTION_OF_TYPE = "restrictionOfType";
+constexpr auto KEY_SITE_SPECIFIC_LOCALIZATION = "siteSpecificLocalization";
 constexpr auto KEY_TAGS = "tags";
 constexpr auto KEY_METHODS = "methods";
 constexpr auto KEY_BLACKLIST = "blacklist";
@@ -310,14 +310,14 @@ ShvTypeDescr &ShvTypeDescr::setSampleType(ShvTypeDescr::SampleType st)
 	return *this;
 }
 
-string ShvTypeDescr::superTypeName() const
+string ShvTypeDescr::restrictionOfType() const
 {
-	return dataValue(KEY_SUPER_TYPE_NAME).asString();
+	return dataValue(KEY_RESTRICTION_OF_TYPE).asString();
 }
 
-bool ShvTypeDescr::isSiteSpecific() const
+bool ShvTypeDescr::isSiteSpecificLocalization() const
 {
-	return dataValue(KEY_SITE_SPECIFIC).toBool();
+	return dataValue(KEY_SITE_SPECIFIC_LOCALIZATION).toBool();
 }
 
 ShvFieldDescr ShvTypeDescr::field(const std::string &field_name) const
@@ -627,8 +627,8 @@ ShvDeviceDescription ShvDeviceDescription::fromRpcValue(const chainpack::RpcValu
 {
 	ShvDeviceDescription ret;
 	const auto &map = v.asMap();
-	ret.superDeviceType = map.value("superDeviceType").asString();
-	ret.siteSpecific = map.value("siteSpecific").toBool();
+	ret.restrictionOfDevice = map.value(KEY_RESTRICTION_OF_DEVICE).asString();
+	ret.siteSpecificLocalization = map.value(KEY_SITE_SPECIFIC_LOCALIZATION).toBool();
 	for(const auto &rv : map.valref("properties").asList()) {
 		ret.properties.push_back(ShvPropertyDescr::fromRpcValue(rv));
 	}
@@ -638,10 +638,10 @@ ShvDeviceDescription ShvDeviceDescription::fromRpcValue(const chainpack::RpcValu
 RpcValue ShvDeviceDescription::toRpcValue() const
 {
 	RpcValue::Map ret;
-	if(!superDeviceType.empty())
-		ret["superDeviceType"] = superDeviceType;
-	if(siteSpecific)
-		ret["siteSpecific"] = siteSpecific;
+	if(!restrictionOfDevice.empty())
+		ret[KEY_RESTRICTION_OF_DEVICE] = restrictionOfDevice;
+	if(siteSpecificLocalization)
+		ret[KEY_SITE_SPECIFIC_LOCALIZATION] = siteSpecificLocalization;
 	RpcValue::List props;
 	for(const auto &pd : properties) {
 		props.push_back(pd.toRpcValue());
