@@ -476,13 +476,13 @@ ShvTypeDescr ShvTypeDescr::fromRpcValue(const RpcValue &v)
 		if(rv.isString())
 			ret.setTypeName(rv.asString());
 	}
-	if(ret.typeName().empty()) {
+	if(ret.type() == Type::Invalid) {
 		// obsolete
 		auto rv = ret.dataValue(KEY_NAME);
 		if(rv.isString())
 			ret.setTypeName(rv.asString());
 	}
-	if(ret.typeName().empty()) {
+	if(ret.type() == Type::Invalid) {
 		// obsolete
 		auto rv = ret.dataValue(KEY_TYPE);
 		if(rv.isString())
