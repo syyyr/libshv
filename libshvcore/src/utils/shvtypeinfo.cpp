@@ -438,6 +438,11 @@ ShvTypeDescr &ShvTypeDescr::setDecimalPlaces(int n)
 RpcValue ShvTypeDescr::toRpcValue() const
 {
 	RpcValue::Map map = m_data.asMap();
+
+	map[KEY_TYPE_NAME] = map.value(KEY_NAME);
+	map.setValue(KEY_NAME, {}); // erare obsolete
+	map.setValue(KEY_TYPE, {}); // erase obsolete
+
 	if(sampleType() == ShvTypeDescr::SampleType::Invalid || sampleType() == ShvTypeDescr::SampleType::Continuous)
 		map.setValue(KEY_SAMPLE_TYPE, {});
 	else
@@ -447,8 +452,6 @@ RpcValue ShvTypeDescr::toRpcValue() const
 			map.erase(name);
 	};
 	remove_empty_list(KEY_FIELDS);
-	// type is saved as 'name'
-	map.setValue(KEY_TYPE, {});
 	return map;
 }
 
@@ -469,13 +472,19 @@ ShvTypeDescr ShvTypeDescr::fromRpcValue(const RpcValue &v)
 		ret.m_data = RpcValue(std::move(map));
 	}
 	{
-		// obsolete
-		auto rv = ret.dataValue(KEY_TYPE);
+		auto rv = ret.dataValue(KEY_TYPE_NAME);
 		if(rv.isString())
 			ret.setTypeName(rv.asString());
 	}
-	{
+	if(ret.typeName().empty()) {
+		// obsolete
 		auto rv = ret.dataValue(KEY_NAME);
+		if(rv.isString())
+			ret.setTypeName(rv.asString());
+	}
+	if(ret.typeName().empty()) {
+		// obsolete
+		auto rv = ret.dataValue(KEY_TYPE);
 		if(rv.isString())
 			ret.setTypeName(rv.asString());
 	}
