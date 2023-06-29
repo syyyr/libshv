@@ -600,6 +600,18 @@ RpcValue::String RpcResponse::Error::message() const
 	return (iter == end()) ? RpcValue::String{} : iter->second.toString();
 }
 
+RpcResponse::Error& RpcResponse::Error::setMsgData(const RpcValue &data)
+{
+	(*this)[KeyMsgData] = data;
+	return *this;
+}
+
+RpcValue RpcResponse::Error::msgData() const
+{
+	auto iter = find(KeyMsgData);
+	return (iter == end()) ? RpcValue{} : iter->second;
+}
+
 std:: string RpcResponse::Error::errorCodeToString(int code)
 {
 	switch(code) {

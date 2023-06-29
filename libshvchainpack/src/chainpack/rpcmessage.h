@@ -191,7 +191,7 @@ public:
 	{
 	private:
 		using Super = RpcValue::IMap;
-		enum {KeyCode = 1, KeyMessage};
+		enum {KeyCode = 1, KeyMessage, KeyMsgData };
 	public:
 		enum ErrorCode {
 			NoError = 0,
@@ -212,6 +212,8 @@ public:
 		int code() const;
 		Error& setMessage(RpcValue::String &&m);
 		RpcValue::String message() const;
+		Error& setMsgData(const RpcValue &d);
+		RpcValue msgData() const;
 		static std::string errorCodeToString(int code);
 		RpcValue::String toString() const {return std::string("RPC ERROR ") + errorCodeToString(code()) + ": " + message();}
 		RpcValue::Map toJson() const
@@ -219,6 +221,7 @@ public:
 			return RpcValue::Map {
 				{Rpc::JSONRPC_ERROR_CODE, code()},
 				{Rpc::JSONRPC_ERROR_MESSAGE, message()},
+				{Rpc::JSONRPC_ERROR_MSGDATA, msgData()},
 			};
 		}
 		static Error fromJson(const RpcValue::Map &json)
@@ -226,6 +229,7 @@ public:
 			return RpcValue::IMap {
 				{KeyCode, json.value(Rpc::JSONRPC_ERROR_CODE).toInt()},
 				{KeyMessage, json.value(Rpc::JSONRPC_ERROR_MESSAGE).asString()},
+				{KeyMessage, json.value(Rpc::JSONRPC_ERROR_MSGDATA)},
 			};
 		}
 	public:
