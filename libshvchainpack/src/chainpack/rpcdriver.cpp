@@ -472,7 +472,7 @@ void RpcDriver::onRpcDataReceived(Rpc::ProtocolType protocol_type, RpcValue::Met
 		onRpcValueReceived(msg);
 	}
 	else {
-		nError() << "Throwing away message with unknown protocol version:" << static_cast<unsigned>(protocol_type);
+		nError() << "Throwing away invalid or empty message";
 	}
 }
 
