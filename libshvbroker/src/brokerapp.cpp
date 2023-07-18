@@ -684,7 +684,7 @@ void BrokerApp::checkLogin(const chainpack::UserLoginContext &ctx, const QObject
 				auth_thread->start();
 				return;
 		}
-		result.loginError += " Authentication over LDAP requires sending a plaintext password. Please an SSL connection.";
+		result.loginError += " Authentication over LDAP requires sending a plaintext password. Please use an SSL connection.";
 	}
 #else
 	(void)connection_ctx;
