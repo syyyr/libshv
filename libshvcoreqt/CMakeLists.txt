@@ -10,12 +10,6 @@ target_link_libraries(libshvcoreqt PUBLIC Qt::Core libshvcore)
 target_include_directories(libshvcoreqt PUBLIC include)
 target_compile_definitions(libshvcoreqt PRIVATE SHVCOREQT_BUILD_DLL)
 
-if(WIN32)
-	# Need these for some WinAPI calls
-	target_compile_definitions(libshvcoreqt PRIVATE UNICODE)
-	target_compile_definitions(libshvcoreqt PRIVATE _UNICODE)
-endif()
-
 function(add_shvcoreqt_test test_name)
 	add_executable(test_coreqt_${test_name}
 		tests/test_${test_name}.cpp
