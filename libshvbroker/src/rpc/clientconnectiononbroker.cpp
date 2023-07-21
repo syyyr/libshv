@@ -37,6 +37,9 @@ ClientConnectionOnBroker::ClientConnectionOnBroker(shv::iotqt::rpc::Socket *sock
 ClientConnectionOnBroker::~ClientConnectionOnBroker()
 {
 	shvDebug() << __FUNCTION__;
+	// disconnect ClientConnectionOnBroker::onSocketConnectedChanged()
+	// this should not be called from destructor and can cause app crash
+	disconnect(this, nullptr, this, nullptr);
 }
 
 void ClientConnectionOnBroker::onSocketConnectedChanged(bool is_connected)
