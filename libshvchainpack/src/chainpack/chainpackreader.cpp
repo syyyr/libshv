@@ -1,4 +1,5 @@
 #include "chainpackreader.h"
+#include "utils.h"
 #include "../../c/cchainpack.h"
 
 #include <iostream>
@@ -9,15 +10,17 @@ namespace shv::chainpack {
 
 #define PARSE_EXCEPTION(msg) {\
 	std::array<char, 40> buff; \
+	auto err_pos = m_in.tellg(); \
 	auto l = m_in.readsome(buff.data(), buff.size() - 1); \
 	buff[l] = 0; \
+	auto buff_data_hex = shv::chainpack::utils::hexDump(buff.data(), l); \
 	if(exception_aborts) { \
 		std::clog << __FILE__ << ':' << __LINE__;  \
-		std::clog << ' ' << (msg) << " at pos: " << m_in.tellg() << " near to: " << buff.data() << std::endl; \
+		std::clog << ' ' << (msg) << " at pos: " << err_pos << " near to:\n" << buff_data_hex << std::endl; \
 		abort(); \
 	} \
 	else { \
-		throw ParseException(m_inCtx.err_no, std::string("ChainPack ") + msg + std::string(" at pos: ") + std::to_string(m_in.tellg()) + " near to: " + buff.data(), m_in.tellg()); \
+		throw ParseException(m_inCtx.err_no, std::string("ChainPack ") + msg + std::string(" at pos: ") + std::to_string(err_pos) + " near to:\n" + buff_data_hex, err_pos); \
 	} \
 }
 
@@ -41,7 +44,7 @@ ChainPackReader::ItemType ChainPackReader::unpackNext()
 {
 	cchainpack_unpack_next(&m_inCtx);
 	if(m_inCtx.err_no != CCPCP_RC_OK)
-		PARSE_EXCEPTION("Parse error: " + std::string(m_inCtx.err_msg) + " at: " + std::to_string(m_inCtx.err_no));
+		PARSE_EXCEPTION("Parse error: " + std::string(m_inCtx.err_msg) + " error code: " + std::to_string(m_inCtx.err_no));
 	return m_inCtx.item.type;
 }
 
@@ -54,7 +57,7 @@ ChainPackReader::ItemType ChainPackReader::peekNext()
 {
 	const char *p = ccpcp_unpack_peek_byte(&m_inCtx);
 	if(!p)
-		PARSE_EXCEPTION("Parse error: " + std::string(m_inCtx.err_msg) + " at: " + std::to_string(m_inCtx.err_no));
+		PARSE_EXCEPTION("Parse error: " + std::string(m_inCtx.err_msg) + " error code: " + std::to_string(m_inCtx.err_no));
 	auto sch = static_cast<cchainpack_pack_packing_schema>(static_cast<uint8_t>(*p));
 	switch(sch) {
 	case CP_Null: return CCPCP_ITEM_NULL;
