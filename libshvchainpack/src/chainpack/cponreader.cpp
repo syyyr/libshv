@@ -10,19 +10,20 @@ namespace shv::chainpack {
 
 #define PARSE_EXCEPTION(msg) {\
 	std::array<char, 40> buff; \
+	auto err_pos = m_in.tellg(); \
 	auto l = m_in.readsome(buff.data(), buff.size() - 1); \
 	buff[l] = 0; \
 	if(exception_aborts) { \
 		std::clog << __FILE__ << ':' << __LINE__;  \
-		std::clog << ' ' << (msg) << " at pos: " << m_in.tellg() << " near to: " << buff.data() << std::endl; \
+		std::clog << ' ' << (msg) << " at pos: " << err_pos << " near to: " << buff.data() << std::endl; \
 		abort(); \
 	} \
 	else { \
 		throw ParseException(m_inCtx.err_no, std::string("Cpon ") \
 			+ msg \
-			+ std::string(" at pos: ") + std::to_string(m_in.tellg()) \
+			+ std::string(" at pos: ") + std::to_string(err_pos) \
 			+ std::string(" line: ") + std::to_string(m_inCtx.parser_line_no) \
-			+ " near to: " + buff.data(), m_in.tellg()); \
+			+ " near to: " + buff.data(), err_pos); \
 	} \
 }
 
